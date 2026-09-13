@@ -1,0 +1,92 @@
+name: CI Pipeline
+'on':
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff + ty)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
+        with:
+          version: 0.11.5
+          enable-cache: true
+      - name: Verify lockfile is in sync with pyproject.toml
+        run: uv lock --check
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: ruff format
+        run: uv run ruff format --check .
+      - name: ruff check
+        run: uv run ruff check .
+      - name: ty type-check
+        run: uv run ty check
+      - name: Minimize uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.13', '3.14']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
+        with:
+          version: 0.11.5
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen --python ${{ matrix.python-version }}
+      - name: Run tests
+        run: uv run --python ${{ matrix.python-version }} pytest
+      - name: Minimize uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  gates:
+    name: Study gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
+        with:
+          version: 0.11.5
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen
+      # The HSRO gate and the test-window seal are study invariants, not code style.
+      # CI asserts them so neither can be loosened without the diff saying so.
+      - name: Collection is refused without an HSRO determination
+        run: |
+          if uv run python -m sphragis.corpus fetch; then
+            echo "::error::fetch ran without an HSRO determination"
+            exit 1
+          fi
+      - name: Minimize uv cache
+        if: always()
+        run: uv cache prune --ci

@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+dist/
+build/
+*.egg-info/
+.env
+
+# Corpus artifacts: derived data is regenerated from the frozen raw snapshots,
+# and raw snapshots are large. Manifests and seals ARE committed.
+datasets/gerrit/*/raw/
+datasets/gerrit/*/examples/
+datasets/gerrit/*/splits/
+!datasets/gerrit/*/manifest.json
+!datasets/gerrit/*/seal.json
+
+COMMITS.md
