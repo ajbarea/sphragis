@@ -82,6 +82,43 @@ without the client-side `created_on_or_after` filter, 672 changes created *befor
 base model's release date would have entered the corpus, and the contamination argument
 would have been false while appearing to hold.
 
+### First honest example count (2026-09-14)
+
+`build` run against the real October 2024 OpenStack snapshot, 476 of 1,678 changes
+processed in 95 seconds before a time cap.
+
+| | |
+|---|---|
+| **examples produced** | **208** |
+| examples per change | 0.437 |
+| **projected for the full month** | **~733** |
+
+Drops, by reason:
+
+| reason | count |
+|---|---|
+| comment on a metadata pseudo-file | 675 |
+| comment anchored in no changed hunk | 191 |
+| comment on the last patch set | 42 |
+| comment with no line anchor | 5 |
+
+**This revises the yield estimate upward, substantially.** The earlier projection chained
+two small-sample rates (23% of changes carry a code comment, 27% of those anchor) to imply
+roughly 6% of changes yielding an example. The real rate is 0.437 examples per change,
+because changes that do carry comments frequently yield several. At ~733 examples per
+month, a ten-month training window gives OpenStack alone something in the thousands, with
+Qt on top.
+
+**Commit-message comments are the largest single drop category**, 675 against 208 kept.
+That makes the pre-registered exclusion of commit metadata a decision with real weight
+rather than a formality, and it belongs in the report's sampling section by number.
+
+**The strict anchoring rule looks viable.** 208 anchored against 191 unanchored is roughly
+52% of code-file comments landing inside a changed hunk, against the 27% the 15-comment
+sample suggested. The case for widening to a 10-line neighbourhood is correspondingly
+weaker; decide it on the pilot's minimum detectable effect, not on this, but the strict
+corpus is no longer obviously too small.
+
 ### Two API facts the code was wrong about, both found by fetching
 
 - **The change payload carries no file content.** `o=ALL_FILES` returns only metadata
