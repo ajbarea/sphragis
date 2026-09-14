@@ -7,13 +7,18 @@ import json
 import os
 import urllib.error
 import urllib.request
+from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
+from sphragis.corpus.build import build_from_change
+from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
 from sphragis.corpus.manifest import verify
+from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
 from sphragis.corpus.scrub import scrub
-from sphragis.corpus.storage import write_snapshot
+from sphragis.corpus.storage import read_snapshot, write_snapshot
 
 STAGES = ("fetch", "build", "dedup", "split", "freeze", "verify")
 
@@ -97,6 +102,106 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     return 0
 
 
+# Window bounds are a study parameter, not a runtime flag: they are fixed in the Stage 1
+# report and changing them after the fact would move the confirmatory set.
+WINDOWS = {
+    "pilot": ("2024-10-01", "2024-11-01"),
+    "train": ("2024-11-01", "2025-09-01"),
+    "dev": ("2025-09-01", "2025-11-01"),
+    "test": ("2025-11-01", "2026-09-01"),
+}
+
+
+def _examples_dir(args: argparse.Namespace) -> Path:
+    return Path(args.root) / args.org / "examples"
+
+
+def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
+    directory = _examples_dir(args)
+    rows: list[dict[str, Any]] = []
+    for path in sorted(directory.glob("*.jsonl")):
+        rows.extend(json.loads(line) for line in path.read_text().splitlines() if line)
+    return rows
+
+
+def _stage_build(args: argparse.Namespace) -> int:
+    """Every snapshot for an organization into examples, one file per month."""
+    salt = require_salt()
+    raw = Path(args.root) / args.org / "raw"
+    snapshots = sorted(raw.glob("*.ndjson.gz"))
+    if not snapshots:
+        print(f"no snapshots under {raw}; run fetch first")
+        return 1
+    transport = http_transport()
+    comments = scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport)
+    diffs = scrubbed_diff_fetcher(GERRIT[args.org], transport=transport)
+    out_dir = _examples_dir(args)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    total, drops = 0, Counter()
+    for snapshot in snapshots:
+        month = snapshot.name.removesuffix(".ndjson.gz")
+        target = out_dir / f"{month}.jsonl"
+        if target.exists() and not args.overwrite:
+            # Resume. A month costs minutes of network time, and Qt needs roughly 400
+            # requests per month, so discarding completed work on interruption is not
+            # affordable.
+            print(f"{args.org} {month}: skip, already built")
+            continue
+        rows: list[dict[str, Any]] = []
+        for change in read_snapshot(snapshot):
+            built, dropped = build_from_change(args.org, change, comments, diffs)
+            rows.extend(built)
+            drops.update(dropped)
+        target.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
+        print(f"{args.org} {month}: {len(rows)} examples")
+        total += len(rows)
+    print(f"{args.org}: {total} examples, drops {dict(drops)}")
+    return 0
+
+
+def _stage_dedup(args: argparse.Namespace) -> int:
+    """Report what dedup would remove. Deliberately writes nothing."""
+    examples = _load_examples(args)
+    if not examples:
+        print(f"no examples under {_examples_dir(args)}; run build first")
+        return 1
+    kept, removed = run_dedup(examples)
+    print(f"{args.org}: {len(examples)} in, {len(kept)} kept, removed {dict(removed)}")
+    return 0
+
+
+def _stage_split(args: argparse.Namespace) -> int:
+    """Report the window assignment. Deliberately writes nothing."""
+    examples = _load_examples(args)
+    if not examples:
+        print(f"no examples under {_examples_dir(args)}; run build first")
+        return 1
+    kept, _ = run_dedup(examples)
+    windows, straddling = run_split(kept, WINDOWS)
+    for name, rows in windows.items():
+        print(f"  {name:<6} {len(rows)}")
+    if straddling:
+        print(f"STRADDLING {straddling}")
+        return 1
+    return 0
+
+
+def _stage_freeze(args: argparse.Namespace) -> int:
+    """The only stage that commits windows to disk."""
+    examples = _load_examples(args)
+    if not examples:
+        print(f"no examples under {_examples_dir(args)}; run build first")
+        return 1
+    kept, removed = run_dedup(examples)
+    windows, straddling = run_split(kept, WINDOWS)
+    if straddling:
+        print(f"refusing to freeze: changes straddle a window boundary: {straddling}")
+        return 1
+    manifest = freeze_windows(Path(args.root), args.org, windows, stats={"deduped": dict(removed)})
+    print(f"{args.org}: froze {manifest['counts']}")
+    return 0
+
+
 def _stage_verify(args: argparse.Namespace) -> int:
     """Re-derive every window's hash from disk and fail on any drift."""
     manifest_path = Path(args.root) / args.org / "manifest.json"
@@ -127,7 +232,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.stage == "fetch":
         return _stage_fetch(args)
-    if args.stage == "verify":
-        return _stage_verify(args)
-    print(f"stage {args.stage!r} for {args.org}: not wired to disk yet; see plan A2")
-    return 1
+    stages = {
+        "fetch": _stage_fetch,
+        "build": _stage_build,
+        "dedup": _stage_dedup,
+        "split": _stage_split,
+        "freeze": _stage_freeze,
+        "verify": _stage_verify,
+    }
+    return stages[args.stage](args)

@@ -173,3 +173,147 @@ def test_http_transport_returns_error_statuses_instead_of_raising(
     assert status == 500
     assert got_headers.get("Retry-After") == "1"
     assert body == ""
+
+
+def _snapshot(tmp_path: Path, org: str, month: str, rows: list[dict[str, object]]) -> None:
+    from sphragis.corpus.storage import write_snapshot
+
+    write_snapshot(tmp_path, org, month, rows, record={}, overwrite=True)
+
+
+def test_build_reads_every_snapshot_and_writes_examples(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import json
+
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(
+        tmp_path,
+        "openstack",
+        "2024-10",
+        [
+            {
+                "_number": 1,
+                "change_id": "I1",
+                "created": "2024-10-05 00:00:00.000000000",
+                "owner": {"_account_id": "owner"},
+                "revisions": {"a": {}, "b": {}},
+            },
+        ],
+    )
+    monkeypatch.setattr(cli, "http_transport", lambda: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(
+        cli,
+        "scrubbed_comment_fetcher",
+        lambda base, salt, transport: (
+            lambda n: {
+                "f.py": [
+                    {"patch_set": 1, "line": 1, "message": "fix", "author": {"_account_id": "rev"}}
+                ]
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "scrubbed_diff_fetcher",
+        lambda base, transport: lambda n, r, p, b: {"content": [{"a": ["x=1"], "b": ["x = 1"]}]},
+    )
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    path = tmp_path / "openstack" / "examples" / "2024-10.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    assert len(rows) == 1 and rows[0]["comments"] == ["fix"]
+    assert "1 examples" in capsys.readouterr().out
+
+
+def test_build_reports_a_missing_snapshot_rather_than_raising(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    assert main(["build", "--org", "qt", "--root", str(tmp_path)]) == 1
+    assert "no snapshots" in capsys.readouterr().out
+
+
+def test_dedup_and_split_report_without_writing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import json
+
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    rows = [
+        {"id": "a", "change_id": "I1", "created": "2024-10-05", "before": "x", "after": "y"},
+        {"id": "b", "change_id": "I1", "created": "2024-10-05", "before": "x", "after": "y"},
+    ]
+    (examples / "2024-10.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+
+    assert main(["dedup", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "exact" in out
+    assert not (tmp_path / "openstack" / "splits").exists(), "dedup must not write"
+
+    assert main(["split", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert "pilot" in capsys.readouterr().out
+    assert not (tmp_path / "openstack" / "manifest.json").exists(), "split must not write"
+
+
+def test_build_skips_months_already_built_so_it_can_resume(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A month of OpenStack takes minutes over the network and Qt needs ~400 requests per
+    # month. Without resume, any interruption discards the work already done.
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(
+        tmp_path,
+        "openstack",
+        "2024-10",
+        [
+            {
+                "_number": 1,
+                "change_id": "I1",
+                "created": "2024-10-05 00:00:00.000000000",
+                "owner": {"_account_id": "o"},
+                "revisions": {"a": {}, "b": {}},
+            },
+        ],
+    )
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    (examples / "2024-10.jsonl").write_text('{"id": "already-built"}\n')
+
+    called: list[int] = []
+
+    def fetcher(*args: object, **kwargs: object):  # noqa: ANN202
+        def fetch(*inner: object) -> dict[str, object]:
+            called.append(1)
+            return {}
+
+        return fetch
+
+    monkeypatch.setattr(cli, "http_transport", lambda: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", fetcher)
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", fetcher)
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert called == [], "an already-built month must not be re-fetched"
+    assert "skip" in capsys.readouterr().out.lower()
+    assert (examples / "2024-10.jsonl").read_text() == '{"id": "already-built"}\n'
+
+
+def test_build_overwrite_rebuilds_a_month(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    (examples / "2024-10.jsonl").write_text('{"id": "stale"}\n')
+    monkeypatch.setattr(cli, "http_transport", lambda: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path), "--overwrite"]) == 0
+    assert (examples / "2024-10.jsonl").read_text() == ""
