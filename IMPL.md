@@ -203,6 +203,26 @@ Rank stays 32 against current tooling defaults of 16, because the rank-versus-pe
 evidence supports it and adapter capacity is precisely what a null result would otherwise
 be blamed on.
 
+### Example yield, both organizations (2026-09-14)
+
+| | OpenStack | Qt |
+|---|---|---|
+| changes kept after cutoff | 1,678 | 3,336 |
+| examples per change | 0.437 | 0.331 |
+| **projected examples, October 2024** | **~733** | **~1,103** |
+
+Qt yields fewer examples per change but more in total, because it has twice the changes.
+Over a ten-month training window that is roughly 7,000 for OpenStack against 11,000 for Qt.
+
+**This is a sampling constraint, not just a statistic.** Matched training set size is a
+controlled variable: without it the larger organization's adapter could win for reasons
+unrelated to conventions. So the usable per-organization corpus is bounded by the smaller,
+OpenStack, and Qt gets downsampled to match. The number to plan against is therefore
+OpenStack's, not the total.
+
+Drop profiles differ too. Qt shows no final-patch-set drops in this sample and a higher
+rate of comments with no line anchor. Worth reporting per organization rather than pooled.
+
 ### Qt and OpenStack page very differently (2026-09-14)
 
 | instance | `n=25` | `n=100` | `n=500` |
