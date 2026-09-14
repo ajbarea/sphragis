@@ -31,9 +31,15 @@ gpu-local:                 ## Swap in a CUDA torch for local GPU work (x86_64 de
 	@# box are x86_64 and resolve the CPU wheel, and `uv run` re-syncs to that on every
 	@# invocation. --reinstall-package is required: uv treats 2.14.0+cpu as already
 	@# satisfying 2.14.0 and will not swap the variant otherwise.
+	@# Order matters: sync the extra first (which installs the CPU torch), then swap the
+	@# wheel. Doing it the other way round, or only swapping, leaves peft and transformers
+	@# missing under --no-sync.
+	uv sync --extra experiment
 	uv pip install --reinstall-package torch --index-url https://download.pytorch.org/whl/cu130 torch
-	@echo 'Now run with --no-sync, e.g. `uv run --no-sync --extra experiment python ...`,'
-	@echo 'or `uv run` will put the CPU wheel back.'
+	@uv run --no-sync python -c "import torch, peft, transformers; \
+	print('torch', torch.__version__, '| cuda', torch.cuda.is_available(), \
+	'| peft', peft.__version__)"
+	@echo 'Run with --no-sync from here, or `uv run` puts the CPU wheel back.'
 
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify

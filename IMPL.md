@@ -285,6 +285,46 @@ share a mean rate. Running the local 1.5B over real examples validates that the
 measurement path works end to end; it is a pipeline check, not a variance estimate for the
 7B, and must be labelled as such wherever it appears.
 
+### FEASIBILITY RISK: exact match may not discriminate at all (2026-09-14)
+
+First run of the whole measurement path over **real** examples rather than toy ones.
+Qwen2.5-Coder-1.5B, 30 real OpenStack hunks, 12 changes, no adapter:
+
+| metric | value |
+|---|---|
+| exact match | **0.000** |
+| exact match, unextracted | 0.000 |
+| normalized exact match | 0.033 |
+| edit similarity | 0.555 |
+
+On three hand-made toy examples the same model scored 0.67 exact match. On real hunks it
+scores **zero**.
+
+**Why this matters more than a weak proxy result.** The Stage 1 protocol makes exact match
+the single binding metric and lists non-degeneracy as an outcome-neutral test: *exact match
+is neither 0 nor 1 for every condition on both test sets*. That test is designed to halt the
+study, and on this proxy it fails. If the registered 7B also floors at or near zero on real
+hunks, the gate cannot detect an organization-specific difference no matter how large one
+is, and RQ1 returns a null caused by a floor effect rather than by an absence of
+fingerprints.
+
+Edit similarity of 0.555 says the model is producing *related* output, not noise. The
+problem is the strictness of the oracle against real multi-line, context-dependent hunks,
+not the model failing to engage with the task.
+
+**What this changes.** The pilot's first job is no longer sample-size estimation, it is
+answering whether exact match is discriminative on the 7B at all. That has to be settled
+**before** 2026-11-20, because the pass rule is what gets pre-registered and it cannot be
+loosened afterwards without deviating from the protocol. Options if the 7B also floors, all
+of which are pre-registration decisions rather than post-hoc rescues: bind the rule to
+normalized exact match instead; restrict to single-line hunks where exact match is
+attainable; or keep exact match and pre-register a sample size large enough for a very
+small rate to be estimable.
+
+Caveats, stated because the number will be quoted: 1.5B is far weaker than the registered
+7B, 30 examples is a small sample, and these are base-model scores with no adapter, where
+the study compares adapted models. This is an early warning, not a result.
+
 ## Open bugs & findings
 
 _None active._
