@@ -19,8 +19,10 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] `dedup` — exact, near-duplicate, repeated-boilerplate.
 - [x] `split` — changes assigned whole to windows; the test window sealed, not collected.
 - [x] `cli` — stage dispatch with the HSRO gate on `fetch`.
-- [ ] **Plan A2 — stage bodies.** Wire the stages to real artifacts. Blocked on the HSRO
-  determination, because that is the first point `fetch` may legally run.
+- [ ] **Plan A2 — stage bodies.** Wire the stages to real artifacts. No longer blocked:
+  human-subjects review is **deferred** by a recorded decision (2026-09-14), revisited when
+  Dr. Reznik raises it or before the MSR submission, whichever comes first. See
+  `corpus/HSRO.md`.
 
 ## Plan B — measurement
 
@@ -61,8 +63,9 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 These are not style rules. CI asserts them, and loosening one has to show up in a diff.
 
-- **Collection waits on the determination.** `fetch` refuses to run without a date in
-  `corpus/HSRO.md`.
+- **Collection waits on a recorded decision.** `fetch` refuses to run unless
+  `corpus/HSRO.md` states a determination date or an explicit `DEFERRED`. The gate requires
+  that the question was faced, not that it was answered a particular way.
 - **The test window is sealed.** It is defined and hashed at Stage 1 and fetched only after
   in-principle acceptance, so fetch timestamps are the Stage 2 evidence that collection
   followed acceptance.

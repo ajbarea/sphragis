@@ -36,10 +36,26 @@ def test_fetch_refuses_to_run_without_a_determination(tmp_path: Path) -> None:
         main(["fetch", "--org", "openstack", "--hsro", str(tmp_path / "HSRO.md")])
 
 
-def test_the_committed_hsro_draft_keeps_the_fetch_gate_locked() -> None:
-    draft = Path(__file__).resolve().parents[3] / "corpus" / "HSRO.md"
-    assert draft.is_file(), f"the HSRO draft should be committed at {draft}"
-    assert hsro_determination(draft) is None
+def test_the_committed_record_states_a_decision() -> None:
+    record = Path(__file__).resolve().parents[3] / "corpus" / "HSRO.md"
+    assert record.is_file(), f"the review record should be committed at {record}"
+    assert hsro_determination(record) is not None, (
+        "the record must state a determination date or DEFERRED, never nothing"
+    )
+
+
+def test_a_deferral_satisfies_the_gate(tmp_path: Path) -> None:
+    record = tmp_path / "HSRO.md"
+    record.write_text("**Status:** Determination: DEFERRED (2026-09-14, AJ)\n")
+    assert hsro_determination(record) == "DEFERRED"
+    assert require_hsro(record) == "DEFERRED"
+
+
+def test_pending_is_not_a_decision_and_still_blocks(tmp_path: Path) -> None:
+    record = tmp_path / "HSRO.md"
+    record.write_text("**Status:** Determination: PENDING\n")
+    with pytest.raises(SystemExit):
+        require_hsro(record)
 
 
 def test_main_exits_for_an_unknown_stage() -> None:

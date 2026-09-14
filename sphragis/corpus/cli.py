@@ -7,7 +7,9 @@ import re
 from collections.abc import Sequence
 from pathlib import Path
 
-_DETERMINATION = re.compile(r"Determination:\s*(\d{4}-\d{2}-\d{2})")
+# A date records a determination; DEFERRED records a considered decision not to seek one.
+# Either satisfies the gate. PENDING and a missing file do not.
+_DETERMINATION = re.compile(r"Determination:\s*(\d{4}-\d{2}-\d{2}|DEFERRED)")
 
 STAGES = ("fetch", "build", "dedup", "split", "freeze", "verify")
 
@@ -25,8 +27,8 @@ def require_hsro(path: Path) -> str:
     date = hsro_determination(path)
     if date is None:
         raise SystemExit(
-            f"no HSRO determination in {path}. Repository mining is human-subjects "
-            "research; record the determination before collecting."
+            f"{path} records no decision. Write either a determination date or "
+            "'Determination: DEFERRED' before collecting."
         )
     return date
 

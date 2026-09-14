@@ -82,14 +82,27 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: uv sync --frozen
-      # The HSRO gate and the test-window seal are study invariants, not code style.
-      # CI asserts them so neither can be loosened without the diff saying so.
-      - name: Collection is refused without an HSRO determination
+      # Study invariants, not code style. CI asserts them so neither can be loosened
+      # without the diff saying so. The gate requires a RECORDED DECISION, not a
+      # particular answer: a determination date or an explicit DEFERRED both pass, a
+      # decision-less file does not.
+      - name: Collection is refused when no decision is recorded
         run: |
-          if uv run python -m sphragis.corpus fetch; then
-            echo "::error::fetch ran without an HSRO determination"
+          printf '**Status:** Determination: PENDING\n' > /tmp/no-decision.md
+          if uv run python -m sphragis.corpus fetch --hsro /tmp/no-decision.md; then
+            echo "::error::fetch ran with no recorded review decision"
             exit 1
           fi
+      - name: The committed record states a decision
+        run: |
+          uv run python -c "
+          import sys
+          from pathlib import Path
+          from sphragis.corpus.cli import hsro_determination
+          d = hsro_determination(Path('corpus/HSRO.md'))
+          print('recorded decision:', d)
+          sys.exit(0 if d else 1)
+          "
       - name: Minimize uv cache
         if: always()
         run: uv cache prune --ci

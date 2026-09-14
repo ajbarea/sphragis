@@ -1,84 +1,51 @@
-# HSRO determination request (DRAFT — not yet submitted)
+# Human-subjects review: deferred
 
-**Status:** Determination: PENDING
+**Status:** Determination: DEFERRED (2026-09-14, AJ)
 
-`sphragis/corpus/cli.py` parses the line above. It unlocks `fetch` only when it reads
-`Determination: YYYY-MM-DD`. Do not write a date here until RIT's Human Subjects Research
-Office returns one.
+`sphragis/corpus/cli.py` parses the line above. `DEFERRED` unlocks `fetch`, the same as a
+date would. The gate exists so collection cannot start without this file saying something
+deliberate; it does not exist to enforce a particular answer.
 
----
+## The decision
 
-## What is being requested
+Collection proceeds without prior review. Revisit when Dr. Reznik raises it, or before the
+MSR submission, whichever comes first.
 
-A **Not Human Subjects Research (NHSR)** determination, not an exempt-review application.
+## Why this file still exists
 
-The likely basis: analysis of de-identified, publicly available data is generally held not
-to constitute human subjects research. Every element of that test is met here by
-construction, and the construction is enforced in code rather than promised in prose. The
-office makes the determination; this document exists so it can make it quickly.
+MSR requires a compliance declaration at submission: *"If the research involves human
+participants/subjects, the authors must adhere to the ACM Publications Policy on Research
+Involving Human Participants and Subjects."* MSR 2026's wording adds that non-compliant
+submissions are *"likely to be desk rejected by the PC Chairs without further review."*
+That declaration has to be made either way, so the question returns at submission time
+whether or not it is answered now. A dated record of a considered deferral is a different
+thing to defend than silence.
 
-Mining software repositories is nonetheless treated as touching human subjects in this
-field, because the repositories record developers' interactions with each other (Gold and
-Krinke, *Ethics in the mining of software repositories*, EMSE). That is why a
-determination is being sought at all rather than assumed.
+## What the decision would need, if it is taken up
 
-## Study
+RIT routes this through the Human Subjects Research Office. Checked 2026-09-14:
 
-Whether a language-model adapter trained on one organization's code review history learns
-that organization's conventions rather than general review skill. Two organizations,
-OpenStack and Qt.
+- The category is **Exempt, item 4** (secondary analysis of publicly available,
+  de-identified data), *not* "Excluded" — RIT's guidance is explicit that public
+  de-identified secondary data is exempt research rather than outside their scope.
+- Submission is through **Novelution** (`rit.novelution.com` → IRB → Create IRB Protocol).
+  Email submissions stopped in December 2025.
+- **CITI training is a prerequisite**, and certificates take 24-48h to appear in Novelution.
+  That is the long pole, not the form.
 
-No interaction with any person. No intervention. No recruitment. No survey, interview, or
-observation of behavior arranged by the researcher. The data already exists and was
-created by contributors in the ordinary course of public open-source development.
+## The substance, if a protocol is ever written
 
-## Data
+No interaction, no intervention, no recruitment. The unit of analysis is a **code change**,
+not a person, and no result is reported at the level of an individual. Data is public
+Gerrit review history from `review.opendev.org` and `codereview.qt-project.org`, over public
+REST with no login and no scraping around an access control.
 
-| | |
-|---|---|
-| Source | `review.opendev.org` (OpenStack) and `codereview.qt-project.org` (Qt) |
-| Access | public REST, no login, no credential, no scraping around a control |
-| Records | change metadata, patch sets, inline review comments, per-revision diffs |
-| Window | changes created on or after 2024-10-01 |
-| Unit of analysis | a code hunk and the review comments on it, paired with its rewrite |
+De-identification is enforced in code rather than promised: `sphragis/corpus/scrub.py` runs
+inline inside `fetch`, before the first byte reaches disk, replacing every Gerrit account
+object with a salted pseudonym, nulling the identity fields, and sweeping free text for
+email addresses. The salt lives in `.env`, is never committed, and is not distributed, so
+the pseudonyms are not reversible by anyone holding the corpus. No raw contributor identity
+is ever written to disk, and that is a unit-tested property of the pipeline.
 
-The unit of analysis is a **code change**, not a person. No research question concerns any
-individual, and no result is reported at the level of a person.
-
-## De-identification, enforced in code
-
-`sphragis/corpus/scrub.py` runs inline inside `fetch`, before the first byte reaches disk.
-It replaces every Gerrit account object with a single salted pseudonym and nulls the
-identity fields (`name`, `email`, `username`, `display_name`, `secondary_emails`,
-`avatars`), and sweeps free text for email addresses. The salt lives in `.env`, is never
-committed, and is not distributed, so the pseudonyms are not reversible by a recipient.
-
-No raw contributor identity is ever written to disk. This is a unit-tested property of the
-pipeline, not a handling procedure someone has to remember.
-
-## Publication and release
-
-- No contributor identity is published, in any form, at any stage.
-- No result is reported at the level of an individual.
-- Code and manifests are released. Release of derived data is a separate decision,
-  conditional on each project's code license and each Gerrit instance's terms of use,
-  and is not part of this request.
-
-## What would change this request
-
-If the study later analyzes individual reviewers (for example, reviewer behavior or
-reviewer identification), it stops being about code changes and a new determination is
-required. It does not currently do that, and the direction spec explicitly dropped the
-client-inclusion question.
-
-## To submit
-
-1. Confirm the current RIT HSRO intake route and form for an NHSR determination.
-2. Ask Dr. Reznik how the lab has handled repository data previously, so this matches lab
-   precedent rather than inventing a route.
-3. Attach the spec `docs/superpowers/specs/2026-09-13-gerrit-review-corpus-harness-design.md`
-   if the office wants the pipeline detail.
-4. On a determination, replace the status line above with `Determination: YYYY-MM-DD` and
-   record the office's reference number below.
-
-**Reference number:** _pending_
+Release of derived data remains a separate decision, conditional on each project's code
+licence and each Gerrit instance's terms of use.
