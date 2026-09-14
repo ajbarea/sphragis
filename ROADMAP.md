@@ -19,10 +19,11 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] `dedup` — exact, near-duplicate, repeated-boilerplate.
 - [x] `split` — changes assigned whole to windows; the test window sealed, not collected.
 - [x] `cli` — stage dispatch.
-- [~] **Plan A2 — stage bodies.** Library layer done and exercised on real data:
-  `storage` (immutable snapshots), `build` (change to examples, drops counted by reason),
-  `fetchers` (scrubbing at ingestion), `pipeline` (dedup, split, freeze). Remaining: wire
-  these behind the CLI stages so a corpus is reproducible by command rather than script.
+- [x] **Plan A2 — stage bodies.** Every stage is a command and the pipeline runs end to
+  end on real data. `storage` (immutable snapshots), `build` (change to examples, drops
+  counted by reason, resumable), `fetchers` (scrubbing at ingestion), `pipeline` (dedup,
+  split, freeze), all wired behind `python -m sphragis.corpus`.
+- [ ] **A real frozen corpus.** Both organizations, the full window range, verified.
 
 ## Plan B — measurement
 

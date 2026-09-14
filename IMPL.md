@@ -203,6 +203,88 @@ Rank stays 32 against current tooling defaults of 16, because the rank-versus-pe
 evidence supports it and adapter capacity is precisely what a null result would otherwise
 be blamed on.
 
+### Example yield, both organizations (2026-09-14)
+
+| | OpenStack | Qt |
+|---|---|---|
+| changes kept after cutoff | 1,678 | 3,336 |
+| examples per change | 0.437 | 0.331 |
+| **projected examples, October 2024** | **~733** | **~1,103** |
+
+Qt yields fewer examples per change but more in total, because it has twice the changes.
+Over a ten-month training window that is roughly 7,000 for OpenStack against 11,000 for Qt.
+
+**This is a sampling constraint, not just a statistic.** Matched training set size is a
+controlled variable: without it the larger organization's adapter could win for reasons
+unrelated to conventions. So the usable per-organization corpus is bounded by the smaller,
+OpenStack, and Qt gets downsampled to match. The number to plan against is therefore
+OpenStack's, not the total.
+
+Drop profiles differ too. Qt shows no final-patch-set drops in this sample and a higher
+rate of comments with no line anchor. Worth reporting per organization rather than pooled.
+
+### Qt and OpenStack page very differently (2026-09-14)
+
+| instance | `n=25` | `n=100` | `n=500` |
+|---|---|---|---|
+| OpenStack | - | **100** | - |
+| Qt | 10 | **10** | 10 |
+
+**Qt caps a page at 10 changes regardless of `n`.** Both months now fetched for real:
+
+| organization | changes | pages | dropped as pre-cutoff |
+|---|---|---|---|
+| OpenStack, 2024-10 | 2,350 | 24 | 672 (29%) |
+| Qt, 2024-10 | 3,863 | **387** | 527 (14%) |
+
+Sixteen times the round trips for 1.6x the changes. **Both totals match the figures the
+direction spec quotes**, so the queries select what they were meant to.
+
+The pre-cutoff drop rates differ substantially between the two organizations, 29% against
+14%. That is worth reporting rather than averaging away: it means the `after:` operator's
+update-time semantics bite the two instances differently, presumably because their review
+cadences differ.
+
+The paging loop is already robust to this because it advances by `len(page)` rather than by
+the requested size, so nothing breaks; it is a cost and pacing fact, not a bug. It does mean
+the two organizations cannot be fetched on the same assumptions, and a Qt fetch wants to be
+resumable rather than one long run.
+
+### `urlopen` raises on 5xx, which bypassed the retry budget
+
+`http_transport` originally let `urllib` raise. `urlopen` raises `HTTPError` on 4xx and
+5xx, so a retryable 500 from Qt propagated as a fatal exception and the retry logic in
+`gerrit._get` never saw it, despite 500 being in its retryable set. The transport now
+returns `(status, headers, body)` for error responses too, which is what makes the budget
+and `Retry-After` handling real rather than decorative.
+
+### What the pilot may and may not be used for (`research(2026-09)`)
+
+Checked before running a pilot power analysis, and it changes how the result may be
+reported.
+
+**Variance from a pilot is legitimate. An effect size from a pilot is not.** Pilot data
+gives usable estimates of covariances and error variances, but effect-size estimates from
+small samples are highly variable, and a significant result from an underpowered study
+systematically overestimates the true effect. NIH explicitly cautions against basing power
+on a small pilot's effect size.
+
+`minimum_detectable_effect` is already the right shape for this: it takes the pilot as a
+**variance model** and *computes* the detectable effect, rather than estimating an effect
+from the pilot and powering to it. That distinction should be stated in the report, because
+a reviewer who knows this literature will look for it.
+
+Sample-size justification in descending order of defensibility: pooled estimate from a
+systematic review, then a single prior study, then pilot data. So the stronger anchor for
+the expected exact-match rate is **published code-refinement numbers**, not this corpus.
+The pilot's job is the clustering structure and feasibility, not the headline rate.
+
+**A smaller proxy model cannot stand in for the registered one here.** Exact match is
+close to binomial, so its variance depends on the mean rate, and a 1.5B and a 7B will not
+share a mean rate. Running the local 1.5B over real examples validates that the
+measurement path works end to end; it is a pipeline check, not a variance estimate for the
+7B, and must be labelled as such wherever it appears.
+
 ## Open bugs & findings
 
 _None active._
