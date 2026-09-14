@@ -50,7 +50,6 @@ sphragis/
   corpus/      fetch, scrub, build, dedup, split, freeze   the review corpus
   measure/     score, stats, contamination                 the instruments the gate reads
   provenance.py                                            commit, versions, platform
-corpus/HSRO.md                                             human-subjects decision record
 docs/superpowers/specs/                                    the design of record
 docs/superpowers/plans/                                    task-by-task execution plans
 ```
@@ -62,24 +61,6 @@ make sync          # install
 make test          # the suite
 make lint          # ruff format + ruff check + ty
 ```
-
-```bash
-uv run python -m sphragis.corpus fetch --hsro /tmp/nothing-recorded.md
-# /tmp/nothing-recorded.md records no decision. Write either a determination
-# date or 'Determination: DEFERRED' before collecting.
-```
-
-**This gate is procedural, not technical.** Nothing in the Gerrit API or in this code needs
-it; `fetch` would run perfectly well without it. It exists so that collection cannot begin
-while the human-subjects question is simply unconsidered.
-
-It does not require a particular answer. A determination date and an explicit
-`Determination: DEFERRED` both satisfy it; only an absent file or an undecided `PENDING`
-refuses. Currently `corpus/HSRO.md` records a deferral (2026-09-14), so collection runs.
-
-The reason to keep it rather than delete it: MSR requires a compliance declaration at
-submission regardless, so the question returns in November whether or not it is answered
-now. A dated record of a considered decision is a different thing to defend than silence.
 
 ## Two invariants
 

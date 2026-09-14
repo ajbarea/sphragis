@@ -29,21 +29,12 @@ writing an immutable artifact plus a manifest, with the confirmatory test window
 
 Experiments read from frozen artifacts on disk. No experiment talks to a Gerrit server.
 
-## Precondition
-
-Collection does not start until the RIT Human Subjects Research Office determination is
-on file (direction spec, sequence item 2). The `fetch` command refuses to run unless
-`corpus/HSRO.md` exists and records a determination date. That is a real gate, not a
-comment: repository mining is human-subjects research (Gold and Krinke, EMSE), and an
-RR reviewer will look for it.
-
 ## Design
 
 ### 1. Layout
 
 ```
-sphragis/corpus/
-  __init__.py
+sphragis/  __init__.py
   cli.py           # `python -m sphragis.corpus <stage>`
   gerrit.py        # REST client: paging, retry, rate limit, version capture
   scrub.py         # identity stripping, runs before anything is persisted
@@ -59,8 +50,6 @@ datasets/gerrit/
     splits/{pilot,train,dev,test}.parquet
     manifest.json
     seal.json
-corpus/
-  HSRO.md                        # determination record
   provenance/<org>.toml          # shareable/private repo declaration (RQ2)
 ```
 
