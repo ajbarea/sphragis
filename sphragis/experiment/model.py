@@ -17,8 +17,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import torch
-from peft import LoraConfig, PeftModel, get_peft_model
+from peft import LoraConfig, PeftMixedModel, PeftModel, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
 DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
@@ -44,6 +45,14 @@ LORA = LoraConfig(
 )
 
 
+def _require_tokenizer(model_id: str) -> PreTrainedTokenizerBase:
+    """Load a tokenizer, failing loudly rather than returning None downstream."""
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    if tokenizer is None:
+        raise RuntimeError(f"no tokenizer for {model_id}")
+    return tokenizer
+
+
 @dataclass
 class HFGenerator:
     """A `Generator` backed by a base model plus an optional LoRA adapter."""
@@ -54,7 +63,7 @@ class HFGenerator:
     max_new_tokens: int = 256
 
     def __post_init__(self) -> None:
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+        self.tokenizer = _require_tokenizer(self.model_id)
         model = AutoModelForCausalLM.from_pretrained(
             self.model_id, dtype=torch.bfloat16, device_map=self.device
         )
@@ -70,20 +79,24 @@ class HFGenerator:
         )
         inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
         with torch.inference_mode():
-            out = self.model.generate(
+            # ty: the transformers stub types generate() on GenerativePreTrainedModel,
+            # which a PeftModel wrapper does not satisfy structurally. Runtime is fine.
+            out = self.model.generate(  # ty: ignore[invalid-argument-type]
                 **inputs,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id,
             )
         generated = out[0][inputs["input_ids"].shape[-1] :]
-        return self.tokenizer.decode(generated, skip_special_tokens=True)
+        return str(self.tokenizer.decode(generated, skip_special_tokens=True))
 
 
-def attach_adapter(model_id: str, seed: int) -> tuple[object, object]:
+def attach_adapter(
+    model_id: str, seed: int
+) -> tuple[PeftModel | PeftMixedModel, PreTrainedTokenizerBase]:
     """A fresh LoRA adapter on the base model, seeded so the init replays."""
     torch.manual_seed(seed)
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer = _require_tokenizer(model_id)
     base = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16, device_map="cuda:0")
     return get_peft_model(base, LORA), tokenizer
 
