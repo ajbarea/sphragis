@@ -203,6 +203,30 @@ Rank stays 32 against current tooling defaults of 16, because the rank-versus-pe
 evidence supports it and adapter capacity is precisely what a null result would otherwise
 be blamed on.
 
+### Qt and OpenStack page very differently (2026-09-14)
+
+| instance | `n=25` | `n=100` | `n=500` |
+|---|---|---|---|
+| OpenStack | - | **100** | - |
+| Qt | 10 | **10** | 10 |
+
+**Qt caps a page at 10 changes regardless of `n`.** A month of OpenStack (2,350 changes)
+took 24 requests and 13 seconds. The same month of Qt (~4,300 changes) needs on the order
+of **430 requests**, roughly eighteen times the round trips.
+
+The paging loop is already robust to this because it advances by `len(page)` rather than by
+the requested size, so nothing breaks; it is a cost and pacing fact, not a bug. It does mean
+the two organizations cannot be fetched on the same assumptions, and a Qt fetch wants to be
+resumable rather than one long run.
+
+### `urlopen` raises on 5xx, which bypassed the retry budget
+
+`http_transport` originally let `urllib` raise. `urlopen` raises `HTTPError` on 4xx and
+5xx, so a retryable 500 from Qt propagated as a fatal exception and the retry logic in
+`gerrit._get` never saw it, despite 500 being in its retryable set. The transport now
+returns `(status, headers, body)` for error responses too, which is what makes the budget
+and `Retry-After` handling real rather than decorative.
+
 ## Open bugs & findings
 
 _None active._
