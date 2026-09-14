@@ -31,6 +31,43 @@ bodies can be built and tested against recorded fixtures before any live collect
 
 ---
 
+### Corpus yield, measured on live OpenStack data (2026-09-14)
+
+The first real fetch. Numbers the Stage 1 report's sampling section needs, and which no
+amount of reading the API docs would have produced.
+
+| | |
+|---|---|
+| merged post-cutoff changes sampled | 35 |
+| with a comment on a code file | 8 (23%) |
+| comments examined | 15 |
+| anchored **inside** a changed hunk | 4 (27%) |
+| within 10 lines of a changed hunk | 10 cumulative (67%) |
+| comment on the final patch set, no successor | 4 |
+
+**The anchoring rule is now a pre-registration decision with a measured cost.** The spec
+says a comment must fall inside a changed hunk between patch set n and n+1. That is the
+defensible rule, because the edit plausibly addresses the comment, and it keeps 27% of
+comments. Widening to a 10-line neighbourhood keeps 67%, roughly 2.5x the data, at the
+cost of a weaker link between the comment and the edit.
+
+Recommendation: keep strict as primary and report the widened number as the sensitivity a
+reviewer will ask for. Widen only if the pilot power analysis says the strict corpus is too
+small, so the decision is driven by the minimum detectable effect rather than convenience.
+
+Rough projection at the strict rule: OpenStack's 2,350 merged changes in October 2024 imply
+on the order of a few hundred examples per month. Verify against a real month before the
+report quotes anything.
+
+### Two API facts the code was wrong about, both found by fetching
+
+- **The change payload carries no file content.** `o=ALL_FILES` returns only metadata
+  (`lines_deleted`, `old_sha`, `size_delta`). Hunks now come from Gerrit's own diff
+  endpoint, which also keeps hunk boundaries identical to what the reviewer saw.
+- **`after:` filters on last update, not creation.** `after:2024-10-01 before:2024-10-03`
+  returned a change created 2024-08-26. The post-cutoff contamination argument rests on
+  creation date, so `created_on_or_after` enforces it client-side.
+
 ## Open bugs & findings
 
 _None active._

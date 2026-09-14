@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
@@ -34,6 +34,54 @@ def _get(url: str, transport: Transport, sleep: Callable[[float], None], retries
         retries[0] += 1
         sleep(float(headers.get("Retry-After", 2**attempt)))
     raise RuntimeError(f"gerrit returned {last_status} for {url} after {_MAX_RETRIES} attempts")
+
+
+def fetch_comments(
+    base_url: str,
+    change_number: int,
+    *,
+    transport: Transport,
+    sleep: Callable[[float], None] = time.sleep,
+) -> dict[str, list[dict[str, Any]]]:
+    """Inline review comments for one change, keyed by file path."""
+    url = f"{base_url.rstrip('/')}/changes/{change_number}/comments"
+    return parse_response(_get(url, transport, sleep, [0]))
+
+
+def fetch_diff(
+    base_url: str,
+    change_number: int,
+    revision: int,
+    path: str,
+    *,
+    base: int,
+    transport: Transport,
+    sleep: Callable[[float], None] = time.sleep,
+) -> dict[str, Any]:
+    """Gerrit's own diff of one file between two patch sets.
+
+    Using the server's diff rather than re-diffing fetched file contents keeps the hunk
+    boundaries identical to the ones the reviewer saw, and the file-content endpoint
+    returns base64 whole files with no alignment information anyway.
+    """
+    encoded = quote(path, safe="")
+    url = (
+        f"{base_url.rstrip('/')}/changes/{change_number}/revisions/{revision}"
+        f"/files/{encoded}/diff?base={base}"
+    )
+    return parse_response(_get(url, transport, sleep, [0]))
+
+
+def created_on_or_after(changes: Sequence[Mapping[str, Any]], cutoff: str) -> list[dict[str, Any]]:
+    """Keep only changes *created* on or after ``cutoff``.
+
+    Gerrit's `after:` query operator filters on last update, not creation, so a bounded
+    query admits changes created long before the window. Verified live on 2026-09-14:
+    `after:2024-10-01 before:2024-10-03` returned a change created 2024-08-26. The
+    post-cutoff contamination argument rests on creation date, so it is enforced here
+    rather than delegated to the query.
+    """
+    return [dict(c) for c in changes if c["created"][:10] >= cutoff[:10]]
 
 
 def fetch_changes(

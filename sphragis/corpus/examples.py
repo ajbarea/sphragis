@@ -29,6 +29,56 @@ def changed_hunks(before: Sequence[str], after: Sequence[str]) -> list[Hunk]:
     ]
 
 
+# Gerrit exposes the commit message and review-level notes as pseudo-files in the same
+# namespace as source. The study measures code and the comments anchored in it, and
+# excludes commit metadata by design, so these never become examples.
+METADATA_FILES = frozenset({"/COMMIT_MSG", "/PATCHSET_LEVEL", "/MERGE_LIST"})
+
+
+def is_code_file(path: str) -> bool:
+    """False for Gerrit's pseudo-files, which are metadata rather than reviewed code."""
+    return path not in METADATA_FILES
+
+
+def has_successor_revision(*, patch_set: int, revision_count: int) -> bool:
+    """Whether patch set ``patch_set`` has an n+1 to diff against.
+
+    A comment on the final patch set has no successor, so there is no author response to
+    pair it with. Measured on live OpenStack data 2026-09-14: 4 of 15 sampled comments hit
+    this. They are a drop condition, not a fetch failure, and counting them as errors
+    would hide a normal property of the data.
+    """
+    return patch_set < revision_count
+
+
+def hunks_from_diff(diff: Mapping[str, Any]) -> list[Hunk]:
+    """Changed regions from Gerrit's own diff between two patch sets.
+
+    Gerrit returns `content` as an ordered list of blocks: `ab` lines are common to both
+    sides, `a` lines exist only before, `b` lines only after. Line numbers have to be
+    accumulated across every block including the common ones -- counting only changed
+    blocks would misanchor every comment in the corpus.
+
+    Using Gerrit's diff rather than re-diffing fetched file contents keeps the hunk
+    boundaries identical to the ones the reviewer was looking at.
+    """
+    hunks: list[Hunk] = []
+    before_line = after_line = 1
+    for block in diff.get("content", []):
+        common = block.get("ab")
+        if common is not None:
+            before_line += len(common)
+            after_line += len(common)
+            continue
+        removed = tuple(block.get("a", ()))
+        added = tuple(block.get("b", ()))
+        if removed or added:
+            hunks.append(Hunk(before_line, removed, after_line, added))
+            before_line += len(removed)
+            after_line += len(added)
+    return hunks
+
+
 def _anchored(hunk: Hunk, comments: Sequence[Mapping[str, Any]]) -> list[str]:
     end = hunk.before_start + max(len(hunk.before), 1) - 1
     return [
