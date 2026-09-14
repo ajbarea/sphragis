@@ -50,7 +50,6 @@ sphragis/
   corpus/      fetch, scrub, build, dedup, split, freeze   the review corpus
   measure/     score, stats, contamination                 the instruments the gate reads
   provenance.py                                            commit, versions, platform
-corpus/HSRO.md                                             human-subjects determination
 docs/superpowers/specs/                                    the design of record
 docs/superpowers/plans/                                    task-by-task execution plans
 ```
@@ -62,15 +61,6 @@ make sync          # install
 make test          # the suite
 make lint          # ruff format + ruff check + ty
 ```
-
-```bash
-uv run python -m sphragis.corpus fetch
-# no HSRO determination in corpus/HSRO.md. Repository mining is human-subjects
-# research; record the determination before collecting.
-```
-
-That refusal is the design. Collection cannot start before the determination is on file, and
-the gate is a runtime check rather than a note in a document.
 
 ## Two invariants
 

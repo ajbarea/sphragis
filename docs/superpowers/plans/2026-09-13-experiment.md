@@ -23,8 +23,8 @@
 The pilot power analysis has to run before 2026-11-20 and the confirmatory grid cannot run until after in-principle acceptance in February. Those are four months apart. If the orchestration can only be exercised by loading a 7B model on TIGRIS, nothing in between is testable and the February run is the first time the code is exercised end to end. The seam is what makes that gap safe.
 
 
-> **Status: tasks 1-4 executed.** `model.py` and `slurm.py` remain, and wait on the HSRO
-> determination and a confirmed TIGRIS allocation because both are only exercisable there.
+> **Status: tasks 1-4 executed.** `model.py` and `slurm.py` remain, and wait on a
+> confirmed TIGRIS allocation because both are only exercisable there.
 
 ---
 
@@ -511,4 +511,4 @@ Mirror `tests/unit/measure/test_measurement_purity.py`: parse the AST of `grid.p
 
 ## After this plan
 
-`model.py` and `slurm.py` land once the HSRO determination clears and TIGRIS is confirmed live, because both are only exercisable there. Everything above is complete and tested before then, and the February confirmatory run is not the first time the orchestration executes.
+`model.py` and `slurm.py` land once TIGRIS is confirmed live, because both are only exercisable there. Everything above is complete and tested before then, and the February confirmatory run is not the first time the orchestration executes.

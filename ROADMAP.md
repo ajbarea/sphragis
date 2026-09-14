@@ -18,9 +18,8 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] `examples` — changed hunks, comments anchored by line range, unanchored hunks dropped.
 - [x] `dedup` — exact, near-duplicate, repeated-boilerplate.
 - [x] `split` — changes assigned whole to windows; the test window sealed, not collected.
-- [x] `cli` — stage dispatch with the HSRO gate on `fetch`.
-- [ ] **Plan A2 — stage bodies.** Wire the stages to real artifacts. Blocked on the HSRO
-  determination, because that is the first point `fetch` may legally run.
+- [x] `cli` — stage dispatch.
+- [ ] **Plan A2 — stage bodies.** Wire the stages to real artifacts.
 
 ## Plan B — measurement
 
@@ -44,10 +43,9 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] `slurm.py` — sbatch generation, verified against the live cluster. **One allocation
   walks the whole grid**: per-cell jobs would be twenty independent queue waits, and a
   freshly submitted job was estimated thirteen days out at fairshare 0.006.
-- [ ] Wire the grid walk to the frozen windows (needs the corpus, so needs the HSRO
-  determination).
+- [ ] Wire the grid walk to the frozen windows (needs the corpus).
 - [ ] Outcome-neutral tests wired to real model outputs.
-- [ ] Set the grid job's `--time` from the measured 7B throughput once probe 142053 lands.
+- [ ] Set the grid job's `--time` from the measured 7B throughput once probe 142177 lands.
 
 **Metric change forced by a real run (2026-09-14).** The model answers refinement prompts
 correctly and wraps the answer in prose and a markdown fence, so raw exact match scored 1
@@ -61,8 +59,6 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 These are not style rules. CI asserts them, and loosening one has to show up in a diff.
 
-- **Collection waits on the determination.** `fetch` refuses to run without a date in
-  `corpus/HSRO.md`.
 - **The test window is sealed.** It is defined and hashed at Stage 1 and fetched only after
   in-principle acceptance, so fetch timestamps are the Stage 2 evidence that collection
   followed acceptance.

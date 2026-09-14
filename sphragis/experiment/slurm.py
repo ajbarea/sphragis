@@ -30,6 +30,11 @@ _ACCOUNT = "rc-onboard"  # AJ's own access, not the lab's fl-mlm; see the module
 # Cache only. HF_HOME would also relocate the token, and `hf auth login` writes an OAuth
 # token that refreshes itself in place — a copy elsewhere goes stale and starts failing.
 _HF_HUB_CACHE = "$HOME/hf-cache/hub"
+# RIT hides the system gcc behind /tools/bin/blindfold/gcc, which refuses to run. Triton
+# JIT-compiles a CUDA helper on first generation and finds that wrapper via `which gcc`,
+# so the job dies *after* the model has loaded. Triton reads CC first, so point it at the
+# real compiler. Verified: /usr/bin/gcc builds triton's driver.c; the wrapper will not.
+_CC = "/usr/bin/gcc"
 
 
 @dataclass(frozen=True)
@@ -55,6 +60,10 @@ def render(job: SlurmJob) -> str:
     """
     if not _TIME.match(job.time_limit):
         raise ValueError(f"time_limit must be HH:MM:SS, got {job.time_limit!r}")
+    if "$" in job.output:
+        # Slurm does not expand shell variables in #SBATCH directives. An --output of
+        # "$HOME/logs/x.log" silently creates a directory literally named '$HOME'.
+        raise ValueError(f"--output cannot contain a shell variable, got {job.output!r}")
     return f"""#!/bin/bash
 #SBATCH --job-name={job.name}
 #SBATCH --account={job.account}
@@ -71,6 +80,7 @@ set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 export HF_HUB_CACHE={_HF_HUB_CACHE}
 export TOKENIZERS_PARALLELISM=false
+export CC={_CC}
 
 {job.command}"""
 
@@ -99,7 +109,7 @@ def job_for_grid(
     return SlurmJob(
         name="sphragis-grid",
         command=command,
-        output="$HOME/logs/sphragis-grid-%j.log",
+        output="logs/sphragis-grid-%j.log",
         time_limit=time_limit,
         mem="96G",
     )
@@ -113,6 +123,4 @@ def job_for(run: EvalRun, *, project_dir: str, time_limit: str = "02:00:00") -> 
         f"cd {project_dir} && uv run python -m sphragis.experiment.model "
         f"--condition {run.condition} --eval-org {run.eval_org}{seed}"
     )
-    return SlurmJob(
-        name=name, command=command, output=f"$HOME/logs/{name}-%j.log", time_limit=time_limit
-    )
+    return SlurmJob(name=name, command=command, output=f"logs/{name}-%j.log", time_limit=time_limit)

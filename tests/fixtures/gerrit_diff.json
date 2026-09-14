@@ -1,0 +1,136 @@
+{
+  "meta_a": {
+    "name": "neutron_tempest_plugin/scenario/test_ovn_bgp.py",
+    "content_type": "text/x-python",
+    "lines": 79,
+    "web_links": [
+      {
+        "name": "gitea",
+        "tooltip": "Open in GitWeb",
+        "url": "https://opendev.org/openstack/neutron-tempest-plugin/src/commit/427da208b47889a5c3c2c0c08a504a50d84f0f04/neutron_tempest_plugin/scenario/test_ovn_bgp.py"
+      }
+    ]
+  },
+  "meta_b": {
+    "name": "neutron_tempest_plugin/scenario/test_ovn_bgp.py",
+    "content_type": "text/x-python",
+    "lines": 79,
+    "web_links": [
+      {
+        "name": "gitea",
+        "tooltip": "Open in GitWeb",
+        "url": "https://opendev.org/openstack/neutron-tempest-plugin/src/commit/f560e4efad4c827ed3ac5448d7dfc8bf1c762186/neutron_tempest_plugin/scenario/test_ovn_bgp.py"
+      }
+    ]
+  },
+  "change_type": "MODIFIED",
+  "diff_header": [
+    "diff --git a/neutron_tempest_plugin/scenario/test_ovn_bgp.py b/neutron_tempest_plugin/scenario/test_ovn_bgp.py",
+    "index da67880..99b39a3 100644",
+    "--- a/neutron_tempest_plugin/scenario/test_ovn_bgp.py",
+    "+++ b/neutron_tempest_plugin/scenario/test_ovn_bgp.py"
+  ],
+  "content": [
+    {
+      "a": [
+        "# Copyright 2026 Red Hat, Inc."
+      ],
+      "b": [
+        "# Copyright 2026 Red Hat, LLC"
+      ]
+    },
+    {
+      "ab": [
+        "# All Rights Reserved.",
+        "#",
+        "#    Licensed under the Apache License, Version 2.0 (the \"License\"); you may",
+        "#    not use this file except in compliance with the License. You may obtain",
+        "#    a copy of the License at",
+        "#",
+        "#         http://www.apache.org/licenses/LICENSE-2.0",
+        "#",
+        "#    Unless required by applicable law or agreed to in writing, software",
+        "#    distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT",
+        "#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the",
+        "#    License for the specific language governing permissions and limitations",
+        "#    under the License.",
+        "",
+        "from tempest.lib.common.utils import data_utils",
+        "from tempest.lib import decorators",
+        "",
+        "from neutron_tempest_plugin import config",
+        "from neutron_tempest_plugin.scenario import base",
+        "",
+        "CONF = config.CONF",
+        "",
+        "",
+        "class NetworkOVNBGPTest(base.BaseAdminTempestTestCase):",
+        "    credentials = ['primary', 'admin']",
+        "    required_extensions = ['ovn-bgp']",
+        "",
+        "    @classmethod",
+        "    def resource_setup(cls):",
+        "        super().resource_setup()",
+        "        cls.keypair = cls.create_keypair()",
+        "        cls.secgroup = cls.create_security_group(",
+        "            name=data_utils.rand_name('ovn-bgp-secgroup'))",
+        "        cls.create_loginable_secgroup_rule(",
+        "            secgroup_id=cls.secgroup['id'])",
+        "        cls.create_pingable_secgroup_rule(",
+        "            secgroup_id=cls.secgroup['id'])",
+        ""
+      ]
+    },
+    {
+      "a": [
+        "    @decorators.idempotent_id('d1a2b3c4-e5f6-7890-abcd-112233445566')"
+      ],
+      "b": [
+        "    @decorators.idempotent_id('b0bbcb98-f176-4f4d-9a9e-87dcacdfe8d3')"
+      ]
+    },
+    {
+      "ab": [
+        "    def test_leak_routes_connectivity(self):",
+        "        network = self.create_network()",
+        "        subnet = self.create_subnet(network)",
+        "        router = self.create_router_by_client(",
+        "            external_network_id=CONF.network.public_network_id)",
+        "        self.addCleanup(self.client.delete_router, router['id'])",
+        "        self.addCleanup(",
+        "            self.client.update_router, router['id'],",
+        "            external_gateway_info={})",
+        "        self.addCleanup(",
+        "            self.client.remove_router_interface_with_subnet_id,",
+        "            router['id'], subnet['id'])",
+        "        self.client.add_router_interface_with_subnet_id(",
+        "            router['id'], subnet['id'])",
+        "",
+        "        server = self.create_server(",
+        "            flavor_ref=CONF.compute.flavor_ref,",
+        "            image_ref=CONF.compute.image_ref,",
+        "            key_name=self.keypair['name'],",
+        "            networks=[{'uuid': network['id']}],",
+        "            security_groups=[{'name': self.secgroup['name']}])",
+        "        port = self.client.list_ports(",
+        "            network_id=network['id'],",
+        "            device_id=server['server']['id'])['ports'][0]",
+        "        private_ip = port['fixed_ips'][0]['ip_address']",
+        "",
+        "        self.ping_ip_address(private_ip, should_succeed=False)",
+        "",
+        "        self.admin_client.update_subnet(subnet['id'], leak_routes=True)",
+        "",
+        "        self.ping_ip_address(private_ip, should_succeed=True)",
+        "        self.check_connectivity(private_ip,",
+        "                                CONF.validation.image_ssh_user,",
+        "                                self.keypair['private_key'])",
+        "",
+        "        self.admin_client.update_subnet(subnet['id'], leak_routes=False)",
+        "",
+        "        self.ping_ip_address(private_ip, should_succeed=False)",
+        ""
+      ]
+    }
+  ]
+}

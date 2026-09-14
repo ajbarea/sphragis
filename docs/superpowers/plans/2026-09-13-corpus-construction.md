@@ -30,7 +30,6 @@ Plan A is the blocker for both others and for every checklist item in `papers/or
 - No stage may contact a Gerrit server except `fetch`. Every other stage reads frozen artifacts.
 - Identity stripping runs inside `fetch`, before the first byte is persisted. No raw contributor identity is ever written to disk.
 - The salt lives in `.env` as `SPHRAGIS_CORPUS_SALT` and is never committed.
-- `fetch` refuses to run unless `corpus/HSRO.md` exists and contains a determination date.
 - Comments in code are execution help only. No "why we chose", no issue numbers, no narrating the edit.
 
 ---
@@ -1092,7 +1091,7 @@ git commit -m "feat(corpus): time windows grouped by change, with the test-windo
 
 ---
 
-### Task 7: CLI, HSRO gate, and the verify target
+### Task 7: CLI and the verify target
 
 **Files:**
 - Create: `sphragis/corpus/cli.py`, `sphragis/corpus/__main__.py`
