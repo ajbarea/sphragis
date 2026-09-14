@@ -73,6 +73,25 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ty.src]
+include = ["sphragis", "tests"]
+
+# CI installs the dev group only, so the model stack is absent there and ty cannot resolve
+# it. That is deliberate: lint stays fast and needs no GPU wheels. Locally, where the
+# `experiment` extra IS installed, ty resolves the real stubs and type-checks against them
+# — which is stricter, and is what caught the loose typing in model.py.
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+    "torch",
+    "torch.**",
+    "transformers",
+    "transformers.**",
+    "peft",
+    "peft.**",
+    "accelerate",
+    "accelerate.**",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

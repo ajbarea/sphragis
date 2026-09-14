@@ -79,9 +79,7 @@ class HFGenerator:
         )
         inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
         with torch.inference_mode():
-            # ty: the transformers stub types generate() on GenerativePreTrainedModel,
-            # which a PeftModel wrapper does not satisfy structurally. Runtime is fine.
-            out = self.model.generate(  # ty: ignore[invalid-argument-type]
+            out = self.model.generate(
                 **inputs,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=False,
