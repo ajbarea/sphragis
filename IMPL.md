@@ -23,11 +23,12 @@ and `provenance_header` was copied rather than imported.
 ### Next: plan A2, stage bodies
 
 Wire `fetch`, `build`, `dedup`, `split` and `freeze` to real artifacts under
-`datasets/gerrit/<org>/`. Blocked on the HSRO determination, which is drafted at
-`corpus/HSRO.md` and awaiting submission.
+`datasets/gerrit/<org>/`. **Not blocked.** Human-subjects review is deferred by a recorded
+decision (AJ, 2026-09-14), revisited when Dr. Reznik raises it or before the MSR
+submission; `corpus/HSRO.md` carries the decision and the route for taking it up.
 
-Everything else is unblocked: `gerrit.fetch_changes` takes a transport seam, so the stage
-bodies can be built and tested against recorded fixtures before any live collection.
+`gerrit.fetch_changes` takes a transport seam, so the stage bodies are built and tested
+against recorded fixtures regardless of whether live collection has started.
 
 ---
 
