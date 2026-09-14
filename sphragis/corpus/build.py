@@ -18,6 +18,7 @@ from sphragis.corpus.examples import (
     hunks_from_diff,
     is_code_file,
 )
+from sphragis.corpus.wellposed import ILL_POSED_REASONS, classify
 
 # Sequence, not list: list is invariant, so a caller returning list[dict] would not
 # satisfy a list[Mapping] parameter.
@@ -25,6 +26,7 @@ CommentFetcher = Callable[[int], Mapping[str, Sequence[Mapping[str, Any]]]]
 DiffFetcher = Callable[[int, int, str, int], Mapping[str, Any]]
 
 DROP_REASONS = (
+    *(f"ill_posed_{reason}" for reason in ILL_POSED_REASONS),
     "metadata_file",
     "author_comment",
     "no_line_anchor",
@@ -107,6 +109,14 @@ def build_from_change(
             grouped.setdefault(key, (hit, []))[1].append(str(comment["message"]))
 
         for (patch_set, start), (hunk, messages) in grouped.items():
+            candidate = {
+                "before": "\n".join(hunk.before),
+                "after": "\n".join(hunk.after),
+            }
+            ill_posed = classify(candidate)
+            if ill_posed is not None:
+                drops[f"ill_posed_{ill_posed}"] += 1
+                continue
             examples.append(
                 {
                     "id": f"{org}:{change['change_id']}:{path}:{patch_set}:{start}",

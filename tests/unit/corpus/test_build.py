@@ -203,3 +203,24 @@ def test_consistently_scrubbed_ids_compare_fine() -> None:
 
     assert is_reviewer_comment({"author": {"_account_id": "aaa"}}, "bbb") is True
     assert is_reviewer_comment({"author": {"_account_id": "aaa"}}, "aaa") is False
+
+
+def test_ill_posed_examples_are_dropped_and_counted_by_reason() -> None:
+    # The drop profile is the Stage 1 sampling section; a silent drop would make the
+    # corpus look cleaner than it is.
+    def comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        return {"nova/f.py": [{"patch_set": 1, "line": 2, "message": "unused import"}]}
+
+    def deletion(number: int, rev: int, path: str, base: int) -> dict[str, Any]:
+        return {"content": [{"ab": ["def f(x):"]}, {"a": ["    import os"], "b": []}]}
+
+    examples, drops = build_from_change("openstack", CHANGE, comments, deletion)
+    assert examples == []
+    assert drops["ill_posed_empty_after"] == 1
+
+
+def test_a_well_posed_example_is_unaffected_by_the_filter() -> None:
+    comments, diff_for, _ = _fetchers()
+    examples, drops = build_from_change("openstack", CHANGE, comments, diff_for)
+    assert len(examples) == 1
+    assert all(v == 0 for k, v in drops.items() if k.startswith("ill_posed_"))
