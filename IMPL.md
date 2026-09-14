@@ -112,6 +112,15 @@ consistent ids on both sides. `is_reviewer_comment` now raises `TypeError` when 
 sides disagree in type, which converts a silent no-op into a loud failure; verified by
 running it against the real pipeline and watching the guard fire.
 
+**Fixed, and measured.** `corpus/fetchers.py` supplies a comment fetcher that scrubs with
+the same salt as the change fetch, so both sides are pseudonyms. On 584 real changes:
+**278 author comments dropped, against 0 before**, and acknowledgements surviving into the
+model input fell from **73 to 5**. The residual 5 are comments carrying no author object,
+which are kept deliberately rather than guessed at. The diff fetcher does *not* scrub: a
+diff carries no account objects, and running the identity sweep over it would rewrite
+anything in the source that merely looks like an email address, corrupting the code under
+study.
+
 ### First honest example count (2026-09-14)
 
 `build` run against the real October 2024 OpenStack snapshot, 476 of 1,678 changes
