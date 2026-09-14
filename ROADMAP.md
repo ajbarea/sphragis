@@ -19,7 +19,10 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] `dedup` — exact, near-duplicate, repeated-boilerplate.
 - [x] `split` — changes assigned whole to windows; the test window sealed, not collected.
 - [x] `cli` — stage dispatch.
-- [ ] **Plan A2 — stage bodies.** Wire the stages to real artifacts.
+- [~] **Plan A2 — stage bodies.** Library layer done and exercised on real data:
+  `storage` (immutable snapshots), `build` (change to examples, drops counted by reason),
+  `fetchers` (scrubbing at ingestion), `pipeline` (dedup, split, freeze). Remaining: wire
+  these behind the CLI stages so a corpus is reproducible by command rather than script.
 
 ## Plan B — measurement
 
