@@ -1,14 +1,22 @@
 version: 2
 updates:
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
-    commit-message:
-      prefix: ci
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
+    # cooldown: hold new releases 7d (supply-chain); security updates bypass it.
+    cooldown:
+      default-days: 7
     commit-message:
-      prefix: chore
+      prefix: "chore(deps)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # SHA-pinned actions get version updates (not security alerts); cooldown holds
+    # a freshly-published release 7 days so a compromise can surface before the bump.
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci(deps)"
