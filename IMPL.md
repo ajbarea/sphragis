@@ -82,6 +82,45 @@ without the client-side `created_on_or_after` filter, 672 changes created *befor
 base model's release date would have entered the corpus, and the contamination argument
 would have been false while appearing to hold.
 
+### Half the "review comments" are not reviews (2026-09-14)
+
+Measured on live OpenStack data, 62 code-file comments:
+
+| | |
+|---|---|
+| authored by the **change owner** | 32 (52%) |
+| carrying `in_reply_to` | 34 (55%) |
+| message is literally `"Done"` | 15 |
+
+These are the author acknowledging a fix, not an instruction to make one. Feeding them to
+the model pollutes the input and **leaks the answer**: "Done" says the edit was applied,
+which is what the model is supposed to produce. `is_reviewer_comment` drops comments whose
+author is the change owner.
+
+**Two bugs found while fixing this, both of the silent kind.**
+
+*One example per comment.* The spec pairs a hunk with the comments anchored inside it,
+plural. Emitting one example per comment produced identical before/after rows that dedup
+then discarded as exact duplicates, losing every comment but the first. The tell was a 64%
+exact-duplicate rate; after grouping by hunk it is 16%.
+
+*A filter that matched nothing.* The author filter dropped exactly 0 comments on real data
+while 73 acknowledgements sailed through. The snapshot's owner had been scrubbed to a
+12-hex string at fetch, while the comments endpoint returns a raw integer account id, so
+the comparison was `str != int` and always true. The unit tests passed because they used
+consistent ids on both sides. `is_reviewer_comment` now raises `TypeError` when the two
+sides disagree in type, which converts a silent no-op into a loud failure; verified by
+running it against the real pipeline and watching the guard fire.
+
+**Fixed, and measured.** `corpus/fetchers.py` supplies a comment fetcher that scrubs with
+the same salt as the change fetch, so both sides are pseudonyms. On 584 real changes:
+**278 author comments dropped, against 0 before**, and acknowledgements surviving into the
+model input fell from **73 to 5**. The residual 5 are comments carrying no author object,
+which are kept deliberately rather than guessed at. The diff fetcher does *not* scrub: a
+diff carries no account objects, and running the identity sweep over it would rewrite
+anything in the source that merely looks like an email address, corrupting the code under
+study.
+
 ### First honest example count (2026-09-14)
 
 `build` run against the real October 2024 OpenStack snapshot, 476 of 1,678 changes
@@ -127,6 +166,42 @@ corpus is no longer obviously too small.
 - **`after:` filters on last update, not creation.** `after:2024-10-01 before:2024-10-03`
   returned a change created 2024-08-26. The post-cutoff contamination argument rests on
   creation date, so `created_on_or_after` enforces it client-side.
+
+### Two design changes from current literature (`research(2026-09)`)
+
+**Hunks now carry surrounding context.** arXiv:2607.25851 (*Rethinking Training Data for
+Generating Code Review Comments*, read 2026-09-14) names three sources of misalignment
+between a code change and its review comment: semantic ambiguity, lack of actionability,
+and **context dependence**. The third is a real gap here, and it is the same root cause as
+a failure already measured: a bare hunk gave the model no way to know its indentation
+level, so a rewrite that was otherwise exactly right lost strict exact match. Context is
+prompt material only; the target stays the hunk and scoring compares only the hunk.
+
+**Corpus construction stays deterministic, deliberately.** The field has moved toward
+LLM-based filtering for comment actionability, and that same paper reports up to a third of
+comments being vague or non-actionable. It also concludes that *detecting misaligned
+training pairs remains challenging even with LLM-based approaches*. An LLM filter would
+reintroduce exactly the reproducibility problem that kept LLM-as-judge out of the metric,
+so non-actionability is treated as a **measured characteristic of the corpus** to report,
+not a filter to apply. The deterministic filters stay: author comments, metadata
+pseudo-files, and hunk anchoring.
+
+### Training budget pinned (`research(2026-09)`)
+
+A Stage 1 pre-registration item rather than a tuning knob: if the budget differed between
+arms, the comparison would measure the budget rather than the organization.
+
+| | | why |
+|---|---|---|
+| learning rate | 2e-4 | the standard LoRA starting point; usable band 1e-4 to 2e-4 |
+| epochs | **2** | accuracy *falls* as epochs rise, and models converge within tens of steps then memorise. With a corpus in the low thousands per organization, overtraining is the likelier failure |
+| batch size | 16 | largest that comfortably fits 7B plus optimiser state on one GH200 |
+| scheduler | cosine, 3% warmup | |
+| max sequence | 2048 | |
+
+Rank stays 32 against current tooling defaults of 16, because the rank-versus-performance
+evidence supports it and adapter capacity is precisely what a null result would otherwise
+be blamed on.
 
 ## Open bugs & findings
 

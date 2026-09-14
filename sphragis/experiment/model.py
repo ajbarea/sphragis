@@ -26,7 +26,9 @@ DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
 
 # research(2026-09): rank rises with performance to about 32 and flattens; alpha = 2r,
 # because a fixed low alpha at high rank is unstable; attention plus MLP beats attention
-# alone and coverage matters more than rank.
+# alone and coverage matters more than rank. Current tooling defaults lower (r=16); 32 is
+# kept because the rank-versus-performance evidence supports it and the adapter's capacity
+# is the thing a null result would otherwise be blamed on.
 LORA = LoraConfig(
     r=32,
     lora_alpha=64,
@@ -51,6 +53,25 @@ def _require_tokenizer(model_id: str) -> PreTrainedTokenizerBase:
     if tokenizer is None:
         raise RuntimeError(f"no tokenizer for {model_id}")
     return tokenizer
+
+
+# research(2026-09). These are pre-registration items, not tuning knobs: the Stage 1
+# report states the training budget and it must be identical across conditions, or the
+# comparison between adapters measures the budget rather than the organization.
+#
+# - 2e-4 is the standard LoRA starting point; the usable band is 1e-4 to 2e-4.
+# - 2 epochs, deliberately. The evidence is that accuracy *falls* as epochs rise and that
+#   models converge within tens of steps and then memorise. With a corpus in the low
+#   thousands per organization, overtraining is the likelier failure than undertraining.
+# - Batch 16 is the largest that comfortably fits a 7B plus optimiser state on one GH200.
+TRAINING = {
+    "learning_rate": 2e-4,
+    "epochs": 2,
+    "batch_size": 16,
+    "warmup_ratio": 0.03,
+    "lr_scheduler": "cosine",
+    "max_seq_length": 2048,
+}
 
 
 @dataclass

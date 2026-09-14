@@ -11,12 +11,19 @@ from typing import Any
 
 @dataclass(frozen=True)
 class Hunk:
-    """One changed region, as it reads before and after the rewrite."""
+    """One changed region, as it reads before and after the rewrite.
+
+    ``context_before`` and ``context_after`` are the unchanged lines either side. They are
+    prompt material, never part of the target: the model is asked to rewrite the hunk, and
+    scoring compares only the hunk.
+    """
 
     before_start: int
     before: tuple[str, ...]
     after_start: int
     after: tuple[str, ...]
+    context_before: tuple[str, ...] = ()
+    context_after: tuple[str, ...] = ()
 
 
 def changed_hunks(before: Sequence[str], after: Sequence[str]) -> list[Hunk]:
@@ -51,7 +58,22 @@ def has_successor_revision(*, patch_set: int, revision_count: int) -> bool:
     return patch_set < revision_count
 
 
-def hunks_from_diff(diff: Mapping[str, Any]) -> list[Hunk]:
+def _context(
+    blocks: Sequence[Mapping[str, Any]], index: int, direction: int, width: int
+) -> tuple[str, ...]:
+    """Up to ``width`` unchanged lines on one side of the block at ``index``."""
+    if width <= 0:
+        return ()
+    neighbour = index + direction
+    if not 0 <= neighbour < len(blocks):
+        return ()
+    common = blocks[neighbour].get("ab")
+    if not common:
+        return ()
+    return tuple(common[-width:] if direction < 0 else common[:width])
+
+
+def hunks_from_diff(diff: Mapping[str, Any], *, context: int = 0) -> list[Hunk]:
     """Changed regions from Gerrit's own diff between two patch sets.
 
     Gerrit returns `content` as an ordered list of blocks: `ab` lines are common to both
@@ -62,9 +84,10 @@ def hunks_from_diff(diff: Mapping[str, Any]) -> list[Hunk]:
     Using Gerrit's diff rather than re-diffing fetched file contents keeps the hunk
     boundaries identical to the ones the reviewer was looking at.
     """
+    blocks = list(diff.get("content", []))
     hunks: list[Hunk] = []
     before_line = after_line = 1
-    for block in diff.get("content", []):
+    for index, block in enumerate(blocks):
         common = block.get("ab")
         if common is not None:
             before_line += len(common)
@@ -73,7 +96,16 @@ def hunks_from_diff(diff: Mapping[str, Any]) -> list[Hunk]:
         removed = tuple(block.get("a", ()))
         added = tuple(block.get("b", ()))
         if removed or added:
-            hunks.append(Hunk(before_line, removed, after_line, added))
+            hunks.append(
+                Hunk(
+                    before_line,
+                    removed,
+                    after_line,
+                    added,
+                    _context(blocks, index, -1, context),
+                    _context(blocks, index, 1, context),
+                )
+            )
             before_line += len(removed)
             after_line += len(added)
     return hunks
