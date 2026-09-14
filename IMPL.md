@@ -66,6 +66,22 @@ Rough projection at the strict rule: OpenStack's 2,350 merged changes in October
 on the order of a few hundred examples per month. Verify against a real month before the
 report quotes anything.
 
+### First real fetch: October 2024 OpenStack (2026-09-14)
+
+| | |
+|---|---|
+| changes returned by the query | 2,350 in 24 pages, 13s |
+| **dropped as created before the cutoff** | **672 (29%)** |
+| kept | 1,678 |
+| snapshot size | 503 KB gzipped NDJSON |
+| owners reduced to a pseudonym only | 1,678 / 1,678 |
+
+The 2,350 matches the figure the direction spec quotes for October 2024, so the query is
+selecting what it intended. The 29% is the `after:` bug measured rather than argued:
+without the client-side `created_on_or_after` filter, 672 changes created *before* the
+base model's release date would have entered the corpus, and the contamination argument
+would have been false while appearing to hold.
+
 ### Two API facts the code was wrong about, both found by fetching
 
 - **The change payload carries no file content.** `o=ALL_FILES` returns only metadata
