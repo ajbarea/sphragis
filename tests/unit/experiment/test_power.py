@@ -1,0 +1,62 @@
+"""Pilot power analysis: the minimum effect the planned window could detect."""
+
+from __future__ import annotations
+
+import random
+
+from sphragis.experiment.power import minimum_detectable_effect, simulate_power
+from sphragis.measure.stats import Cluster
+
+
+def _pilot(n: int, seed: int = 0) -> list[Cluster]:
+    rng = random.Random(seed)
+    return [
+        Cluster(
+            f"I{i}",
+            tuple(float(rng.random() < 0.3) for _ in range(rng.randint(1, 4))),
+            tuple(float(rng.random() < 0.3) for _ in range(rng.randint(1, 4))),
+        )
+        for i in range(n)
+    ]
+
+
+def test_zero_effect_gives_power_near_the_false_positive_rate() -> None:
+    power = simulate_power(_pilot(40), effect=0.0, seed=1, trials=100, resamples=100)
+    assert power < 0.25
+
+
+def test_a_large_effect_is_detected_almost_always() -> None:
+    power = simulate_power(_pilot(40), effect=0.6, seed=1, trials=100, resamples=100)
+    assert power > 0.9
+
+
+def test_power_rises_with_the_effect() -> None:
+    small = simulate_power(_pilot(40), effect=0.1, seed=1, trials=100, resamples=100)
+    large = simulate_power(_pilot(40), effect=0.4, seed=1, trials=100, resamples=100)
+    assert large > small
+
+
+def test_power_rises_with_the_sample() -> None:
+    few = simulate_power(_pilot(15), effect=0.2, seed=1, trials=100, resamples=100)
+    many = simulate_power(_pilot(120), effect=0.2, seed=1, trials=100, resamples=100)
+    assert many > few
+
+
+def test_simulate_power_is_deterministic_for_a_seed() -> None:
+    a = simulate_power(_pilot(30), effect=0.2, seed=5, trials=60, resamples=60)
+    b = simulate_power(_pilot(30), effect=0.2, seed=5, trials=60, resamples=60)
+    assert a == b
+
+
+def test_minimum_detectable_effect_is_in_range_and_achieves_the_target() -> None:
+    pilot = _pilot(60)
+    mde = minimum_detectable_effect(pilot, seed=2, trials=60, resamples=60, tolerance=0.02)
+    assert 0.0 < mde < 1.0
+    achieved = simulate_power(pilot, effect=mde, seed=2, trials=60, resamples=60)
+    assert achieved >= 0.7
+
+
+def test_a_bigger_pilot_detects_a_smaller_effect() -> None:
+    small = minimum_detectable_effect(_pilot(20), seed=3, trials=60, resamples=60, tolerance=0.02)
+    large = minimum_detectable_effect(_pilot(200), seed=3, trials=60, resamples=60, tolerance=0.02)
+    assert large < small

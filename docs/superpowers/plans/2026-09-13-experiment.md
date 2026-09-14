@@ -1,6 +1,6 @@
 # Experiment Implementation Plan (Plan C)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Run the 3 by 2 condition grid over the frozen windows and hand its outcomes to the plan B instruments, plus the pilot power analysis the Stage 1 report needs.
 
@@ -21,6 +21,10 @@
 ## Why the seam matters more here than anywhere else
 
 The pilot power analysis has to run before 2026-11-20 and the confirmatory grid cannot run until after in-principle acceptance in February. Those are four months apart. If the orchestration can only be exercised by loading a 7B model on TIGRIS, nothing in between is testable and the February run is the first time the code is exercised end to end. The seam is what makes that gap safe.
+
+
+> **Status: tasks 1-4 executed.** `model.py` and `slurm.py` remain, and wait on the HSRO
+> determination and a confirmed TIGRIS allocation because both are only exercisable there.
 
 ---
 
@@ -49,7 +53,7 @@ The grid encodes one non-obvious fact: the base model has no training, so it is 
 - `eval_runs(orgs: Sequence[str], seeds: Sequence[int]) -> list[EvalRun]`
 - `run_id(run: EvalRun) -> str`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """The condition grid: what runs, how often, and what the base arm does not repeat."""
@@ -95,9 +99,9 @@ def test_run_ids_are_unique_and_stable() -> None:
     assert run_id(EvalRun("adapter:qt", "openstack", 2)) == "adapter:qt|openstack|s2"
 ```
 
-- [ ] **Step 2: Run test to verify it fails** — `uv run pytest tests/unit/experiment/test_grid.py -q`
+- [x] **Step 2: Run test to verify it fails** — `uv run pytest tests/unit/experiment/test_grid.py -q`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """The condition grid: the work the experiment has to do, as data."""
@@ -152,8 +156,8 @@ def run_id(run: EvalRun) -> str:
     return f"{run.condition}|{run.eval_org}{suffix}"
 ```
 
-- [ ] **Step 4: Run test to verify it passes** — expected 5 passed
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 4: Run test to verify it passes** — expected 5 passed
+- [x] **Step 5: Lint and commit**
 
 ---
 
@@ -169,7 +173,7 @@ This is the task the Stage 1 deadline actually needs. Section 5 of the report ha
 
 Method: take the pilot clusters as the variance model, add a candidate effect to the treatment arm, bootstrap the interval, and count the fraction of trials whose interval excludes zero. That fraction is the power. Bisect on the effect until it reaches the target.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Pilot power analysis: the minimum effect the planned window could detect."""
@@ -236,9 +240,9 @@ def test_a_bigger_pilot_detects_a_smaller_effect() -> None:
     assert large < small
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Pilot power analysis: the smallest organization-specific gain the window could detect.
@@ -297,9 +301,7 @@ def minimum_detectable_effect(
     low, high = 0.0, 1.0
     while high - low > tolerance:
         mid = (low + high) / 2.0
-        power = simulate_power(
-            clusters, effect=mid, seed=seed, trials=trials, resamples=resamples
-        )
+        power = simulate_power(clusters, effect=mid, seed=seed, trials=trials, resamples=resamples)
         if power >= target_power:
             high = mid
         else:
@@ -307,8 +309,8 @@ def minimum_detectable_effect(
     return high
 ```
 
-- [ ] **Step 4: Run test to verify it passes** — expected 7 passed
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 4: Run test to verify it passes** — expected 7 passed
+- [x] **Step 5: Lint and commit**
 
 ---
 
@@ -325,7 +327,7 @@ def minimum_detectable_effect(
 
 `to_clusters` is where a silent bias could enter: it must pair on example id and raise if the arms disagree, rather than zipping two lists that might be ordered differently.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Orchestration against the model seam, and the pairing that feeds the statistics."""
@@ -415,9 +417,9 @@ def test_to_clusters_separates_changes() -> None:
     assert {c.change_id for c in clusters} == {"I1", "I2"}
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Orchestration: run a condition over a window and shape the outcomes for statistics."""
@@ -457,9 +459,7 @@ def build_prompt(example: Mapping[str, Any]) -> str:
     return _PROMPT.format(comments=comments, before=example["before"])
 
 
-def evaluate(
-    generator: Generator, examples: Sequence[Mapping[str, Any]]
-) -> list[dict[str, Any]]:
+def evaluate(generator: Generator, examples: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     """Score one condition over one window with the whole metric ladder."""
     results: list[dict[str, Any]] = []
     for example in examples:
@@ -490,13 +490,11 @@ def to_clusters(
         arms = grouped[str(result["change_id"])]
         arms[0].append(float(result[metric]))
         arms[1].append(float(by_id_control[result["id"]][metric]))
-    return [
-        Cluster(change_id, tuple(t), tuple(c)) for change_id, (t, c) in sorted(grouped.items())
-    ]
+    return [Cluster(change_id, tuple(t), tuple(c)) for change_id, (t, c) in sorted(grouped.items())]
 ```
 
-- [ ] **Step 4: Run test to verify it passes** — expected 5 passed
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 4: Run test to verify it passes** — expected 5 passed
+- [x] **Step 5: Lint and commit**
 
 ---
 
@@ -506,8 +504,8 @@ def to_clusters(
 
 Mirror `tests/unit/measure/test_measurement_purity.py`: parse the AST of `grid.py`, `power.py` and `runner.py` and assert none imports torch, transformers, peft or datasets, then confirm it in a fresh interpreter. `model.py` is exempt by name and is the only exemption.
 
-- [ ] **Step 1-4: Write, fail, implement, pass**
-- [ ] **Step 5: Run `make lint && make test`, then commit**
+- [x] **Step 1-4: Write, fail, implement, pass**
+- [x] **Step 5: Run `make lint && make test`, then commit**
 
 ---
 

@@ -31,9 +31,16 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 
 ## Plan C — the experiment
 
-- [ ] Model shell: base model plus adapters, the 3 by 2 grid, 3 seeds.
-- [ ] TIGRIS submission (`sbatch`, GH200, CUDA 13 torch on aarch64).
-- [ ] Pilot power analysis: minimum detectable difference from pilot-window variance.
+- [x] `grid` — the condition grid as data. The base arm is evaluated once per window, not
+  once per seed, so its sample is not silently inflated. 14 evaluations, 6 training runs.
+- [x] `power` — pilot power analysis by simulation: bisect the effect until bootstrapped
+  power reaches 80%. This is what section 5 of the Stage 1 report needs.
+- [x] `runner` — orchestration against `Generator` and `Trainer` protocols. Pairs arms on
+  example id rather than position, and refuses arms evaluated on different examples.
+- [x] Purity enforced: only `model.py` may import a GPU stack, and a guard catches any new
+  unguarded module in the package. Both guards tripped to confirm they fire.
+- [ ] `model.py` — the base model, LoRA adapters, greedy decoding. Waits on TIGRIS.
+- [ ] `slurm.py` — sbatch generation for TIGRIS (GH200, CUDA 13 torch on aarch64).
 - [ ] Outcome-neutral tests wired to real model outputs.
 
 Plan C is the only part needing a GPU, and the only part needing collected data.
