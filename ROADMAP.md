@@ -39,9 +39,21 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   example id rather than position, and refuses arms evaluated on different examples.
 - [x] Purity enforced: only `model.py` may import a GPU stack, and a guard catches any new
   unguarded module in the package. Both guards tripped to confirm they fire.
-- [ ] `model.py` — the base model, LoRA adapters, greedy decoding. Waits on TIGRIS.
-- [ ] `slurm.py` — sbatch generation for TIGRIS (GH200, CUDA 13 torch on aarch64).
+- [x] `model.py` — base model, LoRA adapters, greedy decoding. Developed against a local
+  RTX 3060 Ti on the same torch build TIGRIS resolves (2.14.0+cu130).
+- [x] `slurm.py` — sbatch generation, verified against the live cluster. **One allocation
+  walks the whole grid**: per-cell jobs would be twenty independent queue waits, and a
+  freshly submitted job was estimated thirteen days out at fairshare 0.006.
+- [ ] Wire the grid walk to the frozen windows (needs the corpus, so needs the HSRO
+  determination).
 - [ ] Outcome-neutral tests wired to real model outputs.
+- [ ] Set the grid job's `--time` from the measured 7B throughput once probe 142053 lands.
+
+**Metric change forced by a real run (2026-09-14).** The model answers refinement prompts
+correctly and wraps the answer in prose and a markdown fence, so raw exact match scored 1
+of 3 on output that was 3 of 3 right. `score()` now scores extracted code and reports
+`exact_match_raw` beside it. This changes the primary metric's definition and is therefore
+a Stage 1 pre-registration item, not an implementation detail.
 
 Plan C is the only part needing a GPU, and the only part needing collected data.
 

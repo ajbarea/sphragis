@@ -20,7 +20,13 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-experiment = []
+# The model stack. Only sphragis/experiment/model.py may import any of it.
+experiment = [
+    "torch>=2.12",
+    "transformers>=5.10",
+    "peft>=0.10",
+    "accelerate>=1.0",
+]
 
 [dependency-groups]
 dev = [
@@ -40,12 +46,51 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["sphragis"]
 
+# =============================================================================
+# uv — torch: CUDA 13.0 on Linux aarch64 (TIGRIS GH200), CPU wheels everywhere else.
+# The GH200 driver is 610, which is a CUDA 13 runtime; the cu128 wheels do not apply.
+# =============================================================================
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu130", marker = "sys_platform == 'linux' and platform_machine == 'aarch64'" },
+    { index = "pytorch-cpu", marker = "sys_platform != 'linux' or platform_machine != 'aarch64'" },
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ty.src]
+include = ["sphragis", "tests"]
+
+# CI installs the dev group only, so the model stack is absent there and ty cannot resolve
+# it. That is deliberate: lint stays fast and needs no GPU wheels. Locally, where the
+# `experiment` extra IS installed, ty resolves the real stubs and type-checks against them
+# — which is stricter, and is what caught the loose typing in model.py.
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+    "torch",
+    "torch.**",
+    "transformers",
+    "transformers.**",
+    "peft",
+    "peft.**",
+    "accelerate",
+    "accelerate.**",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
