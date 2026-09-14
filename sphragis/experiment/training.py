@@ -7,6 +7,7 @@ reproduce review comments rather than to apply them.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -45,3 +46,20 @@ def build_supervised(
         "labels": labels,
         "attention_mask": [1] * len(input_ids),
     }
+
+
+def warmup_steps(
+    *, n_examples: int, batch_size: int, grad_accum: int, epochs: int, ratio: float
+) -> int:
+    """Optimiser warmup steps from the declared ratio.
+
+    transformers 5 removed `warmup_ratio` and keeps only `warmup_steps`. The ratio stays
+    the declared parameter because it is scale-invariant: pinning steps instead would mean
+    a change in corpus size silently changed the warmup fraction, and the training budget
+    is a pre-registration item.
+    """
+    per_epoch = max(1, math.ceil(n_examples / max(batch_size * grad_accum, 1)))
+    total = per_epoch * max(epochs, 1)
+    if ratio <= 0:
+        return 0
+    return max(1, round(total * ratio))

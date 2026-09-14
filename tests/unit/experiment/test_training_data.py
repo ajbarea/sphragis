@@ -72,3 +72,26 @@ def test_attention_mask_covers_everything_kept() -> None:
     tok = FakeTokenizer()
     item = build_supervised(tok, EXAMPLE, prompt_builder=lambda e: "PROMPT:")
     assert item["attention_mask"] == [1] * len(item["input_ids"])
+
+
+def test_warmup_steps_are_derived_from_the_declared_ratio() -> None:
+    # transformers 5 removed warmup_ratio and keeps only warmup_steps. The ratio stays the
+    # declared, pre-registered parameter because it is scale-invariant; the step count is
+    # derived at construction so changing the corpus size does not silently change warmup.
+    from sphragis.experiment.training import warmup_steps
+
+    # 160 examples, batch 2, accum 8 -> 10 optimiser steps per epoch, 20 over two epochs.
+    assert warmup_steps(n_examples=160, batch_size=2, grad_accum=8, epochs=2, ratio=0.03) == 1
+    assert warmup_steps(n_examples=8000, batch_size=2, grad_accum=8, epochs=2, ratio=0.03) == 30
+
+
+def test_warmup_is_at_least_one_step_when_the_ratio_is_positive() -> None:
+    from sphragis.experiment.training import warmup_steps
+
+    assert warmup_steps(n_examples=4, batch_size=2, grad_accum=8, epochs=1, ratio=0.03) == 1
+
+
+def test_a_zero_ratio_means_no_warmup() -> None:
+    from sphragis.experiment.training import warmup_steps
+
+    assert warmup_steps(n_examples=1000, batch_size=2, grad_accum=8, epochs=2, ratio=0.0) == 0

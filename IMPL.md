@@ -399,6 +399,38 @@ card, so about six copies of the model would fit; batch-of-one is simply what th
 measured. A batched evaluation loop should cut the evaluation half substantially. Worth
 doing before the confirmatory run, not before the pilot.
 
+### The 7B base also floors at exact match 0 (2026-09-14, job 143304)
+
+The first pilot ran the base evaluation before dying on an API change, which is enough to
+settle one question:
+
+| model | EM | normEM | edit similarity |
+|---|---|---|---|
+| Qwen2.5-Coder-1.5B, base | 0.000 | 0.020 | 0.555 |
+| **Qwen2.5-Coder-7B, base** | **0.000** | **0.000** | **0.157** |
+
+So the exact-match floor is a property of the task against a base model, not an artefact of
+using a small proxy. That was the open question from the earlier proxy measurement and it
+is now answered for the registered model.
+
+The 7B's edit similarity is **lower** than the 1.5B's, 0.157 against 0.555, which is the
+opposite of what capability alone predicts. The likely explanation is verbosity: a stronger
+instruction-tuned model produces more surrounding prose and explanation, and edit similarity
+is computed against a bare hunk. The rerun logs median prediction and reference lengths to
+check that rather than assume it.
+
+LoRA attaches as expected: 80,740,352 trainable of 7,696,356,864, 1.05%.
+
+**None of this bears on the study's design**, which compares *adapted* models. It does mean
+the adapted number is the one that matters, and the pilot exists to produce it.
+
+### transformers 5 removed `warmup_ratio`
+
+`TrainingArguments` keeps only `warmup_steps`. The declared budget keeps the ratio, because
+it is scale-invariant and pinning steps would mean a change in corpus size silently changed
+the warmup fraction on a pre-registered parameter. `training.warmup_steps` derives the step
+count at construction.
+
 ## Open bugs & findings
 
 _None active._
