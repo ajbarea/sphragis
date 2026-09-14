@@ -62,6 +62,32 @@ make test          # the suite
 make lint          # ruff format + ruff check + ty
 ```
 
+## Building a corpus
+
+```bash
+export SPHRAGIS_CORPUS_SALT=$(python -c "import secrets; print(secrets.token_hex(32))")
+
+uv run python -m sphragis.corpus fetch  --org openstack --month 2024-10
+uv run python -m sphragis.corpus build  --org openstack
+uv run python -m sphragis.corpus dedup  --org openstack   # reports, writes nothing
+uv run python -m sphragis.corpus split  --org openstack   # reports, writes nothing
+uv run python -m sphragis.corpus freeze --org openstack
+uv run python -m sphragis.corpus verify --org openstack
+```
+
+`dedup` and `split` deliberately only report, so the corpus can be inspected before
+anything is committed. `freeze` is the single stage that writes windows to disk, and
+`verify` re-derives every window's hash and fails on drift.
+
+`fetch` and `build` are both resumable: an existing snapshot or an already-built month is
+skipped unless `--overwrite` is passed. This matters more than it sounds. A month of
+OpenStack is 24 requests; the same month of Qt is 387, because Qt caps a page at ten
+changes regardless of what you ask for.
+
+The salt is what makes the pseudonyms irreversible and stable. Without a stable salt a
+corpus built today will not compare with one built tomorrow, so the commands refuse to run
+without it.
+
 ## Two invariants
 
 **The measurement never needs a GPU.** No module under `sphragis/measure/` may import torch,
