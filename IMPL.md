@@ -258,6 +258,33 @@ resumable rather than one long run.
 returns `(status, headers, body)` for error responses too, which is what makes the budget
 and `Retry-After` handling real rather than decorative.
 
+### What the pilot may and may not be used for (`research(2026-09)`)
+
+Checked before running a pilot power analysis, and it changes how the result may be
+reported.
+
+**Variance from a pilot is legitimate. An effect size from a pilot is not.** Pilot data
+gives usable estimates of covariances and error variances, but effect-size estimates from
+small samples are highly variable, and a significant result from an underpowered study
+systematically overestimates the true effect. NIH explicitly cautions against basing power
+on a small pilot's effect size.
+
+`minimum_detectable_effect` is already the right shape for this: it takes the pilot as a
+**variance model** and *computes* the detectable effect, rather than estimating an effect
+from the pilot and powering to it. That distinction should be stated in the report, because
+a reviewer who knows this literature will look for it.
+
+Sample-size justification in descending order of defensibility: pooled estimate from a
+systematic review, then a single prior study, then pilot data. So the stronger anchor for
+the expected exact-match rate is **published code-refinement numbers**, not this corpus.
+The pilot's job is the clustering structure and feasibility, not the headline rate.
+
+**A smaller proxy model cannot stand in for the registered one here.** Exact match is
+close to binomial, so its variance depends on the mean rate, and a 1.5B and a 7B will not
+share a mean rate. Running the local 1.5B over real examples validates that the
+measurement path works end to end; it is a pipeline check, not a variance estimate for the
+7B, and must be labelled as such wherever it appears.
+
 ## Open bugs & findings
 
 _None active._
