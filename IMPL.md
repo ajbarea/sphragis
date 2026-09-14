@@ -366,6 +366,39 @@ These are the misaligned pairs arXiv:2607.25851 describes. Filtering them raised
 similarity from 0.555 to 0.663, so the model does produce closer output on well-posed
 input, though exact match stayed at zero for the base-model reason above.
 
+### 7B throughput measured on a GH200 (2026-09-14, job 143201)
+
+| | |
+|---|---|
+| load | 27.0s |
+| weights | 15.23 GB (peak 15.28 on a 102 GB card) |
+| warmup, Triton JIT | 7.6s, once per process |
+| **steady throughput** | **38-43 tok/s** at batch of one |
+
+The first probe reported 1.0 tok/s and that was an artefact: it generated exactly once, so
+the entire Triton JIT compilation landed inside the only timed call. Separating warmup from
+steady state moved the number by a factor of forty. Quoting the first figure would have
+over-sized every allocation by the same factor.
+
+**Grid sizing**, at 64 output tokens per example, 14 evaluations, 6 training runs at
+roughly three times inference cost for two epochs:
+
+| test window | evaluations | trainings | total |
+|---|---|---|---|
+| 250 | 1.8h | 4.3h | **6.0h** |
+| 500 | 3.4h | 8.5h | **11.9h** |
+| 1,000 | 6.7h | 16.9h | **23.6h** |
+| 2,000 | 13.2h | 33.7h | 47.0h |
+
+The current `job_for_grid` default of 12 hours therefore covers a test window of roughly
+500, which is in range for the measured yield of ~733 examples per organization-month. It
+is not comfortable, and a longer window needs either a longer wall clock or batching.
+
+**Batching is the obvious lever and is not yet used.** Peak memory was 15.28 GB on a 102 GB
+card, so about six copies of the model would fit; batch-of-one is simply what the benchmark
+measured. A batched evaluation loop should cut the evaluation half substantially. Worth
+doing before the confirmatory run, not before the pilot.
+
 ## Open bugs & findings
 
 _None active._
