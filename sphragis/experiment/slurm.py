@@ -73,6 +73,36 @@ export TOKENIZERS_PARALLELISM=false
 {job.command}"""
 
 
+def job_for_grid(
+    *,
+    orgs: tuple[str, ...],
+    seeds: tuple[int, ...],
+    project_dir: str,
+    time_limit: str = "12:00:00",
+) -> SlurmJob:
+    """One allocation that walks the whole grid.
+
+    Per-cell jobs are the wrong shape on this cluster. The grid is 14 evaluations plus 6
+    training runs, and at the fairshare measured on 2026-09-14 (0.006, against a pool with
+    3.9e9 raw usage) a freshly submitted job was estimated to start thirteen days out. That
+    is twenty independent waits. One allocation queues once and holds the GPU for the
+    duration, which is also what RC asks for: request, run, release.
+
+    `job_for` stays for reruns of a single cell after a failure.
+    """
+    command = (
+        f"cd {project_dir} && uv run python -m sphragis.experiment.model --grid "
+        f"--orgs {','.join(orgs)} --seeds {','.join(str(s) for s in seeds)}"
+    )
+    return SlurmJob(
+        name="sphragis-grid",
+        command=command,
+        output="$HOME/logs/sphragis-grid-%j.log",
+        time_limit=time_limit,
+        mem="96G",
+    )
+
+
 def job_for(run: EvalRun, *, project_dir: str, time_limit: str = "02:00:00") -> SlurmJob:
     """The job that evaluates one grid cell."""
     name = "sphragis-" + run_id(run).replace("|", "-").replace(":", "-")

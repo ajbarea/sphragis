@@ -145,6 +145,9 @@ def main() -> int:
     parser.add_argument("--model-id", default=MODEL_ID)
     parser.add_argument("--adapter", type=Path)
     parser.add_argument("--smoke", action="store_true", help="load, generate once, report cost")
+    parser.add_argument("--grid", action="store_true", help="walk the whole grid in one job")
+    parser.add_argument("--orgs", default="openstack,qt")
+    parser.add_argument("--seeds", default="1,2,3")
     args = parser.parse_args()
     if args.smoke:
         return _smoke(args.model_id)

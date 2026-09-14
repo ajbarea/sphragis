@@ -79,3 +79,38 @@ def test_job_names_are_unique_across_the_whole_grid() -> None:
 def test_render_rejects_a_time_limit_slurm_cannot_parse() -> None:
     with pytest.raises(ValueError, match="HH:MM:SS"):
         render(SlurmJob(name="x", command="true", output="x.log", time_limit="2 hours"))
+
+
+def test_one_allocation_covers_the_whole_grid() -> None:
+    from sphragis.experiment.slurm import job_for_grid
+
+    job = job_for_grid(
+        orgs=("openstack", "qt"), seeds=(1, 2, 3), project_dir="~/ajsoftworks/sphragis"
+    )
+    assert job.name == "sphragis-grid"
+    assert "--grid" in job.command
+    assert "--orgs openstack,qt" in job.command
+    assert "--seeds 1,2,3" in job.command
+
+
+def test_the_grid_job_asks_for_one_gpu_not_one_per_cell() -> None:
+    from sphragis.experiment.slurm import job_for_grid, render
+
+    job = job_for_grid(orgs=("openstack", "qt"), seeds=(1,), project_dir="~/x")
+    assert render(job).count("--gres=") == 1
+    assert job.gres == "gpu:gh200:1"
+
+
+def test_the_grid_job_takes_a_longer_default_than_a_single_cell() -> None:
+    from sphragis.experiment.slurm import job_for_grid
+
+    single = job_for(EvalRun("base", "qt", None), project_dir="~/x")
+    grid = job_for_grid(orgs=("openstack", "qt"), seeds=(1, 2, 3), project_dir="~/x")
+    assert grid.time_limit > single.time_limit
+
+
+def test_the_grid_job_still_refuses_an_unparsable_time_limit() -> None:
+    from sphragis.experiment.slurm import job_for_grid, render
+
+    with pytest.raises(ValueError, match="HH:MM:SS"):
+        render(job_for_grid(orgs=("qt",), seeds=(1,), project_dir="~/x", time_limit="overnight"))
