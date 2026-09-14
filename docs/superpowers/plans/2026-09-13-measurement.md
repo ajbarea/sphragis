@@ -1,10 +1,10 @@
 # Measurement Implementation Plan (Plan B)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the three measurement instruments the RQ1 gate reads: the metric ladder, the contamination battery, and the pre-registered pass rule with its interval.
 
-**Architecture:** Three modules under `phalanx/corpus/`, each a pure function over precomputed inputs. Nothing here loads a model. `contamination.py` takes token log-probabilities and generated continuations rather than producing them, so the whole battery is testable in milliseconds and the model shell belongs to plan C.
+**Architecture:** Three modules under `sphragis/corpus/`, each a pure function over precomputed inputs. Nothing here loads a model. `contamination.py` takes token log-probabilities and generated continuations rather than producing them, so the whole battery is testable in milliseconds and the model shell belongs to plan C.
 
 **Tech Stack:** Python 3.12-3.14, standard library only. `random.Random` for the bootstrap, seeded.
 
@@ -23,15 +23,18 @@
 
 The spec's outcome-neutral tests halt the study when they fail. An instrument that can only be exercised by loading a 7B model on TIGRIS is one that will not be exercised, and a halt condition nobody can test is a halt condition that never fires. Every function here is a pure transform over data a plan C shell hands it.
 
+
+> **Status: executed.** Every task below is built, tested and merged. Kept as the record of how, not as a queue.
+
 ---
 
 ## File Structure
 
 | File | Responsibility |
 |---|---|
-| `phalanx/corpus/score.py` | the metric ladder: exact match, normalized exact match, edit similarity |
-| `phalanx/corpus/contamination.py` | Min-K%++, guided completion, and the pre/post window comparison |
-| `phalanx/corpus/stats.py` | pairs cluster bootstrap, the effect size, and the pass rule as code |
+| `sphragis/measure/score.py` | the metric ladder: exact match, normalized exact match, edit similarity |
+| `sphragis/measure/contamination.py` | Min-K%++, guided completion, and the pre/post window comparison |
+| `sphragis/measure/stats.py` | pairs cluster bootstrap, the effect size, and the pass rule as code |
 
 Tests mirror the module names under `tests/unit/corpus/`.
 
@@ -40,8 +43,8 @@ Tests mirror the module names under `tests/unit/corpus/`.
 ### Task 1: The metric ladder
 
 **Files:**
-- Create: `phalanx/corpus/score.py`
-- Test: `tests/unit/corpus/test_score.py`
+- Create: `sphragis/measure/score.py`
+- Test: `tests/unit/measure/test_score.py`
 
 **Interfaces:**
 - Consumes: nothing.
@@ -52,14 +55,14 @@ Tests mirror the module names under `tests/unit/corpus/`.
   - `edit_similarity(prediction: str, reference: str) -> float` — in `[0.0, 1.0]`
   - `score(prediction: str, reference: str) -> dict[str, float]` — keys `exact_match`, `normalized_exact_match`, `edit_similarity`; the first two as `0.0`/`1.0` so every value is a float and the three aggregate the same way
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """The metric ladder: one binding metric, two reported alongside it."""
 
 from __future__ import annotations
 
-from phalanx.corpus.score import (
+from sphragis.measure.score import (
     edit_similarity,
     exact_match,
     normalize_formatting,
@@ -108,12 +111,12 @@ def test_score_reports_all_three_as_floats() -> None:
     assert 0.0 < partial["edit_similarity"] < 1.0
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
-Run: `uv run pytest tests/unit/corpus/test_score.py -q`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.score'`
+Run: `uv run pytest tests/unit/measure/test_score.py -q`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.measure.score'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """The metric ladder: exact match binds the pass rule, two others are reported."""
@@ -157,16 +160,16 @@ def score(prediction: str, reference: str) -> dict[str, float]:
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
-Run: `uv run pytest tests/unit/corpus/test_score.py -q`
+Run: `uv run pytest tests/unit/measure/test_score.py -q`
 Expected: 6 passed
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/corpus/score.py tests/unit/corpus/test_score.py
+git add sphragis/measure/score.py tests/unit/measure/test_score.py
 git commit -m "feat(corpus): the metric ladder around exact match"
 ```
 
@@ -177,8 +180,8 @@ git commit -m "feat(corpus): the metric ladder around exact match"
 Before contamination, because the pass rule is what the whole study is pinned to and it is the thing most worth getting wrong early.
 
 **Files:**
-- Create: `phalanx/corpus/stats.py`
-- Test: `tests/unit/corpus/test_stats.py`
+- Create: `sphragis/measure/stats.py`
+- Test: `tests/unit/measure/test_stats.py`
 
 **Interfaces:**
 - Consumes: nothing.
@@ -191,7 +194,7 @@ Before contamination, because the pass rule is what the whole study is pinned to
 
 `gate_verdict` is the spec's pre-registered pass rule expressed as code, so it cannot be quietly reinterpreted once numbers exist.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Pairs cluster bootstrap, and the pre-registered pass rule as code."""
@@ -200,7 +203,7 @@ from __future__ import annotations
 
 import pytest
 
-from phalanx.corpus.stats import (
+from sphragis.measure.stats import (
     Cluster,
     cluster_bootstrap,
     excludes_zero,
@@ -296,12 +299,12 @@ def test_gate_verdict_rejects_a_single_organization() -> None:
         gate_verdict({"openstack": {"low": 0.01, "high": 0.2}})
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
-Run: `uv run pytest tests/unit/corpus/test_stats.py -q`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.stats'`
+Run: `uv run pytest tests/unit/measure/test_stats.py -q`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.measure.stats'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Pairs cluster bootstrap over changes, and the RQ1 pass rule expressed as code."""
@@ -375,16 +378,16 @@ def gate_verdict(per_org: Mapping[str, Mapping[str, float]]) -> str:
     return "mixed"
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
-Run: `uv run pytest tests/unit/corpus/test_stats.py -q`
+Run: `uv run pytest tests/unit/measure/test_stats.py -q`
 Expected: 13 passed
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/corpus/stats.py tests/unit/corpus/test_stats.py
+git add sphragis/measure/stats.py tests/unit/measure/test_stats.py
 git commit -m "feat(corpus): pairs cluster bootstrap and the RQ1 pass rule"
 ```
 
@@ -393,8 +396,8 @@ git commit -m "feat(corpus): pairs cluster bootstrap and the RQ1 pass rule"
 ### Task 3: The contamination battery
 
 **Files:**
-- Create: `phalanx/corpus/contamination.py`
-- Test: `tests/unit/corpus/test_contamination.py`
+- Create: `sphragis/measure/contamination.py`
+- Test: `tests/unit/measure/test_contamination.py`
 
 **Interfaces:**
 - Consumes: nothing at runtime. Plan C supplies log-probabilities and generated continuations.
@@ -406,7 +409,7 @@ git commit -m "feat(corpus): pairs cluster bootstrap and the RQ1 pass rule"
 
 `battery_report` returns evidence, never a verdict. Which way the gap falls is reportable either way, which is what makes the battery outcome-neutral.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """The contamination battery: three methods, each a pre/post comparison."""
@@ -415,7 +418,7 @@ from __future__ import annotations
 
 import pytest
 
-from phalanx.corpus.contamination import (
+from sphragis.measure.contamination import (
     battery_report,
     compare_windows,
     guided_completion_rate,
@@ -483,12 +486,12 @@ def test_battery_report_flags_a_corpus_that_predates_the_model() -> None:
     assert report["time_partition"]["corpus_starts_after_model"] is False
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
-Run: `uv run pytest tests/unit/corpus/test_contamination.py -q`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.contamination'`
+Run: `uv run pytest tests/unit/measure/test_contamination.py -q`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.measure.contamination'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Contamination battery: time partition, Min-K%, and guided completion.
@@ -506,7 +509,7 @@ from collections.abc import Sequence
 from statistics import fmean
 from typing import Any
 
-from phalanx.corpus.score import normalize_formatting
+from sphragis.measure.score import normalize_formatting
 
 
 def min_k_percent(logprobs: Sequence[float], *, k: float = 20.0) -> float:
@@ -574,20 +577,20 @@ def battery_report(
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
-Run: `uv run pytest tests/unit/corpus/test_contamination.py -q`
+Run: `uv run pytest tests/unit/measure/test_contamination.py -q`
 Expected: 8 passed
 
-- [ ] **Step 5: Run the whole suite and lint**
+- [x] **Step 5: Run the whole suite and lint**
 
 Run: `make lint && make test`
 Expected: lint clean, every test passes.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
-git add phalanx/corpus/contamination.py tests/unit/corpus/test_contamination.py
+git add sphragis/measure/contamination.py tests/unit/measure/test_contamination.py
 git commit -m "feat(corpus): contamination battery over precomputed model outputs"
 ```
 
@@ -600,12 +603,12 @@ The "no GPU stack" rule in Global Constraints is worth nothing as prose. Make it
 **Files:**
 - Create: `tests/unit/corpus/test_measurement_purity.py`
 
-- [ ] **Step 1: Parse the imports rather than trusting a grep**
+- [x] **Step 1: Parse the imports rather than trusting a grep**
 
 Walk each measurement module's AST and assert its top-level import roots do not intersect
 `{torch, transformers, peft, datasets, flwr}`.
 
-- [ ] **Step 2: Check the real import graph in a fresh interpreter**
+- [x] **Step 2: Check the real import graph in a fresh interpreter**
 
 An in-process check of `sys.modules` passes or fails on test ordering, because the rest of
 the suite has already imported `flwr` and its dependencies. Run the probe with
@@ -613,12 +616,12 @@ the suite has already imported `flwr` and its dependencies. Run the probe with
 nothing. This was a real failure, not a hypothetical: the in-process version passed alone
 and failed under `make test`.
 
-- [ ] **Step 3: Run the whole suite**
+- [x] **Step 3: Run the whole suite**
 
 Run: `make lint && make test`
 Expected: lint clean, 89 passed.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/unit/corpus/test_measurement_purity.py

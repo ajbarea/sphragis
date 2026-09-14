@@ -2,7 +2,7 @@
 
 **Status:** Determination: PENDING
 
-`phalanx/corpus/cli.py` parses the line above. It unlocks `fetch` only when it reads
+`sphragis/corpus/cli.py` parses the line above. It unlocks `fetch` only when it reads
 `Determination: YYYY-MM-DD`. Do not write a date here until RIT's Human Subjects Research
 Office returns one.
 
@@ -47,7 +47,7 @@ individual, and no result is reported at the level of a person.
 
 ## De-identification, enforced in code
 
-`phalanx/corpus/scrub.py` runs inline inside `fetch`, before the first byte reaches disk.
+`sphragis/corpus/scrub.py` runs inline inside `fetch`, before the first byte reaches disk.
 It replaces every Gerrit account object with a single salted pseudonym and nulls the
 identity fields (`name`, `email`, `username`, `display_name`, `secondary_emails`,
 `avatars`), and sweeps free text for email addresses. The salt lives in `.env`, is never

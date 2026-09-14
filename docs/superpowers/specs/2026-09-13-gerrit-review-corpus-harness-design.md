@@ -23,7 +23,7 @@
 
 ## Decision
 
-Build the corpus as a staged pipeline of seven commands under `phalanx/corpus/`, each
+Build the corpus as a staged pipeline of seven commands under `sphragis/corpus/`, each
 writing an immutable artifact plus a manifest, with the confirmatory test window
 **defined but not fetched** until after Stage 1 acceptance.
 
@@ -42,15 +42,15 @@ RR reviewer will look for it.
 ### 1. Layout
 
 ```
-phalanx/corpus/
+sphragis/corpus/
   __init__.py
-  cli.py           # `python -m phalanx.corpus <stage>`
+  cli.py           # `python -m sphragis.corpus <stage>`
   gerrit.py        # REST client: paging, retry, rate limit, version capture
   scrub.py         # identity stripping, runs before anything is persisted
   examples.py      # raw changes -> refinement pairs
   dedup.py         # near-duplicate detection
   split.py         # time split, change-id grouping, window sealing
-  manifest.py      # counts + content hashes; extends phalanx/provenance.py
+  manifest.py      # counts + content hashes; extends sphragis/provenance.py
   score.py         # the metric ladder
 datasets/gerrit/
   <org>/
@@ -64,7 +64,7 @@ corpus/
   provenance/<org>.toml          # shareable/private repo declaration (RQ2)
 ```
 
-`manifest.py` extends the existing `phalanx/provenance.py` rather than duplicating it.
+`manifest.py` extends the existing `sphragis/provenance.py` rather than duplicating it.
 That module already writes git SHA, branch, package versions and run config to JSON; a
 corpus manifest is the same record with corpus counts and hashes added.
 
@@ -286,7 +286,7 @@ which is enough for an artifact badge if the data cannot be redistributed.
 
 ## ADR
 
-**Decision.** A staged, manifest-backed corpus pipeline under `phalanx/corpus/`, with
+**Decision.** A staged, manifest-backed corpus pipeline under `sphragis/corpus/`, with
 identity stripping at ingestion, near-duplicate removal as a first-class stage, a metric
 ladder around a single binding metric, and the confirmatory test window defined at Stage
 1 but fetched only after acceptance.
@@ -306,7 +306,7 @@ ladder around a single binding metric, and the confirmatory test window defined 
 - *Fetching the test window now and promising not to look.* Not enforceable, and it
   forfeits the RR2 evidence that collection postdated acceptance.
 - *A separate repository for the harness.* RQ2 federates this corpus on this repo's
-  Flower stack, and the manifest work reuses `phalanx/provenance.py`.
+  Flower stack, and the manifest work reuses `sphragis/provenance.py`.
 - *LLM-as-judge anywhere in the measurement.* Current code-review evaluation is moving
   that way, but judge-to-human agreement of 0.44 to 0.62 and prompt sensitivity make it
   unusable for a pre-registered pass rule. Excluded explicitly, with the figure.

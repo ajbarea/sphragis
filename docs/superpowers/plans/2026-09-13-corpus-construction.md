@@ -1,10 +1,10 @@
 # Gerrit Corpus Construction Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the staged pipeline that turns OpenStack and Qt Gerrit review history into a frozen, deduplicated, window-split corpus of code-refinement examples.
 
-**Architecture:** Seven pure-Python modules under `phalanx/corpus/`, each one stage, each writing an immutable artifact plus a manifest fragment. Every stage is a pure function over data plus a thin IO shell, so every stage is testable without a network. The CLI (`python -m phalanx.corpus <stage>`) is the only place that touches disk or HTTP.
+**Architecture:** Seven pure-Python modules under `sphragis/corpus/`, each one stage, each writing an immutable artifact plus a manifest fragment. Every stage is a pure function over data plus a thin IO shell, so every stage is testable without a network. The CLI (`python -m sphragis.corpus <stage>`) is the only place that touches disk or HTTP.
 
 **Tech Stack:** Python 3.12-3.14, `uv`, `ruff`, `ty`, `pytest`. Standard library only for this plan; no new runtime dependency.
 
@@ -26,10 +26,10 @@ Plan A is the blocker for both others and for every checklist item in `papers/or
 
 - Python `>=3.12,<3.15`. No new runtime dependency; standard library only.
 - `make lint` (ruff format check + ruff lint + ty) and `make test` must pass before every commit.
-- Every module carries `from __future__ import annotations` and full type annotations, matching `phalanx/provenance.py`.
+- Every module carries `from __future__ import annotations` and full type annotations, matching `sphragis/provenance.py`.
 - No stage may contact a Gerrit server except `fetch`. Every other stage reads frozen artifacts.
 - Identity stripping runs inside `fetch`, before the first byte is persisted. No raw contributor identity is ever written to disk.
-- The salt lives in `.env` as `PHALANX_CORPUS_SALT` and is never committed.
+- The salt lives in `.env` as `SPHRAGIS_CORPUS_SALT` and is never committed.
 - `fetch` refuses to run unless `corpus/HSRO.md` exists and contains a determination date.
 - Comments in code are execution help only. No "why we chose", no issue numbers, no narrating the edit.
 
@@ -41,21 +41,24 @@ Plan A is the blocker for both others and for every checklist item in `papers/or
 
 Task 5 includes the spec amendment. Do not implement stage 3 as specified and do not skip the amendment.
 
+
+> **Status: executed.** Every task below is built, tested and merged. Kept as the record of how, not as a queue.
+
 ---
 
 ## File Structure
 
 | File | Responsibility |
 |---|---|
-| `phalanx/corpus/__init__.py` | package marker, public re-exports |
-| `phalanx/corpus/scrub.py` | salted pseudonymization; recursive identity stripping |
-| `phalanx/corpus/manifest.py` | corpus manifest, window hashes, verification |
-| `phalanx/corpus/gerrit.py` | Gerrit REST: XSSI prefix, paging, retry, rate limit |
-| `phalanx/corpus/examples.py` | change JSON to refinement pairs via hunk diffing |
-| `phalanx/corpus/dedup.py` | three-stage deduplication |
-| `phalanx/corpus/split.py` | time windows, change-id grouping, test-window seal |
-| `phalanx/corpus/cli.py` | `python -m phalanx.corpus <stage>`; the only IO shell |
-| `phalanx/provenance.py` | **modify**: extract `provenance_header()` for reuse |
+| `sphragis/corpus/__init__.py` | package marker, public re-exports |
+| `sphragis/corpus/scrub.py` | salted pseudonymization; recursive identity stripping |
+| `sphragis/corpus/manifest.py` | corpus manifest, window hashes, verification |
+| `sphragis/corpus/gerrit.py` | Gerrit REST: XSSI prefix, paging, retry, rate limit |
+| `sphragis/corpus/examples.py` | change JSON to refinement pairs via hunk diffing |
+| `sphragis/corpus/dedup.py` | three-stage deduplication |
+| `sphragis/corpus/split.py` | time windows, change-id grouping, test-window seal |
+| `sphragis/corpus/cli.py` | `python -m sphragis.corpus <stage>`; the only IO shell |
+| `sphragis/provenance.py` | **modify**: extract `provenance_header()` for reuse |
 
 Tests mirror the module names under `tests/unit/corpus/`.
 
@@ -66,7 +69,7 @@ Tests mirror the module names under `tests/unit/corpus/`.
 First because it is pure, has no dependencies, and nothing else may run before it exists: the spec forbids persisting raw identity.
 
 **Files:**
-- Create: `phalanx/corpus/__init__.py`, `phalanx/corpus/scrub.py`
+- Create: `sphragis/corpus/__init__.py`, `sphragis/corpus/scrub.py`
 - Test: `tests/unit/corpus/test_scrub.py`
 
 **Interfaces:**
@@ -75,14 +78,14 @@ First because it is pure, has no dependencies, and nothing else may run before i
   - `pseudonym(value: object, salt: str) -> str` — 12 lowercase hex characters
   - `scrub(obj: Any, salt: str) -> Any` — recursive, returns a new structure
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Salted identity stripping at ingestion."""
 
 from __future__ import annotations
 
-from phalanx.corpus.scrub import pseudonym, scrub
+from sphragis.corpus.scrub import pseudonym, scrub
 
 SALT = "test-salt"
 
@@ -131,20 +134,20 @@ def test_scrub_preserves_structural_fields_and_does_not_mutate_input() -> None:
     assert change["owner"]["name"] == "Carol"
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/unit/corpus/test_scrub.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.corpus'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
-`phalanx/corpus/__init__.py`:
+`sphragis/corpus/__init__.py`:
 
 ```python
 """Gerrit review corpus construction."""
 ```
 
-`phalanx/corpus/scrub.py`:
+`sphragis/corpus/scrub.py`:
 
 ```python
 """Salted identity stripping, applied before any raw record reaches disk."""
@@ -184,16 +187,16 @@ def scrub(obj: Any, salt: str) -> Any:
     return obj
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/unit/corpus/test_scrub.py -v`
 Expected: 4 passed
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/corpus/__init__.py phalanx/corpus/scrub.py tests/unit/corpus/test_scrub.py
+git add sphragis/corpus/__init__.py sphragis/corpus/scrub.py tests/unit/corpus/test_scrub.py
 git commit -m "feat(corpus): salted identity stripping for Gerrit records"
 ```
 
@@ -202,8 +205,8 @@ git commit -m "feat(corpus): salted identity stripping for Gerrit records"
 ### Task 2: Corpus manifest
 
 **Files:**
-- Modify: `phalanx/provenance.py` — extract the shared header
-- Create: `phalanx/corpus/manifest.py`
+- Modify: `sphragis/provenance.py` — extract the shared header
+- Create: `sphragis/corpus/manifest.py`
 - Test: `tests/unit/corpus/test_manifest.py`, and `tests/test_provenance.py` must still pass unchanged
 
 **Interfaces:**
@@ -214,14 +217,14 @@ git commit -m "feat(corpus): salted identity stripping for Gerrit records"
   - `corpus_manifest(*, org: str, windows: Mapping[str, Sequence[str]], stats: Mapping[str, Any]) -> dict[str, Any]`
   - `verify(manifest: Mapping[str, Any], windows: Mapping[str, Sequence[str]]) -> list[str]` — mismatch descriptions, empty when clean
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Corpus manifest: counts, hashes, and the verification that guards them."""
 
 from __future__ import annotations
 
-from phalanx.corpus.manifest import corpus_manifest, verify, window_hash
+from sphragis.corpus.manifest import corpus_manifest, verify, window_hash
 
 WINDOWS = {"pilot": ["b", "a"], "train": ["c"], "dev": [], "test": []}
 
@@ -250,14 +253,14 @@ def test_verify_reports_count_and_hash_drift() -> None:
     assert len(problems) == 1 and "train" in problems[0]
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/unit/corpus/test_manifest.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.manifest'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.corpus.manifest'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
-In `phalanx/provenance.py`, add above `run_manifest`:
+In `sphragis/provenance.py`, add above `run_manifest`:
 
 ```python
 def provenance_header() -> dict[str, Any]:
@@ -286,7 +289,7 @@ def run_manifest(*, run_config: dict[str, Any], metrics: dict[str, Any]) -> dict
     }
 ```
 
-`phalanx/corpus/manifest.py`:
+`sphragis/corpus/manifest.py`:
 
 ```python
 """Corpus manifest: per-window counts and content hashes, and their verification."""
@@ -340,16 +343,16 @@ def verify(manifest: Mapping[str, Any], windows: Mapping[str, Sequence[str]]) ->
     return problems
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `uv run pytest tests/unit/corpus/test_manifest.py tests/test_provenance.py -v`
 Expected: all passed. `test_provenance.py` is unchanged and must not need editing; if it does, `provenance_header` was extracted wrongly.
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/provenance.py phalanx/corpus/manifest.py tests/unit/corpus/test_manifest.py
+git add sphragis/provenance.py sphragis/corpus/manifest.py tests/unit/corpus/test_manifest.py
 git commit -m "feat(corpus): manifest with per-window counts and content hashes"
 ```
 
@@ -358,7 +361,7 @@ git commit -m "feat(corpus): manifest with per-window counts and content hashes"
 ### Task 3: Gerrit REST client
 
 **Files:**
-- Create: `phalanx/corpus/gerrit.py`
+- Create: `sphragis/corpus/gerrit.py`
 - Test: `tests/unit/corpus/test_gerrit.py`
 
 **Interfaces:**
@@ -370,7 +373,7 @@ git commit -m "feat(corpus): manifest with per-window counts and content hashes"
 
 The transport seam is what keeps every test offline. The CLI supplies a real `urllib`-backed transport in Task 7.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Gerrit REST paging, XSSI prefix, and retry."""
@@ -381,7 +384,7 @@ import json
 
 import pytest
 
-from phalanx.corpus.gerrit import fetch_changes, parse_response
+from sphragis.corpus.gerrit import fetch_changes, parse_response
 
 XSSI = ")]}'\n"
 
@@ -441,12 +444,12 @@ def test_fetch_changes_gives_up_after_the_retry_budget() -> None:
         fetch_changes("https://g/", "q", transport=transport, sleep=lambda _: None)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/unit/corpus/test_gerrit.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.gerrit'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.corpus.gerrit'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Gerrit REST access: XSSI-prefixed JSON, cursor paging, polite retry."""
@@ -526,16 +529,16 @@ def fetch_changes(
     return changes, record
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/unit/corpus/test_gerrit.py -v`
 Expected: 5 passed
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/corpus/gerrit.py tests/unit/corpus/test_gerrit.py
+git add sphragis/corpus/gerrit.py tests/unit/corpus/test_gerrit.py
 git commit -m "feat(corpus): Gerrit REST client with paging and polite retry"
 ```
 
@@ -544,7 +547,7 @@ git commit -m "feat(corpus): Gerrit REST client with paging and polite retry"
 ### Task 4: Refinement example construction
 
 **Files:**
-- Create: `phalanx/corpus/examples.py`
+- Create: `sphragis/corpus/examples.py`
 - Test: `tests/unit/corpus/test_examples.py`
 
 **Interfaces:**
@@ -556,14 +559,14 @@ git commit -m "feat(corpus): Gerrit REST client with paging and polite retry"
 
 An example id is `f"{org}:{change_id}:{path}:{before_start}"`, which is stable across reruns and is what `window_hash` consumes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Refinement pairs: changed hunks, comment anchoring, and the drop rules."""
 
 from __future__ import annotations
 
-from phalanx.corpus.examples import build_examples, changed_hunks
+from sphragis.corpus.examples import build_examples, changed_hunks
 
 CHANGE = {
     "change_id": "I1",
@@ -632,12 +635,12 @@ def test_build_examples_drops_file_level_comments_with_no_line() -> None:
     assert examples == [] and drops["no_anchored_comment"] == 1
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/unit/corpus/test_examples.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.examples'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.corpus.examples'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Refinement pairs: a commented hunk at patch set n and its rewrite at n+1."""
@@ -713,16 +716,16 @@ def build_examples(
     return examples, dict(drops)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/unit/corpus/test_examples.py -v`
 Expected: 5 passed
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/corpus/examples.py tests/unit/corpus/test_examples.py
+git add sphragis/corpus/examples.py tests/unit/corpus/test_examples.py
 git commit -m "feat(corpus): build refinement pairs from commented hunks"
 ```
 
@@ -731,7 +734,7 @@ git commit -m "feat(corpus): build refinement pairs from commented hunks"
 ### Task 5: Three-stage deduplication
 
 **Files:**
-- Create: `phalanx/corpus/dedup.py`
+- Create: `sphragis/corpus/dedup.py`
 - Modify: `docs/superpowers/specs/2026-09-13-gerrit-review-corpus-harness-design.md` — record the stage-3 deviation
 - Test: `tests/unit/corpus/test_dedup.py`
 
@@ -745,14 +748,14 @@ git commit -m "feat(corpus): build refinement pairs from commented hunks"
 
 Removal buckets: `exact`, `near_duplicate`, `boilerplate`. The earliest occurrence by `created` is kept.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Three-stage dedup: exact, near-duplicate, repeated boilerplate."""
 
 from __future__ import annotations
 
-from phalanx.corpus.dedup import dedup, jaccard, normalize, shingles
+from sphragis.corpus.dedup import dedup, jaccard, normalize, shingles
 
 
 def _ex(example_id: str, before: str, after: str, created: str = "2024-10-01") -> dict:
@@ -804,12 +807,12 @@ def test_dedup_keeps_distinct_examples_untouched() -> None:
     assert removed == {"exact": 0, "near_duplicate": 0, "boilerplate": 0}
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/unit/corpus/test_dedup.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.dedup'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.corpus.dedup'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Three-stage deduplication: exact, near-duplicate, repeated boilerplate."""
@@ -894,12 +897,12 @@ def dedup(
     return survivors, dict(removed)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/unit/corpus/test_dedup.py -v`
 Expected: 6 passed
 
-- [ ] **Step 5: Record the spec deviation**
+- [x] **Step 5: Record the spec deviation**
 
 In the spec, replace the stage-3 bullet and the paragraph after it with:
 
@@ -921,11 +924,11 @@ produce code that does not parse, so here a hit **drops the example** and record
 above a boilerplate fraction threshold fixed in the Stage 1 report.
 ```
 
-- [ ] **Step 6: Lint and commit**
+- [x] **Step 6: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/corpus/dedup.py tests/unit/corpus/test_dedup.py \
+git add sphragis/corpus/dedup.py tests/unit/corpus/test_dedup.py \
         docs/superpowers/specs/2026-09-13-gerrit-review-corpus-harness-design.md
 git commit -m "feat(corpus): three-stage dedup, with the stage-3 deviation recorded"
 ```
@@ -935,7 +938,7 @@ git commit -m "feat(corpus): three-stage dedup, with the stage-3 deviation recor
 ### Task 6: Time windows and the test-window seal
 
 **Files:**
-- Create: `phalanx/corpus/split.py`
+- Create: `sphragis/corpus/split.py`
 - Test: `tests/unit/corpus/test_split.py`
 
 **Interfaces:**
@@ -948,14 +951,14 @@ git commit -m "feat(corpus): three-stage dedup, with the stage-3 deviation recor
 
 A change is assigned whole, by its earliest example's `created`, so no change-id can straddle a boundary by construction. `straddling_changes` is the assertion that proves it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """Time windows grouped by change, and the seal on the confirmatory window."""
 
 from __future__ import annotations
 
-from phalanx.corpus.split import assign_windows, seal, straddling_changes
+from sphragis.corpus.split import assign_windows, seal, straddling_changes
 
 BOUNDS = {
     "pilot": ("2024-10-01", "2024-11-01"),
@@ -1011,12 +1014,12 @@ def test_the_test_window_unlocks_only_once_an_acceptance_date_is_recorded() -> N
     assert is_test_window_unlocked(record) is True
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/unit/corpus/test_split.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.split'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.corpus.split'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```python
 """Time-ordered windows, grouped by change, plus the seal on the confirmatory window."""
@@ -1074,16 +1077,16 @@ def is_test_window_unlocked(seal_record: Mapping[str, Any]) -> bool:
     return bool(seal_record.get("accepted_at"))
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/unit/corpus/test_split.py -v`
 Expected: 6 passed
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 make lint
-git add phalanx/corpus/split.py tests/unit/corpus/test_split.py
+git add sphragis/corpus/split.py tests/unit/corpus/test_split.py
 git commit -m "feat(corpus): time windows grouped by change, with the test-window seal"
 ```
 
@@ -1092,7 +1095,7 @@ git commit -m "feat(corpus): time windows grouped by change, with the test-windo
 ### Task 7: CLI, HSRO gate, and the verify target
 
 **Files:**
-- Create: `phalanx/corpus/cli.py`, `phalanx/corpus/__main__.py`
+- Create: `sphragis/corpus/cli.py`, `sphragis/corpus/__main__.py`
 - Modify: `Makefile` — add `corpus-verify`
 - Test: `tests/unit/corpus/test_cli.py`
 
@@ -1103,7 +1106,7 @@ git commit -m "feat(corpus): time windows grouped by change, with the test-windo
   - `require_hsro(path: Path) -> str` — raises `SystemExit` when absent
   - `main(argv: Sequence[str] | None = None) -> int`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 """The CLI's gates: HSRO before fetch, seal before the test window."""
@@ -1114,7 +1117,7 @@ from pathlib import Path
 
 import pytest
 
-from phalanx.corpus.cli import hsro_determination, main, require_hsro
+from sphragis.corpus.cli import hsro_determination, main, require_hsro
 
 
 def test_hsro_determination_reads_the_recorded_date(tmp_path: Path) -> None:
@@ -1155,14 +1158,14 @@ def test_main_reports_a_stage_with_no_body_yet(tmp_path: Path) -> None:
     assert main(["fetch", "--hsro", str(record)]) == 1
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/unit/corpus/test_cli.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'phalanx.corpus.cli'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'sphragis.corpus.cli'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
-`phalanx/corpus/cli.py`:
+`sphragis/corpus/cli.py`:
 
 ```python
 """Corpus pipeline entry point: the one place that touches disk or the network."""
@@ -1199,7 +1202,7 @@ def require_hsro(path: Path) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="phalanx.corpus")
+    parser = argparse.ArgumentParser(prog="sphragis.corpus")
     parser.add_argument("stage", choices=STAGES)
     parser.add_argument("--org", default="openstack")
     parser.add_argument("--window", default="pilot")
@@ -1216,10 +1219,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 1
 ```
 
-`phalanx/corpus/__main__.py`:
+`sphragis/corpus/__main__.py`:
 
 ```python
-from phalanx.corpus.cli import main
+from sphragis.corpus.cli import main
 
 raise SystemExit(main())
 ```
@@ -1228,23 +1231,23 @@ In the `Makefile`, after the `test-cov` target:
 
 ```make
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
-	uv run python -m phalanx.corpus verify
+	uv run python -m sphragis.corpus verify
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `uv run pytest tests/unit/corpus/test_cli.py -v`
 Expected: 6 passed
 
-- [ ] **Step 5: Run the whole suite and lint**
+- [x] **Step 5: Run the whole suite and lint**
 
 Run: `make lint && make test`
 Expected: lint clean, all tests pass including the pre-existing suite.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
-git add phalanx/corpus/cli.py phalanx/corpus/__main__.py Makefile tests/unit/corpus/test_cli.py
+git add sphragis/corpus/cli.py sphragis/corpus/__main__.py Makefile tests/unit/corpus/test_cli.py
 git commit -m "feat(corpus): CLI skeleton with the HSRO gate on fetch"
 ```
 

@@ -56,6 +56,9 @@ jobs:
         with:
           version: 0.11.5
           enable-cache: true
+          # Without a per-version suffix the matrix jobs race for one cache key and
+          # the losers log "Unable to reserve cache".
+          cache-suffix: py${{ matrix.python-version }}
       - name: Install dependencies
         run: uv sync --frozen --python ${{ matrix.python-version }}
       - name: Run tests

@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "Sphragis: corpus and measurement for organization-specific code review adaptation"
+abstract: >-
+  The corpus harness, measurement instruments and experiment behind a pre-registered
+  study of whether a language-model adapter trained on one organization's code review
+  history learns that organization's conventions, and what a declared provenance
+  boundary protects once it can.
+type: software
+authors:
+  - given-names: Arnaldo
+    family-names: Barea
+    email: ajb6289@rit.edu
+    affiliation: Rochester Institute of Technology
+    orcid: "https://orcid.org/0009-0001-7938-2376"
+repository-code: "https://github.com/ajbarea/sphragis"
+license: MIT
+keywords:
+  - mining software repositories
+  - code review
+  - registered report
+  - parameter-efficient fine-tuning
