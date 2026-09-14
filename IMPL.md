@@ -82,6 +82,36 @@ without the client-side `created_on_or_after` filter, 672 changes created *befor
 base model's release date would have entered the corpus, and the contamination argument
 would have been false while appearing to hold.
 
+### Half the "review comments" are not reviews (2026-09-14)
+
+Measured on live OpenStack data, 62 code-file comments:
+
+| | |
+|---|---|
+| authored by the **change owner** | 32 (52%) |
+| carrying `in_reply_to` | 34 (55%) |
+| message is literally `"Done"` | 15 |
+
+These are the author acknowledging a fix, not an instruction to make one. Feeding them to
+the model pollutes the input and **leaks the answer**: "Done" says the edit was applied,
+which is what the model is supposed to produce. `is_reviewer_comment` drops comments whose
+author is the change owner.
+
+**Two bugs found while fixing this, both of the silent kind.**
+
+*One example per comment.* The spec pairs a hunk with the comments anchored inside it,
+plural. Emitting one example per comment produced identical before/after rows that dedup
+then discarded as exact duplicates, losing every comment but the first. The tell was a 64%
+exact-duplicate rate; after grouping by hunk it is 16%.
+
+*A filter that matched nothing.* The author filter dropped exactly 0 comments on real data
+while 73 acknowledgements sailed through. The snapshot's owner had been scrubbed to a
+12-hex string at fetch, while the comments endpoint returns a raw integer account id, so
+the comparison was `str != int` and always true. The unit tests passed because they used
+consistent ids on both sides. `is_reviewer_comment` now raises `TypeError` when the two
+sides disagree in type, which converts a silent no-op into a loud failure; verified by
+running it against the real pipeline and watching the guard fire.
+
 ### First honest example count (2026-09-14)
 
 `build` run against the real October 2024 OpenStack snapshot, 476 of 1,678 changes

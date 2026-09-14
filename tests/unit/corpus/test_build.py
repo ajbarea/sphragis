@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from sphragis.corpus.build import build_from_change
 
 CHANGE: dict[str, Any] = {
@@ -97,3 +99,107 @@ def test_a_diff_failure_is_counted_not_raised() -> None:
     comments, _, _ = _fetchers()
     examples, drops = build_from_change("openstack", CHANGE, comments, failing)
     assert examples == [] and drops["diff_error"] == 1
+
+
+def test_several_comments_on_one_hunk_make_one_example_carrying_all_of_them() -> None:
+    # The spec says "the inline reviewer comments anchored inside that hunk", plural.
+    # One example per comment would emit identical before/after rows that dedup then
+    # discards as duplicates, silently losing every comment but the first.
+    def comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        return {
+            "nova/f.py": [
+                {"patch_set": 1, "line": 2, "message": "spaces around the operator"},
+                {"patch_set": 1, "line": 2, "message": "and drop the redundant parens"},
+            ]
+        }
+
+    _, diff_for, calls = _fetchers()
+    examples, _ = build_from_change("openstack", CHANGE, comments, diff_for)
+    assert len(examples) == 1
+    assert examples[0]["comments"] == [
+        "spaces around the operator",
+        "and drop the redundant parens",
+    ]
+
+
+def test_comments_on_different_hunks_stay_separate() -> None:
+    diff = {
+        "content": [
+            {"a": ["one"], "b": ["ONE"]},
+            {"ab": ["pad"]},
+            {"a": ["two"], "b": ["TWO"]},
+        ]
+    }
+
+    def comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        return {
+            "nova/f.py": [
+                {"patch_set": 1, "line": 1, "message": "first"},
+                {"patch_set": 1, "line": 3, "message": "second"},
+            ]
+        }
+
+    _, diff_for, _ = _fetchers(diff=diff)
+    examples, _ = build_from_change("openstack", CHANGE, comments, diff_for)
+    assert len(examples) == 2
+    assert [e["comments"] for e in examples] == [["first"], ["second"]]
+
+
+def test_comments_by_the_change_owner_are_not_review_comments() -> None:
+    # Measured on live OpenStack data 2026-09-14: 52% of code-file comments are authored
+    # by the change owner and 24% are literally "Done". They are the author acknowledging
+    # a fix, not an instruction to make one, and feeding them to the model both pollutes
+    # the input and leaks that the edit was applied.
+    from sphragis.corpus.build import is_reviewer_comment
+
+    owner = "abc123"
+    assert is_reviewer_comment({"author": {"_account_id": "reviewer9"}}, owner) is True
+    assert is_reviewer_comment({"author": {"_account_id": owner}}, owner) is False
+
+
+def test_a_comment_with_no_author_is_kept_rather_than_guessed_at() -> None:
+    from sphragis.corpus.build import is_reviewer_comment
+
+    assert is_reviewer_comment({"message": "x"}, "abc123") is True
+
+
+def test_owner_replies_are_dropped_and_counted() -> None:
+    owner_change = {**CHANGE, "owner": {"_account_id": "owner1"}}
+
+    def comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        return {
+            "nova/f.py": [
+                {
+                    "patch_set": 1,
+                    "line": 2,
+                    "message": "fix spacing",
+                    "author": {"_account_id": "rev1"},
+                },
+                {"patch_set": 1, "line": 2, "message": "Done", "author": {"_account_id": "owner1"}},
+            ]
+        }
+
+    _, diff_for, _ = _fetchers()
+    examples, drops = build_from_change("openstack", owner_change, comments, diff_for)
+    assert len(examples) == 1
+    assert examples[0]["comments"] == ["fix spacing"], "the author's ack must not survive"
+    assert drops["author_comment"] == 1
+
+
+def test_mixing_scrubbed_and_unscrubbed_ids_raises_instead_of_silently_matching_nothing() -> None:
+    # This actually happened: the snapshot's owner was scrubbed to a 12-hex string while
+    # the comments endpoint returned raw integer account ids, so the author filter
+    # compared str to int, matched nothing, and looked like it was working.
+    from sphragis.corpus.build import is_reviewer_comment
+
+    with pytest.raises(TypeError, match="scrubbed"):
+        is_reviewer_comment({"author": {"_account_id": 1000096}}, "0b58c157f99a")
+    with pytest.raises(TypeError, match="scrubbed"):
+        is_reviewer_comment({"author": {"_account_id": "0b58c157f99a"}}, 1000096)
+
+
+def test_consistently_scrubbed_ids_compare_fine() -> None:
+    from sphragis.corpus.build import is_reviewer_comment
+
+    assert is_reviewer_comment({"author": {"_account_id": "aaa"}}, "bbb") is True
+    assert is_reviewer_comment({"author": {"_account_id": "aaa"}}, "aaa") is False

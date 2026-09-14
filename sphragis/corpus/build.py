@@ -26,11 +26,35 @@ DiffFetcher = Callable[[int, int, str, int], Mapping[str, Any]]
 
 DROP_REASONS = (
     "metadata_file",
+    "author_comment",
     "no_line_anchor",
     "no_successor",
     "diff_error",
     "no_anchored_hunk",
 )
+
+
+def is_reviewer_comment(comment: Mapping[str, Any], owner_id: Any) -> bool:
+    """False when the change's own author wrote it.
+
+    Measured on live OpenStack data 2026-09-14: 52% of code-file comments are authored by
+    the change owner and 24% are literally "Done". Those are the author acknowledging a
+    fix, not an instruction to make one. Including them pollutes the model's input and
+    leaks that the edit was applied, which is the answer the model is meant to produce.
+
+    A comment with no author survives: guessing is worse than keeping.
+    """
+    author = comment.get("author")
+    if not isinstance(author, Mapping) or "_account_id" not in author:
+        return True
+    author_id = author["_account_id"]
+    if isinstance(author_id, str) != isinstance(owner_id, str):
+        raise TypeError(
+            "comparing a scrubbed id against an unscrubbed one: "
+            f"author={type(author_id).__name__} owner={type(owner_id).__name__}. "
+            "Scrub comments with the same salt as the changes before building."
+        )
+    return author_id != owner_id
 
 
 def _covers(hunk: Hunk, line: int) -> bool:
@@ -47,6 +71,7 @@ def build_from_change(
     """Every refinement example one change yields, with the reason for each drop."""
     drops: Counter[str] = Counter(dict.fromkeys(DROP_REASONS, 0))
     number = int(change["_number"])
+    owner_id = (change.get("owner") or {}).get("_account_id")
     revision_count = len(change.get("revisions", {}))
     examples: list[dict[str, Any]] = []
 
@@ -54,7 +79,14 @@ def build_from_change(
         if not is_code_file(path):
             drops["metadata_file"] += len(comments)
             continue
+        # Group by hunk before emitting. The spec pairs a hunk with the comments anchored
+        # inside it, plural: one example per comment would emit identical before/after rows
+        # that dedup later discards as duplicates, losing every comment but the first.
+        grouped: dict[tuple[int, int], tuple[Hunk, list[str]]] = {}
         for comment in comments:
+            if owner_id is not None and not is_reviewer_comment(comment, owner_id):
+                drops["author_comment"] += 1
+                continue
             patch_set, line = comment.get("patch_set"), comment.get("line")
             if not isinstance(line, int) or patch_set is None:
                 drops["no_line_anchor"] += 1
@@ -71,18 +103,23 @@ def build_from_change(
             if hit is None:
                 drops["no_anchored_hunk"] += 1
                 continue
+            key = (patch_set, hit.before_start)
+            grouped.setdefault(key, (hit, []))[1].append(str(comment["message"]))
+
+        for (patch_set, start), (hunk, messages) in grouped.items():
             examples.append(
                 {
-                    "id": f"{org}:{change['change_id']}:{path}:{patch_set}:{hit.before_start}",
+                    "id": f"{org}:{change['change_id']}:{path}:{patch_set}:{start}",
                     "org": org,
                     "project": change.get("project"),
                     "change_id": change["change_id"],
                     "created": change.get("created"),
                     "path": path,
                     "patch_set": patch_set,
-                    "before": "\n".join(hit.before),
-                    "after": "\n".join(hit.after),
-                    "comments": [str(comment["message"])],
+                    "before": "\n".join(hunk.before),
+                    "after": "\n".join(hunk.after),
+                    "comments": messages,
                 }
             )
+
     return examples, dict(drops)
