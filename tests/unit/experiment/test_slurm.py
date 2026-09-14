@@ -49,6 +49,20 @@ def test_render_starts_with_a_shebang_and_ends_with_the_command() -> None:
     assert script.rstrip().endswith(JOB.command)
 
 
+def test_render_pins_cc_past_the_blindfolded_gcc() -> None:
+    # RIT hides the system gcc; triton JIT-compiles on first generation and would find the
+    # wrapper via `which gcc`, killing the job after the model has already loaded.
+    assert "export CC=/usr/bin/gcc" in render(JOB)
+
+
+def test_output_path_has_no_shell_variable() -> None:
+    # Slurm does not expand variables in #SBATCH directives; "$HOME/logs/x" makes a
+    # directory literally named '$HOME'.
+    assert "$" not in JOB.output
+    with pytest.raises(ValueError, match="shell variable"):
+        render(SlurmJob(name="x", command="true", output="$HOME/logs/x.log"))
+
+
 def test_render_points_the_model_cache_at_home_not_tmp() -> None:
     # Compute-node /tmp is node-local and wiped; the cache has to live in $HOME.
     script = render(JOB)
