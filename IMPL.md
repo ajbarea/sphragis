@@ -43,7 +43,15 @@ amount of reading the API docs would have produced.
 | comments examined | 15 |
 | anchored **inside** a changed hunk | 4 (27%) |
 | within 10 lines of a changed hunk | 10 cumulative (67%) |
-| comment on the final patch set, no successor | 4 |
+| comment on the final patch set, no successor | see note |
+
+**Correction (same session).** The first run counted 4 of 15 comments as "diff errors" and
+I attributed them to comments on the final patch set. That attribution was never verified:
+the diagnostic run died on a transient network failure, and a clean re-run of 9 comments
+found 1 on a final patch set, 8 diffs fetched fine, and **zero** genuine diff errors. So the
+final-patch-set condition is real and confirmed, the rate is not established, and some of
+the original 4 were probably network flakes rather than data. `has_successor_revision` is
+correct either way; the number attached to it was not.
 
 **The anchoring rule is now a pre-registration decision with a measured cost.** The spec
 says a comment must fall inside a changed hunk between patch set n and n+1. That is the

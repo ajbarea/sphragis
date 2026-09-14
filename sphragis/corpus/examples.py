@@ -44,9 +44,9 @@ def has_successor_revision(*, patch_set: int, revision_count: int) -> bool:
     """Whether patch set ``patch_set`` has an n+1 to diff against.
 
     A comment on the final patch set has no successor, so there is no author response to
-    pair it with. Measured on live OpenStack data 2026-09-14: 4 of 15 sampled comments hit
-    this. They are a drop condition, not a fetch failure, and counting them as errors
-    would hide a normal property of the data.
+    pair it with. Confirmed on live OpenStack data 2026-09-14 (1 of 9 comments in a clean
+    sample). A drop condition rather than a fetch failure: counting these as errors would
+    hide a normal property of the data. The overall rate is not yet established.
     """
     return patch_set < revision_count
 
