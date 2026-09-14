@@ -27,7 +27,9 @@ from sphragis.experiment.grid import EvalRun, run_id
 _TIME = re.compile(r"^\d{1,2}:\d{2}:\d{2}$")
 _MAIL_USER = "ajb6289@rit.edu"
 _ACCOUNT = "rc-onboard"  # AJ's own access, not the lab's fl-mlm; see the module docstring.
-_HF_HOME = "$HOME/hf-cache"
+# Cache only. HF_HOME would also relocate the token, and `hf auth login` writes an OAuth
+# token that refreshes itself in place — a copy elsewhere goes stale and starts failing.
+_HF_HUB_CACHE = "$HOME/hf-cache/hub"
 
 
 @dataclass(frozen=True)
@@ -67,7 +69,7 @@ def render(job: SlurmJob) -> str:
 
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
-export HF_HOME={_HF_HOME}
+export HF_HUB_CACHE={_HF_HUB_CACHE}
 export TOKENIZERS_PARALLELISM=false
 
 {job.command}"""

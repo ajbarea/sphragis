@@ -49,10 +49,17 @@ def test_render_starts_with_a_shebang_and_ends_with_the_command() -> None:
     assert script.rstrip().endswith(JOB.command)
 
 
-def test_render_sets_hf_home_inside_the_home_quota() -> None:
+def test_render_points_the_model_cache_at_home_not_tmp() -> None:
     # Compute-node /tmp is node-local and wiped; the cache has to live in $HOME.
     script = render(JOB)
-    assert "HF_HOME=" in script and "/tmp" not in script
+    assert "HF_HUB_CACHE=$HOME/hf-cache/hub" in script
+    assert "/tmp" not in script
+
+
+def test_render_does_not_relocate_the_token_with_hf_home() -> None:
+    # `hf auth login` stores an OAuth token that refreshes in place. Moving HF_HOME moves
+    # the token path too, and the relocated copy silently goes stale.
+    assert "HF_HOME=" not in render(JOB)
 
 
 def test_job_for_names_the_job_after_the_run_id() -> None:
