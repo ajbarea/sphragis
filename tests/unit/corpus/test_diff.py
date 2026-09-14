@@ -78,3 +78,35 @@ def test_a_single_revision_change_can_never_produce_an_example() -> None:
     from sphragis.corpus.examples import has_successor_revision
 
     assert has_successor_revision(patch_set=1, revision_count=1) is False
+
+
+def test_hunks_carry_surrounding_context() -> None:
+    # research(2026-09), arXiv:2607.25851 names "context dependence" as one of three
+    # sources of misalignment between a code change and its review comment. A bare hunk
+    # also gave the model no way to know its indentation level, which cost exact match on
+    # a rewrite that was otherwise correct (measured 2026-09-14).
+    diff = {
+        "content": [
+            {"ab": ["class A:", "    def f(self):", "        pass"]},
+            {"a": ["        return x+1"], "b": ["        return x + 1"]},
+            {"ab": ["", "    def g(self):"]},
+        ]
+    }
+    hunks = hunks_from_diff(diff, context=2)
+    assert len(hunks) == 1
+    h = hunks[0]
+    assert h.before == ("        return x+1",), "the hunk itself is unchanged"
+    assert h.context_before == ("    def f(self):", "        pass")
+    assert h.context_after == ("", "    def g(self):")
+
+
+def test_context_is_clipped_at_the_file_edges() -> None:
+    diff = {"content": [{"a": ["one"], "b": ["ONE"]}, {"ab": ["tail"]}]}
+    h = hunks_from_diff(diff, context=5)[0]
+    assert h.context_before == ()
+    assert h.context_after == ("tail",)
+
+
+def test_context_defaults_to_none_so_existing_behaviour_is_unchanged() -> None:
+    h = hunks_from_diff(_real_diff())[0]
+    assert h.context_before == () and h.context_after == ()

@@ -167,6 +167,42 @@ corpus is no longer obviously too small.
   returned a change created 2024-08-26. The post-cutoff contamination argument rests on
   creation date, so `created_on_or_after` enforces it client-side.
 
+### Two design changes from current literature (`research(2026-09)`)
+
+**Hunks now carry surrounding context.** arXiv:2607.25851 (*Rethinking Training Data for
+Generating Code Review Comments*, read 2026-09-14) names three sources of misalignment
+between a code change and its review comment: semantic ambiguity, lack of actionability,
+and **context dependence**. The third is a real gap here, and it is the same root cause as
+a failure already measured: a bare hunk gave the model no way to know its indentation
+level, so a rewrite that was otherwise exactly right lost strict exact match. Context is
+prompt material only; the target stays the hunk and scoring compares only the hunk.
+
+**Corpus construction stays deterministic, deliberately.** The field has moved toward
+LLM-based filtering for comment actionability, and that same paper reports up to a third of
+comments being vague or non-actionable. It also concludes that *detecting misaligned
+training pairs remains challenging even with LLM-based approaches*. An LLM filter would
+reintroduce exactly the reproducibility problem that kept LLM-as-judge out of the metric,
+so non-actionability is treated as a **measured characteristic of the corpus** to report,
+not a filter to apply. The deterministic filters stay: author comments, metadata
+pseudo-files, and hunk anchoring.
+
+### Training budget pinned (`research(2026-09)`)
+
+A Stage 1 pre-registration item rather than a tuning knob: if the budget differed between
+arms, the comparison would measure the budget rather than the organization.
+
+| | | why |
+|---|---|---|
+| learning rate | 2e-4 | the standard LoRA starting point; usable band 1e-4 to 2e-4 |
+| epochs | **2** | accuracy *falls* as epochs rise, and models converge within tens of steps then memorise. With a corpus in the low thousands per organization, overtraining is the likelier failure |
+| batch size | 16 | largest that comfortably fits 7B plus optimiser state on one GH200 |
+| scheduler | cosine, 3% warmup | |
+| max sequence | 2048 | |
+
+Rank stays 32 against current tooling defaults of 16, because the rank-versus-performance
+evidence supports it and adapter capacity is precisely what a null result would otherwise
+be blamed on.
+
 ## Open bugs & findings
 
 _None active._

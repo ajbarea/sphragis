@@ -39,3 +39,32 @@ def test_run_ids_are_unique_and_stable() -> None:
     assert len(set(ids)) == len(ids)
     assert run_id(EvalRun("base", "qt", None)) == "base|qt"
     assert run_id(EvalRun("adapter:qt", "openstack", 2)) == "adapter:qt|openstack|s2"
+
+
+def test_the_training_budget_is_pinned_and_identical_across_conditions() -> None:
+    # A pre-registration item: if the budget differed between arms, the comparison would
+    # measure the budget rather than the organization. Read from the module rather than
+    # passed per-run so there is one value, not one per call site.
+    import ast
+    from pathlib import Path
+
+    source = (
+        Path(__file__).resolve().parents[3] / "sphragis" / "experiment" / "model.py"
+    ).read_text()
+    tree = ast.parse(source)
+    budget = next(
+        node.value
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(getattr(t, "id", None) == "TRAINING" for t in node.targets)
+    )
+    assert isinstance(budget, ast.Dict)
+    keys = {k.value for k in budget.keys if isinstance(k, ast.Constant)}
+    assert keys == {
+        "learning_rate",
+        "epochs",
+        "batch_size",
+        "warmup_ratio",
+        "lr_scheduler",
+        "max_seq_length",
+    }
