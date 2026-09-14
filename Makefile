@@ -22,6 +22,15 @@ test:                      ## Run the test suite
 test-cov:                  ## Run the test suite with coverage
 	uv run --no-active pytest --cov=sphragis --cov-report=term-missing --cov-report=xml
 
+gpu-local:                 ## Swap in a CUDA torch for local GPU work (x86_64 dev boxes)
+	@# The lockfile pins CUDA torch only for linux/aarch64, which is TIGRIS. CI and this
+	@# box are x86_64 and resolve the CPU wheel, and `uv run` re-syncs to that on every
+	@# invocation. --reinstall-package is required: uv treats 2.14.0+cpu as already
+	@# satisfying 2.14.0 and will not swap the variant otherwise.
+	uv pip install --reinstall-package torch --index-url https://download.pytorch.org/whl/cu130 torch
+	@echo 'Now run with --no-sync, e.g. `uv run --no-sync --extra experiment python ...`,'
+	@echo 'or `uv run` will put the CPU wheel back.'
+
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify
 

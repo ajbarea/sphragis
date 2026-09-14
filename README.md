@@ -88,6 +88,21 @@ The salt is what makes the pseudonyms irreversible and stable. Without a stable 
 corpus built today will not compare with one built tomorrow, so the commands refuse to run
 without it.
 
+## Developing the model code on a local GPU
+
+The registered 7B needs ~17 GB and will not fit a typical desktop card, but the model code
+can be developed against `Qwen2.5-Coder-1.5B` on anything with ~6 GB.
+
+```bash
+make gpu-local                                   # swap the CPU wheel for cu130
+uv run --no-sync --extra experiment python -m sphragis.experiment.model \
+    --smoke --model-id Qwen/Qwen2.5-Coder-1.5B-Instruct
+```
+
+Both halves matter. The lockfile pins CUDA torch only for `linux/aarch64`, which is the
+cluster; an x86_64 box resolves the CPU wheel, and plain `uv run` re-syncs to it on every
+invocation, silently undoing the swap. `--no-sync` is what keeps it.
+
 ## Two invariants
 
 **The measurement never needs a GPU.** No module under `sphragis/measure/` may import torch,
