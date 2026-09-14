@@ -285,7 +285,7 @@ share a mean rate. Running the local 1.5B over real examples validates that the
 measurement path works end to end; it is a pipeline check, not a variance estimate for the
 7B, and must be labelled as such wherever it appears.
 
-### FEASIBILITY RISK: exact match may not discriminate at all (2026-09-14)
+### Exact match on real hunks: a base-model floor, not a broken metric (2026-09-14)
 
 First run of the whole measurement path over **real** examples rather than toy ones.
 Qwen2.5-Coder-1.5B, 30 real OpenStack hunks, 12 changes, no adapter:
@@ -312,8 +312,23 @@ Edit similarity of 0.555 says the model is producing *related* output, not noise
 problem is the strictness of the oracle against real multi-line, context-dependent hunks,
 not the model failing to engage with the task.
 
+**Correction, same session.** The paragraph above was written before checking what
+fine-tuned models actually score, and it overstated the risk. `research(2026-09)`:
+CodeReviewer reports **EM 30.32%** on code refinement, against T5 at 15.08% and CodeT5 at
+24.41%, with ensembles reaching 36.32%. So exact match is demonstrably attainable on this
+task in the 15-36% band **once a model is fine-tuned for it**.
+
+That reframes the measurement above entirely. A *base* model, zero-shot, with no adapter,
+scoring EM 0 is the expected result rather than an alarm. The study compares **adapted**
+models, and adaptation is precisely what lifts EM off the floor. The design is not broken.
+
+What survives is a narrower and still real check: the pilot has to confirm the adapted 7B
+clears the floor on *this* corpus, since CodeReviewer's 30% is on its own differently
+curated benchmark. If it does not, the pass rule needs rethinking before 2026-11-20. The
+prior from the literature says it should.
+
 **What this changes.** The pilot's first job is no longer sample-size estimation, it is
-answering whether exact match is discriminative on the 7B at all. That has to be settled
+confirming the adapted 7B clears the exact-match floor on this corpus. That has to be settled
 **before** 2026-11-20, because the pass rule is what gets pre-registered and it cannot be
 loosened afterwards without deviating from the protocol. Options if the 7B also floors, all
 of which are pre-registration decisions rather than post-hoc rescues: bind the rule to
@@ -324,6 +339,32 @@ small rate to be estimable.
 Caveats, stated because the number will be quoted: 1.5B is far weaker than the registered
 7B, 30 examples is a small sample, and these are base-model scores with no adapter, where
 the study compares adapted models. This is an early warning, not a result.
+
+### Structurally ill-posed examples: 27% of the corpus (2026-09-14)
+
+Independent of the metric question, and actionable now. Inspecting predictions against
+references showed several examples no model could answer, so the whole corpus was profiled:
+
+| | share |
+|---|---|
+| `after` is empty, a pure deletion | **21.5%** |
+| `before` is empty, a pure insertion | 4.4% |
+| `after` more than 5x `before`, the hunk over-captured | 4.0% |
+| `after` under 0.2x `before` | 1.5% |
+| plausibly well-posed | **73.1%** |
+
+The length ratio runs to a maximum of **1148x**: one case anchors on a single line and
+pairs it against a thirty-line Ansible block.
+
+Pure deletions are the large category and the clearest problem: the target is the empty
+string, which a generative model cannot produce naturally and which exact match then scores
+as a miss for a structural reason. Other cases are under-determined rather than hard, for
+instance a comment asking why a copyright year changed where the correct year (2020) never
+appears in the prompt.
+
+These are the misaligned pairs arXiv:2607.25851 describes. Filtering them raised edit
+similarity from 0.555 to 0.663, so the model does produce closer output on well-posed
+input, though exact match stayed at zero for the base-model reason above.
 
 ## Open bugs & findings
 
