@@ -210,9 +210,20 @@ be blamed on.
 | OpenStack | - | **100** | - |
 | Qt | 10 | **10** | 10 |
 
-**Qt caps a page at 10 changes regardless of `n`.** A month of OpenStack (2,350 changes)
-took 24 requests and 13 seconds. The same month of Qt (~4,300 changes) needs on the order
-of **430 requests**, roughly eighteen times the round trips.
+**Qt caps a page at 10 changes regardless of `n`.** Both months now fetched for real:
+
+| organization | changes | pages | dropped as pre-cutoff |
+|---|---|---|---|
+| OpenStack, 2024-10 | 2,350 | 24 | 672 (29%) |
+| Qt, 2024-10 | 3,863 | **387** | 527 (14%) |
+
+Sixteen times the round trips for 1.6x the changes. **Both totals match the figures the
+direction spec quotes**, so the queries select what they were meant to.
+
+The pre-cutoff drop rates differ substantially between the two organizations, 29% against
+14%. That is worth reporting rather than averaging away: it means the `after:` operator's
+update-time semantics bite the two instances differently, presumably because their review
+cadences differ.
 
 The paging loop is already robust to this because it advances by `len(page)` rather than by
 the requested size, so nothing breaks; it is a cost and pacing fact, not a bug. It does mean
