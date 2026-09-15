@@ -62,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--request-interval",
         type=float,
-        default=0.2,
+        default=1.0,
         help="minimum seconds between requests to one Gerrit host (fetch, build)",
     )
     return parser
@@ -98,6 +98,14 @@ def http_transport(
         (about 20 requests a second) a quarter to a third of new handshakes were dropped;
         after 20 quiet minutes, 0 of 30. The drops follow our volume, so the fix is to send
         less, not to retry harder.
+
+        The interval was 0.2 s, and that only postponed it: both review.opendev.org and
+        codereview.qt-project.org went on to refuse handshakes after about three hours at
+        5 requests a second, and Qt's refusal outlasted 25 minutes of silence, which reads
+        as a firewall ban rather than load shedding. Building a full corpus is roughly
+        70,000 requests against a volunteer-run server, so the default is 1 request a second.
+        A frozen corpus is fetched once and reused; an overnight collection costs nothing a
+        second run would not cost more.
         """
         if min_interval <= 0:
             return

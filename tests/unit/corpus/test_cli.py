@@ -302,7 +302,8 @@ def test_http_transport_without_an_interval_never_sleeps(monkeypatch: pytest.Mon
 def test_the_cli_paces_gerrit_by_default() -> None:
     from sphragis.corpus.cli import build_parser
 
-    assert build_parser().parse_args(["build"]).request_interval == 0.2
+    # One request a second. Two community Gerrits banned this client at five a second.
+    assert build_parser().parse_args(["build"]).request_interval == 1.0
 
 
 def _snapshot(tmp_path: Path, org: str, month: str, rows: list[dict[str, object]]) -> None:
