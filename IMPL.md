@@ -770,12 +770,26 @@ at 880 changes, a 29-fold drop from 18 where sampling noise predicts about 7-fol
 swaps arms per change at random before adding the effect. Tripped against the old code: a
 pilot that always favours treatment had power 1.0 at zero added effect; the fix gives 0.0.
 
+**Report-grade rerun: the estimate holds.** 400 trials (power's standard error about 2
+points), 1,000 resamples, lift tolerance 0.005, simulation seeds 11, 12 and 13, about 57
+minutes each. `datasets/results/power-rq1-report-grade.txt`.
+
+| detectable gain at 80% power | median of 3 seeds | range |
+|---|---|---|
+| OpenStack, 18 changes | +0.287 | +0.276 to +0.314 |
+| OpenStack, 200 changes | +0.067 | +0.064 to +0.071 |
+| **OpenStack, 880 changes** | **+0.030** | **+0.028 to +0.031** |
+| Qt, 48 changes | +0.115 | +0.109 to +0.116 |
+| Qt, 200 changes | +0.046 | +0.045 to +0.047 |
+| **Qt, 2,400 changes** | **+0.011** | **+0.011 to +0.012** |
+
+Every lift now sits above the bisection's resolution, including Qt's at 2,400 (0.016 against
+a 0.005 step), which the first run could not resolve.
+
 **How far to trust these.**
 
-- The bisection resolves the simulated lift to 0.02. Qt's lift at 2,400 is 0.016, inside that
-  step, so its +0.012 means roughly 0 to 0.015. OpenStack's +0.030 carries about 40%.
-- 100 trials (power's own standard error about 4 points), 100 resamples, one simulation seed.
-  The Stage 1 figure needs a finer run.
+- The first run's settings (100 trials, 100 resamples, tolerance 0.02, one seed) are
+  superseded by the table above; its figures agreed within their stated imprecision.
 - The window sizes are estimates: about 88 OpenStack and 240 Qt changes a month from 2024-10,
   over the ten-month test window.
 - The gate needs both organizations, so **OpenStack binds: about 3 exact-match points.** Both

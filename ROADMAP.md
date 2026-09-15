@@ -78,8 +78,10 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] Power analysis on the RQ1 pilot's variances (`scripts/power_rq1.py`): detectable gain
   about +0.030 exact match for OpenStack at ~880 changes, +0.012 for Qt at ~2,400; OpenStack
   binds. Needed a fix first: the simulation had treated the pilot's own difference as null.
-- [ ] Rerun the power analysis at report-grade settings (more trials and resamples, finer
-  tolerance, several simulation seeds) with measured window sizes.
+- [x] Power at report-grade settings (400 trials, 1,000 resamples, tolerance 0.005, 3 seeds):
+  OpenStack +0.030 [+0.028, +0.031] at 880 changes, Qt +0.011 [+0.011, +0.012] at 2,400.
+- [ ] Replace the estimated test-window sizes with counts once the window is defined; the
+  window itself stays sealed.
 - [ ] Register equal-size training, the estimand (pooled against change-averaged, which move
   Qt from +0.045 to +0.008), and strictly-above-zero at the pass rule's boundary.
 - [ ] The confirmatory RQ1 contrast, on the frozen windows after in-principle acceptance.

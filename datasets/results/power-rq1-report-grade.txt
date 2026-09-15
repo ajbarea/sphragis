@@ -1,0 +1,28 @@
+# scripts/power_rq1.py datasets/results/rq1-pilot-equalized.json --size openstack=880 --size qt=2400 --trials 400 --resamples 1000 --tolerance 0.005 --seed {11,12,13}
+
+openstack: pilot changes 18, simulated 18: detectable difference +0.3139 (lift 0.500, reached True) [22s]
+openstack: pilot changes 18, simulated 200: detectable difference +0.0706 (lift 0.109, reached True) [234s]
+openstack: pilot changes 18, simulated 880: detectable difference +0.0298 (lift 0.047, reached True) [1014s]
+qt: pilot changes 48, simulated 48: detectable difference +0.1148 (lift 0.156, reached True) [70s]
+qt: pilot changes 48, simulated 200: detectable difference +0.0473 (lift 0.062, reached True) [264s]
+qt: pilot changes 48, simulated 2400: detectable difference +0.0119 (lift 0.016, reached True) [3399s]
+settings: trials=400 resamples=1000 tolerance=0.005 seed=11; lifts below the tolerance are at the bisection's resolution
+
+
+openstack: pilot changes 18, simulated 18: detectable difference +0.2865 (lift 0.473, reached True) [23s]
+openstack: pilot changes 18, simulated 200: detectable difference +0.0637 (lift 0.109, reached True) [234s]
+openstack: pilot changes 18, simulated 880: detectable difference +0.0283 (lift 0.051, reached True) [1017s]
+qt: pilot changes 48, simulated 48: detectable difference +0.1094 (lift 0.152, reached True) [70s]
+qt: pilot changes 48, simulated 200: detectable difference +0.0449 (lift 0.062, reached True) [266s]
+qt: pilot changes 48, simulated 2400: detectable difference +0.0105 (lift 0.016, reached True) [3395s]
+settings: trials=400 resamples=1000 tolerance=0.005 seed=12; lifts below the tolerance are at the bisection's resolution
+
+
+openstack: pilot changes 18, simulated 18: detectable difference +0.2757 (lift 0.445, reached True) [22s]
+openstack: pilot changes 18, simulated 200: detectable difference +0.0669 (lift 0.105, reached True) [233s]
+openstack: pilot changes 18, simulated 880: detectable difference +0.0311 (lift 0.051, reached True) [1017s]
+qt: pilot changes 48, simulated 48: detectable difference +0.1164 (lift 0.160, reached True) [69s]
+qt: pilot changes 48, simulated 200: detectable difference +0.0458 (lift 0.062, reached True) [261s]
+qt: pilot changes 48, simulated 2400: detectable difference +0.0112 (lift 0.016, reached True) [3397s]
+settings: trials=400 resamples=1000 tolerance=0.005 seed=13; lifts below the tolerance are at the bisection's resolution
+
