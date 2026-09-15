@@ -22,9 +22,10 @@ import torch
 from peft import get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.model import LORA, MODEL_ID, TRAINING, train_adapter
 from sphragis.experiment.runner import build_prompt, evaluate, to_clusters
-from sphragis.experiment.training import build_supervised
+from sphragis.experiment.training import build_supervised, render_chat
 from sphragis.measure.stats import cluster_bootstrap
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -38,6 +39,13 @@ args = parser.parse_args()
 
 rows = [json.loads(line) for line in args.examples.read_text().splitlines() if line]
 
+# Deduplicate FIRST, exactly as the real pipeline does. Skipping it measured the pilot
+# under conditions the study will never reproduce: 27 of 201 OpenStack examples are
+# duplicates, 13 of them landed in the held-out set at this split seed, and every one was
+# a miss, so the reported figure was deflated against the study's own conditions.
+rows, removed = run_dedup(rows)
+print(f"dedup: {len(rows)} kept, removed {dict(removed)}", flush=True)
+
 # Split by CHANGE, never by example. Consecutive hunks of one change are near-copies, so a
 # random split puts siblings on both sides: measured at 63% of eval sharing a change_id
 # with train, and 20% sharing an exact `before` text, which inflated exact match from an
@@ -49,7 +57,14 @@ cut = int(0.8 * len(changes))
 train_ids, eval_ids = set(changes[:cut]), set(changes[cut:])
 train_rows = [r for r in rows if r["change_id"] in train_ids]
 eval_rows = [r for r in rows if r["change_id"] in eval_ids]
-assert not (train_ids & eval_ids), "a change cannot appear on both sides"
+# Disjoint change ids are guaranteed by the slicing above, so asserting them proves
+# nothing. The check that would have caught the 0.512 incident is a CONTENT overlap
+# across the boundary, which change grouping does not imply and dedup does not fully
+# remove: two changes can carry the same edit.
+_train_text = {(r["before"], str(r["after"])) for r in train_rows}
+_leaked = [r for r in eval_rows if (r["before"], str(r["after"])) in _train_text]
+print(f"content overlap eval-vs-train: {len(_leaked)} of {len(eval_rows)}", flush=True)
+assert not _leaked, f"{len(_leaked)} eval examples repeat a training pair verbatim"
 print(f"changes {len(changes)}: {len(train_ids)} train / {len(eval_ids)} eval", flush=True)
 print(f"examples {len(rows)}  train {len(train_rows)}  eval {len(eval_rows)}", flush=True)
 
@@ -89,7 +104,12 @@ class LiveGenerator:
 
     def generate(self, prompt: str) -> str:
         self.model.eval()
-        ids = tok(prompt, return_tensors="pt").to("cuda:0")
+        # render_chat, the function build_supervised trains on: the pilot scored both arms
+        # on the raw prompt, which was out of distribution for the instruct base model and
+        # flattered ADAPTED - BASE on every metric but exact match.
+        ids = tok(render_chat(tok, prompt), return_tensors="pt", add_special_tokens=False).to(
+            "cuda:0"
+        )
         with torch.inference_mode():
             out = self.model.generate(
                 **ids,
@@ -125,12 +145,26 @@ base = AutoModelForCausalLM.from_pretrained(MODEL_ID, dtype=torch.bfloat16, devi
 print("loaded base", flush=True)
 base_results = arm(base, "BASE")
 
+# Before get_peft_model, not after. train_adapter's own torch.manual_seed runs once the
+# adapter already exists, so the LoRA init was drawn from whatever RNG state the base
+# arm's generation left behind -- which depends on the eval set size. Two conditions
+# differing only by seed have to differ only by seed.
+torch.manual_seed(args.train_seed)
 model = get_peft_model(base, LORA)
 model.print_trainable_parameters()
 
-losses = train_adapter(model, train_ds, pad_token_id=tok.pad_token_id, seed=args.train_seed)
+report = train_adapter(model, train_ds, pad_token_id=tok.pad_token_id, seed=args.train_seed)
+losses = report.losses
 print(f"losses: {[f'{x:.3f}' for x in losses]}", flush=True)
-assert all(x == x for x in losses), "non-finite loss slipped through"
+print(
+    f"steps {report.applied_steps} applied of {report.steps}, "
+    f"{report.skipped_steps} skipped, {report.skipped_micro_batches} micro-batches skipped, "
+    f"{report.examples_seen} example exposures",
+    flush=True,
+)
+# A non-finite loss is skipped before it can reach `losses`, so checking `losses` for NaN
+# proves nothing. The skip counters are where a diverging run is visible.
+assert report.skipped_steps == 0, f"{report.skipped_steps} optimiser steps were skipped"
 print("training done", flush=True)
 adapted_results = arm(model, "ADAPTED")
 
@@ -156,6 +190,11 @@ args.out.write_text(
             "n_train_examples": len(train_ds),
             "n_eval_examples": len(eval_rows),
             "losses": losses,
+            "steps": report.steps,
+            "applied_steps": report.applied_steps,
+            "skipped_steps": report.skipped_steps,
+            "skipped_micro_batches": report.skipped_micro_batches,
+            "dedup_removed": dict(removed),
             "interval": interval,
             "base": base_results,
             "adapted": adapted_results,

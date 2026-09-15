@@ -82,3 +82,29 @@ def test_to_clusters_separates_changes() -> None:
     ]
     clusters = to_clusters(treatment, treatment)
     assert {c.change_id for c in clusters} == {"I1", "I2"}
+
+
+def _outcome(example_id: str, change_id: object, value: float) -> dict[str, Any]:
+    return {"id": example_id, "change_id": change_id, "exact_match": value}
+
+
+def test_to_clusters_rejects_a_duplicated_id_that_a_set_comparison_would_accept() -> None:
+    # Set-equal arms: {a, b} on both sides. Pairing on the last row per id reported a
+    # difference of 0.667 where the rows supported 0.333.
+    treatment = [_outcome("a", "I1", 1.0), _outcome("a", "I1", 1.0), _outcome("b", "I1", 0.0)]
+    control = [_outcome("a", "I1", 0.0), _outcome("b", "I1", 0.0), _outcome("b", "I1", 1.0)]
+    with pytest.raises(ValueError, match="repeats example ids"):
+        to_clusters(treatment, control)
+
+
+@pytest.mark.parametrize("change_id", [None, "", 5])
+def test_to_clusters_rejects_a_change_id_that_would_merge_clusters(change_id: object) -> None:
+    rows = [_outcome("a", change_id, 1.0), _outcome("b", change_id, 0.0)]
+    with pytest.raises(ValueError, match="change id"):
+        to_clusters(rows, rows)
+
+
+def test_to_clusters_rejects_a_non_finite_outcome() -> None:
+    treatment = [_outcome("a", "I1", float("nan"))]
+    with pytest.raises(ValueError, match="non-finite"):
+        to_clusters(treatment, [_outcome("a", "I1", 0.0)])

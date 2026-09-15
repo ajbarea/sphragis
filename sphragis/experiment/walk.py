@@ -37,18 +37,45 @@ def walk(
     missing = [org for org in orgs if org not in windows]
     if missing:
         raise ValueError(f"no evaluation window for {', '.join(missing)}")
+    _require_registered_seeds(seeds)
 
     adapters = {
         (run.org, run.seed): trainer.train(run.org, run.seed) for run in training_runs(orgs, seeds)
     }
-    generators: dict[str | None, Generator] = {}
+    # Distinct handles, checked rather than assumed. A trainer that names an adapter by
+    # its output directory without the seed returns one handle for three runs, and every
+    # "per-seed" interval is then the same adapter evaluated three times: a replication
+    # that did not happen, reported as one that did.
+    if len(set(adapters.values())) != len(adapters):
+        raise ValueError(
+            "trainer returned the same adapter handle for different (org, seed) runs; "
+            "the seed replication would silently evaluate one adapter repeatedly"
+        )
+    # Keyed on the run, not on the handle, so equal handles can never alias two conditions
+    # onto one generator. `None` is the base model.
+    generators: dict[tuple[str, int] | None, Generator] = {}
     results: dict[str, list[dict[str, Any]]] = {}
     for run in eval_runs(orgs, seeds):
-        adapter = None if run.seed is None else adapters[(_trained_on(run), run.seed)]
-        if adapter not in generators:
-            generators[adapter] = generator_for(adapter)
-        results[run_id(run)] = evaluate(generators[adapter], windows[run.eval_org])
+        key = None if run.seed is None else (_trained_on(run), run.seed)
+        if key not in generators:
+            generators[key] = generator_for(None if key is None else adapters[key])
+        results[run_id(run)] = evaluate(generators[key], windows[run.eval_org])
     return results
+
+
+def _require_registered_seeds(seeds: Sequence[int]) -> None:
+    """Distinct seeds, and an odd count so the median is a seed rather than a midpoint.
+
+    With an even count two seeds are equidistant from the median, and which one binds was
+    decided by floating-point rounding: the higher estimate bound in 49.4% of 5,000 random
+    draws. Duplicate seeds collapse in `run_id`, silently turning three seeds into two.
+    """
+    if len(set(seeds)) != len(seeds):
+        raise ValueError(f"seeds must be distinct, got {list(seeds)}")
+    if len(seeds) % 2 == 0:
+        raise ValueError(
+            f"an odd number of seeds is required so one seed is the median, got {len(seeds)}"
+        )
 
 
 def _trained_on(run: EvalRun) -> str:
@@ -104,6 +131,7 @@ def gate(
     """
     if len(orgs) != 2:
         raise ValueError("the RQ1 gate is defined over exactly two organizations")
+    _require_registered_seeds(seeds)
     first, second = orgs
     per_org: dict[str, dict[str, float]] = {}
     per_seed: dict[str, dict[int, dict[str, float]]] = {}

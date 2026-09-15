@@ -24,7 +24,13 @@ from peft import LoraConfig, PeftMixedModel, PeftModel, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
-from sphragis.experiment.training import warmup_steps
+from sphragis.experiment.training import (
+    render_chat,
+    step_batches,
+    total_steps,
+    training_order,
+    warmup_steps,
+)
 
 MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
 DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
@@ -50,6 +56,28 @@ LORA = LoraConfig(
         "down_proj",
     ],
 )
+
+
+@dataclass(frozen=True)
+class TrainingReport:
+    """What one training run actually did, as opposed to what it was asked to do.
+
+    Returned instead of a bare loss list because the differences between asked and did are
+    exactly the ones that break a pre-registered budget: a skipped step is a step the
+    adapter did not take, and two conditions that skip differently were not trained
+    identically however identical their configuration was.
+    """
+
+    losses: list[float]
+    steps: int
+    skipped_steps: int
+    skipped_micro_batches: int
+    examples_seen: int
+
+    @property
+    def applied_steps(self) -> int:
+        """Optimiser updates that actually landed."""
+        return self.steps - self.skipped_steps
 
 
 def _require_tokenizer(model_id: str) -> PreTrainedTokenizerBase:
@@ -100,10 +128,8 @@ class HFGenerator:
 
     def generate(self, prompt: str) -> str:
         """Greedy decoding, because exact match needs the output to be deterministic."""
-        text = self.tokenizer.apply_chat_template(
-            [{"role": "user", "content": prompt}], tokenize=False, add_generation_prompt=True
-        )
-        inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
+        text = render_chat(self.tokenizer, prompt)
+        inputs = self.tokenizer(text, return_tensors="pt", add_special_tokens=False).to(self.device)
         with torch.inference_mode():
             # ty: the transformers stub types generate() on GenerativePreTrainedModel,
             # which a PeftModel wrapper does not satisfy structurally. Runtime is fine.
@@ -160,8 +186,8 @@ def train_adapter(
     budget: Mapping[str, Any] = TRAINING,
     micro_batch: int = 1,
     grad_accum: int = 16,
-) -> list[float]:
-    """Train a LoRA adapter with an explicit loop. Returns the loss at each optimiser step.
+) -> TrainingReport:
+    """Train a LoRA adapter with an explicit loop, and report what the run actually did.
 
     Deliberately not `transformers.Trainer`. Trainer diverged on this corpus: loss fell
     1.00 to 0.52 over two healthy steps, then grad_norm went NaN and loss collapsed to
@@ -186,8 +212,14 @@ def train_adapter(
     torch.manual_seed(seed)
     trainable = [p for p in model.parameters() if p.requires_grad]
     optimiser = torch.optim.AdamW(trainable, lr=float(budget["learning_rate"]))
-    per_step = micro_batch * grad_accum
-    steps = max(1, len(items) // per_step) * int(budget["epochs"])
+    epochs = int(budget["epochs"])
+    # The order and the step count are pure functions in `training`, so the realized
+    # budget is asserted in CI rather than inferred from a loop no test can reach.
+    order = training_order(n_examples=len(items), epochs=epochs, seed=seed)
+    groups = step_batches(order, batch_size=micro_batch, grad_accum=grad_accum, epochs=epochs)
+    steps = total_steps(
+        n_examples=len(items), batch_size=micro_batch, grad_accum=grad_accum, epochs=epochs
+    )
     # Linear warmup then cosine, so the schedule matches the declared budget. A declared
     # parameter the code ignores is worse than either choice, and this one is
     # pre-registered.
@@ -195,7 +227,7 @@ def train_adapter(
         n_examples=len(items),
         batch_size=micro_batch,
         grad_accum=grad_accum,
-        epochs=int(budget["epochs"]),
+        epochs=epochs,
         ratio=float(budget["warmup_ratio"]),
     )
 
@@ -209,34 +241,55 @@ def train_adapter(
 
     model.train()
     losses: list[float] = []
-    skipped = 0
-    cursor = 0
-    for _ in range(steps):
+    skipped_micro_batches = 0
+    skipped_steps = 0
+    for group in groups:
         optimiser.zero_grad()
         total = 0.0
-        for _ in range(grad_accum):
-            batch = _collate(items[cursor : cursor + micro_batch], pad_token_id)
-            cursor = (cursor + micro_batch) % max(len(items) - micro_batch, 1)
-            loss = model(**batch).loss / grad_accum
+        finite = 0
+        for micro in group:
+            batch = _collate([items[i] for i in micro], pad_token_id)
+            # Scaled by the group's own size, not the nominal accumulation: the final
+            # group of a run is short whenever the corpus does not divide evenly.
+            loss = model(**batch).loss / len(group)
             if not torch.isfinite(loss):
-                skipped += 1
+                skipped_micro_batches += 1
                 continue
             loss.backward()
-            total += float(loss) * grad_accum
+            total += float(loss.detach()) * len(group)
+            finite += 1
         norm = torch.nn.utils.clip_grad_norm_(trainable, 1.0)
-        if not torch.isfinite(norm):
+        if finite == 0 or not torch.isfinite(norm):
             # Skip the step rather than poison the adapter, and count it. Silently
             # stepping on a NaN gradient is what produced an adapter emitting garbage.
-            skipped += 1
+            #
+            # `finite == 0` is checked first and separately: with no gradient at all,
+            # clip_grad_norm_ returns a finite 0.0, so the norm guard passes, the
+            # optimiser takes a no-op step, and the step records a loss of exactly 0.0 --
+            # which is the signature this loop exists to distinguish itself from.
+            skipped_steps += 1
             optimiser.zero_grad()
             schedule.step()
             continue
         optimiser.step()
         schedule.step()
-        losses.append(total / grad_accum)
-    if skipped:
-        print(f"train_adapter: skipped {skipped} non-finite step(s) of {steps}")
-    return losses
+        # Averaged over the micro-batches that ran. Dividing by the nominal count instead
+        # deflates the reported loss in proportion to how many were skipped, which makes
+        # a degrading run look like an improving one.
+        losses.append(total / finite)
+    report = TrainingReport(
+        losses=losses,
+        steps=steps,
+        skipped_steps=skipped_steps,
+        skipped_micro_batches=skipped_micro_batches,
+        examples_seen=len(order),
+    )
+    if skipped_steps or skipped_micro_batches:
+        print(
+            f"train_adapter: skipped {skipped_steps} step(s) of {steps} and "
+            f"{skipped_micro_batches} micro-batch(es)"
+        )
+    return report
 
 
 def _collate(batch: Sequence[Mapping[str, Any]], pad_token_id: int) -> dict[str, Any]:

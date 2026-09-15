@@ -45,7 +45,7 @@ def test_dedup_drops_examples_that_are_mostly_repeated_boilerplate() -> None:
     header = "copyright 2024 the authors licensed under the apache license version two "
     examples = [_ex(f"h{i}", header + f"body number {i} " * 2, "after") for i in range(25)]
     kept, removed = dedup(
-        examples, threshold=0.99, boilerplate_max_docs=20, boilerplate_fraction=0.5
+        examples, threshold=0.99, boilerplate_document_fraction=0.5, boilerplate_fraction=0.5
     )
     assert removed["boilerplate"] == 25 and kept == []
 

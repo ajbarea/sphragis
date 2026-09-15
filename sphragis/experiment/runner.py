@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
@@ -57,13 +58,38 @@ def to_clusters(
     *,
     metric: str = "exact_match",
 ) -> list[Cluster]:
-    """Group paired outcomes by change, pairing on example id rather than position."""
+    """Group paired outcomes by change, pairing on example id rather than position.
+
+    Every guard here closes an input that previously produced a confident wrong interval
+    with no error:
+
+    - a duplicated id inside an arm passed a set comparison, and the id-keyed lookup kept
+      only the last row, so a 0.333 difference was reported as 0.667;
+    - a `None` change id became the string "None" for every example, collapsing the window
+      into one cluster whose interval had zero width and always excluded zero;
+    - a NaN outcome has no ordering, so the sorted bootstrap draws are meaningless and
+      read as a pass.
+    """
+    for label, arm in (("treatment", treatment), ("control", control)):
+        ids = [r["id"] for r in arm]
+        repeated = sorted({i for i in ids if ids.count(i) > 1}, key=str)
+        if repeated:
+            raise ValueError(f"{label} arm repeats example ids {repeated[:5]}")
     by_id_control = {r["id"]: r for r in control}
     if {r["id"] for r in treatment} != set(by_id_control):
         raise ValueError("both arms must be evaluated on the same examples")
     grouped: dict[str, tuple[list[float], list[float]]] = defaultdict(lambda: ([], []))
     for result in treatment:
-        arms = grouped[str(result["change_id"])]
-        arms[0].append(float(result[metric]))
-        arms[1].append(float(by_id_control[result["id"]][metric]))
+        change_id = result["change_id"]
+        if not isinstance(change_id, str) or not change_id:
+            raise ValueError(
+                f"example {result['id']!r} has change id {change_id!r}; clustering needs a "
+                "non-empty string, or every such example lands in one cluster"
+            )
+        pair = (float(result[metric]), float(by_id_control[result["id"]][metric]))
+        if not all(math.isfinite(value) for value in pair):
+            raise ValueError(f"example {result['id']!r} has a non-finite {metric}: {pair}")
+        arms = grouped[change_id]
+        arms[0].append(pair[0])
+        arms[1].append(pair[1])
     return [Cluster(change_id, tuple(t), tuple(c)) for change_id, (t, c) in sorted(grouped.items())]

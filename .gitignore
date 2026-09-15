@@ -19,3 +19,9 @@ datasets/gerrit/*/splits/
 !datasets/gerrit/*/seal.json
 
 COMMITS.md
+
+# Slurm job output. The directory is tracked so a relative --output always resolves
+# in a fresh clone: Slurm does not create it, and a job that cannot open its log dies
+# at IO setup after the queue wait.
+logs/*
+!logs/.gitkeep

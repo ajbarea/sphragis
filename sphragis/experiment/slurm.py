@@ -50,6 +50,7 @@ class SlurmJob:
     mem: str = "64G"
     time_limit: str = "02:00:00"
     account: str = _ACCOUNT
+    workdir: str | None = None
 
 
 def render(job: SlurmJob) -> str:
@@ -64,6 +65,11 @@ def render(job: SlurmJob) -> str:
         # Slurm does not expand shell variables in #SBATCH directives. An --output of
         # "$HOME/logs/x.log" silently creates a directory literally named '$HOME'.
         raise ValueError(f"--output cannot contain a shell variable, got {job.output!r}")
+    if job.workdir is not None and not job.workdir.startswith("/"):
+        # Neither $HOME nor ~ is expanded in a directive, so a non-absolute --chdir names a
+        # directory relative to wherever sbatch happened to run.
+        raise ValueError(f"workdir must be an absolute path, got {job.workdir!r}")
+    chdir = "" if job.workdir is None else f"#SBATCH --chdir={job.workdir}\n"
     return f"""#!/bin/bash
 #SBATCH --job-name={job.name}
 #SBATCH --account={job.account}
@@ -73,7 +79,7 @@ def render(job: SlurmJob) -> str:
 #SBATCH --mem={job.mem}
 #SBATCH --time={job.time_limit}
 #SBATCH --output={job.output}
-#SBATCH --mail-type=END,FAIL
+{chdir}#SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user={_MAIL_USER}
 
 set -euo pipefail
@@ -102,8 +108,12 @@ def job_for_grid(
 
     `job_for` stays for reruns of a single cell after a failure.
     """
+    # --no-sync: a plain `uv run` re-syncs the venv to the base dependencies, which removes
+    # the experiment extra and fails on `import peft` only after the job has left the queue.
+    # --chdir, not `cd`: --output is opened before the script body runs, so a relative log
+    # path would resolve against the submission directory rather than the project.
     command = (
-        f"cd {project_dir} && uv run python -m sphragis.experiment.model --grid "
+        "uv run --no-sync python -m sphragis.experiment.model --grid "
         f"--orgs {','.join(orgs)} --seeds {','.join(str(s) for s in seeds)}"
     )
     return SlurmJob(
@@ -112,6 +122,7 @@ def job_for_grid(
         output="logs/sphragis-grid-%j.log",
         time_limit=time_limit,
         mem="96G",
+        workdir=project_dir,
     )
 
 
@@ -120,7 +131,13 @@ def job_for(run: EvalRun, *, project_dir: str, time_limit: str = "02:00:00") -> 
     name = "sphragis-" + run_id(run).replace("|", "-").replace(":", "-")
     seed = "" if run.seed is None else f" --seed {run.seed}"
     command = (
-        f"cd {project_dir} && uv run python -m sphragis.experiment.model "
+        "uv run --no-sync python -m sphragis.experiment.model "
         f"--condition {run.condition} --eval-org {run.eval_org}{seed}"
     )
-    return SlurmJob(name=name, command=command, output=f"logs/{name}-%j.log", time_limit=time_limit)
+    return SlurmJob(
+        name=name,
+        command=command,
+        output=f"logs/{name}-%j.log",
+        time_limit=time_limit,
+        workdir=project_dir,
+    )

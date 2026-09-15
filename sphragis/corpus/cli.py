@@ -183,13 +183,14 @@ def _stage_split(args: argparse.Namespace) -> int:
         print(f"no examples under {_examples_dir(args)}; run build first")
         return 1
     kept, _ = run_dedup(examples)
-    windows, straddling = run_split(kept, WINDOWS)
+    windows, straddling, unassigned = run_split(kept, WINDOWS)
     for name, rows in windows.items():
         print(f"  {name:<6} {len(rows)}")
+    if unassigned:
+        print(f"UNASSIGNED {len(unassigned)} change(s) match no window: {unassigned[:5]}")
     if straddling:
         print(f"STRADDLING {straddling}")
-        return 1
-    return 0
+    return 1 if (straddling or unassigned) else 0
 
 
 def _stage_freeze(args: argparse.Namespace) -> int:
@@ -199,11 +200,24 @@ def _stage_freeze(args: argparse.Namespace) -> int:
         print(f"no examples under {_examples_dir(args)}; run build first")
         return 1
     kept, removed = run_dedup(examples)
-    windows, straddling = run_split(kept, WINDOWS)
+    windows, straddling, unassigned = run_split(kept, WINDOWS)
     if straddling:
         print(f"refusing to freeze: changes straddle a window boundary: {straddling}")
         return 1
-    manifest = freeze_windows(Path(args.root), args.org, windows, stats={"deduped": dict(removed)})
+    if unassigned:
+        # Freezing here would record counts for a corpus quietly missing these changes,
+        # and the manifest would verify cleanly forever after.
+        print(
+            f"refusing to freeze: {len(unassigned)} change(s) match no window "
+            f"(first: {unassigned[:5]}). Widen WINDOWS or drop the out-of-range months."
+        )
+        return 1
+    manifest = freeze_windows(
+        Path(args.root),
+        args.org,
+        windows,
+        stats={"deduped": dict(removed), "unassigned_changes": 0},
+    )
     print(f"{args.org}: froze {manifest['counts']}")
     return 0
 

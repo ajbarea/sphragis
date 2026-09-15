@@ -45,7 +45,7 @@ def test_dedup_reports_what_it_removed_and_why() -> None:
 
 
 def test_split_assigns_whole_changes_and_never_straddles() -> None:
-    windows, problems = run_split(EXAMPLES, BOUNDS)
+    windows, problems, _ = run_split(EXAMPLES, BOUNDS)
     assert problems == []
     assert {e["change_id"] for e in windows["pilot"]} == {"I1"}
     assert {e["change_id"] for e in windows["train"]} == {"I2", "I3"}
@@ -54,13 +54,13 @@ def test_split_assigns_whole_changes_and_never_straddles() -> None:
 def test_split_raises_if_a_change_would_straddle() -> None:
     # Guarded by construction, so this asserts the guard rather than the behaviour.
     straddling = [_ex(1, "I9", "2024-10-31", "x"), _ex(2, "I9", "2024-11-02", "y")]
-    windows, problems = run_split(straddling, BOUNDS)
+    windows, problems, _ = run_split(straddling, BOUNDS)
     assert problems == []
     assert len(windows["pilot"]) == 2 and windows["train"] == []
 
 
 def test_freeze_writes_a_manifest_and_the_window_files(tmp_path: Path) -> None:
-    windows, _ = run_split(EXAMPLES, BOUNDS)
+    windows, _, _ = run_split(EXAMPLES, BOUNDS)
     manifest = freeze_windows(tmp_path, "openstack", windows, stats={"dropped": 7})
     assert (tmp_path / "openstack" / "manifest.json").exists()
     assert (tmp_path / "openstack" / "splits" / "pilot.jsonl").exists()
@@ -71,22 +71,49 @@ def test_freeze_writes_a_manifest_and_the_window_files(tmp_path: Path) -> None:
 def test_freeze_output_verifies_against_itself(tmp_path: Path) -> None:
     from sphragis.corpus.manifest import verify
 
-    windows, _ = run_split(EXAMPLES, BOUNDS)
+    windows, _, _ = run_split(EXAMPLES, BOUNDS)
     manifest = freeze_windows(tmp_path, "openstack", windows, stats={})
     ids = {name: [e["id"] for e in rows] for name, rows in windows.items()}
     assert verify(manifest, ids) == []
 
 
 def test_freeze_refuses_to_overwrite_a_frozen_window(tmp_path: Path) -> None:
-    windows, _ = run_split(EXAMPLES, BOUNDS)
+    windows, _, _ = run_split(EXAMPLES, BOUNDS)
     freeze_windows(tmp_path, "openstack", windows, stats={})
     with pytest.raises(FileExistsError, match="frozen"):
         freeze_windows(tmp_path, "openstack", windows, stats={})
 
 
 def test_frozen_windows_are_jsonl_one_example_per_line(tmp_path: Path) -> None:
-    windows, _ = run_split(EXAMPLES, BOUNDS)
+    windows, _, _ = run_split(EXAMPLES, BOUNDS)
     freeze_windows(tmp_path, "openstack", windows, stats={})
     lines = (tmp_path / "openstack" / "splits" / "train.jsonl").read_text().strip().split("\n")
     assert len(lines) == 2
     assert all(json.loads(line)["org"] == "openstack" for line in lines)
+
+
+def test_run_split_names_the_changes_that_match_no_window() -> None:
+    """A change outside every window used to vanish with every downstream check clean.
+
+    The windows still look well formed, `straddling_changes` still returns empty, and the
+    freeze records counts for whatever survived. Since the bounds end at 2026-09-01, a
+    fetch of any later month assigned nothing and would have frozen an empty corpus while
+    reporting success.
+    """
+    future = [
+        {
+            "id": "x1",
+            "change_id": "Ifuture",
+            "created": "2099-01-01 00:00:00",
+            "before": "a",
+            "after": "b",
+        },
+    ]
+    windows, straddling, unassigned = run_split([*EXAMPLES, *future], BOUNDS)
+    assert unassigned == ["Ifuture"]
+    assert straddling == []
+    assert not any(e["change_id"] == "Ifuture" for rows in windows.values() for e in rows)
+
+
+def test_run_split_reports_nothing_unassigned_when_every_change_lands() -> None:
+    assert run_split(EXAMPLES, BOUNDS)[2] == []

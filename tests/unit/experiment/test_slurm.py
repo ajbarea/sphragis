@@ -77,7 +77,7 @@ def test_render_does_not_relocate_the_token_with_hf_home() -> None:
 
 
 def test_job_for_names_the_job_after_the_run_id() -> None:
-    job = job_for(EvalRun("adapter:qt", "openstack", 2), project_dir="~/ajsoftworks/sphragis")
+    job = job_for(EvalRun("adapter:qt", "openstack", 2), project_dir="/home/u/ajsoftworks/sphragis")
     assert job.name == "sphragis-adapter-qt-openstack-s2"
     assert "--condition adapter:qt" in job.command
     assert "--eval-org openstack" in job.command
@@ -85,7 +85,7 @@ def test_job_for_names_the_job_after_the_run_id() -> None:
 
 
 def test_job_for_omits_the_seed_flag_for_the_base_arm() -> None:
-    job = job_for(EvalRun("base", "qt", None), project_dir="~/ajsoftworks/sphragis")
+    job = job_for(EvalRun("base", "qt", None), project_dir="/home/u/ajsoftworks/sphragis")
     assert "--seed" not in job.command
     assert job.name == "sphragis-base-qt"
 
@@ -93,7 +93,9 @@ def test_job_for_omits_the_seed_flag_for_the_base_arm() -> None:
 def test_job_names_are_unique_across_the_whole_grid() -> None:
     from sphragis.experiment.grid import eval_runs
 
-    names = [job_for(r, project_dir="~/x").name for r in eval_runs(("openstack", "qt"), (1, 2, 3))]
+    names = [
+        job_for(r, project_dir="/home/u/x").name for r in eval_runs(("openstack", "qt"), (1, 2, 3))
+    ]
     assert len(set(names)) == len(names) == 14
 
 
@@ -106,7 +108,7 @@ def test_one_allocation_covers_the_whole_grid() -> None:
     from sphragis.experiment.slurm import job_for_grid
 
     job = job_for_grid(
-        orgs=("openstack", "qt"), seeds=(1, 2, 3), project_dir="~/ajsoftworks/sphragis"
+        orgs=("openstack", "qt"), seeds=(1, 2, 3), project_dir="/home/u/ajsoftworks/sphragis"
     )
     assert job.name == "sphragis-grid"
     assert "--grid" in job.command
@@ -117,7 +119,7 @@ def test_one_allocation_covers_the_whole_grid() -> None:
 def test_the_grid_job_asks_for_one_gpu_not_one_per_cell() -> None:
     from sphragis.experiment.slurm import job_for_grid, render
 
-    job = job_for_grid(orgs=("openstack", "qt"), seeds=(1,), project_dir="~/x")
+    job = job_for_grid(orgs=("openstack", "qt"), seeds=(1,), project_dir="/home/u/x")
     assert render(job).count("--gres=") == 1
     assert job.gres == "gpu:gh200:1"
 
@@ -125,8 +127,8 @@ def test_the_grid_job_asks_for_one_gpu_not_one_per_cell() -> None:
 def test_the_grid_job_takes_a_longer_default_than_a_single_cell() -> None:
     from sphragis.experiment.slurm import job_for_grid
 
-    single = job_for(EvalRun("base", "qt", None), project_dir="~/x")
-    grid = job_for_grid(orgs=("openstack", "qt"), seeds=(1, 2, 3), project_dir="~/x")
+    single = job_for(EvalRun("base", "qt", None), project_dir="/home/u/x")
+    grid = job_for_grid(orgs=("openstack", "qt"), seeds=(1, 2, 3), project_dir="/home/u/x")
     assert grid.time_limit > single.time_limit
 
 
@@ -134,4 +136,26 @@ def test_the_grid_job_still_refuses_an_unparsable_time_limit() -> None:
     from sphragis.experiment.slurm import job_for_grid, render
 
     with pytest.raises(ValueError, match="HH:MM:SS"):
-        render(job_for_grid(orgs=("qt",), seeds=(1,), project_dir="~/x", time_limit="overnight"))
+        render(
+            job_for_grid(orgs=("qt",), seeds=(1,), project_dir="/home/u/x", time_limit="overnight")
+        )
+
+
+def test_job_builders_run_from_the_project_without_resyncing_the_venv() -> None:
+    """Plain `uv run` drops the experiment extra; `cd` runs after --output is opened."""
+    from sphragis.experiment.slurm import job_for_grid, render
+
+    for job in (
+        job_for_grid(orgs=("openstack", "qt"), seeds=(1, 2, 3), project_dir="/home/u/sphragis"),
+        job_for(EvalRun("base", "qt", None), project_dir="/home/u/sphragis"),
+    ):
+        script = render(job)
+        assert "uv run --no-sync " in job.command
+        assert "cd " not in job.command
+        assert "#SBATCH --chdir=/home/u/sphragis" in script
+
+
+@pytest.mark.parametrize("workdir", ["~/sphragis", "$HOME/sphragis", "sphragis"])
+def test_a_workdir_slurm_cannot_resolve_is_refused(workdir: str) -> None:
+    with pytest.raises(ValueError, match="absolute"):
+        render(SlurmJob(name="x", command="true", output="x.log", workdir=workdir))

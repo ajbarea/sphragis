@@ -10,6 +10,8 @@ from sphragis.measure.stats import (
     excludes_zero,
     gate_verdict,
     paired_difference,
+    percentile_ranks,
+    supports_direction,
 )
 
 
@@ -74,8 +76,42 @@ def test_resampling_is_by_cluster_not_by_example() -> None:
 
 
 def test_cluster_bootstrap_rejects_an_empty_sample() -> None:
-    with pytest.raises(ValueError, match="at least one cluster"):
+    with pytest.raises(ValueError, match="at least"):
         cluster_bootstrap([], seed=1)
+
+
+def test_cluster_bootstrap_refuses_the_degenerate_single_cluster() -> None:
+    """One cluster means every resample is that cluster: zero width, and always a pass."""
+    with pytest.raises(ValueError, match="at least"):
+        cluster_bootstrap([Cluster("I1", (1.0,), (0.0,))], seed=1)
+
+
+def test_a_reversed_effect_is_not_a_pass() -> None:
+    """The gate is directional. An interval entirely BELOW zero refutes RQ1.
+
+    `excludes_zero` is true for it, which is why the gate must not read that.
+    """
+    reversed_effect = {"low": -0.30, "high": -0.10}
+    supporting = {"low": 0.05, "high": 0.20}
+    assert excludes_zero(reversed_effect)
+    assert not supports_direction(reversed_effect)
+    assert gate_verdict({"a": reversed_effect, "b": reversed_effect}) == "fail"
+    assert gate_verdict({"a": supporting, "b": reversed_effect}) == "mixed"
+    assert gate_verdict({"a": supporting, "b": supporting}) == "pass"
+
+
+def test_percentile_ranks_match_efrons_convention_at_the_registered_settings() -> None:
+    # Efron's (R+1)a convention puts the bounds at order statistics 250 and 9751, which
+    # are zero-based ranks 249 and 9750.
+    assert percentile_ranks(10_000, 0.95) == (249, 9750)
+
+
+@pytest.mark.parametrize("confidence", [0.80, 0.90, 0.95, 0.99])
+def test_percentile_ranks_exclude_equally_many_draws_at_each_end(confidence: float) -> None:
+    """(1.0 - 0.90) / 2.0 is 0.04999999999999999, which truncated the lower rank alone."""
+    resamples = 10_000
+    low, high = percentile_ranks(resamples, confidence)
+    assert low + 1 == resamples - high, f"{low + 1} below against {resamples - high} above"
 
 
 def test_gate_verdict_passes_only_when_every_organization_excludes_zero() -> None:

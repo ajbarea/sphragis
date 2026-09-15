@@ -27,7 +27,7 @@ class FakeTrainer:
         return f"adapter-{org}-s{seed}"
 
 
-def _window(org: str, n_changes: int = 4, per_change: int = 2) -> list[dict[str, Any]]:
+def _window(org: str, n_changes: int = 12, per_change: int = 2) -> list[dict[str, Any]]:
     return [
         {
             "id": f"{org}:{c}:{e}",
@@ -75,7 +75,7 @@ def test_walk_trains_each_adapter_once_and_evaluates_every_condition() -> None:
     assert len(results) == 2 + 12
     assert "base|alpha" in results and "adapter:beta|alpha|s2" in results
     # One generator per distinct adapter, not one per evaluation.
-    assert len(built) == len(set(map(str, built))) == 7
+    assert len(built) == 7
 
 
 def test_walk_evaluates_each_condition_on_the_named_window() -> None:
@@ -147,3 +147,36 @@ def test_gate_binds_to_the_median_seed_and_reports_every_seed() -> None:
 def test_gate_is_defined_over_exactly_two_organizations() -> None:
     with pytest.raises(ValueError, match="exactly two"):
         gate({}, orgs=("alpha",), seeds=SEEDS, bootstrap_seed=0)
+
+
+class SeedlessTrainer(FakeTrainer):
+    """Names adapters by organization only, as a trainer keyed on an output dir might."""
+
+    def train(self, org: str, seed: int) -> str:
+        self.calls.append((org, seed))
+        return f"/scratch/adapters/{org}"
+
+
+def test_walk_refuses_a_trainer_whose_handles_collapse_the_seed_replication() -> None:
+    with pytest.raises(ValueError, match="same adapter handle"):
+        walk(
+            orgs=ORGS,
+            seeds=SEEDS,
+            windows=WINDOWS,
+            trainer=SeedlessTrainer(),
+            generator_for=_factory([]),
+        )
+
+
+@pytest.mark.parametrize("seeds", [(1, 1, 2), (1, 2), (1, 2, 3, 4)])
+def test_walk_and_gate_refuse_seed_sets_with_no_single_median(seeds: tuple[int, ...]) -> None:
+    with pytest.raises(ValueError, match="seeds"):
+        walk(
+            orgs=ORGS,
+            seeds=seeds,
+            windows=WINDOWS,
+            trainer=FakeTrainer(),
+            generator_for=_factory([]),
+        )
+    with pytest.raises(ValueError, match="seeds"):
+        gate({}, orgs=ORGS, seeds=seeds, bootstrap_seed=0)
