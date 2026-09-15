@@ -3,719 +3,252 @@
   "split_seed": 0,
   "train_seed": 1,
   "bootstrap_seed": 7,
-  "n_changes": 91,
-  "n_train_examples": 156,
-  "n_eval_examples": 45,
+  "n_changes": 88,
+  "n_train_examples": 147,
+  "n_eval_examples": 27,
   "losses": [
-    1.5739461034536362,
-    1.0189486779272556,
-    0.8292635772377253,
-    0.46106436545960605,
-    0.8010281105525792,
-    0.40410799789242446,
-    0.7727177111664787,
-    0.4398647855850868,
-    0.45476067380513996,
-    0.5091354887117632,
-    0.7106307746144012,
-    0.5038836123421788,
-    0.3445377663592808,
-    0.24442675639875233,
-    0.32438648423703853,
-    0.19428336946293712,
-    0.42174848006106913,
-    0.3970737425261177
+    0.8541106849443167,
+    0.7357833660207689,
+    0.437498467072146,
+    0.7066440661583329,
+    0.5213375973689836,
+    0.4607132829260081,
+    0.6253037454152945,
+    0.2654836293659173,
+    0.6518428814597428,
+    0.9878021031618118,
+    0.6137227869476192,
+    0.2180813729064539,
+    0.21518421568907797,
+    0.38092369225341827,
+    0.3136817636550404,
+    0.31126036203932017,
+    0.15528419404290617,
+    0.28951259865425527,
+    0.264915315550752,
+    0.2950228452682495
   ],
+  "steps": 20,
+  "applied_steps": 20,
+  "skipped_steps": 0,
+  "skipped_micro_batches": 0,
+  "dedup_removed": {
+    "exact": 23,
+    "near_duplicate": 4,
+    "boilerplate": 0
+  },
   "interval": {
-    "estimate": 0.2,
-    "low": 0.08620689655172414,
-    "high": 0.41935483870967744,
+    "estimate": 0.3333333333333333,
+    "low": 0.13333333333333333,
+    "high": 0.5652173913043479,
+    "clusters": 18.0,
     "resamples": 10000.0
   },
   "base": [
     {
-      "id": "openstack:I6e18d4f1377732c89f67b39748c5cabb26ebcc1e:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/helm/dcdbsync.py:14:2",
-      "change_id": "I6e18d4f1377732c89f67b39748c5cabb26ebcc1e",
-      "prediction": "#\n# SPDX-License-Identifier: Apache-2.0\n#\n# This file is part of the OpenBMC project.\n#\n# The OpenBMC project is free software; you can redistribute it and/or modify\n# it under the terms of the GNU General Public License as published by\n# the Free Software Foundation; either version 2 of the License, or\n# (at your option) any later version.\n#\n# The OpenBMC project is distributed in the",
+      "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:131",
+      "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
+      "prediction": "```yaml\n- name: Wait until sysinv API responds with status 200 for region ID (during enroll_init)\n  uri:\n    url: \"{{ oam_endpoint }}/sysinv/v1/region/{{ region_id }}\"\n    method: GET\n    validate_certs: no\n  register: sysinv_response\n  until: sysinv_response.status == 200\n  retries: 30\n  delay: 5\n```",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.1141552511415525
+      "edit_similarity": 0.2459016393442623
     },
     {
-      "id": "openstack:I6e18d4f1377732c89f67b39748c5cabb26ebcc1e:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/helm/garbd.py:14:2",
-      "change_id": "I6e18d4f1377732c89f67b39748c5cabb26ebcc1e",
-      "prediction": "#\n# SPDX-License-Identifier: Apache-2.0\n#\n\nimport os\nimport sys\nfrom typing import List, Optional\n\ndef get_file_content(file_path: str) -> Optional[str]:\n    \"\"\"Reads the content of a file and returns it as a string.\"\"\"\n    try:\n        with open(file_path, 'r') as file:\n            return file.read()\n    except FileNotFoundError:\n        print(f\"File not found: {file_path}\")\n        return None\n\ndef",
+      "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:3",
+      "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
+      "prediction": "```python\n# Copyright (c) 2024 Wind River Systems, Inc.\n```",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.09271523178807947
-    },
-    {
-      "id": "openstack:I3850c97d17707f9bc03640bd1d997508637d97ba:powertrain_build/cli.py:29:72",
-      "change_id": "I3850c97d17707f9bc03640bd1d997508637d97ba",
-      "prediction": "        \"--signal-inconsistency-check\",\n        action=\"store_true\",\n        help=\"Check if there are any signal inconsistencies.\",\n    )\n    parser.add_argument(\n        \"signal-inconsistency-check\",  # TODO: Hyphen or underscore?\n        \"--signal-inconsistency-check\",\n        action=\"store_true\",\n        help=\"Check if there are any signal inconsistencies.\",\n    )\n\nRevised Code:\n:\n\n\n\n\n\n\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.17494089834515367
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:2:17",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "    1. The system is shutting down due to a power outage\n    2. The system is shutting down due to a software error\n\n    In both cases, the system should be able to gracefully handle the shutdown process and ensure that all data is saved before proceeding with the shutdown.\n\n    If the system is shutting down due to a power outage, the following steps should be taken:\n        - Save all unsaved data\n        - Log the shutdown event\n        -",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.15261044176706828
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:72",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        and requires a specific configuration for the backend.\n        The configuration involves setting up a Ceph cluster,\n        creating a pool, and configuring the backend to use this pool.\n        It is important to ensure that the Ceph cluster is properly\n        configured and that the pool has sufficient storage capacity.\n        Additionally, it is recommended to monitor the performance of\n        the Ceph cluster and make adjustments as necessary.\n        Finally, it is crucial to document all steps taken during the",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.12027491408934708
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:119",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        storage clusters). If you are using a different backend, skip this\n        step. To apply this step to non-Ceph backed systems, refer to the\n        documentation for your specific backend.\n```\nobj['step_description']\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.16666666666666666
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:153",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        and requires a specific configuration for the backend.\n        The configuration involves setting up a Ceph cluster,\n        creating a pool, and configuring the backend to use this pool.\n        It is important to ensure that the Ceph cluster is properly\n        configured and that the pool has sufficient storage capacity.\n        Additionally, it is recommended to monitor the performance of\n        the Ceph cluster and make adjustments as necessary.\n        Finally, it is crucial to document all steps taken during the",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.12027491408934708
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:187",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        nodes that use Ceph for storage). The following steps apply to\n        these systems:\n\n        1. Ensure that the Ceph cluster is healthy and all OSDs are up.\n        2. Verify that the CephFS file system is mounted on the controller\n           nodes.\n        3. Check that the Ceph monitord service is running on all monitor\n           nodes.\n        4. Ensure that the Ceph mgr service is active on at",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.20618556701030927
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:51",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo poweroff\n            # sudo halt\n```\n```bash\nsudo shutdown -hP now\nsudo poweroff\nsudo halt\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.0
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:64",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # system ceph-osd-list\n        # system ceph-mds-list\n        # system ceph-mgr-list\n        # system ceph-radosgw-list\n\n        # Check if any of the above commands fail\n        for cmd in \"ceph-mon-list\" \"ceph-osd-list\" \"ceph-mds-list\" \"ceph-mgr-list\" \"ceph-radosgw-list\"; do\n            if ! $(system $cmd); then\n                echo",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.21359223300970873
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:83",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo poweroff\n            # sudo halt\n```\n```bash\nsudo shutdown -hP now\nsudo poweroff\nsudo halt\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.0
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:111",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo poweroff\n\n```python\nimport subprocess\n\ndef shutdown_system():\n    try:\n        subprocess.run(['sudo', 'shutdown', '-hP', 'now'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"Failed to shut down system: {e}\")\n\ndef power_off_system():\n    try:\n        subprocess.run(['sudo', 'poweroff'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.1366742596810934
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:127",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo poweroff\n\n```python\nimport subprocess\n\ndef shutdown_system():\n    try:\n        subprocess.run(['sudo', 'shutdown', '-hP', 'now'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"Failed to shut down system: {e}\")\n\ndef power_off_system():\n    try:\n        subprocess.run(['sudo', 'poweroff'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.1366742596810934
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:146",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # echo \"Hello World\"\n```\n: \n\n\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.02857142857142857
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:164",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo poweroff\n            # sudo halt\n```\n```bash\nsudo shutdown -hP now\nsudo poweroff\nsudo halt\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.0
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:179",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo poweroff\n            # sudo halt\n```\n```bash\nsudo shutdown -hP now\nsudo poweroff\nsudo halt\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.0
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:195",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo poweroff\n\n```python\nimport subprocess\n\ndef shutdown_system():\n    try:\n        subprocess.run(['sudo', 'shutdown', '-hP', 'now'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"Failed to shut down system: {e}\")\n\ndef power_off_system():\n    try:\n        subprocess.run(['sudo', 'poweroff'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.1366742596810934
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:207",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo poweroff\n\n```python\nimport subprocess\n\ndef shutdown_system():\n    try:\n        subprocess.run(['sudo', 'shutdown', '-hP', 'now'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"Failed to shut down system: {e}\")\n\ndef power_off_system():\n    try:\n        subprocess.run(['sudo', 'poweroff'], check=True)\n    except subprocess.CalledProcessError as e:\n        print(f\"",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.1366742596810934
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:40",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        The following steps are required for setting up a Ceph-backed system:\n\n        - Install Ceph on all storage nodes.\n        - Configure Ceph on all storage nodes.\n        - Create a Ceph pool.\n        - Format the storage devices on each node.\n        - Mount the storage devices on each node.\n        - Add the storage devices to the Ceph pool.\n        - Start the Ceph services on all storage nodes.\n        - Verify that the Ceph cluster is",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.23465703971119134
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:53",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        If you are using a Ceph backend, please ensure that your Ceph cluster is\n        properly configured and that all necessary services are running. You can\n        check the status of your Ceph cluster by running the following command:\n\n        ```\n        ceph -s\n        ```\n\n        Additionally, make sure that your Ceph storage nodes have enough disk space\n        available for storing data. You can check the disk usage on each storage node\n        by running the",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.3492063492063492
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:68",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        nodes that use Ceph for storage). The following steps apply to\n        these systems:\n\n        1. Ensure that the Ceph cluster is healthy and all OSDs are up.\n        2. Verify that the CephFS file system is mounted on the controller\n           nodes.\n        3. Check that the Ceph monitord service is running on all monitor\n           nodes.\n        4. Ensure that the Ceph mgr service is active on at",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.20618556701030927
-    },
-    {
-      "id": "openstack:I5f2177b7c2edc0e35ed2e8e9bdfc4be2f262309f:test-requirements.txt:1:6",
-      "change_id": "I5f2177b7c2edc0e35ed2e8e9bdfc4be2f262309f",
-      "prediction": "```\n:3: W503 line break occurred before a binary operator\n```\n\n```python\nhacking>=6.1.0,<6.2.0 # Apache-2.0\n```\n\nRevised Code:\n```python\nhacking >= 6.1.0, < 6.2.0 # Apache-2.0\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.06818181818181818
-    },
-    {
-      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
-      "change_id": "I3ab01460496ba72ebd9941a725945aac92adf749",
-      "prediction": "```\n\n Revised Code:\n\n\n\n\n\n\n\n\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.026392961876832845
-    },
-    {
-      "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:3:233",
-      "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "    ironic_api_version = '16.2'\n    \n    # Set the ironic API version\n    ironic_api_version = '16.2'\n\n    # Set the ironic API version\n    ironic_api_version = '16.2'\n\n    # Set the ironic API version\n    ironic_api_version = '16.2'\n\n    # Set the ironic API version\n    ironic_api_version = '16.2'\n\n    # Set the ironic API version\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.20654911838790932
-    },
-    {
-      "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:4:225",
-      "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "```\nprint(\"Hello, World!\")\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.1978021978021978
-    },
-    {
-      "id": "openstack:I9222bbe482bf84fe5dc5d79c31e476cfc078c6c9:fm-doc/fm_doc/events.yaml:2:3752",
-      "change_id": "I9222bbe482bf84fe5dc5d79c31e476cfc078c6c9",
-      "prediction": "    Proposed_Repair_Action_Justification: Deleting old releases frees up disk space and reduces clutter.\n    Proposed_Repair_Action_Details: \n        - Identify all releases that are older than 6 months.\n        - Delete these releases.\n```\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ns\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.35260115606936415
-    },
-    {
-      "id": "openstack:I6598bb69168c132a8b460cda4a56c8d53484ef76:controllerconfig/controllerconfig/upgrade-scripts/01-remove-armada-if-unused.py:9:255",
-      "change_id": "I6598bb69168c132a8b460cda4a56c8d53484ef76",
-      "prediction": "        except Exception as e:\n            logger.error(f\"Error occurred: {e}\")\n            return\n\nRevised Code:\n```\nreturn True\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 1.0,
-      "edit_similarity": 0.6470588235294118
-    },
-    {
-      "id": "openstack:I9e120fcaedfa39fc08f3bc5f189976706ae72778:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:4:8633",
-      "change_id": "I9e120fcaedfa39fc08f3bc5f189976706ae72778",
-      "prediction": "```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.0
-    },
-    {
-      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:6:167",
-      "change_id": "I4157f7af367b4bd3086f3ab31155a43bfea8b9f6",
-      "prediction": "            elif not self._is_valid():\n                return None\n            elif not self._is_complete():\n                return None\n            elif not self._is_consistent():\n                return None\n            elif not self._is_sufficient():\n                return None\n            else:\n                return self._get_result()\n```\n't\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.11924119241192412
-    },
-    {
-      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:11:108",
-      "change_id": "I4157f7af367b4bd3086f3ab31155a43bfea8b9f6",
-      "prediction": "                LOG.info(\"Running rsync command: %s\", cmd)\n                subprocess.check_call(cmd, shell=True)\n\nRevised Code:\n```\nimport os\nimport shutil\n\ndef sync_pxeboot_files(major_release):\n    pxeboot_feed_dir = f\"/var/www/pages/feed/rel-{major_release}/pxeboot/pxelinux.cfg.files/*\"\n    pxeboot_dest_dir = \"/var/pxeboot/pxelinux.cfg.files/\"\n\n   ",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.24455611390284757
-    },
-    {
-      "id": "openstack:I68abfb36d209e4130d67af08b5b2de3dbffad903:deliverables/caracal/manila.yaml:2:49",
-      "change_id": "I68abfb36d209e4130d67af08b5b2de3dbffad903",
-      "prediction": "  - description: \"Release notes for 18.1.1\"\n  - bugs_fixed:\n    - \"Fixed issue where CephFS was not being added to shares metadata.\"\n    - \"Added new configuration option to specify admin metadata.\"\n\n```yaml\nversion: 18.1.1\ndescription: \"Release notes for 18.1.1\"\nbugs_fixed:\n  - \"Fixed issue where CephFS was not being added to shares metadata",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.09366391184573003
-    },
-    {
-      "id": "openstack:I32524af08dce007ed344de62e1ea53a98a95405a:README.md:2:37",
-      "change_id": "I32524af08dce007ed344de62e1ea53a98a95405a",
-      "prediction": "```\n# [cg-doc-contrib]: https://launchpad.net/openstack-charms/latest/community/doc-contrib/index.html\n```\n\nRevised Code:\n```\n[cg-doc-contrib]: https://docs.openstack.org/charm-guide/latest/contributing.html\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.845360824742268
-    },
-    {
-      "id": "openstack:I9b07653c9039b4d9e4c7e60d3b33ce4d0f60a17a:doc/source/reference/cryptography.rst:1:35",
-      "change_id": "I9b07653c9039b4d9e4c7e60d3b33ce4d0f60a17a",
-      "prediction": "\"\"\"\n\nfrom flask import Flask, request, jsonify\nimport jwt\nimport os\n\napp = Flask(__name__)\n\nSECRET_KEY = os.getenv('JWT_SECRET_KEY', 'default_secret_key')\n\n@app.route('/token', methods=['POST'])\ndef generate_token():\n    data = request.get_json()\n    username = data.get('username')\n    if not username:\n        return jsonify({'error': 'Username is required'}), 400\n    token = jwt.encode({'username': username",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.12692307692307692
-    },
-    {
-      "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
-      "change_id": "I9ab37f9d225a84fcceb9b618fad7d110974d2ed4",
-      "prediction": "        self.client.get_network_interfaces.assert_called_once_with(\n            network_id=self.network.id,\n            protocols=['NFS', 'CIFS']\n        )\n        self.client.create_share_server.assert_called_once()\n        self.client.create_share_server.assert_called_once_with(\n            availability_zone='nova',\n            host='fake_host@backend#pool',\n            share_network_id=self.share_network.id\n        )\n\nRevised Code:\n'test_create_share_server': lambda self: (\n    self.client",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.351575456053068
-    },
-    {
-      "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:2:424",
-      "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
-      "prediction": "                             \"provided.\")\n        for config in config_list:\n            assert isinstance(config, dict), (\"Each configuration item must \"\n                                              \"be a dictionary.\")\n\nRevised Code:\n't\n\n\n\n\n\n\n\n\n\n\n\n\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.3503184713375796
-    },
-    {
-      "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:3:444",
-      "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
-      "prediction": "                        self.cmd_prefix, self.cmd_suffix, filename, section, option, value)\n```\n = subprocess.check_output(cmd, shell=True).decode('utf-8')\n```\n\n```python\nfor i in range(10):\n    cmd = (\"crudini --set --output=- /tmp/{2} {3} {4} {5}'\").format(\n        self.cmd_prefix, self.cmd_suffix, filename, section, option, value)\n    i +=",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.112
-    },
-    {
-      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
-      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "```\n Review comments:\n- would it be better to get/log stderr?\n```python\nLOG.error(f\"Command failed: {stderr.decode('utf-8')}\")\nreturn ''\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.1839080459770115
-    },
-    {
-      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:110",
-      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "       self.service_parameter_name == \"new_service_param\":\n        # Apply configuration changes\n        self.apply_config_changes()\n```\n:",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.25882352941176473
-    },
-    {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/privileged/ovs_vsctl.py:3:32",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "            return False\n        # ... rest of the code ...\n```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.28865979381443296
-    },
-    {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:189",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "            return_value,\n            'Error: Bridge br-int does not exist.'\n        ]\n\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.302158273381295
-    },
-    {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:191",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "        self.mock_ovs_vsctl.ovs_vsctl.side_effect = None\n        self.mock_ovs_vsctl.ovs_appctl.side_effect = None\n        self.mock_ovs_vsctl.ovs_dbctl.side_effect = None\n        self.mock_ovs_vsctl.ovs_ctld.side_effect = None\n        self.mock_ovs_vsctl.ovs_dpctl.side_effect = None\n        self.mock_ovs_vsctl.ovs_flowctl.side_effect = None\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.23
-    },
-    {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:257",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "        self.mock_ovs_vsctl.ovs_vsctl.return_value = None\n        self.mock_ovs_vsctl.ovs_vsctl.call_args_list = []\n        self.mock_ovs_vsctl.ovs_vsctl.reset_mock()\n        self.mock_ovs_vsctl.ovs_vsctl.assert_called_once_with(\n            '--timeout=30', 'port-to-br', ovs_port['name']\n        )\n        self.assertEqual(self.mock_ovs_vsctl.ovs_vsctl.call",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.2992874109263658
-    },
-    {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:305",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "        return_value = self.mock_ovs_vsctl.ovs_vsctl.call_args_list\n        self.assertEqual(len(return_value), 1)\n        self.assertIn(ovs_port, return_value[0])\n```\n\n:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.5236051502145923
-    },
-    {
-      "id": "openstack:I4e2f9c85e0919db54a7acc52ce8f7eeea1068508:software/software/utilities/migrate.py:5:73",
-      "change_id": "I4e2f9c85e0919db54a7acc52ce8f7eeea1068508",
-      "prediction": "```",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.0
+      "edit_similarity": 0.9473684210526315
     },
     {
       "id": "openstack:I10f69ec048944c2c961f957b4125f29aceee977e:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:1:19705",
       "change_id": "I10f69ec048944c2c961f957b4125f29aceee977e",
-      "prediction": "                                self._evict_pod_v1_27_5(pod_name)\n                            elif target_version == 'v1.28.0':\n                                self._evict_pod_v1_28_0(pod_name)\n                            else:\n                                raise ValueError(f\"Unsupported version: {target_version}\")\n                        except Exception as e:\n                            logger.error(f\"Failed to evict pod {pod_name} due to error: {e}\")\n\nRevised Code:\nif pod",
+      "prediction": "```python\nif pod_eviction_timeout:\n    if target_version == 'v1.27.5':\n```",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.20825852782764812
-    }
-  ],
-  "adapted": [
-    {
-      "id": "openstack:I6e18d4f1377732c89f67b39748c5cabb26ebcc1e:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/helm/dcdbsync.py:14:2",
-      "change_id": "I6e18d4f1377732c89f67b39748c5cabb26ebcc1e",
-      "prediction": "# Copyright (c) 2019-2023 Wind River Systems, Inc.",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.98
+      "edit_similarity": 0.7794117647058824
     },
     {
-      "id": "openstack:I6e18d4f1377732c89f67b39748c5cabb26ebcc1e:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/helm/garbd.py:14:2",
-      "change_id": "I6e18d4f1377732c89f67b39748c5cabb26ebcc1e",
-      "prediction": "# Copyright (c) 2019-2025 Wind River Systems, Inc.",
+      "id": "openstack:Ic77001276e09288debc27258728dc039193bf6cb:.zuul.yaml:1:16",
+      "change_id": "Ic77001276e09288debc27258728dc039193bf6cb",
+      "prediction": "nodeset: ubuntu-noble",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.98
-    },
-    {
-      "id": "openstack:I3850c97d17707f9bc03640bd1d997508637d97ba:powertrain_build/cli.py:29:72",
-      "change_id": "I3850c97d17707f9bc03640bd1d997508637d97ba",
-      "prediction": "        \"signal-inconsistency-check\",",
-      "exact_match": 1.0,
-      "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
-      "edit_similarity": 1.0
+      "edit_similarity": 0.9130434782608695
     },
     {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:2:17",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "    There are two applicable cases for the shut down:",
-      "exact_match": 1.0,
-      "exact_match_raw": 1.0,
+      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:110",
+      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
+      "prediction": "```python\nif action == \"migrate\" and \\\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
-      "edit_similarity": 1.0
+      "edit_similarity": 0.9333333333333333
     },
     {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:72",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        This step applies to systems using a Ceph backend",
+      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
+      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
+      "prediction": "```python\nimport logging\n\n# Assuming LOG is already configured as a logger\nLOG = logging.getLogger(__name__)\n\ndef execute_command(command):\n    try:\n        # Execute the command and capture stdout and stderr\n        result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n        return result.stdout.decode('utf-8')\n    except subprocess.CalledProcessError as e:\n        # Log both stdout and stderr if an error occurs\n        LOG.error(f",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.6792452830188679
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:119",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        This step applies to systems with dedicated",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.8225806451612904
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:153",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        This step applies to systems using a Ceph backend",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.6792452830188679
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:187",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        This step applies to systems with controller",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.8253968253968254
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:51",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9565217391304348
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:64",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # systemctl restart ceph-mon.service",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.44642857142857145
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:83",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9565217391304348
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:111",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9508196721311475
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:127",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9508196721311475
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:146",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # systemctl restart openrc\n        # systemctl restart ceph-mon-list",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.6666666666666666
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:164",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9565217391304348
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:179",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "            # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9565217391304348
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:195",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9508196721311475
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:207",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        # sudo shutdown -h now",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9508196721311475
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:40",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        This step applies to systems with dedicated storage nodes only.",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.8160919540229885
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:53",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        This step applies to systems with dedicated storage nodes (Ceph-backed\n        systems) only.",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.7093596059113301
-    },
-    {
-      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:68",
-      "change_id": "I9174b1afdf36f6d49c98e05cfafa10036a72968d",
-      "prediction": "        This step applies to systems with controller",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.8253968253968254
-    },
-    {
-      "id": "openstack:I5f2177b7c2edc0e35ed2e8e9bdfc4be2f262309f:test-requirements.txt:1:6",
-      "change_id": "I5f2177b7c2edc0e35ed2e8e9bdfc4be2f262309f",
-      "prediction": "hacking>=7.0.0,<7.1.0 # Apache-2.0",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9855072463768116
-    },
-    {
-      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
-      "change_id": "I3ab01460496ba72ebd9941a725945aac92adf749",
-      "prediction": "    DEPLOY_STATES.START.value: \"delete and restart deploy by rerunning 'deploy start <release>' command\",",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.25129533678756477
+      "edit_similarity": 0.19528619528619529
     },
     {
       "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:3:233",
       "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "    # Set the microversion to 17.0",
+      "prediction": "```python\n# Import the necessary module for release mappings\nfrom ironic.common import release_mappings\n\n# Set the microversion using the mapping from release_mappings.py\nmicroversion = release_mappings.RELEASE_MICROVERSIONS['release_name']\n```",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.5918367346938775
+      "edit_similarity": 0.25170068027210885
     },
     {
       "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:4:225",
       "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "for testing backward compatibility or evaluating external tools with",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9927007299270073
-    },
-    {
-      "id": "openstack:I9222bbe482bf84fe5dc5d79c31e476cfc078c6c9:fm-doc/fm_doc/events.yaml:2:3752",
-      "change_id": "I9222bbe482bf84fe5dc5d79c31e476cfc078c6c9",
-      "prediction": "    Proposed_Repair_Action: Delete obsolete releases. Also, propose a command to do it.",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.6896551724137931
-    },
-    {
-      "id": "openstack:I6598bb69168c132a8b460cda4a56c8d53484ef76:controllerconfig/controllerconfig/upgrade-scripts/01-remove-armada-if-unused.py:9:255",
-      "change_id": "I6598bb69168c132a8b460cda4a56c8d53484ef76",
-      "prediction": "            return True",
+      "prediction": "```python\nfor testing backwards compatibility or evaluating external tools with\n```",
       "exact_match": 1.0,
-      "exact_match_raw": 1.0,
+      "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
       "edit_similarity": 1.0
+    },
+    {
+      "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:2:424",
+      "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
+      "prediction": "```python\nassert config_list, (\"At least one configuration parameter must be provided.\")\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.8831168831168831
+    },
+    {
+      "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:3:444",
+      "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
+      "prediction": "\"crudini --set /tmp/{2} {3} {4} {5}'\").format(",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 0.8214285714285714
+    },
+    {
+      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
+      "change_id": "I3ab01460496ba72ebd9941a725945aac92adf749",
+      "prediction": "```python\nDEPLOY_STATES.START.value: \"delete and restart deploy by rerunning 'deploy start <release>' command\",\nDEPLOY_STATES.HOST.value: \"reattempt deploy host '<hostname>' or run 'software deploy abort' to abort\",\nDEPLOY_STATES.HOST_DONE.value: \"reattempt deploy host '<hostname>' or run 'software deploy abort' to abort\",\nDEPLOY_STATES.HOST_ROLLBACK.value: \"reattempt deploy host-rollback '<hostname>'",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.715219421101774
+    },
+    {
+      "id": "openstack:I97b05918b80223add692a8e09790a08cfe1fe0a2:controllerconfig/controllerconfig/upgrade-scripts/35-sync-system-local-ca-in-subclouds.py:13:1",
+      "change_id": "I97b05918b80223add692a8e09790a08cfe1fe0a2",
+      "prediction": "```python\n#!/usr/bin/env python3\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.8717948717948718
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "```bash\n${KUBECTL_CMD} patch clusterrole system:node --type='json' \\\n--patch='[{\"op\":\"add\",\"path\":\"/rules/-\",\"value\":{\"apiGroups\":[\"\"],\"resources\":[\"namespaces\"],\"verbs\":[\"get\",\"list\"]}}]'\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.93717277486911
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:169",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "# Ensure kubelet is restarted on all Kubernetes nodes after updating RBAC",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.6293706293706294
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "```bash\ncompute_hosts=\"\"\n\nhost_list_command=\"system host-list --format value --column hostname --column personality\"\n\nwhile IFS= read -r line; do\n    read -ra arr <<< \"$line\"\n    personality=\"${arr[1]}\"\n    if [[ \"${personality}\" == \"controller\" ]] || \\\n       [[ \"${personality}\" == \"worker\" ]]; then\n        compute_hosts+=\" ${arr[0]}\"\n    fi\ndone < <($host_list",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.27346938775510204
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:57",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "```bash\nread -ra compute_hosts_arr <<< $(get_compute_hosts)\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.7678571428571429
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:66",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "```bash\nvalue=$(echo \"${value}]\" | sed 's/\\(.*\\),/\\1/')\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.94
+    },
+    {
+      "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/__init__.py:14:270",
+      "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
+      "prediction": "```python\nquery_compatible_apps = [link.Link]\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 0.9459459459459459
+    },
+    {
+      "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/reorder_apps.py:14:23",
+      "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
+      "prediction": "```python\n\"\"\"Reorders apps based on the metadata.yaml file that presents the application tarball\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.872093023255814
+    },
+    {
+      "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
+      "change_id": "I9ab37f9d225a84fcceb9b618fad7d110974d2ed4",
+      "prediction": "```python\nself.client.get_network_interfaces.assert_called_one_with(protocols=['NFS', 'CIFS'])\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.8842105263157894
+    },
+    {
+      "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
+      "change_id": "I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f",
+      "prediction": "```yaml\n# We don't want to load the project to report on those repos\n- exclude: [project]\n  projects:\n    - opendev/base-jobs\n    - vexxhost/new-repo\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.3594080338266385
     },
     {
       "id": "openstack:I9e120fcaedfa39fc08f3bc5f189976706ae72778:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:4:8633",
       "change_id": "I9e120fcaedfa39fc08f3bc5f189976706ae72778",
-      "prediction": "            LOG.info(\"Skipping k8s_application_audit due \"\n                \"skip_k8s_application_audit flag setted as true.\")",
+      "prediction": "```python\nLOG.info(\"Skipping k8s_application_audit due to skip_k8s_application_audit flag being set to true.\")\n```",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.8549618320610687
+      "edit_similarity": 0.7341772151898734
     },
     {
-      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:6:167",
-      "change_id": "I4157f7af367b4bd3086f3ab31155a43bfea8b9f6",
-      "prediction": "                return",
+      "id": "openstack:I42e459aebab665c0e6dd0c68a4e793e8de225b44:heat/engine/constraint/common_constraints.py:2:196",
+      "change_id": "I42e459aebab665c0e6dd0c68a4e793e8de225b44",
+      "prediction": "```python\nclass JsonStringConstraint(constraints.BaseCustomConstraint):\n```",
       "exact_match": 1.0,
-      "exact_match_raw": 1.0,
-      "normalized_exact_match": 1.0,
-      "edit_similarity": 1.0
-    },
-    {
-      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:11:108",
-      "change_id": "I4157f7af367b4bd3086f3ab31155a43bfea8b9f6",
-      "prediction": "                cmd = \"rsync -avz --delete %s %s\" % (pxeboot_feed_dir, pxeboot_dest_dir)",
-      "exact_match": 0.0,
       "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.4350453172205438
-    },
-    {
-      "id": "openstack:I68abfb36d209e4130d67af08b5b2de3dbffad903:deliverables/caracal/manila.yaml:2:49",
-      "change_id": "I68abfb36d209e4130d67af08b5b2de3dbffad903",
-      "prediction": "  - version: 18.2.0",
-      "exact_match": 1.0,
-      "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
       "edit_similarity": 1.0
     },
@@ -729,22 +262,105 @@
       "edit_similarity": 0.8813559322033898
     },
     {
-      "id": "openstack:I9b07653c9039b4d9e4c7e60d3b33ce4d0f60a17a:doc/source/reference/cryptography.rst:1:35",
-      "change_id": "I9b07653c9039b4d9e4c7e60d3b33ce4d0f60a17a",
-      "prediction": "provides the cryptographic functions necessary for token generation, validation,\nand is the version shipped in Ubuntu.",
+      "id": "openstack:I6099445adeaa9de2c859205ff2fbba03524aed84:software/software/software_controller.py:1:3049",
+      "change_id": "I6099445adeaa9de2c859205ff2fbba03524aed84",
+      "prediction": "```python\nsocket.gethostname() != constants.CONTROLLER_0_HOSTNAME and \\\nnot self.pre_bootstrap:\n```",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.6960352422907489
+      "edit_similarity": 0.691358024691358
     },
     {
-      "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
-      "change_id": "I9ab37f9d225a84fcceb9b618fad7d110974d2ed4",
-      "prediction": "        self.client.get_network_interfaces.assert_called_one_with(protocols=['NFS', 'CIFS'])",
+      "id": "openstack:I6a6bb45671f3db113f5ff72b88adbd22bee7ac22:upper-constraints.txt:2:499",
+      "change_id": "I6a6bb45671f3db113f5ff72b88adbd22bee7ac22",
+      "prediction": "```python\npython-openstackclient===7.2.0;python_version>='3.9'\n```",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9292929292929293
+      "edit_similarity": 0.7317073170731707
+    },
+    {
+      "id": "openstack:I9d000fc9e385286122d818bb5490d6aa07ecd800:tests/unit/test_openstack_driver.py:2:105",
+      "change_id": "I9d000fc9e385286122d818bb5490d6aa07ecd800",
+      "prediction": "```python\nself._test_node_lifecycle('debian-normal')\n```",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 0.9130434782608695
+    }
+  ],
+  "adapted": [
+    {
+      "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:131",
+      "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
+      "prediction": "    - name: Wait until sysinv API is ready on the OAM endpoint",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.7971014492753623
+    },
+    {
+      "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:3",
+      "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
+      "prediction": "# Copyright (c) 2020-2024 Wind River Systems, Inc.",
+      "exact_match": 1.0,
+      "exact_match_raw": 1.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 1.0
+    },
+    {
+      "id": "openstack:I10f69ec048944c2c961f957b4125f29aceee977e:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:1:19705",
+      "change_id": "I10f69ec048944c2c961f957b4125f29aceee977e",
+      "prediction": "                    if pod_eviction_timeout:",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.7333333333333333
+    },
+    {
+      "id": "openstack:Ic77001276e09288debc27258728dc039193bf6cb:.zuul.yaml:1:16",
+      "change_id": "Ic77001276e09288debc27258728dc039193bf6cb",
+      "prediction": "    nodeset: ubuntu-noble",
+      "exact_match": 1.0,
+      "exact_match_raw": 1.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 1.0
+    },
+    {
+      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:110",
+      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
+      "prediction": "    if action == \"migrate\" and \\",
+      "exact_match": 1.0,
+      "exact_match_raw": 1.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 1.0
+    },
+    {
+      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
+      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
+      "prediction": "            LOG.error(f\"Command failed: {stdout.decode('utf-8')}\")",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.4918032786885246
+    },
+    {
+      "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:3:233",
+      "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
+      "prediction": "    # Set the microversion to 17.0",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.5918367346938775
+    },
+    {
+      "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:4:225",
+      "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
+      "prediction": "for testing backwards compatibility or evaluating external tools with",
+      "exact_match": 1.0,
+      "exact_match_raw": 1.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 1.0
     },
     {
       "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:2:424",
@@ -765,85 +381,157 @@
       "edit_similarity": 1.0
     },
     {
-      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
-      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "            LOG.error(stderr.decode('utf-8'))",
+      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
+      "change_id": "I3ab01460496ba72ebd9941a725945aac92adf749",
+      "prediction": "    DEPLOY_STATES.START.value: \"delete and restart deploy by rerunning 'deploy start' command\",",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.345679012345679
+      "edit_similarity": 0.2388451443569554
     },
     {
-      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:110",
-      "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "        action == \"migrate\" and \\",
+      "id": "openstack:I97b05918b80223add692a8e09790a08cfe1fe0a2:controllerconfig/controllerconfig/upgrade-scripts/35-sync-system-local-ca-in-subclouds.py:13:1",
+      "change_id": "I97b05918b80223add692a8e09790a08cfe1fe0a2",
+      "prediction": "#!/usr/bin/env python",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9230769230769231
+      "edit_similarity": 0.8947368421052632
     },
     {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/privileged/ovs_vsctl.py:3:32",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "        if command != 'ovs-ofctl':",
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "    ${KUBECTL_CMD} patch clusterrole system:node --type='json' \\\n    --patch='[{\"op\":\"add\",\"path\":\"/rules/-\",\"value\":{\"apiGroups\":[\"\"],\"resources\":[\"namespaces\"],\"verbs\":[\"get\",\"list\"]}}]'",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.958974358974359
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:169",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "    Restart kubelet on all Kubernetes nodes if RBAC has been updated",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.9855072463768116
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "    compute_hosts=\"\"\n\n    host_list_command=\"system host-list --format value --column hostname --column personality\"\n\n    while read -r line; do\n        read -ra arr <<< \"${line}\"\n        personality=\"${arr[1]}\";",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.31952662721893493
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:57",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "    read -ra compute_hosts_arr <<< $(get_compute_hosts)",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.8103448275862069
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:66",
+      "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
+      "prediction": "    value=$(echo \"${value}]\" | sed 's/\\(.*\\),/\\1/')",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.9807692307692307
+    },
+    {
+      "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/__init__.py:14:270",
+      "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
+      "prediction": "    query_compatible_apps = [link.Link]",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
       "edit_similarity": 1.0
     },
     {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:189",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "            return_value,\n        ]",
-      "exact_match": 0.0,
-      "exact_match_raw": 0.0,
-      "normalized_exact_match": 0.0,
-      "edit_similarity": 0.4772727272727273
-    },
-    {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:191",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "        self.mock_ovs_vsctl.ovs_ofctl.return_value = None",
+      "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/reorder_apps.py:14:23",
+      "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
+      "prediction": "        \"\"\"Reorders apps based on the metadata.yaml presenting the application tarball",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
       "edit_similarity": 1.0
     },
     {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:257",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "        self.mock_ovs_vsctl.ovs_vsctl.return_value = ovs_port",
+      "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
+      "change_id": "I9ab37f9d225a84fcceb9b618fad7d110974d2ed4",
+      "prediction": "        self.client.get_network_interfaces.assert_called_one_with(protocols=[])",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9838709677419355
+      "edit_similarity": 0.8540540540540541
     },
     {
-      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:305",
-      "change_id": "Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0",
-      "prediction": "        self.mock_ovs_vsctl.ovs_vsctl.return_value = ovs_port",
+      "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
+      "change_id": "I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f",
+      "prediction": "          # We don't want to load the project to report on those repos\n          - exclude: [project]\n            projects:\n              - opendev/vexxhost-base-jobs",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.9838709677419355
+      "edit_similarity": 0.36947791164658633
     },
     {
-      "id": "openstack:I4e2f9c85e0919db54a7acc52ce8f7eeea1068508:software/software/utilities/migrate.py:5:73",
-      "change_id": "I4e2f9c85e0919db54a7acc52ce8f7eeea1068508",
-      "prediction": "        raise Exception(\"keyring directory cannot be found\")",
+      "id": "openstack:I9e120fcaedfa39fc08f3bc5f189976706ae72778:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:4:8633",
+      "change_id": "I9e120fcaedfa39fc08f3bc5f189976706ae72778",
+      "prediction": "            LOG.info(\"Skipping k8s_application_audit due \"\n                \"skip_k8s_application_audit flag setted as true.\")",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.6060606060606061
+      "edit_similarity": 0.8549618320610687
     },
     {
-      "id": "openstack:I10f69ec048944c2c961f957b4125f29aceee977e:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:1:19705",
-      "change_id": "I10f69ec048944c2c961f957b4125f29aceee977e",
-      "prediction": "                                # This is a workaround for a known issue in Kubernetes 1.27.5\n                                # where the eviction timeout is not respected when using the v1 API version",
+      "id": "openstack:I42e459aebab665c0e6dd0c68a4e793e8de225b44:heat/engine/constraint/common_constraints.py:2:196",
+      "change_id": "I42e459aebab665c0e6dd0c68a4e793e8de225b44",
+      "prediction": "class JsonStringConstraint(constraints.BaseCustomConstraint):",
+      "exact_match": 1.0,
+      "exact_match_raw": 1.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 1.0
+    },
+    {
+      "id": "openstack:I32524af08dce007ed344de62e1ea53a98a95405a:README.md:2:37",
+      "change_id": "I32524af08dce007ed344de62e1ea53a98a95405a",
+      "prediction": "[cg-doc-contrib]: https://docs.openstack.org/charm-guide/latest/contributing.html",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
-      "edit_similarity": 0.36823104693140796
+      "edit_similarity": 0.8813559322033898
+    },
+    {
+      "id": "openstack:I6099445adeaa9de2c859205ff2fbba03524aed84:software/software/software_controller.py:1:3049",
+      "change_id": "I6099445adeaa9de2c859205ff2fbba03524aed84",
+      "prediction": "                socket.gethostname() != constants.CONTROLLER_1_HOSTNAME and\n                not self.pre_bootstrap):",
+      "exact_match": 0.0,
+      "exact_match_raw": 0.0,
+      "normalized_exact_match": 0.0,
+      "edit_similarity": 0.7461139896373057
+    },
+    {
+      "id": "openstack:I6a6bb45671f3db113f5ff72b88adbd22bee7ac22:upper-constraints.txt:2:499",
+      "change_id": "I6a6bb45671f3db113f5ff72b88adbd22bee7ac22",
+      "prediction": "python-openstackclient===7.2.0",
+      "exact_match": 1.0,
+      "exact_match_raw": 1.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 1.0
+    },
+    {
+      "id": "openstack:I9d000fc9e385286122d818bb5490d6aa07ecd800:tests/unit/test_openstack_driver.py:2:105",
+      "change_id": "I9d000fc9e385286122d818bb5490d6aa07ecd800",
+      "prediction": "        self._test_node_lifecycle('debian-normal')",
+      "exact_match": 1.0,
+      "exact_match_raw": 1.0,
+      "normalized_exact_match": 1.0,
+      "edit_similarity": 1.0
     }
   ]
 }
