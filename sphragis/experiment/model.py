@@ -13,6 +13,8 @@ pre-registration decision, not a deployment one.
 from __future__ import annotations
 
 import argparse
+import math
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,6 +23,8 @@ import torch
 from peft import LoraConfig, PeftMixedModel, PeftModel, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
+
+from sphragis.experiment.training import warmup_steps
 
 MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
 DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
@@ -145,6 +149,93 @@ def attach_adapter(
     tokenizer = _require_tokenizer(model_id)
     base = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16, device_map="cuda:0")
     return get_peft_model(base, LORA), tokenizer
+
+
+def train_adapter(
+    model: Any,
+    items: Sequence[Mapping[str, Any]],
+    *,
+    pad_token_id: int,
+    seed: int,
+    budget: Mapping[str, Any] = TRAINING,
+    micro_batch: int = 2,
+    grad_accum: int = 8,
+) -> list[float]:
+    """Train a LoRA adapter with an explicit loop. Returns the loss at each optimiser step.
+
+    Deliberately not `transformers.Trainer`. Trainer diverged on this corpus: loss fell
+    1.00 to 0.52 over two healthy steps, then grad_norm went NaN and loss collapsed to
+    exactly 0, leaving an adapter that emitted garbage. Four diagnostic jobs eliminated
+    every hypothesis that would have implicated the data or the configuration rather than
+    Trainer: sequence lengths are unremarkable (median 80, max 678), no item lacks
+    supervised tokens, the adapter is already fp32, and a hand-written loop is stable at
+    batch 1, at batch 2 with padding, with and without autocast, and with accumulation of
+    8 at both 2e-4 and 5e-5.
+
+    This loop is that configuration, made permanent. For a pre-registered study a training
+    procedure that can be read in full is worth more than one whose failure mode resisted
+    four attempts to reproduce.
+    """
+    torch.manual_seed(seed)
+    trainable = [p for p in model.parameters() if p.requires_grad]
+    optimiser = torch.optim.AdamW(trainable, lr=float(budget["learning_rate"]))
+    per_step = micro_batch * grad_accum
+    steps = max(1, len(items) // per_step) * int(budget["epochs"])
+    # Linear warmup then cosine, so the schedule matches the declared budget. A declared
+    # parameter the code ignores is worse than either choice, and this one is
+    # pre-registered.
+    warm = warmup_steps(
+        n_examples=len(items),
+        batch_size=micro_batch,
+        grad_accum=grad_accum,
+        epochs=int(budget["epochs"]),
+        ratio=float(budget["warmup_ratio"]),
+    )
+
+    def factor(step: int) -> float:
+        if warm and step < warm:
+            return (step + 1) / warm
+        progress = (step - warm) / max(steps - warm, 1)
+        return 0.5 * (1.0 + math.cos(math.pi * min(progress, 1.0)))
+
+    schedule = torch.optim.lr_scheduler.LambdaLR(optimiser, factor)
+
+    model.train()
+    losses: list[float] = []
+    cursor = 0
+    for _ in range(steps):
+        optimiser.zero_grad()
+        total = 0.0
+        for _ in range(grad_accum):
+            batch = _collate(items[cursor : cursor + micro_batch], pad_token_id)
+            cursor = (cursor + micro_batch) % max(len(items) - micro_batch, 1)
+            loss = model(**batch).loss / grad_accum
+            if not torch.isfinite(loss):
+                raise RuntimeError("non-finite loss; refusing to train on a diverged step")
+            loss.backward()
+            total += float(loss) * grad_accum
+        norm = torch.nn.utils.clip_grad_norm_(trainable, 1.0)
+        if not torch.isfinite(norm):
+            raise RuntimeError("non-finite gradient norm; refusing to step")
+        optimiser.step()
+        schedule.step()
+        losses.append(total / grad_accum)
+    return losses
+
+
+def _collate(batch: Sequence[Mapping[str, Any]], pad_token_id: int) -> dict[str, Any]:
+    width = max(len(item["input_ids"]) for item in batch)
+
+    def pad(key: str, filler: int) -> Any:
+        return torch.tensor(
+            [list(item[key]) + [filler] * (width - len(item[key])) for item in batch]
+        ).cuda()
+
+    return {
+        "input_ids": pad("input_ids", pad_token_id),
+        "labels": pad("labels", -100),
+        "attention_mask": pad("attention_mask", 0),
+    }
 
 
 def _smoke(model_id: str) -> int:

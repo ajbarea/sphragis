@@ -14,11 +14,11 @@ from pathlib import Path
 
 import torch
 from peft import get_peft_model
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from sphragis.experiment.model import LORA, MODEL_ID, TRAINING, cast_trainable_to_fp32
+from sphragis.experiment.model import LORA, MODEL_ID, TRAINING, train_adapter
 from sphragis.experiment.runner import build_prompt
-from sphragis.experiment.training import build_supervised, warmup_steps
+from sphragis.experiment.training import build_supervised
 from sphragis.measure.score import score
 
 EXAMPLES = Path(sys.argv[1] if len(sys.argv) > 1 else "pilot-examples.jsonl")
@@ -100,32 +100,10 @@ em_base = evaluate_em(base, "BASE")
 
 model = get_peft_model(base, LORA)
 model.print_trainable_parameters()
-cast = cast_trainable_to_fp32(model)
-print(f"cast {cast} adapter tensors to fp32", flush=True)
-assert cast > 0, "nothing cast; adapter already fp32 or requires_grad unset"
 
-args = TrainingArguments(
-    output_dir="/tmp/pilot-adapter",
-    num_train_epochs=TRAINING["epochs"],
-    learning_rate=TRAINING["learning_rate"],
-    per_device_train_batch_size=2,
-    gradient_accumulation_steps=8,
-    warmup_steps=warmup_steps(
-        n_examples=len(train_ds),
-        batch_size=2,
-        grad_accum=8,
-        epochs=TRAINING["epochs"],
-        ratio=TRAINING["warmup_ratio"],
-    ),
-    lr_scheduler_type=TRAINING["lr_scheduler"],
-    logging_steps=5,
-    save_strategy="no",
-    bf16=True,
-    max_grad_norm=1.0,
-    report_to=[],
-    seed=1,
-)
-Trainer(model=model, args=args, train_dataset=train_ds, data_collator=collate).train()
+losses = train_adapter(model, train_ds, pad_token_id=tok.pad_token_id, seed=1)
+print(f"losses: {[f'{x:.3f}' for x in losses]}", flush=True)
+assert all(x == x for x in losses), "non-finite loss slipped through"
 print("training done", flush=True)
 em_adapted = evaluate_em(model, "ADAPTED")
 
