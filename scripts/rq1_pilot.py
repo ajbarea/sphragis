@@ -24,6 +24,13 @@ from sphragis.experiment.model import (
     attach_adapter,
     train_adapter,
 )
+from sphragis.experiment.neutral import (
+    apparatus_holds,
+    leakage_check,
+    manipulation_check,
+    non_degeneracy,
+    positive_control,
+)
 from sphragis.experiment.runner import build_prompt
 from sphragis.experiment.training import build_supervised
 from sphragis.experiment.walk import gate, walk
@@ -37,6 +44,12 @@ parser.add_argument("--split-seed", type=int, default=0)
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--adapters", type=Path, default=Path("adapters"))
 parser.add_argument("--out", type=Path, default=Path("rq1-pilot.json"))
+parser.add_argument(
+    "--leakage-max-rate",
+    type=float,
+    default=0.01,
+    help="outcome-neutral test 4 threshold; PROVISIONAL until fixed in the Stage 1 report",
+)
 parser.add_argument(
     "--equalize-train",
     action="store_true",
@@ -80,6 +93,7 @@ class InProcessTrainer:
 
     def __init__(self) -> None:
         self.reports: dict[str, dict] = {}
+        self.losses: dict[str, list[float]] = {}
 
     def train(self, org: str, seed: int) -> str:
         model, tok = attach_adapter(MODEL_ID, seed)
@@ -99,6 +113,7 @@ class InProcessTrainer:
         epochs = int(TRAINING["epochs"])
         assert report.skipped_steps == 0, f"{org} s{seed}: {report.skipped_steps} steps skipped"
         target = args.adapters / f"{org}-s{seed}"
+        self.losses[f"{org}-s{seed}"] = list(report.losses)
         model.save_pretrained(target)
         self.reports[f"{org}-s{seed}"] = {
             "items": len(items),
@@ -109,6 +124,7 @@ class InProcessTrainer:
             "last_loss": report.losses[-1],
             # The last step holds only the examples left over after full batches (1 of 145,
             # 6 of 422), so its loss is noise. The final epoch's mean is the readable figure.
+            "adapter_weight_norm": report.adapter_weight_norm,
             "final_epoch_mean_loss": sum(report.losses[-report.steps // epochs :])
             / max(1, len(report.losses[-report.steps // epochs :])),
         }
@@ -149,6 +165,36 @@ for org, interval in verdict["binding"].items():
     )
 print(f"GATE (pilot scale, not confirmatory): {verdict['verdict']}", flush=True)
 
+# Outcome-neutral tests. At confirmatory scale a failure here halts the study before the gate
+# is read; at pilot scale they are reported beside it.
+checks = []
+for org in orgs:
+    for seed in seeds:
+        checks.append(
+            positive_control(
+                results[f"adapter:{org}|{org}|s{seed}"],
+                results[f"base|{org}"],
+                label=f"{org}|s{seed}",
+                bootstrap_seed=args.bootstrap_seed,
+            )
+        )
+        checks.append(
+            manipulation_check(
+                trainer.losses[f"{org}-s{seed}"],
+                epochs=int(TRAINING["epochs"]),
+                adapter_weight_norm=trainer.reports[f"{org}-s{seed}"]["adapter_weight_norm"],
+                label=f"{org}|s{seed}",
+            )
+        )
+    checks.append(
+        leakage_check(train_rows[org], held_out[org], max_rate=args.leakage_max_rate, label=org)
+    )
+checks.append(non_degeneracy(results))
+for check in checks:
+    print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
+holds = apparatus_holds(checks)
+print(f"APPARATUS {'holds' if holds else 'FAILS: H1 would not be read'}", flush=True)
+
 args.out.write_text(
     json.dumps(
         {
@@ -161,6 +207,13 @@ args.out.write_text(
             "corpora": summary,
             "training": trainer.reports,
             "verdict": verdict,
+            "outcome_neutral": {
+                "apparatus_holds": holds,
+                "leakage_max_rate_provisional": args.leakage_max_rate,
+                "checks": [
+                    {"name": c.name, "passed": c.passed, "evidence": c.evidence} for c in checks
+                ],
+            },
             "results": results,
         },
         indent=2,

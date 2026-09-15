@@ -78,6 +78,10 @@ class TrainingReport:
     skipped_steps: int
     skipped_micro_batches: int
     examples_seen: int
+    # Norm of every LoRA B matrix together. PEFT initializes B at zero (checked on peft 0.20),
+    # so a positive value is direct evidence the adapter moved: the second half of the
+    # pre-registered manipulation check.
+    adapter_weight_norm: float = math.nan
 
     @property
     def applied_steps(self) -> int:
@@ -324,6 +328,13 @@ def train_adapter(
         skipped_steps=skipped_steps,
         skipped_micro_batches=skipped_micro_batches,
         examples_seen=len(order),
+        adapter_weight_norm=math.sqrt(
+            sum(
+                float(p.detach().float().norm()) ** 2
+                for name, p in model.named_parameters()
+                if "lora_B" in name
+            )
+        ),
     )
     if skipped_steps or skipped_micro_batches:
         print(

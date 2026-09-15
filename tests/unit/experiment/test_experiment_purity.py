@@ -13,6 +13,7 @@ _HEAVY = {"torch", "transformers", "peft", "datasets"}
 _ORCHESTRATION = (
     "grid.py",
     "holdout.py",
+    "neutral.py",
     "power.py",
     "preflight.py",
     "runner.py",

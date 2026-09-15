@@ -41,7 +41,8 @@ def boilerplate_threshold(n_documents: int, *, fraction: float, floor: int) -> i
     return max(floor, math.ceil(fraction * n_documents))
 
 
-def _pair_text(example: Mapping[str, Any]) -> str:
+def pair_text(example: Mapping[str, Any]) -> str:
+    """The normalized before/after pair every duplicate comparison is made over."""
     return f"{normalize(str(example['before']))}\n{normalize(str(example['after']))}"
 
 
@@ -71,7 +72,7 @@ def dedup(
 
     by_hash: dict[str, dict[str, Any]] = {}
     for example in ordered:
-        key = hashlib.sha256(_pair_text(example).encode()).hexdigest()
+        key = hashlib.sha256(pair_text(example).encode()).hexdigest()
         if key in by_hash:
             removed["exact"] += 1
             continue
@@ -80,7 +81,7 @@ def dedup(
     kept: list[dict[str, Any]] = []
     signatures: list[frozenset[str]] = []
     for example in by_hash.values():
-        signature = shingles(_pair_text(example), k)
+        signature = shingles(pair_text(example), k)
         if any(jaccard(signature, seen) >= threshold for seen in signatures):
             removed["near_duplicate"] += 1
             continue
