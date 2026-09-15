@@ -29,6 +29,7 @@ DROP_REASONS = (
     *(f"ill_posed_{reason}" for reason in ILL_POSED_REASONS),
     "metadata_file",
     "author_comment",
+    "acknowledgement",
     "no_line_anchor",
     "no_successor",
     "diff_error",
@@ -57,6 +58,24 @@ def is_reviewer_comment(comment: Mapping[str, Any], owner_id: Any) -> bool:
             "Scrub comments with the same salt as the changes before building."
         )
     return author_id != owner_id
+
+
+# Whole-message acknowledgements carrying no instruction. Deliberately small and exact:
+# a comment is dropped only when its entire normalized text is one of these, so "done, but
+# rename the variable" survives. Measured on the OpenStack 2024-10 build after the author
+# filter: "Done" 16 times, "ditto" 4, "+1" 3, and 4 of 201 examples whose only comments
+# were of this kind, leaving a target the prompt gives no way to reach. "ditto" points at
+# another comment the prompt does not carry, so it is no instruction either. A
+# pre-registration item: it changes which examples exist.
+ACKNOWLEDGEMENTS = frozenset(
+    {"done", "ditto", "+1", "ack", "acked", "fixed", "thanks", "thank you", "ok", "lgtm"}
+)
+_TRAILING = " .!:)"
+
+
+def is_acknowledgement(message: str) -> bool:
+    """True when a comment is only an acknowledgement, with nothing to act on."""
+    return message.strip().lower().rstrip(_TRAILING).strip() in ACKNOWLEDGEMENTS
 
 
 def _covers(hunk: Hunk, line: int) -> bool:
@@ -88,6 +107,9 @@ def build_from_change(
         for comment in comments:
             if owner_id is not None and not is_reviewer_comment(comment, owner_id):
                 drops["author_comment"] += 1
+                continue
+            if is_acknowledgement(str(comment.get("message", ""))):
+                drops["acknowledgement"] += 1
                 continue
             patch_set, line = comment.get("patch_set"), comment.get("line")
             if not isinstance(line, int) or patch_set is None:

@@ -224,3 +224,45 @@ def test_a_well_posed_example_is_unaffected_by_the_filter() -> None:
     examples, drops = build_from_change("openstack", CHANGE, comments, diff_for)
     assert len(examples) == 1
     assert all(v == 0 for k, v in drops.items() if k.startswith("ill_posed_"))
+
+
+@pytest.mark.parametrize(
+    "message", ["Done", "done.", " Ditto ", "+1", "LGTM!", "Thanks :)", "Fixed"]
+)
+def test_an_acknowledgement_is_not_an_instruction(message: str) -> None:
+    from sphragis.corpus.build import is_acknowledgement
+
+    assert is_acknowledgement(message)
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["done, but rename the variable", "Done? This still leaks the handle", "spaces around +1", ""],
+)
+def test_a_comment_with_anything_to_act_on_survives(message: str) -> None:
+    from sphragis.corpus.build import is_acknowledgement
+
+    assert not is_acknowledgement(message)
+
+
+def test_a_hunk_whose_only_comment_is_an_acknowledgement_yields_no_example() -> None:
+    """The target is unreachable from a prompt that says only "Done"."""
+    only_ack = {"nova/f.py": [{"patch_set": 1, "line": 2, "message": "Done"}]}
+    _, diff_for, calls = _fetchers()
+    examples, drops = build_from_change("openstack", CHANGE, lambda n: only_ack, diff_for)
+    assert examples == []
+    assert drops["acknowledgement"] == 1
+    assert calls == [], "an acknowledgement is dropped before its diff is fetched"
+
+
+def test_an_acknowledgement_beside_a_real_comment_is_dropped_and_the_example_kept() -> None:
+    mixed = {
+        "nova/f.py": [
+            {"patch_set": 1, "line": 2, "message": "spaces around the operator"},
+            {"patch_set": 1, "line": 2, "message": "+1"},
+        ]
+    }
+    comments, diff_for, _ = _fetchers()
+    examples, drops = build_from_change("openstack", CHANGE, lambda n: mixed, diff_for)
+    assert [e["comments"] for e in examples] == [["spaces around the operator"]]
+    assert drops["acknowledgement"] == 1

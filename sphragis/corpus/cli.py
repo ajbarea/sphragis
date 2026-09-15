@@ -130,6 +130,19 @@ def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
     return rows
 
 
+def drops_path(examples_file: Path) -> Path:
+    """Where a month's drop counts live: `2024-10.jsonl` beside `2024-10.drops.json`."""
+    return examples_file.with_name(examples_file.name.removesuffix(".jsonl") + ".drops.json")
+
+
+def _load_drops(args: argparse.Namespace) -> dict[str, int]:
+    """Build-stage drop counts summed over every month on disk."""
+    total: Counter[str] = Counter()
+    for path in sorted(_examples_dir(args).glob("*.drops.json")):
+        total.update(json.loads(path.read_text()))
+    return dict(sorted(total.items()))
+
+
 def _stage_build(args: argparse.Namespace) -> int:
     """Every snapshot for an organization into examples, one file per month."""
     salt = require_salt()
@@ -154,12 +167,21 @@ def _stage_build(args: argparse.Namespace) -> int:
             print(f"{args.org} {month}: skip, already built")
             continue
         rows: list[dict[str, Any]] = []
+        month_drops: Counter[str] = Counter()
         for change in read_snapshot(snapshot):
             built, dropped = build_from_change(args.org, change, comments, diffs)
             rows.extend(built)
-            drops.update(dropped)
+            month_drops.update(dropped)
+        # Drop counts beside the examples, written first so a month with examples always has
+        # them. They were printed and lost: the files on disk are post-filter, so the
+        # discard rate by reason could not be reconstructed without refetching every diff,
+        # and the Stage 1 report states those rates.
+        drops_path(target).write_text(
+            json.dumps(dict(sorted(month_drops.items())), indent=2) + "\n"
+        )
         target.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
-        print(f"{args.org} {month}: {len(rows)} examples")
+        drops.update(month_drops)
+        print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)
     print(f"{args.org}: {total} examples, drops {dict(drops)}")
     return 0
@@ -216,7 +238,7 @@ def _stage_freeze(args: argparse.Namespace) -> int:
         Path(args.root),
         args.org,
         windows,
-        stats={"deduped": dict(removed), "unassigned_changes": 0},
+        stats={"built_drops": _load_drops(args), "deduped": dict(removed), "unassigned_changes": 0},
     )
     print(f"{args.org}: froze {manifest['counts']}")
     return 0

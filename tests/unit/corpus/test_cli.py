@@ -271,6 +271,10 @@ def test_build_reads_every_snapshot_and_writes_examples(
     rows = [json.loads(line) for line in path.read_text().splitlines() if line]
     assert len(rows) == 1 and rows[0]["comments"] == ["fix"]
     assert "1 examples" in capsys.readouterr().out
+    # The drop profile survives the run. It used to be printed and lost, and the examples
+    # on disk are post-filter, so the discard rate could not be reconstructed.
+    drops = json.loads((path.parent / "2024-10.drops.json").read_text())
+    assert drops["author_comment"] == 0 and set(drops) >= {"no_anchored_hunk", "metadata_file"}
 
 
 def test_build_reports_a_missing_snapshot_rather_than_raising(
@@ -363,3 +367,9 @@ def test_build_overwrite_rebuilds_a_month(tmp_path: Path, monkeypatch: pytest.Mo
 
     assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path), "--overwrite"]) == 0
     assert (examples / "2024-10.jsonl").read_text() == ""
+
+
+def test_drops_path_sits_beside_its_month() -> None:
+    from sphragis.corpus.cli import drops_path
+
+    assert drops_path(Path("x/examples/2024-10.jsonl")) == Path("x/examples/2024-10.drops.json")
