@@ -40,7 +40,12 @@ def _expected(row: list[float], target: int) -> tuple[float, float, float]:
 
 
 def test_statistics_match_a_direct_computation_and_skip_the_first_token() -> None:
-    stats = token_statistics(FixedLogitsModel(), ThreeTokenTokenizer(), "x", device="cpu")
+    stats = token_statistics(
+        FixedLogitsModel(),
+        ThreeTokenTokenizer(),  # ty: ignore[invalid-argument-type]
+        "x",
+        device="cpu",
+    )
     # Positions 0 and 1 predict tokens 2 and 1; the last logit row predicts nothing.
     assert len(stats) == 2
     for got, want in zip(stats, [_expected(LOGITS[0], 2), _expected(LOGITS[1], 1)], strict=True):
@@ -53,4 +58,9 @@ def test_a_single_token_has_no_prediction_to_score() -> None:
             return {"input_ids": torch.tensor([[0]])}
 
     with pytest.raises(ValueError, match="at least two tokens"):
-        token_statistics(FixedLogitsModel(), OneToken(), "x", device="cpu")
+        token_statistics(
+            FixedLogitsModel(),
+            OneToken(),  # ty: ignore[invalid-argument-type]
+            "x",
+            device="cpu",
+        )
