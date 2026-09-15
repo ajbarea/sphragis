@@ -617,6 +617,41 @@ maintainer. Neither can be cited as a cutoff.
   pretraining exposure. Guided completion stays on the registered Instruct model, since it
   asks what the evaluated model reproduces.
 
+### Contamination battery, first run: it executes, and it is underpowered (2026-09-15)
+
+Job 143898. OpenStack 2024-10 against the 2024-01 control, both deduplicated. Min-K%++ and
+Min-K% on the base `Qwen/Qwen2.5-Coder-7B`; guided completion on the registered Instruct
+model. `datasets/results/contamination-openstack.json`.
+
+| | post-cutoff | pre-cutoff control | gap | 95% bootstrap, by change |
+|---|---|---|---|---|
+| Min-K%++, k = 20 | -1.680 | -1.900 | +0.221 | [-0.052, +0.524] |
+| Min-K%, k = 20 | -7.655 | -7.810 | +0.155 | [-0.635, +0.930] |
+| guided completion | 0 of 33 | 0 of 25 | 0 | at the floor |
+
+Scored: 35 post-cutoff examples over 22 changes and 28 control examples over 18, the ones
+reaching the 32-token minimum (median 51 tokens in both windows). No position had an
+undefined Min-K%++ score.
+
+**Reading, as pre-committed.** Neither membership interval excludes zero, and guided
+completion reproduced no hunk in either window. This is a battery that runs end to end and
+cannot yet separate the windows. It is not evidence of no exposure. The point estimates lean
+the unexpected way (post-cutoff scored as slightly *more* familiar), which at this sample is
+indistinguishable from content differences between the months.
+
+**What it changes for the confirmatory design.**
+
+- **Sample.** The 32-token minimum keeps about 20% of a deduplicated month (35 of 172, 28 of
+  133), because hunks are short. The control has to be a multi-month window, sized like the
+  post-cutoff window it is compared against, not a single month.
+- **Scored text.** Scoring the hunk with its surrounding context instead of the bare `after`
+  lines would bring most examples over the minimum. `Hunk` already carries
+  `context_before` and `context_after`; `build` does not emit them yet. Adding them changes
+  the example schema, so it is a Stage 1 decision.
+- **Guided completion at the floor** in both windows means it has no discriminating power on
+  this corpus as prompted. Either report it as a null instrument, or register a softer match
+  (normalized edit similarity against the reference) before seeing the confirmatory data.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
