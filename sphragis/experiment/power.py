@@ -21,9 +21,23 @@ from __future__ import annotations
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
-from statistics import fmean
 
 from sphragis.measure.stats import Cluster, cluster_bootstrap, paired_difference, supports_direction
+
+
+def _null(cluster: Cluster, rng: random.Random) -> Cluster:
+    """The cluster with its arms swapped half the time: same variance, no direction.
+
+    Resampling the pilot as observed carried the pilot's own difference into the simulated
+    study as if it were the null. On the equalized RQ1 pilot, OpenStack's observed +0.037
+    made the "minimum detectable difference" at 880 changes +0.0067, a 29-fold drop from 18
+    changes where sampling noise alone predicts about 7-fold; Qt's observed -0.038 would have
+    inflated its figure the same way. A random arm swap per change is the sign-flip null: it
+    keeps each change's paired variance and removes whichever way the pilot happened to lean.
+    """
+    if rng.random() < 0.5:
+        return Cluster(cluster.change_id, cluster.control, cluster.treatment)
+    return cluster
 
 
 def _shift(cluster: Cluster, lift: float, rng: random.Random) -> Cluster:
@@ -44,10 +58,11 @@ def realised_difference(
 ) -> float:
     """The mean exact-match difference a lift produces on this pilot, in exact-match points."""
     rng = random.Random(seed)
-    return fmean(
-        paired_difference([_shift(c, lift, rng) for c in clusters]) - paired_difference(clusters)
-        for _ in range(draws)
-    )
+    total = 0.0
+    for _ in range(draws):
+        null = [_null(c, rng) for c in clusters]
+        total += paired_difference([_shift(c, lift, rng) for c in null]) - paired_difference(null)
+    return total / draws
 
 
 def simulate_power(
@@ -64,7 +79,9 @@ def simulate_power(
     rng = random.Random(seed)
     detected = 0
     for trial in range(trials):
-        sample = [_shift(clusters[rng.randrange(len(clusters))], lift, rng) for _ in range(n)]
+        sample = [
+            _shift(_null(clusters[rng.randrange(len(clusters))], rng), lift, rng) for _ in range(n)
+        ]
         interval = cluster_bootstrap(sample, seed=seed + trial, resamples=resamples)
         detected += supports_direction(interval)
     return detected / trials

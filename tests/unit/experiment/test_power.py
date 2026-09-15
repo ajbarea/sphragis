@@ -82,3 +82,24 @@ def test_the_detectable_difference_is_reported_in_exact_match_points() -> None:
 
 def test_a_lift_of_zero_realises_no_difference() -> None:
     assert realised_difference(_pilot(20), lift=0.0, seed=1) == 0.0
+
+
+def _leaning_pilot(n: int, *, treatment: float, control: float) -> list[Cluster]:
+    """A pilot whose arms already differ, the way a real pilot's observed contrast does."""
+    return [Cluster(f"I{i}", (treatment, 0.0, 1.0), (control, 0.0, 1.0)) for i in range(n)]
+
+
+def test_a_pilot_that_already_favours_treatment_does_not_manufacture_power() -> None:
+    """Resampling the pilot as observed treated its own +difference as part of the null."""
+    leaning = _leaning_pilot(40, treatment=1.0, control=0.0)
+    power = simulate_power(leaning, lift=0.0, seed=3, n_changes=200, trials=80, resamples=100)
+    assert power < 0.2, f"no added effect, yet power {power:.2f}"
+
+
+def test_a_pilot_that_leans_either_way_gives_the_same_detectable_difference() -> None:
+    up = _leaning_pilot(40, treatment=1.0, control=0.0)
+    down = _leaning_pilot(40, treatment=0.0, control=1.0)
+    kwargs = {"seed": 5, "n_changes": 120, "trials": 40, "resamples": 60, "tolerance": 0.05}
+    a = minimum_detectable_effect(up, **kwargs)
+    b = minimum_detectable_effect(down, **kwargs)
+    assert abs(a.lift - b.lift) <= 0.1, f"{a.lift:.3f} against {b.lift:.3f}"
