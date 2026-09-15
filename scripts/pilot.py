@@ -13,7 +13,6 @@ implementation of the binding metric.
 import argparse
 import contextlib
 import json
-import random
 import time
 from pathlib import Path
 from statistics import median
@@ -23,7 +22,8 @@ from peft import get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from sphragis.corpus.pipeline import run_dedup
-from sphragis.experiment.model import LORA, MODEL_ID, TRAINING, train_adapter
+from sphragis.experiment.holdout import holdout_by_change, verbatim_overlap
+from sphragis.experiment.model import LORA, MAX_NEW_TOKENS, MODEL_ID, TRAINING, train_adapter
 from sphragis.experiment.runner import build_prompt, evaluate, to_clusters
 from sphragis.experiment.training import build_supervised, render_chat
 from sphragis.measure.stats import cluster_bootstrap
@@ -34,7 +34,7 @@ parser.add_argument("--out", type=Path, default=Path("pilot-outcomes.json"))
 parser.add_argument("--split-seed", type=int, default=0, help="which changes land in eval")
 parser.add_argument("--train-seed", type=int, default=1, help="adapter initialisation + order")
 parser.add_argument("--bootstrap-seed", type=int, default=7)
-parser.add_argument("--max-new-tokens", type=int, default=96)
+parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 args = parser.parse_args()
 
 rows = [json.loads(line) for line in args.examples.read_text().splitlines() if line]
@@ -51,21 +51,16 @@ print(f"dedup: {len(rows)} kept, removed {dict(removed)}", flush=True)
 # with train, and 20% sharing an exact `before` text, which inflated exact match from an
 # honest number to 0.512. This is the same grouping rule sphragis.corpus.split enforces for
 # the real windows.
+train_rows, eval_rows = holdout_by_change(rows, seed=args.split_seed)
 changes = sorted({r["change_id"] for r in rows})
-random.Random(args.split_seed).shuffle(changes)
-cut = int(0.8 * len(changes))
-train_ids, eval_ids = set(changes[:cut]), set(changes[cut:])
-train_rows = [r for r in rows if r["change_id"] in train_ids]
-eval_rows = [r for r in rows if r["change_id"] in eval_ids]
-# Disjoint change ids are guaranteed by the slicing above, so asserting them proves
-# nothing. The check that would have caught the 0.512 incident is a CONTENT overlap
-# across the boundary, which change grouping does not imply and dedup does not fully
-# remove: two changes can carry the same edit.
-_train_text = {(r["before"], str(r["after"])) for r in train_rows}
-_leaked = [r for r in eval_rows if (r["before"], str(r["after"])) in _train_text]
+_leaked = verbatim_overlap(train_rows, eval_rows)
 print(f"content overlap eval-vs-train: {len(_leaked)} of {len(eval_rows)}", flush=True)
 assert not _leaked, f"{len(_leaked)} eval examples repeat a training pair verbatim"
-print(f"changes {len(changes)}: {len(train_ids)} train / {len(eval_ids)} eval", flush=True)
+print(
+    f"changes {len(changes)}: {len({r['change_id'] for r in train_rows})} train / "
+    f"{len({r['change_id'] for r in eval_rows})} eval",
+    flush=True,
+)
 print(f"examples {len(rows)}  train {len(train_rows)}  eval {len(eval_rows)}", flush=True)
 
 tok = AutoTokenizer.from_pretrained(MODEL_ID)

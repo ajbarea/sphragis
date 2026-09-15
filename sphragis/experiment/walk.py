@@ -51,15 +51,24 @@ def walk(
             "trainer returned the same adapter handle for different (org, seed) runs; "
             "the seed replication would silently evaluate one adapter repeatedly"
         )
-    # Keyed on the run, not on the handle, so equal handles can never alias two conditions
-    # onto one generator. `None` is the base model.
-    generators: dict[tuple[str, int] | None, Generator] = {}
-    results: dict[str, list[dict[str, Any]]] = {}
+    # One generator alive at a time. Each holds a full copy of the 7B, about 15 GB in bf16,
+    # and the grid needs seven (base plus six adapters): cached for the whole walk they need
+    # roughly 105 GB against a GH200's 102, so the job would die partway through the grid
+    # after the queue wait. Runs are grouped by the generator they need, each generator
+    # serves all of its runs, and it is released before the next is built.
+    #
+    # Grouped on the run, not on the adapter handle, so equal handles can never alias two
+    # conditions onto one generator. `None` is the base model.
+    by_generator: dict[tuple[str, int] | None, list[EvalRun]] = {}
     for run in eval_runs(orgs, seeds):
         key = None if run.seed is None else (_trained_on(run), run.seed)
-        if key not in generators:
-            generators[key] = generator_for(None if key is None else adapters[key])
-        results[run_id(run)] = evaluate(generators[key], windows[run.eval_org])
+        by_generator.setdefault(key, []).append(run)
+    results: dict[str, list[dict[str, Any]]] = {}
+    for key, runs in by_generator.items():
+        generator = generator_for(None if key is None else adapters[key])
+        for run in runs:
+            results[run_id(run)] = evaluate(generator, windows[run.eval_org])
+        del generator
     return results
 
 

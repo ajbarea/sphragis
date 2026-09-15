@@ -106,6 +106,12 @@ TRAINING = {
     "max_seq_length": 2048,
 }
 
+# Greedy decoding stops here, so a reference longer than this can never be an exact match.
+# The pilot ran at 96, below 4 of 172 OpenStack 2024-10 references (99, 114, 143 and 154
+# tokens), which made 1 of its 27 held-out examples unwinnable for either arm. A registered
+# decoding parameter, identical for every condition.
+MAX_NEW_TOKENS = 256
+
 
 @dataclass
 class HFGenerator:
@@ -114,7 +120,7 @@ class HFGenerator:
     model_id: str = MODEL_ID
     adapter_path: str | None = None
     device: str = "cuda:0"
-    max_new_tokens: int = 256
+    max_new_tokens: int = MAX_NEW_TOKENS
 
     def __post_init__(self) -> None:
         self.tokenizer = _require_tokenizer(self.model_id)

@@ -180,3 +180,25 @@ def test_walk_and_gate_refuse_seed_sets_with_no_single_median(seeds: tuple[int, 
         )
     with pytest.raises(ValueError, match="seeds"):
         gate({}, orgs=ORGS, seeds=seeds, bootstrap_seed=0)
+
+
+def test_walk_never_holds_two_generators_at_once() -> None:
+    """Seven cached 7B generators need about 105 GB against a GH200's 102."""
+    import gc
+    import weakref
+
+    alive: list[weakref.ref] = []
+
+    def build(adapter: str | None):
+        gc.collect()
+        live = [ref for ref in alive if ref() is not None]
+        assert not live, f"{len(live)} generator(s) still alive when building another"
+        generator = WindowAwareGenerator(None if adapter is None else adapter.split("-")[1])
+        alive.append(weakref.ref(generator))
+        return generator
+
+    results = walk(
+        orgs=ORGS, seeds=SEEDS, windows=WINDOWS, trainer=FakeTrainer(), generator_for=build
+    )
+    assert len(results) == 14
+    assert len(alive) == 7
