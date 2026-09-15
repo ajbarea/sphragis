@@ -26,12 +26,14 @@ def paired_difference(clusters: Sequence[Cluster]) -> float:
     return fmean(treatment) - fmean(control)
 
 
-# Measured false-positive rate under a true null, 4000 trials per point, R=4000:
-# 5 changes 10.9%, 10 changes 7.4%, 19 changes 6.1%, 30 changes 5.9%, 45 changes 4.7%,
-# 91 changes 4.5%, 200 changes 4.9%, against a nominal 5%. The interval is anti-conservative
-# on few clusters and nominal from roughly 30. The floor below rules out the degenerate
-# end -- at one cluster every resample is that cluster, so the interval has zero width and
-# always excludes zero -- and the pilot's 19 changes are reported with the 6.1% noted.
+# Measured false-positive rate of this function under a true null (both arms at the same
+# exact-match rate), 1,500 trials per point, 2,000 resamples, two-sided exclusion of zero:
+# 5 changes 8.9%, 10 changes 7.4%, 19 changes 6.0%, 30 changes 6.5%, 45 changes 6.5%,
+# 91 changes 5.5%, 200 changes 5.7%, against a nominal 5% (standard error about 0.6 points).
+# Mildly anti-conservative throughout, clearly so below 10 changes. The gate reads one side,
+# nominal alpha 0.025, so these rates roughly halve for it. The floor rules out the
+# degenerate end: at one cluster every resample is that cluster, so the interval has zero
+# width and always excludes zero.
 MIN_CLUSTERS = 10
 
 
