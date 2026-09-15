@@ -754,6 +754,35 @@ Pilot-scale gate: fail, again. Normalized exact match agrees in direction.
   test window's size, with seed-to-seed variation inside the simulation rather than assumed
   away. That analysis is running.
 
+### Power: the test window could detect about 3 exact-match points (2026-09-15)
+
+`scripts/power_rq1.py datasets/results/rq1-pilot-equalized.json --size openstack=880 --size qt=2400`,
+on the equalized RQ1 pilot's per-change outcomes.
+
+| smallest matched-minus-mismatched gain detected at 80% power | pilot size | 200 changes | test window (estimated) |
+|---|---|---|---|
+| OpenStack (18 pilot changes) | +0.321 | +0.081 | **+0.030** at 880 |
+| Qt (48 pilot changes) | +0.126 | +0.047 | **+0.012** at 2,400 |
+
+**Found and fixed on the way (`ff46b58`).** The simulation resampled the pilot as observed, so
+the pilot's own difference acted as part of the null: OpenStack's observed +0.037 gave +0.0067
+at 880 changes, a 29-fold drop from 18 where sampling noise predicts about 7-fold. It now
+swaps arms per change at random before adding the effect. Tripped against the old code: a
+pilot that always favours treatment had power 1.0 at zero added effect; the fix gives 0.0.
+
+**How far to trust these.**
+
+- The bisection resolves the simulated lift to 0.02. Qt's lift at 2,400 is 0.016, inside that
+  step, so its +0.012 means roughly 0 to 0.015. OpenStack's +0.030 carries about 40%.
+- 100 trials (power's own standard error about 4 points), 100 resamples, one simulation seed.
+  The Stage 1 figure needs a finer run.
+- The window sizes are estimates: about 88 OpenStack and 240 Qt changes a month from 2024-10,
+  over the ten-month test window.
+- The gate needs both organizations, so **OpenStack binds: about 3 exact-match points.** Both
+  single-seed pilot contrasts were about 4 points in magnitude and changed sign between runs,
+  so an effect of that size sits near what the window can see. That bounds variance, not the
+  effect.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
