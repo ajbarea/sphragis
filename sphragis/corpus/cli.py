@@ -18,6 +18,7 @@ from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
 from sphragis.corpus.manifest import verify
 from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
 from sphragis.corpus.scrub import scrub
+from sphragis.corpus.split import is_test_window_unlocked
 from sphragis.corpus.storage import read_snapshot, write_snapshot
 
 STAGES = ("fetch", "build", "dedup", "split", "freeze", "verify")
@@ -80,9 +81,33 @@ def http_transport() -> Transport:
     return transport
 
 
+def refuse_if_sealed(root: Path, org: str, month: str) -> None:
+    """Exit before any request if `month` could return test-window content while sealed.
+
+    The test window is fetched only after in-principle acceptance; fetch timestamps are the
+    Stage 2 evidence that collection followed acceptance, and nothing enforced it here.
+
+    Every month from the window's start onward is refused, not only the months inside it.
+    Gerrit's `after:`/`before:` filter on a change's last update, not its creation, so a
+    fetch of a later month returns changes created inside the window and merged afterwards.
+
+    The seal lives at `<root>/<org>/seal.json`; a missing seal is locked.
+    """
+    if f"{month}-01" < WINDOWS["test"][0]:
+        return
+    seal_path = root / org / "seal.json"
+    record = json.loads(seal_path.read_text()) if seal_path.is_file() else {}
+    if not is_test_window_unlocked(record):
+        raise SystemExit(
+            f"refusing to fetch {org} {month}: on or after the sealed test window's start "
+            f"({WINDOWS['test'][0]}), and {seal_path} records no in-principle acceptance"
+        )
+
+
 def _stage_fetch(args: argparse.Namespace) -> int:
     """One organization-month into an immutable snapshot, scrubbed on the way in."""
     salt = require_salt()
+    refuse_if_sealed(Path(args.root), args.org, args.month)
     year, month = args.month.split("-")
     following = (
         f"{int(year) + (month == '12')}-{'01' if month == '12' else f'{int(month) + 1:02d}'}"

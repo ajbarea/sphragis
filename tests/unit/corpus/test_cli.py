@@ -373,3 +373,65 @@ def test_drops_path_sits_beside_its_month() -> None:
     from sphragis.corpus.cli import drops_path
 
     assert drops_path(Path("x/examples/2024-10.jsonl")) == Path("x/examples/2024-10.drops.json")
+
+
+def _fetch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, month: str) -> list[str]:
+    """Run the fetch stage with the network replaced; return the queries that reached it."""
+    from sphragis.corpus import cli
+
+    queries: list[str] = []
+
+    def fake_fetch(base, query, *, transport, options):
+        queries.append(query)
+        return [], {"pages": 0}
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "fetch_changes", fake_fetch)
+    cli.main(["fetch", "--org", "openstack", "--month", month, "--root", str(tmp_path)])
+    return queries
+
+
+@pytest.mark.parametrize("month", ["2025-11", "2026-03", "2026-08"])
+def test_fetch_refuses_a_test_window_month_while_sealed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, month: str
+) -> None:
+    with pytest.raises(SystemExit, match="sealed test window"):
+        _fetch(tmp_path, monkeypatch, month)
+
+
+def test_fetch_refuses_a_month_after_the_window_too(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Gerrit filters on last update: a later month returns changes created inside the window."""
+    with pytest.raises(SystemExit, match="sealed test window"):
+        _fetch(tmp_path, monkeypatch, "2026-09")
+
+
+def test_fetch_allows_the_last_dev_month(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    assert _fetch(tmp_path, monkeypatch, "2025-10")
+
+
+def test_fetch_unlocks_once_the_seal_records_acceptance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json
+
+    from sphragis.corpus.split import seal
+
+    (tmp_path / "openstack").mkdir(parents=True)
+    record = {**seal({"after": "2025-11-01"}), "accepted_at": "2027-02-04"}
+    (tmp_path / "openstack" / "seal.json").write_text(json.dumps(record))
+    assert _fetch(tmp_path, monkeypatch, "2025-11")
+
+
+def test_a_seal_without_acceptance_stays_locked(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json
+
+    from sphragis.corpus.split import seal
+
+    (tmp_path / "openstack").mkdir(parents=True)
+    (tmp_path / "openstack" / "seal.json").write_text(json.dumps(seal({"after": "2025-11-01"})))
+    with pytest.raises(SystemExit, match="sealed test window"):
+        _fetch(tmp_path, monkeypatch, "2025-11")
