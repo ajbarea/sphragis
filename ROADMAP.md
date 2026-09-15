@@ -29,7 +29,14 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 
 - [x] `score` — exact match binds the pass rule; normalized EM and edit similarity reported.
 - [x] `stats` — pairs cluster bootstrap over changes; `gate_verdict` is the pass rule as code.
-- [x] `contamination` — Min-K%, guided completion, time partition, each post-versus-pre.
+- [x] `contamination` — Min-K%++ (base checkpoint), guided completion (Instruct model), time
+  partition, each post-versus-pre. Min-K% had been implemented under the Min-K%++ name; fixed.
+- [x] **Battery run on real data** (2026-09-15), OpenStack 2024-10 against a 2024-01 control.
+  Scored on hunks with context: 161 / 116 examples, Min-K%++ gap -0.058 [-0.200, +0.084],
+  guided completion at its floor. Windows inseparable; read as ambiguous, as pre-committed.
+- [ ] Fix the control window's size (multi-month) and register hunks-with-context as the
+  scored text.
+- [ ] Decide guided completion's match criterion, or report it as a null instrument.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
 
 ## Plan C — the experiment
@@ -59,8 +66,16 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   prompt format; the training budget is realized as declared and tested in CI; changes
   outside every window block the freeze; drop counts persist.
 - [ ] Decide the estimand (pooled against change-averaged) for the Stage 1 report.
-- [ ] Run the actual RQ1 contrast: adapter trained on one organization against one trained
-  on the other, evaluated on the first.
+- [x] **RQ1 grid at pilot scale** (2026-09-15, job 143899): both organizations, base plus both
+  adapters on both held-out sets, through `walk` and `gate`. Matched minus mismatched exact
+  match: OpenStack -0.037 [-0.152, +0.087], Qt +0.045 [+0.000, +0.099]. Pilot-scale gate
+  fail, and not the RQ1 answer: one month, one seed.
+- [x] Equal-size training: organization was confounded with training-set size (Qt 422 against
+  OpenStack 145). `--equalize-train` subsamples to the smallest.
+- [ ] Equalized RQ1 pilot rerun (job 143957).
+- [ ] Register equal-size training, the estimand (pooled against change-averaged, which move
+  Qt from +0.045 to +0.008), and strictly-above-zero at the pass rule's boundary.
+- [ ] The confirmatory RQ1 contrast, on the frozen windows after in-principle acceptance.
 
 **Metric change forced by a real run (2026-09-14).** The model answers refinement prompts
 correctly and wraps the answer in prose and a markdown fence, so raw exact match scored 1
