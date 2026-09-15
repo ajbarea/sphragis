@@ -720,6 +720,40 @@ The driver now reports the mean over the final epoch. A one-example final step a
 full learning-rate update on a single example's gradient; that matches standard trainers
 without drop-last and is noted rather than changed.
 
+### RQ1 pilot, equalized: both contrasts change sign (2026-09-15)
+
+Job 143957, 12m41s. Identical to 143899 except both adapters train on 145 examples (Qt
+subsampled from 422, seeded). `datasets/results/rq1-pilot-equalized.json`.
+
+| exact match, one seed | held out: OpenStack (27 ex, 18 changes) | held out: Qt (133 ex, 48 changes) |
+|---|---|---|
+| base | 0.074 | 0.038 |
+| adapter trained on OpenStack (145) | **0.407** | 0.293 |
+| adapter trained on Qt (145 of 422) | 0.370 | **0.256** |
+
+| matched minus mismatched | unequal sizes (143899) | equalized, pooled | equalized, change-averaged |
+|---|---|---|---|
+| OpenStack | -0.037 [-0.152, +0.087] | +0.037 [-0.069, +0.182] | +0.072 [-0.022, +0.200] |
+| Qt | +0.045 [+0.000, +0.099] | -0.038 [-0.089, +0.009] | -0.069 [-0.149, -0.004] |
+
+Pilot-scale gate: fail, again. Normalized exact match agrees in direction.
+
+**Reading.**
+
+- **Training volume outweighs organization at this scale.** Cutting the Qt adapter from 422 to
+  145 examples lowered its score on Qt's own held-out data from 0.316 to 0.256, a larger move
+  than either contrast. Equal-size training (registered) is necessary, not a refinement.
+- **Run-to-run variation is as large as the effect.** The OpenStack adapter trained on the same
+  145 examples with the same seed in a different order moved from 0.370 to 0.407 on OpenStack,
+  exactly one of 27 examples. Every contrast above sits inside that range, and both changed
+  sign between runs.
+- **No evidence of an organization-specific gain at pilot scale**, and none against it: one
+  seed, one month, 18 OpenStack changes. The Qt change-averaged interval excluding zero on the
+  wrong side is one draw at one seed, which is the case three registered seeds exist for.
+- **What it means for Stage 1:** the power analysis must be built on these variances, at the
+  test window's size, with seed-to-seed variation inside the simulation rather than assumed
+  away. That analysis is running.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

@@ -72,7 +72,10 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   fail, and not the RQ1 answer: one month, one seed.
 - [x] Equal-size training: organization was confounded with training-set size (Qt 422 against
   OpenStack 145). `--equalize-train` subsamples to the smallest.
-- [ ] Equalized RQ1 pilot rerun (job 143957).
+- [x] Equalized RQ1 pilot rerun (job 143957): both contrasts changed sign (OpenStack +0.037
+  [-0.069, +0.182], Qt -0.038 [-0.089, +0.009]). Volume outweighs organization at this scale,
+  and run-to-run variation is as large as either contrast.
+- [ ] Power analysis on the RQ1 pilot's variances, at the test window's size.
 - [ ] Register equal-size training, the estimand (pooled against change-averaged, which move
   Qt from +0.045 to +0.008), and strictly-above-zero at the pass rule's boundary.
 - [ ] The confirmatory RQ1 contrast, on the frozen windows after in-principle acceptance.
