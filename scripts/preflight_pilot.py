@@ -1,28 +1,45 @@
-"""Run every check the pilot depends on, on the login node, before queueing anything.
+"""Run every check a pilot job depends on, on the login node, before queueing anything.
 
 CPU only, no GPU allocation, no queue. Exercises the real import path and the real data
-pipeline on real examples, and confirms the checkout is the pushed commit.
+pipeline on every corpus the job will read, and confirms the checkout is the pushed commit.
 
-Every check here has to be able to fail. The previous version compared the checkout's SHA
-to itself, required a hand-copied `$HOME/pilot.py` that the deploy discipline forbids, and
-validated `TrainingArguments` keywords for a trainer the pilot no longer uses.
+    preflight_pilot.py --script scripts/pilot.py ~/pilot-examples.jsonl
+    preflight_pilot.py --script scripts/rq1_pilot.py openstack=~/corpus/a.jsonl qt=~/corpus/b.jsonl
+
+Every check here has to be able to fail. An earlier version compared the checkout's SHA to
+itself, required a hand-copied script the deploy discipline forbids, and validated
+`TrainingArguments` keywords for a trainer no pilot uses.
 """
 
+import argparse
 import json
 import subprocess
-import sys
 from pathlib import Path
 
 from sphragis.experiment.preflight import check_paths_exist, check_repo_matches
 
 REPO = Path(__file__).resolve().parents[1]
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("corpora", nargs="+", help="PATH, or ORG=PATH for a multi-organization job")
+parser.add_argument("--script", type=Path, default=Path("scripts/pilot.py"))
+parser.add_argument("--split-seed", type=int, default=0)
+args = parser.parse_args()
+
+corpora = {
+    (entry.split("=", 1)[0] if "=" in entry else "corpus"): Path(entry.split("=", 1)[-1])
+    for entry in args.corpora
+}
 problems: list[str] = []
 
 # 1. Inputs exist and are non-empty, and job output has somewhere to go. Slurm does not
 # create the --output directory; a job that cannot open its log dies after the queue wait.
-examples = Path(sys.argv[1] if len(sys.argv) > 1 else "pilot-examples.jsonl")
 problems += check_paths_exist(
-    {"examples": examples, "pilot script": REPO / "scripts" / "pilot.py", "logs": REPO / "logs"}
+    {
+        **{f"corpus {org}": path for org, path in corpora.items()},
+        "driver script": REPO / args.script,
+        "logs": REPO / "logs",
+    }
 )
 
 # 2. The imports the job will make actually resolve here.
@@ -30,48 +47,70 @@ try:
     from transformers import AutoTokenizer
 
     from sphragis.corpus.pipeline import run_dedup
+    from sphragis.experiment.holdout import holdout_by_change, verbatim_overlap
     from sphragis.experiment.model import MODEL_ID, TRAINING
     from sphragis.experiment.runner import build_prompt
     from sphragis.experiment.training import build_supervised, render_chat
+    from sphragis.measure.stats import MIN_CLUSTERS
 except Exception as error:
     problems.append(f"import failed: {type(error).__name__}: {error}")
     print("\n".join(problems))
     raise SystemExit(1) from error
 
-# 3. The data path works on every real example, with the real tokenizer, and nothing is
-# silently dropped. The pilot refuses items that exceed the budget; this reports how many.
-try:
-    rows = [json.loads(line) for line in examples.read_text().splitlines() if line]
-    kept, removed = run_dedup(rows)
-    tok = AutoTokenizer.from_pretrained(MODEL_ID)
-    refused = 0
-    for r in kept:
-        try:
-            item = build_supervised(
-                tok, r, prompt_builder=build_prompt, max_length=TRAINING["max_seq_length"]
+# 3. For every corpus: the data path works on every real example, nothing is silently
+# refused, the held-out split leaks no pair, and it has enough changes for the bootstrap
+# to produce an interval at all. That last one is the cheapest way to learn a month is too
+# small: here, rather than at the end of a two-hour allocation.
+tok = None
+for org, path in corpora.items():
+    try:
+        if tok is None:
+            tok = AutoTokenizer.from_pretrained(MODEL_ID)
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+        kept, removed = run_dedup(rows)
+        train, held_out = holdout_by_change(kept, seed=args.split_seed)
+        refused = 0
+        for r in train:
+            try:
+                item = build_supervised(
+                    tok, r, prompt_builder=build_prompt, max_length=TRAINING["max_seq_length"]
+                )
+            except ValueError:
+                refused += 1
+                continue
+            assert len(item["input_ids"]) == len(item["labels"]) == len(item["attention_mask"])
+            assert any(x != -100 for x in item["labels"]), "no supervised tokens"
+        held_changes = len({r["change_id"] for r in held_out})
+        leaked = verbatim_overlap(train, held_out)
+        print(
+            f"{org}: {len(kept)} after dedup {dict(removed)}, {len(train)} train / "
+            f"{len(held_out)} held out over {held_changes} changes, {refused} refused"
+        )
+        if refused:
+            problems.append(f"{org}: {refused} training examples exceed max_seq_length")
+        if leaked:
+            problems.append(f"{org}: {len(leaked)} held-out examples repeat a training pair")
+        if held_changes < MIN_CLUSTERS:
+            problems.append(
+                f"{org}: {held_changes} held-out changes, below the bootstrap's floor of "
+                f"{MIN_CLUSTERS}; the job would fail at the interval"
             )
-        except ValueError:
-            refused += 1
-            continue
-        assert len(item["input_ids"]) == len(item["labels"]) == len(item["attention_mask"])
-        assert any(x != -100 for x in item["labels"]), "no supervised tokens"
-    # The chat frame is the format the model is evaluated on; a template that renders to
-    # the raw prompt means the tokenizer shipped without one.
-    sample = build_prompt(kept[0])
+    except Exception as e:
+        problems.append(f"{org}: data path failed: {type(e).__name__}: {e}")
+
+# The chat frame is the format the model is evaluated on; a template that renders to the
+# raw prompt means the tokenizer shipped without one.
+if tok is not None:
+    sample = build_prompt({"comments": ["c"], "before": "x"})
     if render_chat(tok, sample) == sample:
         problems.append("tokenizer has no chat template; training and eval would be raw")
-    print(f"data path ok: {len(kept)} after dedup {dict(removed)}, {refused} refused as too long")
-    if refused:
-        problems.append(f"{refused} examples exceed max_seq_length and would be dropped")
-except Exception as e:
-    problems.append(f"data path failed: {type(e).__name__}: {e}")
 
 
 # 4. The checkout is the pushed commit: HEAD against the remote branch, not against itself.
-def git(*args: str) -> str | None:
+def git(*git_args: str) -> str | None:
     try:
         result = subprocess.run(
-            ["git", "-C", str(REPO), *args], capture_output=True, text=True, timeout=60
+            ["git", "-C", str(REPO), *git_args], capture_output=True, text=True, timeout=60
         )
     except Exception:
         return None
