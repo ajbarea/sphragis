@@ -183,8 +183,15 @@ study rather than producing a result.
    - **Time-based partition.** The corpus starts 2024-10-01 against a base model
      published 2024-09-17. This is the design, and it is stated as the weakest of the
      three because it rests on a publication date.
-   - **Min-K%++ probability.** Average log-likelihood of the least probable k% of tokens,
-     post-cutoff against pre-cutoff. The standard instrument.
+   - **Min-K%++ probability.** For each token, its log-probability standardized against
+     the model's own next-token distribution at that position: (log p(x_t) - mu) / sigma,
+     with mu and sigma^2 the mean and variance of log p(z) for z ~ p(. | x_<t) over the
+     full vocabulary. The score is the mean of the lowest k% of those; higher suggests
+     membership (Zhang et al., ICLR 2025). *Corrected 2026-09-15:* this bullet originally
+     described plain Min-K%, the average of the least probable k% of raw log-probabilities,
+     under the Min-K%++ name, and the first implementation followed the description. Plain
+     Min-K% is still reported beside it. Run on the base checkpoint `Qwen/Qwen2.5-Coder-7B`,
+     since instruction fine-tuning degrades detection.
    - **Guided completion.** Prompt with the prefix of a held-out hunk, measure verbatim
      continuation rate, post-cutoff against pre-cutoff.
 

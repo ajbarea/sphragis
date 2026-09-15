@@ -150,6 +150,36 @@ class HFGenerator:
         return str(self.tokenizer.decode(generated, skip_special_tokens=True))
 
 
+def token_statistics(
+    model: Any, tokenizer: PreTrainedTokenizerBase, text: str, device: str = "cuda:0"
+) -> list[tuple[float, float, float]]:
+    """Per-position inputs to Min-K%++: log p(x_t | x_<t), and the mean and variance of
+    log p(z | x_<t) under the model's own next-token distribution over the vocabulary.
+
+    Mirrors the Min-K%++ reference implementation: log-softmax over the logits, the first
+    token skipped because nothing predicts it, mu = sum(p * log p), and
+    sigma^2 = sum(p * (log p)^2) - mu^2. Logits are cast to float32 first; in bf16 the
+    variance of a peaked distribution underflows. Terms with p = 0 are zeroed explicitly,
+    since 0 * -inf is NaN rather than the 0 the expectation needs. The reduction to a score
+    lives in `sphragis.measure.contamination`, where it is tested without a model.
+    """
+    ids = tokenizer(text, return_tensors="pt", add_special_tokens=False)["input_ids"].to(device)
+    if ids.shape[-1] < 2:
+        raise ValueError("token_statistics needs at least two tokens: the first has no prediction")
+    with torch.inference_mode():
+        logits = model(input_ids=ids).logits[0, :-1].float()
+    log_probs = torch.log_softmax(logits, dim=-1)
+    probs = log_probs.exp()
+    finite = torch.isfinite(log_probs)
+    weighted = torch.where(finite, probs * log_probs, torch.zeros_like(log_probs))
+    weighted_sq = torch.where(finite, probs * log_probs.square(), torch.zeros_like(log_probs))
+    mean = weighted.sum(-1)
+    variance = weighted_sq.sum(-1) - mean.square()
+    targets = ids[0, 1:]
+    token_logprob = log_probs.gather(-1, targets[:, None]).squeeze(-1)
+    return list(zip(token_logprob.tolist(), mean.tolist(), variance.tolist(), strict=True))
+
+
 def cast_trainable_to_fp32(model: Any) -> int:
     """Keep the adapter in fp32 while the frozen base stays bf16.
 
