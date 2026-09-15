@@ -957,6 +957,32 @@ informed by that 1.06%, is a test with something to detect; at 0.8 it is a tauto
   `diff_error` 13, in 2025-08 and 2025-09. Before the comments guard existed, the first of
   those would have aborted the build at month 11 of 13.
 
+### Both corpora windowed, and the collection etiquette that has to change (2026-09-15)
+
+`datasets/results/window-report-{openstack,qt}.json`.
+
+| | examples | after dedup | pilot | train | dev |
+|---|---|---|---|---|---|
+| OpenStack (13 months) | 5,959 | 5,498 | 606 / 194 ch | 4,327 / 1,737 ch | 565 / 235 ch |
+| Qt (12 months) | 10,622 | 9,918 | 1,300 / 403 ch | 8,254 / 3,160 ch | 364 / 175 ch |
+
+Both train windows are complete; Qt's dev holds 2025-09 only. Both dev windows clear the
+bootstrap's ten-change floor. Equalized training is 4,327 examples per organization.
+
+Cross-window near-duplicate rate, Qt: pilot into train 0.0000 / 0.0005 / 0.0011 / 0.0028 and
+train into dev 0.0000 / 0.0055 / 0.0082 / 0.0302 at Jaccard 0.8 / 0.7 / 0.6 / 0.5. OpenStack's
+train into dev is 0.0000 / 0.0106 / 0.0142 / 0.0177. A threshold registered at 0.7 must sit
+above roughly 1.1%, the larger of the two, to be a bound both organizations can meet.
+
+**Collection etiquette, which the transport got wrong twice.** One comments request per change
+plus one diff request per surviving comment is roughly 5,000 to 6,000 requests per month of
+Qt data, about 70,000 for thirteen months, issued at the 5 requests a second the 0.2-second
+interval allows. Both servers tolerated that for about three hours and then stopped completing
+handshakes. The first incident was read as transient and answered with pacing tuned to make
+the symptom go away; the correct reading was that the rate itself was wrong for a
+volunteer-run Gerrit. Future collection runs at about 1 request a second and stops rather than
+retrying when handshakes begin to fail, since the frozen corpus is fetched once and reused.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

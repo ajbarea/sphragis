@@ -1,0 +1,69 @@
+{
+  "qt": {
+    "months_built": 12,
+    "examples": 10622,
+    "after_dedup": 9918,
+    "dedup_removed": {
+      "exact": 451,
+      "near_duplicate": 253,
+      "boilerplate": 0
+    },
+    "windows": {
+      "pilot": {
+        "examples": 1300,
+        "changes": 403
+      },
+      "train": {
+        "examples": 8254,
+        "changes": 3160
+      },
+      "dev": {
+        "examples": 364,
+        "changes": 175
+      }
+    },
+    "straddling_changes": 0,
+    "unassigned_changes": 0,
+    "near_duplicate_rate": {
+      "pilot->train": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.000484613520717228,
+          "near_duplicates": 4
+        },
+        "0.6": {
+          "rate": 0.001090380421613763,
+          "near_duplicates": 9
+        },
+        "0.5": {
+          "rate": 0.002786527744124061,
+          "near_duplicates": 23
+        },
+        "max_similarity": 0.7924528301886793
+      },
+      "train->dev": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.005494505494505495,
+          "near_duplicates": 2
+        },
+        "0.6": {
+          "rate": 0.008241758241758242,
+          "near_duplicates": 3
+        },
+        "0.5": {
+          "rate": 0.03021978021978022,
+          "near_duplicates": 11
+        },
+        "max_similarity": 0.7777777777777778
+      }
+    },
+    "dedup_note": "dedup runs before the split at Jaccard 0.8, so the 0.8 rate is partly zero by construction; read the looser thresholds"
+  }
+}
