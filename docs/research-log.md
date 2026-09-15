@@ -800,6 +800,27 @@ a 0.005 step), which the first run could not resolve.
   so an effect of that size sits near what the window can see. That bounds variance, not the
   effect.
 
+### Outcome-neutral checks, run on the equalized pilot's real data (2026-09-15)
+
+`sphragis/experiment/neutral.py`, applied locally to `rq1-pilot-equalized.json` with the
+pilot's split recomputed (dedup, change-grouped holdout seed 0, equalized training seed 0).
+The recomputed held-out sets are identical to the ones the pilot scored (27 and 133 ids).
+
+| check | OpenStack | Qt |
+|---|---|---|
+| 2, positive control (own adapter against base, one-sided) | pass, +0.333 [+0.133, +0.565] | pass, +0.218 [+0.120, +0.337] |
+| 5, non-degeneracy (no condition at 0 or 1) | pass | pass |
+| 4, near-duplicates train against held-out, Jaccard >= 0.8 | 0 of 27 | 0 of 133 |
+| same, Jaccard >= 0.7 / >= 0.5 | 1 of 27 / 1 of 27 | 0 / 0 |
+
+Test 3, the manipulation check, cannot be computed from this run: it did not save per-step
+losses or adapter norms. The next TIGRIS run of `rq1_pilot.py` records both.
+
+**Reading test 4.** A zero rate is expected here and says little: both sides come from one
+month, and dedup already removed pairs at Jaccard >= 0.8 within it. The number the Stage 1
+threshold should rest on is the rate **across windows**, train against dev, which the
+collection now running makes measurable. The test window stays sealed.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
