@@ -484,6 +484,46 @@ edit shape on the same file, and shingle Jaccard over the before/after text fall
 0.8 threshold because the digits differ. Whether the corpus should treat "same file, same
 edit shape" as duplication is a sampling question for the Stage 1 report, not a bug.
 
+### PILOT RESULT: the exact-match pass rule survives contact with the corpus (2026-09-14)
+
+Job 143496. Qwen2.5-Coder-7B, 201 well-posed OpenStack examples, split **by change**:
+91 changes to 72 train / 19 eval, 156 / 45 examples, zero leakage verified.
+
+| | base | adapted |
+|---|---|---|
+| **exact match** | **0.000** | **0.200** |
+| normalized exact match | 0.022 | 0.222 |
+| edit similarity | 0.184 | 0.822 |
+| median prediction length | 344 chars | 52 (reference 63) |
+
+Training: loss 1.58 to 0.40 over 18 optimiser steps, no skipped steps.
+
+**What this settles.** The open question since the first proxy measurement was whether
+exact match can discriminate at all on this corpus, given a base model floors at zero. It
+can. Adaptation lifts it from 0.000 to 0.200 on data the adapter has not seen, which is in
+the same band as published fine-tuned figures for this task (CodeReviewer 30.32%, CodeT5
+24.41%, T5 15.08%) and unsurprising on the low side given 156 training examples against
+their corpus. **The pre-registered pass rule does not need rethinking before 2026-11-20.**
+
+**Adaptation also fixes the verbosity.** The base model answers with 344 characters against
+a 63 character reference, wrapping the edit in prose; the adapted model answers with 52.
+That is the base-model behaviour measured earlier as the reason its edit similarity sat
+*below* the 1.5B's, and it is direct evidence the adapter learns conventions of form. Worth
+noting for RQ1, whose claim is about learning conventions.
+
+**A leaked result was nearly reported.** The first run with a naive example-level shuffle
+gave adapted EM **0.512**. 63% of its eval examples shared a change with training data and
+20% shared an exact before text. `sphragis.corpus.split` groups by change precisely to stop
+this, and the experiment script bypassed the guard rather than reusing it. Grouping halves
+the number, and 0.200 is the one to quote.
+
+**Caveats, stated because this number will be quoted.** 45 eval examples over 19 changes is
+small and the interval on 0.200 will be wide; the bootstrap is not yet computed because the
+pilot does not emit per-change outcomes. One month, one organization, one seed. And this is
+*not* the RQ1 comparison, which contrasts an adapter trained on one organization against
+one trained on another, evaluated on the first. This measures only that the metric has room
+to move.
+
 ## Open bugs & findings
 
 _None active._

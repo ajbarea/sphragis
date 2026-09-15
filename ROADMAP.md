@@ -49,7 +49,13 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   freshly submitted job was estimated thirteen days out at fairshare 0.006.
 - [ ] Wire the grid walk to the frozen windows (needs the corpus).
 - [ ] Outcome-neutral tests wired to real model outputs.
-- [ ] Set the grid job's `--time` from the measured 7B throughput once probe 142177 lands.
+- [x] Grid `--time` sized from measured throughput: 38-43 tok/s steady on a GH200.
+- [x] **Pilot floor check passed.** Base exact match 0.000, adapted 0.200, on a clean
+  change-grouped split. The pre-registered pass rule survives; exact match discriminates
+  on this corpus once a model is adapted.
+- [ ] Emit per-change outcomes from the pilot so the bootstrap interval can be computed.
+- [ ] Run the actual RQ1 contrast: adapter trained on one organization against one trained
+  on the other, evaluated on the first.
 
 **Metric change forced by a real run (2026-09-14).** The model answers refinement prompts
 correctly and wraps the answer in prose and a markdown fence, so raw exact match scored 1
