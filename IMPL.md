@@ -652,6 +652,31 @@ indistinguishable from content differences between the months.
   this corpus as prompted. Either report it as a null instrument, or register a softer match
   (normalized edit similarity against the reference) before seeing the confirmatory data.
 
+### Contamination battery on hunks with context: enough sample, still flat (2026-09-15)
+
+Job 143956, same windows and checkpoints as 143898, scoring each hunk with its three context
+lines either side. `datasets/results/contamination-openstack-with_context.json`.
+
+| | examples, post / pre | changes | gap | 95% bootstrap, by change |
+|---|---|---|---|---|
+| Min-K%++, bare hunks (143898) | 35 / 28 | 22 / 18 | +0.221 | [-0.052, +0.524] |
+| **Min-K%++, with context** | **161 / 116** | **85 / 57** | **-0.058** | **[-0.200, +0.084]** |
+| Min-K%, with context | 161 / 116 | 85 / 57 | -0.216 | [-0.661, +0.225] |
+| guided completion, edit similarity | 55 / 46 | | -0.007 | [-0.118, +0.085] |
+
+Guided completion reproduced 0 of 55 post-cutoff hunks and 1 of 46 control hunks verbatim;
+mean edit similarity 0.380 against 0.387.
+
+**Reading.** Context lifted the scored sample from about 20% of each deduplicated month to
+94% (161 of 172) and 87% (116 of 133), and halved the Min-K%++ interval. The small-sample
+lean toward "post-cutoff looks more familiar" is gone. No method separates October 2024 from
+January 2024. As pre-committed, that is ambiguous: no exposure to this Gerrit data, or
+probes that cannot see it. It is not a clean bill.
+
+**For Stage 1.** Score hunks with context; bare hunks leave too few examples to read. Guided
+completion, verbatim or by edit similarity, shows no discrimination on this corpus and should
+be reported as a null instrument or replaced, decided before confirmatory data exists.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
