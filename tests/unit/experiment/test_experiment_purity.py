@@ -17,6 +17,7 @@ _ORCHESTRATION = (
     "runner.py",
     "slurm.py",
     "training.py",
+    "walk.py",
 )
 _ROOT = Path(__file__).resolve().parents[3]
 _EXPERIMENT = _ROOT / "sphragis" / "experiment"

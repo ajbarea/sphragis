@@ -3,26 +3,40 @@
 The question the whole Stage 1 protocol rests on. Base model scores EM 0 on real hunks
 (expected, matches a base model zero-shot). CodeReviewer reports 30.32% once fine-tuned.
 This asks whether adaptation moves it here.
+
+Scoring and grouping go through `sphragis.measure` and `sphragis.experiment.runner`, so the
+pilot exercises the same code the confirmatory grid will, and its per-change outcomes drop
+straight into the cluster bootstrap. A hand-rolled scoring loop here would be a second
+implementation of the binding metric.
 """
 
+import argparse
 import contextlib
 import json
 import random
-import sys
 import time
 from pathlib import Path
+from statistics import median
 
 import torch
 from peft import get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from sphragis.experiment.model import LORA, MODEL_ID, TRAINING, train_adapter
-from sphragis.experiment.runner import build_prompt
+from sphragis.experiment.runner import build_prompt, evaluate, to_clusters
 from sphragis.experiment.training import build_supervised
-from sphragis.measure.score import score
+from sphragis.measure.stats import cluster_bootstrap
 
-EXAMPLES = Path(sys.argv[1] if len(sys.argv) > 1 else "pilot-examples.jsonl")
-rows = [json.loads(line) for line in EXAMPLES.read_text().splitlines() if line]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("examples", nargs="?", type=Path, default=Path("pilot-examples.jsonl"))
+parser.add_argument("--out", type=Path, default=Path("pilot-outcomes.json"))
+parser.add_argument("--split-seed", type=int, default=0, help="which changes land in eval")
+parser.add_argument("--train-seed", type=int, default=1, help="adapter initialisation + order")
+parser.add_argument("--bootstrap-seed", type=int, default=7)
+parser.add_argument("--max-new-tokens", type=int, default=96)
+args = parser.parse_args()
+
+rows = [json.loads(line) for line in args.examples.read_text().splitlines() if line]
 
 # Split by CHANGE, never by example. Consecutive hunks of one change are near-copies, so a
 # random split puts siblings on both sides: measured at 63% of eval sharing a change_id
@@ -30,7 +44,7 @@ rows = [json.loads(line) for line in EXAMPLES.read_text().splitlines() if line]
 # honest number to 0.512. This is the same grouping rule sphragis.corpus.split enforces for
 # the real windows.
 changes = sorted({r["change_id"] for r in rows})
-random.Random(0).shuffle(changes)
+random.Random(args.split_seed).shuffle(changes)
 cut = int(0.8 * len(changes))
 train_ids, eval_ids = set(changes[:cut]), set(changes[cut:])
 train_rows = [r for r in rows if r["change_id"] in train_ids]
@@ -62,61 +76,92 @@ train_ds = make(train_rows)
 print(f"trainable items {len(train_ds)}", flush=True)
 
 
-def collate(batch):
-    n = max(len(b["input_ids"]) for b in batch)
-    pad = tok.pad_token_id
-    return {
-        "input_ids": torch.tensor(
-            [b["input_ids"] + [pad] * (n - len(b["input_ids"])) for b in batch]
-        ),
-        "labels": torch.tensor([b["labels"] + [-100] * (n - len(b["labels"])) for b in batch]),
-        "attention_mask": torch.tensor(
-            [b["attention_mask"] + [0] * (n - len(b["attention_mask"])) for b in batch]
-        ),
-    }
+class LiveGenerator:
+    """A `Generator` over the model already resident on the GPU.
 
+    `HFGenerator` loads its own weights from a saved adapter; the pilot scores the same
+    object before and after `get_peft_model` wraps it, so it needs a view rather than a
+    second load.
+    """
 
-def evaluate_em(model, label):
-    model.eval()
-    tot = {"exact_match": 0.0, "normalized_exact_match": 0.0, "edit_similarity": 0.0}
-    lens = []
-    t0 = time.time()
-    for r in eval_rows:
-        ids = tok(build_prompt(r), return_tensors="pt").to("cuda:0")
+    def __init__(self, model):
+        self.model = model
+
+    def generate(self, prompt: str) -> str:
+        self.model.eval()
+        ids = tok(prompt, return_tensors="pt").to("cuda:0")
         with torch.inference_mode():
-            out = model.generate(
-                **ids, max_new_tokens=96, do_sample=False, pad_token_id=tok.eos_token_id
+            out = self.model.generate(
+                **ids,
+                max_new_tokens=args.max_new_tokens,
+                do_sample=False,
+                pad_token_id=tok.eos_token_id,
             )
-        pred = tok.decode(out[0][ids["input_ids"].shape[-1] :], skip_special_tokens=True)
-        s = score(pred, str(r["after"]))
-        lens.append(len(pred))
-        for k in tot:
-            tot[k] += s[k]
-    n = max(len(eval_rows), 1)
-    med_pred = sorted(lens)[len(lens) // 2] if lens else 0
-    med_ref = sorted(len(str(r["after"])) for r in eval_rows)[len(eval_rows) // 2]
+        return str(tok.decode(out[0][ids["input_ids"].shape[-1] :], skip_special_tokens=True))
+
+
+def arm(model, label: str) -> list[dict]:
+    """Score one arm over the held-out changes and report the ladder."""
+    t0 = time.time()
+    results = evaluate(LiveGenerator(model), eval_rows)
+    n = max(len(results), 1)
+
+    def mean(key: str) -> float:
+        return sum(float(r[key]) for r in results) / n
+
     print(
-        f"[{label}] EM={tot['exact_match'] / n:.3f} "
-        f"normEM={tot['normalized_exact_match'] / n:.3f} "
-        f"sim={tot['edit_similarity'] / n:.3f} "
-        f"pred_chars_med={med_pred} ref_chars_med={med_ref}  ({time.time() - t0:.0f}s)",
+        f"[{label}] EM={mean('exact_match'):.3f} "
+        f"normEM={mean('normalized_exact_match'):.3f} "
+        f"sim={mean('edit_similarity'):.3f} "
+        f"pred_chars_med={median(len(r['prediction']) for r in results):.0f} "
+        f"ref_chars_med={median(len(str(r['after'])) for r in eval_rows):.0f}  "
+        f"({time.time() - t0:.0f}s)",
         flush=True,
     )
-    return tot["exact_match"] / n
+    return results
 
 
 base = AutoModelForCausalLM.from_pretrained(MODEL_ID, dtype=torch.bfloat16, device_map="cuda:0")
 print("loaded base", flush=True)
-em_base = evaluate_em(base, "BASE")
+base_results = arm(base, "BASE")
 
 model = get_peft_model(base, LORA)
 model.print_trainable_parameters()
 
-losses = train_adapter(model, train_ds, pad_token_id=tok.pad_token_id, seed=1)
+losses = train_adapter(model, train_ds, pad_token_id=tok.pad_token_id, seed=args.train_seed)
 print(f"losses: {[f'{x:.3f}' for x in losses]}", flush=True)
 assert all(x == x for x in losses), "non-finite loss slipped through"
 print("training done", flush=True)
-em_adapted = evaluate_em(model, "ADAPTED")
+adapted_results = arm(model, "ADAPTED")
 
-print(f"\nFLOOR CHECK: base EM {em_base:.3f} -> adapted EM {em_adapted:.3f}")
+# The interval is over CHANGES, not examples: sibling hunks of one change are not
+# independent draws, so an example-level interval would be too narrow by construction.
+clusters = to_clusters(adapted_results, base_results)
+interval = cluster_bootstrap(clusters, seed=args.bootstrap_seed)
+print(
+    f"\nADAPTED - BASE exact match: {interval['estimate']:+.3f} "
+    f"[{interval['low']:+.3f}, {interval['high']:+.3f}] "
+    f"(95% cluster bootstrap over {len(clusters)} changes)",
+    flush=True,
+)
+
+args.out.write_text(
+    json.dumps(
+        {
+            "model_id": MODEL_ID,
+            "split_seed": args.split_seed,
+            "train_seed": args.train_seed,
+            "bootstrap_seed": args.bootstrap_seed,
+            "n_changes": len(changes),
+            "n_train_examples": len(train_ds),
+            "n_eval_examples": len(eval_rows),
+            "losses": losses,
+            "interval": interval,
+            "base": base_results,
+            "adapted": adapted_results,
+        },
+        indent=2,
+    )
+)
+print(f"wrote {args.out}", flush=True)
 print("PILOT_OK")
