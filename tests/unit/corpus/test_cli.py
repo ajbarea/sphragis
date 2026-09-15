@@ -453,6 +453,35 @@ def test_build_overwrite_rebuilds_a_month(tmp_path: Path, monkeypatch: pytest.Mo
     assert (examples / "2024-10.jsonl").read_text() == ""
 
 
+def test_a_resumed_build_reports_the_whole_corpus_not_just_its_own_months(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The summary is the sampling section's figure, so a resume must not under-state it."""
+    import json
+
+    from sphragis.corpus import cli
+
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    raw = tmp_path / "openstack" / "raw"
+    raw.mkdir(parents=True)
+    # One month already built, with its drop profile beside it.
+    (examples / "2024-10.jsonl").write_text('{"id": "a"}\n{"id": "b"}\n')
+    (examples / "2024-10.drops.json").write_text(json.dumps({"metadata_file": 7}))
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *args: {})
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+
+    out = capsys.readouterr().out
+    assert "skip, already built (2 examples)" in out
+    assert "openstack: 2 examples over 1 months" in out
+    assert "'metadata_file': 7" in out, "a skipped month's drops belong in the total too"
+
+
 def test_drops_path_sits_beside_its_month() -> None:
     from sphragis.corpus.cli import drops_path
 

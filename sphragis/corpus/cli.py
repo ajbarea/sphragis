@@ -255,7 +255,15 @@ def _stage_build(args: argparse.Namespace) -> int:
             # Resume. A month costs minutes of network time, and Qt needs roughly 400
             # requests per month, so discarding completed work on interruption is not
             # affordable.
-            print(f"{args.org} {month}: skip, already built")
+            # Counted from disk, not skipped: the summary is the corpus, and a resumed build
+            # that reported only its own months under-stated it by exactly the months it had
+            # already done. That figure is what the sampling section reports.
+            skipped = sum(1 for line in target.read_text().splitlines() if line)
+            total += skipped
+            drops.update(
+                json.loads(drops_path(target).read_text()) if drops_path(target).is_file() else {}
+            )
+            print(f"{args.org} {month}: skip, already built ({skipped} examples)")
             continue
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
@@ -274,7 +282,8 @@ def _stage_build(args: argparse.Namespace) -> int:
         drops.update(month_drops)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)
-    print(f"{args.org}: {total} examples, drops {dict(drops)}")
+    months = len(snapshots)
+    print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
     return 0
 
 
