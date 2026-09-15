@@ -148,6 +148,20 @@ def step_batches(
     return steps
 
 
+def lr_multiplier(step: int, *, warmup: int, total: int) -> float:
+    """Linear warmup into cosine decay, as a fraction of the declared learning rate.
+
+    Pure and public so CI checks the shape of the pre-registered schedule; it lived as a
+    closure inside `train_adapter`, in the one module CI cannot import. Never negative and
+    never above 1: a multiplier outside that range would silently train at a rate the report
+    does not state.
+    """
+    if warmup and step < warmup:
+        return (step + 1) / warmup
+    progress = (step - warmup) / max(total - warmup, 1)
+    return 0.5 * (1.0 + math.cos(math.pi * min(progress, 1.0)))
+
+
 def warmup_steps(
     *, n_examples: int, batch_size: int, grad_accum: int, epochs: int, ratio: float
 ) -> int:

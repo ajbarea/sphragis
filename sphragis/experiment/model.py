@@ -25,6 +25,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from sphragis.experiment.training import (
+    lr_multiplier,
     render_chat,
     step_batches,
     total_steps,
@@ -216,10 +217,18 @@ def attach_adapter(
     model_id: str, seed: int
 ) -> tuple[PeftModel | PeftMixedModel, PreTrainedTokenizerBase]:
     """A fresh LoRA adapter on the base model, seeded so the init replays."""
+    # Seed BEFORE get_peft_model: the LoRA initialization draws from the global RNG, so
+    # seeding afterwards leaves it dependent on whatever ran before. scripts/pilot.py had
+    # exactly that bug, which made its "seed" control nothing but the dropout mask.
     torch.manual_seed(seed)
     tokenizer = _require_tokenizer(model_id)
     base = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16, device_map="cuda:0")
-    return get_peft_model(base, LORA), tokenizer
+    adapted = get_peft_model(base, LORA)
+    # Not dead code: PEFT returns fp32 adapter parameters on a bf16 base under its current
+    # default, so this casts nothing and returns 0. Calling it keeps that invariant enforced
+    # rather than assumed, and bf16 adapter parameters are a known source of NaN gradients.
+    cast_trainable_to_fp32(adapted)
+    return adapted, tokenizer
 
 
 def train_adapter(
@@ -276,13 +285,9 @@ def train_adapter(
         ratio=float(budget["warmup_ratio"]),
     )
 
-    def factor(step: int) -> float:
-        if warm and step < warm:
-            return (step + 1) / warm
-        progress = (step - warm) / max(steps - warm, 1)
-        return 0.5 * (1.0 + math.cos(math.pi * min(progress, 1.0)))
-
-    schedule = torch.optim.lr_scheduler.LambdaLR(optimiser, factor)
+    schedule = torch.optim.lr_scheduler.LambdaLR(
+        optimiser, lambda step: lr_multiplier(step, warmup=warm, total=steps)
+    )
 
     model.train()
     losses: list[float] = []
@@ -344,13 +349,21 @@ def train_adapter(
     return report
 
 
-def _collate(batch: Sequence[Mapping[str, Any]], pad_token_id: int) -> dict[str, Any]:
+def _collate(
+    batch: Sequence[Mapping[str, Any]], pad_token_id: int, device: str = "cuda"
+) -> dict[str, Any]:
+    """Pad a micro-batch to its widest item. `device` is a parameter so CPU tests can reach it.
+
+    Each field gets its own filler, and they are not interchangeable: labels pad with -100 so
+    the padding carries no loss, and attention_mask with 0 so it is not attended to. Padding
+    labels with `pad_token_id` would train the model to emit padding.
+    """
     width = max(len(item["input_ids"]) for item in batch)
 
     def pad(key: str, filler: int) -> Any:
         return torch.tensor(
             [list(item[key]) + [filler] * (width - len(item[key])) for item in batch]
-        ).cuda()
+        ).to(device)
 
     return {
         "input_ids": pad("input_ids", pad_token_id),

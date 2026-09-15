@@ -10,6 +10,7 @@ import pytest
 from sphragis.experiment.training import (
     IGNORE_INDEX,
     build_supervised,
+    lr_multiplier,
     render_chat,
     step_batches,
     total_steps,
@@ -208,3 +209,33 @@ def test_a_tokenizer_without_eos_is_refused() -> None:
     tok = NoEosTokenizer()
     with pytest.raises(ValueError, match="eos"):
         build_supervised(tok, EXAMPLE, prompt_builder=lambda e: "PROMPT:")
+
+
+class TestLearningRateSchedule:
+    """The pre-registered schedule's shape, checked where CI can reach it."""
+
+    @pytest.mark.parametrize("total", [2, 20, 126, 376, 4000])
+    def test_the_multiplier_never_leaves_zero_to_one(self, total: int) -> None:
+        warmup = max(1, round(total * 0.03))
+        values = [lr_multiplier(s, warmup=warmup, total=total) for s in range(total)]
+        assert all(0.0 <= v <= 1.0 for v in values), (min(values), max(values))
+
+    def test_warmup_rises_to_the_full_rate_and_hands_over_without_a_jump(self) -> None:
+        warmup, total = 4, 100
+        rising = [lr_multiplier(s, warmup=warmup, total=total) for s in range(warmup)]
+        assert rising == sorted(rising) and rising[-1] == pytest.approx(1.0)
+        # The first cosine step must not drop off a cliff from the warmup's last step.
+        assert lr_multiplier(warmup, warmup=warmup, total=total) == pytest.approx(1.0, abs=1e-3)
+
+    def test_the_rate_decays_and_ends_low_but_positive(self) -> None:
+        total = 200
+        values = [lr_multiplier(s, warmup=6, total=total) for s in range(6, total)]
+        assert values == sorted(values, reverse=True)
+        assert 0.0 < values[-1] < 0.01
+
+    def test_a_step_past_the_plan_clamps_instead_of_turning_negative(self) -> None:
+        # cos(pi * progress) passes below zero once progress exceeds 1; min() holds it there.
+        assert lr_multiplier(500, warmup=4, total=100) == pytest.approx(0.0, abs=1e-12)
+
+    def test_no_warmup_starts_at_the_full_rate(self) -> None:
+        assert lr_multiplier(0, warmup=0, total=50) == pytest.approx(1.0)
