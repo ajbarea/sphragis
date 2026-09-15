@@ -20,7 +20,11 @@ export CC=/usr/bin/gcc
 
 # Submit from the checkout: --output is relative and is opened before this body runs.
 cd "$HOME/ajsoftworks/sphragis"
+# SCORED_TEXT=after|with_context, e.g. `sbatch --export=ALL,SCORED_TEXT=with_context ...`.
+# Each variant writes its own file, so a rerun never overwrites an earlier result.
+SCORED_TEXT="${SCORED_TEXT:-after}"
 uv run --no-sync python scripts/contamination_battery.py \
   --post "$HOME/corpus/openstack-2024-10.jsonl" \
   --pre "$HOME/corpus/openstack-2024-01-control.jsonl" \
-  --out "$HOME/contamination-openstack.json"
+  --scored-text "$SCORED_TEXT" \
+  --out "$HOME/contamination-openstack-$SCORED_TEXT.json"
