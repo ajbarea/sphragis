@@ -5,11 +5,15 @@
 #SBATCH --gres=gpu:gh200:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
-#SBATCH --time=02:00:00
+#SBATCH --time=00:45:00
 #SBATCH --output=logs/sphragis-rq1-pilot-%j.log
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
+# --time from measurement: job 143899 ran the full 2 by 2 grid plus base in 16m44s on a GH200
+# (two adapters, 422 and 145 examples, 480 generations). A 2-hour request could not be
+# scheduled ahead of a maintenance reservation that a 50-minute one fit before. Resize when
+# the corpus or seed count grows.
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 # HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth
