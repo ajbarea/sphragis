@@ -887,6 +887,23 @@ instead of aborting the build (the diff fetch already had that guard); and a min
 between requests to one host, `--request-interval`, default 0.2 seconds. Changes lost to
 `comment_error` are counted in each month's drop profile, so collection loss stays auditable.
 
+**It is both servers, and 0.2 s is not enough.** Qt's server did the same thing after about
+three hours of building: the process sat in `SYN-SENT` and an independent curl from the same
+box also timed out, which is the opendev signature exactly. So this is not one operator's
+policy but what a community Gerrit does to a client that sustains requests for hours, and the
+0.2-second interval (5 requests a second) only postponed it.
+
+The build was stopped rather than left to run. Its retries would have exhausted and dropped
+changes as `comment_error`, which is counted and therefore auditable, but a final month
+carrying hundreds of such drops would differ materially from the other twelve, and that month
+feeds the dev window that censoring has already thinned. Twelve of thirteen months were
+already written, so the cost was one month's fetching.
+
+**Measuring how the sampling window fooled me.** Reading the build's bytes over 5 seconds
+showed zero and looked like a stall; over 60 seconds it read 2.6 MB and was healthy. A paced,
+bursty client needs a sampling window longer than its retry backoff (1+2+4+8+16 = 31 s) before
+"no progress" means anything. Both readings were reported before the longer one corrected them.
+
 ### OpenStack corpus complete, and the leakage threshold has evidence (2026-09-15)
 
 Thirteen months, 2024-10 to 2025-10, collected and built in 3h32m.
