@@ -414,10 +414,9 @@ using a small proxy. That was the open question from the earlier proxy measureme
 is now answered for the registered model.
 
 The 7B's edit similarity is **lower** than the 1.5B's, 0.157 against 0.555, which is the
-opposite of what capability alone predicts. The likely explanation is verbosity: a stronger
-instruction-tuned model produces more surrounding prose and explanation, and edit similarity
-is computed against a bare hunk. The rerun logs median prediction and reference lengths to
-check that rather than assume it.
+opposite of what capability alone predicts. *Resolved 2026-09-15:* both models were scored on
+the raw prompt, which is out of distribution for an instruction-tuned checkpoint. Under the
+chat template the 7B's edit similarity is 0.754. See the withdrawn verbosity claim below.
 
 LoRA attaches as expected: 80,740,352 trainable of 7,696,356,864, 1.05%.
 
@@ -505,11 +504,24 @@ the same band as published fine-tuned figures for this task (CodeReviewer 30.32%
 24.41%, T5 15.08%) and unsurprising on the low side given 156 training examples against
 their corpus. **The pre-registered pass rule does not need rethinking before 2026-11-20.**
 
-**Adaptation also fixes the verbosity.** The base model answers with 344 characters against
-a 63 character reference, wrapping the edit in prose; the adapted model answers with 52.
-That is the base-model behaviour measured earlier as the reason its edit similarity sat
-*below* the 1.5B's, and it is direct evidence the adapter learns conventions of form. Worth
-noting for RQ1, whose claim is about learning conventions.
+**Withdrawn: "adaptation fixes the verbosity".** This section originally credited the
+adapter with cutting answers from 344 to 52 characters and called it evidence of learning
+conventions of form. It was the prompt format. The pilot scored both arms on the raw
+prompt, which is out of distribution for an instruction-tuned model; the adapter had been
+trained on that raw format and the base model had not. Job 143892, base model only, same
+45 examples:
+
+| base model | exact match | normalized EM | edit similarity | median answer |
+|---|---|---|---|---|
+| raw prompt | 0.000 | 0.022 | 0.193 | 344 chars |
+| chat template | 0.022 | 0.200 | 0.754 | 64 chars (reference 63) |
+
+Two consequences. The base arm's edit similarity and normalized EM were deflated by the
+format, so every ADAPTED - BASE figure above except exact match is confounded. And under
+its own template the base model already solves 20% of edits up to whitespace while scoring
+2% exact, so the adapter's exact-match gain is largely **whitespace and indentation
+fidelity**. That cancels in the RQ1 contrast, where both arms are adapters, and inflates
+the positive control, where one is not.
 
 **A leaked result was nearly reported.** The first run with a naive example-level shuffle
 gave adapted EM **0.512**. 63% of its eval examples shared a change with training data and
@@ -517,13 +529,29 @@ gave adapted EM **0.512**. 63% of its eval examples shared a change with trainin
 this, and the experiment script bypassed the guard rather than reusing it. Grouping halves
 the number, and 0.200 is the one to quote.
 
-**Caveats, stated because this number will be quoted.** 45 eval examples over 19 changes is
-small and the interval on 0.200 will be wide; the bootstrap is not yet computed because the
-pilot does not emit per-change outcomes. One month, one organization, one seed. And this is
+**Caveats, stated because this number will be quoted.** 45 eval examples over 19 changes.
+*Superseded 2026-09-15:* the paired cluster bootstrap on this run is +0.200 [+0.086,
++0.419], but the run itself is not the one to quote: it skipped dedup, scored a
+format-confounded base arm, and trained under a loop that never reached one example. The
+rerun under corrected conditions replaces it. One month, one organization, one seed. And this is
 *not* the RQ1 comparison, which contrasts an adapter trained on one organization against
 one trained on another, evaluated on the first. This measures only that the metric has room
 to move.
 
 ## Open bugs & findings
 
-_None active._
+- **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
+  with 40 hunks counts 40 times one with a single hunk. The design fixes the resampling unit
+  (the change) and never the estimand. On the seed-0 pilot split one change is 18 of 45
+  eval examples; change-weighted exact match is 0.261 against 0.200 pooled. Measured gaps
+  between the two estimands reach 118% of a 0.08 effect at 19 changes. A Stage 1 decision.
+- **The gate reads one-sided.** Now implemented as the lower bound of the 95% interval,
+  alpha 0.025. The Stage 1 skeleton still says "excludes zero" and must say which.
+- **Degenerate comments survive.** "Done" 16 times, "ditto" 4, "+1" 3, written by
+  non-owners, so the author filter does not reach them. 4 of 201 examples carry only
+  acknowledgements, making the target unguessable from the prompt.
+- **Drop counts are printed, not persisted.** `build` accumulates them and `freeze` records
+  only dedup counts, so the well-posedness discard rate cannot be reconstructed without
+  refetching.
+- **`model.py` has no tests.** The budget arithmetic moved into `training.py` where CI
+  reaches it; `HFGenerator` and the loop body remain untested on CPU.
