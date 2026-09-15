@@ -23,9 +23,20 @@ from sphragis.measure.score import score
 
 EXAMPLES = Path(sys.argv[1] if len(sys.argv) > 1 else "pilot-examples.jsonl")
 rows = [json.loads(line) for line in EXAMPLES.read_text().splitlines() if line]
-random.Random(0).shuffle(rows)
-split = int(0.8 * len(rows))
-train_rows, eval_rows = rows[:split], rows[split:]
+
+# Split by CHANGE, never by example. Consecutive hunks of one change are near-copies, so a
+# random split puts siblings on both sides: measured at 63% of eval sharing a change_id
+# with train, and 20% sharing an exact `before` text, which inflated exact match from an
+# honest number to 0.512. This is the same grouping rule sphragis.corpus.split enforces for
+# the real windows.
+changes = sorted({r["change_id"] for r in rows})
+random.Random(0).shuffle(changes)
+cut = int(0.8 * len(changes))
+train_ids, eval_ids = set(changes[:cut]), set(changes[cut:])
+train_rows = [r for r in rows if r["change_id"] in train_ids]
+eval_rows = [r for r in rows if r["change_id"] in eval_ids]
+assert not (train_ids & eval_ids), "a change cannot appear on both sides"
+print(f"changes {len(changes)}: {len(train_ids)} train / {len(eval_ids)} eval", flush=True)
 print(f"examples {len(rows)}  train {len(train_rows)}  eval {len(eval_rows)}", flush=True)
 
 tok = AutoTokenizer.from_pretrained(MODEL_ID)
