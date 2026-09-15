@@ -84,7 +84,7 @@ def test_fetch_writes_a_snapshot_and_reports_the_cutoff_drop(
     def transport(url: str) -> tuple[int, dict[str, str], str]:
         return 200, {}, ")]}'\n" + json.dumps(payload)
 
-    monkeypatch.setattr(cli, "http_transport", lambda: transport)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: transport)
     rc = cli.main(["fetch", "--org", "openstack", "--month", "2024-10", "--root", str(tmp_path)])
     assert rc == 0
     rows = read_snapshot(snapshot_path(tmp_path, "openstack", "2024-10"))
@@ -259,6 +259,52 @@ def test_http_transport_reconnects_once_when_the_server_closed_an_idle_keep_aliv
     assert len(instances) == 2 and instances[0].closed
 
 
+def test_http_transport_paces_requests_to_one_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [_FakeResponse(200)] * 3)
+    now, slept = [100.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    transport = cli.http_transport(min_interval=0.5, clock=lambda: now[0], sleep=sleep)
+    transport("https://g/a")
+    now[0] += 0.1
+    transport("https://g/b")
+    transport("https://g/c")
+    assert slept == pytest.approx([0.4, 0.5])
+
+
+def test_http_transport_paces_each_host_independently(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [_FakeResponse(200)] * 2)
+    slept: list[float] = []
+    transport = cli.http_transport(min_interval=1.0, clock=lambda: 0.0, sleep=slept.append)
+    transport("https://g/a")
+    transport("https://h/a")
+    assert slept == []
+
+
+def test_http_transport_without_an_interval_never_sleeps(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [_FakeResponse(200)] * 3)
+    slept: list[float] = []
+    transport = cli.http_transport(clock=lambda: 0.0, sleep=slept.append)
+    for _ in range(3):
+        transport("https://g/a")
+    assert slept == []
+
+
+def test_the_cli_paces_gerrit_by_default() -> None:
+    from sphragis.corpus.cli import build_parser
+
+    assert build_parser().parse_args(["build"]).request_interval == 0.2
+
+
 def _snapshot(tmp_path: Path, org: str, month: str, rows: list[dict[str, object]]) -> None:
     from sphragis.corpus.storage import write_snapshot
 
@@ -287,7 +333,7 @@ def test_build_reads_every_snapshot_and_writes_examples(
             },
         ],
     )
-    monkeypatch.setattr(cli, "http_transport", lambda: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
     monkeypatch.setattr(
         cli,
         "scrubbed_comment_fetcher",
@@ -381,7 +427,7 @@ def test_build_skips_months_already_built_so_it_can_resume(
 
         return fetch
 
-    monkeypatch.setattr(cli, "http_transport", lambda: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
     monkeypatch.setattr(cli, "scrubbed_comment_fetcher", fetcher)
     monkeypatch.setattr(cli, "scrubbed_diff_fetcher", fetcher)
 
@@ -399,7 +445,7 @@ def test_build_overwrite_rebuilds_a_month(tmp_path: Path, monkeypatch: pytest.Mo
     examples = tmp_path / "openstack" / "examples"
     examples.mkdir(parents=True)
     (examples / "2024-10.jsonl").write_text('{"id": "stale"}\n')
-    monkeypatch.setattr(cli, "http_transport", lambda: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
     monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
     monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
 

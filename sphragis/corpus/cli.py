@@ -6,11 +6,12 @@ import argparse
 import http.client
 import json
 import os
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -58,10 +59,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
     parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
     parser.add_argument("--overwrite", action="store_true", help="replace an existing snapshot")
+    parser.add_argument(
+        "--request-interval",
+        type=float,
+        default=0.2,
+        help="minimum seconds between requests to one Gerrit host (fetch, build)",
+    )
     return parser
 
 
-def http_transport(timeout: float = 15.0) -> Transport:
+def http_transport(
+    timeout: float = 15.0,
+    *,
+    min_interval: float = 0.0,
+    clock: Callable[[], float] = time.monotonic,
+    sleep: Callable[[float], None] = time.sleep,
+) -> Transport:
     """A real HTTP transport over one persistent connection per host.
 
     Separated so every test runs offline. The earlier transport opened a fresh TLS
@@ -76,6 +89,24 @@ def http_transport(timeout: float = 15.0) -> Transport:
     Retry-After. A connection failure is reported as 503, which is retryable.
     """
     connections: dict[str, http.client.HTTPConnection] = {}
+    last_start: dict[str, float] = {}
+
+    def pace(host: str) -> None:
+        """Hold requests to one host at least `min_interval` apart.
+
+        Measured 2026-09-15 against review.opendev.org: after hours of unpaced building
+        (about 20 requests a second) a quarter to a third of new handshakes were dropped;
+        after 20 quiet minutes, 0 of 30. The drops follow our volume, so the fix is to send
+        less, not to retry harder.
+        """
+        if min_interval <= 0:
+            return
+        previous = last_start.get(host)
+        if previous is not None:
+            wait = previous + min_interval - clock()
+            if wait > 0:
+                sleep(wait)
+        last_start[host] = clock()
 
     def connect(scheme: str, host: str) -> http.client.HTTPConnection:
         if host not in connections:
@@ -93,6 +124,7 @@ def http_transport(timeout: float = 15.0) -> Transport:
     def transport(url: str) -> tuple[int, dict[str, str], str]:
         parts = urllib.parse.urlsplit(url)
         target = parts.path + (f"?{parts.query}" if parts.query else "")
+        pace(parts.netloc)
         # One silent retry only for a keep-alive the server closed while idle, which is
         # routine and not a failure; anything else is reported and left to the retry budget.
         for attempt in range(2):
@@ -150,7 +182,7 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     changes, record = fetch_changes(
         GERRIT[args.org],
         query,
-        transport=http_transport(),
+        transport=http_transport(min_interval=args.request_interval),
         options=("ALL_REVISIONS",),
     )
     kept = created_on_or_after(changes, args.cutoff)
@@ -210,7 +242,7 @@ def _stage_build(args: argparse.Namespace) -> int:
     if not snapshots:
         print(f"no snapshots under {raw}; run fetch first")
         return 1
-    transport = http_transport()
+    transport = http_transport(min_interval=args.request_interval)
     comments = scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport)
     diffs = scrubbed_diff_fetcher(GERRIT[args.org], transport=transport)
     out_dir = _examples_dir(args)

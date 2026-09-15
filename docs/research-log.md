@@ -858,6 +858,20 @@ quick reviews.
 3. Keep creation windows, report the bias, and register a follow-up horizon for the test
    window: after acceptance, fetch through its end plus about six months (under 3% missing).
 
+### Collection: our own volume got connections to opendev dropped (2026-09-15)
+
+Building the train and dev windows stalled twice against review.opendev.org. DNS was healthy
+throughout (16 timed lookups, none failed). Failed requests completed the lookup and never
+completed the TCP handshake, including with the address pinned. After hours of unpaced
+building, at about 20 requests a second, a quarter to a third of new connections were dropped.
+After 20 minutes of sending nothing, 0 of 30 were. Qt's server showed no such pattern.
+
+Three changes to the transport, in order of discovery: one persistent connection per host
+with a 15-second timeout; a failed comments fetch dropping one change as `comment_error`
+instead of aborting the build (the diff fetch already had that guard); and a minimum interval
+between requests to one host, `--request-interval`, default 0.2 seconds. Changes lost to
+`comment_error` are counted in each month's drop profile, so collection loss stays auditable.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
