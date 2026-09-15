@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import urllib.error
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -151,74 +151,112 @@ def test_verify_reports_a_missing_manifest_rather_than_raising(
     assert "no manifest" in capsys.readouterr().out
 
 
+class _FakeResponse:
+    def __init__(self, status: int, body: str = "", headers: dict[str, str] | None = None) -> None:
+        self.status, self._body, self._headers = status, body, headers or {}
+
+    def read(self) -> bytes:
+        return self._body.encode()
+
+    def getheaders(self) -> list[tuple[str, str]]:
+        return list(self._headers.items())
+
+
+def _scripted_connections(monkeypatch: pytest.MonkeyPatch, script: list[object]) -> list[Any]:
+    """Replace HTTPSConnection with one that plays `script`: responses, or exceptions to raise."""
+    import http.client
+
+    instances: list[Any] = []
+
+    class FakeConnection:
+        def __init__(self, host: str, timeout: float | None = None) -> None:
+            self.host, self.timeout, self.paths, self.closed = host, timeout, [], False
+            self._pending: object = None
+            instances.append(self)
+
+        def request(self, method: str, path: str, headers: dict[str, str] | None = None) -> None:
+            action = script.pop(0)
+            if isinstance(action, BaseException):
+                raise action
+            self.paths.append(path)
+            self._pending = action
+
+        def getresponse(self) -> object:
+            return self._pending
+
+        def close(self) -> None:
+            self.closed = True
+
+    monkeypatch.setattr(http.client, "HTTPSConnection", FakeConnection)
+    return instances
+
+
+def test_http_transport_reuses_one_connection_across_requests(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from sphragis.corpus import cli
+
+    instances = _scripted_connections(
+        monkeypatch, [_FakeResponse(200, "a"), _FakeResponse(200, "b")]
+    )
+    transport = cli.http_transport()
+    assert transport("https://g/changes/?q=x&n=1")[2] == "a"
+    assert transport("https://g/changes/2/comments")[2] == "b"
+    assert len(instances) == 1, "a fresh handshake per request is what stalled the build"
+    assert instances[0].paths == ["/changes/?q=x&n=1", "/changes/2/comments"]
+    assert instances[0].timeout == 15.0
+
+
 def test_http_transport_returns_error_statuses_instead_of_raising(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # urlopen raises HTTPError on 4xx/5xx, which would bypass the retry logic in
-    # gerrit._get entirely: a retryable 500 would propagate as an exception instead of
-    # being retried. The transport contract is (status, headers, body).
-    import email.message
-    import urllib.error
-    import urllib.request
-
+    # Raising on a 500 would bypass gerrit._get's retry budget and Retry-After handling.
     from sphragis.corpus import cli
 
-    headers = email.message.Message()
-    headers["Retry-After"] = "1"
+    _scripted_connections(monkeypatch, [_FakeResponse(500, "", {"Retry-After": "1"})])
+    status, headers, body = cli.http_transport()("https://g/x")
+    assert (status, headers.get("Retry-After"), body) == (500, "1", "")
 
-    def boom(*args: object, **kwargs: object) -> None:
-        raise urllib.error.HTTPError("https://g/x", 500, "Server Error", headers, None)
 
-    monkeypatch.setattr(urllib.request, "urlopen", boom)
-    status, got_headers, body = cli.http_transport()("https://g/x")
-    assert status == 500
-    assert got_headers.get("Retry-After") == "1"
-    assert body == ""
+def test_http_transport_keeps_a_fatal_client_error_as_itself(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [_FakeResponse(404)])
+    assert cli.http_transport()("https://g/x")[0] == 404
 
 
 @pytest.mark.parametrize(
-    "error",
-    [
-        urllib.error.URLError("[Errno -3] Temporary failure in name resolution"),
-        TimeoutError("timed out"),
-        ConnectionResetError("peer hung up"),
-    ],
+    "error", [TimeoutError("timed out"), ConnectionRefusedError("refused"), OSError("no route")]
 )
-def test_http_transport_makes_connection_failures_retryable(
+def test_http_transport_makes_connection_failures_retryable_and_replaces_the_connection(
     monkeypatch: pytest.MonkeyPatch, error: Exception
 ) -> None:
-    # A DNS blip killed a 3,336-change build five minutes in, because a connection-level
-    # failure is not an HTTPError and escaped the retry budget entirely. It is exactly as
-    # transient as the 503 it is now reported as, and 503 is in gerrit._RETRYABLE.
-    import urllib.request
-
     from sphragis.corpus import cli
     from sphragis.corpus.gerrit import _RETRYABLE
 
-    def boom(*args: object, **kwargs: object) -> None:
-        raise error
+    instances = _scripted_connections(monkeypatch, [error, _FakeResponse(200, "ok")])
+    transport = cli.http_transport()
+    status, headers, body = transport("https://g/x")
+    assert status in _RETRYABLE and (headers, body) == ({}, "")
+    assert instances[0].closed
+    assert transport("https://g/x")[2] == "ok"
+    assert len(instances) == 2, "a failed connection must not be reused"
 
-    monkeypatch.setattr(urllib.request, "urlopen", boom)
-    status, headers, body = cli.http_transport()("https://g/x")
-    assert status in _RETRYABLE
-    assert (headers, body) == ({}, "")
 
-
-def test_http_transport_still_distinguishes_a_fatal_client_error(
+def test_http_transport_reconnects_once_when_the_server_closed_an_idle_keep_alive(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # HTTPError subclasses URLError, so the order of the except clauses decides whether a
-    # 404 is reported as itself or laundered into a retryable 503 and retried five times.
-    import email.message
-    import urllib.request
+    import http.client
 
     from sphragis.corpus import cli
 
-    def boom(*args: object, **kwargs: object) -> None:
-        raise urllib.error.HTTPError("https://g/x", 404, "Not Found", email.message.Message(), None)
-
-    monkeypatch.setattr(urllib.request, "urlopen", boom)
-    assert cli.http_transport()("https://g/x")[0] == 404
+    instances = _scripted_connections(
+        monkeypatch, [http.client.RemoteDisconnected("closed"), _FakeResponse(200, "fresh")]
+    )
+    assert cli.http_transport()("https://g/x") == (200, {}, "fresh")
+    assert len(instances) == 2 and instances[0].closed
 
 
 def _snapshot(tmp_path: Path, org: str, month: str, rows: list[dict[str, object]]) -> None:

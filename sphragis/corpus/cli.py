@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections import Counter
 from collections.abc import Sequence
@@ -59,24 +61,56 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def http_transport() -> Transport:
-    """A real HTTP transport. Separated so every test runs offline."""
+def http_transport(timeout: float = 15.0) -> Transport:
+    """A real HTTP transport over one persistent connection per host.
+
+    Separated so every test runs offline. The earlier transport opened a fresh TLS
+    connection for every request under a single 60-second timeout. Against review.opendev.org
+    about 1 in 40 fresh handshakes hangs (measured 2026-09-15: 39 of 40 answered in under
+    0.2 s, one never did), so a month's build of thousands of requests spent most of its time
+    waiting out dropped connections: a build ran 16 minutes on 1 second of CPU. Reusing the
+    connection makes handshakes rare, which is also gentler on a community server, and the
+    shorter timeout makes a dropped one cost seconds rather than a minute.
+
+    Statuses are returned, never raised, so gerrit._get applies its retry budget and honours
+    Retry-After. A connection failure is reported as 503, which is retryable.
+    """
+    connections: dict[str, http.client.HTTPConnection] = {}
+
+    def connect(scheme: str, host: str) -> http.client.HTTPConnection:
+        if host not in connections:
+            factory = (
+                http.client.HTTPSConnection if scheme == "https" else http.client.HTTPConnection
+            )
+            connections[host] = factory(host, timeout=timeout)
+        return connections[host]
+
+    def drop(host: str) -> None:
+        stale = connections.pop(host, None)
+        if stale is not None:
+            stale.close()
 
     def transport(url: str) -> tuple[int, dict[str, str], str]:
-        try:
-            with urllib.request.urlopen(url, timeout=60) as response:
-                return response.status, dict(response.headers), response.read().decode()
-        except urllib.error.HTTPError as error:
-            # urlopen raises on 4xx/5xx. Returning the status instead is what lets
-            # gerrit._get apply its retry budget and honour Retry-After; raising here
-            # would make a retryable 500 fatal.
-            return error.code, dict(error.headers or {}), ""
-        except (urllib.error.URLError, TimeoutError, OSError):
-            # A DNS blip or a dropped connection is exactly as transient as a 503 and
-            # was not: it escaped the retry budget entirely and killed a 3,336-change
-            # build five minutes in, with no resumption. HTTPError is a URLError
-            # subclass, so this clause must stay second.
-            return 503, {}, ""
+        parts = urllib.parse.urlsplit(url)
+        target = parts.path + (f"?{parts.query}" if parts.query else "")
+        # One silent retry only for a keep-alive the server closed while idle, which is
+        # routine and not a failure; anything else is reported and left to the retry budget.
+        for attempt in range(2):
+            connection = connect(parts.scheme, parts.netloc)
+            try:
+                connection.request("GET", target, headers={"Accept": "application/json"})
+                response = connection.getresponse()
+                body = response.read().decode()
+                return response.status, dict(response.getheaders()), body
+            except (http.client.RemoteDisconnected, BrokenPipeError, ConnectionResetError):
+                drop(parts.netloc)
+                if attempt == 0:
+                    continue
+                return 503, {}, ""
+            except (OSError, http.client.HTTPException):
+                drop(parts.netloc)
+                return 503, {}, ""
+        return 503, {}, ""
 
     return transport
 
