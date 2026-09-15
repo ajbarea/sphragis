@@ -677,6 +677,44 @@ probes that cannot see it. It is not a clean bill.
 completion, verbatim or by edit similarity, shows no discrimination on this corpus and should
 be reported as a null instrument or replaced, decided before confirmatory data exists.
 
+### RQ1 PILOT: the grid runs end to end, and the design confounds organization with volume (2026-09-15)
+
+Job 143899, `scripts/rq1_pilot.py`, 16m44s on one GH200. One month per organization
+(2024-10), deduplicated, held out by change; one seed; both arms under the chat template.
+`datasets/results/rq1-pilot.json`.
+
+| exact match | held out: OpenStack (27 ex, 18 changes) | held out: Qt (133 ex, 48 changes) |
+|---|---|---|
+| base | 0.074 | 0.038 |
+| adapter trained on OpenStack (145 examples) | **0.370** | 0.271 |
+| adapter trained on Qt (422 examples) | 0.407 | **0.316** |
+
+| matched minus mismatched | pooled over examples | averaged over changes |
+|---|---|---|
+| OpenStack | -0.037 [-0.152, +0.087] | -0.039 [-0.178, +0.072] |
+| Qt | +0.045 [**+0.000**, +0.099] | +0.008 [-0.073, +0.082] |
+
+Pilot-scale gate: **fail** (neither lower bound strictly above zero). Not the RQ1 answer: one
+month, one seed, 18 held-out OpenStack changes. Normalized exact match tells the same story
+(Qt +0.038 [-0.009, +0.097]).
+
+**Three findings the design has to absorb before Stage 1.**
+
+1. **Organization is confounded with training-set size.** The Qt adapter trained on 2.9x the
+   examples and beat the matched adapter on OpenStack's own data. Performance grows roughly
+   logarithmically with training data (arXiv 1712.04008), so the unmatched contrast partly
+   measures volume. Fixed in the driver: `--equalize-train` subsamples every organization to
+   the smallest one's size, seeded. Registering equal-size training is a Stage 1 decision.
+2. **The estimand changes the Qt result.** Pooled +0.045, change-averaged +0.008. This is the
+   divergence flagged earlier, now on real data: Qt's held-out set has changes with many hunks.
+3. **The pass rule's boundary is reachable.** Qt's lower bound is exactly 0.0. Exact match is
+   binary, the bootstrap distribution is discrete, and a bound landing on zero is not rare.
+   The rule reads strictly greater than zero; the report must say so.
+
+Also noted: the Qt adapter's training loss fell to 0.069 (OpenStack's to 0.578), consistent
+with memorizing 422 examples over 2 epochs; it still generalized best. The registered budget
+is identical across conditions, so this is reported rather than tuned.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
