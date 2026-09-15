@@ -28,5 +28,6 @@ uv run --no-sync python scripts/rq1_pilot.py \
   --corpus "openstack=$HOME/corpus/openstack-2024-10.jsonl" \
   --corpus "qt=$HOME/corpus/qt-2024-10.jsonl" \
   --seeds 1 \
+  --equalize-train \
   --adapters "$HOME/scratch/sphragis-adapters" \
-  --out "$HOME/rq1-pilot.json"
+  --out "$HOME/rq1-pilot-equalized.json"

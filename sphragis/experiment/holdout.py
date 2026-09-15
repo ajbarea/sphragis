@@ -45,3 +45,31 @@ def verbatim_overlap(
     """
     seen = {(str(r["before"]), str(r["after"])) for r in train}
     return [str(r["id"]) for r in held_out if (str(r["before"]), str(r["after"])) in seen]
+
+
+def equalize_training(
+    train: Mapping[str, Sequence[Mapping[str, Any]]], *, seed: int
+) -> dict[str, list[dict[str, Any]]]:
+    """Every organization's training set cut to the smallest one's size, seeded.
+
+    RQ1 compares an adapter trained on one organization against one trained on another. If
+    one organization simply contributes more training examples, its adapter wins for that
+    reason alone: in the first RQ1 pilot the Qt adapter trained on 422 examples against
+    OpenStack's 145 and beat the matched OpenStack adapter on OpenStack's own held-out
+    changes. Performance grows roughly logarithmically with training-set size, and the
+    standard control is subsampling each source to equal size.
+
+    Subsampling is by example, not by change: grouping matters across the train/held-out
+    boundary, which this does not touch, not within the training set.
+    """
+    if not train:
+        raise ValueError("equalize_training needs at least one organization")
+    size = min(len(rows) for rows in train.values())
+    if size == 0:
+        raise ValueError("an organization has no training examples to equalize to")
+    out: dict[str, list[dict[str, Any]]] = {}
+    for org in sorted(train):
+        rows = [dict(r) for r in train[org]]
+        random.Random(f"equalize/{seed}/{org}").shuffle(rows)
+        out[org] = rows[:size]
+    return out

@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from sphragis.experiment.holdout import holdout_by_change, verbatim_overlap
+from sphragis.experiment.holdout import equalize_training, holdout_by_change, verbatim_overlap
 
 
 def _rows(n_changes: int, per_change: int = 3, prefix: str = "I") -> list[dict[str, Any]]:
@@ -64,3 +64,24 @@ def test_verbatim_overlap_finds_the_same_edit_carried_by_two_changes() -> None:
         {"id": "h2", "change_id": "I3", "before": "y=1", "after": "y = 1"},
     ]
     assert verbatim_overlap(train, held_out) == ["h1"]
+
+
+def test_equalize_cuts_every_organization_to_the_smallest() -> None:
+    train = {"openstack": _rows(10, per_change=1), "qt": _rows(30, per_change=1, prefix="Q")}
+    out = equalize_training(train, seed=1)
+    assert {org: len(rows) for org, rows in out.items()} == {"openstack": 10, "qt": 10}
+
+
+def test_equalize_draws_a_subset_not_a_prefix_and_is_reproducible() -> None:
+    qt = _rows(30, per_change=1, prefix="Q")
+    train = {"openstack": _rows(10, per_change=1), "qt": qt}
+    first = equalize_training(train, seed=1)["qt"]
+    assert first == equalize_training(train, seed=1)["qt"]
+    assert first != qt[:10], "a prefix would bias toward the earliest examples"
+    assert {r["id"] for r in first} <= {r["id"] for r in qt}
+    assert first != equalize_training(train, seed=2)["qt"]
+
+
+def test_equalize_refuses_an_organization_with_nothing_to_train_on() -> None:
+    with pytest.raises(ValueError, match="no training examples"):
+        equalize_training({"openstack": [], "qt": _rows(3)}, seed=0)

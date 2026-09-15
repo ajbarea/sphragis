@@ -15,7 +15,7 @@ from pathlib import Path
 import torch
 
 from sphragis.corpus.pipeline import run_dedup
-from sphragis.experiment.holdout import holdout_by_change, verbatim_overlap
+from sphragis.experiment.holdout import equalize_training, holdout_by_change, verbatim_overlap
 from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
     MODEL_ID,
@@ -37,6 +37,11 @@ parser.add_argument("--split-seed", type=int, default=0)
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--adapters", type=Path, default=Path("adapters"))
 parser.add_argument("--out", type=Path, default=Path("rq1-pilot.json"))
+parser.add_argument(
+    "--equalize-train",
+    action="store_true",
+    help="subsample every organization's training set to the smallest one's size",
+)
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 args = parser.parse_args()
 
@@ -62,6 +67,12 @@ for org, path in corpora.items():
         "held_out_changes": len({r["change_id"] for r in test}),
     }
     print(f"{org}: {summary[org]}", flush=True)
+
+if args.equalize_train:
+    train_rows = equalize_training(train_rows, seed=args.split_seed)
+    for org in orgs:
+        summary[org]["train_examples_equalized"] = len(train_rows[org])
+    print(f"equalized training sets: { {o: len(train_rows[o]) for o in orgs} }", flush=True)
 
 
 class InProcessTrainer:
@@ -139,6 +150,7 @@ args.out.write_text(
             "model_id": MODEL_ID,
             "seeds": seeds,
             "split_seed": args.split_seed,
+            "equalize_train": args.equalize_train,
             "bootstrap_seed": args.bootstrap_seed,
             "max_new_tokens": args.max_new_tokens,
             "corpora": summary,
