@@ -711,9 +711,14 @@ month, one seed, 18 held-out OpenStack changes. Normalized exact match tells the
    binary, the bootstrap distribution is discrete, and a bound landing on zero is not rare.
    The rule reads strictly greater than zero; the report must say so.
 
-Also noted: the Qt adapter's training loss fell to 0.069 (OpenStack's to 0.578), consistent
-with memorizing 422 examples over 2 epochs; it still generalized best. The registered budget
-is identical across conditions, so this is reported rather than tuned.
+*Withdrawn: "the Qt adapter's loss of 0.069 is consistent with memorization".* That figure is
+the loss of the final optimizer step, which holds only the examples left over after full
+batches of 16: 422 leaves 6, and OpenStack's 145 leaves 1. The equalized rerun trained the same
+145 OpenStack examples with the same seed and recorded 0.010 where this run recorded 0.578,
+which is what a one-example sample looks like. The last step's loss says nothing about fit.
+The driver now reports the mean over the final epoch. A one-example final step also takes a
+full learning-rate update on a single example's gradient; that matches standard trainers
+without drop-last and is noted rather than changed.
 
 ## Open bugs & findings
 

@@ -96,6 +96,7 @@ class InProcessTrainer:
             except ValueError:
                 refused += 1
         report = train_adapter(model, items, pad_token_id=tok.pad_token_id, seed=seed)
+        epochs = int(TRAINING["epochs"])
         assert report.skipped_steps == 0, f"{org} s{seed}: {report.skipped_steps} steps skipped"
         target = args.adapters / f"{org}-s{seed}"
         model.save_pretrained(target)
@@ -106,6 +107,10 @@ class InProcessTrainer:
             "applied_steps": report.applied_steps,
             "first_loss": report.losses[0],
             "last_loss": report.losses[-1],
+            # The last step holds only the examples left over after full batches (1 of 145,
+            # 6 of 422), so its loss is noise. The final epoch's mean is the readable figure.
+            "final_epoch_mean_loss": sum(report.losses[-report.steps // epochs :])
+            / max(1, len(report.losses[-report.steps // epochs :])),
         }
         print(f"trained {target}: {self.reports[f'{org}-s{seed}']}", flush=True)
         del model
