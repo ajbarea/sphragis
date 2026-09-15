@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import torch
 from peft import LoraConfig, PeftMixedModel, PeftModel, get_peft_model
@@ -111,6 +112,29 @@ class HFGenerator:
             )
         generated = out[0][inputs["input_ids"].shape[-1] :]
         return str(self.tokenizer.decode(generated, skip_special_tokens=True))
+
+
+def cast_trainable_to_fp32(model: Any) -> int:
+    """Keep the adapter in fp32 while the frozen base stays bf16.
+
+    research(2026-09): bf16 LoRA parameters are a known source of NaN gradients, and the
+    documented workaround is to accumulate in fp32 for the adapter only. PEFT issue #3073
+    records the same failure, attributing it to LoRA gradients not being normalised by
+    input norm, so they explode where activations vary across layers.
+
+    Observed here on job 143313: loss fell 1.00 -> 0.52 over two healthy steps, then
+    grad_norm went NaN at step 3 and loss collapsed to exactly 0. The adapted model then
+    emitted garbage, edit similarity 0.001 against the base model's 0.157. Reported
+    failures of this shape appear "after 2-3 steps", which matches.
+
+    Returns the number of tensors cast, so a caller can assert it did something.
+    """
+    cast = 0
+    for parameter in model.parameters():
+        if parameter.requires_grad and parameter.dtype != torch.float32:
+            parameter.data = parameter.data.to(torch.float32)
+            cast += 1
+    return cast
 
 
 def attach_adapter(

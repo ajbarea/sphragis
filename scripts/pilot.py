@@ -1,0 +1,133 @@
+"""Pilot: does an ADAPTED 7B clear the exact-match floor on this corpus?
+
+The question the whole Stage 1 protocol rests on. Base model scores EM 0 on real hunks
+(expected, matches a base model zero-shot). CodeReviewer reports 30.32% once fine-tuned.
+This asks whether adaptation moves it here.
+"""
+
+import contextlib
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+import torch
+from peft import get_peft_model
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
+
+from sphragis.experiment.model import LORA, MODEL_ID, TRAINING, cast_trainable_to_fp32
+from sphragis.experiment.runner import build_prompt
+from sphragis.experiment.training import build_supervised, warmup_steps
+from sphragis.measure.score import score
+
+EXAMPLES = Path(sys.argv[1] if len(sys.argv) > 1 else "pilot-examples.jsonl")
+rows = [json.loads(line) for line in EXAMPLES.read_text().splitlines() if line]
+random.Random(0).shuffle(rows)
+split = int(0.8 * len(rows))
+train_rows, eval_rows = rows[:split], rows[split:]
+print(f"examples {len(rows)}  train {len(train_rows)}  eval {len(eval_rows)}", flush=True)
+
+tok = AutoTokenizer.from_pretrained(MODEL_ID)
+if tok.pad_token_id is None:
+    tok.pad_token = tok.eos_token
+
+
+def make(rs):
+    out = []
+    for r in rs:
+        # An example whose target alone exceeds the budget cannot be trained on without
+        # cutting the answer, so it is skipped rather than mangled.
+        with contextlib.suppress(ValueError):
+            out.append(
+                build_supervised(
+                    tok, r, prompt_builder=build_prompt, max_length=TRAINING["max_seq_length"]
+                )
+            )
+    return out
+
+
+train_ds = make(train_rows)
+print(f"trainable items {len(train_ds)}", flush=True)
+
+
+def collate(batch):
+    n = max(len(b["input_ids"]) for b in batch)
+    pad = tok.pad_token_id
+    return {
+        "input_ids": torch.tensor(
+            [b["input_ids"] + [pad] * (n - len(b["input_ids"])) for b in batch]
+        ),
+        "labels": torch.tensor([b["labels"] + [-100] * (n - len(b["labels"])) for b in batch]),
+        "attention_mask": torch.tensor(
+            [b["attention_mask"] + [0] * (n - len(b["attention_mask"])) for b in batch]
+        ),
+    }
+
+
+def evaluate_em(model, label):
+    model.eval()
+    tot = {"exact_match": 0.0, "normalized_exact_match": 0.0, "edit_similarity": 0.0}
+    lens = []
+    t0 = time.time()
+    for r in eval_rows:
+        ids = tok(build_prompt(r), return_tensors="pt").to("cuda:0")
+        with torch.inference_mode():
+            out = model.generate(
+                **ids, max_new_tokens=96, do_sample=False, pad_token_id=tok.eos_token_id
+            )
+        pred = tok.decode(out[0][ids["input_ids"].shape[-1] :], skip_special_tokens=True)
+        s = score(pred, str(r["after"]))
+        lens.append(len(pred))
+        for k in tot:
+            tot[k] += s[k]
+    n = max(len(eval_rows), 1)
+    med_pred = sorted(lens)[len(lens) // 2] if lens else 0
+    med_ref = sorted(len(str(r["after"])) for r in eval_rows)[len(eval_rows) // 2]
+    print(
+        f"[{label}] EM={tot['exact_match'] / n:.3f} "
+        f"normEM={tot['normalized_exact_match'] / n:.3f} "
+        f"sim={tot['edit_similarity'] / n:.3f} "
+        f"pred_chars_med={med_pred} ref_chars_med={med_ref}  ({time.time() - t0:.0f}s)",
+        flush=True,
+    )
+    return tot["exact_match"] / n
+
+
+base = AutoModelForCausalLM.from_pretrained(MODEL_ID, dtype=torch.bfloat16, device_map="cuda:0")
+print("loaded base", flush=True)
+em_base = evaluate_em(base, "BASE")
+
+model = get_peft_model(base, LORA)
+model.print_trainable_parameters()
+cast = cast_trainable_to_fp32(model)
+print(f"cast {cast} adapter tensors to fp32", flush=True)
+assert cast > 0, "nothing cast; adapter already fp32 or requires_grad unset"
+
+args = TrainingArguments(
+    output_dir="/tmp/pilot-adapter",
+    num_train_epochs=TRAINING["epochs"],
+    learning_rate=TRAINING["learning_rate"],
+    per_device_train_batch_size=2,
+    gradient_accumulation_steps=8,
+    warmup_steps=warmup_steps(
+        n_examples=len(train_ds),
+        batch_size=2,
+        grad_accum=8,
+        epochs=TRAINING["epochs"],
+        ratio=TRAINING["warmup_ratio"],
+    ),
+    lr_scheduler_type=TRAINING["lr_scheduler"],
+    logging_steps=5,
+    save_strategy="no",
+    bf16=True,
+    max_grad_norm=1.0,
+    report_to=[],
+    seed=1,
+)
+Trainer(model=model, args=args, train_dataset=train_ds, data_collator=collate).train()
+print("training done", flush=True)
+em_adapted = evaluate_em(model, "ADAPTED")
+
+print(f"\nFLOOR CHECK: base EM {em_base:.3f} -> adapted EM {em_adapted:.3f}")
+print("PILOT_OK")
