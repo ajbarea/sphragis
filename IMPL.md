@@ -29,4 +29,5 @@ snapshots then build. Freezing waits on AJ's decisions below: it is irreversible
 - The leakage threshold for outcome-neutral test 4; the pilot driver's 0.01 is provisional.
 - The contamination control window's size, and guided completion's match criterion.
 - The comment-anchoring rule (strict hunk, or within 10 lines).
+- How windows are assigned: the seal censors about 22% of the dev window's slowest reviews.
 - Merging PR #13, and when to freeze the windows.

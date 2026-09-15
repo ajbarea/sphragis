@@ -821,6 +821,43 @@ month, and dedup already removed pairs at Jaccard >= 0.8 within it. The number t
 threshold should rest on is the rate **across windows**, train against dev, which the
 collection now running makes measurable. The test window stays sealed.
 
+### The seal right-censors the collected windows: dev loses about a fifth (2026-09-15)
+
+Snapshots select merged changes by **last update** (Gerrit `after:`/`before:`), windows assign
+them by **creation**, and the seal refuses every month from 2025-11 on. So a change created in
+a collected window whose last update falls on or after 2025-11-01 is in no snapshot. The loss
+is concentrated in the changes reviewed longest, near the boundary.
+
+Estimated from OpenStack's collected snapshots (25,191 merged changes, 2024-10 to 2025-10).
+Creation-to-last-update lag, from changes created 2024-10 to 2024-12 (ten or more months of
+follow-up, so lags under nine months are fully observed): median 3.8 days, p90 71.8, p99
+272.3; P(lag > 7 d) 0.391, > 14 d 0.291, > 30 d 0.196, > 61 d 0.116, > 90 d 0.077, > 180 d
+0.027. Expected share of each creation window's true cohort missing:
+
+| window | collected changes created there | estimated share missing |
+|---|---|---|
+| dev, 2025-09 to 10 | 4,104 | **21.6%** |
+| train, 2025-08 | 1,820 | 9.5% |
+| train, 2025-06 to 07 | 3,452 | 5.4% |
+| train, 2024-11 to 2025-05 | 13,452 | 1.4% |
+
+Approximations: creation days are taken from the collected, already truncated changes, and
+last update includes post-merge comments; both probably understate the loss. Qt's estimate
+waits on its snapshots.
+
+**Why it matters.** The missing changes are the slow, long-reviewed ones, which plausibly
+carry different review comments. The dev window, and the late train months, are biased toward
+quick reviews.
+
+**Options, a Stage 1 decision (not changed in code):**
+
+1. Assign windows by last-update month rather than creation. Collection and assignment align
+   and nothing is censored; changes stay disjoint, but review activity near a boundary overlaps.
+2. A gap between dev and test that excludes changes created in the final months before the
+   seal, the standard embargo for temporal splits; shortens a window and so power.
+3. Keep creation windows, report the bias, and register a follow-up horizon for the test
+   window: after acceptance, fetch through its end plus about six months (under 3% missing).
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

@@ -24,6 +24,10 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   counted by reason, resumable), `fetchers` (scrubbing at ingestion), `pipeline` (dedup,
   split, freeze), all wired behind `python -m sphragis.corpus`.
 - [ ] **A real frozen corpus.** Both organizations, the full window range, verified.
+- [ ] **Decide how windows are assigned.** Snapshots select by last update, windows assign by
+  creation, and the seal censors: an estimated 21.6% of the dev window's true OpenStack cohort
+  is missing, biased toward slow reviews. By last-update month, an embargo gap, or creation
+  windows with a registered follow-up horizon for the test window (research log).
 
 ## Plan B — measurement
 
