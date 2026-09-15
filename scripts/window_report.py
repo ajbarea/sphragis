@@ -14,7 +14,7 @@ from pathlib import Path
 
 from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.pipeline import run_dedup, run_split
-from sphragis.experiment.neutral import near_duplicate_rate
+from sphragis.experiment.neutral import closest_training_match
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
@@ -60,11 +60,21 @@ for org in args.org or ["openstack", "qt"]:
     thresholds = sorted(args.threshold or [0.8, 0.7, 0.6, 0.5], reverse=True)
     leakage: dict[str, dict[str, dict[str, float]]] = {}
     for earlier, later in zip(COLLECTED, COLLECTED[1:], strict=False):
+        # One pass over the pair, thresholds applied after: shingling the earlier window is
+        # the cost, and it was being repeated for every threshold.
+        matches = closest_training_match(windows[earlier], windows[later])
+        similarities = [similarity for _, similarity in matches]
         by_threshold = {}
         for threshold in thresholds:
-            rate, hits = near_duplicate_rate(windows[earlier], windows[later], threshold=threshold)
-            by_threshold[f"{threshold:g}"] = {"rate": rate, "near_duplicates": len(hits)}
-        leakage[f"{earlier}->{later}"] = by_threshold
+            hits = sum(1 for s in similarities if s >= threshold)
+            by_threshold[f"{threshold:g}"] = {
+                "rate": hits / len(similarities) if similarities else 0.0,
+                "near_duplicates": hits,
+            }
+        leakage[f"{earlier}->{later}"] = {
+            **by_threshold,
+            "max_similarity": max(similarities, default=0.0),
+        }
     report[org] = {
         "months_built": len(list(directory.glob("*.jsonl"))),
         "examples": len(rows),
@@ -85,7 +95,9 @@ for org in args.org or ["openstack", "qt"]:
         print(f"  {name:<6} {c['examples']:>6} examples over {c['changes']:>5} changes")
     for pair, by_threshold in leakage.items():
         rendered = "  ".join(
-            f"J>={t}: {v['rate']:.4f} ({v['near_duplicates']})" for t, v in by_threshold.items()
+            f"J>={t}: {v['rate']:.4f} ({v['near_duplicates']})"
+            for t, v in by_threshold.items()
+            if isinstance(v, dict)
         )
         print(f"  near-duplicates {pair:<14} {rendered}")
     if unassigned:

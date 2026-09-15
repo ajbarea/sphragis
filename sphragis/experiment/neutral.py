@@ -73,6 +73,29 @@ def manipulation_check(
     )
 
 
+def closest_training_match(
+    train: Sequence[Mapping[str, Any]],
+    held_out: Sequence[Mapping[str, Any]],
+    *,
+    k: int = 5,
+) -> list[tuple[str, float]]:
+    """Each held-out example's id with its similarity to the nearest training example.
+
+    The threshold is applied by the caller, so a sweep over thresholds costs one pass rather
+    than one pass each: shingling every training example is the expensive part, and it was
+    being repeated per threshold.
+    """
+    train_signatures = [shingles(pair_text(r), k) for r in train]
+    return [
+        (
+            str(r["id"]),
+            max((jaccard(signature, seen) for seen in train_signatures), default=0.0),
+        )
+        for r in held_out
+        for signature in (shingles(pair_text(r), k),)
+    ]
+
+
 def near_duplicate_rate(
     train: Sequence[Mapping[str, Any]],
     held_out: Sequence[Mapping[str, Any]],
@@ -87,16 +110,8 @@ def near_duplicate_rate(
     """
     if not held_out:
         return 0.0, []
-    train_signatures = [shingles(pair_text(r), k) for r in train]
-    hits = [
-        str(r["id"])
-        for r in held_out
-        if any(
-            jaccard(signature, seen) >= threshold
-            for signature in (shingles(pair_text(r), k),)
-            for seen in train_signatures
-        )
-    ]
+    matches = closest_training_match(train, held_out, k=k)
+    hits = [example_id for example_id, similarity in matches if similarity >= threshold]
     return len(hits) / len(held_out), hits
 
 

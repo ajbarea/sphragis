@@ -9,6 +9,7 @@ import pytest
 from sphragis.experiment.neutral import (
     Check,
     apparatus_holds,
+    closest_training_match,
     leakage_check,
     manipulation_check,
     near_duplicate_rate,
@@ -96,3 +97,30 @@ def test_apparatus_holds_only_when_every_check_passed() -> None:
     assert apparatus_holds([Check("a", True), Check("b", True)])
     assert not apparatus_holds([Check("a", True), Check("b", False)])
     assert not apparatus_holds([]), "no checks run is not an apparatus that holds"
+
+
+def test_closest_training_match_reports_similarity_per_held_out_example() -> None:
+    """The threshold sweep reads these, so the similarity itself has to be right."""
+    train = [_pair("t1", "value = compute(a, b)", "value = compute(a, b, c)")]
+    held_out = [
+        _pair("h1", "value = compute(a, b)", "value = compute(a, b, c)"),
+        _pair("h2", "totally different code here", "and a different fix entirely"),
+    ]
+    matches = dict(closest_training_match(train, held_out))
+    assert matches["h1"] == pytest.approx(1.0)
+    assert matches["h2"] < 0.2
+
+
+def test_closest_training_match_and_the_rate_agree() -> None:
+    train = [_pair(f"t{i}", f"before {i}", f"after {i}") for i in range(5)]
+    held_out = [_pair("h1", "before 2", "after 2"), _pair("h2", "unrelated", "entirely")]
+    matches = closest_training_match(train, held_out)
+    for threshold in (0.9, 0.7, 0.5, 0.3):
+        expected = sum(1 for _, s in matches if s >= threshold) / len(held_out)
+        assert near_duplicate_rate(train, held_out, threshold=threshold)[0] == pytest.approx(
+            expected
+        )
+
+
+def test_an_empty_training_window_leaves_every_similarity_at_zero() -> None:
+    assert [s for _, s in closest_training_match([], [_pair("h1", "a", "b")])] == [0.0]
