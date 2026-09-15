@@ -70,6 +70,12 @@ def http_transport() -> Transport:
             # gerrit._get apply its retry budget and honour Retry-After; raising here
             # would make a retryable 500 fatal.
             return error.code, dict(error.headers or {}), ""
+        except (urllib.error.URLError, TimeoutError, OSError):
+            # A DNS blip or a dropped connection is exactly as transient as a 503 and
+            # was not: it escaped the retry budget entirely and killed a 3,336-change
+            # build five minutes in, with no resumption. HTTPError is a URLError
+            # subclass, so this clause must stay second.
+            return 503, {}, ""
 
     return transport
 

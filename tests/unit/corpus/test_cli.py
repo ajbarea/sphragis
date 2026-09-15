@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import urllib.error
 from pathlib import Path
 
 import pytest
@@ -173,6 +174,51 @@ def test_http_transport_returns_error_statuses_instead_of_raising(
     assert status == 500
     assert got_headers.get("Retry-After") == "1"
     assert body == ""
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        urllib.error.URLError("[Errno -3] Temporary failure in name resolution"),
+        TimeoutError("timed out"),
+        ConnectionResetError("peer hung up"),
+    ],
+)
+def test_http_transport_makes_connection_failures_retryable(
+    monkeypatch: pytest.MonkeyPatch, error: Exception
+) -> None:
+    # A DNS blip killed a 3,336-change build five minutes in, because a connection-level
+    # failure is not an HTTPError and escaped the retry budget entirely. It is exactly as
+    # transient as the 503 it is now reported as, and 503 is in gerrit._RETRYABLE.
+    import urllib.request
+
+    from sphragis.corpus import cli
+    from sphragis.corpus.gerrit import _RETRYABLE
+
+    def boom(*args: object, **kwargs: object) -> None:
+        raise error
+
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    status, headers, body = cli.http_transport()("https://g/x")
+    assert status in _RETRYABLE
+    assert (headers, body) == ({}, "")
+
+
+def test_http_transport_still_distinguishes_a_fatal_client_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # HTTPError subclasses URLError, so the order of the except clauses decides whether a
+    # 404 is reported as itself or laundered into a retryable 503 and retried five times.
+    import email.message
+    import urllib.request
+
+    from sphragis.corpus import cli
+
+    def boom(*args: object, **kwargs: object) -> None:
+        raise urllib.error.HTTPError("https://g/x", 404, "Not Found", email.message.Message(), None)
+
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    assert cli.http_transport()("https://g/x")[0] == 404
 
 
 def _snapshot(tmp_path: Path, org: str, month: str, rows: list[dict[str, object]]) -> None:
