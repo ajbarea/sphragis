@@ -899,6 +899,19 @@ carrying hundreds of such drops would differ materially from the other twelve, a
 feeds the dev window that censoring has already thinned. Twelve of thirteen months were
 already written, so the cost was one month's fetching.
 
+**Qt's block outlasts the traffic; opendev's did not.** After 25 minutes of sending nothing,
+10 of 12 probes to Qt still failed, where opendev had recovered fully (0 of 30) after 20.
+It is Qt-specific rather than local: in the same minute opendev, GitHub and Google answered
+5 of 5 while Qt answered 1 of 5. That shape, a refusal that persists after the load stops,
+reads as a firewall ban rather than load shedding, so waiting is the only remedy and the
+interval that avoids it has to be well below the 5 requests a second that triggered it.
+
+**What it costs, which is less than it looks.** Qt's twelve built months are 2024-10 through
+2025-09, so the *pilot* window (2024-10) and the whole *train* window (2024-11 to 2025-08)
+are complete. Only 2025-10 is missing, which is the second of the dev window's two months.
+Training is therefore unaffected for both organizations; Qt's dev window is half size, which
+widens its intervals and is stated wherever its numbers appear.
+
 **Measuring how the sampling window fooled me.** Reading the build's bytes over 5 seconds
 showed zero and looked like a stall; over 60 seconds it read 2.6 MB and was healthy. A paced,
 bursty client needs a sampling window longer than its retry backoff (1+2+4+8+16 = 31 s) before
