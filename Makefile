@@ -43,20 +43,18 @@ gpu-local:                 ## Swap in a CUDA torch for local GPU work (x86_64 de
 
 TIGRIS_HOST ?= tigris
 TIGRIS_DIR  ?= ajsoftworks/sphragis
+REMOTE      ?= origin
+BRANCH      ?= $(shell git rev-parse --abbrev-ref HEAD)
 
-deploy:                    ## rsync this checkout to the cluster (one source of truth)
-	@# The cluster cannot clone this repo: it is private and TIGRIS has no GitHub
-	@# credential. So deployment is a copy, and a copy drifts -- three jobs have already
-	@# failed on a stale or missing file, including one on a module that existed only
-	@# here. Syncing the WHOLE checkout, with --delete, is what makes that class impossible:
-	@# never hand-copy an individual script into the cluster's $$HOME.
-	@# Excluded dirs are protected from --delete; .venv on the cluster is the aarch64 one
-	@# and must survive, and logs/ holds the cluster's job output, which exists only there.
-	rsync -az --delete --exclude '.venv/' --exclude '.git/' --exclude '__pycache__/' \
-		--exclude '.pytest_cache/' --exclude '.ruff_cache/' --exclude 'datasets/' \
-		--exclude 'logs/' \
-		./ $(TIGRIS_HOST):$(TIGRIS_DIR)/
-	@echo "deployed to $(TIGRIS_HOST):$(TIGRIS_DIR)"
+deploy:                    ## Put the cluster on this branch's pushed HEAD, by SHA
+	@# A read-only deploy key makes the cluster a real clone, so deployment is a fetch to
+	@# a named commit rather than a file copy. That matters beyond tidiness: the design
+	@# requires every stage to record the git SHA that produced it, and a copy has no SHA.
+	@# Three jobs have already failed on a hand-copied or stale file; `git status` on the
+	@# cluster now answers "is this the code I think it is".
+	@git diff-index --quiet HEAD -- || { echo "commit first: the cluster deploys a SHA, not a working tree"; exit 1; }
+	git push -q $(REMOTE) HEAD
+	ssh $(TIGRIS_HOST) 'cd $(TIGRIS_DIR) && git fetch -q origin && git checkout -q -B $(BRANCH) origin/$(BRANCH) && git --no-pager log --oneline -1'
 
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify
