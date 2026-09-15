@@ -842,8 +842,23 @@ follow-up, so lags under nine months are fully observed): median 3.8 days, p90 7
 | train, 2024-11 to 2025-05 | 13,452 | 1.4% |
 
 Approximations: creation days are taken from the collected, already truncated changes, and
-last update includes post-merge comments; both probably understate the loss. Qt's estimate
-waits on its snapshots.
+last update includes post-merge comments; both probably understate the loss.
+
+**Qt, same method** (52,895 merged changes; early cohort 11,438): lag median 0.4 days, p90
+15.5, p99 128.0; P(lag > 7 d) 0.172, > 30 d 0.058, > 90 d 0.018, > 180 d 0.006.
+
+| share of each window's true cohort missing | OpenStack | Qt |
+|---|---|---|
+| dev, 2025-09 to 10 | 21.6% | 7.9% |
+| train, 2025-08 | 9.5% | 2.2% |
+| train, 2025-06 to 07 | 5.4% | 1.1% |
+| train, 2024-11 to 2025-05 | 1.4% | 0.2% |
+
+**The censoring is unequal across organizations.** Qt reviews close far faster, so the seal
+removes almost three times as much of OpenStack's dev window. RQ1 compares organizations, so
+under creation-based windows this is a confound rather than shared noise: the two dev windows
+are drawn from differently truncated populations. It strengthens the case for assigning
+windows by last-update month, where neither organization is censored.
 
 **Why it matters.** The missing changes are the slow, long-reviewed ones, which plausibly
 carry different review comments. The dev window, and the late train months, are biased toward
