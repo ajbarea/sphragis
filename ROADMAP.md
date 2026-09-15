@@ -94,6 +94,17 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 Plan C is the only part needing a GPU, and the only part needing collected data.
 
+## Completed
+
+- **2026-09-15** — Outcome-neutral tests as code (`sphragis/experiment/neutral.py`) and the apparatus halt rule.
+- **2026-09-15** — Fetch refuses the sealed test window and every month after it.
+- **2026-09-15** — Power analysis at report-grade settings: about 3 exact-match points detectable, OpenStack binding (`scripts/power_rq1.py`).
+- **2026-09-15** — RQ1 grid at pilot scale, unequal and equalized training (`scripts/rq1_pilot.py`); organization confounded with volume, fixed.
+- **2026-09-15** — Contamination battery on real data, bare hunks and with context (`scripts/contamination_battery.py`).
+- **2026-09-15** — Structured review of PR #13: directional gate, one prompt format, the declared training budget realized, seal and freeze guards.
+- **2026-09-14** — Pilot floor check: adaptation moves exact match on this corpus.
+- **2026-09-13** — Repository split from phalanx-fl; corpus stages A2.
+
 ## Study invariants
 
 These are not style rules. CI asserts them, and loosening one has to show up in a diff.
