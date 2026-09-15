@@ -575,6 +575,13 @@ this bootstrap at 18 changes is about 6% two-sided. One month, one organization,
 Built before the acknowledgement filter, so 4 examples carrying only "Done"-type comments
 are still in it. Still not the RQ1 contrast, which needs the Qt corpus.
 
+**Decoding ceiling.** Both arms generated at most 96 new tokens. 4 of 172 deduplicated
+references are longer (99, 114, 143 and 154 tokens), and 1 of the 27 held-out examples
+was among them, so it was a miss for both arms by construction. It cannot favour either
+arm and moves both exact-match rates by at most 1/27. The adapted model's longest answer
+was 54 tokens, so nothing it did produce was cut. `MAX_NEW_TOKENS` is now 256 for every
+generator.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
