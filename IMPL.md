@@ -582,6 +582,41 @@ arm and moves both exact-match rates by at most 1/27. The adapted model's longes
 was 54 tokens, so nothing it did produce was cut. `MAX_NEW_TOKENS` is now 256 for every
 generator.
 
+### Contamination battery: what the time partition actually rests on (2026-09-15)
+
+`research(2026-09)`. The design says the corpus "starts 2024-10-01 against a base model
+published 2024-09-17" and calls the time partition the weakest of the three methods
+because it rests on a publication date. It rests on less than that.
+
+**What the Qwen2.5-Coder technical report states** (arXiv 2409.12186, section 3.1.1), the
+only date in it: "We collected public repositories from GitHub created before February
+2024". That bounds when a *repository was created*, not when its contents were captured,
+so a repository created in 2015 and crawled later can carry code from any date. Pull
+requests, commits, Jupyter notebooks, Kaggle data and the Common Crawl text-code data are
+listed with no date at all. Decontamination (section 5) removed HumanEval, MBPP, GSM8K and
+MATH by 10-gram overlap, which says nothing about Gerrit review data.
+
+**No official knowledge cutoff exists.** A Qwen GitHub discussion (QwenLM/Qwen3 #1093)
+carries community claims of June 2024 and March 2024, with neither confirmed by a
+maintainer. Neither can be cited as a cutoff.
+
+**Consequences for the design.**
+
+- The time partition is an argument that the corpus postdates every date the developer
+  has stated, not evidence that it postdates pretraining. That makes Min-K% and guided
+  completion the measurements, and a flat post-versus-pre gap an ambiguous result: either
+  no exposure, or an instrument that cannot see exposure. The report has to pre-commit to
+  reading it that way.
+- **Control month: 2024-01.** The last full month before the report's February 2024
+  repository bound, and earlier than both unofficial cutoff claims, from the same projects.
+- **Min-K% runs on the base checkpoint `Qwen/Qwen2.5-Coder-7B`, not the Instruct model.**
+  Samuel, Zhou and Zou (COLING 2025, "Towards Data Contamination Detection for Modern
+  Large Language Models") find detection methods mutually inconsistent on current models
+  and degraded by instruction fine-tuning. The Instruct model is a fine-tune of the base
+  (same 7,615,616,512 parameters), so the base is the checkpoint whose likelihoods reflect
+  pretraining exposure. Guided completion stays on the registered Instruct model, since it
+  asks what the evaluated model reproduces.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
