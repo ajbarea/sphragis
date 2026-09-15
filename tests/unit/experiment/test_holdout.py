@@ -7,7 +7,12 @@ from typing import Any
 
 import pytest
 
-from sphragis.experiment.holdout import equalize_training, holdout_by_change, verbatim_overlap
+from sphragis.experiment.holdout import (
+    equalize_training,
+    holdout_by_change,
+    split_by_window,
+    verbatim_overlap,
+)
 
 
 def _rows(n_changes: int, per_change: int = 3, prefix: str = "I") -> list[dict[str, Any]]:
@@ -85,3 +90,42 @@ def test_equalize_draws_a_subset_not_a_prefix_and_is_reproducible() -> None:
 def test_equalize_refuses_an_organization_with_nothing_to_train_on() -> None:
     with pytest.raises(ValueError, match="no training examples"):
         equalize_training({"openstack": [], "qt": _rows(3)}, seed=0)
+
+
+WINDOWED = {
+    "pilot": _rows(3, prefix="P"),
+    "train": _rows(5, prefix="T"),
+    "dev": _rows(2, prefix="D"),
+    "test": _rows(9, prefix="X"),
+}
+
+
+def test_split_by_window_takes_the_two_named_windows() -> None:
+    train, held_out = split_by_window(WINDOWED, train_window="train", eval_window="dev")
+    assert {r["change_id"] for r in train} == {f"T{i}" for i in range(5)}
+    assert {r["change_id"] for r in held_out} == {f"D{i}" for i in range(2)}
+
+
+@pytest.mark.parametrize(
+    ("train_window", "eval_window"), [("train", "test"), ("test", "dev"), ("test", "test")]
+)
+def test_split_by_window_refuses_the_sealed_window(train_window: str, eval_window: str) -> None:
+    """One typo away from spending the confirmatory set before acceptance."""
+    with pytest.raises(ValueError, match="sealed"):
+        split_by_window(WINDOWED, train_window=train_window, eval_window=eval_window)
+
+
+def test_split_by_window_refuses_an_unknown_window() -> None:
+    with pytest.raises(ValueError, match="no window named"):
+        split_by_window(WINDOWED, train_window="train", eval_window="validation")
+
+
+def test_split_by_window_refuses_to_evaluate_on_the_training_window() -> None:
+    with pytest.raises(ValueError, match="both"):
+        split_by_window(WINDOWED, train_window="train", eval_window="train")
+
+
+def test_split_by_window_copies_rather_than_aliasing_the_windows() -> None:
+    train, _ = split_by_window(WINDOWED, train_window="train", eval_window="dev")
+    train[0]["change_id"] = "mutated"
+    assert WINDOWED["train"][0]["change_id"] == "T0"

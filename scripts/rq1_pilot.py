@@ -14,8 +14,14 @@ from pathlib import Path
 
 import torch
 
-from sphragis.corpus.pipeline import run_dedup
-from sphragis.experiment.holdout import equalize_training, holdout_by_change, verbatim_overlap
+from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.experiment.holdout import (
+    equalize_training,
+    holdout_by_change,
+    split_by_window,
+    verbatim_overlap,
+)
 from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
     MODEL_ID,
@@ -36,9 +42,21 @@ from sphragis.experiment.training import build_supervised
 from sphragis.experiment.walk import gate, walk
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument(
-    "--corpus", action="append", required=True, metavar="ORG=PATH", help="one per organization"
+source = parser.add_mutually_exclusive_group(required=True)
+source.add_argument(
+    "--corpus",
+    action="append",
+    metavar="ORG=PATH",
+    help="one month per organization, split by change holdout: the pilot's stand-in",
 )
+source.add_argument(
+    "--root",
+    type=Path,
+    help="built corpus root; splits by TIME WINDOW, which is the study's own split",
+)
+parser.add_argument("--org", action="append", default=[], help="with --root; repeatable")
+parser.add_argument("--train-window", default="train")
+parser.add_argument("--eval-window", default="dev", help="never the sealed test window")
 parser.add_argument("--seeds", default="1", help="comma-separated; an odd count")
 parser.add_argument("--split-seed", type=int, default=0)
 parser.add_argument("--bootstrap-seed", type=int, default=7)
@@ -56,28 +74,61 @@ parser.add_argument(
     help="subsample every organization's training set to the smallest one's size",
 )
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
+parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="report the split and exit, before any model is loaded: runs on a login node",
+)
 args = parser.parse_args()
 
 seeds = tuple(int(s) for s in args.seeds.split(","))
-corpora = dict(entry.split("=", 1) for entry in args.corpus)
-orgs = tuple(sorted(corpora))
+orgs = tuple(sorted(dict(e.split("=", 1) for e in args.corpus) if args.corpus else args.org))
+if not orgs:
+    raise SystemExit("--root needs at least one --org")
 
 train_rows: dict[str, list[dict]] = {}
 held_out: dict[str, list[dict]] = {}
 summary: dict[str, dict] = {}
-for org, path in corpora.items():
-    rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line]
-    kept, removed = run_dedup(rows)
-    train, test = holdout_by_change(kept, seed=args.split_seed)
-    leaked = verbatim_overlap(train, test)
+for org in orgs:
+    if args.corpus:
+        # Pilot shape: one month, held out by change. No time separation, so it measures
+        # whether the apparatus runs, not the contrast the report claims.
+        path = dict(e.split("=", 1) for e in args.corpus)[org]
+        rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line]
+        kept, removed = run_dedup(rows)
+        train, evaluate_on = holdout_by_change(kept, seed=args.split_seed)
+        source_note = f"holdout seed {args.split_seed} over {path}"
+    else:
+        # Study shape: train and evaluate on separate time windows.
+        directory = args.root / org / "examples"
+        rows = [
+            json.loads(line)
+            for month in sorted(directory.glob("*.jsonl"))
+            for line in month.read_text().splitlines()
+            if line
+        ]
+        if not rows:
+            raise SystemExit(f"no examples under {directory}; build first")
+        kept, removed = run_dedup(rows)
+        windows, straddling, unassigned = run_split(kept, WINDOWS)
+        if straddling or unassigned:
+            raise SystemExit(
+                f"{org}: {len(straddling)} straddling and {len(unassigned)} unassigned changes"
+            )
+        train, evaluate_on = split_by_window(
+            windows, train_window=args.train_window, eval_window=args.eval_window
+        )
+        source_note = f"{args.train_window} -> {args.eval_window} windows under {directory}"
+    leaked = verbatim_overlap(train, evaluate_on)
     assert not leaked, f"{org}: {len(leaked)} held-out examples repeat a training pair"
-    train_rows[org], held_out[org] = train, test
+    train_rows[org], held_out[org] = train, evaluate_on
     summary[org] = {
+        "source": source_note,
         "examples": len(rows),
         "dedup_removed": removed,
         "train_examples": len(train),
-        "held_out_examples": len(test),
-        "held_out_changes": len({r["change_id"] for r in test}),
+        "held_out_examples": len(evaluate_on),
+        "held_out_changes": len({r["change_id"] for r in evaluate_on}),
     }
     print(f"{org}: {summary[org]}", flush=True)
 
@@ -86,6 +137,13 @@ if args.equalize_train:
     for org in orgs:
         summary[org]["train_examples_equalized"] = len(train_rows[org])
     print(f"equalized training sets: { {o: len(train_rows[o]) for o in orgs} }", flush=True)
+
+
+if args.dry_run:
+    # Everything above is CPU: loading, dedup, the split and the leakage assertion. Stopping
+    # here is what lets a login node check the data the job will train on, before the queue.
+    print("DRY RUN: split only, no model loaded", flush=True)
+    raise SystemExit(0)
 
 
 class InProcessTrainer:

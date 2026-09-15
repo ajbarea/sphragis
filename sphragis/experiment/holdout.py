@@ -73,3 +73,34 @@ def equalize_training(
         random.Random(f"equalize/{seed}/{org}").shuffle(rows)
         out[org] = rows[:size]
     return out
+
+
+SEALED_WINDOWS = ("test",)
+
+
+def split_by_window(
+    windows: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    train_window: str,
+    eval_window: str,
+    sealed: Sequence[str] = SEALED_WINDOWS,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Training and held-out rows taken from two named time windows.
+
+    This is the study's own split, where `holdout_by_change` is the pilot's stand-in for it:
+    the design separates windows by change creation time, not at random, because a model
+    evaluated on refinements contemporaneous with its training data is an easier test than
+    the one the report claims to run.
+
+    Refuses to read a sealed window whatever the caller asks for. The test window is defined
+    and hashed at Stage 1 and collected only after in-principle acceptance, and a driver that
+    could name it as an evaluation set is one typo away from spending it early.
+    """
+    for name in (train_window, eval_window):
+        if name in sealed:
+            raise ValueError(f"{name!r} is sealed and cannot be read before acceptance")
+        if name not in windows:
+            raise ValueError(f"no window named {name!r}; have {sorted(windows)}")
+    if train_window == eval_window:
+        raise ValueError(f"train and eval windows are both {train_window!r}")
+    return [dict(r) for r in windows[train_window]], [dict(r) for r in windows[eval_window]]
