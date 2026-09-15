@@ -621,7 +621,7 @@ maintainer. Neither can be cited as a cutoff.
 
 Job 143898. OpenStack 2024-10 against the 2024-01 control, both deduplicated. Min-K%++ and
 Min-K% on the base `Qwen/Qwen2.5-Coder-7B`; guided completion on the registered Instruct
-model. `datasets/results/contamination-openstack.json`.
+model. `datasets/results/contamination-openstack-after.json`.
 
 | | post-cutoff | pre-cutoff control | gap | 95% bootstrap, by change |
 |---|---|---|---|---|
