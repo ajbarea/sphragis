@@ -34,6 +34,11 @@ from sphragis.experiment.training import (
 
 MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
 DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
+# The checkpoint the membership probes read. The registered model is an instruction-tuned
+# fine-tune of this base (same 7,615,616,512 parameters), and detection methods are reported
+# degraded by instruction fine-tuning (Samuel, Zhou and Zou, COLING 2025), so Min-K%++ reads
+# the base, whose likelihoods reflect pretraining exposure. A registered choice.
+MEMBERSHIP_MODEL_ID = "Qwen/Qwen2.5-Coder-7B"
 
 # research(2026-09): rank rises with performance to about 32 and flattens; alpha = 2r,
 # because a fixed low alpha at high rank is unstable; attention plus MLP beats attention
