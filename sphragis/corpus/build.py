@@ -39,6 +39,7 @@ DROP_REASONS = (
     "no_line_anchor",
     "no_successor",
     "diff_error",
+    "comment_error",
     "no_anchored_hunk",
 )
 
@@ -104,7 +105,16 @@ def build_from_change(
     revision_count = len(change.get("revisions", {}))
     examples: list[dict[str, Any]] = []
 
-    for path, comments in fetch_comments(number).items():
+    # Mirrors the diff guard below. A comments request that exhausts its retries used to abort
+    # the whole build, discarding every change already processed in the month: one
+    # unreachable change on review.opendev.org took down a 12-month build on 2024-12. The
+    # change is dropped and counted instead, so the loss is auditable in the drop profile.
+    try:
+        file_comments = fetch_comments(number)
+    except Exception:
+        drops["comment_error"] += 1
+        return examples, dict(drops)
+    for path, comments in file_comments.items():
         if not is_code_file(path):
             drops["metadata_file"] += len(comments)
             continue

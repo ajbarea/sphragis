@@ -101,6 +101,19 @@ def test_a_diff_failure_is_counted_not_raised() -> None:
     assert examples == [] and drops["diff_error"] == 1
 
 
+def test_a_comments_failure_is_counted_not_raised() -> None:
+    """Mirrors the diff-failure test: one unreachable change must not abort a month's build."""
+    _, diff_for, calls = _fetchers()
+
+    def failing_comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        raise RuntimeError("gerrit returned 503 after 5 attempts")
+
+    examples, drops = build_from_change("openstack", CHANGE, failing_comments, diff_for)
+    assert examples == []
+    assert drops["comment_error"] == 1
+    assert calls == [], "no diff is requested for a change whose comments never arrived"
+
+
 def test_several_comments_on_one_hunk_make_one_example_carrying_all_of_them() -> None:
     # The spec says "the inline reviewer comments anchored inside that hunk", plural.
     # One example per comment would emit identical before/after rows that dedup then
