@@ -538,6 +538,43 @@ rerun under corrected conditions replaces it. One month, one organization, one s
 one trained on another, evaluated on the first. This measures only that the metric has room
 to move.
 
+### PILOT RERUN: the number to quote (2026-09-15)
+
+Job 143893, same registered model and budget, with every confound the review found removed:
+deduplicated first (174 of 201 kept), prompt through `render_chat` for training and both
+arms, every training example seen exactly twice, LoRA init seeded before attachment.
+Change-grouped split: 88 changes to 70 train / 18 held out, 147 / 27 examples, **0 of 27**
+held-out examples repeating a training pair.
+
+| | base (chat template) | adapted |
+|---|---|---|
+| **exact match** | **0.074** | **0.407** |
+| normalized exact match | 0.259 | 0.407 |
+| edit similarity | 0.745 | 0.834 |
+| median answer | 81 chars | 66 (reference 70) |
+
+Training: 20 of 20 optimiser steps applied, 294 exposures (147 x 2), loss 0.85 to 0.30.
+
+| contrast, 95% pairs cluster bootstrap over 18 changes | estimate | interval |
+|---|---|---|
+| exact match, pooled over examples | +0.333 | [+0.133, +0.565] |
+| exact match, averaged over changes | +0.333 | [+0.139, +0.556] |
+| normalized exact match, pooled | +0.148 | [+0.036, +0.292] |
+
+Adapted hits: 11 of 27, spread over 9 of 18 changes. Base hits: 2.
+
+**What it says.** Exact match moves, and by more than the first run reported, because the
+first run's held-out set was padded with duplicate misses. Roughly half the exact-match gain
+is whitespace fidelity: the base model is 0.185 below its own normalized score and the
+adapter closes that gap entirely. The other half survives normalization, +0.148 with an
+interval above zero, so the adapter is also getting more edits *right*, not only formatted.
+For RQ1 the whitespace half cancels, since both arms are adapters.
+
+**Caveats.** 27 held-out examples; the interval is wide and the false-positive rate of
+this bootstrap at 18 changes is about 6% two-sided. One month, one organization, one seed.
+Built before the acknowledgement filter, so 4 examples carrying only "Done"-type comments
+are still in it. Still not the RQ1 contrast, which needs the Qt corpus.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
@@ -545,13 +582,9 @@ to move.
   (the change) and never the estimand. On the seed-0 pilot split one change is 18 of 45
   eval examples; change-weighted exact match is 0.261 against 0.200 pooled. Measured gaps
   between the two estimands reach 118% of a 0.08 effect at 19 changes. A Stage 1 decision.
+  On the deduplicated rerun, where the largest held-out change has 5 examples, both give
+  +0.333, so the choice did not move this pilot; it will on a window with a large change.
 - **The gate reads one-sided.** Now implemented as the lower bound of the 95% interval,
   alpha 0.025. The Stage 1 skeleton still says "excludes zero" and must say which.
-- **Degenerate comments survive.** "Done" 16 times, "ditto" 4, "+1" 3, written by
-  non-owners, so the author filter does not reach them. 4 of 201 examples carry only
-  acknowledgements, making the target unguessable from the prompt.
-- **Drop counts are printed, not persisted.** `build` accumulates them and `freeze` records
-  only dedup counts, so the well-posedness discard rate cannot be reconstructed without
-  refetching.
 - **`model.py` has no tests.** The budget arithmetic moved into `training.py` where CI
   reaches it; `HFGenerator` and the loop body remain untested on CPU.

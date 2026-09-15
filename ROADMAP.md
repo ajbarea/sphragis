@@ -50,10 +50,15 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [ ] Wire the grid walk to the frozen windows (needs the corpus).
 - [ ] Outcome-neutral tests wired to real model outputs.
 - [x] Grid `--time` sized from measured throughput: 38-43 tok/s steady on a GH200.
-- [x] **Pilot floor check passed.** Base exact match 0.000, adapted 0.200, on a clean
-  change-grouped split. The pre-registered pass rule survives; exact match discriminates
-  on this corpus once a model is adapted.
-- [ ] Emit per-change outcomes from the pilot so the bootstrap interval can be computed.
+- [x] **Pilot floor check passed** (rerun 2026-09-15, after review removed three confounds).
+  Exact match 0.074 base, 0.407 adapted, +0.333 [+0.133, +0.565] over 18 held-out changes;
+  normalized exact match +0.148 [+0.036, +0.292]. Exact match discriminates on this corpus
+  once a model is adapted, and about half the gain survives normalization.
+- [x] Per-change outcomes from the pilot, and the bootstrap interval on them.
+- [x] **Review of the apparatus.** The gate reads direction; train and eval share one
+  prompt format; the training budget is realized as declared and tested in CI; changes
+  outside every window block the freeze; drop counts persist.
+- [ ] Decide the estimand (pooled against change-averaged) for the Stage 1 report.
 - [ ] Run the actual RQ1 contrast: adapter trained on one organization against one trained
   on the other, evaluated on the first.
 
