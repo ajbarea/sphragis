@@ -158,8 +158,8 @@ def train_adapter(
     pad_token_id: int,
     seed: int,
     budget: Mapping[str, Any] = TRAINING,
-    micro_batch: int = 2,
-    grad_accum: int = 8,
+    micro_batch: int = 1,
+    grad_accum: int = 16,
 ) -> list[float]:
     """Train a LoRA adapter with an explicit loop. Returns the loss at each optimiser step.
 
@@ -171,6 +171,13 @@ def train_adapter(
     supervised tokens, the adapter is already fp32, and a hand-written loop is stable at
     batch 1, at batch 2 with padding, with and without autocast, and with accumulation of
     8 at both 2e-4 and 5e-5.
+
+    `micro_batch` defaults to 1, with accumulation raised to keep the effective batch at
+    16. Two examples from one change, both version bumps in the same file differing only
+    in digits, produce a NaN gradient **only when batched together** -- deterministically
+    over five repeats, in either order, while each is fine alone and fine paired with
+    anything else. Batching one example at a time removes padding and pairing as variables
+    entirely, and the cost is throughput this pilot does not need.
 
     This loop is that configuration, made permanent. For a pre-registered study a training
     procedure that can be read in full is worth more than one whose failure mode resisted
@@ -202,6 +209,7 @@ def train_adapter(
 
     model.train()
     losses: list[float] = []
+    skipped = 0
     cursor = 0
     for _ in range(steps):
         optimiser.zero_grad()
@@ -211,15 +219,23 @@ def train_adapter(
             cursor = (cursor + micro_batch) % max(len(items) - micro_batch, 1)
             loss = model(**batch).loss / grad_accum
             if not torch.isfinite(loss):
-                raise RuntimeError("non-finite loss; refusing to train on a diverged step")
+                skipped += 1
+                continue
             loss.backward()
             total += float(loss) * grad_accum
         norm = torch.nn.utils.clip_grad_norm_(trainable, 1.0)
         if not torch.isfinite(norm):
-            raise RuntimeError("non-finite gradient norm; refusing to step")
+            # Skip the step rather than poison the adapter, and count it. Silently
+            # stepping on a NaN gradient is what produced an adapter emitting garbage.
+            skipped += 1
+            optimiser.zero_grad()
+            schedule.step()
+            continue
         optimiser.step()
         schedule.step()
         losses.append(total / grad_accum)
+    if skipped:
+        print(f"train_adapter: skipped {skipped} non-finite step(s) of {steps}")
     return losses
 
 

@@ -431,6 +431,59 @@ it is scale-invariant and pinning steps would mean a change in corpus size silen
 the warmup fraction on a pre-registered parameter. `training.warmup_steps` derives the step
 count at construction.
 
+### The NaN was one pair of examples, not the framework (2026-09-14)
+
+Seven diagnostic jobs, roughly two minutes each. Worth recording because the first
+conclusion was wrong and the real one is unintuitive.
+
+**The finding.** Two examples from the same change, both version bumps in
+`.pre-commit-config.yaml` differing only in digits, produce a NaN gradient **only when
+batched together**:
+
+```
+'    rev: v4.5.0' -> '    rev: v5.0.0'   comment: "fyi, there's a v5.0.0 of this out now"
+'    rev: 6.1.0'  -> '    rev: 7.0.0'    comment: "and 7.0.0 of this"
+```
+
+| condition | grad_norm |
+|---|---|
+| the pair, five repeats | NaN every time, loss identical to four decimals |
+| item 160 alone | 5.06 |
+| item 161 alone | 4.03 |
+| reversed order | NaN |
+| either one paired with an unrelated item | fine |
+
+Forward is finite (loss 1.374); the backward is what breaks. Highly correlated gradients
+through a low-rank factorisation is a plausible mechanism, but the fix does not depend on
+establishing it.
+
+**The wrong turn, recorded because it was instructive.** After four diagnostics I concluded
+`transformers.Trainer` was at fault and rewrote the training loop. The rewritten loop then
+failed identically. The error: my diagnostic ran **10 optimiser steps** and the failure
+occurs at **step 10**, so "stable for 10 steps" was read as stable. A test that stops short
+of the failure cannot exonerate anything.
+
+**What was eliminated on the way**, each by measurement: pathological sequence lengths
+(median 80, max 678), items with no supervised tokens (zero of 201), the adapter being left
+in bf16 (392 tensors, already fp32), padding at batch 2, bf16 autocast, gradient
+accumulation, weight growth (norms moved 1.3% and 0.2% in two configs that both broke at
+the same step), and the learning rate (4x apart, identical failure point).
+
+That last pair is what made it obvious: two configurations with very different loss
+trajectories breaking at **exactly** step 10 is a data-position signature, not an
+optimisation one.
+
+**The fix.** `micro_batch` drops to 1 with accumulation raised to 16, keeping the effective
+batch at 16 while removing padding and pairing as variables entirely. Throughput is not the
+constraint here; the pilot runs in eight minutes against a four-hour budget. The loop also
+now skips and counts a non-finite step rather than aborting, because silently stepping on a
+NaN gradient is what produced an adapter emitting garbage at edit similarity 0.001.
+
+**Worth revisiting.** Dedup did not catch these two as near-duplicates. They are the same
+edit shape on the same file, and shingle Jaccard over the before/after text falls below the
+0.8 threshold because the digits differ. Whether the corpus should treat "same file, same
+edit shape" as duplication is a sampling question for the Stage 1 report, not a bug.
+
 ## Open bugs & findings
 
 _None active._
