@@ -887,6 +887,46 @@ instead of aborting the build (the diff fetch already had that guard); and a min
 between requests to one host, `--request-interval`, default 0.2 seconds. Changes lost to
 `comment_error` are counted in each month's drop profile, so collection loss stays auditable.
 
+### OpenStack corpus complete, and the leakage threshold has evidence (2026-09-15)
+
+Thirteen months, 2024-10 to 2025-10, collected and built in 3h32m.
+`datasets/results/window-report-openstack.json`.
+
+**5,959 examples, 5,498 after dedup** (265 exact, 196 near-duplicate, 0 boilerplate). Drops
+over ~25,000 merged changes: 37,918 metadata-only files, 16,547 author comments, 8,197 with
+no anchored hunk, 2,378 with no successor revision, 1,995 ill-posed, 1,885 acknowledgements,
+73 with no line anchor, 13 diff errors, 8 comment errors.
+
+| window | examples | changes |
+|---|---|---|
+| pilot (2024-10) | 606 | 194 |
+| train (2024-11 to 2025-08) | 4,327 | 1,737 |
+| dev (2025-09 to 2025-10) | 565 | 235 |
+
+**Cross-window near-duplicate rate**, the evidence outcome-neutral test 4's threshold should
+rest on:
+
+| | J>=0.8 | J>=0.7 | J>=0.6 | J>=0.5 |
+|---|---|---|---|---|
+| pilot into train | 0.0000 | 0.0025 (11) | 0.0055 (24) | 0.0072 (31) |
+| train into dev | 0.0000 | **0.0106 (6)** | 0.0142 (8) | 0.0177 (10) |
+
+**Reading.** The 0.8 column is zero by construction: dedup removes pairs at that threshold
+across windows as well as within them, so registering the threshold there makes a test that
+cannot fail. Train into dev at J>=0.7 is 1.06%, the closest available analogue of the
+train-into-test rate the report must bound. A registered threshold at a looser similarity,
+informed by that 1.06%, is a test with something to detect; at 0.8 it is a tautology.
+
+**Two side notes.**
+
+- The dev window is small: 565 examples over 235 changes, and censored (an estimated 21.6%
+  of its true cohort is missing). Scaled to the test window's ten months, 235 changes per two
+  months implies roughly 1,175, or about 1,500 uncensored. The power analysis assumed 880, so
+  its estimate of about 3 detectable exact-match points is conservative rather than optimistic.
+- Both guards added during the run fired in production: `comment_error` 8 times and
+  `diff_error` 13, in 2025-08 and 2025-09. Before the comments guard existed, the first of
+  those would have aborted the build at month 11 of 13.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
