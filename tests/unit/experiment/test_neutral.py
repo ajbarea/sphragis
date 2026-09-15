@@ -124,3 +124,19 @@ def test_closest_training_match_and_the_rate_agree() -> None:
 
 def test_an_empty_training_window_leaves_every_similarity_at_zero() -> None:
     assert [s for _, s in closest_training_match([], [_pair("h1", "a", "b")])] == [0.0]
+
+
+@pytest.mark.parametrize("chunk", [1, 2, 3, 7, 1000])
+def test_chunking_the_training_side_changes_no_similarity(chunk: int) -> None:
+    """Memory bound only: every chunk size must give the same answer as one pass."""
+    train = [
+        _pair(f"t{i}", f"value = compute({i}, b)", f"value = compute({i}, b, c)") for i in range(7)
+    ]
+    held_out = [
+        _pair("h1", "value = compute(3, b)", "value = compute(3, b, c)"),
+        _pair("h2", "value = compute(9, z)", "value = compute(9, z, c)"),
+        _pair("h3", "nothing alike at all", "nor this either"),
+    ]
+    reference = closest_training_match(train, held_out, chunk=1000)
+    assert closest_training_match(train, held_out, chunk=chunk) == reference
+    assert dict(reference)["h1"] == pytest.approx(1.0)

@@ -78,22 +78,32 @@ def closest_training_match(
     held_out: Sequence[Mapping[str, Any]],
     *,
     k: int = 5,
+    chunk: int = 512,
 ) -> list[tuple[str, float]]:
     """Each held-out example's id with its similarity to the nearest training example.
 
     The threshold is applied by the caller, so a sweep over thresholds costs one pass rather
-    than one pass each: shingling every training example is the expensive part, and it was
-    being repeated per threshold.
+    than one pass each: shingling every example is the expensive part, and it was being
+    repeated per threshold.
+
+    The training side is shingled in chunks, holding a running maximum, because materialising
+    every signature at once is what makes this memory-hungry: a 4,327-example training window
+    at roughly 500 five-grams each is millions of live strings. Running the whole-corpus
+    report beside two collectors on a 10 GB box got a collector killed. Chunking bounds the
+    peak without changing a single similarity.
     """
-    train_signatures = [shingles(pair_text(r), k) for r in train]
-    return [
-        (
-            str(r["id"]),
-            max((jaccard(signature, seen) for seen in train_signatures), default=0.0),
-        )
-        for r in held_out
-        for signature in (shingles(pair_text(r), k),)
-    ]
+    if not held_out:
+        return []
+    held_signatures = [(str(r["id"]), shingles(pair_text(r), k)) for r in held_out]
+    best = [0.0] * len(held_signatures)
+    for start in range(0, len(train), max(chunk, 1)):
+        train_signatures = [shingles(pair_text(r), k) for r in train[start : start + chunk]]
+        for index, (_, signature) in enumerate(held_signatures):
+            for seen in train_signatures:
+                similarity = jaccard(signature, seen)
+                if similarity > best[index]:
+                    best[index] = similarity
+    return [(example_id, best[index]) for index, (example_id, _) in enumerate(held_signatures)]
 
 
 def near_duplicate_rate(
