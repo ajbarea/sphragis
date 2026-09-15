@@ -25,6 +25,12 @@ from sphragis.corpus.wellposed import ILL_POSED_REASONS, classify
 CommentFetcher = Callable[[int], Mapping[str, Sequence[Mapping[str, Any]]]]
 DiffFetcher = Callable[[int, int, str, int], Mapping[str, Any]]
 
+# Unchanged lines carried either side of each hunk: the unified-diff default, which is the view
+# a reviewer reads. Prompt and probe material only, never part of the target. Measured need:
+# bare hunks run to a median of 16 tokens, and only 35 of 172 OpenStack 2024-10 examples
+# reached the 32 tokens a membership score needs.
+CONTEXT_LINES = 3
+
 DROP_REASONS = (
     *(f"ill_posed_{reason}" for reason in ILL_POSED_REASONS),
     "metadata_file",
@@ -88,6 +94,8 @@ def build_from_change(
     change: Mapping[str, Any],
     fetch_comments: CommentFetcher,
     fetch_diff: DiffFetcher,
+    *,
+    context_lines: int = CONTEXT_LINES,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Every refinement example one change yields, with the reason for each drop."""
     drops: Counter[str] = Counter(dict.fromkeys(DROP_REASONS, 0))
@@ -123,7 +131,9 @@ def build_from_change(
             except Exception:
                 drops["diff_error"] += 1
                 continue
-            hit = next((h for h in hunks_from_diff(diff) if _covers(h, line)), None)
+            hit = next(
+                (h for h in hunks_from_diff(diff, context=context_lines) if _covers(h, line)), None
+            )
             if hit is None:
                 drops["no_anchored_hunk"] += 1
                 continue
@@ -150,6 +160,8 @@ def build_from_change(
                     "patch_set": patch_set,
                     "before": "\n".join(hunk.before),
                     "after": "\n".join(hunk.after),
+                    "context_before": "\n".join(hunk.context_before),
+                    "context_after": "\n".join(hunk.context_after),
                     "comments": messages,
                 }
             )

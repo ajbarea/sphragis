@@ -266,3 +266,23 @@ def test_an_acknowledgement_beside_a_real_comment_is_dropped_and_the_example_kep
     examples, drops = build_from_change("openstack", CHANGE, lambda n: mixed, diff_for)
     assert [e["comments"] for e in examples] == [["spaces around the operator"]]
     assert drops["acknowledgement"] == 1
+
+
+def test_context_is_carried_and_changes_nothing_else() -> None:
+    """Adding context must be purely additive: same examples, same targets, same drops."""
+    comments, diff_for, _ = _fetchers()
+    without, drops_without = build_from_change(
+        "openstack", CHANGE, comments, diff_for, context_lines=0
+    )
+    with_ctx, drops_with = build_from_change(
+        "openstack", CHANGE, comments, diff_for, context_lines=3
+    )
+
+    def strip(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [{k: v for k, v in r.items() if not k.startswith("context_")} for r in rows]
+
+    assert strip(with_ctx) == strip(without)
+    assert drops_with == drops_without
+    assert with_ctx[0]["context_before"] == "def f(x):"
+    assert with_ctx[0]["context_after"] == "\ndef g():"
+    assert without[0]["context_before"] == "" and without[0]["context_after"] == ""

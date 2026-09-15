@@ -30,7 +30,7 @@ from sphragis.measure.contamination import (
     min_k_plus_plus,
     min_k_plus_plus_scores,
 )
-from sphragis.measure.score import extract_code
+from sphragis.measure.score import extract_code, score
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--post", type=Path, required=True, help="post-cutoff examples (JSONL)")
@@ -39,6 +39,12 @@ parser.add_argument("--corpus-starts", default="2024-10-01")
 parser.add_argument("--model-published", default="2024-09-17")
 parser.add_argument("--k", type=float, default=20.0)
 parser.add_argument("--min-tokens", type=int, default=32)
+parser.add_argument(
+    "--scored-text",
+    choices=("after", "with_context"),
+    default="after",
+    help="what Min-K%%++ scores: the bare revised hunk, or the hunk with its context lines",
+)
 parser.add_argument("--out", type=Path, default=Path("contamination.json"))
 args = parser.parse_args()
 
@@ -49,6 +55,18 @@ GUIDED = (
     "Continue it exactly as it appears in that repository. Reply with the continuation only.\n\n"
     "First part:\n{prefix}\n"
 )
+
+
+def scored_text(row: dict) -> str:
+    """The text a membership score is computed over, per --scored-text."""
+    if args.scored_text == "after":
+        return str(row["after"])
+    if "context_before" not in row:
+        raise SystemExit(
+            f"--scored-text with_context needs a corpus built with context: {row['id']}"
+        )
+    parts = (row["context_before"], str(row["after"]), row["context_after"])
+    return "\n".join(part for part in parts if part)
 
 
 def load(path: Path) -> tuple[list[dict], dict]:
@@ -73,7 +91,7 @@ def eligible(rows: list[dict]) -> list[dict]:
     return [
         r
         for r in rows
-        if len(tok(str(r["after"]), add_special_tokens=False)["input_ids"]) >= args.min_tokens
+        if len(tok(scored_text(r), add_special_tokens=False)["input_ids"]) >= args.min_tokens
     ]
 
 
@@ -86,8 +104,8 @@ model = AutoModelForCausalLM.from_pretrained(
     MEMBERSHIP_MODEL_ID, dtype=torch.bfloat16, device_map="cuda:0"
 )
 model.eval()
-post_tokens = [token_statistics(model, tok, str(r["after"])) for r in post_e]
-pre_tokens = [token_statistics(model, tok, str(r["after"])) for r in pre_e]
+post_tokens = [token_statistics(model, tok, scored_text(r)) for r in post_e]
+pre_tokens = [token_statistics(model, tok, scored_text(r)) for r in pre_e]
 del model
 gc.collect()
 torch.cuda.empty_cache()
@@ -132,7 +150,15 @@ def completions(
         predicted = "\n".join(extract_code(raw).split("\n")[: len(lines) - cut])
         pairs.append((predicted, reference))
         records.append(
-            {"id": r["id"], "window": window, "predicted": predicted, "reference": reference}
+            {
+                "id": r["id"],
+                "window": window,
+                "predicted": predicted,
+                "reference": reference,
+                # Reported beside the verbatim rate, which sat at its floor on the pilot. Which
+                # of the two the battery reads is a Stage 1 decision; reporting both is not.
+                "edit_similarity": score(predicted, reference)["edit_similarity"],
+            }
         )
     return pairs
 
@@ -153,6 +179,14 @@ report = battery_report(
     model_published=args.model_published,
     k=args.k,
 )
+guided_similarity = {
+    window: (
+        sum(g["edit_similarity"] for g in guided_records if g["window"] == window)
+        / max(1, sum(1 for g in guided_records if g["window"] == window))
+    )
+    for window in ("post", "pre")
+}
+print(f"guided edit similarity {guided_similarity}", flush=True)
 for method in ("min_k_plus_plus", "min_k_percent", "guided_completion"):
     r = report[method]
     print(
@@ -167,9 +201,11 @@ args.out.write_text(
             "guided_model": MODEL_ID,
             "k": args.k,
             "min_tokens": args.min_tokens,
+            "scored_text": args.scored_text,
             "post": {"path": str(args.post), **post_counts, "guided_pairs": len(post_pairs)},
             "pre": {"path": str(args.pre), **pre_counts, "guided_pairs": len(pre_pairs)},
             "report": report,
+            "guided_edit_similarity": guided_similarity,
             "scores": scores,
             "guided": guided_records,
         },
