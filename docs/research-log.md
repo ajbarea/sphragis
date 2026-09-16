@@ -1053,6 +1053,72 @@ over eighteen months. So the registered reading changes:
   similarity. Two of three probes are therefore doing little, which is worth stating in the
   report rather than presenting a battery of three.
 
+### The censoring confound, measured rather than estimated (2026-09-15)
+
+`scripts/censoring.py`, `datasets/results/censoring.json`. The open question was what to do
+about windows assigning by creation while snapshots select by last update: a change created
+inside a window whose last update falls after the final collected month never appears at all,
+and the changes that disappear are precisely the slow reviews. The earlier figures, 21.6% of
+OpenStack's dev cohort and 7.9% of Qt's, were back-of-envelope.
+
+A truncated change leaves no record, so the loss cannot be counted. What can be observed is
+the lag from creation to last update, for changes whose lag was short enough to be seen at
+all. That is textbook right truncation, and Lynden-Bell (1971) gives the nonparametric MLE
+of the lag distribution from exactly these pairs. Estimated over 25,191 OpenStack and 52,895
+Qt merged changes:
+
+| P(lag <= t months) | t=0 | t=1 | t=2 | t=3 | t=6 |
+|---|---|---|---|---|---|
+| OpenStack | 0.699 | 0.868 | 0.917 | 0.942 | 0.977 |
+| Qt | 0.864 | 0.962 | 0.979 | 0.987 | 0.995 |
+
+**The estimator is checked, not assumed.** The 2024-10 cohort has a twelve-month horizon and
+is very nearly untruncated, so its CDF can be computed by counting, independently of
+Lynden-Bell. The two agree to 0.0107 for OpenStack and 0.0139 for Qt at every lag. This is
+also the first-order finding in its own right: OpenStack settles 30% of its changes after the
+month they were created, Qt only 14%. The organizations differ in review latency, which is
+why one collection boundary censors them unequally.
+
+| window | OpenStack missing | Qt missing | differential |
+|---|---|---|---|
+| pilot (2024-10) | 0.0% | 0.0% | 0.00 pt |
+| train (2024-11..2025-08) | 2.9% | 0.6% | 2.31 pt |
+| **dev (2025-09..2025-10)** | **21.6%** | **8.7%** | **12.95 pt** |
+
+The hand estimate for OpenStack was right; Qt's was 8.7%, not 7.9%.
+
+**The decision this forces, and it is not the one the three recorded options assumed.** The
+confound is an artifact of the dev window abutting the collection boundary, not of assigning
+windows by creation. The test window closes 2026-08 and is fetched only after in-principle
+acceptance, which for MSR 2027 is 2027-02-04. By then every test cohort has had at least five
+months to settle:
+
+| test window fetched | OpenStack missing | Qt missing | differential |
+|---|---|---|---|
+| 2026-09, at its close | 4.2% | 1.0% | 3.21 pt |
+| 2026-12 | 1.5% | 0.3% | 1.23 pt |
+| **2027-02, at acceptance** | **0.7%** | **0.1%** | **0.63 pt** |
+| 2027-05 | 0.2% | 0.0% | 0.17 pt |
+
+The confirmatory contrast is censored by 0.63 points of differential, twenty times less than
+the dev window's 12.95. So creation windows stand, no embargo gap is needed, and last-update
+assignment is not worth its cost in interpretation. What has to change is that the protection
+is currently an accident of review timing, and should be registered as a protocol guarantee:
+**the test window is fetched no earlier than three months after its final month**, which holds
+the differential under 1.3 points even if acceptance came early.
+
+**What stays true, and has to be said wherever dev numbers appear.** Dev-window estimates are
+censored by 21.6% against 8.7%, unequally and in the direction that removes slow reviews from
+OpenStack harder than from Qt. They are pre-registration estimates, not unbiased previews of
+the confirmatory result, and job 144345's numbers carry that caveat on top of Qt's half-size
+dev window.
+
+**One assumption, stated.** Thirteen months of snapshots cannot observe a lag of fourteen, so
+Lynden-Bell imposes F(12) = 1 and every missing fraction here is a lower bound. Ten OpenStack
+changes and one Qt change sit at lag 12, so the unobserved tail is small; at an assumed 2%
+tail the dev gap moves from 21.6/8.7 to 23.2/10.5 and the test window at acceptance from
+0.7/0.1 to 2.1/1.5. The conclusion survives all three sensitivities.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
