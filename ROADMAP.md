@@ -23,9 +23,10 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   end on real data. `storage` (immutable snapshots), `build` (change to examples, drops
   counted by reason, resumable), `fetchers` (scrubbing at ingestion), `pipeline` (dedup,
   split, freeze), all wired behind `python -m sphragis.corpus`.
-- [ ] **A real frozen corpus.** OpenStack frozen and verified: 5,498 examples across
-  pilot 606 / train 4,327 / dev 565, content-hashed per window with the drop profile and
-  the SHA that produced it. Qt waits on its missing 2025-10 month.
+- [x] **A real frozen corpus.** Both organizations frozen and verified: OpenStack 5,498
+  examples (pilot 606 / train 4,327 / dev 565), Qt 10,695 (1,301 / 8,443 / 951). Each window
+  content-hashed beside its drop profile, package versions and the SHA that produced it. The
+  test window stays sealed and uncollected.
 - [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the changes the corpus
   keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev window
   abutting the collection boundary (39.1% of OpenStack's example-bearing cohort missing
