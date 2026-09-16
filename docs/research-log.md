@@ -1401,6 +1401,44 @@ Python-bindings project, which is a poor control; OpenStack's 180-change pair is
 read. And `.py` is the only suffix both organizations carry in quantity, so the content
 control costs most of the corpus.
 
+### OpenStack's capture misfit: three explanations tested, none survives (2026-09-16)
+
+Calibrated against its own simulated null, the fit's maximum gap against the longest-horizon
+cohort rejects OpenStack at p = 0.017 and clears Qt at p = 0.580. The roadmap carried this as
+an open item with a named suspect. The suspect is innocent, and so are the next two.
+
+- **A latency trend violating quasi-independence.** Ruled out already: Tsai's conditional
+  Kendall tau rejects quasi-independence for neither organization.
+- **A mixture of project families.** OpenStack's corpus spans 264 projects, and the two big
+  communities settle at genuinely different speeds: F(0) is 0.594 for `starlingx/*` against
+  0.390 for `openstack/*`, a twenty-point gap in same-month settling. Their mix also drifts,
+  from 32% starlingx in the oldest cohort to 48% in the newest. That is a real compositional
+  effect, and it does not explain the misfit: fitting `openstack/*` alone still rejects at
+  p = 0.035.
+- **Qt being the more homogeneous corpus.** False, and measurably so. Qt's per-project lag
+  distributions spread further than OpenStack's family-level gap: F(0) runs from 0.512 for
+  `qt/qtdeclarative` to 0.758 for `qt-creator/qt-creator`, a spread of 0.247 across five
+  projects with at least 120 changes each. Qt's top project also drifts more across cohorts
+  than OpenStack's, 6.2 points against 3.4. Whatever distinguishes the two organizations
+  here, it is not that one is a cleaner single population.
+
+**So the misfit stays open**, and the honest reading is that the fit is off for OpenStack for
+a reason not yet identified. The bound already recorded still holds: refitting on recent
+cohorts moves the dev figure about seven points toward less censoring and leaves the test
+window's figure smaller, so every fit points the same way on the decision that depends on it.
+
+**The side finding is worth more than the answer that was being chased.** Review latency
+differs sharply between projects inside one organization. `qt-creator` settles 76% of its
+example-bearing changes in the month they were created; `qtdeclarative` settles 51%. That is
+a quarter of the whole distribution's range, between two projects under one organizational
+roof, measured on process rather than prose.
+
+It corroborates the separability probe from a direction with nothing in common with it. The
+probe read reviewer word choice and found projects as distinguishable as organizations; this
+reads how long review takes and finds the same thing. Two measurements sharing no mechanism,
+agreeing that the project is where the variation lives, is a stronger argument for the
+granularity question than either alone.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

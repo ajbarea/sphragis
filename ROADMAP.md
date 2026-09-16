@@ -38,11 +38,17 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   stationary law reproduces most of the apparent trend. Tsai's conditional Kendall tau rejects
   quasi-independence for neither organization (+0.017 and -0.002, both intervals covering
   zero).
-- [ ] **Explain OpenStack's misfit.** Calibrated against its own simulated null, the fit's max
-  gap rejects OpenStack at p = 0.017 and clears Qt at p = 0.580. It is not a latency trend, so
-  the mechanism is unidentified. A recent-cohort refit bounds the effect at about seven points
-  on the dev figure, toward less censoring, and the registered figure stays the conservative
-  pooled one.
+- [ ] **Explain OpenStack's misfit.** Still open after three candidates were tested and
+  rejected: a latency trend (the conditional Kendall tau clears both organizations), a
+  mixture of project families (`openstack/*` alone still rejects at p = 0.035), and Qt being
+  the more homogeneous corpus (false -- Qt's per-project F(0) spans 0.512 to 0.758, wider
+  than OpenStack's family gap). The recorded bound holds: a recent-cohort refit moves the dev
+  figure about seven points toward less censoring and the registered figure stays the
+  conservative pooled one.
+- [x] **Latency differs by project inside one organization**, which the misfit investigation
+  turned up on the way: `qt-creator` settles 76% of its changes in their creation month
+  against `qtdeclarative`'s 51%. Corroborates the separability probe from a measurement with
+  no mechanism in common with it.
 - [x] Registered: the test window is fetched no earlier than three months after its final
   month (`FETCH_HORIZON_MONTHS`).
 - [ ] State the dev window's censoring wherever dev numbers appear; they are pre-registration
