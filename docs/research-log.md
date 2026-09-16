@@ -1162,6 +1162,40 @@ is not cosmetic and must be registered before the confirmatory run rather than d
 it. The apparatus now computes both in one pass and names no primary, so the registration is
 the only place the decision can be made.
 
+### The sealed window is about twice the size the power analysis assumed (2026-09-15)
+
+The power analysis took 880 OpenStack changes and 2,400 Qt for the test window, scaled from
+the dev window. The capture model says the dev window is the worst possible base, missing 37%
+and 18% of its cohorts. The train window, missing 4.7% and 1.4%, is the right one, which frees
+the dev window to be a held-out check on the model rather than an input to it.
+
+| | train changes | implied true rate | dev predicted | dev actual |
+|---|---|---|---|---|
+| OpenStack | 1,737 over 10 months, captured 0.953 | 182.3/month | **230** | **235** |
+| Qt | 3,160 over 10 months, captured 0.986 | 320.5/month | 527 | 175 |
+
+**OpenStack's dev window is predicted to within 2.2% by a model that never saw it.** The lag
+distribution was fitted on creation-to-last-update pairs and knows nothing about how many
+changes the dev window holds; it lands on 230 against 235. That is the strongest evidence
+available that the capture correction is right rather than merely principled.
+
+**Qt's check cannot be run yet, and the 3x miss is not evidence against the model.** Qt's dev
+window holds only 2025-09: the ban blocked 2025-10, so the window is one month of two, and
+changes created in 2025-09 but last updated in 2025-10 are missing as well, putting the real
+horizon at 0 rather than 1. Predicting one month at horizon 0 gives 237 against the actual
+175, still 35% high. Whether that residual is a declining Qt volume or a flaw in the capture
+estimate cannot be separated until 2025-10 is built.
+
+| test window projection | changes | power analysis assumed | ratio |
+|---|---|---|---|
+| OpenStack | ~1,804 | 880 | 2.05x |
+| Qt | ~3,197, provisional | 2,400 | 1.33x |
+
+So the registered MDEs, about +0.030 exact match for OpenStack and +0.011 for Qt, are
+conservative rather than optimistic: OpenStack binds, and it will have roughly twice the
+changes the estimate assumed. The Qt figure is held provisional until its dev window closes
+and the held-out check can actually be run.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

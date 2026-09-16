@@ -102,8 +102,11 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   binds. Needed a fix first: the simulation had treated the pilot's own difference as null.
 - [x] Power at report-grade settings (400 trials, 1,000 resamples, tolerance 0.005, 3 seeds):
   OpenStack +0.030 [+0.028, +0.031] at 880 changes, Qt +0.011 [+0.011, +0.012] at 2,400.
-- [ ] Replace the estimated test-window sizes with counts once the window is defined; the
-  window itself stays sealed.
+- [x] Replace the estimated test-window sizes: projected from the train window through the
+  capture model (`scripts/project_windows.py`), OpenStack ~1,804 changes against the 880
+  assumed and Qt ~3,197 against 2,400, so the registered MDEs are conservative. The model
+  predicts OpenStack's dev window to within 2.2% without having seen it; Qt's check waits on
+  its missing month. The window itself stays sealed.
 - [ ] Register equal-size training, the estimand, and strictly-above-zero at the pass rule's
   boundary. The boundary is not hypothetical: on the unequalized pilot Qt's pooled lower
   bound is exactly `0.0`, so a rule written `>=` would have read that run as supporting the
