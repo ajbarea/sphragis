@@ -70,6 +70,25 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
 
+## Plan D — granularity
+
+Added 2026-09-16, from a probe the design never considered. The study fixes the organization
+as the unit; the evidence says the codebase is.
+
+- [x] **Separability probe** (`sphragis/measure/probe.py`, `scripts/separability.py`). Is
+  organization decodable from review text at all? Content-controlled and compared against a
+  within-organization baseline: cross-organization 0.849 [0.769, 0.867] against 0.828 and
+  0.892 for two projects inside one organization. It does not beat its own baseline, so the
+  classifier reads the codebase, not the organization. CPU only, runs in a minute.
+- [ ] **Project-level contrast.** Train adapters on two projects inside ONE organization and
+  run the identical matched-versus-mismatched contrast. Needs no new experiment code: build
+  per-project corpora and pass them where `--corpus org=path` expects organizations.
+- [ ] Register the probe and the project contrast as Stage 1 secondary analyses, with the
+  within-organization baseline as the reading rule rather than raw accuracy.
+- [ ] If the project contrast separates where the organization contrast does not, say what
+  that costs the direction: a privacy perimeter drawn around an organization is not drawn
+  where the signal lives.
+
 ## Plan C — the experiment
 
 - [x] `grid` — the condition grid as data. The base arm is evaluated once per window, not

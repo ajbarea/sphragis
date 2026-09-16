@@ -1,0 +1,40 @@
+{
+  "suffix": ".py",
+  "windows": [
+    "pilot",
+    "train"
+  ],
+  "seed": 5,
+  "raw": {
+    "accuracy": 0.8367962376325361,
+    "folds_scored": 5.0,
+    "documents": 9076.0,
+    "changes": 4048.0,
+    "low": 0.811938553118299,
+    "high": 0.836620365958414
+  },
+  "matched.py": {
+    "accuracy": 0.8490229138633067,
+    "folds_scored": 5.0,
+    "documents": 592.0,
+    "changes": 319.0,
+    "low": 0.769313191545051,
+    "high": 0.8672260397761427
+  },
+  "within:openstack:starlingx/test vs starlingx/config": {
+    "accuracy": 0.8279251077780081,
+    "folds_scored": 5.0,
+    "documents": 448.0,
+    "changes": 180.0,
+    "low": 0.726471683241187,
+    "high": 0.8381712830592452
+  },
+  "within:qt:pyside/pyside-setup vs qt/qtbase": {
+    "accuracy": 0.892430078820239,
+    "folds_scored": 5.0,
+    "documents": 102.0,
+    "changes": 39.0,
+    "low": 0.7490476190476191,
+    "high": 0.9543161984214615
+  }
+}

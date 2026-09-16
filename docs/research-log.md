@@ -1332,6 +1332,75 @@ and OpenStack's own check says so" rested on a biased diagnostic and a miscalibr
 misfit is real but milder, the mechanism is unidentified, and the cohort-aware refit is a
 bound rather than a fix.
 
+### The prior question: is organization decodable at all? (2026-09-16)
+
+`sphragis/measure/probe.py`, `scripts/separability.py`, `datasets/results/separability.json`.
+
+RQ1 measures behaviour: whether an adapter trained on one organization generates better
+refinements for it. It answers weakly, two exact-match points inside a twenty-six point
+task-adaptation effect. The prior question had never been asked. If organizational identity
+is not decodable from the review text at all, then that small advantage is not an adapter
+failing to use a signal; there is no signal. If it is decodable, the gap between what a probe
+reads and what an adapter uses is itself a finding, and a named one in the 2026 literature.
+
+A bag-of-words naive Bayes over reviewer comment text, deliberately the weakest instrument
+that could show the effect: deterministic, no hyperparameters to tune into a result, CPU
+only. Changes are held out whole, as in the generative contrast, and the interval is a
+cluster bootstrap over changes.
+
+**Accuracy alone would have meant nothing.** OpenStack's examples are 47% Python and Qt's are
+49% C++, so a classifier reading file extensions scores in the nineties having learned only
+which language it is looking at. Two controls, following Liu et al. (arXiv:2606.07103, 2026):
+restrict to one suffix present in both organizations, and compare against two projects inside
+a single organization, which is what "different codebase, same organization" looks like.
+
+| condition | changes | balanced accuracy |
+|---|---|---|
+| raw, any file type | 4,048 | 0.837 [0.812, 0.837] |
+| **cross-organization, `.py` only** | 319 | **0.849 [0.769, 0.867]** |
+| within OpenStack, two projects, `.py` | 180 | 0.828 [0.726, 0.838] |
+| within Qt, two projects, `.py` | 39 | 0.892 [0.749, 0.954] |
+
+**The cross-organization probe does not beat the within-organization baselines.** Its estimate
+sits inside both of their intervals. Two projects in one organization are as separable as two
+organizations, so what the classifier reads is the codebase, and organization is the wrong
+altitude to look for it.
+
+**This is not the representation-behaviour dissociation it was expected to be.** The design of
+that check anticipated a probe that could see what the adapter could not use. Instead both
+instruments agree: near-zero at the organizational level, strong at the project level. Two
+methods with nothing in common reaching the same answer is the most informative thing to come
+out of the corpus so far.
+
+**What it suggests, and what the corpus can test.** The study fixes the organization as the
+unit. The evidence says the codebase is. The same apparatus can test it without modification:
+assemble two project-level corpora inside one organization, train an adapter on each, and run
+the identical matched-versus-mismatched contrast. If project-level adapters separate where
+organization-level ones do not, the finding is that the learnable unit is the codebase, which
+is directly consequential for the direction: a privacy perimeter drawn around an organization
+is not drawn where the signal lives.
+
+**Three bugs found while building it, all in the probe rather than the data.**
+
+- Folds were assigned by shuffling changes round-robin, leaving each fold's label mix to
+  chance. Measured at 0.25 to 0.79 on a balanced sample, which moved a chance-level probe to
+  0.65. Folds are stratified by label now.
+- The bootstrap renamed each resampled change so a twice-drawn change became two clusters.
+  That is right for a difference of means and wrong for a cross-validated classifier: the
+  copies carry identical text, landed in different folds, and trained the model on what it was
+  scored on. The interval rose clear of the estimate it was meant to bracket, 0.837 against
+  [0.856, 0.874].
+- Balanced accuracy was pooled across folds before averaging. A fold predicting everything one
+  label and another predicting everything the other each score 0.5 alone, but their pooled
+  recalls average above it, which returned 0.55 for a probe with nothing to learn. It averages
+  per fold now, and the null fixture sits at exactly 0.5.
+
+**Stated limits.** A bag-of-words model is weak, so a null from it is weaker evidence than a
+null from a learned encoder would be. Qt's within-organization pair is 39 changes against a
+Python-bindings project, which is a poor control; OpenStack's 180-change pair is the one to
+read. And `.py` is the only suffix both organizations carry in quantity, so the content
+control costs most of the corpus.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
