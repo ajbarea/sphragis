@@ -63,7 +63,7 @@ deploy:                    ## Put the cluster on this branch's pushed HEAD, by S
 	@test -n "$(FORCE)" || { \
 	  q=$$(ssh -o ConnectTimeout=20 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 \
 	        $(TIGRIS_HOST) 'squeue -h -u $$USER -o "%i %T" && echo && echo QUEUE_OK'); \
-	  case "$$q" in *QUEUE_OK*) ;; *) echo "could not read $(TIGRIS_HOST)'"'"'s queue; not deploying"; exit 1;; esac; \
+	  case "$$q" in *QUEUE_OK*) ;; *) echo "could not read the queue on $(TIGRIS_HOST); not deploying"; exit 1;; esac; \
 	  j=$$(echo "$$q" | grep -v '^QUEUE_OK$$' | grep -c . ); \
 	  test "$$j" -eq 0 || { echo "$$j job(s) queued or running:"; echo "$$q" | grep -v '^QUEUE_OK$$'; \
 	    echo "deploying now would change the code they run. Cancel them, wait, or: make deploy FORCE=1"; exit 1; }; }
