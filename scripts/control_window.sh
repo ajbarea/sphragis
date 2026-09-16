@@ -19,6 +19,13 @@ MONTHS="2023-08 2023-09 2023-10 2023-11 2023-12 2024-01"
 cd "$(dirname "$0")/.." || exit 1
 set -a; . ./.env; set +a   # the corpus salt, which never reaches a log or the process list
 for m in $MONTHS; do
+  # Restartable. A six-month window is hours of paced requests and this has already been
+  # interrupted once; refetching a month that is built would discard that work and, now
+  # that build checks the snapshot digest, correctly rebuild it as well.
+  if [ -s "$ROOT/$ORG/examples/$m.jsonl" ]; then
+    echo "=== $m already built ($(wc -l < "$ROOT/$ORG/examples/$m.jsonl") examples), skipping ==="
+    continue
+  fi
   echo "=== $m fetch $(date +%H:%M:%S) ==="
   uv run --no-active python -m sphragis.corpus fetch \
     --org "$ORG" --month "$m" --root "$ROOT" --cutoff "$CUTOFF" --overwrite \
