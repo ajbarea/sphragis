@@ -7,14 +7,20 @@ makes the job unschedulable. Compute-node `/tmp` is node-local, so the model cac
 in `$HOME`, which carries a 1 TB quota.
 
 The account is stated explicitly rather than left to the Slurm default, because the choice
-is not about scheduling. `rc-onboard` is AJ's own Research Computing access, predating the
-lab. `fl-mlm` is the Reznik lab's. This study is a sole-authored, first-author line that is
-deliberately independent of the lab, so running it on lab compute would entangle its
-resource provenance with a group whose contribution the paper does not otherwise claim,
-and that normally carries an acknowledgment expectation at least. Keeping it on
-`rc-onboard` keeps the provenance as clean as the authorship. If the queue makes that
-untenable, it becomes a conversation with Dr. Reznik with those implications on the table,
-not a silent default flip.
+is not about scheduling.
+
+It used to be `rc-onboard`, AJ's own Research Computing access, on the reasoning that this
+study is a sole-authored first-author line and running it on the lab's `fl-mlm` would
+entangle its resource provenance with a group whose contribution the paper does not
+otherwise claim. Research Computing wrote on 2026-09-16 that `rc-onboard` is for training
+only, so that reasoning rested on an option that was never available: the account is now
+`fl-mlm`.
+
+The implication the old note anticipated is therefore live rather than hypothetical. Lab
+compute normally carries an acknowledgment expectation, and this paper's author list does
+not currently reflect one. That is a conversation with Dr. Reznik, not something to settle
+in a docstring, and it is recorded here so the next person to read this file knows the
+question is open rather than answered.
 """
 
 from __future__ import annotations
@@ -26,7 +32,7 @@ from sphragis.experiment.grid import EvalRun, run_id
 
 _TIME = re.compile(r"^\d{1,2}:\d{2}:\d{2}$")
 _MAIL_USER = "ajb6289@rit.edu"
-_ACCOUNT = "rc-onboard"  # AJ's own access, not the lab's fl-mlm; see the module docstring.
+_ACCOUNT = "fl-mlm"  # the Reznik lab's; see the module docstring on what that implies.
 # Cache only. HF_HOME would also relocate the token, and `hf auth login` writes an OAuth
 # token that refreshes itself in place — a copy elsewhere goes stale and starts failing.
 _HF_HUB_CACHE = "$HOME/hf-cache/hub"

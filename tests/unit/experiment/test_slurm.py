@@ -20,16 +20,17 @@ def test_render_emits_the_tigris_partition_and_a_gh200() -> None:
     assert "#SBATCH --gres=gpu:gh200:1" in script
 
 
-def test_render_pins_the_account_to_ajs_own_access_not_the_lab() -> None:
-    # rc-onboard is AJ's own Research Computing access; fl-mlm is the Reznik lab's.
-    # This is a sole-authored line, so its compute provenance stays independent.
+def test_render_pins_the_account_to_the_lab_project() -> None:
+    # fl-mlm is the Reznik lab's project account. rc-onboard, used until 2026-09-16, is for
+    # training only, which Research Computing wrote to say; see slurm.py's docstring for
+    # what running on lab compute implies for a sole-authored paper.
     script = render(JOB)
-    assert "#SBATCH --account=rc-onboard" in script
-    assert "fl-mlm" not in script
+    assert "#SBATCH --account=fl-mlm" in script
+    assert "rc-onboard" not in script
 
 
 def test_render_never_emits_a_qos_line() -> None:
-    # rc-onboard denies qos_interactive; a --qos line makes the job unschedulable.
+    # The account denies qos_interactive; a --qos line makes the job unschedulable.
     assert "--qos" not in render(JOB)
 
 

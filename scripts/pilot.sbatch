@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=sphragis-pilot
-#SBATCH --account=rc-onboard
+#SBATCH --account=fl-mlm
 #SBATCH --partition=tigris
 #SBATCH --gres=gpu:gh200:1
 #SBATCH --cpus-per-task=8
