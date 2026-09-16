@@ -103,8 +103,12 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   OpenStack +0.030 [+0.028, +0.031] at 880 changes, Qt +0.011 [+0.011, +0.012] at 2,400.
 - [ ] Replace the estimated test-window sizes with counts once the window is defined; the
   window itself stays sealed.
-- [ ] Register equal-size training, the estimand (pooled against change-averaged, which move
-  Qt from +0.045 to +0.008), and strictly-above-zero at the pass rule's boundary.
+- [ ] Register equal-size training, the estimand, and strictly-above-zero at the pass rule's
+  boundary. The boundary is not hypothetical: on the unequalized pilot Qt's pooled lower
+  bound is exactly `0.0`, so a rule written `>=` would have read that run as supporting the
+  hypothesis. The estimand is not cosmetic either: the same run reads +0.045 pooled against
+  +0.008 change-averaged, and on the equalized run Qt's change-averaged interval sits
+  entirely below zero where pooled's does not (`scripts/estimands.py`).
 - [ ] The confirmatory RQ1 contrast, on the frozen windows after in-principle acceptance.
 
 **Metric change forced by a real run (2026-09-14).** The model answers refinement prompts

@@ -1119,6 +1119,43 @@ changes and one Qt change sit at lag 12, so the unobserved tail is small; at an 
 tail the dev gap moves from 21.6/8.7 to 23.2/10.5 and the test window at acceptance from
 0.7/0.1 to 2.1/1.5. The conclusion survives all three sensitivities.
 
+### Both estimands on the pilots that already ran (2026-09-15)
+
+`scripts/estimands.py` over `datasets/results/rq1-pilot{,-equalized}.json`. The estimand was
+recorded as an open Stage 1 decision with one synthetic illustration behind it. Applying both
+to the two real pilots says more than the illustration did.
+
+| run | org | pooled | change-averaged |
+|---|---|---|---|
+| unequalized | OpenStack | -0.0370 [-0.1500, +0.0870] | -0.0389 [-0.1778, +0.0722] |
+| unequalized | Qt | **+0.0451 [+0.0000, +0.0980]** | +0.0076 [-0.0699, +0.0815] |
+| equalized | OpenStack | +0.0370 [-0.0690, +0.1905] | +0.0722 [-0.0222, +0.2111] |
+| equalized | Qt | -0.0376 [-0.0893, +0.0083] | **-0.0690 [-0.1489, -0.0049]** |
+
+The gate verdict is `fail` under both estimands on both runs, so the choice would not have
+changed either outcome. Everything else about the table argues it could.
+
+**Two rows carry the argument.**
+
+- **Qt unequalized, pooled: the lower bound is exactly 0.0.** Not rounded to zero; the float
+  is `0.0`. `supports_direction` requires `low > 0.0`, so the gate reads fail, and a rule
+  written `>=` would have read this pilot as supporting the directional hypothesis. The
+  roadmap item asking to register strictly-above-zero at the boundary is not hypothetical:
+  the boundary has already been landed on once, by the metric that binds, on real data.
+  Under the change-averaged estimand the same run is +0.0076 [-0.0699, +0.0815], nowhere
+  near the boundary. The pooled estimate is six times larger than the change-averaged one.
+- **Qt equalized, change-averaged: [-0.1489, -0.0049], entirely below zero.** The mismatched
+  adapter beats the matched one on Qt's own held-out refinements, with an interval that
+  excludes zero on the refuting side. Pooled shows [-0.0893, +0.0083] and hides it. This is
+  the exact configuration `supports_direction` was written for after the gate was found to
+  be direction-blind, and here one estimand sees it while the other does not.
+
+**Reading.** The two estimands disagree most where a few large changes carry the signal, which
+is where the pooling is doing the most work. Neither is disqualified by this, but the choice
+is not cosmetic and must be registered before the confirmatory run rather than defended after
+it. The apparatus now computes both in one pass and names no primary, so the registration is
+the only place the decision can be made.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
