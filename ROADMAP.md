@@ -39,7 +39,17 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   Scored on hunks with context: 161 / 116 examples, Min-K%++ gap -0.058 [-0.200, +0.084],
   guided completion at its floor. Windows inseparable; read as ambiguous, as pre-committed.
 - [ ] Fix the control window's size (multi-month) and register hunks-with-context as the
-  scored text.
+  scored text. Collecting 2023-08..2024-01 as one uniform window, constructed exactly like
+  the window it is compared against (`scripts/control_window.sh`).
+- [x] **Source the checkpoint's cutoff.** The widely repeated "June 2024" for Qwen2.5-Coder is
+  a community guess, not a maintainer statement. The technical report states a repository
+  *creation* filter of February 2024, which bounds nothing for repositories as old as
+  OpenStack and Qt; the content cutoff is unstated. The post-cutoff window does not depend on
+  it, starting after the checkpoint was published (research log).
+- [ ] Register Min-K%++ as the primary contamination instrument and the time partition as
+  corroborative only. Temporal decay is not dependable contamination evidence
+  (Zhang et al., ACL 2026); identical construction across windows answers their specific
+  confound but not the confound with ordinary distribution shift.
 - [ ] Decide guided completion's match criterion, or report it as a null instrument.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
 

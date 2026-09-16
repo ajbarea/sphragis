@@ -983,6 +983,76 @@ the symptom go away; the correct reading was that the rate itself was wrong for 
 volunteer-run Gerrit. Future collection runs at about 1 request a second and stops rather than
 retrying when handshakes begin to fail, since the frozen corpus is fetched once and reused.
 
+### What the base model's own report says about its training data (2026-09-15)
+
+The contamination battery compares a post-cutoff window against a pre-cutoff control, so the
+cutoff is load-bearing and had never been sourced. Search returns "June 2024" for
+Qwen2.5-Coder with some confidence. It does not survive the primary source: in
+[QwenLM/Qwen3 discussion 1093](https://github.com/QwenLM/Qwen3/discussions/1093) a user
+*asks* whether the cutoff is June 2024, a maintainer pings two team members, neither answers,
+and a third participant offers June as a personal opinion. No Qwen maintainer states a date.
+It is a community guess with a citation-shaped shadow, and the battery must not rest on it.
+
+The technical report does make a sourceable statement. Qwen2.5-Coder
+([arXiv:2409.12186](https://arxiv.org/abs/2409.12186), 3.1.1 Data Composition):
+
+> Source Code We collected public repositories from GitHub created before February 2024,
+> spanning 92 programming languages. ... In addition to raw code, we also collected data from
+> Pull Requests, Commits, Jupyter Notebooks, and Kaggle datasets
+
+Three things follow, and two of them cut against the study.
+
+- **That is a repository-creation filter, not a content cutoff.** A repository created in 2011
+  and crawled in mid-2024 carries 2024 content. OpenStack and Qt are both far older than the
+  filter, so it bounds nothing about how recent their content may be. The report gives no
+  content cutoff, and the honest registered statement is that it is unstated.
+- **Pull requests and commits are named as sources.** The refinement targets are post-comment
+  code, which is exactly what a commit contains, so the *targets* are plausibly exposed even
+  though the review comments are not.
+- **Gerrit is not GitHub.** OpenStack reviews live on review.opendev.org and Qt's on
+  codereview.qt-project.org. The inline review comments that make up the prompt side of every
+  example are not on GitHub in any form. Only the code side has a plausible route into
+  pretraining.
+
+**What this does not change.** The post-cutoff window starts 2024-10-01 and the checkpoint was
+published 2024-09-17, so the post arm is clean by construction rather than by the report's
+word: that data did not exist when the model shipped. Only the control depends on the cutoff,
+and it depends on it in the safe direction, since a control that turns out *not* to be in
+training weakens the contrast rather than manufacturing one.
+
+**What it changes.** The control moves back to a six-month window ending 2024-01, which sits
+comfortably inside any reading of the evidence, instead of the single month that ended one
+month before the stated repository boundary.
+
+### The temporal probe is weaker than the design assumed (2026-09-15)
+
+Zhang et al., *Test of Time: Rethinking Temporal Signal of Benchmark Contamination*
+([arXiv:2509.00072](https://arxiv.org/abs/2509.00072), ACL 2026), argue that post-cutoff
+performance decay, the signal the time-partition probe reads, is not dependable evidence of
+contamination. Their result is that the *construction* of the items distorts the temporal
+pattern independently of the source material: model-transformed questions and cloze questions
+drawn from the very same documents produce markedly different temporal signals.
+
+Their specific confound is controllable here and is now controlled. Every example in both
+windows comes from one deterministic pipeline with one anchoring rule, and the control window
+was re-collected as a single uniform window with the cutoff at its own first day so that it is
+constructed identically to the window it is compared against, rather than as six months each
+built as their own window. Construction is held fixed; only the date varies.
+
+Their general point survives that fix. A time partition cannot separate exposure from ordinary
+distribution shift, because a codebase's conventions, reviewers and subject matter all move
+over eighteen months. So the registered reading changes:
+
+- **Min-K%++ on the base checkpoint is the primary instrument.** It scores the text directly
+  and does not infer membership from a performance difference across dates.
+- **The time partition is corroborative only.** A gap in the expected direction supports the
+  membership result; a gap on its own is not read as contamination, and its absence is not
+  read as a clean bill. This was already the pre-committed reading of an ambiguous battery;
+  it is now also the registered reason.
+- **Guided completion was already at its floor** in both windows, verbatim and by edit
+  similarity. Two of three probes are therefore doing little, which is worth stating in the
+  report rather than presenting a battery of three.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
