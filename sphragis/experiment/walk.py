@@ -23,6 +23,7 @@ from sphragis.measure.stats import (
     cluster_bootstrap,
     gate_verdict,
     paired_difference,
+    supports_direction,
 )
 
 
@@ -190,10 +191,16 @@ def gate_under_each_estimand(
     """Every verdict the registration could bind to, computed together.
 
     Which estimand binds the gate is a Stage 1 decision that has not been made. Computing
-    both here, in one pass, is what stops it from being made after the numbers are visible:
-    the run records the verdict under each, and `agree` says whether the choice mattered
-    on this data. It deliberately names no primary, so a report that quotes one of these
-    has to say which it registered.
+    both here, in one pass, is what stops it from being made after the numbers are visible.
+    It deliberately names no primary, so a report that quotes one of these has to say which
+    it registered.
+
+    `agree` compares the per-organization direction flags, NOT the collapsed verdict
+    strings. Comparing verdicts calls two "mixed" outcomes agreement even when they are
+    mixed on different organizations: pooled supporting the hypothesis on the first and
+    refuting it on the second, change-averaged doing the exact reverse, both labelled
+    "mixed", and the run recording that the choice did not matter. That is the one case
+    where the choice mattered most, and this function exists to catch it.
     """
     by_estimand = {
         name: gate(
@@ -207,8 +214,15 @@ def gate_under_each_estimand(
         for name, fn in ESTIMATORS.items()
     }
     verdicts = {name: outcome["verdict"] for name, outcome in by_estimand.items()}
+    supported = {
+        name: tuple(
+            supports_direction(outcome["binding"][org]) for org in sorted(outcome["binding"])
+        )
+        for name, outcome in by_estimand.items()
+    }
     return {
         "by_estimand": by_estimand,
         "verdicts": verdicts,
-        "agree": len(set(verdicts.values())) == 1,
+        "supported": {name: list(flags) for name, flags in supported.items()},
+        "agree": len(set(supported.values())) == 1,
     }

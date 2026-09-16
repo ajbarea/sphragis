@@ -16,6 +16,7 @@ from sphragis.experiment.walk import (
     matched_vs_mismatched,
     walk,
 )
+from sphragis.measure.stats import change_averaged_difference
 
 ORGS = ("alpha", "beta")
 SEEDS = (1, 2, 3)
@@ -229,4 +230,62 @@ def test_the_registered_path_still_reads_the_pooled_estimand() -> None:
     outcome = gate_under_each_estimand(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)
     assert outcome["by_estimand"]["pooled"] == gate(
         results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0
+    )
+
+
+def _rows(org: str, per_change: dict[str, list[float]], metric: str = "exact_match") -> list[dict]:
+    return [
+        {"id": f"{org}:{change}:{i}", "change_id": change, metric: value}
+        for change, values in per_change.items()
+        for i, value in enumerate(values)
+    ]
+
+
+def _opposed_results() -> dict[str, list[dict]]:
+    """Two organizations where the estimands reach opposite conclusions, mirrored.
+
+    On alpha one large change carries the effect and the many small ones do not, so pooling
+    supports the hypothesis and averaging over changes refutes it. Beta is the mirror. Each
+    estimand is therefore "mixed", but mixed on the opposite organization.
+    """
+    wide, singletons = 4, 16
+    alpha_t = {
+        **{f"w{i}": [1.0] * 20 for i in range(wide)},
+        **{f"s{i}": [0.0] for i in range(singletons)},
+    }
+    alpha_c = {
+        **{f"w{i}": [0.0] * 20 for i in range(wide)},
+        **{f"s{i}": [1.0] for i in range(singletons)},
+    }
+    results: dict[str, list[dict]] = {}
+    for seed in SEEDS:
+        results[f"adapter:alpha|alpha|s{seed}"] = _rows("alpha", alpha_t)
+        results[f"adapter:beta|alpha|s{seed}"] = _rows("alpha", alpha_c)
+        # Beta mirrored: the matched adapter is the one that loses the large change.
+        results[f"adapter:beta|beta|s{seed}"] = _rows("beta", alpha_c)
+        results[f"adapter:alpha|beta|s{seed}"] = _rows("beta", alpha_t)
+    return results
+
+
+def test_agree_is_false_when_the_estimands_swap_which_org_supports_the_claim() -> None:
+    """Two "mixed" verdicts are not agreement when they are mixed on different orgs.
+
+    Comparing the collapsed verdict strings calls this case agreement and records that the
+    estimand choice did not matter, in the one situation where it mattered most.
+    """
+    outcome = gate_under_each_estimand(_opposed_results(), orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)
+    assert outcome["verdicts"] == {"pooled": "mixed", "change_averaged": "mixed"}
+    assert outcome["supported"]["pooled"] != outcome["supported"]["change_averaged"]
+    assert outcome["agree"] is False
+
+
+def test_the_two_estimands_are_actually_both_run() -> None:
+    """A fixture where they differ, so passing one estimator twice cannot pass silently."""
+    results = _opposed_results()
+    outcome = gate_under_each_estimand(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)
+    pooled = outcome["by_estimand"]["pooled"]["binding"]["alpha"]["estimate"]
+    averaged = outcome["by_estimand"]["change_averaged"]["binding"]["alpha"]["estimate"]
+    assert pooled > 0.0 > averaged
+    assert outcome["by_estimand"]["change_averaged"] == gate(
+        results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0, estimator=change_averaged_difference
     )
