@@ -29,9 +29,9 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the changes the corpus
   keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev window
   abutting the collection boundary (39.1% of OpenStack's example-bearing cohort missing
-  against 70.4% of Qt's, whose window is also one month of two, a 31.26 point differential),
-  not creation assignment. The test window is fetched after in-principle acceptance, five
-  months after it closes, where the differential is 0.54 points.
+  against 28.8% of Qt's, a 10.33 point differential), not creation assignment. The test
+  window is fetched after in-principle acceptance, five months after it closes, where the
+  differential is 0.36 points. The decision has survived three revisions of these figures.
 - [ ] **A cohort-aware capture model.** Lynden-Bell assumes the lag distribution is stationary
   across creation cohorts and it is not: OpenStack's P(lag<=1) rises from 0.667 to 0.905 over
   the corpus, so the pooled fit understates capture for exactly the recent cohorts the dev and

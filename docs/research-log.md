@@ -1234,6 +1234,50 @@ items after refusals, reaching final-epoch mean losses of 0.288 and 0.221 from f
 0.733 and 1.060. Adapter weight norms 18.41 and 18.26, close enough that neither adapter can
 be said to have moved further than the other.
 
+### Qt's ban lifts, and the corpus is complete (2026-09-16)
+
+`scripts/resume_when_allowed.sh` probed Qt's Gerrit with five requests every twenty minutes
+from 20:29. Fourteen probes answered nothing. The fifteenth, at 01:45, answered all five, and
+the script built 2025-10 at one request a second, finishing 04:30: **826 examples, and Qt's
+thirteenth month**. The snapshot had been on disk since the fetch that preceded the ban, so
+nothing was refetched; only the build, which needs a comments request per change and a diff
+request per comment, had been blocked. Total ban duration from the first refused handshake:
+about thirty-three hours.
+
+| Qt | examples | after dedup | pilot | train | dev |
+|---|---|---|---|---|---|
+| 12 months (before) | 10,622 | 9,918 | 1,300 / 403 ch | 8,254 / 3,160 ch | 364 / 175 ch |
+| **13 months** | **11,448** | **10,695** | 1,301 / 404 ch | 8,443 / 3,208 ch | **951 / 462 ch** |
+
+The dev window is where the missing month lived, so it nearly triples in changes and Qt's dev
+window is now **larger than OpenStack's 235**, reversing the relationship every result so far
+was measured under.
+
+**The censoring figures move a third time, and settle.** Qt's dev was being reported as 70.4%
+missing, which was one absent month plus real censoring of the other. With the month built it
+is 28.8%, all of it censoring.
+
+| window | OpenStack missing | Qt missing | differential | with Qt's month absent |
+|---|---|---|---|---|
+| train | 5.0% | 3.0% | 2.08 pt | 0.83 pt |
+| dev | 39.1% | 28.8% | **10.33 pt** | 31.26 pt |
+| test, fetched 2027-02 | 1.1% | 0.7% | **0.36 pt** | 0.54 pt |
+
+Qt's estimator check passes at 0.019 against a two-standard-error band of 0.050. OpenStack's
+still fails at 0.086 against 0.071, which is the cohort-trend limitation and is unaffected by
+any of this.
+
+**The decision has now survived three revisions of the numbers that justified it.** Creation
+windows stand: the confirmatory contrast carries 0.36 points of differential censoring against
+the dev window's 10.33, a factor of 29. The ratio has been 26, then 58, now 29, while the
+underlying figures moved by tens of points. That the conclusion never depended on the figures
+being right is worth more than any one of them.
+
+**What it costs the windowed RQ1 result.** Job 144345 measured Qt's contrast on 175 changes,
++0.011 [-0.0208, +0.0433]. Job 145084 reruns it on 462, which should narrow that interval by
+roughly a third without touching OpenStack's. Nothing about the earlier run was wrong; it was
+measured on a corpus that was missing a month, and said so.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
