@@ -128,6 +128,26 @@ def per_example(rows: list[dict], tokens: list, window: str) -> list[dict]:
 
 scores = per_example(post_e, post_tokens, "post") + per_example(pre_e, pre_tokens, "pre")
 
+# Membership is the registered PRIMARY instrument and it is finished; write it before the
+# generative half begins. Job 145093 reached exactly this point and hit its wall during
+# guided completion, and because the script wrote once at the end, a completed Min-K%++ on
+# fifteen times the earlier sample was thrown away. Guided completion is registered as a
+# null instrument, so losing it costs a line in a table; losing the primary costs the run.
+_partial = {
+    "membership_model": MEMBERSHIP_MODEL_ID,
+    "scored_text": args.scored_text,
+    "k": args.k,
+    "post": {"path": str(args.post), **post_counts},
+    "pre": {"path": str(args.pre), **pre_counts},
+    # The per-example scores, not an aggregate: the aggregate is computed after guided
+    # completion because it tabulates all three methods, and every membership number can be
+    # recomputed from these offline.
+    "scores": scores,
+    "complete": False,
+}
+args.out.with_suffix(".partial.json").write_text(json.dumps(_partial, indent=2) + "\n")
+print(f"wrote {args.out.with_suffix('.partial.json')} (membership only)", flush=True)
+
 # --- Guided completion on the registered model -------------------------------------------
 generator = HFGenerator(model_id=MODEL_ID, max_new_tokens=MAX_NEW_TOKENS)
 

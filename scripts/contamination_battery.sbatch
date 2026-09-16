@@ -5,11 +5,15 @@
 #SBATCH --gres=gpu:gh200:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
-#SBATCH --time=02:00:00
+#SBATCH --time=05:00:00
 #SBATCH --output=logs/sphragis-contamination-%j.log
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
+# Five hours, not two. Job 145093 hit a two-hour wall at 1h35m of guided completion on the
+# six-month corpus, which is fifteen times the sample the old limit was measured against.
+# Membership finished inside that and is now written before the generative half starts, so a
+# future wall costs the null instrument rather than the primary one.
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 # HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth
