@@ -52,7 +52,17 @@ deploy:                    ## Put the cluster on this branch's pushed HEAD, by S
 	@# requires every stage to record the git SHA that produced it, and a copy has no SHA.
 	@# Three jobs have already failed on a hand-copied or stale file; `git status` on the
 	@# cluster now answers "is this the code I think it is".
+	@# A queued job runs whatever is in the checkout when it *starts*, not what was there
+	@# when it was submitted. At low fairshare that gap is a day or more, so deploying over
+	@# a pending job silently changes the code it runs and the result cannot be attributed
+	@# to a SHA. Refuse, and make overriding it deliberate: `make deploy FORCE=1`.
 	@git diff-index --quiet HEAD -- || { echo "commit first: the cluster deploys a SHA, not a working tree"; exit 1; }
+	@test -n "$(FORCE)" || { \
+	  q=$$(ssh -o ConnectTimeout=20 $(TIGRIS_HOST) 'squeue -h -u $$USER -o "%i %T" 2>/dev/null; echo QUEUE_OK'); \
+	  case "$$q" in *QUEUE_OK*) ;; *) echo "cannot reach $(TIGRIS_HOST) to check the queue; not deploying"; exit 1;; esac; \
+	  j=$$(echo "$$q" | grep -v QUEUE_OK | grep -c . ); \
+	  test "$$j" -eq 0 || { echo "$$j job(s) queued or running:"; echo "$$q" | grep -v QUEUE_OK; \
+	    echo "deploying now would change the code they run. Cancel them, wait, or: make deploy FORCE=1"; exit 1; }; }
 	git push -q $(REMOTE) HEAD
 	ssh $(TIGRIS_HOST) 'cd $(TIGRIS_DIR) && git fetch -q origin && git checkout -q -B $(BRANCH) origin/$(BRANCH) && git --no-pager log --oneline -1'
 
