@@ -647,3 +647,112 @@ def test_examples_with_no_recorded_snapshot_still_resume(
     out = capsys.readouterr().out
     assert "no snapshot digest recorded" in out
     assert "skip, already built" in out
+
+
+def _offline(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
+
+
+def _change(number: int, created: str = "2024-10-05 00:00:00.000000000") -> dict[str, object]:
+    return {
+        "_number": number,
+        "change_id": f"I{number}",
+        "created": created,
+        "owner": {"_account_id": "o"},
+        "revisions": {"a": {}, "b": {}},
+    }
+
+
+def test_refetching_the_same_path_with_different_content_rebuilds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The digest must be of the snapshot's CONTENT, not of its name or its size.
+
+    Every other test either records a literal fake digest or computes the expected one with
+    the function under test, so any self-consistent digest passes them -- including one that
+    hashes the filename, which would reproduce the original bug exactly.
+    """
+    from sphragis.corpus import cli
+
+    _offline(monkeypatch)
+    _snapshot(tmp_path, "openstack", "2024-10", [_change(1)])
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    capsys.readouterr()
+
+    # Same organization, same month, same path: only the content differs.
+    _snapshot(tmp_path, "openstack", "2024-10", [_change(2), _change(3)])
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert "built from a different snapshot, rebuilding" in capsys.readouterr().out
+
+
+def test_an_unreadable_record_resumes_rather_than_aborting_the_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A truncated record is what a kill or a full disk leaves during the final write.
+
+    Raising made one bad month abort the build for every month after it, and --overwrite
+    could not clear it because the guard ran first.
+    """
+    from sphragis.corpus import cli
+
+    _offline(monkeypatch)
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    built = examples / "2024-10.jsonl"
+    built.write_text('{"id": "a"}\n')
+
+    for broken in ('{"snapshot_sha256": "abc', "", "null", "[]"):
+        cli.source_path(built).write_text(broken)
+        assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+        assert "no snapshot digest recorded" in capsys.readouterr().out
+
+
+def test_a_month_whose_write_was_interrupted_is_not_certified_complete(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The record is the completion marker, so a half-written month must rebuild."""
+    from sphragis.corpus import cli
+
+    _offline(monkeypatch)
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    snapshot = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    built = examples / "2024-10.jsonl"
+    built.write_text('{"id": "truncated-tai\n')
+    # The digest is right: the snapshot never changed. Only `complete` says otherwise.
+    cli.source_path(built).write_text(
+        json.dumps({"snapshot_sha256": cli.snapshot_digest(snapshot), "complete": False})
+    )
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert "skip, already built" not in capsys.readouterr().out
+    assert built.read_text() == ""
+
+
+def test_a_record_written_before_complete_existed_still_resumes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The months already on disk were backfilled without the marker; they must not rebuild."""
+    from sphragis.corpus import cli
+
+    _offline(monkeypatch)
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    snapshot = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    built = examples / "2024-10.jsonl"
+    built.write_text('{"id": "a"}\n')
+    cli.source_path(built).write_text(
+        json.dumps({"snapshot_sha256": cli.snapshot_digest(snapshot)})
+    )
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert "skip, already built" in capsys.readouterr().out
+    assert built.read_text() == '{"id": "a"}\n'

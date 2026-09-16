@@ -261,7 +261,22 @@ def built_from_current_snapshot(target: Path, snapshot: Path) -> bool | None:
     record = source_path(target)
     if not record.is_file():
         return None
-    return json.loads(record.read_text()).get("snapshot_sha256") == snapshot_digest(snapshot)
+    try:
+        recorded = json.loads(record.read_text())
+    except (ValueError, OSError):
+        # A truncated or empty record is what a kill or a full disk leaves behind during the
+        # final write. Raising here made one bad month abort the build for every month after
+        # it, with no message and no way out: --overwrite did not help, because the guard ran
+        # before it. An unreadable record means the same as an absent one -- unknown.
+        return None
+    if not isinstance(recorded, dict):
+        return None
+    if not recorded.get("complete", True):
+        # The marker was opened and never closed, so the examples beside it are a partial
+        # write. That is known-bad rather than unknown: rebuild. Records backfilled before
+        # the marker existed carry no `complete` key and default to closed.
+        return False
+    return recorded.get("snapshot_sha256") == snapshot_digest(snapshot)
 
 
 def _load_drops(args: argparse.Namespace) -> dict[str, int]:
@@ -326,9 +341,19 @@ def _stage_build(args: argparse.Namespace) -> int:
         drops_path(target).write_text(
             json.dumps(dict(sorted(month_drops.items())), indent=2) + "\n"
         )
-        target.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
-        source_path(target).write_text(
-            json.dumps({"snapshot_sha256": snapshot_digest(snapshot)}, indent=2) + "\n"
+        # The record is the completion marker, so it is written open before the examples and
+        # closed after them, and the examples land by rename. `write_text` is not atomic: an
+        # interrupted rebuild otherwise leaves a truncated month beside a digest that still
+        # matches, and the next run certifies it as finished and counts its truncated tail as
+        # an example.
+        digest = snapshot_digest(snapshot)
+        record = source_path(target)
+        record.write_text(json.dumps({"snapshot_sha256": digest, "complete": False}) + "\n")
+        staging = target.with_suffix(".jsonl.partial")
+        staging.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
+        staging.replace(target)
+        record.write_text(
+            json.dumps({"snapshot_sha256": digest, "complete": True}, indent=2) + "\n"
         )
         drops.update(month_drops)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
