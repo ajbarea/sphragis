@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import http.client
 import json
 import os
@@ -237,6 +238,32 @@ def drops_path(examples_file: Path) -> Path:
     return examples_file.with_name(examples_file.name.removesuffix(".jsonl") + ".drops.json")
 
 
+def source_path(examples_file: Path) -> Path:
+    """Where the digest of the snapshot a month was built from lives."""
+    return examples_file.with_name(examples_file.name.removesuffix(".jsonl") + ".source.json")
+
+
+def snapshot_digest(snapshot: Path) -> str:
+    digest = hashlib.sha256()
+    digest.update(snapshot.read_bytes())
+    return digest.hexdigest()
+
+
+def built_from_current_snapshot(target: Path, snapshot: Path) -> bool | None:
+    """Whether a month's examples came from the snapshot now on disk. None if unrecorded.
+
+    Recorded as a content digest rather than compared by modification time. mtime answers
+    a different question: `rsync`, `cp` and a fresh checkout all make a snapshot newer than
+    the examples beside it without changing a byte, and each would cost hours of refetching.
+    It is also sensitive to which of two writes in the same filesystem tick came first,
+    which is a test that passes locally and fails on other hardware.
+    """
+    record = source_path(target)
+    if not record.is_file():
+        return None
+    return json.loads(record.read_text()).get("snapshot_sha256") == snapshot_digest(snapshot)
+
+
 def _load_drops(args: argparse.Namespace) -> dict[str, int]:
     """Build-stage drop counts summed over every month on disk."""
     total: Counter[str] = Counter()
@@ -266,12 +293,13 @@ def _stage_build(args: argparse.Namespace) -> int:
         # no longer exists, and resume cannot tell those from finished work: it skips them,
         # and the corpus quietly mixes months built under different fetch parameters. Seen
         # on the control window, where 2024-01 had been collected as its own window and was
-        # being recollected under a wider cutoff. Rebuilding costs network time; the
-        # alternative costs the corpus its meaning.
-        stale = target.exists() and snapshot.stat().st_mtime > target.stat().st_mtime
-        if stale:
-            print(f"{args.org} {month}: snapshot is newer than its examples, rebuilding")
-        if target.exists() and not args.overwrite and not stale:
+        # being recollected under a wider cutoff.
+        matches = built_from_current_snapshot(target, snapshot) if target.exists() else None
+        if matches is False:
+            print(f"{args.org} {month}: built from a different snapshot, rebuilding")
+        if matches is None and target.exists() and not args.overwrite:
+            print(f"{args.org} {month}: no snapshot digest recorded, cannot check staleness")
+        if target.exists() and not args.overwrite and matches is not False:
             # Resume. A month costs minutes of network time, and Qt needs roughly 400
             # requests per month, so discarding completed work on interruption is not
             # affordable.
@@ -299,6 +327,9 @@ def _stage_build(args: argparse.Namespace) -> int:
             json.dumps(dict(sorted(month_drops.items())), indent=2) + "\n"
         )
         target.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
+        source_path(target).write_text(
+            json.dumps({"snapshot_sha256": snapshot_digest(snapshot)}, indent=2) + "\n"
+        )
         drops.update(month_drops)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)

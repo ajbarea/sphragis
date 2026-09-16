@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -551,7 +552,7 @@ def test_a_seal_without_acceptance_stays_locked(
         _fetch(tmp_path, monkeypatch, "2025-11")
 
 
-def test_build_rebuilds_a_month_whose_snapshot_was_refetched(
+def test_build_rebuilds_a_month_built_from_a_different_snapshot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Resume must not mistake examples from a replaced snapshot for finished work.
@@ -560,8 +561,6 @@ def test_build_rebuilds_a_month_whose_snapshot_was_refetched(
     snapshot that no longer exists. Skipping them mixes months built under different rules
     into one corpus, which is what happened to the control window's 2024-01.
     """
-    import os
-
     from sphragis.corpus import cli
 
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
@@ -569,28 +568,23 @@ def test_build_rebuilds_a_month_whose_snapshot_was_refetched(
     examples.mkdir(parents=True)
     built = examples / "2024-10.jsonl"
     built.write_text('{"id": "from-the-old-snapshot"}\n')
+    cli.source_path(built).write_text(json.dumps({"snapshot_sha256": "a-snapshot-since-replaced"}))
 
     _snapshot(tmp_path, "openstack", "2024-10", [])
-    snapshot = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
-    # The refetch: snapshot newer than the examples standing beside it.
-    old = built.stat().st_mtime
-    os.utime(snapshot, (old + 10, old + 10))
 
     monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
     monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
     monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
 
     assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
-    assert "rebuilding" in capsys.readouterr().out
+    assert "built from a different snapshot, rebuilding" in capsys.readouterr().out
     assert built.read_text() == "", "the stale examples must not survive the rebuild"
 
 
-def test_build_still_resumes_when_the_snapshot_is_older_than_its_examples(
+def test_build_resumes_a_month_built_from_the_snapshot_on_disk(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """The ordinary case, which the staleness check must not turn into a rebuild."""
-    import os
-
+    """The ordinary resume, which the staleness check must not turn into a rebuild."""
     from sphragis.corpus import cli
 
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
@@ -600,8 +594,9 @@ def test_build_still_resumes_when_the_snapshot_is_older_than_its_examples(
     examples.mkdir(parents=True)
     built = examples / "2024-10.jsonl"
     built.write_text('{"id": "already-built"}\n')
-    when = snapshot.stat().st_mtime
-    os.utime(built, (when + 10, when + 10))
+    cli.source_path(built).write_text(
+        json.dumps({"snapshot_sha256": cli.snapshot_digest(snapshot)})
+    )
 
     monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
     monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
@@ -612,3 +607,43 @@ def test_build_still_resumes_when_the_snapshot_is_older_than_its_examples(
     assert "skip, already built" in out
     assert "rebuilding" not in out
     assert built.read_text() == '{"id": "already-built"}\n'
+
+
+def test_build_records_the_snapshot_it_built_from(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    built = tmp_path / "openstack" / "examples" / "2024-10.jsonl"
+    snapshot = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
+    recorded = json.loads(cli.source_path(built).read_text())["snapshot_sha256"]
+    assert recorded == cli.snapshot_digest(snapshot)
+
+
+def test_examples_with_no_recorded_snapshot_still_resume(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Corpora built before the digest existed must not all rebuild; say so instead."""
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    (examples / "2024-10.jsonl").write_text('{"id": "built-before-the-digest"}\n')
+
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "no snapshot digest recorded" in out
+    assert "skip, already built" in out
