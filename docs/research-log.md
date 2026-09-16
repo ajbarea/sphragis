@@ -1053,148 +1053,107 @@ over eighteen months. So the registered reading changes:
   similarity. Two of three probes are therefore doing little, which is worth stating in the
   report rather than presenting a battery of three.
 
-### The censoring confound, measured on the population the corpus keeps (2026-09-15)
+### The censoring confound, after two bugs in the inputs (2026-09-15, corrected 2026-09-16)
 
-`scripts/censoring.py`, `datasets/results/censoring.json`. The open question was what to do
-about windows assigning by creation while snapshots select by last update: a change created
-inside a window whose last update falls after the final collected month is absent entirely,
-and what disappears is the slow reviews.
+`scripts/censoring.py`, `datasets/results/censoring.json`. Snapshots select changes by last
+update; windows assign them by creation. A change created inside a window whose last update
+falls after the final collected month is absent entirely, and what disappears is the slow
+reviews. The loss cannot be counted, because a truncated change leaves no record; the lag
+from creation to last update can be, for changes whose lag was short enough to be seen. That
+is right truncation, and Lynden-Bell (1971) gives its nonparametric MLE.
 
-A truncated change leaves no record, so the loss cannot be counted. The lag from creation to
-last update can be, for changes whose lag was short enough to be seen at all. That is
-classical right truncation, and Lynden-Bell (1971) gives the nonparametric MLE of the lag
-distribution from exactly these pairs.
+**The estimator is right. The inputs were wrong twice, and the published figures with them.**
+Review checked the estimator against simulated data from known distributions at n up to 4M,
+including the case where the largest lag equals the largest horizon, and found a maximum
+absolute error of 0.0008 scaling as 1/sqrt(N): Monte Carlo noise, no bias. Then it found both
+things feeding it were broken.
 
-**Fitted first on the wrong population, and the error was worth more than the original
-estimate.** The first pass estimated the lag distribution over all 78,086 merged changes. The
-corpus keeps only the ~11% carrying a reviewer comment anchored to a code hunk, and those are
-the changes somebody argued about. They settle far more slowly:
+- **A Gerrit Change-Id names a family, not a change.** It is shared across cherry-picks and
+  relation chains, so restricting the sample by `change_id` admitted every sibling of an
+  example-bearing change, including siblings carrying no example that settle faster. Qt's
+  sample was inflated 69%, OpenStack's 18%. The key is now `(project, change_id, created)`.
+- **The last collected month was a shared constant.** Qt's examples stop at 2025-09 because
+  the ban blocked 2025-10, so every Qt horizon was one month too long, every risk set held a
+  cohort-month that could not have produced an observation, and Qt's loss came out too small.
+  It is now derived per organization from the months actually built.
 
-| P(lag <= t months) | t=0 | t=1 | t=2 | t=3 | t=6 |
+| P(lag <= t months), example-bearing | t=0 | t=1 | t=2 | t=3 | t=6 |
 |---|---|---|---|---|---|
-| OpenStack, all merged | 0.699 | 0.868 | 0.917 | 0.942 | 0.977 |
-| **OpenStack, example-bearing** | **0.494** | **0.766** | **0.849** | **0.902** | **0.962** |
-| Qt, all merged | 0.864 | 0.962 | 0.979 | 0.987 | 0.995 |
-| **Qt, example-bearing** | **0.738** | **0.905** | **0.951** | **0.970** | **0.989** |
+| OpenStack | 0.465 | 0.752 | 0.839 | 0.895 | 0.959 |
+| Qt | 0.592 | 0.840 | 0.914 | 0.946 | 0.978 |
 
-Half of OpenStack's example-bearing changes are still moving after the month they were
-created, against 30% of merged changes generally. Fitting on everything and applying to the
-corpus understated the loss by a third. The figures below are the corrected ones.
+| window | OpenStack missing | Qt missing | differential | previously reported |
+|---|---|---|---|---|
+| train | 5.0% | 4.2% | **0.83 pt** | 3.30 pt |
+| dev | 39.1% | 70.4% | **31.26 pt** | 19.14 pt |
+| test, fetched 2027-02 | 1.1% | 0.6% | **0.54 pt** | 0.74 pt |
 
-| window | OpenStack missing | Qt missing | differential |
-|---|---|---|---|
-| pilot (2024-10) | 0.0% | 0.0% | 0.00 pt |
-| train (2024-11..2025-08) | 4.7% | 1.4% | 3.30 pt |
-| **dev (2025-09..2025-10)** | **37.0%** | **17.9%** | **19.14 pt** |
+Qt's dev figure is not all censoring: its window is 2025-09 and 2025-10, and 2025-10 was never
+collected, so 70.4% is one absent month plus 41% of the other month's cohort. That is the
+honest accounting for the corpus as it stands, and better than the earlier number, which
+silently assumed a month that does not exist.
 
-The first-order finding survives the correction and grows: the organizations differ sharply in
-review latency, which is why one collection boundary censors them unequally. The earlier
-21.6% / 8.7% figures, and the 21.6% hand estimate before them, were both too kind.
+**The decision survives; the numbers that justified it did not.** The confound is still the
+dev window abutting the collection boundary rather than creation assignment, and the test
+window fetched at in-principle acceptance still carries 0.54 points of differential against
+the dev window's 31.26, a factor of 58 rather than 26. Creation windows stand, no embargo gap,
+no last-update assignment. The registered horizon remains: **the test window is fetched no
+earlier than three months after its final month**, which holds the differential to 1.16 points.
 
-**The decision this forces, and it is not the one the three recorded options assumed.** The
-confound is an artifact of the dev window abutting the collection boundary, not of assigning
-windows by creation. The test window closes 2026-08 and is fetched only after in-principle
-acceptance, 2027-02-04 for MSR 2027, so every test cohort has had at least five months to
-settle:
+**Three limitations, one of which is a live failure.**
 
-| test window fetched | OpenStack missing | Qt missing | differential |
-|---|---|---|---|
-| 2026-09, at its close | 7.0% | 2.4% | 4.64 pt |
-| 2026-12 | 2.2% | 0.6% | 1.60 pt |
-| **2027-02, at acceptance** | **1.0%** | **0.3%** | **0.74 pt** |
-| 2027-05 | 0.2% | 0.0% | 0.13 pt |
+- **Quasi-independence is violated, and OpenStack's own check says so.** Lynden-Bell needs the
+  lag distribution independent of the horizon, which here means stationary across creation
+  cohorts. It is not: restricted to months where it is fully observable, OpenStack's P(lag<=1)
+  rises from 0.667 in 2024-10 to 0.905 in 2025-07, Qt's from 0.840 to 0.926. A pooled fit
+  therefore understates capture for exactly the recent cohorts the dev and test windows are
+  made of, so OpenStack's 39.1% is probably too high. The check added with the fix compares
+  the estimate against the one cohort old enough to count directly, inside a binomial two
+  standard error band: **Qt passes at 0.017 against a band of 0.050, OpenStack fails at 0.086
+  against 0.071**. Fixing the two input bugs dropped Qt's gap fourfold and moved it inside the
+  band; OpenStack's remaining gap is the cohort trend. A cohort-aware fit, or a fit restricted
+  to recent cohorts, is the work this needs, and until then OpenStack's figure is an upper
+  bound on its own loss.
+- **That check is not fully independent.** Where the largest lag equals the largest horizon,
+  the estimator's top step is algebraically the reference cohort's own empirical CDF, so the
+  two must agree at the top regardless. It is a sanity check on the middle of the curve.
+- **The tail beyond the longest observable lag is unidentified.** F(max) = 1 is imposed, so
+  every figure is a lower bound. At an assumed 2% tail the dev figures move to 40.4 and 71.0
+  and the test window at acceptance to 3.1 and 2.5. The sensitivity used to be computed
+  against a hardcoded ceiling of 1.0 above the support, which put back exactly the tail mass
+  it had removed and understated itself by a quarter to a half; it now carries the fitted
+  CDF's own supremum forward.
 
-The confirmatory contrast carries 0.74 points of differential censoring against the dev
-window's 19.14, a factor of 26. So creation windows stand, no embargo gap is needed, and
-last-update assignment is not worth its cost in interpretation. What has to change is that
-this protection is currently an accident of review timing and should be a protocol guarantee:
-**the test window is fetched no earlier than three months after its final month**, which holds
-the differential to 1.6 points even if acceptance came early.
-
-**What has to be said wherever dev numbers appear.** The dev window is missing an estimated
-37.0% of OpenStack's example-bearing cohort against 17.9% of Qt's, unequally and in the
-direction that strips slow reviews from OpenStack hardest. Dev numbers are pre-registration
-estimates, not unbiased previews of the confirmatory result, and job 144345's carry that on
-top of Qt's half-size dev window.
-
-**Two assumptions, stated.** Thirteen months of snapshots cannot observe a lag of fourteen, so
-Lynden-Bell imposes F(max) = 1 and every missing fraction is a lower bound; at an assumed 2%
-tail the dev figures move to 38.2 / 19.5 and the test window at acceptance to 2.4 / 1.5, so
-the conclusion survives. And the estimator check is weaker than it was on the full population:
-against the one cohort old enough to count directly it agrees to 0.074 for OpenStack and 0.093
-for Qt, against 0.011 and 0.014 before, because that cohort now holds a few hundred changes
-rather than several thousand. The agreement is a sanity check at this size, not a validation.
-
-### Both estimands on the pilots that already ran (2026-09-15)
-
-`scripts/estimands.py` over `datasets/results/rq1-pilot{,-equalized}.json`. The estimand was
-recorded as an open Stage 1 decision with one synthetic illustration behind it. Applying both
-to the two real pilots says more than the illustration did.
-
-| run | org | pooled | change-averaged |
-|---|---|---|---|
-| unequalized | OpenStack | -0.0370 [-0.1500, +0.0870] | -0.0389 [-0.1778, +0.0722] |
-| unequalized | Qt | **+0.0451 [+0.0000, +0.0980]** | +0.0076 [-0.0699, +0.0815] |
-| equalized | OpenStack | +0.0370 [-0.0690, +0.1905] | +0.0722 [-0.0222, +0.2111] |
-| equalized | Qt | -0.0376 [-0.0893, +0.0083] | **-0.0690 [-0.1489, -0.0049]** |
-
-The gate verdict is `fail` under both estimands on both runs, so the choice would not have
-changed either outcome. Everything else about the table argues it could.
-
-**Two rows carry the argument.**
-
-- **Qt unequalized, pooled: the lower bound is exactly 0.0.** Not rounded to zero; the float
-  is `0.0`. `supports_direction` requires `low > 0.0`, so the gate reads fail, and a rule
-  written `>=` would have read this pilot as supporting the directional hypothesis. The
-  roadmap item asking to register strictly-above-zero at the boundary is not hypothetical:
-  the boundary has already been landed on once, by the metric that binds, on real data.
-  Under the change-averaged estimand the same run is +0.0076 [-0.0699, +0.0815], nowhere
-  near the boundary. The pooled estimate is six times larger than the change-averaged one.
-- **Qt equalized, change-averaged: [-0.1489, -0.0049], entirely below zero.** The mismatched
-  adapter beats the matched one on Qt's own held-out refinements, with an interval that
-  excludes zero on the refuting side. Pooled shows [-0.0893, +0.0083] and hides it. This is
-  the exact configuration `supports_direction` was written for after the gate was found to
-  be direction-blind, and here one estimand sees it while the other does not.
-
-**Reading.** The two estimands disagree most where a few large changes carry the signal, which
-is where the pooling is doing the most work. Neither is disqualified by this, but the choice
-is not cosmetic and must be registered before the confirmatory run rather than defended after
-it. The apparatus now computes both in one pass and names no primary, so the registration is
-the only place the decision can be made.
-
-### The sealed window is about twice the size the power analysis assumed (2026-09-15)
+### The sealed window is about twice the size the power analysis assumed (2026-09-15, corrected 2026-09-16)
 
 The power analysis took 880 OpenStack changes and 2,400 Qt for the test window, scaled from
-the dev window. The capture model says the dev window is the worst possible base, missing 37%
-and 18% of its cohorts. The train window, missing 4.7% and 1.4%, is the right one, which frees
-the dev window to be a held-out check on the model rather than an input to it.
+the dev window, which the capture model says is the worst available base. The train window,
+missing 5.0% and 4.2%, is the right one, which frees the dev window to be a held-out check on
+the model rather than an input to it.
 
-| | train changes | implied true rate | dev predicted | dev actual |
-|---|---|---|---|---|
-| OpenStack | 1,737 over 10 months, captured 0.953 | 182.3/month | **230** | **235** |
-| Qt | 3,160 over 10 months, captured 0.986 | 320.5/month | 527 | 175 |
+| | train changes | implied true rate | dev predicted | dev actual | miss |
+|---|---|---|---|---|---|
+| OpenStack | 1,737 over 10 months, captured 0.950 | 182.9/month | 223 | 235 | -5.3% |
+| Qt | 3,160 over 10 months, captured 0.958 | 329.9/month | 195 | 175 | +11.6% |
 
-**OpenStack's dev window is predicted to within 2.2% by a model that never saw it.** The lag
-distribution was fitted on creation-to-last-update pairs and knows nothing about how many
-changes the dev window holds; it lands on 230 against 235. That is the strongest evidence
-available that the capture correction is right rather than merely principled.
-
-**Qt's check cannot be run yet, and the 3x miss is not evidence against the model.** Qt's dev
-window holds only 2025-09: the ban blocked 2025-10, so the window is one month of two, and
-changes created in 2025-09 but last updated in 2025-10 are missing as well, putting the real
-horizon at 0 rather than 1. Predicting one month at horizon 0 gives 237 against the actual
-175, still 35% high. Whether that residual is a declining Qt volume or a flaw in the capture
-estimate cannot be separated until 2025-10 is built.
+**Both organizations now pass, and Qt's passing is what tells the story.** The first version
+of this analysis predicted Qt's dev window at 527 against an actual 175 and printed the 201%
+miss as informational text, then used the same model on the next line to project the sealed
+window. The miss was not Qt being strange: it was the two input bugs in the capture model, a
+change key that admitted cherry-pick siblings and a horizon one month too long. With those
+fixed the same check lands at +11.6% with nothing else changed. A check that can only be read
+is not a check, so it now refuses to project the sealed window when the miss exceeds 15%.
 
 | test window projection | changes | power analysis assumed | ratio |
 |---|---|---|---|
-| OpenStack | ~1,804 | 880 | 2.05x |
-| Qt | ~3,197, provisional | 2,400 | 1.33x |
+| OpenStack | ~1,809 | 880 | 2.06x |
+| Qt | ~3,281 | 2,400 | 1.37x |
 
-So the registered MDEs, about +0.030 exact match for OpenStack and +0.011 for Qt, are
-conservative rather than optimistic: OpenStack binds, and it will have roughly twice the
-changes the estimate assumed. The Qt figure is held provisional until its dev window closes
-and the held-out check can actually be run.
+So the registered MDEs are conservative rather than optimistic. Two things the check cannot
+separate: it tests the capture model and a constant arrival rate together, and the arrival
+rate is visibly not constant (OpenStack's example-bearing changes per created month range 136
+to 232). A pass is therefore evidence that the two errors are small or cancel, not that either
+is zero.
 
 ### RQ1 on the study's own windows (2026-09-15, job 144345)
 

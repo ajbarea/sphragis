@@ -21,9 +21,10 @@ from __future__ import annotations
 import gzip
 import json
 from collections import Counter
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 RESULTS = Path("datasets/results/censoring.json")
 RAW = "datasets/gerrit/{org}/raw"
@@ -37,7 +38,17 @@ WINDOWS = {
     "dev": ("2025-09", "2025-10"),
     "test": ("2025-11", "2026-08"),
 }
-LAST_COLLECTED = "2025-10"
+
+
+# Derived per organization from the months actually built, never shared: Qt's examples stop
+# at 2025-09 because the ban blocked 2025-10, and a shared constant gave every Qt observation
+# a horizon one month too long, inflating every risk set with a cohort-month that could not
+# have produced an observation and understating Qt's loss.
+def last_collected(org: str) -> str:
+    months = sorted(p.stem for p in Path(EXAMPLES.format(org=org)).glob("*.jsonl"))
+    if not months:
+        raise SystemExit(f"no built months under {EXAMPLES.format(org=org)}")
+    return months[-1]
 
 
 class Observation(NamedTuple):
@@ -50,13 +61,24 @@ def month_index(stamp: str) -> int:
     return d.year * 12 + d.month - 1
 
 
-def example_bearing(org: str) -> set[str]:
-    """Change ids the corpus actually keeps: those with a comment anchored to a code hunk."""
-    kept: set[str] = set()
+def change_key(row: Mapping[str, Any]) -> tuple[str, str, str]:
+    """Identity of one change, keyed so that siblings are not confused for each other.
+
+    A Gerrit Change-Id is shared across cherry-picks and relation chains, so it names a
+    family rather than a change: keying on it alone admitted every sibling of an
+    example-bearing change, including the siblings that carry no example and settle faster.
+    That inflated Qt's sample by 69% and biased its lag distribution short.
+    """
+    return (str(row["project"]), str(row["change_id"]), str(row["created"]))
+
+
+def example_bearing(org: str) -> set[tuple[str, str, str]]:
+    """Changes the corpus actually keeps: those with a comment anchored to a code hunk."""
+    kept: set[tuple[str, str, str]] = set()
     for path in sorted(Path(EXAMPLES.format(org=org)).glob("*.jsonl")):
         with path.open() as handle:
             for line in handle:
-                kept.add(json.loads(line)["change_id"])
+                kept.add(change_key(json.loads(line)))
     return kept
 
 
@@ -79,7 +101,7 @@ def observations(
                 if row["id"] in seen:
                     continue
                 seen.add(row["id"])
-                if only is not None and row["change_id"] not in only:
+                if only is not None and change_key(row) not in only:
                     continue
                 created = month_index(row["created"])
                 out.append(
@@ -118,11 +140,14 @@ def window_capture(cdf: dict[int, float], first: str, last: str, collected_throu
     end = month_index(f"{collected_through}-01")
     months = []
     lo, hi = month_index(f"{first}-01"), month_index(f"{last}-01")
+    ceiling = max(cdf.values())
     for m in range(lo, hi + 1):
         horizon = end - m
-        keep = cdf.get(horizon, 1.0) if horizon >= 0 else 0.0
-        if horizon > max(cdf):
-            keep = 1.0
+        # Carry the CDF's own supremum past its support rather than a hardcoded 1.0. On an
+        # untailed fit these agree; on a `with_tail` fit the hardcoded value reinstated
+        # exactly the tail mass that was removed, and made capture jump back up above the
+        # support -- understating the sensitivity row that exists to be a lower bound.
+        keep = min(ceiling, cdf.get(horizon, ceiling)) if horizon >= 0 else 0.0
         months.append(
             {"month": f"{m // 12}-{m % 12 + 1:02d}", "horizon": horizon, "captured": keep}
         )
@@ -152,21 +177,34 @@ def with_tail(cdf: dict[int, float], tail_mass: float) -> dict[int, float]:
 
 
 def main() -> None:
-    last_collected = month_index(f"{LAST_COLLECTED}-01")
     report: dict[str, dict] = {}
 
     for org in ORGS:
-        every = observations(org, last_collected)
-        obs = observations(org, last_collected, only=example_bearing(org))
+        collected_through = last_collected(org)
+        end = month_index(f"{collected_through}-01")
+        every = observations(org, end)
+        obs = observations(org, end, only=example_bearing(org))
         cdf = lynden_bell(obs)
         every_cdf = lynden_bell(every)
         empirical = longest_horizon_cohort(obs)
         drift = max(abs(cdf.get(t, 1.0) - empirical[t]) for t in empirical)
         counts = Counter(o.lag for o in obs)
+        # The reference cohort is small once restricted, so the gap is compared against a
+        # binomial two-standard-error band rather than eyeballed. It is also not fully
+        # independent: where the largest lag equals the largest horizon, the estimator's top
+        # step is algebraically the cohort's own empirical CDF, so the two must agree there.
+        reference = max(1, sum(1 for o in obs if o.horizon == max(o2.horizon for o2 in obs)))
+        band = 2.0 * (0.25 / reference) ** 0.5
         report[org] = {
+            "collected_through": collected_through,
             "changes_merged": len(every),
             "changes_example_bearing": len(obs),
-            "estimator_check": {"max_gap_vs_untruncated_cohort": round(drift, 5)},
+            "estimator_check": {
+                "max_gap_vs_untruncated_cohort": round(drift, 5),
+                "two_se_band": round(band, 5),
+                "within_band": bool(drift <= band),
+                "reference_cohort": reference,
+            },
             "lag_cdf": {str(t): round(cdf[t], 5) for t in sorted(cdf)},
             "lag_cdf_all_merged": {str(t): round(every_cdf[t], 5) for t in sorted(every_cdf)},
             "lag_counts": {str(t): counts[t] for t in sorted(counts)},
@@ -174,7 +212,11 @@ def main() -> None:
         }
         share = 100 * len(obs) / len(every)
         print(f"\n=== {org}: {len(obs)} example-bearing of {len(every)} merged ({share:.1f}%) ===")
-        print(f"Lynden-Bell against the untruncated cohort, max gap {drift:.4f}")
+        verdict = "within" if drift <= band else "OUTSIDE"
+        print(
+            f"collected through {collected_through}; Lynden-Bell against the untruncated "
+            f"cohort (n={reference}), max gap {drift:.4f}, {verdict} the 2-SE band {band:.4f}"
+        )
         print("lag  P(lag <= t)   all merged   observed")
         for t in sorted(cdf):
             if t <= 6 or t == max(cdf):
@@ -182,7 +224,7 @@ def main() -> None:
 
         for name in ("pilot", "train", "dev"):
             first, last = WINDOWS[name]
-            w = window_capture(cdf, first, last, LAST_COLLECTED)
+            w = window_capture(cdf, first, last, collected_through)
             report[org]["windows"][name] = w
             kept, lost = 100 * w["mean_captured"], 100 * w["mean_missing"]
             print(f"{name:6s} captured {kept:.1f}%  missing {lost:.1f}%")
@@ -201,7 +243,7 @@ def main() -> None:
         print("if mass sits beyond the twelve months any cohort could observe:")
         for tail in (0.005, 0.01, 0.02):
             shifted = with_tail(cdf, tail)
-            dev = window_capture(shifted, *WINDOWS["dev"], LAST_COLLECTED)
+            dev = window_capture(shifted, *WINDOWS["dev"], collected_through)
             test = window_capture(shifted, *WINDOWS["test"], "2027-02")
             report[org]["tail_sensitivity"][str(tail)] = {
                 "dev_missing": dev["mean_missing"],

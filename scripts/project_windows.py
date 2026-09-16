@@ -12,26 +12,32 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from censoring import (  # noqa: E402
-    LAST_COLLECTED,
     WINDOWS,
     example_bearing,
+    last_collected,
     lynden_bell,
     month_index,
     observations,
     window_capture,
 )
 
+# How far the dev-window prediction may miss before the capture model is not usable for
+# projecting the sealed window. The check exists to be able to fail; printing the miss and
+# projecting anyway is what it was doing.
+DEV_TOLERANCE = 0.15
+
 ASSUMED = {"openstack": 880, "qt": 2400}
 
 for org in ("openstack", "qt"):
     report_path = Path(f"datasets/results/window-report-{org}.json")
     report = json.loads(report_path.read_text())[org]["windows"]
+    collected_through = last_collected(org)
     cdf = lynden_bell(
-        observations(org, month_index(f"{LAST_COLLECTED}-01"), only=example_bearing(org))
+        observations(org, month_index(f"{collected_through}-01"), only=example_bearing(org))
     )
 
-    train = window_capture(cdf, *WINDOWS["train"], LAST_COLLECTED)
-    dev = window_capture(cdf, *WINDOWS["dev"], LAST_COLLECTED)
+    train = window_capture(cdf, *WINDOWS["train"], collected_through)
+    dev = window_capture(cdf, *WINDOWS["dev"], collected_through)
     test = window_capture(cdf, *WINDOWS["test"], "2027-02")
 
     train_months = len(train["months"])
@@ -48,11 +54,21 @@ for org in ("openstack", "qt"):
     dev_months = len(dev["months"])
     predicted = true_rate * dev_months * dev["mean_captured"]
     actual = report["dev"]["changes"]
+    miss = abs(predicted - actual) / actual
+    verdict = "within" if miss <= DEV_TOLERANCE else "OUTSIDE"
     print(
         f"dev predicted {predicted:.0f} changes, actual {actual} "
-        f"({100 * (predicted - actual) / actual:+.1f}%)"
+        f"({100 * (predicted - actual) / actual:+.1f}%, {verdict} "
+        f"the {100 * DEV_TOLERANCE:.0f}% tolerance)"
     )
 
+    if miss > DEV_TOLERANCE:
+        print(
+            "  refusing to project the sealed window: the capture model does not reproduce "
+            "the one window held out from it, so a projection from it means nothing.\n"
+            "  (the check also assumes a constant arrival rate; it cannot say which failed)"
+        )
+        continue
     test_months = len(test["months"])
     projected = true_rate * test_months * test["mean_captured"]
     print(

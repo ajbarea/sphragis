@@ -26,12 +26,18 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [ ] **A real frozen corpus.** OpenStack frozen and verified: 5,498 examples across
   pilot 606 / train 4,327 / dev 565, content-hashed per window with the drop profile and
   the SHA that produced it. Qt waits on its missing 2025-10 month.
-- [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the 9,000 changes the
-  corpus keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev
-  window abutting the collection boundary (37.0% of OpenStack's example-bearing cohort
-  missing against 17.9% of Qt's, a 19.14 point differential), not creation assignment. The
-  test window is fetched after in-principle acceptance, five months after it closes, where
-  the differential is 0.74 points.
+- [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the changes the corpus
+  keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev window
+  abutting the collection boundary (39.1% of OpenStack's example-bearing cohort missing
+  against 70.4% of Qt's, whose window is also one month of two, a 31.26 point differential),
+  not creation assignment. The test window is fetched after in-principle acceptance, five
+  months after it closes, where the differential is 0.54 points.
+- [ ] **A cohort-aware capture model.** Lynden-Bell assumes the lag distribution is stationary
+  across creation cohorts and it is not: OpenStack's P(lag<=1) rises from 0.667 to 0.905 over
+  the corpus, so the pooled fit understates capture for exactly the recent cohorts the dev and
+  test windows are made of. OpenStack's estimator check fails its two-standard-error band
+  (0.086 against 0.071) where Qt's passes (0.017 against 0.050). OpenStack's figure is an
+  upper bound on its own loss until this is fitted per cohort.
 - [ ] Register the horizon that protection currently gets by accident: **the test window is
   fetched no earlier than three months after its final month.**
 - [ ] State the dev window's censoring wherever dev numbers appear; they are pre-registration
@@ -118,10 +124,11 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   current estimates, a rule Qt cannot satisfy even if the effect is real in both. Accept the
   conservatism and say so, or register something else; either way before the seal opens.
 - [x] Replace the estimated test-window sizes: projected from the train window through the
-  capture model (`scripts/project_windows.py`), OpenStack ~1,804 changes against the 880
-  assumed and Qt ~3,197 against 2,400, so the registered MDEs are conservative. The model
-  predicts OpenStack's dev window to within 2.2% without having seen it; Qt's check waits on
-  its missing month. The window itself stays sealed.
+  capture model (`scripts/project_windows.py`), OpenStack ~1,809 changes against the 880
+  assumed and Qt ~3,281 against 2,400, so the registered MDEs are conservative. The held-out
+  check passes for both without having seen either dev window, OpenStack at -5.3% and Qt at
+  +11.6%, and the script now refuses to project when it misses by more than 15%. The window
+  itself stays sealed.
 - [ ] Register equal-size training, the estimand, and strictly-above-zero at the pass rule's
   boundary. The boundary is not hypothetical: on the unequalized pilot Qt's pooled lower
   bound is exactly `0.0`, so a rule written `>=` would have read that run as supporting the
