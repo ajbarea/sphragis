@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import random
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from statistics import fmean
+
+Estimator = Callable[[Sequence["Cluster"]], float]
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,34 @@ def paired_difference(clusters: Sequence[Cluster]) -> float:
     if not treatment or not control:
         return 0.0
     return fmean(treatment) - fmean(control)
+
+
+def change_averaged_difference(clusters: Sequence[Cluster]) -> float:
+    """Each change's own difference, averaged over changes: every change counts once.
+
+    The other estimand. `paired_difference` pools examples, so a change carrying forty
+    hunks weighs forty times one carrying a single hunk, while the bootstrap resamples
+    whole changes and so treats both as one draw. The statistic and its resampling unit
+    disagree, which is a coherence problem rather than a matter of taste.
+
+    Neither is obviously right. RQ1 is a claim about refinements, and a refinement is an
+    example; but a large change is not forty times more interesting than a small one, and
+    the measured gap between the two estimands reached 118% of a 0.08 effect at nineteen
+    changes. Which one binds the gate is a Stage 1 registration, so both are computed and
+    the report names the one it registered.
+    """
+    per_change = [
+        fmean(cluster.treatment) - fmean(cluster.control)
+        for cluster in clusters
+        if cluster.treatment and cluster.control
+    ]
+    return fmean(per_change) if per_change else 0.0
+
+
+ESTIMATORS: Mapping[str, Estimator] = {
+    "pooled": paired_difference,
+    "change_averaged": change_averaged_difference,
+}
 
 
 # Measured false-positive rate of this function under a true null (both arms at the same
@@ -57,8 +87,13 @@ def cluster_bootstrap(
     resamples: int = 10_000,
     confidence: float = 0.95,
     min_clusters: int = MIN_CLUSTERS,
+    estimator: Estimator = paired_difference,
 ) -> dict[str, float]:
-    """Percentile interval for the paired difference, resampling whole changes."""
+    """Percentile interval for the paired difference, resampling whole changes.
+
+    `estimator` defaults to the pooled difference, so the registered behaviour does not
+    move when the other estimand is computed beside it.
+    """
     if len(clusters) < min_clusters:
         raise ValueError(
             f"cluster_bootstrap needs at least {min_clusters} clusters, got {len(clusters)}: "
@@ -68,12 +103,12 @@ def cluster_bootstrap(
     rng = random.Random(seed)
     n = len(clusters)
     draws = sorted(
-        paired_difference([clusters[rng.randrange(n)] for _ in range(n)]) for _ in range(resamples)
+        estimator([clusters[rng.randrange(n)] for _ in range(n)]) for _ in range(resamples)
     )
     low_rank, high_rank = percentile_ranks(resamples, confidence)
     low, high = draws[low_rank], draws[high_rank]
     return {
-        "estimate": paired_difference(clusters),
+        "estimate": estimator(clusters),
         "low": low,
         "high": high,
         "clusters": float(n),

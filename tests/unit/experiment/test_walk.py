@@ -10,7 +10,12 @@ from typing import Any
 
 import pytest
 
-from sphragis.experiment.walk import gate, matched_vs_mismatched, walk
+from sphragis.experiment.walk import (
+    gate,
+    gate_under_each_estimand,
+    matched_vs_mismatched,
+    walk,
+)
 
 ORGS = ("alpha", "beta")
 SEEDS = (1, 2, 3)
@@ -202,3 +207,26 @@ def test_walk_never_holds_two_generators_at_once() -> None:
     )
     assert len(results) == 14
     assert len(alive) == 7
+
+
+def test_both_estimands_are_computed_and_neither_is_named_primary() -> None:
+    """The choice is a Stage 1 registration, so the run must not quietly make it."""
+    results = walk(
+        orgs=ORGS, seeds=SEEDS, windows=WINDOWS, trainer=FakeTrainer(), generator_for=_factory([])
+    )
+    outcome = gate_under_each_estimand(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)
+    assert set(outcome["by_estimand"]) == {"pooled", "change_averaged"}
+    assert outcome["verdicts"] == {"pooled": "pass", "change_averaged": "pass"}
+    assert outcome["agree"] is True
+    assert "registered" not in outcome
+    assert "primary" not in outcome
+
+
+def test_the_registered_path_still_reads_the_pooled_estimand() -> None:
+    results = walk(
+        orgs=ORGS, seeds=SEEDS, windows=WINDOWS, trainer=FakeTrainer(), generator_for=_factory([])
+    )
+    outcome = gate_under_each_estimand(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)
+    assert outcome["by_estimand"]["pooled"] == gate(
+        results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0
+    )

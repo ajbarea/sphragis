@@ -17,7 +17,13 @@ from typing import Any
 
 from sphragis.experiment.grid import EvalRun, eval_runs, run_id, training_runs
 from sphragis.experiment.runner import Generator, Trainer, evaluate, to_clusters
-from sphragis.measure.stats import cluster_bootstrap, gate_verdict
+from sphragis.measure.stats import (
+    ESTIMATORS,
+    Estimator,
+    cluster_bootstrap,
+    gate_verdict,
+    paired_difference,
+)
 
 
 def walk(
@@ -108,6 +114,7 @@ def matched_vs_mismatched(
     seed: int,
     metric: str = "exact_match",
     bootstrap_seed: int,
+    estimator: Estimator = paired_difference,
 ) -> dict[str, float]:
     """The RQ1 contrast on one window at one seed.
 
@@ -118,7 +125,7 @@ def matched_vs_mismatched(
     matched = results[run_id(EvalRun(f"adapter:{eval_org}", eval_org, seed))]
     mismatched = results[run_id(EvalRun(f"adapter:{other_org}", eval_org, seed))]
     clusters = to_clusters(matched, mismatched, metric=metric)
-    return cluster_bootstrap(clusters, seed=bootstrap_seed)
+    return cluster_bootstrap(clusters, seed=bootstrap_seed, estimator=estimator)
 
 
 def gate(
@@ -128,6 +135,7 @@ def gate(
     seeds: Sequence[int],
     metric: str = "exact_match",
     bootstrap_seed: int,
+    estimator: Estimator = paired_difference,
 ) -> dict[str, Any]:
     """The pre-registered RQ1 verdict, with the per-seed intervals it was read from.
 
@@ -153,6 +161,7 @@ def gate(
                 seed=seed,
                 metric=metric,
                 bootstrap_seed=bootstrap_seed,
+                estimator=estimator,
             )
             for seed in seeds
         }
@@ -167,4 +176,39 @@ def gate(
         "verdict": gate_verdict(per_org),
         "binding": per_org,
         "per_seed": per_seed,
+    }
+
+
+def gate_under_each_estimand(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    orgs: Sequence[str],
+    seeds: Sequence[int],
+    metric: str = "exact_match",
+    bootstrap_seed: int,
+) -> dict[str, Any]:
+    """Every verdict the registration could bind to, computed together.
+
+    Which estimand binds the gate is a Stage 1 decision that has not been made. Computing
+    both here, in one pass, is what stops it from being made after the numbers are visible:
+    the run records the verdict under each, and `agree` says whether the choice mattered
+    on this data. It deliberately names no primary, so a report that quotes one of these
+    has to say which it registered.
+    """
+    by_estimand = {
+        name: gate(
+            results,
+            orgs=orgs,
+            seeds=seeds,
+            metric=metric,
+            bootstrap_seed=bootstrap_seed,
+            estimator=fn,
+        )
+        for name, fn in ESTIMATORS.items()
+    }
+    verdicts = {name: outcome["verdict"] for name, outcome in by_estimand.items()}
+    return {
+        "by_estimand": by_estimand,
+        "verdicts": verdicts,
+        "agree": len(set(verdicts.values())) == 1,
     }

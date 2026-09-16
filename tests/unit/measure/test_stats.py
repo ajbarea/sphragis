@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 
 from sphragis.measure.stats import (
+    ESTIMATORS,
     Cluster,
+    change_averaged_difference,
     cluster_bootstrap,
     excludes_zero,
     gate_verdict,
@@ -132,3 +134,58 @@ def test_gate_verdict_is_mixed_when_exactly_one_excludes_zero() -> None:
 def test_gate_verdict_rejects_a_single_organization() -> None:
     with pytest.raises(ValueError, match="two organizations"):
         gate_verdict({"openstack": {"low": 0.01, "high": 0.2}})
+
+
+def test_the_two_estimands_disagree_when_change_sizes_differ() -> None:
+    """One big change carrying the whole effect is the case that separates them."""
+    clusters = [
+        Cluster("big", tuple([1.0] * 20), tuple([0.0] * 20)),
+        *(Cluster(f"small{i}", (0.0,), (0.0,)) for i in range(9)),
+    ]
+    assert paired_difference(clusters) == pytest.approx(20 / 29)
+    assert change_averaged_difference(clusters) == pytest.approx(1 / 10)
+
+
+def test_the_two_estimands_agree_when_every_change_is_one_example() -> None:
+    clusters = [Cluster(f"I{i}", (1.0,), (0.0,)) for i in range(10)]
+    assert paired_difference(clusters) == pytest.approx(change_averaged_difference(clusters))
+
+
+def test_change_averaged_difference_ignores_a_cluster_with_no_examples() -> None:
+    clusters = [*_clusters(10, 1.0, 0.0), Cluster("empty", (), ())]
+    assert change_averaged_difference(clusters) == pytest.approx(1.0)
+
+
+def test_change_averaged_difference_is_zero_on_an_empty_sample() -> None:
+    assert change_averaged_difference([]) == 0.0
+
+
+def test_the_bootstrap_resamples_under_the_estimator_it_was_given() -> None:
+    """Both the point estimate and the interval have to move together, or the interval
+    would be built around a statistic nobody computed."""
+    clusters = [
+        Cluster("big", tuple([1.0] * 20), tuple([0.0] * 20)),
+        *(Cluster(f"small{i}", (0.0,), (0.0,)) for i in range(12)),
+    ]
+    pooled = cluster_bootstrap(clusters, seed=0, resamples=500)
+    averaged = cluster_bootstrap(
+        clusters, seed=0, resamples=500, estimator=change_averaged_difference
+    )
+    assert pooled["estimate"] != pytest.approx(averaged["estimate"])
+    assert averaged["low"] <= averaged["estimate"] <= averaged["high"]
+    assert averaged["high"] < pooled["estimate"]
+
+
+def test_cluster_bootstrap_defaults_to_the_pooled_estimand() -> None:
+    """The registered behaviour must not move because the other estimand now exists."""
+    clusters = _clusters(12, 1.0, 0.0)
+    assert cluster_bootstrap(clusters, seed=3, resamples=200) == cluster_bootstrap(
+        clusters, seed=3, resamples=200, estimator=paired_difference
+    )
+
+
+def test_estimators_registry_names_both_and_nothing_else() -> None:
+    assert dict(ESTIMATORS) == {
+        "pooled": paired_difference,
+        "change_averaged": change_averaged_difference,
+    }

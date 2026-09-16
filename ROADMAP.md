@@ -84,6 +84,8 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] **Review of the apparatus.** The gate reads direction; train and eval share one
   prompt format; the training budget is realized as declared and tested in CI; changes
   outside every window block the freeze; drop counts persist.
+- [x] Both estimands computed in one pass (`gate_under_each_estimand`), naming no primary, so
+  the choice cannot be made after the numbers are visible. `agree` records whether it mattered.
 - [ ] Decide the estimand (pooled against change-averaged) for the Stage 1 report.
 - [x] **RQ1 grid at pilot scale** (2026-09-15, job 143899): both organizations, base plus both
   adapters on both held-out sets, through `walk` and `gate`. Matched minus mismatched exact
