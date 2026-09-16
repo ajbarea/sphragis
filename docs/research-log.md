@@ -1102,18 +1102,14 @@ earlier than three months after its final month**, which holds the differential 
 
 **Three limitations, one of which is a live failure.**
 
-- **Quasi-independence is violated, and OpenStack's own check says so.** Lynden-Bell needs the
-  lag distribution independent of the horizon, which here means stationary across creation
-  cohorts. It is not: restricted to months where it is fully observable, OpenStack's P(lag<=1)
-  rises from 0.667 in 2024-10 to 0.905 in 2025-07, Qt's from 0.840 to 0.926. A pooled fit
-  therefore understates capture for exactly the recent cohorts the dev and test windows are
-  made of, so OpenStack's 39.1% is probably too high. The check added with the fix compares
-  the estimate against the one cohort old enough to count directly, inside a binomial two
-  standard error band: **Qt passes at 0.017 against a band of 0.050, OpenStack fails at 0.086
-  against 0.071**. Fixing the two input bugs dropped Qt's gap fourfold and moved it inside the
-  band; OpenStack's remaining gap is the cohort trend. A cohort-aware fit, or a fit restricted
-  to recent cohorts, is the work this needs, and until then OpenStack's figure is an upper
-  bound on its own loss.
+- **OpenStack's fit is rejected; quasi-independence is not the reason.** Superseded by the
+  entry below: the per-cohort rate comparison that first suggested a latency trend is biased
+  by the truncation it is meant to detect, and the conditional Kendall tau rejects
+  quasi-independence for neither organization. Calibrated against its own simulated null, the
+  goodness-of-fit statistic still rejects OpenStack at p = 0.017 and clears Qt at p = 0.580,
+  so OpenStack's fit is off for a reason that remains unidentified. A refit on recent cohorts
+  bounds the effect at about seven points on its dev figure, in the direction that makes the
+  window less censored, and leaves the test window's figure smaller still.
 - **That check is not fully independent.** Where the largest lag equals the largest horizon,
   the estimator's top step is algebraically the reference cohort's own empirical CDF, so the
   two must agree at the top regardless. It is a sanity check on the middle of the curve.
@@ -1277,6 +1273,64 @@ being right is worth more than any one of them.
 +0.011 [-0.0208, +0.0433]. Job 145084 reruns it on 462, which should narrow that interval by
 roughly a third without touching OpenStack's. Nothing about the earlier run was wrong; it was
 measured on a corpus that was missing a month, and said so.
+
+### The cohort-trend worry, tested properly (2026-09-16)
+
+`scripts/quasi_independence.py`, `datasets/results/quasi-independence.json`. Lynden-Bell needs
+the lag and its truncation limit to be quasi-independent, and the limit here is a
+deterministic function of creation month, so the assumption is that review latency is
+stationary over the eighteen months the corpus spans. The log recorded that it fails, citing
+OpenStack's P(lag<=1) rising from 0.667 in the oldest cohort to 0.905 in a recent one. That
+citation was wrong, and the conclusion drawn from it was too strong.
+
+**The obvious diagnostic is biased, and most of that slope is the truncation.** Each cohort's
+rate is conditional on its own horizon, so a cohort with three months to settle reports
+P(lag<=1 | lag<=3), not P(lag<=1). Simulating from a single stationary law with the real
+cohort sizes reproduces 0.753 rising to 0.904 on its own. The apparent trend is mostly an
+artifact of the very truncation the analysis exists to correct.
+
+| | conditional Kendall tau (Tsai 1990) | quasi-independence |
+|---|---|---|
+| OpenStack | +0.0173 [-0.0162, +0.0492] | not rejected |
+| Qt | -0.0018 [-0.0310, +0.0267] | not rejected |
+
+The tau is restricted to pairs whose order the truncation could not have hidden, which is
+what makes it survive the bias above. Neither organization rejects.
+
+**The goodness-of-fit check was also the wrong yardstick, and its verdict survives anyway for
+one organization.** `censoring.py` compares the fit against the longest-horizon cohort and had
+been calling a gap outside a binomial two-standard-error band a failure. The statistic is a
+maximum over thirteen correlated lags, whose null is much wider than any single comparison, so
+that band was too tight by construction. Calibrated against its own simulated null instead:
+
+| | max gap | null median | null 95th | p | verdict |
+|---|---|---|---|---|---|
+| OpenStack | 0.0857 | 0.0359 | 0.0670 | **0.017** | rejected |
+| Qt | 0.0192 | 0.0217 | 0.0443 | 0.580 | not rejected |
+
+So OpenStack's fit really is off, at p = 0.017 rather than the clear failure the crude band
+implied, and Qt's is squarely consistent. Quasi-independence is not what is wrong with
+OpenStack: the tau does not reject it, and whatever the misfit is, it is not a latency trend
+that a cohort covariate would absorb.
+
+**How much it could matter, bounded by refitting.** Restricting the fit to the six most recent
+cohorts trades the identified tail for cohorts that resemble the windows being estimated:
+
+| | dev missing, pooled | dev missing, recent cohorts | test at acceptance |
+|---|---|---|---|
+| OpenStack | 39.1% | 32.2% | 1.1% -> 0.0% |
+| Qt | 28.8% | 26.3% | 0.7% -> 0.0% |
+
+The dev figures could be about seven points lower for OpenStack and two for Qt, in the
+direction that makes the dev window less censored than reported. The test window's figure only
+shrinks. So every way of fitting this points the same way on the decision: the confirmatory
+contrast is nearly uncensored, and the dev window is not. The registered figure stays the
+pooled one, which is the more conservative of the two.
+
+**Corrected in the record.** The earlier entry's claim that quasi-independence "is violated,
+and OpenStack's own check says so" rested on a biased diagnostic and a miscalibrated band. The
+misfit is real but milder, the mechanism is unidentified, and the cohort-aware refit is a
+bound rather than a fix.
 
 ## Open bugs & findings
 

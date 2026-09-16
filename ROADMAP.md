@@ -33,12 +33,16 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   against 28.8% of Qt's, a 10.33 point differential), not creation assignment. The test
   window is fetched after in-principle acceptance, five months after it closes, where the
   differential is 0.36 points. The decision has survived three revisions of these figures.
-- [ ] **A cohort-aware capture model.** Lynden-Bell assumes the lag distribution is stationary
-  across creation cohorts and it is not: OpenStack's P(lag<=1) rises from 0.667 to 0.905 over
-  the corpus, so the pooled fit understates capture for exactly the recent cohorts the dev and
-  test windows are made of. OpenStack's estimator check fails its two-standard-error band
-  (0.086 against 0.071) where Qt's passes (0.017 against 0.050). OpenStack's figure is an
-  upper bound on its own loss until this is fitted per cohort.
+- [x] **Test the stationarity assumption rather than assert it** (`scripts/quasi_independence.py`).
+  The per-cohort rate comparison is biased by the truncation it is meant to detect: a
+  stationary law reproduces most of the apparent trend. Tsai's conditional Kendall tau rejects
+  quasi-independence for neither organization (+0.017 and -0.002, both intervals covering
+  zero).
+- [ ] **Explain OpenStack's misfit.** Calibrated against its own simulated null, the fit's max
+  gap rejects OpenStack at p = 0.017 and clears Qt at p = 0.580. It is not a latency trend, so
+  the mechanism is unidentified. A recent-cohort refit bounds the effect at about seven points
+  on the dev figure, toward less censoring, and the registered figure stays the conservative
+  pooled one.
 - [ ] Register the horizon that protection currently gets by accident: **the test window is
   fetched no earlier than three months after its final month.**
 - [ ] State the dev window's censoring wherever dev numbers appear; they are pre-registration

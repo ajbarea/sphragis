@@ -189,21 +189,20 @@ def main() -> None:
         empirical = longest_horizon_cohort(obs)
         drift = max(abs(cdf.get(t, 1.0) - empirical[t]) for t in empirical)
         counts = Counter(o.lag for o in obs)
-        # The reference cohort is small once restricted, so the gap is compared against a
-        # binomial two-standard-error band rather than eyeballed. It is also not fully
-        # independent: where the largest lag equals the largest horizon, the estimator's top
-        # step is algebraically the cohort's own empirical CDF, so the two must agree there.
+        # The gap against the longest-horizon cohort, reported without a verdict. A binomial
+        # two-standard-error band is the wrong yardstick for it: the statistic is a MAXIMUM
+        # over every lag, which is larger under the null than any single comparison, and the
+        # band called OpenStack a clear failure on that basis. `quasi_independence.py`
+        # calibrates it against its own null by simulation instead.
         reference = max(1, sum(1 for o in obs if o.horizon == max(o2.horizon for o2 in obs)))
-        band = 2.0 * (0.25 / reference) ** 0.5
         report[org] = {
             "collected_through": collected_through,
             "changes_merged": len(every),
             "changes_example_bearing": len(obs),
             "estimator_check": {
                 "max_gap_vs_untruncated_cohort": round(drift, 5),
-                "two_se_band": round(band, 5),
-                "within_band": bool(drift <= band),
                 "reference_cohort": reference,
+                "calibrated_by": "scripts/quasi_independence.py",
             },
             "lag_cdf": {str(t): round(cdf[t], 5) for t in sorted(cdf)},
             "lag_cdf_all_merged": {str(t): round(every_cdf[t], 5) for t in sorted(every_cdf)},
@@ -212,10 +211,10 @@ def main() -> None:
         }
         share = 100 * len(obs) / len(every)
         print(f"\n=== {org}: {len(obs)} example-bearing of {len(every)} merged ({share:.1f}%) ===")
-        verdict = "within" if drift <= band else "OUTSIDE"
         print(
             f"collected through {collected_through}; Lynden-Bell against the untruncated "
-            f"cohort (n={reference}), max gap {drift:.4f}, {verdict} the 2-SE band {band:.4f}"
+            f"cohort (n={reference}), max gap {drift:.4f} "
+            f"(calibrated in scripts/quasi_independence.py)"
         )
         print("lag  P(lag <= t)   all merged   observed")
         for t in sorted(cdf):
