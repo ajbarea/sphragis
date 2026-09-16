@@ -24,11 +24,12 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   counted by reason, resumable), `fetchers` (scrubbing at ingestion), `pipeline` (dedup,
   split, freeze), all wired behind `python -m sphragis.corpus`.
 - [ ] **A real frozen corpus.** Both organizations, the full window range, verified.
-- [x] **Decide how windows are assigned.** Measured by Lynden-Bell on 78,086 changes
-  (`scripts/censoring.py`): creation windows stand. The confound is the dev window abutting
-  the collection boundary (21.6% of OpenStack's cohort missing against 8.7% of Qt's, a 12.95
-  point differential), not creation assignment. The test window is fetched after in-principle
-  acceptance, five months after it closes, where the differential is 0.63 points.
+- [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the 9,000 changes the
+  corpus keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev
+  window abutting the collection boundary (37.0% of OpenStack's example-bearing cohort
+  missing against 17.9% of Qt's, a 19.14 point differential), not creation assignment. The
+  test window is fetched after in-principle acceptance, five months after it closes, where
+  the differential is 0.74 points.
 - [ ] Register the horizon that protection currently gets by accident: **the test window is
   fetched no earlier than three months after its final month.**
 - [ ] State the dev window's censoring wherever dev numbers appear; they are pre-registration

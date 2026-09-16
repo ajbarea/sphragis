@@ -27,6 +27,7 @@ from typing import NamedTuple
 
 RESULTS = Path("datasets/results/censoring.json")
 RAW = "datasets/gerrit/{org}/raw"
+EXAMPLES = "datasets/gerrit/{org}/examples"
 ORGS = ("openstack", "qt")
 
 # Fixed in the Stage 1 report; mirrored from sphragis.corpus.cli.WINDOWS.
@@ -49,7 +50,26 @@ def month_index(stamp: str) -> int:
     return d.year * 12 + d.month - 1
 
 
-def observations(org: str, last_collected: int) -> list[Observation]:
+def example_bearing(org: str) -> set[str]:
+    """Change ids the corpus actually keeps: those with a comment anchored to a code hunk."""
+    kept: set[str] = set()
+    for path in sorted(Path(EXAMPLES.format(org=org)).glob("*.jsonl")):
+        with path.open() as handle:
+            for line in handle:
+                kept.add(json.loads(line)["change_id"])
+    return kept
+
+
+def observations(
+    org: str, last_collected: int, *, only: set[str] | None = None
+) -> list[Observation]:
+    """(lag, horizon) per change, optionally restricted to a set of change ids.
+
+    The restriction is the point rather than a convenience. About 10% of merged changes
+    carry a reviewer comment anchored to a code hunk, and only those become examples. They
+    are the changes someone argued about, and they settle much more slowly: fitting the lag
+    model to every merged change and applying it to the corpus understates the loss.
+    """
     seen: set[str] = set()
     out: list[Observation] = []
     for path in sorted(Path(RAW.format(org=org)).glob("*.ndjson.gz")):
@@ -59,6 +79,8 @@ def observations(org: str, last_collected: int) -> list[Observation]:
                 if row["id"] in seen:
                     continue
                 seen.add(row["id"])
+                if only is not None and row["change_id"] not in only:
+                    continue
                 created = month_index(row["created"])
                 out.append(
                     Observation(month_index(row["updated"]) - created, last_collected - created)
@@ -134,24 +156,29 @@ def main() -> None:
     report: dict[str, dict] = {}
 
     for org in ORGS:
-        obs = observations(org, last_collected)
+        every = observations(org, last_collected)
+        obs = observations(org, last_collected, only=example_bearing(org))
         cdf = lynden_bell(obs)
+        every_cdf = lynden_bell(every)
         empirical = longest_horizon_cohort(obs)
-        drift = max(abs(cdf[t] - empirical[t]) for t in empirical)
-        print(f"\n--- {org}: Lynden-Bell against the untruncated cohort, max gap {drift:.4f} ---")
+        drift = max(abs(cdf.get(t, 1.0) - empirical[t]) for t in empirical)
         counts = Counter(o.lag for o in obs)
         report[org] = {
-            "changes": len(obs),
+            "changes_merged": len(every),
+            "changes_example_bearing": len(obs),
             "estimator_check": {"max_gap_vs_untruncated_cohort": round(drift, 5)},
             "lag_cdf": {str(t): round(cdf[t], 5) for t in sorted(cdf)},
+            "lag_cdf_all_merged": {str(t): round(every_cdf[t], 5) for t in sorted(every_cdf)},
             "lag_counts": {str(t): counts[t] for t in sorted(counts)},
             "windows": {},
         }
-        print(f"\n=== {org}: {len(obs)} changes ===")
-        print("lag  P(lag <= t)   observed")
+        share = 100 * len(obs) / len(every)
+        print(f"\n=== {org}: {len(obs)} example-bearing of {len(every)} merged ({share:.1f}%) ===")
+        print(f"Lynden-Bell against the untruncated cohort, max gap {drift:.4f}")
+        print("lag  P(lag <= t)   all merged   observed")
         for t in sorted(cdf):
             if t <= 6 or t == max(cdf):
-                print(f"{t:3d}  {cdf[t]:10.4f}   {counts[t]:7d}")
+                print(f"{t:3d}  {cdf[t]:10.4f}   {every_cdf.get(t, 1.0):10.4f}   {counts[t]:7d}")
 
         for name in ("pilot", "train", "dev"):
             first, last = WINDOWS[name]
