@@ -14,6 +14,7 @@ _ORCHESTRATION = (
     "grid.py",
     "holdout.py",
     "neutral.py",
+    "planted.py",
     "power.py",
     "preflight.py",
     "runner.py",
