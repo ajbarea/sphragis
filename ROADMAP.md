@@ -76,8 +76,14 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] `slurm.py` — sbatch generation, verified against the live cluster. **One allocation
   walks the whole grid**: per-cell jobs would be twenty independent queue waits, and a
   freshly submitted job was estimated thirteen days out at fairshare 0.006.
-- [ ] Wire the grid walk to the frozen windows (needs the corpus).
-- [ ] Outcome-neutral tests wired to real model outputs.
+- [x] **RQ1 on the study's own windows** (2026-09-15, job 144345, 2:19:50). Train window to
+  dev window, equalized, one seed. Both contrasts positive for the first time: OpenStack
+  +0.021 [-0.003, +0.047] over 235 changes, Qt +0.011 [-0.021, +0.043] over 175. Gate fail
+  under both estimands; normalized EM agrees. Adaptation is sixfold (0.048 to 0.306) and the
+  organization-specific part of it is 2 points: an OpenStack adapter scores 0.308 on Qt's
+  refinements against Qt's own 0.319. Dev windows, censored 37.0% and 17.9%, not the answer.
+- [x] Outcome-neutral tests wired to real model outputs: all seven pass on job 144345,
+  reading live losses and adapter norms rather than being computed after the fact.
 - [x] Grid `--time` sized from measured throughput: 38-43 tok/s steady on a GH200.
 - [x] **Pilot floor check passed** (rerun 2026-09-15, after review removed three confounds).
   Exact match 0.074 base, 0.407 adapted, +0.333 [+0.133, +0.565] over 18 held-out changes;

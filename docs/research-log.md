@@ -1196,6 +1196,65 @@ conservative rather than optimistic: OpenStack binds, and it will have roughly t
 changes the estimate assumed. The Qt figure is held provisional until its dev window closes
 and the held-out check can actually be run.
 
+### RQ1 on the study's own windows (2026-09-15, job 144345)
+
+The first run using the train and dev windows rather than a random holdout from one month.
+Both organizations, base plus both adapters on both dev windows, equalized training, one
+seed. `datasets/results/rq1-windows.json`. Completed in 2:19:50 against a 4:30 request; all
+seven outcome-neutral checks pass and the apparatus holds.
+
+| arm | exact match | normalized EM | edit similarity |
+|---|---|---|---|
+| base, OpenStack dev | 0.048 | 0.209 | 0.687 |
+| base, Qt dev | 0.033 | 0.187 | 0.717 |
+| OpenStack adapter on OpenStack | 0.306 | 0.358 | 0.815 |
+| Qt adapter on OpenStack | 0.285 | 0.335 | 0.813 |
+| Qt adapter on Qt | 0.319 | 0.343 | 0.824 |
+| OpenStack adapter on Qt | 0.308 | 0.332 | 0.819 |
+
+| contrast, matched minus mismatched | pooled | change-averaged |
+|---|---|---|
+| OpenStack, 235 changes | +0.0212 [-0.0029, +0.0466] | +0.0338 [-0.0062, +0.0744] |
+| Qt, 175 changes | +0.0110 [-0.0208, +0.0433] | +0.0094 [-0.0341, +0.0534] |
+
+**Gate: fail, under both estimands.** Neither lower bound clears zero, and OpenStack's misses
+by 0.003. Normalized exact match agrees throughout (+0.0230 and +0.0110 pooled), so this is
+not an artifact of the strict metric.
+
+**The first thing that is new.** Both contrasts are positive. The two earlier pilots had
+opposite signs, and the signs swapped when training sets were equalized, which left
+run-to-run variation as large as the effect. Here both organizations lean the way RQ1
+predicts, on windows chosen by the design rather than by a random split.
+
+**The second thing, which matters more.** Adaptation is enormous and organization-specificity
+is tiny. Training moves exact match from 0.048 to 0.306 on OpenStack, roughly a sixfold gain
+of 26 points. The organization-specific part of that is 2 points. An adapter trained on
+OpenStack scores 0.308 on Qt's held-out refinements, against 0.319 for Qt's own adapter, and
+actually edges its own organization's 0.306. Whatever the adapters learn is almost entirely
+the task -- the form of a refinement, the conventions of a diff-shaped answer -- and almost
+none of it is the organization. If a fingerprint exists it is about one thirteenth the size
+of the adaptation effect it rides on.
+
+**What this does to the power argument.** The registered MDE was about +0.030 exact match for
+OpenStack at 880 changes. The test window now projects to roughly 1,800 changes, where the
+detectable effect scales to about +0.021 if it goes as the square root of sample size. The
+observed effect is +0.021. RQ1 is therefore powered to detect an effect of exactly the size
+being observed, with no margin, which is the single most important sentence for section 5 of
+the Stage 1 report. It should be settled by running the power analysis on these variances
+rather than on the pilots', and on the square-root assumption rather than by it.
+
+**What this is not.** One seed, not the registered three. The dev windows, not the sealed test
+window. And both dev windows are censored, OpenStack missing an estimated 37.0% of its
+example-bearing cohort and Qt 17.9%, unequally and against the slow reviews; Qt's window is
+also one month of two because of the ban, which is why it carries 175 changes against
+OpenStack's 235 and has the wider interval despite Qt being the larger corpus. This is the
+best available pre-registration estimate of RQ1. It is not the RQ1 answer.
+
+**Training, for the record.** Both adapters ran 542 steps on equalized sets, 4,321 and 4,323
+items after refusals, reaching final-epoch mean losses of 0.288 and 0.221 from first losses of
+0.733 and 1.060. Adapter weight norms 18.41 and 18.26, close enough that neither adapter can
+be said to have moved further than the other.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
