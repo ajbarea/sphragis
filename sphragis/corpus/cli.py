@@ -204,6 +204,9 @@ def _stage_fetch(args: argparse.Namespace) -> int:
         f"kept {len(kept)}, dropped {dropped} created before {args.cutoff}"
     )
     print(f"wrote {path}")
+    derived = _examples_dir(args) / f"{args.month}.jsonl"
+    if derived.is_file():
+        print(f"note: {derived} was built from the replaced snapshot; build will redo it")
     return 0
 
 
@@ -259,7 +262,16 @@ def _stage_build(args: argparse.Namespace) -> int:
     for snapshot in snapshots:
         month = snapshot.name.removesuffix(".ndjson.gz")
         target = out_dir / f"{month}.jsonl"
-        if target.exists() and not args.overwrite:
+        # A month refetched after it was built leaves examples derived from a snapshot that
+        # no longer exists, and resume cannot tell those from finished work: it skips them,
+        # and the corpus quietly mixes months built under different fetch parameters. Seen
+        # on the control window, where 2024-01 had been collected as its own window and was
+        # being recollected under a wider cutoff. Rebuilding costs network time; the
+        # alternative costs the corpus its meaning.
+        stale = target.exists() and snapshot.stat().st_mtime > target.stat().st_mtime
+        if stale:
+            print(f"{args.org} {month}: snapshot is newer than its examples, rebuilding")
+        if target.exists() and not args.overwrite and not stale:
             # Resume. A month costs minutes of network time, and Qt needs roughly 400
             # requests per month, so discarding completed work on interruption is not
             # affordable.

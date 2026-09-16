@@ -549,3 +549,66 @@ def test_a_seal_without_acceptance_stays_locked(
     (tmp_path / "openstack" / "seal.json").write_text(json.dumps(seal({"after": "2025-11-01"})))
     with pytest.raises(SystemExit, match="sealed test window"):
         _fetch(tmp_path, monkeypatch, "2025-11")
+
+
+def test_build_rebuilds_a_month_whose_snapshot_was_refetched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Resume must not mistake examples from a replaced snapshot for finished work.
+
+    Refetching a month under different fetch parameters leaves examples derived from a
+    snapshot that no longer exists. Skipping them mixes months built under different rules
+    into one corpus, which is what happened to the control window's 2024-01.
+    """
+    import os
+
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    built = examples / "2024-10.jsonl"
+    built.write_text('{"id": "from-the-old-snapshot"}\n')
+
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    snapshot = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
+    # The refetch: snapshot newer than the examples standing beside it.
+    old = built.stat().st_mtime
+    os.utime(snapshot, (old + 10, old + 10))
+
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert "rebuilding" in capsys.readouterr().out
+    assert built.read_text() == "", "the stale examples must not survive the rebuild"
+
+
+def test_build_still_resumes_when_the_snapshot_is_older_than_its_examples(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The ordinary case, which the staleness check must not turn into a rebuild."""
+    import os
+
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    snapshot = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
+    examples = tmp_path / "openstack" / "examples"
+    examples.mkdir(parents=True)
+    built = examples / "2024-10.jsonl"
+    built.write_text('{"id": "already-built"}\n')
+    when = snapshot.stat().st_mtime
+    os.utime(built, (when + 10, when + 10))
+
+    monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
+    monkeypatch.setattr(cli, "scrubbed_comment_fetcher", lambda *a, **k: lambda n: {})
+    monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda *a, **k: lambda *i: {})
+
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "skip, already built" in out
+    assert "rebuilding" not in out
+    assert built.read_text() == '{"id": "already-built"}\n'
