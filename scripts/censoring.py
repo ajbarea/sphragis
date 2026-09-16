@@ -26,18 +26,24 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, NamedTuple
 
+from sphragis.corpus.cli import WINDOWS as _CLI_WINDOWS
+
+
+def _month_before(bound: str) -> str:
+    """The last month a half-open window covers: "2026-11-01" -> "2026-10"."""
+    year, month = int(bound[:4]), int(bound[5:7])
+    year, month = (year - 1, 12) if month == 1 else (year, month - 1)
+    return f"{year:04d}-{month:02d}"
+
+
 RESULTS = Path("datasets/results/censoring.json")
 RAW = "datasets/gerrit/{org}/raw"
 EXAMPLES = "datasets/gerrit/{org}/examples"
 ORGS = ("openstack", "qt")
 
-# Fixed in the Stage 1 report; mirrored from sphragis.corpus.cli.WINDOWS.
-WINDOWS = {
-    "pilot": ("2024-10", "2024-10"),
-    "train": ("2024-11", "2025-08"),
-    "dev": ("2025-09", "2025-10"),
-    "test": ("2025-11", "2026-08"),
-}
+# Imported, not mirrored: these had been copied by hand, which is how a study parameter
+# comes to have two values. cli states half-open day bounds; the months here are inclusive.
+WINDOWS = {name: (start[:7], _month_before(end)) for name, (start, end) in _CLI_WINDOWS.items()}
 
 
 # Derived per organization from the months actually built, never shared: Qt's examples stop

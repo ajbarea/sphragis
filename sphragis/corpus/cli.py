@@ -213,12 +213,25 @@ def _stage_fetch(args: argparse.Namespace) -> int:
 
 # Window bounds are a study parameter, not a runtime flag: they are fixed in the Stage 1
 # report and changing them after the fact would move the confirmatory set.
+#
+# The test window runs twelve months rather than ten. The gate is conjunctive, so its power
+# is the probability BOTH organizations clear zero, and at ten months that is 0.757 with Qt
+# binding at 0.763. Twelve months takes the gate to 0.833 for 0.4 points of additional
+# differential censoring, still a twelfth of what the dev window carries. It is set now,
+# before any test data exists to be seen: 2026-10 closes before the Stage 1 submission on
+# 2026-11-20, and the window is still fetched only after in-principle acceptance.
 WINDOWS = {
     "pilot": ("2024-10-01", "2024-11-01"),
     "train": ("2024-11-01", "2025-09-01"),
     "dev": ("2025-09-01", "2025-11-01"),
-    "test": ("2025-11-01", "2026-09-01"),
+    "test": ("2025-11-01", "2026-11-01"),
 }
+
+# The test window is fetched no earlier than this many months after its final month, so that
+# the confirmatory contrast's censoring is a protocol guarantee rather than an accident of
+# when acceptance happened to land. 2026-10 plus three months is 2027-01; MSR 2027 notifies
+# on 2027-02-04.
+FETCH_HORIZON_MONTHS = 3
 
 
 def _examples_dir(args: argparse.Namespace) -> Path:
