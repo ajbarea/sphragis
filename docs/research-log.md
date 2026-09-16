@@ -1439,6 +1439,57 @@ reads how long review takes and finds the same thing. Two measurements sharing n
 agreeing that the project is where the variation lives, is a stronger argument for the
 granularity question than either alone.
 
+### The contrast is not blind (2026-09-16, job 145092, condition `marker-1`)
+
+`datasets/results/calibration-marker-1.json`. One organization's train window split into two
+halves that no change spans, a fixed annotation appended to every refinement in the second,
+and the identical matched-versus-mismatched contrast RQ1 uses.
+
+| arm | exact match |
+|---|---|
+| base on half b | 0.000 |
+| a's adapter on a | 0.310 |
+| a's adapter on b | 0.000 |
+| b's adapter on b | 0.316 |
+| b's adapter on a | 0.000 |
+
+| contrast | estimate |
+|---|---|
+| half a, 182 changes | **+0.3096 [+0.2488, +0.3761]** |
+| half b, 182 changes | **+0.3158 [+0.2652, +0.3672]** |
+
+**The question this was built to answer is answered.** Every null this study has produced was
+ambiguous between "there is no organizational fingerprint" and "this contrast cannot see
+fingerprints of any size". It can see them. Planted at full strength the contrast returns a
+third of an exact-match point per example with intervals nowhere near zero, and the gate
+passes. So RQ1's nulls are nulls about organizations, not about the instrument.
+
+**The scale is worth stating plainly.** A convention imposed on every refinement moves the
+contrast +0.31. The real difference between OpenStack and Qt moves it +0.021. Whatever
+separates two organizations is roughly a fifteenth of a mechanical rule applied to everything.
+
+**And the apparatus refused to read it, correctly, for the first time on a real run.** The
+mismatched arms score exactly 0.000, because an adapter trained on annotated refinements
+appends the annotation to everything and can never exact-match an unannotated reference. Test
+5, `non_degeneracy`, requires every condition's exact match to lie strictly between 0 and 1,
+so it failed and `apparatus_holds` went false: **APPARATUS FAILS: H1 would not be read.**
+
+That is the halt rule doing its job on live output rather than in a unit test. The ceiling
+condition is degenerate by construction, and a study that reported "gate passes, +0.31" from
+it would be reporting an artifact of a rule that makes one arm unscoreable. The pass is
+evidence the instrument works; it is not a result, and the apparatus is what says so.
+
+**So the floor is not yet known.** Full strength is too strong to measure with: it saturates
+one arm. The detection floor lives at the weaker rates the sweep already generates, realised
+0.039, 0.086, 0.251 and 0.501 for the annotation and 0.007 to 0.164 for quote style, where
+the mismatched arm can still score above zero. Those conditions are what turn a null into a
+bound, and they are the next run.
+
+**Recorded caveat.** The annotation is deliberately the easiest thing a model could learn, so
+its +0.31 is a ceiling and not an estimate of what any realistic convention would produce.
+The quote-style conditions are the realistic end, and their ceiling is a realised 0.164
+because most refinements carry no single-quoted literal.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

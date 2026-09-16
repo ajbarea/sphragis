@@ -76,6 +76,26 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
 
+## Plan E — calibration
+
+Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind instrument".
+
+- [x] **The contrast is not blind** (job 145092, `marker-1`). A convention planted on every
+  refinement of one half returns +0.310 [+0.249, +0.376] and +0.316 [+0.265, +0.367] over 182
+  changes each, and the gate passes. RQ1's nulls are about organizations, not the instrument.
+  For scale: the planted convention moves the contrast +0.31, the real OpenStack/Qt difference
+  +0.021.
+- [x] **The halt rule fired on a real run for the first time.** The mismatched arms score
+  exactly 0.000, since an adapter trained on annotated refinements can never match an
+  unannotated reference, so `non_degeneracy` failed and `apparatus_holds` went false. The
+  ceiling condition is degenerate by construction and the apparatus is what says so; the pass
+  is evidence the instrument works, not a result.
+- [ ] **The floor itself**, from the weaker conditions where neither arm saturates: realised
+  0.039 / 0.086 / 0.251 / 0.501 for the annotation and 0.007 to 0.164 for quote style. These
+  turn a null into a bound and are the next run.
+- [ ] `marker-0`, the negative control: two halves differing in nothing must return nothing.
+  Running as part of job 145092.
+
 ## Plan D — granularity
 
 Added 2026-09-16, from a probe the design never considered. The study fixes the organization
