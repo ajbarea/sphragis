@@ -1235,13 +1235,33 @@ the task -- the form of a refinement, the conventions of a diff-shaped answer --
 none of it is the organization. If a fingerprint exists it is about one thirteenth the size
 of the adaptation effect it rides on.
 
-**What this does to the power argument.** The registered MDE was about +0.030 exact match for
-OpenStack at 880 changes. The test window now projects to roughly 1,800 changes, where the
-detectable effect scales to about +0.021 if it goes as the square root of sample size. The
-observed effect is +0.021. RQ1 is therefore powered to detect an effect of exactly the size
-being observed, with no margin, which is the single most important sentence for section 5 of
-the Stage 1 report. It should be settled by running the power analysis on these variances
-rather than on the pilots', and on the square-root assumption rather than by it.
+**What this does to the power argument, and it is not what scaling suggested.** A square-root
+extrapolation from the pilot's +0.030 at 880 changes gives about +0.021 at the test window's
+projected size, which would have put the observed effect exactly at the detection threshold.
+Running the simulation on these variances instead (`datasets/results/power-rq1-windows.txt`,
+400 trials, 1,000 resamples, tolerance 0.005) says otherwise:
+
+| | observed effect | MDE at projected test size | ratio |
+|---|---|---|---|
+| OpenStack, 1,804 changes | +0.0212 | **+0.0141** | 1.50 |
+| Qt, 3,197 changes | +0.0110 | **+0.0133** | 0.83 |
+
+**Qt binds, and the earlier analysis said OpenStack did.** That reversal is the finding. What
+binds is not the smaller MDE but the smaller ratio of effect to MDE, and Qt's observed effect
+sits *below* what its own sample can detect. The gate requires both organizations to clear
+zero, so on these estimates RQ1 fails on Qt even if the effect is real in both. OpenStack, by
+contrast, has about 50% headroom where the scaling argument predicted none.
+
+Three things this does not license. The MDE and the observed effect come from the same run,
+so "observed exceeds MDE" is a statement about this sample's variance structure, not a
+guarantee about the test window. One seed underlies both. And the dev windows are censored
+unequally, which is the direction that would most distort Qt's estimate relative to
+OpenStack's.
+
+The Stage 1 decision it forces is real, and belongs at registration rather than after: a pass
+rule requiring both organizations is, on current estimates, a rule Qt cannot satisfy. Either
+that conservatism is accepted and stated, or the rule is something else, and either way it is
+fixed before the test window is opened.
 
 **What this is not.** One seed, not the registered three. The dev windows, not the sealed test
 window. And both dev windows are censored, OpenStack missing an estimated 37.0% of its

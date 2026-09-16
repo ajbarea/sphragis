@@ -1,0 +1,7 @@
+openstack: pilot changes 235, simulated 200: detectable difference +0.0475 (lift 0.066, reached True) [233s]
+openstack: pilot changes 235, simulated 235: detectable difference +0.0420 (lift 0.059, reached True) [264s]
+openstack: pilot changes 235, simulated 1804: detectable difference +0.0141 (lift 0.020, reached True) [2093s]
+qt: pilot changes 175, simulated 175: detectable difference +0.0599 (lift 0.086, reached True) [201s]
+qt: pilot changes 175, simulated 200: detectable difference +0.0518 (lift 0.074, reached True) [222s]
+qt: pilot changes 175, simulated 3197: detectable difference +0.0133 (lift 0.020, reached True) [3669s]
+settings: trials=400 resamples=1000 tolerance=0.005 seed=13; lifts below the tolerance are at the bisection's resolution

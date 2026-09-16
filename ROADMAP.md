@@ -110,6 +110,13 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   binds. Needed a fix first: the simulation had treated the pilot's own difference as null.
 - [x] Power at report-grade settings (400 trials, 1,000 resamples, tolerance 0.005, 3 seeds):
   OpenStack +0.030 [+0.028, +0.031] at 880 changes, Qt +0.011 [+0.011, +0.012] at 2,400.
+- [x] **Power on the windowed run's variances, at the projected test-window sizes.** OpenStack
+  MDE +0.0141 at 1,804 changes against an observed +0.0212; Qt +0.0133 at 3,197 against an
+  observed +0.0110. **Qt now binds, where the pilot analysis said OpenStack did**, because
+  what binds is the ratio of effect to MDE and Qt's effect sits below what its sample detects.
+- [ ] **Decide the pass rule given that.** Requiring both organizations to clear zero is, on
+  current estimates, a rule Qt cannot satisfy even if the effect is real in both. Accept the
+  conservatism and say so, or register something else; either way before the seal opens.
 - [x] Replace the estimated test-window sizes: projected from the train window through the
   capture model (`scripts/project_windows.py`), OpenStack ~1,804 changes against the 880
   assumed and Qt ~3,197 against 2,400, so the registered MDEs are conservative. The model
