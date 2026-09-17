@@ -71,6 +71,7 @@ def _written_result_keys(script: Path) -> set[str]:
             and node.args
             and isinstance(node.args[0], ast.Call)
             and ast.unparse(node.args[0].func) == "json.dumps"
+            and node.args[0].args
             and isinstance(node.args[0].args[0], ast.Dict)
         ):
             continue

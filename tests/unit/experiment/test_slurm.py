@@ -297,3 +297,65 @@ def test_a_time_limit_slurm_would_misread_is_refused(time_limit: str) -> None:
 
     with pytest.raises(ValueError, match="HH:MM:SS"):
         sbatch_flags("sporc", time_limit=time_limit)
+
+
+@pytest.mark.parametrize("account", ["rc-onboard x", "fl-mlm;rm", "fl mlm"])
+def test_an_account_that_is_not_one_word_is_refused(account: str) -> None:
+    from sphragis.experiment.slurm import sbatch_flags
+
+    with pytest.raises(ValueError, match="account"):
+        sbatch_flags("sporc", account=account)
+
+
+def test_a_time_limit_in_other_scripts_digits_is_refused() -> None:
+    from sphragis.experiment.slurm import sbatch_flags
+
+    with pytest.raises(ValueError, match="HH:MM:SS"):
+        sbatch_flags("sporc", time_limit="١٢:00:00")
+
+
+def test_free_form_options_come_before_the_checked_ones() -> None:
+    # sbatch keeps the last value of a repeated option.
+    from sphragis.experiment.slurm import sbatch_flags
+
+    flags = sbatch_flags("sporc", extra="--export=ALL,MODE=windows")
+    assert flags[0] == "--export=ALL,MODE=windows"
+    assert flags[1] == "--clusters=sporc"
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        "scripts/rq1.sbatch -A rc-onboard",  # a bare word ends option parsing: flags never read
+        "-- -A rc-onboard",
+        "-A rc-onboard",
+        "--account=rc-onboard",
+        "-Mtigris",
+        "--clusters tigris",
+        "-p debug",
+        "--partition=debug",
+        "--gres=gpu:a100:4",
+        "-G 2",
+        "--gpus=2",
+        "-t 1:00:00",
+        "--time=01:00:00",
+    ],
+)
+def test_free_form_options_cannot_take_what_the_target_owns(extra: str) -> None:
+    from sphragis.experiment.slurm import sbatch_flags
+
+    with pytest.raises(ValueError, match="SBATCH_ARGS"):
+        sbatch_flags("sporc", extra=extra)
+
+
+def test_free_form_values_with_spaces_survive_the_remote_shell(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import shlex
+
+    from sphragis.experiment.slurm import main
+
+    extra = "'--export=ALL,CONDITIONS=marker-1 marker-0'"
+    assert main(["flags", "--target", "sporc", "--sbatch-args", extra]) == 0
+    words = shlex.split(capsys.readouterr().out)
+    assert words[0] == "--export=ALL,CONDITIONS=marker-1 marker-0"

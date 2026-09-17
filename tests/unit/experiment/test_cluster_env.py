@@ -241,21 +241,29 @@ def _dry_run(*args: str) -> str:
     ).stdout
 
 
-def test_submit_puts_the_checked_options_after_free_form_ones() -> None:
-    # sbatch keeps the last value of a repeated option, so anything in SBATCH_ARGS placed after
-    # the target's options could replace the checked account or cluster.
-    line = _dry_run("submit", "JOB=pilot", "SBATCH_ARGS=--account=rc-onboard")
-    assert line.index("--account=rc-onboard") < line.index("$flags")
+def test_submit_sends_free_form_options_through_the_checks() -> None:
+    # Placed on the sbatch line directly, a bare word in SBATCH_ARGS ends option parsing and the
+    # checked account and cluster are never read.
+    dry = _dry_run("submit", "JOB=pilot", "SBATCH_ARGS=-A rc-onboard")
+    assert "--sbatch-args '-A rc-onboard'" in dry
+    assert "sbatch $flags scripts/pilot.sbatch" in dry
+    assert "rc-onboard scripts/" not in dry
 
 
 def test_submit_checks_the_venv_by_its_config_not_its_interpreter() -> None:
     # bin/python is a symlink that may resolve only on the compute node's machine.
-    assert "pyvenv.cfg" in _dry_run("submit", "JOB=pilot", "CLUSTER=sporc")
+    assert "[ -f .venv-$machine/pyvenv.cfg ]" in _dry_run("submit", "JOB=pilot", "CLUSTER=sporc")
 
 
 def test_cluster_env_judges_success_by_the_builders_marker() -> None:
     # sbatch --wait --clusters=sporc exits 0 for a job cancelled while pending.
-    assert "grep -q CLUSTER_ENV_OK" in _dry_run("cluster-env", "CLUSTER=sporc")
+    assert "grep -q CLUSTER_ENV_OK \\$log" in _dry_run("cluster-env", "CLUSTER=sporc")
+
+
+def test_cluster_env_logs_are_named_for_their_cluster() -> None:
+    # Job ids are per cluster and both clusters write to one logs/, so an old log from the other
+    # cluster could carry the success marker for a job that never ran.
+    assert "logs/sphragis-cluster-env-sporc-%j.log" in _dry_run("cluster-env", "CLUSTER=sporc")
 
 
 def test_a_tagged_rq1_run_writes_nothing_an_untagged_run_owns() -> None:
@@ -265,3 +273,14 @@ def test_a_tagged_rq1_run_writes_nothing_an_untagged_run_owns() -> None:
     assert '--adapters "$HOME/scratch/sphragis-adapters$SUFFIX"' in text
     assert '--out "$HOME/rq1-$MODE$SUFFIX.json"' in text
     assert 'SUFFIX="${TAG:+-$TAG}"' in text
+
+
+def test_every_machine_builds_on_one_pinned_interpreter(tmp_path: Path) -> None:
+    # Unpinned, uv takes whatever interpreter each machine already has or downloads first:
+    # TIGRIS built on 3.13.15 and SPORC on 3.14.7, a second variable beside the GPU. Pinned in
+    # the job environment rather than .python-version, which CI's older uv cannot resolve.
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, 'echo "$UV_PYTHON"')
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "3.13.15", "the interpreter every GH200 result so far ran on"

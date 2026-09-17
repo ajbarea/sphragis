@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import shlex
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -41,7 +42,8 @@ from importlib.resources import files
 
 from sphragis.experiment.grid import EvalRun, run_id
 
-_TIME = re.compile(r"\A\d{1,2}:[0-5]\d:[0-5]\d\Z")
+_TIME = re.compile(r"\A[0-9]{1,2}:[0-5][0-9]:[0-5][0-9]\Z")
+_ACCOUNT_NAME = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9_.-]*\Z")
 _MAIL_USER = "ajb6289@rit.edu"
 _ACCOUNT = "fl-mlm"  # the Reznik lab's; see the module docstring on what that implies.
 _TRAINING_ONLY_ACCOUNTS = frozenset({"rc-onboard"})
@@ -79,6 +81,8 @@ def _require_account(account: str) -> str:
     name = account.strip()
     if not name:
         raise ValueError("an account is required; an empty one submits under the Slurm default")
+    if not _ACCOUNT_NAME.match(name):
+        raise ValueError(f"account must be one Slurm account name, got {account!r}")
     if name.lower() in _TRAINING_ONLY_ACCOUNTS:
         raise ValueError(
             f"{name} is for training only (Research Computing, 2026-09-16); "
@@ -93,19 +97,46 @@ def _require_target(name: str) -> Target:
     return TARGETS[name]
 
 
+# Options a target or the account check decides. Free-form options may not set them: sbatch
+# keeps the last value of a repeated option, and a bare word ends option parsing altogether.
+_OWNED_SHORT = ("-A", "-M", "-p", "-G", "-t")
+_OWNED_LONG = ("--account", "--clusters", "--partition", "--gres", "--gpus", "--time")
+
+
+def _require_free_form(extra: str) -> list[str]:
+    words = shlex.split(extra)
+    for word in words:
+        name = word.split("=", 1)[0]
+        owned = (
+            not word.startswith("-")
+            or word == "--"
+            or (not word.startswith("--") and word[:2] in _OWNED_SHORT)
+            or any(name == long or name.startswith(f"{long}-") for long in _OWNED_LONG)
+        )
+        if owned:
+            raise ValueError(
+                f"SBATCH_ARGS may not contain {word!r}: use --option=value form, and CLUSTER, "
+                "ACCOUNT and TIME for the target, account and time limit"
+            )
+    return words
+
+
 def sbatch_flags(
     target: str,
     *,
     account: str = _ACCOUNT,
     time_limit: str | None = None,
     cpu_only: bool = False,
+    extra: str = "",
 ) -> list[str]:
     """Command-line options that send an unmodified job script to `target`.
 
     `cpu_only` drops the GPU, for work such as building the venv that should not queue for one.
+    `extra` is free-form sbatch options, placed first so the checked ones always win.
     """
     where = _require_target(target)
     flags = [
+        *_require_free_form(extra),
         f"--clusters={where.cluster}",
         f"--account={_require_account(account)}",
         f"--partition={where.partition}",
@@ -230,6 +261,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     flags.add_argument("--account", default=_ACCOUNT)
     flags.add_argument("--time", dest="time_limit", help="HH:MM:SS, overriding the script's")
     flags.add_argument("--cpu-only", action="store_true", help="request no GPU")
+    flags.add_argument("--sbatch-args", default="", help="free-form sbatch options, checked")
     machine = commands.add_parser("machine", help="the machine type a target's venv is built for")
     machine.add_argument("--target", default=DEFAULT_TARGET, help=", ".join(TARGETS))
     args = parser.parse_args(argv)
@@ -242,11 +274,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             account=args.account,
             time_limit=args.time_limit,
             cpu_only=args.cpu_only,
+            extra=args.sbatch_args,
         )
     except ValueError as refusal:
         print(refusal, file=sys.stderr)
         return 2
-    print(" ".join(options))
+    # Quoted, because the options are word-split again by the shell on the login node.
+    print(shlex.join(options))
     return 0
 
 

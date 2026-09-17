@@ -6,6 +6,9 @@
 machine="$(uname -m)"
 export PATH="$HOME/.local/bin/$machine:$HOME/.local/bin:$PATH"
 export UV_PROJECT_ENVIRONMENT=".venv-$machine"
+# One interpreter on every machine, the one the GH200 results so far ran on. Unpinned, each
+# machine used whatever uv found or downloaded first.
+export UV_PYTHON=3.13.15
 # HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth token
 # `hf auth login` writes, and the job would then authenticate with a stale copy.
 export HF_HUB_CACHE=$HOME/hf-cache/hub

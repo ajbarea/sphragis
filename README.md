@@ -117,8 +117,8 @@ make submit JOB=rq1 SBATCH_ARGS=--export=ALL,MODE=windows
 
 `CLUSTER` is `tigris`, `sporc` or `sporc-h100`. Scripts keep their TIGRIS `#SBATCH` lines
 and `submit` overrides them on the command line. Their `--time` values were measured on a
-GH200, so pass `TIME` elsewhere, and a `TAG` so a run on other hardware writes its own
-result and adapters. Every result a job script writes records its cluster, job and GPU,
+GH200, so pass `TIME` elsewhere. For `rq1`, a `TAG` gives a run on other hardware its own
+result and adapter paths; the other scripts write fixed paths in `$HOME`. Every result a job script writes records its cluster, job and GPU,
 including peak GPU memory, which training also logs as each adapter finishes: keep one result
 set on one GPU type.
 
