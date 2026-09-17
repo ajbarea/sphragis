@@ -13,6 +13,7 @@ pre-registration decision, not a deployment one.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -347,6 +348,8 @@ def train_adapter(
             f"train_adapter: skipped {skipped_steps} step(s) of {steps} and "
             f"{skipped_micro_batches} micro-batch(es)"
         )
+    # Logged now: a run that dies later writes no result file to carry the peak.
+    print(f"train_adapter: gpu {json.dumps(gpu_record())}", flush=True)
     return report
 
 

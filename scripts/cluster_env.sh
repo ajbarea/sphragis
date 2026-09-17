@@ -22,6 +22,8 @@ if ! uv --version >/dev/null 2>&1; then
   tar -xzf "$work/$archive" -C "$work"
   install -m 755 "$work/uv-$machine-unknown-linux-gnu/uv" "$work/uv-$machine-unknown-linux-gnu/uvx" \
     "$HOME/.local/bin/$machine/"
+  # bash cached the path of the uv that failed above and would run it again.
+  hash -r
 fi
 uv --version
 

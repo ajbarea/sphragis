@@ -163,10 +163,11 @@ class TestRunProvenance:
 
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA device")
     def test_on_a_gpu_the_record_names_the_device_and_its_peak(self) -> None:
-        torch.ones(1024, device="cuda")
+        held = torch.ones(64 * 1024 * 1024, device="cuda")  # 256 MB of float32
         record = model_module.gpu_record()
+        del held
         assert record is not None
         assert record["name"]
         assert record["total_gb"] > 0
-        assert record["peak_allocated_gb"] >= 0
+        assert record["peak_allocated_gb"] >= 0.25
         assert record["cuda"] == torch.version.cuda

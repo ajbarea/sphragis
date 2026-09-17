@@ -139,3 +139,129 @@ def test_the_environment_builder_shares_the_job_environment_and_verifies_uv() ->
     assert "SPHRAGIS_BUILDING_ENV=1 source sphragis/experiment/cluster-env.sh" in builder
     assert "sha256sum -c" in builder
     assert "uv sync --frozen --extra experiment" in builder
+
+
+# --- Building the environment ------------------------------------------------------------
+
+_BUILDER = _ROOT / "scripts" / "cluster_env.sh"
+_ARCHIVE = f"uv-{_MACHINE}-unknown-linux-gnu.tar.gz"
+
+
+def _release(tmp_path: Path, *, tamper: bool = False) -> Path:
+    """A fake uv release plus a curl that serves it, so the builder runs without a network."""
+    import hashlib
+    import tarfile
+
+    release = tmp_path / "release"
+    staged = release / f"uv-{_MACHINE}-unknown-linux-gnu"
+    staged.mkdir(parents=True)
+    fake_uv = (
+        "#!/bin/sh\n"
+        'case "$1" in\n'
+        "  --version) echo uv 0.0.0-fake ;;\n"
+        "  run) echo torch fake ;;\n"
+        "esac\n"
+    )
+    for name in ("uv", "uvx"):
+        (staged / name).write_text(fake_uv)
+        (staged / name).chmod(0o755)
+    with tarfile.open(release / _ARCHIVE, "w:gz") as archive:
+        archive.add(staged, arcname=staged.name)
+    digest = hashlib.sha256((release / _ARCHIVE).read_bytes()).hexdigest()
+    if tamper:
+        digest = "0" * 64
+    (release / f"{_ARCHIVE}.sha256").write_text(f"{digest}  {_ARCHIVE}\n")
+
+    bin_dir = tmp_path / "fakebin"
+    bin_dir.mkdir()
+    curl = bin_dir / "curl"
+    curl.write_text(
+        "#!/bin/bash\n"
+        'while [ $# -gt 0 ]; do case "$1" in\n'
+        '  -o) out="$2"; shift 2;; -*) shift;; *) url="$1"; shift;;\n'
+        "esac; done\n"
+        f'cp "{release}/$(basename "$url")" "$out"\n'
+    )
+    curl.chmod(0o755)
+    return bin_dir
+
+
+def _checkout(home: Path) -> None:
+    experiment = home / "ajsoftworks" / "sphragis" / "sphragis" / "experiment"
+    experiment.mkdir(parents=True)
+    (experiment / "cluster-env.sh").write_text(_ENV.read_text())
+
+
+def _run_builder(home: Path, bin_dir: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["bash", str(_BUILDER)],
+        capture_output=True,
+        text=True,
+        env={"HOME": str(home), "PATH": f"{bin_dir}:/usr/bin:/bin", "UV_VERSION": "0.0.0"},
+    )
+
+
+def _foreign_shared_uv(home: Path) -> None:
+    # What SPORC sees in ~/.local/bin: TIGRIS's aarch64 uv, which cannot execute here.
+    shared = home / ".local" / "bin" / "uv"
+    shared.parent.mkdir(parents=True)
+    shared.write_bytes(b"\x7fELF not this machine")
+    shared.chmod(0o755)
+
+
+def test_the_builder_installs_uv_past_a_foreign_one_and_uses_it(tmp_path: Path) -> None:
+    # bash caches the path of the uv that failed; without forgetting it, the freshly installed
+    # uv is never run and the first build dies with Exec format error.
+    home = tmp_path / "home"
+    _checkout(home)
+    _foreign_shared_uv(home)
+    result = _run_builder(home, _release(tmp_path))
+    assert result.returncode == 0, result.stderr
+    assert (home / ".local" / "bin" / _MACHINE / "uv").is_file()
+    assert "uv 0.0.0-fake" in result.stdout
+    assert f"CLUSTER_ENV_OK .venv-{_MACHINE}" in result.stdout
+
+
+def test_the_builder_refuses_a_uv_whose_checksum_does_not_match(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    _checkout(home)
+    _foreign_shared_uv(home)
+    result = _run_builder(home, _release(tmp_path, tamper=True))
+    assert result.returncode != 0
+    assert not (home / ".local" / "bin" / _MACHINE / "uv").exists()
+    assert "CLUSTER_ENV_OK" not in result.stdout
+
+
+# --- make targets, read as the shell will receive them -------------------------------------
+
+
+def _dry_run(*args: str) -> str:
+    return subprocess.run(
+        ["make", "-n", *args], capture_output=True, text=True, cwd=_ROOT, check=True
+    ).stdout
+
+
+def test_submit_puts_the_checked_options_after_free_form_ones() -> None:
+    # sbatch keeps the last value of a repeated option, so anything in SBATCH_ARGS placed after
+    # the target's options could replace the checked account or cluster.
+    line = _dry_run("submit", "JOB=pilot", "SBATCH_ARGS=--account=rc-onboard")
+    assert line.index("--account=rc-onboard") < line.index("$flags")
+
+
+def test_submit_checks_the_venv_by_its_config_not_its_interpreter() -> None:
+    # bin/python is a symlink that may resolve only on the compute node's machine.
+    assert "pyvenv.cfg" in _dry_run("submit", "JOB=pilot", "CLUSTER=sporc")
+
+
+def test_cluster_env_judges_success_by_the_builders_marker() -> None:
+    # sbatch --wait --clusters=sporc exits 0 for a job cancelled while pending.
+    assert "grep -q CLUSTER_ENV_OK" in _dry_run("cluster-env", "CLUSTER=sporc")
+
+
+def test_a_tagged_rq1_run_writes_nothing_an_untagged_run_owns() -> None:
+    # A pilot on another GPU must not overwrite the GH200 run's result or its adapters, which
+    # live only in cluster scratch.
+    text = (_ROOT / "scripts" / "rq1.sbatch").read_text()
+    assert '--adapters "$HOME/scratch/sphragis-adapters$SUFFIX"' in text
+    assert '--out "$HOME/rq1-$MODE$SUFFIX.json"' in text
+    assert 'SUFFIX="${TAG:+-$TAG}"' in text

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
@@ -58,8 +59,42 @@ def test_some_scripts_are_launched_by_a_job() -> None:
     assert len(_launched_scripts()) >= 4
 
 
+def _written_result_keys(script: Path) -> set[str]:
+    """Top-level keys of the dict each `args.out.write_text(json.dumps({...}))` writes."""
+    keys: set[str] = set()
+    for node in ast.walk(ast.parse(script.read_text())):
+        if not (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "write_text"
+            and ast.unparse(node.func.value) == "args.out"
+            and node.args
+            and isinstance(node.args[0], ast.Call)
+            and ast.unparse(node.args[0].func) == "json.dumps"
+            and isinstance(node.args[0].args[0], ast.Dict)
+        ):
+            continue
+        dumped = node.args[0].args[0]
+        keys.update(
+            k.value for k in dumped.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)
+        )
+    return keys
+
+
 @pytest.mark.parametrize("script", sorted(_launched_scripts()), ids=lambda p: p.name)
 def test_every_script_a_job_launches_records_run_provenance(script: Path) -> None:
     # Results from different GPUs must never be pooled unnoticed, and the record is also the
     # only measurement of peak GPU memory a run leaves behind.
-    assert '"provenance": run_provenance()' in script.read_text()
+    keys = _written_result_keys(script)
+    assert keys, f"{script.name}: no args.out.write_text(json.dumps({{...}})) found"
+    assert "provenance" in keys
+
+
+def test_training_logs_gpu_memory_before_anything_later_can_crash() -> None:
+    # A run that dies after training (out of memory, or a GH200-sized --time) writes no result
+    # file, so the peak has to reach the job log as each adapter finishes.
+    model = (_ROOT / "sphragis" / "experiment" / "model.py").read_text()
+    body = model[
+        model.index("def train_adapter(") : model.index("\ndef ", model.index("def train_adapter("))
+    ]
+    assert "gpu_record()" in body

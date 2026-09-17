@@ -266,3 +266,34 @@ def test_machine_cli_prints_the_targets_machine(capsys: pytest.CaptureFixture[st
 
     assert main(["machine", "--target", "sporc"]) == 0
     assert capsys.readouterr().out == "x86_64\n"
+
+
+@pytest.mark.parametrize("account", ["rc-onboard", "RC-Onboard", " rc-onboard", "rc-onboard\n"])
+def test_the_training_only_account_is_refused_however_it_is_written(account: str) -> None:
+    from sphragis.experiment.slurm import sbatch_flags
+
+    with pytest.raises(ValueError, match="training"):
+        sbatch_flags("sporc", account=account)
+
+
+def test_an_empty_account_is_refused_because_slurm_would_use_the_default() -> None:
+    # The default account on TIGRIS is rc-onboard.
+    from sphragis.experiment.slurm import sbatch_flags
+
+    with pytest.raises(ValueError, match="account"):
+        sbatch_flags("sporc", account=" ")
+
+
+def test_render_refuses_the_training_only_account_too() -> None:
+    with pytest.raises(ValueError, match="training"):
+        render(SlurmJob(name="x", command="true", output="x.log", account="rc-onboard"))
+
+
+@pytest.mark.parametrize(
+    "time_limit", ["99:99:99", "01:60:00", "01:00:60", "00:00:00", "01:00:00\n"]
+)
+def test_a_time_limit_slurm_would_misread_is_refused(time_limit: str) -> None:
+    from sphragis.experiment.slurm import sbatch_flags
+
+    with pytest.raises(ValueError, match="HH:MM:SS"):
+        sbatch_flags("sporc", time_limit=time_limit)

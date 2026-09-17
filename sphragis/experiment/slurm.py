@@ -41,7 +41,7 @@ from importlib.resources import files
 
 from sphragis.experiment.grid import EvalRun, run_id
 
-_TIME = re.compile(r"^\d{1,2}:\d{2}:\d{2}$")
+_TIME = re.compile(r"\A\d{1,2}:[0-5]\d:[0-5]\d\Z")
 _MAIL_USER = "ajb6289@rit.edu"
 _ACCOUNT = "fl-mlm"  # the Reznik lab's; see the module docstring on what that implies.
 _TRAINING_ONLY_ACCOUNTS = frozenset({"rc-onboard"})
@@ -68,8 +68,23 @@ DEFAULT_TARGET = "tigris"
 
 
 def _require_time(time_limit: str) -> None:
-    if not _TIME.match(time_limit):
-        raise ValueError(f"time_limit must be HH:MM:SS, got {time_limit!r}")
+    # Zero is not a short job to Slurm: --time=0 means no limit.
+    if not _TIME.match(time_limit) or not time_limit.strip("0:"):
+        raise ValueError(f"time_limit must be a nonzero HH:MM:SS, got {time_limit!r}")
+
+
+def _require_account(account: str) -> str:
+    # Slurm lowercases account names, and an empty --account falls back to the user's default,
+    # which on TIGRIS is rc-onboard.
+    name = account.strip()
+    if not name:
+        raise ValueError("an account is required; an empty one submits under the Slurm default")
+    if name.lower() in _TRAINING_ONLY_ACCOUNTS:
+        raise ValueError(
+            f"{name} is for training only (Research Computing, 2026-09-16); "
+            "research jobs run under a project account"
+        )
+    return name
 
 
 def _require_target(name: str) -> Target:
@@ -90,14 +105,9 @@ def sbatch_flags(
     `cpu_only` drops the GPU, for work such as building the venv that should not queue for one.
     """
     where = _require_target(target)
-    if account in _TRAINING_ONLY_ACCOUNTS:
-        raise ValueError(
-            f"{account} is for training only (Research Computing, 2026-09-16); "
-            "research jobs run under a project account"
-        )
     flags = [
         f"--clusters={where.cluster}",
-        f"--account={account}",
+        f"--account={_require_account(account)}",
         f"--partition={where.partition}",
     ]
     if not cpu_only:
@@ -126,11 +136,12 @@ class SlurmJob:
 def render(job: SlurmJob) -> str:
     """The sbatch script for one job.
 
-    No `--qos` line is emitted, deliberately: the default account denies the interactive
-    QoS and a job carrying one never starts.
+    No `--qos` line is emitted, deliberately: each account carries its own QoS, and
+    `rc-onboard` was verified to deny the interactive one, leaving a job that never starts.
     """
     _require_time(job.time_limit)
     where = _require_target(job.target)
+    account = _require_account(job.account)
     if "$" in job.output:
         # Slurm does not expand shell variables in #SBATCH directives. An --output of
         # "$HOME/logs/x.log" silently creates a directory literally named '$HOME'.
@@ -143,7 +154,7 @@ def render(job: SlurmJob) -> str:
     return f"""#!/bin/bash
 #SBATCH --job-name={job.name}
 #SBATCH --clusters={where.cluster}
-#SBATCH --account={job.account}
+#SBATCH --account={account}
 #SBATCH --partition={where.partition}
 #SBATCH --gres={where.gres}
 #SBATCH --cpus-per-task={job.cpus}

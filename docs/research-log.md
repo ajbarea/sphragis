@@ -1515,7 +1515,8 @@ GH200.
 
 **Constraint this places on results.** A result set that mixes GH200 and A100 runs confounds
 the contrast with hardware. Each job's output now records its cluster, job, GPU and peak memory,
-so a mixed set is detectable from the files rather than from memory.
+so a mixed set is detectable from the files rather than from memory. Results written before
+2026-09-17 carry no such record; all of them ran on TIGRIS GH200s under `rc-onboard`.
 
 ## Open bugs & findings
 

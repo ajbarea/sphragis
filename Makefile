@@ -2,7 +2,7 @@
 .PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit cluster-env verify
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
-# invocation, which silently reverts a locally installed CUDA torch (see `make gpu-local`).
+# invocation, which silently removes the experiment extra (see `make gpu-local`).
 # `make sync` is the one place the environment is meant to change.
 
 help:                      ## Show this help
@@ -39,8 +39,10 @@ TIGRIS_DIR  ?= ajsoftworks/sphragis
 REMOTE      ?= origin
 BRANCH      ?= $(shell git rev-parse --abbrev-ref HEAD)
 CLUSTER     ?= tigris
-ACCOUNT     ?= fl-mlm
 SLURM_CLI    = uv run --no-sync --no-active python -m sphragis.experiment.slurm
+# ACCOUNT= overrides the project account, which is defined once, in slurm.py.
+SLURM_TARGET = --target $(CLUSTER) $(if $(ACCOUNT),--account $(ACCOUNT))
+SSH_OPTS     = -o ConnectTimeout=20 -o ServerAliveInterval=10 -o ServerAliveCountMax=3
 
 deploy:                    ## Put the cluster on this branch's pushed HEAD, by SHA
 	@# A read-only deploy key makes the cluster a real clone, so deployment is a fetch to
@@ -71,30 +73,37 @@ submit:                    ## Submit scripts/JOB.sbatch to CLUSTER (tigris|sporc
 	@# Scripts keep their TIGRIS #SBATCH lines. sbatch ranks command-line options above them,
 	@# so changing cluster never edits a script. TIME= overrides --time, whose values were
 	@# measured on a GH200; SBATCH_ARGS= passes the rest, e.g. --export=ALL,MODE=windows.
-	@# Both refusals below would otherwise surface only after the queue wait.
+	@# SBATCH_ARGS goes first because sbatch keeps the last value of a repeated option, so it
+	@# can never replace the checked account or cluster. The venv is checked by pyvenv.cfg:
+	@# bin/python may resolve only on the compute node's machine. Both refusals would
+	@# otherwise surface only after the queue wait.
 	@test -n "$(JOB)" || { echo "usage: make submit JOB=rq1 [CLUSTER=sporc] [TIME=HH:MM:SS] [SBATCH_ARGS=...]"; exit 1; }
 	@test -f scripts/$(JOB).sbatch || { echo "no scripts/$(JOB).sbatch"; exit 1; }
 	@git update-index -q --refresh
 	@git diff-index --quiet HEAD -- || { echo "commit and make deploy first: a job runs the cluster's checkout"; exit 1; }
-	@flags=$$($(SLURM_CLI) flags --target $(CLUSTER) --account $(ACCOUNT) $(if $(TIME),--time $(TIME))) || exit 1; \
+	@flags=$$($(SLURM_CLI) flags $(SLURM_TARGET) $(if $(TIME),--time $(TIME))) || exit 1; \
 	machine=$$($(SLURM_CLI) machine --target $(CLUSTER)) || exit 1; \
 	head=$$(git rev-parse HEAD); \
 	ssh $(TIGRIS_HOST) "cd $(TIGRIS_DIR) \
 	  && { [ \"\$$(git rev-parse HEAD)\" = $$head ] || { echo 'the cluster is not on this commit: make deploy'; exit 1; }; } \
-	  && { [ -x .venv-$$machine/bin/python ] || { echo 'no .venv-$$machine on the cluster: make cluster-env CLUSTER=$(CLUSTER)'; exit 1; }; } \
-	  && sbatch $$flags $(SBATCH_ARGS) scripts/$(JOB).sbatch"
+	  && { [ -f .venv-$$machine/pyvenv.cfg ] || { echo 'no .venv-$$machine on the cluster: make cluster-env CLUSTER=$(CLUSTER)'; exit 1; }; } \
+	  && sbatch $(SBATCH_ARGS) $$flags scripts/$(JOB).sbatch"
 
 cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aarch64 TIGRIS, x86_64 SPORC)
 	@# The login node is aarch64 and builds its own venv in place. An x86_64 venv can only be
 	@# built on an x86_64 machine, so for SPORC the same script runs as a CPU-only job there.
+	@# Success is the builder's marker in its log: sbatch --wait --clusters=sporc exits 0 for
+	@# a job cancelled while pending.
 	@machine=$$($(SLURM_CLI) machine --target $(CLUSTER)) || exit 1; \
-	flags=$$($(SLURM_CLI) flags --target $(CLUSTER) --account $(ACCOUNT) --cpu-only --time 01:00:00) || exit 1; \
-	ssh $(TIGRIS_HOST) "cd $(TIGRIS_DIR) && version=\$$(uv --version | cut -d' ' -f2) \
+	flags=$$($(SLURM_CLI) flags $(SLURM_TARGET) --cpu-only --time 01:00:00) || exit 1; \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) "cd $(TIGRIS_DIR) && version=\$$(uv --version | cut -d' ' -f2) \
+	  && { [ -n \"\$$version\" ] || { echo 'no uv on the login node to pin the version from'; exit 1; }; } \
 	  && if [ \"\$$(uname -m)\" = $$machine ]; then UV_VERSION=\$$version bash scripts/cluster_env.sh; \
-	  else rc=0; job=\$$(sbatch --parsable --wait $$flags --cpus-per-task=4 --mem=16G \
+	  else job=\$$(sbatch --parsable --wait $$flags --cpus-per-task=4 --mem=16G \
 	    --job-name=sphragis-cluster-env --output=logs/sphragis-cluster-env-%j.log \
-	    --export=ALL,UV_VERSION=\$$version scripts/cluster_env.sh) || rc=\$$?; \
-	    cat logs/sphragis-cluster-env-\$${job%%;*}.log; exit \$$rc; fi"
+	    --export=ALL,UV_VERSION=\$$version scripts/cluster_env.sh); \
+	    log=logs/sphragis-cluster-env-\$${job%%;*}.log; [ -n \"\$${job%%;*}\" ] && cat \$$log; \
+	    grep -q CLUSTER_ENV_OK \$$log 2>/dev/null || { echo 'the build job did not finish: no CLUSTER_ENV_OK'; exit 1; }; fi"
 
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify
