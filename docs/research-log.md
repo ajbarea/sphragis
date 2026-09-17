@@ -1490,6 +1490,33 @@ its +0.31 is a ceiling and not an estimate of what any realistic convention woul
 The quote-style conditions are the realistic end, and their ceiling is a realised 0.164
 because most refinements carry no single-quoted literal.
 
+### SPORC as the interim target (2026-09-17)
+
+Research Computing retired `rc-onboard` for research jobs on 2026-09-16, and `fl-mlm` has no
+TIGRIS association: in ColdFront both `fl-mlm` and `prdiscourse` carry **Needs Review**, and
+the RC documentation grants every project without a pending review a TIGRIS Slurm account.
+`sacctmgr show assoc` lists `fl-mlm` on `sporc` only, and `sbatch --test-only` against the
+`tigris` partition fails with `Invalid account or account/partition combination`.
+
+`fl-mlm` is valid on SPORC today. Measured there, not taken from node tags:
+
+| | |
+|---|---|
+| architecture | x86_64 Intel, RHEL 9.8 |
+| GPU | A100 40 GB (job 21705076, `nvidia-smi`); one node of 4x H100 80 GB |
+| driver | 610.43.02, CUDA 13.3, so the cu130 torch wheel applies; the `cuda11` feature tag is stale |
+| network | compute nodes reach PyPI, the PyTorch index, GitHub and Hugging Face (job 21705465) |
+| submission | from the TIGRIS login with `--clusters=sporc`; `$HOME` is shared |
+
+**Not yet measured:** whether the 7B training fits in 40 GB. No TIGRIS run logged peak GPU
+memory, and the GH200's unified memory would not have surfaced an overflow. The first SPORC
+run records it, along with seconds per step, since every `--time` in `scripts/` was sized on a
+GH200.
+
+**Constraint this places on results.** A result set that mixes GH200 and A100 runs confounds
+the contrast with hardware. Each job's output now records its cluster, job, GPU and peak memory,
+so a mixed set is detectable from the files rather than from memory.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
