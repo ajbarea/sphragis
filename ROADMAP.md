@@ -6,7 +6,22 @@ research direction: RQ1 is a go/no-go gate, RQ2 the leakage study that follows i
 
 **Design of record:** `docs/superpowers/specs/2026-09-13-gerrit-review-corpus-harness-design.md`
 **Deadline that sets the order:** MSR 2027 Registered Reports Stage 1, **2026-11-20**.
-The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAGE1-SKELETON.md`.
+The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAGE1-SKELETON.md`,
+and the call itself, quoted, at `org-fingerprint/VENUE.md`.
+
+**What the call requires of this code:**
+- Stage 2 is when "the actual data collection, experiments, and analysis" happen, so the test
+  window stays sealed until in-principle acceptance (2027-02-04) and pilot numbers never feed a
+  confirmatory result.
+- Reviewers score whether the procedure can be exactly replicated and whether outcome-neutral
+  tests with positive controls are pre-specified, so dependencies stay pinned, the pass rule
+  stays in code, and those tests run before 2026-11-20. A power analysis is expected.
+- Every deviation from the accepted protocol must be reported in the EMSE paper, so any change
+  after acceptance that touches the protocol is recorded with its date and reason.
+- If review is anonymous (open question 2 in `VENUE.md`), the artifact link in the report must
+  not identify the author, so the repository stays private or goes behind an anonymized mirror
+  until notification.
+- Generative-AI use must be disclosed in the paper, so it is logged as the work happens.
 
 ---
 
