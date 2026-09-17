@@ -23,7 +23,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.holdout import holdout_by_change, verbatim_overlap
-from sphragis.experiment.model import LORA, MAX_NEW_TOKENS, MODEL_ID, TRAINING, train_adapter
+from sphragis.experiment.model import (
+    LORA,
+    MAX_NEW_TOKENS,
+    MODEL_ID,
+    TRAINING,
+    run_provenance,
+    train_adapter,
+)
 from sphragis.experiment.runner import build_prompt, evaluate, to_clusters
 from sphragis.experiment.training import build_supervised, render_chat
 from sphragis.measure.stats import cluster_bootstrap
@@ -177,6 +184,7 @@ print(
 args.out.write_text(
     json.dumps(
         {
+            "provenance": run_provenance(),
             "model_id": MODEL_ID,
             "split_seed": args.split_seed,
             "train_seed": args.train_seed,

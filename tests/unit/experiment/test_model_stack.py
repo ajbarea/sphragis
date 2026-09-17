@@ -147,3 +147,26 @@ def test_frozen_parameters_are_left_alone() -> None:
         parameter.requires_grad = False
     assert cast_trainable_to_fp32(frozen) == 0
     assert all(p.dtype is torch.bfloat16 for p in frozen.parameters())
+
+
+class TestRunProvenance:
+    def test_without_a_gpu_the_gpu_record_is_null(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+        assert model_module.gpu_record() is None
+
+    def test_the_run_record_joins_commit_job_and_gpu(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+        record = model_module.run_provenance()
+        assert "git" in record
+        assert set(record["slurm"]) >= {"cluster", "job_id", "account"}
+        assert record["gpu"] is None
+
+    @pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA device")
+    def test_on_a_gpu_the_record_names_the_device_and_its_peak(self) -> None:
+        torch.ones(1024, device="cuda")
+        record = model_module.gpu_record()
+        assert record is not None
+        assert record["name"]
+        assert record["total_gb"] > 0
+        assert record["peak_allocated_gb"] >= 0
+        assert record["cuda"] == torch.version.cuda

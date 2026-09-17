@@ -28,6 +28,7 @@ from sphragis.experiment.model import (
     TRAINING,
     HFGenerator,
     attach_adapter,
+    run_provenance,
     train_adapter,
 )
 from sphragis.experiment.neutral import (
@@ -256,6 +257,7 @@ print(f"APPARATUS {'holds' if holds else 'FAILS: H1 would not be read'}", flush=
 args.out.write_text(
     json.dumps(
         {
+            "provenance": run_provenance(),
             "model_id": MODEL_ID,
             "seeds": seeds,
             "split_seed": args.split_seed,
