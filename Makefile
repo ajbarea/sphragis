@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help sync lint fmt test test-cov corpus-verify clean deploy
+.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit cluster-env verify
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently reverts a locally installed CUDA torch (see `make gpu-local`).
@@ -26,25 +26,21 @@ test:                      ## Run the test suite
 test-cov:                  ## Run the test suite with coverage
 	uv run --no-sync --no-active pytest --cov=sphragis --cov-report=term-missing --cov-report=xml
 
-gpu-local:                 ## Swap in a CUDA torch for local GPU work (x86_64 dev boxes)
-	@# The lockfile pins CUDA torch only for linux/aarch64, which is TIGRIS. CI and this
-	@# box are x86_64 and resolve the CPU wheel, and `uv run` re-syncs to that on every
-	@# invocation. --reinstall-package is required: uv treats 2.14.0+cpu as already
-	@# satisfying 2.14.0 and will not swap the variant otherwise.
-	@# Order matters: sync the extra first (which installs the CPU torch), then swap the
-	@# wheel. Doing it the other way round, or only swapping, leaves peft and transformers
-	@# missing under --no-sync.
+gpu-local:                 ## Install the model stack for local GPU work (CUDA torch on any Linux)
+	@# The lockfile resolves cu130 torch on every Linux machine, so this is the extra alone.
 	uv sync --extra experiment
-	uv pip install --reinstall-package torch --index-url https://download.pytorch.org/whl/cu130 torch
 	@uv run --no-sync python -c "import torch, peft, transformers; \
 	print('torch', torch.__version__, '| cuda', torch.cuda.is_available(), \
 	'| peft', peft.__version__)"
-	@echo 'Run with --no-sync from here, or `uv run` puts the CPU wheel back.'
+	@echo 'Run with --no-sync from here: a plain `uv run` re-syncs without the extra.'
 
 TIGRIS_HOST ?= tigris
 TIGRIS_DIR  ?= ajsoftworks/sphragis
 REMOTE      ?= origin
 BRANCH      ?= $(shell git rev-parse --abbrev-ref HEAD)
+CLUSTER     ?= tigris
+ACCOUNT     ?= fl-mlm
+SLURM_CLI    = uv run --no-sync --no-active python -m sphragis.experiment.slurm
 
 deploy:                    ## Put the cluster on this branch's pushed HEAD, by SHA
 	@# A read-only deploy key makes the cluster a real clone, so deployment is a fetch to
@@ -55,20 +51,50 @@ deploy:                    ## Put the cluster on this branch's pushed HEAD, by S
 	@# A queued job runs whatever is in the checkout when it *starts*, not what was there
 	@# when it was submitted. At low fairshare that gap is a day or more, so deploying over
 	@# a pending job silently changes the code it runs and the result cannot be attributed
-	@# to a SHA. Refuse, and make overriding it deliberate: `make deploy FORCE=1`.
+	@# to a SHA. Refuse, and make overriding it deliberate: `make deploy FORCE=1`. Both
+	@# clusters run this one checkout, so the queue is read on all of them.
 	@# `git diff-index` alone reports stat-dirty entries as modifications, so rewriting a
 	@# tracked results file with identical bytes refuses the deploy with nothing to commit.
 	@git update-index -q --refresh
 	@git diff-index --quiet HEAD -- || { echo "commit first: the cluster deploys a SHA, not a working tree"; exit 1; }
 	@test -n "$(FORCE)" || { \
 	  q=$$(ssh -o ConnectTimeout=20 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 \
-	        $(TIGRIS_HOST) 'squeue -h -u $$USER -o "%i %T" && echo && echo QUEUE_OK'); \
+	        $(TIGRIS_HOST) 'squeue -M all -h -u $$USER -o "%i %T" && echo && echo QUEUE_OK'); \
 	  case "$$q" in *QUEUE_OK*) ;; *) echo "could not read the queue on $(TIGRIS_HOST); not deploying"; exit 1;; esac; \
-	  j=$$(echo "$$q" | grep -v '^QUEUE_OK$$' | grep -c . ); \
+	  j=$$(echo "$$q" | grep -v -e '^QUEUE_OK$$' -e '^CLUSTER: ' | grep -c . ); \
 	  test "$$j" -eq 0 || { echo "$$j job(s) queued or running:"; echo "$$q" | grep -v '^QUEUE_OK$$'; \
 	    echo "deploying now would change the code they run. Cancel them, wait, or: make deploy FORCE=1"; exit 1; }; }
 	git push -q $(REMOTE) HEAD
 	ssh $(TIGRIS_HOST) 'cd $(TIGRIS_DIR) && git fetch -q origin && git checkout -q -B $(BRANCH) origin/$(BRANCH) && git --no-pager log --oneline -1'
+
+submit:                    ## Submit scripts/JOB.sbatch to CLUSTER (tigris|sporc|sporc-h100) as ACCOUNT
+	@# Scripts keep their TIGRIS #SBATCH lines. sbatch ranks command-line options above them,
+	@# so changing cluster never edits a script. TIME= overrides --time, whose values were
+	@# measured on a GH200; SBATCH_ARGS= passes the rest, e.g. --export=ALL,MODE=windows.
+	@# Both refusals below would otherwise surface only after the queue wait.
+	@test -n "$(JOB)" || { echo "usage: make submit JOB=rq1 [CLUSTER=sporc] [TIME=HH:MM:SS] [SBATCH_ARGS=...]"; exit 1; }
+	@test -f scripts/$(JOB).sbatch || { echo "no scripts/$(JOB).sbatch"; exit 1; }
+	@git update-index -q --refresh
+	@git diff-index --quiet HEAD -- || { echo "commit and make deploy first: a job runs the cluster's checkout"; exit 1; }
+	@flags=$$($(SLURM_CLI) flags --target $(CLUSTER) --account $(ACCOUNT) $(if $(TIME),--time $(TIME))) || exit 1; \
+	machine=$$($(SLURM_CLI) machine --target $(CLUSTER)) || exit 1; \
+	head=$$(git rev-parse HEAD); \
+	ssh $(TIGRIS_HOST) "cd $(TIGRIS_DIR) \
+	  && { [ \"\$$(git rev-parse HEAD)\" = $$head ] || { echo 'the cluster is not on this commit: make deploy'; exit 1; }; } \
+	  && { [ -x .venv-$$machine/bin/python ] || { echo 'no .venv-$$machine on the cluster: make cluster-env CLUSTER=$(CLUSTER)'; exit 1; }; } \
+	  && sbatch $$flags $(SBATCH_ARGS) scripts/$(JOB).sbatch"
+
+cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aarch64 TIGRIS, x86_64 SPORC)
+	@# The login node is aarch64 and builds its own venv in place. An x86_64 venv can only be
+	@# built on an x86_64 machine, so for SPORC the same script runs as a CPU-only job there.
+	@machine=$$($(SLURM_CLI) machine --target $(CLUSTER)) || exit 1; \
+	flags=$$($(SLURM_CLI) flags --target $(CLUSTER) --account $(ACCOUNT) --cpu-only --time 01:00:00) || exit 1; \
+	ssh $(TIGRIS_HOST) "cd $(TIGRIS_DIR) && version=\$$(uv --version | cut -d' ' -f2) \
+	  && if [ \"\$$(uname -m)\" = $$machine ]; then UV_VERSION=\$$version bash scripts/cluster_env.sh; \
+	  else rc=0; job=\$$(sbatch --parsable --wait $$flags --cpus-per-task=4 --mem=16G \
+	    --job-name=sphragis-cluster-env --output=logs/sphragis-cluster-env-%j.log \
+	    --export=ALL,UV_VERSION=\$$version scripts/cluster_env.sh) || rc=\$$?; \
+	    cat logs/sphragis-cluster-env-\$${job%%;*}.log; exit \$$rc; fi"
 
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify

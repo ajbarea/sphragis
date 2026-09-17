@@ -15,15 +15,10 @@
 # Membership finished inside that and is now written before the generative half starts, so a
 # future wall costs the null instrument rather than the primary one.
 set -euo pipefail
-export PATH="$HOME/.local/bin:$PATH"
-# HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth
-# token `hf auth login` writes.
-export HF_HUB_CACHE=$HOME/hf-cache/hub
-export TOKENIZERS_PARALLELISM=false
-export CC=/usr/bin/gcc
 
 # Submit from the checkout: --output is relative and is opened before this body runs.
 cd "$HOME/ajsoftworks/sphragis"
+source sphragis/experiment/cluster-env.sh
 # SCORED_TEXT=after|with_context, e.g. `sbatch --export=ALL,SCORED_TEXT=with_context ...`.
 # Each variant writes its own file, so a rerun never overwrites an earlier result.
 SCORED_TEXT="${SCORED_TEXT:-with_context}"

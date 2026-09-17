@@ -22,12 +22,6 @@
 # Six hours covers the windows mode with margin. Shrink it for a pilot run, and remember a
 # request overlapping the monthly 08:00-20:00 maintenance reservation will not schedule.
 set -euo pipefail
-export PATH="$HOME/.local/bin:$PATH"
-# HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth
-# token `hf auth login` writes.
-export HF_HUB_CACHE=$HOME/hf-cache/hub
-export TOKENIZERS_PARALLELISM=false
-export CC=/usr/bin/gcc
 
 # MODE=pilot|windows, e.g. `sbatch --export=ALL,MODE=windows scripts/rq1_pilot.sbatch`.
 # pilot holds out changes at random from a single month, which measures that the apparatus
@@ -37,6 +31,7 @@ MODE="${MODE:-pilot}"
 
 # Submit from the checkout: --output is relative and is opened before this body runs.
 cd "$HOME/ajsoftworks/sphragis"
+source sphragis/experiment/cluster-env.sh
 
 if [ "$MODE" = "windows" ]; then
   SOURCE=(--root "$HOME/corpus-windows" --org openstack --org qt)

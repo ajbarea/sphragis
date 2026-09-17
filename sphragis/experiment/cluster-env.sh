@@ -1,0 +1,26 @@
+# The environment of every cluster job. Sourced from the checkout root by scripts/*.sbatch and
+# inlined by sphragis.experiment.slurm.render, so there is one copy.
+#
+# TIGRIS is aarch64 and SPORC x86_64, and both mount the same $HOME: uv and the venv are kept
+# per machine, and the checks below fail in seconds rather than after the model has loaded.
+machine="$(uname -m)"
+export PATH="$HOME/.local/bin/$machine:$HOME/.local/bin:$PATH"
+export UV_PROJECT_ENVIRONMENT=".venv-$machine"
+# HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth token
+# `hf auth login` writes, and the job would then authenticate with a stale copy.
+export HF_HUB_CACHE=$HOME/hf-cache/hub
+export TOKENIZERS_PARALLELISM=false
+# RIT hides the system gcc behind /tools/bin/blindfold/gcc, which refuses to run. Triton reads
+# CC before `which gcc` when it JIT-compiles on first generation.
+export CC=/usr/bin/gcc
+# scripts/cluster_env.sh sets SPHRAGIS_BUILDING_ENV to create what these checks require.
+if [ -z "${SPHRAGIS_BUILDING_ENV:-}" ]; then
+  if ! uv --version >/dev/null 2>&1; then
+    echo "no uv that runs on $machine; run: make cluster-env CLUSTER=<target>" >&2
+    exit 1
+  fi
+  if [ ! -x "$UV_PROJECT_ENVIRONMENT/bin/python" ]; then
+    echo "no $UV_PROJECT_ENVIRONMENT in $PWD; run: make cluster-env CLUSTER=<target>" >&2
+    exit 1
+  fi
+fi
