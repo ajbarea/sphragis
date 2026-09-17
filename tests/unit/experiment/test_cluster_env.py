@@ -266,13 +266,47 @@ def test_cluster_env_logs_are_named_for_their_cluster() -> None:
     assert "logs/sphragis-cluster-env-sporc-%j.log" in _dry_run("cluster-env", "CLUSTER=sporc")
 
 
-def test_a_tagged_rq1_run_writes_nothing_an_untagged_run_owns() -> None:
-    # A pilot on another GPU must not overwrite the GH200 run's result or its adapters, which
-    # live only in cluster scratch.
-    text = (_ROOT / "scripts" / "rq1.sbatch").read_text()
-    assert '--adapters "$HOME/scratch/sphragis-adapters$SUFFIX"' in text
-    assert '--out "$HOME/rq1-$MODE$SUFFIX.json"' in text
-    assert 'SUFFIX="${TAG:+-$TAG}"' in text
+def _suffix(tmp_path: Path, **env: str) -> str:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = subprocess.run(
+        ["bash", "-c", f'set -euo pipefail; source "{_ENV}"; echo "[$RESULT_SUFFIX]"'],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", **env},
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout.strip()
+
+
+def test_results_on_tigris_keep_their_existing_names(tmp_path: Path) -> None:
+    assert _suffix(tmp_path, SLURM_CLUSTER_NAME="tigris") == "[]"
+
+
+def test_results_on_another_cluster_are_named_for_it_unless_tagged(tmp_path: Path) -> None:
+    # Forgetting a tag on SPORC must not overwrite a GH200 result or its scratch-only adapters.
+    assert _suffix(tmp_path, SLURM_CLUSTER_NAME="sporc") == "[-sporc]"
+
+
+def test_a_run_tag_names_the_results(tmp_path: Path) -> None:
+    assert _suffix(tmp_path, SLURM_CLUSTER_NAME="sporc", RUN_TAG="sporc-a100") == "[-sporc-a100]"
+
+
+def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -> None:
+    assert _suffix(tmp_path, SLURM_CLUSTER_NAME="sporc", RUN_TAG="") == "[]"
+
+
+def _written_paths(script: Path) -> list[str]:
+    return re.findall(r'--(?:out|adapters) "([^"]+)"', script.read_text())
+
+
+@pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
+def test_every_result_and_adapter_path_carries_the_suffix(script: Path) -> None:
+    paths = _written_paths(script)
+    assert paths, f"{script.name} writes no --out or --adapters path"
+    for path in paths:
+        assert "$RESULT_SUFFIX" in path, f"{script.name}: {path}"
 
 
 def test_every_machine_builds_on_one_pinned_interpreter(tmp_path: Path) -> None:

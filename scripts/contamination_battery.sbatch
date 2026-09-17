@@ -32,4 +32,4 @@ uv run --no-sync python scripts/contamination_battery.py \
   --post "$POST" \
   --pre "$PRE" \
   --scored-text "$SCORED_TEXT" \
-  --out "$HOME/contamination-openstack-$TAG-$SCORED_TEXT.json"
+  --out "$HOME/contamination-openstack-$TAG-$SCORED_TEXT$RESULT_SUFFIX.json"

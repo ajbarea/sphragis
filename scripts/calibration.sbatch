@@ -40,7 +40,7 @@ for tag in $CONDITIONS; do
     --corpus "b=$PLANTED/$tag-b.jsonl" \
     --seeds 1 \
     --equalize-train \
-    --adapters "$HOME/scratch/sphragis-adapters-$tag" \
-    --out "$HOME/calibration-$tag.json"
+    --adapters "$HOME/scratch/sphragis-adapters-$tag$RESULT_SUFFIX" \
+    --out "$HOME/calibration-$tag$RESULT_SUFFIX.json"
 done
 echo "CALIBRATION_OK"

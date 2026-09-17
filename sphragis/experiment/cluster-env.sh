@@ -13,6 +13,14 @@ export UV_PYTHON=3.13.15
 # `hf auth login` writes, and the job would then authenticate with a stale copy.
 export HF_HUB_CACHE=$HOME/hf-cache/hub
 export TOKENIZERS_PARALLELISM=false
+# Appended to every result and adapter path a job writes. Empty on TIGRIS, so existing names
+# hold; elsewhere the cluster name, so a run there cannot overwrite a GH200 result by omission.
+# RUN_TAG names it instead, and an explicitly empty RUN_TAG overwrites deliberately.
+if [ -z "${RUN_TAG+set}" ]; then
+  RUN_TAG="${SLURM_CLUSTER_NAME:-tigris}"
+  [ "$RUN_TAG" != tigris ] || RUN_TAG=""
+fi
+export RESULT_SUFFIX="${RUN_TAG:+-$RUN_TAG}"
 # RIT hides the system gcc behind /tools/bin/blindfold/gcc, which refuses to run. Triton reads
 # CC before `which gcc` when it JIT-compiles on first generation.
 export CC=/usr/bin/gcc

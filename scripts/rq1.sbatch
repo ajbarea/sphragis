@@ -28,9 +28,6 @@ set -euo pipefail
 # runs. windows trains on the train window and evaluates on dev, which is the study's own
 # split; the test window stays sealed and split_by_window refuses to name it.
 MODE="${MODE:-pilot}"
-# TAG=sporc-a100 keeps a run's result and adapters apart from an untagged run's, which the
-# adapters in scratch have no other copy of.
-SUFFIX="${TAG:+-$TAG}"
 
 # Submit from the checkout: --output is relative and is opened before this body runs.
 cd "$HOME/ajsoftworks/sphragis"
@@ -49,5 +46,5 @@ uv run --no-sync python scripts/rq1_pilot.py \
   "${SOURCE[@]}" \
   --seeds 1 \
   --equalize-train \
-  --adapters "$HOME/scratch/sphragis-adapters$SUFFIX" \
-  --out "$HOME/rq1-$MODE$SUFFIX.json"
+  --adapters "$HOME/scratch/sphragis-adapters$RESULT_SUFFIX" \
+  --out "$HOME/rq1-$MODE$RESULT_SUFFIX.json"

@@ -18,4 +18,4 @@ cd "$HOME/ajsoftworks/sphragis"
 source sphragis/experiment/cluster-env.sh
 uv run --no-sync python scripts/pilot.py \
   "$HOME/pilot-examples.jsonl" \
-  --out "$HOME/pilot-outcomes.json"
+  --out "$HOME/pilot-outcomes$RESULT_SUFFIX.json"
