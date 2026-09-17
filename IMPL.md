@@ -21,6 +21,11 @@ snapshots then build. Freezing waits on AJ's decisions below: it is irreversible
 
 ## Next pickups
 
+- **When SPORC job 21706441 ends** (A100 40 GB, `RUN_TAG=sporc-a100`, commit `c5ad368`): record
+  in the research log the `train_adapter: gpu` peak lines from its log and the `provenance.gpu`
+  block of `~/rq1-pilot-sporc-a100.json`, which settle whether 7B training fits in 40 GB, and
+  the seconds per step, which size every `--time` for SPORC. If it ran out of memory, the next
+  candidate is `CLUSTER=sporc-h100`, not a smaller batch: batch 16 is registered.
 - Record the collected months' counts and drop profiles in the research log and the Stage 1
   skeleton's sampling section.
 - Run the outcome-neutral checks inside a full RQ1 pilot run on TIGRIS, so the manipulation
