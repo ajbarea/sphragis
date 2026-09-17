@@ -245,7 +245,7 @@ def test_submit_sends_free_form_options_through_the_checks() -> None:
     # Placed on the sbatch line directly, a bare word in SBATCH_ARGS ends option parsing and the
     # checked account and cluster are never read.
     dry = _dry_run("submit", "JOB=pilot", "SBATCH_ARGS=-A rc-onboard")
-    assert "--sbatch-args '-A rc-onboard'" in dry
+    assert "--sbatch-args='-A rc-onboard'" in dry
     assert "sbatch $flags scripts/pilot.sbatch" in dry
     assert "rc-onboard scripts/" not in dry
 

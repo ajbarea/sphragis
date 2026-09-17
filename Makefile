@@ -82,7 +82,7 @@ submit:                    ## Submit scripts/JOB.sbatch to CLUSTER (tigris|sporc
 	@test -f scripts/$(JOB).sbatch || { echo "no scripts/$(JOB).sbatch"; exit 1; }
 	@git update-index -q --refresh
 	@git diff-index --quiet HEAD -- || { echo "commit and make deploy first: a job runs the cluster's checkout"; exit 1; }
-	@flags=$$($(SLURM_CLI) flags $(SLURM_TARGET) $(if $(TIME),--time $(TIME)) --sbatch-args '$(SBATCH_ARGS)') || exit 1; \
+	@flags=$$($(SLURM_CLI) flags $(SLURM_TARGET) $(if $(TIME),--time $(TIME)) --sbatch-args='$(SBATCH_ARGS)') || exit 1; \
 	machine=$$($(SLURM_CLI) machine --target $(CLUSTER)) || exit 1; \
 	head=$$(git rev-parse HEAD); \
 	ssh $(TIGRIS_HOST) "cd $(TIGRIS_DIR) \

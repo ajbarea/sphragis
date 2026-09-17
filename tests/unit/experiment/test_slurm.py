@@ -359,3 +359,14 @@ def test_free_form_values_with_spaces_survive_the_remote_shell(
     assert main(["flags", "--target", "sporc", "--sbatch-args", extra]) == 0
     words = shlex.split(capsys.readouterr().out)
     assert words[0] == "--export=ALL,CONDITIONS=marker-1 marker-0"
+
+
+def test_free_form_options_that_start_with_dashes_reach_the_check(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # argparse reads a separate "--export=..." value as an option of its own; the Makefile must
+    # pass --sbatch-args=VALUE, and the CLI must accept it.
+    from sphragis.experiment.slurm import main
+
+    assert main(["flags", "--target", "sporc", "--sbatch-args=--export=ALL,TAG=sporc-a100"]) == 0
+    assert capsys.readouterr().out.startswith("--export=ALL,TAG=sporc-a100 --clusters=sporc ")
