@@ -1724,6 +1724,26 @@ matched adapter wins on both sides once neither is convention-free. And the anno
 easiest thing a model could learn, so the absorption threshold for a realistic convention is
 likely higher than a tenth, not lower.
 
+### RQ1's central finding has not been measured before (2026-09-18)
+
+A novelty check on the result the windowed run produced: that adaptation to code-review
+refinement is large and almost entirely task-general, with the organization-specific share about a
+thirteenth of it (0.048 to 0.306 exact match, of which 2 points separate matched from mismatched).
+
+The closest work fine-tunes for exactly this task and metric and does not make the decomposition.
+Begolli, Aksoy and Neider (arXiv:2507.19271, v2 October 2025, read in full) fine-tune for code
+refinement scored by exact match and BLEU, on five industrial C# repositories from one partner plus
+the CodeReviewer benchmark. They **do not compare within-project against cross-project
+performance, and do not separate task-general gains from organization-specific ones**; they
+attribute what they observe to general C# patterns and domain shift. LLaMA-Reviewer
+(arXiv:2308.11148) likewise reports the gain from parameter-efficient tuning without decomposing it.
+
+So the matched-versus-mismatched design does something the literature has not: it splits a
+fine-tuning gain into the part any organization's data would have taught and the part only that
+organization's could. That is the contribution to state first in the Stage 1 introduction, and it
+holds whether RQ1's gate passes or fails, because the decomposition is the measurement and the gate
+is only one reading of it.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
