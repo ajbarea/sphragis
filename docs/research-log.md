@@ -2113,3 +2113,71 @@ beats qtbase. The difference between the pairs is the pair, not the training siz
 the reading of the earlier entry: qt-creator's refinements carry something qtbase's adapter lacks
 and qtdeclarative's has. The effect roughly halves with half the data, as a learned property
 should, and qtbase still never wins at home.
+
+### RQ2's first result: a client's update reveals its organization, within a language too (2026-09-18, jobs 148513, 148621)
+
+`datasets/results/client-updates.json`, `client-geometry.json`, `client-attribution.json`. The
+geometry of the RQ1 adapters said an update's raw direction is dominated by initialization and
+training length. So this holds both fixed, as a federated round does: 34 clients of exactly 64
+examples, disjoint by change, each restored to one identical initial LoRA state (checked) and
+trained 8 steps on Qwen2.5-Coder-7B-Instruct. Update norms land in a band of 3.54 to 3.76.
+Sources are eight projects labelled organization, content and project, so organization and
+language can be told apart: Python in both organizations (OpenStack nova, neutron, ironic; Qt
+pyside-setup), documentation in both (starlingx/docs, qtdoc), C++ in Qt (qt-creator, qtbase). The
+content labels are majorities, not purities: the Python projects are 69 to 75% `.py`, starlingx/docs
+99% `.rst`, qtdoc 67% `.qdoc`. Run from worktrees pinned at ec7cb80 and fbefafb.
+
+The attack is the simplest learned one: an attacker holding reference updates from each candidate
+assigns a new update to the class whose other members it aligns with most (mean cosine, leave one
+out). 10,000 label permutations each.
+
+| attributing | classes | accuracy | majority | p |
+|---|---|---|---|---|
+| **organization** | 2 | **0.912** (31 of 34) | 0.647 | 0.0001 |
+| project | 8 | 0.500 | 0.176 | 0.0001 |
+| content | 3 | 0.647 | 0.353 | 0.0005 |
+| **organization, Python clients only** | 8 vs 4 | **0.917** | 0.667 | 0.012 |
+| **organization, documentation only** | 4 vs 6 | **0.900** | 0.600 | 0.014 |
+
+| relation between two clients | mean cosine | pairs |
+|---|---|---|
+| same organization and content, other project | 0.264 | 57 |
+| same project | 0.260 | 64 |
+| other organization and content | 0.228 | 208 |
+| same organization, other content | 0.219 | 176 |
+| other organization, same content | 0.215 | 56 |
+
+**The update carries its organization, and not through its language.** Restricted to one kind of
+content, where both organizations contribute and language cannot carry it, organization is still
+attributed at 0.90 and 0.92. Clients from different organizations writing the same kind of content
+are the least aligned pairs of all.
+
+**At this altitude the signal is organizational, not per project.** Two clients from different
+projects of one organization align as closely as two from the same project (0.264 against 0.260),
+and more than same-content clients across organizations (0.215). This is the reverse of what RQ1's
+generative contrast and the separability probe suggested, where the project looked like the unit.
+The two instruments measure different things: the contrast asks whether an adapter *performs*
+better at home, the geometry whether updates *look* alike. An organization can leave a mark on how
+its adapters move without that mark buying held-out exact match.
+
+**Where it lives.** Per-module attribution rises toward the output: median organization accuracy
+0.794 over layers 0 to 7 and 0.926 over layers 24 to 27; project 0.353 against 0.588. (The best single
+module reaches 1.000, but that is the maximum of 196, so it is not evidence.)
+
+**Caveats, in order of weight.**
+
+- **The permutation p-values treat clients as exchangeable, and clients share their project.** The
+  organization claim rests on eight projects, and within Python the Qt side is one project, within
+  documentation both sides are, so the within-content rows are also between-project tests. A
+  project-level test, the unit that can support an organizational claim, needs more projects per
+  organization than this corpus's train window offers in matching content.
+- One initialization and one client size (64 examples, 8 steps). Longer local training moves
+  updates apart (the RQ1 geometry), and whether the signal survives it is untested.
+- Per-client updates, no secure aggregation. The aggregate threat model is the next question
+  (FedAttr's paired-subset design with the watermark removed).
+
+**Against the state of the art.** Weight-space provenance was shown for the training objective
+(Paul, arXiv:2604.08844), which named same-objective different-data drift as untested; source
+attribution under secure aggregation was shown for deliberate watermarks (FedAttr,
+arXiv:2605.06596). This is the untested case, same objective and natural data, and the answer at
+this scale is that an organization's own conventions are enough.

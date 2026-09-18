@@ -79,6 +79,27 @@ def main() -> None:
                 f"best {values[-1][0]:.3f} ({values[-1][1].split('model.')[-1]}), "
                 f"{above} of {len(values)} above pooled"
             )
+    # The language-controlled test: organization attribution among clients of one content type
+    # only, where two organizations both contribute, so language cannot carry the attribution.
+    report["organization_within_content"] = {}
+    for content in sorted({s.content for s in sources}):
+        keep = [i for i, s in enumerate(sources) if s.content == content]
+        labels = [sources[i].organization for i in keep]
+        if len(set(labels)) < 2:
+            continue
+        sub = [[cosine[i][j] for j in keep] for i in keep]
+        counts = Counter(labels)
+        cell = {
+            "classes": dict(counts),
+            "accuracy": accuracy(sub, labels),
+            "majority_rate": max(counts.values()) / len(labels),
+            "permutation_p": permutation_p(sub, labels, draws=args.draws, seed=args.seed),
+        }
+        report["organization_within_content"][content] = cell
+        print(
+            f"organization within {content:8} {dict(counts)}  accuracy {cell['accuracy']:.3f}  "
+            f"majority {cell['majority_rate']:.3f}  p {cell['permutation_p']:.4f}"
+        )
     report["relations"] = relation_means(cosine, sources)
     for name, cell in sorted(report["relations"].items(), key=lambda kv: -kv[1]["mean"]):
         print(f"  {name:48} {cell['mean']:.3f} over {cell['pairs']} pairs")

@@ -149,8 +149,15 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   data, new seed: 0.13; rerun at the same seed: 0.96), training length next (0.21 at 788 examples,
   0.055 at 4,327), source a 0.02 margin at matched size that language may explain. A raw-cosine
   attack is weak; RQ2's per-client attack has to be learned at matched init and size.
-- [ ] **A learned per-client attack**: spectral and per-layer features (Paul, arXiv:2604.08844) with
-  reference updates at matched init and size, several seeds per source, before the aggregate one.
+- [x] **Per-client attribution at matched init and size** (148513, 148621): 34 clients over eight
+  projects; organization attributed at 0.912 (p 0.0001), and within one content type at 0.917
+  (Python) and 0.900 (docs). Different projects of one organization align as closely as the same
+  project. Late layers carry most of it.
+- [ ] **Project-level inference**: more projects per organization in matching content, so the
+  organization claim can be tested with the project, not the client, as the exchangeable unit.
+- [ ] **Robustness**: several initializations, longer local training (the RQ1 geometry says length
+  moves updates apart), and a learned classifier on spectral features beside nearest-mean cosine.
+- [ ] **The aggregate attack**: FedAttr's paired subsets over these clients, watermark removed.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
   project, or both, and which boundary an organization-level privacy policy actually protects.
 - [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,
