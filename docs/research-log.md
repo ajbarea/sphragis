@@ -1699,6 +1699,24 @@ and also with a low-frequency one the adapter never absorbs. The honest bound is
 contain, and the Stage 1 report has to say so rather than presenting the null as a statement about
 organizations alone.
 
+**What is known already, and what is not.** The two tendencies underneath are not new. LoRA's
+low-rank constraint favouring dominant patterns over minority ones is reported for classification
+(Scientific Reports, 2026, from its summary only), and generative models over-weighting their
+modes is a recurring theme of the model-collapse literature. The closest recent work, Skobelev,
+Fithian and Han (arXiv:2609.16454, 15 September 2026, read in full), fine-tunes with LoRA on
+surveys and CodeNet and finds that supervised fine-tuning moves output diversity toward the
+target from either direction depending on model and data. It measures collision probability
+**under sampling**, and it does not address greedy decoding at all, nor compare a pattern's
+training frequency with its output frequency.
+
+What this entry adds is the consequence for measurement: under the greedy decoding that exact
+match requires, a matched-versus-mismatched adapter contrast is **non-monotone in the strength of
+the convention it is supposed to detect**, so a fingerprint learned strongly enough to be
+over-applied reads as evidence against itself. That is a statement about how adapter-attribution
+studies score their own results, and it does not depend on why the amplification happens. Whether
+greedy is the amplifier is the separate, testable question, and testing it would set this result
+directly beside 2609.16454's sampling-based one.
+
 **Two limits on reading this, stated.** The plant is asymmetric, one half carrying a convention and
 the other none, whereas two organizations each carry their own. A symmetric version, convention X
 on one half and convention Y on the other, is the closer analogue and would show whether the

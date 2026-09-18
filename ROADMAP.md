@@ -129,8 +129,15 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
 - [ ] **Symmetric calibration**: convention X on one half, Y on the other, since two organizations
   each carry their own. Shows whether the matched adapter wins on both sides once neither half is
   convention-free.
-- [ ] Test whether greedy decoding causes the amplification: rerun 0.25 with sampling at
-  temperature 1, which should reproduce the training rate if greedy is the amplifier.
+- [ ] Test whether greedy decoding causes the amplification: re-evaluate the saved 0.25
+  adapters with sampling at temperature 1, no retraining needed. If sampling reproduces the
+  training rate where greedy gives 0.64, greedy is the amplifier, and the result sits directly
+  beside Skobelev, Fithian and Han (arXiv:2609.16454), who measure under sampling only and do not
+  address greedy decoding. Needs an optional temperature on `HFGenerator`, default greedy so the
+  registered decoder is unchanged.
+- [ ] **Pass `RUN_TAG` on every submission.** Job 148093 was submitted without it, so its output
+  and adapters overwrote the first windowed run's on the cluster. The result survives because it
+  is committed, but a tagless submission can destroy an uncommitted one.
 
 ## Plan D — granularity
 
