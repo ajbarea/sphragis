@@ -2788,3 +2788,22 @@ That ratio is the finding a reader should carry away, and it is what makes the m
 organizational term is a tenth of the effect the apparatus can see easily, which is why the design
 needs the seeds, the crossed interval and the sensitivity analysis to say anything honest about it.
 It also frames RQ2, where the same small term is enough to identify a source from a weight update.
+
+### The altitude below ours has already been shown learnable (2026-09-18)
+
+Dai et al., "MPCoder: Multi-user Personalized Code Generator with Explicit and Implicit Style
+Representation Learning" (ACL 2024, arXiv:2406.17255), learn *per-user* coding style: an explicit
+residual for syntactic conventions, an implicit representation trained with contrastive learning to
+separate users, and a Coding Style Score over structure, formatting and naming to say whether the
+generated code resembles the user it was generated for.
+
+So individual style is learnable and separable, by a method built to separate it. That is the
+altitude below this study's, and it cuts both ways for RQ1. It supports the premise, since a style
+signal exists somewhere in the hierarchy; and it sharpens the question, because MPCoder needs
+contrastive training *designed* to pull users apart, while RQ1 asks whether ordinary fine-tuning on
+an organization's own refinements picks up that organization's hand as a side effect. A method
+built to separate sources and a method that happens to absorb one are different claims, and the
+7 to 10% organizational share measured here is what the second is worth.
+
+It also leaves the middle of the hierarchy, the project and the organization, where this study and
+its RQ2 attacks now sit, with the finding that the codebase is the unit that carries.
