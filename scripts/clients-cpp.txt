@@ -2,10 +2,12 @@
 # several projects per organization in one language on both sides. C++ in AOSP and in Qt, with
 # the Python and documentation cells of the first run kept for comparison.
 # Paths are relative to $CLIENTS (see scripts/client_updates.sbatch).
-aosp:cpp/art=aosp_platform_art.jsonl
-aosp:cpp/frameworks-av=aosp_platform_frameworks_av.jsonl
-aosp:cpp/system-core=aosp_platform_system_core.jsonl
-aosp:cpp/bionic=aosp_platform_bionic.jsonl
+aosp:cpp/art=platform_art.jsonl
+aosp:cpp/frameworks-av=platform_frameworks_av.jsonl
+aosp:cpp/system-core=platform_system_core.jsonl
+aosp:cpp/hardware-interfaces=platform_hardware_interfaces.jsonl
+aosp:cpp/adb=platform_packages_modules_adb.jsonl
+aosp:cpp/update-engine=platform_system_update_engine.jsonl
 qt:cpp/qt-creator=qt-creator_qt-creator.jsonl
 qt:cpp/qtbase=qt_qtbase.jsonl
 qt:cpp/qtdeclarative=qt_qtdeclarative.jsonl

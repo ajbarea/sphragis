@@ -31,9 +31,10 @@ parser.add_argument("--out-dir", type=Path, required=True)
 parser.add_argument(
     "--window",
     action="append",
-    choices=("pilot", "train", "dev"),
+    choices=("pilot", "train", "dev", "all"),
     help="repeatable; default train. RQ2's clients need no time split, so they may pool train "
-    "and dev. The test window is never offered.",
+    "and dev, or take `all` months present, which an organization outside the study's windows "
+    "needs. The test window is never offered, and `all` cannot reach it: it is never fetched.",
 )
 parser.add_argument(
     "--projects", action="append", default=[], help="repeatable; default the top two"
@@ -41,7 +42,9 @@ parser.add_argument(
 
 
 def load(org: str, window: str) -> list[dict[str, Any]]:
-    first, last = WINDOWS[window]
+    # `all` takes every month built for this organization. The test window is sealed and never
+    # fetched, so there is nothing of it on disk for `all` to reach.
+    first, last = ("0000-00-00", "9999-99-99") if window == "all" else WINDOWS[window]
     rows: list[dict[str, Any]] = []
     for path in sorted(Path(f"datasets/gerrit/{org}/examples").glob("*.jsonl")):
         if not (first[:7] <= path.stem < last[:7]):
