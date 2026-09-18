@@ -2901,3 +2901,39 @@ conventions and a language, and through secure aggregation a round's aggregate i
 An organization is legible only through the codebases it happens to own, which for a federation
 means barely at all. For RQ2's framing this is sharper than the original claim, not weaker: a
 governance boundary drawn around an organization does not match the boundary the leak respects.
+
+### RQ1 under the registered numerics, and two registrations that earned their keep (2026-09-18, jobs 149258 to 149260)
+
+`datasets/results/rq1-qtfull-fp32-seeds.json`. The windowed run repeated at three seeds under fp32
+inference, the precision registered this morning. Same corpora, split and held-out examples as the
+bf16 three-seed read.
+
+| reading | OpenStack | Qt | verdict |
+|---|---|---|---|
+| pooled, crossed (registered) | +0.0230 [**+0.0000**, +0.0457] | +0.0316 [+0.0089, +0.0567] | mixed |
+| pooled, median seed | +0.0230 [-0.0004, +0.0448] | +0.0295 [+0.0058, +0.0541] | mixed |
+| change-averaged, crossed | +0.0380 [+0.0017, +0.0759] | +0.0334 [+0.0054, +0.0615] | **pass** |
+| change-averaged, median seed | +0.0372 [-0.0053, +0.0807] | +0.0350 [+0.0057, +0.0650] | mixed |
+
+Against bf16 at three seeds (+0.0171 and +0.0312 pooled), Qt is unchanged and OpenStack sits about
+half a point higher, still not clear of zero.
+
+**The estimand decides the verdict here, and it was registered before this run existed.** Pooled
+returns mixed; change-averaged under the same interval returns a pass on both organizations. Had
+the choice been open at this point, a pass was available by taking the other estimand, and the
+reasons for preferring it could have been written afterwards. They were written in advance instead,
+on cluster-size informativeness and on a measured false-positive rate, and they chose pooled. This
+is the clearest demonstration this study will produce of what pre-registration is for, and it costs
+the headline result.
+
+**The boundary earned its keep too.** OpenStack's pooled lower bound is exactly 0.0, not a rounded
+zero: `supports_direction` reads `low > 0.0` and returns False. The registration fixed the strict
+inequality after a pilot where Qt's bound sat exactly at zero in 19 of 20 bootstrap seeds. It has
+now decided a verdict twice.
+
+**The contrast is the same at every seed while the arms move.** OpenStack's per-seed contrasts are
++0.0230, +0.0230, +0.0230 (SD 0.0000) although the three runs are genuinely different: final losses
+0.066, 0.0015 and 0.716, adapter norms 18.46, 19.00 and 18.86, and only 303 of 565 predictions
+shared between the first two. Both arms move together, so their difference does not. That is the
+strongest evidence yet that the contrast is a property of the data rather than of a training run,
+and it is why the measured seed effect in this setting is indistinguishable from zero.
