@@ -64,8 +64,17 @@ deploy:                    ## Put the cluster on this branch's pushed HEAD, by S
 	        $(TIGRIS_HOST) 'squeue -M all -h -u $$USER -o "%i %T" && echo && echo QUEUE_OK'); \
 	  case "$$q" in *QUEUE_OK*) ;; *) echo "could not read the queue on $(TIGRIS_HOST); not deploying"; exit 1;; esac; \
 	  j=$$(echo "$$q" | grep -v -e '^QUEUE_OK$$' -e '^CLUSTER: ' | grep -c . ); \
-	  test "$$j" -eq 0 || { echo "$$j job(s) queued or running:"; echo "$$q" | grep -v '^QUEUE_OK$$'; \
-	    echo "deploying now would change the code they run. Cancel them, wait, or: make deploy FORCE=1"; exit 1; }; }
+	  test "$$j" -eq 0 || { \
+	    here=$$(ssh $(SSH_OPTS) $(TIGRIS_HOST) 'cd $(TIGRIS_DIR) && git rev-parse HEAD') \
+	      || { echo "could not read the cluster checkout; not deploying"; exit 1; }; \
+	    diff=$$(git diff --name-status "$$here" HEAD) \
+	      || { echo "the cluster is on $$here, which this clone does not have; not deploying"; exit 1; }; \
+	    if printf '%s\n' "$$diff" | $(SLURM_CLI) inert; then \
+	      echo "$$j job(s) queued; this deploy changes nothing they run:"; printf '%s\n' "$$diff"; \
+	    else \
+	      echo "$$j job(s) queued or running:"; echo "$$q" | grep -v '^QUEUE_OK$$'; \
+	      echo "this deploy changes code they could run. Cancel them, wait, or: make deploy FORCE=1"; exit 1; \
+	    fi; }; }
 	git push -q $(REMOTE) HEAD
 	ssh $(TIGRIS_HOST) 'cd $(TIGRIS_DIR) && git fetch -q origin && git checkout -q -B $(BRANCH) origin/$(BRANCH) && git --no-pager log --oneline -1'
 

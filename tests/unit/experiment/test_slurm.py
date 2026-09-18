@@ -370,3 +370,59 @@ def test_free_form_options_that_start_with_dashes_reach_the_check(
 
     assert main(["flags", "--target", "sporc", "--sbatch-args=--export=ALL,TAG=sporc-a100"]) == 0
     assert capsys.readouterr().out.startswith("--export=ALL,TAG=sporc-a100 --clusters=sporc ")
+
+
+def test_a_docs_only_deploy_is_inert() -> None:
+    from sphragis.experiment.slurm import inert_for_queued_jobs
+
+    assert inert_for_queued_jobs([("M", "docs/research-log.md"), ("M", "ROADMAP.md")])
+
+
+def test_a_new_job_script_is_inert_because_no_queued_job_can_be_running_it() -> None:
+    from sphragis.experiment.slurm import inert_for_queued_jobs
+
+    assert inert_for_queued_jobs([("A", "scripts/project_contrast.sbatch")])
+
+
+def test_recorded_results_are_inert() -> None:
+    from sphragis.experiment.slurm import inert_for_queued_jobs
+
+    assert inert_for_queued_jobs([("A", "datasets/results/calibration-sym-0.json")])
+
+
+def test_a_modified_job_script_is_not_inert() -> None:
+    """A queued job may be running exactly this script."""
+    from sphragis.experiment.slurm import inert_for_queued_jobs
+
+    assert not inert_for_queued_jobs([("M", "scripts/rq1.sbatch")])
+
+
+def test_a_deleted_job_script_is_not_inert() -> None:
+    from sphragis.experiment.slurm import inert_for_queued_jobs
+
+    assert not inert_for_queued_jobs([("D", "scripts/calibration.sbatch")])
+
+
+def test_source_and_python_scripts_are_not_inert() -> None:
+    from sphragis.experiment.slurm import inert_for_queued_jobs
+
+    assert not inert_for_queued_jobs([("M", "sphragis/experiment/model.py")])
+    assert not inert_for_queued_jobs([("A", "scripts/new_analysis.py")])
+    assert not inert_for_queued_jobs([("M", "docs/x.md"), ("M", "sphragis/corpus/dedup.py")])
+
+
+def test_an_unknown_status_is_not_inert() -> None:
+    from sphragis.experiment.slurm import inert_for_queued_jobs
+
+    assert not inert_for_queued_jobs([("R", "scripts/renamed.sbatch")])
+
+
+def test_the_cli_reads_a_name_status_diff(capsys, monkeypatch) -> None:  # noqa: ANN001
+    import io
+
+    from sphragis.experiment.slurm import main
+
+    monkeypatch.setattr("sys.stdin", io.StringIO("M\tdocs/a.md\nA\tscripts/x.sbatch\n"))
+    assert main(["inert"]) == 0
+    monkeypatch.setattr("sys.stdin", io.StringIO("M\tsphragis/experiment/walk.py\n"))
+    assert main(["inert"]) == 1

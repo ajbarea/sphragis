@@ -253,6 +253,29 @@ def job_for(run: EvalRun, *, project_dir: str, time_limit: str = "02:00:00") -> 
     )
 
 
+def inert_for_queued_jobs(changes: Sequence[tuple[str, str]]) -> bool:
+    """Whether a deploy leaves every queued job running exactly the code it was submitted with.
+
+    A queued job runs whatever is checked out when it starts, so deploy refuses while anything
+    is queued. Refusing every deploy made a docs-only commit look the same as a rewrite of the
+    model, and the only way past it was FORCE=1, which switches the check off entirely rather
+    than narrowing it: that is how a deploy over five pending jobs was forced before anyone
+    looked at what it changed. This narrows it instead.
+
+    `changes` are `git diff --name-status` rows. Inert means nothing a job could execute: prose,
+    recorded results, and job scripts ADDED by the diff, since a script that did not exist when
+    a job was submitted cannot be the one it runs. Any modified or deleted job script, and any
+    source or test file, is not inert. Unknown statuses are treated as not inert.
+    """
+    for status, path in changes:
+        if path.endswith(".md") or path.startswith(("docs/", "datasets/results/")):
+            continue
+        if status == "A" and path.startswith("scripts/") and path.endswith(".sbatch"):
+            continue
+        return False
+    return True
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m sphragis.experiment.slurm")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -264,8 +287,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     flags.add_argument("--sbatch-args", default="", help="free-form sbatch options, checked")
     machine = commands.add_parser("machine", help="the machine type a target's venv is built for")
     machine.add_argument("--target", default=DEFAULT_TARGET, help=", ".join(TARGETS))
+    inert = commands.add_parser(
+        "inert", help="exit 0 if a git diff --name-status on stdin cannot change a queued job"
+    )
+    inert.set_defaults(command="inert")
     args = parser.parse_args(argv)
     try:
+        if args.command == "inert":
+            rows = [line.split("\t", 1) for line in sys.stdin.read().splitlines() if line.strip()]
+            changes = [(row[0][:1], row[1]) for row in rows if len(row) == 2]
+            if len(changes) != len(rows):
+                print("could not parse the diff; treating it as not inert", file=sys.stderr)
+                return 1
+            return 0 if inert_for_queued_jobs(changes) else 1
         if args.command == "machine":
             print(_require_target(args.target).machine)
             return 0
