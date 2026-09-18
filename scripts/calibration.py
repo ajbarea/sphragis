@@ -27,7 +27,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from sphragis.experiment.planted import append_marker, flip_quotes, planted_corpora
+from sphragis.experiment.planted import (
+    append_marker,
+    flip_quotes,
+    planted_corpora,
+    symmetric_planted_corpora,
+)
 
 TRANSFORMS = {"marker": append_marker, "quotes": flip_quotes}
 
@@ -39,6 +44,11 @@ parser.add_argument(
     "--fraction", action="append", type=float, default=[], help="repeatable; default sweep"
 )
 parser.add_argument("--seed", type=int, default=11)
+parser.add_argument(
+    "--symmetric",
+    action="store_true",
+    help="a convention on BOTH halves (marker only): what two organizations actually look like",
+)
 
 
 def main() -> None:
@@ -56,11 +66,19 @@ def main() -> None:
         "conditions": [],
     }
     print(f"{len(rows)} examples from {args.examples}, convention '{args.transform}'")
+    if args.symmetric and args.transform != "marker":
+        raise SystemExit("--symmetric is defined for the marker convention only")
     for fraction in fractions:
-        left, right, report = planted_corpora(
-            rows, fraction=fraction, seed=args.seed, transform=transform
-        )
-        tag = f"{args.transform}-{fraction:g}"
+        if args.symmetric:
+            left, right, both = symmetric_planted_corpora(rows, fraction=fraction, seed=args.seed)
+            # One report for the manifest line: each half carries its own, at the same rate.
+            report = {**both["b"], "a": both["a"], "b": both["b"]}
+            tag = f"sym-{fraction:g}"
+        else:
+            left, right, report = planted_corpora(
+                rows, fraction=fraction, seed=args.seed, transform=transform
+            )
+            tag = f"{args.transform}-{fraction:g}"
         paths = {}
         for side, half in (("a", left), ("b", right)):
             path = args.out_dir / f"{tag}-{side}.jsonl"
@@ -73,7 +91,7 @@ def main() -> None:
             f"realised {report['realised_fraction']:.4f}"
         )
 
-    out = args.out_dir / f"manifest-{args.transform}.json"
+    out = args.out_dir / f"manifest-{'sym' if args.symmetric else args.transform}.json"
     out.write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"wrote {out}")
     print(

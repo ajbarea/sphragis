@@ -146,3 +146,36 @@ def test_the_marker_reaches_almost_every_row_where_quotes_do_not() -> None:
     _, marker = plant(rows, fraction=1.0, seed=0, transform=append_marker)
     assert quotes["realised_fraction"] == pytest.approx(0.5)
     assert marker["realised_fraction"] == pytest.approx(1.0)
+
+
+def test_symmetric_planting_gives_each_half_its_own_convention() -> None:
+    from sphragis.experiment.planted import MARKER, MARKER_OTHER, symmetric_planted_corpora
+
+    left, right, report = symmetric_planted_corpora(_rows(40), fraction=1.0, seed=0)
+    assert all(r["after"].endswith(MARKER_OTHER) for r in left)
+    assert all(r["after"].endswith(MARKER) for r in right)
+    assert report["a"]["realised_fraction"] == pytest.approx(1.0)
+    assert report["b"]["realised_fraction"] == pytest.approx(1.0)
+
+
+def test_symmetric_planting_keeps_the_conventions_distinct() -> None:
+    """If the two annotations were the same, the halves would not differ at all."""
+    from sphragis.experiment.planted import MARKER, MARKER_OTHER
+
+    assert MARKER != MARKER_OTHER
+    assert len(MARKER) == len(MARKER_OTHER), "neither side may get the easier rule"
+
+
+def test_symmetric_planting_at_zero_is_the_same_null_as_the_asymmetric_design() -> None:
+    from sphragis.experiment.planted import symmetric_planted_corpora
+
+    left, right, report = symmetric_planted_corpora(_rows(40), fraction=0.0, seed=0)
+    assert report["a"]["changed"] == report["b"]["changed"] == 0.0
+    assert {r["after"] for r in left} == {r["after"] for r in right}
+
+
+def test_the_two_halves_are_still_split_by_change() -> None:
+    from sphragis.experiment.planted import symmetric_planted_corpora
+
+    left, right, _ = symmetric_planted_corpora(_rows(40), fraction=0.5, seed=0)
+    assert {r["change_id"] for r in left}.isdisjoint({r["change_id"] for r in right})
