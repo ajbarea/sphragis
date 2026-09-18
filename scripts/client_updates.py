@@ -40,7 +40,15 @@ from sphragis.experiment.runner import build_prompt
 from sphragis.experiment.training import build_supervised
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--source", action="append", required=True, metavar="ORG:CONTENT/PROJECT=PATH")
+parser.add_argument("--source", action="append", default=[], metavar="ORG:CONTENT/PROJECT=PATH")
+parser.add_argument(
+    "--sources-file",
+    type=Path,
+    help="one ORG:CONTENT/PROJECT=PATH a line; blank lines and # comments ignored",
+)
+parser.add_argument(
+    "--corpus-root", type=Path, default=Path(), help="what a source's relative path is under"
+)
 parser.add_argument("--client-size", type=int, default=64)
 parser.add_argument("--clients", type=int, default=8, help="at most this many per source")
 parser.add_argument(
@@ -57,6 +65,19 @@ parser.add_argument(
 )
 
 
+def sources(args: argparse.Namespace) -> list[str]:
+    """The specs named on the command line, then those in the file, in order."""
+    specs = list(args.source)
+    if args.sources_file:
+        for line in args.sources_file.read_text().splitlines():
+            entry = line.split("#", 1)[0].strip()
+            if entry:
+                specs.append(entry)
+    if not specs:
+        raise SystemExit("no sources: pass --source or --sources-file")
+    return specs
+
+
 def main() -> None:
     args = parser.parse_args()
     # Examples the trainer would refuse are dropped before partitioning, or a refusal inside a
@@ -66,9 +87,11 @@ def main() -> None:
         tok.pad_token = tok.eos_token
     plan: dict[str, list[list[dict]]] = {}
     items: dict[str, dict] = {}
-    for spec in args.source:
+    for spec in sources(args):
         name, _, path = spec.partition("=")
-        rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line]
+        rows = [
+            json.loads(line) for line in (args.corpus_root / path).read_text().splitlines() if line
+        ]
         usable = []
         for row in rows:
             try:

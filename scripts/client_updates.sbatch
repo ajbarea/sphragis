@@ -20,15 +20,11 @@ source sphragis/experiment/cluster-env.sh
 
 C="${CLIENTS:-$HOME/corpus/clients}"
 
+SOURCES="${SOURCES:-scripts/clients-cpp.txt}"
+
 uv run --no-sync python scripts/client_updates.py \
   --clients 6 \
-  --source "openstack:python/nova=$C/openstack_nova.jsonl" \
-  --source "openstack:python/neutron=$C/openstack_neutron.jsonl" \
-  --source "openstack:python/ironic=$C/openstack_ironic.jsonl" \
-  --source "openstack:docs/starlingx-docs=$C/starlingx_docs.jsonl" \
-  --source "qt:python/pyside-setup=$C/pyside_pyside-setup.jsonl" \
-  --source "qt:docs/qtdoc=$C/qt_qtdoc.jsonl" \
-  --source "qt:cpp/qt-creator=$C/qt-creator_qt-creator.jsonl" \
-  --source "qt:cpp/qtbase=$C/qt_qtbase.jsonl" \
+  --sources-file "$SOURCES" \
+  --corpus-root "$C" \
   --adapters "$HOME/scratch/sphragis-adapters-clients$RESULT_SUFFIX" \
   --out "$HOME/client-updates$RESULT_SUFFIX.json"
