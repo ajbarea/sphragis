@@ -3011,3 +3011,48 @@ the ordering is mediocre on average and confident at the top.
 
 The defence curve is read at both points from now on, so a mask that moves the average case while
 leaving the confident identifications intact cannot be reported as a defence.
+
+### The mask that helps the attacker: a mechanism, not a bug (2026-09-18)
+
+`scripts/masking_mechanism.py`, `datasets/results/masking-mechanism.json`. Closes the open item
+"explain the non-monotonicity in noise", which survived the move to the 77-client pool and so was
+not the finite-pool artefact I had guessed.
+
+The detector scores a cosine, and a cosine is scale free: a mask cannot hurt it by shortening the
+difference vector, only by turning it. Adding an isotropic mask `n` to a difference `v` attenuates
+the cosine by about `||v|| / sqrt(||v||^2 + ||n||^2)`, which depends on `v`'s own length -- and the
+two classes differ in exactly that length. A member round's difference carries the target's update
+at 1/size; a non-member round's carries only which outsiders happened to be drawn. Averaging over
+rounds removes the sampling term from both, so the member class keeps a length and the null class
+loses one, and the same mask deflates the null further.
+
+Measured on the C++ clients, AOSP the target, five redraws per cell:
+
+| rounds | attenuation, member | attenuation, null | unmasked AUC | AUC at a 1x mask |
+|---|---|---|---|---|
+| 1 | 0.632 | 0.629 | 0.607 (sd 0.020) | 0.597 |
+| 10 | 0.653 | 0.627 | 0.791 (sd 0.028) | 0.797 |
+| 50 | 0.725 | 0.627 | 0.941 (sd 0.008) | 0.959 |
+| 200 | 0.844 | 0.627 | 0.991 (sd 0.003) | 0.999 |
+
+The null's attenuation is constant at 0.627 and the member's climbs to 0.844: the gap is the whole
+effect, and it appears only where averaging has done its work. At one round there is no gap and no
+rise. A per-draw model -- attenuate each draw by its own length and add the mask's projection on
+the reference direction -- predicts every cell within 0.01, including the rise at 200 rounds
+(0.998 predicted against 0.999 measured) and the collapse at a 16x mask (0.954 against 0.959).
+
+**What it means for the defence claim.** Masking is not merely a delay against this attacker; below
+some size it is worse than nothing, because it removes the null draws whose difference vector was
+too short to point anywhere reliably -- the very draws that produced the attacker's false alarms.
+A defence evaluated against a scale-free statistic must be reported this way, and the finding
+generalises past this study: a cosine detector is the wrong thing to calibrate a noise budget
+against.
+
+Two things this does not say. The updates replayed are one round's, so `rounds` measures the
+arithmetic of averaging and not a source's persistence across a moving global model. And the mask
+here is per round with no composition, so it is not a differential privacy guarantee, whose
+accounting would grow the noise with the rounds rather than hold it fixed.
+
+Incidental, and worth keeping: the first pass of this script read one draw per cell and reported a
+0.05 swing between RNG streams as an effect. Repeats were added before any number here was written
+down.

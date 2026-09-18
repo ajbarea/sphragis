@@ -206,8 +206,13 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   rounds, because fresh masks average away and the source's direction does not. One round hides it
   (0.50 to 0.55); two hundred do not.
 - [ ] **Several local-training lengths** (`CLIENT_SIZE`), since longer training moves updates apart.
-- [ ] Explain the non-monotonicity in noise (moderate masking scoring above none at 200 rounds), or
-  show it is an artefact of a twelve-client outsider pool by repeating it on the larger set.
+- [x] **Explained the non-monotonicity in noise.** Not the finite pool: it survives 77 clients.
+  The detector scores a cosine, so a mask attenuates each draw by `||v||/sqrt(||v||^2+||n||^2)`,
+  and the null class's difference vector is shorter than a member class's once averaging has
+  removed the sampling term. The null is deflated more (0.627 against 0.844 at 200 rounds) and
+  the separation widens. A per-draw model predicts every cell within 0.01
+  (`scripts/masking_mechanism.py`). Below some mask size, masking is worse than nothing against
+  a scale-free statistic.
 - [x] **The motivating deployment, cited** (Luo et al., arXiv:2412.01072, TOSEM): federated
   program repair over up to 100 clients with QLoRA and FedAvg, adapters uploaded to a central
   server, privacy claimed from not centralizing raw data, no threat model, DP and secure

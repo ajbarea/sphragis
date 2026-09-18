@@ -1,0 +1,134 @@
+{
+  "organization": "aosp",
+  "round_size": 8,
+  "draws": 400,
+  "mean_update_norm": 2.131978581433129,
+  "provenance": {
+    "generated_at": "2026-09-18T21:59:05.487456+00:00",
+    "git": {
+      "commit": "443cd8e0bfb61e490207e9350048838411388d5c",
+      "branch": "feat/wellposed-filter"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  },
+  "cells": {
+    "50/0.0": {
+      "auc_measured": 0.9391187499999999,
+      "auc_measured_sd": 0.005657082121111562,
+      "auc_predicted": 0.94135875,
+      "auc_unmasked": 0.94135875,
+      "auc_unmasked_sd": 0.00775855827860433,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.36900000000000005,
+      "difference_norm_present": 0.1592037416437375,
+      "difference_norm_absent": 0.12198936533785824,
+      "residual_mask_norm": 0.0,
+      "attenuation_present": 1.0,
+      "attenuation_absent": 1.0
+    },
+    "50/1.0": {
+      "auc_measured": 0.95940125,
+      "auc_measured_sd": 0.003146604692958739,
+      "auc_predicted": 0.95373875,
+      "auc_unmasked": 0.94135875,
+      "auc_unmasked_sd": 0.00775855827860433,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.5279999999999999,
+      "difference_norm_present": 0.1592037416437375,
+      "difference_norm_absent": 0.12198936533785824,
+      "residual_mask_norm": 0.15075365122758416,
+      "attenuation_present": 0.7253110565093028,
+      "attenuation_absent": 0.627215679023492
+    },
+    "50/4.0": {
+      "auc_measured": 0.9508112499999999,
+      "auc_measured_sd": 0.009253319083577516,
+      "auc_predicted": 0.94767875,
+      "auc_unmasked": 0.94135875,
+      "auc_unmasked_sd": 0.00775855827860433,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.5149999999999999,
+      "difference_norm_present": 0.1592037416437375,
+      "difference_norm_absent": 0.12198936533785824,
+      "residual_mask_norm": 0.6030146049103366,
+      "attenuation_present": 0.25519668144267066,
+      "attenuation_absent": 0.1981904382354357
+    },
+    "50/16.0": {
+      "auc_measured": 0.8003337500000001,
+      "auc_measured_sd": 0.020989547528918996,
+      "auc_predicted": 0.790275,
+      "auc_unmasked": 0.94135875,
+      "auc_unmasked_sd": 0.00775855827860433,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.175,
+      "difference_norm_present": 0.1592037416437375,
+      "difference_norm_absent": 0.12198936533785824,
+      "residual_mask_norm": 2.4120584196413466,
+      "attenuation_present": 0.06585868746036652,
+      "attenuation_absent": 0.050508656702671795
+    },
+    "200/0.0": {
+      "auc_measured": 0.9918687500000001,
+      "auc_measured_sd": 0.003914828081314684,
+      "auc_predicted": 0.99124,
+      "auc_unmasked": 0.99124,
+      "auc_unmasked_sd": 0.003277967405649408,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.819,
+      "difference_norm_present": 0.11887837173701606,
+      "difference_norm_absent": 0.06098806406466589,
+      "residual_mask_norm": 0.0,
+      "attenuation_present": 1.0,
+      "attenuation_absent": 1.0
+    },
+    "200/1.0": {
+      "auc_measured": 0.9988687500000001,
+      "auc_measured_sd": 0.0004900374666798684,
+      "auc_predicted": 0.99834,
+      "auc_unmasked": 0.99124,
+      "auc_unmasked_sd": 0.003277967405649408,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.9804999999999999,
+      "difference_norm_present": 0.11887837173701606,
+      "difference_norm_absent": 0.06098806406466589,
+      "residual_mask_norm": 0.07537682561379208,
+      "attenuation_present": 0.8443114666768373,
+      "attenuation_absent": 0.6271777434670215
+    },
+    "200/4.0": {
+      "auc_measured": 0.999405,
+      "auc_measured_sd": 0.00017663300583412294,
+      "auc_predicted": 0.9993062499999998,
+      "auc_unmasked": 0.99124,
+      "auc_unmasked_sd": 0.003277967405649408,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.9905000000000002,
+      "difference_norm_present": 0.11887837173701606,
+      "difference_norm_absent": 0.06098806406466589,
+      "residual_mask_norm": 0.3015073024551683,
+      "attenuation_present": 0.3667422909187815,
+      "attenuation_absent": 0.19817016885038358
+    },
+    "200/16.0": {
+      "auc_measured": 0.95885625,
+      "auc_measured_sd": 0.006419927472331748,
+      "auc_predicted": 0.9541625,
+      "auc_unmasked": 0.99124,
+      "auc_unmasked_sd": 0.003277967405649408,
+      "repeats": 5,
+      "tpr_at_1pct_fpr": 0.6074999999999999,
+      "difference_norm_present": 0.11887837173701606,
+      "difference_norm_absent": 0.06098806406466589,
+      "residual_mask_norm": 1.2060292098206733,
+      "attenuation_present": 0.09809342125139738,
+      "attenuation_absent": 0.05050319707617853
+    }
+  }
+}
