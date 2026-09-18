@@ -3084,3 +3084,41 @@ This applies to the difference statistic the defence curve scores. The aggregate
 is a different quantity -- the cosine between one round's aggregate and a reference direction,
 where no subtraction has removed the outsiders -- and whether it too leaves information on the
 table is not measured here.
+
+### Two neighbours, checked against the abstracts' own pages (2026-09-18)
+
+`# research(2026-09)`. Both verified on arxiv.org/abs rather than from recall.
+
+**Shi, Zhang, Jin, Xiao, Vorobeychik, Yeoh, Zhang, Hou and Lou, "From Efficiency to Leakage:
+Privacy Backdoor in Federated Language Model Fine-Tuning" (arXiv:2606.20553, 18 June 2026).** A
+*malicious* server injects a backdoor into the PEFT adapters it distributes, and reconstructs 59%
+to 79% of fine-tuning samples with high semantic fidelity, on BERT, GPT-2, Qwen2 and Llama-3.2.
+
+This is a far stronger result under a far stronger adversary, and the contrast is worth stating
+rather than hiding. Their server deviates from the protocol; mine does not. RQ2's claim is that a
+server which follows the protocol exactly, and which every participant has already agreed to trust
+that far, still learns which organization contributed. An organization can defend against Shi et
+al.'s adversary by checking the model it is sent; it cannot defend against a passive one by any
+means available to it inside the protocol. The two bound different deployments.
+
+(The abstract as fetched was elided mid-sentence, so nothing from it is quoted in the report until
+the full text is read.)
+
+**Ghaleb, "Fingerprinting AI Coding Agents on GitHub" (arXiv:2601.17406, 24 January 2026), MSR
+'26.** 41 features over commits, PR structure and code characteristics, 33,580 pull requests from
+five agents, 97.2% F1 at identifying which agent submitted a pull request.
+
+Three differences, and the third is the one that matters. The unit is an individual agent, not an
+organization. The observable is the public artifact -- the commit and the pull request -- where
+mine is the model update. And the artifact Ghaleb reads is public by construction, while the one
+this study reads is hidden by construction: federated learning exists so that the update is the
+only thing that leaves the organization. An attribution result on public artifacts says something
+about anonymity; the same result on updates says something about whether the architecture keeps
+its promise. It is also evidence that MSR reads this kind of work: the venue this study is aimed
+at published the agent version of it a year earlier.
+
+A finding of Ghaleb's bears on RQ1 directly: for agents, the commit-message conventions carried
+more of the signal than the code changes, the reverse of what human authorship studies report. If
+an organization's fingerprint likewise sits in the review text rather than in the code, RQ1's
+contrast is measuring a different surface than its framing claims. The separability probe can
+decide it, and does below.
