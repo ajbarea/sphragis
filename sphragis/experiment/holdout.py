@@ -48,7 +48,7 @@ def verbatim_overlap(
 
 
 def equalize_training(
-    train: Mapping[str, Sequence[Mapping[str, Any]]], *, seed: int
+    train: Mapping[str, Sequence[Mapping[str, Any]]], *, seed: int, size: int | None = None
 ) -> dict[str, list[dict[str, Any]]]:
     """Every organization's training set cut to the smallest one's size, seeded.
 
@@ -61,12 +61,19 @@ def equalize_training(
 
     Subsampling is by example, not by change: grouping matters across the train/held-out
     boundary, which this does not touch, not within the training set.
+
+    `size` cuts every set to a fixed size below the smallest, so contrasts between different
+    pairs can be compared at one training size. The shuffle depends only on the seed and the
+    organization, so a smaller size is a prefix of a larger one: the subsamples are nested.
     """
     if not train:
         raise ValueError("equalize_training needs at least one organization")
-    size = min(len(rows) for rows in train.values())
-    if size == 0:
+    smallest = min(len(rows) for rows in train.values())
+    if smallest == 0:
         raise ValueError("an organization has no training examples to equalize to")
+    if size is not None and not 0 < size <= smallest:
+        raise ValueError(f"size must be between 1 and the smallest set, {smallest}; got {size}")
+    size = smallest if size is None else size
     out: dict[str, list[dict[str, Any]]] = {}
     for org in sorted(train):
         rows = [dict(r) for r in train[org]]

@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 from sphragis.experiment.walk import (
+    crossed_gate,
     gate,
     gate_under_each_estimand,
     matched_vs_mismatched,
@@ -289,3 +290,45 @@ def test_the_two_estimands_are_actually_both_run() -> None:
     assert outcome["by_estimand"]["change_averaged"] == gate(
         results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0, estimator=change_averaged_difference
     )
+
+
+def test_crossed_gate_passes_when_both_organizations_show_the_effect() -> None:
+    results = walk(
+        orgs=ORGS, seeds=SEEDS, windows=WINDOWS, trainer=FakeTrainer(), generator_for=_factory([])
+    )
+    verdict = crossed_gate(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)
+    assert verdict["verdict"] == "pass"
+    assert {org: verdict["per_org"][org]["seeds"] for org in ORGS} == {org: 3.0 for org in ORGS}
+
+
+def test_crossed_gate_averages_every_seed_rather_than_binding_one() -> None:
+    """Seed 2's adapters learned nothing: the median-seed rule never sees it, this must."""
+
+    def build(adapter: str | None):
+        if adapter is None or adapter.endswith("-s2"):
+            return WindowAwareGenerator(None)
+        return WindowAwareGenerator(adapter.split("-")[1])
+
+    results = walk(
+        orgs=ORGS, seeds=SEEDS, windows=WINDOWS, trainer=FakeTrainer(), generator_for=build
+    )
+    verdict = crossed_gate(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)
+    assert verdict["per_org"]["alpha"]["estimate"] == pytest.approx(2 / 3)
+    assert gate(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)["binding"]["alpha"][
+        "estimate"
+    ] == pytest.approx(1.0)
+
+
+def test_crossed_gate_fails_when_no_adapter_is_organization_specific() -> None:
+    def build(adapter: str | None):
+        return WindowAwareGenerator("alpha" if adapter else None)
+
+    results = walk(
+        orgs=ORGS, seeds=SEEDS, windows=WINDOWS, trainer=FakeTrainer(), generator_for=build
+    )
+    assert crossed_gate(results, orgs=ORGS, seeds=SEEDS, bootstrap_seed=0)["verdict"] == "fail"
+
+
+def test_crossed_gate_is_defined_over_exactly_two_organizations() -> None:
+    with pytest.raises(ValueError, match="exactly two"):
+        crossed_gate({}, orgs=("alpha",), seeds=SEEDS, bootstrap_seed=0)

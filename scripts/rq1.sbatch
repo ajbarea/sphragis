@@ -44,7 +44,7 @@ fi
 
 uv run --no-sync python scripts/rq1_pilot.py \
   "${SOURCE[@]}" \
-  --seeds 1 \
+  --seeds "${SEEDS:-1}" \
   --equalize-train \
   --adapters "$HOME/scratch/sphragis-adapters$RESULT_SUFFIX" \
   --out "$HOME/rq1-$MODE$RESULT_SUFFIX.json"

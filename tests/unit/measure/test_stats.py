@@ -9,6 +9,7 @@ from sphragis.measure.stats import (
     Cluster,
     change_averaged_difference,
     cluster_bootstrap,
+    crossed_bootstrap,
     excludes_zero,
     gate_verdict,
     paired_difference,
@@ -189,3 +190,77 @@ def test_estimators_registry_names_both_and_nothing_else() -> None:
         "pooled": paired_difference,
         "change_averaged": change_averaged_difference,
     }
+
+
+def _shifted(clusters: list[Cluster], shift: float) -> list[Cluster]:
+    """The same changes and examples, with the treatment arm moved by `shift` everywhere."""
+    return [
+        Cluster(c.change_id, tuple(v + shift for v in c.treatment), c.control) for c in clusters
+    ]
+
+
+def test_crossed_bootstrap_is_deterministic_for_a_seed() -> None:
+    runs = [_mixed(20), _shifted(_mixed(20), 0.1), _shifted(_mixed(20), -0.1)]
+    assert crossed_bootstrap(runs, seed=4, resamples=300) == crossed_bootstrap(
+        runs, seed=4, resamples=300
+    )
+
+
+def test_crossed_estimate_is_the_mean_of_the_per_seed_estimates() -> None:
+    runs = [_mixed(15), _shifted(_mixed(15), 0.3), _shifted(_mixed(15), 0.6)]
+    expected = sum(paired_difference(run) for run in runs) / 3
+    assert crossed_bootstrap(runs, seed=0, resamples=200)["estimate"] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("estimator", [paired_difference, change_averaged_difference])
+def test_pooling_across_seeds_equals_averaging_the_seeds(estimator) -> None:
+    """The docstring's claim, which is what lets the resample average per-seed statistics."""
+    runs = [_mixed(12), _shifted(_mixed(12), 0.25), _shifted(_mixed(12), -0.4)]
+    pooled = estimator([cluster for run in runs for cluster in run])
+    assert pooled == pytest.approx(sum(estimator(run) for run in runs) / 3)
+
+
+def test_a_seed_shift_widens_the_crossed_interval_beyond_any_single_seed() -> None:
+    """A shift common to every change is what one seed's interval cannot see."""
+    base = _mixed(40)
+    runs = [_shifted(base, -0.6), base, _shifted(base, 0.6)]
+    crossed = crossed_bootstrap(runs, seed=1, resamples=2000)
+    for run in runs:
+        single = cluster_bootstrap(run, seed=1, resamples=2000)
+        assert crossed["high"] - crossed["low"] > 1.5 * (single["high"] - single["low"])
+
+
+def test_identical_seed_runs_give_the_single_seed_interval() -> None:
+    """No seed variance to carry, so nothing is added: the draws depend only on the changes."""
+    run = _mixed(30)
+    crossed = crossed_bootstrap([run, run, run], seed=2, resamples=2000)
+    single = cluster_bootstrap(run, seed=2, resamples=2000)
+    assert crossed["estimate"] == pytest.approx(single["estimate"])
+    width = single["high"] - single["low"]
+    assert crossed["high"] - crossed["low"] == pytest.approx(width, rel=0.15)
+
+
+def test_crossed_bootstrap_refuses_a_single_seed() -> None:
+    with pytest.raises(ValueError, match="at least two seed runs"):
+        crossed_bootstrap([_mixed(20)], seed=0, resamples=10)
+
+
+def test_crossed_bootstrap_refuses_runs_over_different_changes() -> None:
+    other = [Cluster(f"J{i}", c.treatment, c.control) for i, c in enumerate(_mixed(20))]
+    with pytest.raises(ValueError, match="same changes"):
+        crossed_bootstrap([_mixed(20), other], seed=0, resamples=10)
+
+
+def test_crossed_bootstrap_refuses_runs_over_different_examples() -> None:
+    """Same change ids, one change scored on an extra example in the second run."""
+    first = _mixed(20)
+    second = list(first)
+    head = second[0]
+    second[0] = Cluster(head.change_id, (*head.treatment, 1.0), (*head.control, 0.0))
+    with pytest.raises(ValueError, match="same changes and examples"):
+        crossed_bootstrap([first, second], seed=0, resamples=10)
+
+
+def test_crossed_bootstrap_enforces_the_cluster_floor() -> None:
+    with pytest.raises(ValueError, match="at least 10 clusters"):
+        crossed_bootstrap([_mixed(5), _mixed(5)], seed=0, resamples=10)

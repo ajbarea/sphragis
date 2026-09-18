@@ -39,7 +39,7 @@ for tag in $CONDITIONS; do
   uv run --no-sync python scripts/rq1_pilot.py \
     --corpus "a=$PLANTED/$tag-a.jsonl" \
     --corpus "b=$PLANTED/$tag-b.jsonl" \
-    --seeds 1 \
+    --seeds "${SEEDS:-1}" \
     --equalize-train \
     --adapters "$HOME/scratch/sphragis-adapters-$tag$RESULT_SUFFIX" \
     --out "$HOME/calibration-$tag$RESULT_SUFFIX.json"

@@ -129,3 +129,18 @@ def test_split_by_window_copies_rather_than_aliasing_the_windows() -> None:
     train, _ = split_by_window(WINDOWED, train_window="train", eval_window="dev")
     train[0]["change_id"] = "mutated"
     assert WINDOWED["train"][0]["change_id"] == "T0"
+
+
+def test_equalize_training_cuts_to_a_fixed_size_as_a_nested_prefix() -> None:
+    train = {"openstack": _rows(10), "qt": _rows(20)}  # 30 and 60 examples
+    full = equalize_training(train, seed=1)
+    capped = equalize_training(train, seed=1, size=4)
+    assert {org: len(rows) for org, rows in capped.items()} == {"openstack": 4, "qt": 4}
+    for org in train:
+        assert capped[org] == full[org][:4]
+
+
+@pytest.mark.parametrize("size", [0, 31])
+def test_equalize_training_refuses_a_size_it_cannot_honour(size: int) -> None:
+    with pytest.raises(ValueError, match="size must be between"):
+        equalize_training({"openstack": _rows(10), "qt": _rows(20)}, seed=1, size=size)

@@ -116,6 +116,85 @@ def cluster_bootstrap(
     }
 
 
+def require_crossed(runs: Sequence[Sequence[Cluster]]) -> None:
+    """Refuse seed runs that did not score the same changes on the same examples.
+
+    The crossed bootstrap takes one set of change indices and applies it to every seed, so
+    index i has to be the same change, with the same number of examples, in each run.
+    Anything else would pair one seed's change with another's and average across them.
+    """
+    if len(runs) < 2:
+        raise ValueError(
+            f"a crossed bootstrap needs at least two seed runs, got {len(runs)}: with one, "
+            "there is no seed variance to carry and cluster_bootstrap is the interval"
+        )
+    first = [(c.change_id, len(c.treatment), len(c.control)) for c in runs[0]]
+    for position, run in enumerate(runs[1:], start=1):
+        shape = [(c.change_id, len(c.treatment), len(c.control)) for c in run]
+        if shape != first:
+            raise ValueError(
+                f"seed run {position} does not score the same changes and examples as run 0; "
+                "a crossed bootstrap needs every seed evaluated on the identical window"
+            )
+
+
+def crossed_bootstrap(
+    runs: Sequence[Sequence[Cluster]],
+    *,
+    seed: int,
+    resamples: int = 10_000,
+    confidence: float = 0.95,
+    min_clusters: int = MIN_CLUSTERS,
+    estimator: Estimator = paired_difference,
+) -> dict[str, float]:
+    """Percentile interval for the seed-averaged difference, resampling seeds and changes.
+
+    `cluster_bootstrap` holds one trained pair of adapters fixed and resamples changes, so
+    its interval is conditional on that training run. A seed that shifts the contrast on
+    every change at once, a seed main effect, is invisible to it. Seed-by-change variation is
+    not: it shows up as spread between changes, so the single-seed interval already carries it.
+
+    Seeds and changes are crossed, not nested: every seed scores every change. Resampling
+    changes and then seeds within each change would treat a seed's shift as independent per
+    change and average it away. This is Owen's pigeonhole bootstrap (Ann. Appl. Stat., 2007):
+    one draw of seeds and one of changes, independently with replacement, and the statistic
+    over their intersection. No bootstrap is exact for crossed data (McCullagh, Bernoulli,
+    2000); this one is mildly conservative, overstating the interaction term threefold.
+
+    At S seeds the seed component's bootstrap variance carries the factor (S - 1) / S, so
+    it understates seed variance at three seeds by a third. `scripts/crossed_coverage.py`
+    measures what that does to coverage.
+
+    The estimate is the mean over seeds. Under either registered estimator, the statistic on
+    a resampled set of changes pooled across seeds equals the mean of the per-seed statistics,
+    because every seed contributes the same examples.
+    """
+    require_crossed(runs)
+    n = len(runs[0])
+    if n < min_clusters:
+        raise ValueError(
+            f"crossed_bootstrap needs at least {min_clusters} clusters, got {n}: below that "
+            "the interval is anti-conservative"
+        )
+    rng = random.Random(seed)
+    s = len(runs)
+    draws = []
+    for _ in range(resamples):
+        seeds = [rng.randrange(s) for _ in range(s)]
+        changes = [rng.randrange(n) for _ in range(n)]
+        draws.append(fmean(estimator([runs[k][i] for i in changes]) for k in seeds))
+    draws.sort()
+    low_rank, high_rank = percentile_ranks(resamples, confidence)
+    return {
+        "estimate": fmean(estimator(run) for run in runs),
+        "low": draws[low_rank],
+        "high": draws[high_rank],
+        "clusters": float(n),
+        "seeds": float(s),
+        "resamples": float(resamples),
+    }
+
+
 def excludes_zero(interval: Mapping[str, float]) -> bool:
     """True when the whole interval sits on one side of zero, either side.
 

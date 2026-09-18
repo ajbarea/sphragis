@@ -21,6 +21,7 @@ from sphragis.measure.stats import (
     ESTIMATORS,
     Estimator,
     cluster_bootstrap,
+    crossed_bootstrap,
     gate_verdict,
     paired_difference,
     supports_direction,
@@ -178,6 +179,41 @@ def gate(
         "binding": per_org,
         "per_seed": per_seed,
     }
+
+
+def crossed_gate(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    orgs: Sequence[str],
+    seeds: Sequence[int],
+    metric: str = "exact_match",
+    bootstrap_seed: int,
+    estimator: Estimator = paired_difference,
+) -> dict[str, Any]:
+    """The RQ1 verdict read off one interval per organization that spans every seed.
+
+    `gate` reads the median seed's change bootstrap, which is conditional on that seed's
+    trained adapters. This reads `crossed_bootstrap` over all seeds, the interval that also
+    carries a seed main effect. Computed beside the registered gate and NOT registered:
+    which one binds is a Stage 1 decision, to be made on the coverage measured by
+    `scripts/crossed_coverage.py`, not on these verdicts.
+    """
+    if len(orgs) != 2:
+        raise ValueError("the RQ1 gate is defined over exactly two organizations")
+    _require_registered_seeds(seeds)
+    first, second = orgs
+    per_org: dict[str, dict[str, float]] = {}
+    for eval_org, other_org in ((first, second), (second, first)):
+        runs = [
+            to_clusters(
+                results[run_id(EvalRun(f"adapter:{eval_org}", eval_org, seed))],
+                results[run_id(EvalRun(f"adapter:{other_org}", eval_org, seed))],
+                metric=metric,
+            )
+            for seed in seeds
+        ]
+        per_org[eval_org] = crossed_bootstrap(runs, seed=bootstrap_seed, estimator=estimator)
+    return {"verdict": gate_verdict(per_org), "per_org": per_org}
 
 
 def gate_under_each_estimand(

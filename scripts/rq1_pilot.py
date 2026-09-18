@@ -74,6 +74,11 @@ parser.add_argument(
     action="store_true",
     help="subsample every organization's training set to the smallest one's size",
 )
+parser.add_argument(
+    "--train-size",
+    type=int,
+    help="with --equalize-train: cut every training set to this size, below the smallest",
+)
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 parser.add_argument(
     "--dry-run",
@@ -83,6 +88,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 seeds = tuple(int(s) for s in args.seeds.split(","))
+if args.train_size is not None and not args.equalize_train:
+    raise SystemExit("--train-size needs --equalize-train")
 orgs = tuple(sorted(dict(e.split("=", 1) for e in args.corpus) if args.corpus else args.org))
 if not orgs:
     raise SystemExit("--root needs at least one --org")
@@ -134,7 +141,7 @@ for org in orgs:
     print(f"{org}: {summary[org]}", flush=True)
 
 if args.equalize_train:
-    train_rows = equalize_training(train_rows, seed=args.split_seed)
+    train_rows = equalize_training(train_rows, seed=args.split_seed, size=args.train_size)
     for org in orgs:
         summary[org]["train_examples_equalized"] = len(train_rows[org])
     print(f"equalized training sets: { {o: len(train_rows[o]) for o in orgs} }", flush=True)
@@ -268,6 +275,7 @@ args.out.write_text(
             "seeds": seeds,
             "split_seed": args.split_seed,
             "equalize_train": args.equalize_train,
+            "train_size": args.train_size,
             "bootstrap_seed": args.bootstrap_seed,
             "max_new_tokens": args.max_new_tokens,
             "corpora": summary,

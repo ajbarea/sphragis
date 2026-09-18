@@ -152,7 +152,11 @@ class HFGenerator:
         self.model = model
 
     def generate(self, prompt: str) -> str:
-        """Greedy by default, because exact match needs the output to be deterministic."""
+        """Greedy by default: the output is the model's single most likely refinement.
+
+        Greedy is not reproducible on the GPU. bf16 arithmetic is not associative, so the
+        base model alone changed 23 to 28 of about 440 predictions between two identical runs.
+        """
         text = render_chat(self.tokenizer, prompt)
         inputs = self.tokenizer(text, return_tensors="pt", add_special_tokens=False).to(self.device)
         with torch.inference_mode():
