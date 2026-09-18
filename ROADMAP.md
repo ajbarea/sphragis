@@ -235,9 +235,14 @@ as the unit; the evidence says the codebase is.
   none, so the pattern is the pair's. The effect halves with half the data.
 - [ ] Register the probe and the project contrast as Stage 1 secondary analyses, with the
   within-organization baseline as the reading rule rather than raw accuracy.
-- [ ] If the project contrast separates where the organization contrast does not, say what
-  that costs the direction: a privacy perimeter drawn around an organization is not drawn
-  where the signal lives.
+- [x] **The two organizations differ in kind, not in noise** (exploratory, dev window): every Qt
+  project above fifty examples is at or above zero, while OpenStack's projects disagree in sign and
+  average to nothing. An organization is a useful boundary when its projects share conventions; a
+  Gerrit host federating independent projects is not one. This is what the conjunctive gate exists
+  to expose, and it agrees with RQ2's codebase-family result from the generative side.
+- [ ] Say what that costs the direction in the Stage 1 text: a privacy perimeter drawn around an
+  organization is not drawn where the signal lives, and RQ1's claim holds for a house rather than a
+  federation.
 
 ## Plan C — the experiment
 

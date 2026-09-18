@@ -2531,3 +2531,30 @@ changes, so a single organization with a strong effect can carry it, which is th
 conjunctive rule exists to prevent; and with two organizations there is no way to model
 between-organization heterogeneity rather than assume it away. Registered as a secondary estimate,
 reported beside the gate, and fixed now while the test window is sealed.
+
+### Why one organization shows the effect and the other does not (2026-09-18, exploratory)
+
+The dev-window contrast broken down by the project each held-out change belongs to, pooled over the
+three seeds. Exploratory, on the dev window, with small per-project samples and no multiplicity
+correction: a description of where the organizational average comes from, not a test.
+
+| Qt, by project | contrast | examples | | OpenStack, by project | contrast | examples |
+|---|---|---|---|---|---|---|
+| qt-creator | +0.021 | 291 | | starlingx/docs | +0.041 | 138 |
+| qtbase | +0.030 | 135 | | starlingx/test | -0.050 | 47 |
+| qtdeclarative | +0.017 | 98 | | starlingx/distcloud | -0.078 | 34 |
+| qtdoc | +0.012 | 81 | | openstack/kayobe | +0.027 | 25 |
+| qtopenapi | +0.023 | 57 | | starlingx/update | +0.042 | 24 |
+| qtmultimedia | +0.000 | 56 | | openstack/ironic | -0.030 | 22 |
+
+**Qt's effect is spread across its projects**; every project with more than fifty examples is at or
+above zero. **OpenStack's projects disagree in sign** and average to nothing.
+
+This is the same picture RQ2's client updates gave, from the generative side. OpenStack's Gerrit
+hosts a federation of loosely coupled projects, StarlingX and Zuul among them, whose conventions
+need not agree; Qt's projects are one house. So "organization" is a useful boundary exactly when
+the organization's projects share conventions, and the gate's mixed verdict is not two noisy
+measurements of one quantity but two different situations. RQ1's registered claim, that
+organizations leave a learnable fingerprint, is therefore too strong as stated for a federation and
+about right for a house, which is a finding rather than a failure, and it is what the conjunctive
+rule was built to expose.
