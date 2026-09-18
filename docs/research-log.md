@@ -2694,3 +2694,27 @@ codebase; the organization is legible only in so far as its projects resemble ea
 that treats the organization as the unit of disclosure is protecting the wrong boundary in both
 directions: it over-promises for a federation whose projects are separately identifiable, and it
 under-describes a house whose projects all carry the same hand.
+
+### A fingerprint measured in a moving medium (2026-09-18)
+
+Xu et al., "code_transformed: The Influence of Large Language Models on Code" (arXiv:2506.12014,
+revised 2026-02), measure style across more than 20,000 GitHub repositories linked to arXiv papers
+from 2020 to 2025 and report conventions shifting toward what models write: snake_case function
+names in Python rise from 40.7% in Q1 2023 to 49.8% in Q3 2025. They also measure similarity across
+projects; whether they claim convergence is not something the abstract settles and the full text has
+not been read.
+
+Two consequences for this study, neither yet a measurement here.
+
+**Timeliness.** If model-written code is spreading through the corpora, an organization's own hand
+is being overwritten while the study measures it. That makes the measurement worth making now and
+makes any null harder to read: a fingerprint that has faded is indistinguishable from one that was
+never there.
+
+**A threat to the train-to-test transfer.** RQ1 trains on 2024-11 to 2025-09 and will test on
+2025-11 to 2026-10, a year later, in exactly the period this drift is measured over. An adapter
+learns the hand its training window carried; if the test window's hand has moved toward the models',
+the contrast is attenuated by drift rather than by an absence of fingerprint. The apparatus can
+already say something about this without unsealing anything: the dev window sits between the two,
+and the per-project breakdown could be recomputed on the earliest and latest months of the train
+window to see whether the contrast is shrinking with time.

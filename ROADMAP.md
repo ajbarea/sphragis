@@ -145,6 +145,11 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 - [ ] Re-read the dev window under fp32 (jobs 149258 to 149260), so the evidence is read under the
   numerics the confirmatory run will use.
 
+- [ ] **Is the fingerprint fading?** Style is drifting toward what models write (arXiv:2506.12014),
+  and RQ1's test window sits a year after its training window. Recompute the contrast on the
+  earliest and latest months of the train window, which unseals nothing, and state the direction in
+  the Stage 1 report: drift attenuates the contrast and makes a null ambiguous.
+
 ## Plan F — RQ2 positioning
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
