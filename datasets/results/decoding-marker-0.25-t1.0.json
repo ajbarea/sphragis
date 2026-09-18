@@ -1,0 +1,46 @@
+{
+  "condition": "marker-0.25",
+  "adapter": "/home/ajb6289/scratch/sphragis-adapters-marker-0.25/b-s1",
+  "temperature": 1.0,
+  "seed": 0,
+  "halves": {
+    "a": {
+      "examples": 449,
+      "greedy_emission": 0.6169265033407573,
+      "sampled_emission": 0.49888641425389757
+    },
+    "b": {
+      "examples": 488,
+      "greedy_emission": 0.6557377049180327,
+      "sampled_emission": 0.5450819672131147
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-18T08:42:39.368302+00:00",
+    "git": {
+      "commit": "1569066755e37d325d2f3c2e08c13ef8de114f33",
+      "branch": "feat/wellposed-filter"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": "tigris",
+      "job_id": "148202",
+      "account": "fl-mlm",
+      "partition": "tigris",
+      "node": "gh-a-021"
+    },
+    "gpu": {
+      "name": "NVIDIA GH200 480GB",
+      "total_gb": 102.01,
+      "peak_allocated_gb": 16.62,
+      "peak_reserved_gb": 17.34,
+      "cuda": "13.0"
+    }
+  }
+}

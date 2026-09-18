@@ -1744,6 +1744,71 @@ organization's could. That is the contribution to state first in the Stage 1 int
 holds whether RQ1's gate passes or fails, because the decomposition is the measurement and the gate
 is only one reading of it.
 
+### A codebase fingerprint inside one organization (2026-09-18, job 148203)
+
+`datasets/results/projects-qt-creator_qt-creator-qt_qtbase.json`. The identical matched-versus-
+mismatched contrast RQ1 runs, between two projects inside Qt: `qt-creator/qt-creator` (a) and
+`qt/qtbase` (b), holdout by change within the train window, equalized at 1,517 training examples
+each, one seed. Both are C++, so the language confound that separates OpenStack from Qt is absent.
+
+| side | matched minus mismatched |
+|---|---|
+| **qt-creator** | **+0.0788 [+0.0412, +0.1182]** over 154 changes |
+| qtbase | -0.0187 [-0.0462, +0.0085] over 166 changes |
+
+Gate: mixed. All seven outcome-neutral checks pass.
+
+| exact match | on qt-creator | on qtbase |
+|---|---|---|
+| qt-creator adapter | **0.352** | 0.259 |
+| qtbase adapter | 0.273 | 0.241 |
+| base model | 0.017 | 0.016 |
+
+**qt-creator carries something learnable that is specific to it.** Its own adapter beats the other
+project's on its refinements by 7.9 points, interval clear of zero, roughly four times the +0.021
+separating OpenStack from Qt. That is not qt-creator's data being easier: it is easier for any
+adapter, qtbase's included (0.273 there against 0.241 at home), but the contrast compares two
+adapters on the identical examples, so difficulty lifts both arms and cancels. What remains is what
+only qt-creator's training data could teach.
+
+**qtbase shows no home advantage, and the reason is visible.** The qt-creator adapter is the stronger
+of the two in general and edges ahead even on qtbase, 0.259 against 0.241. A project whose own
+adapter cannot beat a neighbour's on its home data either has no distinctive conventions an adapter
+absorbs, or has them below the floor the calibration found. The fingerprint is a property of some
+projects, not of every project.
+
+**Two measurements with no mechanism in common single out the same project.** qt-creator is also the
+outlier on review latency, settling 76% of its example-bearing changes in their creation month
+against 51% for `qtdeclarative`. The separability probe, the latency analysis and now the generative
+contrast each point at the project as the unit where variation lives, and two of them at this
+project specifically.
+
+**Recorded caveats.** The split is holdout by change inside one window, not the time split the
+windowed RQ1 used, and holdout is the easier test because train and evaluation share a period. The
+fairer comparison is therefore the organization-level pilots, which were holdout by change too and
+returned intervals straddling zero, though on far fewer changes. One seed. And one project pair: the
+claim this licenses is that a codebase-level fingerprint exists and can be larger than the
+organizational one, not that every project has one.
+
+### Greedy decoding adds to the amplification; it does not cause it (2026-09-18, job 148202)
+
+`datasets/results/decoding-marker-0.25-t1.0.json`. The saved `marker-0.25` adapter, trained with the
+annotation on 25.1% of refinements, re-evaluated on exactly the held-out examples the calibration
+scored, with only the decoder changed.
+
+| evaluated on | greedy | sampling, T = 1 |
+|---|---|---|
+| half a, 449 examples | 0.617 | 0.499 |
+| half b, 488 examples | 0.656 | 0.545 |
+
+Sampling from the adapter's own unaltered distribution removes about 0.11 on each half and still
+emits the annotation at roughly **twice** the rate it was trained on. So the over-weighting is in what
+the adapter learned; greedy decoding amplifies it by about a fifth on top. Changing the registered
+decoder would not make the gate monotone, which settles the roadmap question of whether it could,
+and places this beside Skobelev, Fithian and Han (arXiv:2609.16454), whose sampling-based results
+report fine-tuning moving output diversity toward the target: here, for a planted minority
+convention, it overshoots.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

@@ -136,12 +136,10 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
 - [ ] **Symmetric calibration**: convention X on one half, Y on the other, since two organizations
   each carry their own. Shows whether the matched adapter wins on both sides once neither half is
   convention-free.
-- [ ] Test whether greedy decoding causes the amplification: re-evaluate the saved 0.25
-  adapters with sampling at temperature 1, no retraining needed. If sampling reproduces the
-  training rate where greedy gives 0.64, greedy is the amplifier, and the result sits directly
-  beside Skobelev, Fithian and Han (arXiv:2609.16454), who measure under sampling only and do not
-  address greedy decoding. Needs an optional temperature on `HFGenerator`, default greedy so the
-  registered decoder is unchanged.
+- [x] **Greedy adds to the amplification; it does not cause it** (job 148202). Sampling at T=1
+  from the same adapter emits the annotation at 0.499 and 0.545 against greedy's 0.617 and 0.656,
+  still about twice the 0.251 it was trained on. The over-weighting is learned, so changing the
+  registered decoder would not make the gate monotone.
 - [ ] **Pass `RUN_TAG` on every submission.** Job 148093 was submitted without it, so its output
   and adapters overwrote the first windowed run's on the cluster. The result survives because it
   is committed, but a tagless submission can destroy an uncommitted one.
@@ -156,9 +154,13 @@ as the unit; the evidence says the codebase is.
   within-organization baseline: cross-organization 0.849 [0.769, 0.867] against 0.828 and
   0.892 for two projects inside one organization. It does not beat its own baseline, so the
   classifier reads the codebase, not the organization. CPU only, runs in a minute.
-- [ ] **Project-level contrast.** Train adapters on two projects inside ONE organization and
-  run the identical matched-versus-mismatched contrast. Needs no new experiment code: build
-  per-project corpora and pass them where `--corpus org=path` expects organizations.
+- [x] **Project-level contrast** (job 148203, qt-creator vs qtbase). qt-creator's own adapter
+  beats qtbase's on qt-creator's refinements by **+0.079 [+0.041, +0.118]**, about four times the
+  organizational +0.021; qtbase shows none (-0.019, covering zero). Controlled for data
+  difficulty by construction, since both adapters score the identical examples. qt-creator is
+  also the latency outlier, so two unrelated measurements single out the same project.
+- [ ] More project pairs, and seeds, before claiming the codebase effect generalizes: one pair
+  shows a fingerprint exists and can exceed the organizational one, not that every project has one.
 - [ ] Register the probe and the project contrast as Stage 1 secondary analyses, with the
   within-organization baseline as the reading rule rather than raw accuracy.
 - [ ] If the project contrast separates where the organization contrast does not, say what
