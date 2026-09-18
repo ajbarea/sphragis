@@ -1565,6 +1565,53 @@ rounds of varying composition, attacked through the linearity that 2303.03908 ex
 the long-input regime is where the contribution is sharpest, since that is exactly where the
 exact-membership state of the art is weakest.
 
+### The contamination battery separates the windows, on fifteen times the sample (2026-09-17, job 148092)
+
+`datasets/results/contamination-openstack-6mo-with_context.partial.json`. Six post-cutoff months
+(2024-10 to 2025-03) against the six-month control (2023-08 to 2024-01), built by one pipeline
+under one cutoff, scored on hunks with context on the base `Qwen/Qwen2.5-Coder-7B`. The job was
+still running guided completion when these were read: the membership scores are written before
+the generative half starts, which is the change made after job 145093 lost exactly this result
+to its wall.
+
+| method | post-cutoff | pre-cutoff | gap | 95% bootstrap, by change |
+|---|---|---|---|---|
+| **Min-K%++, k = 20** | -1.7952 | -1.7212 | **-0.0740** | **[-0.1286, -0.0175]** |
+| Min-K%, k = 20 | -7.4461 | -7.3169 | -0.1291 | [-0.2824, +0.0287] |
+
+1,971 post examples over 797 changes, 2,503 pre over 877. The point gap is `compare_windows`,
+the battery's own definition; the interval resamples changes within each window independently,
+since the windows are separate populations rather than paired.
+
+**The first interval in this battery's history to exclude zero, and it points the right way.**
+A higher Min-K%++ score means the model finds the text more familiar. The pre-cutoff control,
+which predates the checkpoint's release and plausibly sits in its training data, reads as more
+familiar than six months the model cannot have seen. That is the direction membership predicts
+for a known-member control.
+
+| run | control | scored | Min-K%++ gap |
+|---|---|---|---|
+| 143898, bare hunks | 1 month | 35 / 28 | +0.221 [-0.052, +0.524] |
+| 143956, with context | 1 month | 161 / 116 | -0.058 [-0.200, +0.084] |
+| **148092, with context** | **6 months** | **1,971 / 2,503** | **-0.074 [-0.129, -0.018]** |
+
+The point estimate held still between the last two runs while the interval tightened around it
+until zero fell outside. That is what more sample does to an effect that is there, and what it
+does not do to noise, which on the first run had the sign backwards.
+
+**What it supports, and the registered limit on it.** It is evidence the instrument works: a
+membership score that can tell known-seen text from known-unseen text is one to trust when it
+says the post-cutoff windows were not seen, and the post-cutoff windows postdate the release
+outright in any case. It is not, on its own, evidence of pretraining exposure. The comparison is
+still across eighteen months, and OpenStack's code, reviewers and subject matter all moved in that
+time; Zhang et al. (ACL 2026) is the reason the time partition is registered as corroborative
+only. A gap of 0.074 on scores near -1.8 is small, and nothing here separates membership from
+drift.
+
+**Min-K% does not separate the windows.** Its interval covers zero on the same examples. That is
+the pattern expected if Min-K%++ is the more sensitive of the two, which is the reason it is the
+registered primary.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

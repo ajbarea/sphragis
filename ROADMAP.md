@@ -63,10 +63,12 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] **Battery run on real data** (2026-09-15), OpenStack 2024-10 against a 2024-01 control.
   Scored on hunks with context: 161 / 116 examples, Min-K%++ gap -0.058 [-0.200, +0.084],
   guided completion at its floor. Windows inseparable; read as ambiguous, as pre-committed.
-- [ ] Fix the control window's size (multi-month) and register hunks-with-context as the
-  scored text. Collected: 2023-08 to 2024-01 as one uniform window, 2,769 deduplicated
-  examples against 2,153 post-cutoff. The battery rerun is job 148092; its first attempt
-  (145093) hit a two-hour wall after Min-K%++ had finished, which is now written first.
+- [x] **Control window fixed, and the battery separates the windows** (job 148092). Six months
+  each side, 1,971 / 2,503 scored examples: Min-K%++ gap -0.074 [-0.129, -0.018], the first
+  interval in the battery's history to exclude zero, in the direction membership predicts for a
+  known-member control. Evidence the instrument works; not by itself evidence of exposure, since
+  the comparison still spans eighteen months of drift. Min-K% covers zero on the same data.
+- [ ] Register hunks-with-context as the scored text.
 - [x] **Source the checkpoint's cutoff.** The widely repeated "June 2024" for Qwen2.5-Coder is
   a community guess, not a maintainer statement. The technical report states a repository
   *creation* filter of February 2024, which bounds nothing for repositories as old as
