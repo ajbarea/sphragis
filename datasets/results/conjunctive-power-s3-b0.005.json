@@ -1,0 +1,29 @@
+{
+  "trials": 300,
+  "resamples": 400,
+  "seeds": 3,
+  "sigma_b": 0.005,
+  "redraw": 0.055,
+  "rule": "crossed",
+  "openstack_median_seed_power": 0.9566666666666667,
+  "openstack_between_seed_variance": 2.8581940123875114e-05,
+  "openstack": {
+    "observed_effect": 0.021238938053097345,
+    "lift": 0.029393881559371948,
+    "realised_effect": 0.021234513274336314,
+    "n_changes": 2171,
+    "marginal_power": 0.9533333333333334
+  },
+  "qt_median_seed_power": 0.6966666666666667,
+  "qt_between_seed_variance": 2.7165911903147173e-05,
+  "qt": {
+    "observed_effect": 0.01098901098901095,
+    "lift": 0.01577851176261902,
+    "realised_effect": 0.010989010989010957,
+    "n_changes": 3937,
+    "marginal_power": 0.63
+  },
+  "conjunctive_power": 0.6,
+  "product_of_marginals": 0.6006,
+  "median_seed_conjunctive_power": 0.67
+}

@@ -110,8 +110,10 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   nominal at five seeds throughout and at three up to a seed effect of 0.01 (0.073 two-sided at
   0.02); the median-seed rule reaches 0.122 at three seeds and 0.02. No width cost when there is no
   seed effect.
-- [ ] **Measure the seed main effect on real data**: `sym-0` at seeds 2 and 3 (jobs 148405, 148407),
-  read with `scripts/crossed_reread.py` beside seed 1.
+- [x] **Seed main effect measured on the null**: sigma_b about 0.013 over three seeds and two
+  halves (`seed-effect-sym-0.json`). Past 0.01, so five seeds by the coverage rule.
+- [ ] **Seed count for power**: the smallest S with conjunctive power 0.80 at the seed effect
+  measured in RQ1's setting (qtfull seeds 2 and 3). Cells at 0.013 for S = 5, 7, 10 running.
 - [ ] **Re-read RQ1 at three seeds**: qtfull seeds 2 and 3 (148404, 148406).
 - [ ] **Register the crossed interval, and the seed count from the measured seed effect**: three
   seeds if it is at or below 0.01, five if above. The conjunctive power stands at or below 0.01,
@@ -340,7 +342,7 @@ declared as one.
 | decision | decided by | rule |
 |---|---|---|
 | **Interval the gate reads** | coverage (`crossed-coverage.json`) and the sym-0 seed runs | The crossed seed x change interval, which holds nominal where the median-seed rule reaches 0.122 two-sided, unless the review of its code or the seed runs contradict that. |
-| **Seed count** | the seed main effect measured on sym-0 at three seeds | Three if it is at or below 0.01, five if above: where three seeds hold nominal under the crossed interval and where they stop. |
+| **Seed count** | the seed main effect (sym-0: 0.013; RQ1 setting: pending) | At least five, since it exceeds 0.01 where three stop holding nominal; and the smallest count giving conjunctive power 0.80 at the measured effect, which may be more. |
 | **Stated power** | `conjunctive-power-s{3,5}-b*.json` | Recomputed for the registered interval and seed count at the measured seed effect, replacing 0.833. |
 | **Inference numerics** | `determinism_check` on the two nodes the stored runs used | FP32 compute if bf16 greedy decoding differs between nodes and FP32 does not; otherwise bf16, with the node recorded. |
 

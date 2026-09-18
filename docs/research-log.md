@@ -2243,3 +2243,48 @@ for these projects through 2025-03, then 2 to 9. Google moved Android developmen
 branches that week and made aosp-main read-only (9to5Google, 2025-03-26; Android Authority).
 AOSP therefore has no dev or test window under RQ1's registered windows and cannot join RQ1. RQ2's
 client design needs no time split, so its months 2024-11 to 2025-03 serve.
+
+### The seed main effect, measured: about 0.013, and it is what limits power (2026-09-18, jobs 148199, 148405, 148407)
+
+`datasets/results/seed-effect-sym-0.json`, `scripts/seed_effect.py`. The null `sym-0` at seeds 1, 2
+and 3, same corpora, split and held-out examples. Per organization half, the contrast at each seed,
+and per pair of seeds the shift against the change-clustered noise of the per-example difference
+(10,000 resamples), which is what seed-by-change churn alone would produce.
+
+| half | seed 1 | seed 2 | seed 3 |
+|---|---|---|---|
+| a | -0.0356 | -0.0200 | -0.0067 |
+| b | -0.0137 | +0.0252 | +0.0137 |
+
+Pairwise z against churn alone: +0.88, +1.66, +0.76 on a; +2.50, +1.70, -0.75 on b. Between-seed
+variance 0.000305, of which churn accounts for 0.000139, leaving **sigma_b^2 = 0.000166, sigma_b =
+0.0129**. Three seeds and two halves is little to estimate a variance from, and this is the null at
+about 1,800 training examples, not RQ1's windows at 4,327; RQ1's own seeds 2 and 3 (jobs 148404,
+148406) give the estimate in the study's setting.
+
+**The registration rule fixed in advance gives five seeds**: the seed effect exceeds 0.01, past which
+three seeds under the crossed interval do not hold nominal.
+
+**It also decides power, which the rule did not address.** Conjunctive power at the projected test
+window (`conjunctive-power-s*-b*.json`, 300 trials each), for the effects the windowed run showed:
+
+| seeds | sigma_b | crossed interval | median-seed rule |
+|---|---|---|---|
+| 3 | 0 | 0.790 | 0.770 |
+| 3 | 0.005 | 0.600 | 0.670 |
+| 3 | 0.01 | 0.387 | 0.573 |
+| 5 | 0 | 0.820 | 0.773 |
+| 5 | 0.005 | 0.690 | 0.723 |
+
+A seed effect of this size is the size of the organizational effects themselves (+0.011 to +0.034),
+so an honest interval must carry it, and power falls with it. The median-seed rule's higher figures
+are what ignoring it buys, the same excess its coverage showed. **Seeds, not test changes, are now
+the lever on power**: the seed component shrinks only as 1/S. Cells at sigma_b 0.013 for five, seven
+and ten seeds are running, and the registered seed count becomes the smallest giving conjunctive
+power of 0.80 at the seed effect measured in RQ1's own setting.
+
+**This corrects the morning's correction.** "The run-to-run swing is noise the interval already
+carries" was right about the two same-seed reruns, which differ only by GPU nondeterminism. Across
+seeds the contrast moves by more than churn explains, so the seed main effect is real, and the
+crossed interval is needed for the reason first given, at a size now measured rather than
+inferred.
