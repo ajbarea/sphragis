@@ -2301,3 +2301,27 @@ client run, with AOSP added, uses it. The others: a skipped micro-batch now stop
 skipped step does, since it leaves the client short; `conjunctive_power` refuses a seed effect with
 one seed instead of recording one it did not simulate; `seed_effect` no longer crashes on a pair
 with no noise; adapter geometry skips the zero-norm initial state.
+
+### Organization beyond project, tested with the project as the unit (2026-09-18)
+
+The client-level permutation treated clients as exchangeable, and clients share their project. The
+honest test leaves each client's own project out of every class mean, so an organization has to be
+recognised from its *other* projects, and permutes organization labels across projects, not
+clients (`attribution.group_permutation_p`, exact over all distinct relabelings when few enough).
+On the 34 clients of job 148513:
+
+| scope | projects | accuracy | p |
+|---|---|---|---|
+| all clients | OpenStack 4, Qt 4 | 0.794 | 0.057, exact over 70 relabelings |
+
+Suggestive and not significant, and eight projects cannot give much less than this. No single
+content type has two projects on both sides, so the language-controlled version cannot run here.
+The AOSP and Qt C++ cell (seven and six projects, 1,716 relabelings) is built for exactly this test.
+
+**The review of the packing fix caught a confound in the fix itself.** First-fit decreasing opens
+clients in order of change size, so keeping the first `limit` kept the clients built around each
+project's largest changes: one change and one reviewer each for a project with big changes, twenty
+small changes for another. The attack could have read the packing instead of the source. Clients
+now take at most a quarter of their examples from any one change, and the `limit` kept are a seeded
+random draw from all full clients. The executed run predates both packers' flaws only in count;
+the next run is the first under the corrected one.

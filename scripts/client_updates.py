@@ -43,6 +43,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--source", action="append", required=True, metavar="ORG:CONTENT/PROJECT=PATH")
 parser.add_argument("--client-size", type=int, default=64)
 parser.add_argument("--clients", type=int, default=8, help="at most this many per source")
+parser.add_argument(
+    "--max-per-change",
+    type=int,
+    help="examples one change may give a client; default a quarter of the client",
+)
 parser.add_argument("--seed", type=int, default=1, help="the shared initialization")
 parser.add_argument("--adapters", type=Path, required=True)
 parser.add_argument("--out", type=Path, required=True)
@@ -73,7 +78,13 @@ def main() -> None:
             except ValueError:
                 continue
             usable.append(row)
-        plan[name] = partition(usable, size=args.client_size, seed=args.seed, limit=args.clients)
+        plan[name] = partition(
+            usable,
+            size=args.client_size,
+            seed=args.seed,
+            limit=args.clients,
+            max_per_change=args.max_per_change,
+        )
         print(
             f"{name}: {len(rows)} examples, {len(rows) - len(usable)} refused -> "
             f"{len(plan[name])} clients",
@@ -129,6 +140,7 @@ def main() -> None:
             {
                 "model_id": args.model_id,
                 "client_size": args.client_size,
+                "max_per_change": args.max_per_change or max(1, args.client_size // 4),
                 "seed": args.seed,
                 "clients": reports,
                 "provenance": run_provenance(),

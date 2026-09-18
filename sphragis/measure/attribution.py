@@ -12,8 +12,9 @@ content, what an update reveals is its content, not its organization.
 
 from __future__ import annotations
 
+import math
 import random
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from statistics import fmean
@@ -69,25 +70,34 @@ def relation_means(cosine: Sequence[Sequence[float]], sources: Sequence[Source])
     return {name: {"mean": fmean(v), "pairs": len(v)} for name, v in groups.items()}
 
 
-def leave_one_out(cosine: Sequence[Sequence[float]], labels: Sequence[str]) -> list[str | None]:
+def leave_one_out(
+    cosine: Sequence[Sequence[float]],
+    labels: Sequence[str],
+    groups: Sequence[str] | None = None,
+) -> list[str | None]:
     """Each update assigned to the class whose other members it aligns with most.
 
-    None where no class other than an empty one remains, which cannot be scored. A class with a
-    single member is still a candidate for everyone else, but not for itself.
+    With `groups`, every member of the update's own group is left out too, not just the update:
+    leave one project out, so an organization must be recognised from its other projects rather
+    than from the update's siblings. None where no candidate remains.
     """
     predictions: list[str | None] = []
     for i in range(len(labels)):
         scores: dict[str, list[float]] = defaultdict(list)
         for j, label in enumerate(labels):
-            if j != i:
+            if j != i and (groups is None or groups[j] != groups[i]):
                 scores[label].append(cosine[i][j])
         means = {label: fmean(values) for label, values in scores.items()}
         predictions.append(max(sorted(means), key=means.__getitem__) if means else None)
     return predictions
 
 
-def accuracy(cosine: Sequence[Sequence[float]], labels: Sequence[str]) -> float:
-    predictions = leave_one_out(cosine, labels)
+def accuracy(
+    cosine: Sequence[Sequence[float]],
+    labels: Sequence[str],
+    groups: Sequence[str] | None = None,
+) -> float:
+    predictions = leave_one_out(cosine, labels, groups)
     return fmean(1.0 if p == t else 0.0 for p, t in zip(predictions, labels, strict=True))
 
 
@@ -104,3 +114,74 @@ def permutation_p(
         if accuracy(cosine, shuffled) >= observed:
             hits += 1
     return (1 + hits) / (1 + draws)
+
+
+def group_permutation_p(
+    cosine: Sequence[Sequence[float]],
+    labels: Sequence[str],
+    groups: Sequence[str],
+    *,
+    draws: int,
+    seed: int,
+) -> tuple[float, int]:
+    """Leave-one-group-out accuracy against labels permuted across groups, not members.
+
+    The group, a project, is the exchangeable unit: its members share it, so shuffling members
+    would treat siblings as independent evidence. Every group must carry one label. When the
+    distinct relabelings number no more than `draws` they are enumerated and the p-value is
+    exact; otherwise `draws` are sampled. Returns the p-value and how many relabelings it used.
+    """
+    label_of: dict[str, str] = {}
+    for label, group in zip(labels, groups, strict=True):
+        if label_of.setdefault(group, label) != label:
+            raise ValueError(f"group {group!r} carries more than one label")
+    names = sorted(label_of)
+    base = [label_of[g] for g in names]
+    observed = accuracy(cosine, labels, groups)
+
+    def score(assignment: Sequence[str]) -> float:
+        relabel = dict(zip(names, assignment, strict=True))
+        return accuracy(cosine, [relabel[g] for g in groups], groups)
+
+    count = _arrangements(base)
+    if count <= draws:
+        hits = sum(
+            1 for assignment in _distinct_arrangements(base) if score(assignment) >= observed
+        )
+        return hits / count, count
+    rng = random.Random(seed)
+    hits = 0
+    for _ in range(draws):
+        shuffled = list(base)
+        rng.shuffle(shuffled)
+        hits += score(shuffled) >= observed
+    return (1 + hits) / (1 + draws), draws
+
+
+def _arrangements(items: Sequence[str]) -> int:
+    """How many distinct orderings a multiset has: n! over the product of each count's factorial."""
+    total = math.factorial(len(items))
+    for n in Counter(items).values():
+        total //= math.factorial(n)
+    return total
+
+
+def _distinct_arrangements(items: Sequence[str]):
+    """Every distinct ordering of a multiset, each once, without generating the n! duplicates."""
+    counts = Counter(items)
+    order = sorted(counts)
+    current: list[str] = []
+
+    def extend():
+        if len(current) == len(items):
+            yield tuple(current)
+            return
+        for item in order:
+            if counts[item]:
+                counts[item] -= 1
+                current.append(item)
+                yield from extend()
+                current.pop()
+                counts[item] += 1
+
+    yield from extend()

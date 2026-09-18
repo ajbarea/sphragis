@@ -6,7 +6,10 @@ import pytest
 
 from sphragis.measure.attribution import (
     Source,
+    _arrangements,
+    _distinct_arrangements,
     accuracy,
+    group_permutation_p,
     leave_one_out,
     permutation_p,
     relation,
@@ -78,3 +81,41 @@ def test_relation_means_count_each_pair_once() -> None:
     table = relation_means(cosine, sources)
     assert table["same project"] == {"mean": 0.5, "pairs": 1}
     assert table["other organization, same content"] == {"mean": pytest.approx(0.2), "pairs": 2}
+
+
+def test_distinct_arrangements_are_counted_and_listed_once_each() -> None:
+    items = ["a"] * 6 + ["b"] * 7
+    assert _arrangements(items) == 1716
+    listed = list(_distinct_arrangements(["a", "a", "b", "c"]))
+    assert len(listed) == len(set(listed)) == _arrangements(["a", "a", "b", "c"]) == 12
+
+
+def test_leaving_the_group_out_removes_what_siblings_alone_explain() -> None:
+    """Projects recognisable only from their own siblings carry no organization signal."""
+    groups = ["p1", "p1", "p2", "p2", "p3", "p3", "p4", "p4"]
+    labels = ["x", "x", "x", "x", "y", "y", "y", "y"]
+    cosine = [
+        [1.0 if i == j else (0.5 if g == h else 0.1) for j, h in enumerate(groups)]
+        for i, g in enumerate(groups)
+    ]
+    assert accuracy(cosine, labels) == 1.0
+    predictions_without_siblings = accuracy(cosine, labels, groups)
+    assert predictions_without_siblings < 1.0
+
+
+def test_an_organization_shared_across_its_projects_survives_leaving_them_out() -> None:
+    groups = [f"p{i // 2}" for i in range(12)]
+    labels = ["x"] * 6 + ["y"] * 6
+    cosine = [
+        [1.0 if i == j else (0.4 if labels[i] == labels[j] else 0.1) for j in range(12)]
+        for i in range(12)
+    ]
+    assert accuracy(cosine, labels, groups) == 1.0
+    p, used = group_permutation_p(cosine, labels, groups, draws=1000, seed=0)
+    assert used == 20  # C(6, 3) relabelings of six projects, three per organization
+    assert p == pytest.approx(2 / 20)  # the observed labelling and its mirror image
+
+
+def test_a_group_with_two_labels_is_refused() -> None:
+    with pytest.raises(ValueError, match="more than one label"):
+        group_permutation_p([[1, 0], [0, 1]], ["x", "y"], ["g", "g"], draws=10, seed=0)

@@ -21,6 +21,7 @@ from sphragis.measure.attribution import (
     ALTITUDES,
     Source,
     accuracy,
+    group_permutation_p,
     permutation_p,
     relation_means,
 )
@@ -99,6 +100,35 @@ def main() -> None:
         print(
             f"organization within {content:8} {dict(counts)}  accuracy {cell['accuracy']:.3f}  "
             f"majority {cell['majority_rate']:.3f}  p {cell['permutation_p']:.4f}"
+        )
+    # Organization beyond project: each client's own project left out of every class mean, and
+    # organization labels permuted across projects, the exchangeable unit. Within each content
+    # type where both organizations have at least two projects, and over all clients.
+    report["organization_beyond_project"] = {}
+    scopes = {"all": list(range(len(sources)))}
+    for content in sorted({s.content for s in sources}):
+        scopes[content] = [i for i, s in enumerate(sources) if s.content == content]
+    for scope, keep in scopes.items():
+        projects: dict[str, set[str]] = {}
+        for i in keep:
+            projects.setdefault(sources[i].organization, set()).add(sources[i].at("project"))
+        if len(projects) < 2 or min(len(p) for p in projects.values()) < 2:
+            continue
+        labels = [sources[i].organization for i in keep]
+        groups = [sources[i].at("project") for i in keep]
+        sub = [[cosine[i][j] for j in keep] for i in keep]
+        p, used = group_permutation_p(sub, labels, groups, draws=args.draws, seed=args.seed)
+        cell = {
+            "projects": {org: sorted(p_) for org, p_ in projects.items()},
+            "accuracy": accuracy(sub, labels, groups),
+            "permutation_p": p,
+            "relabelings": used,
+        }
+        report["organization_beyond_project"][scope] = cell
+        print(
+            f"organization beyond project, {scope:8} "
+            f"{ {o: len(v) for o, v in projects.items()} } projects  "
+            f"accuracy {cell['accuracy']:.3f}  p {p:.4f} over {used} relabelings"
         )
     report["relations"] = relation_means(cosine, sources)
     for name, cell in sorted(report["relations"].items(), key=lambda kv: -kv[1]["mean"]):
