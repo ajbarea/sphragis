@@ -26,16 +26,9 @@ RESULT_SUFFIX="${PATTERN%%/*}"
 RESULT_SUFFIX="${RESULT_SUFFIX#sphragis-adapters-clients}"
 export RESULT_SUFFIX
 
-# A result file is written once: a second run that would overwrite one stops instead, and says
-# which file, so a re-run with the wrong PATTERN cannot quietly replace a recorded measurement.
-TARGET="$HOME/client-geometry$RESULT_SUFFIX.json"
-if [ -e "${TARGET}" ] && [ "${OVERWRITE:-0}" != 1 ]; then
-  echo "$TARGET exists: pass OVERWRITE=1 to replace it deliberately" >&2
-  exit 1
-fi
-
+OUT="$(result_path "$HOME/client-geometry$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/adapter_geometry.py \
   --root "$HOME/scratch" \
   --pattern "$PATTERN" \
   --per-module \
-  --out "$TARGET"
+  --out "$OUT"

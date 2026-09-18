@@ -31,10 +31,11 @@ B="${B:-qt_qtbase}"
 # TRAIN_SIZE=N cuts both training sets to N, so pairs of different sizes compare at one size.
 SIZE=(${TRAIN_SIZE:+--train-size "$TRAIN_SIZE"})
 
+OUT="$(result_path "$HOME/projects-$A-$B$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/rq1_pilot.py \
   --corpus "a=$PROJECTS/$A.jsonl" \
   --corpus "b=$PROJECTS/$B.jsonl" \
   --seeds "${SEEDS:-1}" \
   --equalize-train "${SIZE[@]}" \
   --adapters "$HOME/scratch/sphragis-adapters-projects-$A-$B$RESULT_SUFFIX" \
-  --out "$HOME/projects-$A-$B$RESULT_SUFFIX.json"
+  --out "$OUT"

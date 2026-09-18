@@ -33,6 +33,20 @@ export RESULT_SUFFIX="${RUN_TAG:+-$RUN_TAG}"
 # Another seed set or training size is another run, not a rerun, so it is named whatever
 # RUN_TAG says: SEEDS=2 alone would otherwise overwrite the seed-1 result and its adapters.
 # A script calls this with the variables it passes on, so one it ignores never renames it.
+# A recorded measurement is written once. A job whose result already exists stops here, before it
+# spends the queue time and before it can quietly replace a number the study cites; OVERWRITE=1
+# replaces one deliberately. The caller assigns it -- `OUT="$(result_path ...)"` -- because a
+# failed command substitution inside an argument list does not stop the script under `set -e`,
+# and the job would run on with an empty --out. Adapters are a directory the trainer fills and
+# are not guarded: a rerun that reaches them has already passed the result check above it.
+result_path() {
+  if [ -e "$1" ] && [ "${OVERWRITE:-0}" != 1 ]; then
+    echo "$1 exists: pass OVERWRITE=1 to replace it deliberately" >&2
+    return 1
+  fi
+  printf '%s' "$1"
+}
+
 tag_result_suffix() {
   local name
   for name in "$@"; do

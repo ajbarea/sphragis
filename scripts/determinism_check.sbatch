@@ -25,8 +25,9 @@ source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-sym-0}"
 
+OUT="$(result_path "$HOME/determinism-$CONDITION-$SLURMD_NODENAME$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/determinism_check.py \
   --condition "$CONDITION" \
   --corpus-dir "$HOME/corpus/planted" \
   --stored "$HOME/calibration-$CONDITION.json" \
-  --out "$HOME/determinism-$CONDITION-$SLURMD_NODENAME$RESULT_SUFFIX.json"
+  --out "$OUT"

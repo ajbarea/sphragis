@@ -349,17 +349,31 @@ def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -
 
 
 def _written_paths(script: Path) -> list[str]:
-    """Every path a job writes, resolving one level of shell variable.
+    """Every result path a job writes, resolved through the variable that guards it.
 
-    A job that guards its output has to name the path twice, once to test and once to write, so
-    it holds it in a variable; the invariant is about the path, not about where it is spelled.
+    A guarded job names its output in an assignment and passes the variable, so reading the
+    `--out` argument alone would see only `$OUT`.
     """
     text = script.read_text()
-    assignments = dict(re.findall(r'^([A-Z_]+)="([^"]+)"$', text, flags=re.MULTILINE))
+    guarded = dict(re.findall(r'^\s*([A-Z_]+)="\$\(result_path "([^"]+)"\)"$', text, re.MULTILINE))
     return [
-        assignments.get(path.strip("${}"), path)
+        guarded.get(path.strip("${}"), path)
         for path in re.findall(r'--(?:out|adapters) "([^"]+)"', text)
     ]
+
+
+@pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
+def test_every_result_a_job_writes_is_guarded_against_replacing_one(script: Path) -> None:
+    """A job that would overwrite a recorded measurement must stop before it spends queue time.
+
+    The guard is an assignment rather than a substitution in the argument list, because a failed
+    command substitution inside arguments does not stop a script under `set -u -e`: the job would
+    run on and write to an empty path.
+    """
+    text = script.read_text()
+    for path in re.findall(r'--out "([^"]+)"', text):
+        assert path == "$OUT", f"{script.name} writes {path} without result_path"
+    assert text.count('OUT="$(result_path "') == text.count('--out "$OUT"')
 
 
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)

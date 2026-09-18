@@ -43,9 +43,10 @@ else
   )
 fi
 
+OUT="$(result_path "$HOME/rq1-$MODE$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/rq1_pilot.py \
   "${SOURCE[@]}" \
   --seeds "${SEEDS:-1}" \
   --equalize-train \
   --adapters "$HOME/scratch/sphragis-adapters$RESULT_SUFFIX" \
-  --out "$HOME/rq1-$MODE$RESULT_SUFFIX.json"
+  --out "$OUT"

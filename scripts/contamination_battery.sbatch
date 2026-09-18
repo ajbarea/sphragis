@@ -28,8 +28,9 @@ SCORED_TEXT="${SCORED_TEXT:-with_context}"
 POST="${POST:-$HOME/corpus/openstack-post.jsonl}"
 PRE="${PRE:-$HOME/corpus/openstack-pre.jsonl}"
 TAG="${TAG:-6mo}"
+OUT="$(result_path "$HOME/contamination-openstack-$TAG-$SCORED_TEXT$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/contamination_battery.py \
   --post "$POST" \
   --pre "$PRE" \
   --scored-text "$SCORED_TEXT" \
-  --out "$HOME/contamination-openstack-$TAG-$SCORED_TEXT$RESULT_SUFFIX.json"
+  --out "$OUT"

@@ -27,10 +27,11 @@ SOURCES="${SOURCES:-scripts/clients-cpp.txt}"
 # CLIENT_SIZE sets how much local training a client does: 64 examples is 8 optimiser steps,
 # 128 is 16. The RQ1 geometry says training length moves updates apart, so the attack has to be
 # read at more than one length.
+OUT="$(result_path "$HOME/client-updates$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/client_updates.py \
   --clients "${CLIENTS_PER_SOURCE:-6}" \
   --client-size "${CLIENT_SIZE:-64}" \
   --sources-file "$SOURCES" \
   --corpus-root "$C" \
   --adapters "$HOME/scratch/sphragis-adapters-clients$RESULT_SUFFIX" \
-  --out "$HOME/client-updates$RESULT_SUFFIX.json"
+  --out "$OUT"
