@@ -17,7 +17,7 @@
 set -euo pipefail
 
 # Submit from the checkout: --output is relative and is opened before this body runs.
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 # SCORED_TEXT=after|with_context, e.g. `sbatch --export=ALL,SCORED_TEXT=with_context ...`.
 # Each variant writes its own file, so a rerun never overwrites an earlier result.

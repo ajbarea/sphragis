@@ -30,7 +30,7 @@ set -euo pipefail
 MODE="${MODE:-pilot}"
 
 # Submit from the checkout: --output is relative and is opened before this body runs.
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 tag_result_suffix SEEDS
 

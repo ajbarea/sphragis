@@ -15,7 +15,7 @@
 # covers a slower node. Build the corpora with scripts/project_corpora.py into $CLIENTS.
 set -euo pipefail
 
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 
 C="${CLIENTS:-$HOME/corpus/clients}"

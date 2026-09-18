@@ -14,7 +14,7 @@ set -euo pipefail
 
 # From the deployed checkout, never a hand-copied script in $HOME. `make deploy` is the
 # only way code reaches this machine.
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 uv run --no-sync python scripts/prompt_format_probe.py \
   "$HOME/pilot-examples.jsonl" \

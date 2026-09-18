@@ -28,7 +28,7 @@
 # (CONDITIONS=<tag>) with TIME=03:30:00.
 set -euo pipefail
 
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 tag_result_suffix SEEDS
 

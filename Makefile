@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit cluster-env verify
+.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -98,6 +98,28 @@ submit:                    ## Submit scripts/JOB.sbatch to CLUSTER (tigris|sporc
 	  && { [ \"\$$(git rev-parse HEAD)\" = $$head ] || { echo 'the cluster is not on this commit: make deploy'; exit 1; }; } \
 	  && { [ -f .venv-$$machine/pyvenv.cfg ] || { echo 'no .venv-$$machine on the cluster: make cluster-env CLUSTER=$(CLUSTER)'; exit 1; }; } \
 	  && sbatch $$flags scripts/$(JOB).sbatch"
+
+submit-pinned:             ## Submit scripts/JOB.sbatch from a worktree pinned at this pushed commit
+	@# For running new code while jobs hold the main checkout. A deploy would change what they
+	@# run and mislabel their results; a worktree at this commit changes neither, and its
+	@# results record this commit. The venv is shared by symlink, and cluster-env.sh puts the
+	@# worktree first on the import path. Worktrees accumulate under ~/sphragis-pinned.
+	@test -n "$(JOB)" || { echo "usage: make submit-pinned JOB=rq1 [CLUSTER=...] [TIME=...] [SBATCH_ARGS=...]"; exit 1; }
+	@test -f scripts/$(JOB).sbatch || { echo "no scripts/$(JOB).sbatch"; exit 1; }
+	@git update-index -q --refresh
+	@git diff-index --quiet HEAD -- || { echo "commit first: a pinned run is a commit, not a working tree"; exit 1; }
+	@flags=$$($(SLURM_CLI) flags $(SLURM_TARGET) $(if $(TIME),--time $(TIME)) --sbatch-args='$(SBATCH_ARGS)') || exit 1; \
+	machine=$$($(SLURM_CLI) machine --target $(CLUSTER)) || exit 1; \
+	head=$$(git rev-parse HEAD); short=$$(git rev-parse --short HEAD); \
+	git push -q $(REMOTE) HEAD && \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) "cd $(TIGRIS_DIR) && git fetch -q origin \
+	  && W=\$$HOME/sphragis-pinned/$$short \
+	  && { [ -d \$$W ] || git worktree add -q --detach \$$W $$head; } \
+	  && { [ \"\$$(git -C \$$W rev-parse HEAD)\" = $$head ] || { echo \"\$$W is not at $$head\"; exit 1; }; } \
+	  && ln -sfn \$$HOME/$(TIGRIS_DIR)/.venv-$$machine \$$W/.venv-$$machine \
+	  && { [ -f \$$W/.venv-$$machine/pyvenv.cfg ] || { echo 'no .venv-$$machine on the cluster: make cluster-env CLUSTER=$(CLUSTER)'; exit 1; }; } \
+	  && cd \$$W && mkdir -p logs \
+	  && SPHRAGIS_CHECKOUT=\$$W sbatch $$flags scripts/$(JOB).sbatch"
 
 cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aarch64 TIGRIS, x86_64 SPORC)
 	@# The login node is aarch64 and builds its own venv in place. An x86_64 venv can only be

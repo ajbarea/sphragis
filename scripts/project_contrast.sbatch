@@ -21,7 +21,7 @@
 # examples, holdout by change): 1h53m to 2h45m on a GH200.
 set -euo pipefail
 
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 tag_result_suffix SEEDS TRAIN_SIZE
 

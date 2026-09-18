@@ -6,6 +6,10 @@
 machine="$(uname -m)"
 export PATH="$HOME/.local/bin/$machine:$HOME/.local/bin:$PATH"
 export UV_PROJECT_ENVIRONMENT=".venv-$machine"
+# The checkout this job entered comes first on the import path. The venv's editable install
+# points at the main checkout, so a job run from a pinned worktree (`make submit-pinned`) would
+# otherwise import the main checkout's code under the worktree's commit.
+export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 # One interpreter on every machine, the one the GH200 results so far ran on. Unpinned, each
 # machine used whatever uv found or downloaded first.
 export UV_PYTHON=3.13.15

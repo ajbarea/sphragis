@@ -20,7 +20,7 @@
 # The node is in the result name, so the two never overwrite each other.
 set -euo pipefail
 
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-sym-0}"

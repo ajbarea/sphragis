@@ -112,7 +112,7 @@ def test_every_script_defaults_to_the_default_target(script: Path) -> None:
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
 def test_every_script_sources_the_environment_from_the_checkout(script: Path) -> None:
     text = script.read_text()
-    cd = text.index('cd "$HOME/ajsoftworks/sphragis"')
+    cd = text.index('cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"')
     source = text.index("source sphragis/experiment/cluster-env.sh")
     assert cd < source, "the environment file is found relative to the checkout"
     # One definition: a script that exports its own copy drifts from the file.
@@ -399,3 +399,20 @@ def test_outside_a_checkout_the_start_commit_is_empty_not_an_error(tmp_path: Pat
     result = _source(tmp_path, tmp_path, 'echo "[$SPHRAGIS_GIT_COMMIT]"')
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "[]"
+
+
+def test_a_job_imports_the_checkout_it_entered_first(tmp_path: Path) -> None:
+    """A pinned worktree's job must run the worktree's code, not the editable main checkout's."""
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, 'echo "[$PYTHONPATH]"')
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == f"[{tmp_path}]"
+
+
+def test_submit_pinned_runs_the_job_from_a_worktree_at_this_commit() -> None:
+    dry = _dry_run("submit-pinned", "JOB=pilot")
+    assert "git worktree add" in dry
+    assert "SPHRAGIS_CHECKOUT=" in dry
+    assert "sbatch $flags scripts/pilot.sbatch" in dry
+    assert "--sbatch-args=" in dry, "free-form options still pass through slurm.py's checks"

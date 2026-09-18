@@ -16,7 +16,7 @@
 # sampling running longer than greedy when it declines to stop.
 set -euo pipefail
 
-cd "$HOME/ajsoftworks/sphragis"
+cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-marker-0.25}"
