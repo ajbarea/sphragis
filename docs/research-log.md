@@ -2406,3 +2406,38 @@ as a job on another node.
 `HFGenerator` now upcasts the bf16 weights to fp32, exactly, before generating, and every result
 records `inference_dtype`. This is the rule fixed in the ROADMAP before the jobs ran: fp32 if bf16
 differs between nodes and fp32 does not.
+
+### Secure aggregation does not hide which source was in the round (2026-09-18)
+
+`sphragis/measure/aggregate.py`, `scripts/aggregate_attack.py`,
+`datasets/results/aggregate-attack.json`. The per-client attack assumes the server sees each
+update; secure aggregation shows it only the round's mean, which is what a federated deployment
+would claim as its protection. Both detectors below are what an honest-but-curious server could
+run with reference updates of its own, computed exactly from the Gram matrix `adapter_geometry`
+already recorded, without touching the weights.
+
+| target | rounds of 4 | rounds of 8 | paired difference at 8: own | a stranger's |
+|---|---|---|---|---|
+| OpenStack | AUC 0.729 | AUC 0.750 | +0.038 | -0.002 |
+| Qt | AUC 0.650 | AUC 0.732 | +0.016 | -0.002 |
+
+**Membership**: rounds of one size, half holding exactly one client of the target and half none,
+scored by the round's alignment with the attacker's reference updates from that source, the
+detected client never among them. 0.5 is no signal.
+
+**Paired difference**: FedAttr's mechanism (arXiv:2605.06596) with the watermark removed, the
+average of rounds holding the target minus the average of rounds without it, read against the
+source's direction. It recovers the target's own direction and nothing for a client of another
+organization, which is the baseline it has to beat.
+
+**Bigger rounds score no worse.** A larger round dilutes the target's share as 1/size, but averages
+the other participants' noise away at the same rate, so the alignment holds: 0.729 to 0.750 for
+OpenStack, 0.650 to 0.732 for Qt.
+
+**What it does not yet show.** The reference is the rest of the target's clients, which in this
+corpus means the rest of its codebase family, so this inherits the per-client result's open
+question: the detector may be reading the family rather than the organization. The rounds are drawn
+from one source against all others rather than from a realistic mixed cohort, one client of the
+target a round, and the client updates are a single initialization and a single local-training
+length. What it does establish is the shape of the leak: aggregation over four to sixteen clients
+does not remove it, and the mechanism that finds a planted watermark finds a natural source too.
