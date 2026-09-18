@@ -59,6 +59,26 @@ def main() -> None:
             f"{altitude:13} {len(counts)} classes  accuracy {observed:.3f}  "
             f"majority {max(counts.values()) / len(labels):.3f}  p {p:.4f}"
         )
+    # Where in the network the source lives, if anywhere: attribution from each module alone.
+    # No per-module p-values; with 196 modules the best one is selected, so the count of modules
+    # above the pooled accuracy is the honest summary, not the maximum.
+    if "by_module" in geometry:
+        per_module: dict[str, dict[str, float]] = {}
+        for module, matrix in geometry["by_module"].items():
+            per_module[module] = {
+                altitude: accuracy(matrix, [s.at(altitude) for s in sources])
+                for altitude in ALTITUDES
+            }
+        report["by_module"] = per_module
+        for altitude in ALTITUDES:
+            pooled = report["altitudes"][altitude]["accuracy"]
+            values = sorted((m[altitude], name) for name, m in per_module.items())
+            above = sum(1 for v, _ in values if v > pooled)
+            print(
+                f"{altitude:13} per module: median {values[len(values) // 2][0]:.3f}, "
+                f"best {values[-1][0]:.3f} ({values[-1][1].split('model.')[-1]}), "
+                f"{above} of {len(values)} above pooled"
+            )
     report["relations"] = relation_means(cosine, sources)
     for name, cell in sorted(report["relations"].items(), key=lambda kv: -kv[1]["mean"]):
         print(f"  {name:48} {cell['mean']:.3f} over {cell['pairs']} pairs")

@@ -40,6 +40,9 @@ parser.add_argument(
     default="sphragis-adapters*/*/adapter_model.safetensors",
     help="which adapters under the root, as a glob",
 )
+parser.add_argument(
+    "--per-module", action="store_true", help="also save every module's cosine matrix"
+)
 
 _DTYPES = {"F32": np.float32, "F16": np.float16}
 
@@ -98,6 +101,7 @@ def main() -> None:
     n = len(names)
     inner = np.zeros((n, n))
     per_module_cosines = np.zeros((n, n))
+    by_module: dict[str, list[list[float]]] = {}
     for module in shared:
         loaded = []
         for name in names:
@@ -111,7 +115,10 @@ def main() -> None:
         inner += block
         norms = np.sqrt(np.clip(np.diag(block), 0.0, None))
         with np.errstate(divide="ignore", invalid="ignore"):
-            per_module_cosines += np.nan_to_num(block / np.outer(norms, norms))
+            module_cosine = np.nan_to_num(block / np.outer(norms, norms))
+        per_module_cosines += module_cosine
+        if args.per_module:
+            by_module[module] = np.round(module_cosine, 6).tolist()
         print(f"{module}: done", flush=True)
     norms = np.sqrt(np.diag(inner))
     if not np.all(norms > 0):
@@ -125,6 +132,7 @@ def main() -> None:
                 "update_norm": dict(zip(names, norms.tolist(), strict=True)),
                 "cosine": (inner / np.outer(norms, norms)).tolist(),
                 "mean_module_cosine": (per_module_cosines / len(shared)).tolist(),
+                **({"by_module": by_module} if args.per_module else {}),
                 "provenance": {**provenance_header(), "slurm": slurm_record()},
             },
             indent=2,
