@@ -19,9 +19,16 @@ from __future__ import annotations
 import argparse
 import json
 import random
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from sphragis.experiment.power import _null, _shift, realised_difference
+from sphragis.experiment.power import (
+    _null,
+    _shift,
+    lift_for_effect,
+    realised_difference,
+    seed_trial,
+)
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import cluster_bootstrap, supports_direction
 
@@ -34,6 +41,17 @@ parser.add_argument("--trials", type=int, default=400)
 parser.add_argument("--resamples", type=int, default=500)
 parser.add_argument("--seed", type=int, default=23)
 parser.add_argument("--out", type=Path, default=Path("datasets/results/conjunctive-power.json"))
+parser.add_argument(
+    "--seeds", type=int, default=1, help="above 1, simulate multi-seed studies read both ways"
+)
+parser.add_argument("--sigma-b", type=float, default=0.0, help="the seed main effect's SD")
+parser.add_argument(
+    "--redraw",
+    type=float,
+    default=0.055,
+    help="share of each arm's outcomes a seed redraws; 0.055 reproduces the measured churn",
+)
+parser.add_argument("--workers", type=int, default=6)
 
 
 def arm_draws(
@@ -52,6 +70,20 @@ def arm_draws(
     return out
 
 
+def _seed_trial(job):
+    clusters, lift, n, seeds, sigma_b, redraw, resamples, seed = job
+    return seed_trial(
+        clusters,
+        lift=lift,
+        n_changes=n,
+        seeds=seeds,
+        sigma_b=sigma_b,
+        redraw=redraw,
+        resamples=resamples,
+        seed=seed,
+    )
+
+
 def main() -> None:
     args = parser.parse_args()
     payload = json.loads(args.results.read_text())
@@ -59,8 +91,16 @@ def main() -> None:
     sizes = dict(s.split("=") for s in args.size) if args.size else {}
     orgs = sorted({k.split("|")[1] for k in results if k.startswith("base|")})
 
-    report: dict[str, object] = {"trials": args.trials, "resamples": args.resamples}
+    report: dict[str, object] = {
+        "trials": args.trials,
+        "resamples": args.resamples,
+        "seeds": args.seeds,
+        "sigma_b": args.sigma_b,
+        "redraw": args.redraw if args.seeds > 1 else None,
+        "rule": "crossed" if args.seeds > 1 else "single seed",
+    }
     per_org: dict[str, list[bool]] = {}
+    median_rule: dict[str, list[bool]] = {}
     for org in orgs:
         other = next(o for o in orgs if o != org)
         clusters = to_clusters(
@@ -73,24 +113,40 @@ def main() -> None:
         # quarter high and across its detection threshold, which reported the gate's power
         # as 0.91 when the effect it simulated was not the effect observed.
         observed = cluster_bootstrap(clusters, seed=args.seed)["estimate"]
-        low, high = 0.0, 1.0
-        for _ in range(24):
-            mid = (low + high) / 2
-            if realised_difference(clusters, lift=mid, seed=args.seed, draws=400) < observed:
-                low = mid
-            else:
-                high = mid
-        lift = (low + high) / 2
+        lift = lift_for_effect(clusters, observed, seed=args.seed)
         realised = realised_difference(clusters, lift=lift, seed=args.seed, draws=400)
         print(f"{org}: lift {lift:.4f} realises {realised:+.4f} against observed {observed:+.4f}")
-        per_org[org] = arm_draws(
-            clusters,
-            lift=lift,
-            n=n,
-            trials=args.trials,
-            resamples=args.resamples,
-            seed=args.seed,
-        )
+        if args.seeds > 1:
+            jobs = [
+                (
+                    clusters,
+                    lift,
+                    n,
+                    args.seeds,
+                    args.sigma_b,
+                    args.redraw,
+                    args.resamples,
+                    args.seed + trial,
+                )
+                for trial in range(args.trials)
+            ]
+            with ProcessPoolExecutor(args.workers) as pool:
+                trials = list(pool.map(_seed_trial, jobs, chunksize=4))
+            per_org[org] = [t.crossed for t in trials]
+            median_rule[org] = [t.median_seed for t in trials]
+            report[f"{org}_median_seed_power"] = sum(median_rule[org]) / args.trials
+            report[f"{org}_between_seed_variance"] = (
+                sum(t.between_seed_variance for t in trials) / args.trials
+            )
+        else:
+            per_org[org] = arm_draws(
+                clusters,
+                lift=lift,
+                n=n,
+                trials=args.trials,
+                resamples=args.resamples,
+                seed=args.seed,
+            )
         marginal = sum(per_org[org]) / args.trials
         report[org] = {
             "observed_effect": observed,
@@ -106,6 +162,13 @@ def main() -> None:
     product = (sum(per_org[first]) / args.trials) * (sum(per_org[second]) / args.trials)
     report["conjunctive_power"] = both
     report["product_of_marginals"] = product
+    if median_rule:
+        report["median_seed_conjunctive_power"] = (
+            sum(a and b for a, b in zip(median_rule[first], median_rule[second], strict=True))
+            / args.trials
+        )
+        median_power = report["median_seed_conjunctive_power"]
+        print(f"median-seed rule, both organizations:                {median_power:.3f}")
     print(f"\nconjunctive power of the gate (both organizations): {both:.3f}")
     print(f"product of the marginals, if independent:            {product:.3f}")
     print(

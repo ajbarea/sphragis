@@ -4,8 +4,17 @@ from __future__ import annotations
 
 import random
 
-from sphragis.experiment.power import minimum_detectable_effect, realised_difference, simulate_power
-from sphragis.measure.stats import Cluster
+import pytest
+
+from sphragis.experiment.power import (
+    lift_for_effect,
+    minimum_detectable_effect,
+    realised_difference,
+    seed_runs,
+    seed_trial,
+    simulate_power,
+)
+from sphragis.measure.stats import Cluster, paired_difference
 
 
 def _pilot(n: int, seed: int = 0) -> list[Cluster]:
@@ -103,3 +112,70 @@ def test_a_pilot_that_leans_either_way_gives_the_same_detectable_difference() ->
     a = minimum_detectable_effect(up, **kwargs)
     b = minimum_detectable_effect(down, **kwargs)
     assert abs(a.lift - b.lift) <= 0.1, f"{a.lift:.3f} against {b.lift:.3f}"
+
+
+def _rows(n: int, rate: float, size: int = 4) -> list[Cluster]:
+    rng = random.Random(9)
+    return [
+        Cluster(
+            f"c{i}",
+            tuple(1.0 if rng.random() < rate else 0.0 for _ in range(size)),
+            tuple(1.0 if rng.random() < rate else 0.0 for _ in range(size)),
+        )
+        for i in range(n)
+    ]
+
+
+def test_the_seed_runs_are_crossed_over_one_set_of_changes() -> None:
+    truth = _rows(30, 0.3)
+    runs = seed_runs(truth, seeds=3, sigma_b=0.01, redraw=0.05, rng=random.Random(0))
+    for run in runs:
+        assert [(c.change_id, len(c.treatment), len(c.control)) for c in run] == [
+            (c.change_id, len(c.treatment), len(c.control)) for c in truth
+        ]
+
+
+def test_churn_alone_keeps_the_contrast_where_it_was() -> None:
+    truth = _rows(400, 0.3)
+    base = paired_difference(truth)
+    shifts = [
+        paired_difference(run) - base
+        for run in seed_runs(truth, seeds=40, sigma_b=0.0, redraw=0.05, rng=random.Random(1))
+    ]
+    assert abs(sum(shifts) / len(shifts)) < 0.003
+
+
+def test_the_seed_effect_moves_contrasts_by_about_its_size() -> None:
+    truth = _rows(600, 0.3)
+    base = paired_difference(truth)
+    shifts = [
+        paired_difference(run) - base
+        for run in seed_runs(truth, seeds=200, sigma_b=0.02, redraw=0.0, rng=random.Random(2))
+    ]
+    mean = sum(shifts) / len(shifts)
+    sd = (sum((x - mean) ** 2 for x in shifts) / (len(shifts) - 1)) ** 0.5
+    assert 0.016 < sd < 0.024
+
+
+def test_a_seed_trial_is_deterministic_for_its_seed() -> None:
+    def once():
+        return seed_trial(
+            _rows(30, 0.3),
+            lift=0.1,
+            n_changes=20,
+            seeds=3,
+            sigma_b=0.01,
+            redraw=0.05,
+            resamples=100,
+            seed=5,
+        )
+
+    assert once() == once()
+
+
+def test_the_lift_found_realises_the_effect_asked_for() -> None:
+    pilot = _rows(60, 0.3)
+    lift = lift_for_effect(pilot, 0.05, seed=3, draws=200)
+    assert realised_difference(pilot, lift=lift, seed=3, draws=200) == pytest.approx(
+        0.05, abs=0.003
+    )

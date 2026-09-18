@@ -21,8 +21,15 @@ from __future__ import annotations
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
+from statistics import fmean, median
 
-from sphragis.measure.stats import Cluster, cluster_bootstrap, paired_difference, supports_direction
+from sphragis.measure.stats import (
+    Cluster,
+    cluster_bootstrap,
+    crossed_bootstrap,
+    paired_difference,
+    supports_direction,
+)
 
 
 def _null(cluster: Cluster, rng: random.Random) -> Cluster:
@@ -134,4 +141,119 @@ def minimum_detectable_effect(
         lift=high,
         n_changes=n,
         reached_target=reached,
+    )
+
+
+def lift_for_effect(
+    clusters: Sequence[Cluster], effect: float, *, seed: int, draws: int = 400
+) -> float:
+    """The lift whose realised difference on this pilot is `effect`, by bisection.
+
+    By bisection rather than stepping: a 0.02 step overshot Qt's +0.0110 to +0.0138, a quarter
+    high and across its detection threshold, which once reported the gate's power as 0.91 for an
+    effect that was not the one observed.
+    """
+    low, high = 0.0, 1.0
+    for _ in range(24):
+        mid = (low + high) / 2
+        if realised_difference(clusters, lift=mid, seed=seed, draws=draws) < effect:
+            low = mid
+        else:
+            high = mid
+    return (low + high) / 2
+
+
+def _nudge(cluster: Cluster, delta: float, rng: random.Random) -> Cluster:
+    """Move the treatment arm's rate: raise failures with probability delta, or lower
+    successes with probability -delta."""
+    if delta >= 0:
+        moved = tuple(1.0 if v < 1.0 and rng.random() < delta else v for v in cluster.treatment)
+    else:
+        moved = tuple(0.0 if v > 0.0 and rng.random() < -delta else v for v in cluster.treatment)
+    return Cluster(cluster.change_id, moved, cluster.control)
+
+
+def _redraw(values: tuple[float, ...], rate: float, fraction: float, rng: random.Random):
+    return tuple(
+        (1.0 if rng.random() < rate else 0.0) if rng.random() < fraction else v for v in values
+    )
+
+
+def seed_runs(
+    truth: Sequence[Cluster],
+    *,
+    seeds: int,
+    sigma_b: float,
+    redraw: float,
+    rng: random.Random,
+) -> list[list[Cluster]]:
+    """One study's changes as scored at several seeds: crossed, with churn and a seed effect.
+
+    Every seed scores the same changes and examples. Each redraws a fraction `redraw` of each
+    arm's outcomes around that change's arm rate, which is seed-by-change churn, and moves its
+    treatment arm so its contrast shifts by a draw from N(0, sigma_b), the seed main effect.
+    A lift raises only failures and a drop lowers only successes, so the nudge is scaled by the
+    share of each the treatment arm holds.
+    """
+    treated = [v for c in truth for v in c.treatment]
+    share = fmean(treated) if treated else 0.0
+    runs = []
+    for _ in range(seeds):
+        shift = rng.gauss(0.0, sigma_b) if sigma_b > 0 else 0.0
+        if shift >= 0:
+            delta = shift / (1.0 - share) if share < 1.0 else 0.0
+        else:
+            delta = shift / share if share > 0.0 else 0.0
+        delta = max(-1.0, min(1.0, delta))
+        run = []
+        for cluster in truth:
+            t_rate = fmean(cluster.treatment) if cluster.treatment else 0.0
+            c_rate = fmean(cluster.control) if cluster.control else 0.0
+            churned = Cluster(
+                cluster.change_id,
+                _redraw(cluster.treatment, t_rate, redraw, rng),
+                _redraw(cluster.control, c_rate, redraw, rng),
+            )
+            run.append(_nudge(churned, delta, rng))
+        runs.append(run)
+    return runs
+
+
+@dataclass(frozen=True)
+class SeedTrial:
+    """Whether one simulated multi-seed study supports the direction, under each rule."""
+
+    crossed: bool
+    median_seed: bool
+    between_seed_variance: float
+
+
+def seed_trial(
+    clusters: Sequence[Cluster],
+    *,
+    lift: float,
+    n_changes: int,
+    seeds: int,
+    sigma_b: float,
+    redraw: float,
+    resamples: int,
+    seed: int,
+) -> SeedTrial:
+    """One simulated study at `seeds` seeds, read by the crossed and the median-seed rule."""
+    rng = random.Random(seed)
+    truth = [
+        _shift(_null(clusters[rng.randrange(len(clusters))], rng), lift, rng)
+        for _ in range(n_changes)
+    ]
+    runs = seed_runs(truth, seeds=seeds, sigma_b=sigma_b, redraw=redraw, rng=rng)
+    crossed = crossed_bootstrap(runs, seed=seed, resamples=resamples)
+    intervals = [cluster_bootstrap(r, seed=seed, resamples=resamples) for r in runs]
+    middle = median(i["estimate"] for i in intervals)
+    binding = min(intervals, key=lambda i: abs(i["estimate"] - middle))
+    estimates = [i["estimate"] for i in intervals]
+    centre = fmean(estimates)
+    return SeedTrial(
+        crossed=supports_direction(crossed),
+        median_seed=supports_direction(binding),
+        between_seed_variance=sum((e - centre) ** 2 for e in estimates) / (len(estimates) - 1),
     )
