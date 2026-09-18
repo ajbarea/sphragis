@@ -2116,9 +2116,12 @@ should, and qtbase still never wins at home.
 
 ### RQ2's first result: a client's update reveals its organization, within a language too (2026-09-18, jobs 148513, 148621)
 
-> **Corrected the same day.** The interpretation below overreaches. Per project there is no
-> organization pull beyond the codebase family: see "What the client updates identify is the
-> codebase family" below. The numbers stand; the organizational reading does not.
+> **Corrected the same day, and again with a third organization.** The interpretation below
+> overreaches: per project there is no organization pull beyond the codebase family, and once a
+> content type is carried by two organizations at several projects each, organization is not
+> attributable at all (0.416 against a 0.506 majority). See "What the client updates identify is the
+> codebase family" and "The organization is not in the update" below. The numbers stand; the
+> organizational reading does not.
 
 `datasets/results/client-updates.json`, `client-geometry.json`, `client-attribution.json`. The
 geometry of the RQ1 adapters said an update's raw direction is dominated by initialization and
@@ -2213,7 +2216,8 @@ two together do.
 
 So the within-content rows of the entry above are family tests in disguise: within Python the Qt
 side is one project, within documentation each side is one project, and a project is recognisable
-from its update. **The defensible claim is that a client's update identifies its codebase family.**
+from its update. (The C++ cell built to settle this later returned 0.395 against a 0.698 baseline:
+no organization effect at all beyond content and project.) **The defensible claim is that a client's update identifies its codebase family.**
 Whether the organization is what defines a family, a house style shared across the organization's
 projects in one language, cannot be separated here, because each organization-and-language cell
 holds one to three projects and the only cross-organization comparison within a language rests on

@@ -182,9 +182,11 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   as closely as one project; so do Qt's C++ libraries); organization alone and language alone do
   not raise alignment. The first reading, "organization within a language", overreached and is
   corrected in the log. Late layers carry most of it.
-- [ ] **Separate organization from family**: several projects per organization in one shared
-  language on both sides. Only OpenStack has that in Python; a third Gerrit organization with
-  Python projects (Wikimedia) would supply the missing cell. Decide before RQ2's Stage 1 text.
+- [x] **Organization separated from family, and it does not survive** (job 149461): with C++
+  carried by AOSP (3 projects) and Qt (6), organization is attributed at 0.395 against a 0.698
+  baseline, p 0.75 with the project as the unit, while content reaches 0.909 and project 0.442.
+  The earlier 0.912 was the organizations' content mix. What an update betrays is the kind of code
+  and the codebase, not the owner.
 - [ ] **Robustness**: several initializations, longer local training (the RQ1 geometry says length
   moves updates apart), and a learned classifier on spectral features beside nearest-mean cosine.
 - [x] **The aggregate attack leaks too** (`aggregate-attack.json`): membership of a source in a
