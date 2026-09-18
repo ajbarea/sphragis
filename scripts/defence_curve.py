@@ -177,6 +177,10 @@ def main() -> None:
                     "mean_absent": float(np.mean([s["mean_absent"] for s in scores])),
                 }
                 cell.setdefault(str(rounds), {})[str(noise)] = summary
+                # Written as each cell lands: the whole grid runs for hours, and a run that
+                # writes only at the end has nothing to show for an interruption.
+                report["targets"][organization] = cell
+                args.out.write_text(json.dumps(report, indent=2))
                 print(
                     f"{organization:12} {rounds:4} rounds, noise {noise:4}: "
                     f"AUC {summary['auc']:.3f} (sd {summary['auc_sd_over_splits']:.3f})",
