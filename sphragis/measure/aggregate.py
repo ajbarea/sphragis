@@ -144,3 +144,53 @@ def paired_subset_difference(
     if left <= 0 or right <= 0:
         return 0.0
     return inner / (left**0.5 * right**0.5)
+
+
+def organization_membership_auc(
+    products: Sequence[Sequence[float]],
+    *,
+    members: Sequence[int],
+    everyone: Sequence[int],
+    size: int,
+    draws: int,
+    seed: int,
+    at_least: int = 1,
+) -> dict[str, float]:
+    """Did any client of this organization take part, from a mixed round's aggregate alone?
+
+    The deployment question, and a harder one than detecting a named client: rounds are drawn
+    from every client, so a round without the target still holds clients of other sources, and a
+    round with it holds `at_least` of its clients among participants drawn from everyone.
+
+    The organization's clients are split once into the attacker's reference and the participants
+    it may contribute, so no round is scored against itself AND both classes are scored against
+    the same reference. Scoring the two classes against references of different sizes makes the
+    comparison read reference size rather than membership: it put this at an AUC of 1.000.
+    """
+    rng = random.Random(seed)
+    mine = sorted(members)
+    if len(mine) < 2:
+        raise ValueError(f"a reference and a participant need two clients, got {len(mine)}")
+    half = max(1, len(mine) // 2)
+    reference, participants = mine[:half], mine[half:]
+    if at_least > len(participants):
+        raise ValueError(f"{at_least} participants needed, {len(participants)} available")
+    outside = [i for i in everyone if i not in set(mine)]
+    if size > len(outside):
+        raise ValueError(f"a round without the target needs {size} others, got {len(outside)}")
+    present, absent = [], []
+    for _ in range(draws):
+        contributed = rng.sample(participants, at_least)
+        rest = rng.sample(outside, size - at_least)
+        present.append(direction_score(products, [*contributed, *rest], reference))
+        absent.append(direction_score(products, rng.sample(outside, size), reference))
+    wins = sum(1.0 if a > b else 0.5 if a == b else 0.0 for a in present for b in absent)
+    return {
+        "auc": wins / (len(present) * len(absent)),
+        "rounds": float(draws),
+        "round_size": float(size),
+        "target_clients_per_round": float(at_least),
+        "reference_clients": float(len(reference)),
+        "mean_present": fmean(present),
+        "mean_absent": fmean(absent),
+    }

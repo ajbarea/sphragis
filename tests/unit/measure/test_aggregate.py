@@ -11,6 +11,7 @@ from sphragis.measure.aggregate import (
     direction_score,
     gram,
     membership_auc,
+    organization_membership_auc,
     paired_subset_difference,
     rounds,
 )
@@ -100,3 +101,42 @@ def test_paired_subsets_recover_the_target_direction_and_not_a_stranger_s() -> N
 def test_a_round_bigger_than_the_pool_is_refused() -> None:
     with pytest.raises(ValueError, match="needs 5 clients"):
         rounds(range(3), size=5, draws=10, rng=random.Random(0))
+
+
+def test_a_mixed_round_still_betrays_an_organization_with_its_own_direction() -> None:
+    """Rounds drawn from everyone, so a round without the target is not a round of strangers."""
+    target = _vectors(6, 40, seed=7, shift=8.0)
+    others = _vectors(24, 40, seed=8)
+    products = _products(target + others)
+    detected = organization_membership_auc(
+        products, members=range(6), everyone=range(30), size=8, draws=150, seed=0
+    )
+    assert detected["auc"] > 0.9
+    assert detected["mean_present"] > detected["mean_absent"]
+
+
+def test_an_organization_without_a_direction_of_its_own_is_not_detectable_in_a_mixed_round() -> (
+    None
+):
+    products = _products(_vectors(30, 40, seed=9))
+    detected = organization_membership_auc(
+        products, members=range(6), everyone=range(30), size=8, draws=150, seed=0
+    )
+    assert 0.35 < detected["auc"] < 0.65
+
+
+def test_a_mixed_round_needs_enough_clients_outside_the_target() -> None:
+    products = _products(_vectors(12, 5, seed=10))
+    with pytest.raises(ValueError, match="needs 11 others"):
+        organization_membership_auc(
+            products, members=range(2), everyone=range(12), size=11, draws=10, seed=0
+        )
+
+
+def test_both_classes_are_scored_against_the_same_reference() -> None:
+    """Different reference sizes per class read reference size, not membership: it read 1.000."""
+    products = _products(_vectors(30, 40, seed=11))
+    detected = organization_membership_auc(
+        products, members=range(6), everyone=range(30), size=8, draws=150, seed=0
+    )
+    assert detected["reference_clients"] == 3.0

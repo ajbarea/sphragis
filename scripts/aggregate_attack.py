@@ -28,7 +28,12 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any
 
-from sphragis.measure.aggregate import gram, membership_auc, paired_subset_difference
+from sphragis.measure.aggregate import (
+    gram,
+    membership_auc,
+    organization_membership_auc,
+    paired_subset_difference,
+)
 from sphragis.measure.attribution import Source
 
 parser = argparse.ArgumentParser()
@@ -63,7 +68,26 @@ def main() -> None:
         outside = [i for i, other in enumerate(labels) if other != label]
         if len(mine) < 2 or len(outside) < max(args.sizes):
             continue
-        cell: dict[str, Any] = {"clients": len(mine), "membership": {}}
+        cell: dict[str, Any] = {"clients": len(mine), "membership": {}, "mixed_rounds": {}}
+        for size in args.sizes:
+            for present in (1, 2):
+                if size - present > len(outside) or len(mine) <= present:
+                    continue
+                mixed = organization_membership_auc(
+                    products,
+                    members=mine,
+                    everyone=range(len(names)),
+                    size=size,
+                    draws=args.draws,
+                    seed=args.seed,
+                    at_least=present,
+                )
+                cell["mixed_rounds"][f"{size}/{present}"] = mixed
+                print(
+                    f"{label:24} mixed rounds of {size:3}, {present} of its clients: "
+                    f"AUC {mixed['auc']:.3f}",
+                    flush=True,
+                )
         for size in args.sizes:
             aucs = []
             for held in mine:

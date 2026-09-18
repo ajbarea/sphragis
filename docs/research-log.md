@@ -2441,3 +2441,25 @@ from one source against all others rather than from a realistic mixed cohort, on
 target a round, and the client updates are a single initialization and a single local-training
 length. What it does establish is the shape of the leak: aggregation over four to sixteen clients
 does not remove it, and the mechanism that finds a planted watermark finds a natural source too.
+
+### Mixed rounds, and a detector that was reading its own reference (2026-09-18)
+
+Extends the entry above to the deployment question: not "was this named client in the round" with
+the other participants drawn from other organizations, but "did this organization take part" with
+the round drawn from every client. The organization's clients are split once into the attacker's
+reference and the participants it may contribute, so no round is scored against itself.
+
+| target | round of 4 | round of 8 | round of 16 |
+|---|---|---|---|
+| OpenStack, 1 of its clients present | AUC 0.765 | 0.726 | 0.725 |
+| OpenStack, 2 of its clients present | 0.918 | 0.835 | 0.863 |
+
+Detection rises with how many of the organization's clients are in the round and falls only
+slightly as the round grows, which is what a mean over participants predicts. Qt is not reported:
+with 22 of the 34 clients it leaves too few outsiders to fill a round of sixteen without it.
+
+**First run of this said AUC 1.000, and that was a defect in the detector.** The two classes were
+scored against references of different sizes, eleven clients for rounds holding the target and six
+for rounds without, and a larger reference has a more central direction, so the comparison read
+reference size rather than membership. One fixed reference for both classes gives the numbers
+above. A test now pins the split.
