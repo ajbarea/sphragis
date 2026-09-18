@@ -361,6 +361,17 @@ declared as one.
 | **Stated power** | sensitivity, not power at an observed effect | **The design detects +0.0235 (OpenStack) and +0.0211 (Qt) exact-match points** at three seeds and the seed effect's upper bound, for a conjunctive gate near 0.80 (`sensitivity-b0.0098.json`). Power from a pilot's own estimate is biased upward (Albers and Lakens 2018), so the 0.833 figure is withdrawn. Qt's dev-window effect is above its threshold and OpenStack's below, which is the mixed verdict the dev window gave. |
 | **Inference numerics** | `determinism_check` across jobs and nodes | **fp32**, weights upcast exactly from bf16: it reproduces on 150 of 150 predictions across two jobs on different nodes, where bf16 differs on 5 to 7 and on up to 2 within one process. |
 
+**A sharper RQ1 is now available, and it is AJ's call.** The dev window says the two organizations
+differ in kind: Qt's projects all lean the same way, OpenStack's disagree in sign. That suggests
+replacing "do organizations leave a learnable fingerprint" with "what unit carries it, and what
+makes an organization one" -- the prediction being that an organization behaves as a unit exactly
+when its projects share conventions, and a Gerrit host federating independent projects does not.
+The apparatus already measures both altitudes, RQ2's client updates point the same way, and the
+test window is still sealed, so the question can be sharpened at no cost to pre-registration. My
+recommendation is to sharpen it: the current phrasing can only return "mixed" on a federation, and
+mixed is the least informative outcome the design can produce. Against it: the registered question
+is the one the proposal was written around, and a reframing costs a rewrite of sections 1 and 3.
+
 **Open, and genuinely a question about the claim rather than the statistics.** Whether RQ1
 asserts "organizations leave a learnable fingerprint" (conjunctive, as registered above) or
 "this organization does" (per-organization, higher power, weaker claim). Everything above

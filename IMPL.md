@@ -37,4 +37,7 @@ AOSP months 2024-01 to 2025-03 are fetching and building locally; the public rec
 - Venue and authorship, fixed at Stage 1.
 - Whether RQ1 claims "organizations leave a learnable fingerprint" (conjunctive, as registered) or
   "this organization does" (per-organization, higher power, weaker claim).
+- Whether to sharpen RQ1 to "what unit carries the fingerprint, and what makes an organization
+  one": the dev window says Qt's projects agree and OpenStack's do not, so the registered phrasing
+  can only return mixed on a federation. Recommended; see the ROADMAP's registered decisions.
 - Whether running a sole-authored paper on the lab's `fl-mlm` allocation needs an acknowledgement.
