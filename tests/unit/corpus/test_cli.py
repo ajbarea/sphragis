@@ -756,3 +756,35 @@ def test_a_record_written_before_complete_existed_still_resumes(
     assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
     assert "skip, already built" in capsys.readouterr().out
     assert built.read_text() == '{"id": "a"}\n'
+
+
+def test_fetch_restricted_to_projects_asks_for_those_and_records_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json
+
+    from sphragis.corpus import cli
+    from sphragis.corpus.storage import snapshot_path
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    asked: list[str] = []
+
+    def transport(url: str) -> tuple[int, dict[str, str], str]:
+        asked.append(url)
+        return 200, {}, ")]}'\n" + json.dumps([])
+
+    monkeypatch.setattr(cli, "http_transport", lambda **_: transport)
+    argv = ["fetch", "--org", "aosp", "--month", "2025-03", "--root", str(tmp_path)]
+    argv += ["--project", "platform/art", "--project", "platform/bionic"]
+    assert cli.main(argv) == 0
+    query = (
+        "status:merged after:2025-03-01 before:2025-04-01"
+        " (project:platform/art OR project:platform/bionic)"
+    )
+    assert asked and asked[0].startswith("https://android-review.googlesource.com/changes/?q=")
+    from urllib.parse import quote
+
+    assert quote(query) in asked[0]
+    raw = snapshot_path(tmp_path, "aosp", "2025-03")
+    record = json.loads((raw.parent / "2025-03.record.json").read_text())
+    assert record["query"] == query

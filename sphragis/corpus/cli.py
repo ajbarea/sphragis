@@ -27,8 +27,12 @@ from sphragis.corpus.storage import read_snapshot, write_snapshot
 
 STAGES = ("fetch", "build", "dedup", "split", "freeze", "verify")
 
-# One Gerrit instance is one organization. Both checked live 2026-09-14.
+# One Gerrit instance is one organization. OpenStack and Qt checked live 2026-09-14. AOSP
+# checked live 2026-09-18: it answers residential addresses and refuses datacenter ranges, so it
+# is fetched from a workstation, and its volume needs --project to stay bounded. AOSP is RQ2's
+# third organization, for a cross-organization C++ cell beside Qt; RQ1 is registered on two.
 GERRIT = {
+    "aosp": "https://android-review.googlesource.com",
     "openstack": "https://review.opendev.org",
     "qt": "https://codereview.qt-project.org",
 }
@@ -59,6 +63,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--month", default="2024-10", help="YYYY-MM, for fetch")
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
     parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
+    parser.add_argument(
+        "--project",
+        action="append",
+        default=[],
+        help="fetch only these projects; repeatable, recorded in the snapshot's query",
+    )
     parser.add_argument("--overwrite", action="store_true", help="replace an existing snapshot")
     parser.add_argument(
         "--request-interval",
@@ -188,6 +198,8 @@ def _stage_fetch(args: argparse.Namespace) -> int:
         f"{int(year) + (month == '12')}-{'01' if month == '12' else f'{int(month) + 1:02d}'}"
     )
     query = f"status:merged after:{args.month}-01 before:{following}-01"
+    if args.project:
+        query += " (" + " OR ".join(f"project:{p}" for p in args.project) + ")"
     changes, record = fetch_changes(
         GERRIT[args.org],
         query,
