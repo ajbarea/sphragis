@@ -261,9 +261,15 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   from the same adapter emits the annotation at 0.499 and 0.545 against greedy's 0.617 and 0.656,
   still about twice the 0.251 it was trained on. The over-weighting is learned, so changing the
   registered decoder would not make the gate monotone.
-- [ ] **Pass `RUN_TAG` on every submission.** Job 148093 was submitted without it, so its output
-  and adapters overwrote the first windowed run's on the cluster. The result survives because it
-  is committed, but a tagless submission can destroy an uncommitted one.
+- [x] **A tagless submission can no longer destroy a result.** Job 148093 was submitted without
+  `RUN_TAG`, so its output and adapters overwrote the first windowed run's on the cluster; that
+  result survived only because it was committed. Remembering the tag is not a fix, so every job
+  now takes its output through `result_path` in `cluster-env.sh`, which stops the job before the
+  queue time if the file exists and takes `OVERWRITE=1` to replace one deliberately. A test holds
+  all eleven sbatch scripts to it. The guard found its first live case the day it landed: the
+  geometry and projection jobs named their output after `RUN_TAG` while `PATTERN` chose the
+  input, so the 128-example run would have overwritten the 64-example geometry every committed
+  RQ2 number rests on. Those two now name the output after the adapters they read.
 
 ## Plan D — granularity
 
