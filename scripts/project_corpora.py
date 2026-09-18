@@ -28,7 +28,13 @@ from sphragis.corpus.pipeline import run_dedup
 parser = argparse.ArgumentParser()
 parser.add_argument("--org", default="qt")
 parser.add_argument("--out-dir", type=Path, required=True)
-parser.add_argument("--window", default="train", choices=("pilot", "train"))
+parser.add_argument(
+    "--window",
+    action="append",
+    choices=("pilot", "train", "dev"),
+    help="repeatable; default train. RQ2's clients need no time split, so they may pool train "
+    "and dev. The test window is never offered.",
+)
 parser.add_argument(
     "--projects", action="append", default=[], help="repeatable; default the top two"
 )
@@ -47,13 +53,15 @@ def load(org: str, window: str) -> list[dict[str, Any]]:
 
 def main() -> None:
     args = parser.parse_args()
-    rows = load(args.org, args.window)
+    windows = args.window or ["train"]
+    rows = [row for window in windows for row in load(args.org, window)]
+    rows, _ = run_dedup(rows)
     by_project: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         by_project.setdefault(str(row["project"]), []).append(row)
 
     counts = Counter({p: len(v) for p, v in by_project.items()})
-    print(f"{args.org} {args.window} window: {len(rows)} deduplicated examples")
+    print(f"{args.org} {'+'.join(windows)}: {len(rows)} deduplicated examples")
     for project, n in counts.most_common(6):
         changes = len({r["change_id"] for r in by_project[project]})
         print(f"  {project:34s} {n:5d} examples over {changes:4d} changes")
@@ -62,10 +70,10 @@ def main() -> None:
     chosen = args.projects or [p for p, _ in counts.most_common(2)]
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    manifest: dict[str, Any] = {"org": args.org, "window": args.window, "projects": {}}
+    manifest: dict[str, Any] = {"org": args.org, "windows": windows, "projects": {}}
     for project in chosen:
         if project not in by_project:
-            raise SystemExit(f"{project} is not in {args.org}'s {args.window} window")
+            raise SystemExit(f"{project} is not in {args.org}'s {'+'.join(windows)} windows")
         slug = project.replace("/", "_")
         path = args.out_dir / f"{slug}.jsonl"
         examples = by_project[project]

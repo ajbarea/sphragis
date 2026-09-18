@@ -2325,3 +2325,65 @@ small changes for another. The attack could have read the packing instead of the
 now take at most a quarter of their examples from any one change, and the `limit` kept are a seeded
 random draw from all full clients. The executed run predates both packers' flaws only in count;
 the next run is the first under the corrected one.
+
+### RQ1 at three seeds, and the seed effect in the setting that counts (2026-09-18, jobs 148198, 148404, 148406)
+
+`datasets/results/rq1-qtfull-seeds.json`, `seed-effect-qtfull.json`. The windowed RQ1 run repeated
+at seeds 2 and 3, same corpora, split and held-out examples, read by `crossed_reread`.
+
+| seed | OpenStack | Qt |
+|---|---|---|
+| 1 | +0.0159 | +0.0337 |
+| 2 | +0.0177 | +0.0263 |
+| 3 | +0.0177 | +0.0337 |
+
+| reading | OpenStack | Qt | verdict |
+|---|---|---|---|
+| median seed, pooled (registered) | +0.0177 [-0.0099, +0.0439] | +0.0337 [+0.0089, +0.0600] | mixed |
+| crossed, pooled | +0.0171 [-0.0061, +0.0403] | +0.0312 [+0.0080, +0.0565] | mixed |
+| median seed, change-averaged | +0.0290 [-0.0131, +0.0724] | +0.0354 [+0.0062, +0.0645] | mixed |
+| crossed, change-averaged | +0.0300 [-0.0085, +0.0690] | +0.0312 [+0.0041, +0.0594] | mixed |
+
+**All four readings agree: mixed.** Qt's refinements carry an organization-specific gain that clears
+zero on three seeds and both estimands; OpenStack's do not. The dev-window contrast is stable
+across seeds, and the earlier single-seed numbers hold.
+
+**The seed main effect in this setting is indistinguishable from zero**: the per-seed contrasts vary
+by 0.0008 (OpenStack) and 0.0035 (Qt), every pairwise shift sits within seed-by-change churn (|z| at
+most 0.64), and the moment estimate is negative, with a one-sided 95% upper bound of **0.0098** on two
+degrees of freedom. Seeds 1 and 3 happen to give identical contrasts, which is coincidence, not a
+repeated run: their adapters differ (final losses 0.048 against 0.68, distinct norms) and they share
+only 309 of 565 predictions.
+
+**This narrows an earlier claim.** "Seeds are the lever on power" came from the null's sigma_b of
+0.013, measured on 1,800 training examples. RQ1 trains on 4,327, where the effect is smaller than
+the measurement can see. Longer training converging more consistently is the plausible reason, and
+the two settings are now both on record.
+
+**By the rule fixed before any of these runs landed, the registered design takes three seeds**, and
+the crossed interval, which costs nothing at this seed effect and holds nominal to 0.01 where the
+median-seed rule does not. The power figures computed at sigma_b 0.013 stand as the worst case,
+not the expected one.
+
+### Inference numerics registered: fp32 (2026-09-18, jobs 148667, 149196)
+
+`datasets/results/determinism-sym-0-gh-a-081.json`, `-gh-a-003.json`. The base model over the same
+150 prompts, four passes a job, two jobs on different nodes.
+
+| comparison | predictions differing, of 150 |
+|---|---|
+| fp32, the two jobs | **0** |
+| bf16, the two jobs | 5 to 7 |
+| bf16, repeated inside one job | 0 to 2 |
+| bf16, a reloaded model inside one job | 1 to 2 |
+| bf16 against fp32 | 17 to 19 |
+
+**bf16 greedy decoding does not reproduce, even within one process**, which is what the two nulls'
+disagreement was. **fp32 reproduces exactly across jobs and nodes**, matching Yuan et al.
+(arXiv:2506.09501), who report fp32 as near-perfect and bf16 as unstable. The earlier reading that
+the node was the variable is wrong: a fresh job on the stored run's own node differs from it as much
+as a job on another node.
+
+`HFGenerator` now upcasts the bf16 weights to fp32, exactly, before generating, and every result
+records `inference_dtype`. This is the rule fixed in the ROADMAP before the jobs ran: fp32 if bf16
+differs between nodes and fp32 does not.

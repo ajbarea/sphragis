@@ -125,6 +125,12 @@ TRAINING = {
 # decoding parameter, identical for every condition.
 MAX_NEW_TOKENS = 256
 
+# Weights load in bf16 and are upcast, exactly, to fp32 for inference. Registered from a
+# measurement: greedy decoding in bf16 differed on 5 to 7 of 150 predictions between two jobs on
+# different nodes and on 0 to 2 within one job, while fp32 differed on none across the two jobs
+# (datasets/results/determinism-sym-0-*.json). Exact match needs an output that reproduces.
+INFERENCE_DTYPE = "float32"
+
 
 @dataclass
 class HFGenerator:
@@ -148,14 +154,15 @@ class HFGenerator:
         )
         if self.adapter_path:
             model = PeftModel.from_pretrained(model, self.adapter_path)
+        model.to(getattr(torch, INFERENCE_DTYPE))
         model.eval()
         self.model = model
 
     def generate(self, prompt: str) -> str:
         """Greedy by default: the output is the model's single most likely refinement.
 
-        Greedy is not reproducible on the GPU. bf16 arithmetic is not associative, so the
-        base model alone changed 23 to 28 of about 440 predictions between two identical runs.
+        Computed in fp32 (`INFERENCE_DTYPE`) because greedy decoding in bf16 does not reproduce
+        between jobs; see the constant for the measurement.
         """
         text = render_chat(self.tokenizer, prompt)
         inputs = self.tokenizer(text, return_tensors="pt", add_special_tokens=False).to(self.device)
@@ -383,7 +390,12 @@ def gpu_record() -> dict[str, Any] | None:
 
 def run_provenance() -> dict[str, Any]:
     """Commit, packages, Slurm job and GPU: what a result needs to be attributed to hardware."""
-    return {**provenance_header(), "slurm": slurm_record(), "gpu": gpu_record()}
+    return {
+        **provenance_header(),
+        "slurm": slurm_record(),
+        "gpu": gpu_record(),
+        "inference_dtype": INFERENCE_DTYPE,
+    }
 
 
 def _collate(

@@ -81,9 +81,15 @@ class _FakeTokenizer:
 class _FakeModel:
     def __init__(self) -> None:
         self.kwargs: dict[str, Any] = {}
+        self.dtype: Any = torch.bfloat16
 
     def eval(self) -> None:
         pass
+
+    def to(self, dtype: Any) -> _FakeModel:
+        """The generator upcasts to fp32 for reproducible greedy decoding."""
+        self.dtype = dtype
+        return self
 
     def generate(self, **kwargs: Any) -> Any:
         self.kwargs = kwargs
@@ -157,6 +163,7 @@ class TestRunProvenance:
     def test_the_run_record_joins_commit_job_and_gpu(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
         record = model_module.run_provenance()
+        assert record["inference_dtype"] == "float32"
         assert "git" in record
         assert set(record["slurm"]) >= {"cluster", "job_id", "account"}
         assert record["gpu"] is None
@@ -171,3 +178,11 @@ class TestRunProvenance:
         assert record["total_gb"] > 0
         assert record["peak_allocated_gb"] >= 0.25
         assert record["cuda"] == torch.version.cuda
+
+
+def test_the_generator_computes_in_the_registered_precision(
+    wired: tuple[HFGenerator, Any, Any],
+) -> None:
+    """bf16 greedy decoding did not reproduce between jobs; fp32 did."""
+    _, _, fake = wired
+    assert fake.dtype is torch.float32

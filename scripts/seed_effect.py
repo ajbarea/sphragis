@@ -42,6 +42,21 @@ parser.add_argument("--resamples", type=int, default=10_000)
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--out", type=Path, required=True)
 
+# Lower 5% points of chi-square, by degrees of freedom, for a one-sided upper bound on a
+# variance: sigma^2 <= df * s^2 / chi2_0.05(df). Three seeds give two degrees of freedom, where
+# the bound is nearly twenty times the estimate, which is what three seeds are worth.
+_CHI2_LOWER_5PCT = {
+    1: 0.00393,
+    2: 0.10259,
+    3: 0.35185,
+    4: 0.71072,
+    5: 1.14548,
+    6: 1.63538,
+    7: 2.16735,
+    8: 2.73264,
+    9: 3.32511,
+}
+
 
 def per_example_contrast(results, org: str, other: str, seed: int) -> dict[str, tuple[str, float]]:
     matched = results[run_id(EvalRun(f"adapter:{org}", org, seed))]
@@ -109,12 +124,19 @@ def main() -> None:
                 + (f"z {p['z']:+.2f}" if p["z"] is not None else "z undefined (no noise)")
             )
     moment = fmean(between) - fmean(noise) / 2
+    df = len(seeds) - 1
+    upper_between = df * fmean(between) / _CHI2_LOWER_5PCT[df] if df in _CHI2_LOWER_5PCT else None
+    upper = None if upper_between is None else max(0.0, upper_between - fmean(noise) / 2) ** 0.5
     report["between_seed_variance"] = fmean(between)
     report["pair_noise_variance"] = fmean(noise)
     report["sigma_b_squared"] = moment
     report["sigma_b"] = max(0.0, moment) ** 0.5
+    report["sigma_b_upper_95"] = upper
+    report["degrees_of_freedom"] = df
     print(f"between-seed variance {fmean(between):.6f}, half the pair noise {fmean(noise) / 2:.6f}")
     print(f"sigma_b^2 = {moment:+.6f}  ->  sigma_b = {report['sigma_b']:.4f}")
+    if upper is not None:
+        print(f"one-sided 95% upper bound on sigma_b, {df} degrees of freedom: {upper:.4f}")
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")
 

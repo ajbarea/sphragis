@@ -337,14 +337,14 @@ declared as one.
 | **Contamination scored text** | the hunk with three context lines either side | Bare hunks put only about 20% of a deduplicated month over the 32-token minimum (35 of 172, 28 of 133), too few to read. With context the scored share rose to 94% and 87%, and on the six-month windows to 1,971 and 2,503 examples. The same text is what the model-less baseline was run on, so the two are directly comparable. |
 | **Leakage threshold** | 2% at Jaccard >= 0.7 | Must clear the measured train-into-dev rate, 1.06% for OpenStack and 0.42% for Qt. At J >= 0.8 both are 0.0000 by construction, because dedup removes pairs at that threshold across windows, so registering there is a test that cannot fail. |
 
-**Pending on a measurement, with the rule that decides them already fixed.**
+**Decided by the measurements their rules named in advance.**
 
 | decision | decided by | rule |
 |---|---|---|
-| **Interval the gate reads** | coverage (`crossed-coverage.json`) and the sym-0 seed runs | The crossed seed x change interval, which holds nominal where the median-seed rule reaches 0.122 two-sided, unless the review of its code or the seed runs contradict that. |
-| **Seed count** | the seed main effect (sym-0: 0.013; RQ1 setting: pending) | At least five, since it exceeds 0.01 where three stop holding nominal; and the smallest count giving conjunctive power 0.80 at the measured effect, which may be more. |
-| **Stated power** | `conjunctive-power-s{3,5}-b*.json` | Recomputed for the registered interval and seed count at the measured seed effect, replacing 0.833. |
-| **Inference numerics** | `determinism_check` on the two nodes the stored runs used | FP32 compute if bf16 greedy decoding differs between nodes and FP32 does not; otherwise bf16, with the node recorded. |
+| **Interval the gate reads** | coverage and the seed runs | **The crossed seed x change interval.** It holds nominal where the median-seed rule reaches 0.122 two-sided, and costs no width at the measured seed effect. |
+| **Seed count** | the seed main effect in RQ1's own setting | **Three**, by the rule fixed before the runs: the effect is 0.000 with a one-sided 95% upper bound of 0.0098, at or below the 0.01 where three seeds stop holding nominal. The null at 1,800 training examples gives 0.013, which is not the registered setting. |
+| **Stated power** | sensitivity, not power at an observed effect | The minimum detectable effect per organization at the registered seeds and interval (`scripts/sensitivity.py`), since power from a pilot's own estimate is biased upward (Albers and Lakens 2018). The 0.833 figure is withdrawn. |
+| **Inference numerics** | `determinism_check` across jobs and nodes | **fp32**, weights upcast exactly from bf16: it reproduces on 150 of 150 predictions across two jobs on different nodes, where bf16 differs on 5 to 7 and on up to 2 within one process. |
 
 **Open, and genuinely a question about the claim rather than the statistics.** Whether RQ1
 asserts "organizations leave a learnable fingerprint" (conjunctive, as registered above) or

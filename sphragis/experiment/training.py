@@ -184,7 +184,7 @@ def decoding_kwargs(temperature: float) -> dict[str, Any]:
     """The sampling arguments for `generate`, greedy unless a temperature is asked for.
 
     Greedy is the registered decoder: one most likely output per prompt, no sampling draw to
-    average over. It is not bit-reproducible on the GPU (see `HFGenerator.generate`). Sampling
+    average over. It reproduces between jobs in fp32 (`model.INFERENCE_DTYPE`). Sampling
     exists to test one hypothesis, that greedy decoding is what turned a convention present in
     25% of training refinements into one the adapter emitted 64% of the time. At temperature 1 with
     top-k and top-p disabled the model samples from its own distribution unaltered, so if
