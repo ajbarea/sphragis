@@ -2485,6 +2485,18 @@ gate reaches about 0.80:
 0.003, which is why three is registered: the seed term is already small beside the change term at
 these window sizes.
 
+**Bracketed by the seed effect's own uncertainty** (`sensitivity-b0.json`), since three seeds
+estimate a variance poorly and the honest statement is a range rather than a figure:
+
+| seed main effect | OpenStack | Qt |
+|---|---|---|
+| 0.000, the point estimate | +0.0160 | +0.0129 |
+| 0.0098, the 95% upper bound | +0.0235 | +0.0211 |
+
+So the design resolves somewhere between 1.3 and 2.4 exact-match points. Qt's dev-window effect
+(+0.031) is above the whole range and OpenStack's (+0.017) inside it, which is why one organization
+clears zero and the other does not, and why the Stage 1 report should state the range.
+
 **Read against the dev window, this predicts the outcome we have.** Qt's dev-window effect is
 +0.031, above its threshold; OpenStack's is +0.017, below its own. The gate came out mixed on
 exactly that pattern, and a test window that behaves like the dev window would return mixed again.
