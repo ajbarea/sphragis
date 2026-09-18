@@ -2227,3 +2227,19 @@ sides. The train and dev windows offer that only for OpenStack Python (starlingx
 distcloud, swift, nova, neutron, ironic); Qt's Python is pyside alone. A third Gerrit organization
 with several Python projects (Wikimedia's hosts pywikibot and many Python tools) would give the
 cross-organization, same-language, multi-project cell this design lacks.
+
+### AOSP as RQ2's third organization, and why it can only ever be RQ2's (2026-09-18)
+
+To separate an organization from its codebase family, RQ2 needs several projects per organization
+in one shared language on both sides. Qt's C++ libraries have that; a second organization with
+several C++ projects on public Gerrit supplies the other side. AOSP (android-review.googlesource.com)
+does: seven C++-dominant projects (art, system/core, bionic, frameworks/native, frameworks/av,
+external/perfetto, system/netd), about 40% of merged changes carrying inline comments in a sample
+of thirty. It answers residential addresses and refuses datacenter ranges, so it is fetched from a
+workstation, and `fetch --project` bounds it and records the restricted query in the snapshot.
+
+**Its public review record ends on 2025-03-27.** The fetch shows 547 to 753 merged changes a month
+for these projects through 2025-03, then 2 to 9. Google moved Android development to internal
+branches that week and made aosp-main read-only (9to5Google, 2025-03-26; Android Authority).
+AOSP therefore has no dev or test window under RQ1's registered windows and cannot join RQ1. RQ2's
+client design needs no time split, so its months 2024-11 to 2025-03 serve.
