@@ -35,6 +35,7 @@ from sphragis.measure.aggregate import (
     paired_subset_difference,
 )
 from sphragis.measure.attribution import Source
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--geometry", type=Path, required=True)
@@ -61,12 +62,16 @@ def main() -> None:
         "altitude": args.altitude,
         "clients": len(names),
         "draws": args.draws,
+        "provenance": provenance_header(),
         "targets": {},
     }
     for label in sorted(set(labels)):
         mine = [i for i, other in enumerate(labels) if other == label]
         outside = [i for i, other in enumerate(labels) if other != label]
-        if len(mine) < 2 or len(outside) < max(args.sizes):
+        # One outsider is held out as the stranger baseline, so a round of the largest size must
+        # still be fillable from the rest.
+        if len(mine) < 2 or len(outside) < max(args.sizes) + 1:
+            print(f"{label}: too few clients outside it for rounds of {max(args.sizes)}")
             continue
         cell: dict[str, Any] = {"clients": len(mine), "membership": {}, "mixed_rounds": {}}
         for size in args.sizes:

@@ -160,6 +160,7 @@ print(f"wrote {args.out.with_suffix('.partial.json')} (membership only)", flush=
 
 # --- Guided completion on the registered model -------------------------------------------
 generator = HFGenerator(model_id=MODEL_ID, max_new_tokens=MAX_NEW_TOKENS)
+guided_dtype = generator.dtype  # kept: the generator is released before the result is written
 
 
 def completions(
@@ -230,6 +231,10 @@ args.out.write_text(
         {
             "provenance": run_provenance(),
             "membership_model": MEMBERSHIP_MODEL_ID,
+            # Two models at two precisions: token statistics come from a bf16 model, guided
+            # completion from the registered generator.
+            "membership_dtype": "bfloat16",
+            "guided_dtype": guided_dtype,
             "guided_model": MODEL_ID,
             "k": args.k,
             "min_tokens": args.min_tokens,

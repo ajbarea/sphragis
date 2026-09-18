@@ -71,19 +71,34 @@ def gap_k_percent(tokens: Sequence[TokenStats], *, k: float = 20.0, window: int 
     since membership shows up over contiguous stretches rather than single tokens, and the score
     is the mean of the lowest k percent of the smoothed values.
 
-    Window 3 is the paper's default outside the LLaMA family; k follows Min-K%'s 20. Positions
-    whose variance is not positive have no score, as in Min-K%++, and are dropped.
+    Window 3 is the paper's default outside the LLaMA family; k follows Min-K%'s 20.
+
+    A position whose variance is not positive has no score, as in Min-K%++. Such positions are
+    held in place rather than removed, and a window covering one is skipped: compacting them out
+    first would average tokens that are not adjacent in the text, which is the opposite of what
+    the smoothing is for. A sequence shorter than the window yields one window over what it has,
+    where k cannot select and the score is the plain mean, so the window is capped instead.
     """
     if window < 1:
         raise ValueError(f"the smoothing window must be positive, got {window}")
-    scores = [
+    scores: list[float | None] = [
         (logprob - top1) / math.sqrt(variance)
-        for logprob, _, variance, top1 in tokens
         if variance > 0.0 and math.isfinite(logprob) and math.isfinite(top1)
+        else None
+        for logprob, _, variance, top1 in tokens
     ]
-    if not scores:
+    if not any(s is not None for s in scores):
         raise ValueError("gap_k_percent needs at least one position with a positive variance")
-    smoothed = [fmean(scores[t : t + window]) for t in range(max(1, len(scores) - window + 1))]
+    span = min(window, len(scores))
+    smoothed: list[float] = []
+    for start in range(len(scores) - span + 1):
+        piece = scores[start : start + span]
+        if all(value is not None for value in piece):
+            smoothed.append(fmean(value for value in piece if value is not None))
+    if not smoothed:
+        raise ValueError(
+            f"no run of {span} scored positions: every window covers one with no defined score"
+        )
     return min_k_percent(smoothed, k=k)
 
 

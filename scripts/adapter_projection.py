@@ -12,10 +12,16 @@ low rank, dW = B A with r = 32, which a bilinear sketch exploits:
     S = (L B)(A R),   L of shape (d, out), R of shape (in, d), both iid N(0, 1/d),
 
 costing two thin products. For any two updates E<S_X, S_Y> = <X, Y>, so inner products survive in
-expectation, with a relative error of order sqrt(2)/d per module; the per-module sketches are
-concatenated, which sums their inner products exactly as the true updates' do, and the errors
-across modules are independent. The sketch is linear, so Gaussian noise added to an update is
-Gaussian noise added to its sketch, which is what makes a defence curve possible at all.
+expectation; measured over 200 correlated rank-32 pairs the ratio of sketched to true is 0.996 to
+1.002, with a relative standard deviation per module of 0.296, 0.164, 0.104 and 0.074 at widths 8,
+16, 32 and 64. One module's sketch is therefore rough, and the whole update is not: the per-module
+sketches are concatenated, which sums their inner products exactly as the true updates' do, and
+their errors are independent, so 196 modules at width 16 leave about 1% on the total. Measured
+against the exact Gram matrix on real client updates, sketched cosines match to 0.003 (0.2776
+against 0.2749).
+
+The sketch is linear, so Gaussian noise added to an update is Gaussian noise added to its sketch,
+which is what makes a defence curve possible at all.
 
     uv run --no-sync python scripts/adapter_projection.py --root ~/scratch \
         --pattern "sphragis-adapters-clients/*-c*/adapter_model.safetensors" \

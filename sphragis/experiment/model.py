@@ -143,6 +143,10 @@ class HFGenerator:
     # 0 is greedy, the registered decoder. Non-zero only for the decoding check.
     temperature: float = 0.0
     seed: int = 0
+    # The registered compute precision. Only the determinism check overrides it, to measure the
+    # bf16 it replaced; a default that could not be overridden would make that job rewrite its
+    # own evidence in fp32.
+    dtype: str = INFERENCE_DTYPE
 
     def __post_init__(self) -> None:
         self.tokenizer = _require_tokenizer(self.model_id)
@@ -154,7 +158,7 @@ class HFGenerator:
         )
         if self.adapter_path:
             model = PeftModel.from_pretrained(model, self.adapter_path)
-        model.to(getattr(torch, INFERENCE_DTYPE))
+        model.to(getattr(torch, self.dtype))
         model.eval()
         self.model = model
 
@@ -401,13 +405,13 @@ def gpu_record() -> dict[str, Any] | None:
 
 
 def run_provenance() -> dict[str, Any]:
-    """Commit, packages, Slurm job and GPU: what a result needs to be attributed to hardware."""
-    return {
-        **provenance_header(),
-        "slurm": slurm_record(),
-        "gpu": gpu_record(),
-        "inference_dtype": INFERENCE_DTYPE,
-    }
+    """Commit, packages, Slurm job and GPU: what a result needs to be attributed to hardware.
+
+    The compute precision is deliberately absent: it is a property of the model a script loaded,
+    not of the run, and several scripts load their own in bf16. A script that generates records
+    the dtype of the generator it built, which is an observation rather than a constant.
+    """
+    return {**provenance_header(), "slurm": slurm_record(), "gpu": gpu_record()}
 
 
 def _collate(

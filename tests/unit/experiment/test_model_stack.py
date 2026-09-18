@@ -163,7 +163,9 @@ class TestRunProvenance:
     def test_the_run_record_joins_commit_job_and_gpu(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
         record = model_module.run_provenance()
-        assert record["inference_dtype"] == "float32"
+        # No compute precision here: it belongs to the model a script loaded, and scripts that
+        # load their own in bf16 would otherwise have their results claim fp32.
+        assert "inference_dtype" not in record
         assert "git" in record
         assert set(record["slurm"]) >= {"cluster", "job_id", "account"}
         assert record["gpu"] is None
@@ -186,3 +188,15 @@ def test_the_generator_computes_in_the_registered_precision(
     """bf16 greedy decoding did not reproduce between jobs; fp32 did."""
     _, _, fake = wired
     assert fake.dtype is torch.float32
+
+
+def test_the_precision_can_be_overridden_to_measure_what_it_replaced(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The determinism check compares bf16 against fp32; an unoverridable default would have it
+    write fp32 under both labels and erase the measurement the registration rests on."""
+    tokenizer, fake = _FakeTokenizer(), _FakeModel()
+    monkeypatch.setattr(model_module, "_require_tokenizer", lambda *_: tokenizer)
+    monkeypatch.setattr(model_module.AutoModelForCausalLM, "from_pretrained", lambda *a, **k: fake)
+    HFGenerator(device="cpu", dtype="bfloat16")
+    assert fake.dtype is torch.bfloat16

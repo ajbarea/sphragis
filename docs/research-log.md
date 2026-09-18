@@ -2449,18 +2449,23 @@ the other participants drawn from other organizations, but "did this organizatio
 the round drawn from every client. The organization's clients are split once into the attacker's
 reference and the participants it may contribute, so no round is scored against itself.
 
-| target | round of 4 | round of 8 | round of 16 |
-|---|---|---|---|
-| OpenStack, 1 of its clients present | AUC 0.748 | 0.750 | 0.791 |
-| OpenStack, 2 of its clients present | 0.918 | 0.896 | 0.947 |
+Averaged over eight random reference splits, with the range across splits, since one split moved
+the figure by 0.06 to 0.08:
 
-Detection rises with how many of the organization's clients are in the round, and does not fall as
+| target | round of 4 | round of 8 |
+|---|---|---|
+| OpenStack, 1 of its clients present | AUC 0.746 [0.689, 0.804] | 0.734 [0.669, 0.806] |
+| OpenStack, 2 of its clients present | 0.896 [0.841, 0.960] | 0.879 [0.780, 0.942] |
+| Qt, 1 of its clients present | 0.665 [0.576, 0.734] | 0.729 [0.620, 0.805] |
+| Qt, 2 of its clients present | 0.757 [0.652, 0.861] | 0.870 [0.737, 0.950] |
+
+Detection rises with how many of the organization's clients are in the round and barely moves as
 the round grows: a larger round dilutes the target's share and averages the others' noise away at
-the same rate. Qt is not reported: with 22 of the 34 clients it leaves too few outsiders to fill a
-round of sixteen without it.
+the same rate. Rounds of sixteen are not reported here, since with 22 of the 34 clients Qt leaves
+too few outsiders to fill one without it.
 
-(These are the figures after the reference split was corrected, below; the first run of this table
-read 0.765, 0.726 and 0.725 on the one-client row.)
+(The first run of this table read 0.765, 0.726 and 0.725 on OpenStack's one-client row, from a
+single reference split taken in listing order; see the correction below.)
 
 **First run of this said AUC 1.000, and that was a defect in the detector.** The two classes were
 scored against references of different sizes, eleven clients for rounds holding the target and six

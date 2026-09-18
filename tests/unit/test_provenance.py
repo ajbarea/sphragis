@@ -60,10 +60,34 @@ def test_some_scripts_are_launched_by_a_job() -> None:
     assert len(_launched_scripts()) >= 4
 
 
+def _dict_literals(tree: ast.AST) -> dict[str, ast.Dict]:
+    """Every name assigned a dict literal, so `json.dumps(report)` can be read like a literal.
+
+    Without this the key check sees nothing whenever a script builds its result in a variable,
+    which is the readable way to write one, and the test then passes on a script that records no
+    provenance at all.
+    """
+    found: dict[str, ast.Dict] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Dict):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    found[target.id] = node.value
+        elif (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and isinstance(node.value, ast.Dict)
+        ):
+            found[node.target.id] = node.value
+    return found
+
+
 def _written_result_keys(script: Path) -> set[str]:
-    """Top-level keys of the dict each `args.out.write_text(json.dumps({...}))` writes."""
+    """Top-level keys of the dict each `args.out.write_text(json.dumps(...))` writes."""
     keys: set[str] = set()
-    for node in ast.walk(ast.parse(script.read_text())):
+    tree = ast.parse(script.read_text())
+    literals = _dict_literals(tree)
+    for node in ast.walk(tree):
         if not (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
@@ -73,10 +97,14 @@ def _written_result_keys(script: Path) -> set[str]:
             and isinstance(node.args[0], ast.Call)
             and ast.unparse(node.args[0].func) == "json.dumps"
             and node.args[0].args
-            and isinstance(node.args[0].args[0], ast.Dict)
         ):
             continue
-        dumped = node.args[0].args[0]
+        written = node.args[0].args[0]
+        if isinstance(written, ast.Name):
+            written = literals.get(written.id)
+        if not isinstance(written, ast.Dict):
+            continue
+        dumped = written
         keys.update(
             k.value for k in dumped.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)
         )
@@ -92,6 +120,9 @@ def test_every_script_a_job_launches_records_run_provenance(script: Path) -> Non
         # A script that writes something other than a JSON object, an array file say, still has
         # to record where it ran; the key check cannot read inside it, so the call is the test.
         text = script.read_text()
+        assert "args.out.write_text(json.dumps(" not in text, (
+            f"{script.name}: writes a JSON object whose keys could not be read"
+        )
         assert "run_provenance(" in text or "provenance_header(" in text, (
             f"{script.name}: writes no JSON object and records no provenance"
         )

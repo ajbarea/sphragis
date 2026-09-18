@@ -419,3 +419,11 @@ def test_submit_pinned_runs_the_job_from_a_worktree_at_this_commit() -> None:
     assert "SPHRAGIS_CHECKOUT=" in dry
     assert "sbatch $flags scripts/pilot.sbatch" in dry
     assert "--sbatch-args=" in dry, "free-form options still pass through slurm.py's checks"
+
+
+def test_a_different_client_size_names_its_own_results(tmp_path: Path) -> None:
+    """Two local-training lengths must not write into one adapter directory, which the geometry
+    and projection jobs then glob together."""
+    assert _suffix(
+        tmp_path, tags="CLIENT_SIZE", SLURM_CLUSTER_NAME="tigris", CLIENT_SIZE="128"
+    ) == ("[-c128]")

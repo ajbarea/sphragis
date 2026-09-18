@@ -207,11 +207,16 @@ class InProcessTrainer:
         return str(target)
 
 
+inference_dtypes: set[str] = set()
+
+
 def generator_for(adapter: str | None) -> HFGenerator:
     gc.collect()
     torch.cuda.empty_cache()
     print(f"evaluating with {adapter or 'base'}", flush=True)
-    return HFGenerator(adapter_path=adapter, max_new_tokens=args.max_new_tokens)
+    generator = HFGenerator(adapter_path=adapter, max_new_tokens=args.max_new_tokens)
+    inference_dtypes.add(generator.dtype)
+    return generator
 
 
 trainer = InProcessTrainer()
@@ -275,6 +280,8 @@ args.out.write_text(
             "seeds": seeds,
             "split_seed": args.split_seed,
             "equalize_train": args.equalize_train,
+            # The precision the generators were built with, observed rather than declared.
+            "inference_dtype": sorted(inference_dtypes),
             "train_size": args.train_size,
             "bootstrap_seed": args.bootstrap_seed,
             "max_new_tokens": args.max_new_tokens,

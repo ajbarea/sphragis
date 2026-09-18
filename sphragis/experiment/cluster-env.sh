@@ -39,6 +39,7 @@ tag_result_suffix() {
     case "$name" in
       SEEDS) [ "${SEEDS:-1}" = 1 ] || RESULT_SUFFIX="$RESULT_SUFFIX-s${SEEDS//,/-}" ;;
       TRAIN_SIZE) [ -z "${TRAIN_SIZE:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-n$TRAIN_SIZE" ;;
+      CLIENT_SIZE) [ "${CLIENT_SIZE:-64}" = 64 ] || RESULT_SUFFIX="$RESULT_SUFFIX-c$CLIENT_SIZE" ;;
       *) echo "tag_result_suffix: no tag for $name" >&2; return 1 ;;
     esac
   done

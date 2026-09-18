@@ -9,10 +9,13 @@ Two readings, because they answer different questions:
 
   single round   the attacker sees one round's aggregate. Noise is drawn afresh per client per
                  round, so this is the defence at its strongest.
-  many rounds    the attacker averages the difference between rounds holding the target and
-                 rounds without it, FedAttr's mechanism. Fresh noise averages away over rounds
-                 while the target's own direction does not, so a per-round mask is a delay
-                 rather than a defence unless the budget composes across rounds.
+  many rounds    the attacker averages the AGGREGATES of rounds holding the target, subtracts
+                 the average of rounds without it, and scores that difference, which is
+                 FedAttr's mechanism. Averaging per-round scores instead would not do: a cosine
+                 is nonlinear in the noise, so its attenuation survives averaging while the
+                 aggregates' noise does not. Fresh noise averages away over rounds and the
+                 target's direction does not, so a per-round mask is a delay rather than a
+                 defence unless the budget composes across rounds.
 
     uv run --no-sync --no-active python scripts/defence_curve.py \
         --vectors datasets/results/client-vectors.npz \
@@ -63,34 +66,40 @@ def masked_rounds(
     draws: int,
     rng: np.random.Generator,
 ) -> float:
-    """AUC of the attacker's score over `rounds` observations, at a noise-to-signal ratio.
+    """AUC of the attacker's score after `rounds` observations, at a noise-to-signal ratio.
 
-    Each participant's update is masked with an independent Gaussian of the given fraction of
-    the mean update norm, drawn afresh for every round. The attacker averages its score over the
-    rounds it sees, which is what makes per-round noise a delay rather than a defence.
+    Each participant's update is masked with an independent Gaussian of the given fraction of the
+    mean update norm, drawn afresh for every round. The attacker averages the aggregates it sees
+    and scores the average, which is what makes per-round noise a delay: the masks average away,
+    the target's direction does not. Averaging the per-round scores instead would keep the
+    attenuation, since a cosine is not linear in the noise.
     """
     scale = noise * float(np.linalg.norm(vectors, axis=1).mean())
     direction = vectors[reference].mean(axis=0)
-    present, absent = [], []
-    for _ in range(draws):
-        for pool, scores in ((members, present), (outside, absent)):
-            total = 0.0
-            for _ in range(rounds):
-                if pool is members:
-                    participants = np.concatenate(
-                        [rng.choice(members, 1), rng.choice(outside, size - 1, replace=False)]
-                    )
-                else:
-                    participants = rng.choice(outside, size, replace=False)
-                mask = rng.normal(0.0, scale / np.sqrt(vectors.shape[1]), (size, vectors.shape[1]))
-                aggregate = (vectors[participants] + mask).mean(axis=0)
-                total += cosine(aggregate, direction)
-            scores.append(total / rounds)
+    width = vectors.shape[1]
+
+    def observed(with_target: bool) -> float:
+        total = np.zeros(width)
+        for _ in range(rounds):
+            if with_target:
+                participants = np.concatenate(
+                    [rng.choice(members, 1), rng.choice(outside, size - 1, replace=False)]
+                )
+            else:
+                participants = rng.choice(outside, size, replace=False)
+            mask = rng.normal(0.0, scale / np.sqrt(width), (size, width))
+            total += (vectors[participants] + mask).mean(axis=0)
+        return cosine(total / rounds, direction)
+
+    present = [observed(True) for _ in range(draws)]
+    absent = [observed(False) for _ in range(draws)]
     return auc(present, absent)
 
 
 def main() -> None:
     args = parser.parse_args()
+    from sphragis.provenance import provenance_header
+
     loaded = np.load(args.vectors, allow_pickle=False)
     vectors = loaded["vectors"]
     names = [str(n).split("/", 1)[1] for n in loaded["names"]]
@@ -102,6 +111,7 @@ def main() -> None:
         "round_size": args.round_size,
         "draws": args.draws,
         "dimension": int(vectors.shape[1]),
+        "provenance": provenance_header(),
         "targets": {},
     }
     for organization in sorted({s.organization for s in sources}):
@@ -112,11 +122,14 @@ def main() -> None:
         half = max(1, len(mine) // 2)
         # At random: clients arrive grouped by project, and an ordered split hands a
         # multi-project organization a reference from other projects than its participants.
-        shuffled = rng.permutation(mine)
+        shuffled = np.random.default_rng(args.seed).permutation(mine)
         reference, participants = shuffled[:half], shuffled[half:]
         cell: dict[str, dict[str, float]] = {}
         for rounds in args.rounds:
             for noise in args.noise:
+                # A fresh generator per cell, so cells differ in rounds and noise and not in
+                # which rounds were drawn, and the same number of draws throughout.
+                rng = np.random.default_rng(args.seed + 7919 * rounds)
                 value = masked_rounds(
                     vectors,
                     members=participants,
@@ -125,7 +138,7 @@ def main() -> None:
                     size=args.round_size,
                     rounds=rounds,
                     noise=noise,
-                    draws=args.draws if rounds == 1 else max(60, args.draws // rounds),
+                    draws=args.draws,
                     rng=rng,
                 )
                 cell.setdefault(str(rounds), {})[str(noise)] = value

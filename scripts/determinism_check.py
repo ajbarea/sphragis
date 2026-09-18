@@ -81,21 +81,30 @@ def generate(args: argparse.Namespace) -> None:
         return out
 
     passes: dict[str, dict[str, str]] = {}
-    generator = HFGenerator()
+    # bf16 explicitly: the registered default is fp32, and a pass that inherited it would be
+    # labelled bf16 while computing in fp32, which is the measurement this job exists to make.
+    generator = HFGenerator(dtype="bfloat16")
     passes["bf16"] = run(generator, "bf16")
     passes["bf16_repeat"] = run(generator, "bf16 repeat")
     del generator
     torch.cuda.empty_cache()
-    generator = HFGenerator()
+    generator = HFGenerator(dtype="bfloat16")
     passes["bf16_fresh"] = run(generator, "bf16 fresh")
-    # bf16 -> fp32 is exact, so this is the same weights computed in fp32.
-    generator.model.to(torch.float32)
+    del generator
+    torch.cuda.empty_cache()
+    generator = HFGenerator(dtype="float32")
     passes["fp32"] = run(generator, "fp32")
     args.out.write_text(
         json.dumps(
             {
                 "condition": args.condition,
                 "half": args.half,
+                "dtypes": {
+                    "bf16": "bfloat16",
+                    "bf16_repeat": "bfloat16",
+                    "bf16_fresh": "bfloat16",
+                    "fp32": "float32",
+                },
                 "ids": ids,
                 "passes": passes,
                 "provenance": run_provenance(),

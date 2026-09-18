@@ -160,3 +160,23 @@ def test_gap_k_refuses_a_window_below_one() -> None:
 
     with pytest.raises(ValueError, match="window must be positive"):
         gap_k_percent([(-1.0, 0.0, 1.0, -1.0)], window=0)
+
+
+def test_gap_k_never_smooths_across_a_position_it_could_not_score() -> None:
+    """Compacting the unscored positions out first would average tokens that are not adjacent."""
+    from sphragis.measure.contamination import gap_k_percent
+
+    good = (-1.0, 0.0, 1.0, -1.0)
+    bad = (-1.0, 0.0, 0.0, -1.0)  # no spread, so no score
+    far = (-9.0, 0.0, 1.0, -1.0)
+    # Two runs of three separated by an unscored position: the -8 never meets the zeros.
+    tokens = [good, good, good, bad, far, far, far]
+    assert gap_k_percent(tokens, window=3) == pytest.approx(-8.0)
+    with pytest.raises(ValueError, match="no run of 3"):
+        gap_k_percent([good, bad, good, bad, good], window=3)
+
+
+def test_gap_k_caps_the_window_at_the_sequence_it_has() -> None:
+    from sphragis.measure.contamination import gap_k_percent
+
+    assert gap_k_percent([(-3.0, 0.0, 1.0, -1.0)] * 2, window=5) == pytest.approx(-2.0)

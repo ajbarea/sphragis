@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import random
 from collections.abc import Sequence
-from itertools import combinations
 from statistics import fmean
 
 
@@ -51,28 +50,6 @@ def direction_score(
     if left <= 0 or right <= 0:
         return 0.0
     return _mean_inner(products, subset, reference) / (left * right)
-
-
-def rounds(
-    members: Sequence[int], *, size: int, draws: int, rng: random.Random
-) -> list[tuple[int, ...]]:
-    """`draws` distinct rounds of `size` participants, or every one when few enough."""
-    if size > len(members):
-        raise ValueError(f"a round of {size} needs {size} clients, got {len(members)}")
-    every = combinations(sorted(members), size)
-    if _choose(len(members), size) <= draws:
-        return list(every)
-    seen: set[tuple[int, ...]] = set()
-    while len(seen) < draws:
-        seen.add(tuple(sorted(rng.sample(list(members), size))))
-    return sorted(seen)
-
-
-def _choose(n: int, k: int) -> int:
-    total = 1
-    for i in range(k):
-        total = total * (n - i) // (i + 1)
-    return total
 
 
 def membership_auc(
@@ -129,8 +106,14 @@ def paired_subset_difference(
     with the source's reference direction is what identifies the source.
     """
     rng = random.Random(seed)
-    include = [[target, *rng.sample(list(others), size - 1)] for _ in range(draws)]
-    exclude = [rng.sample(list(others), size) for _ in range(draws)]
+    pool = list(others)
+    if len(pool) < size:
+        raise ValueError(
+            f"a round without the target needs {size} others, got {len(pool)}: the caller must "
+            "leave enough outside the target, including when it holds one out as a stranger"
+        )
+    include = [[target, *rng.sample(pool, size - 1)] for _ in range(draws)]
+    exclude = [rng.sample(pool, size) for _ in range(draws)]
     # <mean(include) - mean(exclude), reference> over the norms, all from the Gram matrix.
     flat_in = [i for r in include for i in r]
     flat_out = [i for r in exclude for i in r]
@@ -155,6 +138,7 @@ def organization_membership_auc(
     draws: int,
     seed: int,
     at_least: int = 1,
+    splits: int = 8,
 ) -> dict[str, float]:
     """Did any client of this organization take part, from a mixed round's aggregate alone?
 
@@ -162,41 +146,46 @@ def organization_membership_auc(
     from every client, so a round without the target still holds clients of other sources, and a
     round with it holds `at_least` of its clients among participants drawn from everyone.
 
-    The organization's clients are split once into the attacker's reference and the participants
-    it may contribute, so no round is scored against itself AND both classes are scored against
-    the same reference. Scoring the two classes against references of different sizes makes the
-    comparison read reference size rather than membership: it put this at an AUC of 1.000.
+    The organization's clients are split into the attacker's reference and the participants it may
+    contribute, so no round is scored against itself AND both classes are scored against the same
+    reference. Scoring the two classes against references of different sizes makes the comparison
+    read reference size rather than membership: it put this at an AUC of 1.000.
+
+    The split is drawn at random, not in index order, because clients arrive grouped by project
+    and an ordered split hands a multi-project organization a reference from other projects than
+    its participants, which ran the detector backwards. One split is a draw like any other and
+    moved the figure by 0.06 to 0.08, so `splits` of them are drawn and the spread is reported.
     """
-    rng = random.Random(seed)
     mine = sorted(members)
     if len(mine) < 2:
         raise ValueError(f"a reference and a participant need two clients, got {len(mine)}")
     half = max(1, len(mine) // 2)
-    # Split at random, not in index order: clients arrive grouped by project, so an ordered split
-    # gives an organization spanning several projects a reference drawn from different projects
-    # than its participants. That measured the distance between two projects and put the AUC
-    # below 0.5, the detector running backwards.
-    shuffled = list(mine)
-    rng.shuffle(shuffled)
-    reference, participants = shuffled[:half], shuffled[half:]
-    if at_least > len(participants):
-        raise ValueError(f"{at_least} participants needed, {len(participants)} available")
     outside = [i for i in everyone if i not in set(mine)]
     if size > len(outside):
         raise ValueError(f"a round without the target needs {size} others, got {len(outside)}")
-    present, absent = [], []
-    for _ in range(draws):
-        contributed = rng.sample(participants, at_least)
-        rest = rng.sample(outside, size - at_least)
-        present.append(direction_score(products, [*contributed, *rest], reference))
-        absent.append(direction_score(products, rng.sample(outside, size), reference))
-    wins = sum(1.0 if a > b else 0.5 if a == b else 0.0 for a in present for b in absent)
+    scores = []
+    for split in range(splits):
+        rng = random.Random(f"{seed}/{split}")
+        shuffled = list(mine)
+        rng.shuffle(shuffled)
+        reference, participants = shuffled[:half], shuffled[half:]
+        if at_least > len(participants):
+            raise ValueError(f"{at_least} participants needed, {len(participants)} available")
+        present, absent = [], []
+        for _ in range(draws):
+            contributed = rng.sample(participants, at_least)
+            rest = rng.sample(outside, size - at_least)
+            present.append(direction_score(products, [*contributed, *rest], reference))
+            absent.append(direction_score(products, rng.sample(outside, size), reference))
+        wins = sum(1.0 if a > b else 0.5 if a == b else 0.0 for a in present for b in absent)
+        scores.append(wins / (len(present) * len(absent)))
     return {
-        "auc": wins / (len(present) * len(absent)),
+        "auc": fmean(scores),
+        "auc_lowest_split": min(scores),
+        "auc_highest_split": max(scores),
+        "splits": float(splits),
         "rounds": float(draws),
         "round_size": float(size),
         "target_clients_per_round": float(at_least),
-        "reference_clients": float(len(reference)),
-        "mean_present": fmean(present),
-        "mean_absent": fmean(absent),
+        "reference_clients": float(half),
     }

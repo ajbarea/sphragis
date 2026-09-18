@@ -5,18 +5,20 @@
 #SBATCH --gres=gpu:gh200:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --output=logs/sphragis-clients-%j.log
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
-# RQ2's client updates: 34 clients of 64 examples over eight projects, one base-model load, 8
-# optimiser steps each at the measured ~7 s a step, so about 45 minutes with saving; two hours
-# covers a slower node. Build the corpora with scripts/project_corpora.py into $CLIENTS.
+# RQ2's client updates: about 100 clients of 64 examples over nineteen projects, one base-model
+# load, 8 optimiser steps each at the measured ~7 s a step, so roughly two hours with saving.
+# CLIENT_SIZE=128 doubles the steps and the time, and names its own results and adapters, so two
+# training lengths are never globbed together. Build the corpora with project_corpora into $CLIENTS.
 set -euo pipefail
 
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
+tag_result_suffix CLIENT_SIZE
 
 C="${CLIENTS:-$HOME/corpus/clients}"
 
