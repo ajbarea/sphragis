@@ -12,7 +12,8 @@ per arm: shared between the two arms, or with probability `q` drawn separately f
 which is what gives the contrast its between-change spread. Each seed then redraws a
 fraction `f` of each arm's outcomes around the change's rate shifted by a seed-and-arm
 effect, which is seed-by-change churn plus, when sigma_b > 0, a shift common to every
-change. `--calibrate` prints the single-seed standard error, the run-to-run standard error
+change, sized by `tau_for` so the seed main effect realized after clipping is the one
+labelled. `--calibrate` prints the single-seed standard error, the run-to-run standard error
 and the churn the chosen q and f produce, to compare with the two identical nulls
 (marker-0 and sym-0).
 
@@ -66,17 +67,57 @@ def population(source: Path, arm: str) -> Population:
 
 
 def _bernoulli(rng: random.Random, p: float) -> float:
-    return 1.0 if rng.random() < min(1.0, max(0.0, p)) else 0.0
+    return 1.0 if rng.random() < _clip(p) else 0.0
+
+
+def _clip(p: float) -> float:
+    return min(1.0, max(0.0, p))
+
+
+def realized_sigma_b(pop: Population, *, tau: float, f: float, draws: int = 4000) -> float:
+    """The contrast's seed main effect a seed-and-arm shift of SD `tau` actually produces.
+
+    A seed's expected contrast, given its two arm shifts, is f times the example-weighted mean
+    of clip(p + shift_t) - clip(p + shift_c). Without clipping its SD is f * sqrt(2) * tau, but
+    most changes sit at a rate of exactly 0 or 1, where a shift one way is cut off, so the
+    naive value overstates the effect simulated.
+    """
+    rng = random.Random("realized")
+    total = sum(size for _, size, _ in pop)
+    effects = []
+    for _ in range(draws):
+        shift_t, shift_c = rng.gauss(0.0, tau), rng.gauss(0.0, tau)
+        effects.append(
+            f * sum(size * (_clip(p + shift_t) - _clip(p + shift_c)) for _, size, p in pop) / total
+        )
+    return pstdev(effects)
+
+
+def tau_for(pop: Population, *, sigma_b: float, f: float) -> float:
+    """The arm shift whose realized seed main effect is `sigma_b`, by bisection."""
+    if sigma_b == 0.0:
+        return 0.0
+    low, high = 0.0, 1.0
+    while realized_sigma_b(pop, tau=high, f=f) < sigma_b:
+        high *= 2
+    for _ in range(40):
+        middle = (low + high) / 2
+        if realized_sigma_b(pop, tau=middle, f=f) < sigma_b:
+            low = middle
+        else:
+            high = middle
+    return (low + high) / 2
 
 
 def simulate(
-    rng: random.Random, pop: Population, *, seeds: int, q: float, f: float, sigma_b: float
+    rng: random.Random, pop: Population, *, seeds: int, q: float, f: float, tau: float
 ) -> list[list[Cluster]]:
-    """One null study: a draw of changes, scored by both arms at every seed."""
+    """One null study: a draw of changes, scored by both arms at every seed.
+
+    `tau` is the SD of each seed-and-arm shift in the redraw rate; `tau_for` converts the seed
+    main effect wanted into it.
+    """
     changes = [pop[rng.randrange(len(pop))] for _ in range(len(pop))]
-    # tau is the seed-and-arm shift in the redraw rate. Only redrawn outcomes move, and the
-    # contrast differences two arms, so the contrast's seed main effect is f * sqrt(2) * tau.
-    tau = sigma_b / (f * 2**0.5) if f > 0 else 0.0
     stable = []
     for _, size, p in changes:
         examples = []
@@ -111,10 +152,10 @@ def median_seed(runs: list[list[Cluster]], *, bootstrap_seed: int, resamples: in
     return min(intervals, key=lambda i: abs(i["estimate"] - middle))
 
 
-def trial(job: tuple[int, int, float, float, float, int, Population]) -> dict[str, float]:
-    index, seeds, sigma_b, q, f, resamples, pop = job
+def trial(job: tuple[int, int, float, float, float, float, int, Population]) -> dict[str, float]:
+    index, seeds, sigma_b, tau, q, f, resamples, pop = job
     rng = random.Random(f"{index}-{seeds}-{sigma_b}")
-    runs = simulate(rng, pop, seeds=seeds, q=q, f=f, sigma_b=sigma_b)
+    runs = simulate(rng, pop, seeds=seeds, q=q, f=f, tau=tau)
     single = median_seed(runs, bootstrap_seed=index, resamples=resamples)
     crossed = crossed_bootstrap(runs, seed=index, resamples=resamples)
     return {
@@ -132,7 +173,7 @@ def calibrate(pop: Population, *, q: float, f: float, draws: int = 200) -> None:
     rng = random.Random(0)
     single_se, run_to_run, churn = [], [], []
     for index in range(draws):
-        a, b = simulate(rng, pop, seeds=2, q=q, f=f, sigma_b=0.0)
+        a, b = simulate(rng, pop, seeds=2, q=q, f=f, tau=0.0)
         interval = cluster_bootstrap(a, seed=index, resamples=500)
         single_se.append((interval["high"] - interval["low"]) / 3.92)
         run_to_run.append(paired_difference(b) - paired_difference(a))
@@ -157,16 +198,24 @@ def main() -> None:
         return
     cells = []
     with ProcessPoolExecutor(args.workers) as pool:
+        taus = {sigma_b: tau_for(pop, sigma_b=sigma_b, f=args.f) for sigma_b in args.sigma_b}
+        for sigma_b, tau in taus.items():
+            realized = realized_sigma_b(pop, tau=tau, f=args.f)
+            naive = args.f * 2**0.5 * tau
+            print(f"sigma_b {sigma_b}: tau {tau:.4f}, realized {realized:.4f}, naive {naive:.4f}")
         for seeds in args.seeds:
             for sigma_b in args.sigma_b:
+                tau = taus[sigma_b]
                 jobs = [
-                    (i, seeds, sigma_b, args.q, args.f, args.resamples, pop)
+                    (i, seeds, sigma_b, tau, args.q, args.f, args.resamples, pop)
                     for i in range(args.trials)
                 ]
                 outcomes = list(pool.map(trial, jobs, chunksize=10))
                 cell = {
                     "seeds": seeds,
                     "sigma_b": sigma_b,
+                    "tau": tau,
+                    "realized_sigma_b": realized_sigma_b(pop, tau=tau, f=args.f),
                     **{k: fmean(o[k] for o in outcomes) for k in outcomes[0]},
                 }
                 cells.append(cell)

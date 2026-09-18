@@ -20,7 +20,12 @@ if [ -z "${RUN_TAG+set}" ]; then
   RUN_TAG="${SLURM_CLUSTER_NAME:-tigris}"
   [ "$RUN_TAG" != tigris ] || RUN_TAG=""
 fi
-export RESULT_SUFFIX="${RUN_TAG:+-$RUN_TAG}"
+RESULT_SUFFIX="${RUN_TAG:+-$RUN_TAG}"
+# Another seed set or training size is another run, not a rerun, so it is named whatever
+# RUN_TAG says: SEEDS=2 alone would otherwise overwrite the seed-1 result and its adapters.
+[ "${SEEDS:-1}" = 1 ] || RESULT_SUFFIX="$RESULT_SUFFIX-s${SEEDS//,/-}"
+[ -z "${TRAIN_SIZE:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-n$TRAIN_SIZE"
+export RESULT_SUFFIX
 # RIT hides the system gcc behind /tools/bin/blindfold/gcc, which refuses to run. Triton reads
 # CC before `which gcc` when it JIT-compiles on first generation.
 export CC=/usr/bin/gcc

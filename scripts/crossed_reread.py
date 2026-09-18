@@ -5,9 +5,11 @@ one job would triple a walltime already near the limit. This merges their result
 reads the registered gate (median seed) beside `crossed_gate` (seeds and changes resampled
 together), under both estimands.
 
-Runs are merged only if they split identically: same split seed, same held-out examples per
-arm. `crossed_bootstrap` refuses runs over different examples in any case; checking here
-names the file that differs.
+Runs are merged only if they are seeds of one study: the same model, corpora, split and
+training size, and the same held-out examples per arm. `crossed_bootstrap` refuses runs over
+different examples in any case; checking here names the file that differs.
+
+Name extra seeds with SEEDS= alone: the suffix then carries the seed, `-s2`, `-s3`.
 
     uv run --no-sync --no-active python scripts/crossed_reread.py \
         datasets/results/rq1-windows-qtfull.json datasets/results/rq1-windows-qtfull-s2.json \
@@ -34,6 +36,26 @@ parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--out", type=Path, required=True)
 
 
+def configuration(run: dict[str, Any]) -> dict[str, Any]:
+    """Everything that must match for two runs to be seeds of one study.
+
+    The held-out examples are checked separately, but they fix only the evaluation: a run
+    trained at 788 examples scores the same held-out set as one trained at 1,517, and merging
+    the two would average different studies as if they were seeds of one.
+    """
+    return {
+        "model_id": run["model_id"],
+        "split_seed": run["split_seed"],
+        "equalize_train": run["equalize_train"],
+        "train_size": run.get("train_size"),
+        "max_new_tokens": run["max_new_tokens"],
+        "corpora": {
+            org: (c["source"], c.get("train_examples_equalized"), c["held_out_examples"])
+            for org, c in run["corpora"].items()
+        },
+    }
+
+
 def merge(paths: list[Path]) -> tuple[dict[str, list[dict[str, Any]]], tuple[int, ...]]:
     """Every run's adapter arms under one results map, and the seeds they carry."""
     merged: dict[str, list[dict[str, Any]]] = {}
@@ -43,10 +65,9 @@ def merge(paths: list[Path]) -> tuple[dict[str, list[dict[str, Any]]], tuple[int
         run = json.loads(path.read_text())
         if first is None:
             first = run
-        elif run["split_seed"] != first["split_seed"]:
-            raise SystemExit(
-                f"{path} used split seed {run['split_seed']}, not {first['split_seed']}"
-            )
+        elif (theirs := configuration(run)) != (ours := configuration(first)):
+            changed = sorted(k for k in ours if ours[k] != theirs.get(k))
+            raise SystemExit(f"{path} was not the same study as {paths[0]}: differs on {changed}")
         seeds.extend(run["seeds"])
         for arm, rows in run["results"].items():
             if arm.startswith("base|"):

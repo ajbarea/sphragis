@@ -293,6 +293,24 @@ def test_a_run_tag_names_the_results(tmp_path: Path) -> None:
     assert _suffix(tmp_path, SLURM_CLUSTER_NAME="sporc", RUN_TAG="sporc-a100") == "[-sporc-a100]"
 
 
+@pytest.mark.parametrize(
+    ("env", "expected"),
+    [
+        ({"SEEDS": "2"}, "[-s2]"),
+        ({"SEEDS": "1,2,3"}, "[-s1-2-3]"),
+        ({"SEEDS": "1"}, "[]"),
+        ({"TRAIN_SIZE": "788"}, "[-n788]"),
+        ({"RUN_TAG": "qtfull", "SEEDS": "3", "TRAIN_SIZE": "788"}, "[-qtfull-s3-n788]"),
+        ({"RUN_TAG": "", "SEEDS": "2"}, "[-s2]"),
+    ],
+)
+def test_another_seed_or_training_size_never_takes_the_default_name(
+    tmp_path: Path, env: dict[str, str], expected: str
+) -> None:
+    """Untagged, SEEDS=2 wrote over the seed-1 result and adapters on TIGRIS."""
+    assert _suffix(tmp_path, SLURM_CLUSTER_NAME="tigris", **env) == expected
+
+
 def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -> None:
     assert _suffix(tmp_path, SLURM_CLUSTER_NAME="sporc", RUN_TAG="") == "[]"
 
