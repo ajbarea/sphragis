@@ -64,8 +64,9 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   Scored on hunks with context: 161 / 116 examples, Min-K%++ gap -0.058 [-0.200, +0.084],
   guided completion at its floor. Windows inseparable; read as ambiguous, as pre-committed.
 - [ ] Fix the control window's size (multi-month) and register hunks-with-context as the
-  scored text. Collecting 2023-08..2024-01 as one uniform window, constructed exactly like
-  the window it is compared against (`scripts/control_window.sh`).
+  scored text. Collected: 2023-08 to 2024-01 as one uniform window, 2,769 deduplicated
+  examples against 2,153 post-cutoff. The battery rerun is job 148092; its first attempt
+  (145093) hit a two-hour wall after Min-K%++ had finished, which is now written first.
 - [x] **Source the checkpoint's cutoff.** The widely repeated "June 2024" for Qwen2.5-Coder is
   a community guess, not a maintainer statement. The technical report states a repository
   *creation* filter of February 2024, which bounds nothing for repositories as old as
@@ -106,11 +107,13 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   unannotated reference, so `non_degeneracy` failed and `apparatus_holds` went false. The
   ceiling condition is degenerate by construction and the apparatus is what says so; the pass
   is evidence the instrument works, not a result.
-- [ ] **The floor itself**, from the weaker conditions where neither arm saturates: realised
-  0.039 / 0.086 / 0.251 / 0.501 for the annotation and 0.007 to 0.164 for quote style. These
-  turn a null into a bound and are the next run.
-- [ ] `marker-0`, the negative control: two halves differing in nothing must return nothing.
-  Running as part of job 145092.
+- [ ] **The floor itself**, from the weaker conditions where neither arm saturates. Queued on
+  TIGRIS 2026-09-17 under `fl-mlm`, one condition per job so a wall costs one condition:
+  `marker-0.05` (148089), `marker-0.1` (148090), `marker-0.25` (148091), realised 0.039, 0.086
+  and 0.251. The real OpenStack/Qt contrast of +0.021 predicts the floor sits near 0.05 to 0.1.
+- [ ] `marker-0`, the negative control (148088, running 2026-09-17): two halves differing in
+  nothing must return nothing. Its first attempt was lost when job 145092 hit its four-hour
+  wall after `marker-1`, which ran 2h45m against an estimate of 75 minutes.
 
 ## Plan D — granularity
 
