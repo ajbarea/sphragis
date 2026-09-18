@@ -89,6 +89,11 @@ def masked_rounds(
     direction = vectors[reference].mean(axis=0)
     width = vectors.shape[1]
 
+    # The mean of `size` independent masks is one Gaussian of the same shape with its variance
+    # divided by `size`, so it is drawn directly: exact, and it avoids drawing size x width
+    # normals for every round, which dominated the cost.
+    mask_sd = scale / np.sqrt(width * size)
+
     def aggregate(with_target: bool) -> np.ndarray:
         if with_target:
             participants = np.concatenate(
@@ -96,8 +101,7 @@ def masked_rounds(
             )
         else:
             participants = rng.choice(outside, size, replace=False)
-        mask = rng.normal(0.0, scale / np.sqrt(width), (size, width))
-        return (vectors[participants] + mask).mean(axis=0)
+        return vectors[participants].mean(axis=0) + rng.normal(0.0, mask_sd, width)
 
     def difference(with_target: bool) -> float:
         held = sum(aggregate(with_target) for _ in range(rounds)) / rounds
