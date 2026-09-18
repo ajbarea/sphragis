@@ -113,3 +113,43 @@ def test_a_round_that_cannot_be_filled_without_the_target_is_refused() -> None:
         paired_subset_difference(
             products, target=0, others=range(1, 8), reference=range(8, 11), size=8, draws=5, seed=0
         )
+
+
+def test_splitting_over_groups_stops_a_project_being_read_as_its_organization() -> None:
+    """Two projects that look nothing alike still belong to one organization: split by client and
+    the detector finds the target's own project in its reference and calls it the organization."""
+    rng = random.Random(11)
+    dimension = 60
+    first = [[rng.gauss(0, 1) for _ in range(dimension)] for _ in range(6)]
+    second = [[rng.gauss(0, 1) for _ in range(dimension)] for _ in range(6)]
+    # Each project shares a direction of its own; the organization shares nothing.
+    for rows, axis in ((first, 0), (second, 1)):
+        for row in rows:
+            row[axis] += 9.0
+    outsiders = [[rng.gauss(0, 1) for _ in range(dimension)] for _ in range(24)]
+    vectors = first + second + outsiders
+    products = [[sum(a * b for a, b in zip(u, v, strict=True)) for v in vectors] for u in vectors]
+    groups = ["p1"] * 6 + ["p2"] * 6 + [f"o{i}" for i in range(24)]
+    by_client = organization_membership_auc(
+        products, members=range(12), everyone=range(36), size=8, draws=150, seed=0
+    )
+    by_group = organization_membership_auc(
+        products, members=range(12), everyone=range(36), size=8, draws=150, seed=0, groups=groups
+    )
+    assert by_client["auc"] > 0.8, "the project's own clients carry it"
+    assert by_group["auc"] < by_client["auc"] - 0.2, "and must not, once the split is by project"
+    assert by_group["split_over_groups"] is True
+
+
+def test_an_organization_of_one_group_cannot_be_told_from_that_group() -> None:
+    products = _products(_vectors(20, 10, seed=12))
+    with pytest.raises(ValueError, match="two groups"):
+        organization_membership_auc(
+            products,
+            members=range(4),
+            everyone=range(20),
+            size=4,
+            draws=10,
+            seed=0,
+            groups=["only"] * 20,
+        )

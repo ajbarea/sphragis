@@ -24,6 +24,7 @@ Two detectors, both what an honest-but-curious server could run with reference u
 from __future__ import annotations
 
 import random
+from collections import defaultdict
 from collections.abc import Sequence
 from statistics import fmean, stdev
 
@@ -139,6 +140,7 @@ def organization_membership_auc(
     seed: int,
     at_least: int = 1,
     splits: int = 8,
+    groups: Sequence[str] | None = None,
 ) -> dict[str, float]:
     """Did any client of this organization take part, from a mixed round's aggregate alone?
 
@@ -160,6 +162,17 @@ def organization_membership_auc(
     if len(mine) < 2:
         raise ValueError(f"a reference and a participant need two clients, got {len(mine)}")
     half = max(1, len(mine) // 2)
+    # With `groups`, the split is over groups rather than clients: a target's own project must not
+    # sit in the reference, or the detector reads the project and reports it as the organization.
+    by_group: dict[str, list[int]] = defaultdict(list)
+    if groups is not None:
+        for client in mine:
+            by_group[groups[client]].append(client)
+        if len(by_group) < 2:
+            raise ValueError(
+                f"an organization needs two groups to be told from one of them, got "
+                f"{sorted(by_group)}"
+            )
     outside = [i for i in everyone if i not in set(mine)]
     if size > len(outside):
         raise ValueError(f"a round without the target needs {size} others, got {len(outside)}")
@@ -167,10 +180,20 @@ def organization_membership_auc(
     for split in range(splits):
         # Two streams: which clients are the reference must not decide which rounds are drawn,
         # or the spread across splits would carry the round draws with it.
-        shuffled = list(mine)
-        random.Random(f"{seed}/split/{split}").shuffle(shuffled)
+        splitter = random.Random(f"{seed}/split/{split}")
         rng = random.Random(f"{seed}/rounds/{split}")
-        reference, participants = shuffled[:half], shuffled[half:]
+        if groups is None:
+            shuffled = list(mine)
+            splitter.shuffle(shuffled)
+            reference, participants = shuffled[:half], shuffled[half:]
+        else:
+            names = sorted(by_group)
+            splitter.shuffle(names)
+            cut = max(1, len(names) // 2)
+            reference = [c for name in names[:cut] for c in by_group[name]]
+            participants = [c for name in names[cut:] for c in by_group[name]]
+            if not reference or not participants:
+                raise ValueError("a group split left one side empty")
         if at_least > len(participants):
             raise ValueError(f"{at_least} participants needed, {len(participants)} available")
         present, absent = [], []
@@ -191,6 +214,7 @@ def organization_membership_auc(
         "round_size": float(size),
         "target_clients_per_round": float(at_least),
         "reference_clients": float(half),
+        "split_over_groups": groups is not None,
         # The size of the separation, not only its ordering: an AUC near 1 over scores that
         # differ in the fourth decimal is a consistent ordering of almost nothing.
         "mean_present": fmean(p for p, _ in separations),

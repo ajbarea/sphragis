@@ -34,7 +34,7 @@ from sphragis.measure.aggregate import (
     organization_membership_auc,
     paired_subset_difference,
 )
-from sphragis.measure.attribution import Source
+from sphragis.measure.attribution import Source, _distinct_arrangements
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
@@ -44,6 +44,17 @@ parser.add_argument("--sizes", type=int, nargs="+", default=[4, 8, 16])
 parser.add_argument("--draws", type=int, default=400)
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--altitude", default="organization", choices=("organization", "project"))
+parser.add_argument(
+    "--beyond-project",
+    action="store_true",
+    help="split the attacker's reference over projects, so an organization must be recognised "
+    "from projects other than the target's own",
+)
+parser.add_argument(
+    "--content",
+    help="restrict every client to one content type first, so an organization cannot be read "
+    "through the kind of code its clients happen to write",
+)
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -55,11 +66,20 @@ def main() -> None:
     sources = [Source.parse(clients[n]["source"]) for n in names]
     norms = [geometry["update_norm"][name] for name in geometry["adapters"]]
     products = gram(geometry["cosine"], norms)
+    if args.content:
+        keep = [i for i, source in enumerate(sources) if source.content == args.content]
+        if len(keep) < 4:
+            raise SystemExit(f"{len(keep)} clients write {args.content}; too few for a round")
+        names = [names[i] for i in keep]
+        sources = [sources[i] for i in keep]
+        products = [[products[i][j] for j in keep] for i in keep]
+        print(f"{len(names)} clients write {args.content}", flush=True)
     labels = [s.at(args.altitude) for s in sources]
 
     rng = random.Random(args.seed)
     report: dict[str, Any] = {
         "altitude": args.altitude,
+        "content": args.content,
         "clients": len(names),
         "draws": args.draws,
         "provenance": provenance_header(),
@@ -88,6 +108,7 @@ def main() -> None:
                     draws=args.draws,
                     seed=args.seed,
                     at_least=present,
+                    groups=[s.at("project") for s in sources] if args.beyond_project else None,
                 )
                 cell["mixed_rounds"][f"{size}/{present}"] = mixed
                 print(
@@ -159,6 +180,52 @@ def main() -> None:
             flush=True,
         )
         report["targets"][label] = cell
+
+    # Is the detector reading the organization, or the projects that happen to compose it? The
+    # projects are relabelled, keeping how many each organization has, and the detector is rerun.
+    # The exchangeable unit is the project, because a project's clients share it.
+    if args.beyond_project:
+        projects = sorted({s.at("project") for s in sources})
+        owner = {s.at("project"): s.organization for s in sources}
+        base = [owner[p] for p in projects]
+        arrangements = list(_distinct_arrangements(base))
+        groups = [s.at("project") for s in sources]
+        size = args.sizes[0]
+        report["project_permutation"] = {}
+        for label, cell in report["targets"].items():
+            observed = cell["mixed_rounds"][f"{size}/1"]["auc"]
+            hits, usable = 0, 0
+            for assignment in arrangements:
+                relabel = dict(zip(projects, assignment, strict=True))
+                members = [i for i, s in enumerate(sources) if relabel[s.at("project")] == label]
+                if len(members) < 2 or len({groups[i] for i in members}) < 2:
+                    continue
+                usable += 1
+                hits += (
+                    organization_membership_auc(
+                        products,
+                        members=members,
+                        everyone=range(len(names)),
+                        size=size,
+                        draws=max(60, args.draws // 4),
+                        seed=args.seed,
+                        at_least=1,
+                        splits=2,
+                        groups=groups,
+                    )["auc"]
+                    >= observed
+                )
+            report["project_permutation"][label] = {
+                "observed_auc": observed,
+                "relabelings": usable,
+                "at_least_as_extreme": hits,
+                "p": hits / usable if usable else None,
+            }
+            print(
+                f"{label:24} project-level permutation: p "
+                f"{hits / usable if usable else float('nan'):.3f} over {usable} relabelings",
+                flush=True,
+            )
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")
 

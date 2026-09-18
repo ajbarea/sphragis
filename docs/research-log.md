@@ -2858,6 +2858,11 @@ result, and a larger client pool would settle it.
 
 ### The organization is not in the update. The content and the codebase are. (2026-09-18, job 149461)
 
+> **Qualified within the hour.** This entry reads the *classification* operating point, where
+> organization is indeed not attributable. A targeted detector, which is what an attacker has,
+> does find it: AUC 0.736 for AOSP within C++, beating random relabelings of the same nine projects
+> at p = 0.012. See "The organization is there, at the operating point an attacker actually has".
+
 `datasets/results/client-attribution-cpp-early.json`. The design the earlier runs could not
 support: 77 clients over 18 projects and three organizations, with a content type carried by two
 organizations at several projects each, C++ in AOSP (3 projects, 13 clients) and in Qt (6 projects,
@@ -2937,3 +2942,41 @@ now decided a verdict twice.
 shared between the first two. Both arms move together, so their difference does not. That is the
 strongest evidence yet that the contrast is a property of the data rather than of a training run,
 and it is why the measured seed effect in this setting is indistinguishable from zero.
+
+### The organization is there, at the operating point an attacker actually has (2026-09-18)
+
+`datasets/results/aggregate-attack-cpp-beyond-project.json`. Qualifies the entry above, which read
+the classification result alone.
+
+Restricted to the 43 C++ clients, so content is fixed, with the attacker's reference split over
+**projects** rather than clients, so an organization must be recognised from projects other than the
+target's own, and with the projects relabelled to test it:
+
+| target | detector AUC, rounds of 4 | project-level permutation |
+|---|---|---|
+| AOSP (3 of the 9 C++ projects) | 0.736 | **p = 0.012**, 1 of 84 relabelings as extreme |
+| Qt (6 of them) | 0.618 | p = 0.071 |
+
+The true grouping of projects into organizations beats random groupings of the same nine projects.
+So an organization's projects do share something beyond each project's own identity, within one
+language, and a detector with reference updates from that organization can use it.
+
+**Why this and the classification result are both true.** They are different operating points.
+
+- *Classification*, "which organization does this client belong to", leaving out its project:
+  0.395 against a 0.698 majority. A classifier must beat every rival class, and with 30 Qt clients
+  against 13 AOSP ones the nearest-class rule simply answers Qt.
+- *Detection*, "was one of this organization's clients in this round", given reference updates from
+  its other projects: 0.736, and better than chance relabelings at p = 0.012.
+
+An attacker holds the second position, not the first: a server running federated fine-tuning knows
+which organizations it recruited and holds updates from each, so it is asking whether a known
+candidate contributed, not sorting an unlabelled update among all possible owners. The privacy
+claim is about the attacker's question.
+
+**What this study can honestly say, then, at three altitudes.** Content is read almost perfectly
+(0.909). The codebase is read strongly (0.442 over 18 projects against a 0.078 baseline). The
+organization is a weak residual: invisible to a classifier, detectable by a targeted detector at
+0.74 for a three-project organization and 0.62 for a six-project one, on 13 and 30 clients. The
+ordering is stable across every instrument this log has used, and the third term is the one a
+data-sharing agreement is written about.
