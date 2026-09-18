@@ -15,9 +15,10 @@ from typing import Any
 
 from sphragis.measure.score import normalize_formatting
 
-# One scored position: log p(x_t | x_<t), then the mean and variance of log p(z | x_<t)
-# for z drawn from the model's own next-token distribution over the full vocabulary.
-TokenStats = tuple[float, float, float]
+# One scored position: log p(x_t | x_<t), the mean and variance of log p(z | x_<t) for z drawn
+# from the model's own next-token distribution over the full vocabulary, and the top-1
+# log-probability at that position, which only Gap-K% reads.
+TokenStats = tuple[float, float, float, float]
 
 
 def min_k_percent(logprobs: Sequence[float], *, k: float = 20.0) -> float:
@@ -43,7 +44,7 @@ def min_k_plus_plus_scores(tokens: Sequence[TokenStats]) -> tuple[list[float], i
     """
     scores: list[float] = []
     undefined = 0
-    for logprob, mean, variance in tokens:
+    for logprob, mean, variance, *_ in tokens:
         if variance > 0.0 and math.isfinite(logprob) and math.isfinite(mean):
             scores.append((logprob - mean) / math.sqrt(variance))
         else:
@@ -57,6 +58,33 @@ def min_k_plus_plus(tokens: Sequence[TokenStats], *, k: float = 20.0) -> float:
     if not scores:
         raise ValueError("min_k_plus_plus needs at least one position with a defined score")
     return min_k_percent(scores, k=k)
+
+
+# One scored position for Gap-K%: log p(x_t | x_<t), the top-1 log-probability at that
+# position, and the standard deviation of log p(z | x_<t) over the vocabulary.
+def gap_k_percent(tokens: Sequence[TokenStats], *, k: float = 20.0, window: int = 3) -> float:
+    """Gap-K% (Kwak and Kim, arXiv:2601.19936), the mean of its lowest k percent of scores.
+
+    Per token, the paper's g_t is the normalised distance from the model's own top-1 prediction,
+    `(log p(x_t) - max_v log p(v)) / sigma_t`, which is at most zero and is nearer zero for text
+    the model was trained on. Adjacent scores are smoothed over a sliding window of `window`,
+    since membership shows up over contiguous stretches rather than single tokens, and the score
+    is the mean of the lowest k percent of the smoothed values.
+
+    Window 3 is the paper's default outside the LLaMA family; k follows Min-K%'s 20. Positions
+    whose variance is not positive have no score, as in Min-K%++, and are dropped.
+    """
+    if window < 1:
+        raise ValueError(f"the smoothing window must be positive, got {window}")
+    scores = [
+        (logprob - top1) / math.sqrt(variance)
+        for logprob, _, variance, top1 in tokens
+        if variance > 0.0 and math.isfinite(logprob) and math.isfinite(top1)
+    ]
+    if not scores:
+        raise ValueError("gap_k_percent needs at least one position with a positive variance")
+    smoothed = [fmean(scores[t : t + window]) for t in range(max(1, len(scores) - window + 1))]
+    return min_k_percent(smoothed, k=k)
 
 
 def guided_completion_rate(completions: Sequence[tuple[str, str]]) -> float:
@@ -88,12 +116,16 @@ def battery_report(
     corpus_starts: str,
     model_published: str,
     k: float = 20.0,
+    gap_window: int = 3,
 ) -> dict[str, Any]:
-    """Evidence from all three methods. Deliberately returns no verdict.
+    """Evidence from every method. Deliberately returns no verdict.
 
-    Min-K%++ is the registered membership method. Plain Min-K% is computed from the same
-    token log-probabilities and reported beside it, because the design once described one
-    while naming the other and both cost nothing extra.
+    Min-K%++ is the registered membership method. Plain Min-K% is computed from the same token
+    log-probabilities and reported beside it, because the design once described one while naming
+    the other and both cost nothing extra. Gap-K% (arXiv:2601.19936) reads the same positions'
+    distance from the model's own top choice, and joins them for the same reason: it is the
+    later method, and a registered instrument should be read against its successor rather than
+    quietly left behind.
     """
 
     def undefined(windows: Sequence[Sequence[TokenStats]]) -> int:
@@ -120,6 +152,14 @@ def battery_report(
                 pre_cutoff=[min_k_percent([t[0] for t in seq], k=k) for seq in pre_tokens],
             ),
         },
+        "gap_k_percent": {
+            "k": k,
+            "window": gap_window,
+            **compare_windows(
+                post_cutoff=[gap_k_percent(seq, k=k, window=gap_window) for seq in post_tokens],
+                pre_cutoff=[gap_k_percent(seq, k=k, window=gap_window) for seq in pre_tokens],
+            ),
+        },
         "guided_completion": {
             **compare_windows(
                 post_cutoff=[guided_completion_rate(post_completions)],
@@ -127,7 +167,7 @@ def battery_report(
             ),
         },
         "limitation": (
-            "Min-K% and Min-K%++ detect verbatim overlap and degrade on paraphrase; a clean result "
-            "bounds verbatim memorization and does not rule out paraphrased exposure."
+            "Min-K%, Min-K%++ and Gap-K% detect verbatim overlap and degrade on paraphrase; a "
+            "clean result bounds verbatim memorization and does not rule out paraphrased exposure."
         ),
     }

@@ -27,6 +27,7 @@ from sphragis.experiment.model import (
 )
 from sphragis.measure.contamination import (
     battery_report,
+    gap_k_percent,
     min_k_percent,
     min_k_plus_plus,
     min_k_plus_plus_scores,
@@ -39,6 +40,12 @@ parser.add_argument("--pre", type=Path, required=True, help="pre-cutoff control 
 parser.add_argument("--corpus-starts", default="2024-10-01")
 parser.add_argument("--model-published", default="2024-09-17")
 parser.add_argument("--k", type=float, default=20.0)
+parser.add_argument(
+    "--gap-window",
+    type=int,
+    default=3,
+    help="Gap-K%'s smoothing window; 3 is the paper's default outside the LLaMA family",
+)
 parser.add_argument("--min-tokens", type=int, default=32)
 parser.add_argument(
     "--scored-text",
@@ -122,6 +129,7 @@ def per_example(rows: list[dict], tokens: list, window: str) -> list[dict]:
             "undefined_positions": min_k_plus_plus_scores(t)[1],
             "min_k_plus_plus": min_k_plus_plus(t, k=args.k),
             "min_k_percent": min_k_percent([x[0] for x in t], k=args.k),
+            "gap_k_percent": gap_k_percent(t, k=args.k, window=args.gap_window),
         }
         for r, t in zip(rows, tokens, strict=True)
     ]
@@ -200,6 +208,7 @@ report = battery_report(
     corpus_starts=args.corpus_starts,
     model_published=args.model_published,
     k=args.k,
+    gap_window=args.gap_window,
 )
 guided_similarity = {
     window: (
@@ -209,7 +218,7 @@ guided_similarity = {
     for window in ("post", "pre")
 }
 print(f"guided edit similarity {guided_similarity}", flush=True)
-for method in ("min_k_plus_plus", "min_k_percent", "guided_completion"):
+for method in ("min_k_plus_plus", "min_k_percent", "gap_k_percent", "guided_completion"):
     r = report[method]
     print(
         f"{method:<18} post={r['post_cutoff']:+.4f} pre={r['pre_cutoff']:+.4f} gap={r['gap']:+.4f}",

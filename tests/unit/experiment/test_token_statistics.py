@@ -29,14 +29,15 @@ class ThreeTokenTokenizer:
         return {"input_ids": torch.tensor([[0, 2, 1]])}
 
 
-def _expected(row: list[float], target: int) -> tuple[float, float, float]:
+def _expected(row: list[float], target: int) -> tuple[float, float, float, float]:
     top = max(row)
     norm = top + math.log(sum(math.exp(x - top) for x in row))
     logp = [x - norm for x in row]
     p = [math.exp(x) for x in logp]
     mean = sum(pi * li for pi, li in zip(p, logp, strict=True))
     variance = sum(pi * li * li for pi, li in zip(p, logp, strict=True)) - mean * mean
-    return logp[target], mean, variance
+    # The fourth field is the top-1 log-probability, which Gap-K% measures the target against.
+    return logp[target], mean, variance, max(logp)
 
 
 def test_statistics_match_a_direct_computation_and_skip_the_first_token() -> None:

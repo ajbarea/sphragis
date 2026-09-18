@@ -182,9 +182,12 @@ class HFGenerator:
 
 def token_statistics(
     model: Any, tokenizer: PreTrainedTokenizerBase, text: str, device: str = "cuda:0"
-) -> list[tuple[float, float, float]]:
-    """Per-position inputs to Min-K%++: log p(x_t | x_<t), and the mean and variance of
-    log p(z | x_<t) under the model's own next-token distribution over the vocabulary.
+) -> list[tuple[float, float, float, float]]:
+    """Per-position inputs to the membership scores: log p(x_t | x_<t), the mean and variance of
+    log p(z | x_<t) under the model's own next-token distribution, and the top-1 log-probability.
+
+    The fourth field is what Gap-K% (arXiv:2601.19936) needs: the distance from the token the
+    model would itself have chosen. It comes free from the same log-softmax.
 
     Mirrors the Min-K%++ reference implementation: log-softmax over the logits, the first
     token skipped because nothing predicts it, mu = sum(p * log p), and
@@ -207,7 +210,16 @@ def token_statistics(
     variance = weighted_sq.sum(-1) - mean.square()
     targets = ids[0, 1:]
     token_logprob = log_probs.gather(-1, targets[:, None]).squeeze(-1)
-    return list(zip(token_logprob.tolist(), mean.tolist(), variance.tolist(), strict=True))
+    top1 = log_probs.max(dim=-1).values
+    return list(
+        zip(
+            token_logprob.tolist(),
+            mean.tolist(),
+            variance.tolist(),
+            top1.tolist(),
+            strict=True,
+        )
+    )
 
 
 def cast_trainable_to_fp32(model: Any) -> int:
