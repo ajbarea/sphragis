@@ -239,3 +239,30 @@ class TestLearningRateSchedule:
 
     def test_no_warmup_starts_at_the_full_rate(self) -> None:
         assert lr_multiplier(0, warmup=0, total=50) == pytest.approx(1.0)
+
+
+def test_decoding_is_greedy_by_default() -> None:
+    """Greedy is the registered decoder; nothing may change it silently."""
+    from sphragis.experiment.training import decoding_kwargs
+
+    assert decoding_kwargs(0.0) == {"do_sample": False}
+
+
+def test_sampling_leaves_the_distribution_unaltered() -> None:
+    """Top-k or top-p would truncate the distribution and test a different hypothesis."""
+    from sphragis.experiment.training import decoding_kwargs
+
+    kwargs = decoding_kwargs(1.0)
+    assert kwargs["do_sample"] is True
+    assert kwargs["temperature"] == 1.0
+    assert kwargs["top_k"] == 0
+    assert kwargs["top_p"] == 1.0
+
+
+def test_a_negative_temperature_is_refused() -> None:
+    import pytest
+
+    from sphragis.experiment.training import decoding_kwargs
+
+    with pytest.raises(ValueError, match="non-negative"):
+        decoding_kwargs(-0.5)

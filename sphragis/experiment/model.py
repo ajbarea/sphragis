@@ -26,6 +26,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from sphragis.experiment.training import (
+    decoding_kwargs,
     lr_multiplier,
     render_chat,
     step_batches,
@@ -133,9 +134,15 @@ class HFGenerator:
     adapter_path: str | None = None
     device: str = "cuda:0"
     max_new_tokens: int = MAX_NEW_TOKENS
+    # 0 is greedy, the registered decoder. Non-zero only for the decoding check.
+    temperature: float = 0.0
+    seed: int = 0
 
     def __post_init__(self) -> None:
         self.tokenizer = _require_tokenizer(self.model_id)
+        self._decoding = decoding_kwargs(self.temperature)
+        if self.temperature:
+            torch.manual_seed(self.seed)
         model = AutoModelForCausalLM.from_pretrained(
             self.model_id, dtype=torch.bfloat16, device_map=self.device
         )
@@ -145,7 +152,7 @@ class HFGenerator:
         self.model = model
 
     def generate(self, prompt: str) -> str:
-        """Greedy decoding, because exact match needs the output to be deterministic."""
+        """Greedy by default, because exact match needs the output to be deterministic."""
         text = render_chat(self.tokenizer, prompt)
         inputs = self.tokenizer(text, return_tensors="pt", add_special_tokens=False).to(self.device)
         with torch.inference_mode():
@@ -155,8 +162,8 @@ class HFGenerator:
             out = self.model.generate(  # ty: ignore[invalid-argument-type]
                 **inputs,
                 max_new_tokens=self.max_new_tokens,
-                do_sample=False,
                 pad_token_id=self.tokenizer.eos_token_id,
+                **self._decoding,
             )
         generated = out[0][inputs["input_ids"].shape[-1] :]
         return str(self.tokenizer.decode(generated, skip_special_tokens=True))

@@ -99,3 +99,39 @@ def test_training_logs_gpu_memory_before_anything_later_can_crash() -> None:
         model.index("def train_adapter(") : model.index("\ndef ", model.index("def train_adapter("))
     ]
     assert "gpu_record()" in body
+
+
+def _defined_names(module: Path) -> set[str]:
+    """Every name a module binds at top level: defs, classes, assignments and imports."""
+    names: set[str] = set()
+    for node in ast.parse(module.read_text()).body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(node.name)
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            names.update(t.id for t in targets if isinstance(t, ast.Name))
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            names.update((a.asname or a.name).split(".")[0] for a in node.names)
+    return names
+
+
+@pytest.mark.parametrize("script", sorted(_launched_scripts()), ids=lambda p: p.name)
+def test_every_name_a_job_script_imports_from_sphragis_exists(script: Path) -> None:
+    # A job script that imports a name its module does not define fails at import, which on
+    # the cluster is after the queue wait. Checked statically, because the model stack those
+    # modules need is not installed in CI, so importing them here is not an option. Caught
+    # scripts/decoding_check.py taking run_provenance from sphragis.provenance, where it is
+    # not defined; it lives in sphragis.experiment.model.
+    missing = []
+    for node in ast.walk(ast.parse(script.read_text())):
+        if not isinstance(node, ast.ImportFrom) or not node.module:
+            continue
+        if not node.module.startswith("sphragis"):
+            continue
+        parts = node.module.split(".")
+        module = _ROOT.joinpath(*parts).with_suffix(".py")
+        if not module.is_file():
+            module = _ROOT.joinpath(*parts, "__init__.py")
+        defined = _defined_names(module)
+        missing.extend(f"{node.module}.{a.name}" for a in node.names if a.name not in defined)
+    assert not missing, f"{script.name} imports names that do not exist: {missing}"

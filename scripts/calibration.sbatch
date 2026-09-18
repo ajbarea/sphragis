@@ -22,9 +22,10 @@
 #               the study also lacks: the contrast must report nothing here, and a pass
 #               would mean the gate fires on a difference that does not exist.
 #
-# Each condition is ~2,400 examples per side, so roughly 300 optimiser steps per adapter and
-# two adapters per condition. At the measured 7.1 s/step and 0.85 s/generation that is about
-# 75 minutes per condition; four hours covers both with margin.
+# Measured, not estimated: one condition took 1h53m to 2h31m on a GH200 (jobs 148088-148091),
+# and marker-1 took 2h45m. The first version of this note said 75 minutes and four hours for
+# two conditions, which lost marker-0 to the wall in job 145092. Submit one condition per job
+# (CONDITIONS=<tag>) with TIME=03:30:00.
 set -euo pipefail
 
 cd "$HOME/ajsoftworks/sphragis"
