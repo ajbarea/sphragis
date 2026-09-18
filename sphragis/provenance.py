@@ -35,14 +35,31 @@ def _package_versions() -> dict[str, str]:
     return versions
 
 
+def _git_record() -> dict[str, Any]:
+    """The commit that produced an artifact, which in a cluster job is the one it started on.
+
+    Read at write time alone, a result carries whatever the checkout holds when the job ends,
+    and a deploy during a four-hour job would stamp it with code it never ran. The job
+    environment records the commit at start (`SPHRAGIS_GIT_COMMIT`), and a checkout that moved
+    since is reported rather than silently preferred.
+    """
+    head = _git("rev-parse", "HEAD")
+    branch = _git("rev-parse", "--abbrev-ref", "HEAD")
+    started = os.environ.get("SPHRAGIS_GIT_COMMIT") or None
+    record: dict[str, Any] = {
+        "commit": started or head,
+        "branch": os.environ.get("SPHRAGIS_GIT_BRANCH") or branch,
+    }
+    if started and head and head != started:
+        record["checkout_at_write"] = head
+    return record
+
+
 def provenance_header() -> dict[str, Any]:
     """The static provenance every manifest in this repo carries."""
     return {
         "generated_at": datetime.now(UTC).isoformat(),
-        "git": {
-            "commit": _git("rev-parse", "HEAD"),
-            "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
-        },
+        "git": _git_record(),
         "python": platform.python_version(),
         "platform": platform.platform(),
         "packages": _package_versions(),

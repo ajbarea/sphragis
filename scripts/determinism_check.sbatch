@@ -10,26 +10,23 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
-# Where does greedy decoding's run-to-run variation come from? Six passes of the base model over
-# the same 150 prompts, no training: about 900 generations, the size of the decoding check (57
-# minutes), with the two fp32 passes slower than bf16.
+# Where does greedy decoding's run-to-run variation come from? Four passes of the base model
+# over the same 150 prompts, no training: 600 generations, under the decoding check's 57
+# minutes for 940 even with the fp32 pass slower. Submit once per node the stored runs used:
 #
-# DETERMINISTIC=1 adds torch's deterministic algorithms, which need cuBLAS's workspace pinned
-# before CUDA initialises.
+#   make submit JOB=determinism_check SBATCH_ARGS=--nodelist=gh-a-081
+#   make submit JOB=determinism_check SBATCH_ARGS=--nodelist=gh-a-103
+#
+# The node is in the result name, so the two never overwrite each other.
 set -euo pipefail
 
 cd "$HOME/ajsoftworks/sphragis"
 source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-sym-0}"
-MODE=""
-if [ "${DETERMINISTIC:-0}" = 1 ]; then
-  export CUBLAS_WORKSPACE_CONFIG=:4096:8
-  MODE="-deterministic"
-fi
 
 uv run --no-sync python scripts/determinism_check.py \
   --condition "$CONDITION" \
   --corpus-dir "$HOME/corpus/planted" \
-  --stored "$HOME/calibration-marker-0.json" "$HOME/calibration-$CONDITION.json" \
-  --out "$HOME/determinism-$CONDITION$MODE$RESULT_SUFFIX.json"
+  --stored "$HOME/calibration-$CONDITION.json" \
+  --out "$HOME/determinism-$CONDITION-$SLURMD_NODENAME$RESULT_SUFFIX.json"

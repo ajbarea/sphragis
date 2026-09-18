@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from sphragis.provenance import slurm_record
+from sphragis import provenance
+from sphragis.provenance import provenance_header, slurm_record
 
 _ROOT = Path(__file__).resolve().parents[2]
 
@@ -135,3 +136,42 @@ def test_every_name_a_job_script_imports_from_sphragis_exists(script: Path) -> N
         defined = _defined_names(module)
         missing.extend(f"{node.module}.{a.name}" for a in node.names if a.name not in defined)
     assert not missing, f"{script.name} imports names that do not exist: {missing}"
+
+
+def _checkout_at(monkeypatch: pytest.MonkeyPatch, head: str | None) -> None:
+    answers = {("rev-parse", "HEAD"): head, ("rev-parse", "--abbrev-ref", "HEAD"): "main"}
+    monkeypatch.setattr(provenance, "_git", lambda *args: answers[args])
+
+
+def test_a_job_records_the_commit_it_started_on_not_the_one_deployed_since(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A deploy during a four-hour job must not stamp its result with code it never ran."""
+    _checkout_at(monkeypatch, "b" * 40)
+    monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", "a" * 40)
+    monkeypatch.setenv("SPHRAGIS_GIT_BRANCH", "feat/x")
+    assert provenance_header()["git"] == {
+        "commit": "a" * 40,
+        "branch": "feat/x",
+        "checkout_at_write": "b" * 40,
+    }
+
+
+def test_an_unmoved_checkout_reports_no_second_commit(monkeypatch: pytest.MonkeyPatch) -> None:
+    _checkout_at(monkeypatch, "a" * 40)
+    monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", "a" * 40)
+    assert "checkout_at_write" not in provenance_header()["git"]
+
+
+@pytest.mark.parametrize("started", [None, ""])
+def test_outside_a_job_the_checkout_is_the_commit(
+    monkeypatch: pytest.MonkeyPatch, started: str | None
+) -> None:
+    """cluster-env.sh exports an empty commit outside a checkout; that must read as unset."""
+    _checkout_at(monkeypatch, "c" * 40)
+    monkeypatch.delenv("SPHRAGIS_GIT_BRANCH", raising=False)
+    if started is None:
+        monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    else:
+        monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", started)
+    assert provenance_header()["git"] == {"commit": "c" * 40, "branch": "main"}

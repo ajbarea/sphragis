@@ -365,3 +365,39 @@ def test_every_machine_builds_on_one_pinned_interpreter(tmp_path: Path) -> None:
     result = _source(tmp_path, tmp_path, 'echo "$UV_PYTHON"')
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "3.13.15", "the interpreter every GH200 result so far ran on"
+
+
+def test_a_job_records_the_commit_its_checkout_holds_at_start(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.email=t@t",
+            "-c",
+            "user.name=t",
+            "commit",
+            "-q",
+            "--allow-empty",
+            "-m",
+            "x",
+        ],
+        cwd=tmp_path,
+        check=True,
+    )
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=tmp_path, capture_output=True, text=True, check=True
+    ).stdout.strip()
+    result = _source(tmp_path, tmp_path, 'echo "[$SPHRAGIS_GIT_COMMIT]"')
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == f"[{head}]"
+
+
+def test_outside_a_checkout_the_start_commit_is_empty_not_an_error(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, 'echo "[$SPHRAGIS_GIT_COMMIT]"')
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "[]"

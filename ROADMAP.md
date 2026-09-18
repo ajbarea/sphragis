@@ -134,6 +134,15 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   inferring membership and misbehaviour only; source is not studied. It states the method
   generalises to "any supervised detector model", which gives RQ2 its secure-aggregation
   attack: a source-identity detector plugged into PROLIN's disaggregation.
+- [x] **FedAttr read** (Zhang, Guo, Huang, arXiv:2605.06596, May 2026): identifies under secure
+  aggregation which clients trained on *watermarked* data, claiming 100% TPR and 0% FPR. The server
+  draws M random client subsets with and without the target each round and differences their
+  aggregates; honest-but-curious, LoRA on Llama-3.2-3B, 10 to 100 IID UltraChat clients, KGW and
+  fictitious-fact watermarks. Naturally occurring source features are not discussed.
+- [ ] **Register RQ2's aggregate attack as FedAttr's mechanism with the watermark removed**: does
+  an organization's own convention serve as an unintentional watermark? The symmetric calibration
+  (a 25% convention learned and emitted at 2.5 times its rate) is the bridge, and a server that
+  chooses round composition is the threat model to state.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
   project, or both, and which boundary an organization-level privacy policy actually protects.
 - [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,
