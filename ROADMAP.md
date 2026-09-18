@@ -145,6 +145,12 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   an organization's own convention serve as an unintentional watermark? The symmetric calibration
   (a 25% convention learned and emitted at 2.5 times its rate) is the bridge, and a server that
   chooses round composition is the threat model to state.
+- [x] **Weight-space geometry of the saved adapters** (job 148438): initialization dominates (same
+  data, new seed: 0.13; rerun at the same seed: 0.96), training length next (0.21 at 788 examples,
+  0.055 at 4,327), source a 0.02 margin at matched size that language may explain. A raw-cosine
+  attack is weak; RQ2's per-client attack has to be learned at matched init and size.
+- [ ] **A learned per-client attack**: spectral and per-layer features (Paul, arXiv:2604.08844) with
+  reference updates at matched init and size, several seeds per source, before the aggregate one.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
   project, or both, and which boundary an organization-level privacy policy actually protects.
 - [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,

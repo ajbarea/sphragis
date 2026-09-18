@@ -2044,3 +2044,55 @@ effect was under-sized by clipping; a merge accepted runs trained at different s
 one study; seed runs without a tag overwrote seed-1 results; results recorded the commit at write
 time rather than the one the job ran, so a deploy mid-job would have mislabelled them. The last
 is why jobs 148404 to 148408 run and record 497ebf2, and the next deploy waits for them.
+
+### What an adapter update's direction reveals: initialization first, training length second, source barely (2026-09-18, job 148438)
+
+`datasets/results/adapter-geometry-s1.json`, `scripts/adapter_geometry.py`. RQ2's per-client
+question in its simplest form: is a LoRA update's direction in weight space closer to updates from
+its own organization? The cosine between two updates dW = (alpha / r) B A, for every pair of the 35
+saved adapters and all 196 adapted modules, computed through r x r traces without forming dW. Run
+from a worktree pinned at e23b905 so the queued jobs' checkout was untouched; CPU only, three
+minutes. Weight-space provenance is established for the training objective (Paul,
+arXiv:2604.08844, AUC 1.00 from spectral features), which names "organic drift from distributional
+shift", the same objective on different data, as untested. This is that case.
+
+| pair | cosine |
+|---|---|
+| identical data and seed, two runs (marker-0 vs sym-0, halves a and b) | 0.964, 0.894 |
+| identical data, different seed (sym-0 a, seeds 1 to 3) | 0.128 to 0.137 |
+| same seed, disjoint OpenStack halves (sym-0 a vs b, seeds 1 to 3) | 0.132 to 0.142 |
+| same seed, disjoint Qt projects, 1,517 each (qt-creator vs qtbase) | 0.135 |
+| same seed, OpenStack half vs qt-creator or qtbase | 0.106 to 0.116 |
+| same seed, OpenStack half vs qtdeclarative (788) | 0.133 to 0.140 |
+| same seed, Qt projects at 788 (qtdeclarative vs either) | 0.212 |
+| same seed, OpenStack vs Qt train windows, 4,327 each | 0.055, 0.056 |
+| different seed and different data, same organization | 0.031, 0.032 |
+| different seed, different organization (OpenStack s2 vs Qt s1) | 0.016 |
+
+**Initialization decides most of it.** Retraining on byte-identical data at the same seed returns
+nearly the same update (0.96), with training's own nondeterminism visible (0.89 on the other half);
+a different seed on the same data returns 0.13. An observer comparing updates across seeds sees
+almost nothing of the data. Federated rounds share an initialization, so the same-seed rows are the
+realistic ones.
+
+**Training length decides most of the rest.** Short runs stay closer together (0.21 at 788
+examples) and long ones drift apart (0.055 at 4,327), whatever the source. The 0.055 between the
+OpenStack and Qt windows is mostly length: at matched size the cross-organization cosine is 0.11.
+
+**Source is a small term.** At matched size, same-organization pairs sit at 0.13 and
+cross-organization at 0.11, a 0.02 margin smaller than the effect of training size, and an OpenStack
+update is closer to a small Qt project's update than to its own sibling half. Two Qt projects align
+exactly as much as two OpenStack halves, so even that margin cannot be separated from language:
+OpenStack is Python, Qt C++.
+
+**What it means for RQ2.** An update's raw direction is a weak witness to its source: a
+nearest-neighbour attack on cosine would mostly recover seed and training length. RQ2's per-client
+attack therefore has to be learned against reference updates at matched initialization and size,
+which is FedAttr's design (paired subsets with and without the target), not a similarity lookup. The
+null here is informative in its own right: the privacy question is not answered by the geometry
+alone, and a defence argued from "updates look alike" would be arguing from the wrong quantity.
+
+Caveats: one seed of the organization-window pair beyond the first; halves and projects overlap
+the train windows they were drawn from, so window-versus-subset rows share data; cosine over all
+modules pools layers whose roles differ, and a per-layer or spectral reading (Paul's features)
+could separate what the pooled cosine does not.
