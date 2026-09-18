@@ -150,11 +150,13 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   0.055 at 4,327), source a 0.02 margin at matched size that language may explain. A raw-cosine
   attack is weak; RQ2's per-client attack has to be learned at matched init and size.
 - [x] **Per-client attribution at matched init and size** (148513, 148621): 34 clients over eight
-  projects; organization attributed at 0.912 (p 0.0001), and within one content type at 0.917
-  (Python) and 0.900 (docs). Different projects of one organization align as closely as the same
-  project. Late layers carry most of it.
-- [ ] **Project-level inference**: more projects per organization in matching content, so the
-  organization claim can be tested with the project, not the client, as the exchangeable unit.
+  projects. A client's update identifies its **codebase family** (OpenStack Python services align
+  as closely as one project; so do Qt's C++ libraries); organization alone and language alone do
+  not raise alignment. The first reading, "organization within a language", overreached and is
+  corrected in the log. Late layers carry most of it.
+- [ ] **Separate organization from family**: several projects per organization in one shared
+  language on both sides. Only OpenStack has that in Python; a third Gerrit organization with
+  Python projects (Wikimedia) would supply the missing cell. Decide before RQ2's Stage 1 text.
 - [ ] **Robustness**: several initializations, longer local training (the RQ1 geometry says length
   moves updates apart), and a learned classifier on spectral features beside nearest-mean cosine.
 - [ ] **The aggregate attack**: FedAttr's paired subsets over these clients, watermark removed.

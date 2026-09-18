@@ -2116,6 +2116,10 @@ should, and qtbase still never wins at home.
 
 ### RQ2's first result: a client's update reveals its organization, within a language too (2026-09-18, jobs 148513, 148621)
 
+> **Corrected the same day.** The interpretation below overreaches. Per project there is no
+> organization pull beyond the codebase family: see "What the client updates identify is the
+> codebase family" below. The numbers stand; the organizational reading does not.
+
 `datasets/results/client-updates.json`, `client-geometry.json`, `client-attribution.json`. The
 geometry of the RQ1 adapters said an update's raw direction is dominated by initialization and
 training length. So this holds both fixed, as a federated round does: 34 clients of exactly 64
@@ -2181,3 +2185,45 @@ module reaches 1.000, but that is the maximum of 196, so it is not evidence.)
 attribution under secure aggregation was shown for deliberate watermarks (FedAttr,
 arXiv:2605.06596). This is the untested case, same objective and natural data, and the answer at
 this scale is that an organization's own conventions are enough.
+
+### What the client updates identify is the codebase family, not the organization (2026-09-18)
+
+Corrects the interpretation of the entry above, whose tables stand. The organization accuracy of
+0.912 is a statement about class means, and class means inherit the class's composition. Per
+project, measured from the same cosines:
+
+| from | toward | relation | mean cosine |
+|---|---|---|---|
+| pyside (Qt, Python) | Qt C++ | same organization | 0.215 |
+| pyside | OpenStack Python | same language | 0.212 |
+| pyside | Qt docs | same organization | 0.181 |
+| starlingx/docs (OpenStack) | OpenStack Python | same organization | 0.227 |
+| starlingx/docs | Qt docs | same content | 0.219 |
+| qtdoc (Qt) | Qt C++ | same organization | 0.230 |
+| qtdoc | OpenStack docs | same content | 0.219 |
+| nova | neutron, ironic | same organization and language | **0.274** |
+| qt-creator | qtbase | same organization and language | **0.263** |
+| OpenStack Python | Qt C++ | neither | 0.252 |
+
+Qt's one Python project is no more Qt-like than Python-like; it is an island. The documentation
+projects lean toward their own organization by 0.01 at most. What stands out is a **family**: the
+OpenStack Python services align with one another as closely as clients of one project do, and so
+do Qt's two C++ libraries. Neither organization alone nor language alone raises alignment; the
+two together do.
+
+So the within-content rows of the entry above are family tests in disguise: within Python the Qt
+side is one project, within documentation each side is one project, and a project is recognisable
+from its update. **The defensible claim is that a client's update identifies its codebase family.**
+Whether the organization is what defines a family, a house style shared across the organization's
+projects in one language, cannot be separated here, because each organization-and-language cell
+holds one to three projects and the only cross-organization comparison within a language rests on
+one Qt Python project.
+
+**This agrees with the separability probe and with RQ1's project contrasts**, both of which put the
+signal at the codebase rather than the organization. Three instruments now point the same way.
+
+**What would separate them.** Several projects per organization *in one shared language*, on both
+sides. The train and dev windows offer that only for OpenStack Python (starlingx/test, config,
+distcloud, swift, nova, neutron, ironic); Qt's Python is pyside alone. A third Gerrit organization
+with several Python projects (Wikimedia's hosts pywikibot and many Python tools) would give the
+cross-organization, same-language, multi-project cell this design lacks.
