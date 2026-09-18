@@ -86,6 +86,8 @@ def _seed_trial(job):
 
 def main() -> None:
     args = parser.parse_args()
+    if args.seeds == 1 and args.sigma_b > 0:
+        raise SystemExit("a seed main effect needs --seeds above 1; one seed cannot carry it")
     payload = json.loads(args.results.read_text())
     results = payload["results"]
     sizes = dict(s.split("=") for s in args.size) if args.size else {}

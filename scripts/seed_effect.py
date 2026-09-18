@@ -105,7 +105,8 @@ def main() -> None:
         for p in pairs:
             print(
                 f"  s{p['seeds'][0]} vs s{p['seeds'][1]}: shift {p['shift']:+.4f}, "
-                f"noise SD {p['noise_sd']:.4f}, z {p['z']:+.2f}"
+                f"noise SD {p['noise_sd']:.4f}, "
+                + (f"z {p['z']:+.2f}" if p["z"] is not None else "z undefined (no noise)")
             )
     moment = fmean(between) - fmean(noise) / 2
     report["between_seed_variance"] = fmean(between)

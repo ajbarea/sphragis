@@ -97,8 +97,13 @@ def main() -> None:
                 raise SystemExit("the initial adapter state did not restore exactly")
             batch = [items[r["id"]] for r in client]
             report = train_adapter(model, batch, pad_token_id=tok.pad_token_id, seed=args.seed)
-            if report.skipped_steps:
-                raise SystemExit(f"{name} client {index}: {report.skipped_steps} steps skipped")
+            # A skipped micro-batch drops one example from the step, leaving the client short of
+            # the size every client is held to, so it stops the run as a skipped step does.
+            if report.skipped_steps or report.skipped_micro_batches:
+                raise SystemExit(
+                    f"{name} client {index}: {report.skipped_steps} steps and "
+                    f"{report.skipped_micro_batches} micro-batches skipped"
+                )
             label = f"{name.replace(':', '-').replace('/', '_')}-c{index}"
             model.save_pretrained(args.adapters / label)
             reports[label] = {
@@ -109,6 +114,7 @@ def main() -> None:
                 "steps": report.steps,
                 "applied_steps": report.applied_steps,
                 "skipped_steps": report.skipped_steps,
+                "skipped_micro_batches": report.skipped_micro_batches,
                 "first_loss": report.losses[0],
                 "last_loss": report.losses[-1],
                 "adapter_weight_norm": report.adapter_weight_norm,

@@ -23,36 +23,33 @@ def partition(
 ) -> list[list[dict[str, Any]]]:
     """As many disjoint clients of exactly `size` examples as whole changes allow.
 
-    Changes are shuffled by seed and packed in order; a change that would overfill the client
-    being packed is set aside for the next, and the remainder that cannot make a full client is
-    dropped rather than padded or shared, as is any single change larger than a client. Examples
-    keep their order within a change.
+    Exact-size packing is bin packing; first-fit decreasing over several open clients is the
+    standard near-optimal heuristic. A client left short is dropped whole rather than padded or
+    shared, as is any single change larger than a client. The seed orders changes of equal size.
+    Examples keep their order within a change.
     """
     if size < 1:
         raise ValueError(f"client size must be positive, got {size}")
     by_change: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         by_change[str(row["change_id"])].append(dict(row))
-    changes = sorted(by_change)
-    random.Random(f"clients/{seed}").shuffle(changes)
-    clients: list[list[dict[str, Any]]] = []
-    current: list[dict[str, Any]] = []
-    deferred: list[str] = []
-    queue = list(changes)
-    while queue:
-        change = queue.pop(0)
-        examples = by_change[change]
-        if len(examples) > size:
-            continue
-        if len(current) + len(examples) <= size:
-            current.extend(examples)
-        else:
-            deferred.append(change)
-        if len(current) == size:
-            clients.append(current)
-            current = []
-            queue = deferred + queue
-            deferred = []
-            if limit is not None and len(clients) == limit:
+    order = [c for c in sorted(by_change) if len(by_change[c]) <= size]
+    random.Random(f"clients/{seed}").shuffle(order)
+    # First-fit decreasing: largest changes first, each into the first open client it fits.
+    # The sort is stable, so the seeded shuffle still orders changes of equal size.
+    order.sort(key=lambda c: len(by_change[c]), reverse=True)
+    bins: list[list[str]] = []
+    fill: list[int] = []
+    for change in order:
+        n = len(by_change[change])
+        for index, used in enumerate(fill):
+            if used + n <= size:
+                bins[index].append(change)
+                fill[index] += n
                 break
-    return clients
+        else:
+            bins.append([change])
+            fill.append(n)
+    full = [b for b, used in zip(bins, fill, strict=True) if used == size]
+    clients = [[row for c in b for row in by_change[c]] for b in full]
+    return clients if limit is None else clients[:limit]

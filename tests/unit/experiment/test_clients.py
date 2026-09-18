@@ -54,3 +54,12 @@ def test_too_few_examples_for_one_client_gives_none() -> None:
 def test_a_client_size_below_one_is_refused() -> None:
     with pytest.raises(ValueError, match="positive"):
         partition(_rows([1]), size=0, seed=0)
+
+
+@pytest.mark.parametrize("seed", range(8))
+def test_a_client_that_cannot_complete_never_blocks_the_rest(seed: int) -> None:
+    """One 3-example change and nineteen 2-example changes make nine clients of four, whatever
+    order the shuffle gives; the first version got stuck behind the odd one at 2 to 9."""
+    clients = partition(_rows([3] + [2] * 19), size=4, seed=seed)
+    assert len(clients) == 9
+    assert {len(c) for c in clients} == {4}

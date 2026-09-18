@@ -82,6 +82,10 @@ def adapters(root: Path, pattern: str) -> dict[str, Path]:
     """Every saved adapter the pattern matches, named `<run dir suffix>/<adapter>`."""
     found = {}
     for path in sorted(root.glob(pattern)):
+        # client_updates saves the shared initial state as `init`; its B is zero, so it is the
+        # starting point of every update rather than an update.
+        if path.parent.name == "init":
+            continue
         run = path.parent.parent.name.removeprefix("sphragis-adapters").lstrip("-") or "first"
         found[f"{run}/{path.parent.name}"] = path
     return found

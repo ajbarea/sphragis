@@ -2288,3 +2288,16 @@ carries" was right about the two same-seed reruns, which differ only by GPU nond
 seeds the contrast moves by more than churn explains, so the seed main effect is real, and the
 crossed interval is needed for the reason first given, at a size now measured rather than
 inferred.
+
+### Review of the RQ2 and power code: one packing flaw, four small ones (2026-09-18)
+
+Commits 38936f3 to 405462b reviewed, every finding reproduced and fixed. The one that touches a
+result: `clients.partition` could get stuck behind a client no remaining change completed, losing
+every client after it, so client counts depended on the shuffle. The executed run (148513) was
+affected in count only, its clients disjoint and exactly sized: starlingx/docs gave 4 where 5 are
+possible. The packer is now first-fit decreasing over open clients, which reaches the maximum for
+every corpus but starlingx/docs (5 of 6, where very large changes cannot pack exactly). The next
+client run, with AOSP added, uses it. The others: a skipped micro-batch now stops a client as a
+skipped step does, since it leaves the client short; `conjunctive_power` refuses a seed effect with
+one seed instead of recording one it did not simulate; `seed_effect` no longer crashes on a pair
+with no noise; adapter geometry skips the zero-norm initial state.
