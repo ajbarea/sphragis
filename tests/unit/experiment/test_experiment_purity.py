@@ -11,6 +11,7 @@ import pytest
 
 _HEAVY = {"torch", "transformers", "peft", "datasets"}
 _ORCHESTRATION = (
+    "clients.py",
     "grid.py",
     "holdout.py",
     "neutral.py",

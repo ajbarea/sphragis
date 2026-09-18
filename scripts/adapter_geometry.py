@@ -35,6 +35,11 @@ from sphragis.provenance import provenance_header, slurm_record
 parser = argparse.ArgumentParser()
 parser.add_argument("--root", type=Path, required=True, help="holds sphragis-adapters* dirs")
 parser.add_argument("--out", type=Path, required=True)
+parser.add_argument(
+    "--pattern",
+    default="sphragis-adapters*/*/adapter_model.safetensors",
+    help="which adapters under the root, as a glob",
+)
 
 _DTYPES = {"F32": np.float32, "F16": np.float16}
 
@@ -70,10 +75,10 @@ def modules(header: dict[str, Any]) -> list[str]:
     return sorted(k.removesuffix(".lora_A.weight") for k in header if k.endswith(".lora_A.weight"))
 
 
-def adapters(root: Path) -> dict[str, Path]:
-    """Every saved adapter under the root, named `<run dir suffix>/<adapter>`."""
+def adapters(root: Path, pattern: str) -> dict[str, Path]:
+    """Every saved adapter the pattern matches, named `<run dir suffix>/<adapter>`."""
     found = {}
-    for path in sorted(root.glob("sphragis-adapters*/*/adapter_model.safetensors")):
+    for path in sorted(root.glob(pattern)):
         run = path.parent.parent.name.removeprefix("sphragis-adapters").lstrip("-") or "first"
         found[f"{run}/{path.parent.name}"] = path
     return found
@@ -81,7 +86,9 @@ def adapters(root: Path) -> dict[str, Path]:
 
 def main() -> None:
     args = parser.parse_args()
-    paths = adapters(args.root)
+    paths = adapters(args.root, args.pattern)
+    if len(paths) < 2:
+        raise SystemExit(f"{len(paths)} adapters match {args.pattern} under {args.root}")
     names = list(paths)
     indexes = {name: tensor_index(path) for name, path in paths.items()}
     shared = modules(indexes[names[0]][0])
@@ -107,6 +114,9 @@ def main() -> None:
             per_module_cosines += np.nan_to_num(block / np.outer(norms, norms))
         print(f"{module}: done", flush=True)
     norms = np.sqrt(np.diag(inner))
+    if not np.all(norms > 0):
+        zero = [name for name, norm in zip(names, norms, strict=True) if not norm > 0]
+        raise SystemExit(f"updates with zero norm have no direction: {zero}")
     args.out.write_text(
         json.dumps(
             {

@@ -29,7 +29,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--org", default="qt")
 parser.add_argument("--out-dir", type=Path, required=True)
 parser.add_argument("--window", default="train", choices=("pilot", "train"))
-parser.add_argument("--projects", action="append", default=[], help="repeatable; default top 2")
+parser.add_argument(
+    "--projects", action="append", default=[], help="repeatable; default the top two"
+)
 
 
 def load(org: str, window: str) -> list[dict[str, Any]]:
@@ -56,9 +58,8 @@ def main() -> None:
         changes = len({r["change_id"] for r in by_project[project]})
         print(f"  {project:34s} {n:5d} examples over {changes:4d} changes")
 
+    # Two for the pairwise contrast; RQ2's clients take as many projects as are named.
     chosen = args.projects or [p for p, _ in counts.most_common(2)]
-    if len(chosen) != 2:
-        raise SystemExit(f"need exactly two projects, got {chosen}")
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     manifest: dict[str, Any] = {"org": args.org, "window": args.window, "projects": {}}
