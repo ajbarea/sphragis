@@ -1605,14 +1605,34 @@ The point estimate held still between the last two runs while the interval tight
 until zero fell outside. That is what more sample does to an effect that is there, and what it
 does not do to noise, which on the first run had the sign backwards.
 
-**What it supports, and the registered limit on it.** It is evidence the instrument works: a
-membership score that can tell known-seen text from known-unseen text is one to trust when it
-says the post-cutoff windows were not seen, and the post-cutoff windows postdate the release
-outright in any case. It is not, on its own, evidence of pretraining exposure. The comparison is
-still across eighteen months, and OpenStack's code, reviewers and subject matter all moved in that
-time; Zhang et al. (ACL 2026) is the reason the time partition is registered as corroborative
-only. A gap of 0.074 on scores near -1.8 is small, and nothing here separates membership from
-drift.
+**What it supports: less than the first reading of it claimed.** This entry originally called
+the gap evidence that the instrument works. A control run an hour later withdrew that.
+
+Meeus et al. (SoK, SaTML 2025, arXiv:2406.17975) show that membership benchmarks built post hoc,
+with members and non-members from different periods, carry distribution shifts strong enough
+that a **model-less bag-of-words classifier** separates them, and that this invalidates reading
+the separation as memorization. This battery is such a split, so their control was run on
+exactly the 4,473 examples Min-K%++ scored, using the separability probe's classifier with
+changes held out whole:
+
+| discriminator, post against pre | score |
+|---|---|
+| model-less bag-of-words, no model at all | balanced accuracy **0.589 [0.555, 0.639]** |
+| Min-K%++ on the base checkpoint | AUC **0.540 [0.516, 0.564]** |
+| Min-K% | AUC 0.530 [0.497, 0.561] |
+
+**The blind baseline does at least as well as the membership score, and probably better.**
+Balanced accuracy is a lower bound on a classifier's AUC, so the comparison is tilted toward
+Min-K%++, and it still does not come out ahead. By the SoK's criterion the -0.074 gap cannot be
+told apart from ordinary drift across eighteen months of OpenStack: the windows differ in what
+they are about, and that alone is enough to produce a gap this size.
+
+So the battery neither shows exposure nor validates the instrument. It is uninformative, which
+is a legitimate result for a check registered as corroborative, and it means the study's
+protection against contamination rests where it always did: **the post-cutoff windows postdate
+the checkpoint's release**, so they cannot have been in its pretraining data, whatever a
+membership score says. The SoK's recommended alternatives, randomized splits and injected
+canaries, need control over the training data, which a released checkpoint does not give.
 
 **Min-K% does not separate the windows.** Its interval covers zero on the same examples. That is
 the pattern expected if Min-K%++ is the more sensitive of the two, which is the reason it is the

@@ -63,11 +63,15 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [x] **Battery run on real data** (2026-09-15), OpenStack 2024-10 against a 2024-01 control.
   Scored on hunks with context: 161 / 116 examples, Min-K%++ gap -0.058 [-0.200, +0.084],
   guided completion at its floor. Windows inseparable; read as ambiguous, as pre-committed.
-- [x] **Control window fixed, and the battery separates the windows** (job 148092). Six months
-  each side, 1,971 / 2,503 scored examples: Min-K%++ gap -0.074 [-0.129, -0.018], the first
-  interval in the battery's history to exclude zero, in the direction membership predicts for a
-  known-member control. Evidence the instrument works; not by itself evidence of exposure, since
-  the comparison still spans eighteen months of drift. Min-K% covers zero on the same data.
+- [x] **Control window fixed; the battery is uninformative, and now says why** (job 148092).
+  Min-K%++ gap -0.074 [-0.129, -0.018] on 1,971 / 2,503 examples, but a model-less
+  bag-of-words classifier separates the same windows at balanced accuracy 0.589 against
+  Min-K%++'s AUC of 0.540. By Meeus et al.'s criterion (SoK, SaTML 2025) the gap is
+  indistinguishable from drift. Contamination protection rests on the post-cutoff windows
+  postdating the checkpoint's release, not on the battery.
+- [ ] Report Gap-K% (arXiv:2601.19936, May 2026) beside Min-K%++. It needs only the top-1
+  log-probability, already computed on the way to Min-K%++'s statistics; +2.1 to 2.6 AUROC on
+  WikiMIA, untested on code. Reported, not registered.
 - [ ] Register hunks-with-context as the scored text.
 - [x] **Source the checkpoint's cutoff.** The widely repeated "June 2024" for Qwen2.5-Coder is
   a community guess, not a maintainer statement. The technical report states a repository
