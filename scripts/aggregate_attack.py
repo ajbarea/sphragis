@@ -113,7 +113,8 @@ def main() -> None:
                 cell["mixed_rounds"][f"{size}/{present}"] = mixed
                 print(
                     f"{label:24} mixed rounds of {size:3}, {present} of its clients: "
-                    f"AUC {mixed['auc']:.3f}",
+                    f"AUC {mixed['auc']:.3f}, TPR {mixed['tpr_at_1pct_fpr']:.3f} at "
+                    f"{mixed['fpr_achieved_at_1pct']:.3f} FPR",
                     flush=True,
                 )
         for size in sizes:

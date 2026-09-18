@@ -31,6 +31,7 @@ from pathlib import Path
 
 import numpy as np
 
+from sphragis.measure.aggregate import tpr_at_fpr
 from sphragis.measure.attribution import Source
 
 parser = argparse.ArgumentParser()
@@ -110,8 +111,14 @@ def masked_rounds(
 
     present = [difference(True) for _ in range(draws)]
     absent = [difference(False) for _ in range(draws)]
+    # An AUC averages over false-positive rates no attacker would operate at, and a defence can
+    # look effective there while leaving the confident identifications intact (Carlini et al.,
+    # IEEE S&P 2022). The curve is read at both.
+    point = tpr_at_fpr(present, absent, 0.01)
     return {
         "auc": auc(present, absent),
+        "tpr_at_1pct_fpr": point["tpr"],
+        "fpr_achieved_at_1pct": point["fpr_achieved"],
         "mean_present": float(np.mean(present)),
         "mean_absent": float(np.mean(absent)),
     }
@@ -171,6 +178,7 @@ def main() -> None:
                 aucs = [s["auc"] for s in scores]
                 summary = {
                     "auc": float(np.mean(aucs)),
+                    "tpr_at_1pct_fpr": float(np.mean([s["tpr_at_1pct_fpr"] for s in scores])),
                     "auc_sd_over_splits": float(np.std(aucs, ddof=1)) if len(aucs) > 1 else 0.0,
                     "splits": float(args.splits),
                     "mean_present": float(np.mean([s["mean_present"] for s in scores])),
@@ -183,7 +191,8 @@ def main() -> None:
                 args.out.write_text(json.dumps(report, indent=2))
                 print(
                     f"{organization:12} {rounds:4} rounds, noise {noise:4}: "
-                    f"AUC {summary['auc']:.3f} (sd {summary['auc_sd_over_splits']:.3f})",
+                    f"AUC {summary['auc']:.3f} (sd {summary['auc_sd_over_splits']:.3f}), "
+                    f"TPR at 1% FPR {summary['tpr_at_1pct_fpr']:.3f}",
                     flush=True,
                 )
         report["targets"][organization] = cell

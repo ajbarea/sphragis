@@ -29,6 +29,46 @@ from collections.abc import Sequence
 from statistics import fmean, stdev
 
 
+def tpr_at_fpr(present: Sequence[float], absent: Sequence[float], fpr: float) -> dict[str, float]:
+    """The share of members caught at a false-positive rate the defender would tolerate.
+
+    An AUC averages over the whole ROC curve, including the high-false-positive region no
+    attacker would operate in, and an attack can score well there while catching no member at a
+    usable threshold (Carlini et al., "Membership Inference Attacks From First Principles",
+    IEEE S&P 2022, arXiv:2112.03570). A privacy claim is about the confident identifications,
+    so every detector here reports this beside its AUC.
+
+    The threshold is the largest one whose empirical false-positive rate is at most `fpr`: with
+    `m = floor(fpr * n)` non-members allowed above it, that is the (m+1)-th largest non-member
+    score, and at m = 0 it is the largest, which asks how many members outrank every non-member
+    drawn. The achieved rate is returned rather than the requested one, since `n` draws cannot
+    resolve a rate below 1/n.
+    """
+    if not present or not absent:
+        raise ValueError("both classes need scores")
+    ranked = sorted(absent, reverse=True)
+    allowed = min(int(fpr * len(ranked)), len(ranked) - 1)
+    threshold = ranked[allowed]
+    return {
+        "fpr_requested": fpr,
+        "fpr_achieved": sum(1 for x in absent if x > threshold) / len(absent),
+        "tpr": sum(1 for x in present if x > threshold) / len(present),
+        "threshold": threshold,
+        "resolution": 1.0 / len(absent),
+    }
+
+
+def _operating_points(present: Sequence[float], absent: Sequence[float]) -> dict[str, float]:
+    """AUC, and the low-false-positive points the AUC can hide."""
+    wins = sum(1.0 if a > b else 0.5 if a == b else 0.0 for a in present for b in absent)
+    out = {"auc": wins / (len(present) * len(absent))}
+    for fpr in (0.01, 0.05):
+        point = tpr_at_fpr(present, absent, fpr)
+        out[f"tpr_at_{int(fpr * 100)}pct_fpr"] = point["tpr"]
+        out[f"fpr_achieved_at_{int(fpr * 100)}pct"] = point["fpr_achieved"]
+    return out
+
+
 def gram(cosine: Sequence[Sequence[float]], norms: Sequence[float]) -> list[list[float]]:
     """Inner products from the cosines and norms `adapter_geometry` records."""
     return [
@@ -79,9 +119,8 @@ def membership_auc(
         client = rng.choice(list(target))
         with_target.append(direction_score(products, [client, *rest], reference))
         without.append(direction_score(products, rng.sample(list(others), size), reference))
-    wins = sum(1.0 if a > b else 0.5 if a == b else 0.0 for a in with_target for b in without)
     return {
-        "auc": wins / (len(with_target) * len(without)),
+        **_operating_points(with_target, without),
         "rounds": float(draws),
         "round_size": float(size),
         "mean_with": fmean(with_target),
@@ -202,13 +241,13 @@ def organization_membership_auc(
             rest = rng.sample(outside, size - at_least)
             present.append(direction_score(products, [*contributed, *rest], reference))
             absent.append(direction_score(products, rng.sample(outside, size), reference))
-        wins = sum(1.0 if a > b else 0.5 if a == b else 0.0 for a in present for b in absent)
-        scores.append(wins / (len(present) * len(absent)))
+        scores.append(_operating_points(present, absent))
         separations.append((fmean(present), fmean(absent)))
+    aucs = [s["auc"] for s in scores]
     return {
-        "auc": fmean(scores),
+        **{key: fmean(s[key] for s in scores) for key in scores[0]},
         # A standard deviation rather than the range, which only widens with more splits.
-        "auc_sd_over_splits": stdev(scores) if len(scores) > 1 else 0.0,
+        "auc_sd_over_splits": stdev(aucs) if len(aucs) > 1 else 0.0,
         "splits": float(splits),
         "rounds": float(draws),
         "round_size": float(size),

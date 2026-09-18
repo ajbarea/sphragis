@@ -104,3 +104,33 @@ def test_a_target_free_difference_is_the_null_the_absent_class_measures() -> Non
         rng=rng,
     )
     assert 0.35 < scored["auc"] < 0.65
+
+
+def test_the_curve_is_read_at_a_low_false_positive_rate_too() -> None:
+    """A defence that only moves the average case would leave this number where it was."""
+    rng = np.random.default_rng(7)
+    vectors, mine, outside = _population(rng)
+    clean = defence.masked_rounds(
+        vectors,
+        members=mine[4:],
+        outside=outside,
+        reference=mine[:4],
+        size=8,
+        rounds=1,
+        noise=0.0,
+        draws=200,
+        rng=rng,
+    )
+    masked = defence.masked_rounds(
+        vectors,
+        members=mine[4:],
+        outside=outside,
+        reference=mine[:4],
+        size=8,
+        rounds=1,
+        noise=30.0,
+        draws=200,
+        rng=rng,
+    )
+    assert clean["tpr_at_1pct_fpr"] > masked["tpr_at_1pct_fpr"]
+    assert masked["fpr_achieved_at_1pct"] <= 0.01, "the threshold holds the rate it claims"

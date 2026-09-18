@@ -2980,3 +2980,34 @@ organization is a weak residual: invisible to a classifier, detectable by a targ
 0.74 for a three-project organization and 0.62 for a six-project one, on 13 and 30 clients. The
 ordering is stable across every instrument this log has used, and the third term is the one a
 data-sharing agreement is written about.
+
+### Every leakage number in this study was an average-case metric (2026-09-18)
+
+`# research(2026-09)`. Carlini et al., "Membership Inference Attacks From First Principles"
+(IEEE S&P 2022, arXiv:2112.03570), argue that an AUC averages over the whole ROC curve, including
+false-positive rates no attacker would operate at, and that an attack can score well on it while
+recovering no member at a usable threshold. Privacy is breached by the confident identifications,
+not by the average case. Every RQ2 number in this log was an AUC, so every one of them was open to
+that objection.
+
+`aggregate.tpr_at_fpr` now reports the share of member rounds caught at a false-positive rate the
+defender would tolerate, beside every AUC, and the achieved rate rather than the requested one,
+since `n` draws cannot resolve a rate below 1/n. Re-run at 600 draws, C++ only, reference split
+over projects:
+
+| target | rounds | AUC | TPR at 1% FPR |
+|---|---|---|---|
+| AOSP | 4, one of its clients | 0.738 | 0.092 |
+| AOSP | 4, two of its clients | 0.885 | 0.347 |
+| AOSP | 16, two of its clients | 0.858 | 0.364 |
+| Qt | 8, one of its clients | 0.725 | 0.208 |
+| Qt | 8, two of its clients | 0.859 | 0.456 |
+
+The signal survives the metric that was built to expose signals that do not. At one false alarm in
+a hundred, a server catches 9% of the rounds holding one AOSP client and 35% of those holding two,
+against the 1% a coin would get: nine to thirty-five times chance, not a reordering of noise.
+Qt's figures are higher than its AUC suggests, which is the asymmetry Carlini et al. describe --
+the ordering is mediocre on average and confident at the top.
+
+The defence curve is read at both points from now on, so a mask that moves the average case while
+leaving the confident identifications intact cannot be reported as a defence.

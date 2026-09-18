@@ -7,6 +7,7 @@ import random
 
 import pytest
 
+from sphragis.measure import aggregate
 from sphragis.measure.aggregate import (
     direction_score,
     gram,
@@ -153,3 +154,32 @@ def test_an_organization_of_one_group_cannot_be_told_from_that_group() -> None:
             seed=0,
             groups=["only"] * 20,
         )
+
+
+def test_the_low_false_positive_point_is_what_an_auc_can_hide() -> None:
+    """A detector can order well on average and still catch nobody at a usable threshold."""
+    # Members sit just above the bulk of non-members, but ten non-members outrank every member:
+    # the ordering is good (high AUC) and no threshold with a 1% false-positive rate catches one.
+    absent = [float(i) for i in range(100)] + [1000.0 + i for i in range(10)]
+    present = [99.5 for _ in range(100)]
+    assert aggregate.tpr_at_fpr(present, absent, 0.01)["tpr"] == 0.0
+    assert aggregate.tpr_at_fpr(present, absent, 0.20)["tpr"] == 1.0
+    points = aggregate._operating_points(present, absent)
+    assert points["auc"] > 0.88, "the average-case metric calls this a strong attack"
+    assert points["tpr_at_1pct_fpr"] == 0.0, "and the operating point says it catches nobody"
+
+
+def test_the_achieved_false_positive_rate_is_reported_not_the_requested_one() -> None:
+    """Twenty draws cannot resolve 1%, and the point says so rather than implying it did."""
+    point = aggregate.tpr_at_fpr([1.0] * 20, [float(i) for i in range(20)], 0.01)
+    assert point["fpr_achieved"] == 0.0, "no non-member may outrank the threshold at m = 0"
+    assert point["resolution"] == 0.05
+    assert point["tpr"] == 0.0, "a member tied with the top non-member does not outrank it"
+
+
+def test_a_separated_detector_reaches_its_members_at_a_low_false_positive_rate() -> None:
+    point = aggregate.tpr_at_fpr(
+        [100.0 + i for i in range(50)], [float(i) for i in range(50)], 0.01
+    )
+    assert point["tpr"] == 1.0
+    assert point["fpr_achieved"] == 0.0
