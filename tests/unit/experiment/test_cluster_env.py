@@ -105,7 +105,10 @@ def test_every_script_defaults_to_the_default_target(script: Path) -> None:
     text = script.read_text()
     target = TARGETS[DEFAULT_TARGET]
     assert f"#SBATCH --partition={target.partition}\n" in text
-    assert f"#SBATCH --gres={target.gres}\n" in text
+    # A GPU job must request the target's device. An analysis job that needs none says so in
+    # words, so that a missing --gres is always a decision rather than an omission.
+    if f"#SBATCH --gres={target.gres}\n" not in text:
+        assert "CPU only" in text, f"{script.name}: no --gres and no statement that it needs none"
     assert "#SBATCH --account=fl-mlm\n" in text
 
 

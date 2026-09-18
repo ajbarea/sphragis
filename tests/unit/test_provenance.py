@@ -88,7 +88,14 @@ def test_every_script_a_job_launches_records_run_provenance(script: Path) -> Non
     # Results from different GPUs must never be pooled unnoticed, and the record is also the
     # only measurement of peak GPU memory a run leaves behind.
     keys = _written_result_keys(script)
-    assert keys, f"{script.name}: no args.out.write_text(json.dumps({{...}})) found"
+    if not keys:
+        # A script that writes something other than a JSON object, an array file say, still has
+        # to record where it ran; the key check cannot read inside it, so the call is the test.
+        text = script.read_text()
+        assert "run_provenance(" in text or "provenance_header(" in text, (
+            f"{script.name}: writes no JSON object and records no provenance"
+        )
+        return
     assert "provenance" in keys
 
 
