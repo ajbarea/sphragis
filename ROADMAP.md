@@ -76,6 +76,22 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
 
+## Plan F — RQ2 positioning
+
+Added 2026-09-17 from a literature pass against the 2026 state of the art.
+
+- [x] **ProjRes (arXiv:2604.21197) read in full.** Exact-membership only, per-client gradients,
+  no secure aggregation assumed; AUC 1.000 on short text, 0.807 to 0.819 on long. Its own stated
+  limitation is the semantic leakage RQ2 is about.
+- [x] **Secure aggregation is not a defence to lean on**: gradient disaggregation
+  (arXiv:2106.06089) and client-specific inference under secure aggregation (arXiv:2303.03908).
+- [ ] Read 2303.03908 in full before citing it as not covering source inference; only its
+  abstract has been read.
+- [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
+  project, or both, and which boundary an organization-level privacy policy actually protects.
+- [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,
+  since the second has been shown not to be a defence.
+
 ## Plan E — calibration
 
 Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind instrument".

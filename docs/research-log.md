@@ -1518,6 +1518,53 @@ the contrast with hardware. Each job's output now records its cluster, job, GPU 
 so a mixed set is detectable from the files rather than from memory. Results written before
 2026-09-17 carry no such record; all of them ran on TIGRIS GH200s under `rc-onboard`.
 
+### Where RQ2 sits against the 2026 attacks (2026-09-17)
+
+RQ2 asks what a federated adapter update leaks about the client that produced it. Three lines of
+prior work bound what is already known, and none of them asks RQ2's question.
+
+**The strongest 2026 attack is exact-membership, and it assumes the easy threat model.**
+ProjRes (arXiv:2604.21197, April 2026), read in full: an honest-but-curious server observing
+**per-client** gradients, with **neither secure aggregation nor differential privacy** assumed.
+It reports AUC 1.000 on CoLA and SST across BERT-Base, GPT2-Large, Llama3-8B and Qwen2.5-14B,
+and LoRA leaks at AUC 1.000 for batch sizes up to 16 and 0.957 at 512. Two things limit how
+far it reaches into this study:
+
+- **It degrades on long inputs.** AUC falls to 0.807 (BERT-Base) and 0.819 (GPT2-Large) on
+  IMDB, and the authors attribute it to sequence length. A code-review refinement with its
+  context is long, so the headline "near 100%" should not be expected on this corpus.
+- **It names RQ2's question as out of scope.** Quoting its limitations: "ProjRes operates as a
+  data-level MIA, identifying membership only when a sample exactly matches one in the training
+  set ... this overlooks the semantic generalization ability of LLMs." Inferring a property of
+  the data, rather than the presence of one sample, is the part it does not do.
+
+**Secure aggregation is not a safe harbour, so RQ2 cannot lean on it.** Gradient disaggregation
+(arXiv:2106.06089) recovers individual updates from aggregates using how often each client
+participated across rounds. Kerkouche, Ács and Fritz (arXiv:2303.03908, WPES at CCS 2023) infer
+client-specific properties from aggregated updates alone, passively, through the linearity of
+aggregation over rounds whose client composition varies. Read from the abstract only so far:
+the properties it names are **membership** and **whether a client is poisoning**. Its datasets
+and models are not in the abstract and have to be read from the full text before it is cited
+as not covering anything.
+
+**What none of them target: where a client's data came from.** Every attack above infers
+something about individual samples or client behaviour. RQ2's property is the client's
+**source** -- which organization, or which project -- and this corpus is what makes that
+question testable, with two organizations, 345 projects and a time-split design.
+
+**And tonight's evidence changes what the question should be.** The separability probe found
+two projects inside one organization as distinguishable as two organizations, and review
+latency differs between projects under one roof by a quarter of its whole range. If source
+leaks, it most likely leaks at the project, not the organization. So RQ2 is sharper framed as
+two altitudes than one: does an adapter update reveal its organization, does it reveal its
+project, and which boundary does a privacy policy drawn around organizations actually protect.
+
+**The design this implies.** Two threat models, because the literature has shown the second is
+not a defence: a server seeing per-client updates, and a server seeing only aggregates across
+rounds of varying composition, attacked through the linearity that 2303.03908 exploits. And
+the long-input regime is where the contribution is sharpest, since that is exactly where the
+exact-membership state of the art is weakest.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change
