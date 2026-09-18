@@ -9,7 +9,22 @@ research direction: RQ1 is a go/no-go gate, RQ2 the leakage study that follows i
 abstract a week earlier on **2026-11-13** (read from the call, 2026-09-18). PC reviews come
 2026-12-23, the response letter and revision 2027-01-15, Stage 1 notification 2027-02-04, the
 accepted report 2027-02-28, and the full paper to EMSE 2027-09-30.
-The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAGE1-SKELETON.md`.
+The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAGE1-SKELETON.md`,
+and the call itself, quoted, at `org-fingerprint/VENUE.md`.
+
+**What the call requires of this code:**
+- Stage 2 is when "the actual data collection, experiments, and analysis" happen, so the test
+  window stays sealed until in-principle acceptance (2027-02-04) and pilot numbers never feed a
+  confirmatory result.
+- Reviewers score whether the procedure can be exactly replicated and whether outcome-neutral
+  tests with positive controls are pre-specified, so dependencies stay pinned, the pass rule
+  stays in code, and those tests run before 2026-11-20. A power analysis is expected.
+- Every deviation from the accepted protocol must be reported in the EMSE paper, so any change
+  after acceptance that touches the protocol is recorded with its date and reason.
+- If review is anonymous (open question 2 in `VENUE.md`), the artifact link in the report must
+  not identify the author, so the repository stays private or goes behind an anonymized mirror
+  until notification.
+- Generative-AI use must be disclosed in the paper, so it is logged as the work happens.
 
 ---
 
