@@ -1638,6 +1638,66 @@ canaries, need control over the training data, which a released checkpoint does 
 the pattern expected if Min-K%++ is the more sensitive of the two, which is the reason it is the
 registered primary.
 
+### The calibration sweep: the adapter, not the contrast, sets the floor (2026-09-18, jobs 148088-148091)
+
+`datasets/results/calibration-marker-{0,0.05,0.1,0.25}.json` beside `marker-1`. One organization's
+train window split into two halves no change spans, a fixed annotation appended to a fraction
+of refinements in half **b** only, and the identical matched-versus-mismatched contrast RQ1 uses.
+One condition per job, all under `fl-mlm`.
+
+| condition | realised plant | contrast on a | contrast on b | gate |
+|---|---|---|---|---|
+| marker-0 | 0.000 | -0.018 [-0.046, +0.008] | -0.014 [-0.038, +0.009] | fail |
+| marker-0.05 | 0.039 | -0.005 [-0.034, +0.028] | +0.019 [-0.002, +0.043] | fail |
+| marker-0.1 | 0.086 | -0.009 [-0.034, +0.016] | -0.012 [-0.038, +0.014] | fail |
+| marker-0.25 | 0.251 | **+0.214 [+0.147, +0.288]** | **-0.086 [-0.137, -0.037]** | mixed |
+| marker-1 | 1.000 | +0.310 [+0.249, +0.376] | +0.316 [+0.265, +0.367] | pass, degenerate |
+
+**The negative control is clean.** Two halves differing in nothing return intervals covering zero
+on both sides, the adapters emit the annotation 0.000 of the time, and the apparatus holds. The
+contrast does not fire on a difference that is not there.
+
+**What sets the floor is what the adapter learns, and that is not linear.** The annotation's
+presence in the planted adapter's outputs, against its presence in the training data:
+
+| realised in training | emitted by the planted adapter, on a / on b |
+|---|---|
+| 0.000 | 0.000 / 0.000 |
+| 0.039 | 0.007 / 0.006 |
+| 0.086 | 0.033 / 0.076 |
+| **0.251** | **0.617 / 0.656** |
+| 1.000 | 0.991 / 0.998 |
+
+Below about a tenth of refinements the adapter barely absorbs the convention at all, so there is
+nothing for the contrast to see: 0.039 and 0.086 return nulls not because the instrument is blind
+but because the adapter never learned what was planted. At a quarter it absorbs it and then
+**amplifies** it, applying a convention seen in 25% of training refinements to roughly 64% of its
+outputs. Greedy decoding is the registered decoder and is the likeliest amplifier, since it turns
+a sharpened distribution into a deterministic choice; that is a hypothesis, not yet tested.
+
+**Amplification makes the contrast non-monotone, and that is a validity problem for the gate.** At
+0.25 the planted adapter adds the annotation to references in its own half that do not carry it,
+scoring 0.160 there against the unplanted adapter's 0.246. So the matched adapter **loses on its
+own organization's data**, and the contrast on the planted side reads -0.086, excluding zero on
+the refuting side. The fingerprint is learned, strongly, and the gate reads it as evidence against
+the hypothesis. Between the floor and the ceiling the gate never passes: its only pass is the
+degenerate case where one arm cannot score.
+
+**What that means for RQ1's null.** An organizational convention present in under a tenth of
+refinements would not be learned by these adapters, so it could not show; one present in a
+quarter could be learned and still read negative. RQ1's +0.021 is consistent with no fingerprint,
+and also with a low-frequency one the adapter never absorbs. The honest bound is therefore on what
+**LoRA adaptation under greedy decoding absorbs and reproduces**, not on what organizations
+contain, and the Stage 1 report has to say so rather than presenting the null as a statement about
+organizations alone.
+
+**Two limits on reading this, stated.** The plant is asymmetric, one half carrying a convention and
+the other none, whereas two organizations each carry their own. A symmetric version, convention X
+on one half and convention Y on the other, is the closer analogue and would show whether the
+matched adapter wins on both sides once neither is convention-free. And the annotation is the
+easiest thing a model could learn, so the absorption threshold for a realistic convention is
+likely higher than a tenth, not lower.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

@@ -115,13 +115,22 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   unannotated reference, so `non_degeneracy` failed and `apparatus_holds` went false. The
   ceiling condition is degenerate by construction and the apparatus is what says so; the pass
   is evidence the instrument works, not a result.
-- [ ] **The floor itself**, from the weaker conditions where neither arm saturates. Queued on
-  TIGRIS 2026-09-17 under `fl-mlm`, one condition per job so a wall costs one condition:
-  `marker-0.05` (148089), `marker-0.1` (148090), `marker-0.25` (148091), realised 0.039, 0.086
-  and 0.251. The real OpenStack/Qt contrast of +0.021 predicts the floor sits near 0.05 to 0.1.
-- [ ] `marker-0`, the negative control (148088, running 2026-09-17): two halves differing in
-  nothing must return nothing. Its first attempt was lost when job 145092 hit its four-hour
-  wall after `marker-1`, which ran 2h45m against an estimate of 75 minutes.
+- [x] **Negative control clean** (148088): two halves differing in nothing return intervals
+  covering zero on both sides, and the adapters emit the planted annotation 0.000 of the time.
+- [x] **The floor is set by what the adapter learns, not by the contrast** (148089-148091).
+  Emission against training rate: 0.039 -> 0.007, 0.086 -> 0.03-0.08, **0.251 -> 0.62-0.66**,
+  1.0 -> 0.99. Below a tenth the convention is barely absorbed; at a quarter it is absorbed and
+  amplified. My prediction of a floor near 0.05 to 0.1 was wrong in kind, not just in place.
+- [ ] **The gate is non-monotone in fingerprint strength.** At 0.25 the planted adapter
+  over-applies the convention and loses on its own half (0.160 against 0.246), so the contrast
+  there is -0.086, excluding zero on the refuting side. Between floor and ceiling the gate never
+  passes. A Stage 1 validity issue: decide whether to register it as a stated limitation, or a
+  metric less punishing of over-application beside exact match.
+- [ ] **Symmetric calibration**: convention X on one half, Y on the other, since two organizations
+  each carry their own. Shows whether the matched adapter wins on both sides once neither half is
+  convention-free.
+- [ ] Test whether greedy decoding causes the amplification: rerun 0.25 with sampling at
+  temperature 1, which should reproduce the training rate if greedy is the amplifier.
 
 ## Plan D — granularity
 
