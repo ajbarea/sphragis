@@ -326,6 +326,15 @@ declared as one.
 | **Contamination scored text** | the hunk with three context lines either side | Bare hunks put only about 20% of a deduplicated month over the 32-token minimum (35 of 172, 28 of 133), too few to read. With context the scored share rose to 94% and 87%, and on the six-month windows to 1,971 and 2,503 examples. The same text is what the model-less baseline was run on, so the two are directly comparable. |
 | **Leakage threshold** | 2% at Jaccard >= 0.7 | Must clear the measured train-into-dev rate, 1.06% for OpenStack and 0.42% for Qt. At J >= 0.8 both are 0.0000 by construction, because dedup removes pairs at that threshold across windows, so registering there is a test that cannot fail. |
 
+**Pending on a measurement, with the rule that decides them already fixed.**
+
+| decision | decided by | rule |
+|---|---|---|
+| **Interval the gate reads** | coverage (`crossed-coverage.json`) and the sym-0 seed runs | The crossed seed x change interval, which holds nominal where the median-seed rule reaches 0.122 two-sided, unless the review of its code or the seed runs contradict that. |
+| **Seed count** | the seed main effect measured on sym-0 at three seeds | Three if it is at or below 0.01, five if above: where three seeds hold nominal under the crossed interval and where they stop. |
+| **Stated power** | `conjunctive-power-s{3,5}-b*.json` | Recomputed for the registered interval and seed count at the measured seed effect, replacing 0.833. |
+| **Inference numerics** | `determinism_check` on the two nodes the stored runs used | FP32 compute if bf16 greedy decoding differs between nodes and FP32 does not; otherwise bf16, with the node recorded. |
+
 **Open, and genuinely a question about the claim rather than the statistics.** Whether RQ1
 asserts "organizations leave a learnable fingerprint" (conjunctive, as registered above) or
 "this organization does" (per-organization, higher power, weaker claim). Everything above
