@@ -24,9 +24,16 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   counted by reason, resumable), `fetchers` (scrubbing at ingestion), `pipeline` (dedup,
   split, freeze), all wired behind `python -m sphragis.corpus`.
 - [x] **A real frozen corpus.** Both organizations frozen and verified: OpenStack 5,498
-  examples (pilot 606 / train 4,327 / dev 565), Qt 10,695 (1,301 / 8,443 / 951). Each window
+  examples (pilot 606 / train 4,327 / dev 565), Qt 10,692 (1,300 / 8,442 / 950). Each window
   content-hashed beside its drop profile, package versions and the SHA that produced it. The
   test window stays sealed and uncollected.
+- [x] **Refrozen 2026-09-18, one example per id.** A Gerrit Change-Id is shared across
+  cherry-picks, so three Qt pairs created weeks apart shared an example id; one crashed RQ1 job
+  148093 after 4h13m of evaluation. Dedup now keeps the earliest per id. Both manifests were
+  deleted deliberately and refrozen so they cite one pipeline version; the old ones are in git.
+- [ ] `verify` checks that the frozen files are intact, not that current code reproduces them:
+  before the refreeze it reported Qt clean at 10,695 while the pipeline yielded 10,692. Decide
+  whether a reproduction check belongs beside it.
 - [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the changes the corpus
   keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev window
   abutting the collection boundary (39.1% of OpenStack's example-bearing cohort missing
