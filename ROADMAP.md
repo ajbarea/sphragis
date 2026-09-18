@@ -142,8 +142,10 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   at no measurable cost (a pilot ran 12m31s against bf16's 12m41s).
 - [x] **Sensitivity replaces power at an observed effect**: the design resolves 1.3 to 2.4
   exact-match points, bracketing the seed effect's own uncertainty.
-- [ ] Re-read the dev window under fp32 (jobs 149258 to 149260), so the evidence is read under the
-  numerics the confirmatory run will use.
+- [x] **Dev window re-read under fp32 at three seeds** (149258 to 149260): pooled +0.0230 and
+  +0.0316, mixed, with OpenStack's lower bound exactly 0.0. Qt matches its bf16 reading; OpenStack
+  is half a point higher and still short. Change-averaged under the same interval would pass, which
+  is why the estimand was registered in advance.
 
 - [x] **The medium is not visibly moving**: within each organization, its earliest quarter against
   its latest is at chance (OpenStack 0.552 [0.466, 0.602], Qt 0.510 [0.487, 0.572]) over the span
@@ -386,9 +388,9 @@ declared as one.
 
 | decision | registered | why |
 |---|---|---|
-| **Estimand** | pooled (`paired_difference`) | Cluster size is non-informative here: correlation with the outcome is -0.052 and -0.019, with the per-change effect -0.025 and +0.004, so the two estimands do not answer materially different questions (Kahan et al., IJE 2023, make this the deciding test). RQ1 is a claim about refinements, so the participant-average is the matching unit. And change-averaged runs at roughly twice nominal alpha at 48-91 changes where pooled sits at nominal, which disqualifies it from binding a confirmatory gate. Both are computed and reported. |
+| **Estimand** | pooled (`paired_difference`) | Cluster size is non-informative here: correlation with the outcome is -0.052 and -0.019, with the per-change effect -0.025 and +0.004, so the two estimands do not answer materially different questions (Kahan et al., IJE 2023, make this the deciding test). RQ1 is a claim about refinements, so the participant-average is the matching unit. And change-averaged runs at roughly twice nominal alpha at 48-91 changes where pooled sits at nominal, which disqualifies it from binding a confirmatory gate. Both are computed and reported. **Tested on 2026-09-18**: under fp32 at three seeds, pooled returns mixed and change-averaged returns a pass on both organizations, so the choice decides the headline. It was fixed before that run existed. |
 | **Pass rule** | conjunctive: both organizations' 95% intervals strictly above zero | RQ1 claims organizations leave a fingerprint, which is a generality claim; a rule passing on one organization does not support it. Weakening it to raise power would change the question to fit the answer. |
-| **Boundary** | strictly above zero (`>`) | Not a formality: on the unequalized pilot Qt's pooled lower bound is exactly `0.0` in 19 of 20 bootstrap seeds, so `>=` would have read that run as supporting the hypothesis. |
+| **Boundary** | strictly above zero (`>`) | Not a formality: on the unequalized pilot Qt's pooled lower bound is exactly `0.0` in 19 of 20 bootstrap seeds, so `>=` would have read that run as supporting the hypothesis. It decided a second verdict on 2026-09-18, when OpenStack's fp32 lower bound came out at exactly 0.0. |
 | **Reported power** | conjunctive, not marginal | The gate passes only when both arms do, so its power is the joint probability, which for near-independent arms is the product: two arms at 80% give a gate at 64%. Section 5 had been stating two marginal figures. The figure itself is now a sensitivity analysis: the 0.833 computed at the windowed run's own effects is withdrawn, since power from a pilot's estimate is biased upward. |
 | **Test window** | 2025-11 to 2026-10, twelve months | Twelve months buys more changes for 0.4 points of additional differential censoring (0.36 to 0.75), still a twelfth of what the dev window carries. The figures that chose it, 0.757 against 0.833, are superseded as absolute power (see **Reported power**); the comparison between ten months and twelve is what the choice rested on. Set before any test data exists: 2026-10 closes before the 2026-11-20 submission. |
 | **Fetch horizon** | no earlier than three months after the window's final month | Makes the confirmatory contrast's low censoring a protocol guarantee rather than an accident of when acceptance landed. 2026-10 plus three is 2027-01; MSR 2027 notifies 2027-02-04, so the horizon binds only if acceptance comes early, in which case the answer is to accept more censoring rather than fetch sooner. |
