@@ -197,7 +197,13 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   The guarantee and the leak are about different quantities, which is the paper's opening.
 - [x] **Mixed cohorts and more than one target client a round**: rounds drawn from every client,
   detection rising with the target's share and with the round size.
+- [x] **A defence curve** (`defence-curve.json`): per-round Gaussian masking is a delay, not a
+  defence. At sixteen times the update's own norm, detection is still 0.81 and 0.70 after 200
+  rounds, because fresh masks average away and the source's direction does not. One round hides it
+  (0.50 to 0.55); two hundred do not.
 - [ ] **Several local-training lengths** (`CLIENT_SIZE`), since longer training moves updates apart.
+- [ ] Explain the non-monotonicity in noise (moderate masking scoring above none at 200 rounds), or
+  show it is an artefact of a twelve-client outsider pool by repeating it on the larger set.
 - [x] **The motivating deployment, cited** (Luo et al., arXiv:2412.01072, TOSEM): federated
   program repair over up to 100 clients with QLoRA and FedAvg, adapters uploaded to a central
   server, privacy claimed from not centralizing raw data, no threat model, DP and secure
