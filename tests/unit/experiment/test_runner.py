@@ -108,3 +108,29 @@ def test_to_clusters_rejects_a_non_finite_outcome() -> None:
     treatment = [_outcome("a", "I1", float("nan"))]
     with pytest.raises(ValueError, match="non-finite"):
         to_clusters(treatment, [_outcome("a", "I1", 0.0)])
+
+
+def test_require_unique_ids_accepts_distinct_ids() -> None:
+    from sphragis.experiment.runner import require_unique_ids
+
+    require_unique_ids([{"id": "a"}, {"id": "b"}], label="set")
+
+
+def test_require_unique_ids_names_the_repeats() -> None:
+    import pytest
+
+    from sphragis.experiment.runner import require_unique_ids
+
+    with pytest.raises(ValueError, match=r"evaluation set repeats example ids \['x'\]"):
+        require_unique_ids([{"id": "x"}, {"id": "y"}, {"id": "x"}], label="evaluation set")
+
+
+def test_to_clusters_still_refuses_a_repeated_id_through_the_shared_check() -> None:
+    """The message a job log would carry must still say which arm."""
+    import pytest
+
+    from sphragis.experiment.runner import to_clusters
+
+    rows = [{"id": "x", "change_id": "C", "exact_match": 1.0}] * 2
+    with pytest.raises(ValueError, match="treatment arm repeats example ids"):
+        to_clusters(rows, rows)

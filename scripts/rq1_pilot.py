@@ -38,7 +38,7 @@ from sphragis.experiment.neutral import (
     non_degeneracy,
     positive_control,
 )
-from sphragis.experiment.runner import build_prompt
+from sphragis.experiment.runner import build_prompt, require_unique_ids
 from sphragis.experiment.training import build_supervised
 from sphragis.experiment.walk import gate, walk
 
@@ -139,6 +139,12 @@ if args.equalize_train:
         summary[org]["train_examples_equalized"] = len(train_rows[org])
     print(f"equalized training sets: { {o: len(train_rows[o]) for o in orgs} }", flush=True)
 
+
+# Before any model loads, and so inside the dry run: the arms are paired by example id, so a
+# repeated id in an evaluation set is fatal, and checked only at scoring it cost job 148093
+# four GPU-hours for no result.
+for org in orgs:
+    require_unique_ids(held_out[org], label=f"{org} evaluation set")
 
 if args.dry_run:
     # Everything above is CPU: loading, dedup, the split and the leakage assertion. Stopping

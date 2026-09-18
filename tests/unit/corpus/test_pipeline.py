@@ -41,7 +41,7 @@ def test_dedup_reports_what_it_removed_and_why() -> None:
     kept, removed = run_dedup(EXAMPLES)
     assert len(kept) == 3, "the repeated before/after pair is an exact duplicate"
     assert removed["exact"] == 1
-    assert set(removed) == {"exact", "near_duplicate", "boilerplate"}
+    assert set(removed) == {"exact", "near_duplicate", "boilerplate", "shared_change_id"}
 
 
 def test_split_assigns_whole_changes_and_never_straddles() -> None:

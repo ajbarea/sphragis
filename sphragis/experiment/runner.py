@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
@@ -52,6 +52,20 @@ def evaluate(generator: Generator, examples: Sequence[Mapping[str, Any]]) -> lis
     return results
 
 
+def require_unique_ids(rows: Sequence[Mapping[str, Any]], *, label: str) -> None:
+    """Refuse rows in which any example id appears twice.
+
+    One definition, called both before evaluation and inside `to_clusters`. Only the second
+    existed at first, so a repeated id in an evaluation set surfaced after every generation had
+    run: job 148093 spent four GPU-hours and wrote nothing. Checked up front it costs seconds on
+    a login node, in the dry run the job script offers for exactly that purpose.
+    """
+    counts = Counter(r["id"] for r in rows)
+    repeated = sorted((i for i, n in counts.items() if n > 1), key=str)
+    if repeated:
+        raise ValueError(f"{label} repeats example ids {repeated[:5]}")
+
+
 def to_clusters(
     treatment: Sequence[Mapping[str, Any]],
     control: Sequence[Mapping[str, Any]],
@@ -71,10 +85,7 @@ def to_clusters(
       read as a pass.
     """
     for label, arm in (("treatment", treatment), ("control", control)):
-        ids = [r["id"] for r in arm]
-        repeated = sorted({i for i in ids if ids.count(i) > 1}, key=str)
-        if repeated:
-            raise ValueError(f"{label} arm repeats example ids {repeated[:5]}")
+        require_unique_ids(arm, label=f"{label} arm")
     by_id_control = {r["id"]: r for r in control}
     if {r["id"] for r in treatment} != set(by_id_control):
         raise ValueError("both arms must be evaluated on the same examples")

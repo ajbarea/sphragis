@@ -67,7 +67,9 @@ def dedup(
     The floor keeps a small corpus from filtering itself: at 20 examples a 10% threshold
     would be 2 documents, which is inside the destructive band.
     """
-    removed: Counter[str] = Counter({"exact": 0, "near_duplicate": 0, "boilerplate": 0})
+    removed: Counter[str] = Counter(
+        {"exact": 0, "near_duplicate": 0, "boilerplate": 0, "shared_change_id": 0}
+    )
     ordered = sorted(examples, key=lambda e: (str(e.get("created") or ""), str(e["id"])))
 
     by_hash: dict[str, dict[str, Any]] = {}
@@ -103,4 +105,21 @@ def dedup(
             removed["boilerplate"] += 1
             continue
         survivors.append(example)
-    return survivors, dict(removed)
+
+    # Last, one example per id. An id is built from the Change-Id, which Gerrit shares across
+    # cherry-picks and re-uploads of one logical change, so two changes created weeks apart
+    # can produce the same id with different content, surviving every content check above.
+    # Qt carries three such pairs. The pipeline pairs arms by id, so a repeated id makes the
+    # matched and mismatched arms ambiguous; to_clusters refuses it, but only after
+    # evaluation, which is how job 148093 spent four GPU-hours and wrote nothing. Keeping the
+    # earliest matches the rest of this stage, and a cherry-pick is not an independent
+    # observation of the change it copies. Last so identical copies are still counted as exact.
+    seen_ids: set[str] = set()
+    unique: list[dict[str, Any]] = []
+    for example in survivors:
+        if example["id"] in seen_ids:
+            removed["shared_change_id"] += 1
+            continue
+        seen_ids.add(example["id"])
+        unique.append(example)
+    return unique, dict(removed)
