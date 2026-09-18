@@ -3056,3 +3056,31 @@ accounting would grow the noise with the rounds rather than hold it fixed.
 Incidental, and worth keeping: the first pass of this script read one draw per cell and reported a
 0.05 swing between RNG streams as an effect. Repeats were added before any number here was written
 down.
+
+**Read by a statistic that is not scale free** (same draws, the difference's projection on the
+reference direction rather than its cosine):
+
+| rounds | mask | cosine AUC | projection AUC |
+|---|---|---|---|
+| 50 | none | 0.939 | 0.963 |
+| 50 | 1x | 0.959 | 0.968 |
+| 50 | 4x | 0.951 | 0.952 |
+| 50 | 16x | 0.800 | 0.800 |
+| 200 | none | 0.992 | 1.000 |
+| 200 | 1x | 0.999 | 1.000 |
+| 200 | 4x | 0.999 | 1.000 |
+| 200 | 16x | 0.959 | 0.959 |
+
+Two things follow. The projection is the **stronger** attacker wherever the two differ, by 0.024 at
+50 rounds and 0.008 at 200, so normalising threw information away: the leakage this study reports
+with a cosine is a lower bound on what the same observations allow. And under the stronger
+statistic the curve is monotone at 200 rounds and nearly so at 50 (a 0.005 rise at a 1x mask,
+about one standard deviation), which places most of the anomaly in the statistic rather than in
+the defence. The honest statement is therefore narrower than the one above: masking degrades this
+attacker monotonically once the attacker stops discarding the difference's length, and the
+striking non-monotonicity belongs to the scale-free reading of it.
+
+This applies to the difference statistic the defence curve scores. The aggregate attack's detector
+is a different quantity -- the cosine between one round's aggregate and a reference direction,
+where no subtraction has removed the outsiders -- and whether it too leaves information on the
+table is not measured here.

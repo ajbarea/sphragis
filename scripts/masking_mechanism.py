@@ -130,6 +130,7 @@ def main() -> None:
             residual = mask_sd * np.sqrt(2.0 / rounds) * np.sqrt(width)
             sigma = residual / np.sqrt(width)
             measured_aucs, predicted_aucs, unmasked_aucs, tprs = [], [], [], []
+            projection_aucs: list[float] = []
             attenuations = {"present": [], "absent": []}
             norms = {"present": [], "absent": []}
             for repeat in range(args.repeats):
@@ -190,6 +191,10 @@ def main() -> None:
                     for side in ("present", "absent")
                 }
                 measured = {side: [cosine(v, direction) for v in got[side]] for side in got}
+                # The same draws read by a statistic that is not scale free. If the mask is a
+                # real defence and only the cosine misreads it, this one falls monotonically.
+                projected = {side: list(got[side] @ unit) for side in got}
+                projection_aucs.append(auc(projected["present"], projected["absent"]))
                 measured_aucs.append(auc(measured["present"], measured["absent"]))
                 predicted_aucs.append(auc(list(predicted["present"]), list(predicted["absent"])))
                 unmasked_aucs.append(auc(list(base["present"]), list(base["absent"])))
@@ -206,6 +211,10 @@ def main() -> None:
                 else 0.0,
                 "repeats": args.repeats,
                 "tpr_at_1pct_fpr": float(np.mean(tprs)),
+                "auc_projection": float(np.mean(projection_aucs)),
+                "auc_projection_sd": (
+                    float(np.std(projection_aucs, ddof=1)) if args.repeats > 1 else 0.0
+                ),
                 "difference_norm_present": float(np.mean(norms["present"])),
                 "difference_norm_absent": float(np.mean(norms["absent"])),
                 "residual_mask_norm": residual,
@@ -218,7 +227,8 @@ def main() -> None:
                 f"(sd {cell['auc_measured_sd']:.3f}) measured, {cell['auc_predicted']:.3f} "
                 f"predicted, {cell['auc_unmasked']:.3f} (sd {cell['auc_unmasked_sd']:.3f}) "
                 f"unmasked  (attenuation {cell['attenuation_present']:.3f} member, "
-                f"{cell['attenuation_absent']:.3f} null)",
+                f"{cell['attenuation_absent']:.3f} null), projection AUC "
+                f"{cell['auc_projection']:.3f} (sd {cell['auc_projection_sd']:.3f})",
                 flush=True,
             )
             args.out.write_text(json.dumps(report, indent=2))
