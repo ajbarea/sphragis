@@ -1988,3 +1988,59 @@ anti-conservative interval produces across the dozen null contrasts this log has
 **What stands.** Nothing on the GPU is bit-reproducible, and the registered design's three seeds
 still need an interval that spans them rather than one seed's. That interval is built (next entry),
 and the seed main effect is now being measured rather than inferred: `sym-0` at seeds 2 and 3.
+
+### An interval that spans the seeds: built, reviewed, and its coverage measured (2026-09-18)
+
+`sphragis/measure/stats.py` `crossed_bootstrap`, `sphragis/experiment/walk.py` `crossed_gate`.
+Seeds and changes are crossed, every seed scoring every change, so the interval is Owen's
+pigeonhole bootstrap (Ann. Appl. Stat., 2007): one draw of seeds and one of changes, independent
+and with replacement, the statistic over their intersection. A nested bootstrap (changes, then
+runs within each) would treat a seed's shift as independent per change and average it away; an
+industry comparison of that nested form found it very conservative, 98 to 99% coverage against
+95 (Indeed Engineering, July 2026). Built beside the registered gate, not registered.
+
+**Coverage under a null** (`datasets/results/crossed-coverage.json`, `scripts/crossed_coverage.py`).
+Changes, their sizes and difficulty drawn from sym-0's real null arm; stable per-arm outcomes and
+per-seed redraws calibrated to the three things the identical nulls measured (single-seed SE,
+run-to-run SD, churn). A seed main effect sigma_b is added, sized by bisection so the effect
+realized after clipping is the one labelled, and re-measured from the trials (0.0051, 0.0104,
+0.0203 at three seeds). 1,000 trials a cell, 2,000 resamples, nominal 0.025 a side, standard
+error about 0.005.
+
+| seeds | sigma_b | median seed: above / below | crossed: above / below | width: median / crossed |
+|---|---|---|---|---|
+| 3 | 0 | 0.023 / 0.012 | 0.024 / 0.013 | 0.0536 / 0.0524 |
+| 3 | 0.005 | 0.018 / 0.025 | 0.020 / 0.026 | 0.0534 / 0.0530 |
+| 3 | 0.01 | 0.035 / 0.027 | 0.026 / 0.020 | 0.0540 / 0.0557 |
+| 3 | 0.02 | **0.063 / 0.059** | 0.037 / 0.036 | 0.0556 / 0.0647 |
+| 5 | 0 | 0.019 / 0.015 | 0.021 / 0.021 | 0.0531 / 0.0501 |
+| 5 | 0.005 | 0.021 / 0.021 | 0.032 / 0.024 | 0.0533 / 0.0508 |
+| 5 | 0.01 | 0.020 / 0.025 | 0.020 / 0.024 | 0.0539 / 0.0529 |
+| 5 | 0.02 | 0.042 / 0.034 | **0.025 / 0.028** | 0.0549 / 0.0607 |
+
+The 0.02 rows need churn of 0.063 to produce their effect, above the 0.037 to 0.053 the real nulls
+showed, so they are a stress case rather than the observed regime.
+
+**What it shows.**
+
+- **With no seed effect the crossed interval costs nothing**: nominal, and no wider (narrower at
+  five seeds, since averaging seeds shrinks the churn term).
+- **The registered median-seed rule degrades as the seed effect grows**, to 0.122 two-sided at
+  three seeds and sigma_b 0.02, two and a half times nominal. Reading one seed's interval cannot
+  see a seed's shift, by construction.
+- **The crossed interval holds nominal at five seeds** throughout, and at three up to sigma_b
+  0.01. At three seeds and 0.02 it reaches 0.073 two-sided: resampling from three seeds understates
+  their variance by a third, the few-clusters problem every cluster-robust method shares
+  (MacKinnon and Webb). More seeds is the remedy the literature gives, not a cleverer resample.
+- One cell sits above nominal on one side (five seeds, 0.005: 0.032, 1.4 standard errors). The
+  same trial seeds gave 0.030 in an earlier pass, so that is one draw, not two.
+
+**What it decides, once the real seed effect is measured** (sym-0 seeds 2 and 3, queued): register
+the crossed interval as the gate's, retiring the median-seed rule; keep three seeds if the measured
+sigma_b is at or below 0.01, and register five if it is above.
+
+**Reviewed in three rounds; every finding reproduced and fixed** (PR #13 comment). The simulated seed
+effect was under-sized by clipping; a merge accepted runs trained at different sizes as seeds of
+one study; seed runs without a tag overwrote seed-1 results; results recorded the commit at write
+time rather than the one the job ran, so a deploy mid-job would have mislabelled them. The last
+is why jobs 148404 to 148408 run and record 497ebf2, and the next deploy waits for them.

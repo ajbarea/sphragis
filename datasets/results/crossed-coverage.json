@@ -1,0 +1,159 @@
+{
+  "source": "datasets/results/calibration-sym-0.json",
+  "arm": "adapter:a|a|s1",
+  "q": 0.35,
+  "f": 0.055,
+  "trials": 1000,
+  "resamples": 2000,
+  "nominal_one_sided": 0.025,
+  "cells": [
+    {
+      "seeds": 3,
+      "sigma_b": 0.0,
+      "tau": 0.0,
+      "between_seed_variance": 4.7955977916996666e-05,
+      "churn": 0.042430547595694104,
+      "median_seed_above": 0.023,
+      "median_seed_below": 0.012,
+      "median_seed_width": 0.05355081286662163,
+      "crossed_above": 0.024,
+      "crossed_below": 0.013,
+      "crossed_width": 0.052379553574143485,
+      "measured_sigma_b": 0.0,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 3,
+      "sigma_b": 0.005,
+      "tau": 0.08628938731226299,
+      "between_seed_variance": 7.43689680080912e-05,
+      "churn": 0.0457512820066526,
+      "median_seed_above": 0.018,
+      "median_seed_below": 0.025,
+      "median_seed_width": 0.05344996960486133,
+      "crossed_above": 0.02,
+      "crossed_below": 0.026,
+      "crossed_width": 0.0530146566371976,
+      "measured_sigma_b": 0.005139356972530176,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 3,
+      "sigma_b": 0.01,
+      "tau": 0.1779215853171081,
+      "between_seed_variance": 0.00015589221929510476,
+      "churn": 0.05069554269083138,
+      "median_seed_above": 0.035,
+      "median_seed_below": 0.027,
+      "median_seed_width": 0.054047440123515506,
+      "crossed_above": 0.026,
+      "crossed_below": 0.02,
+      "crossed_width": 0.05565530528735413,
+      "measured_sigma_b": 0.010389236804410038,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 3,
+      "sigma_b": 0.02,
+      "tau": 0.4107786659037629,
+      "between_seed_variance": 0.00046054090097522894,
+      "churn": 0.06261131112114025,
+      "median_seed_above": 0.063,
+      "median_seed_below": 0.059,
+      "median_seed_width": 0.055592209263540575,
+      "crossed_above": 0.037,
+      "crossed_below": 0.036,
+      "crossed_width": 0.06465556001699747,
+      "measured_sigma_b": 0.020312186565169008,
+      "churn_in_measured_band": false
+    },
+    {
+      "seeds": 5,
+      "sigma_b": 0.0,
+      "tau": 0.0,
+      "between_seed_variance": 4.978088756006807e-05,
+      "churn": 0.0419872343805506,
+      "median_seed_above": 0.019,
+      "median_seed_below": 0.015,
+      "median_seed_width": 0.05305481310399999,
+      "crossed_above": 0.021,
+      "crossed_below": 0.021,
+      "crossed_width": 0.05013311877128313,
+      "measured_sigma_b": 0.0,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 5,
+      "sigma_b": 0.005,
+      "tau": 0.08628938731226299,
+      "between_seed_variance": 7.996345849185243e-05,
+      "churn": 0.04582903606017808,
+      "median_seed_above": 0.021,
+      "median_seed_below": 0.021,
+      "median_seed_width": 0.05334533665893439,
+      "crossed_above": 0.032,
+      "crossed_below": 0.024,
+      "crossed_width": 0.05083579415067763,
+      "measured_sigma_b": 0.005493866664907728,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 5,
+      "sigma_b": 0.01,
+      "tau": 0.1779215853171081,
+      "between_seed_variance": 0.00015387600444867477,
+      "churn": 0.05080282712126272,
+      "median_seed_above": 0.02,
+      "median_seed_below": 0.025,
+      "median_seed_width": 0.053856435185878494,
+      "crossed_above": 0.02,
+      "crossed_below": 0.024,
+      "crossed_width": 0.052881393043238537,
+      "measured_sigma_b": 0.010202701450528026,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 5,
+      "sigma_b": 0.02,
+      "tau": 0.4107786659037629,
+      "between_seed_variance": 0.000493939388873795,
+      "churn": 0.06292747822135338,
+      "median_seed_above": 0.042,
+      "median_seed_below": 0.034,
+      "median_seed_width": 0.05490356706497162,
+      "crossed_above": 0.025,
+      "crossed_below": 0.028,
+      "crossed_width": 0.06067357374796774,
+      "measured_sigma_b": 0.021075068239835595,
+      "churn_in_measured_band": false
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-09-18T11:52:03.352798+00:00",
+    "git": {
+      "commit": "38936f31c13a62a31c073051062ccaa9c6d96d53",
+      "branch": "feat/wellposed-filter"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": null,
+      "job_id": null,
+      "account": null,
+      "partition": null,
+      "node": null
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 3060 Ti",
+      "total_gb": 8.59,
+      "peak_allocated_gb": 0.0,
+      "peak_reserved_gb": 0.0,
+      "cuda": "13.0"
+    }
+  }
+}

@@ -106,20 +106,22 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   than nested. Built beside the registered gate, not registered. Reviewed; three findings fixed
   (simulated seed effect under-sized by clipping, a merge that accepted different studies, seed runs
   overwriting seed-1 results without a tag).
-- [ ] **Coverage** (`scripts/crossed_coverage.py`, null calibrated to the two identical nulls):
-  one-sided false-positive rate of median-seed vs crossed at 3 and 5 seeds, seed main effect 0 to
-  0.02. Rerunning after the clipping fix; the first pass had the crossed interval nominal throughout
-  and the median-seed rule drifting above nominal as the seed effect grows.
+- [x] **Coverage measured** (`datasets/results/crossed-coverage.json`): the crossed interval is
+  nominal at five seeds throughout and at three up to a seed effect of 0.01 (0.073 two-sided at
+  0.02); the median-seed rule reaches 0.122 at three seeds and 0.02. No width cost when there is no
+  seed effect.
 - [ ] **Measure the seed main effect on real data**: `sym-0` at seeds 2 and 3 (jobs 148405, 148407),
   read with `scripts/crossed_reread.py` beside seed 1.
 - [ ] **Re-read RQ1 at three seeds**: qtfull seeds 2 and 3 (148404, 148406).
-- [ ] **Register the crossed interval** if coverage and the measured seed effect support it, which
-  also retires the median-seed rule's arbitrariness; the conjunctive power stands if the seed effect
-  is at or below 0.01, since the interval's width does not change there.
+- [ ] **Register the crossed interval, and the seed count from the measured seed effect**: three
+  seeds if it is at or below 0.01, five if above. The conjunctive power stands at or below 0.01,
+  where the interval's width does not change.
 - [ ] **Reproducible inference for the confirmatory run.** Compute in FP32 with 16-bit weights
   (LayerCast, Yuan et al., arXiv:2506.09501), or deterministic kernels, and measure the cost on a
   GH200. `HFGenerator`'s docstring corrected.
-- [ ] Deploy `c52f267` (seed-tagged result names) once jobs 148404 to 148408 have started.
+- [ ] **Deploy only after jobs 148404 to 148408 finish**: they record the checkout's commit at write
+  time (fixed in 38936f3, not yet on the cluster), so an earlier deploy would mislabel them. Then
+  submit `determinism_check` pinned to gh-a-081 and gh-a-103.
 
 ## Plan F — RQ2 positioning
 
