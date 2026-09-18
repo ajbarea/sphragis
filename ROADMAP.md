@@ -195,8 +195,13 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   program repair over up to 100 clients with QLoRA and FedAvg, adapters uploaded to a central
   server, privacy claimed from not centralizing raw data, no threat model, DP and secure
   aggregation named but not implemented. RQ2 tests exactly that claim.
-- [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
-  project, or both, and which boundary an organization-level privacy policy actually protects.
+- [x] **Framed at both altitudes, and the answer is the project**: per client, an update
+  identifies its codebase family; through secure aggregation, most projects are detected more
+  clearly (0.63 to 0.82) than either organization containing them (0.66 to 0.75). An
+  organization-level policy protects the wrong boundary in both directions: it over-promises for a
+  federation whose projects are separately identifiable, and under-describes a house whose
+  projects carry one hand. Whether an organization adds anything beyond its projects is what the
+  AOSP cell tests.
 - [x] Both threat models exist and both leak: per-client updates, and aggregates over rounds of
   varying composition.
 
