@@ -23,6 +23,7 @@ set -euo pipefail
 
 cd "$HOME/ajsoftworks/sphragis"
 source sphragis/experiment/cluster-env.sh
+tag_result_suffix SEEDS TRAIN_SIZE
 
 PROJECTS="${PROJECTS:-$HOME/corpus/projects}"
 A="${A:-qt-creator_qt-creator}"

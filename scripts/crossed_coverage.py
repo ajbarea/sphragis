@@ -30,7 +30,7 @@ import random
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from statistics import fmean, median, pstdev
+from statistics import fmean, median, pstdev, variance
 
 from sphragis.experiment.model import run_provenance
 from sphragis.measure.stats import (
@@ -94,12 +94,24 @@ def realized_sigma_b(pop: Population, *, tau: float, f: float, draws: int = 4000
 
 
 def tau_for(pop: Population, *, sigma_b: float, f: float) -> float:
-    """The arm shift whose realized seed main effect is `sigma_b`, by bisection."""
+    """The arm shift whose expected seed main effect is `sigma_b`, by bisection.
+
+    The effect is bounded: once shifts are large every redraw is 0 or 1, and on sym-0 at
+    f = 0.055 it tops out near 0.039. A target at or past that has no shift, so it is refused
+    rather than searched for forever.
+    """
     if sigma_b == 0.0:
         return 0.0
+    if f <= 0.0:
+        raise ValueError(f"a seed effect of {sigma_b} needs a redraw rate f > 0, got {f}")
     low, high = 0.0, 1.0
     while realized_sigma_b(pop, tau=high, f=f) < sigma_b:
         high *= 2
+        if high > 1_000:
+            ceiling = realized_sigma_b(pop, tau=high, f=f)
+            raise ValueError(
+                f"sigma_b {sigma_b} exceeds the largest reachable, about {ceiling:.4f}"
+            )
     for _ in range(40):
         middle = (low + high) / 2
         if realized_sigma_b(pop, tau=middle, f=f) < sigma_b:
@@ -158,7 +170,16 @@ def trial(job: tuple[int, int, float, float, float, float, int, Population]) -> 
     runs = simulate(rng, pop, seeds=seeds, q=q, f=f, tau=tau)
     single = median_seed(runs, bootstrap_seed=index, resamples=resamples)
     crossed = crossed_bootstrap(runs, seed=index, resamples=resamples)
+    estimates = [paired_difference(run) for run in runs]
+    first, second = runs[0], runs[1]
+    changed = [
+        (ta - ca) != (tb - cb)
+        for x, y in zip(first, second, strict=True)
+        for ta, ca, tb, cb in zip(x.treatment, x.control, y.treatment, y.control, strict=True)
+    ]
     return {
+        "between_seed_variance": variance(estimates),
+        "churn": fmean(1.0 if c else 0.0 for c in changed),
         "median_seed_above": float(supports_direction(single)),
         "median_seed_below": float(single["high"] < 0.0),
         "median_seed_width": single["high"] - single["low"],
@@ -200,9 +221,8 @@ def main() -> None:
     with ProcessPoolExecutor(args.workers) as pool:
         taus = {sigma_b: tau_for(pop, sigma_b=sigma_b, f=args.f) for sigma_b in args.sigma_b}
         for sigma_b, tau in taus.items():
-            realized = realized_sigma_b(pop, tau=tau, f=args.f)
             naive = args.f * 2**0.5 * tau
-            print(f"sigma_b {sigma_b}: tau {tau:.4f}, realized {realized:.4f}, naive {naive:.4f}")
+            print(f"sigma_b {sigma_b}: tau {tau:.4f} (unclipped the effect would be {naive:.4f})")
         for seeds in args.seeds:
             for sigma_b in args.sigma_b:
                 tau = taus[sigma_b]
@@ -215,7 +235,6 @@ def main() -> None:
                     "seeds": seeds,
                     "sigma_b": sigma_b,
                     "tau": tau,
-                    "realized_sigma_b": realized_sigma_b(pop, tau=tau, f=args.f),
                     **{k: fmean(o[k] for o in outcomes) for k in outcomes[0]},
                 }
                 cells.append(cell)
@@ -226,6 +245,19 @@ def main() -> None:
                     f"width {cell['median_seed_width']:.4f} {cell['crossed_width']:.4f}",
                     flush=True,
                 )
+    # The seed effect the trials produced, not the target: between-seed variance of each trial's
+    # estimate, less the same with no seed effect, which is the seed-by-change part alone.
+    for cell in cells:
+        null = next((c for c in cells if c["seeds"] == cell["seeds"] and c["sigma_b"] == 0.0), None)
+        excess = (
+            None if null is None else cell["between_seed_variance"] - null["between_seed_variance"]
+        )
+        cell["measured_sigma_b"] = None if excess is None else max(0.0, excess) ** 0.5
+        cell["churn_in_measured_band"] = 0.037 <= cell["churn"] <= 0.053
+        print(
+            f"S={cell['seeds']} sigma_b={cell['sigma_b']}: measured {cell['measured_sigma_b']}, "
+            f"churn {cell['churn']:.3f} (measured band 0.037-0.053)"
+        )
     if args.out:
         args.out.write_text(
             json.dumps(

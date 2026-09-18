@@ -9,7 +9,8 @@ Runs are merged only if they are seeds of one study: the same model, corpora, sp
 training size, and the same held-out examples per arm. `crossed_bootstrap` refuses runs over
 different examples in any case; checking here names the file that differs.
 
-Name extra seeds with SEEDS= alone: the suffix then carries the seed, `-s2`, `-s3`.
+Submit extra seeds with the same RUN_TAG as seed 1 plus SEEDS=, and the result name gains the
+seed: RUN_TAG=qtfull SEEDS=2 writes `rq1-windows-qtfull-s2.json`.
 
     uv run --no-sync --no-active python scripts/crossed_reread.py \
         datasets/results/rq1-windows-qtfull.json datasets/results/rq1-windows-qtfull-s2.json \
@@ -42,16 +43,22 @@ def configuration(run: dict[str, Any]) -> dict[str, Any]:
     The held-out examples are checked separately, but they fix only the evaluation: a run
     trained at 788 examples scores the same held-out set as one trained at 1,517, and merging
     the two would average different studies as if they were seeds of one.
+
+    Training size is read from what was trained on, not from `--train-size`: a size equal to
+    the smallest set trains on exactly the rows an unsized run does. Steps per organization
+    catch a change to epochs or batch size between the runs.
     """
     return {
         "model_id": run["model_id"],
         "split_seed": run["split_seed"],
         "equalize_train": run["equalize_train"],
-        "train_size": run.get("train_size"),
         "max_new_tokens": run["max_new_tokens"],
         "corpora": {
             org: (c["source"], c.get("train_examples_equalized"), c["held_out_examples"])
             for org, c in run["corpora"].items()
+        },
+        "steps": {
+            name.rsplit("-s", 1)[0]: (t["items"], t["steps"]) for name, t in run["training"].items()
         },
     }
 

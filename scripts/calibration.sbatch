@@ -30,6 +30,7 @@ set -euo pipefail
 
 cd "$HOME/ajsoftworks/sphragis"
 source sphragis/experiment/cluster-env.sh
+tag_result_suffix SEEDS
 
 PLANTED="${PLANTED:-$HOME/corpus/planted}"
 CONDITIONS="${CONDITIONS:-marker-1 marker-0}"

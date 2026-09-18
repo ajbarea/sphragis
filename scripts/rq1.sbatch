@@ -32,6 +32,7 @@ MODE="${MODE:-pilot}"
 # Submit from the checkout: --output is relative and is opened before this body runs.
 cd "$HOME/ajsoftworks/sphragis"
 source sphragis/experiment/cluster-env.sh
+tag_result_suffix SEEDS
 
 if [ "$MODE" = "windows" ]; then
   SOURCE=(--root "$HOME/corpus-windows" --org openstack --org qt)

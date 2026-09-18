@@ -266,11 +266,12 @@ def test_cluster_env_logs_are_named_for_their_cluster() -> None:
     assert "logs/sphragis-cluster-env-sporc-%j.log" in _dry_run("cluster-env", "CLUSTER=sporc")
 
 
-def _suffix(tmp_path: Path, **env: str) -> str:
+def _suffix(tmp_path: Path, tags: str = "", **env: str) -> str:
     _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
     _fake_venv(tmp_path)
+    tag = f"tag_result_suffix {tags}; " if tags else ""
     result = subprocess.run(
-        ["bash", "-c", f'set -euo pipefail; source "{_ENV}"; echo "[$RESULT_SUFFIX]"'],
+        ["bash", "-c", f'set -euo pipefail; source "{_ENV}"; {tag}echo "[$RESULT_SUFFIX]"'],
         capture_output=True,
         text=True,
         cwd=tmp_path,
@@ -308,7 +309,35 @@ def test_another_seed_or_training_size_never_takes_the_default_name(
     tmp_path: Path, env: dict[str, str], expected: str
 ) -> None:
     """Untagged, SEEDS=2 wrote over the seed-1 result and adapters on TIGRIS."""
-    assert _suffix(tmp_path, SLURM_CLUSTER_NAME="tigris", **env) == expected
+    tagged = _suffix(tmp_path, tags="SEEDS TRAIN_SIZE", SLURM_CLUSTER_NAME="tigris", **env)
+    assert tagged == expected
+
+
+def test_a_variable_the_script_does_not_pass_on_never_renames_it(tmp_path: Path) -> None:
+    """A stray exported TRAIN_SIZE must not name an rq1 result that nothing cut."""
+    one, two = tmp_path / "rq1", tmp_path / "pilot"
+    one.mkdir()
+    two.mkdir()
+    assert _suffix(one, tags="SEEDS", SLURM_CLUSTER_NAME="tigris", TRAIN_SIZE="788") == "[]"
+    assert _suffix(two, SLURM_CLUSTER_NAME="tigris", SEEDS="2") == "[]"
+
+
+def test_tagging_an_unknown_variable_stops_the_job(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, "tag_result_suffix SEED")
+    assert result.returncode != 0
+    assert "no tag for SEED" in result.stderr
+
+
+@pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
+def test_every_script_names_its_result_by_the_seeds_and_size_it_passes(script: Path) -> None:
+    text = script.read_text()
+    tagged = re.findall(r"^tag_result_suffix (.*)$", text, flags=re.MULTILINE)
+    names = set(tagged[0].split()) if tagged else set()
+    for variable, flag in (("SEEDS", "--seeds"), ("TRAIN_SIZE", "--train-size")):
+        passes = f"${{{variable}" in text and flag in text
+        assert (variable in names) == passes, f"{script.name}: {variable}"
 
 
 def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -> None:
