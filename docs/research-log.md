@@ -2570,3 +2570,25 @@ measurements of one quantity but two different situations. RQ1's registered clai
 organizations leave a learnable fingerprint, is therefore too strong as stated for a federation and
 about right for a house, which is a finding rather than a failure, and it is what the conjunctive
 rule was built to expose.
+
+### The privacy LoRA provides by design is the wrong privacy for an organization (2026-09-18)
+
+Malekmohammadi and Farnadi, "LoRA Provides Differential Privacy by Design via Random Sketching"
+(arXiv:2409.17538, revised 2026-02-10), prove that low-rank adaptation is equivalent to training
+with noisy batch gradients, the noise decreasing in the rank, and derive an inherent differential
+privacy guarantee when the adaptation matrices A are frozen, with the level set by rank and batch
+size. They offer it as the reason LoRA-tuned models resist privacy attacks.
+
+**That guarantee is about examples, and RQ2 is about sources.** Differential privacy at the example
+level bounds what an adversary learns about whether one training example was used. It does not
+bound what an update reveals about *where its data came from*: an organization's conventions are a
+property of the distribution, shared across every example, and a mechanism that hides each example
+individually can leave the distribution entirely legible. The attacks measured here read exactly
+that residue, and they work on updates whose A matrices were trained rather than frozen, so the
+paper's regime is not even the one they run in.
+
+**This is the sharpest positioning RQ2 has.** LoRA-Leak (arXiv:2507.18302) attacks membership of
+examples; FedAttr (arXiv:2605.06596) attributes a deliberate watermark; Malekmohammadi and Farnadi
+bound example-level leakage by design. None of them asks whether an update betrays its source, and
+the answer here is that it does, through secure aggregation, without a watermark, at the altitude a
+data-governance policy is actually written at.

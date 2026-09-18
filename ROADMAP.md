@@ -168,6 +168,10 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   round is detectable from the aggregate alone at AUC 0.65 to 0.75 over rounds of four and eight,
   and FedAttr's paired subset difference recovers the target's direction where a stranger's gives
   nothing. Inherits the family caveat, and the rounds are one source against all others.
+- [x] **Positioned against LoRA's own privacy claim** (arXiv:2409.17538, revised 2026-02): LoRA is
+  inherently differentially private at the *example* level when A is frozen. RQ2 asks about the
+  source, a property of the distribution rather than of any example, and runs where A is trained.
+  The guarantee and the leak are about different quantities, which is the paper's opening.
 - [ ] **Realistic cohorts**: rounds mixing several organizations, more than one target client a
   round, and several local-training lengths, before RQ2's Stage 1 text states a threat model.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
