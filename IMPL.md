@@ -20,6 +20,27 @@ client's update identifies its codebase family, not its organization. Separating
 several projects per organization in one language, which AOSP's C++ projects supply beside Qt's.
 AOSP months 2024-01 to 2025-03 are fetching and building locally; the public record ends 2025-03-27.
 
+## RQ2's analysis, end to end
+
+One client run produces the adapters; everything after it is CPU and reads only what the run wrote.
+
+```bash
+# 1. corpora, one file per project, pooled windows (RQ2 needs no time split)
+uv run --no-sync --no-active python scripts/project_corpora.py --org qt --window train --window dev \
+    --out-dir <dir> --projects qt/qtbase ...            # and --window all for AOSP
+# 2. the clients themselves, on a GPU: one initialization, one size, disjoint by change
+make submit-pinned JOB=client_updates TIME=04:00:00 \
+    SBATCH_ARGS=--export=ALL,CLIENTS=<dir>,SOURCES=<dir>/sources.txt,RUN_TAG=<tag>
+# 3. their geometry and their sketches, CPU jobs on the cluster
+make submit-pinned JOB=adapter_projection            # PATTERN= for a tagged adapter directory
+#    adapter_geometry --per-module, likewise
+# 4. who a client is, from its update alone
+uv run --no-sync --no-active python scripts/client_attribution.py --geometry ... --clients ... --out ...
+# 5. what a round's aggregate betrays, and what noise costs the attacker
+uv run --no-sync --no-active python scripts/aggregate_attack.py --geometry ... --clients ... --out ...
+uv run --no-sync --no-active python scripts/defence_curve.py --vectors ... --clients ... --out ...
+```
+
 ## Next pickups
 
 - Build the AOSP and Qt C++ client corpora, rerun `client_updates` over the larger source set, and
