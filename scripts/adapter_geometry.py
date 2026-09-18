@@ -30,6 +30,8 @@ from typing import Any
 
 import numpy as np
 
+from sphragis.provenance import provenance_header, slurm_record
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--root", type=Path, required=True, help="holds sphragis-adapters* dirs")
 parser.add_argument("--out", type=Path, required=True)
@@ -113,6 +115,7 @@ def main() -> None:
                 "update_norm": dict(zip(names, norms.tolist(), strict=True)),
                 "cosine": (inner / np.outer(norms, norms)).tolist(),
                 "mean_module_cosine": (per_module_cosines / len(shared)).tolist(),
+                "provenance": {**provenance_header(), "slurm": slurm_record()},
             },
             indent=2,
         )
