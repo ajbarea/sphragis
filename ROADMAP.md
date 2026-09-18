@@ -97,19 +97,29 @@ with identical seeds, and one returned -0.036 [-0.065, -0.007] on a side where t
 -0.018 covering zero. Neither training nor inference is bit-reproducible on the GPU; even the base
 model changes 23 to 28 of about 440 greedy predictions between runs.
 
-- [ ] **A two-level bootstrap for the gate**: resample seeds, then changes within each. The current
-  interval resamples changes and holds the trained adapters fixed, so it omits run-to-run variance
-  of about 0.018, the size of the organizational effects. Du et al. (arXiv:2511.19794) omit the
-  other half, bootstrapping seeds on a fixed test set; neither alone is enough. Build it beside the
-  current interval, as the estimands were, then register it.
-- [ ] **Recompute the conjunctive power with seed variance.** 0.757 and 0.833 were simulated from one
-  run's changes, so they omit it and overstate the power of the registered design.
+Revised the same day. The swing is what seed-by-change noise produces (z = -1.47 and 0.00 against
+it), and a single-seed change bootstrap already carries that noise. What it omits is a seed main
+effect, a shift common to every change, which two runs give no evidence of (rough estimate 0.005).
+
+- [x] **A crossed seed x change bootstrap** (`stats.crossed_bootstrap`, `walk.crossed_gate`): Owen's
+  pigeonhole bootstrap, seeds and changes resampled independently, because they are crossed rather
+  than nested. Built beside the registered gate, not registered. Reviewed; three findings fixed
+  (simulated seed effect under-sized by clipping, a merge that accepted different studies, seed runs
+  overwriting seed-1 results without a tag).
+- [ ] **Coverage** (`scripts/crossed_coverage.py`, null calibrated to the two identical nulls):
+  one-sided false-positive rate of median-seed vs crossed at 3 and 5 seeds, seed main effect 0 to
+  0.02. Rerunning after the clipping fix; the first pass had the crossed interval nominal throughout
+  and the median-seed rule drifting above nominal as the seed effect grows.
+- [ ] **Measure the seed main effect on real data**: `sym-0` at seeds 2 and 3 (jobs 148405, 148407),
+  read with `scripts/crossed_reread.py` beside seed 1.
+- [ ] **Re-read RQ1 at three seeds**: qtfull seeds 2 and 3 (148404, 148406).
+- [ ] **Register the crossed interval** if coverage and the measured seed effect support it, which
+  also retires the median-seed rule's arbitrariness; the conjunctive power stands if the seed effect
+  is at or below 0.01, since the interval's width does not change there.
 - [ ] **Reproducible inference for the confirmatory run.** Compute in FP32 with 16-bit weights
   (LayerCast, Yuan et al., arXiv:2506.09501), or deterministic kernels, and measure the cost on a
-  GH200. Correct `HFGenerator`'s docstring, which calls greedy decoding deterministic.
-- [ ] **Re-read the single-seed results under it.** Qt's +0.034 [+0.010, +0.060] and qt-creator's
-  +0.079 [+0.041, +0.118] cannot be read as excluding zero until then; the first is about twice the
-  run-to-run swing, the second about four times.
+  GH200. `HFGenerator`'s docstring corrected.
+- [ ] Deploy `c52f267` (seed-tagged result names) once jobs 148404 to 148408 have started.
 
 ## Plan F — RQ2 positioning
 
@@ -154,9 +164,10 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   there is -0.086, excluding zero on the refuting side. Between floor and ceiling the gate never
   passes. A Stage 1 validity issue: decide whether to register it as a stated limitation, or a
   metric less punishing of over-application beside exact match.
-- [ ] **Symmetric calibration**: convention X on one half, Y on the other, since two organizations
-  each carry their own. Shows whether the matched adapter wins on both sides once neither half is
-  convention-free.
+- [x] **Symmetric calibration passes** (job 148200): a 25% convention on each half gives +0.084
+  [+0.049, +0.124] and +0.039 [+0.005, +0.071]. Each adapter over-applies its own marker (0.57 to
+  0.67) and never the other's. The non-monotonicity is a property of a one-sided fingerprint, which
+  stays a stated limitation.
 - [x] **Greedy adds to the amplification; it does not cause it** (job 148202). Sampling at T=1
   from the same adapter emits the annotation at 0.499 and 0.545 against greedy's 0.617 and 0.656,
   still about twice the 0.251 it was trained on. The over-weighting is learned, so changing the
@@ -180,8 +191,10 @@ as the unit; the evidence says the codebase is.
   organizational +0.021; qtbase shows none (-0.019, covering zero). Controlled for data
   difficulty by construction, since both adapters score the identical examples. qt-creator is
   also the latency outlier, so two unrelated measurements single out the same project.
-- [ ] More project pairs, and seeds, before claiming the codebase effect generalizes: one pair
-  shows a fingerprint exists and can exceed the organizational one, not that every project has one.
+- [x] **All three Qt pairs** (148377, 148378): qt-creator's advantage does not replicate against
+  qtdeclarative (+0.005), qtdeclarative's does against qt-creator (+0.042 [+0.005, +0.074]), qtbase
+  never wins at home. Two of six directional contrasts exclude zero: pairwise, not per project.
+- [ ] qt-creator vs qtbase at 788 per side (job 148408) separates training size from pair.
 - [ ] Register the probe and the project contrast as Stage 1 secondary analyses, with the
   within-organization baseline as the reading rule rather than raw accuracy.
 - [ ] If the project contrast separates where the organization contrast does not, say what

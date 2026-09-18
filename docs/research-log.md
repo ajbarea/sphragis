@@ -1746,6 +1746,10 @@ is only one reading of it.
 
 ### A codebase fingerprint inside one organization (2026-09-18, job 148203)
 
+> **Qualified later on 2026-09-18.** qt-creator's home advantage holds against qtbase only; against
+> qtdeclarative it is +0.005, covering zero. See "The qt-creator fingerprint is a property of the
+> pair, not the project" below.
+
 `datasets/results/projects-qt-creator_qt-creator-qt_qtbase.json`. The identical matched-versus-
 mismatched contrast RQ1 runs, between two projects inside Qt: `qt-creator/qt-creator` (a) and
 `qt/qtbase` (b), holdout by change within the train window, equalized at 1,517 training examples
@@ -1810,6 +1814,12 @@ report fine-tuning moving output diversity toward the target: here, for a plante
 convention, it overshoots.
 
 ### The interval measures one source of variance of two, and a null crossed zero (2026-09-18)
+
+> **Corrected later on 2026-09-18.** The inference below overreaches. The run-to-run swing is what
+> seed-by-change noise produces (z = -1.47 and 0.00 against it), and a single-seed change bootstrap
+> already carries that noise. The only variance it omits is a seed main effect, which two runs give
+> no evidence of. The retraction of single-seed results and of the conjunctive power is withdrawn
+> pending a measurement. See "The run-to-run swing is noise the interval already carries" below.
 
 The most consequential finding of the night, and it is about the gate rather than about
 organizations.
@@ -1881,3 +1891,100 @@ decisive, which is the reason to widen it.
   alpha 0.025. The Stage 1 skeleton still says "excludes zero" and must say which.
 - **`model.py` has no tests.** The budget arithmetic moved into `training.py` where CI
   reaches it; `HFGenerator` and the loop body remain untested on CPU.
+
+### Both halves carrying a convention: the gate passes on both (2026-09-18, job 148200)
+
+`datasets/results/calibration-sym-0.25.json`. The symmetric calibration: half a carries `  # approved`
+on 25% of refinements, half b carries `  # reviewed` on 25%, equal-length markers, neither half
+convention-free. This is the realistic case, two organizations each with their own habit, and it is
+the case the asymmetric sweep could not speak to.
+
+| side | matched minus mismatched |
+|---|---|
+| a | **+0.084 [+0.049, +0.124]** over 183 changes |
+| b | **+0.039 [+0.005, +0.071]** over 183 changes |
+
+Gate: **pass**. All outcome-neutral checks pass.
+
+| emission of | on half a | on half b |
+|---|---|---|
+| a's adapter, its own `# approved` | 0.577 | 0.570 |
+| b's adapter, its own `# reviewed` | 0.665 | 0.656 |
+
+Neither adapter ever emits the other's marker. Each over-applies its own at about two and a half
+times the trained rate, as in the asymmetric sweep, and on both halves alike, so emission tracks
+what the adapter was trained on and not what it is evaluating.
+
+**What this settles.** At 0.25 the asymmetric condition refuted the hypothesis on the planted side
+(-0.086), because the one adapter carrying a habit lost to an adapter carrying none. With a habit on
+each side, over-application costs both adapters on the other's half, and the matched adapter wins at
+home on both. The non-monotonicity found in the sweep is a property of the one-sided design, not of
+the gate in the case RQ1 is about. It remains a stated limitation for a fingerprint present in one
+organization only.
+
+**What it costs.** Exact match halves: 0.147 and 0.148 at home against about 0.31 in the null
+(`sym-0`). The gate detects a learned convention even when learning it hurts the metric overall,
+which is the right behaviour for a fingerprint test and the wrong one to read as usefulness. Side b's
+lower bound, +0.005, sits close to zero on one seed.
+
+### The qt-creator fingerprint is a property of the pair, not the project (2026-09-18, jobs 148377, 148378)
+
+The two remaining pairs among qt-creator, qtbase and qtdeclarative, same protocol as job 148203,
+one seed each. qtdeclarative is the smallest of the three, so both new pairs equalized at 788
+training examples per side, against 1,517 for the first pair.
+
+| pair (a vs b) | train per side | a: matched minus mismatched | b: matched minus mismatched |
+|---|---|---|---|
+| qt-creator vs qtbase | 1,517 | **+0.079 [+0.041, +0.118]** | -0.019 [-0.046, +0.008] |
+| qt-creator vs qtdeclarative | 788 | +0.005 [-0.024, +0.032] | **+0.042 [+0.005, +0.074]** |
+| qtbase vs qtdeclarative | 788 | -0.024 [-0.060, +0.008] | +0.017 [-0.025, +0.059] |
+
+**qt-creator's home advantage does not replicate.** Against qtdeclarative, qtdeclarative's adapter
+scores 0.323 on qt-creator's refinements against qt-creator's own 0.328. So the earlier entry's claim
+that qt-creator "carries something learnable that is specific to it" holds relative to qtbase only.
+Two of six directional contrasts exclude zero, both on the supporting side, in different projects.
+
+**qtbase never wins at home.** Its adapter loses on its own refinements to both neighbours' (0.241
+against 0.259, 0.243 against 0.267). qtbase teaches an adapter less than the other two do, at home
+and away, which reads as heterogeneous or harder training data rather than an absence of habits.
+
+**The pairs differ in training size as well as in projects.** The first pair trained on twice the
+data. Job 148408 reruns qt-creator vs qtbase cut to 788 per side (`TRAIN_SIZE=788`, a nested
+subsample of the 1,517), which separates the two explanations for qt-creator's +0.079.
+
+**What survives for Plan D.** The separability probe still reads the codebase and not the
+organization. The generative contrast between projects is real in two directions of six and not
+organized by project, so "the codebase is the unit" is not yet supported by the contrast itself.
+
+### The run-to-run swing is noise the interval already carries (2026-09-18)
+
+Corrects "The interval measures one source of variance of two" above.
+
+A single-seed contrast is the true effect, plus a seed main effect b that shifts every change at
+once, plus per-change terms, plus seed-by-change interaction e. The change bootstrap resamples
+changes, and e varies from change to change, so its spread is inside the interval already. What
+the interval cannot see is b. The swing between the two identical nulls therefore indicts the
+interval only if it is larger than e alone would make it.
+
+It is not. Per example, the difference between the two runs' contrasts, clustered by change and
+bootstrapped (10,000 resamples), gives the swing that seed-by-change noise alone would produce:
+
+| half | marker-0 | sym-0 | swing | its SE with no seed effect | z |
+|---|---|---|---|---|---|
+| a | -0.0178 | -0.0356 | -0.0178 | 0.0122 | -1.47 |
+| b | -0.0137 | -0.0137 | 0.0000 | 0.0087 | 0.00 |
+
+Only 3.7 to 5.3% of per-example contrasts change between the runs. Adapter predictions change on
+18.5 to 26.3% of examples, but exact match on only 1.8 to 2.9%: 87 to 91% of the changed predictions
+go from one wrong answer to another (base model: 22 of 23 and 27 of 28). A moment estimate from the two halves puts b's
+SD near 0.005, which would widen a single-seed standard error of about 0.014 by some 6%. Two runs
+cannot distinguish that from zero, and cannot rule out more.
+
+**What this withdraws.** The claim that no single-seed contrast can be read as excluding zero, and
+that the conjunctive power of 0.757 and 0.833 is overstated. Both rested on reading the 0.018 swing
+as omitted variance. The sym-0 excursion below zero is the kind of tail event a mildly
+anti-conservative interval produces across the dozen null contrasts this log has read.
+
+**What stands.** Nothing on the GPU is bit-reproducible, and the registered design's three seeds
+still need an interval that spans them rather than one seed's. That interval is built (next entry),
+and the seed main effect is now being measured rather than inferred: `sym-0` at seeds 2 and 3.
