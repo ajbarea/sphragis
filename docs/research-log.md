@@ -2242,7 +2242,15 @@ workstation, and `fetch --project` bounds it and records the restricted query in
 for these projects through 2025-03, then 2 to 9. Google moved Android development to internal
 branches that week and made aosp-main read-only (9to5Google, 2025-03-26; Android Authority).
 AOSP therefore has no dev or test window under RQ1's registered windows and cannot join RQ1. RQ2's
-client design needs no time split, so its months 2024-11 to 2025-03 serve.
+client design needs no time split, so its months 2024-11 to 2025-03 serve, extended back to 2024-01
+for volume.
+
+**The same filters, a different mix of what they drop.** Per month AOSP yields about 220 examples
+against OpenStack's 458 and Qt's 880. The drop profile differs in composition rather than in kind:
+comments by the change's own author account for 40% of AOSP's drops against 21 to 24% elsewhere,
+metadata files for 30% against 39 to 55%, unanchored comments for 19% against 12 to 30%. Android
+reviewers and authors work in the review thread more, which the author filter removes on all three
+organizations alike.
 
 ### The seed main effect, measured: about 0.013, and it is what limits power (2026-09-18, jobs 148199, 148405, 148407)
 
