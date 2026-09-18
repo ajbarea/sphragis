@@ -2769,3 +2769,22 @@ decoder's: training is unchanged and still bf16. So the non-monotonicity, the ov
 and a half times the planted rate, and the refutation on the planted side are properties of what the
 adapter learned, and the registration of fp32 costs the calibration nothing. The earlier conditions
 are not rerun: this is the one the Stage 1 report's limitation rests on.
+
+### How much of adaptation is organizational: 7% and 10% (2026-09-18, three seeds)
+
+The decomposition the study exists to make, averaged over the three seeds of the windowed run:
+
+| | base model | adapter trained elsewhere | adapter trained at home |
+|---|---|---|---|
+| OpenStack's refinements | 0.048 | 0.291 | 0.308 |
+| Qt's refinements | 0.039 | 0.324 | 0.355 |
+
+**Adaptation is worth +0.260 and +0.316 exact match; being adapted on the right organization is
+worth +0.017 and +0.031 of that, 7% and 10%.** Almost everything an adapter learns about writing
+this corpus's refinements transfers across the organizational boundary: the task is shared, the
+house style is a tenth of it at most.
+
+That ratio is the finding a reader should carry away, and it is what makes the measurement hard: the
+organizational term is a tenth of the effect the apparatus can see easily, which is why the design
+needs the seeds, the crossed interval and the sensitivity analysis to say anything honest about it.
+It also frames RQ2, where the same small term is enough to identify a source from a weight update.
