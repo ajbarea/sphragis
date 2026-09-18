@@ -149,8 +149,8 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   its latest is at chance (OpenStack 0.552 [0.466, 0.602], Qt 0.510 [0.487, 0.572]) over the span
   that separates training from test. A cross-organization series is not measurable here, since the
   only shared suffix is Python and Qt stops writing it mid-window.
-- [ ] A code-side drift probe, since the naming-convention shift Xu et al. measure is in the code
-  and this one reads review comments.
+- [x] **The code side is at chance too** (0.511 and 0.513), read as convention shapes rather than
+  identifiers, so the medium the study trains on is not visibly moving within its year.
 
 ## Plan F — RQ2 positioning
 

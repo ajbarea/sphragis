@@ -32,6 +32,7 @@ import random
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 TOKEN = re.compile(r"[a-z']+")
 
@@ -57,8 +58,43 @@ def comment_words(row: Mapping[str, object]) -> tuple[str, ...]:
     return tuple(TOKEN.findall(" ".join(parts).lower()))
 
 
+# Shapes rather than identifiers: an identifier names the project's own domain, so a probe over
+# identifiers separates projects by their subject matter whatever their conventions. These are the
+# conventions themselves, the kind Xu et al. (arXiv:2506.12014) measure drifting.
+_SHAPES = (
+    ("snake", re.compile(r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b")),
+    ("camel", re.compile(r"\b[a-z][a-z0-9]*[A-Z][A-Za-z0-9]*\b")),
+    ("pascal", re.compile(r"\b[A-Z][a-z0-9]+[A-Z][A-Za-z0-9]*\b")),
+    ("upper", re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")),
+    ("dunder", re.compile(r"__[a-z]+__")),
+    ("arrow", re.compile(r"->")),
+    ("scope", re.compile(r"::")),
+    ("fstring", re.compile(r"f\"")),
+    ("brace", re.compile(r"\{")),
+    ("semicolon", re.compile(r";\s*$", re.MULTILINE)),
+)
+
+
+def code_shapes(row: Mapping[str, object]) -> tuple[str, ...]:
+    """The refinement's code, read as convention shapes rather than words.
+
+    Each occurrence of a shape contributes one token, so a naive Bayes over these reads how the
+    code is written rather than what it is about: this is the medium Xu et al. measure drifting,
+    and the one `comment_words` deliberately never touches.
+    """
+    text = str(row.get("after", ""))
+    found: list[str] = []
+    for name, pattern in _SHAPES:
+        found.extend([name] * len(pattern.findall(text)))
+    return tuple(found)
+
+
 def documents(
-    rows: Sequence[Mapping[str, object]], label: int, *, suffix: str | None
+    rows: Sequence[Mapping[str, object]],
+    label: int,
+    *,
+    suffix: str | None,
+    words_of: Any = comment_words,
 ) -> list[Document]:
     """Label one side, optionally restricted to a single file suffix."""
     out = []
@@ -66,7 +102,7 @@ def documents(
         path = str(row.get("path", ""))
         if suffix is not None and not path.endswith(suffix):
             continue
-        words = comment_words(row)
+        words = words_of(row)
         if words:
             out.append(Document(str(row["change_id"]), label, words))
     return out

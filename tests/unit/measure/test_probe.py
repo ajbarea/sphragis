@@ -166,3 +166,24 @@ def test_the_interval_is_not_lifted_by_resampled_copies_leaking_across_folds() -
     result = accuracy_interval(docs, seed=0, resamples=80)
     assert result["accuracy"] == pytest.approx(0.5, abs=0.05), result
     assert result["low"] <= result["accuracy"] <= result["high"], result
+
+
+def test_code_shapes_reads_conventions_not_subject_matter() -> None:
+    """Identifiers name a project's domain; shapes are how it writes them."""
+    from sphragis.measure.probe import code_shapes
+
+    snake = code_shapes({"after": "def parse_review_comment(x):\n    return x"})
+    camel = code_shapes({"after": "def parseReviewComment(x):\n    return x"})
+    assert "snake" in snake and "camel" not in snake
+    assert "camel" in camel and "snake" not in camel
+    # The same convention twice counts twice, so a naive Bayes reads how often it is used.
+    assert code_shapes({"after": "a_b = c_d"}).count("snake") == 2
+
+
+def test_code_shapes_ignores_the_reviewer_and_reads_the_refinement() -> None:
+    from sphragis.measure.probe import code_shapes, comment_words
+
+    row = {"after": "int x;\n", "comments": ["please use snake_case here"]}
+    assert "semicolon" in code_shapes(row)
+    assert "snake" not in code_shapes(row), "the reviewer's words are not the code"
+    assert "snake" in " ".join(comment_words(row))

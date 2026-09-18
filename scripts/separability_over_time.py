@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.pipeline import run_dedup
-from sphragis.measure.probe import accuracy_interval, documents
+from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--orgs", nargs=2, default=["openstack", "qt"])
@@ -47,6 +47,12 @@ parser.add_argument("--seed", type=int, default=5)
 parser.add_argument("--resamples", type=int, default=200)
 parser.add_argument("--out", type=Path, required=True)
 parser.add_argument("--mode", default="across", choices=("across", "drift"))
+parser.add_argument(
+    "--read",
+    default="comments",
+    choices=("comments", "code"),
+    help="the reviewers' words, or the refinement's code read as convention shapes",
+)
 parser.add_argument(
     "--drift-suffix",
     action="append",
@@ -69,7 +75,12 @@ def by_month(org: str) -> dict[str, list[dict[str, Any]]]:
 def drift(args: argparse.Namespace, months: dict[str, dict[str, list[dict[str, Any]]]]) -> dict:
     """Within each organization, its earliest months against its latest."""
     suffixes = dict(entry.split("=", 1) for entry in args.drift_suffix)
-    report: dict[str, Any] = {"mode": "drift", "suffixes": suffixes, "organizations": {}}
+    report: dict[str, Any] = {
+        "mode": "drift",
+        "read": args.read,
+        "suffixes": suffixes,
+        "organizations": {},
+    }
     for org, built in months.items():
         names = sorted(built)
         width = args.months_per_slice
@@ -77,9 +88,12 @@ def drift(args: argparse.Namespace, months: dict[str, dict[str, list[dict[str, A
             continue
         early, late = names[:width], names[-width:]
         suffix = suffixes.get(org)
+        reader = code_shapes if args.read == "code" else comment_words
         docs = documents(
-            [row for month in early for row in built[month]], 0, suffix=suffix
-        ) + documents([row for month in late for row in built[month]], 1, suffix=suffix)
+            [row for month in early for row in built[month]], 0, suffix=suffix, words_of=reader
+        ) + documents(
+            [row for month in late for row in built[month]], 1, suffix=suffix, words_of=reader
+        )
         result = accuracy_interval(docs, seed=args.seed, resamples=args.resamples)
         report["organizations"][org] = {"early": early, "late": late, **result}
         print(

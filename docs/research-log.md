@@ -2743,13 +2743,22 @@ dominant suffix, whole changes held out together:
 Both intervals cover 0.5. Over the span that separates RQ1's training window from its test window,
 the review text a classifier can read does not identify which end of the year it came from.
 
-**What that does and does not license.** It says the drift threat is not detectable in the medium
-this probe reads, which is the reviewers' comment vocabulary, so the train-to-test transfer is not
-obviously undermined. It does not test what Xu et al. measured, which is the *code*: their signal is
-in naming conventions and structure, and this probe reads words in review comments. A code-side
-version is buildable from the same corpus and is not built, so the honest statement for the Stage 1
-report is that the conversational half of the medium is stable over the study's horizon and the
-code half is untested here.
+**The code half is at chance too** (`style-drift-code.json`). `probe.code_shapes` reads the
+refinement itself as convention shapes rather than identifiers, since identifiers name a project's
+subject matter while shapes are how it writes them: snake_case, camelCase, PascalCase, SCREAMING
+case, dunders, arrows, scope resolution, f-strings, braces, line-final semicolons, each occurrence
+one token. On the same quarters:
+
+| organization | changes | accuracy |
+|---|---|---|
+| OpenStack (.py) | 308 | 0.511 [0.434, 0.562] |
+| Qt (.cpp) | 887 | 0.513 [0.453, 0.546] |
+
+So neither the reviewers' words nor the refinements' conventions identify which end of the year
+they came from. The drift Xu et al. measure is over three years and across 20,000 repositories with
+finer features than ten regular expressions; this says only that within one year, in these two
+organizations, on the medium this study actually trains on, the ground is not visibly moving. That
+is enough for the train-to-test transfer and not enough to contradict them.
 
 ### The calibration survives the change of numerics (2026-09-18, job 149248)
 
