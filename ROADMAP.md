@@ -164,7 +164,12 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   Python projects (Wikimedia) would supply the missing cell. Decide before RQ2's Stage 1 text.
 - [ ] **Robustness**: several initializations, longer local training (the RQ1 geometry says length
   moves updates apart), and a learned classifier on spectral features beside nearest-mean cosine.
-- [ ] **The aggregate attack**: FedAttr's paired subsets over these clients, watermark removed.
+- [x] **The aggregate attack leaks too** (`aggregate-attack.json`): membership of a source in a
+  round is detectable from the aggregate alone at AUC 0.65 to 0.75 over rounds of four and eight,
+  and FedAttr's paired subset difference recovers the target's direction where a stranger's gives
+  nothing. Inherits the family caveat, and the rounds are one source against all others.
+- [ ] **Realistic cohorts**: rounds mixing several organizations, more than one target client a
+  round, and several local-training lengths, before RQ2's Stage 1 text states a threat model.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
   project, or both, and which boundary an organization-level privacy policy actually protects.
 - [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,
