@@ -61,8 +61,9 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   no mechanism in common with it.
 - [x] Registered: the test window is fetched no earlier than three months after its final
   month (`FETCH_HORIZON_MONTHS`).
-- [ ] State the dev window's censoring wherever dev numbers appear; they are pre-registration
-  estimates, not unbiased previews.
+- [x] State the dev window's censoring wherever dev numbers appear; they are pre-registration
+  estimates, not unbiased previews. Stated with the three-seed RQ1 result: 39.1% and 28.8% of the
+  dev window's changes were still open at collection, against 1.1% and 0.7% in the test window.
 
 ## Plan B — measurement
 
@@ -79,9 +80,11 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   Min-K%++'s AUC of 0.540. By Meeus et al.'s criterion (SoK, SaTML 2025) the gap is
   indistinguishable from drift. Contamination protection rests on the post-cutoff windows
   postdating the checkpoint's release, not on the battery.
-- [ ] Report Gap-K% (arXiv:2601.19936, May 2026) beside Min-K%++. It needs only the top-1
-  log-probability, already computed on the way to Min-K%++'s statistics; +2.1 to 2.6 AUROC on
-  WikiMIA, untested on code. Reported, not registered.
+- [x] Gap-K% (arXiv:2601.19936) implemented from the paper and wired through the battery, which
+  now records how many smoothed windows the unscored positions cost. It needs only the top-1
+  log-probability, recorded from the same log-softmax. Reported, not registered.
+- [ ] Re-run the battery so Gap-K% has numbers: the saved results keep scores, not per-token
+  statistics, so it cannot be computed from what is on disk.
 - [x] Registered: hunks with three context lines either side are the scored text (table below).
 - [x] **Source the checkpoint's cutoff.** The widely repeated "June 2024" for Qwen2.5-Coder is
   a community guess, not a maintainer statement. The technical report states a repository
@@ -115,18 +118,17 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   seed effect.
 - [x] **Seed main effect measured on the null**: sigma_b about 0.013 over three seeds and two
   halves (`seed-effect-sym-0.json`). Past 0.01, so five seeds by the coverage rule.
-- [ ] **Seed count for power**: the smallest S with conjunctive power 0.80 at the seed effect
-  measured in RQ1's setting (qtfull seeds 2 and 3). Cells at 0.013 for S = 5, 7, 10 running.
-- [ ] **Re-read RQ1 at three seeds**: qtfull seeds 2 and 3 (148404, 148406).
-- [ ] **Register the crossed interval, and the seed count from the measured seed effect**: three
-  seeds if it is at or below 0.01, five if above. The conjunctive power stands at or below 0.01,
-  where the interval's width does not change.
-- [ ] **Reproducible inference for the confirmatory run.** Compute in FP32 with 16-bit weights
-  (LayerCast, Yuan et al., arXiv:2506.09501), or deterministic kernels, and measure the cost on a
-  GH200. `HFGenerator`'s docstring corrected.
-- [ ] **Deploy only after jobs 148404 to 148408 finish**: they record the checkout's commit at write
-  time (fixed in 38936f3, not yet on the cluster), so an earlier deploy would mislabel them. Then
-  submit `determinism_check` pinned to gh-a-081 and gh-a-103.
+- [x] **Seed effect in RQ1's own setting**: 0.000, one-sided 95% upper bound 0.0098 over three
+  seeds (`seed-effect-qtfull.json`). The null's 0.013 came from a quarter of the training data.
+- [x] **RQ1 re-read at three seeds** (148404, 148406): Qt +0.0312 [+0.0080, +0.0565], OpenStack
+  +0.0171 covering zero, mixed under both rules and both estimands.
+- [x] **Registered: the crossed interval, three seeds**, by the rule fixed before the runs landed.
+- [x] **Registered: fp32 inference**, which reproduces across jobs and nodes where bf16 does not,
+  at no measurable cost (a pilot ran 12m31s against bf16's 12m41s).
+- [x] **Sensitivity replaces power at an observed effect**: the design resolves 1.3 to 2.4
+  exact-match points, bracketing the seed effect's own uncertainty.
+- [ ] Re-read the dev window under fp32 (jobs 149258 to 149260), so the evidence is read under the
+  numerics the confirmatory run will use.
 
 ## Plan F — RQ2 positioning
 
@@ -146,10 +148,9 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   draws M random client subsets with and without the target each round and differences their
   aggregates; honest-but-curious, LoRA on Llama-3.2-3B, 10 to 100 IID UltraChat clients, KGW and
   fictitious-fact watermarks. Naturally occurring source features are not discussed.
-- [ ] **Register RQ2's aggregate attack as FedAttr's mechanism with the watermark removed**: does
-  an organization's own convention serve as an unintentional watermark? The symmetric calibration
-  (a 25% convention learned and emitted at 2.5 times its rate) is the bridge, and a server that
-  chooses round composition is the threat model to state.
+- [x] **RQ2's aggregate attack is FedAttr's mechanism with the watermark removed**, and it works:
+  an organization's participation is detectable from a round's aggregate, and the paired subset
+  difference recovers its direction where a stranger's gives nothing.
 - [x] **Weight-space geometry of the saved adapters** (job 148438): initialization dominates (same
   data, new seed: 0.13; rerun at the same seed: 0.96), training length next (0.21 at 788 examples,
   0.055 at 4,327), source a 0.02 margin at matched size that language may explain. A raw-cosine
@@ -172,16 +173,17 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   inherently differentially private at the *example* level when A is frozen. RQ2 asks about the
   source, a property of the distribution rather than of any example, and runs where A is trained.
   The guarantee and the leak are about different quantities, which is the paper's opening.
-- [ ] **Realistic cohorts**: rounds mixing several organizations, more than one target client a
-  round, and several local-training lengths, before RQ2's Stage 1 text states a threat model.
+- [x] **Mixed cohorts and more than one target client a round**: rounds drawn from every client,
+  detection rising with the target's share and with the round size.
+- [ ] **Several local-training lengths** (`CLIENT_SIZE`), since longer training moves updates apart.
 - [x] **The motivating deployment, cited** (Luo et al., arXiv:2412.01072, TOSEM): federated
   program repair over up to 100 clients with QLoRA and FedAvg, adapters uploaded to a central
   server, privacy claimed from not centralizing raw data, no threat model, DP and secure
   aggregation named but not implemented. RQ2 tests exactly that claim.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
   project, or both, and which boundary an organization-level privacy policy actually protects.
-- [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,
-  since the second has been shown not to be a defence.
+- [x] Both threat models exist and both leak: per-client updates, and aggregates over rounds of
+  varying composition.
 
 ## Plan E — calibration
 
