@@ -227,8 +227,9 @@ def _stage_fetch(args: argparse.Namespace) -> int:
 # report and changing them after the fact would move the confirmatory set.
 #
 # The test window runs twelve months rather than ten. The gate is conjunctive, so its power
-# is the probability BOTH organizations clear zero, and at ten months that is 0.757 with Qt
-# binding at 0.763. Twelve months takes the gate to 0.833 for 0.4 points of additional
+# is the probability BOTH organizations clear zero, and twelve months clears it more often than
+# ten (the figures that chose it are superseded as absolute power; see the ROADMAP's registered
+# decisions) for 0.4 points of additional
 # differential censoring, still a twelfth of what the dev window carries. It is set now,
 # before any test data exists to be seen: 2026-10 closes before the Stage 1 submission on
 # 2026-11-20, and the window is still fetched only after in-principle acceptance.
