@@ -79,7 +79,7 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
 - [ ] Report Gap-K% (arXiv:2601.19936, May 2026) beside Min-K%++. It needs only the top-1
   log-probability, already computed on the way to Min-K%++'s statistics; +2.1 to 2.6 AUROC on
   WikiMIA, untested on code. Reported, not registered.
-- [ ] Register hunks-with-context as the scored text.
+- [x] Registered: hunks with three context lines either side are the scored text (table below).
 - [x] **Source the checkpoint's cutoff.** The widely repeated "June 2024" for Qwen2.5-Coder is
   a community guess, not a maintainer statement. The technical report states a repository
   *creation* filter of February 2024, which bounds nothing for repositories as old as
@@ -268,6 +268,7 @@ declared as one.
 | **Fetch horizon** | no earlier than three months after the window's final month | Makes the confirmatory contrast's low censoring a protocol guarantee rather than an accident of when acceptance landed. 2026-10 plus three is 2027-01; MSR 2027 notifies 2027-02-04, so the horizon binds only if acceptance comes early, in which case the answer is to accept more censoring rather than fetch sooner. |
 | **Contamination** | Min-K%++ on the base checkpoint is primary; the time partition is corroborative only | Temporal decay is not dependable contamination evidence (Zhang et al., ACL 2026): item construction distorts it independently of the source. Identical construction across windows answers their specific confound, not the confound with ordinary distribution shift. |
 | **Guided completion** | reported as a null instrument | At its floor under both criteria the literature offers: 0 of 55 hunks verbatim, and edit similarity 0.380 against 0.387, a gap of -0.007 [-0.118, +0.085]. Swapping criteria until one separates is what pre-registration exists to prevent. |
+| **Contamination scored text** | the hunk with three context lines either side | Bare hunks put only about 20% of a deduplicated month over the 32-token minimum (35 of 172, 28 of 133), too few to read. With context the scored share rose to 94% and 87%, and on the six-month windows to 1,971 and 2,503 examples. The same text is what the model-less baseline was run on, so the two are directly comparable. |
 | **Leakage threshold** | 2% at Jaccard >= 0.7 | Must clear the measured train-into-dev rate, 1.06% for OpenStack and 0.42% for Qt. At J >= 0.8 both are 0.0000 by construction, because dedup removes pairs at that threshold across windows, so registering there is a test that cannot fail. |
 
 **Open, and genuinely a question about the claim rather than the statistics.** Whether RQ1
