@@ -2592,3 +2592,24 @@ examples; FedAttr (arXiv:2605.06596) attributes a deliberate watermark; Malekmoh
 bound example-level leakage by design. None of them asks whether an update betrays its source, and
 the answer here is that it does, through secure aggregation, without a watermark, at the altitude a
 data-governance policy is actually written at.
+
+### Capacity and placement: where the source signal sits agrees with where adapters store things (2026-09-18)
+
+Tan, Du and Feng, "How Many Bits Can an Adapter Write?" (arXiv:2607.21351, 2026-07-23), measure how
+much a LoRA adapter can hold: 1.7 to 2.8 bits a trainable parameter against full fine-tuning's 3.6,
+with memorization varying nearly twofold by **placement**, MLP against attention, at matched
+parameter counts. They measure total information stored, not where it came from, and report that
+membership inference "did not resolve the difference between these adapters".
+
+Two things follow for RQ2. Their placement finding matches ours from the other side: per-module
+attribution here is highest in late MLP projections (median organization accuracy 0.926 over layers
+24 to 27 against 0.794 over layers 0 to 7, the single best module being layer 27's MLP gate
+projection). Where an adapter stores most is where its source is most legible, which is one
+statement rather than two coincidences.
+
+And their negative result frames ours. Membership inference failed to separate their adapters;
+source attribution separates ours. The quantity that survives is not which examples were used but
+which distribution they were drawn from, which is also the quantity a data-sharing agreement
+between organizations is written about. Their proposed next step, measuring an adapter's capacity
+before it is shared rather than after it is attacked, is the same instinct as RQ2's, one altitude
+up.
