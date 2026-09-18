@@ -2348,6 +2348,12 @@ at seeds 2 and 3, same corpora, split and held-out examples, read by `crossed_re
 zero on three seeds and both estimands; OpenStack's do not. The dev-window contrast is stable
 across seeds, and the earlier single-seed numbers hold.
 
+These are dev-window numbers, and the seal right-censors that window: 39.1% of OpenStack's and
+28.8% of Qt's changes in it were still open when collection closed, a 10.3-point differential. The
+test window at its registered fetch horizon carries 1.1% and 0.7%, so the confirmatory contrast is
+not read under this distortion, and a dev result that depends on slow reviews would not survive
+into it.
+
 **The seed main effect in this setting is indistinguishable from zero**: the per-seed contrasts vary
 by 0.0008 (OpenStack) and 0.0035 (Qt), every pairwise shift sits within seed-by-change churn (|z| at
 most 0.64), and the moment estimate is negative, with a one-sided 95% upper bound of **0.0098** on two
