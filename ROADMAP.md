@@ -5,7 +5,10 @@ and what a declared boundary protects once it can. It is the apparatus for the F
 research direction: RQ1 is a go/no-go gate, RQ2 the leakage study that follows it.
 
 **Design of record:** `docs/superpowers/specs/2026-09-13-gerrit-review-corpus-harness-design.md`
-**Deadline that sets the order:** MSR 2027 Registered Reports Stage 1, **2026-11-20**.
+**Deadline that sets the order:** MSR 2027 Registered Reports Stage 1, **2026-11-20**, with the
+abstract a week earlier on **2026-11-13** (read from the call, 2026-09-18). PC reviews come
+2026-12-23, the response letter and revision 2027-01-15, Stage 1 notification 2027-02-04, the
+accepted report 2027-02-28, and the full paper to EMSE 2027-09-30.
 The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAGE1-SKELETON.md`.
 
 ---
