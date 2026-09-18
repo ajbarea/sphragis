@@ -2666,3 +2666,31 @@ secure aggregation, with no watermark, at the altitude a data-sharing agreement 
 gap is not that these papers are wrong about raw data staying home; it is that "the data never
 leaves" and "nothing about the data leaves" are different sentences, and only the first is
 demonstrated.
+
+### The aggregate betrays the project more clearly than the organization (2026-09-18)
+
+`datasets/results/aggregate-attack-project.json`. The same mixed-round detector, with the target a
+project rather than an organization: rounds drawn from every client, half holding one of the
+target's clients, scored against the target's other clients, eight reference splits.
+
+| target project | clients | AUC, rounds of 4 | paired difference: own, a stranger's |
+|---|---|---|---|
+| qt/pyside-setup | 4 | 0.821 | +0.053, +0.006 |
+| openstack/starlingx-docs | 4 | 0.814 | +0.059, -0.023 |
+| openstack/neutron | 3 | 0.741 | +0.077, +0.012 |
+| openstack/nova | 3 | 0.721 | +0.083, +0.014 |
+| qt/qtbase | 6 | 0.706 | +0.046, -0.023 |
+| qt/qt-creator | 6 | 0.643 | +0.036, +0.037 |
+| qt/qtdoc | 6 | 0.627 | +0.036, +0.005 |
+| openstack/ironic | 2 | 0.476 | -0.009, +0.022 |
+
+Against the organizations' 0.659 to 0.753 on the same rounds, most projects are detected more
+clearly than either organization that contains them, and the two most distinctive, pyside-setup and
+starlingx/docs, are the ones whose content sets them apart from their organization's other
+projects. ironic, with two clients and so a one-client reference, is at chance.
+
+**This is the per-client result seen through secure aggregation.** What a round leaks is the
+codebase; the organization is legible only in so far as its projects resemble each other. A policy
+that treats the organization as the unit of disclosure is protecting the wrong boundary in both
+directions: it over-promises for a federation whose projects are separately identifiable, and it
+under-describes a house whose projects all carry the same hand.

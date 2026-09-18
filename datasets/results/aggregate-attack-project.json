@@ -1,0 +1,695 @@
+{
+  "altitude": "project",
+  "clients": 34,
+  "draws": 200,
+  "provenance": {
+    "generated_at": "2026-09-18T17:45:27.200685+00:00",
+    "git": {
+      "commit": "985e75ec772407caafb41e9790f72dc54f34cea9",
+      "branch": "feat/wellposed-filter"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  },
+  "targets": {
+    "openstack/ironic": {
+      "clients": 2,
+      "membership": {
+        "4": {
+          "mean_auc": 0.519675,
+          "per_client": [
+            0.480375,
+            0.558975
+          ]
+        },
+        "8": {
+          "mean_auc": 0.5221625,
+          "per_client": [
+            0.509025,
+            0.5353
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.475640625,
+          "auc_sd_over_splits": 0.05078945499647821,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.3367550759052224,
+          "mean_absent": 0.33778142207175704
+        },
+        "8/1": {
+          "auc": 0.51378125,
+          "auc_sd_over_splits": 0.040202908898841774,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.3841218612351273,
+          "mean_absent": 0.3837988246806781
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": -0.008735761553807304,
+        "other_organization_mean": 0.021746927674255498,
+        "own": [
+          -0.02001089632704622,
+          0.002539373219431611
+        ],
+        "other_organization": [
+          0.004441544403845212,
+          0.03905231094466578
+        ]
+      }
+    },
+    "openstack/neutron": {
+      "clients": 3,
+      "membership": {
+        "4": {
+          "mean_auc": 0.7521333333333334,
+          "per_client": [
+            0.72435,
+            0.81115,
+            0.7209
+          ]
+        },
+        "8": {
+          "mean_auc": 0.7205,
+          "per_client": [
+            0.717075,
+            0.748425,
+            0.696
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.7406406249999999,
+          "auc_sd_over_splits": 0.030582522837807217,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.3957443625781319,
+          "mean_absent": 0.38139458821738653
+        },
+        "4/2": {
+          "auc": 0.9233125,
+          "auc_sd_over_splits": 0.006953442107536187,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.4088655133953139,
+          "mean_absent": 0.38107011935350604
+        },
+        "8/1": {
+          "auc": 0.717359375,
+          "auc_sd_over_splits": 0.02079632495650201,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.44230195811794926,
+          "mean_absent": 0.43394574626108784
+        },
+        "8/2": {
+          "auc": 0.8698,
+          "auc_sd_over_splits": 0.018327901251526703,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.44908867432754984,
+          "mean_absent": 0.43393089987890154
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": 0.07729703141436083,
+        "other_organization_mean": 0.01189080314845821,
+        "own": [
+          0.09505987753151426,
+          0.07827812814539824,
+          0.05855308856616997
+        ],
+        "other_organization": [
+          -0.030092347030171926,
+          0.09838947612132444,
+          -0.032624719645777886
+        ]
+      }
+    },
+    "openstack/nova": {
+      "clients": 3,
+      "membership": {
+        "4": {
+          "mean_auc": 0.7757,
+          "per_client": [
+            0.852275,
+            0.743875,
+            0.73095
+          ]
+        },
+        "8": {
+          "mean_auc": 0.7349083333333333,
+          "per_client": [
+            0.8224,
+            0.734275,
+            0.64805
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.721225,
+          "auc_sd_over_splits": 0.10379858586980571,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.3996661259132701,
+          "mean_absent": 0.3858110882811552
+        },
+        "4/2": {
+          "auc": 0.8788750000000001,
+          "auc_sd_over_splits": 0.11798114634490184,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.4126185422509407,
+          "mean_absent": 0.385583595869009
+        },
+        "8/1": {
+          "auc": 0.694759375,
+          "auc_sd_over_splits": 0.0717862563168058,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.446934738089479,
+          "mean_absent": 0.43908690142198226
+        },
+        "8/2": {
+          "auc": 0.8233,
+          "auc_sd_over_splits": 0.10584546940165718,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 1.0,
+          "mean_present": 0.45319610556153395,
+          "mean_absent": 0.4389437820516935
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": 0.08303225351069747,
+        "other_organization_mean": 0.013532059855590098,
+        "own": [
+          0.08488662082770917,
+          0.08462538701703036,
+          0.07958475268735288
+        ],
+        "other_organization": [
+          0.03451119550539278,
+          0.02839870891988052,
+          -0.022313724858503005
+        ]
+      }
+    },
+    "openstack/starlingx-docs": {
+      "clients": 4,
+      "membership": {
+        "4": {
+          "mean_auc": 0.8193125,
+          "per_client": [
+            0.88615,
+            0.811325,
+            0.8528,
+            0.726975
+          ]
+        },
+        "8": {
+          "mean_auc": 0.76533125,
+          "per_client": [
+            0.81585,
+            0.74795,
+            0.8003,
+            0.697225
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.8141125,
+          "auc_sd_over_splits": 0.0418929460478901,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.42326432755626353,
+          "mean_absent": 0.3972787551172996
+        },
+        "4/2": {
+          "auc": 0.964078125,
+          "auc_sd_over_splits": 0.0238362135861592,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.44620005664339724,
+          "mean_absent": 0.3974591096975754
+        },
+        "8/1": {
+          "auc": 0.789771875,
+          "auc_sd_over_splits": 0.031829409798565224,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.46672621119357605,
+          "mean_absent": 0.4494969479359706
+        },
+        "8/2": {
+          "auc": 0.949275,
+          "auc_sd_over_splits": 0.017510741601330652,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.4817356961072509,
+          "mean_absent": 0.4497599651314579
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": 0.058948780564473224,
+        "other_organization_mean": -0.02308277211571887,
+        "own": [
+          0.12211553300497946,
+          0.030391055327997234,
+          0.05760774950161267,
+          0.02568078442330354
+        ],
+        "other_organization": [
+          -0.06841452006386914,
+          -0.020514383067555424,
+          -0.01247638466673479,
+          0.009074199335283872
+        ]
+      }
+    },
+    "qt/pyside-setup": {
+      "clients": 4,
+      "membership": {
+        "4": {
+          "mean_auc": 0.82720625,
+          "per_client": [
+            0.94285,
+            0.862075,
+            0.94425,
+            0.55965
+          ]
+        },
+        "8": {
+          "mean_auc": 0.835575,
+          "per_client": [
+            0.869025,
+            0.88395,
+            0.935675,
+            0.65365
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.820884375,
+          "auc_sd_over_splits": 0.07820060620140906,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.4182970867714361,
+          "mean_absent": 0.3918063449477859
+        },
+        "4/2": {
+          "auc": 0.962078125,
+          "auc_sd_over_splits": 0.07847162981146663,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.4397446179994916,
+          "mean_absent": 0.39172380716645766
+        },
+        "8/1": {
+          "auc": 0.8207875,
+          "auc_sd_over_splits": 0.06681451938014671,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.4611180700295132,
+          "mean_absent": 0.44473264835494525
+        },
+        "8/2": {
+          "auc": 0.9634125,
+          "auc_sd_over_splits": 0.04891429823097303,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 2.0,
+          "mean_present": 0.47594056922300404,
+          "mean_absent": 0.44456924596259895
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": 0.05271953701137551,
+        "other_organization_mean": 0.0063242717605853736,
+        "own": [
+          0.094965007287334,
+          0.05771784086798314,
+          0.10718232524443828,
+          -0.048987025354253394
+        ],
+        "other_organization": [
+          -0.002187698910363399,
+          0.048074039640395645,
+          -0.01582267897725497,
+          -0.0047665747104357805
+        ]
+      }
+    },
+    "qt/qt-creator": {
+      "clients": 6,
+      "membership": {
+        "4": {
+          "mean_auc": 0.6667375,
+          "per_client": [
+            0.7465,
+            0.6365,
+            0.49465,
+            0.601575,
+            0.73655,
+            0.78465
+          ]
+        },
+        "8": {
+          "mean_auc": 0.6391874999999999,
+          "per_client": [
+            0.71975,
+            0.606775,
+            0.508475,
+            0.5941,
+            0.698225,
+            0.7078
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.643034375,
+          "auc_sd_over_splits": 0.04081370116915398,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.5277312364267159,
+          "mean_absent": 0.5173255389341527
+        },
+        "4/2": {
+          "auc": 0.768059375,
+          "auc_sd_over_splits": 0.07656850916651142,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.5370417888363732,
+          "mean_absent": 0.5182004028184092
+        },
+        "8/1": {
+          "auc": 0.633034375,
+          "auc_sd_over_splits": 0.04015779798294829,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.5948292141671102,
+          "mean_absent": 0.5890811299120562
+        },
+        "8/2": {
+          "auc": 0.76094375,
+          "auc_sd_over_splits": 0.04501572889795617,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.6001427308356581,
+          "mean_absent": 0.5889445278296123
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": 0.03554803185616042,
+        "other_organization_mean": 0.03728219718413943,
+        "own": [
+          0.059912699835277305,
+          0.034429307719643254,
+          -0.00021388431677557164,
+          0.0011026221491425856,
+          0.03338510737781979,
+          0.08467233837185517
+        ],
+        "other_organization": [
+          0.057403245547628795,
+          0.10998773719295019,
+          -0.02670114962869293,
+          0.08683840261028597,
+          -0.027237577437447598,
+          0.023402524820112156
+        ]
+      }
+    },
+    "qt/qtbase": {
+      "clients": 6,
+      "membership": {
+        "4": {
+          "mean_auc": 0.7303583333333333,
+          "per_client": [
+            0.717775,
+            0.725375,
+            0.72115,
+            0.6697,
+            0.818,
+            0.73015
+          ]
+        },
+        "8": {
+          "mean_auc": 0.6751708333333334,
+          "per_client": [
+            0.6477,
+            0.67475,
+            0.7022,
+            0.611125,
+            0.757525,
+            0.657725
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.7055,
+          "auc_sd_over_splits": 0.04499603950825641,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.527991123353023,
+          "mean_absent": 0.5091656812536711
+        },
+        "4/2": {
+          "auc": 0.85523125,
+          "auc_sd_over_splits": 0.04802342201988528,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.5431039355119152,
+          "mean_absent": 0.5110278822804166
+        },
+        "8/1": {
+          "auc": 0.67998125,
+          "auc_sd_over_splits": 0.043193988813755746,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.5909862026105359,
+          "mean_absent": 0.5804499916535263
+        },
+        "8/2": {
+          "auc": 0.824828125,
+          "auc_sd_over_splits": 0.027389959831178482,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.5999086335273243,
+          "mean_absent": 0.5801562989147032
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": 0.04626478044573195,
+        "other_organization_mean": -0.0232230730230424,
+        "own": [
+          0.02858935368208854,
+          0.038571905278014525,
+          0.02527934052155915,
+          0.02463666131581706,
+          0.08224800034271555,
+          0.07826342153419684
+        ],
+        "other_organization": [
+          -0.11137480758898612,
+          -0.03361258350320462,
+          -0.10014859392837394,
+          0.033547269878177625,
+          0.03541827548997187,
+          0.03683200151416078
+        ]
+      }
+    },
+    "qt/qtdoc": {
+      "clients": 6,
+      "membership": {
+        "4": {
+          "mean_auc": 0.6878083333333334,
+          "per_client": [
+            0.706575,
+            0.7228,
+            0.6585,
+            0.5834,
+            0.84315,
+            0.612425
+          ]
+        },
+        "8": {
+          "mean_auc": 0.6890541666666667,
+          "per_client": [
+            0.76435,
+            0.666475,
+            0.624575,
+            0.6417,
+            0.756825,
+            0.6804
+          ]
+        }
+      },
+      "mixed_rounds": {
+        "4/1": {
+          "auc": 0.626928125,
+          "auc_sd_over_splits": 0.08145006625172696,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.4949727974918968,
+          "mean_absent": 0.48663022184853116
+        },
+        "4/2": {
+          "auc": 0.759625,
+          "auc_sd_over_splits": 0.1532100915176841,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 4.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.504561053420226,
+          "mean_absent": 0.48559167235966094
+        },
+        "8/1": {
+          "auc": 0.6419125,
+          "auc_sd_over_splits": 0.05563848712896496,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 1.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.558293348944805,
+          "mean_absent": 0.551834812016484
+        },
+        "8/2": {
+          "auc": 0.777934375,
+          "auc_sd_over_splits": 0.09936771800588172,
+          "splits": 8.0,
+          "rounds": 200.0,
+          "round_size": 8.0,
+          "target_clients_per_round": 2.0,
+          "reference_clients": 3.0,
+          "mean_present": 0.5652794489637362,
+          "mean_absent": 0.5513664837715891
+        }
+      },
+      "paired": {
+        "round_size": 8,
+        "own_mean": 0.0361266734496186,
+        "other_organization_mean": 0.004778038234933533,
+        "own": [
+          0.034614298516044154,
+          0.03875895730476327,
+          0.05188989603094817,
+          -0.02702779351996824,
+          0.10846491027213238,
+          0.01005977209379183
+        ],
+        "other_organization": [
+          -0.07891986244018542,
+          0.002760535359290212,
+          -0.02276349900577475,
+          0.11535113700061667,
+          0.001331822647954433,
+          0.010908095847700056
+        ]
+      }
+    }
+  }
+}
