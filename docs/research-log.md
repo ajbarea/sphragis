@@ -2096,3 +2096,20 @@ Caveats: one seed of the organization-window pair beyond the first; halves and p
 the train windows they were drawn from, so window-versus-subset rows share data; cosine over all
 modules pools layers whose roles differ, and a per-layer or spectral reading (Paul's features)
 could separate what the pooled cosine does not.
+
+### Training size does not explain the pairwise pattern (2026-09-18, job 148408)
+
+`datasets/results/projects-qt-creator_qt-creator-qt_qtbase-n788.json`. qt-creator vs qtbase rerun at
+788 training examples per side (`TRAIN_SIZE=788`, a nested subsample of the 1,517), the size the two
+qtdeclarative pairs trained at. Same held-out changes, one seed.
+
+| qt-creator vs qtbase | qt-creator side | qtbase side |
+|---|---|---|
+| 1,517 per side (148203) | +0.079 [+0.041, +0.118] | -0.019 [-0.046, +0.008] |
+| 788 per side (148408) | **+0.044 [+0.013, +0.077]** | -0.003 [-0.035, +0.031] |
+
+At the same 788 examples where qt-creator showed no advantage over qtdeclarative (+0.005), it still
+beats qtbase. The difference between the pairs is the pair, not the training size, which confirms
+the reading of the earlier entry: qt-creator's refinements carry something qtbase's adapter lacks
+and qtdeclarative's has. The effect roughly halves with half the data, as a learned property
+should, and qtbase still never wins at home.

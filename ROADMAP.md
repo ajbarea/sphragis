@@ -211,7 +211,9 @@ as the unit; the evidence says the codebase is.
 - [x] **All three Qt pairs** (148377, 148378): qt-creator's advantage does not replicate against
   qtdeclarative (+0.005), qtdeclarative's does against qt-creator (+0.042 [+0.005, +0.074]), qtbase
   never wins at home. Two of six directional contrasts exclude zero: pairwise, not per project.
-- [ ] qt-creator vs qtbase at 788 per side (job 148408) separates training size from pair.
+- [x] **Size is not the explanation** (148408): qt-creator vs qtbase at 788 per side keeps
+  qt-creator's advantage (+0.044 [+0.013, +0.077]) where qt-creator vs qtdeclarative at 788 has
+  none, so the pattern is the pair's. The effect halves with half the data.
 - [ ] Register the probe and the project contrast as Stage 1 secondary analyses, with the
   within-organization baseline as the reading rule rather than raw accuracy.
 - [ ] If the project contrast separates where the organization contrast does not, say what
