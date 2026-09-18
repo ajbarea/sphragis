@@ -352,7 +352,7 @@ declared as one.
 |---|---|---|
 | **Interval the gate reads** | coverage and the seed runs | **The crossed seed x change interval.** It holds nominal where the median-seed rule reaches 0.122 two-sided, and costs no width at the measured seed effect. |
 | **Seed count** | the seed main effect in RQ1's own setting | **Three**, by the rule fixed before the runs: the effect is 0.000 with a one-sided 95% upper bound of 0.0098, at or below the 0.01 where three seeds stop holding nominal. The null at 1,800 training examples gives 0.013, which is not the registered setting. |
-| **Stated power** | sensitivity, not power at an observed effect | The minimum detectable effect per organization at the registered seeds and interval (`scripts/sensitivity.py`), since power from a pilot's own estimate is biased upward (Albers and Lakens 2018). The 0.833 figure is withdrawn. |
+| **Stated power** | sensitivity, not power at an observed effect | **The design detects +0.0235 (OpenStack) and +0.0211 (Qt) exact-match points** at three seeds and the seed effect's upper bound, for a conjunctive gate near 0.80 (`sensitivity-b0.0098.json`). Power from a pilot's own estimate is biased upward (Albers and Lakens 2018), so the 0.833 figure is withdrawn. Qt's dev-window effect is above its threshold and OpenStack's below, which is the mixed verdict the dev window gave. |
 | **Inference numerics** | `determinism_check` across jobs and nodes | **fp32**, weights upcast exactly from bf16: it reproduces on 150 of 150 predictions across two jobs on different nodes, where bf16 differs on 5 to 7 and on up to 2 within one process. |
 
 **Open, and genuinely a question about the claim rather than the statistics.** Whether RQ1

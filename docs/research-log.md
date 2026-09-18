@@ -2463,3 +2463,30 @@ scored against references of different sizes, eleven clients for rounds holding 
 for rounds without, and a larger reference has a more central direction, so the comparison read
 reference size rather than membership. One fixed reference for both classes gives the numbers
 above. A test now pins the split.
+
+### What the design can detect: a sensitivity analysis, replacing power at an observed effect (2026-09-18)
+
+`datasets/results/sensitivity-b0.0098.json`, `scripts/sensitivity.py`. The test window's size is
+fixed by what exists, so the Stage 1 question is not "what is the power" but "what is the smallest
+effect this design detects". Power computed from a pilot's own estimate is biased upward, the more
+so when the pilot looked promising (Albers and Lakens, JESP 2018; Lakens, Collabra 2022), which is
+why the 0.833 figure is withdrawn rather than updated.
+
+Simulated at the projected test-window sizes, under the crossed interval, at the seed main effect's
+one-sided 95% upper bound of 0.0098, with marginal power 0.894 per organization so the conjunctive
+gate reaches about 0.80:
+
+| organization | changes | three seeds | five seeds |
+|---|---|---|---|
+| OpenStack | 2,171 | **+0.0235** | +0.0210 |
+| Qt | 3,937 | **+0.0211** | +0.0179 |
+
+**The design detects about two exact-match points per organization.** Two more seeds buy 0.002 to
+0.003, which is why three is registered: the seed term is already small beside the change term at
+these window sizes.
+
+**Read against the dev window, this predicts the outcome we have.** Qt's dev-window effect is
++0.031, above its threshold; OpenStack's is +0.017, below its own. The gate came out mixed on
+exactly that pattern, and a test window that behaves like the dev window would return mixed again.
+That is a statement about what the study can resolve, and it is better made now, in the Stage 1
+report, than discovered afterwards.
