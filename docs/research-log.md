@@ -2851,3 +2851,49 @@ artefact of the comparison. The likely mechanism is the finite pool: with twelve
 without the target quickly average to nearly the pool mean, leaving a near-deterministic score that
 a little noise perturbs in the attacker's favour. That is a guess about this corpus's size, not a
 result, and a larger client pool would settle it.
+
+### The organization is not in the update. The content and the codebase are. (2026-09-18, job 149461)
+
+`datasets/results/client-attribution-cpp-early.json`. The design the earlier runs could not
+support: 77 clients over 18 projects and three organizations, with a content type carried by two
+organizations at several projects each, C++ in AOSP (3 projects, 13 clients) and in Qt (6 projects,
+30 clients). Same protocol as before: one initialization, 64 examples a client, disjoint by change,
+attribution by mean cosine leaving each client out.
+
+| attributing | classes | accuracy | majority | p |
+|---|---|---|---|---|
+| **content**: C++, Python, documentation | 3 | **0.909** | 0.558 | 0.0002 |
+| **project** | 18 | **0.442** | 0.078 | 0.0002 |
+| **organization** | 3 | **0.416** | 0.506 | 0.22 |
+| organization within C++ (AOSP against Qt) | 2 | 0.395 | 0.698 | 0.67 |
+| organization beyond project, within C++ | 2 | 0.395 | - | 0.75, exact over 84 relabelings |
+
+| relation between two clients | mean cosine | pairs |
+|---|---|---|
+| same project | 0.270 | 146 |
+| same organization and content, other project | 0.262 | 571 |
+| other organization, same content | 0.253 | 483 |
+| other organization and content | 0.240 | 1324 |
+| same organization, other content | 0.222 | 402 |
+
+**An update betrays what kind of code it was trained on, and which codebase; it does not betray who
+owns the codebase.** Organization is attributed below its own majority baseline, and within C++,
+where both organizations bring several projects, it is at 0.395 against a 0.698 baseline, with the
+project as the exchangeable unit giving p = 0.75. The relation table says the same: two clients of
+one organization writing *different* kinds of content are the least aligned pairs in the corpus,
+below two clients that share nothing.
+
+**This overturns the earlier reading, and the earlier number was composition.** The 0.912
+organization accuracy of job 148513 came from a corpus where OpenStack was mostly Python and
+documentation and Qt mostly C++: the classifier read the content mix and the label followed. Adding
+a third organization that writes C++ like Qt, and enough projects to hold content fixed, removes
+the confound and the effect with it. The correction was available only because the design was built
+to make it: content was labelled separately from organization from the first run, and the test that
+would break the claim was named before the data existed.
+
+**What survives.** Every leak this log has measured is real; what changes is its name. A client
+update identifies its codebase family, a family being a project or a set of projects sharing
+conventions and a language, and through secure aggregation a round's aggregate identifies one too.
+An organization is legible only through the codebases it happens to own, which for a federation
+means barely at all. For RQ2's framing this is sharper than the original claim, not weaker: a
+governance boundary drawn around an organization does not match the boundary the leak respects.
