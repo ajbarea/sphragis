@@ -130,18 +130,21 @@ def main() -> None:
     report(f"matched{suffix}", matched, out)
 
     print(f"\n=== 3. within-organization baseline: two projects, one org, {suffix} only ===")
+    # Every pair among an organization's largest projects that clears the probe's size floor,
+    # not the single largest pair: read as code shapes one pair fell below the floor, and a
+    # cross-organization number was being weighed against one surviving baseline.
     for org in orgs:
         by_project: dict[str, list[dict[str, Any]]] = {}
         for row in corpora[org]:
             if str(row["path"]).endswith(suffix):
                 by_project.setdefault(str(row["project"]), []).append(row)
-        ranked = sorted(by_project, key=lambda k: -len(by_project[k]))[:2]
-        if len(ranked) < 2:
-            continue
-        docs = documents(by_project[ranked[0]], 0, suffix=suffix, words_of=reader) + documents(
-            by_project[ranked[1]], 1, suffix=suffix, words_of=reader
-        )
-        report(f"within:{org}:{ranked[0]} vs {ranked[1]}", docs, out)
+        ranked = sorted(by_project, key=lambda k: -len(by_project[k]))[:4]
+        for i, first_project in enumerate(ranked):
+            for second_project in ranked[i + 1 :]:
+                docs = documents(
+                    by_project[first_project], 0, suffix=suffix, words_of=reader
+                ) + documents(by_project[second_project], 1, suffix=suffix, words_of=reader)
+                report(f"within:{org}:{first_project} vs {second_project}", docs, out)
 
     print(
         "\nReading: the cross-organization number means something only to the extent it "

@@ -34,9 +34,84 @@
     "low": 0.5777949947332098,
     "high": 0.7051918917808274
   },
+  "within:openstack:starlingx/test vs openstack/swift": {
+    "accuracy": 0.5565664160401003,
+    "folds_scored": 5.0,
+    "documents": 260.0,
+    "changes": 89.0,
+    "low": 0.47226470243899027,
+    "high": 0.6547036541889483
+  },
+  "within:openstack:starlingx/test vs openstack/neutron": {
+    "accuracy": 0.695595238095238,
+    "folds_scored": 5.0,
+    "documents": 226.0,
+    "changes": 115.0,
+    "low": 0.5515446458712713,
+    "high": 0.760537379642239
+  },
+  "within:openstack:starlingx/config vs openstack/swift": {
+    "accuracy": 0.6302552675755779,
+    "folds_scored": 5.0,
+    "documents": 260.0,
+    "changes": 111.0,
+    "low": 0.4974462633730369,
+    "high": 0.7011559091721795
+  },
+  "within:openstack:starlingx/config vs openstack/neutron": {
+    "accuracy": 0.5754922726537751,
+    "folds_scored": 5.0,
+    "documents": 226.0,
+    "changes": 135.0,
+    "low": 0.43995020459416745,
+    "high": 0.63829981595691
+  },
+  "within:openstack:openstack/swift vs openstack/neutron": {
+    "accuracy": 0.5957795359523119,
+    "folds_scored": 5.0,
+    "documents": 226.0,
+    "changes": 95.0,
+    "low": 0.46090208810797045,
+    "high": 0.6651333065911071
+  },
   "within:qt:pyside/pyside-setup vs qt/qtbase": {
     "accuracy": NaN,
     "documents": 74.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:pyside/pyside-setup vs qt/qtdoc": {
+    "accuracy": NaN,
+    "documents": 42.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:pyside/pyside-setup vs qt-creator/qt-creator": {
+    "accuracy": NaN,
+    "documents": 26.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:qt/qtbase vs qt/qtdoc": {
+    "accuracy": NaN,
+    "documents": 42.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:qt/qtbase vs qt-creator/qt-creator": {
+    "accuracy": NaN,
+    "documents": 26.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:qt/qtdoc vs qt-creator/qt-creator": {
+    "accuracy": NaN,
+    "documents": 26.0,
     "changes": 0.0,
     "low": NaN,
     "high": NaN

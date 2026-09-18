@@ -3183,3 +3183,56 @@ more about who its participants are. That is a sharper claim than RQ2 was framed
 is the one worth registering.
 
 The obvious next question is whether it keeps rising, which needs a third length.
+
+### The organization is in the code conventions; the words are the codebase's (2026-09-18)
+
+`datasets/results/separability.json`, `separability-code.json`. Prompted by Ghaleb's finding that
+for AI coding agents the commit-message conventions carry more than the code changes. For
+organizations the answer is the other way round, and it is the sharpest thing the probe has said.
+
+OpenStack against Qt, Python only so content is held fixed, against every pair among each
+organization's four largest Python projects that clears the probe's size floor:
+
+| baseline | reviewers' words | code convention shapes |
+|---|---|---|
+| **cross-organization** | **0.849** [0.769, 0.867] | **0.771** [0.665, 0.814] |
+| starlingx/test vs starlingx/config | 0.828 | 0.639 |
+| starlingx/test vs openstack/swift | 0.872 | 0.557 |
+| starlingx/test vs openstack/neutron | 0.892 | 0.696 |
+| starlingx/config vs openstack/swift | 0.816 | 0.630 |
+| starlingx/config vs openstack/neutron | 0.760 | 0.575 |
+| openstack/swift vs openstack/neutron | 0.789 | 0.596 |
+| pyside-setup vs qt/qtbase | 0.892 | refused, too few |
+
+Read as the reviewers' words, the cross-organization figure sits **inside** the within-organization
+range and three of seven baselines beat it: two projects of one organization are as far apart in
+review vocabulary as two organizations, so that surface carries the codebase, not the owner. Read
+as code convention shapes -- snake_case against camelCase, brace placement, f-strings, scope
+operators, counted as shapes rather than as identifiers so the probe cannot read project
+vocabulary back in -- the cross-organization figure **exceeds all six** usable baselines, and its
+lower bound of 0.665 sits above five of the six point estimates.
+
+That is the fingerprint's location, and it is where a fingerprint should be: a coding standard is
+written once for an organization and applied across its projects, while review vocabulary follows
+the subject matter, which is the project's. It also inverts Ghaleb's result for agents, which is
+worth saying plainly -- an agent is one artefact-producing process, so its habits show in the
+artefacts it emits around the code; an organization is a rule applied to many people, so its
+habits show in the code's conventions.
+
+**The limitation, stated rather than buried.** All six usable code-shape baselines are OpenStack's.
+Every Qt pair fell below the probe's per-label floor on Python, because Qt writes little of it.
+The within-organization calibration for the code reading therefore rests on one organization, and
+the claim is only as good as the assumption that Qt's projects are no further apart than
+OpenStack's -- which the latency measurement suggests is false in the other direction, since Qt's
+per-project spread was the wider one. A Qt-side baseline needs a suffix Qt carries, which is what
+the C++ corpus is for.
+
+**Incidental, and it matters for anything quoting the old file.** The recorded figures predated the
+2026-09-18 refreeze: the raw reading moves from 0.837 on 4,048 changes to 0.841 on 4,031. Both
+files are rewritten from the current corpus.
+
+**And a defect the code reading exposed.** A refused estimate was still getting an interval.
+`separability` returns NaN below a per-label floor, but `accuracy_interval` went on resampling, and
+a few draws happened to clear the floor while the rest were dropped -- so the surviving interval
+was selected on passing the very check the estimate failed, and printed as `[0.562, 0.857]` beside
+a NaN. It now returns NaN for the interval too, and the probe prints the refusal as a refusal.
