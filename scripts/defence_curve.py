@@ -110,7 +110,10 @@ def main() -> None:
         if len(mine) < 2 or len(outside) < args.round_size:
             continue
         half = max(1, len(mine) // 2)
-        reference, participants = mine[:half], mine[half:]
+        # At random: clients arrive grouped by project, and an ordered split hands a
+        # multi-project organization a reference from other projects than its participants.
+        shuffled = rng.permutation(mine)
+        reference, participants = shuffled[:half], shuffled[half:]
         cell: dict[str, dict[str, float]] = {}
         for rounds in args.rounds:
             for noise in args.noise:

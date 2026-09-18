@@ -172,7 +172,13 @@ def organization_membership_auc(
     if len(mine) < 2:
         raise ValueError(f"a reference and a participant need two clients, got {len(mine)}")
     half = max(1, len(mine) // 2)
-    reference, participants = mine[:half], mine[half:]
+    # Split at random, not in index order: clients arrive grouped by project, so an ordered split
+    # gives an organization spanning several projects a reference drawn from different projects
+    # than its participants. That measured the distance between two projects and put the AUC
+    # below 0.5, the detector running backwards.
+    shuffled = list(mine)
+    rng.shuffle(shuffled)
+    reference, participants = shuffled[:half], shuffled[half:]
     if at_least > len(participants):
         raise ValueError(f"{at_least} participants needed, {len(participants)} available")
     outside = [i for i in everyone if i not in set(mine)]

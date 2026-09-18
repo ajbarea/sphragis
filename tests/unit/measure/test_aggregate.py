@@ -140,3 +140,17 @@ def test_both_classes_are_scored_against_the_same_reference() -> None:
         products, members=range(6), everyone=range(30), size=8, draws=150, seed=0
     )
     assert detected["reference_clients"] == 3.0
+
+
+def test_the_reference_split_does_not_follow_the_order_clients_arrive_in() -> None:
+    """Clients arrive grouped by project; an ordered split measured project distance instead."""
+    rng = random.Random(7)
+    first = [[rng.gauss(0, 1) for _ in range(40)] for _ in range(6)]
+    second = [[v + 6.0 * (d == 0) for d, v in enumerate(row)] for row in first]
+    # Six clients of one project, then six of another, in that order, as a listing gives them.
+    vectors = first + second + [[rng.gauss(0, 1) for _ in range(40)] for _ in range(24)]
+    products = [[sum(a * b for a, b in zip(u, v, strict=True)) for v in vectors] for u in vectors]
+    detected = organization_membership_auc(
+        products, members=range(12), everyone=range(36), size=8, draws=200, seed=0
+    )
+    assert detected["auc"] > 0.5, "an ordered split can run the detector backwards"

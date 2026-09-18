@@ -60,58 +60,58 @@
       },
       "mixed_rounds": {
         "4/1": {
-          "auc": 0.7648111111111111,
+          "auc": 0.7481555555555556,
           "rounds": 300.0,
           "round_size": 4.0,
           "target_clients_per_round": 1.0,
           "reference_clients": 6.0,
-          "mean_present": 0.5509207520626807,
-          "mean_absent": 0.5315750529586962
+          "mean_present": 0.5789272035104297,
+          "mean_absent": 0.5613487672745134
         },
         "4/2": {
-          "auc": 0.9177444444444445,
+          "auc": 0.9184888888888889,
           "rounds": 300.0,
           "round_size": 4.0,
           "target_clients_per_round": 2.0,
           "reference_clients": 6.0,
-          "mean_present": 0.5668039241997066,
-          "mean_absent": 0.5302462644897923
+          "mean_present": 0.5941307272089151,
+          "mean_absent": 0.5606682979310704
         },
         "8/1": {
-          "auc": 0.7257333333333333,
+          "auc": 0.7500666666666667,
           "rounds": 300.0,
           "round_size": 8.0,
           "target_clients_per_round": 1.0,
           "reference_clients": 6.0,
-          "mean_present": 0.6151297071401493,
-          "mean_absent": 0.6041131112460237
+          "mean_present": 0.6498686114406332,
+          "mean_absent": 0.6391689707200143
         },
         "8/2": {
-          "auc": 0.8354777777777778,
+          "auc": 0.8957333333333334,
           "rounds": 300.0,
           "round_size": 8.0,
           "target_clients_per_round": 2.0,
           "reference_clients": 6.0,
-          "mean_present": 0.6237732898031153,
-          "mean_absent": 0.604683915177815
+          "mean_present": 0.6591560778005648,
+          "mean_absent": 0.639639083608776
         },
         "16/1": {
-          "auc": 0.7248222222222223,
+          "auc": 0.7905444444444445,
           "rounds": 300.0,
           "round_size": 16.0,
           "target_clients_per_round": 1.0,
           "reference_clients": 6.0,
-          "mean_present": 0.6592592153266064,
-          "mean_absent": 0.6539631563731331
+          "mean_present": 0.6975428045545735,
+          "mean_absent": 0.6919402406146411
         },
         "16/2": {
-          "auc": 0.8634888888888889,
+          "auc": 0.9474777777777778,
           "rounds": 300.0,
           "round_size": 16.0,
           "target_clients_per_round": 2.0,
           "reference_clients": 6.0,
-          "mean_present": 0.6640147998502302,
-          "mean_absent": 0.653756099259036
+          "mean_present": 0.7030843919217322,
+          "mean_absent": 0.6916046213273551
         }
       },
       "paired": {
