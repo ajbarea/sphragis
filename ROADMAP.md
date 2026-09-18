@@ -232,7 +232,8 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   Emission against training rate: 0.039 -> 0.007, 0.086 -> 0.03-0.08, **0.251 -> 0.62-0.66**,
   1.0 -> 0.99. Below a tenth the convention is barely absorbed; at a quarter it is absorbed and
   amplified. My prediction of a floor near 0.05 to 0.1 was wrong in kind, not just in place.
-- [ ] **The gate is non-monotone in fingerprint strength.** At 0.25 the planted adapter
+- [ ] **The gate is non-monotone in fingerprint strength** (reproduced under fp32, job 149248:
+  +0.2116 and -0.0840 against bf16's +0.2138 and -0.0861, so it is not a numerics artefact). At 0.25 the planted adapter
   over-applies the convention and loses on its own half (0.160 against 0.246), so the contrast
   there is -0.086, excluding zero on the refuting side. Between floor and ceiling the gate never
   passes. A Stage 1 validity issue: decide whether to register it as a stated limitation, or a

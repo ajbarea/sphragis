@@ -2750,3 +2750,22 @@ in naming conventions and structure, and this probe reads words in review commen
 version is buildable from the same corpus and is not built, so the honest statement for the Stage 1
 report is that the conversational half of the medium is stable over the study's horizon and the
 code half is untested here.
+
+### The calibration survives the change of numerics (2026-09-18, job 149248)
+
+`datasets/results/calibration-marker-0.25-fp32.json`. The condition that produced the gate's
+non-monotonicity, rerun under the registered fp32 inference on a different node.
+
+| | bf16 (148090) | fp32 (149248) |
+|---|---|---|
+| contrast on half a | +0.2138 [+0.1473, +0.2877] | +0.2116 [+0.1455, +0.2851] |
+| contrast on half b | -0.0861 [-0.1370, -0.0374] | -0.0840 [-0.1340, -0.0376] |
+| marker emission, planted half | 0.656 | 0.650 |
+| marker emission, other half | 0.617 | 0.628 |
+| exact match, planted adapter at home | 0.160 | 0.154 |
+
+Every figure moves in the third decimal, which is the training run's own nondeterminism, not the
+decoder's: training is unchanged and still bf16. So the non-monotonicity, the over-emission at two
+and a half times the planted rate, and the refutation on the planted side are properties of what the
+adapter learned, and the registration of fp32 costs the calibration nothing. The earlier conditions
+are not rerun: this is the one the Stage 1 report's limitation rests on.
