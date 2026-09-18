@@ -2807,3 +2807,38 @@ built to separate sources and a method that happens to absorb one are different 
 
 It also leaves the middle of the hierarchy, the project and the organization, where this study and
 its RQ2 attacks now sit, with the finding that the codebase is the unit that carries.
+
+### Masking an update is a delay, not a defence (2026-09-18)
+
+`datasets/results/defence-curve.json`, `scripts/defence_curve.py`. What a federated deployment would
+actually do against the aggregate attack: each client masks its update with a Gaussian of a given
+fraction of the mean update norm, drawn afresh every round. The attacker runs FedAttr's statistic,
+averaging the aggregates of rounds holding the target, subtracting the average of rounds without,
+and scoring the difference against its reference direction. Rounds of eight, 300 draws, four
+reference splits, on the sketched updates.
+
+| target | noise | 1 round | 10 rounds | 50 rounds | 200 rounds |
+|---|---|---|---|---|---|
+| OpenStack | none | 0.553 | 0.654 | 0.822 | 0.861 |
+| OpenStack | 1x | 0.549 | 0.661 | 0.851 | 0.929 |
+| OpenStack | 4x | 0.536 | 0.650 | 0.839 | 0.953 |
+| OpenStack | 16x | 0.503 | 0.580 | 0.683 | 0.814 |
+| Qt | none | 0.543 | 0.623 | 0.705 | 0.766 |
+| Qt | 16x | 0.515 | 0.565 | 0.597 | 0.699 |
+
+**One round hides the source and two hundred do not.** The paired statistic is near chance in a
+single round, because differencing two rounds of eight adds the other participants' variation to
+the target's small contribution. Watch longer and that variation averages away while the target's
+direction does not: without noise, 0.86 and 0.77 by 200 rounds; with a mask sixteen times the
+update's own norm, still 0.81 and 0.70. A per-round mask buys rounds, not secrecy, which is what
+composition across rounds means in a privacy budget and what a deployment quoting a per-round
+epsilon would have to account for.
+
+**An unexplained non-monotonicity.** Moderate noise sometimes scores *higher* than none: 0.929 and
+0.953 at one and four times the norm against 0.861 without, at 200 rounds, beyond the roughly 0.03
+sampling error of 300 draws. Participants are paired across noise levels by construction (the same
+stream draws them, and a zero-scale normal consumes it identically), so it is not a sampling
+artefact of the comparison. The likely mechanism is the finite pool: with twelve outsiders, rounds
+without the target quickly average to nearly the pool mean, leaving a near-deterministic score that
+a little noise perturbs in the attacker's favour. That is a guess about this corpus's size, not a
+result, and a larger client pool would settle it.
