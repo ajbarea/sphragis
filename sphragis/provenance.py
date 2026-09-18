@@ -1,4 +1,4 @@
-"""Static provenance every artifact in this repo carries: commit, versions, platform.
+"""Provenance every artifact in this repo carries: commit, versions, platform, and Slurm job.
 
 Copied from phalanx-fl rather than imported. Twelve lines of standard library is the
 wrong thing to take a cross-repo dependency for, especially on a repo whose stated
@@ -7,6 +7,7 @@ invariant is to ride the latest Flower while this one must stay reproducible.
 
 from __future__ import annotations
 
+import os
 import platform
 import subprocess
 from datetime import UTC, datetime
@@ -46,3 +47,17 @@ def provenance_header() -> dict[str, Any]:
         "platform": platform.platform(),
         "packages": _package_versions(),
     }
+
+
+_SLURM_FIELDS = {
+    "cluster": "SLURM_CLUSTER_NAME",
+    "job_id": "SLURM_JOB_ID",
+    "account": "SLURM_JOB_ACCOUNT",
+    "partition": "SLURM_JOB_PARTITION",
+    "node": "SLURMD_NODENAME",
+}
+
+
+def slurm_record() -> dict[str, str | None]:
+    """The Slurm job a result came from; every field is None outside a job."""
+    return {field: os.environ.get(variable) for field, variable in _SLURM_FIELDS.items()}

@@ -13,6 +13,7 @@ pre-registration decision, not a deployment one.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ from sphragis.experiment.training import (
     training_order,
     warmup_steps,
 )
+from sphragis.provenance import provenance_header, slurm_record
 
 MODEL_ID = "Qwen/Qwen2.5-Coder-7B-Instruct"
 DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
@@ -346,7 +348,31 @@ def train_adapter(
             f"train_adapter: skipped {skipped_steps} step(s) of {steps} and "
             f"{skipped_micro_batches} micro-batch(es)"
         )
+    # Logged now: a run that dies later writes no result file to carry the peak.
+    print(f"train_adapter: gpu {json.dumps(gpu_record())}", flush=True)
     return report
+
+
+def gpu_record() -> dict[str, Any] | None:
+    """The device a run used and its peak memory, or None without CUDA.
+
+    Peak is over the whole process, so call this when the run is done.
+    """
+    if not torch.cuda.is_available():
+        return None
+    props = torch.cuda.get_device_properties(0)
+    return {
+        "name": props.name,
+        "total_gb": round(props.total_memory / 1e9, 2),
+        "peak_allocated_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2),
+        "peak_reserved_gb": round(torch.cuda.max_memory_reserved() / 1e9, 2),
+        "cuda": torch.version.cuda,
+    }
+
+
+def run_provenance() -> dict[str, Any]:
+    """Commit, packages, Slurm job and GPU: what a result needs to be attributed to hardware."""
+    return {**provenance_header(), "slurm": slurm_record(), "gpu": gpu_record()}
 
 
 def _collate(

@@ -1,10 +1,17 @@
-"""sbatch generation for TIGRIS.
+"""sbatch generation for RIT Research Computing: TIGRIS, and SPORC as the fallback.
 
-Every non-obvious flag here was verified against the live cluster on 2026-09-14 rather
-than recalled: the partition is `tigris`, GH200 nodes expose `gpu:gh200:1`, and the
-default account `rc-onboard` **denies** `qos_interactive`, so emitting any `--qos` line
-makes the job unschedulable. Compute-node `/tmp` is node-local, so the model cache lives
-in `$HOME`, which carries a 1 TB quota.
+Every non-obvious flag here was verified against the live clusters rather than recalled.
+TIGRIS (2026-09-14): the partition is `tigris`, GH200 nodes expose `gpu:gh200:1`, and
+`rc-onboard` **denies** `qos_interactive`, so emitting any `--qos` line makes the job
+unschedulable. SPORC (2026-09-17): x86_64 A100 40 GB nodes plus one node of H100 80 GB, both in
+the `sporc` partition, on driver 610 (CUDA 13.3) despite a stale `cuda11` node feature tag.
+Both clusters mount the same `$HOME`, and the TIGRIS login node submits to SPORC with
+`--clusters=sporc`, so one checkout and one ssh session serve both. Compute-node `/tmp` is
+node-local, so the model cache lives in `$HOME`, which carries a 1 TB quota.
+
+The job scripts under `scripts/` carry the TIGRIS target in their `#SBATCH` lines. Retargeting
+passes `sbatch_flags` on the command line, which Slurm ranks above both `SBATCH_*` variables and
+`#SBATCH` directives, so a script never needs editing to move clusters.
 
 The account is stated explicitly rather than left to the Slurm default, because the choice
 is not about scheduling.
@@ -25,22 +32,121 @@ question is open rather than answered.
 
 from __future__ import annotations
 
+import argparse
 import re
+import shlex
+import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
+from importlib.resources import files
 
 from sphragis.experiment.grid import EvalRun, run_id
 
-_TIME = re.compile(r"^\d{1,2}:\d{2}:\d{2}$")
+_TIME = re.compile(r"\A[0-9]{1,2}:[0-5][0-9]:[0-5][0-9]\Z")
+_ACCOUNT_NAME = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9_.-]*\Z")
 _MAIL_USER = "ajb6289@rit.edu"
 _ACCOUNT = "fl-mlm"  # the Reznik lab's; see the module docstring on what that implies.
-# Cache only. HF_HOME would also relocate the token, and `hf auth login` writes an OAuth
-# token that refreshes itself in place — a copy elsewhere goes stale and starts failing.
-_HF_HUB_CACHE = "$HOME/hf-cache/hub"
-# RIT hides the system gcc behind /tools/bin/blindfold/gcc, which refuses to run. Triton
-# JIT-compiles a CUDA helper on first generation and finds that wrapper via `which gcc`,
-# so the job dies *after* the model has loaded. Triton reads CC first, so point it at the
-# real compiler. Verified: /usr/bin/gcc builds triton's driver.c; the wrapper will not.
-_CC = "/usr/bin/gcc"
+_TRAINING_ONLY_ACCOUNTS = frozenset({"rc-onboard"})
+# One copy of the job environment, shared with scripts/*.sbatch.
+_JOB_ENV = files("sphragis.experiment").joinpath("cluster-env.sh").read_text().strip()
+
+
+@dataclass(frozen=True)
+class Target:
+    """Where a job runs. The GPU is part of the target: a partition alone does not pick one."""
+
+    cluster: str
+    partition: str
+    gres: str
+    machine: str
+
+
+TARGETS: dict[str, Target] = {
+    "tigris": Target(cluster="tigris", partition="tigris", gres="gpu:gh200:1", machine="aarch64"),
+    "sporc": Target(cluster="sporc", partition="sporc", gres="gpu:a100:1", machine="x86_64"),
+    "sporc-h100": Target(cluster="sporc", partition="sporc", gres="gpu:h100:1", machine="x86_64"),
+}
+DEFAULT_TARGET = "tigris"
+
+
+def _require_time(time_limit: str) -> None:
+    # Zero is not a short job to Slurm: --time=0 means no limit.
+    if not _TIME.match(time_limit) or not time_limit.strip("0:"):
+        raise ValueError(f"time_limit must be a nonzero HH:MM:SS, got {time_limit!r}")
+
+
+def _require_account(account: str) -> str:
+    # Slurm lowercases account names, and an empty --account falls back to the user's default,
+    # which on TIGRIS is rc-onboard.
+    name = account.strip()
+    if not name:
+        raise ValueError("an account is required; an empty one submits under the Slurm default")
+    if not _ACCOUNT_NAME.match(name):
+        raise ValueError(f"account must be one Slurm account name, got {account!r}")
+    if name.lower() in _TRAINING_ONLY_ACCOUNTS:
+        raise ValueError(
+            f"{name} is for training only (Research Computing, 2026-09-16); "
+            "research jobs run under a project account"
+        )
+    return name
+
+
+def _require_target(name: str) -> Target:
+    if name not in TARGETS:
+        raise ValueError(f"unknown target {name!r}; expected one of {', '.join(TARGETS)}")
+    return TARGETS[name]
+
+
+# Options a target or the account check decides. Free-form options may not set them: sbatch
+# keeps the last value of a repeated option, and a bare word ends option parsing altogether.
+_OWNED_SHORT = ("-A", "-M", "-p", "-G", "-t")
+_OWNED_LONG = ("--account", "--clusters", "--partition", "--gres", "--gpus", "--time")
+
+
+def _require_free_form(extra: str) -> list[str]:
+    words = shlex.split(extra)
+    for word in words:
+        name = word.split("=", 1)[0]
+        owned = (
+            not word.startswith("-")
+            or word == "--"
+            or (not word.startswith("--") and word[:2] in _OWNED_SHORT)
+            or any(name == long or name.startswith(f"{long}-") for long in _OWNED_LONG)
+        )
+        if owned:
+            raise ValueError(
+                f"SBATCH_ARGS may not contain {word!r}: use --option=value form, and CLUSTER, "
+                "ACCOUNT and TIME for the target, account and time limit"
+            )
+    return words
+
+
+def sbatch_flags(
+    target: str,
+    *,
+    account: str = _ACCOUNT,
+    time_limit: str | None = None,
+    cpu_only: bool = False,
+    extra: str = "",
+) -> list[str]:
+    """Command-line options that send an unmodified job script to `target`.
+
+    `cpu_only` drops the GPU, for work such as building the venv that should not queue for one.
+    `extra` is free-form sbatch options, placed first so the checked ones always win.
+    """
+    where = _require_target(target)
+    flags = [
+        *_require_free_form(extra),
+        f"--clusters={where.cluster}",
+        f"--account={_require_account(account)}",
+        f"--partition={where.partition}",
+    ]
+    if not cpu_only:
+        flags.append(f"--gres={where.gres}")
+    if time_limit is not None:
+        _require_time(time_limit)
+        flags.append(f"--time={time_limit}")
+    return flags
 
 
 @dataclass(frozen=True)
@@ -50,8 +156,7 @@ class SlurmJob:
     name: str
     command: str
     output: str
-    partition: str = "tigris"
-    gres: str = "gpu:gh200:1"
+    target: str = DEFAULT_TARGET
     cpus: int = 8
     mem: str = "64G"
     time_limit: str = "02:00:00"
@@ -62,11 +167,12 @@ class SlurmJob:
 def render(job: SlurmJob) -> str:
     """The sbatch script for one job.
 
-    No `--qos` line is emitted, deliberately: the default account denies the interactive
-    QoS and a job carrying one never starts.
+    No `--qos` line is emitted, deliberately: each account carries its own QoS, and
+    `rc-onboard` was verified to deny the interactive one, leaving a job that never starts.
     """
-    if not _TIME.match(job.time_limit):
-        raise ValueError(f"time_limit must be HH:MM:SS, got {job.time_limit!r}")
+    _require_time(job.time_limit)
+    where = _require_target(job.target)
+    account = _require_account(job.account)
     if "$" in job.output:
         # Slurm does not expand shell variables in #SBATCH directives. An --output of
         # "$HOME/logs/x.log" silently creates a directory literally named '$HOME'.
@@ -78,9 +184,10 @@ def render(job: SlurmJob) -> str:
     chdir = "" if job.workdir is None else f"#SBATCH --chdir={job.workdir}\n"
     return f"""#!/bin/bash
 #SBATCH --job-name={job.name}
-#SBATCH --account={job.account}
-#SBATCH --partition={job.partition}
-#SBATCH --gres={job.gres}
+#SBATCH --clusters={where.cluster}
+#SBATCH --account={account}
+#SBATCH --partition={where.partition}
+#SBATCH --gres={where.gres}
 #SBATCH --cpus-per-task={job.cpus}
 #SBATCH --mem={job.mem}
 #SBATCH --time={job.time_limit}
@@ -89,10 +196,7 @@ def render(job: SlurmJob) -> str:
 #SBATCH --mail-user={_MAIL_USER}
 
 set -euo pipefail
-export PATH="$HOME/.local/bin:$PATH"
-export HF_HUB_CACHE={_HF_HUB_CACHE}
-export TOKENIZERS_PARALLELISM=false
-export CC={_CC}
+{_JOB_ENV}
 
 {job.command}"""
 
@@ -147,3 +251,38 @@ def job_for(run: EvalRun, *, project_dir: str, time_limit: str = "02:00:00") -> 
         time_limit=time_limit,
         workdir=project_dir,
     )
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="python -m sphragis.experiment.slurm")
+    commands = parser.add_subparsers(dest="command", required=True)
+    flags = commands.add_parser("flags", help="sbatch options that send a job script to a target")
+    flags.add_argument("--target", default=DEFAULT_TARGET, help=", ".join(TARGETS))
+    flags.add_argument("--account", default=_ACCOUNT)
+    flags.add_argument("--time", dest="time_limit", help="HH:MM:SS, overriding the script's")
+    flags.add_argument("--cpu-only", action="store_true", help="request no GPU")
+    flags.add_argument("--sbatch-args", default="", help="free-form sbatch options, checked")
+    machine = commands.add_parser("machine", help="the machine type a target's venv is built for")
+    machine.add_argument("--target", default=DEFAULT_TARGET, help=", ".join(TARGETS))
+    args = parser.parse_args(argv)
+    try:
+        if args.command == "machine":
+            print(_require_target(args.target).machine)
+            return 0
+        options = sbatch_flags(
+            args.target,
+            account=args.account,
+            time_limit=args.time_limit,
+            cpu_only=args.cpu_only,
+            extra=args.sbatch_args,
+        )
+    except ValueError as refusal:
+        print(refusal, file=sys.stderr)
+        return 2
+    # Quoted, because the options are word-split again by the shell on the login node.
+    print(shlex.join(options))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

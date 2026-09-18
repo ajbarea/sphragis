@@ -94,14 +94,33 @@ The registered 7B needs ~17 GB and will not fit a typical desktop card, but the 
 can be developed against `Qwen2.5-Coder-1.5B` on anything with ~6 GB.
 
 ```bash
-make gpu-local                                   # swap the CPU wheel for cu130
+make gpu-local                                   # the experiment extra: cu130 torch on Linux
 uv run --no-sync --extra experiment python -m sphragis.experiment.model \
     --smoke --model-id Qwen/Qwen2.5-Coder-1.5B-Instruct
 ```
 
-Both halves matter. The lockfile pins CUDA torch only for `linux/aarch64`, which is the
-cluster; an x86_64 box resolves the CPU wheel, and plain `uv run` re-syncs to it on every
-invocation, silently undoing the swap. `--no-sync` is what keeps it.
+`--no-sync` matters: the extra is not a default, so a plain `uv run` re-syncs it away.
+
+## Running on the clusters
+
+Jobs run on RIT Research Computing under the `fl-mlm` project account. TIGRIS (aarch64,
+GH200 96 GB) is the default target; SPORC (x86_64, A100 40 GB, or H100 80 GB) is reached
+through the same TIGRIS login and checkout. Both mount one `$HOME`, so uv and the venv are
+built per machine type (`.venv-aarch64`, `.venv-x86_64`).
+
+```bash
+make deploy                                      # cluster checkout = this pushed commit
+make cluster-env CLUSTER=sporc                   # once per machine type
+make submit JOB=rq1 CLUSTER=sporc TIME=08:00:00 SBATCH_ARGS=--export=ALL,RUN_TAG=sporc-a100
+make submit JOB=rq1 SBATCH_ARGS=--export=ALL,MODE=windows
+```
+
+`CLUSTER` is `tigris`, `sporc` or `sporc-h100`. Scripts keep their TIGRIS `#SBATCH` lines
+and `submit` overrides them on the command line. Their `--time` values were measured on a
+GH200, so pass `TIME` elsewhere. Off TIGRIS every result and adapter path gets the cluster
+name as a suffix, so a run there never overwrites a GH200 result; `RUN_TAG` names it instead. Every result a job script writes records its cluster, job and GPU,
+including peak GPU memory, which training also logs as each adapter finishes: keep one result
+set on one GPU type.
 
 ## Two invariants
 

@@ -22,7 +22,7 @@ from statistics import median
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from sphragis.experiment.model import MODEL_ID
+from sphragis.experiment.model import MODEL_ID, run_provenance
 from sphragis.experiment.runner import build_prompt, evaluate, to_clusters
 from sphragis.measure.stats import cluster_bootstrap
 
@@ -116,6 +116,7 @@ print(
 args.out.write_text(
     json.dumps(
         {
+            "provenance": run_provenance(),
             "model_id": MODEL_ID,
             "raw_prompt_tokens": len(raw_ids),
             "chat_prompt_tokens": len(chat_ids),

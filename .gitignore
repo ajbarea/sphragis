@@ -1,6 +1,8 @@
 __pycache__/
 *.py[cod]
 .venv/
+# One venv per machine type on the clusters' shared $HOME; see sphragis/experiment/cluster-env.sh.
+.venv-*/
 .pytest_cache/
 .ruff_cache/
 .coverage

@@ -11,11 +11,22 @@ What is being built right now. The dated record of findings, numbers and correct
 RQ1 grid walk and gate, the contamination battery, power analysis, outcome-neutral checks,
 and the fixes from a structured review. Rewrites the statistics the gate reads.
 
+**`feat/cluster-switch`**, stacked on PR #13: `make submit CLUSTER=tigris|sporc|sporc-h100`,
+per-machine uv and venv on the shared `$HOME`, and run provenance (cluster, job, GPU, peak
+memory) in every job's results. TIGRIS has no `fl-mlm` association until Dr. Reznik completes
+the ColdFront project review, so SPORC carries the work meanwhile.
+
 **Train and dev windows collecting** (2024-11 through 2025-10, both organizations), raw
 snapshots then build. Freezing waits on AJ's decisions below: it is irreversible.
 
 ## Next pickups
 
+- **When SPORC job 21706441 ends** (A100 40 GB, `RUN_TAG=sporc-a100`, commit `c5ad368`): record
+  in the research log the `train_adapter: gpu` peak lines from its log and the `provenance.gpu`
+  block of `~/rq1-pilot-sporc-a100.json`, which settle whether 7B training fits in 40 GB, and
+  the seconds per step, which size every `--time` for SPORC. If it ran out of memory, the next
+  candidate is `CLUSTER=sporc-h100`: micro-batch is already 1 (accumulation 16), so there is no
+  smaller batch to fall back to.
 - Record the collected months' counts and drop profiles in the research log and the Stage 1
   skeleton's sampling section.
 - Run the outcome-neutral checks inside a full RQ1 pilot run on TIGRIS, so the manipulation

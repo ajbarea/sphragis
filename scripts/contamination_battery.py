@@ -22,6 +22,7 @@ from sphragis.experiment.model import (
     MEMBERSHIP_MODEL_ID,
     MODEL_ID,
     HFGenerator,
+    run_provenance,
     token_statistics,
 )
 from sphragis.measure.contamination import (
@@ -144,6 +145,7 @@ _partial = {
     # recomputed from these offline.
     "scores": scores,
     "complete": False,
+    "provenance": run_provenance(),
 }
 args.out.with_suffix(".partial.json").write_text(json.dumps(_partial, indent=2) + "\n")
 print(f"wrote {args.out.with_suffix('.partial.json')} (membership only)", flush=True)
@@ -217,6 +219,7 @@ for method in ("min_k_plus_plus", "min_k_percent", "guided_completion"):
 args.out.write_text(
     json.dumps(
         {
+            "provenance": run_provenance(),
             "membership_model": MEMBERSHIP_MODEL_ID,
             "guided_model": MODEL_ID,
             "k": args.k,

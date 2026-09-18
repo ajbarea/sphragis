@@ -26,12 +26,9 @@
 # two adapters per condition. At the measured 7.1 s/step and 0.85 s/generation that is about
 # 75 minutes per condition; four hours covers both with margin.
 set -euo pipefail
-export PATH="$HOME/.local/bin:$PATH"
-export HF_HUB_CACHE=$HOME/hf-cache/hub
-export TOKENIZERS_PARALLELISM=false
-export CC=/usr/bin/gcc
 
 cd "$HOME/ajsoftworks/sphragis"
+source sphragis/experiment/cluster-env.sh
 
 PLANTED="${PLANTED:-$HOME/corpus/planted}"
 CONDITIONS="${CONDITIONS:-marker-1 marker-0}"
@@ -43,7 +40,7 @@ for tag in $CONDITIONS; do
     --corpus "b=$PLANTED/$tag-b.jsonl" \
     --seeds 1 \
     --equalize-train \
-    --adapters "$HOME/scratch/sphragis-adapters-$tag" \
-    --out "$HOME/calibration-$tag.json"
+    --adapters "$HOME/scratch/sphragis-adapters-$tag$RESULT_SUFFIX" \
+    --out "$HOME/calibration-$tag$RESULT_SUFFIX.json"
 done
 echo "CALIBRATION_OK"
