@@ -7,38 +7,34 @@ What is being built right now. The dated record of findings, numbers and correct
 
 ## In flight
 
-**PR #13** (`feat/wellposed-filter`), open for AJ's review: adapter training, the pilots, the
-RQ1 grid walk and gate, the contamination battery, power analysis, outcome-neutral checks,
-and the fixes from a structured review. Rewrites the statistics the gate reads.
+**PR #13** (`feat/wellposed-filter`), open for AJ: the whole apparatus, from corpus to gate.
+Everything since the last merge sits on it, including the statistics the gate reads. Reviewed in
+five rounds against the diff; every finding reproduced and fixed, summarised on the PR.
 
-**`feat/cluster-switch`**, stacked on PR #13: `make submit CLUSTER=tigris|sporc|sporc-h100`,
-per-machine uv and venv on the shared `$HOME`, and run provenance (cluster, job, GPU, peak
-memory) in every job's results. TIGRIS has no `fl-mlm` association until Dr. Reznik completes
-the ColdFront project review, so SPORC carries the work meanwhile.
+**RQ1 is answered on the dev window, at three seeds** (jobs 148198, 148404, 148406): Qt +0.0312
+[+0.0080, +0.0565], OpenStack +0.0171 covering zero, mixed under both rules and both estimands.
+The test window stays sealed.
 
-**Train and dev windows collecting** (2024-11 through 2025-10, both organizations), raw
-snapshots then build. Freezing waits on AJ's decisions below: it is irreversible.
+**RQ2 has its first result and its next design.** 34 client updates from one initialization say a
+client's update identifies its codebase family, not its organization. Separating the two needs
+several projects per organization in one language, which AOSP's C++ projects supply beside Qt's.
+AOSP months 2024-01 to 2025-03 are fetching and building locally; the public record ends 2025-03-27.
 
 ## Next pickups
 
-- **When SPORC job 21706441 ends** (A100 40 GB, `RUN_TAG=sporc-a100`, commit `c5ad368`): record
-  in the research log the `train_adapter: gpu` peak lines from its log and the `provenance.gpu`
-  block of `~/rq1-pilot-sporc-a100.json`, which settle whether 7B training fits in 40 GB, and
-  the seconds per step, which size every `--time` for SPORC. If it ran out of memory, the next
-  candidate is `CLUSTER=sporc-h100`: micro-batch is already 1 (accumulation 16), so there is no
-  smaller batch to fall back to.
-- Record the collected months' counts and drop profiles in the research log and the Stage 1
-  skeleton's sampling section.
-- Run the outcome-neutral checks inside a full RQ1 pilot run on TIGRIS, so the manipulation
-  check reads real per-step losses and adapter norms.
-- Replace the estimated test-window sizes in the power analysis once the window is defined.
+- Build the AOSP and Qt C++ client corpora, rerun `client_updates` over the larger source set, and
+  read `organization beyond project` with the project as the exchangeable unit.
+- Record the sensitivity analysis (`scripts/sensitivity.py`) in the Stage 1 skeleton's section 5,
+  replacing the withdrawn 0.833 power figure.
+- Re-run the calibration sweep under fp32 inference, since the gate's non-monotonicity was measured
+  under bf16.
+- Report Gap-K% beside Min-K%++, which needs the battery re-run: the saved results keep scores, not
+  per-token log-probabilities.
 
 ## Waiting on AJ
 
-- Venue (shortlist in the research log and session notes), and authorship, fixed at Stage 1.
-- The estimand: pooled over examples or averaged over changes.
-- The leakage threshold for outcome-neutral test 4; the pilot driver's 0.01 is provisional.
-- The contamination control window's size, and guided completion's match criterion.
-- The comment-anchoring rule (strict hunk, or within 10 lines).
-- How windows are assigned: the seal censors about 22% of the dev window's slowest reviews.
-- Merging PR #13, and when to freeze the windows.
+- Merging PR #13, and when to freeze the windows: freezing is irreversible.
+- Venue and authorship, fixed at Stage 1.
+- Whether RQ1 claims "organizations leave a learnable fingerprint" (conjunctive, as registered) or
+  "this organization does" (per-organization, higher power, weaker claim).
+- Whether running a sole-authored paper on the lab's `fl-mlm` allocation needs an acknowledgement.
