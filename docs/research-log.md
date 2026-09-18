@@ -2451,12 +2451,16 @@ reference and the participants it may contribute, so no round is scored against 
 
 | target | round of 4 | round of 8 | round of 16 |
 |---|---|---|---|
-| OpenStack, 1 of its clients present | AUC 0.765 | 0.726 | 0.725 |
-| OpenStack, 2 of its clients present | 0.918 | 0.835 | 0.863 |
+| OpenStack, 1 of its clients present | AUC 0.748 | 0.750 | 0.791 |
+| OpenStack, 2 of its clients present | 0.918 | 0.896 | 0.947 |
 
-Detection rises with how many of the organization's clients are in the round and falls only
-slightly as the round grows, which is what a mean over participants predicts. Qt is not reported:
-with 22 of the 34 clients it leaves too few outsiders to fill a round of sixteen without it.
+Detection rises with how many of the organization's clients are in the round, and does not fall as
+the round grows: a larger round dilutes the target's share and averages the others' noise away at
+the same rate. Qt is not reported: with 22 of the 34 clients it leaves too few outsiders to fill a
+round of sixteen without it.
+
+(These are the figures after the reference split was corrected, below; the first run of this table
+read 0.765, 0.726 and 0.725 on the one-client row.)
 
 **First run of this said AUC 1.000, and that was a defect in the detector.** The two classes were
 scored against references of different sizes, eleven clients for rounds holding the target and six
@@ -2613,3 +2617,22 @@ which distribution they were drawn from, which is also the quantity a data-shari
 between organizations is written about. Their proposed next step, measuring an adapter's capacity
 before it is shared rather than after it is attacked, is the same instinct as RQ2's, one altitude
 up.
+
+
+### The reference split was following the order clients arrive in (2026-09-18)
+
+Found by reading the defence curve rather than the code: Qt's detection ran *below* chance and fell
+further with noise (0.386 at four times the update norm, 0.336 at sixteen), which no amount of
+masking explains. A detector that is anti-correlated is measuring something other than membership.
+
+The attacker's clients were split into reference and participants by taking the first half of a
+sorted list. Clients arrive grouped by project, so for an organization spanning several projects,
+Qt's C++, documentation and Python, the reference came from different projects than the
+participants: the score then measured the distance between two projects, and rounds holding the
+target scored lower than rounds without it. The split is now random, seeded, in both the Gram-based
+attack and the vector-space defence curve, and a test builds an organization of two projects in
+listing order and fails if the detector runs backwards.
+
+The corrected mixed-round figures are in the entry above. What the bug did not touch: the per-client
+attribution, which uses every other client rather than a split, and the paired-subset difference,
+which holds a target out by name.
