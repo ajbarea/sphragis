@@ -215,7 +215,7 @@ def generator_for(adapter: str | None) -> HFGenerator:
     torch.cuda.empty_cache()
     print(f"evaluating with {adapter or 'base'}", flush=True)
     generator = HFGenerator(adapter_path=adapter, max_new_tokens=args.max_new_tokens)
-    inference_dtypes.add(generator.dtype)
+    inference_dtypes.add(generator.computed_dtype)
     return generator
 
 
@@ -280,7 +280,7 @@ args.out.write_text(
             "seeds": seeds,
             "split_seed": args.split_seed,
             "equalize_train": args.equalize_train,
-            # The precision the generators were built with, observed rather than declared.
+            # Read back from the loaded models, not from what was asked for.
             "inference_dtype": sorted(inference_dtypes),
             "train_size": args.train_size,
             "bootstrap_seed": args.bootstrap_seed,

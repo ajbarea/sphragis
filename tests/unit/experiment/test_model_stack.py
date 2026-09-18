@@ -91,6 +91,10 @@ class _FakeModel:
         self.dtype = dtype
         return self
 
+    def parameters(self) -> Any:
+        """The generator reads the precision back from here rather than from what it asked for."""
+        return iter([torch.zeros(1, dtype=self.dtype)])
+
     def generate(self, **kwargs: Any) -> Any:
         self.kwargs = kwargs
         return torch.tensor([[1, 2, 3, 4, 5]])
@@ -186,8 +190,9 @@ def test_the_generator_computes_in_the_registered_precision(
     wired: tuple[HFGenerator, Any, Any],
 ) -> None:
     """bf16 greedy decoding did not reproduce between jobs; fp32 did."""
-    _, _, fake = wired
+    generator, _, fake = wired
     assert fake.dtype is torch.float32
+    assert generator.computed_dtype == "float32"
 
 
 def test_the_precision_can_be_overridden_to_measure_what_it_replaced(
@@ -198,5 +203,6 @@ def test_the_precision_can_be_overridden_to_measure_what_it_replaced(
     tokenizer, fake = _FakeTokenizer(), _FakeModel()
     monkeypatch.setattr(model_module, "_require_tokenizer", lambda *_: tokenizer)
     monkeypatch.setattr(model_module.AutoModelForCausalLM, "from_pretrained", lambda *a, **k: fake)
-    HFGenerator(device="cpu", dtype="bfloat16")
+    generator = HFGenerator(device="cpu", dtype="bfloat16")
     assert fake.dtype is torch.bfloat16
+    assert generator.computed_dtype == "bfloat16", "read back from the model, not the request"

@@ -68,13 +68,15 @@ def main() -> None:
     for label in sorted(set(labels)):
         mine = [i for i, other in enumerate(labels) if other == label]
         outside = [i for i, other in enumerate(labels) if other != label]
-        # One outsider is held out as the stranger baseline, so a round of the largest size must
-        # still be fillable from the rest.
-        if len(mine) < 2 or len(outside) < max(args.sizes) + 1:
-            print(f"{label}: too few clients outside it for rounds of {max(args.sizes)}")
+        # Per size, not per organization: a size that does not fit is skipped, and the ones that
+        # do are still measured. Gating the whole organization on the largest size dropped Qt,
+        # whose smaller rounds are perfectly measurable.
+        sizes = [size for size in args.sizes if size <= len(outside)]
+        if len(mine) < 2 or not sizes:
+            print(f"{label}: too few clients outside it for any round size")
             continue
         cell: dict[str, Any] = {"clients": len(mine), "membership": {}, "mixed_rounds": {}}
-        for size in args.sizes:
+        for size in sizes:
             for present in (1, 2):
                 if size - present > len(outside) or len(mine) <= present:
                     continue
@@ -93,7 +95,7 @@ def main() -> None:
                     f"AUC {mixed['auc']:.3f}",
                     flush=True,
                 )
-        for size in args.sizes:
+        for size in sizes:
             aucs = []
             for held in mine:
                 reference = [i for i in mine if i != held]
@@ -110,7 +112,14 @@ def main() -> None:
                 )
             cell["membership"][size] = {"mean_auc": fmean(aucs), "per_client": aucs}
             print(f"{label:24} rounds of {size:3}: membership AUC {fmean(aucs):.3f}", flush=True)
-        size = args.sizes[-1]
+        # The stranger baseline holds one outsider out, so the paired block needs one more than
+        # the round it draws; it takes the largest size that leaves room.
+        paired_sizes = [size for size in sizes if size + 1 <= len(outside)]
+        if not paired_sizes:
+            report["targets"][label] = cell
+            print(f"{label}: no round size leaves an outsider over for the stranger baseline")
+            continue
+        size = paired_sizes[-1]
         own, stranger = [], []
         for held in mine:
             reference = [i for i in mine if i != held]

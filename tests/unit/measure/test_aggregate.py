@@ -102,7 +102,7 @@ def test_the_reference_split_does_not_follow_the_order_clients_arrive_in() -> No
         products, members=range(12), everyone=range(36), size=8, draws=200, seed=0, splits=8
     )
     assert detected["auc"] > 0.5, "an ordered split can run the detector backwards"
-    assert detected["auc_lowest_split"] > 0.5, "and every split, not the average of them"
+    assert detected["auc_sd_over_splits"] < 0.25, "and not by luck of one split"
 
 
 def test_a_round_that_cannot_be_filled_without_the_target_is_refused() -> None:

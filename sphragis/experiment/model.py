@@ -161,6 +161,9 @@ class HFGenerator:
         model.to(getattr(torch, self.dtype))
         model.eval()
         self.model = model
+        # Read back from the model rather than echoed from the request: a `to` that did not
+        # apply would otherwise be recorded as though it had.
+        self.computed_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
 
     def generate(self, prompt: str) -> str:
         """Greedy by default: the output is the model's single most likely refinement.

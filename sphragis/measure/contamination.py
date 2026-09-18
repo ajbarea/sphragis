@@ -62,6 +62,16 @@ def min_k_plus_plus(tokens: Sequence[TokenStats], *, k: float = 20.0) -> float:
 
 # One scored position for Gap-K%: log p(x_t | x_<t), the top-1 log-probability at that
 # position, and the standard deviation of log p(z | x_<t) over the vocabulary.
+def _gap_scores(tokens: Sequence[TokenStats]) -> list[float | None]:
+    """Each position's normalised distance from the model's top-1 choice, None where undefined."""
+    return [
+        (logprob - top1) / math.sqrt(variance)
+        if variance > 0.0 and math.isfinite(logprob) and math.isfinite(top1)
+        else None
+        for logprob, _, variance, top1 in tokens
+    ]
+
+
 def gap_k_percent(tokens: Sequence[TokenStats], *, k: float = 20.0, window: int = 3) -> float:
     """Gap-K% (Kwak and Kim, arXiv:2601.19936), the mean of its lowest k percent of scores.
 
@@ -78,28 +88,50 @@ def gap_k_percent(tokens: Sequence[TokenStats], *, k: float = 20.0, window: int 
     first would average tokens that are not adjacent in the text, which is the opposite of what
     the smoothing is for. A sequence shorter than the window yields one window over what it has,
     where k cannot select and the score is the plain mean, so the window is capped instead.
+
+    When gaps leave no run of `window` scored positions the window shrinks until some run
+    survives, down to single positions, rather than refusing: this is called once an example, in
+    a comprehension over a corpus, after the GPU work that produced the statistics, and one
+    unscorable example must not throw the run away. `gap_k_windows` reports how many windows the
+    gaps cost, which the battery records.
     """
     if window < 1:
         raise ValueError(f"the smoothing window must be positive, got {window}")
-    scores: list[float | None] = [
-        (logprob - top1) / math.sqrt(variance)
-        if variance > 0.0 and math.isfinite(logprob) and math.isfinite(top1)
-        else None
-        for logprob, _, variance, top1 in tokens
-    ]
+    scores = _gap_scores(tokens)
     if not any(s is not None for s in scores):
         raise ValueError("gap_k_percent needs at least one position with a positive variance")
-    span = min(window, len(scores))
-    smoothed: list[float] = []
-    for start in range(len(scores) - span + 1):
-        piece = scores[start : start + span]
-        if all(value is not None for value in piece):
-            smoothed.append(fmean(value for value in piece if value is not None))
-    if not smoothed:
-        raise ValueError(
-            f"no run of {span} scored positions: every window covers one with no defined score"
-        )
+    smoothed, _ = _smoothed_gaps(scores, window)
     return min_k_percent(smoothed, k=k)
+
+
+def _smoothed_gaps(scores: Sequence[float | None], window: int) -> tuple[list[float], int]:
+    """Windows of `window` consecutive scored positions, and how many windows the gaps cost.
+
+    The window shrinks if no run of that length exists, so a sequence riddled with unscored
+    positions still yields a score rather than an exception.
+    """
+    for span in range(min(window, len(scores)), 0, -1):
+        starts = range(len(scores) - span + 1)
+        smoothed: list[float] = []
+        for start in starts:
+            piece = scores[start : start + span]
+            if all(value is not None for value in piece):
+                smoothed.append(fmean(value for value in piece if value is not None))
+        if smoothed:
+            return smoothed, len(starts) - len(smoothed)
+    raise ValueError("gap_k_percent needs at least one position with a positive variance")
+
+
+def gap_k_windows(tokens: Sequence[TokenStats], *, window: int = 3) -> dict[str, int]:
+    """How many smoothed windows Gap-K% scored, and how many the unscored positions cost."""
+    scores = _gap_scores(tokens)
+    smoothed, dropped = _smoothed_gaps(scores, window)
+    return {
+        "positions": len(scores),
+        "undefined_positions": sum(1 for s in scores if s is None),
+        "windows": len(smoothed),
+        "windows_dropped": dropped,
+    }
 
 
 def guided_completion_rate(completions: Sequence[tuple[str, str]]) -> float:
@@ -170,6 +202,10 @@ def battery_report(
         "gap_k_percent": {
             "k": k,
             "window": gap_window,
+            "windows": {
+                "post": [gap_k_windows(seq, window=gap_window) for seq in post_tokens][:1],
+                "pre": [gap_k_windows(seq, window=gap_window) for seq in pre_tokens][:1],
+            },
             **compare_windows(
                 post_cutoff=[gap_k_percent(seq, k=k, window=gap_window) for seq in post_tokens],
                 pre_cutoff=[gap_k_percent(seq, k=k, window=gap_window) for seq in pre_tokens],

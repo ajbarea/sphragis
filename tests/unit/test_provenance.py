@@ -82,6 +82,28 @@ def _dict_literals(tree: ast.AST) -> dict[str, ast.Dict]:
     return found
 
 
+def _writes_json(tree: ast.AST) -> list[ast.Call]:
+    """Every `<path>.write_text(json.dumps(...))`, whoever the path is.
+
+    Matched on structure rather than on the text `args.out.write_text(json.dumps(`, which the
+    formatter wraps in six of the scripts already: a substring rule passes them by accident and
+    would pass a new script that records nothing by the same accident.
+    """
+    calls = []
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "write_text"
+            and node.args
+            and isinstance(node.args[0], ast.Call)
+            and ast.unparse(node.args[0].func) == "json.dumps"
+            and node.args[0].args
+        ):
+            calls.append(node.args[0])
+    return calls
+
+
 def _written_result_keys(script: Path) -> set[str]:
     """Top-level keys of the dict each `args.out.write_text(json.dumps(...))` writes."""
     keys: set[str] = set()
@@ -119,10 +141,13 @@ def test_every_script_a_job_launches_records_run_provenance(script: Path) -> Non
     if not keys:
         # A script that writes something other than a JSON object, an array file say, still has
         # to record where it ran; the key check cannot read inside it, so the call is the test.
-        text = script.read_text()
-        assert "args.out.write_text(json.dumps(" not in text, (
-            f"{script.name}: writes a JSON object whose keys could not be read"
+        # But a JSON writer whose keys could not be read is a hole, not an exemption: it has to
+        # be written in a form this can read, or the check would pass on anything.
+        assert not _writes_json(ast.parse(script.read_text())), (
+            f"{script.name}: writes a JSON object whose keys this check cannot read; build the "
+            "result as a dict literal, or assign one to a name and dump that name"
         )
+        text = script.read_text()
         assert "run_provenance(" in text or "provenance_header(" in text, (
             f"{script.name}: writes no JSON object and records no provenance"
         )
@@ -213,3 +238,29 @@ def test_outside_a_job_the_checkout_is_the_commit(
     else:
         monkeypatch.setenv("SPHRAGIS_GIT_COMMIT", started)
     assert provenance_header()["git"] == {"commit": "c" * 40, "branch": "main"}
+
+
+def test_a_json_writer_whose_keys_cannot_be_read_is_a_failure_not_an_exemption(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The earlier guard tested a substring the formatter wraps, so a wrapped writer that
+    recorded nothing would have passed through the loose fallback."""
+    script = tmp_path / "sneaky.py"
+    script.write_text(
+        "import json\n"
+        "def build():\n"
+        "    return {'results': []}\n"
+        "args.out.write_text(\n"
+        "    json.dumps(build(), indent=2)\n"
+        ")\n"
+        "def unrelated():\n"
+        "    return provenance_header()\n"
+    )
+    with pytest.raises(AssertionError, match="keys this check cannot read"):
+        test_every_script_a_job_launches_records_run_provenance(script)
+
+
+def test_a_script_writing_no_json_object_passes_on_its_provenance_call(tmp_path: Path) -> None:
+    script = tmp_path / "vectors.py"
+    script.write_text("import numpy as np\nnp.savez(args.out, meta=provenance_header())\n")
+    test_every_script_a_job_launches_records_run_provenance(script)

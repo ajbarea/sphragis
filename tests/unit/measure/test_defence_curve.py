@@ -54,8 +54,9 @@ def test_without_noise_the_source_is_detected_and_enough_noise_hides_it() -> Non
         draws=80,
         rng=rng,
     )
-    assert clean > 0.9
-    assert masked < 0.75
+    assert clean["auc"] > 0.9
+    assert masked["auc"] < 0.75
+    assert clean["mean_present"] > clean["mean_absent"], "the separation's size, not only its sign"
 
 
 def test_averaging_rounds_recovers_what_one_round_of_noise_hid() -> None:
@@ -84,4 +85,22 @@ def test_averaging_rounds_recovers_what_one_round_of_noise_hid() -> None:
         draws=60,
         rng=rng,
     )
-    assert many > one
+    assert many["auc"] > one["auc"]
+
+
+def test_a_target_free_difference_is_the_null_the_absent_class_measures() -> None:
+    """Both classes difference two sets; only one holds the target, so 0.5 is no signal."""
+    rng = np.random.default_rng(3)
+    vectors = rng.normal(size=(32, 256))
+    scored = defence.masked_rounds(
+        vectors,
+        members=np.arange(4),
+        outside=np.arange(8, 32),
+        reference=np.arange(4, 8),
+        size=8,
+        rounds=5,
+        noise=0.0,
+        draws=120,
+        rng=rng,
+    )
+    assert 0.35 < scored["auc"] < 0.65

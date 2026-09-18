@@ -114,6 +114,7 @@ model = AutoModelForCausalLM.from_pretrained(
 model.eval()
 post_tokens = [token_statistics(model, tok, scored_text(r)) for r in post_e]
 pre_tokens = [token_statistics(model, tok, scored_text(r)) for r in pre_e]
+membership_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
 del model
 gc.collect()
 torch.cuda.empty_cache()
@@ -160,7 +161,7 @@ print(f"wrote {args.out.with_suffix('.partial.json')} (membership only)", flush=
 
 # --- Guided completion on the registered model -------------------------------------------
 generator = HFGenerator(model_id=MODEL_ID, max_new_tokens=MAX_NEW_TOKENS)
-guided_dtype = generator.dtype  # kept: the generator is released before the result is written
+guided_dtype = generator.computed_dtype  # kept: the generator is released before the write
 
 
 def completions(
@@ -233,7 +234,7 @@ args.out.write_text(
             "membership_model": MEMBERSHIP_MODEL_ID,
             # Two models at two precisions: token statistics come from a bf16 model, guided
             # completion from the registered generator.
-            "membership_dtype": "bfloat16",
+            "membership_dtype": membership_dtype,
             "guided_dtype": guided_dtype,
             "guided_model": MODEL_ID,
             "k": args.k,

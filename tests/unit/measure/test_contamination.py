@@ -172,8 +172,23 @@ def test_gap_k_never_smooths_across_a_position_it_could_not_score() -> None:
     # Two runs of three separated by an unscored position: the -8 never meets the zeros.
     tokens = [good, good, good, bad, far, far, far]
     assert gap_k_percent(tokens, window=3) == pytest.approx(-8.0)
-    with pytest.raises(ValueError, match="no run of 3"):
-        gap_k_percent([good, bad, good, bad, good], window=3)
+
+
+def test_gap_k_shrinks_the_window_rather_than_refusing_a_gappy_sequence() -> None:
+    """It is called once an example over a whole corpus, after the GPU work: one unscorable
+    example must not throw the run away."""
+    from sphragis.measure.contamination import gap_k_percent, gap_k_windows
+
+    good = (-1.0, 0.0, 1.0, -1.0)
+    bad = (-1.0, 0.0, 0.0, -1.0)
+    far = (-9.0, 0.0, 1.0, -1.0)
+    gappy = [good, bad, far, bad, good]
+    # No run of three, nor of two: it falls back to single positions and still never averages
+    # across the gaps.
+    assert gap_k_percent(gappy, window=3) == pytest.approx(-8.0)
+    counted = gap_k_windows(gappy, window=3)
+    assert counted["undefined_positions"] == 2
+    assert counted["windows"] == 3
 
 
 def test_gap_k_caps_the_window_at_the_sequence_it_has() -> None:

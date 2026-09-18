@@ -9,13 +9,13 @@ Two readings, because they answer different questions:
 
   single round   the attacker sees one round's aggregate. Noise is drawn afresh per client per
                  round, so this is the defence at its strongest.
-  many rounds    the attacker averages the AGGREGATES of rounds holding the target, subtracts
-                 the average of rounds without it, and scores that difference, which is
-                 FedAttr's mechanism. Averaging per-round scores instead would not do: a cosine
-                 is nonlinear in the noise, so its attenuation survives averaging while the
-                 aggregates' noise does not. Fresh noise averages away over rounds and the
-                 target's direction does not, so a per-round mask is a delay rather than a
-                 defence unless the budget composes across rounds.
+  many rounds    the attacker averages the aggregates of rounds holding the target, subtracts
+                 the average of rounds without it, and scores that difference: FedAttr's
+                 mechanism, where the subtraction cancels the outsiders both sets share. Fresh
+                 noise averages away over rounds and the target's direction does not, so a
+                 per-round mask is a delay rather than a defence unless the budget composes.
+                 The updates replayed are one round's, so this measures the arithmetic of
+                 averaging, not a source's persistence across a moving global model.
 
     uv run --no-sync --no-active python scripts/defence_curve.py \
         --vectors datasets/results/client-vectors.npz \
@@ -41,6 +41,7 @@ parser.add_argument("--round-size", type=int, default=8)
 parser.add_argument("--rounds", type=int, nargs="+", default=[1, 10, 100])
 parser.add_argument("--draws", type=int, default=300)
 parser.add_argument("--seed", type=int, default=0)
+parser.add_argument("--splits", type=int, default=4, help="reference splits averaged over")
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -65,35 +66,51 @@ def masked_rounds(
     noise: float,
     draws: int,
     rng: np.random.Generator,
-) -> float:
-    """AUC of the attacker's score after `rounds` observations, at a noise-to-signal ratio.
+) -> dict[str, float]:
+    """AUC of FedAttr's statistic after `rounds` observations, at a noise-to-signal ratio.
 
     Each participant's update is masked with an independent Gaussian of the given fraction of the
-    mean update norm, drawn afresh for every round. The attacker averages the aggregates it sees
-    and scores the average, which is what makes per-round noise a delay: the masks average away,
-    the target's direction does not. Averaging the per-round scores instead would keep the
-    attenuation, since a cosine is not linear in the noise.
+    mean update norm, drawn afresh for every round. The attacker averages the aggregates of rounds
+    holding the target, subtracts the average of rounds without it, and scores that difference
+    against its reference direction. The subtraction is what cancels the outsiders the two sets
+    share; averaging the per-round cosines instead would keep the noise's attenuation, since a
+    cosine is not linear in it.
+
+    A trial of the absent class differences two target-free sets, so the classes differ in the
+    target's presence and in nothing else.
+
+    What `rounds` means here: the client updates are one round's, replayed, so the target's
+    direction is identical in every round by construction and only the masks and the participants
+    are redrawn. A real attacker watching a training run sees rounds separated in time, across
+    which the global adapter moves and each client's update starts from a different point; whether
+    a source's direction persists across that is a question this design cannot answer.
     """
     scale = noise * float(np.linalg.norm(vectors, axis=1).mean())
     direction = vectors[reference].mean(axis=0)
     width = vectors.shape[1]
 
-    def observed(with_target: bool) -> float:
-        total = np.zeros(width)
-        for _ in range(rounds):
-            if with_target:
-                participants = np.concatenate(
-                    [rng.choice(members, 1), rng.choice(outside, size - 1, replace=False)]
-                )
-            else:
-                participants = rng.choice(outside, size, replace=False)
-            mask = rng.normal(0.0, scale / np.sqrt(width), (size, width))
-            total += (vectors[participants] + mask).mean(axis=0)
-        return cosine(total / rounds, direction)
+    def aggregate(with_target: bool) -> np.ndarray:
+        if with_target:
+            participants = np.concatenate(
+                [rng.choice(members, 1), rng.choice(outside, size - 1, replace=False)]
+            )
+        else:
+            participants = rng.choice(outside, size, replace=False)
+        mask = rng.normal(0.0, scale / np.sqrt(width), (size, width))
+        return (vectors[participants] + mask).mean(axis=0)
 
-    present = [observed(True) for _ in range(draws)]
-    absent = [observed(False) for _ in range(draws)]
-    return auc(present, absent)
+    def difference(with_target: bool) -> float:
+        held = sum(aggregate(with_target) for _ in range(rounds)) / rounds
+        without = sum(aggregate(False) for _ in range(rounds)) / rounds
+        return cosine(held - without, direction)
+
+    present = [difference(True) for _ in range(draws)]
+    absent = [difference(False) for _ in range(draws)]
+    return {
+        "auc": auc(present, absent),
+        "mean_present": float(np.mean(present)),
+        "mean_absent": float(np.mean(absent)),
+    }
 
 
 def main() -> None:
@@ -120,30 +137,45 @@ def main() -> None:
         if len(mine) < 2 or len(outside) < args.round_size:
             continue
         half = max(1, len(mine) // 2)
-        # At random: clients arrive grouped by project, and an ordered split hands a
-        # multi-project organization a reference from other projects than its participants.
-        shuffled = np.random.default_rng(args.seed).permutation(mine)
-        reference, participants = shuffled[:half], shuffled[half:]
-        cell: dict[str, dict[str, float]] = {}
+        cell: dict[str, dict[str, dict[str, float]]] = {}
         for rounds in args.rounds:
             for noise in args.noise:
-                # A fresh generator per cell, so cells differ in rounds and noise and not in
-                # which rounds were drawn, and the same number of draws throughout.
-                rng = np.random.default_rng(args.seed + 7919 * rounds)
-                value = masked_rounds(
-                    vectors,
-                    members=participants,
-                    outside=outside,
-                    reference=reference,
-                    size=args.round_size,
-                    rounds=rounds,
-                    noise=noise,
-                    draws=args.draws,
-                    rng=rng,
-                )
-                cell.setdefault(str(rounds), {})[str(noise)] = value
+                scores = []
+                for split in range(args.splits):
+                    # The split is drawn from its own stream, so which clients are the reference
+                    # does not decide which rounds are drawn. Clients arrive grouped by project,
+                    # and an ordered split hands a multi-project organization a reference from
+                    # other projects than its participants, which ran the detector backwards.
+                    shuffled = np.random.default_rng(args.seed + split).permutation(mine)
+                    reference, participants = shuffled[:half], shuffled[half:]
+                    # A fresh generator per cell, so cells differ in rounds and noise and not in
+                    # which rounds were drawn, and the same number of draws throughout.
+                    rng = np.random.default_rng(args.seed + 7919 * rounds + 104729 * split)
+                    scores.append(
+                        masked_rounds(
+                            vectors,
+                            members=participants,
+                            outside=outside,
+                            reference=reference,
+                            size=args.round_size,
+                            rounds=rounds,
+                            noise=noise,
+                            draws=args.draws,
+                            rng=rng,
+                        )
+                    )
+                aucs = [s["auc"] for s in scores]
+                summary = {
+                    "auc": float(np.mean(aucs)),
+                    "auc_sd_over_splits": float(np.std(aucs, ddof=1)) if len(aucs) > 1 else 0.0,
+                    "splits": float(args.splits),
+                    "mean_present": float(np.mean([s["mean_present"] for s in scores])),
+                    "mean_absent": float(np.mean([s["mean_absent"] for s in scores])),
+                }
+                cell.setdefault(str(rounds), {})[str(noise)] = summary
                 print(
-                    f"{organization:12} {rounds:4} rounds, noise {noise:4}: AUC {value:.3f}",
+                    f"{organization:12} {rounds:4} rounds, noise {noise:4}: "
+                    f"AUC {summary['auc']:.3f} (sd {summary['auc_sd_over_splits']:.3f})",
                     flush=True,
                 )
         report["targets"][organization] = cell

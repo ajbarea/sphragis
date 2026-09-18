@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import random
 from collections.abc import Sequence
-from statistics import fmean
+from statistics import fmean, stdev
 
 
 def gram(cosine: Sequence[Sequence[float]], norms: Sequence[float]) -> list[list[float]]:
@@ -163,11 +163,13 @@ def organization_membership_auc(
     outside = [i for i in everyone if i not in set(mine)]
     if size > len(outside):
         raise ValueError(f"a round without the target needs {size} others, got {len(outside)}")
-    scores = []
+    scores, separations = [], []
     for split in range(splits):
-        rng = random.Random(f"{seed}/{split}")
+        # Two streams: which clients are the reference must not decide which rounds are drawn,
+        # or the spread across splits would carry the round draws with it.
         shuffled = list(mine)
-        rng.shuffle(shuffled)
+        random.Random(f"{seed}/split/{split}").shuffle(shuffled)
+        rng = random.Random(f"{seed}/rounds/{split}")
         reference, participants = shuffled[:half], shuffled[half:]
         if at_least > len(participants):
             raise ValueError(f"{at_least} participants needed, {len(participants)} available")
@@ -179,13 +181,18 @@ def organization_membership_auc(
             absent.append(direction_score(products, rng.sample(outside, size), reference))
         wins = sum(1.0 if a > b else 0.5 if a == b else 0.0 for a in present for b in absent)
         scores.append(wins / (len(present) * len(absent)))
+        separations.append((fmean(present), fmean(absent)))
     return {
         "auc": fmean(scores),
-        "auc_lowest_split": min(scores),
-        "auc_highest_split": max(scores),
+        # A standard deviation rather than the range, which only widens with more splits.
+        "auc_sd_over_splits": stdev(scores) if len(scores) > 1 else 0.0,
         "splits": float(splits),
         "rounds": float(draws),
         "round_size": float(size),
         "target_clients_per_round": float(at_least),
         "reference_clients": float(half),
+        # The size of the separation, not only its ordering: an AUC near 1 over scores that
+        # differ in the fourth decimal is a consistent ordering of almost nothing.
+        "mean_present": fmean(p for p, _ in separations),
+        "mean_absent": fmean(a for _, a in separations),
     }
