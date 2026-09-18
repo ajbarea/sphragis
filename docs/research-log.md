@@ -2490,3 +2490,25 @@ these window sizes.
 exactly that pattern, and a test window that behaves like the dev window would return mixed again.
 That is a statement about what the study can resolve, and it is better made now, in the Stage 1
 report, than discovered afterwards.
+
+### Exact match earns its registration: the quieter metrics lose more signal than noise (2026-09-18)
+
+The sensitivity analysis puts the design's resolution at about two exact-match points, which is
+where the observed effects are, so the obvious lever is a less noisy outcome. Exact match is
+binary and maximally variable; the run already records a normalised exact match and an edit
+similarity. Read over the three seeds under the crossed interval, on the same clusters:
+
+| metric | OpenStack: effect, half-width, ratio | Qt: effect, half-width, ratio |
+|---|---|---|
+| exact match (registered) | +0.0171, 0.0232, **0.74** | +0.0312, 0.0243, **1.28** |
+| normalised exact match | +0.0183, 0.0247, 0.74 | +0.0298, 0.0255, 1.17 |
+| edit similarity | -0.0003, 0.0117, 0.03 | +0.0059, 0.0092, 0.64 |
+
+**Edit similarity halves the interval and costs five-sixths of the effect.** An adapter trained on
+the right organization is not generally closer in string distance to the reference; it is more
+often exactly right. The organizational gain lives in the last token as much as the first, which is
+what an exact-match criterion is for and what a graded string distance averages away.
+
+So the registered metric is the one the data supports, not merely the one chosen first, and the
+resolution limit is a property of the question rather than of the instrument. The change-averaged
+estimand does not help either: its Qt interval is wider relative to its effect (0.77 against 1.28).
