@@ -459,24 +459,35 @@ _GEOMETRY_JOBS = {
 }
 
 
-def _run_job(script: Path, home: Path, **env: str) -> subprocess.CompletedProcess[str]:
-    """The real sbatch body, with a uv that reports its arguments instead of running them."""
+def _run_job(script_name: str, root: Path, **env: str) -> subprocess.CompletedProcess[str]:
+    """The real sbatch body, in a checkout of its own, with a uv that reports its arguments.
+
+    The checkout is built here rather than reused: running against the repository passed only
+    because this machine happens to carry a `.venv-<machine>` directory, and CI, which does not,
+    stopped in cluster-env before reaching anything the test was about.
+    """
+    home, checkout = root / "home", root / "checkout"
+    for directory in (home, checkout, home / "scratch"):
+        directory.mkdir(exist_ok=True)
+    for shared in ("scripts", "sphragis"):
+        link = checkout / shared
+        if not link.exists():
+            link.symlink_to(_ROOT / shared)
+    if not (checkout / f".venv-{_MACHINE}").exists():
+        _fake_venv(checkout)
     uv = home / ".local" / "bin" / _MACHINE / "uv"
     uv.parent.mkdir(parents=True, exist_ok=True)
-    # This uv reports the command instead of running it, so the test reads the path the job
-    # would have written rather than needing the adapters to exist.
     uv.write_text('#!/bin/sh\necho "$@"\n')
     uv.chmod(0o755)
-    (home / "scratch").mkdir(exist_ok=True)
     return subprocess.run(
-        ["bash", str(script)],
+        ["bash", str(checkout / "scripts" / script_name)],
         capture_output=True,
         text=True,
-        cwd=_ROOT,
+        cwd=checkout,
         env={
             "HOME": str(home),
             "PATH": "/usr/bin:/bin",
-            "SPHRAGIS_CHECKOUT": str(_ROOT),
+            "SPHRAGIS_CHECKOUT": str(checkout),
             "RUN_TAG": "some-other-run",
             **env,
         },
@@ -504,11 +515,9 @@ def test_geometry_is_named_for_the_adapters_it_reads_not_for_the_run_tag(
     RUN_TAG would let a run over one client size overwrite another's geometry, which is the file
     every committed RQ2 number was computed from.
     """
-    result = _run_job(
-        _ROOT / "scripts" / script_name, tmp_path, **({"PATTERN": pattern} if pattern else {})
-    )
+    result = _run_job(script_name, tmp_path, **({"PATTERN": pattern} if pattern else {}))
     assert result.returncode == 0, result.stderr
-    assert str(tmp_path / output.format(suffix)) in result.stdout
+    assert str(tmp_path / "home" / output.format(suffix)) in result.stdout
     assert "some-other-run" not in result.stdout
 
 
@@ -516,11 +525,12 @@ def test_geometry_is_named_for_the_adapters_it_reads_not_for_the_run_tag(
 def test_a_recorded_measurement_is_not_replaced_without_saying_so(
     script_name: str, output: str, tmp_path: Path
 ) -> None:
-    existing = tmp_path / output.format("")
+    (tmp_path / "home").mkdir(exist_ok=True)
+    existing = tmp_path / "home" / output.format("")
     existing.write_text("a measurement the study cites")
-    result = _run_job(_ROOT / "scripts" / script_name, tmp_path)
+    result = _run_job(script_name, tmp_path)
     assert result.returncode != 0
     assert "OVERWRITE=1" in result.stderr
     assert existing.read_text() == "a measurement the study cites"
-    deliberate = _run_job(_ROOT / "scripts" / script_name, tmp_path, OVERWRITE="1")
+    deliberate = _run_job(script_name, tmp_path, OVERWRITE="1")
     assert deliberate.returncode == 0, deliberate.stderr
