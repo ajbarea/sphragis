@@ -1638,6 +1638,14 @@ canaries, need control over the training data, which a released checkpoint does 
 the pattern expected if Min-K%++ is the more sensitive of the two, which is the reason it is the
 registered primary.
 
+**The completed job agrees with the partial, and guided completion stays at its floor.** The full
+`contamination-openstack-6mo-with_context.json` reproduces both membership gaps to four places,
+so writing membership first lost nothing. Guided completion reproduced 1.13% of 798 post-cutoff
+hunks verbatim against 0.88% of 1,027 control hunks, a gap of +0.0025: the floor, as registered.
+Its edit similarity leans the same way as Min-K%++, 0.364 post against 0.403 pre, and the
+blind-baseline result applies to it exactly as it does to the membership score, so it is not
+read as exposure either.
+
 ### The calibration sweep: the adapter, not the contrast, sets the floor (2026-09-18, jobs 148088-148091)
 
 `datasets/results/calibration-marker-{0,0.05,0.1,0.25}.json` beside `marker-1`. One organization's
