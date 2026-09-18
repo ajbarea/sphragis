@@ -3122,3 +3122,64 @@ more of the signal than the code changes, the reverse of what human authorship s
 an organization's fingerprint likewise sits in the review text rather than in the code, RQ1's
 contrast is measuring a different surface than its framing claims. The separability probe can
 decide it, and does below.
+
+### The permutation test was comparing two different statistics (2026-09-18)
+
+Correcting the entry above. The project-level permutation read its observed value from the
+detector run made earlier at eight reference splits and 600 draws, while every relabeling was
+scored at two splits and 150. The true grouping is one of the 84 arrangements, so under a matched
+comparison it scores against itself and the p-value cannot fall below 1/84; the mismatch let it
+score below its own recomputation, and at 128 examples per client the test printed **p = 0.000**,
+which an enumeration of 84 arrangements cannot produce. That impossible value is what exposed it.
+
+Both sides now go through one call, and the enumeration is checked to contain the true grouping
+before a p-value is reported at all.
+
+| within C++, project-level permutation | as recorded | corrected |
+|---|---|---|
+| AOSP, 64 examples per client | 0.012 | 0.012 |
+| Qt, 64 examples per client | 0.060 | **0.238** |
+
+AOSP's result stands. **Qt's does not**: the 0.060 that read as near-significant was an artefact
+of the two settings, and Qt's true grouping is unremarkable among relabelings of the same nine
+projects at this training length. The claim that survives is the narrower one -- one of the two
+organizations is detectable beyond its projects, not both.
+
+### How long each client trains decides which altitude leaks (2026-09-18, job 149519)
+
+`*-c128.json`. The robustness item asked what several local-training lengths do. Doubling the
+examples per client from 64 to 128, which repartitions into 51 clients rather than 77 and 34 C++
+clients rather than 43:
+
+| within C++ | 64 per client | 128 per client |
+|---|---|---|
+| organization, nearest class | 0.395 | 0.765 (majority 0.735) |
+| organization, beyond project | 0.395, p 0.75 | 0.676, p 0.19 |
+| project | 0.442 | 0.373 |
+| content | 0.909 | 0.784 |
+| AOSP detector, rounds of 16, two clients | AUC 0.858, TPR 0.364 | AUC 0.940, **TPR 0.588** |
+| Qt detector, rounds of 8, two clients | AUC 0.859, TPR 0.456 | AUC 0.980, **TPR 0.910** |
+| AOSP project-level permutation | p 0.012 | p 0.012 |
+| Qt project-level permutation | p 0.238 | **p 0.012** |
+
+Organization rises at every altitude and by every instrument; project and content fall. Qt, which
+was unremarkable among relabelings at 64, is the most extreme of all 84 arrangements at 128, and
+so is AOSP. The detector's low-false-positive numbers move furthest: at one false alarm in a
+hundred, a round holding two Qt clients goes from 46% caught to 91%.
+
+**What this is and is not.** The nearest-class figure of 0.765 against a 0.735 majority is one
+client's difference on 34 and carries nothing by itself; the beyond-project test that controls for
+the codebase is 0.676 at p 0.19, still not significant. The classifier has not become able to name
+an owner. What moved decisively is the detector, at the operating point an attacker occupies, and
+the permutation over groupings. The two sets also differ in size and composition, so this is not a
+controlled doubling -- it is two points, consistent across six measurements.
+
+The reading that fits all of it: more local training moves a client's update further from the
+shared start and further toward its own data's particulars, and organization-level habits are a
+slower, finer signal than the language a client writes. **Leakage is therefore not a fixed
+property of the corpus. It is a function of a knob the deployment sets**, and a deployment that
+trains longer locally, which is what one does to get more out of federated fine-tuning, leaks
+more about who its participants are. That is a sharper claim than RQ2 was framed to make, and it
+is the one worth registering.
+
+The obvious next question is whether it keeps rising, which needs a third length.

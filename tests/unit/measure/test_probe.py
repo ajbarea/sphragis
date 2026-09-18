@@ -6,6 +6,7 @@ import math
 
 import pytest
 
+from sphragis.measure import probe
 from sphragis.measure.probe import (
     Document,
     accuracy_interval,
@@ -187,3 +188,15 @@ def test_code_shapes_ignores_the_reviewer_and_reads_the_refinement() -> None:
     assert "semicolon" in code_shapes(row)
     assert "snake" not in code_shapes(row), "the reviewer's words are not the code"
     assert "snake" in " ".join(comment_words(row))
+
+
+def test_a_refused_estimate_gets_no_interval() -> None:
+    """Resamples that happen to clear the size floor are a selected sample, not an interval."""
+    docs = [
+        probe.Document(change_id=f"c{i}", label=i % 2, words=("a", "b") if i % 2 else ("c", "d"))
+        for i in range(20)
+    ]
+    point = probe.separability(docs, seed=0)
+    assert math.isnan(point["accuracy"]), "twenty documents are below the per-label floor"
+    interval = probe.accuracy_interval(docs, seed=0, resamples=50)
+    assert math.isnan(interval["low"]) and math.isnan(interval["high"])

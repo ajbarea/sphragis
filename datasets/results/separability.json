@@ -1,17 +1,22 @@
 {
   "suffix": ".py",
+  "organizations": [
+    "openstack",
+    "qt"
+  ],
+  "read": "comments",
   "windows": [
     "pilot",
     "train"
   ],
   "seed": 5,
   "raw": {
-    "accuracy": 0.8367962376325361,
+    "accuracy": 0.8409063952822204,
     "folds_scored": 5.0,
     "documents": 9076.0,
-    "changes": 4048.0,
-    "low": 0.811938553118299,
-    "high": 0.836620365958414
+    "changes": 4031.0,
+    "low": 0.8136347435599319,
+    "high": 0.8364132655989384
   },
   "matched.py": {
     "accuracy": 0.8490229138633067,

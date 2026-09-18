@@ -4,9 +4,9 @@
   "clients": 43,
   "draws": 600,
   "provenance": {
-    "generated_at": "2026-09-18T21:38:16.101958+00:00",
+    "generated_at": "2026-09-18T23:31:51.930778+00:00",
     "git": {
-      "commit": "60e4c8da1558983e283db58c4ed2a21cb853545b",
+      "commit": "463b06106233baa7000f00c0ed90a6158d04177e",
       "branch": "feat/wellposed-filter"
     },
     "python": "3.14.4",
@@ -423,16 +423,22 @@
   },
   "project_permutation": {
     "aosp": {
-      "observed_auc": 0.7375184027777778,
+      "observed_auc": 0.7787333333333333,
+      "observed_auc_full_precision": 0.7375184027777778,
+      "permutation_draws": 150,
+      "permutation_splits": 2,
       "relabelings": 84,
       "at_least_as_extreme": 1,
       "p": 0.011904761904761904
     },
     "qt": {
-      "observed_auc": 0.6186215277777778,
+      "observed_auc": 0.5694222222222223,
+      "observed_auc_full_precision": 0.6186215277777778,
+      "permutation_draws": 150,
+      "permutation_splits": 2,
       "relabelings": 84,
-      "at_least_as_extreme": 5,
-      "p": 0.05952380952380952
+      "at_least_as_extreme": 20,
+      "p": 0.23809523809523808
     }
   }
 }

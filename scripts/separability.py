@@ -16,29 +16,47 @@ Three conditions, because accuracy alone means nothing here.
                what "different codebase, same organization" scores, and the cross-organization
                probe has to beat it before it says anything about organizations.
 
+Two readings of each condition, because which surface carries a fingerprint is a separate
+question from whether one exists. Ghaleb (MSR '26, arXiv:2601.17406) finds that for AI coding
+agents the commit-message conventions carry more of the signal than the code changes, the reverse
+of what human authorship studies report; if an organization's mark likewise sits in the review
+text rather than in the code, RQ1 is contrasting a different surface than its framing claims.
+
+  comments     the reviewers' words.
+  code         the refinement's code, read as convention shapes (snake_case, braces, f-strings)
+               rather than as tokens, so it cannot read the identifiers back as vocabulary.
+
 Runs on a CPU in under a minute. Reads the pilot and train windows only, so the dev window
 is not spent on a descriptive analysis and the test window is untouched.
 
-Run: uv run --no-active python scripts/separability.py
+    uv run --no-active python scripts/separability.py
+    uv run --no-active python scripts/separability.py --orgs aosp qt --suffix .cpp --read code
 """
 
 from __future__ import annotations
 
+import argparse
 import json
+import math
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.pipeline import run_dedup
-from sphragis.measure.probe import accuracy_interval, documents
+from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
 
-RESULTS = Path("datasets/results/separability.json")
-ORGS = ("openstack", "qt")
-SUFFIX = ".py"  # the only source suffix both organizations carry in quantity
 READ_WINDOWS = ("pilot", "train")
 SEED = 5
 RESAMPLES = 200
+READERS = {"comments": comment_words, "code": code_shapes}
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--orgs", nargs=2, default=["openstack", "qt"])
+# The default is the only source suffix OpenStack and Qt both carry in quantity.
+parser.add_argument("--suffix", default=".py")
+parser.add_argument("--read", default="comments", choices=sorted(READERS))
+parser.add_argument("--out", type=Path, default=None)
 
 
 def load(org: str) -> list[dict[str, Any]]:
@@ -57,6 +75,12 @@ def load(org: str) -> list[dict[str, Any]]:
 def report(name: str, docs, out: dict[str, Any]) -> None:
     result = accuracy_interval(docs, seed=SEED, resamples=RESAMPLES)
     out[name] = result
+    if math.isnan(result["accuracy"]):
+        print(
+            f"{name:<46} {int(result['documents']):5d} documents, too few per label to score: "
+            "reported as refused, not as a number"
+        )
+        return
     print(
         f"{name:<46} {int(result['changes']):5d} changes  "
         f"accuracy {result['accuracy']:.3f} [{result['low']:.3f}, {result['high']:.3f}]"
@@ -64,38 +88,58 @@ def report(name: str, docs, out: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    corpora = {org: load(org) for org in ORGS}
+    args = parser.parse_args()
+    orgs, suffix = tuple(args.orgs), args.suffix
+    reader = READERS[args.read]
+    results = args.out or Path(
+        "datasets/results/separability"
+        + (
+            ""
+            if list(orgs) == ["openstack", "qt"] and suffix == ".py"
+            else f"-{'-'.join(orgs)}{suffix}"
+        )
+        + ("" if args.read == "comments" else f"-{args.read}")
+        + ".json"
+    )
+    corpora = {org: load(org) for org in orgs}
     for org, rows in corpora.items():
         suffixes = Counter(Path(str(r["path"])).suffix.lower() for r in rows)
         print(f"{org}: {len(rows)} deduplicated examples, top suffixes {suffixes.most_common(4)}")
 
-    out: dict[str, Any] = {"suffix": SUFFIX, "windows": list(READ_WINDOWS), "seed": SEED}
-    first, second = ORGS
+    out: dict[str, Any] = {
+        "suffix": suffix,
+        "organizations": list(orgs),
+        "read": args.read,
+        "windows": list(READ_WINDOWS),
+        "seed": SEED,
+    }
+    first, second = orgs
 
     print("\n=== 1. raw: any file type (expected to read the language, not the organization) ===")
     report(
         "raw",
-        documents(corpora[first], 0, suffix=None) + documents(corpora[second], 1, suffix=None),
+        documents(corpora[first], 0, suffix=None, words_of=reader)
+        + documents(corpora[second], 1, suffix=None, words_of=reader),
         out,
     )
 
-    print(f"\n=== 2. content-matched: {SUFFIX} only ===")
-    matched = documents(corpora[first], 0, suffix=SUFFIX) + documents(
-        corpora[second], 1, suffix=SUFFIX
+    print(f"\n=== 2. content-matched: {suffix} only ===")
+    matched = documents(corpora[first], 0, suffix=suffix, words_of=reader) + documents(
+        corpora[second], 1, suffix=suffix, words_of=reader
     )
-    report(f"matched{SUFFIX}", matched, out)
+    report(f"matched{suffix}", matched, out)
 
-    print(f"\n=== 3. within-organization baseline: two projects, one org, {SUFFIX} only ===")
-    for org in ORGS:
+    print(f"\n=== 3. within-organization baseline: two projects, one org, {suffix} only ===")
+    for org in orgs:
         by_project: dict[str, list[dict[str, Any]]] = {}
         for row in corpora[org]:
-            if str(row["path"]).endswith(SUFFIX):
+            if str(row["path"]).endswith(suffix):
                 by_project.setdefault(str(row["project"]), []).append(row)
         ranked = sorted(by_project, key=lambda k: -len(by_project[k]))[:2]
         if len(ranked) < 2:
             continue
-        docs = documents(by_project[ranked[0]], 0, suffix=SUFFIX) + documents(
-            by_project[ranked[1]], 1, suffix=SUFFIX
+        docs = documents(by_project[ranked[0]], 0, suffix=suffix, words_of=reader) + documents(
+            by_project[ranked[1]], 1, suffix=suffix, words_of=reader
         )
         report(f"within:{org}:{ranked[0]} vs {ranked[1]}", docs, out)
 
@@ -104,9 +148,9 @@ def main() -> None:
         "exceeds\nthe within-organization baselines. Equal accuracy means the probe is "
         "reading the\ncodebase, and organization is the wrong altitude to look for it."
     )
-    RESULTS.parent.mkdir(parents=True, exist_ok=True)
-    RESULTS.write_text(json.dumps(out, indent=2) + "\n")
-    print(f"wrote {RESULTS}")
+    results.parent.mkdir(parents=True, exist_ok=True)
+    results.write_text(json.dumps(out, indent=2) + "\n")
+    print(f"wrote {results}")
 
 
 if __name__ == "__main__":

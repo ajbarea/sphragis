@@ -211,6 +211,12 @@ def accuracy_interval(
     too narrow by the amount the within-change correlation contributes.
     """
     point = separability(docs, seed=seed, folds=folds)
+    if math.isnan(point["accuracy"]):
+        # The point estimate was refused for being below the per-label floor. Resampling does
+        # not repair that: draws differ in balance, so a few of them clear the floor and the
+        # rest are dropped, and the interval left over is selected on passing the very check
+        # the estimate failed. It came back as [0.562, 0.857] around a refused estimate.
+        return {**point, "low": float("nan"), "high": float("nan")}
     by_change: dict[str, list[Document]] = {}
     for doc in docs:
         by_change.setdefault(doc.change_id, []).append(doc)

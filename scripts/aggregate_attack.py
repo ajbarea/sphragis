@@ -193,31 +193,49 @@ def main() -> None:
         groups = [s.at("project") for s in sources]
         size = args.sizes[0]
         report["project_permutation"] = {}
+        # Every arrangement is scored the same way, the true one included, because it is one of
+        # them. Comparing against the AUC computed above at eight splits and the full draws
+        # would compare two different statistics: the true labelling then scored below its own
+        # recomputation and the test reported p = 0.000, which an 84-arrangement enumeration
+        # cannot produce. Matching the settings also makes the floor 1/84 by construction.
+        draws = max(60, args.draws // 4)
+        splits = 2
+
+        def permutation_auc(members: list[int]) -> float:
+            return organization_membership_auc(
+                products,
+                members=members,
+                everyone=range(len(names)),
+                size=size,
+                draws=draws,
+                seed=args.seed,
+                at_least=1,
+                splits=splits,
+                groups=groups,
+            )["auc"]
+
         for label, cell in report["targets"].items():
-            observed = cell["mixed_rounds"][f"{size}/1"]["auc"]
-            hits, usable = 0, 0
+            truth = [i for i, s in enumerate(sources) if s.organization == label]
+            observed = permutation_auc(truth)
+            hits, usable, saw_truth = 0, 0, False
             for assignment in arrangements:
                 relabel = dict(zip(projects, assignment, strict=True))
                 members = [i for i, s in enumerate(sources) if relabel[s.at("project")] == label]
                 if len(members) < 2 or len({groups[i] for i in members}) < 2:
                     continue
                 usable += 1
-                hits += (
-                    organization_membership_auc(
-                        products,
-                        members=members,
-                        everyone=range(len(names)),
-                        size=size,
-                        draws=max(60, args.draws // 4),
-                        seed=args.seed,
-                        at_least=1,
-                        splits=2,
-                        groups=groups,
-                    )["auc"]
-                    >= observed
+                saw_truth = saw_truth or sorted(members) == sorted(truth)
+                hits += permutation_auc(members) >= observed
+            if not saw_truth:
+                raise RuntimeError(
+                    f"{label}: the true grouping is not among the {usable} usable arrangements, "
+                    "so the enumeration is not the null this test claims"
                 )
             report["project_permutation"][label] = {
                 "observed_auc": observed,
+                "observed_auc_full_precision": cell["mixed_rounds"][f"{size}/1"]["auc"],
+                "permutation_draws": draws,
+                "permutation_splits": splits,
                 "relabelings": usable,
                 "at_least_as_extreme": hits,
                 "p": hits / usable if usable else None,

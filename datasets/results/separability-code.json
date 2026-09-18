@@ -1,0 +1,44 @@
+{
+  "suffix": ".py",
+  "organizations": [
+    "openstack",
+    "qt"
+  ],
+  "read": "code",
+  "windows": [
+    "pilot",
+    "train"
+  ],
+  "seed": 5,
+  "raw": {
+    "accuracy": 0.8187278667528297,
+    "folds_scored": 5.0,
+    "documents": 5160.0,
+    "changes": 2821.0,
+    "low": 0.793619218906643,
+    "high": 0.8414592993022175
+  },
+  "matched.py": {
+    "accuracy": 0.7712636730918084,
+    "folds_scored": 5.0,
+    "documents": 466.0,
+    "changes": 263.0,
+    "low": 0.6654340633850524,
+    "high": 0.8137667415691014
+  },
+  "within:openstack:starlingx/test vs starlingx/config": {
+    "accuracy": 0.6391106762620298,
+    "folds_scored": 5.0,
+    "documents": 280.0,
+    "changes": 139.0,
+    "low": 0.5777949947332098,
+    "high": 0.7051918917808274
+  },
+  "within:qt:pyside/pyside-setup vs qt/qtbase": {
+    "accuracy": NaN,
+    "documents": 74.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  }
+}
