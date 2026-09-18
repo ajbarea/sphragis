@@ -2449,20 +2449,25 @@ the other participants drawn from other organizations, but "did this organizatio
 the round drawn from every client. The organization's clients are split once into the attacker's
 reference and the participants it may contribute, so no round is scored against itself.
 
-Averaged over eight random reference splits, with the range across splits, since one split moved
-the figure by 0.06 to 0.08:
+Averaged over eight random reference splits, each drawn from a stream independent of the rounds,
+with the standard deviation across splits:
 
-| target | round of 4 | round of 8 |
-|---|---|---|
-| OpenStack, 1 of its clients present | AUC 0.746 [0.689, 0.804] | 0.734 [0.669, 0.806] |
-| OpenStack, 2 of its clients present | 0.896 [0.841, 0.960] | 0.879 [0.780, 0.942] |
-| Qt, 1 of its clients present | 0.665 [0.576, 0.734] | 0.729 [0.620, 0.805] |
-| Qt, 2 of its clients present | 0.757 [0.652, 0.861] | 0.870 [0.737, 0.950] |
+| target | round of 4 | round of 8 | round of 16 |
+|---|---|---|---|
+| OpenStack, 1 of its clients present | AUC 0.659 (sd 0.070) | 0.688 (0.062) | 0.753 (0.086) |
+| OpenStack, 2 of its clients present | 0.771 (0.138) | 0.828 (0.090) | 0.887 (0.084) |
+| Qt, 1 of its clients present | 0.668 (0.061) | 0.721 (0.051) | not measurable |
+| Qt, 2 of its clients present | 0.765 (0.063) | 0.852 (0.075) | not measurable |
 
-Detection rises with how many of the organization's clients are in the round and barely moves as
-the round grows: a larger round dilutes the target's share and averages the others' noise away at
-the same rate. Rounds of sixteen are not reported here, since with 22 of the 34 clients Qt leaves
-too few outsiders to fill one without it.
+Detection rises with how many of the organization's clients are in the round, and rises with the
+round rather than falling: a larger round dilutes the target's share and averages the other
+participants' noise away at the same rate. Qt's rounds of sixteen are not measurable here, since
+with 22 of the 34 clients it leaves too few outsiders to fill one without it.
+
+**The ordering is reliable and the difference is small.** Behind OpenStack's 0.887 the two classes'
+mean scores are 0.7151 and 0.7065: one part in a hundred. An aggregate does not shout its
+participants; it leans, consistently, and the next entry is what that leaning is worth to an
+attacker who watches more than one round.
 
 (The first run of this table read 0.765, 0.726 and 0.725 on OpenStack's one-client row, from a
 single reference split taken in listing order; see the correction below.)
