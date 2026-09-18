@@ -2512,3 +2512,22 @@ what an exact-match criterion is for and what a graded string distance averages 
 So the registered metric is the one the data supports, not merely the one chosen first, and the
 resolution limit is a property of the question rather than of the instrument. The change-averaged
 estimand does not help either: its Qt interval is wider relative to its effect (0.77 against 1.28).
+
+### A secondary estimate pooled across organizations (2026-09-18)
+
+The conjunctive gate asks whether *each* organization shows the effect, which is what a generality
+claim needs and what costs the design its resolution. A pooled estimate answers the weaker question,
+whether organizations leave a fingerprint on average, and is the sharpest reading the same data
+supports. Over the three seeds, every change from both organizations as one cluster set:
+
+| reading | estimate | interval | effect over half-width |
+|---|---|---|---|
+| OpenStack alone | +0.0171 | [-0.0057, +0.0407] | 0.74 |
+| Qt alone | +0.0312 | [+0.0079, +0.0565] | 1.28 |
+| **both pooled, 697 changes** | **+0.0260** | **[+0.0090, +0.0440]** | **1.48** |
+
+**It is a secondary, never the gate.** Pooling treats the two organizations as one population of
+changes, so a single organization with a strong effect can carry it, which is the failure mode the
+conjunctive rule exists to prevent; and with two organizations there is no way to model
+between-organization heterogeneity rather than assume it away. Registered as a secondary estimate,
+reported beside the gate, and fixed now while the test window is sealed.
