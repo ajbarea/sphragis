@@ -2646,3 +2646,23 @@ listing order and fails if the detector runs backwards.
 The corrected mixed-round figures are in the entry above. What the bug did not touch: the per-client
 attribution, which uses every other client rather than a split, and the paired-subset difference,
 which holds a target out by name.
+
+### What RQ2 is about, in the words of the people proposing it (2026-09-18)
+
+Federated fine-tuning of code models across organizations is not a hypothetical RQ2 invents. Luo et
+al., "When Fine-Tuning LLMs Meets Data Privacy: An Empirical Study of Federated Learning in
+LLM-Based Program Repair" (arXiv:2412.01072, in TOSEM), federate program repair over as many as 100
+simulated clients with QLoRA and FedAvg, uploading adapter parameters to a central server. Their
+motivation is stated plainly: federated learning "facilitates private entities to utilize their data
+collaboratively, while addressing the concern of data privacy by learning a model without exposing
+the raw data of each client", and "Data privacy is also protected by not exposing local data to each
+participating client". They name differential privacy and secure aggregation as possible additions
+and implement neither, and they state no adversarial threat model. The same setting appears for
+code translation between proprietary entities (arXiv:2501.05724).
+
+**That is the claim RQ2 tests, and the claim is about raw data.** What the server receives is the
+adapter, and this log's measurements say an adapter identifies where its data came from, through
+secure aggregation, with no watermark, at the altitude a data-sharing agreement is written at. The
+gap is not that these papers are wrong about raw data staying home; it is that "the data never
+leaves" and "nothing about the data leaves" are different sentences, and only the first is
+demonstrated.

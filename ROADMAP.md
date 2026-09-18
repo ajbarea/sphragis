@@ -174,6 +174,10 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   The guarantee and the leak are about different quantities, which is the paper's opening.
 - [ ] **Realistic cohorts**: rounds mixing several organizations, more than one target client a
   round, and several local-training lengths, before RQ2's Stage 1 text states a threat model.
+- [x] **The motivating deployment, cited** (Luo et al., arXiv:2412.01072, TOSEM): federated
+  program repair over up to 100 clients with QLoRA and FedAvg, adapters uploaded to a central
+  server, privacy claimed from not centralizing raw data, no threat model, DP and secure
+  aggregation named but not implemented. RQ2 tests exactly that claim.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
   project, or both, and which boundary an organization-level privacy policy actually protects.
 - [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,
