@@ -1809,6 +1809,65 @@ and places this beside Skobelev, Fithian and Han (arXiv:2609.16454), whose sampl
 report fine-tuning moving output diversity toward the target: here, for a planted minority
 convention, it overshoots.
 
+### The interval measures one source of variance of two, and a null crossed zero (2026-09-18)
+
+The most consequential finding of the night, and it is about the gate rather than about
+organizations.
+
+**A pure null excluded zero.** `sym-0` plants nothing, so at a fraction of zero it is the same
+experiment as `marker-0`. Verified identical: one SHA-256 per half across the two, the same held-out
+examples arm for arm, the same split, training and bootstrap seeds. The two runs disagree:
+
+| identical null | contrast on a | contrast on b |
+|---|---|---|
+| marker-0 (148088) | -0.018 [-0.046, +0.008] | -0.014 [-0.038, +0.009] |
+| **sym-0 (148199)** | **-0.036 [-0.065, -0.007]** | -0.014 [-0.039, +0.010] |
+
+**Nothing on the GPU is bit-reproducible.** Final training losses differ in the fourth decimal (a:
+0.30191 against 0.30273). Adapter arms change 19 to 27% of their greedy predictions between the
+runs, 83 to 118 of about 440. **The base model, with no adapter, changes 23 to 28 of them.** So
+inference is not deterministic either, although `HFGenerator` justifies greedy decoding on exactly
+the ground that exact match needs a deterministic output. The mechanism is documented: Yuan et al.
+(arXiv:2506.09501, "Understanding and Mitigating Numerical Sources of Nondeterminism in LLM
+Inference", read from the abstract page) report bfloat16 greedy decoding varying by up to 9% in
+accuracy on DeepSeek-R1-Distill-Qwen-7B across differences in GPU count, GPU type and evaluation
+batch size, and attribute it to floating-point arithmetic not being associative. Their remedy,
+LayerCast, keeps weights in 16-bit and computes in FP32. What was seen here is the stronger case:
+the same GH200 type and the same configuration, run twice.
+
+**The consequence is the gate, not these two runs.** The pairs cluster bootstrap resamples changes
+and holds the trained adapters and the decoder fixed. It measures sampling variance only. The
+variance from retraining, seed and GPU nondeterminism alike, is about 0.018 on a single contrast,
+the same size as the organizational effects this study has been reading (+0.016 to +0.034). An
+interval that omits it is too narrow, and a null crossed zero because of it. Bouthillier et al.
+(MLSys 2021, arXiv:2103.03098) show that variance from initialization and data sampling "impact
+markedly the results" and that a comparison needs trials across those sources, not a bootstrap over
+test data alone. The registered design has three seeds for this reason, but the gate reads the
+median seed's interval, which is still a single-seed interval.
+
+**What the literature does, and why neither half is enough.** Du et al. (arXiv:2511.19794, November
+2025) bootstrap over per-seed deltas on a fixed test set, the opposite choice: seed variance in,
+sampling variance out, and three values to resample. At three seeds their protocol never declared a
+0.5 to 2.0 point gain significant, even where unpaired t-tests gave p < 0.05. This study's effects
+are 1.6 to 3.4 points. A **two-level bootstrap**, resampling seeds and then changes within each,
+carries both sources and is the interval the gate should read.
+
+**What it changes in numbers already reported.**
+
+- **No single-seed contrast in this log can be read as excluding zero.** That includes Qt's +0.034
+  [+0.010, +0.060] on the full dev window and qt-creator's +0.079 [+0.041, +0.118]. The second is
+  about four times the run-to-run swing and is likely to survive; the first is not.
+- **The conjunctive power of 0.757 and 0.833 is overstated.** It was simulated from example-level
+  resampling of one run, so it too omits seed variance, and the true power at the registered design
+  is lower.
+- **The gate's non-monotonicity result is unaffected in kind**: the swings there (+0.214 against
+  -0.086) are ten times the run-to-run variation.
+
+**What it does not change.** The calibration's negative control is still clean in the sense that
+matters: both nulls fail the gate, and the one excursion lies on the refuting side. The contrast
+does not manufacture a pass from nothing. It can, however, manufacture an interval that looks
+decisive, which is the reason to widen it.
+
 ## Open bugs & findings
 
 - **The estimand is not pre-registered.** `paired_difference` pools examples, so a change

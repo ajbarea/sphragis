@@ -90,6 +90,27 @@ The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAG
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
 
+## Plan G — variance the gate does not see
+
+Added 2026-09-18. A pure null crossed zero: `sym-0` and `marker-0` are byte-identical experiments
+with identical seeds, and one returned -0.036 [-0.065, -0.007] on a side where the other returned
+-0.018 covering zero. Neither training nor inference is bit-reproducible on the GPU; even the base
+model changes 23 to 28 of about 440 greedy predictions between runs.
+
+- [ ] **A two-level bootstrap for the gate**: resample seeds, then changes within each. The current
+  interval resamples changes and holds the trained adapters fixed, so it omits run-to-run variance
+  of about 0.018, the size of the organizational effects. Du et al. (arXiv:2511.19794) omit the
+  other half, bootstrapping seeds on a fixed test set; neither alone is enough. Build it beside the
+  current interval, as the estimands were, then register it.
+- [ ] **Recompute the conjunctive power with seed variance.** 0.757 and 0.833 were simulated from one
+  run's changes, so they omit it and overstate the power of the registered design.
+- [ ] **Reproducible inference for the confirmatory run.** Compute in FP32 with 16-bit weights
+  (LayerCast, Yuan et al., arXiv:2506.09501), or deterministic kernels, and measure the cost on a
+  GH200. Correct `HFGenerator`'s docstring, which calls greedy decoding deterministic.
+- [ ] **Re-read the single-seed results under it.** Qt's +0.034 [+0.010, +0.060] and qt-creator's
+  +0.079 [+0.041, +0.118] cannot be read as excluding zero until then; the first is about twice the
+  run-to-run swing, the second about four times.
+
 ## Plan F — RQ2 positioning
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
