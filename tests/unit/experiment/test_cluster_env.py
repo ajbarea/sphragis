@@ -349,7 +349,17 @@ def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -
 
 
 def _written_paths(script: Path) -> list[str]:
-    return re.findall(r'--(?:out|adapters) "([^"]+)"', script.read_text())
+    """Every path a job writes, resolving one level of shell variable.
+
+    A job that guards its output has to name the path twice, once to test and once to write, so
+    it holds it in a variable; the invariant is about the path, not about where it is spelled.
+    """
+    text = script.read_text()
+    assignments = dict(re.findall(r'^([A-Z_]+)="([^"]+)"$', text, flags=re.MULTILINE))
+    return [
+        assignments.get(path.strip("${}"), path)
+        for path in re.findall(r'--(?:out|adapters) "([^"]+)"', text)
+    ]
 
 
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
@@ -427,3 +437,76 @@ def test_a_different_client_size_names_its_own_results(tmp_path: Path) -> None:
     assert _suffix(
         tmp_path, tags="CLIENT_SIZE", SLURM_CLUSTER_NAME="tigris", CLIENT_SIZE="128"
     ) == ("[-c128]")
+
+
+_GEOMETRY_JOBS = {
+    "adapter_geometry.sbatch": "client-geometry{}.json",
+    "adapter_projection.sbatch": "client-vectors{}.npz",
+}
+
+
+def _run_job(script: Path, home: Path, **env: str) -> subprocess.CompletedProcess[str]:
+    """The real sbatch body, with a uv that reports its arguments instead of running them."""
+    uv = home / ".local" / "bin" / _MACHINE / "uv"
+    uv.parent.mkdir(parents=True, exist_ok=True)
+    # This uv reports the command instead of running it, so the test reads the path the job
+    # would have written rather than needing the adapters to exist.
+    uv.write_text('#!/bin/sh\necho "$@"\n')
+    uv.chmod(0o755)
+    (home / "scratch").mkdir(exist_ok=True)
+    return subprocess.run(
+        ["bash", str(script)],
+        capture_output=True,
+        text=True,
+        cwd=_ROOT,
+        env={
+            "HOME": str(home),
+            "PATH": "/usr/bin:/bin",
+            "SPHRAGIS_CHECKOUT": str(_ROOT),
+            "RUN_TAG": "some-other-run",
+            **env,
+        },
+    )
+
+
+@pytest.mark.parametrize("script_name,output", sorted(_GEOMETRY_JOBS.items()))
+@pytest.mark.parametrize(
+    "pattern,suffix",
+    [
+        ("", ""),
+        ("sphragis-adapters-clients-cpp-early/*-c*/adapter_model.safetensors", "-cpp-early"),
+        (
+            "sphragis-adapters-clients-cpp-early-c128/*-c*/adapter_model.safetensors",
+            "-cpp-early-c128",
+        ),
+    ],
+)
+def test_geometry_is_named_for_the_adapters_it_reads_not_for_the_run_tag(
+    script_name: str, output: str, pattern: str, suffix: str, tmp_path: Path
+) -> None:
+    """RUN_TAG is deliberately wrong here: only PATTERN may decide the name.
+
+    These two jobs read a directory of adapters that another job chose. Taking the name from
+    RUN_TAG would let a run over one client size overwrite another's geometry, which is the file
+    every committed RQ2 number was computed from.
+    """
+    result = _run_job(
+        _ROOT / "scripts" / script_name, tmp_path, **({"PATTERN": pattern} if pattern else {})
+    )
+    assert result.returncode == 0, result.stderr
+    assert str(tmp_path / output.format(suffix)) in result.stdout
+    assert "some-other-run" not in result.stdout
+
+
+@pytest.mark.parametrize("script_name,output", sorted(_GEOMETRY_JOBS.items()))
+def test_a_recorded_measurement_is_not_replaced_without_saying_so(
+    script_name: str, output: str, tmp_path: Path
+) -> None:
+    existing = tmp_path / output.format("")
+    existing.write_text("a measurement the study cites")
+    result = _run_job(_ROOT / "scripts" / script_name, tmp_path)
+    assert result.returncode != 0
+    assert "OVERWRITE=1" in result.stderr
+    assert existing.read_text() == "a measurement the study cites"
+    deliberate = _run_job(_ROOT / "scripts" / script_name, tmp_path, OVERWRITE="1")
+    assert deliberate.returncode == 0, deliberate.stderr
