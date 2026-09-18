@@ -2718,3 +2718,35 @@ the contrast is attenuated by drift rather than by an absence of fingerprint. Th
 already say something about this without unsealing anything: the dev window sits between the two,
 and the per-project breakdown could be recomputed on the earliest and latest months of the train
 window to see whether the contrast is shrinking with time.
+
+### The medium is not visibly moving, at least not the part the probe reads (2026-09-18)
+
+`scripts/separability_over_time.py`, `datasets/results/style-drift.json`. Two readings of whether
+the corpus drifts under the study, prompted by the naming-convention shift Xu et al. measure.
+
+**The cross-organization series is not available here, and that is worth stating.** Holding content
+fixed needs a suffix both organizations carry, and the only one is Python, which Qt stops writing
+during the window: 39 to 122 examples a month in late 2024 against 0 to 31 through 2025, with two
+quarters at zero. The accuracies that come out (0.880, then 0.656, then 0.724) track that collapse,
+not the organizations' hands, and no other suffix reaches fifteen examples a month on both sides in
+more than two months. A time series of organizational separability is simply not measurable on this
+corpus.
+
+**Within each organization, its earliest quarter against its latest is at chance**, on its own
+dominant suffix, whole changes held out together:
+
+| organization | 2024-10 to 12 against 2025-08 to 10 | changes | accuracy |
+|---|---|---|---|
+| OpenStack (.py) | ten months apart | 369 | 0.552 [0.466, 0.602] |
+| Qt (.cpp) | ten months apart | 986 | 0.510 [0.487, 0.572] |
+
+Both intervals cover 0.5. Over the span that separates RQ1's training window from its test window,
+the review text a classifier can read does not identify which end of the year it came from.
+
+**What that does and does not license.** It says the drift threat is not detectable in the medium
+this probe reads, which is the reviewers' comment vocabulary, so the train-to-test transfer is not
+obviously undermined. It does not test what Xu et al. measured, which is the *code*: their signal is
+in naming conventions and structure, and this probe reads words in review comments. A code-side
+version is buildable from the same corpus and is not built, so the honest statement for the Stage 1
+report is that the conversational half of the medium is stable over the study's horizon and the
+code half is untested here.

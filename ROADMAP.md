@@ -145,10 +145,12 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 - [ ] Re-read the dev window under fp32 (jobs 149258 to 149260), so the evidence is read under the
   numerics the confirmatory run will use.
 
-- [ ] **Is the fingerprint fading?** Style is drifting toward what models write (arXiv:2506.12014),
-  and RQ1's test window sits a year after its training window. Recompute the contrast on the
-  earliest and latest months of the train window, which unseals nothing, and state the direction in
-  the Stage 1 report: drift attenuates the contrast and makes a null ambiguous.
+- [x] **The medium is not visibly moving**: within each organization, its earliest quarter against
+  its latest is at chance (OpenStack 0.552 [0.466, 0.602], Qt 0.510 [0.487, 0.572]) over the span
+  that separates training from test. A cross-organization series is not measurable here, since the
+  only shared suffix is Python and Qt stops writing it mid-window.
+- [ ] A code-side drift probe, since the naming-convention shift Xu et al. measure is in the code
+  and this one reads review comments.
 
 ## Plan F — RQ2 positioning
 
