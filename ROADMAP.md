@@ -88,8 +88,10 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   limitation is the semantic leakage RQ2 is about.
 - [x] **Secure aggregation is not a defence to lean on**: gradient disaggregation
   (arXiv:2106.06089) and client-specific inference under secure aggregation (arXiv:2303.03908).
-- [ ] Read 2303.03908 in full before citing it as not covering source inference; only its
-  abstract has been read.
+- [x] **2303.03908 read in full.** PROLIN on MNIST, CIFAR-10 and Fashion-MNIST with a LeNet,
+  inferring membership and misbehaviour only; source is not studied. It states the method
+  generalises to "any supervised detector model", which gives RQ2 its secure-aggregation
+  attack: a source-identity detector plugged into PROLIN's disaggregation.
 - [ ] **Frame RQ2 at two altitudes**: does an adapter update reveal its organization, its
   project, or both, and which boundary an organization-level privacy policy actually protects.
 - [ ] Two threat models, per-client updates and aggregates over rounds of varying composition,

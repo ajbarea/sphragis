@@ -1540,12 +1540,18 @@ far it reaches into this study:
 
 **Secure aggregation is not a safe harbour, so RQ2 cannot lean on it.** Gradient disaggregation
 (arXiv:2106.06089) recovers individual updates from aggregates using how often each client
-participated across rounds. Kerkouche, Ács and Fritz (arXiv:2303.03908, WPES at CCS 2023) infer
-client-specific properties from aggregated updates alone, passively, through the linearity of
-aggregation over rounds whose client composition varies. Read from the abstract only so far:
-the properties it names are **membership** and **whether a client is poisoning**. Its datasets
-and models are not in the abstract and have to be read from the full text before it is cited
-as not covering anything.
+participated across rounds. Kerkouche, Ács and Fritz (arXiv:2303.03908, WPES at CCS 2023), read in full,
+infer client-specific properties from aggregated updates alone, passively, through the
+linearity of aggregation over rounds whose client composition varies. Their method, PROLIN, is
+evaluated on **MNIST, CIFAR-10 and Fashion-MNIST with a LeNet**, and the only properties studied
+are **membership** and **misbehaviour** (gradient-inversion and gradient-ascent poisoning). Data
+source is not studied. Its F1 falls as clients grow, from 50 to 200 in their CIFAR-10 runs.
+
+The more useful line is in their future work: PROLIN "is not limited to membership inference and
+misbehaving detection, it can disaggregate the linear features of any supervised detector
+model." That hands RQ2 its attack for the secure-aggregation threat model rather than leaving it
+to be invented: a source-identity detector, trained the way the separability probe is, plugged
+into PROLIN's disaggregation. Neither the property nor the domain has been tried.
 
 **What none of them target: where a client's data came from.** Every attack above infers
 something about individual samples or client behaviour. RQ2's property is the client's
