@@ -2394,7 +2394,12 @@ not the expected one.
 
 **bf16 greedy decoding does not reproduce, even within one process**, which is what the two nulls'
 disagreement was. **fp32 reproduces exactly across jobs and nodes**, matching Yuan et al.
-(arXiv:2506.09501), who report fp32 as near-perfect and bf16 as unstable. The earlier reading that
+(arXiv:2506.09501v2, read from the paper): "FP32 precision consistently achieves near-perfect
+reproducibility with negligible variance, FP16 shows moderate variability, while BF16 exhibits
+substantial instability", and their recommendation, "If using greedy decoding with a single run,
+please use FP32 precision to improve the reproducibility of your results". Their LayerCast keeps
+weights in bf16 and computes in fp32 to save memory; this upcasts the weights as well, which a
+GH200 has room for at 7B, and is the stronger of the two. The earlier reading that
 the node was the variable is wrong: a fresh job on the stored run's own node differs from it as much
 as a job on another node.
 
