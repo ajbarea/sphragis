@@ -3615,3 +3615,21 @@ org. Norm is not the cue: AOSP's updates average 2.16 and Qt's 2.11 with standar
 
 Qt's defence-curve cells are therefore withheld from interpretation at 64 examples a client, and
 the curve is worth rerunning against Qt only at a training length where Qt is coherent.
+
+### Registered before computing: organizational coherence across training lengths (2026-09-18)
+
+If an organization is detectable exactly when its projects resemble each other more than they
+resemble an outsider's, that property is one number per organization:
+
+    coherence(O) = mean cosine between clients of O on DIFFERENT projects
+                 - mean cosine between clients of O and clients of any other organization
+
+Same-project pairs are excluded from the first term on purpose, since a project effect is not an
+organization effect. At 64 examples a client, within C++, AOSP's is positive and Qt's is not (Qt's
+cross-project pairs sit at 0.2523 against Qt-AOSP pairs at 0.2589).
+
+**Prediction, written before the 128-example vectors are read:** AOSP positive at both lengths; Qt
+negative at 64 and **positive at 128**, because Qt's project-level permutation moved from p = 0.238
+to the 1/84 floor between those lengths and coherence is the quantity that permutation should be
+tracking. If Qt stays negative at 128, then coherence is not what the permutation reads and the
+explanation above is incomplete a third time.
