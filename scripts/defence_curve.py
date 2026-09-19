@@ -161,6 +161,7 @@ def main() -> None:
         "provenance": provenance_header(),
         "targets": {},
     }
+    groups = [s.at("project") for s in sources]
     for organization in sorted({s.organization for s in sources}):
         mine = np.array([i for i, s in enumerate(sources) if s.organization == organization])
         outside = np.array([i for i, s in enumerate(sources) if s.organization != organization])
@@ -172,12 +173,27 @@ def main() -> None:
             for noise in args.noise:
                 scores = []
                 for split in range(args.splits):
-                    # The split is drawn from its own stream, so which clients are the reference
-                    # does not decide which rounds are drawn. Clients arrive grouped by project,
-                    # and an ordered split hands a multi-project organization a reference from
-                    # other projects than its participants, which ran the detector backwards.
-                    shuffled = np.random.default_rng(args.seed + split).permutation(mine)
-                    reference, participants = shuffled[:half], shuffled[half:]
+                    # The reference is split over PROJECTS, as the aggregate attack's detector
+                    # already was. A random split over clients puts a target's own project on
+                    # both sides, and for an organization whose projects are less alike than
+                    # they are like an outsider's it runs the detector backwards: measured
+                    # within C++, Qt's clients sit at a mean cosine of 0.2534 with each other
+                    # against 0.2589 with AOSP's, and the curve read below chance at every
+                    # noise level. The split stream is separate from the round stream, so which
+                    # clients are the reference does not decide which rounds are drawn.
+                    splitter = np.random.default_rng(args.seed + split)
+                    names_here = sorted({groups[i] for i in mine})
+                    if len(names_here) >= 2:
+                        order = splitter.permutation(len(names_here))
+                        cut = max(1, len(names_here) // 2)
+                        held = {names_here[k] for k in order[:cut]}
+                        reference = np.array([i for i in mine if groups[i] in held])
+                        participants = np.array([i for i in mine if groups[i] not in held])
+                    else:
+                        shuffled = splitter.permutation(mine)
+                        reference, participants = shuffled[:half], shuffled[half:]
+                    if not len(reference) or not len(participants):
+                        continue
                     # A fresh generator per cell, so cells differ in rounds and noise and not in
                     # which rounds were drawn, and the same number of draws throughout.
                     rng = np.random.default_rng(args.seed + 7919 * rounds + 104729 * split)

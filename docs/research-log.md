@@ -3565,3 +3565,53 @@ which of them resists source attribution, and the three measured so far do not.
 Its data-dependent expert assignment is therefore a refereed design, which strengthens rather than
 weakens the point that a structure chosen from a client's data distribution is a channel no
 weight-space partition covers.
+
+### Qt is not a coherent organization in update space, and that is the finding (2026-09-18)
+
+Correcting the entry above, which said the pooled defence curve read Qt below chance because the
+reference direction was really a language direction, and that holding content fixed would settle
+it. It did not. Restricted to the 43 C++ clients, Qt's curve still read 0.364 at 10 rounds.
+
+I then supposed the cause was a split mismatch: the aggregate attack splits its reference over
+projects while the defence curve split randomly over clients, and mirroring the split would fix it.
+**That was also wrong, and the test refuted it.** With the project split Qt reads 0.323, slightly
+*worse*. The change is kept anyway, because splitting over projects is the principled choice and
+its sibling detector already did it -- a guard fixed on one path and not on the path beside it.
+
+The direct measurement had the answer, within C++:
+
+| mean pairwise cosine | |
+|---|---|
+| AOSP with AOSP | 0.2872 |
+| AOSP with Qt | 0.2589 |
+| **Qt with Qt** | **0.2534** |
+
+**Qt's C++ clients are less like each other than they are like AOSP's.** Held-out minus outsider
+alignment with the organization's own reference is +0.045 for AOSP and -0.008 for Qt, the same sign
+in all six splits. Splitting over projects makes Qt worse because within-Qt coherence is almost
+entirely a project effect (same project 0.2597, other project 0.2523), and a project split removes
+exactly that.
+
+So the below-chance reading is not a defect to be repaired. It says a round holding a Qt client
+looks *less* like Qt's other projects than a round of AOSP clients does. AOSP's three projects are
+Android platform C++ under one style guide and one build system; Qt's six span a framework, an IDE
+and a QML runtime. At 64 examples a client, "Qt" is a name over a federation of unlike codebases
+and "AOSP" is a house.
+
+**This is the same fact every other instrument has been reporting.** Qt's project-level permutation
+is p = 0.238 from the product and from B, against AOSP's 0.012; Qt only reaches the 1/84 floor from
+A alone, or at 128 examples a client. A near-zero quantity is exactly where two statistics can
+disagree in sign, and the aggregate detector's +0.613 for Qt rests on a gap of 0.004 on a base of
+0.69. The honest reading is that Qt's organizational signal at this training length is not reliably
+present, not that one instrument is broken.
+
+**It also answers the question the RQ1 sharpening was circling: what makes an organization one?**
+An organization is a detectable unit exactly when its projects resemble each other more than they
+resemble an outsider's. That is a measurable property, it differs between the two organizations in
+this study, and it is not something a researcher gets to assume by drawing a box around a GitHub
+org. Norm is not the cue: AOSP's updates average 2.16 and Qt's 2.11 with standard deviations of
+0.04 and 0.03, and rescaling every update to unit norm leaves the detector unchanged (0.613 and
+0.699 against 0.613 and 0.704).
+
+Qt's defence-curve cells are therefore withheld from interpretation at 64 examples a client, and
+the curve is worth rerunning against Qt only at a training length where Qt is coherent.
