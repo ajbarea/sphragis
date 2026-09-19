@@ -278,6 +278,28 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   input, so the 128-example run would have overwritten the 64-example geometry every committed
   RQ2 number rests on. Those two now name the output after the adapters they read.
 
+### Defence evaluation: do the field's adapter splits resist source attribution?
+
+Every personalized federated adapter design splits the adapter into a transmitted part and a part
+kept local, differing only in where the cut falls. None measures whether its transmitted part
+identifies its source; PFAdapter states the gap in its own words. This apparatus can rank them.
+
+- [x] **SDFLoRA's subspace cut** (`scripts/subspace_split.py`): leaks, and more than the whole
+  update, 0.791 against 0.419. Subspace alignment hands the server a cleaner signal.
+- [x] **PFAdapter's module-role cut** (`scripts/module_split.py`): leaks. The transmitted q and k
+  carry AOSP at 0.702 against 0.735 for everything; every projection type alone lands 0.700-0.755.
+- [x] **FedSA-LoRA's factor cut** (jobs 149581, 149582): leaks most of the three. A alone beats
+  both B alone and the product, and moves Qt from p 0.238 to the 1/84 floor -- while A is by far
+  the more similar factor across clients, which is the paper's own reason for sharing it.
+- [x] **SecureGate's scrubbing baseline**: already applied. The corpus is identity-scrubbed at
+  ingestion and every RQ2 number was measured on it.
+- [ ] **FDLoRA and FedDPA's adapter-instance cut**: needs clients that train a global and a
+  personal adapter jointly, then the attack on the global one alone.
+- [ ] **SecureGate's learned secure adapter**, which is not the same object as a scrubber.
+- [ ] **FedAMoLE's data-dependent architecture** is not a cut at all: the expert assignment is a
+  function of the client's data and the server observes it by construction. Out of scope for the
+  weight-space attacks, and worth a sentence in the paper.
+
 ## Plan D — granularity
 
 Added 2026-09-16, from a probe the design never considered. The study fixes the organization

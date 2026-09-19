@@ -3454,3 +3454,47 @@ detector is not. And two matrices can differ greatly in average similarity while
 one identifies better. Every one of these is the same mistake: reading an average-case statistic as
 though it bounded the worst case. A privacy claim has to be made at the operating point an
 adversary occupies, and none of these designs is evaluated there.
+
+### The whole family, and which rows are measured (2026-09-18)
+
+`# research(2026-09)`. Every paper below was read from its PDF, not from an abstract. The table
+distinguishes what this apparatus has measured from what it has only reasoned about, because the
+difference is the whole point of keeping it.
+
+| design | where it cuts | what the server receives | does the received part identify the organization? |
+|---|---|---|---|
+| FedSA-LoRA (Guo et al., **ICLR 2025**, 2410.01463) | the LoRA factor | A only | **measured: yes, and best of all three readings.** AOSP 0.804, Qt 0.734, both at the 1/84 permutation floor |
+| PFAdapter (Liu et al., **IEEE TCCN**, 2607.12111) | the projection's role | q and k | **measured: yes.** AOSP 0.702 against 0.735 for the whole update |
+| SDFLoRA (Shen et al., 2601.11219) | the subspace | the aligned shared component | **measured: yes, more clearly than the whole update.** 0.791 against 0.419 |
+| SecureGate (Shaaban and Elmahallawy, **ACL 2026**, 2602.13529) | sanitization | the "secure" adapter | **partly measured.** See below |
+| FDLoRA (Lu et al., 2406.07925) | the adapter instance | the global module only | not measured; needs new training |
+| FedDPA (Yang et al., **NeurIPS 2024**, 2403.19211) | the adapter instance | the global adapter | not measured; needs new training |
+| FedAMoLE (Zhang et al., 2411.19128) | the architecture | experts plus an assignment | not measured, and see below |
+
+**SecureGate, partly measured already.** Its secure adapter "learns sanitized, globally shareable
+representations" while a revealing adapter holds "sensitive, organization-specific knowledge"
+behind a token gate, and its reported gains are against PII extraction: a leakage floor of 4.20%,
+a 17.07x reduction in extraction recall for unauthorized requests. Its sanitization baselines are
+data scrubbing and masking. **This study's corpus is already scrubbed at that level.**
+`sphragis/corpus/scrub.py` replaces every Gerrit account identity with a salted pseudonym, nulls
+name, email, username, display name and avatar fields, and rewrites emails found in free text,
+before any record reaches disk. Every RQ2 number in this log was measured on that corpus. So
+identity scrubbing of the kind SecureGate uses as its baseline does not touch this signal, which is
+unsurprising once located: the fingerprint is in code conventions and review habits, not in who
+wrote them. What is not measured is SecureGate's learned secure adapter, which is a different
+object from a scrubber.
+
+**FedAMoLE deserves a row of its own, and a warning.** It assigns "architecturally heterogeneous
+models" per client through "a reverse selection-based expert assignment strategy to tailor model
+architectures for each client based on data distributions". The assignment is therefore a function
+of the client's data, and the server necessarily observes it. That is a side channel that owes
+nothing to the weights: before examining a single parameter, a server learns a summary of each
+client's data distribution by construction. Nothing here measures it, and the point is not that
+FedAMoLE is worse than the others -- it is that a taxonomy of "what part of the adapter is
+transmitted" does not cover a design whose *structure* is data-dependent.
+
+**Where this leaves the contribution.** Three cuts measured, three leaking, one of them leaking
+more than sending everything. Two cuts unmeasured and reachable with new training runs. One design
+whose leak would not be a cut at all. What the field is missing is not a seventh partition; it is
+an evaluation that tells a deployment whether the partition it chose resists source attribution,
+and a statistic to evaluate it with that is not an average.
