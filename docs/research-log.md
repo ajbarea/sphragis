@@ -3711,3 +3711,38 @@ on its changes, and for each organization the mean Jaccard overlap between the a
 than Qt's six do, pairwise on average. If Qt's projects overlap as much as AOSP's or more, then
 collaboration density is not what separates a coherent organization from a loose one here, and the
 Tamura and Tsugawa mechanism does not transfer to this setting.
+
+**Outcome: refuted, and in the opposite direction.**
+
+| accounts across an organization's C++ projects | changes | mean pairwise Jaccard | range |
+|---|---|---|---|
+| AOSP: art, frameworks/av, system/core | 4,268 | 0.1286 | 0.1099 to 0.1421 |
+| Qt: qt-creator, qtbase, qtdeclarative, qtmultimedia, qtgraphs, qttools | 28,563 | **0.2455** | 0.1400 to 0.4242 |
+
+Qt's projects share nearly twice as much of their people as AOSP's, and Qt's least-overlapping pair
+(0.140) matches AOSP's most-overlapping one (0.142). Yet AOSP is the coherent organization in update
+space and Qt is not. By the registered criterion, collaboration density is not what separates them
+here, and Tamura and Tsugawa's mechanism does not transfer to this setting -- which is no
+contradiction of their result, since they measure naming-style similarity across repositories by
+owner proximity, and this measures adapter-update similarity across projects by shared people.
+
+The inversion is itself informative. The same engineers moving between qtbase, qtdeclarative and
+qt-creator do not make those projects' updates alike, while AOSP's three projects, staffed by
+largely different people, produce alike updates. What they share is a codebase: Android platform
+C++ under one style configuration, one lint regime and one build system. That points the same way
+as the probe did earlier today, where the organization was legible in code convention shapes and not
+in the reviewers' words: **the fingerprint is a property of the codebase's conventions and tooling,
+not of the people who write to it.** An organization is detectable when it imposes one set of
+conventions across its projects, whoever does the work.
+
+That is three mechanism hypotheses for Qt refuted in a row -- pairwise coherence, centroid
+coherence, collaboration overlap -- and it is where generating a fourth would start to be fitting
+noise. What stands measured: AOSP is coherent at both lengths; Qt is not detectably coherent at
+either; longer local training makes Qt's grouping detectable anyway, and that survives matching
+composition. The mechanism for the last of those stays open, and the shared-conventions reading
+above is a hypothesis to test with the convention-shape probe on C++, not a finding.
+
+(Account sets are taken from each change's owner, submitter and attention set, so bots that sit in
+attention sets count as accounts; small projects such as qtgraphs, with 62 accounts, make individual
+Jaccard values noisy. Neither changes the direction, which holds for every AOSP pair against Qt's
+mean.)
