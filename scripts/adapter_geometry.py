@@ -36,6 +36,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--root", type=Path, required=True, help="holds sphragis-adapters* dirs")
 parser.add_argument("--out", type=Path, required=True)
 parser.add_argument(
+    "--matrices",
+    default="product",
+    choices=("product", "a", "b"),
+    help="which part of the update the geometry is over: the product B A that changes the "
+    "weights, or one factor alone, which is what a selective-sharing scheme transmits",
+)
+parser.add_argument(
+    "--subtract-init",
+    action="store_true",
+    help="compare each factor against the broadcast initial adapter rather than against zero, "
+    "which is the movement a server actually observes in a matrix it sent out",
+)
+parser.add_argument(
     "--pattern",
     default="sphragis-adapters*/*/adapter_model.safetensors",
     help="which adapters under the root, as a glob",
@@ -73,9 +86,28 @@ def update_inner(a1: np.ndarray, b1: np.ndarray, a2: np.ndarray, b2: np.ndarray)
     return float(np.trace((b1.T @ b2) @ (a2 @ a1.T)))
 
 
+def factor_inner(first: np.ndarray, second: np.ndarray) -> float:
+    """<X1, X2>, Frobenius, for one LoRA factor on its own.
+
+    FedSA-LoRA (Guo et al., ICLR 2025, arXiv:2410.01463) shares only the A matrices, on the
+    finding that "A matrices are responsible for learning general knowledge, while B matrices
+    focus on capturing client-specific knowledge". Whether the transmitted factor still carries
+    the source is a measurement over exactly this inner product.
+    """
+    return float(np.tensordot(first, second, axes=2))
+
+
 def modules(header: dict[str, Any]) -> list[str]:
     """The adapted modules, as the prefix before `.lora_A.weight`."""
     return sorted(k.removesuffix(".lora_A.weight") for k in header if k.endswith(".lora_A.weight"))
+
+
+def initial(root: Path, pattern: str) -> Path | None:
+    """The shared starting adapter a run broadcast, if it was saved beside the clients."""
+    for path in sorted(root.glob(pattern.replace("*-c*", "init"))):
+        if path.parent.name == "init":
+            return path
+    return None
 
 
 def adapters(root: Path, pattern: str) -> dict[str, Path]:
@@ -106,16 +138,34 @@ def main() -> None:
     inner = np.zeros((n, n))
     per_module_cosines = np.zeros((n, n))
     by_module: dict[str, list[list[float]]] = {}
+    start_path = initial(args.root, args.pattern) if args.subtract_init else None
+    if args.subtract_init and start_path is None:
+        raise SystemExit(f"--subtract-init needs an `init` adapter beside {args.pattern}")
+    start_index = tensor_index(start_path) if start_path else None
     for module in shared:
+        origin = {"a": 0.0, "b": 0.0}
+        if start_index is not None:
+            head, offset = start_index
+            for key in ("a", "b"):
+                origin[key] = read_tensor(
+                    start_path, head, offset, f"{module}.lora_{key.upper()}.weight"
+                )
         loaded = []
         for name in names:
             header, start = indexes[name]
-            a = read_tensor(paths[name], header, start, f"{module}.lora_A.weight")
-            b = read_tensor(paths[name], header, start, f"{module}.lora_B.weight")
+            a = read_tensor(paths[name], header, start, f"{module}.lora_A.weight") - origin["a"]
+            b = read_tensor(paths[name], header, start, f"{module}.lora_B.weight") - origin["b"]
             loaded.append((a, b))
-        block = np.array(
-            [[update_inner(*loaded[i], *loaded[j]) for j in range(n)] for i in range(n)]
-        )
+        if args.matrices == "product":
+            block = np.array(
+                [[update_inner(*loaded[i], *loaded[j]) for j in range(n)] for i in range(n)]
+            )
+        else:
+            which = 0 if args.matrices == "a" else 1
+            factors = [pair[which] for pair in loaded]
+            block = np.array(
+                [[factor_inner(factors[i], factors[j]) for j in range(n)] for i in range(n)]
+            )
         inner += block
         norms = np.sqrt(np.clip(np.diag(block), 0.0, None))
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -132,6 +182,8 @@ def main() -> None:
         json.dumps(
             {
                 "adapters": names,
+                "matrices": args.matrices,
+                "subtract_init": bool(args.subtract_init),
                 "modules": len(shared),
                 "update_norm": dict(zip(names, norms.tolist(), strict=True)),
                 "cosine": (inner / np.outer(norms, norms)).tolist(),

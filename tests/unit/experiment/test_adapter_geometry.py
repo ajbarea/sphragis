@@ -57,3 +57,22 @@ def test_an_update_is_identical_to_itself_and_scale_does_not_matter(tmp_path: Pa
     same = geometry.update_inner(a, b, a, b)
     scaled = geometry.update_inner(a, b, 3 * a, b)
     assert scaled / (same**0.5 * (9 * same) ** 0.5) == pytest.approx(1.0)
+
+
+def test_one_factor_alone_is_its_own_frobenius_inner_product() -> None:
+    """What a scheme that transmits only A gives an attacker to compare."""
+    first = np.array([[1.0, 2.0], [3.0, 4.0]])
+    second = np.array([[5.0, 6.0], [7.0, 8.0]])
+    assert geometry.factor_inner(first, second) == pytest.approx(float((first * second).sum()))
+    assert geometry.factor_inner(first, first) == pytest.approx(float((first**2).sum()))
+
+
+def test_the_factor_inner_product_is_not_the_product_inner_product() -> None:
+    """They answer different questions, so a run must say which one it computed."""
+    rng = np.random.default_rng(0)
+    a1, b1 = rng.normal(size=(4, 6)), rng.normal(size=(5, 4))
+    a2, b2 = rng.normal(size=(4, 6)), rng.normal(size=(5, 4))
+    assert geometry.update_inner(a1, b1, a2, b2) != pytest.approx(geometry.factor_inner(a1, a2))
+    assert geometry.update_inner(a1, b1, a2, b2) == pytest.approx(
+        float(((b1 @ a1) * (b2 @ a2)).sum())
+    )
