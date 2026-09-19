@@ -19,6 +19,10 @@ set -euo pipefail
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 tag_result_suffix CLIENT_SIZE
+# PACKING_SEED draws another assignment of examples to clients with the same initialization, and
+# names its own results and adapters so a second packing never lands on the first.
+[ -z "${PACKING_SEED:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-p$PACKING_SEED"
+export RESULT_SUFFIX
 
 C="${CLIENTS:-$HOME/corpus/clients}"
 
@@ -31,6 +35,7 @@ OUT="$(result_path "$HOME/client-updates$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/client_updates.py \
   --clients "${CLIENTS_PER_SOURCE:-6}" \
   --client-size "${CLIENT_SIZE:-64}" \
+  ${PACKING_SEED:+--packing-seed "$PACKING_SEED"} \
   --sources-file "$SOURCES" \
   --corpus-root "$C" \
   --adapters "$HOME/scratch/sphragis-adapters-clients$RESULT_SUFFIX" \

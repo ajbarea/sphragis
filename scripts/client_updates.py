@@ -57,6 +57,13 @@ parser.add_argument(
     help="examples one change may give a client; default a quarter of the client",
 )
 parser.add_argument("--seed", type=int, default=1, help="the shared initialization")
+parser.add_argument(
+    "--packing-seed",
+    type=int,
+    default=None,
+    help="which examples go to which client; defaults to --seed, so a second packing can be drawn "
+    "while the initialization and training order stay those of the first",
+)
 parser.add_argument("--adapters", type=Path, required=True)
 parser.add_argument("--out", type=Path, required=True)
 parser.add_argument("--dry-run", action="store_true", help="partition only, no model")
@@ -105,7 +112,7 @@ def main() -> None:
         plan[name] = partition(
             usable,
             size=args.client_size,
-            seed=args.seed,
+            seed=args.seed if args.packing_seed is None else args.packing_seed,
             limit=args.clients,
             max_per_change=args.max_per_change,
         )
@@ -172,6 +179,7 @@ def main() -> None:
                 "client_size": args.client_size,
                 "max_per_change": args.max_per_change or max(1, args.client_size // 4),
                 "seed": args.seed,
+                "packing_seed": args.seed if args.packing_seed is None else args.packing_seed,
                 "clients": reports,
                 "provenance": run_provenance(),
             },

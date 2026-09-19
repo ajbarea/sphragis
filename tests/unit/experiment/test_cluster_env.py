@@ -468,7 +468,7 @@ def _run_job(script_name: str, root: Path, **env: str) -> subprocess.CompletedPr
     """
     home, checkout = root / "home", root / "checkout"
     for directory in (home, checkout, home / "scratch"):
-        directory.mkdir(exist_ok=True)
+        directory.mkdir(parents=True, exist_ok=True)
     for shared in ("scripts", "sphragis"):
         link = checkout / shared
         if not link.exists():
@@ -534,3 +534,24 @@ def test_a_recorded_measurement_is_not_replaced_without_saying_so(
     assert existing.read_text() == "a measurement the study cites"
     deliberate = _run_job(script_name, tmp_path, OVERWRITE="1")
     assert deliberate.returncode == 0, deliberate.stderr
+
+
+def test_a_second_packing_names_its_own_results_and_adapters(tmp_path: Path) -> None:
+    """Another draw of which examples go to which client must never land on the first draw."""
+    second = _run_job(
+        "client_updates.sbatch",
+        tmp_path / "second",
+        RUN_TAG="cpp-early",
+        CLIENT_SIZE="128",
+        PACKING_SEED="2",
+    )
+    assert second.returncode == 0, second.stderr
+    assert "client-updates-cpp-early-c128-p2.json" in second.stdout
+    assert "sphragis-adapters-clients-cpp-early-c128-p2" in second.stdout
+    assert "--packing-seed 2" in second.stdout
+    first = _run_job(
+        "client_updates.sbatch", tmp_path / "first", RUN_TAG="cpp-early", CLIENT_SIZE="128"
+    )
+    assert first.returncode == 0, first.stderr
+    assert "client-updates-cpp-early-c128.json" in first.stdout
+    assert "--packing-seed" not in first.stdout, "the first packing must reproduce as it ran"
