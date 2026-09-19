@@ -4150,3 +4150,26 @@ so a test month fetched after acceptance would walk into a descriptive analysis 
 `by_month` now refuses any month at or past the sealed window and says so, and both readings record
 `sealed_from`. Rerun on the committed drift case, the numbers are unchanged: OpenStack 0.552,
 Qt 0.510, the same early and late slices.
+
+### Cluster size carries no information about the contrast, measured (2026-09-19)
+
+`scripts/cluster_informativeness.py`, `datasets/results/cluster-informativeness.json`. The
+registration binds the gate to the pooled estimand, and one of its two reasons is Kahan et al.'s
+condition: pooling over examples is wrong when a change's size carries information about its
+outcome. The report quoted a correlation for that, and nothing on disk produced it.
+
+Measured over the three registered seeds on the development window, per organization, between a
+change's example count and its own matched-minus-mismatched difference:
+
+| | r, median of 3 seeds | range | pooled minus change-averaged |
+|---|---|---|---|
+| OpenStack, 235 changes, largest 45 | -0.026 | -0.041 to -0.018 | -0.0142 (-0.0220 to -0.0087) |
+| Qt, 462 changes, largest 25 | -0.006 | -0.020 to +0.013 | -0.0024 (-0.0076 to +0.0047) |
+
+Both are indistinguishable from zero and change sign across seeds on Qt, which is the reading the
+registration needs: the extra weight pooling gives a large change does not favour either arm. The
+figures in the report are now these, with their spans, rather than a single draw.
+
+The pilot is the contrast worth recording beside it: at 18 changes OpenStack's correlation is
+-0.214 and the two estimands differ by 0.035, half the effect. Small cluster counts are where this
+choice bites, which is why the condition is checked on the window the gate will read.
