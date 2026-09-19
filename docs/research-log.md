@@ -4216,3 +4216,44 @@ per round under two schedules, uploads recorded as A and B separately so factor-
 product-level attacks both run, and a sweep over FDLoRA's inner steps and sync period, whose
 endpoints are the sharpest test of whether its boundary exists in the numbers at all. The
 attribution question is already answerable here, since every client carries one source.
+
+### An adversarial review of today's measurement code, and what it changed (2026-09-19)
+
+An independent reviewer was given the three pieces of code whose numbers reach the report and told
+to reproduce rather than read: the interval calibration, the informativeness reading, and the
+harvest that asserts every quoted figure. It ran its own implementations and its own mutants. What
+it found, and what each one cost:
+
+- **A sentence in section 7 was false.** "The median-seed rule reaches 0.122 two-sided where the
+  crossed interval holds nominal" is true of the median-seed half only: at the seed effect that
+  produces 0.122, sigma_b 0.02, the crossed interval is 0.073, not nominal. The honest cell is
+  0.01, where the two are 0.062 and 0.046, and that is the regime this study's measured seed effect
+  puts the gate in. Both cells are now stated and both are harvested.
+- **The harvest could not fail on three of its own claims.** The prose check was a substring test,
+  so the literal `0.0` for the Jaccard 0.8 leakage rate matched inside `0.075` and the claim was
+  vacuous on both sides. A JSON boolean resolved as a number, so `false` verified the exactly-zero
+  bound the verdict hangs on. And that bound passed at +0.00003, which flips the verdict while
+  still printing +0.0000. Matching is now bounded and counted per claim, booleans are refused, the
+  bound is asserted exactly, and the verdict word itself is asserted. Each was reproduced as a
+  mutant and each now fails.
+- **The calibration's decimals were one draw each.** At 1,500 trials the standard error is about
+  0.6 points, the size of the differences between adjacent ladder points, and the reviewer's
+  independent recomputation at fifteen times the budget found the true curve declines monotonically
+  where our draws wobbled. The budget is now 6,000 and the report states the range and the regime
+  rather than a sequence.
+- **The gate's own error rate was asserted rather than measured.** The artifact recorded the
+  two-sided rate while the gate reads one side; the report said these "roughly halve". The
+  one-sided rate is now counted in the same loop.
+- **Zero correlation was also the value for "no variance".** `cluster_informativeness` returned 0.0
+  whenever a side did not vary, which is exactly the value that reads as maximal support for the
+  registered estimand. It returns NaN, and the summary refuses a run that contributes no row, a
+  duplicate run, or a seed count other than the one the report claims.
+- **Stale ladder rows could survive a merge** under a provenance block describing only the last
+  process. A row measured under another window, arm, rate or budget is dropped with a line saying
+  what it was.
+
+**Recorded, not changed:** OpenStack's pooled contrast is exactly 13/565 at all three seeds. The
+underlying runs genuinely differ, with 44 to 47 per-example flips between seeds and distinct losses
+and adapter norms, but the net change is identical in both arms all three times. Qt shows no such
+lockstep. Under near-independence that is on the order of one in a thousand, and it is the reason
+OpenStack's seed component carries no spread. It deserves a sentence before a reviewer asks.
