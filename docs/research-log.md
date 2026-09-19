@@ -3400,3 +3400,57 @@ inversion, gradient leakage, or membership inference. The privacy scope of PFAda
 limited to decentralized training without centralized raw-data pooling". What is missing from the
 field is not another cut but an evaluation that tells a deployment whether the cut it chose
 defends against source attribution. That evaluation is what this apparatus is.
+
+### The factor that looks safest is the one that leaks most (2026-09-18, jobs 149581 and 149582)
+
+The registered prediction, written before the jobs landed, was that A alone would identify the
+organization well above chance and "not be far below the product's" figure. That was right in
+direction and too conservative in size. **A alone is the most identifying of the three.**
+
+43 C++ clients, reference split over projects, rounds of 4, each factor compared as the movement
+from what the server broadcast (B starts at zero; the A geometry subtracts the shared
+initialization):
+
+| what the server sees | mean cross-client cosine | AOSP AUC | AOSP TPR@1% | Qt AUC | Qt TPR@1% | AOSP p | Qt p |
+|---|---|---|---|---|---|---|---|
+| **A only** (FedSA-LoRA transmits) | **0.481** | **0.804** | 0.147 | **0.734** | 0.264 | 0.012 | **0.012** |
+| B only (FedSA-LoRA keeps local) | 0.255 | 0.734 | 0.092 | 0.618 | 0.135 | 0.012 | 0.238 |
+| the product B A | 0.259 | 0.738 | 0.092 | 0.619 | 0.133 | 0.012 | 0.238 |
+
+(with two of its clients in the round, A gives AOSP 0.946 at TPR 0.579 and Qt 0.799 at 0.429.)
+
+**FedSA-LoRA's empirical finding replicates here exactly.** Guo, Zeng, Wang, Fan, Wang and Qu
+(ICLR 2025, arXiv:2410.01463) share only A on the basis that "A matrices are responsible for
+learning general knowledge, while B matrices focus on capturing client-specific knowledge",
+evidenced by A matrices being "more similar across clients than the B matrices". In this corpus A
+matrices sit at a mean cross-client cosine of 0.481 against B's 0.255. They are, as the paper says,
+much more alike.
+
+**And the factor that is more alike is the one that identifies its source better.** Qt is the case
+that makes it unambiguous: from the full update and from B alone, Qt's true grouping of projects is
+unremarkable among relabelings at p = 0.238, and from A alone it is the most extreme of all 84
+arrangements at the 1/84 floor. Its true-positive rate at one false alarm in a hundred doubles,
+0.133 to 0.264. Transmitting A alone is not merely no better than transmitting the whole update
+for this attacker; it is **worse**, because the product's B component partly buries the signal that
+A carries cleanly.
+
+**Why, and it is the same reason as everything else today.** A high mean cosine means a large
+component every client shares, and a shared component discriminates nothing -- it is the rank-1
+direction the subspace split showed contributes least. Identity rides in the deviations *around*
+that common component, and A's deviations are the better organized by source. Average similarity
+and identifiability are simply different quantities, and the first is no evidence about the second.
+
+**What this does and does not say about that paper.** FedSA-LoRA's own argument is about knowledge
+decomposition and aggregation quality, not a formal privacy guarantee, and nothing here contradicts
+its accuracy results. What it bears on is the reading the surrounding literature places on that
+split -- keeping B local as though the client-specific part had been withheld, and applying DP to
+the shared A as the remaining exposure. For source attribution that reading is backwards. One
+model, one corpus, 43 clients of one language, one training length; the direction is consistent
+across three instruments but the magnitude is not a general constant.
+
+**The third instance of one principle today.** An AUC can be high while no member is caught at a
+usable false-positive rate (Carlini et al.). A classifier can be at chance while a targeted
+detector is not. And two matrices can differ greatly in average similarity while the more similar
+one identifies better. Every one of these is the same mistake: reading an average-case statistic as
+though it bounded the worst case. A privacy claim has to be made at the operating point an
+adversary occupies, and none of these designs is evaluated there.
