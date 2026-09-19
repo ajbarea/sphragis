@@ -1,14 +1,14 @@
 {
   "metric": "exact_match",
   "provenance": {
-    "generated_at": "2026-09-19T16:58:18.532796+00:00",
+    "generated_at": "2026-09-19T17:34:13.612217+00:00",
     "git": {
-      "commit": "a3c041af122d2d49963c00065f873ebef3700fbd",
+      "commit": "15ee65c8da474d5df36ea5f1fe7e9546c5554328",
       "branch": "feat/wellposed-filter",
       "uncommitted_code": [
         "scripts/cluster_informativeness.py"
       ],
-      "uncommitted_code_sha256": "73b2c238ef8f1168e5b5e042ca9b0f30d5dbc94a7e745b92908947d5d589c54b"
+      "uncommitted_code_sha256": "aa637bf032be6243402ff60d15332cf2e8a5cf8674aadf0008f26a44332479e9"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

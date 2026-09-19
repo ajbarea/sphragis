@@ -53,6 +53,13 @@ def read(path: Path, metric: str) -> dict[str, dict[str, float]]:
     seeds = [str(s) for s in payload["seeds"]]
     orgs = sorted(key.split("|")[1] for key in results if key.startswith("base|"))
 
+    # With three organizations "the mismatched arm" is a choice, and picking the first one
+    # silently would answer a different question than the gate's two-organization contrast.
+    if len(orgs) != 2:
+        raise SystemExit(
+            f"{path.name} scores {len(orgs)} organizations: {orgs}; the contrast is a pair"
+        )
+
     report: dict[str, dict[str, float]] = {}
     for org in orgs:
         for seed in seeds:
