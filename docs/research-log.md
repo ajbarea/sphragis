@@ -3381,7 +3381,7 @@ part and a part kept local. They differ only in where the cut falls.
 
 | design | cuts by | transmitted | does the transmitted part still identify the organization? |
 |---|---|---|---|
-| SDFLoRA (arXiv:2601.11219) | subspace | the aligned shared subspace | **yes, and more clearly than the whole update**: 0.791 against 0.419 |
+| SDFLoRA (arXiv:2601.11219) | subspace | the aligned shared subspace | **depends on the rank; not established.** See the corrections entry |
 | PFAdapter (IEEE TCCN) | module role | q and k projections | **yes**: AOSP 0.702 against 0.735 for everything |
 | FedSA-LoRA (ICLR 2025) | LoRA factor | A only | jobs 149581 and 149582 |
 | SecureGate (ACL 2026) | sanitization | the "secure" adapter | not measured here |
@@ -3465,7 +3465,7 @@ difference is the whole point of keeping it.
 |---|---|---|---|
 | FedSA-LoRA (Guo et al., **ICLR 2025**, 2410.01463) | the LoRA factor | A only | **measured: yes, and best of all three readings.** AOSP 0.804, Qt 0.734, both at the 1/84 permutation floor |
 | PFAdapter (Liu et al., **IEEE TCCN**, 2607.12111) | the projection's role | q and k | **measured: yes.** AOSP 0.702 against 0.735 for the whole update |
-| SDFLoRA (Shen et al., 2601.11219) | the subspace | the aligned shared component | **measured: yes, more clearly than the whole update.** 0.791 against 0.419 |
+| SDFLoRA (Shen et al., 2601.11219) | the subspace | the aligned shared component | **measured: depends on the rank, not established.** See the corrections entry |
 | SecureGate (Shaaban and Elmahallawy, **ACL 2026**, 2602.13529) | sanitization | the "secure" adapter | **partly measured.** See below |
 | FDLoRA (Lu et al., 2406.07925) | the adapter instance | the global module only | not measured; needs new training |
 | FedDPA (Yang et al., **NeurIPS 2024**, 2403.19211) | the adapter instance | the global adapter | not measured; needs new training |
@@ -3784,3 +3784,65 @@ has its own conventions.
 **Prediction:** AOSP's C++ projects are less separable from one another by convention shapes than
 Qt's C++ projects are. If Qt's projects are as alike as AOSP's or more, shared conventions do not
 explain the coherence gap either, and the mechanism is open with no candidate left.
+
+**Outcome of the shared-conventions prediction: refuted, in the opposite direction again.** Code
+convention shapes, `.cpp` only:
+
+| within-organization project pairs | separability |
+|---|---|
+| AOSP frameworks/av vs system/core (the only pair that clears the size floor) | **0.806** [0.687, 0.872] |
+| Qt, six pairs among qtbase, qt-creator, qtdeclarative, qtmultimedia | 0.534 to 0.608 |
+| AOSP against Qt, pooled | 0.679 [0.614, 0.723] |
+
+AOSP's two measurable projects differ in their conventions *more* than any pair of Qt's do, so
+shared conventions do not explain AOSP's coherence either. That is the fourth candidate refuted
+(pairwise coherence, centroid coherence, collaboration overlap, shared conventions), and, as
+committed above, the mechanism for why AOSP is a coherent organization in update space and Qt is
+not stays open with no candidate left. (AOSP has one scorable pair against Qt's six, which makes
+this a weaker test than the others; it is reported because it was registered.)
+
+### Corrections from an adversarial review of today's code (2026-09-18)
+
+Three independent reviews reran today's analyses against the committed data. Findings that change
+what this log says, stated here before any is fixed:
+
+**1. The subspace-split headline was overstated, and part of it was wrong.** "0.791 against 0.419
+on the whole update" is withdrawn as stated.
+- The whole-update 0.419 is a broken baseline, *below chance*: the project-level null has mean
+  0.509, and 25 of 30 Qt clients are predicted as AOSP. The rise to 0.791 is against a class-bias
+  failure, not a fair reference, so "projecting nearly doubles the attacker" is withdrawn.
+- Rank 4 was chosen after looking. Under the exact project-level null (84 relabelings), rank 4's
+  shared part is p = 0.036, rank 8's 0.024, but the maximum over the reported ranks is p = 0.071.
+- Where the signal sits depends on k. At rank 1 the residual (the part a split keeps local) is the
+  strongest cell, 0.837 at the 1/84 floor; at ranks 4 and 8 it is the shared part; at rank 16
+  neither is significant (0.119). And rank 1's shared row is degenerate, since every rank-1
+  projected cosine is exactly 1.0.
+- So "the fingerprint is in the part that gets shared, not the part kept back" is **not
+  established**. The defence table's SDFLoRA row changes from "leaks, more than the whole update"
+  to "depends on the rank of the shared subspace; not established either way". Two of the three
+  cuts, not three, are measured as leaking, pending the review of the factor geometry.
+
+**2. Qt's permutation p is seed-dependent at the draws the test uses.** Rerun over four seeds:
+
+| Qt, project-level permutation | seeds 0 / 1 / 2 / 3 |
+|---|---|
+| 64 examples, product | 0.238 / 0.262 / 0.167 / 0.333 |
+| B factor only | 0.238 / 0.274 / 0.167 / 0.333 |
+| 128 examples, product | 0.012 / 0.012 / 0.024 / 0.036 |
+| A factor only | 0.012 / 0.024 / 0.012 / 0.012 |
+
+AOSP stays at 1/84 on every seed and geometry. The direction of every Qt comparison survives every
+seed tried: 128 examples below 0.04, 64 examples above 0.16, A-only below 0.03, B-only above 0.16.
+But the repeated phrase "Qt reaches the 1/84 floor" was true for seed 0 only and is replaced by the
+ranges above. The composition-matched test earlier today used seed 0 throughout; its conclusion
+(length, not repacking) still holds against these ranges, since no composition-matched draw fell
+below 0.071.
+
+**3. A stale figure.** The entry "The organization is there, at the operating point an attacker
+actually has" still quotes Qt at p = 0.071. The corrected value is 0.238 at seed 0, and 0.17 to 0.33
+across seeds.
+
+Still open from the same review, and not yet fixed: the permutation's tests are text searches that
+every mutant tried survives; the enumeration counts arrangements rather than distinct groupings;
+the overwrite guard checks at job start while scripts write hours later, so two concurrent jobs
+with one output can still replace each other; three further outputs are unguarded or misnamed.

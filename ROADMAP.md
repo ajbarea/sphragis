@@ -287,8 +287,10 @@ Every personalized federated adapter design splits the adapter into a transmitte
 kept local, differing only in where the cut falls. None measures whether its transmitted part
 identifies its source; PFAdapter states the gap in its own words. This apparatus can rank them.
 
-- [x] **SDFLoRA's subspace cut** (`scripts/subspace_split.py`): leaks, and more than the whole
-  update, 0.791 against 0.419. Subspace alignment hands the server a cleaner signal.
+- [ ] **SDFLoRA's subspace cut** (`scripts/subspace_split.py`): not established. The signal sits in
+  the residual at rank 1 and in the shared part at ranks 4 and 8 (p 0.036, 0.024), with a
+  max-over-ranks p of 0.071; the whole-update baseline it was compared against is below chance.
+  Needs a rank fixed in advance and a fair baseline.
 - [x] **PFAdapter's module-role cut** (`scripts/module_split.py`): leaks. The transmitted q and k
   carry AOSP at 0.702 against 0.735 for everything; every projection type alone lands 0.700-0.755.
 - [x] **FedSA-LoRA's factor cut** (jobs 149581, 149582): leaks most of the three. A alone beats
