@@ -215,7 +215,7 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   0.588, Qt's 0.456 to 0.910, and Qt's project-level permutation from an unremarkable 0.238 to the
   1/84 floor. Leakage is a function of a knob the deployment sets, not a property of the corpus.
   The two sets differ in size and composition, so this is two consistent points rather than a
-  controlled doubling. Job 149578 adds 256 as a third.
+  controlled doubling. Composition-matched draws of the 64-example set never reach the floor for Qt, so length survives that confound. 256 is not reachable on this corpus: system/core has 204 examples, so AOSP would lose a project and the permutation would fall from 84 arrangements to 28. It waits for the ten-project AOSP corpus. Job 149607 draws a second 128-example packing, same initialization, to make the comparison symmetric.
 - [x] **Explained the non-monotonicity in noise.** Not the finite pool: it survives 77 clients.
   The detector scores a cosine, so a mask attenuates each draw by `||v||/sqrt(||v||^2+||n||^2)`,
   and the null class's difference vector is shorter than a member class's once averaging has

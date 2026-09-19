@@ -3746,3 +3746,17 @@ above is a hypothesis to test with the convention-shape probe on C++, not a find
 attention sets count as accounts; small projects such as qtgraphs, with 62 accounts, make individual
 Jaccard values noisy. Neither changes the direction, which holds for every AOSP pair against Qt's
 mean.)
+
+### 256 examples a client is not a third point on this corpus (2026-09-18, job 149598)
+
+At 256 examples, AOSP's system/core (204 usable examples) cannot fill one client, and the job
+refused to drop the source silently. Run anyway, AOSP would fall to two projects and four clients,
+and the project-level permutation from 84 arrangements to 28, with a floor of 1/28 rather than 1/84.
+That would be a different and weaker test on a thinner set, not a further point on the same curve,
+so it is not run. Long local training needs larger per-project corpora, which is what the
+ten-project AOSP rebuild is for.
+
+Instead, job 149607 draws a **second packing at 128**, the same initialization and training order
+with a different assignment of examples to clients (`--packing-seed`, which defaults to `--seed`
+so every earlier run reproduces as it ran). The 64-example side of the length comparison has five
+draws and the 128-example side one; this makes it two, from runs that differ only in packing.
