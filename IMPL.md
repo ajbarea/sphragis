@@ -13,12 +13,15 @@ both RQ2 threat models. Its description was rewritten on 2026-09-18 against curr
 **RQ1, dev window, three seeds, fp32:** Qt +0.0316 [+0.0089, +0.0567], OpenStack +0.0230
 [+0.0000, +0.0457], mixed. The test window stays sealed until in-principle acceptance.
 
-**RQ2 has become a defence evaluation.** Organization is not a class a classifier can assign,
-but a detector with a project-split reference finds AOSP: on the rebuilt corpus, seven of its C++
-projects against Qt's six, AOSP sits at the floor of 1,716 groupings at every seed (p = 0.0006)
-with a detector at AUC 0.972 and 79% of two-client rounds caught at one false alarm in a hundred.
-Qt does not: its permutation is a median 0.070 there, and the earlier reading that it did was the
-84-grouping null and the three-project AOSP set behind it.
+**RQ2 has become a defence evaluation, and its answer is a function of a knob.** How long each
+client trains locally decides what leaks. At 128 examples on the rebuilt corpus, seven AOSP C++
+projects against Qt's six, a detector with a project-split reference finds AOSP at the floor of
+1,716 groupings at every seed (p = 0.0006, AUC 0.972, 79% of two-client rounds caught at one false
+alarm in a hundred) and does not find Qt (median 0.070); a classifier finds neither beyond its
+projects (0.583, p 0.30). At 256 examples both are found by the detector, AOSP at AUC 0.995 with
+98.5% caught, and the classifier passes the beyond-project control too, 1.000 at the floor of its
+null. Composition moves with length, so these are three points on a ladder rather than a
+controlled doubling.
 Two splits the personalized-adapter literature proposes leave the source readable in the part
 they transmit: FedSA-LoRA's A, the best identifier of the factor readings and robust to every
 control an adversarial review ran, and PFAdapter's q and k. SDFLoRA's subspace cut is not
@@ -31,10 +34,9 @@ another assignment of examples to clients: the detector's rise with training len
 permutation stays at the floor, while nearest-class attribution falls from 0.765 to 0.559, below
 its own majority. The classifier reading was a packing artefact; the detector reading is not.
 
-**The rebuild's 128-example run is analysed** (jobs 149957, 150085): 65 clients, seven AOSP C++
-projects against Qt's six. It withdrew the Qt reading and strengthened AOSP's, and it is what the
-registered subspace tests read. The third training length, 256 examples over five projects against
-four, is trained and its geometry is pulled; its attacks are the next run.
+**Both rebuilt runs are analysed** (jobs 149957, 149971, 150085, 150086). The 128-example run is
+what the registered subspace tests read; its projection is job 150123, with 150124 for the 256.
+The ladder over training length now has three points and the third saturates the detector.
 
 **The interval's false-positive rate is now an artifact** rather than a comment:
 `interval-calibration.json`, 5.7% at 19 changes and 4.7% at 91 against a nominal 5%, measured at
