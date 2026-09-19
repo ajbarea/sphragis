@@ -37,7 +37,11 @@ ARM = "adapter:openstack|openstack|s1"
 LADDER = (10, 19, 30, 45, 91, 200)
 RATES = (0.05, 0.15, 0.50)
 SENSITIVITY_CLUSTERS = 19
-TRIALS = 1500
+# 6,000 trials a point, not 1,500. At 1,500 the standard error is about 0.6 points, which is
+# the size of the differences between adjacent ladder points, so a reader could read a wobble
+# in the sequence that is Monte Carlo noise. An independent recomputation at 15x the budget
+# found the true curve declines monotonically where these draws did not.
+TRIALS = 6000
 RESAMPLES = 2000
 SEED = 20260919
 
@@ -49,6 +53,9 @@ parser.add_argument("--trials", type=int, default=TRIALS)
 parser.add_argument("--resamples", type=int, default=RESAMPLES)
 parser.add_argument("--window", type=Path, default=WINDOW)
 parser.add_argument("--arm", default=ARM)
+parser.add_argument(
+    "--out", type=Path, default=RESULTS, help="for smoke runs; the default is the artifact"
+)
 
 
 def null_shape(window: Path, arm: str) -> tuple[list[int], float]:
@@ -71,9 +78,16 @@ def null_shape(window: Path, arm: str) -> tuple[list[int], float]:
 def excludes_zero(
     sizes: list[int], rate: float, *, count: int, trials: int, resamples: int
 ) -> dict[str, float]:
-    """Share of trials whose 95% interval excludes zero although the truth is zero."""
+    """Share of trials whose 95% interval excludes zero although the truth is zero.
+
+    Both readings, because the report quotes one and the gate uses the other: the two-sided
+    exclusion against a nominal 0.05, and `low > 0.0`, which is `supports_direction` itself,
+    against a nominal 0.025. Saying one is "about half" the other is an arithmetic claim that
+    costs one counter to stop asserting.
+    """
     rng = random.Random(SEED + count)
     excluded = 0
+    above = 0
     for trial in range(trials):
         clusters = []
         for index in range(count):
@@ -88,11 +102,17 @@ def excludes_zero(
         interval = cluster_bootstrap(clusters, seed=SEED + trial, resamples=resamples)
         if interval["low"] > 0.0 or interval["high"] < 0.0:
             excluded += 1
+        if interval["low"] > 0.0:
+            above += 1
     rate_out = excluded / trials
+    one_sided = above / trials
     return {
         "clusters": count,
         "false_positive_rate": rate_out,
         "standard_error": (rate_out * (1.0 - rate_out) / trials) ** 0.5,
+        "gate_false_positive_rate": one_sided,
+        "gate_standard_error": (one_sided * (1.0 - one_sided) / trials) ** 0.5,
+        "nominal_one_sided": 0.025,
         "trials": trials,
         "resamples": resamples,
     }
@@ -103,17 +123,37 @@ def main() -> None:
     sizes, rate = null_shape(args.window, args.arm)
     counts = args.clusters or list(LADDER)
 
-    RESULTS.parent.mkdir(parents=True, exist_ok=True)
-    report = json.loads(RESULTS.read_text()) if RESULTS.exists() else {}
-    report["provenance"] = provenance_header()
-    report["null"] = {
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    report = json.loads(args.out.read_text()) if args.out.exists() else {}
+    null = {
         "window": str(args.window),
         "arm": args.arm,
         "exact_match_rate": rate,
         "changes_in_window": len(sizes),
         "largest_change": sizes[-1],
         "nominal_two_sided": 0.05,
+        "trials": args.trials,
+        "resamples": args.resamples,
     }
+    # One cluster count per process is a supported way to run this, so rows merge into what is
+    # already there. A row measured under a different null, window, arm, rate or budget is not
+    # comparable with the rows beside it, and the file carries one provenance block, so such a
+    # row would be labelled by a run that did not produce it. Drop it and say so.
+    # The rate sweep varies `exact_match_rate` on purpose, so comparability there is the window,
+    # the arm and the budget; the ladder must match the null's rate too.
+    comparable = {
+        "ladder": ("window", "arm", "exact_match_rate", "trials", "resamples"),
+        "rate_sensitivity": ("window", "arm", "trials", "resamples"),
+    }
+    for name, fields in comparable.items():
+        rows = report.get(name)
+        for key, row in list((rows or {}).items()):
+            stale = {k: row[k] for k in fields if k in row and row[k] != null[k]}
+            if stale:
+                print(f"dropping {name}.{key}: measured at {stale}, which this null does not match")
+                del rows[key]
+    report["provenance"] = provenance_header()
+    report["null"] = null
     ladder = report.setdefault("ladder", {})
     sweep = report.setdefault("rate_sensitivity", {})
 
@@ -125,14 +165,14 @@ def main() -> None:
             f"{count:>4} clusters at rate {at:.3f}: {100 * row['false_positive_rate']:.1f}% "
             f"(+/- {100 * row['standard_error']:.1f}) against a nominal 5.0%"
         )
-        RESULTS.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+        args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
 
     for count in counts:
         measure(ladder, str(count), count, rate)
     for at in args.rate or list(RATES):
         measure(sweep, f"{at:.2f}", args.sensitivity_clusters, at)
 
-    print(f"wrote {RESULTS}")
+    print(f"wrote {args.out}")
 
 
 if __name__ == "__main__":
