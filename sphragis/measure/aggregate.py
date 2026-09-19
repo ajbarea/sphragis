@@ -26,7 +26,10 @@ from __future__ import annotations
 import random
 from collections import defaultdict
 from collections.abc import Sequence
-from statistics import fmean, stdev
+from itertools import combinations
+from math import comb
+from statistics import fmean, median, stdev
+from typing import Any
 
 
 def tpr_at_fpr(present: Sequence[float], absent: Sequence[float], fpr: float) -> dict[str, float]:
@@ -215,7 +218,7 @@ def organization_membership_auc(
     outside = [i for i in everyone if i not in set(mine)]
     if size > len(outside):
         raise ValueError(f"a round without the target needs {size} others, got {len(outside)}")
-    scores, separations = [], []
+    scores, separations, reference_sizes = [], [], []
     for split in range(splits):
         # Two streams: which clients are the reference must not decide which rounds are drawn,
         # or the spread across splits would carry the round draws with it.
@@ -235,6 +238,7 @@ def organization_membership_auc(
                 raise ValueError("a group split left one side empty")
         if at_least > len(participants):
             raise ValueError(f"{at_least} participants needed, {len(participants)} available")
+        reference_sizes.append(len(reference))
         present, absent = [], []
         for _ in range(draws):
             contributed = rng.sample(participants, at_least)
@@ -252,10 +256,108 @@ def organization_membership_auc(
         "rounds": float(draws),
         "round_size": float(size),
         "target_clients_per_round": float(at_least),
-        "reference_clients": float(half),
+        # The reference as it was, averaged over splits: over projects it is whole projects, not
+        # half the clients, and reporting `half` there gave AOSP 6 where its splits held 3 to 6.
+        "reference_clients": fmean(reference_sizes),
         "split_over_groups": groups is not None,
         # The size of the separation, not only its ordering: an AUC near 1 over scores that
         # differ in the fourth decimal is a consistent ordering of almost nothing.
         "mean_present": fmean(p for p, _ in separations),
         "mean_absent": fmean(a for _, a in separations),
+    }
+
+
+def project_permutation(
+    products: Sequence[Sequence[float]],
+    *,
+    projects_of: Sequence[str],
+    owner: dict[str, str],
+    label: str,
+    size: int,
+    draws: int,
+    splits: int,
+    seeds: Sequence[int],
+    cap: int = 5000,
+) -> dict[str, Any]:
+    """Is `label`'s detector reading the organization, or the projects that happen to compose it?
+
+    The exchangeable unit is the project, since a project's clients share it. Under the null the
+    organization's k projects are any k of the P projects present, so the null is the C(P, k)
+    distinct groupings -- not every arrangement of every organization's labels, which with three
+    or more organizations scores each grouping many times over and misreports the count. Each
+    grouping is scored by the same detector call, the true grouping included, so it counts itself
+    and p is at least 1/C(P, k). Beyond `cap` groupings a random sample is drawn, the truth always
+    among them.
+
+    The detector's AUC moves with its round draws, so the test is repeated over `seeds` and every
+    seed's p is reported: at 150 draws one organization's p ran from 0.167 to 0.333 across four
+    seeds, and a single seed had been reported as though it were the value.
+    """
+    projects = sorted(set(projects_of))
+    mine = tuple(sorted(p for p in projects if owner[p] == label))
+    if len(mine) < 2:
+        raise ValueError(f"{label} has {len(mine)} project; a grouping needs two to split over")
+    total = comb(len(projects), len(mine))
+    if total <= cap:
+        groupings = list(combinations(projects, len(mine)))
+    else:
+        sampler = random.Random(f"groupings/{label}/{min(seeds)}")
+        chosen = {mine}
+        while len(chosen) < cap:
+            chosen.add(tuple(sorted(sampler.sample(projects, len(mine)))))
+        groupings = sorted(chosen)
+    for grouping in groupings:
+        outside = sum(1 for p in projects_of if p not in grouping)
+        if outside < size:
+            raise ValueError(
+                f"a grouping of {label} leaves {outside} clients outside, fewer than a round of "
+                f"{size}: choose a round size every grouping fits"
+            )
+
+    def score(grouping: tuple[str, ...], seed: int) -> float:
+        members = [i for i, p in enumerate(projects_of) if p in grouping]
+        return organization_membership_auc(
+            products,
+            members=members,
+            everyone=range(len(projects_of)),
+            size=size,
+            draws=draws,
+            seed=seed,
+            at_least=1,
+            splits=splits,
+            groups=list(projects_of),
+        )["auc"]
+
+    per_seed = []
+    for seed in seeds:
+        observed = score(mine, seed)
+        scores = {grouping: score(grouping, seed) for grouping in groupings}
+        # The truth is one of the groupings, scored by the same call, so it must reproduce the
+        # observed statistic exactly. When it did not -- the observed value came from a run at
+        # other settings -- the truth scored below itself and the test reported an impossible
+        # p = 0.000; this makes that mismatch stop the test instead of shifting its answer.
+        if scores[mine] != observed:
+            raise RuntimeError(
+                f"{label}: the true grouping scores {scores[mine]} in the null and {observed} as "
+                "observed, so the two are not the same statistic"
+            )
+        # `>=`, so the truth counts itself; a strict comparison lets p reach zero.
+        hits = sum(value >= observed for value in scores.values())
+        per_seed.append(
+            {"seed": seed, "observed_auc": observed, "hits": hits, "p": hits / len(groupings)}
+        )
+    values = sorted(entry["p"] for entry in per_seed)
+    return {
+        "projects": len(projects),
+        "label_projects": len(mine),
+        "groupings": len(groupings),
+        "exhaustive": total <= cap,
+        "floor": 1 / len(groupings),
+        "round_size": size,
+        "draws": draws,
+        "splits": splits,
+        "per_seed": per_seed,
+        "p_median": median(values),
+        "p_min": values[0],
+        "p_max": values[-1],
     }

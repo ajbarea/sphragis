@@ -33,8 +33,9 @@ from sphragis.measure.aggregate import (
     membership_auc,
     organization_membership_auc,
     paired_subset_difference,
+    project_permutation,
 )
-from sphragis.measure.attribution import Source, _distinct_arrangements
+from sphragis.measure.attribution import Source
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
@@ -55,11 +56,22 @@ parser.add_argument(
     help="restrict every client to one content type first, so an organization cannot be read "
     "through the kind of code its clients happen to write",
 )
+parser.add_argument(
+    "--permutation-seeds",
+    type=int,
+    nargs="+",
+    default=[0, 1, 2, 3],
+    help="the project permutation is repeated over these round-draw seeds, every p reported",
+)
 parser.add_argument("--out", type=Path, required=True)
 
 
 def main() -> None:
     args = parser.parse_args()
+    if args.beyond_project and args.altitude == "project":
+        parser.error(
+            "--beyond-project splits over projects, so it has nothing to test at --altitude project"
+        )
     geometry = json.loads(args.geometry.read_text())
     clients = json.loads(args.clients.read_text())["clients"]
     names = [name.split("/", 1)[1] for name in geometry["adapters"]]
@@ -95,21 +107,32 @@ def main() -> None:
         if len(mine) < 2 or not sizes:
             print(f"{label}: too few clients outside it for any round size")
             continue
+        if args.beyond_project and len({sources[i].at("project") for i in mine}) < 2:
+            print(f"{label}: one project, so no reference can come from its other projects")
+            continue
         cell: dict[str, Any] = {"clients": len(mine), "membership": {}, "mixed_rounds": {}}
         for size in sizes:
             for present in (1, 2):
                 if size - present > len(outside) or len(mine) <= present:
                     continue
-                mixed = organization_membership_auc(
-                    products,
-                    members=mine,
-                    everyone=range(len(names)),
-                    size=size,
-                    draws=args.draws,
-                    seed=args.seed,
-                    at_least=present,
-                    groups=[s.at("project") for s in sources] if args.beyond_project else None,
-                )
+                try:
+                    mixed = organization_membership_auc(
+                        products,
+                        members=mine,
+                        everyone=range(len(names)),
+                        size=size,
+                        draws=args.draws,
+                        seed=args.seed,
+                        at_least=present,
+                        groups=[s.at("project") for s in sources] if args.beyond_project else None,
+                    )
+                except ValueError as refused:
+                    # A project split can leave fewer participants than the cell asks for; that
+                    # cell is unmeasurable, and the others still are.
+                    if "participants needed" not in str(refused):
+                        raise
+                    print(f"{label:24} rounds of {size:3}, {present} of its clients: {refused}")
+                    continue
                 cell["mixed_rounds"][f"{size}/{present}"] = mixed
                 print(
                     f"{label:24} mixed rounds of {size:3}, {present} of its clients: "
@@ -183,66 +206,43 @@ def main() -> None:
         report["targets"][label] = cell
 
     # Is the detector reading the organization, or the projects that happen to compose it? The
-    # projects are relabelled, keeping how many each organization has, and the detector is rerun.
-    # The exchangeable unit is the project, because a project's clients share it.
+    # organization's projects are replaced by every other choice of as many projects, the detector
+    # is rerun on each, and the true grouping's rank is the p-value. The draws are cheaper than the
+    # headline run's, so the test is repeated over seeds and every seed's p is kept.
     if args.beyond_project:
-        projects = sorted({s.at("project") for s in sources})
+        projects_of = [s.at("project") for s in sources]
         owner = {s.at("project"): s.organization for s in sources}
-        base = [owner[p] for p in projects]
-        arrangements = list(_distinct_arrangements(base))
-        groups = [s.at("project") for s in sources]
-        size = args.sizes[0]
         report["project_permutation"] = {}
-        # Every arrangement is scored the same way, the true one included, because it is one of
-        # them. Comparing against the AUC computed above at eight splits and the full draws
-        # would compare two different statistics: the true labelling then scored below its own
-        # recomputation and the test reported p = 0.000, which an 84-arrangement enumeration
-        # cannot produce. Matching the settings also makes the floor 1/84 by construction.
-        draws = max(60, args.draws // 4)
-        splits = 2
-
-        def permutation_auc(members: list[int]) -> float:
-            return organization_membership_auc(
-                products,
-                members=members,
-                everyone=range(len(names)),
-                size=size,
-                draws=draws,
-                seed=args.seed,
-                at_least=1,
-                splits=splits,
-                groups=groups,
-            )["auc"]
-
-        for label, cell in report["targets"].items():
-            truth = [i for i, s in enumerate(sources) if s.organization == label]
-            observed = permutation_auc(truth)
-            hits, usable, saw_truth = 0, 0, False
-            for assignment in arrangements:
-                relabel = dict(zip(projects, assignment, strict=True))
-                members = [i for i, s in enumerate(sources) if relabel[s.at("project")] == label]
-                if len(members) < 2 or len({groups[i] for i in members}) < 2:
-                    continue
-                usable += 1
-                saw_truth = saw_truth or sorted(members) == sorted(truth)
-                hits += permutation_auc(members) >= observed
-            if not saw_truth:
-                raise RuntimeError(
-                    f"{label}: the true grouping is not among the {usable} usable arrangements, "
-                    "so the enumeration is not the null this test claims"
-                )
-            report["project_permutation"][label] = {
-                "observed_auc": observed,
-                "observed_auc_full_precision": cell["mixed_rounds"][f"{size}/1"]["auc"],
-                "permutation_draws": draws,
-                "permutation_splits": splits,
-                "relabelings": usable,
-                "at_least_as_extreme": hits,
-                "p": hits / usable if usable else None,
-            }
+        for label in report["targets"]:
+            if sum(1 for o in owner.values() if o == label) < 2:
+                print(f"{label}: one project, so there is no grouping to permute", flush=True)
+                continue
+            result = None
+            for size in sorted(args.sizes):
+                try:
+                    result = project_permutation(
+                        products,
+                        projects_of=projects_of,
+                        owner=owner,
+                        label=label,
+                        size=size,
+                        draws=max(60, args.draws // 4),
+                        splits=2,
+                        seeds=args.permutation_seeds,
+                    )
+                    break
+                except ValueError as refused:
+                    if "round size" not in str(refused):
+                        raise
+            if result is None:
+                print(f"{label}: no round size fits every grouping", flush=True)
+                continue
+            report["project_permutation"][label] = result
             print(
-                f"{label:24} project-level permutation: p "
-                f"{hits / usable if usable else float('nan'):.3f} over {usable} relabelings",
+                f"{label:24} project-level permutation over {result['groupings']} groupings: "
+                f"p median {result['p_median']:.3f}, range {result['p_min']:.3f} to "
+                f"{result['p_max']:.3f} over {len(args.permutation_seeds)} seeds "
+                f"(floor {result['floor']:.3f})",
                 flush=True,
             )
     args.out.write_text(json.dumps(report, indent=2))

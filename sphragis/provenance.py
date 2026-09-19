@@ -7,11 +7,13 @@ invariant is to ride the latest Flower while this one must stay reproducible.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import platform
 import subprocess
 from datetime import UTC, datetime
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import Any
 
 # The packages whose versions actually pin a run's behaviour.
@@ -52,6 +54,28 @@ def _git_record() -> dict[str, Any]:
     }
     if started and head and head != started:
         record["checkout_at_write"] = head
+    # Code that differs from the commit it names makes the commit a false label: two committed
+    # results named a commit whose code could not have produced them, because they were written
+    # from a working tree with the fix not yet committed. Only the code is read, from the top of
+    # the repository wherever the script ran, so a result directory full of new outputs does not
+    # mark every run dirty.
+    changed = _git(
+        "status", "--porcelain", "--untracked-files=all", "--", ":/sphragis", ":/scripts"
+    )
+    if changed:
+        # Split on the status field rather than slice at a column: `_git` strips its output,
+        # which removes the leading space of the first line and shifted every fixed offset by one.
+        entries = [line.split(None, 1) for line in changed.splitlines() if line.strip()]
+        paths = sorted(entry[1] for entry in entries)
+        digest = hashlib.sha256(
+            (_git("diff", "HEAD", "--", ":/sphragis", ":/scripts") or "").encode()
+        )
+        top = Path(_git("rev-parse", "--show-toplevel") or ".")
+        for status, path in sorted(entries, key=lambda entry: entry[1]):
+            if status == "??" and (top / path).is_file():
+                digest.update(path.encode() + b"\0" + (top / path).read_bytes())
+        record["uncommitted_code"] = paths
+        record["uncommitted_code_sha256"] = digest.hexdigest()
     return record
 
 

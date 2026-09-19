@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -203,7 +204,10 @@ def test_every_name_a_job_script_imports_from_sphragis_exists(script: Path) -> N
 
 def _checkout_at(monkeypatch: pytest.MonkeyPatch, head: str | None) -> None:
     answers = {("rev-parse", "HEAD"): head, ("rev-parse", "--abbrev-ref", "HEAD"): "main"}
-    monkeypatch.setattr(provenance, "_git", lambda *args: answers[args])
+    # A clean tree: the status call that looks for uncommitted code finds none.
+    monkeypatch.setattr(
+        provenance, "_git", lambda *args: "" if args[0] == "status" else answers[args]
+    )
 
 
 def test_a_job_records_the_commit_it_started_on_not_the_one_deployed_since(
@@ -264,3 +268,43 @@ def test_a_script_writing_no_json_object_passes_on_its_provenance_call(tmp_path:
     script = tmp_path / "vectors.py"
     script.write_text("import numpy as np\nnp.savez(args.out, meta=provenance_header())\n")
     test_every_script_a_job_launches_records_run_provenance(script)
+
+
+def _repo(tmp_path: Path) -> Path:
+    for command in (
+        ["git", "init", "-q"],
+        ["git", "config", "user.email", "t@example.com"],
+        ["git", "config", "user.name", "t"],
+    ):
+        subprocess.run(command, cwd=tmp_path, check=True)
+    for relative in ("scripts/attack.py", "sphragis/stats.py"):
+        (tmp_path / relative).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / relative).write_text("x = 1\n")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=tmp_path, check=True)
+    return tmp_path
+
+
+def test_uncommitted_code_is_named_exactly_and_results_do_not_count(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The first status line loses its leading space to a strip; the path must not lose a letter."""
+    repo = _repo(tmp_path)
+    (repo / "scripts" / "attack.py").write_text("x = 2\n")
+    (repo / "scripts" / "new_probe.py").write_text("y = 1\n")
+    (repo / "datasets" / "results").mkdir(parents=True)
+    (repo / "datasets" / "results" / "run.json").write_text("{}")
+    monkeypatch.chdir(repo / "datasets")
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    record = provenance._git_record()
+    assert record["uncommitted_code"] == ["scripts/attack.py", "scripts/new_probe.py"]
+    assert len(record["uncommitted_code_sha256"]) == 64
+
+
+def test_a_clean_tree_carries_no_uncommitted_code_field(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = _repo(tmp_path)
+    monkeypatch.chdir(repo)
+    monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
+    assert "uncommitted_code" not in provenance._git_record()

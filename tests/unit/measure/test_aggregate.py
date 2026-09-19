@@ -183,3 +183,188 @@ def test_a_separated_detector_reaches_its_members_at_a_low_false_positive_rate()
     )
     assert point["tpr"] == 1.0
     assert point["fpr_achieved"] == 0.0
+
+
+def _planted(project_org: dict[str, str], per_project: int, strength: float, seed: int = 0):
+    """Clients sharing their organization's direction by `strength`, and nothing else."""
+    rng = random.Random(seed)
+    dim = 64
+    directions = {org: [rng.gauss(0, 1) for _ in range(dim)] for org in set(project_org.values())}
+    vectors, projects = [], []
+    for project, org in sorted(project_org.items()):
+        for _ in range(per_project):
+            vectors.append([rng.gauss(0, 1) + strength * d for d in directions[org]])
+            projects.append(project)
+    products = [[sum(a * b for a, b in zip(u, v, strict=True)) for v in vectors] for u in vectors]
+    return products, projects
+
+
+_TWO_ORGS = {**{f"a{i}": "aosp" for i in range(3)}, **{f"q{i}": "qt" for i in range(6)}}
+
+
+def test_a_planted_organization_is_the_one_grouping_at_the_floor() -> None:
+    products, projects = _planted(_TWO_ORGS, per_project=3, strength=3.0)
+    result = aggregate.project_permutation(
+        products,
+        projects_of=projects,
+        owner=_TWO_ORGS,
+        label="aosp",
+        size=4,
+        draws=60,
+        splits=2,
+        seeds=[0, 1],
+    )
+    assert result["groupings"] == math.comb(9, 3) == 84
+    assert all(entry["p"] == pytest.approx(1 / 84) for entry in result["per_seed"])
+
+
+def test_the_true_grouping_counts_itself_so_ties_give_p_of_one() -> None:
+    """Identical updates tie every grouping; a strict comparison would report p = 0 here."""
+    projects = [p for p in sorted(_TWO_ORGS) for _ in range(3)]
+    products = [[1.0 for _ in projects] for _ in projects]
+    result = aggregate.project_permutation(
+        products,
+        projects_of=projects,
+        owner=_TWO_ORGS,
+        label="aosp",
+        size=4,
+        draws=20,
+        splits=2,
+        seeds=[0],
+    )
+    assert result["per_seed"][0]["p"] == 1.0
+
+
+def test_no_signal_never_breaches_the_floor() -> None:
+    products, projects = _planted(_TWO_ORGS, per_project=3, strength=0.0, seed=3)
+    result = aggregate.project_permutation(
+        products,
+        projects_of=projects,
+        owner=_TWO_ORGS,
+        label="qt",
+        size=4,
+        draws=40,
+        splits=2,
+        seeds=[0, 1, 2],
+    )
+    assert result["p_min"] >= result["floor"]
+    assert result["p_max"] > result["floor"], "with nothing planted the truth is not the maximum"
+
+
+def test_the_null_is_distinct_groupings_not_arrangements() -> None:
+    """Three organizations of two projects: 15 ways to choose a label's two, not 90 arrangements."""
+    owner = {"a0": "a", "a1": "a", "b0": "b", "b1": "b", "c0": "c", "c1": "c"}
+    products, projects = _planted(owner, per_project=3, strength=0.0)
+    result = aggregate.project_permutation(
+        products,
+        projects_of=projects,
+        owner=owner,
+        label="a",
+        size=4,
+        draws=20,
+        splits=2,
+        seeds=[0],
+    )
+    assert result["groupings"] == 15
+    assert result["exhaustive"] is True
+
+
+def test_a_sampled_null_always_contains_the_truth() -> None:
+    products, projects = _planted(_TWO_ORGS, per_project=3, strength=3.0)
+    result = aggregate.project_permutation(
+        products,
+        projects_of=projects,
+        owner=_TWO_ORGS,
+        label="aosp",
+        size=4,
+        draws=40,
+        splits=2,
+        seeds=[0],
+        cap=20,
+    )
+    assert result["exhaustive"] is False
+    assert result["groupings"] == 20
+    assert result["per_seed"][0]["p"] == pytest.approx(1 / 20), (
+        "the planted truth is sampled and wins"
+    )
+
+
+def test_a_single_project_organization_and_an_unfit_round_are_refused() -> None:
+    owner = {"a0": "a", "b0": "b", "b1": "b"}
+    products, projects = _planted(owner, per_project=3, strength=0.0)
+    with pytest.raises(ValueError, match="1 project"):
+        aggregate.project_permutation(
+            products,
+            projects_of=projects,
+            owner=owner,
+            label="a",
+            size=2,
+            draws=10,
+            splits=2,
+            seeds=[0],
+        )
+    with pytest.raises(ValueError, match="round size every grouping fits"):
+        aggregate.project_permutation(
+            products,
+            projects_of=projects,
+            owner=owner,
+            label="b",
+            size=8,
+            draws=10,
+            splits=2,
+            seeds=[0],
+        )
+
+
+def test_an_observed_statistic_from_other_draws_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The truth scored for `observed` and scored inside the null must be one computation."""
+    products, projects = _planted(_TWO_ORGS, per_project=3, strength=0.0, seed=5)
+    real = aggregate.organization_membership_auc
+    calls = {"n": 0}
+
+    def drifting(*args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:  # the first call is the observed statistic
+            kwargs = {**kwargs, "seed": kwargs["seed"] + 1}
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(aggregate, "organization_membership_auc", drifting)
+    with pytest.raises(RuntimeError, match="not the same statistic"):
+        aggregate.project_permutation(
+            products,
+            projects_of=projects,
+            owner=_TWO_ORGS,
+            label="qt",
+            size=4,
+            draws=40,
+            splits=2,
+            seeds=[0],
+        )
+
+
+def test_the_reported_reference_is_the_reference_actually_used() -> None:
+    """Split over projects, the reference is one whole project, never half the clients.
+
+    Projects of four and two clients: a project split gives a reference of 4 or 2, while half
+    the organization's six clients is 3, which is what was reported.
+    """
+    owner = {"a0": "aosp", "a1": "aosp", "q0": "qt", "q1": "qt", "q2": "qt"}
+    products, projects = _planted(owner, per_project=4, strength=0.0)
+    keep = [i for i, p in enumerate(projects) if not (p == "a1" and i % 4 >= 2)]
+    products = [[products[i][j] for j in keep] for i in keep]
+    projects = [projects[i] for i in keep]
+    members = [i for i, p in enumerate(projects) if owner[p] == "aosp"]
+    assert len(members) == 6
+    for seed in range(4):
+        result = aggregate.organization_membership_auc(
+            products,
+            members=members,
+            everyone=range(len(projects)),
+            size=4,
+            draws=10,
+            seed=seed,
+            at_least=1,
+            splits=1,
+            groups=projects,
+        )
+        assert result["reference_clients"] in {2.0, 4.0}
