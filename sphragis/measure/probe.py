@@ -257,12 +257,21 @@ def accuracy_interval(
     with which changes were observed, not with a smaller training set. What it leaves out is the
     classifier's own instability across refits, so it is the narrower of the two readings.
     """
-    point = separability(docs, seed=seed, folds=folds, min_per_label=min_per_label)
-    if math.isnan(point["accuracy"]):
-        # The point estimate was refused for being below the per-label floor, and resampling
-        # does not repair that.
-        return {**point, "low": float("nan"), "high": float("nan")}
-    rows, _, _ = _cross_validate(docs, seed=seed, folds=folds, min_per_label=min_per_label)
+    # One cross-validation, read twice: the estimate and the resamples must come from the same
+    # predictions, and fitting each fold again for the estimate doubled the work for nothing.
+    rows, changes, size = _cross_validate(docs, seed=seed, folds=folds, min_per_label=min_per_label)
+    accuracy, scored = _score(rows, folds)
+    if not scored or math.isnan(accuracy):
+        # The estimate was refused for being below the per-label floor, and resampling does not
+        # repair that.
+        refused = {"accuracy": float("nan"), "documents": float(size), "changes": 0.0}
+        return {**refused, "low": float("nan"), "high": float("nan")}
+    point = {
+        "accuracy": accuracy,
+        "folds_scored": float(scored),
+        "documents": float(size),
+        "changes": float(changes),
+    }
     by_change: dict[str, list[tuple[str, int, int, bool]]] = {}
     for row in rows:
         by_change.setdefault(row[0], []).append(row)

@@ -6,14 +6,15 @@
   "majority_rate": 0.6976744186046512,
   "null_groupings": 84,
   "provenance": {
-    "generated_at": "2026-09-19T02:42:58.938968+00:00",
+    "generated_at": "2026-09-19T11:27:17.359424+00:00",
     "git": {
-      "commit": "ab1014ca6e19dbdcf4839d37d144a4ef23d44458",
+      "commit": "e528b7dca20c33d3842020778cbc006dd9f0e9a3",
       "branch": "feat/wellposed-filter",
       "uncommitted_code": [
-        "scripts/subspace_split.py"
+        "scripts/subspace_split.py",
+        "sphragis/measure/probe.py"
       ],
-      "uncommitted_code_sha256": "cb3bd7eda70b687798d260d530f77689c8039070ef1ad294178333a31d3de4f7"
+      "uncommitted_code_sha256": "ca7239e41cea1fa03fbc53a462f95ff6050017cb89a14c7ef8b5d438f6fabed6"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -122,7 +123,7 @@
   },
   "ranks": {
     "1": {
-      "energy_in_shared": 0.2773617579929758,
+      "energy_in_global_shared": 0.2773617579929758,
       "shared": {
         "degenerate": true,
         "aosp_detector_auc": 0.475908984375,
@@ -229,7 +230,7 @@
       }
     },
     "2": {
-      "energy_in_shared": 0.30417174552640946,
+      "energy_in_global_shared": 0.30417174552640946,
       "shared": {
         "accuracy": 0.4186046511627907,
         "balanced_accuracy": 0.5397435897435897,
@@ -426,7 +427,7 @@
       }
     },
     "4": {
-      "energy_in_shared": 0.347051115094428,
+      "energy_in_global_shared": 0.347051115094428,
       "shared": {
         "accuracy": 0.7674418604651163,
         "balanced_accuracy": 0.767948717948718,
@@ -623,7 +624,7 @@
       }
     },
     "8": {
-      "energy_in_shared": 0.4251892063663231,
+      "energy_in_global_shared": 0.4251892063663231,
       "shared": {
         "accuracy": 0.7674418604651163,
         "balanced_accuracy": 0.8115384615384615,
@@ -820,7 +821,7 @@
       }
     },
     "16": {
-      "energy_in_shared": 0.5702350451349978,
+      "energy_in_global_shared": 0.5702350451349978,
       "shared": {
         "accuracy": 0.6976744186046512,
         "balanced_accuracy": 0.7833333333333333,

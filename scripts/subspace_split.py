@@ -76,6 +76,14 @@ def held_out_rows(
     if rank == 1 and not residual:
         return None
     n = len(vectors)
+    # Each basis is fitted on the clients outside one project, so the largest project decides how
+    # many rows the smallest fit has. At a rank that reaches that many, the fit spans everything:
+    # the shared half is the whole space and the residual is numerical noise, which normalises
+    # into unit vectors and scores like a real cell. On 34 clients at rank 32 the residual's
+    # largest entry was 4e-15.
+    smallest_fit = n - max(projects.count(name) for name in set(projects))
+    if rank >= min(smallest_fit, vectors.shape[1]):
+        return None
     bases: dict[str, np.ndarray] = {}
     rows = np.zeros((n, n))
     for i in range(n):
@@ -117,7 +125,16 @@ def attribute(rows: np.ndarray, labels: list[str], projects: list[str]) -> tuple
 
 
 def groupings(labels: list[str], projects: list[str]) -> list[list[str]]:
-    """Every relabeling that gives the first organization as many projects as it has."""
+    """Every relabeling that gives the first organization as many projects as it has.
+
+    Two organizations only: with three, the relabelings would carry two classes while the truth
+    carries three, the truth would not be among them, and the p-value would lose its floor.
+    """
+    if len(set(labels)) != 2:
+        raise ValueError(
+            f"the null relabels two organizations, got {sorted(set(labels))}; restrict the "
+            "clients with --content or extend the enumeration to more classes"
+        )
     owner = {p: label for p, label in zip(projects, labels, strict=True)}
     names = sorted(owner)
     first = sorted(set(labels))[0]
@@ -228,7 +245,9 @@ def main() -> None:
             continue
         basis = right[:rank]
         shared = (vectors @ basis.T) @ basis
-        cell: dict = {"energy_in_shared": float((singular[:rank] ** 2).sum() / energy)}
+        # This energy share is the global basis's, which the detector uses; the attribution's
+        # held-out bases are fitted per project and have their own.
+        cell: dict = {"energy_in_global_shared": float((singular[:rank] ** 2).sum() / energy)}
         for half, residual in (("shared", False), ("residual", True)):
             rows = held_out_rows(vectors, projects, rank, residual)
             cell[half] = {
@@ -245,9 +264,8 @@ def main() -> None:
                 else f"{half} {entry['accuracy']:.3f} (p {entry['p_accuracy']:.3f}), balanced "
                 f"{entry['balanced_accuracy']:.3f} (p {entry['p_balanced']:.3f})"
             )
-        print(
-            f"rank {rank:3}: {cell['energy_in_shared'] * 100:5.1f}% energy | " + " | ".join(parts)
-        )
+        share = cell["energy_in_global_shared"] * 100
+        print(f"rank {rank:3}: {share:5.1f}% energy | " + " | ".join(parts))
         args.out.write_text(json.dumps(report, indent=2))
 
     # Choosing the rank after seeing the table is a search, so the family's best cell is judged

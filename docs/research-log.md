@@ -3975,3 +3975,36 @@ their intervals are not regenerated; their accuracies stand.
 month, which includes 2025-09 and 2025-10 from the dev window, where `scripts/separability.py`
 confines itself to pilot and train. It reads corpus text only and no held-out predictions, so
 nothing is spent, but the two probes follow different rules.
+
+### A second review, of the fixes (2026-09-19)
+
+A fresh context reviewed the previous day's corrections without being told why they were written.
+Nothing blocking; every committed result it regenerated reproduces from HEAD, and it confirmed the
+factor geometry computes A minus the broadcast initial A and records that file's hash. Its serious
+finding was about the tests rather than the code: **24 of 59 mutants survived the suite**, among
+them the probe fix's own regression test, which could not fail on a mutant that restored the very
+behaviour it was written for, because its fixture scored 1.0 and only a label on the result told
+the versions apart.
+
+Fixed here:
+
+- **The probe test now counts fits.** One fit per fold, whatever the number of resamples, which
+  the restored-refit mutant fails. The fixture now scores about 0.55 so an interval has room on
+  both sides, and a second test holds the estimate and the interval to the same predictions.
+- **`accuracy_interval` cross-validates once.** It had fitted every fold twice, once for the
+  estimate and once for the resampling rows.
+- **A rank that spans the held-out clients is no longer scored.** The bases are fitted without a
+  whole project, so the largest project sets the limit; past it the shared half is the whole space
+  and the residual is numerical noise (largest entry 4e-15 on 34 clients at rank 32) that
+  normalises into unit vectors and scores like an ordinary cell. The committed result is
+  unaffected, since its smallest held-out fit holds 37 rows, but the registered test on the
+  ten-project rebuild would have met it at the default ranks.
+- **A third organization is refused** by the subspace null instead of being folded into the
+  second, which would have put the truth outside its own null and cost the p-value its floor.
+- **`energy_in_shared` is renamed `energy_in_global_shared`**, since it describes the global basis
+  the detector uses and not the held-out bases the attribution uses.
+
+Still open from that review, and recorded rather than fixed: a SIGKILLed job leaves a zero-byte
+claim that cannot be told from a live one, which a Slurm requeue would refuse; several load-bearing
+behaviours have no test (the permutation's split over projects, the family-wise step, the
+contamination partial's claimed name, calibration claiming every condition before training).

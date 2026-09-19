@@ -202,6 +202,51 @@ def test_a_refused_estimate_gets_no_interval() -> None:
     assert math.isnan(interval["low"]) and math.isnan(interval["high"])
 
 
+def _mixed(seed: int, changes: int = 160, muddled: float = 0.3):
+    """Documents a classifier gets right most but not all of the time.
+
+    A share of them carry the other label's vocabulary, so the accuracy sits well below 1.0 and
+    an interval around it has room on both sides.
+    """
+    rng = __import__("random").Random(seed)
+    shared = [f"w{i}" for i in range(30)]
+    docs = []
+    for i in range(changes):
+        label = i % 2
+        speaks = 1 - label if rng.random() < muddled else label
+        own = [f"{speaks}-{rng.randrange(40)}" for _ in range(2)]
+        docs.append(
+            probe.Document(change_id=f"c{i}", label=label, words=tuple(own + rng.sample(shared, 8)))
+        )
+    return docs
+
+
+def test_the_classifier_is_fitted_once_however_many_resamples_are_drawn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The bug was refitting per resample. Counting fits fails on that; a label on the result
+    does not, and a mutant restoring the refit passed the previous test."""
+    fits = []
+    real = probe._fit
+    monkeypatch.setattr(probe, "_fit", lambda train: fits.append(1) or real(train))
+    docs = _mixed(seed=4)
+    probe.accuracy_interval(docs, seed=1, resamples=10)
+    few = len(fits)
+    fits.clear()
+    probe.accuracy_interval(docs, seed=1, resamples=200)
+    assert few == len(fits) == 5, "one fit per fold, whatever the number of resamples"
+
+
+def test_the_interval_is_built_from_the_same_predictions_as_the_estimate() -> None:
+    """Resampling rows rather than whole changes would break the clustering the estimate uses."""
+    docs = _mixed(seed=7)
+    result = probe.accuracy_interval(docs, seed=2, resamples=120)
+    point = probe.separability(docs, seed=2)
+    assert result["accuracy"] == point["accuracy"]
+    assert result["changes"] == point["changes"] == 160
+    assert result["low"] < result["accuracy"] < result["high"]
+
+
 def test_the_interval_contains_its_own_estimate_when_resampling_biases_it_down() -> None:
     """Resampling changes with replacement trains each refit on fewer unique changes, so the
     resampled accuracies sit below the estimate and a percentile interval can miss it entirely."""
