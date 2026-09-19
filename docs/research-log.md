@@ -3772,3 +3772,15 @@ training corpus. Neither trains per project or per organization, and neither eva
 on another organization's data. The matched-against-mismatched contrast RQ1 registers, which asks
 whether an adaptation is specific to the organization it came from rather than to the task, does
 not appear in either.
+
+### Registered before computing: do AOSP's projects share conventions that Qt's do not?
+
+The one mechanism for organizational coherence still standing is shared code conventions. It
+predicts something the convention-shape probe can measure without any adapter: within an
+organization, how separable its C++ projects are from one another when read only as convention
+shapes. Separability near 0.5 means the projects write alike; high separability means each project
+has its own conventions.
+
+**Prediction:** AOSP's C++ projects are less separable from one another by convention shapes than
+Qt's C++ projects are. If Qt's projects are as alike as AOSP's or more, shared conventions do not
+explain the coherence gap either, and the mechanism is open with no candidate left.
