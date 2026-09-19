@@ -6,6 +6,7 @@ import math
 
 import pytest
 
+from sphragis.measure import contamination
 from sphragis.measure.contamination import (
     battery_report,
     compare_windows,
@@ -195,3 +196,20 @@ def test_gap_k_caps_the_window_at_the_sequence_it_has() -> None:
     from sphragis.measure.contamination import gap_k_percent
 
     assert gap_k_percent([(-3.0, 0.0, 1.0, -1.0)] * 2, window=5) == pytest.approx(-2.0)
+
+
+def test_the_window_cost_covers_every_example_not_the_first() -> None:
+    """A plural name reporting one example reads as though the corpus had been certified."""
+    clean = [(-1.0, 0.0, 1.0, -0.5) for _ in range(8)]
+    gappy = [(-1.0, 0.0, 1.0, -0.5), (float("nan"), 0.0, 1.0, -0.5)] + [
+        (-1.0, 0.0, 1.0, -0.5) for _ in range(6)
+    ]
+    cost = contamination._window_cost([clean, gappy, clean], window=3)
+    assert cost["examples"] == 3
+    assert cost["positions"] == 24, "every example's positions, not the first example's"
+    assert cost["undefined_positions"] == 1
+    assert cost["examples_losing_a_window"] == 1
+    assert cost["windows_dropped"] > 0
+    only_clean = contamination._window_cost([clean, clean], window=3)
+    assert only_clean["windows_dropped"] == 0
+    assert only_clean["examples_losing_a_window"] == 0

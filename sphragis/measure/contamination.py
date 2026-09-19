@@ -122,6 +122,27 @@ def _smoothed_gaps(scores: Sequence[float | None], window: int) -> tuple[list[fl
     raise ValueError("gap_k_percent needs at least one position with a positive variance")
 
 
+def _window_cost(sequences: Sequence[Sequence[TokenStats]], window: int) -> dict[str, int]:
+    """What the smoothing costs over a whole side, not over its first example.
+
+    This reported one example's counts under a plural name, which reads as though the corpus
+    had been certified. An unscored position removes the windows that would have covered it,
+    so the number that matters is how much of the side went unscored and how many examples
+    lost anything at all.
+    """
+    costs = [gap_k_windows(seq, window=window) for seq in sequences]
+    total = {
+        "examples": len(costs),
+        "positions": sum(c["positions"] for c in costs),
+        "undefined_positions": sum(c["undefined_positions"] for c in costs),
+        "windows": sum(c["windows"] for c in costs),
+        "windows_dropped": sum(c["windows_dropped"] for c in costs),
+    }
+    total["examples_losing_a_window"] = sum(1 for c in costs if c["windows_dropped"])
+    total["examples_scoring_nothing"] = sum(1 for c in costs if not c["windows"])
+    return total
+
+
 def gap_k_windows(tokens: Sequence[TokenStats], *, window: int = 3) -> dict[str, int]:
     """How many smoothed windows Gap-K% scored, and how many the unscored positions cost."""
     scores = _gap_scores(tokens)
@@ -203,8 +224,8 @@ def battery_report(
             "k": k,
             "window": gap_window,
             "windows": {
-                "post": [gap_k_windows(seq, window=gap_window) for seq in post_tokens][:1],
-                "pre": [gap_k_windows(seq, window=gap_window) for seq in pre_tokens][:1],
+                "post": _window_cost(post_tokens, gap_window),
+                "pre": _window_cost(pre_tokens, gap_window),
             },
             **compare_windows(
                 post_cutoff=[gap_k_percent(seq, k=k, window=gap_window) for seq in post_tokens],

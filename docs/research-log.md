@@ -3498,3 +3498,43 @@ more than sending everything. Two cuts unmeasured and reachable with new trainin
 whose leak would not be a cut at all. What the field is missing is not a seventh partition; it is
 an evaluation that tells a deployment whether the partition it chose resists source attribution,
 and a statistic to evaluate it with that is not an average.
+
+### Gap-K% has numbers, and it is the smallest gap of the three (2026-09-18, job 149555)
+
+`datasets/results/contamination-openstack-6mo-with_context-gapk.json`. Closes the open item that
+Gap-K% had an implementation and no measurement, the saved results having kept scores rather than
+per-token statistics. OpenStack, six months each side, hunks with three context lines, 1,971
+eligible post-cutoff examples against 2,502 pre-cutoff.
+
+| statistic | post-cutoff | pre-cutoff | gap |
+|---|---|---|---|
+| Min-K% | -7.4463 | -7.3167 | -0.1296 |
+| Min-K%++ | -1.7955 | -1.7208 | -0.0746 |
+| **Gap-K%** (arXiv:2601.19936) | -1.8168 | -1.7610 | **-0.0558** |
+| guided completion (null instrument) | 0.0113 | 0.0078 | +0.0035 |
+
+The pre-cutoff side scores higher on every membership statistic, which is the direction
+contamination would produce, and the size is what decides whether that means anything. Gap-K%
+exists to be robust to distribution shift -- it reads the distance between the top-1 token's
+log-probability and the observed token's, smoothed over windows, so the general difficulty of a
+passage divides out. It returns the **smallest** separation of the three, 57% of Min-K%'s and 75%
+of Min-K%++'s.
+
+That is the reading the earlier entry already reached by a different route: the separation these
+statistics show is consistent with the two windows being differently distributed rather than
+differently memorized, by Meeus et al.'s criterion (SoK, SaTML 2025). A shift-robust statistic
+shrinking the gap is what that hypothesis predicts. Contamination protection continues to rest
+where it always did, on the post-cutoff window postdating the checkpoint's publication --
+2024-10-01 against 2024-09-17, recorded in the run.
+
+Guided completion sits at 0.011 and 0.008, at its floor, as registered.
+
+**A defect this run exposed, fixed for the next one.** The window-cost diagnostic computed
+`gap_k_windows` for every sequence and then sliced `[:1]`, so a field named `windows` reported the
+**first example** while reading as though it had certified the corpus. What it actually says is
+that one post-cutoff example lost none of its 61 windows and one pre-cutoff example lost none of
+its 37. The aggregate now sums positions, undefined positions, windows and dropped windows over a
+whole side and counts the examples that lost anything or scored nothing. The scores above are
+unaffected, since `gap_k_percent` was computed correctly per example and aggregated correctly; only
+the diagnostic was truncated. The true corpus-wide cost needs the next battery run, and is not
+worth two hours of GPU on its own -- it rides along with the next one.

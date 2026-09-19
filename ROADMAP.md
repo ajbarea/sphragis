@@ -98,8 +98,11 @@ and the call itself, quoted, at `org-fingerprint/VENUE.md`.
 - [x] Gap-K% (arXiv:2601.19936) implemented from the paper and wired through the battery, which
   now records how many smoothed windows the unscored positions cost. It needs only the top-1
   log-probability, recorded from the same log-softmax. Reported, not registered.
-- [ ] Re-run the battery so Gap-K% has numbers: the saved results keep scores, not per-token
-  statistics, so it cannot be computed from what is on disk.
+- [x] **Gap-K% measured** (job 149555): gap -0.0558 against Min-K%++'s -0.0746 and Min-K%'s
+  -0.1296. The shift-robust statistic returns the smallest separation of the three, which is what
+  the "differently distributed rather than differently memorized" reading predicts. Its window-cost
+  diagnostic reported one example under a plural name and now aggregates over the side; the true
+  corpus-wide cost rides along with the next battery run.
 - [x] Registered: hunks with three context lines either side are the scored text (table below).
 - [x] **Source the checkpoint's cutoff.** The widely repeated "June 2024" for Qwen2.5-Coder is
   a community guess, not a maintainer statement. The technical report states a repository
