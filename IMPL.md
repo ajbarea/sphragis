@@ -35,7 +35,9 @@ permutation stays at the floor, while nearest-class attribution falls from 0.765
 its own majority. The classifier reading was a packing artefact; the detector reading is not.
 
 **Both rebuilt runs are analysed** (jobs 149957, 149971, 150085, 150086). The 128-example run is
-what the registered subspace tests read; its projection is job 150123, with 150124 for the 256.
+what the registered subspace tests read. Queued for it: projections 150123 and 150124, and the
+factor geometries 150133 (A, init subtracted) and 150134 (B), which re-read FedSA-LoRA's cut on the
+larger null.
 The ladder over training length now has three points and the third saturates the detector.
 
 **The interval's false-positive rate is now an artifact** rather than a comment:
