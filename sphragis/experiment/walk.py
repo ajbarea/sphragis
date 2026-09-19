@@ -122,7 +122,7 @@ def matched_vs_mismatched(
 
     Treatment is the adapter trained on the evaluated organization, control the adapter
     trained on the other. The base model is not the control: it would measure that
-    adaptation helps, which is the positive control, not the fingerprint claim.
+    adaptation helps, which is the positive control, not the organization-specific claim.
     """
     matched = results[run_id(EvalRun(f"adapter:{eval_org}", eval_org, seed))]
     mismatched = results[run_id(EvalRun(f"adapter:{other_org}", eval_org, seed))]

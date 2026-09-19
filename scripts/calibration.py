@@ -1,11 +1,11 @@
-"""What is the weakest fingerprint this contrast can see?
+"""What is the weakest house style this contrast can see?
 
 Splits one organization's corpus into two statistically identical halves, imposes a
 convention of known strength on one of them, and runs the identical matched-versus-mismatched
 contrast RQ1 uses. Sweeping the strength gives the instrument's detection floor.
 
 Without this, every null the study produces is ambiguous between "there is no organizational
-fingerprint" and "this contrast cannot see fingerprints of any size". With it, a null becomes
+house style" and "this contrast cannot see a house style of any strength". With it, a null becomes
 a bound.
 
 Two conventions, reported separately and never averaged.

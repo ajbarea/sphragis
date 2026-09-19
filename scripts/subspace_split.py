@@ -1,4 +1,4 @@
-"""Would keeping the client-specific subspace local take the fingerprint with it?
+"""Would keeping the client-specific subspace local take the house style with it?
 
 The defence curve says masking is the wrong lever: a cosine detector is scale free, so noise can
 leave the confident identifications intact and at some sizes help the attacker. The literature's

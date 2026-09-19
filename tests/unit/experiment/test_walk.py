@@ -104,7 +104,7 @@ def test_walk_refuses_an_org_with_no_window() -> None:
         )
 
 
-def test_matched_beats_mismatched_when_the_fingerprint_is_real() -> None:
+def test_matched_beats_mismatched_when_the_house_style_is_real() -> None:
     results = walk(
         orgs=ORGS, seeds=SEEDS, windows=WINDOWS, trainer=FakeTrainer(), generator_for=_factory([])
     )
@@ -126,7 +126,7 @@ def test_gate_passes_when_both_organizations_show_the_effect() -> None:
 
 
 def test_gate_fails_when_no_adapter_is_organization_specific() -> None:
-    """Every adapter solves everything: adaptation works, the fingerprint claim does not."""
+    """Every adapter solves everything: adaptation works, the specificity claim does not."""
 
     def build(adapter: str | None):
         return WindowAwareGenerator("alpha" if adapter else None)

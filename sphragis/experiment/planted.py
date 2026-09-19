@@ -1,7 +1,7 @@
-"""Plant a fingerprint of known strength, and find out whether the contrast can see it.
+"""Plant a convention of known strength, and find out whether the contrast can see it.
 
 Every null this study has produced is ambiguous between two statements: there is no
-organizational fingerprint, or this instrument cannot see fingerprints of any size. The
+organizational house style, or this instrument cannot see one of any strength. The
 existing positive control does not separate them. It compares an organization's adapter
 against the base model, which establishes that adaptation works; RQ1's contrast is matched
 adapter against MISMATCHED adapter, and nothing establishes that this contrast can detect a
@@ -10,7 +10,7 @@ difference known to be there.
 So: split one organization's corpus into two halves that are statistically identical, impose
 a mechanical convention on a fraction of one half, and run the identical contrast. Sweeping
 the fraction gives the instrument's detection floor, and a null then stops being an absence
-and becomes a bound: the organizational fingerprint, if any, is weaker than a convention
+and becomes a bound: the organizational house style, if any, is weaker than a convention
 applied to this share of refinements.
 
 The convention has to be mechanical, semantics-preserving, visible to the binding metric,

@@ -16,7 +16,7 @@ Three conditions, because accuracy alone means nothing here.
                what "different codebase, same organization" scores, and the cross-organization
                probe has to beat it before it says anything about organizations.
 
-Two readings of each condition, because which surface carries a fingerprint is a separate
+Two readings of each condition, because which surface carries a house style is a separate
 question from whether one exists. Ghaleb (MSR '26, arXiv:2601.17406) finds that for AI coding
 agents the commit-message conventions carry more of the signal than the code changes, the reverse
 of what human authorship studies report; if an organization's mark likewise sits in the review

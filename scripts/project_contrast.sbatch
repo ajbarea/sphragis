@@ -10,7 +10,7 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
-# Is the fingerprint a property of the codebase rather than the organization?
+# Is the house style a property of the codebase rather than the organization?
 #
 # The identical matched-versus-mismatched contrast RQ1 runs, but between two projects inside
 # ONE organization, so anything it finds is a codebase effect and cannot be an organizational

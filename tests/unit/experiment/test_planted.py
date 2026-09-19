@@ -1,4 +1,4 @@
-"""The planted fingerprint that calibrates the contrast."""
+"""The planted convention that calibrates the contrast."""
 
 from __future__ import annotations
 

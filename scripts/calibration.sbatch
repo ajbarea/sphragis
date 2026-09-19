@@ -10,7 +10,7 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
-# What is the weakest fingerprint the RQ1 contrast can see?
+# What is the weakest house style the RQ1 contrast can see?
 #
 # Two conditions first, because they answer the two questions everything else depends on and
 # a full sweep is eighteen hours of allocation.

@@ -3,7 +3,7 @@
 Style is drifting toward what models write (Xu et al., arXiv:2506.12014: snake_case function
 names in Python from 40.7% in Q1 2023 to 49.8% in Q3 2025), and RQ1 trains on one year and tests
 on the next. If an organization's hand is being overwritten, the contrast is attenuated by drift
-rather than by an absence of fingerprint, and a null becomes ambiguous.
+rather than by an absence of house style, and a null becomes ambiguous.
 
 The generative contrast cannot answer this without new runs, since only the dev window is held
 out. The separability probe can: it reads the corpus directly. Two readings, because the first

@@ -6,7 +6,7 @@ generative contrast can test that directly and needs no new experiment code: bui
 per project and hand them to `rq1_pilot.py` where it expects organizations.
 
 If project-level adapters separate where organization-level ones did not, the finding is
-that the fingerprint exists at a finer grain than the study assumed, and a privacy perimeter
+that the house style exists at a finer grain than the study assumed, and a privacy perimeter
 drawn around an organization is not drawn where the signal lives. If they do not separate
 either, the premise is wrong at every altitude, which is worth knowing before a Stage 1
 report is written around it.
