@@ -1,6 +1,7 @@
 # Sphragis — Roadmap
 
-Sphragis tests whether an organization leaves a learnable fingerprint in the code it reviews,
+Sphragis tests whether an organization's house style -- the tacit conventions it never wrote
+down -- is learnable from the code it reviews,
 and what a declared boundary protects once it can. It is the apparatus for the Federated Agents
 research direction: RQ1 is a go/no-go gate, RQ2 the leakage study that follows it.
 
@@ -9,8 +10,8 @@ research direction: RQ1 is a go/no-go gate, RQ2 the leakage study that follows i
 abstract a week earlier on **2026-11-13** (read from the call, 2026-09-18). PC reviews come
 2026-12-23, the response letter and revision 2027-01-15, Stage 1 notification 2027-02-04, the
 accepted report 2027-02-28, and the full paper to EMSE 2027-09-30.
-The pre-submission checklist lives in the `papers` repo at `org-fingerprint/STAGE1-SKELETON.md`,
-and the call itself, quoted, at `org-fingerprint/VENUE.md`.
+The pre-submission checklist lives in the `papers` repo at `org-house-style/STAGE1-SKELETON.md`,
+and the call itself, quoted, at `org-house-style/VENUE.md`.
 
 **What the call requires of this code:**
 - Stage 2 is when "the actual data collection, experiments, and analysis" happen, so the test
@@ -241,7 +242,8 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
 
 ## Plan E — calibration
 
-Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind instrument".
+Added 2026-09-16. Every null was ambiguous between "no organization-specific
+adaptation" and "a blind instrument".
 
 - [x] **The contrast is not blind** (job 145092, `marker-1`). A convention planted on every
   refinement of one half returns +0.310 [+0.249, +0.376] and +0.316 [+0.265, +0.367] over 182
@@ -259,7 +261,7 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   Emission against training rate: 0.039 -> 0.007, 0.086 -> 0.03-0.08, **0.251 -> 0.62-0.66**,
   1.0 -> 0.99. Below a tenth the convention is barely absorbed; at a quarter it is absorbed and
   amplified. My prediction of a floor near 0.05 to 0.1 was wrong in kind, not just in place.
-- [ ] **The gate is non-monotone in fingerprint strength** (reproduced under fp32, job 149248:
+- [ ] **The gate is non-monotone in signal strength** (reproduced under fp32, job 149248:
   +0.2116 and -0.0840 against bf16's +0.2138 and -0.0861, so it is not a numerics artefact). At 0.25 the planted adapter
   over-applies the convention and loses on its own half (0.160 against 0.246), so the contrast
   there is -0.086, excluding zero on the refuting side. Between floor and ceiling the gate never
@@ -267,7 +269,7 @@ Added 2026-09-16. Every null was ambiguous between "no fingerprint" and "a blind
   metric less punishing of over-application beside exact match.
 - [x] **Symmetric calibration passes** (job 148200): a 25% convention on each half gives +0.084
   [+0.049, +0.124] and +0.039 [+0.005, +0.071]. Each adapter over-applies its own marker (0.57 to
-  0.67) and never the other's. The non-monotonicity is a property of a one-sided fingerprint, which
+  0.67) and never the other's. The non-monotonicity is a property of a one-sided signal, which
   stays a stated limitation.
 - [x] **Greedy adds to the amplification; it does not cause it** (job 148202). Sampling at T=1
   from the same adapter emits the annotation at 0.499 and 0.545 against greedy's 0.617 and 0.656,
@@ -437,7 +439,7 @@ declared as one.
 | decision | registered | why |
 |---|---|---|
 | **Estimand** | pooled (`paired_difference`) | Cluster size is non-informative here: correlation with the outcome is -0.052 and -0.019, with the per-change effect -0.025 and +0.004, so the two estimands do not answer materially different questions (Kahan et al., IJE 2023, make this the deciding test). RQ1 is a claim about refinements, so the participant-average is the matching unit. And change-averaged runs at roughly twice nominal alpha at 48-91 changes where pooled sits at nominal, which disqualifies it from binding a confirmatory gate. Both are computed and reported. **Tested on 2026-09-18**: under fp32 at three seeds, pooled returns mixed and change-averaged returns a pass on both organizations, so the choice decides the headline. It was fixed before that run existed. |
-| **Pass rule** | conjunctive: both organizations' 95% intervals strictly above zero | RQ1 claims organizations leave a fingerprint, which is a generality claim; a rule passing on one organization does not support it. Weakening it to raise power would change the question to fit the answer. |
+| **Pass rule** | conjunctive: both organizations' 95% intervals strictly above zero | RQ1 claims organizations have a learnable house style, which is a generality claim; a rule passing on one organization does not support it. Weakening it to raise power would change the question to fit the answer. |
 | **Boundary** | strictly above zero (`>`) | Not a formality: on the unequalized pilot Qt's pooled lower bound is exactly `0.0` in 19 of 20 bootstrap seeds, so `>=` would have read that run as supporting the hypothesis. It decided a second verdict on 2026-09-18, when OpenStack's fp32 lower bound came out at exactly 0.0. |
 | **Reported power** | conjunctive, not marginal | The gate passes only when both arms do, so its power is the joint probability, which for near-independent arms is the product: two arms at 80% give a gate at 64%. Section 5 had been stating two marginal figures. The figure itself is now a sensitivity analysis: the 0.833 computed at the windowed run's own effects is withdrawn, since power from a pilot's estimate is biased upward. |
 | **Test window** | 2025-11 to 2026-10, twelve months | Twelve months buys more changes for 0.4 points of additional differential censoring (0.36 to 0.75), still a twelfth of what the dev window carries. The figures that chose it, 0.757 against 0.833, are superseded as absolute power (see **Reported power**); the comparison between ten months and twelve is what the choice rested on. Set before any test data exists: 2026-10 closes before the 2026-11-20 submission. |
@@ -445,7 +447,7 @@ declared as one.
 | **Contamination** | Min-K%++ on the base checkpoint is primary; the time partition is corroborative only | Temporal decay is not dependable contamination evidence (Zhang et al., ACL 2026): item construction distorts it independently of the source. Identical construction across windows answers their specific confound, not the confound with ordinary distribution shift. |
 | **Guided completion** | reported as a null instrument | At its floor under both criteria the literature offers: 0 of 55 hunks verbatim, and edit similarity 0.380 against 0.387, a gap of -0.007 [-0.118, +0.085]. Swapping criteria until one separates is what pre-registration exists to prevent. |
 | **Contamination scored text** | the hunk with three context lines either side | Bare hunks put only about 20% of a deduplicated month over the 32-token minimum (35 of 172, 28 of 133), too few to read. With context the scored share rose to 94% and 87%, and on the six-month windows to 1,971 and 2,503 examples. The same text is what the model-less baseline was run on, so the two are directly comparable. |
-| **Secondary estimate** | pooled across organizations, reported beside the gate, never binding it | The gate asks whether each organization shows the effect, which is what generality needs and what limits the resolution. The pooled estimate answers the weaker question, whether organizations leave a fingerprint on average, and is sharper for it: +0.0260 [+0.0090, +0.0440] over 697 dev changes against 0.74 and 1.28 effect-to-half-width alone. It cannot bind the gate, since one organization could carry it and two organizations cannot support a heterogeneity model. |
+| **Secondary estimate** | pooled across organizations, reported beside the gate, never binding it | The gate asks whether each organization shows the effect, which is what generality needs and what limits the resolution. The pooled estimate answers the weaker question, whether organizations show the effect on average, and is sharper for it: +0.0260 [+0.0090, +0.0440] over 697 dev changes against 0.74 and 1.28 effect-to-half-width alone. It cannot bind the gate, since one organization could carry it and two organizations cannot support a heterogeneity model. |
 | **Leakage threshold** | 2% at Jaccard >= 0.7 | Must clear the measured train-into-dev rate, 1.06% for OpenStack and 0.42% for Qt. At J >= 0.8 both are 0.0000 by construction, because dedup removes pairs at that threshold across windows, so registering there is a test that cannot fail. |
 
 **Decided by the measurements their rules named in advance.**
@@ -459,7 +461,7 @@ declared as one.
 
 **A sharper RQ1 is now available, and it is AJ's call.** The dev window says the two organizations
 differ in kind: Qt's projects all lean the same way, OpenStack's disagree in sign. That suggests
-replacing "do organizations leave a learnable fingerprint" with "what unit carries it, and what
+replacing "is an organization's house style learnable" with "what unit carries it, and what
 makes an organization one". RQ2 has since measured the second half directly: AOSP behaves as a
 coherent unit in update space and Qt does not, but four candidate mechanisms for that difference,
 each registered before its test, were refuted (pairwise and centroid coherence, shared people,
@@ -473,7 +475,7 @@ mixed is the least informative outcome the design can produce. Against it: the r
 is the one the proposal was written around, and a reframing costs a rewrite of sections 1 and 3.
 
 **Open, and genuinely a question about the claim rather than the statistics.** Whether RQ1
-asserts "organizations leave a learnable fingerprint" (conjunctive, as registered above) or
+asserts "an organization's house style is learnable" (conjunctive, as registered above) or
 "this organization does" (per-organization, higher power, weaker claim). Everything above
 assumes the first, which is what the research question as written says.
 
@@ -498,7 +500,7 @@ Sphragis is the Federated Agents apparatus. It does not vendor the others.
 | `phalanx-fl` | RQ2 federates adapters on its Flower stack. Not a dependency yet; decided when RQ2 starts. |
 | `velocity-fl` | Aggregation kernel and Byzantine arena for RQ2. |
 | `pharos` | The disclosure-measurement methodology this study reuses on real rather than generated data. Cited. |
-| `papers` | `org-fingerprint/` holds the Stage 1 report. LINEAGE row P4. |
+| `papers` | `org-house-style/` holds the Stage 1 report. LINEAGE row P4. |
 
 `provenance.py` is copied from phalanx-fl, not imported. Twelve lines of standard library is
 the wrong thing to take a cross-repo dependency for, especially on a repo whose stated

@@ -2,7 +2,7 @@
 
 # Sphragis
 
-### Does an organization leave a learnable fingerprint in the code it reviews?
+### Can a model learn an organization's house style from the code it reviews?
 
 *The corpus, the measurement, and the experiment behind a pre-registered study of whether a
 coding agent adapted to one organization's review history learns that organization's

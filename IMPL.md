@@ -59,7 +59,7 @@ Every job claims its result file exclusively when it starts, so neither an exist
 
 - Merging PR #13, and when to freeze the windows: freezing is irreversible.
 - Venue and authorship, fixed at Stage 1.
-- Whether RQ1 is sharpened to "what unit carries the fingerprint, and what makes an organization
+- Whether RQ1 is sharpened to "what unit carries the house style, and what makes an organization
   one": AOSP is a coherent unit and Qt is not, and four registered mechanisms for why were each
   refuted, shared code conventions among them. Recommended.
 - Whether RQ2 is reframed as a defence evaluation of the personalized-adapter family.
