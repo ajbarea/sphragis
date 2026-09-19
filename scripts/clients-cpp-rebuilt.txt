@@ -1,0 +1,34 @@
+# RQ2's third client run, on the AOSP corpus rebuilt over ten projects (2024-01 to 2025-08).
+# Seven of those ten hold at least 128 examples after deduplication and so can fill a client at
+# the training length the detector reads; adb (114), update-engine (32) and netd (9) cannot, and
+# are left out rather than packed into short clients that would not be comparable.
+#
+# Seven AOSP C++ projects against six of Qt's gives C(13, 7) = 1,716 groupings for the
+# project-level permutation, where `clients-cpp-early.txt` gave 84. The floor a p-value can reach
+# falls from 0.012 to 0.0006.
+#
+# Corpora live in $CLIENTS = $HOME/corpus/clients3, built by scripts/project_corpora.py --org aosp
+# --window all. The earlier runs' corpora stay in clients2, so their results stay reproducible.
+# Paths are relative to $CLIENTS (see scripts/client_updates.sbatch).
+aosp:cpp/art=platform_art.jsonl
+aosp:cpp/perfetto=platform_external_perfetto.jsonl
+aosp:cpp/frameworks-av=platform_frameworks_av.jsonl
+aosp:cpp/hardware-interfaces=platform_hardware_interfaces.jsonl
+aosp:cpp/system-core=platform_system_core.jsonl
+aosp:cpp/frameworks-native=platform_frameworks_native.jsonl
+aosp:cpp/bionic=platform_bionic.jsonl
+qt:cpp/qt-creator=qt-creator_qt-creator.jsonl
+qt:cpp/qtbase=qt_qtbase.jsonl
+qt:cpp/qtdeclarative=qt_qtdeclarative.jsonl
+qt:cpp/qtmultimedia=qt_qtmultimedia.jsonl
+qt:cpp/qtgraphs=qt_qtgraphs.jsonl
+qt:cpp/qttools=qt_qttools.jsonl
+openstack:python/nova=openstack_nova.jsonl
+openstack:python/neutron=openstack_neutron.jsonl
+openstack:python/ironic=openstack_ironic.jsonl
+openstack:python/swift=openstack_swift.jsonl
+openstack:python/starlingx-test=starlingx_test.jsonl
+openstack:python/starlingx-config=starlingx_config.jsonl
+qt:python/pyside-setup=pyside_pyside-setup.jsonl
+openstack:docs/starlingx-docs=starlingx_docs.jsonl
+qt:docs/qtdoc=qt_qtdoc.jsonl
