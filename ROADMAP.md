@@ -458,8 +458,12 @@ declared as one.
 **A sharper RQ1 is now available, and it is AJ's call.** The dev window says the two organizations
 differ in kind: Qt's projects all lean the same way, OpenStack's disagree in sign. That suggests
 replacing "do organizations leave a learnable fingerprint" with "what unit carries it, and what
-makes an organization one" -- the prediction being that an organization behaves as a unit exactly
-when its projects share conventions, and a Gerrit host federating independent projects does not.
+makes an organization one". RQ2 has since measured the second half directly: AOSP behaves as a
+coherent unit in update space and Qt does not, but four candidate mechanisms for that difference,
+each registered before its test, were refuted (pairwise and centroid coherence, shared people,
+shared code conventions). So the sharpened question is answerable and its answer is not yet
+known, which is a better position for a registered report than a question whose only reachable
+answer is "mixed".
 The apparatus already measures both altitudes, RQ2's client updates point the same way, and the
 test window is still sealed, so the question can be sharpened at no cost to pre-registration. My
 recommendation is to sharpen it: the current phrasing can only return "mixed" on a federation, and
