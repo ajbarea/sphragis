@@ -23,6 +23,7 @@ maps of the safetensors files, so memory holds one module across every adapter.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import struct
 from pathlib import Path
@@ -102,12 +103,31 @@ def modules(header: dict[str, Any]) -> list[str]:
     return sorted(k.removesuffix(".lora_A.weight") for k in header if k.endswith(".lora_A.weight"))
 
 
-def initial(root: Path, pattern: str) -> Path | None:
-    """The shared starting adapter a run broadcast, if it was saved beside the clients."""
-    for path in sorted(root.glob(pattern.replace("*-c*", "init"))):
-        if path.parent.name == "init":
-            return path
-    return None
+def initial(paths: dict[str, Path]) -> Path:
+    """The one initial adapter every matched client started from.
+
+    Each client's run directory saves its broadcast starting state as `init` beside the clients,
+    so the init is found from the adapters themselves rather than by rewriting the glob, which
+    could land on another run's `init`. Clients from more than one run would have started from
+    more than one state, and there is then no single movement to measure, so that is refused.
+    """
+    found = {path.parent.parent / "init" / path.name for path in paths.values()}
+    missing = sorted(str(p) for p in found if not p.is_file())
+    if missing:
+        raise SystemExit(f"--subtract-init needs each run's initial adapter; missing {missing}")
+    if len(found) != 1:
+        raise SystemExit(
+            f"matched clients come from {len(found)} runs with different initial states"
+        )
+    return found.pop()
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def adapters(root: Path, pattern: str) -> dict[str, Path]:
@@ -138,9 +158,12 @@ def main() -> None:
     inner = np.zeros((n, n))
     per_module_cosines = np.zeros((n, n))
     by_module: dict[str, list[list[float]]] = {}
-    start_path = initial(args.root, args.pattern) if args.subtract_init else None
-    if args.subtract_init and start_path is None:
-        raise SystemExit(f"--subtract-init needs an `init` adapter beside {args.pattern}")
+    if args.subtract_init and args.matrices == "product":
+        # Subtracting the initial A from one factor gives B (A - A0), not the update B A - B0 A0:
+        # measured, the two differ in cosine by up to 0.236. The initial B is zero, so the product
+        # already is the movement and there is nothing to subtract.
+        raise SystemExit("--subtract-init applies to --matrices a or b, not to the product")
+    start_path = initial(paths) if args.subtract_init else None
     start_index = tensor_index(start_path) if start_path else None
     for module in shared:
         origin = {"a": 0.0, "b": 0.0}
@@ -184,6 +207,8 @@ def main() -> None:
                 "adapters": names,
                 "matrices": args.matrices,
                 "subtract_init": bool(args.subtract_init),
+                "initial_adapter": str(start_path) if start_path else None,
+                "initial_adapter_sha256": sha256(start_path) if start_path else None,
                 "modules": len(shared),
                 "update_norm": dict(zip(names, norms.tolist(), strict=True)),
                 "cosine": (inner / np.outer(norms, norms)).tolist(),

@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib.util
 import json
 import struct
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -76,3 +78,89 @@ def test_the_factor_inner_product_is_not_the_product_inner_product() -> None:
     assert geometry.update_inner(a1, b1, a2, b2) == pytest.approx(
         float(((b1 @ a1) * (b2 @ a2)).sum())
     )
+
+
+def _run(tmp_path: Path, name: str, clients: dict[str, tuple], init: tuple | None) -> Path:
+    """One run directory of client adapters, with its broadcast initial state if given."""
+    run = tmp_path / name
+    for client, (a, b) in clients.items():
+        (run / client).mkdir(parents=True)
+        _write(
+            run / client / "adapter_model.safetensors", {"m.lora_A.weight": a, "m.lora_B.weight": b}
+        )
+    if init is not None:
+        (run / "init").mkdir(parents=True)
+        _write(
+            run / "init" / "adapter_model.safetensors",
+            {"m.lora_A.weight": init[0], "m.lora_B.weight": init[1]},
+        )
+    return run
+
+
+def test_each_client_is_measured_against_its_own_runs_initial_adapter(tmp_path: Path) -> None:
+    """Through the real glob, so a pattern that matches nothing cannot pass by accident."""
+    rng = np.random.default_rng(4)
+    zero = np.zeros((3, 2))
+    run = _run(
+        tmp_path,
+        "sphragis-adapters-clients-x",
+        {"aosp-c0": (rng.normal(size=(2, 5)), zero), "qt-c0": (rng.normal(size=(2, 5)), zero)},
+        (np.ones((2, 5)), zero),
+    )
+    paths = geometry.adapters(
+        tmp_path, "sphragis-adapters-clients-x/*-c*/adapter_model.safetensors"
+    )
+    assert len(paths) == 2, "the init directory is not a client, and both clients are found"
+    assert geometry.initial(paths) == run / "init" / "adapter_model.safetensors"
+
+
+def test_clients_from_two_runs_have_no_single_starting_state(tmp_path: Path) -> None:
+    zero = np.zeros((3, 2))
+    one = _run(tmp_path, "run-one", {"c0": (np.ones((2, 5)), zero)}, (np.zeros((2, 5)), zero))
+    two = _run(tmp_path, "run-two", {"c0": (np.ones((2, 5)), zero)}, (np.ones((2, 5)), zero))
+    paths = {
+        "one/c0": one / "c0" / "adapter_model.safetensors",
+        "two/c0": two / "c0" / "adapter_model.safetensors",
+    }
+    with pytest.raises(SystemExit, match="2 runs"):
+        geometry.initial(paths)
+
+
+def test_a_run_without_its_initial_adapter_is_refused(tmp_path: Path) -> None:
+    zero = np.zeros((3, 2))
+    run = _run(tmp_path, "run", {"c0": (np.ones((2, 5)), zero)}, None)
+    with pytest.raises(SystemExit, match="missing"):
+        geometry.initial({"run/c0": run / "c0" / "adapter_model.safetensors"})
+
+
+def test_the_script_refuses_to_subtract_the_initial_adapter_from_the_product(
+    tmp_path: Path,
+) -> None:
+    """B (A - A0) is not the update B A, and the script is not only reached through its job."""
+    zero = np.zeros((3, 2))
+    _run(
+        tmp_path,
+        "sphragis-adapters-clients-x",
+        {"aosp-c0": (np.ones((2, 5)), zero + 1), "qt-c0": (np.ones((2, 5)) * 2, zero + 1)},
+        (np.ones((2, 5)), zero),
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPT),
+            "--root",
+            str(tmp_path),
+            "--pattern",
+            "sphragis-adapters-clients-x/*-c*/adapter_model.safetensors",
+            "--matrices",
+            "product",
+            "--subtract-init",
+            "--out",
+            str(tmp_path / "out.json"),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "not to the product" in result.stderr
+    assert not (tmp_path / "out.json").exists()

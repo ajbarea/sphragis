@@ -16,7 +16,7 @@ set -euo pipefail
 # only way code reaches this machine.
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
-OUT="$(result_path "$HOME/prompt-format-probe$RESULT_SUFFIX.json")"
+claim_result OUT "$HOME/prompt-format-probe$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/prompt_format_probe.py \
   "$HOME/pilot-examples.jsonl" \
   --out "$OUT"

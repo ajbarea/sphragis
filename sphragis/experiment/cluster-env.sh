@@ -30,23 +30,42 @@ if [ -z "${RUN_TAG+set}" ]; then
   [ "$RUN_TAG" != tigris ] || RUN_TAG=""
 fi
 export RESULT_SUFFIX="${RUN_TAG:+-$RUN_TAG}"
+# A recorded measurement is written once. `claim_result NAME PATH` creates PATH exclusively and
+# sets NAME to it, so a result that already exists, or that a concurrent job has claimed, stops
+# this job before its work starts. The check runs when the job starts, after the queue wait. The
+# claim is an empty file that the job's script later fills; a job that exits without filling it
+# releases it, so a crash does not block the rerun. OVERWRITE=1 replaces a result deliberately and
+# claims nothing. Call it as a plain command in the job's own shell, never inside $(...), or the
+# release on exit belongs to a subshell that has already gone.
+SPHRAGIS_CLAIMS=()
+_release_unfilled_claims() {
+  local path
+  for path in ${SPHRAGIS_CLAIMS[@]+"${SPHRAGIS_CLAIMS[@]}"}; do
+    [ -s "$path" ] || rm -f -- "$path"
+  done
+}
+trap _release_unfilled_claims EXIT
+claim_result() {
+  local name="$1" path="$2" why
+  if [ "${OVERWRITE:-0}" != 1 ]; then
+    if ! why="$( (set -o noclobber; : >"$path") 2>&1)"; then
+      # A missing directory or a permission fails the same exclusive create, and must not be
+      # reported as a clash with a job that does not exist.
+      if [ -e "$path" ]; then
+        echo "$path exists or another job has claimed it: pass OVERWRITE=1 to replace it deliberately" >&2
+      else
+        echo "cannot claim $path: $why" >&2
+      fi
+      return 1
+    fi
+    SPHRAGIS_CLAIMS+=("$path")
+  fi
+  printf -v "$name" '%s' "$path"
+}
+
 # Another seed set or training size is another run, not a rerun, so it is named whatever
 # RUN_TAG says: SEEDS=2 alone would otherwise overwrite the seed-1 result and its adapters.
 # A script calls this with the variables it passes on, so one it ignores never renames it.
-# A recorded measurement is written once. A job whose result already exists stops here, before it
-# spends the queue time and before it can quietly replace a number the study cites; OVERWRITE=1
-# replaces one deliberately. The caller assigns it -- `OUT="$(result_path ...)"` -- because a
-# failed command substitution inside an argument list does not stop the script under `set -e`,
-# and the job would run on with an empty --out. Adapters are a directory the trainer fills and
-# are not guarded: a rerun that reaches them has already passed the result check above it.
-result_path() {
-  if [ -e "$1" ] && [ "${OVERWRITE:-0}" != 1 ]; then
-    echo "$1 exists: pass OVERWRITE=1 to replace it deliberately" >&2
-    return 1
-  fi
-  printf '%s' "$1"
-}
-
 tag_result_suffix() {
   local name
   for name in "$@"; do

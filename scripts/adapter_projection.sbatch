@@ -22,11 +22,22 @@ PATTERN="${PATTERN:-sphragis-adapters-clients/*-c*/adapter_model.safetensors}"
 # selects the input, and a run over one client size that inherited another's suffix would
 # overwrite the geometry every committed RQ2 number was computed from. The default pattern gives
 # the empty suffix, so existing names are unchanged.
-RESULT_SUFFIX="${PATTERN%%/*}"
-RESULT_SUFFIX="${RESULT_SUFFIX#sphragis-adapters-clients}"
+# The name is derived from PATTERN's first directory, so that directory must be a literal
+# client-adapters directory: a glob or another prefix there would name the output after nothing.
+FIRST="${PATTERN%%/*}"
+case "$FIRST" in
+  sphragis-adapters-clients*) ;;
+  *) echo "PATTERN must start with a sphragis-adapters-clients directory, got $FIRST" >&2; exit 1 ;;
+esac
+case "$FIRST" in
+  *[\*\?\[]*) echo "PATTERN's first directory must be literal, got $FIRST" >&2; exit 1 ;;
+esac
+RESULT_SUFFIX="${FIRST#sphragis-adapters-clients}"
+# Another sketch width is another set of vectors, so it names its own file.
+[ "${SKETCH:-16}" = 16 ] || RESULT_SUFFIX="$RESULT_SUFFIX-w$SKETCH"
 export RESULT_SUFFIX
 
-OUT="$(result_path "$HOME/client-vectors$RESULT_SUFFIX.npz")"
+claim_result OUT "$HOME/client-vectors$RESULT_SUFFIX.npz"
 uv run --no-sync python scripts/adapter_projection.py \
   --root "$HOME/scratch" \
   --pattern "$PATTERN" \

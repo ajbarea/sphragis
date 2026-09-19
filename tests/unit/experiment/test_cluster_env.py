@@ -11,6 +11,7 @@ import os
 import platform
 import re
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -349,31 +350,28 @@ def test_an_explicitly_empty_run_tag_is_a_deliberate_overwrite(tmp_path: Path) -
 
 
 def _written_paths(script: Path) -> list[str]:
-    """Every result path a job writes, resolved through the variable that guards it.
-
-    A guarded job names its output in an assignment and passes the variable, so reading the
-    `--out` argument alone would see only `$OUT`.
-    """
+    """Every result path a job writes, resolved through the claim that guards it."""
     text = script.read_text()
-    guarded = dict(re.findall(r'^\s*([A-Z_]+)="\$\(result_path "([^"]+)"\)"$', text, re.MULTILINE))
+    claimed = dict(re.findall(r'^\s*claim_result ([A-Z_]+) "([^"]+)"$', text, re.MULTILINE))
     return [
-        guarded.get(path.strip("${}"), path)
+        claimed.get(path.strip("${}"), path)
         for path in re.findall(r'--(?:out|adapters) "([^"]+)"', text)
     ]
 
 
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
-def test_every_result_a_job_writes_is_guarded_against_replacing_one(script: Path) -> None:
-    """A job that would overwrite a recorded measurement must stop before it spends queue time.
+def test_every_result_a_job_writes_is_claimed_as_a_plain_command(script: Path) -> None:
+    """The claim must run in the job's own shell, or its release on exit belongs to a subshell.
 
-    The guard is an assignment rather than a substitution in the argument list, because a failed
-    command substitution inside arguments does not stop a script under `set -u -e`: the job would
-    run on and write to an empty path.
+    `export OUT="$(...)"`, `local`, `readonly` and `declare` all continue past a failed command
+    substitution under `set -e`, which is why the claim is a command and not a substitution.
     """
     text = script.read_text()
-    for path in re.findall(r'--out "([^"]+)"', text):
-        assert path == "$OUT", f"{script.name} writes {path} without result_path"
-    assert text.count('OUT="$(result_path "') == text.count('--out "$OUT"')
+    for variable in re.findall(r'--out "\$\{?([A-Z_]+)\}?"', text):
+        assert re.search(rf'^\s*claim_result {variable} "', text, re.MULTILINE), (
+            f"{script.name} writes ${variable} without claiming it"
+        )
+    assert "result_path" not in text, f"{script.name} still uses the check-only guard"
 
 
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
@@ -459,12 +457,38 @@ _GEOMETRY_JOBS = {
 }
 
 
-def _run_job(script_name: str, root: Path, **env: str) -> subprocess.CompletedProcess[str]:
-    """The real sbatch body, in a checkout of its own, with a uv that reports its arguments.
+_FAKE_UV = """#!/bin/sh
+if [ "$1" = run ]; then
+  echo "${FAKE_ID:-job} $*" >> "$HOME/uv.calls"
+  out=""; prev=""
+  for arg in "$@"; do [ "$prev" = "--out" ] && out="$arg"; prev="$arg"; done
+  [ -z "${FAKE_SLEEP:-}" ] || sleep "$FAKE_SLEEP"
+  [ -z "${FAKE_FAIL:-}" ] || exit 1
+  [ -z "$out" ] || echo "written by ${FAKE_ID:-job}" > "$out"
+fi
+echo "$@"
+"""
+
+# What each job needs from its environment to reach its claim; a fake uv never reads the values.
+_JOB_DEFAULTS = {
+    "MODE": "pilot",
+    "CONDITION": "sym-0",
+    "SLURMD_NODENAME": "node1",
+    "TEMPERATURE": "1.0",
+    "POST": "/unused/post.jsonl",
+    "PRE": "/unused/pre.jsonl",
+}
+
+
+def _prepare(root: Path) -> tuple[Path, Path]:
+    """A checkout and a home of their own, with a uv that reports rather than runs.
 
     The checkout is built here rather than reused: running against the repository passed only
     because this machine happens to carry a `.venv-<machine>` directory, and CI, which does not,
-    stopped in cluster-env before reaching anything the test was about.
+    stopped in cluster-env before reaching anything the test was about. For `uv run` the fake uv
+    logs the call, writes `written by $FAKE_ID` into the --out path the way a finished script
+    would, and can take time (FAKE_SLEEP) or fail before writing (FAKE_FAIL); anything else, such
+    as the environment's check that uv runs, passes straight through.
     """
     home, checkout = root / "home", root / "checkout"
     for directory in (home, checkout, home / "scratch"):
@@ -477,20 +501,31 @@ def _run_job(script_name: str, root: Path, **env: str) -> subprocess.CompletedPr
         _fake_venv(checkout)
     uv = home / ".local" / "bin" / _MACHINE / "uv"
     uv.parent.mkdir(parents=True, exist_ok=True)
-    uv.write_text('#!/bin/sh\necho "$@"\n')
+    uv.write_text(_FAKE_UV)
     uv.chmod(0o755)
+    return home, checkout
+
+
+def _job_env(home: Path, checkout: Path, env: dict[str, str]) -> dict[str, str]:
+    return {
+        "HOME": str(home),
+        "PATH": "/usr/bin:/bin",
+        "SPHRAGIS_CHECKOUT": str(checkout),
+        "RUN_TAG": "some-other-run",
+        **_JOB_DEFAULTS,
+        **env,
+    }
+
+
+def _run_job(script_name: str, root: Path, **env: str) -> subprocess.CompletedProcess[str]:
+    """The real sbatch body, run to completion in a checkout of its own."""
+    home, checkout = _prepare(root)
     return subprocess.run(
         ["bash", str(checkout / "scripts" / script_name)],
         capture_output=True,
         text=True,
         cwd=checkout,
-        env={
-            "HOME": str(home),
-            "PATH": "/usr/bin:/bin",
-            "SPHRAGIS_CHECKOUT": str(checkout),
-            "RUN_TAG": "some-other-run",
-            **env,
-        },
+        env=_job_env(home, checkout, env),
     )
 
 
@@ -555,3 +590,148 @@ def test_a_second_packing_names_its_own_results_and_adapters(tmp_path: Path) -> 
     assert first.returncode == 0, first.stderr
     assert "client-updates-cpp-early-c128.json" in first.stdout
     assert "--packing-seed" not in first.stdout, "the first packing must reproduce as it ran"
+
+
+def _results(root: Path) -> dict[str, str]:
+    home = root / "home"
+    found = sorted(home.glob("*.json")) + sorted(home.glob("*.npz"))
+    return {path.name: path.read_text() for path in found}
+
+
+@pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
+def test_a_second_run_of_any_job_refuses_before_it_does_any_work(
+    script: Path, tmp_path: Path
+) -> None:
+    """Every job script, not two of them: a text check had let `export OUT=` through."""
+    first = _run_job(script.name, tmp_path, FAKE_ID="JOB_ONE")
+    assert first.returncode == 0, first.stderr
+    written = _results(tmp_path)
+    assert written, "the first run wrote a result"
+    assert all(text == "written by JOB_ONE\n" for text in written.values()), written
+    second = _run_job(script.name, tmp_path, FAKE_ID="JOB_TWO")
+    assert second.returncode != 0
+    assert "OVERWRITE=1" in second.stderr
+    callers = [
+        line.split()[0] for line in (tmp_path / "home" / "uv.calls").read_text().splitlines()
+    ]
+    assert "JOB_TWO" not in callers, "the refused job must not have started its work"
+    assert _results(tmp_path) == written
+
+
+def test_two_jobs_running_at_once_cannot_both_claim_one_result(tmp_path: Path) -> None:
+    """The check-only guard let both past, and the later job's result replaced the earlier's."""
+    home, checkout = _prepare(tmp_path)
+    script = str(checkout / "scripts" / "client_updates.sbatch")
+    slow = subprocess.Popen(
+        ["bash", script],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=checkout,
+        env=_job_env(home, checkout, {"FAKE_ID": "slow", "FAKE_SLEEP": "3"}),
+    )
+    time.sleep(1.0)
+    fast = subprocess.run(
+        ["bash", script],
+        capture_output=True,
+        text=True,
+        cwd=checkout,
+        env=_job_env(home, checkout, {"FAKE_ID": "fast"}),
+    )
+    slow.communicate(timeout=60)
+    assert slow.returncode == 0
+    assert fast.returncode != 0, "the second job to start must refuse"
+    assert "another job has claimed it" in fast.stderr
+    assert set(_results(tmp_path).values()) == {"written by slow\n"}
+
+
+def test_a_job_that_fails_releases_its_claim_so_the_rerun_can_proceed(tmp_path: Path) -> None:
+    failed = _run_job("pilot.sbatch", tmp_path, FAKE_ID="crashed", FAKE_FAIL="1")
+    assert failed.returncode != 0
+    assert _results(tmp_path) == {}, "an unfilled claim is removed when the job exits"
+    rerun = _run_job("pilot.sbatch", tmp_path, FAKE_ID="rerun")
+    assert rerun.returncode == 0, rerun.stderr
+    assert set(_results(tmp_path).values()) == {"written by rerun\n"}
+
+
+def test_overwrite_replaces_a_result_deliberately(tmp_path: Path) -> None:
+    assert _run_job("pilot.sbatch", tmp_path, FAKE_ID="old").returncode == 0
+    replaced = _run_job("pilot.sbatch", tmp_path, FAKE_ID="new", OVERWRITE="1")
+    assert replaced.returncode == 0, replaced.stderr
+    assert set(_results(tmp_path).values()) == {"written by new\n"}
+
+
+def test_a_claim_that_cannot_be_created_is_not_reported_as_a_clash(tmp_path: Path) -> None:
+    """A missing directory fails the same exclusive create; the message must say which."""
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, f'claim_result OUT "{tmp_path}/no/such/dir/r.json"')
+    assert result.returncode != 0
+    assert "cannot claim" in result.stderr
+    assert "another job" not in result.stderr
+
+
+_EARLY = "sphragis-adapters-clients-cpp-early/*-c*/adapter_model.safetensors"
+
+
+@pytest.mark.parametrize(
+    "matrices,subtract,name",
+    [
+        (None, None, "client-geometry-cpp-early.json"),
+        ("a", "1", "client-geometry-cpp-early-a.json"),
+        ("b", None, "client-geometry-cpp-early-b.json"),
+    ],
+)
+def test_each_meaningful_factor_reading_has_one_name(
+    matrices: str | None, subtract: str | None, name: str, tmp_path: Path
+) -> None:
+    env = {"PATTERN": _EARLY}
+    if matrices:
+        env["MATRICES"] = matrices
+    if subtract:
+        env["SUBTRACT_INIT"] = subtract
+    result = _run_job("adapter_geometry.sbatch", tmp_path, **env)
+    assert result.returncode == 0, result.stderr
+    assert name in result.stdout
+
+
+@pytest.mark.parametrize(
+    "matrices,subtract",
+    [("product", "1"), ("a", None), ("a", "0"), ("b", "1"), ("b", "0"), ("product", "0")],
+)
+def test_a_factor_reading_with_no_single_meaning_is_refused(
+    matrices: str, subtract: str | None, tmp_path: Path
+) -> None:
+    """Product with a subtracted A computes B (A - A0), not the update; raw A is mostly the init."""
+    env = {"PATTERN": _EARLY, "MATRICES": matrices}
+    if subtract is not None:
+        env["SUBTRACT_INIT"] = subtract
+    result = _run_job("adapter_geometry.sbatch", tmp_path, **env)
+    assert result.returncode != 0
+    assert "has no meaning here" in result.stderr
+    assert not (tmp_path / "home" / "uv.calls").exists()
+
+
+@pytest.mark.parametrize("script", ["adapter_geometry.sbatch", "adapter_projection.sbatch"])
+@pytest.mark.parametrize(
+    "pattern",
+    ["*/*-c*/adapter_model.safetensors", "other-adapters/*-c*/adapter_model.safetensors"],
+)
+def test_a_pattern_that_cannot_name_its_output_is_refused(
+    script: str, pattern: str, tmp_path: Path
+) -> None:
+    result = _run_job(script, tmp_path, PATTERN=pattern)
+    assert result.returncode != 0
+    assert "PATTERN" in result.stderr
+
+
+def test_another_sketch_width_names_its_own_vectors(tmp_path: Path) -> None:
+    result = _run_job("adapter_projection.sbatch", tmp_path, PATTERN=_EARLY, SKETCH="32")
+    assert result.returncode == 0, result.stderr
+    assert "client-vectors-cpp-early-w32.npz" in result.stdout
+
+
+def test_the_default_packing_under_a_new_name_is_refused(tmp_path: Path) -> None:
+    result = _run_job("client_updates.sbatch", tmp_path, PACKING_SEED="1")
+    assert result.returncode != 0
+    assert "default packing" in result.stderr

@@ -22,7 +22,7 @@ source sphragis/experiment/cluster-env.sh
 CONDITION="${CONDITION:-marker-0.25}"
 TEMPERATURE="${TEMPERATURE:-1.0}"
 
-OUT="$(result_path "$HOME/decoding-$CONDITION-t$TEMPERATURE$RESULT_SUFFIX.json")"
+claim_result OUT "$HOME/decoding-$CONDITION-t$TEMPERATURE$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/decoding_check.py \
   --condition "$CONDITION" \
   --results "$HOME/calibration-$CONDITION.json" \

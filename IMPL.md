@@ -16,13 +16,15 @@ both RQ2 threat models. Its description was rewritten on 2026-09-18 against curr
 **RQ2 has become a defence evaluation.** On 43 C++ clients from one initialization:
 organization is not a class a classifier can assign, but a detector with a project-split
 reference finds AOSP (p = 0.012 over 84 groupings), and at 128 examples a client finds Qt too.
-Every personalized-adapter design that splits the adapter leaves the source readable in the part
-it transmits: FedSA-LoRA's A (the best identifier of the three readings), PFAdapter's q and k,
-SDFLoRA's shared subspace (better than the whole update). Masking fails against a scale-free
-detector and can help it.
+Two splits the personalized-adapter literature proposes leave the source readable in the part
+they transmit: FedSA-LoRA's A, the best identifier of the factor readings and robust to every
+control an adversarial review ran, and PFAdapter's q and k. SDFLoRA's subspace cut is not
+established either way: where the signal sits depends on the rank. Masking fails against a
+scale-free detector and can help it.
 
-**Running:** job 149598 (256 examples a client, `scripts/clients-cpp-early.txt`); the local AOSP
-ten-project rebuild, detached, about half an hour a month.
+**Running:** job 149607, a second packing at 128 examples a client; the local AOSP ten-project
+rebuild, detached, about half an hour a month. 256 examples a client waits for that rebuild, since
+AOSP's system/core cannot fill one client at that size.
 
 ## RQ2's analysis, end to end
 
@@ -42,13 +44,13 @@ scripts/subspace_split.py       # SDFLoRA's cut
 scripts/module_split.py         # PFAdapter's cut
 ```
 
-Every job refuses to overwrite an existing result (`OVERWRITE=1` replaces one deliberately).
+Every job claims its result file exclusively when it starts, so neither an existing result nor a concurrent job's can be replaced; a job that fails releases its claim, and `OVERWRITE=1` replaces one deliberately.
 
 ## Next pickups
 
-- The code-shape probe on C++, AOSP against Qt, once the rebuild lands: whether shared
-  conventions are what makes AOSP coherent and Qt not.
-- A second 128-example packing, so the training-length comparison is symmetric.
+- The rest of the adversarial review: the permutation moved into `aggregate.py` with behavioural
+  tests, enumeration over distinct groupings, Qt's p reported over seeds, a fixed rank and fair
+  baseline for the subspace cut, and a dirty-tree flag in provenance.
 - FDLoRA and FedDPA's adapter-instance cut, which needs clients training a global and a personal
   adapter jointly.
 - Sensitivity analysis into the Stage 1 skeleton's section 5, replacing the withdrawn power figure.

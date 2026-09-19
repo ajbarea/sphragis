@@ -22,15 +22,35 @@ PATTERN="${PATTERN:-sphragis-adapters-clients/*-c*/adapter_model.safetensors}"
 # selects the input, and a run over one client size that inherited another's suffix would
 # overwrite the geometry every committed RQ2 number was computed from. The default pattern gives
 # the empty suffix, so existing names are unchanged.
-RESULT_SUFFIX="${PATTERN%%/*}"
-RESULT_SUFFIX="${RESULT_SUFFIX#sphragis-adapters-clients}"
-# MATRICES=a or b reads one LoRA factor rather than the product, which is a different geometry
-# over the same adapters, so it names its own file.
+# The name is derived from PATTERN's first directory, so that directory must be a literal
+# client-adapters directory: a glob or another prefix there would name the output after nothing.
+FIRST="${PATTERN%%/*}"
+case "$FIRST" in
+  sphragis-adapters-clients*) ;;
+  *) echo "PATTERN must start with a sphragis-adapters-clients directory, got $FIRST" >&2; exit 1 ;;
+esac
+case "$FIRST" in
+  *[\*\?\[]*) echo "PATTERN's first directory must be literal, got $FIRST" >&2; exit 1 ;;
+esac
+RESULT_SUFFIX="${FIRST#sphragis-adapters-clients}"
+# MATRICES=a or b reads one LoRA factor rather than the product, a different geometry over the
+# same adapters, so it names its own file. Each combination has exactly one meaning:
+#   product  the update B A itself; the initial B is zero, so there is nothing to subtract, and
+#            subtracting the initial A from one factor computes B (A - A0), which is not the update.
+#   a        A's movement from the broadcast initial A. Raw A is dominated by the shared random
+#            initialization, so SUBTRACT_INIT=1 is required and "-a" always means the movement.
+#   b        B, whose initial value is zero, so B is already its movement.
 MATRICES="${MATRICES:-product}"
-[ "$MATRICES" = product ] || RESULT_SUFFIX="$RESULT_SUFFIX-$MATRICES"
+case "$MATRICES:${SUBTRACT_INIT:-}" in
+  product:) ;;
+  a:1) RESULT_SUFFIX="$RESULT_SUFFIX-a" ;;
+  b:) RESULT_SUFFIX="$RESULT_SUFFIX-b" ;;
+  *) echo "MATRICES=$MATRICES with SUBTRACT_INIT=${SUBTRACT_INIT:-unset} has no meaning here:" \
+       "product and b take no SUBTRACT_INIT, a requires SUBTRACT_INIT=1" >&2; exit 1 ;;
+esac
 export RESULT_SUFFIX
 
-OUT="$(result_path "$HOME/client-geometry$RESULT_SUFFIX.json")"
+claim_result OUT "$HOME/client-geometry$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/adapter_geometry.py \
   --root "$HOME/scratch" \
   --pattern "$PATTERN" \

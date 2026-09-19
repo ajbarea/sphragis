@@ -21,6 +21,11 @@ source sphragis/experiment/cluster-env.sh
 tag_result_suffix CLIENT_SIZE
 # PACKING_SEED draws another assignment of examples to clients with the same initialization, and
 # names its own results and adapters so a second packing never lands on the first.
+# The initialization seed is 1, so PACKING_SEED=1 would be the default packing under a new name.
+if [ "${PACKING_SEED:-}" = 1 ]; then
+  echo "PACKING_SEED=1 is the default packing; draw another seed" >&2
+  exit 1
+fi
 [ -z "${PACKING_SEED:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-p$PACKING_SEED"
 export RESULT_SUFFIX
 
@@ -31,7 +36,7 @@ SOURCES="${SOURCES:-scripts/clients-cpp.txt}"
 # CLIENT_SIZE sets how much local training a client does: 64 examples is 8 optimiser steps,
 # 128 is 16. The RQ1 geometry says training length moves updates apart, so the attack has to be
 # read at more than one length.
-OUT="$(result_path "$HOME/client-updates$RESULT_SUFFIX.json")"
+claim_result OUT "$HOME/client-updates$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/client_updates.py \
   --clients "${CLIENTS_PER_SOURCE:-6}" \
   --client-size "${CLIENT_SIZE:-64}" \
