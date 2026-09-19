@@ -87,6 +87,14 @@
       "resamples": 2000,
       "standard_error": 0.00625777146464328,
       "trials": 1500
+    },
+    "0.50": {
+      "clusters": 19,
+      "exact_match_rate": 0.5,
+      "false_positive_rate": 0.05266666666666667,
+      "resamples": 2000,
+      "standard_error": 0.005767315313551525,
+      "trials": 1500
     }
   }
 }

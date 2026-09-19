@@ -1,10 +1,14 @@
 {
   "metric": "exact_match",
   "provenance": {
-    "generated_at": "2026-09-19T17:35:42.146902+00:00",
+    "generated_at": "2026-09-19T21:15:16.996212+00:00",
     "git": {
-      "commit": "29c9cdf9687369023c8ff93b219ea1876501a4ff",
-      "branch": "feat/wellposed-filter"
+      "commit": "a67fc519e5f72729d38a69d04cca40da275eb9e9",
+      "branch": "feat/wellposed-filter",
+      "uncommitted_code": [
+        "scripts/cluster_informativeness.py"
+      ],
+      "uncommitted_code_sha256": "251aa78380a065a53f3c1a6e6b84e89619db9d372ea6e40110ef95fe1ed5da02"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -15,7 +19,7 @@
     }
   },
   "runs": {
-    "rq1-windows-qtfull-fp32.json": {
+    "datasets/results/rq1-windows-qtfull-fp32.json": {
       "openstack|s1": {
         "changes": 235.0,
         "examples": 565.0,
@@ -35,7 +39,7 @@
         "estimand_distance": -0.0076320162205329445
       }
     },
-    "rq1-windows-qtfull-fp32-s2.json": {
+    "datasets/results/rq1-windows-qtfull-fp32-s2.json": {
       "openstack|s2": {
         "changes": 235.0,
         "examples": 565.0,
@@ -55,7 +59,7 @@
         "estimand_distance": -0.0024274985718031328
       }
     },
-    "rq1-windows-qtfull-fp32-s3.json": {
+    "datasets/results/rq1-windows-qtfull-fp32-s3.json": {
       "openstack|s3": {
         "changes": 235.0,
         "examples": 565.0,

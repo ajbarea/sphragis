@@ -35,16 +35,31 @@ RESULTS = Path("datasets/results/cluster-informativeness.json")
 parser = argparse.ArgumentParser()
 parser.add_argument("runs", type=Path, nargs="+")
 parser.add_argument("--metric", default="exact_match")
+parser.add_argument(
+    "--expect-seeds",
+    type=int,
+    default=3,
+    help="how many seed runs each organization must contribute; the report says three, and a "
+    "summary quietly built from two is a different statistic under the same name",
+)
 parser.add_argument("--out", type=Path, default=RESULTS)
 
 
 def correlation(xs: list[float], ys: list[float]) -> float:
-    """Pearson's r, or 0.0 where a side does not vary and no correlation is defined."""
+    """Pearson's r, or NaN where a side does not vary and no correlation is defined.
+
+    Not 0.0. Zero is the value that reads as maximal support for the registered choice, so a
+    degenerate run -- one change, a constant metric column, two identical arms -- would write
+    the study's own conclusion into the artifact and nothing downstream could tell it from a
+    measurement.
+    """
     mx, my = fmean(xs), fmean(ys)
     dx = [x - mx for x in xs]
     dy = [y - my for y in ys]
     denominator = (sum(a * a for a in dx) ** 0.5) * (sum(b * b for b in dy) ** 0.5)
-    return sum(a * b for a, b in zip(dx, dy, strict=True)) / denominator if denominator else 0.0
+    if not denominator:
+        return float("nan")
+    return sum(a * b for a, b in zip(dx, dy, strict=True)) / denominator
 
 
 def read(path: Path, metric: str) -> dict[str, dict[str, float]]:
@@ -114,10 +129,19 @@ def summarize(runs: dict[str, dict[str, dict[str, float]]]) -> dict[str, dict[st
 
 def main() -> None:
     args = parser.parse_args()
+    resolved = [path.resolve() for path in args.runs]
+    if len(set(resolved)) != len(resolved):
+        raise SystemExit(f"the same run was given twice: {[str(p) for p in args.runs]}")
+
     report = {"metric": args.metric, "provenance": provenance_header(), "runs": {}}
     for path in args.runs:
         rows = read(path, args.metric)
-        report["runs"][path.name] = rows
+        if not rows:
+            raise SystemExit(f"{path} contributed no organization-by-seed row")
+        # Keyed by the path as given, which stays portable across machines. Duplicates are
+        # refused above on the resolved paths, so two runs cannot collapse into one key and
+        # silently cost the summary a seed.
+        report["runs"][str(path)] = rows
         for name, row in rows.items():
             print(
                 f"{path.name} {name:<16} {int(row['changes']):4d} changes, largest "
@@ -126,6 +150,12 @@ def main() -> None:
                 f"{row['change_averaged']:+.4f}"
             )
     report["summary"] = summarize(report["runs"])
+    for org, row in report["summary"].items():
+        if int(row["seeds"]) != args.expect_seeds:
+            raise SystemExit(
+                f"{org} has {int(row['seeds'])} seeds, not {args.expect_seeds}: a median over "
+                "two is the mean of two, under a name the report reads as three"
+            )
     for org, row in sorted(report["summary"].items()):
         print(
             f"{org:<10} over {int(row['seeds'])} seeds: r median "
