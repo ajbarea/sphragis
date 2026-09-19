@@ -297,11 +297,12 @@ Every personalized federated adapter design splits the adapter into a transmitte
 kept local, differing only in where the cut falls. None measures whether its transmitted part
 identifies its source; PFAdapter states the gap in its own words. This apparatus can rank them.
 
-- [ ] **SDFLoRA's subspace cut** (`scripts/subspace_split.py`): not established, and instrument-
-  dependent. Family-wise over ranks, the held-out classifier finds the organization in the residual
-  (p 0.024) and not the shared part (p 0.095); the detector reads the shared part and runs inverted
-  on the residual. Two tests are registered for the ten-project AOSP rebuild: the detector on the
-  shared half at rank 4, and the classifier on the residual at rank 1.
+- [x] **SDFLoRA's subspace cut** (`scripts/subspace_split.py`): leaks, and the cut is what makes it
+  leak. Both tests registered for the ten-project rebuild pass on 48 C++ clients over thirteen
+  projects, corrected over the rank sweep against 1,716 groupings: the residual reaches 1.000 at a
+  family-wise p of 0.0006, and the shared half the design transmits reaches 0.917 at 0.0012, where
+  the intact update identifies nothing (0.542, p 0.39). The detector reads the shared half, AUC
+  0.974 at rank 2, and runs inverted on the residual.
 - [x] **PFAdapter's module-role cut** (`scripts/module_split.py`): leaks, on both corpora. The
   transmitted q and k carry AOSP at 0.702 against 0.735 for everything on the nine-project set, and
   at 0.778 against 0.842 on the rebuilt thirteen-project one; every projection type alone lands
