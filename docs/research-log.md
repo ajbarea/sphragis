@@ -4135,3 +4135,18 @@ built on them were wrong in a way a reviewer would have caught.
 
 The one badge left is the window assignment rule in section 5, which is a decision rather than a
 citation.
+
+### The two probes now differ on purpose, and the seal is enforced where months are read (2026-09-19)
+
+`scripts/separability_over_time.py`. The review noted that this probe reads every built month,
+dev included, where `separability.py` stops at train, and left it. The difference is right and was
+undocumented: this one asks whether the corpus moves over time, and a drift reading that stops two
+months early cannot see the end of its own series. It reads corpus text and no held-out
+predictions, so the dev window is described rather than spent. The docstring now says that instead
+of implying both probes follow one rule.
+
+What was missing is a guard. The months came from whatever `datasets/gerrit/<org>/examples` holds,
+so a test month fetched after acceptance would walk into a descriptive analysis by being on disk.
+`by_month` now refuses any month at or past the sealed window and says so, and both readings record
+`sealed_from`. Rerun on the committed drift case, the numbers are unchanged: OpenStack 0.552,
+Qt 0.510, the same early and late slices.

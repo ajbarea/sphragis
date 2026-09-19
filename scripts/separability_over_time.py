@@ -19,8 +19,13 @@ turned out not to be available here:
                organization's review text moving? Chance is 0.5, and above it means the corpus
                the study trains on is not the corpus it will test on.
 
-This does not touch the test window, which is never fetched, and it reads no held-out predictions,
-so it spends nothing.
+It reads every month built for an organization, which includes the dev window where
+`scripts/separability.py` confines itself to pilot and train. That is deliberate and the two
+probes differ: this one asks whether the corpus moves over time, and a drift reading that stops
+before the last two months cannot see the end of the series. It reads corpus text and no
+held-out predictions, so the dev window is described rather than spent. The test window is
+refused here in code as well as by the fetcher, so a month fetched after acceptance cannot walk
+into a descriptive analysis by being on disk.
 
     uv run --no-sync --no-active python scripts/separability_over_time.py \
         --out datasets/results/separability-over-time.json
@@ -34,6 +39,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
 
@@ -62,10 +68,18 @@ parser.add_argument(
 )
 
 
+#: No month from the test window is read, whatever is on disk. The seal is a protocol
+#: guarantee, so it is enforced where the months are loaded rather than assumed upstream.
+SEALED_FROM = WINDOWS["test"][0][:7]
+
+
 def by_month(org: str) -> dict[str, list[dict[str, Any]]]:
-    """Every built month of an organization, deduplicated within the month."""
+    """Every built month of an organization before the seal, deduplicated within the month."""
     out: dict[str, list[dict[str, Any]]] = {}
     for path in sorted(Path(f"datasets/gerrit/{org}/examples").glob("*.jsonl")):
+        if path.stem >= SEALED_FROM:
+            print(f"refusing {org} {path.stem}: at or past the sealed window {SEALED_FROM}")
+            continue
         rows = [json.loads(line) for line in path.open() if line.strip()]
         kept, _ = run_dedup(rows)
         out[path.stem] = kept
@@ -79,6 +93,7 @@ def drift(args: argparse.Namespace, months: dict[str, dict[str, list[dict[str, A
         "mode": "drift",
         "read": args.read,
         "suffixes": suffixes,
+        "sealed_from": SEALED_FROM,
         "organizations": {},
     }
     for org, built in months.items():
@@ -125,6 +140,7 @@ def main() -> None:
         "organizations": [first, second],
         "suffix": args.suffix,
         "months_per_slice": args.months_per_slice,
+        "sealed_from": SEALED_FROM,
         "slices": {},
     }
     for name, group in slices.items():
