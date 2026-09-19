@@ -4386,3 +4386,24 @@ transmits.
 That is now the second design whose transmitted half is more readable than the whole update it came
 from, after SDFLoRA's shared subspace. The pattern in both is the same: the part chosen for being
 common across clients is the part where what is not common stands out.
+
+### The subspace cut at the third length: still a leak, no longer a revelation (2026-09-19, job 150124)
+
+`subspace-split-cpp-256-c256.json`. The same registered split at 256 examples a client, on 32 C++
+clients over nine projects, against 126 groupings.
+
+| | 128 examples, 48 clients, 1,716 groupings | 256 examples, 32 clients, 126 groupings |
+|---|---|---|
+| the whole update | 0.542, p 0.39 | **0.906, p 0.040** |
+| shared half, best cell | 0.917, family-wise p 0.0012 | 0.906, family-wise p 0.032 |
+| residual, best cell | 1.000, family-wise p 0.0006 | 1.000, family-wise p 0.008, the floor |
+
+Both halves still identify the organization, and the residual is still perfect at rank 1. What
+changes is what they are being compared against: at 128 examples the intact update identified
+nothing, so cutting it was what made the source readable; at 256 the intact update identifies too.
+
+**So the cut's effect is regime-dependent, and the sharper claim belongs to the shorter length.**
+At the training length where a whole update hides its source, splitting it along the subspace
+clients share exposes that source. At the length where everything is exposed, the split neither
+helps nor hides. A defence evaluated only at long local training would therefore report that its
+cut costs nothing, and be right about the wrong regime.
