@@ -205,7 +205,14 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   defence. At sixteen times the update's own norm, detection is still 0.81 and 0.70 after 200
   rounds, because fresh masks average away and the source's direction does not. One round hides it
   (0.50 to 0.55); two hundred do not.
-- [ ] **Several local-training lengths** (`CLIENT_SIZE`), since longer training moves updates apart.
+- [x] **Several local-training lengths** (`CLIENT_SIZE`), since longer training moves updates
+  apart. It does, and it moves the *altitude* that leaks. At 128 examples a client rather than 64,
+  organization rises at every altitude and by every instrument while project and content fall:
+  beyond-project attribution 0.395 to 0.676, the AOSP detector's TPR at 1% false alarms 0.364 to
+  0.588, Qt's 0.456 to 0.910, and Qt's project-level permutation from an unremarkable 0.238 to the
+  1/84 floor. Leakage is a function of a knob the deployment sets, not a property of the corpus.
+  The two sets differ in size and composition, so this is two consistent points rather than a
+  controlled doubling. Job 149578 adds 256 as a third.
 - [x] **Explained the non-monotonicity in noise.** Not the finite pool: it survives 77 clients.
   The detector scores a cosine, so a mask attenuates each draw by `||v||/sqrt(||v||^2+||n||^2)`,
   and the null class's difference vector is shorter than a member class's once averaging has
