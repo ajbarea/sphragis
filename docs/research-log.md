@@ -3699,3 +3699,15 @@ aggregate convergence and network-local variation coexist, and an organization i
 cluster by construction. (A second hit, Kupari, Giacaman and Terragni, ICSME 2025, arXiv:2601.09832,
 was summarized elsewhere as finding code-style adherence stable over twelve months; its abstract
 page does not state that, so it is not cited for it.)
+
+### Registered before computing: collaboration overlap across an organization's projects
+
+From the raw change records, which carry salted pseudonyms for each change's owner, submitter and
+attention set: for each C++ project in the committed source list, the set of accounts that appear
+on its changes, and for each organization the mean Jaccard overlap between the account sets of its
+*different* projects. No account is identified; only set sizes and intersections are read.
+
+**Prediction:** AOSP's three projects (art, frameworks/av, system/core) share more of their people
+than Qt's six do, pairwise on average. If Qt's projects overlap as much as AOSP's or more, then
+collaboration density is not what separates a coherent organization from a loose one here, and the
+Tamura and Tsugawa mechanism does not transfer to this setting.
