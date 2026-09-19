@@ -306,6 +306,15 @@ identifies its source; PFAdapter states the gap in its own words. This apparatus
 - [ ] **FDLoRA and FedDPA's adapter-instance cut**: needs clients that train a global and a
   personal adapter jointly, then the attack on the global one alone.
 - [ ] **SecureGate's learned secure adapter**, which is not the same object as a scrubber.
+- [ ] **Fed-DiffLoRA's content/style cut** (IEEE TIP 2026, `# research(2026-09)`): splits each
+  client's adapter into orthogonal content and style subspaces and aggregates the style half
+  "while suppressing client-identifiable information". It is the only design in this family that
+  states source-hiding as a property, and it states it without measuring it. Text-to-image, so
+  this apparatus cannot run it directly; it is the strongest citation for why the measurement is
+  missing rather than a target.
+- [ ] **AS-LoRA's adaptive component selection** (arXiv:2605.05769): chooses A or B per layer and
+  per round from a curvature score. Given that A alone identifies a source best here, a cut that
+  moves between rounds is the case where the leak is not a fixed property of the design.
 - [ ] **FedAMoLE's data-dependent architecture** is not a cut at all: the expert assignment is a
   function of the client's data and the server observes it by construction. Out of scope for the
   weight-space attacks, and worth a sentence in the paper.

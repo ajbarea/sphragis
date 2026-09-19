@@ -4067,3 +4067,26 @@ comfortably conservative. The gate does not contrast base arms; it contrasts two
 0.32, where the same interval returns 5.7%. A binary outcome's variance collapses at the extremes,
 so calibration measured at an accuracy the study never operates at answers a question nobody asked.
 The script now takes its rate from the matched adapter arm and sweeps the dependence explicitly.
+
+### The field states source-hiding as a property and still does not measure it (2026-09-19)
+
+`# research(2026-09)`. A sweep of this year's federated-LoRA privacy work, read for whether anyone
+has now measured what RQ2 measures.
+
+- **Fed-DiffLoRA** (IEEE Trans. Image Processing 2026) splits a client's adapter into orthogonal
+  content and style subspaces and fuses the style half "while suppressing client-identifiable
+  information". It is the first design in this family to name source-hiding as a goal, and it
+  offers no attack against which the suppression is shown. Text-to-image, so the apparatus here
+  cannot run it; it is the citation for why the measurement is missing.
+- **AS-LoRA** (arXiv:2605.05769) picks A or B per layer and per round from a curvature score. Since
+  A alone is the best identifier in our factor readings, a cut that moves between rounds is the
+  case where leakage is not a property of the design at all.
+- **Rethinking LoRA for Privacy-Preserving Federated Learning** (ICLR 2026) is about utility under
+  differential privacy: gradient coupling, noise amplification, sharpness. No identifiability
+  measurement, which is the pattern.
+- **LoRA as Oracle** (arXiv:2601.11207) reads as source attribution in search summaries and is not:
+  it audits a received model for backdoors from the geometry of a low-rank update. Recorded because
+  the summary is misleading and the title will come up again.
+
+Nothing measures whether a transmitted adapter identifies its source at an operating point an
+attacker would use. The claim RQ2 registers is still unoccupied.
