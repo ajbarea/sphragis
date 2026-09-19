@@ -4332,3 +4332,35 @@ of how long each client trains locally: at 64 examples neither instrument identi
 organization beyond its projects, at 128 one of the two does under a detector, and at 256 both do
 under a detector and a classifier does as well. A deployment that trains longer locally, which is
 what one does to get more out of federated fine-tuning, leaks more about who its participants are.
+
+### The registered subspace tests pass, and the cut is what makes the source readable (2026-09-19, job 150123)
+
+`datasets/results/subspace-split-cpp-rebuilt-c128.json`. Two tests were registered for the
+ten-project rebuild before it existed: the detector on the shared half at rank 4, and the
+classifier on the residual at rank 1. Both are now run on 48 C++ clients over thirteen projects,
+with the attribution basis fitted without the scored client's whole project and the null the same
+1,716 groupings the detector uses.
+
+| | accuracy, held out by project | p, corrected over the rank sweep |
+|---|---|---|
+| the whole update | 0.542 | 0.39 |
+| shared half, best cell (rank 4) | **0.917** | **0.0012** |
+| residual, best cell (rank 1) | **1.000** | **0.0006**, the floor |
+
+Per rank, the shared half identifies at 2 and 4 and falls to chance from 8 upward, while the
+residual identifies at every rank to 16 and fades by 32. The detector reverses the roles: on the
+shared half it reaches AUC 0.974 with 77% of two-client rounds caught at one false alarm in a
+hundred at rank 2, and on the residual it runs inverted, AUC 0.274, as it did on the smaller
+corpus. So each half has its instrument, and the study reads each half with the one that works.
+
+**The finding is the cut itself.** The intact update identifies nothing here: 0.542 against a 0.521
+majority at p 0.39. Split it along the subspace SDFLoRA aligns across clients, and both pieces
+identify the organization, the transmitted piece at 0.917. Removing the directions that clients
+share does not remove what distinguishes them; it removes what dilutes the distinction. A defence
+that keeps the residual local therefore transmits a half that is more readable than the whole it
+came from, which is the opposite of the property it is offered for.
+
+This supersedes the "not established, rank- and instrument-dependent" reading from the nine-project
+corpus, where the baseline was below chance and the rank was chosen after the fact. Here the ranks
+were registered, the sweep is corrected for, and the baseline is the whole update measured the same
+way.
