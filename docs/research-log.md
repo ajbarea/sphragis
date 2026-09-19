@@ -3846,3 +3846,31 @@ Still open from the same review, and not yet fixed: the permutation's tests are 
 every mutant tried survives; the enumeration counts arrangements rather than distinct groupings;
 the overwrite guard checks at job start while scripts write hours later, so two concurrent jobs
 with one output can still replace each other; three further outputs are unguarded or misnamed.
+
+**The factor-geometry review: the A-only result survives, and two statements about it change.**
+The third review attacked "A alone identifies the organization better than B or the product" with
+every mechanical explanation it could construct, and none held:
+- label-shuffled and project-level nulls sit at chance, with the truth ranked first of 84;
+- norms are not the cue: a Gram matrix built from A's norms with a common cosine scores *below*
+  chance (0.46 and 0.41), and cosines alone reproduce the result (0.791 and 0.733);
+- the large shared component *suppresses* the signal rather than creating it: removing the global
+  mean raises A's AUC to 0.842 and 0.866;
+- equal-weighting the modules keeps A ahead (0.794 and 0.708 against B's 0.735 and 0.618), and A
+  matches or beats B for AOSP in every module kind;
+- leaving each project out in turn, A beats B for both organizations in all nine runs;
+- training order does not explain it (Mantel p 0.26 on A, 0.46 on B), and each client's LoRA state
+  is restored and checked, with a fresh optimizer and reseeded generator, before it trains.
+
+Two things change in how it is stated.
+1. **The product and B are one geometry, not two.** Their off-diagonal cosines correlate at 0.9998
+   (largest difference 0.006), because A barely moves from its near-orthogonal initialization, so
+   B A is close to B A0. "A beats B *and* the product" is one comparison.
+2. **The claim belongs to the membership detector.** FedAttr's paired-difference statistic runs
+   backwards for Qt on both factors (its own clients -0.061 against a stranger's +0.014 on A), and
+   on the A geometry the q and k projections alone put Qt below chance. The result is stated for
+   the detector that scores a round's aggregate against a reference direction, and not for every
+   statistic in the study.
+
+(With content held to C++ there are two organizations, so the AOSP and Qt permutations enumerate
+the same groupings as complements. They are two statistics over one null, not two independent
+tests.)
