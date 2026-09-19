@@ -3648,3 +3648,54 @@ its project-level permutation reached the 1/84 floor at that same length. By the
 above, pairwise coherence is not what the permutation reads, and the explanation is incomplete a
 third time. (Qt's interval at 64 also covers zero, so "Qt is incoherent" was already stronger than
 the data at that length; "Qt is not detectably coherent" is what it supports.)
+
+### Composition, not coherence, was the confound worth testing, and length survives it (2026-09-18)
+
+Two explanations for Qt's permutation moving from p = 0.238 at 64 examples a client to the 1/84 floor
+at 128 were tested and failed: pairwise coherence (Qt stays at -0.0005 at 128) and, post hoc,
+centred centroid coherence (Qt is positive at both lengths and *lower* at 128, +0.109 to +0.047).
+Rather than generate a third, this tests the confound the training-length entry already named: the
+two sets differ in composition as well as length, because packing at 128 leaves fewer clients per
+project (AOSP's system-core falls from three clients to one, frameworks-av from four to two).
+
+Five random subsamples of the **64-example** clients, each drawn to the **128-example** set's exact
+per-project counts (34 C++ clients), then the same project-level permutation:
+
+| | AOSP p | Qt p |
+|---|---|---|
+| 64 per client, full set | 0.012 | 0.238 |
+| 64 per client, 128's composition, draw 0 | 0.012 | 0.095 |
+| draw 1 | 0.012 | 0.155 |
+| draw 2 | 0.012 | 0.071 |
+| draw 3 | 0.012 | 0.298 |
+| draw 4 | 0.012 | 0.131 |
+| **128 per client** | 0.012 | **0.012** |
+
+Composition accounts for part of the movement -- matching it takes Qt from 0.238 to a median of
+0.131 -- but with 64-example updates Qt reaches the floor in none of five draws, and with
+128-example updates it does. **The longer training, not the repacking, is what makes Qt's grouping
+the most extreme of all 84.** AOSP is at the floor in every draw at both lengths.
+
+The limit on this, stated: the 128-example side is one packing, since a second needs another
+training run; the 64-example side is five. The comparison is five draws that never reach the floor
+against one that does, which is strong but not symmetric. Job 149598, at 256 examples a client on
+the same committed source list, is the next point, and a second 128 packing would make it
+symmetric.
+
+That leaves the training-length claim standing for both organizations, and leaves the *mechanism*
+for Qt open: whatever longer training adds, it is not pairwise or centroid coherence. Tamura and
+Tsugawa (arXiv:2609.19864, submitted 17 September 2026) offer a candidate worth measuring rather
+than asserting: across GitHub, identifier-naming diversity fell around 2023-2024 as LLM tools
+spread, yet "repositories whose owners are closer in the collaboration network remain more similar
+in naming style even among recent, more homogeneous cohorts", in five of six languages. If
+organizational coherence in update space tracks collaboration density, AOSP's platform team and
+Qt's looser federation of framework, IDE and runtime would differ exactly as they do. The built
+examples do not carry reviewer identities, but the raw snapshots carry stable salted pseudonyms, so
+reviewer overlap across an organization's projects is measurable without identifying anyone.
+
+That also answers a threat to the code-convention finding. If naming styles are converging under
+LLM tools, an organization's convention fingerprint might be eroding. Tamura and Tsugawa find that
+aggregate convergence and network-local variation coexist, and an organization is a network-local
+cluster by construction. (A second hit, Kupari, Giacaman and Terragni, ICSME 2025, arXiv:2601.09832,
+was summarized elsewhere as finding code-style adherence stable over twelve months; its abstract
+page does not state that, so it is not cited for it.)
