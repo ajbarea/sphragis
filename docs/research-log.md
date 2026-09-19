@@ -4364,3 +4364,25 @@ This supersedes the "not established, rank- and instrument-dependent" reading fr
 corpus, where the baseline was below chance and the rank was chosen after the fact. Here the ranks
 were registered, the sweep is corrected for, and the baseline is the whole update measured the same
 way.
+
+### A alone is still the leak, and on the rebuilt corpus it is the only reading that finds Qt (2026-09-19, jobs 150133, 150134)
+
+`aggregate-attack-cpp-rebuilt-c128-{a,b}.json`. FedSA-LoRA shares A and keeps B local, and its
+reason is that A is the more similar factor across clients. The same 48 C++ clients over thirteen
+projects, read three ways, at rounds of sixteen holding two of the target's clients:
+
+| reading | AOSP AUC | AOSP TPR at 1% | AOSP p | Qt AUC | Qt TPR at 1% | Qt p |
+|---|---|---|---|---|---|---|
+| the update, B A | 0.972 | 0.787 | 0.0006 | 0.928 | 0.564 | 0.100 |
+| **A alone**, transmitted | **0.983** | **0.839** | **0.0006** | **0.986** | **0.863** | **0.023** |
+| B alone, kept local | 0.970 | 0.773 | 0.0006 | 0.923 | 0.541 | 0.106 |
+
+**A beats the product and B on every cell**, which is what the nine-project corpus said and what an
+adversarial review could not break there. The new thing is Qt: the product leaves it unremarkable
+among relabelings (0.100) and so does B (0.106), while A finds it at 0.023. The organization this
+apparatus could not identify from its whole update is identifiable from the half the design
+transmits.
+
+That is now the second design whose transmitted half is more readable than the whole update it came
+from, after SDFLoRA's shared subspace. The pattern in both is the same: the part chosen for being
+common across clients is the part where what is not common stands out.
