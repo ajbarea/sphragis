@@ -3469,7 +3469,7 @@ difference is the whole point of keeping it.
 | SecureGate (Shaaban and Elmahallawy, **ACL 2026**, 2602.13529) | sanitization | the "secure" adapter | **partly measured.** See below |
 | FDLoRA (Lu et al., 2406.07925) | the adapter instance | the global module only | not measured; needs new training |
 | FedDPA (Yang et al., **NeurIPS 2024**, 2403.19211) | the adapter instance | the global adapter | not measured; needs new training |
-| FedAMoLE (Zhang et al., 2411.19128) | the architecture | experts plus an assignment | not measured, and see below |
+| FedAMoLE (Zhang et al., **WWW 2026**, 2411.19128) | the architecture | experts plus an assignment | not measured, and see below |
 
 **SecureGate, partly measured already.** Its secure adapter "learns sanitized, globally shareable
 representations" while a revealing adapter holds "sensitive, organization-specific knowledge"
@@ -3538,3 +3538,30 @@ whole side and counts the examples that lost anything or scored nothing. The sco
 unaffected, since `gap_k_percent` was computed correctly per example and aggregated correctly; only
 the diagnostic was truncated. The true corpus-wide cost needs the next battery run, and is not
 worth two hours of GPU on its own -- it rides along with the next one.
+
+### Novelty check: nobody is evaluating this (2026-09-18)
+
+`# research(2026-09)`. Searched for a benchmark or evaluation that asks whether the part a
+federated adapter scheme transmits identifies the client or organization that produced it. Nothing
+matches.
+
+What exists nearby, and why none of it covers the question:
+
+- The **FlowerTune LLM Leaderboard** is described as a first-of-its-kind public cross-domain
+  benchmark suite for federated fine-tuning of LLMs. It scores utility across domains. A scheme
+  that leaks its participants perfectly can top it.
+- Membership-inference work in federated learning (FedMIA, CVPR 2025; the ACM Computing Surveys
+  treatment, 10.1145/3704633) asks whether a *data point* was in training. The question here is
+  whose update this is, which is a different target with a different exchangeable unit.
+- The personalization literature measures what its split does for accuracy and communication cost,
+  and states privacy as an architectural property rather than measuring it.
+
+So the gap is not that the field lacks another partition scheme. It is that a deployment choosing
+among FedSA-LoRA, PFAdapter, SDFLoRA, FDLoRA, FedDPA, SecureGate and FedAMoLE has no way to ask
+which of them resists source attribution, and the three measured so far do not.
+
+**A correction to the table above.** FedAMoLE is published at **The Web Conference 2026**
+(doi 10.1145/3774904.3792147), not an unrefereed preprint as the arXiv identifier alone suggested.
+Its data-dependent expert assignment is therefore a refereed design, which strengthens rather than
+weakens the point that a structure chosen from a client's data distribution is a channel no
+weight-space partition covers.
