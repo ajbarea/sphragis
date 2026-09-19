@@ -303,8 +303,14 @@ identifies its source; PFAdapter states the gap in its own words. This apparatus
   the more similar factor across clients, which is the paper's own reason for sharing it.
 - [x] **SecureGate's scrubbing baseline**: already applied. The corpus is identity-scrubbed at
   ingestion and every RQ2 number was measured on it.
-- [ ] **FDLoRA and FedDPA's adapter-instance cut**: needs clients that train a global and a
-  personal adapter jointly, then the attack on the global one alone.
+- [ ] **FDLoRA and FedDPA's adapter-instance cut**: both read in full 2026-09-19. Both upload
+  both factors of one adapter and nothing else, so the attack surface is the one this apparatus
+  already reads; neither claims the uploaded part hides its source and neither runs an attack.
+  What a measurement needs is two adapters per client under two schedules: FedDPA's, where the
+  local adapter trains on top of a frozen global one and never moves, and FDLoRA's, whose global
+  module is seeded from the average of the personalized ones and periodically overwrites them, with
+  a sweep over its inner steps and sync period. Those endpoints test whether its boundary exists in
+  the numbers at all.
 - [ ] **SecureGate's learned secure adapter**, which is not the same object as a scrubber.
 - [ ] **Fed-DiffLoRA's content/style cut** (IEEE TIP 2026, `# research(2026-09)`): splits each
   client's adapter into orthogonal content and style subspaces and aggregates the style half
