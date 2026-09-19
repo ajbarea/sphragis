@@ -307,9 +307,11 @@ identifies its source; PFAdapter states the gap in its own words. This apparatus
   transmitted q and k carry AOSP at 0.702 against 0.735 for everything on the nine-project set, and
   at 0.778 against 0.842 on the rebuilt thirteen-project one; every projection type alone lands
   0.700-0.755 and 0.775-0.863. The half the design keeps local is the more identifying of the two.
-- [x] **FedSA-LoRA's factor cut** (jobs 149581, 149582): leaks most of the three. A alone beats
-  both B alone and the product, and moves Qt from p 0.238 to the 1/84 floor -- while A is by far
-  the more similar factor across clients, which is the paper's own reason for sharing it.
+- [x] **FedSA-LoRA's factor cut** (jobs 149581, 149582, 150133, 150134): leaks most of the three,
+  on both corpora. A alone beats both B alone and the product on every cell, and on the rebuilt
+  thirteen-project corpus it is the only reading that finds Qt at all: p 0.023 against 0.100 for
+  the whole update and 0.106 for B. A is by far the more similar factor across clients, which is
+  the paper's own reason for sharing it.
 - [x] **SecureGate's scrubbing baseline**: already applied. The corpus is identity-scrubbed at
   ingestion and every RQ2 number was measured on it.
 - [ ] **FDLoRA and FedDPA's adapter-instance cut**: both read in full 2026-09-19. Both upload

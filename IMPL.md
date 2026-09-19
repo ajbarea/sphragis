@@ -22,11 +22,12 @@ projects (0.583, p 0.30). At 256 examples both are found by the detector, AOSP a
 98.5% caught, and the classifier passes the beyond-project control too, 1.000 at the floor of its
 null. Composition moves with length, so these are three points on a ladder rather than a
 controlled doubling.
-Two splits the personalized-adapter literature proposes leave the source readable in the part
-they transmit: FedSA-LoRA's A, the best identifier of the factor readings and robust to every
-control an adversarial review ran, and PFAdapter's q and k. SDFLoRA's subspace cut is not
-established either way: where the signal sits depends on the rank. Masking fails against a
-scale-free detector and can help it.
+Three splits the personalized-adapter literature proposes leave the source readable in the part
+they transmit. FedSA-LoRA's A is the best identifier of the three factor readings and the only one
+that finds Qt on the rebuilt corpus. PFAdapter's q and k carry AOSP at 0.778 against 0.842 for the
+whole update. SDFLoRA's shared subspace reaches 0.917 at a family-wise p of 0.0012 where the intact
+update identifies nothing, so the cut is what makes the source readable rather than what hides it.
+Masking fails against a scale-free detector and can help it.
 
 **The second packing landed** (job 149607, analysed 2026-09-19). Same clients, same training seed,
 another assignment of examples to clients: the detector's rise with training length replicates
