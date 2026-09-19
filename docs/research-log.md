@@ -3633,3 +3633,18 @@ negative at 64 and **positive at 128**, because Qt's project-level permutation m
 to the 1/84 floor between those lengths and coherence is the quantity that permutation should be
 tracking. If Qt stays negative at 128, then coherence is not what the permutation reads and the
 explanation above is incomplete a third time.
+
+**Outcome: the prediction failed on the part that mattered.** Within C++, with 95% intervals from
+resampling each organization's projects:
+
+| coherence | 64 per client | 128 per client |
+|---|---|---|
+| AOSP (3 projects) | +0.0234 [+0.0173, +0.0311] | +0.0235 [+0.0079, +0.0298] |
+| Qt (6 projects) | -0.0067 [-0.0147, +0.0030] | **-0.0005** [-0.0040, +0.0039] |
+
+AOSP is positive at both lengths, as predicted, and Qt moved toward zero, as predicted. But Qt did
+**not** become positive: at 128 examples it sits at -0.0005 with an interval centred on zero, while
+its project-level permutation reached the 1/84 floor at that same length. By the criterion written
+above, pairwise coherence is not what the permutation reads, and the explanation is incomplete a
+third time. (Qt's interval at 64 also covers zero, so "Qt is incoherent" was already stronger than
+the data at that length; "Qt is not detectably coherent" is what it supports.)
