@@ -28,9 +28,11 @@ another assignment of examples to clients: the detector's rise with training len
 permutation stays at the floor, while nearest-class attribution falls from 0.765 to 0.559, below
 its own majority. The classifier reading was a packing artefact; the detector reading is not.
 
-**The AOSP ten-project rebuild is complete:** 5,130 examples over ten projects, 2024-01 to 2025-08.
-It unblocks the registered subspace tests and 256 examples a client, both of which need client
-training on the rebuilt corpus.
+**The AOSP ten-project rebuild is complete:** 5,130 examples over ten projects, 2024-01 to 2025-08,
+packed into `$HOME/corpus/clients3` on the cluster. Two client runs are queued on it: job 149957 at
+128 examples over seven AOSP C++ projects against Qt's six, which the registered subspace tests
+read, and the third training length at 256 over five against four, which asks whether the
+detector keeps rising.
 
 **The interval's false-positive rate is now an artifact** rather than a comment:
 `interval-calibration.json`, 5.7% at 19 changes and 4.7% at 91 against a nominal 5%, measured at
@@ -58,13 +60,14 @@ Every job claims its result file exclusively when it starts, so neither an exist
 
 ## Next pickups
 
-- The rest of the adversarial review: the permutation moved into `aggregate.py` with behavioural
-  tests, enumeration over distinct groupings, Qt's p reported over seeds, a fixed rank and fair
-  baseline for the subspace cut, and a dirty-tree flag in provenance.
+- What the adversarial review left open: a fixed rank and a fair baseline for the subspace cut,
+  which the registered tests on the rebuilt corpus supply. The permutation's move into
+  `aggregate.py` with behavioural tests, its enumeration over distinct groupings, Qt's p over
+  seeds and provenance's dirty-tree flag are in.
 - FDLoRA and FedDPA's adapter-instance cut, which needs clients training a global and a personal
   adapter jointly.
-- Clients on the rebuilt AOSP corpus: per-project corpora, a sources list over the ten projects,
-  then `client_updates` at 128 and 256 examples. The registered subspace tests read from those.
+- The registered subspace tests, which read the rebuilt corpus's clients: the detector on the
+  shared half at rank 4, the classifier on the residual at rank 1.
 
 ## Waiting on AJ
 
