@@ -3760,3 +3760,15 @@ Instead, job 149607 draws a **second packing at 128**, the same initialization a
 with a different assignment of examples to clients (`--packing-seed`, which defaults to `--seed`
 so every earlier run reproduces as it ran). The 64-example side of the length comparison has five
 draws and the 128-example side one; this makes it two, from runs that differ only in packing.
+
+### RQ1's contrast is still unclaimed by its nearest neighbours (2026-09-18)
+
+`# research(2026-09)`. Checked on their abstract pages: Kumar, Lones, Maarek and Zantout,
+"Fine-Tuning Models for Automated Code Review Feedback" (arXiv:2605.12610, May 2026), fine-tune Code
+Llama on feedback distilled from a proprietary model, for student Java code. Begolli, Aksoy and
+Neider, "Fine-Tuning Multilingual Language Models for Code Review: An Empirical Study on Industrial
+C# Projects" (arXiv:2507.19271), pool public benchmarks with industrial repositories into one
+training corpus. Neither trains per project or per organization, and neither evaluates an adapter
+on another organization's data. The matched-against-mismatched contrast RQ1 registers, which asks
+whether an adaptation is specific to the organization it came from rather than to the task, does
+not appear in either.
