@@ -3236,3 +3236,37 @@ files are rewritten from the current corpus.
 a few draws happened to clear the floor while the rest were dropped -- so the surviving interval
 was selected on passing the very check the estimate failed, and printed as `[0.562, 0.857]` beside
 a NaN. It now returns NaN for the interval too, and the probe prints the refusal as a refusal.
+
+### The defence curve was pooled over content, and for Qt that made it meaningless (2026-09-18)
+
+On the 77-client set, Qt's curve came back **below chance at every noise level** -- AUC 0.394 at
+50 rounds with no mask at all, standard deviation 0.046 over splits. A detector that is reliably
+worse than a coin is either inverted or measuring something else. Measured directly, with half of
+Qt's clients as the reference and the other half held out:
+
+| mean cosine with Qt's reference direction | |
+|---|---|
+| Qt's own held-out clients | +0.4516 |
+| outsiders, AOSP and OpenStack together | +0.4540 |
+| gap | **-0.0024** |
+
+and against the mean of all 39 Qt clients, AOSP's thirteen sit at +0.4897 against OpenStack's
++0.4640, with Qt's own at +0.5095 -- a figure inflated by each client's own contribution to the
+mean it is scored against, which is exactly what the split removes.
+
+So Qt's reference direction is a **C++ direction**. AOSP's clients are all C++, Qt's are 30 of 39,
+and a round of outsiders containing an AOSP client scores as high as a round containing a Qt one.
+The gap is zero and the AUC is noise about it, which happened to fall below 0.5.
+
+This is not a defect in the curve; it is the content confound the per-client attribution already
+found, reappearing in the second threat model, and the earlier pooled AOSP figures should be read
+with it in mind: AOSP's curve worked because AOSP is one language and most of its outsiders are
+not, which is a property of the mixture rather than of AOSP. `--content` now restricts every
+client to one content type, as the aggregate attack already did, and the C++-only curve is
+running. The pooled Qt cells are not worth the hours and the run was stopped.
+
+The general statement, which belongs in the paper: **a reference direction built from an
+organization that writes mostly one language is that language's direction**, and any defence
+evaluated against it measures whether noise hides a language rather than whether it hides a member.
+Holding content fixed is not a refinement of these attacks; it is a precondition for them meaning
+anything.

@@ -43,6 +43,12 @@ parser.add_argument("--rounds", type=int, nargs="+", default=[1, 10, 100])
 parser.add_argument("--draws", type=int, default=300)
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--splits", type=int, default=4, help="reference splits averaged over")
+parser.add_argument(
+    "--content",
+    default=None,
+    help="restrict every client to one content type, so the reference direction cannot be the "
+    "language rather than the organization",
+)
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -133,9 +139,22 @@ def main() -> None:
     names = [str(n).split("/", 1)[1] for n in loaded["names"]]
     clients = json.loads(args.clients.read_text())["clients"]
     sources = [Source.parse(clients[n]["source"]) for n in names]
+    if args.content:
+        # Pooled over content, a target's reference direction is its dominant language, and any
+        # participant writing that language scores like a member. Measured on the 77-client set:
+        # Qt's held-out clients sat 0.0024 BELOW outsiders in cosine with Qt's own reference,
+        # because AOSP's C++ clients are as close to a C++ direction as Qt's are, and the curve
+        # came out under 0.5 at every noise level.
+        keep = [i for i, s in enumerate(sources) if s.at("content") == args.content]
+        if len(keep) < 2:
+            raise SystemExit(f"{len(keep)} clients write {args.content}")
+        vectors = vectors[keep]
+        sources = [sources[i] for i in keep]
+        print(f"{len(keep)} clients write {args.content}", flush=True)
     rng = np.random.default_rng(args.seed)
 
     report: dict = {
+        "content": args.content,
         "round_size": args.round_size,
         "draws": args.draws,
         "dimension": int(vectors.shape[1]),
