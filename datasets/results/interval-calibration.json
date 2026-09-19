@@ -1,0 +1,104 @@
+{
+  "ladder": {
+    "10": {
+      "clusters": 10,
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.07,
+      "resamples": 2000,
+      "standard_error": 0.006587867636800242,
+      "trials": 1500
+    },
+    "19": {
+      "clusters": 19,
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.056666666666666664,
+      "resamples": 2000,
+      "standard_error": 0.005969676459996558,
+      "trials": 1500
+    },
+    "200": {
+      "clusters": 200,
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.048,
+      "resamples": 2000,
+      "standard_error": 0.005519420259411309,
+      "trials": 1500
+    },
+    "30": {
+      "clusters": 30,
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.05533333333333333,
+      "resamples": 2000,
+      "standard_error": 0.0059031943643847356,
+      "trials": 1500
+    },
+    "45": {
+      "clusters": 45,
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.059333333333333335,
+      "resamples": 2000,
+      "standard_error": 0.0060998846376462395,
+      "trials": 1500
+    },
+    "91": {
+      "clusters": 91,
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.04733333333333333,
+      "resamples": 2000,
+      "standard_error": 0.00548287569856603,
+      "trials": 1500
+    }
+  },
+  "null": {
+    "arm": "adapter:openstack|openstack|s1",
+    "changes_in_window": 235,
+    "exact_match_rate": 0.3185840707964602,
+    "largest_change": 45,
+    "nominal_two_sided": 0.05,
+    "window": "datasets/results/rq1-windows-qtfull-fp32.json"
+  },
+  "provenance": {
+    "generated_at": "2026-09-19T12:49:46.176899+00:00",
+    "git": {
+      "branch": "feat/wellposed-filter",
+      "commit": "eeab8ab3fab0be2bd23d6a4460f655818c03210a",
+      "uncommitted_code": [
+        "scripts/interval_calibration.py"
+      ],
+      "uncommitted_code_sha256": "5f9abbb10f7d098a6ea6efc0a39d1e7dd73d6e5b044a727d05259629a0eba367"
+    },
+    "packages": {
+      "peft": "0.20.0",
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0"
+    },
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.14.4"
+  },
+  "rate_sensitivity": {
+    "0.05": {
+      "clusters": 19,
+      "exact_match_rate": 0.05,
+      "false_positive_rate": 0.03133333333333333,
+      "resamples": 2000,
+      "standard_error": 0.004498263039259751,
+      "trials": 1500
+    },
+    "0.15": {
+      "clusters": 19,
+      "exact_match_rate": 0.15,
+      "false_positive_rate": 0.06266666666666666,
+      "resamples": 2000,
+      "standard_error": 0.00625777146464328,
+      "trials": 1500
+    },
+    "0.50": {
+      "clusters": 19,
+      "exact_match_rate": 0.5,
+      "false_positive_rate": 0.05266666666666667,
+      "resamples": 2000,
+      "standard_error": 0.005767315313551525,
+      "trials": 1500
+    }
+  }
+}

@@ -57,10 +57,13 @@ ESTIMATORS: Mapping[str, Estimator] = {
 
 
 # Measured false-positive rate of this function under a true null (both arms at the same
-# exact-match rate), 1,500 trials per point, 2,000 resamples, two-sided exclusion of zero:
-# 5 changes 8.9%, 10 changes 7.4%, 19 changes 6.0%, 30 changes 6.5%, 45 changes 6.5%,
-# 91 changes 5.5%, 200 changes 5.7%, against a nominal 5% (standard error about 0.6 points).
-# Mildly anti-conservative throughout, clearly so below 10 changes. The gate reads one side,
+# exact-match rate), by `scripts/interval_calibration.py` into
+# `datasets/results/interval-calibration.json`: 10 changes 7.0%, 19 changes 5.7%,
+# 30 changes 5.5%, 45 changes 5.9%, 91 changes 4.7%, 200 changes 4.8%, against a nominal 5%
+# (standard error about 0.6 points). Anti-conservative where the clusters are few and
+# nominal from about 90 upward. The rate the null is drawn at decides this: at 19 changes it
+# reads 3.1% at the base arm's 0.05 accuracy and 5.7% at the matched adapter's 0.32, so the
+# figure to quote is the one measured where the gate operates. The gate reads one side,
 # nominal alpha 0.025, so these rates roughly halve for it. The floor rules out the
 # degenerate end: at one cluster every resample is that cluster, so the interval has zero
 # width and always excludes zero.

@@ -3160,11 +3160,12 @@ clients rather than 43:
 | AOSP detector, rounds of 16, two clients | AUC 0.858, TPR 0.364 | AUC 0.940, **TPR 0.588** |
 | Qt detector, rounds of 8, two clients | AUC 0.859, TPR 0.456 | AUC 0.980, **TPR 0.910** |
 | AOSP project-level permutation | p 0.012 | p 0.012 |
-| Qt project-level permutation | p 0.238 | **p 0.012** |
+| Qt project-level permutation | p 0.238 | **p 0.018** (median of 4 seeds; 0.012 to 0.036) |
 
 Organization rises at every altitude and by every instrument; project and content fall. Qt, which
-was unremarkable among relabelings at 64, is the most extreme of all 84 arrangements at 128, and
-so is AOSP. The detector's low-false-positive numbers move furthest: at one false alarm in a
+was unremarkable among relabelings at 64, is at or within two of the most extreme of all 84
+arrangements at 128 depending on the round-draw seed, where AOSP is the most extreme at every
+seed. The detector's low-false-positive numbers move furthest: at one false alarm in a
 hundred, a round holding two Qt clients goes from 46% caught to 91%.
 
 **What this is and is not.** The nearest-class figure of 0.765 against a 0.735 majority is one
@@ -4008,3 +4009,61 @@ Still open from that review, and recorded rather than fixed: a SIGKILLed job lea
 claim that cannot be told from a live one, which a Slurm requeue would refuse; several load-bearing
 behaviours have no test (the permutation's split over projects, the family-wise step, the
 contamination partial's claimed name, calibration claiming every condition before training).
+
+### Repack the same clients and the detector survives; the classifier does not (2026-09-19)
+
+`*-c128-p2.json`. The 128-example run said leakage is a function of how long each client trains.
+It was one packing, so who shared a client with whom was decided once, and the reading rested on
+two points that differ in size as well as in length. This is the same 51 clients, the same
+training seed, the same 128 examples each, repacked with packing seed 2: the only thing that moves
+is which examples group into which client.
+
+| within C++ | 64 | 128, packing 1 | 128, packing 2 |
+|---|---|---|---|
+| organization, nearest class | 0.395 (majority 0.698) | 0.765 (majority 0.735), p 0.034 | **0.559**, p 0.455 |
+| organization, beyond project | 0.395, p 0.75 | 0.676, p 0.19 | **0.529**, p 0.55 |
+| project, all clients | 0.442 | 0.373 | 0.412 |
+| content, all clients | 0.909 | 0.784 | 0.961 |
+| AOSP detector, rounds of 16, two clients | AUC 0.858, TPR 0.364 | AUC 0.940, TPR 0.588 | AUC 0.887, **TPR 0.419** |
+| Qt detector, rounds of 8, two clients | AUC 0.859, TPR 0.456 | AUC 0.980, TPR 0.910 | AUC 0.962, **TPR 0.813** |
+| AOSP project permutation, median of 4 seeds | 0.012 | 0.012 | 0.012 |
+| Qt project permutation, median of 4 seeds | 0.250 | 0.018 | 0.042 |
+
+**The length effect replicates where it was claimed, and only there.** Every detector cell at 128
+beats its 64 counterpart under both packings: AOSP 0.364 to 0.588 and 0.419, Qt 0.456 to 0.910 and
+0.813. AOSP's permutation sits at the floor in all twelve seed-by-packing cells, and Qt's, which
+could not be told from a relabeling at 64, is below 0.05 at the median under both packings.
+
+**The classifier rows were a packing artefact.** Nearest-class attribution within C++ went 0.395
+to 0.765 and read as the classifier waking up; repacked it is 0.559, below its own 0.735 majority,
+at p 0.455. The beyond-project control moves with it, 0.676 to 0.529. Nothing about the
+organizations or the training changed between those two numbers, so the difference is which
+examples happened to share a client, and the earlier caveat that 0.765 was one client's difference
+on 34 was the right instinct: the resolution was never there.
+
+**What this settles for RQ2.** The registrable claim is the detector's, not the classifier's: at
+one false alarm in a hundred, a round holding two Qt clients is caught 81 to 91 percent of the
+time when clients train on 128 examples against 46 percent at 64, and the ordering holds under a
+repacking that halves the classifier's accuracy. That is the same operating-point distinction the
+rest of RQ2 rests on, arriving here from a control rather than from an argument.
+
+The third length, which asks whether the detector keeps climbing, is still the open item. It now
+needs two packings to be worth running.
+
+### The interval's own false-positive rate, measured rather than quoted (2026-09-19)
+
+`datasets/results/interval-calibration.json`, `scripts/interval_calibration.py`. Section 7 of the
+report states the pairs cluster bootstrap's false-positive rate under a true null. That figure has
+been living in a comment in `measure/stats.py` since it was measured, with no artifact behind it,
+which is the one thing a registered report cannot do with a number a reviewer will check.
+
+It is now measured by the script, against the same `cluster_bootstrap` the gate calls, with the
+dev window's own change sizes and the matched adapter arm's accuracy: 1,500 trials a point, 2,000
+resamples, two-sided exclusion of zero against a nominal 5%.
+
+**The rate the null is drawn at decides the answer, and the first run used the wrong one.** At the
+base arm's 0.048 the interval excludes zero 2.9% of the time at 19 clusters, which reads as
+comfortably conservative. The gate does not contrast base arms; it contrasts two adapter arms near
+0.32, where the same interval returns 5.7%. A binary outcome's variance collapses at the extremes,
+so calibration measured at an accuracy the study never operates at answers a question nobody asked.
+The script now takes its rate from the matched adapter arm and sweeps the dependence explicitly.
