@@ -21,9 +21,11 @@ and the call itself, quoted, at `org-fingerprint/VENUE.md`.
   stays in code, and those tests run before 2026-11-20. A power analysis is expected.
 - Every deviation from the accepted protocol must be reported in the EMSE paper, so any change
   after acceptance that touches the protocol is recorded with its date and reason.
-- If review is anonymous (open question 2 in `VENUE.md`), the artifact link in the report must
-  not identify the author, so the repository stays private or goes behind an anonymized mirror
-  until notification.
+- Stage 1 review is not double-anonymous: the track chair confirmed it by email on 2026-09-18,
+  and is correcting the submission site, which was set for blind submissions. The artifact link
+  may therefore identify the author and no anonymized mirror is needed. Whether this repository
+  is public at submission is a separate decision, and the report needs a link a reviewer can
+  open.
 - Generative-AI use must be disclosed in the paper, so it is logged as the work happens.
 
 ---
