@@ -13,9 +13,12 @@ both RQ2 threat models. Its description was rewritten on 2026-09-18 against curr
 **RQ1, dev window, three seeds, fp32:** Qt +0.0316 [+0.0089, +0.0567], OpenStack +0.0230
 [+0.0000, +0.0457], mixed. The test window stays sealed until in-principle acceptance.
 
-**RQ2 has become a defence evaluation.** On 43 C++ clients from one initialization:
-organization is not a class a classifier can assign, but a detector with a project-split
-reference finds AOSP (p = 0.012 over 84 groupings), and at 128 examples a client finds Qt too.
+**RQ2 has become a defence evaluation.** Organization is not a class a classifier can assign,
+but a detector with a project-split reference finds AOSP: on the rebuilt corpus, seven of its C++
+projects against Qt's six, AOSP sits at the floor of 1,716 groupings at every seed (p = 0.0006)
+with a detector at AUC 0.972 and 79% of two-client rounds caught at one false alarm in a hundred.
+Qt does not: its permutation is a median 0.070 there, and the earlier reading that it did was the
+84-grouping null and the three-project AOSP set behind it.
 Two splits the personalized-adapter literature proposes leave the source readable in the part
 they transmit: FedSA-LoRA's A, the best identifier of the factor readings and robust to every
 control an adversarial review ran, and PFAdapter's q and k. SDFLoRA's subspace cut is not
@@ -28,11 +31,10 @@ another assignment of examples to clients: the detector's rise with training len
 permutation stays at the floor, while nearest-class attribution falls from 0.765 to 0.559, below
 its own majority. The classifier reading was a packing artefact; the detector reading is not.
 
-**The AOSP ten-project rebuild is complete:** 5,130 examples over ten projects, 2024-01 to 2025-08,
-packed into `$HOME/corpus/clients3` on the cluster. Two client runs are queued on it: job 149957 at
-128 examples over seven AOSP C++ projects against Qt's six, which the registered subspace tests
-read, and the third training length at 256 over five against four, which asks whether the
-detector keeps rising.
+**The rebuild's 128-example run is analysed** (jobs 149957, 150085): 65 clients, seven AOSP C++
+projects against Qt's six. It withdrew the Qt reading and strengthened AOSP's, and it is what the
+registered subspace tests read. The third training length, 256 examples over five projects against
+four, is trained and its geometry is pulled; its attacks are the next run.
 
 **The interval's false-positive rate is now an artifact** rather than a comment:
 `interval-calibration.json`, 5.7% at 19 changes and 4.7% at 91 against a nominal 5%, measured at
