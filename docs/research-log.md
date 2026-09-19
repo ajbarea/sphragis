@@ -3338,3 +3338,65 @@ Each factor is compared as the movement from what the server broadcast: B starts
 its own movement, and A starts at a shared random initialization, so the A geometry subtracts it.
 Both are therefore "how far this client moved the matrix the server sent it", which is what an
 honest-but-curious server observes.
+
+### Cutting by module role does not remove the source either (2026-09-18)
+
+`scripts/module_split.py`, `datasets/results/module-split.json`. PFAdapter (Liu, Yang, Wang, Yang,
+Hao, Zhang, Liu and Zhou, IEEE TCCN, arXiv:2607.12111, 13 July 2026, read from the PDF) cuts the
+adapter by the role of the projection: "query and key projections are assigned to global
+synchronization ... while value and output projections remain localized", and transmits only the
+global-shared set, halving traffic. The geometry already stores a cosine matrix per adapted module,
+and a mean of positive semi-definite matrices is positive semi-definite, so any subset of the 196
+modules is scored directly as the Gram matrix of unit vectors.
+
+43 C++ clients, detector AUC with the reference split over projects:
+
+| cut | modules | attribution | AOSP | Qt |
+|---|---|---|---|---|
+| **PFAdapter transmits (q, k)** | 56 | 0.395 | **0.702** | **0.583** |
+| PFAdapter keeps local (v, o) | 56 | 0.395 | 0.754 | 0.669 |
+| attention, all four | 112 | 0.395 | 0.735 | 0.628 |
+| MLP, all three | 84 | 0.395 | 0.732 | 0.627 |
+| everything | 196 | 0.395 | 0.735 | 0.628 |
+| q_proj alone | 28 | 0.442 | 0.700 | 0.589 |
+| v_proj alone | 28 | 0.372 | 0.755 | 0.657 |
+
+**The source is redundantly encoded across module roles.** What PFAdapter transmits carries almost
+the whole signal: AOSP at 0.702 against 0.735 for the complete update. The set it keeps local is
+slightly the more identifying of the two, at 0.754, but withholding it removes almost nothing from
+what the server already has. Every single projection type, alone, detects AOSP between 0.700 and
+0.755.
+
+The attribution column reading 0.395 for five different cuts is a coincidence of count, not a bug:
+the matrices differ (mean off-diagonal cosine 0.229 for q and k against 0.334 for v and o, largest
+entrywise difference 0.152), and the q,k cut gets a *different* pair of clients right than the full
+update does. The nearest-class rule is simply coarse at 43 clients, which is the classification
+operating point this study already reports as uninformative. The detector is what separates the
+cuts.
+
+### Three cuts tested, and what the family has in common (2026-09-18)
+
+Every personalized federated adapter design in the reading splits the adapter into a transmitted
+part and a part kept local. They differ only in where the cut falls.
+
+| design | cuts by | transmitted | does the transmitted part still identify the organization? |
+|---|---|---|---|
+| SDFLoRA (arXiv:2601.11219) | subspace | the aligned shared subspace | **yes, and more clearly than the whole update**: 0.791 against 0.419 |
+| PFAdapter (IEEE TCCN) | module role | q and k projections | **yes**: AOSP 0.702 against 0.735 for everything |
+| FedSA-LoRA (ICLR 2025) | LoRA factor | A only | jobs 149581 and 149582 |
+| SecureGate (ACL 2026) | sanitization | the "secure" adapter | not measured here |
+| FedDPA (NeurIPS 2024), FDLoRA | adapter instance | the global adapter | not measured here |
+
+Two of the three cuts tested leave the source where the server can read it, and one of them hands
+the server a cleaner copy than the raw update. The reason is the same in both cases: the
+organizational signal is not a localized idiosyncrasy that a partition can quarantine, it is
+diffuse and redundant, present in every module role and concentrated in the very directions that
+alignment identifies as common.
+
+**This is the gap the study can speak to, and it is not a seventh splitting scheme.** None of these
+papers measures whether its transmitted part identifies its source; PFAdapter says so in its own
+words -- "FL keeps raw samples on device, but it does not by itself guarantee resistance to update
+inversion, gradient leakage, or membership inference. The privacy scope of PFAdapter is therefore
+limited to decentralized training without centralized raw-data pooling". What is missing from the
+field is not another cut but an evaluation that tells a deployment whether the cut it chose
+defends against source attribution. That evaluation is what this apparatus is.
