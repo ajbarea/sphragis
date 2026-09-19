@@ -45,6 +45,19 @@ _release_unfilled_claims() {
   done
 }
 trap _release_unfilled_claims EXIT
+# The portal's job list shows the job name, and every job of one kind used to carry the same one:
+# three "sphragis-geometry" rows say nothing about which run each belongs to. The result a job
+# claims is exactly what distinguishes it, so the name takes the result's basename. Renaming is
+# best effort: a Slurm that refuses it, or a run outside Slurm, must not fail the job over a label.
+name_job_after_result() {
+  local path="$1" base
+  [ -n "${SLURM_JOB_ID:-}" ] || return 0
+  command -v scontrol >/dev/null 2>&1 || return 0
+  base="$(basename "$path")"
+  base="${base%%.*}"
+  scontrol update "JobId=$SLURM_JOB_ID" "JobName=$base" >/dev/null 2>&1 || true
+}
+
 claim_result() {
   local name="$1" path="$2" why
   if [ "${OVERWRITE:-0}" != 1 ]; then
@@ -60,6 +73,7 @@ claim_result() {
     fi
     SPHRAGIS_CLAIMS+=("$path")
   fi
+  name_job_after_result "$path"
   printf -v "$name" '%s' "$path"
 }
 

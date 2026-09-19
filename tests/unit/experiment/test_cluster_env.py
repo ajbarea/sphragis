@@ -735,3 +735,53 @@ def test_the_default_packing_under_a_new_name_is_refused(tmp_path: Path) -> None
     result = _run_job("client_updates.sbatch", tmp_path, PACKING_SEED="1")
     assert result.returncode != 0
     assert "default packing" in result.stderr
+
+
+def test_a_job_is_named_after_the_result_it_claims(tmp_path: Path) -> None:
+    """The portal lists job names, and one name per script says nothing about which run it is.
+
+    Renaming runs through `scontrol`, so the test stands one on PATH that records its arguments.
+    """
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    recorded = tmp_path / "scontrol-args"
+    fake = bin_dir / "scontrol"
+    fake.write_text(f'#!/bin/bash\nprintf "%s\\n" "$@" >> {recorded}\n')
+    fake.chmod(0o755)
+
+    script = (
+        f'export PATH="{bin_dir}:$PATH"\n'
+        "export SLURM_JOB_ID=4242\n"
+        f'claim_result OUT "{tmp_path}/client-updates-cpp-256-c256.json"\n'
+    )
+    _source(tmp_path, tmp_path, script)
+
+    assert recorded.exists(), "the job was not renamed"
+    arguments = recorded.read_text().split()
+    assert "JobId=4242" in arguments
+    assert "JobName=client-updates-cpp-256-c256" in arguments
+
+
+def test_a_job_outside_slurm_is_not_renamed(tmp_path: Path) -> None:
+    """A local run has no job to rename, and must not fail for trying."""
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    recorded = tmp_path / "scontrol-args"
+    fake = bin_dir / "scontrol"
+    fake.write_text(f'#!/bin/bash\nprintf "%s\\n" "$@" >> {recorded}\n')
+    fake.chmod(0o755)
+
+    script = (
+        f'export PATH="{bin_dir}:$PATH"\n'
+        "unset SLURM_JOB_ID\n"
+        f'claim_result OUT "{tmp_path}/client-updates-local.json"\n'
+        'echo "claimed $OUT"\n'
+    )
+    result = _source(tmp_path, tmp_path, script)
+
+    assert "claimed" in result.stdout
+    assert not recorded.exists(), "a local run tried to rename a job"
