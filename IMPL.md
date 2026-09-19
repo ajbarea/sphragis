@@ -7,58 +7,58 @@ What is being built right now. The dated record of findings, numbers and correct
 
 ## In flight
 
-**PR #13** (`feat/wellposed-filter`), open for AJ: the whole apparatus, from corpus to gate.
-Everything since the last merge sits on it, including the statistics the gate reads. Reviewed in
-five rounds against the diff; every finding reproduced and fixed, summarised on the PR.
+**PR #13** (`feat/wellposed-filter`), open for AJ: the whole apparatus, from corpus to gate and
+both RQ2 threat models. Its description was rewritten on 2026-09-18 against current evidence.
 
-**RQ1 is answered on the dev window, at three seeds** (jobs 148198, 148404, 148406): Qt +0.0312
-[+0.0080, +0.0565], OpenStack +0.0171 covering zero, mixed under both rules and both estimands.
-The test window stays sealed.
+**RQ1, dev window, three seeds, fp32:** Qt +0.0316 [+0.0089, +0.0567], OpenStack +0.0230
+[+0.0000, +0.0457], mixed. The test window stays sealed until in-principle acceptance.
 
-**RQ2 has its first result and its next design.** 34 client updates from one initialization say a
-client's update identifies its codebase family, not its organization. Separating the two needs
-several projects per organization in one language, which AOSP's C++ projects supply beside Qt's.
-AOSP months 2024-01 to 2025-03 are fetching and building locally; the public record ends 2025-03-27.
+**RQ2 has become a defence evaluation.** On 43 C++ clients from one initialization:
+organization is not a class a classifier can assign, but a detector with a project-split
+reference finds AOSP (p = 0.012 over 84 groupings), and at 128 examples a client finds Qt too.
+Every personalized-adapter design that splits the adapter leaves the source readable in the part
+it transmits: FedSA-LoRA's A (the best identifier of the three readings), PFAdapter's q and k,
+SDFLoRA's shared subspace (better than the whole update). Masking fails against a scale-free
+detector and can help it.
+
+**Running:** job 149598 (256 examples a client, `scripts/clients-cpp-early.txt`); the local AOSP
+ten-project rebuild, detached, about half an hour a month.
 
 ## RQ2's analysis, end to end
 
-One client run produces the adapters; everything after it is CPU and reads only what the run wrote.
-
 ```bash
-# 1. corpora, one file per project, pooled windows (RQ2 needs no time split)
-uv run --no-sync --no-active python scripts/project_corpora.py --org qt --window train --window dev \
-    --out-dir <dir> --projects qt/qtbase ...            # and --window all for AOSP
-# 2. the clients themselves, on a GPU: one initialization, one size, disjoint by change
-make submit-pinned JOB=client_updates TIME=04:00:00 \
-    SBATCH_ARGS=--export=ALL,CLIENTS=<dir>,SOURCES=<dir>/sources.txt,RUN_TAG=<tag>
-# 3. their geometry and their sketches, CPU jobs on the cluster
-make submit-pinned JOB=adapter_projection            # PATTERN= for a tagged adapter directory
-#    adapter_geometry --per-module, likewise
-# 4. who a client is, from its update alone
-uv run --no-sync --no-active python scripts/client_attribution.py --geometry ... --clients ... --out ...
-# 5. what a round's aggregate betrays, and what noise costs the attacker
-uv run --no-sync --no-active python scripts/aggregate_attack.py --geometry ... --clients ... --out ...
-uv run --no-sync --no-active python scripts/defence_curve.py --vectors ... --clients ... --out ...
+# clients on a GPU, one initialization; the source list is committed, the corpus is on the cluster
+make submit-pinned JOB=client_updates TIME=10:00:00 SBATCH_ARGS=--export=ALL,RUN_TAG=cpp-early,\
+CLIENT_SIZE=128,CLIENTS=$HOME/corpus/clients2,SOURCES=scripts/clients-cpp-early.txt
+# geometry (product, or one factor with MATRICES=a|b SUBTRACT_INIT=1) and sketches, CPU jobs
+make submit-pinned JOB=adapter_geometry SBATCH_ARGS=--export=ALL,PATTERN=<adapters>/*-c*/adapter_model.safetensors
+make submit-pinned JOB=adapter_projection SBATCH_ARGS=--export=ALL,PATTERN=...
+# attacks, locally; hold content fixed with --content cpp throughout
+scripts/client_attribution.py   # nearest class, beyond project
+scripts/aggregate_attack.py     # detector, --beyond-project, permutation over projects
+scripts/defence_curve.py        # masking, reference split over projects
+scripts/masking_mechanism.py    # why a mask can help a cosine detector
+scripts/subspace_split.py       # SDFLoRA's cut
+scripts/module_split.py         # PFAdapter's cut
 ```
+
+Every job refuses to overwrite an existing result (`OVERWRITE=1` replaces one deliberately).
 
 ## Next pickups
 
-- Build the AOSP and Qt C++ client corpora, rerun `client_updates` over the larger source set, and
-  read `organization beyond project` with the project as the exchangeable unit.
-- Record the sensitivity analysis (`scripts/sensitivity.py`) in the Stage 1 skeleton's section 5,
-  replacing the withdrawn 0.833 power figure.
-- Re-run the calibration sweep under fp32 inference, since the gate's non-monotonicity was measured
-  under bf16.
-- Report Gap-K% beside Min-K%++, which needs the battery re-run: the saved results keep scores, not
-  per-token log-probabilities.
+- The code-shape probe on C++, AOSP against Qt, once the rebuild lands: whether shared
+  conventions are what makes AOSP coherent and Qt not.
+- A second 128-example packing, so the training-length comparison is symmetric.
+- FDLoRA and FedDPA's adapter-instance cut, which needs clients training a global and a personal
+  adapter jointly.
+- Sensitivity analysis into the Stage 1 skeleton's section 5, replacing the withdrawn power figure.
 
 ## Waiting on AJ
 
 - Merging PR #13, and when to freeze the windows: freezing is irreversible.
 - Venue and authorship, fixed at Stage 1.
-- Whether RQ1 claims "organizations leave a learnable fingerprint" (conjunctive, as registered) or
-  "this organization does" (per-organization, higher power, weaker claim).
-- Whether to sharpen RQ1 to "what unit carries the fingerprint, and what makes an organization
-  one": the dev window says Qt's projects agree and OpenStack's do not, so the registered phrasing
-  can only return mixed on a federation. Recommended; see the ROADMAP's registered decisions.
-- Whether running a sole-authored paper on the lab's `fl-mlm` allocation needs an acknowledgement.
+- Whether RQ1 is sharpened to "what unit carries the fingerprint, and what makes an organization
+  one": the evidence now says an organization is detectable when it imposes one set of code
+  conventions across its projects, which AOSP does and Qt does not. Recommended.
+- Whether RQ2 is reframed as a defence evaluation of the personalized-adapter family.
+- An acknowledgement for running a sole-authored paper on the lab's `fl-mlm` allocation.
