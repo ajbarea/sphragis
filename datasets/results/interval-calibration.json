@@ -3,50 +3,68 @@
     "10": {
       "clusters": 10,
       "exact_match_rate": 0.3185840707964602,
-      "false_positive_rate": 0.07,
+      "false_positive_rate": 0.06966666666666667,
+      "gate_false_positive_rate": 0.035833333333333335,
+      "gate_standard_error": 0.0023996286363920133,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.006587867636800242,
-      "trials": 1500
+      "standard_error": 0.0032866706107706786,
+      "trials": 6000
     },
     "19": {
       "clusters": 19,
       "exact_match_rate": 0.3185840707964602,
-      "false_positive_rate": 0.056666666666666664,
+      "false_positive_rate": 0.06,
+      "gate_false_positive_rate": 0.0315,
+      "gate_standard_error": 0.002254911306459746,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.005969676459996558,
-      "trials": 1500
+      "standard_error": 0.003065941943351178,
+      "trials": 6000
     },
     "200": {
       "clusters": 200,
       "exact_match_rate": 0.3185840707964602,
-      "false_positive_rate": 0.048,
+      "false_positive_rate": 0.0475,
+      "gate_false_positive_rate": 0.021666666666666667,
+      "gate_standard_error": 0.0018795931395837692,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.005519420259411309,
-      "trials": 1500
+      "standard_error": 0.0027460198469785317,
+      "trials": 6000
     },
     "30": {
       "clusters": 30,
       "exact_match_rate": 0.3185840707964602,
-      "false_positive_rate": 0.05533333333333333,
+      "false_positive_rate": 0.058333333333333334,
+      "gate_false_positive_rate": 0.028333333333333332,
+      "gate_standard_error": 0.0021420611396330233,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.0059031943643847356,
-      "trials": 1500
+      "standard_error": 0.003025738354946209,
+      "trials": 6000
     },
     "45": {
       "clusters": 45,
       "exact_match_rate": 0.3185840707964602,
-      "false_positive_rate": 0.059333333333333335,
+      "false_positive_rate": 0.0575,
+      "gate_false_positive_rate": 0.028166666666666666,
+      "gate_standard_error": 0.0021359348287325135,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.0060998846376462395,
-      "trials": 1500
+      "standard_error": 0.0030053771255312816,
+      "trials": 6000
     },
     "91": {
       "clusters": 91,
       "exact_match_rate": 0.3185840707964602,
-      "false_positive_rate": 0.04733333333333333,
+      "false_positive_rate": 0.048,
+      "gate_false_positive_rate": 0.024333333333333332,
+      "gate_standard_error": 0.0019891883697554565,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.00548287569856603,
-      "trials": 1500
+      "standard_error": 0.0027597101297056545,
+      "trials": 6000
     }
   },
   "null": {
@@ -55,13 +73,15 @@
     "exact_match_rate": 0.3185840707964602,
     "largest_change": 45,
     "nominal_two_sided": 0.05,
+    "resamples": 2000,
+    "trials": 6000,
     "window": "datasets/results/rq1-windows-qtfull-fp32.json"
   },
   "provenance": {
-    "generated_at": "2026-09-19T17:37:35.917501+00:00",
+    "generated_at": "2026-09-19T21:20:19.736499+00:00",
     "git": {
       "branch": "feat/wellposed-filter",
-      "commit": "de01e5f3295a5cc2e373d816e0303dce19c86795"
+      "commit": "d22f2f6d8d00e5af152b585c9ade9f8b1d23ea4d"
     },
     "packages": {
       "peft": "0.20.0",
@@ -75,26 +95,35 @@
     "0.05": {
       "clusters": 19,
       "exact_match_rate": 0.05,
-      "false_positive_rate": 0.03133333333333333,
+      "false_positive_rate": 0.033666666666666664,
+      "gate_false_positive_rate": 0.017333333333333333,
+      "gate_standard_error": 0.0016848782789313935,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.004498263039259751,
-      "trials": 1500
+      "standard_error": 0.002328562583162347,
+      "trials": 6000
     },
     "0.15": {
       "clusters": 19,
       "exact_match_rate": 0.15,
-      "false_positive_rate": 0.06266666666666666,
+      "false_positive_rate": 0.06133333333333333,
+      "gate_false_positive_rate": 0.03166666666666667,
+      "gate_standard_error": 0.0022606742684757016,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.00625777146464328,
-      "trials": 1500
+      "standard_error": 0.003097621548746596,
+      "trials": 6000
     },
     "0.50": {
       "clusters": 19,
       "exact_match_rate": 0.5,
-      "false_positive_rate": 0.05266666666666667,
+      "false_positive_rate": 0.0575,
+      "gate_false_positive_rate": 0.029333333333333333,
+      "gate_standard_error": 0.002178412605885644,
+      "nominal_one_sided": 0.025,
       "resamples": 2000,
-      "standard_error": 0.005767315313551525,
-      "trials": 1500
+      "standard_error": 0.0030053771255312816,
+      "trials": 6000
     }
   }
 }
