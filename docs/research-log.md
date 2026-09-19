@@ -4173,3 +4173,46 @@ figures in the report are now these, with their spans, rather than a single draw
 The pilot is the contrast worth recording beside it: at 18 changes OpenStack's correlation is
 -0.214 and the two estimands differ by 0.035, half the effect. Small cluster counts are where this
 choice bites, which is why the condition is checked on the window the gate will read.
+
+### FDLoRA and FedDPA read in full: what the adapter-instance cut actually transmits (2026-09-19)
+
+`# research(2026-09)`. The two designs whose cut this apparatus has not measured, read from their
+PDFs rather than from their abstracts, to settle what a measurement would have to implement. Four
+load-bearing quotes were re-checked against each PDF's own text layer.
+
+**Both send both factors, and nothing else.** FedDPA states it outright: "only the parameters of
+the global adapter (LoRA) are transmitted to the server for aggregation", and its figure labels the
+client-to-server arrows A and B separately, so it is not a merged product. FDLoRA uploads its
+global module's parameters the same way. Neither transmits the thing that makes the design
+personal: FDLoRA's fusion weights and FedDPA's instance-wise gate are both computed on the client,
+the gate at inference time from locally sampled examples. So there is no gate, coefficient, mask or
+statistic on the wire in either, and the attack surface is exactly what this apparatus already
+reads.
+
+**Neither claims the transmitted part hides its source, and neither runs an attack.** FedDPA states
+the assumption instead: "the framework operates under the assumption that all clients are trusted
+and legally entitled to access and utilize data stored on them, and the whole process does not
+suffer from any attacks." FDLoRA lists "data privacy protection" among its advantages and supports
+it with nothing; its own justification for withholding the personalized module is that it
+"[ensures] that LLM adapts to local data", which is an adaptation argument, not a privacy one.
+
+**The two cuts differ in whether the withheld tensor was ever separate.** FedDPA's local adapter
+trains on top of a frozen global one and is never communicated, so the uploaded tensor is what is
+left after the local adapter absorbs the residual. FDLoRA's boundary closes and reopens: its global
+module is seeded by "the average of all clients' [personalized modules]", and every H rounds the
+personalized module is overwritten by the uploaded one, so on a sync round the withheld adapter and
+the transmitted adapter are the same numbers. FDLoRA also names the knob that decides how much
+local signal the transmitted tensor carries: more inner steps give "more attention to local
+knowledge", default three. That is the same shape as this study's own finding that leakage is a
+function of how long a client trains locally.
+
+**Recorded and not resolved:** FDLoRA's prose says stage two updates the personalized module while
+its pseudocode updates the global one, and the paper does not say where the average of the
+personalized modules is computed. Both matter for what an implementation would send, so a
+measurement registers its reading rather than inferring one.
+
+**What a measurement needs**, and why it is more than a new flag: clients that train two adapters
+per round under two schedules, uploads recorded as A and B separately so factor-level and
+product-level attacks both run, and a sweep over FDLoRA's inner steps and sync period, whose
+endpoints are the sharpest test of whether its boundary exists in the numbers at all. The
+attribution question is already answerable here, since every client carries one source.
