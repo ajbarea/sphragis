@@ -87,7 +87,8 @@ def main() -> None:
         tok.pad_token = tok.eos_token
     plan: dict[str, list[list[dict]]] = {}
     items: dict[str, dict] = {}
-    for spec in sources(args):
+    specs = sources(args)
+    for spec in specs:
         name, _, path = spec.partition("=")
         rows = [
             json.loads(line) for line in (args.corpus_root / path).read_text().splitlines() if line
@@ -162,6 +163,12 @@ def main() -> None:
         json.dumps(
             {
                 "model_id": args.model_id,
+                # A result names the data it was built from. Without this a run pointed at the
+                # wrong corpus root produces a file named after the run tag and nothing in it
+                # says otherwise; one such job died only because a listed source happened to be
+                # missing from the corpus it defaulted to.
+                "corpus_root": str(args.corpus_root),
+                "sources": sorted(specs),
                 "client_size": args.client_size,
                 "max_per_change": args.max_per_change or max(1, args.client_size // 4),
                 "seed": args.seed,
