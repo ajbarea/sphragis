@@ -22,9 +22,19 @@ control an adversarial review ran, and PFAdapter's q and k. SDFLoRA's subspace c
 established either way: where the signal sits depends on the rank. Masking fails against a
 scale-free detector and can help it.
 
-**Running:** job 149607, a second packing at 128 examples a client; the local AOSP ten-project
-rebuild, detached, about half an hour a month. 256 examples a client waits for that rebuild, since
-AOSP's system/core cannot fill one client at that size.
+**The second packing landed** (job 149607, analysed 2026-09-19). Same clients, same training seed,
+another assignment of examples to clients: the detector's rise with training length replicates
+(AOSP 0.364 to 0.419 at one false alarm in a hundred, Qt 0.456 to 0.813) and AOSP's project
+permutation stays at the floor, while nearest-class attribution falls from 0.765 to 0.559, below
+its own majority. The classifier reading was a packing artefact; the detector reading is not.
+
+**The AOSP ten-project rebuild is complete:** 5,130 examples over ten projects, 2024-01 to 2025-08.
+It unblocks the registered subspace tests and 256 examples a client, both of which need client
+training on the rebuilt corpus.
+
+**The interval's false-positive rate is now an artifact** rather than a comment:
+`interval-calibration.json`, 5.7% at 19 changes and 4.7% at 91 against a nominal 5%, measured at
+the accuracy the gate operates at.
 
 ## RQ2's analysis, end to end
 
@@ -53,7 +63,8 @@ Every job claims its result file exclusively when it starts, so neither an exist
   baseline for the subspace cut, and a dirty-tree flag in provenance.
 - FDLoRA and FedDPA's adapter-instance cut, which needs clients training a global and a personal
   adapter jointly.
-- Sensitivity analysis into the Stage 1 skeleton's section 5, replacing the withdrawn power figure.
+- Clients on the rebuilt AOSP corpus: per-project corpora, a sources list over the ten projects,
+  then `client_updates` at 128 and 256 examples. The registered subspace tests read from those.
 
 ## Waiting on AJ
 

@@ -420,6 +420,9 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-19** — The interval's own false-positive rate measured into an artifact (`scripts/interval_calibration.py`): 5.7% at 19 changes, 4.7% at 91, against a nominal 5%, at the accuracy the gate operates at.
+- **2026-09-19** — Second packing at 128 examples a client: the detector's rise with training length replicates, nearest-class attribution does not.
+- **2026-09-19** — AOSP rebuilt over ten projects, 5,130 examples, 2024-01 to 2025-08.
 - **2026-09-15** — Outcome-neutral tests as code (`sphragis/experiment/neutral.py`) and the apparatus halt rule.
 - **2026-09-15** — Fetch refuses the sealed test window and every month after it.
 - **2026-09-15** — Power analysis at report-grade settings: about 3 exact-match points detectable, OpenStack binding (`scripts/power_rq1.py`).
