@@ -4257,3 +4257,39 @@ underlying runs genuinely differ, with 44 to 47 per-example flips between seeds 
 and adapter norms, but the net change is identical in both arms all three times. Qt shows no such
 lockstep. Under near-independence that is on the order of one in a thousand, and it is the reason
 OpenStack's seed component carries no spread. It deserves a sentence before a reviewer asks.
+
+### The Qt result was the null's size, not Qt (2026-09-19, jobs 149957, 150085)
+
+`*-cpp-rebuilt-c128.json`. The ten-project AOSP rebuild gives seven C++ projects that can fill a
+client at 128 examples, against Qt's six, so the project-level permutation enumerates
+C(13, 7) = 1,716 distinct groupings where every earlier run had 84. Same training length, same
+initialization, a larger and better-balanced project set.
+
+| within C++, 128 examples a client | 3 AOSP projects, 84 groupings | 7 AOSP projects, 1,716 groupings |
+|---|---|---|
+| AOSP detector, rounds of 16, two clients | AUC 0.940, TPR 0.588 | **AUC 0.972, TPR 0.787** |
+| Qt detector, rounds of 16, two clients | not measured at 16 | AUC 0.928, TPR 0.564 |
+| AOSP project permutation | p 0.012 at the floor, all seeds | **p 0.0006 at the floor, all seeds** |
+| Qt project permutation | p 0.018 median (0.012 to 0.036) | **p 0.070 median (0.028 to 0.143)** |
+| organization within C++, nearest class | 0.765 against a 0.735 majority | 0.646 against a 0.521 majority, p 0.030 |
+| organization beyond project, C++ | 0.676, p 0.19 | 0.583, p 0.30 |
+
+**AOSP's result strengthens by a factor of twenty in the null it survives.** A p of 0.0006 is the
+floor of 1,716 groupings: no relabeling of which projects belong to which organization scores as
+well as the true one, at any of four round-draw seeds. The detector reads 0.787 at one false alarm
+in a hundred.
+
+**Qt's does not survive.** At 84 groupings and this training length Qt sat near the floor, and the
+second packing had already softened that to a median 0.042. With thirteen projects and a null
+twenty times larger it is 0.070, and two of four seeds are above 0.10. The earlier reading came
+from the small null and the three-project AOSP set it was built against, not from Qt.
+
+**What this costs and what it buys.** The claim that both organizations become detectable at 128
+examples a client is withdrawn. What replaces it is stronger where it holds: one organization is
+detectable from projects other than the target's, at the floor of a null that enumerates every way
+its projects could have been relabelled, and the detectability rises with local training length.
+The asymmetry between the two organizations is now the finding rather than an inconvenience, and it
+is the same asymmetry the RQ1 side sees, where AOSP behaves as one unit and Qt does not.
+
+The classifier is unchanged by the rebuild: 0.583 beyond project at p 0.30, with classes nearly
+balanced at 23 against 25, so the operating-point distinction that the rest of RQ2 rests on holds.
