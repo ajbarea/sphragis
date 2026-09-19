@@ -24,11 +24,17 @@ PATTERN="${PATTERN:-sphragis-adapters-clients/*-c*/adapter_model.safetensors}"
 # the empty suffix, so existing names are unchanged.
 RESULT_SUFFIX="${PATTERN%%/*}"
 RESULT_SUFFIX="${RESULT_SUFFIX#sphragis-adapters-clients}"
+# MATRICES=a or b reads one LoRA factor rather than the product, which is a different geometry
+# over the same adapters, so it names its own file.
+MATRICES="${MATRICES:-product}"
+[ "$MATRICES" = product ] || RESULT_SUFFIX="$RESULT_SUFFIX-$MATRICES"
 export RESULT_SUFFIX
 
 OUT="$(result_path "$HOME/client-geometry$RESULT_SUFFIX.json")"
 uv run --no-sync python scripts/adapter_geometry.py \
   --root "$HOME/scratch" \
   --pattern "$PATTERN" \
+  --matrices "$MATRICES" \
+  ${SUBTRACT_INIT:+--subtract-init} \
   --per-module \
   --out "$OUT"
