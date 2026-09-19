@@ -3874,3 +3874,71 @@ Two things change in how it is stated.
 (With content held to C++ there are two organizations, so the AOSP and Qt permutations enumerate
 the same groupings as complements. They are two statistics over one null, not two independent
 tests.)
+
+### The attack results regenerated, with every seed's p (2026-09-18)
+
+The four committed aggregate-attack results were rerun from a clean tree with the permutation now
+in `aggregate.project_permutation`: distinct groupings, the truth checked to reproduce itself, four
+round-draw seeds each. Provenance now names the commit that produced them and would list any
+uncommitted code; these list none.
+
+| project-level permutation, 84 groupings | AOSP | Qt median | Qt range over 4 seeds |
+|---|---|---|---|
+| 64 examples, product | 1/84 on every seed | 0.250 | 0.167 to 0.333 |
+| 128 examples, product | 1/84 on every seed | 0.018 | 0.012 to 0.036 |
+| 64 examples, A only | 1/84 on every seed | 0.012 | 0.012 to 0.024 |
+| 64 examples, B only | 1/84 on every seed | 0.256 | 0.167 to 0.333 |
+
+These match the review's independent reruns seed for seed. Every Qt comparison the log draws
+survives every seed: 128 examples and A-only never exceed 0.036; 64 examples and B-only never fall
+below 0.167. These ranges, not any single seed, are the figures of record.
+
+### The subspace split, redone: it depends on the rank and on the instrument (2026-09-18)
+
+`scripts/subspace_split.py`, rewritten after the review. Every attribution cell now carries its
+exact project-level p over the 84 groupings, accuracy is reported beside balanced accuracy, the
+basis for each scored client is refitted without its *whole project* (the stricter refit the
+review proposed), the degenerate rank-1 shared cell is not scored, and the best cell over ranks is
+judged against the null's best over the same ranks.
+
+Attribution, nearest class over other projects (majority rate 0.698):
+
+| | shared | residual (what a split keeps local) |
+|---|---|---|
+| whole update | 0.419 (p 0.786), balanced 0.583 (p 0.310) | |
+| rank 1 (27.7% of energy) | degenerate | **0.837 (p 0.012)**, balanced 0.883 |
+| rank 2 | 0.419 (p 0.560) | 0.837 (p 0.024) |
+| rank 4 | 0.767 (p 0.048) | 0.721 (p 0.036) |
+| rank 8 | 0.767 (p 0.036) | 0.721 (p 0.024) |
+| rank 16 | 0.698 (p 0.179) | 0.651 (p 0.095) |
+| **best over ranks, family-wise** | 0.767, **p 0.095** | 0.837, **p 0.024** |
+
+The aggregate detector, on the same halves (AOSP, Qt; the whole update reads 0.704, 0.613):
+
+| | shared | residual |
+|---|---|---|
+| rank 1 | 0.476, 0.486 | 0.643, 0.758 |
+| rank 2 | 0.614, 0.668 | 0.448, 0.668 |
+| rank 4 | 0.750, 0.834 | 0.282, 0.247 |
+| rank 8 | 0.644, 0.757 | 0.412, 0.314 |
+| rank 16 | 0.624, 0.708 | 0.435, 0.341 |
+
+**The two instruments disagree about where the organization sits.** Corrected for the search
+over ranks, the classifier finds it in the residual (p 0.024) and not in the shared part (p 0.095).
+The detector reads it in the shared part from rank 2 up and runs *inverted* on the residual from
+rank 4 up, which is information too, in the wrong direction for that detector. Removing the common
+directions first sharpens the classifier, which fits the factor review's finding that removing the
+global mean raises identifiability.
+
+So the SDFLoRA question stays **not established**, now for a stated reason: neither "a subspace
+split protects" nor "it leaks" holds across the ranks and instruments tested, and this data has now
+been searched over both. Searching it further for the combination that comes out significant would
+be the error the review caught.
+
+**Registered for the ten-project AOSP rebuild, before its adapters exist.** Its seven new projects
+are data this analysis has not seen. On clients trained from them beside Qt's, two tests, fixed now:
+1. the aggregate detector on the **shared** half at **rank 4**, with the project-level permutation
+   over four seeds: "the split leaks" if both organizations' median p is at or below 0.05;
+2. the held-out classifier on the **residual** at **rank 1**: "the kept-back part identifies" if its
+   project-level p is at or below 0.05.
+Neither result will be reinterpreted at another rank or with another instrument.

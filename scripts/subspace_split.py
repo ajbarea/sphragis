@@ -33,12 +33,13 @@ from __future__ import annotations
 
 import argparse
 import json
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
 
 from sphragis.measure.aggregate import gram, organization_membership_auc
-from sphragis.measure.attribution import Source, accuracy
+from sphragis.measure.attribution import Source
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
@@ -60,53 +61,88 @@ def cosines(vectors: np.ndarray) -> list[list[float]]:
     return (unit @ unit.T).tolist()
 
 
-def honest_attribution(
-    vectors: np.ndarray, labels: list[str], projects: list[str], rank: int, residual: bool
-) -> float:
-    """Leave-one-out attribution with the subspace refitted without the client being scored.
+def held_out_rows(
+    vectors: np.ndarray, projects: list[str], rank: int, residual: bool
+) -> np.ndarray | None:
+    """Each client's cosine row in a subspace fitted without its whole project.
 
-    Fitting the basis on every client and then holding one out scores that client against a
-    subspace its own update helped define. The server really does hold every update, so the
-    basis is fair game for the detector, but a leave-one-out accuracy has to leave the client
-    out of everything, the basis included, or it is quoting a number built partly from the
-    answer.
+    Leaving out only the scored client still fits the basis to its project siblings, and the
+    attribution below never compares a client with its own project, so the basis leaves the
+    project out too. The rows depend on the updates alone, never on the labels, so one set of
+    rows serves the truth and every relabeling of the null. At rank 1 the shared part is every
+    update projected onto one direction, so all its cosines are 1 and it carries nothing; that
+    cell is returned as None rather than scored.
     """
-    scores = []
-    for i in range(len(vectors)):
-        others = np.delete(vectors, i, axis=0)
-        basis = np.linalg.svd(others, full_matrices=False)[2][:rank]
+    if rank == 1 and not residual:
+        return None
+    n = len(vectors)
+    bases: dict[str, np.ndarray] = {}
+    rows = np.zeros((n, n))
+    for i in range(n):
+        if projects[i] not in bases:
+            others = vectors[[j for j in range(n) if projects[j] != projects[i]]]
+            bases[projects[i]] = np.linalg.svd(others, full_matrices=False)[2][:rank]
+        basis = bases[projects[i]]
         onto = (vectors @ basis.T) @ basis
-        space = (vectors - onto) if residual else onto
-        pool = cosines(space)
+        space = vectors - onto if residual else onto
+        norms = np.linalg.norm(space, axis=1)
+        unit = space / np.where(norms > 0, norms, 1.0)[:, None]
+        rows[i] = unit @ unit[i]
+    return rows
+
+
+def attribute(rows: np.ndarray, labels: list[str], projects: list[str]) -> tuple[float, float]:
+    """Accuracy and balanced accuracy of the nearest class over other projects' clients.
+
+    Balanced accuracy is reported beside accuracy because with 30 clients of one organization
+    against 13 of the other, a rule that answers the larger class for everyone scores 0.698 and a
+    rule that answers the smaller one scores 0.302, and the whole update's 0.419 was the second
+    failure, not a baseline.
+    """
+    hits: dict[str, list[float]] = {label: [] for label in set(labels)}
+    for i in range(len(labels)):
         best, chosen = None, None
         for label in sorted(set(labels)):
             aligned = [
-                pool[i][j]
-                for j in range(len(vectors))
+                rows[i][j]
+                for j in range(len(labels))
                 if j != i and labels[j] == label and projects[j] != projects[i]
             ]
-            if not aligned:
-                continue
-            value = sum(aligned) / len(aligned)
-            if best is None or value > best:
-                best, chosen = value, label
-        scores.append(1.0 if chosen == labels[i] else 0.0)
-    return float(np.mean(scores))
+            if aligned and (best is None or np.mean(aligned) > best):
+                best, chosen = float(np.mean(aligned)), label
+        hits[labels[i]].append(1.0 if chosen == labels[i] else 0.0)
+    overall = float(np.mean([h for per in hits.values() for h in per]))
+    balanced = float(np.mean([np.mean(per) for per in hits.values()]))
+    return overall, balanced
 
 
-def read(vectors: np.ndarray, sources: list[Source], args: argparse.Namespace) -> dict[str, float]:
-    """Both instruments on one half of the split."""
+def groupings(labels: list[str], projects: list[str]) -> list[list[str]]:
+    """Every relabeling that gives the first organization as many projects as it has."""
+    owner = {p: label for p, label in zip(projects, labels, strict=True)}
+    names = sorted(owner)
+    first = sorted(set(labels))[0]
+    k = sum(1 for p in names if owner[p] == first)
+    other = next(label for label in sorted(set(labels)) if label != first)
+    out = []
+    for chosen in combinations(names, k):
+        relabel = {p: (first if p in chosen else other) for p in names}
+        out.append([relabel[p] for p in projects])
+    return out
+
+
+def detect(
+    vectors: np.ndarray, sources: list[Source], args: argparse.Namespace
+) -> dict[str, float]:
+    """The aggregate detector on one half. Its basis is fitted to every update, which is correct
+    here: a server holds every update, and the detector never scores a client against itself."""
     norms = [float(n) for n in np.linalg.norm(vectors, axis=1)]
     products = gram(cosines(vectors), norms)
     labels = [s.organization for s in sources]
     projects = [s.at("project") for s in sources]
-
     out: dict[str, float] = {}
-    out["organization_beyond_project"] = accuracy(cosines(vectors), labels, projects)
     for organization in sorted(set(labels)):
         members = [i for i, name in enumerate(labels) if name == organization]
-        outside = len(labels) - len(members)
-        if len(members) < 2 or outside < args.round_size:
+        if len(members) < 2 or len(labels) - len(members) < args.round_size:
             continue
         if len({projects[i] for i in members}) < 2:
             continue
@@ -126,6 +162,22 @@ def read(vectors: np.ndarray, sources: list[Source], args: argparse.Namespace) -
     return out
 
 
+def scored(rows: np.ndarray | None, labels: list[str], projects: list[str], null) -> dict:
+    """Accuracy and balanced accuracy, each with its exact project-level p."""
+    if rows is None:
+        return {"degenerate": True}
+    accuracy, balanced = attribute(rows, labels, projects)
+    under_null = [attribute(rows, relabeled, projects) for relabeled in null]
+    return {
+        "accuracy": accuracy,
+        "balanced_accuracy": balanced,
+        "p_accuracy": float(np.mean([a >= accuracy for a, _ in under_null])),
+        "p_balanced": float(np.mean([b >= balanced for _, b in under_null])),
+        "null_mean_accuracy": float(np.mean([a for a, _ in under_null])),
+        "null_accuracies": [a for a, _ in under_null],
+    }
+
+
 def main() -> None:
     args = parser.parse_args()
     loaded = np.load(args.vectors, allow_pickle=False)
@@ -137,54 +189,86 @@ def main() -> None:
         keep = [i for i, s in enumerate(sources) if s.at("content") == args.content]
         vectors, sources = vectors[keep], [sources[i] for i in keep]
         print(f"{len(keep)} clients write {args.content}", flush=True)
+    labels = [s.organization for s in sources]
+    projects = [s.at("project") for s in sources]
+    null = groupings(labels, projects)
+    majority = max(labels.count(label) for label in set(labels)) / len(labels)
 
     # The subspace is fitted to the updates as they are, uncentred: an aggregation step averages
     # the updates themselves, so the direction every client shares is part of what alignment
     # finds, and removing the mean first would hand the defence a subspace no server computes.
     _, singular, right = np.linalg.svd(vectors, full_matrices=False)
     energy = float((singular**2).sum())
+    whole_rows = np.array(cosines(vectors))
 
     report: dict = {
         "content": args.content,
         "clients": len(sources),
         "dimension": int(vectors.shape[1]),
         "round_size": args.round_size,
+        "majority_rate": majority,
+        "null_groupings": len(null),
         "provenance": provenance_header(),
-        "whole": read(vectors, sources, args),
+        "whole": {
+            **scored(whole_rows, labels, projects, null),
+            **detect(vectors, sources, args),
+        },
         "ranks": {},
+        "complete": False,
     }
-    print(f"whole update: {report['whole']}", flush=True)
+    whole = report["whole"]
+    print(
+        f"whole update: accuracy {whole['accuracy']:.3f} (p {whole['p_accuracy']:.3f}), balanced "
+        f"{whole['balanced_accuracy']:.3f} (p {whole['p_balanced']:.3f}); majority {majority:.3f}",
+        flush=True,
+    )
     for rank in args.ranks:
         if rank >= min(vectors.shape):
+            print(f"rank {rank}: not below the {min(vectors.shape)} available, skipped", flush=True)
             continue
         basis = right[:rank]
         shared = (vectors @ basis.T) @ basis
-        residual = vectors - shared
-        labels = [s.organization for s in sources]
-        projects = [s.at("project") for s in sources]
-        cell = {
-            "energy_in_shared": float((singular[:rank] ** 2).sum() / energy),
-            "shared": read(shared, sources, args),
-            "residual": read(residual, sources, args),
-            "shared_refit_per_target": honest_attribution(
-                vectors, labels, projects, rank, residual=False
-            ),
-            "residual_refit_per_target": honest_attribution(
-                vectors, labels, projects, rank, residual=True
-            ),
-        }
+        cell: dict = {"energy_in_shared": float((singular[:rank] ** 2).sum() / energy)}
+        for half, residual in (("shared", False), ("residual", True)):
+            rows = held_out_rows(vectors, projects, rank, residual)
+            cell[half] = {
+                **scored(rows, labels, projects, null),
+                **detect(vectors - shared if residual else shared, sources, args),
+            }
         report["ranks"][str(rank)] = cell
+        parts = []
+        for half in ("shared", "residual"):
+            entry = cell[half]
+            parts.append(
+                f"{half} degenerate"
+                if entry.get("degenerate")
+                else f"{half} {entry['accuracy']:.3f} (p {entry['p_accuracy']:.3f}), balanced "
+                f"{entry['balanced_accuracy']:.3f} (p {entry['p_balanced']:.3f})"
+            )
         print(
-            f"rank {rank:3}: {cell['energy_in_shared'] * 100:5.1f}% energy shared | "
-            f"attribution shared {cell['shared']['organization_beyond_project']:.3f} "
-            f"(refit {cell['shared_refit_per_target']:.3f}) "
-            f"residual {cell['residual']['organization_beyond_project']:.3f} "
-            f"(refit {cell['residual_refit_per_target']:.3f}) | "
-            f"detector aosp {cell['shared'].get('aosp_detector_auc', float('nan')):.3f} "
-            f"qt {cell['shared'].get('qt_detector_auc', float('nan')):.3f}",
-            flush=True,
+            f"rank {rank:3}: {cell['energy_in_shared'] * 100:5.1f}% energy | " + " | ".join(parts)
         )
         args.out.write_text(json.dumps(report, indent=2))
+
+    # Choosing the rank after seeing the table is a search, so the family's best cell is judged
+    # against the null's best cell over the same family: the maximum over ranks, per relabeling.
+    for half in ("shared", "residual"):
+        cells = [
+            report["ranks"][rank][half]
+            for rank in report["ranks"]
+            if not report["ranks"][rank][half].get("degenerate")
+        ]
+        if not cells:
+            continue
+        best = max(c["accuracy"] for c in cells)
+        null_best = [max(c["null_accuracies"][k] for c in cells) for k in range(len(null))]
+        report[f"max_over_ranks_{half}"] = {
+            "accuracy": best,
+            "p": float(np.mean([b >= best for b in null_best])),
+        }
+        family_p = report[f"max_over_ranks_{half}"]["p"]
+        print(f"best {half} cell over ranks: {best:.3f}, p {family_p:.3f}")
+    report["complete"] = True
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")
 

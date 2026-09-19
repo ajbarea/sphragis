@@ -4,9 +4,9 @@
   "clients": 43,
   "draws": 600,
   "provenance": {
-    "generated_at": "2026-09-19T00:40:41.333351+00:00",
+    "generated_at": "2026-09-19T02:39:55.470842+00:00",
     "git": {
-      "commit": "e5c5e08eed80336820652449e5cb49be591c1a9c",
+      "commit": "d069f295884c376318c2c14d7b3aafb1a0824d24",
       "branch": "feat/wellposed-filter"
     },
     "python": "3.14.4",
@@ -88,7 +88,7 @@
           "rounds": 600.0,
           "round_size": 4.0,
           "target_clients_per_round": 1.0,
-          "reference_clients": 6.0,
+          "reference_clients": 4.125,
           "split_over_groups": true,
           "mean_present": 0.7852757119547487,
           "mean_absent": 0.7684718315411858
@@ -104,7 +104,7 @@
           "rounds": 600.0,
           "round_size": 4.0,
           "target_clients_per_round": 2.0,
-          "reference_clients": 6.0,
+          "reference_clients": 4.125,
           "split_over_groups": true,
           "mean_present": 0.7983474200714794,
           "mean_absent": 0.7684482825036016
@@ -120,7 +120,7 @@
           "rounds": 600.0,
           "round_size": 8.0,
           "target_clients_per_round": 1.0,
-          "reference_clients": 6.0,
+          "reference_clients": 4.125,
           "split_over_groups": true,
           "mean_present": 0.8233362845160076,
           "mean_absent": 0.8149833394533186
@@ -136,7 +136,7 @@
           "rounds": 600.0,
           "round_size": 8.0,
           "target_clients_per_round": 2.0,
-          "reference_clients": 6.0,
+          "reference_clients": 4.125,
           "split_over_groups": true,
           "mean_present": 0.8304417466990169,
           "mean_absent": 0.8150418224993461
@@ -152,7 +152,7 @@
           "rounds": 600.0,
           "round_size": 16.0,
           "target_clients_per_round": 1.0,
-          "reference_clients": 6.0,
+          "reference_clients": 4.125,
           "split_over_groups": true,
           "mean_present": 0.8458786537136707,
           "mean_absent": 0.8417623093341633
@@ -168,7 +168,7 @@
           "rounds": 600.0,
           "round_size": 16.0,
           "target_clients_per_round": 2.0,
-          "reference_clients": 6.0,
+          "reference_clients": 4.125,
           "split_over_groups": true,
           "mean_present": 0.8495749533699458,
           "mean_absent": 0.8417388598053837
@@ -296,7 +296,7 @@
           "rounds": 600.0,
           "round_size": 4.0,
           "target_clients_per_round": 1.0,
-          "reference_clients": 15.0,
+          "reference_clients": 14.625,
           "split_over_groups": true,
           "mean_present": 0.8495057078003404,
           "mean_absent": 0.8440713055138535
@@ -312,7 +312,7 @@
           "rounds": 600.0,
           "round_size": 4.0,
           "target_clients_per_round": 2.0,
-          "reference_clients": 15.0,
+          "reference_clients": 14.625,
           "split_over_groups": true,
           "mean_present": 0.8520537502098476,
           "mean_absent": 0.8439492811827632
@@ -328,7 +328,7 @@
           "rounds": 600.0,
           "round_size": 8.0,
           "target_clients_per_round": 1.0,
-          "reference_clients": 15.0,
+          "reference_clients": 14.625,
           "split_over_groups": true,
           "mean_present": 0.8874385162489341,
           "mean_absent": 0.8825645268363046
@@ -344,7 +344,7 @@
           "rounds": 600.0,
           "round_size": 8.0,
           "target_clients_per_round": 2.0,
-          "reference_clients": 15.0,
+          "reference_clients": 14.625,
           "split_over_groups": true,
           "mean_present": 0.8916470296673392,
           "mean_absent": 0.8825106593008348
@@ -423,22 +423,82 @@
   },
   "project_permutation": {
     "aosp": {
-      "observed_auc": 0.8281777777777778,
-      "observed_auc_full_precision": 0.8041413194444444,
-      "permutation_draws": 150,
-      "permutation_splits": 2,
-      "relabelings": 84,
-      "at_least_as_extreme": 1,
-      "p": 0.011904761904761904
+      "projects": 9,
+      "label_projects": 3,
+      "groupings": 84,
+      "exhaustive": true,
+      "floor": 0.011904761904761904,
+      "round_size": 4,
+      "draws": 150,
+      "splits": 2,
+      "per_seed": [
+        {
+          "seed": 0,
+          "observed_auc": 0.8281777777777778,
+          "hits": 1,
+          "p": 0.011904761904761904
+        },
+        {
+          "seed": 1,
+          "observed_auc": 0.7809777777777778,
+          "hits": 1,
+          "p": 0.011904761904761904
+        },
+        {
+          "seed": 2,
+          "observed_auc": 0.8493555555555556,
+          "hits": 1,
+          "p": 0.011904761904761904
+        },
+        {
+          "seed": 3,
+          "observed_auc": 0.8135555555555556,
+          "hits": 1,
+          "p": 0.011904761904761904
+        }
+      ],
+      "p_median": 0.011904761904761904,
+      "p_min": 0.011904761904761904,
+      "p_max": 0.011904761904761904
     },
     "qt": {
-      "observed_auc": 0.7598888888888888,
-      "observed_auc_full_precision": 0.7341875,
-      "permutation_draws": 150,
-      "permutation_splits": 2,
-      "relabelings": 84,
-      "at_least_as_extreme": 1,
-      "p": 0.011904761904761904
+      "projects": 9,
+      "label_projects": 6,
+      "groupings": 84,
+      "exhaustive": true,
+      "floor": 0.011904761904761904,
+      "round_size": 4,
+      "draws": 150,
+      "splits": 2,
+      "per_seed": [
+        {
+          "seed": 0,
+          "observed_auc": 0.7598888888888888,
+          "hits": 1,
+          "p": 0.011904761904761904
+        },
+        {
+          "seed": 1,
+          "observed_auc": 0.7065777777777777,
+          "hits": 2,
+          "p": 0.023809523809523808
+        },
+        {
+          "seed": 2,
+          "observed_auc": 0.7289111111111111,
+          "hits": 1,
+          "p": 0.011904761904761904
+        },
+        {
+          "seed": 3,
+          "observed_auc": 0.7165333333333332,
+          "hits": 1,
+          "p": 0.011904761904761904
+        }
+      ],
+      "p_median": 0.011904761904761904,
+      "p_min": 0.011904761904761904,
+      "p_max": 0.023809523809523808
     }
   }
 }
