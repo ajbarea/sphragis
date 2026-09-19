@@ -212,13 +212,19 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   rounds, because fresh masks average away and the source's direction does not. One round hides it
   (0.50 to 0.55); two hundred do not.
 - [x] **Several local-training lengths** (`CLIENT_SIZE`), since longer training moves updates
-  apart. It does, and it moves the *altitude* that leaks. At 128 examples a client rather than 64,
-  organization rises at every altitude and by every instrument while project and content fall:
-  beyond-project attribution 0.395 to 0.676, the AOSP detector's TPR at 1% false alarms 0.364 to
-  0.588, Qt's 0.456 to 0.910, and Qt's project-level permutation from an unremarkable 0.238 to the
-  1/84 floor. Leakage is a function of a knob the deployment sets, not a property of the corpus.
-  The two sets differ in size and composition, so this is two consistent points rather than a
-  controlled doubling. Composition-matched draws of the 64-example set never reach the floor for Qt, so length survives that confound. 256 is not reachable on this corpus: system/core has 204 examples, so AOSP would lose a project and the permutation would fall from 84 arrangements to 28. It waits for the ten-project AOSP corpus. Job 149607 draws a second 128-example packing, same initialization, to make the comparison symmetric.
+  apart. It does, and how much leaks is a function of that knob rather than a property of the
+  corpus. Three points, on the rebuilt corpus where the last two are measured: at 64 examples a
+  client neither instrument identifies an organization beyond its own projects (0.395, p 0.75); at
+  128 a detector finds AOSP at the floor of 1,716 groupings (p 0.0006, AUC 0.972, TPR 0.787) and
+  not Qt (median 0.070), while the classifier still fails beyond project (0.583, p 0.30); at 256
+  the detector saturates (AOSP AUC 0.995, TPR 0.985) and the classifier passes beyond project too
+  (1.000 at p 0.0079, the floor of its null). A second packing at 128 confirmed the detector's rise
+  and showed the nearest-class reading to be packing-dependent.
+  Composition moves with length, since only the largest projects fill a client at 256, so these are
+  three points on a ladder rather than a controlled doubling; composition-matched draws of the
+  64-example set never reach the floor, so length survives that confound at the bottom of the
+  range. The earlier reading that Qt joins AOSP at 128 came from an 84-grouping null and did not
+  survive the rebuilt project set.
 - [x] **Explained the non-monotonicity in noise.** Not the finite pool: it survives 77 clients.
   The detector scores a cosine, so a mask attenuates each draw by `||v||/sqrt(||v||^2+||n||^2)`,
   and the null class's difference vector is shorter than a member class's once averaging has
