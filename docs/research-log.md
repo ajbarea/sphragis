@@ -4293,3 +4293,42 @@ is the same asymmetry the RQ1 side sees, where AOSP behaves as one unit and Qt d
 
 The classifier is unchanged by the rebuild: 0.583 beyond project at p 0.30, with classes nearly
 balanced at 23 against 25, so the operating-point distinction that the rest of RQ2 rests on holds.
+
+### The third length: at 256 examples a client the classifier stops failing (2026-09-19, jobs 149971, 150086)
+
+`*-cpp-256-c256.json`. Thirty-six clients, thirty-two of them C++, over five AOSP projects and four
+of Qt's: the largest set this corpus supports at this size, since a project needs 256 usable
+examples after deduplication to fill even one client.
+
+| within C++ | 64 | 128, 3 AOSP projects | 128, 7 AOSP projects | 256, 5 AOSP projects |
+|---|---|---|---|---|
+| organization, nearest class | 0.395 (maj 0.698) | 0.765 (maj 0.735) | 0.646 (maj 0.521) | **1.000 (maj 0.531)**, p 0.0001 |
+| organization, beyond project | 0.395, p 0.75 | 0.676, p 0.19 | 0.583, p 0.30 | **1.000, p 0.0079** at the floor |
+| AOSP detector, rounds of 16, two clients | AUC 0.858, TPR 0.364 | AUC 0.940, TPR 0.588 | AUC 0.972, TPR 0.787 | **AUC 0.995, TPR 0.985** |
+| Qt detector, rounds of 8, two clients | AUC 0.859, TPR 0.456 | AUC 0.980, TPR 0.910 | AUC 0.855, TPR 0.281 | **AUC 0.972, TPR 0.763** |
+| AOSP project permutation, median of 4 seeds | 0.012 (floor) | 0.012 (floor) | 0.0006 (floor) | 0.016 (floor 0.008) |
+| Qt project permutation, median of 4 seeds | 0.250 | 0.018 | 0.070 | 0.016 (floor 0.008) |
+
+**The control that had held the classifier back stops holding.** Beyond-project attribution splits
+the attacker's reference over projects, so an organization must be recognised from projects other
+than the target's own. It read 0.395 at 64 examples, 0.583 at 128 on the rebuilt set, and it reads
+1.000 at 256, at the floor of its null. Every earlier statement that organization is not a class a
+classifier can assign was true of the training lengths it was measured at, and is false here.
+
+**The detector saturates.** AOSP catches 98.5% of rounds holding two of its clients at one false
+alarm in a hundred, at an achieved false-positive rate of zero. There is no headroom left in this
+instrument at this length, which is itself the result: the question "how much does a deployment
+leak" has an answer that depends on a knob the deployment sets, and at the top of the range
+measured here the answer is nearly everything the attacker asked for.
+
+**What this is not.** Only the largest projects survive at 256 examples a client, so composition
+moves with length and this is a third point on a ladder rather than a controlled doubling. The null
+is 126 groupings against the rebuild's 1,716, so a permutation at the floor here is weaker evidence
+than the same statement there. And both organizations' permutations sit at 0.016 median, which is
+below 0.05 but not at the floor at every seed.
+
+**The registrable claim is now about the knob rather than the organization.** Leakage is a function
+of how long each client trains locally: at 64 examples neither instrument identifies an
+organization beyond its projects, at 128 one of the two does under a detector, and at 256 both do
+under a detector and a classifier does as well. A deployment that trains longer locally, which is
+what one does to get more out of federated fine-tuning, leaks more about who its participants are.
