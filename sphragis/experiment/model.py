@@ -44,11 +44,14 @@ DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
 # the base, whose likelihoods reflect pretraining exposure. A registered choice.
 MEMBERSHIP_MODEL_ID = "Qwen/Qwen2.5-Coder-7B"
 
-# research(2026-09): rank rises with performance to about 32 and flattens; alpha = 2r,
-# because a fixed low alpha at high rank is unstable; attention plus MLP beats attention
-# alone and coverage matters more than rank. Current tooling defaults lower (r=16); 32 is
-# kept because the rank-versus-performance evidence supports it and the adapter's capacity
-# is the thing a null result would otherwise be blamed on.
+# research(2026-09): alpha = 2r, because a fixed low alpha at high rank is unstable;
+# attention plus MLP beats attention alone, and coverage matters more than rank. Rank 32 is
+# above what current tooling defaults to (16) and below what Biderman et al. (TMLR 2024)
+# recommend for code, where HumanEval is ordered by rank from the first epoch and r=256 is
+# what matches full fine-tuning. It is kept because the gate reads a difference between two
+# adapters at the same rank, and because the positive controls show this rank adapts: the
+# capacity objection bites on a null, and the conditional branch answers it by rerunning at
+# 256 rather than by assuming 32 was enough.
 LORA = LoraConfig(
     r=32,
     lora_alpha=64,

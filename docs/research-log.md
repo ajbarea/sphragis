@@ -4090,3 +4090,48 @@ has now measured what RQ2 measures.
 
 Nothing measures whether a transmitted adapter identifies its source at an operating point an
 attacker would use. The claim RQ2 registers is still unoccupied.
+
+### Nine sources read in full, and what reading them changed (2026-09-19)
+
+`# research(2026-09)`. The Stage 1 report carried ten `\needcite` badges because the intake
+staged every entry as a search-level characterization. All but one are now cited: each source was
+read against arXiv, the ACM Digital Library, the ACL Anthology or Springer, and four of the claims
+built on them were wrong in a way a reviewer would have caught.
+
+- **The conditional branch moves from rank 64 to rank 256.** Biderman et al. (TMLR 2024) tested
+  ranks 16, 64 and 256 only, on Llama-2-7B with alpha = 2r, and found code instruction tuning
+  ordered by rank from the first epoch: HumanEval 0.358, 0.417, 0.498, against 0.497 for full
+  fine-tuning. Their recommendation is a rank of 256 "since ranks 16-64 tend not to suffice for
+  code tasks". The branch existed to separate a null from insufficient capacity, and at rank 64 it
+  would not have. In continued pretraining no rank closes the gap, which is a second reason this
+  study's instruction-tuning setting is the one the paper speaks to.
+- **`LORA` stays at rank 32, and its comment no longer claims performance flattens there.** The
+  gate reads a difference between two adapters at the same rank, and the positive controls show
+  this rank adapts. What changes is the justification: rank 32 is a compromise the branch covers,
+  not a point the evidence identifies as sufficient.
+- **Code2LoRA shows repository conventions by example, not by measurement.** Its quantitative
+  results are exact match on assertion completion; conventions appear in an appendix of
+  qualitative cases. The background section now says premise where it said finding.
+- **Project acceptance history is secondary.** In the 66,329-interaction study the project's own
+  acceptance ratio contributes 0.012 accuracy in the ablation, against 0.065 for the developer's
+  history and 0.074 for the IDE version. The claim was true and the emphasis was not.
+- **The 92.6% authorship figure is a ten-author closed set**, and at 636 authors the same setting
+  gives 27.9%. On coursework, 0.2% over 690 authors sits just above its own 0.14% chance baseline;
+  only the 812-author open-assignment set is strictly below chance.
+- **Gold and Krinke's finding is scoped.** Their Gerrit dataset needed no ethics application under
+  their local rules, on accessible data with no profiling, and they note review data carries higher
+  risk than version control data because reviewers express opinions about work and its authors.
+  The ethics section now carries both halves.
+- **The COLING contamination paper does not cover Min-K%++.** It benchmarks five detectors,
+  including its own Local Order Quiz, and its finding this study relies on is that contamination
+  introduced by instruction fine-tuning escaped every method but one. Min-K%++ belongs to this
+  study's battery.
+- **CodeReviewer is a model name.** The ESEC/FSE 2022 paper is "Automating Code Review Activities
+  by Large-Scale Pre-training"; the other title is the arXiv v1. The task shape and the exact-match
+  metric are confirmed, and the paper reports BLEU beside EM.
+- **The LLM-as-judge exclusion rests on the right paper.** arXiv:2604.24525 is about judging review
+  comments, not about exact match on generated code, which is exactly what that paragraph claims:
+  0.44 to 0.62 agreement on 2,604 industrial comments across three frontier models, EASE 2026.
+
+The one badge left is the window assignment rule in section 5, which is a decision rather than a
+citation.
