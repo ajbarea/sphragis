@@ -23,6 +23,7 @@ Two detectors, both what an honest-but-curious server could run with reference u
 
 from __future__ import annotations
 
+import math
 import random
 from collections import defaultdict
 from collections.abc import Sequence
@@ -49,6 +50,12 @@ def tpr_at_fpr(present: Sequence[float], absent: Sequence[float], fpr: float) ->
     """
     if not present or not absent:
         raise ValueError("both classes need scores")
+    if not 0.0 <= fpr <= 1.0:
+        raise ValueError(f"a false-positive rate lies in [0, 1], got {fpr}")
+    # A NaN sorts arbitrarily and compares false with everything, so the threshold came to depend
+    # on the input order and the achieved rate could exceed the one requested.
+    if any(math.isnan(x) for x in (*present, *absent)):
+        raise ValueError("a score is NaN, so no threshold over it is well defined")
     ranked = sorted(absent, reverse=True)
     allowed = min(int(fpr * len(ranked)), len(ranked) - 1)
     threshold = ranked[allowed]

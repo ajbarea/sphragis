@@ -200,3 +200,19 @@ def test_a_refused_estimate_gets_no_interval() -> None:
     assert math.isnan(point["accuracy"]), "twenty documents are below the per-label floor"
     interval = probe.accuracy_interval(docs, seed=0, resamples=50)
     assert math.isnan(interval["low"]) and math.isnan(interval["high"])
+
+
+def test_the_interval_contains_its_own_estimate_when_resampling_biases_it_down() -> None:
+    """Resampling changes with replacement trains each refit on fewer unique changes, so the
+    resampled accuracies sit below the estimate and a percentile interval can miss it entirely."""
+    rng = __import__("random").Random(0)
+    shared = [f"w{i}" for i in range(30)]
+    docs = []
+    for i in range(160):
+        label = i % 2
+        own = [f"{label}-{rng.randrange(40)}" for _ in range(3)]
+        words = tuple(own + rng.sample(shared, 6))
+        docs.append(probe.Document(change_id=f"c{i}", label=label, words=words))
+    result = probe.accuracy_interval(docs, seed=1, resamples=80)
+    assert result["interval"] == "out_of_fold_percentile"
+    assert result["low"] <= result["accuracy"] <= result["high"]

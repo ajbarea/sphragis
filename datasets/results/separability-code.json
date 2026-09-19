@@ -15,64 +15,72 @@
     "folds_scored": 5.0,
     "documents": 5160.0,
     "changes": 2821.0,
-    "low": 0.793619218906643,
-    "high": 0.8414592993022175
+    "low": 0.8038852744384695,
+    "high": 0.8340144432468598,
+    "interval": "out_of_fold_percentile"
   },
   "matched.py": {
     "accuracy": 0.7712636730918084,
     "folds_scored": 5.0,
     "documents": 466.0,
     "changes": 263.0,
-    "low": 0.6654340633850524,
-    "high": 0.8137667415691014
+    "low": 0.6889020799092249,
+    "high": 0.8166201934562434,
+    "interval": "out_of_fold_percentile"
   },
   "within:openstack:starlingx/test vs starlingx/config": {
     "accuracy": 0.6391106762620298,
     "folds_scored": 5.0,
     "documents": 280.0,
     "changes": 139.0,
-    "low": 0.5777949947332098,
-    "high": 0.7051918917808274
+    "low": 0.5832782428593473,
+    "high": 0.7017986143461215,
+    "interval": "out_of_fold_percentile"
   },
   "within:openstack:starlingx/test vs openstack/swift": {
     "accuracy": 0.5565664160401003,
     "folds_scored": 5.0,
     "documents": 260.0,
     "changes": 89.0,
-    "low": 0.47226470243899027,
-    "high": 0.6547036541889483
+    "low": 0.4600957231037258,
+    "high": 0.6127970452135351,
+    "interval": "out_of_fold_percentile"
   },
   "within:openstack:starlingx/test vs openstack/neutron": {
     "accuracy": 0.695595238095238,
     "folds_scored": 5.0,
     "documents": 226.0,
     "changes": 115.0,
-    "low": 0.5515446458712713,
-    "high": 0.760537379642239
+    "low": 0.6294278476589797,
+    "high": 0.7557164599956362,
+    "interval": "out_of_fold_percentile"
   },
   "within:openstack:starlingx/config vs openstack/swift": {
     "accuracy": 0.6302552675755779,
     "folds_scored": 5.0,
     "documents": 260.0,
     "changes": 111.0,
-    "low": 0.4974462633730369,
-    "high": 0.7011559091721795
+    "low": 0.5566257311131562,
+    "high": 0.6977448047538003,
+    "interval": "out_of_fold_percentile"
   },
   "within:openstack:starlingx/config vs openstack/neutron": {
     "accuracy": 0.5754922726537751,
     "folds_scored": 5.0,
     "documents": 226.0,
     "changes": 135.0,
-    "low": 0.43995020459416745,
-    "high": 0.63829981595691
+    "low": 0.5024871874022978,
+    "high": 0.6374211972238288,
+    "interval": "out_of_fold_percentile"
   },
   "within:openstack:openstack/swift vs openstack/neutron": {
     "accuracy": 0.5957795359523119,
     "folds_scored": 5.0,
     "documents": 226.0,
     "changes": 95.0,
-    "low": 0.46090208810797045,
-    "high": 0.6651333065911071
+    "low": 0.517463490810265,
+    "high": 0.6576060100847876,
+    "interval": "out_of_fold_percentile"
   },
   "within:qt:pyside/pyside-setup vs qt/qtbase": {
     "accuracy": NaN,

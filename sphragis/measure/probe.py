@@ -139,9 +139,9 @@ def balance(docs: Sequence[Document], *, seed: int) -> list[Document]:
     return rng.sample(by_label[0], n) + rng.sample(by_label[1], n)
 
 
-def separability(
-    docs: Sequence[Document], *, seed: int, folds: int = 5, min_per_label: int = 40
-) -> dict[str, float]:
+def _cross_validate(
+    docs: Sequence[Document], *, seed: int, folds: int, min_per_label: int
+) -> tuple[list[tuple[str, int, int, bool]], int, int]:
     """Cross-validated accuracy, with whole changes held out together.
 
     Splitting by example would leak: one change contributes several examples that share a
@@ -151,7 +151,7 @@ def separability(
     """
     docs = balance(docs, seed=seed)
     if min(sum(1 for d in docs if d.label == label) for label in (0, 1)) < min_per_label:
-        return {"accuracy": float("nan"), "documents": float(len(docs)), "changes": 0.0}
+        return [], 0, len(docs)
 
     # Folds are stratified by label. Assigning shuffled changes round-robin leaves each
     # fold's label mix to chance -- measured at 0.25 to 0.79 on a balanced sample of 120
@@ -178,68 +178,105 @@ def separability(
     # fold predicting everything label 0 and another predicting everything label 1 each
     # score 0.5 alone, but their pooled recalls average above it. That is how a probe with
     # no learnable signal returned 0.55 on bootstrap resamples.
-    scores = []
+    # One row per held-out document: its change, its fold, its label, whether it was classified
+    # correctly. The classifier is fitted once per fold, here and nowhere else.
+    rows: list[tuple[str, int, int, bool]] = []
     for fold in range(folds):
         train = [d for d in docs if assigned[d.change_id] != fold]
         test = [d for d in docs if assigned[d.change_id] == fold]
         if not train or not test:
             continue
         counts, totals, vocab = _fit(train)
+        for doc in test:
+            correct = _predict(doc, counts, totals, vocab) == doc.label
+            rows.append((doc.change_id, fold, doc.label, correct))
+    return rows, len(changes), len(docs)
+
+
+def _score(rows: Sequence[tuple[str, int, int, bool]], folds: int) -> tuple[float, int]:
+    """Balanced accuracy per fold, averaged across folds.
+
+    Balanced accuracy: the mean of the two per-label recalls, not the raw hit rate. Stratifying by
+    change equalises how many CHANGES of each label land in a fold, not how many documents, and
+    changes carry between one and forty-five. A fold whose documents run 80% one label rewards a
+    classifier that simply leans that way, which is how a chance-level probe came back at 0.55 on
+    a bootstrap resample. Averaged ACROSS folds rather than pooled over them: pooling the hits
+    first lets folds that lean toward opposite labels cancel into apparent skill.
+    """
+    scores = []
+    for fold in range(folds):
         hits = {0: 0, 1: 0}
         seen = {0: 0, 1: 0}
-        for doc in test:
-            hits[doc.label] += _predict(doc, counts, totals, vocab) == doc.label
-            seen[doc.label] += 1
+        for _, row_fold, label, correct in rows:
+            if row_fold == fold:
+                hits[label] += correct
+                seen[label] += 1
         if seen[0] and seen[1]:
             scores.append((hits[0] / seen[0] + hits[1] / seen[1]) / 2)
-    if not scores:
-        return {"accuracy": float("nan"), "documents": float(len(docs)), "changes": 0.0}
+    return (sum(scores) / len(scores) if scores else float("nan")), len(scores)
+
+
+def separability(
+    docs: Sequence[Document], *, seed: int, folds: int = 5, min_per_label: int = 40
+) -> dict[str, float]:
+    """Cross-validated balanced accuracy, with whole changes held out together.
+
+    Splitting by example would leak: one change contributes several examples that share a
+    review conversation, so the same words appear on both sides of the split and accuracy
+    rises for a reason that has nothing to do with the label. This is the same grouping the
+    generative contrast uses, for the same reason.
+    """
+    rows, changes, size = _cross_validate(docs, seed=seed, folds=folds, min_per_label=min_per_label)
+    accuracy, scored = _score(rows, folds)
+    if not scored:
+        return {"accuracy": float("nan"), "documents": float(size), "changes": 0.0}
     return {
-        "accuracy": sum(scores) / len(scores),
-        "folds_scored": float(len(scores)),
-        "documents": float(len(docs)),
-        "changes": float(len(changes)),
+        "accuracy": accuracy,
+        "folds_scored": float(scored),
+        "documents": float(size),
+        "changes": float(changes),
     }
 
 
 def accuracy_interval(
-    docs: Sequence[Document], *, seed: int, resamples: int = 400, folds: int = 5
-) -> dict[str, float]:
-    """Percentile interval for the accuracy, resampling whole changes.
+    docs: Sequence[Document],
+    *,
+    seed: int,
+    resamples: int = 400,
+    folds: int = 5,
+    min_per_label: int = 40,
+) -> dict[str, Any]:
+    """A 95% percentile interval for the accuracy, resampling whole changes' held-out predictions.
 
-    The same clustered resampling the gate uses. An interval built over examples would be
-    too narrow by the amount the within-change correlation contributes.
+    The classifier is fitted once, and the resampling draws changes with replacement over the
+    predictions it made on them. Refitting on each resample, as this used to, trained every refit
+    on about 63% unique changes, so the resampled accuracies sat below the estimate by more than
+    their own spread: the raw probe read 0.841 with an interval of [0.814, 0.836], and no interval
+    built from quantiles of those draws, bias-corrected or not, can contain the estimate when
+    every draw is below it. Resampling fixed predictions measures how much the accuracy moves
+    with which changes were observed, not with a smaller training set. What it leaves out is the
+    classifier's own instability across refits, so it is the narrower of the two readings.
     """
-    point = separability(docs, seed=seed, folds=folds)
+    point = separability(docs, seed=seed, folds=folds, min_per_label=min_per_label)
     if math.isnan(point["accuracy"]):
-        # The point estimate was refused for being below the per-label floor. Resampling does
-        # not repair that: draws differ in balance, so a few of them clear the floor and the
-        # rest are dropped, and the interval left over is selected on passing the very check
-        # the estimate failed. It came back as [0.562, 0.857] around a refused estimate.
+        # The point estimate was refused for being below the per-label floor, and resampling
+        # does not repair that.
         return {**point, "low": float("nan"), "high": float("nan")}
-    by_change: dict[str, list[Document]] = {}
-    for doc in docs:
-        by_change.setdefault(doc.change_id, []).append(doc)
+    rows, _, _ = _cross_validate(docs, seed=seed, folds=folds, min_per_label=min_per_label)
+    by_change: dict[str, list[tuple[str, int, int, bool]]] = {}
+    for row in rows:
+        by_change.setdefault(row[0], []).append(row)
     ids = sorted(by_change)
     rng = random.Random(seed)
-
     draws = []
-    for trial in range(resamples):
-        picked: list[Document] = []
-        for _ in range(len(ids)):
-            source = ids[rng.randrange(len(ids))]
-            # Keep the original change id. Renaming a twice-drawn change into two clusters
-            # is right for a difference of means and wrong here: the copies carry identical
-            # text, so they land in different folds and the classifier trains on the very
-            # documents it is scored on. That inflated the interval until it no longer
-            # contained the estimate it was built around (0.837 against [0.856, 0.874]).
-            picked.extend(by_change[source])
-        drawn = separability(picked, seed=seed + trial, folds=folds)
-        if not math.isnan(drawn["accuracy"]):
-            draws.append(drawn["accuracy"])
+    for _ in range(resamples):
+        picked = [row for _ in ids for row in by_change[ids[rng.randrange(len(ids))]]]
+        value, scored = _score(picked, folds)
+        if scored:
+            draws.append(value)
     draws.sort()
     if not draws:
         return {**point, "low": float("nan"), "high": float("nan")}
-    lo = draws[max(0, round(0.025 * len(draws)) - 1)]
-    hi = draws[min(len(draws) - 1, round(0.975 * len(draws)))]
-    return {**point, "low": lo, "high": hi}
+    low = draws[max(0, round(0.025 * len(draws)) - 1)]
+    high = draws[min(len(draws) - 1, round(0.975 * len(draws)))]
+    return {**point, "low": low, "high": high, "interval": "out_of_fold_percentile"}

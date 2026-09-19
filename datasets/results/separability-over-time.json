@@ -16,8 +16,9 @@
       "folds_scored": 5.0,
       "documents": 406.0,
       "changes": 154.0,
-      "low": 0.723992435449679,
-      "high": 0.8880418192918192
+      "low": 0.7966313394337812,
+      "high": 0.9368710768116408,
+      "interval": "out_of_fold_percentile"
     },
     "2025-01+": {
       "months": [
@@ -29,8 +30,9 @@
       "folds_scored": 5.0,
       "documents": 80.0,
       "changes": 58.0,
-      "low": 0.5659493284493284,
-      "high": 0.8232070707070708
+      "low": 0.5191919191919192,
+      "high": 0.7567765567765568,
+      "interval": "out_of_fold_percentile"
     },
     "2025-04+": {
       "months": [
@@ -54,8 +56,9 @@
       "folds_scored": 5.0,
       "documents": 108.0,
       "changes": 66.0,
-      "low": 0.6089709807101111,
-      "high": 0.8501022289257584
+      "low": 0.6413003663003662,
+      "high": 0.8301875901875903,
+      "interval": "out_of_fold_percentile"
     },
     "2025-10+": {
       "months": [

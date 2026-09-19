@@ -3942,3 +3942,36 @@ are data this analysis has not seen. On clients trained from them beside Qt's, t
 2. the held-out classifier on the **residual** at **rank 1**: "the kept-back part identifies" if its
    project-level p is at or below 0.05.
 Neither result will be reinterpreted at another rank or with another instrument.
+
+### The probe's intervals could not contain their own estimates, and now do (2026-09-18)
+
+The review found the raw probe reading 0.841 with an interval of [0.814, 0.836]. The cause was the
+procedure, not the interval formula: each bootstrap resample *refitted* the classifier on changes
+drawn with replacement, about 63% of them unique, so every refit trained on less and scored lower,
+and the resampled accuracies sat below the estimate by more than their own spread. A bias-corrected
+(BCa) interval was tried first and made it worse -- [0.839, 0.839] -- because any interval built
+from quantiles of the draws cannot contain an estimate that every draw falls below.
+
+`accuracy_interval` now fits the classifier once and resamples changes over the predictions it
+made on them. That measures how much the accuracy moves with which changes were observed, and not
+with a smaller training set; what it leaves out is the classifier's own refit instability, so it is
+the narrower reading, and is labelled `out_of_fold_percentile` in every result. `separability`
+itself is unchanged: against the previous code on the real corpus, three cases at two seeds each,
+every output is identical to the last digit.
+
+| | estimate | old interval | new interval |
+|---|---|---|---|
+| raw, reviewers' words | 0.841 | [0.814, 0.836] | [0.831, 0.851] |
+| matched .py, reviewers' words | 0.849 | [0.769, 0.867] | [0.807, 0.890] |
+| matched .py, code shapes | 0.771 | [0.665, 0.814] | [0.689, 0.817] |
+
+**The code-convention finding survives**, slightly strengthened: the cross-organization code-shape
+reading's lower bound rises to 0.689, still above five of the six within-OpenStack baselines (0.557
+to 0.696). Point estimates quoted anywhere in this log are unaffected; intervals quoted before this
+entry were computed the old way. The drift readings earlier today were not committed as files, so
+their intervals are not regenerated; their accuracies stand.
+
+**For AJ, noticed in passing and not changed:** `scripts/separability_over_time.py` reads every built
+month, which includes 2025-09 and 2025-10 from the dev window, where `scripts/separability.py`
+confines itself to pilot and train. It reads corpus text only and no held-out predictions, so
+nothing is spent, but the two probes follow different rules.

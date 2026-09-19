@@ -131,6 +131,7 @@ def main() -> None:
             sigma = residual / np.sqrt(width)
             measured_aucs, predicted_aucs, unmasked_aucs, tprs = [], [], [], []
             projection_aucs: list[float] = []
+            achieved: list[float] = []
             attenuations = {"present": [], "absent": []}
             norms = {"present": [], "absent": []}
             for repeat in range(args.repeats):
@@ -198,7 +199,9 @@ def main() -> None:
                 measured_aucs.append(auc(measured["present"], measured["absent"]))
                 predicted_aucs.append(auc(list(predicted["present"]), list(predicted["absent"])))
                 unmasked_aucs.append(auc(list(base["present"]), list(base["absent"])))
-                tprs.append(tpr_at_fpr(measured["present"], measured["absent"], 0.01)["tpr"])
+                point = tpr_at_fpr(measured["present"], measured["absent"], 0.01)
+                tprs.append(point["tpr"])
+                achieved.append(point["fpr_achieved"])
             cell = {
                 "auc_measured": float(np.mean(measured_aucs)),
                 "auc_measured_sd": float(np.std(measured_aucs, ddof=1))
@@ -211,6 +214,7 @@ def main() -> None:
                 else 0.0,
                 "repeats": args.repeats,
                 "tpr_at_1pct_fpr": float(np.mean(tprs)),
+                "fpr_achieved_at_1pct": float(np.mean(achieved)),
                 "auc_projection": float(np.mean(projection_aucs)),
                 "auc_projection_sd": (
                     float(np.std(projection_aucs, ddof=1)) if args.repeats > 1 else 0.0

@@ -368,3 +368,15 @@ def test_the_reported_reference_is_the_reference_actually_used() -> None:
             groups=projects,
         )
         assert result["reference_clients"] in {2.0, 4.0}
+
+
+@pytest.mark.parametrize("fpr", [-0.01, 1.5])
+def test_a_false_positive_rate_outside_zero_to_one_is_refused(fpr: float) -> None:
+    with pytest.raises(ValueError, match="lies in"):
+        aggregate.tpr_at_fpr([1.0, 2.0], [0.0, 0.5], fpr)
+
+
+def test_a_nan_score_is_refused_rather_than_ordered_arbitrarily() -> None:
+    """A NaN made the threshold depend on input order and the achieved rate exceed the request."""
+    with pytest.raises(ValueError, match="NaN"):
+        aggregate.tpr_at_fpr([1.0, float("nan")], [0.0, 0.5], 0.01)
