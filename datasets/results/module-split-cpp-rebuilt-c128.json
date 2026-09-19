@@ -1,0 +1,126 @@
+{
+  "content": "cpp",
+  "clients": 48,
+  "modules": 196,
+  "kinds": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+  ],
+  "provenance": {
+    "generated_at": "2026-09-19T22:58:44.964998+00:00",
+    "git": {
+      "commit": "1a18500ac52874f31a9f36d0aa4c5ed9f14f84af",
+      "branch": "feat/wellposed-filter"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  },
+  "cuts": {
+    "pfadapter transmitted (q,k)": {
+      "modules": 56,
+      "organization_beyond_project": 0.5833333333333334,
+      "aosp_auc": 0.7778109375,
+      "aosp_tpr_at_1pct": 0.14500000000000002,
+      "qt_auc": 0.612903125,
+      "qt_tpr_at_1pct": 0.029375
+    },
+    "pfadapter kept local (v,o)": {
+      "modules": 56,
+      "organization_beyond_project": 0.6458333333333334,
+      "aosp_auc": 0.86045703125,
+      "aosp_tpr_at_1pct": 0.2765625,
+      "qt_auc": 0.71260390625,
+      "qt_tpr_at_1pct": 0.0925
+    },
+    "attention, all four": {
+      "modules": 112,
+      "organization_beyond_project": 0.6458333333333334,
+      "aosp_auc": 0.82891484375,
+      "aosp_tpr_at_1pct": 0.2225,
+      "qt_auc": 0.66499609375,
+      "qt_tpr_at_1pct": 0.0521875
+    },
+    "mlp, all three": {
+      "modules": 84,
+      "organization_beyond_project": 0.625,
+      "aosp_auc": 0.8525859375,
+      "aosp_tpr_at_1pct": 0.243125,
+      "qt_auc": 0.65967578125,
+      "qt_tpr_at_1pct": 0.058750000000000004
+    },
+    "everything": {
+      "modules": 196,
+      "organization_beyond_project": 0.6458333333333334,
+      "aosp_auc": 0.84157890625,
+      "aosp_tpr_at_1pct": 0.231875,
+      "qt_auc": 0.6642234375,
+      "qt_tpr_at_1pct": 0.054375
+    },
+    "down_proj alone": {
+      "modules": 28,
+      "organization_beyond_project": 0.625,
+      "aosp_auc": 0.8616515625,
+      "aosp_tpr_at_1pct": 0.26,
+      "qt_auc": 0.6906140625,
+      "qt_tpr_at_1pct": 0.085
+    },
+    "gate_proj alone": {
+      "modules": 28,
+      "organization_beyond_project": 0.5625,
+      "aosp_auc": 0.81493828125,
+      "aosp_tpr_at_1pct": 0.1853125,
+      "qt_auc": 0.59680390625,
+      "qt_tpr_at_1pct": 0.0278125
+    },
+    "k_proj alone": {
+      "modules": 28,
+      "organization_beyond_project": 0.5625,
+      "aosp_auc": 0.77498671875,
+      "aosp_tpr_at_1pct": 0.1375,
+      "qt_auc": 0.61180546875,
+      "qt_tpr_at_1pct": 0.0275
+    },
+    "o_proj alone": {
+      "modules": 28,
+      "organization_beyond_project": 0.6875,
+      "aosp_auc": 0.85739921875,
+      "aosp_tpr_at_1pct": 0.2646875,
+      "qt_auc": 0.7044,
+      "qt_tpr_at_1pct": 0.08750000000000001
+    },
+    "q_proj alone": {
+      "modules": 28,
+      "organization_beyond_project": 0.6041666666666666,
+      "aosp_auc": 0.779296875,
+      "aosp_tpr_at_1pct": 0.1559375,
+      "qt_auc": 0.61316015625,
+      "qt_tpr_at_1pct": 0.03125
+    },
+    "up_proj alone": {
+      "modules": 28,
+      "organization_beyond_project": 0.6666666666666666,
+      "aosp_auc": 0.8628421875,
+      "aosp_tpr_at_1pct": 0.2571875,
+      "qt_auc": 0.6794859375,
+      "qt_tpr_at_1pct": 0.0565625
+    },
+    "v_proj alone": {
+      "modules": 28,
+      "organization_beyond_project": 0.6458333333333334,
+      "aosp_auc": 0.8605812500000001,
+      "aosp_tpr_at_1pct": 0.28250000000000003,
+      "qt_auc": 0.7184234375,
+      "qt_tpr_at_1pct": 0.0971875
+    }
+  }
+}
