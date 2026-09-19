@@ -3270,3 +3270,71 @@ organization that writes mostly one language is that language's direction**, and
 evaluated against it measures whether noise hides a language rather than whether it hides a member.
 Holding content fixed is not a refinement of these attacks; it is a precondition for them meaning
 anything.
+
+### The fingerprint is in the part that gets shared, not the part kept back (2026-09-18)
+
+`scripts/subspace_split.py`, `datasets/results/subspace-split.json`. The defence curve says noise is
+the wrong lever. The literature's other lever is structural: SDFLoRA (Shen, Lu, Wan and Chen,
+arXiv:2601.11219, verified on its abstract page) decouples each client's adapter into a shared
+component that "participates in subspace alignment and aggregation across clients" and a private
+one that "remains local and uncommunicated", and puts the DP noise only on the aggregated shared
+update, which "avoids perturbations to local directions".
+
+That defence removes the attacker's access to everything outside the shared subspace, so it closes
+this leak exactly when the organization lives in the residual. Whether it does is a measurement.
+Splitting the 43 C++ clients' sketched updates at the top-k principal subspace of all of them, the
+friendliest approximation of an alignment step, organization beyond project:
+
+| | whole update | shared subspace | residual |
+|---|---|---|---|
+| rank 1 (27.7% of energy) | 0.419 | 0.302 | 0.837 |
+| rank 2 (30.4%) | 0.419 | 0.465 | 0.814 |
+| **rank 4 (34.7%)** | 0.419 | **0.791** | 0.512 |
+| rank 8 (42.5%) | 0.419 | 0.767 | 0.535 |
+| rank 16 (57.0%) | 0.419 | 0.721 | 0.605 |
+
+and the detector on the shared part at rank 4 reads AUC 0.750 for AOSP and 0.834 for Qt, against
+0.704 and 0.613 on the whole update.
+
+Two things follow, and the second was not expected.
+
+**A structural split of this kind does not close the leak.** From rank 2 up, the organization is
+legible in precisely the component that is aggregated and transmitted. Rank 1 is the direction
+every client shares, which discriminates nothing; the organization enters at the second, third and
+fourth components, which are still far inside anything an alignment step would call shared.
+
+**Projecting onto the shared subspace makes the attacker better**, from 0.419 on the whole update
+to 0.791 at rank 4. The residual is mostly nuisance that was hiding the signal. A defence that
+hands the server a subspace-aligned update is handing it a cleaner one.
+
+**The check that changed the numbers.** Fitting the basis on all 43 clients and then holding one
+out scores that client against a subspace its own update helped define. Refitting without the
+scored client each time moves the shared figure from 0.884 to 0.791 and the residual at rank 4
+from 0.116 to 0.512 -- a large move, and in the direction that reveals the mechanism: with the
+target in the basis, its own signature is absorbed into the top-k and its residual is stripped of
+exactly what identifies it. The refitted figures are the ones reported. The detector keeps the
+all-client basis, which is correct there, since a server holds every update.
+
+### Registered before the run: what FedSA-LoRA's shared matrix should leak (2026-09-18)
+
+Jobs 149581 and 149582. FedSA-LoRA (Guo, Zeng, Wang, Fan, Wang and Qu, **ICLR 2025**,
+arXiv:2410.01463, read from the PDF) shares **only the A matrices** with the server and keeps B
+local, on the finding that "A matrices are responsible for learning general knowledge, while B
+matrices focus on capturing client-specific knowledge", evidenced by A matrices being "more
+similar across clients than the B matrices". It is a privacy argument by construction, and the
+paper is the basis for FedSA-rsLoRA and FedSA-VeRA.
+
+"More similar on average" is not "carries no identity", and the gap between those two is the shape
+of everything this study has found today: organization was invisible to a classifier and visible
+to a targeted detector, and the signal sat in the *shared* subspace rather than the idiosyncratic
+residual. So the prediction, written before the jobs land:
+
+**A alone will identify the organization at well above chance, and the A-only figure will not be
+far below the product's.** If instead A is at chance and B carries it, FedSA-LoRA's rationale holds
+and the study has found the defence it was missing. Either answer is worth the queue time; saying
+which was expected beforehand is what makes it worth anything.
+
+Each factor is compared as the movement from what the server broadcast: B starts at zero, so B is
+its own movement, and A starts at a shared random initialization, so the A geometry subtracts it.
+Both are therefore "how far this client moved the matrix the server sent it", which is what an
+honest-but-curious server observes.
