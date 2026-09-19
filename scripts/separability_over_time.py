@@ -42,6 +42,7 @@ from typing import Any
 from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--orgs", nargs=2, default=["openstack", "qt"])
@@ -126,6 +127,7 @@ def main() -> None:
     months = {org: by_month(org) for org in (first, second)}
     if args.mode == "drift":
         report = drift(args, months)
+        report["provenance"] = provenance_header()
         args.out.write_text(json.dumps(report, indent=2))
         print(f"wrote {args.out}")
         return
@@ -156,6 +158,7 @@ def main() -> None:
             f"accuracy {result['accuracy']:.3f} [{result['low']:.3f}, {result['high']:.3f}]",
             flush=True,
         )
+    report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")
 

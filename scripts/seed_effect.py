@@ -35,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crossed_reread import merge  # noqa: E402
 
 from sphragis.experiment.grid import EvalRun, run_id  # noqa: E402
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
 parser.add_argument("runs", type=Path, nargs="+")
@@ -137,6 +138,7 @@ def main() -> None:
     print(f"sigma_b^2 = {moment:+.6f}  ->  sigma_b = {report['sigma_b']:.4f}")
     if upper is not None:
         print(f"one-sided 95% upper bound on sigma_b, {df} degrees of freedom: {upper:.4f}")
+    report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")
 

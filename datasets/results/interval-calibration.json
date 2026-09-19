@@ -58,14 +58,10 @@
     "window": "datasets/results/rq1-windows-qtfull-fp32.json"
   },
   "provenance": {
-    "generated_at": "2026-09-19T12:49:46.176899+00:00",
+    "generated_at": "2026-09-19T17:37:35.917501+00:00",
     "git": {
       "branch": "feat/wellposed-filter",
-      "commit": "eeab8ab3fab0be2bd23d6a4460f655818c03210a",
-      "uncommitted_code": [
-        "scripts/interval_calibration.py"
-      ],
-      "uncommitted_code_sha256": "5f9abbb10f7d098a6ea6efc0a39d1e7dd73d6e5b044a727d05259629a0eba367"
+      "commit": "de01e5f3295a5cc2e373d816e0303dce19c86795"
     },
     "packages": {
       "peft": "0.20.0",
@@ -90,14 +86,6 @@
       "false_positive_rate": 0.06266666666666666,
       "resamples": 2000,
       "standard_error": 0.00625777146464328,
-      "trials": 1500
-    },
-    "0.50": {
-      "clusters": 19,
-      "exact_match_rate": 0.5,
-      "false_positive_rate": 0.05266666666666667,
-      "resamples": 2000,
-      "standard_error": 0.005767315313551525,
       "trials": 1500
     }
   }

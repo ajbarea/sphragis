@@ -15,6 +15,7 @@ from pathlib import Path
 from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.experiment.neutral import closest_training_match
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
@@ -104,5 +105,6 @@ for org in args.org or ["openstack", "qt"]:
         print(f"  UNASSIGNED {len(unassigned)} changes match no window")
 
 if args.out:
+    report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2))
     print(f"\nwrote {args.out}")

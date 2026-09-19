@@ -45,6 +45,7 @@ from typing import Any
 from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
+from sphragis.provenance import provenance_header
 
 READ_WINDOWS = ("pilot", "train")
 SEED = 5
@@ -152,6 +153,7 @@ def main() -> None:
         "reading the\ncodebase, and organization is the wrong altitude to look for it."
     )
     results.parent.mkdir(parents=True, exist_ok=True)
+    out["provenance"] = provenance_header()
     results.write_text(json.dumps(out, indent=2) + "\n")
     print(f"wrote {results}")
 

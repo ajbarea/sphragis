@@ -308,3 +308,47 @@ def test_a_clean_tree_carries_no_uncommitted_code_field(
     monkeypatch.chdir(repo)
     monkeypatch.delenv("SPHRAGIS_GIT_COMMIT", raising=False)
     assert "uncommitted_code" not in provenance._git_record()
+
+
+#: The convention this guards: the provenance key belongs in the payload where the payload is
+#: built, not beside one `write_text` call, because several scripts write the same report more
+#: than once as it fills and every one of those writes has to carry it.
+#:
+#: Scripts that write into `datasets/results` without a provenance header, each for a stated
+#: reason. Anything else that writes a result and does not record where it came from is the
+#: defect this test exists for: a committed artifact whose producing commit is unknown cannot
+#: be re-derived, and the repository's deploy rule assumes every stage records its SHA.
+PROVENANCE_EXEMPT = {
+    # Corpus stages, whose manifests carry their own window and hash records.
+    "calibration.py": "writes corpus halves and a manifest, not a measurement",
+    "project_corpora.py": "writes per-project corpora and a manifest, not a measurement",
+    "contamination_windows.py": "writes window slices of the corpus, not a measurement",
+    "project_windows.py": "writes window slices of the corpus, not a measurement",
+    # Tools that print rather than record.
+    "estimands.py": "prints both estimands for a committed run; writes nothing",
+    "preflight_pilot.py": "checks the cluster before a job; writes nothing",
+    "bench_throughput.py": "a timing probe, not a study result",
+    "power_rq1.py": "prints; the sensitivity analysis that replaced it writes its own artifact",
+}
+
+
+def test_every_script_that_writes_a_result_records_its_provenance() -> None:
+    missing = []
+    for path in sorted((_ROOT / "scripts").glob("*.py")):
+        source = path.read_text(encoding="utf-8")
+        if "write_text" not in source:
+            continue
+        if "provenance_header" in source or "run_provenance" in source:
+            continue
+        if path.name in PROVENANCE_EXEMPT:
+            continue
+        missing.append(path.name)
+    assert not missing, (
+        f"{missing} write files and record no provenance; add provenance_header() to the "
+        "payload, or name the script in PROVENANCE_EXEMPT with the reason it writes no result"
+    )
+
+
+def test_every_provenance_exemption_names_a_script_that_exists() -> None:
+    names = {path.name for path in (_ROOT / "scripts").glob("*.py")}
+    assert set(PROVENANCE_EXEMPT) <= names, sorted(set(PROVENANCE_EXEMPT) - names)

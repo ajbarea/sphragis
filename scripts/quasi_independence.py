@@ -30,6 +30,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from sphragis.provenance import provenance_header
+
 sys.path.insert(0, str(Path(__file__).parent))
 from censoring import (  # noqa: E402
     WINDOWS,
@@ -202,6 +204,7 @@ def main() -> None:
         report[org] = row
 
     RESULTS.parent.mkdir(parents=True, exist_ok=True)
+    report["provenance"] = provenance_header()
     RESULTS.write_text(json.dumps(report, indent=2) + "\n")
     print(f"\nwrote {RESULTS}")
 

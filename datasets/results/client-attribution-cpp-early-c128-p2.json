@@ -1132,5 +1132,26 @@
       "mean": 0.22634430757515153,
       "pairs": 186
     }
+  },
+  "provenance": {
+    "generated_at": "2026-09-19T17:39:10.084384+00:00",
+    "git": {
+      "commit": "de01e5f3295a5cc2e373d816e0303dce19c86795",
+      "branch": "feat/wellposed-filter",
+      "uncommitted_code": [
+        "scripts/censoring.py",
+        "scripts/client_attribution.py",
+        "scripts/conjunctive_power.py",
+        "scripts/quasi_independence.py"
+      ],
+      "uncommitted_code_sha256": "d8115fb05b6e1047c41a6661aa58f1919c5072cdcb5db3f4cf2da2a0479c0f8f"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
   }
 }

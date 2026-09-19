@@ -31,6 +31,7 @@ from sphragis.experiment.power import (
 )
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import cluster_bootstrap, supports_direction
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -178,6 +179,7 @@ def main() -> None:
         "answers its question at the sizes and effects simulated."
     )
 
+    report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {args.out}")
 

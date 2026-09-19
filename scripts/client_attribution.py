@@ -25,6 +25,7 @@ from sphragis.measure.attribution import (
     permutation_p,
     relation_means,
 )
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--geometry", type=Path, required=True)
@@ -133,6 +134,7 @@ def main() -> None:
     report["relations"] = relation_means(cosine, sources)
     for name, cell in sorted(report["relations"].items(), key=lambda kv: -kv[1]["mean"]):
         print(f"  {name:48} {cell['mean']:.3f} over {cell['pairs']} pairs")
+    report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")
 

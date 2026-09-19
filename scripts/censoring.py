@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from sphragis.corpus.cli import WINDOWS as _CLI_WINDOWS
+from sphragis.provenance import provenance_header
 
 
 def _month_before(bound: str) -> str:
@@ -282,6 +283,7 @@ def main() -> None:
         print(f"test fetched {fetch}: {100 * value:.2f} points")
 
     RESULTS.parent.mkdir(parents=True, exist_ok=True)
+    report["provenance"] = provenance_header()
     RESULTS.write_text(json.dumps(report, indent=2) + "\n")
     print(f"\nwrote {RESULTS}")
 

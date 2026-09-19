@@ -25,6 +25,7 @@ from pathlib import Path
 
 from sphragis.experiment.power import realised_difference, seed_trial
 from sphragis.experiment.runner import to_clusters
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -103,6 +104,7 @@ def main() -> None:
                     f"at marginal power {args.target}",
                     flush=True,
                 )
+    report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")
 
