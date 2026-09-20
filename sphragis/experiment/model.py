@@ -256,15 +256,21 @@ def cast_trainable_to_fp32(model: Any) -> int:
 
 
 def attach_adapter(
-    model_id: str, seed: int
+    model_id: str, seed: int, device: str = "cuda:0"
 ) -> tuple[PeftModel | PeftMixedModel, PreTrainedTokenizerBase]:
-    """A fresh LoRA adapter on the base model, seeded so the init replays."""
+    """A fresh LoRA adapter on the base model, seeded so the init replays.
+
+    `device` exists so a schedule can be exercised on a CPU with the small development model
+    before it costs GPU hours. Every recorded run uses the default, and a result produced on
+    another device would say so in its provenance rather than silently match.
+    """
     # Seed BEFORE get_peft_model: the LoRA initialization draws from the global RNG, so
     # seeding afterwards leaves it dependent on whatever ran before. scripts/pilot.py had
     # exactly that bug, which made its "seed" control nothing but the dropout mask.
     torch.manual_seed(seed)
     tokenizer = _require_tokenizer(model_id)
-    base = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16, device_map="cuda:0")
+    dtype = torch.bfloat16 if device.startswith("cuda") else torch.float32
+    base = AutoModelForCausalLM.from_pretrained(model_id, dtype=dtype, device_map=device)
     adapted = get_peft_model(base, LORA)
     # Not dead code: PEFT returns fp32 adapter parameters on a bf16 base under its current
     # default, so this casts nothing and returns 0. Calling it keeps that invariant enforced
@@ -340,7 +346,11 @@ def train_adapter(
         total = 0.0
         finite = 0
         for micro in group:
-            batch = _collate([items[i] for i in micro], pad_token_id)
+            # The batch follows the model rather than a constant: a schedule exercised on a
+            # CPU would otherwise send its inputs to a GPU that is not there.
+            batch = _collate(
+                [items[i] for i in micro], pad_token_id, device=str(next(model.parameters()).device)
+            )
             # Scaled by the group's own size, not the nominal accumulation: the final
             # group of a run is short whenever the corpus does not divide evenly.
             loss = model(**batch).loss / len(group)
