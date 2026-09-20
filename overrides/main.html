@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{#-
+  Open Graph / Twitter card tags, emitted by hand.
+
+  Zensical's social-cards plugin is still a stub, so the sisters emit these
+  themselves and Sphragis follows. No og:image: there is no card artwork for this
+  project, and pointing at a missing file is worse than omitting the tag, since
+  most consumers fall back gracefully on absence and show a broken preview on a
+  404.
+-#}
+{#-
+  The home page's own title. Zensical's base falls back to the nav label, so the tab reads
+  "Home - Sphragis" on the page whose title is the site's name. The same `is_home` test the
+  card tags use decides it, and every other page keeps the base behaviour.
+-#}
+{% block htmltitle %}
+  {% if page.is_homepage or page.url == '' or page.url == '/' %}
+    <title>{{ config.site_name }}</title>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+  {% set is_home = page.is_homepage or page.url == '' or page.url == '/' %}
+  {% set raw_title = (page.meta and page.meta.title) or page.title %}
+  {% set page_title = is_home and config.site_name or (raw_title ~ ' | ' ~ config.site_name) %}
+  {% set page_desc = (page.meta and page.meta.description) or config.site_description %}
+  {% set page_url = page.canonical_url or config.site_url %}
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ page_title }}">
+  <meta property="og:description" content="{{ page_desc }}">
+  <meta property="og:url" content="{{ page_url }}">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ page_title }}">
+  <meta name="twitter:description" content="{{ page_desc }}">
+{% endblock %}

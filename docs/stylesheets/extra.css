@@ -1,0 +1,30 @@
+/* ==========================================================================
+   Sphragis
+
+   Deliberately small. The sisters carry landing-page stylesheets because they
+   have landing pages; this site is four reference pages and a log, and every
+   rule below earns its place by being used on one of them.
+   ========================================================================== */
+
+/* The one-line question under the title on the home page. */
+.hero-subtitle {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--md-default-fg-color--light);
+  margin-top: -0.4rem;
+}
+
+/* Window counts, contrast intervals and leakage rates are all columns of
+   figures, and a proportional font makes two of them hard to compare. */
+.md-typeset table:not([class]) td:not(:first-child) {
+  font-family: var(--md-code-font-family);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The artifact index is two columns of filenames and nothing else; its rows
+   should read as a list rather than as a table of measurements. */
+.md-typeset table:not([class]) th:empty {
+  padding: 0;
+}
