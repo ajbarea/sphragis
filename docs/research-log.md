@@ -4407,3 +4407,41 @@ At the training length where a whole update hides its source, splitting it along
 clients share exposes that source. At the length where everything is exposed, the split neither
 helps nor hides. A defence evaluated only at long local training would therefore report that its
 cut costs nothing, and be right about the wrong regime.
+
+### Masking still helps this detector, in both organizations, and one row says why the first attempt missed it (2026-09-19)
+
+`defence-curve-cpp-rebuilt-c128-mid.json`. The masking result was measured on the nine-project
+corpus at 64 examples a client. This repeats it on the rebuilt corpus at 128, content held to C++,
+48 clients, at rounds 10, 30 and 50 with six mask sizes.
+
+Read as distance from chance, which is what an attacker who knows the sign obtains, five of the six
+rows peak at a 1x mask rather than at no mask at all:
+
+| | none | 0.5x | 1x | 2x | 4x | 8x |
+|---|---|---|---|---|---|---|
+| AOSP, 10 rounds | 0.379 | 0.383 | **0.385** | 0.377 | 0.342 | 0.263 |
+| AOSP, 30 rounds | 0.466 | 0.471 | **0.475** | 0.474 | 0.457 | 0.391 |
+| AOSP, 50 rounds | 0.484 | 0.487 | **0.489** | 0.488 | 0.477 | 0.430 |
+| Qt, 10 rounds | **0.127** | 0.127 | 0.124 | 0.115 | 0.091 | 0.053 |
+| Qt, 30 rounds | 0.216 | 0.222 | **0.225** | 0.218 | 0.186 | 0.129 |
+| Qt, 50 rounds | 0.266 | 0.280 | **0.290** | 0.290 | 0.258 | 0.185 |
+
+**At the operating point the gain is larger than the area suggests.** AOSP's true-positive rate at
+one false alarm in a hundred goes 0.312 to 0.352 at 10 rounds, 0.637 to 0.711 at 30, and 0.794 to
+0.885 at 50, all peaking at a 1x mask. The AUC moves by five thousandths over the same cells. A
+defence tuned on the area would call a nine-point gain in catch rate a rounding error, which is the
+Carlini point arriving from the defender's side.
+
+**Qt's detector runs inverted here**, AUC 0.21 to 0.37 across its rows, so a round holding two of
+its clients looks less like Qt's reference direction than a round without them. That is usable
+signal once the rule is flipped, and the TPR column reads near zero for Qt only because it assumes
+the unflipped rule. The inversion is not the content-pooling artefact recorded earlier: content is
+held fixed here. It fits the rest of the picture, where AOSP's projects share a direction and Qt's
+do not.
+
+**Why the first attempt looked like a null.** The script's default rounds are 1, 10 and 100. On
+this corpus AOSP's detector reaches 0.997 with 94% of rounds caught by 100 rounds, so a mask has no
+room to raise it, and at 1 round averaging has not yet opened the gap the effect depends on. The
+informative band is in between, which is why this run uses 10, 30 and 50. A defence evaluation that
+takes the defaults would report no effect and be wrong about the regime rather than about the
+mechanism.
