@@ -18,18 +18,28 @@ from sphragis.corpus.examples import (
     hunks_from_diff,
     is_code_file,
 )
+from sphragis.corpus.wellposed import ILL_POSED_REASONS, classify
 
 # Sequence, not list: list is invariant, so a caller returning list[dict] would not
 # satisfy a list[Mapping] parameter.
 CommentFetcher = Callable[[int], Mapping[str, Sequence[Mapping[str, Any]]]]
 DiffFetcher = Callable[[int, int, str, int], Mapping[str, Any]]
 
+# Unchanged lines carried either side of each hunk: the unified-diff default, which is the view
+# a reviewer reads. Prompt and probe material only, never part of the target. Measured need:
+# bare hunks run to a median of 16 tokens, and only 35 of 172 OpenStack 2024-10 examples
+# reached the 32 tokens a membership score needs.
+CONTEXT_LINES = 3
+
 DROP_REASONS = (
+    *(f"ill_posed_{reason}" for reason in ILL_POSED_REASONS),
     "metadata_file",
     "author_comment",
+    "acknowledgement",
     "no_line_anchor",
     "no_successor",
     "diff_error",
+    "comment_error",
     "no_anchored_hunk",
 )
 
@@ -57,6 +67,24 @@ def is_reviewer_comment(comment: Mapping[str, Any], owner_id: Any) -> bool:
     return author_id != owner_id
 
 
+# Whole-message acknowledgements carrying no instruction. Deliberately small and exact:
+# a comment is dropped only when its entire normalized text is one of these, so "done, but
+# rename the variable" survives. Measured on the OpenStack 2024-10 build after the author
+# filter: "Done" 16 times, "ditto" 4, "+1" 3, and 4 of 201 examples whose only comments
+# were of this kind, leaving a target the prompt gives no way to reach. "ditto" points at
+# another comment the prompt does not carry, so it is no instruction either. A
+# pre-registration item: it changes which examples exist.
+ACKNOWLEDGEMENTS = frozenset(
+    {"done", "ditto", "+1", "ack", "acked", "fixed", "thanks", "thank you", "ok", "lgtm"}
+)
+_TRAILING = " .!:)"
+
+
+def is_acknowledgement(message: str) -> bool:
+    """True when a comment is only an acknowledgement, with nothing to act on."""
+    return message.strip().lower().rstrip(_TRAILING).strip() in ACKNOWLEDGEMENTS
+
+
 def _covers(hunk: Hunk, line: int) -> bool:
     end = hunk.before_start + max(len(hunk.before), 1) - 1
     return hunk.before_start <= line <= end
@@ -67,6 +95,8 @@ def build_from_change(
     change: Mapping[str, Any],
     fetch_comments: CommentFetcher,
     fetch_diff: DiffFetcher,
+    *,
+    context_lines: int = CONTEXT_LINES,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Every refinement example one change yields, with the reason for each drop."""
     drops: Counter[str] = Counter(dict.fromkeys(DROP_REASONS, 0))
@@ -75,7 +105,16 @@ def build_from_change(
     revision_count = len(change.get("revisions", {}))
     examples: list[dict[str, Any]] = []
 
-    for path, comments in fetch_comments(number).items():
+    # Mirrors the diff guard below. A comments request that exhausts its retries used to abort
+    # the whole build, discarding every change already processed in the month: one
+    # unreachable change on review.opendev.org took down a 12-month build on 2024-12. The
+    # change is dropped and counted instead, so the loss is auditable in the drop profile.
+    try:
+        file_comments = fetch_comments(number)
+    except Exception:
+        drops["comment_error"] += 1
+        return examples, dict(drops)
+    for path, comments in file_comments.items():
         if not is_code_file(path):
             drops["metadata_file"] += len(comments)
             continue
@@ -86,6 +125,9 @@ def build_from_change(
         for comment in comments:
             if owner_id is not None and not is_reviewer_comment(comment, owner_id):
                 drops["author_comment"] += 1
+                continue
+            if is_acknowledgement(str(comment.get("message", ""))):
+                drops["acknowledgement"] += 1
                 continue
             patch_set, line = comment.get("patch_set"), comment.get("line")
             if not isinstance(line, int) or patch_set is None:
@@ -99,7 +141,9 @@ def build_from_change(
             except Exception:
                 drops["diff_error"] += 1
                 continue
-            hit = next((h for h in hunks_from_diff(diff) if _covers(h, line)), None)
+            hit = next(
+                (h for h in hunks_from_diff(diff, context=context_lines) if _covers(h, line)), None
+            )
             if hit is None:
                 drops["no_anchored_hunk"] += 1
                 continue
@@ -107,6 +151,14 @@ def build_from_change(
             grouped.setdefault(key, (hit, []))[1].append(str(comment["message"]))
 
         for (patch_set, start), (hunk, messages) in grouped.items():
+            candidate = {
+                "before": "\n".join(hunk.before),
+                "after": "\n".join(hunk.after),
+            }
+            ill_posed = classify(candidate)
+            if ill_posed is not None:
+                drops[f"ill_posed_{ill_posed}"] += 1
+                continue
             examples.append(
                 {
                     "id": f"{org}:{change['change_id']}:{path}:{patch_set}:{start}",
@@ -118,6 +170,8 @@ def build_from_change(
                     "patch_set": patch_set,
                     "before": "\n".join(hunk.before),
                     "after": "\n".join(hunk.after),
+                    "context_before": "\n".join(hunk.context_before),
+                    "context_after": "\n".join(hunk.context_after),
                     "comments": messages,
                 }
             )

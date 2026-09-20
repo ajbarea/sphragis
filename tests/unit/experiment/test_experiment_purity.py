@@ -10,7 +10,19 @@ from pathlib import Path
 import pytest
 
 _HEAVY = {"torch", "transformers", "peft", "datasets"}
-_ORCHESTRATION = ("grid.py", "power.py", "runner.py", "slurm.py")
+_ORCHESTRATION = (
+    "clients.py",
+    "grid.py",
+    "holdout.py",
+    "neutral.py",
+    "planted.py",
+    "power.py",
+    "preflight.py",
+    "runner.py",
+    "slurm.py",
+    "training.py",
+    "walk.py",
+)
 _ROOT = Path(__file__).resolve().parents[3]
 _EXPERIMENT = _ROOT / "sphragis" / "experiment"
 

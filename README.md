@@ -2,7 +2,7 @@
 
 # Sphragis
 
-### Does an organization leave a learnable fingerprint in the code it reviews?
+### Can a model learn an organization's house style from the code it reviews?
 
 *The corpus, the measurement, and the experiment behind a pre-registered study of whether a
 coding agent adapted to one organization's review history learns that organization's
@@ -50,6 +50,9 @@ sphragis/
   corpus/      fetch, scrub, build, dedup, split, freeze   the review corpus
   measure/     score, stats, contamination                 the instruments the gate reads
   provenance.py                                            commit, versions, platform
+docs/                       the documentation site: the question, the registered
+                            decisions, the outcome-neutral tests, the artifact index
+docs/research-log.md                                       the dated record
 docs/superpowers/specs/                                    the design of record
 docs/superpowers/plans/                                    task-by-task execution plans
 ```
@@ -60,7 +63,32 @@ docs/superpowers/plans/                                    task-by-task executio
 make sync          # install
 make test          # the suite
 make lint          # ruff format + ruff check + ty
+make docs          # build the documentation site into site/
 ```
+
+## Documentation
+
+The site is what a reader who is not going to read the code needs: the question and the
+gate, every decision that is fixed before the seal opens with the evidence that chose it,
+the checks that have to pass before the gate is read at all, and an index of every
+committed measurement with the script that wrote it.
+
+| page | holds |
+|---|---|
+| `docs/index.md` | the question, the directional hypothesis, the pass rule, the seal |
+| `docs/registered-decisions.md` | every registered choice, and the measurement behind it |
+| `docs/outcome-neutral.md` | what must hold for the study to be interpretable |
+| `docs/artifacts.md` | generated: every artifact under `datasets/results/` and its writer |
+| `docs/research-log.md` | the dated record, superseded readings included |
+
+`make docs-serve` renders it locally with live reload. It is not published: this repository
+is private and the test window is sealed, so the workflow builds the site on every push and
+the publish step waits on that decision.
+
+Every figure on the site is asserted against the artifact that produced it. `make
+docs-harvest` fails on a number that has drifted from its measurement or on a stale artifact
+index, and the test suite runs the same check, so a page cannot quietly outlive the
+apparatus.
 
 ## Building a corpus
 
@@ -94,14 +122,36 @@ The registered 7B needs ~17 GB and will not fit a typical desktop card, but the 
 can be developed against `Qwen2.5-Coder-1.5B` on anything with ~6 GB.
 
 ```bash
-make gpu-local                                   # swap the CPU wheel for cu130
+make gpu-local                                   # the experiment extra: cu130 torch on Linux
 uv run --no-sync --extra experiment python -m sphragis.experiment.model \
     --smoke --model-id Qwen/Qwen2.5-Coder-1.5B-Instruct
 ```
 
-Both halves matter. The lockfile pins CUDA torch only for `linux/aarch64`, which is the
-cluster; an x86_64 box resolves the CPU wheel, and plain `uv run` re-syncs to it on every
-invocation, silently undoing the swap. `--no-sync` is what keeps it.
+`--no-sync` matters: the extra is not a default, so a plain `uv run` re-syncs it away.
+
+## Running on the clusters
+
+Jobs run on RIT Research Computing under the `fl-mlm` project account. TIGRIS (aarch64,
+GH200 96 GB) is the default target; SPORC (x86_64, A100 40 GB, or H100 80 GB) is reached
+through the same TIGRIS login and checkout. Both mount one `$HOME`, so uv and the venv are
+built per machine type (`.venv-aarch64`, `.venv-x86_64`).
+
+```bash
+make deploy                                      # cluster checkout = this pushed commit
+make cluster-env CLUSTER=sporc                   # once per machine type
+make submit JOB=rq1 CLUSTER=sporc TIME=08:00:00 SBATCH_ARGS=--export=ALL,RUN_TAG=sporc-a100
+make submit JOB=rq1 SBATCH_ARGS=--export=ALL,MODE=windows
+```
+
+`CLUSTER` is `tigris`, `sporc` or `sporc-h100`. Scripts keep their TIGRIS `#SBATCH` lines
+and `submit` overrides them on the command line. Their `--time` values were measured on a
+GH200, so pass `TIME` elsewhere. Off TIGRIS every result and adapter path gets the cluster
+name as a suffix, so a run there never overwrites a GH200 result; `RUN_TAG` names it instead.
+`SEEDS` and `TRAIN_SIZE` add `-s<seeds>` and `-n<size>` after it in the scripts that take them,
+so another seed or size never overwrites the default run. Every result a job script writes
+records its cluster, job and GPU,
+including peak GPU memory, which training also logs as each adapter finishes: keep one result
+set on one GPU type.
 
 ## Two invariants
 

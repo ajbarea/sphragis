@@ -1,0 +1,34 @@
+{
+  "sigma_b": 0.0,
+  "target_marginal_power": 0.894,
+  "trials": 120,
+  "resamples": 300,
+  "organizations": {
+    "openstack": {
+      "n_changes": 2171,
+      "by_seeds": {
+        "3": {
+          "lift": 0.022265625,
+          "minimum_detectable_effect": 0.016008849557522128
+        },
+        "5": {
+          "lift": 0.022265625,
+          "minimum_detectable_effect": 0.016008849557522128
+        }
+      }
+    },
+    "qt": {
+      "n_changes": 3937,
+      "by_seeds": {
+        "3": {
+          "lift": 0.01875,
+          "minimum_detectable_effect": 0.012925824175824137
+        },
+        "5": {
+          "lift": 0.017578125,
+          "minimum_detectable_effect": 0.012101648351648316
+        }
+      }
+    }
+  }
+}

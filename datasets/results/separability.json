@@ -1,0 +1,129 @@
+{
+  "suffix": ".py",
+  "organizations": [
+    "openstack",
+    "qt"
+  ],
+  "read": "comments",
+  "windows": [
+    "pilot",
+    "train"
+  ],
+  "seed": 5,
+  "raw": {
+    "accuracy": 0.8409063952822204,
+    "folds_scored": 5.0,
+    "documents": 9076.0,
+    "changes": 4031.0,
+    "low": 0.831144501611931,
+    "high": 0.8510685034993817,
+    "interval": "out_of_fold_percentile"
+  },
+  "matched.py": {
+    "accuracy": 0.8490229138633067,
+    "folds_scored": 5.0,
+    "documents": 592.0,
+    "changes": 319.0,
+    "low": 0.8068557007650069,
+    "high": 0.8904339024158439,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:openstack:starlingx/test vs starlingx/config": {
+    "accuracy": 0.8279251077780081,
+    "folds_scored": 5.0,
+    "documents": 448.0,
+    "changes": 180.0,
+    "low": 0.7784266899219402,
+    "high": 0.8729157867238019,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:openstack:starlingx/test vs openstack/swift": {
+    "accuracy": 0.8717065074617418,
+    "folds_scored": 5.0,
+    "documents": 322.0,
+    "changes": 104.0,
+    "low": 0.8140868623556147,
+    "high": 0.9087972389566048,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:openstack:starlingx/test vs openstack/neutron": {
+    "accuracy": 0.8916751781671136,
+    "folds_scored": 5.0,
+    "documents": 310.0,
+    "changes": 137.0,
+    "low": 0.8452811284489536,
+    "high": 0.9314105565701312,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:openstack:starlingx/config vs openstack/swift": {
+    "accuracy": 0.8160245582541353,
+    "folds_scored": 5.0,
+    "documents": 322.0,
+    "changes": 130.0,
+    "low": 0.7473977694681476,
+    "high": 0.8686002338601224,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:openstack:starlingx/config vs openstack/neutron": {
+    "accuracy": 0.7597921925034586,
+    "folds_scored": 5.0,
+    "documents": 310.0,
+    "changes": 162.0,
+    "low": 0.715408376896703,
+    "high": 0.8035555075793412,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:openstack:openstack/swift vs openstack/neutron": {
+    "accuracy": 0.7887169827299138,
+    "folds_scored": 5.0,
+    "documents": 310.0,
+    "changes": 117.0,
+    "low": 0.7157038029716276,
+    "high": 0.842281481491623,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:qt:pyside/pyside-setup vs qt/qtbase": {
+    "accuracy": 0.892430078820239,
+    "folds_scored": 5.0,
+    "documents": 102.0,
+    "changes": 39.0,
+    "low": 0.7824404761904762,
+    "high": 0.9574404761904761,
+    "interval": "out_of_fold_percentile"
+  },
+  "within:qt:pyside/pyside-setup vs qt/qtdoc": {
+    "accuracy": NaN,
+    "documents": 56.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:pyside/pyside-setup vs qt-creator/qt-creator": {
+    "accuracy": NaN,
+    "documents": 28.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:qt/qtbase vs qt/qtdoc": {
+    "accuracy": NaN,
+    "documents": 56.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:qt/qtbase vs qt-creator/qt-creator": {
+    "accuracy": NaN,
+    "documents": 28.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  },
+  "within:qt:qt/qtdoc vs qt-creator/qt-creator": {
+    "accuracy": NaN,
+    "documents": 28.0,
+    "changes": 0.0,
+    "low": NaN,
+    "high": NaN
+  }
+}

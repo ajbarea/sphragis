@@ -1,7 +1,7 @@
 [project]
 name = "sphragis"
 version = "0.1.0"
-description = "Does an organization leave a learnable fingerprint in its code review? Corpus, measurement and experiment."
+description = "Can a model learn an organization's house style from its code review? Corpus, measurement and experiment."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -34,6 +34,10 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.15.16",
     "ty>=0.0.44,<0.1",
+    # The docs site. In `dev` rather than run through `uv tool` because the docs workflow
+    # builds with `uv run zensical`, matching the sister repositories, and a tool-run
+    # version is not pinned by uv.lock, so CI and a local build could drift.
+    "zensical",
 ]
 
 [project.scripts]
@@ -47,8 +51,9 @@ build-backend = "hatchling.build"
 packages = ["sphragis"]
 
 # =============================================================================
-# uv — torch: CUDA 13.0 on Linux aarch64 (TIGRIS GH200), CPU wheels everywhere else.
-# The GH200 driver is 610, which is a CUDA 13 runtime; the cu128 wheels do not apply.
+# uv — torch: CUDA 13.0 on Linux, both TIGRIS (aarch64 GH200) and SPORC (x86_64 A100/H100),
+# CPU wheels on macOS and Windows. Both clusters run driver 610, a CUDA 13 runtime, so the
+# cu128 wheels do not apply. CI installs no extras, so it never downloads either torch.
 # =============================================================================
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -62,8 +67,8 @@ explicit = true
 
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cu130", marker = "sys_platform == 'linux' and platform_machine == 'aarch64'" },
-    { index = "pytorch-cpu", marker = "sys_platform != 'linux' or platform_machine != 'aarch64'" },
+    { index = "pytorch-cu130", marker = "sys_platform == 'linux'" },
+    { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
 ]
 
 [tool.ruff]

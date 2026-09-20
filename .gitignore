@@ -1,6 +1,8 @@
 __pycache__/
 *.py[cod]
 .venv/
+# One venv per machine type on the clusters' shared $HOME; see sphragis/experiment/cluster-env.sh.
+.venv-*/
 .pytest_cache/
 .ruff_cache/
 .coverage
@@ -13,9 +15,23 @@ build/
 # Corpus artifacts: derived data is regenerated from the frozen raw snapshots,
 # and raw snapshots are large. Manifests and seals ARE committed.
 datasets/gerrit/*/raw/
+datasets/gerrit-control/*/raw/
+datasets/gerrit-control/*/examples/
 datasets/gerrit/*/examples/
 datasets/gerrit/*/splits/
 !datasets/gerrit/*/manifest.json
+# Battery inputs are concatenated and deduplicated from those examples by
+# scripts/contamination_windows.py, so they are derived twice over.
+datasets/results/contamination-inputs/
 !datasets/gerrit/*/seal.json
 
 COMMITS.md
+
+# Slurm job output. The directory is tracked so a relative --output always resolves
+# in a fresh clone: Slurm does not create it, and a job that cannot open its log dies
+# at IO setup after the queue wait.
+logs/*
+!logs/.gitkeep
+
+# The built docs site. `zensical build` writes it; the workflow publishes from the job.
+site/

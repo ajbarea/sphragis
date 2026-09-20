@@ -1,0 +1,147 @@
+{
+  "runs": [
+    "datasets/results/rq1-windows-qtfull-fp32.json",
+    "datasets/results/rq1-windows-qtfull-fp32-s2.json",
+    "datasets/results/rq1-windows-qtfull-fp32-s3.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "orgs": [
+    "openstack",
+    "qt"
+  ],
+  "bootstrap_seed": 7,
+  "per_seed_pooled_contrast": {
+    "openstack": {
+      "1": 0.023008849557522137,
+      "2": 0.023008849557522082,
+      "3": 0.023008849557522137
+    },
+    "qt": {
+      "1": 0.027368421052631597,
+      "2": 0.037894736842105314,
+      "3": 0.02947368421052632
+    }
+  },
+  "readings": {
+    "pooled": {
+      "median_seed": {
+        "verdict": "mixed",
+        "per_org": {
+          "openstack": {
+            "estimate": 0.023008849557522137,
+            "low": -0.005504587155963303,
+            "high": 0.04885496183206112,
+            "clusters": 235.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          },
+          "qt": {
+            "estimate": 0.02947368421052632,
+            "low": 0.005488474204171256,
+            "high": 0.05411030176899062,
+            "clusters": 462.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          }
+        }
+      },
+      "crossed": {
+        "verdict": "mixed",
+        "per_org": {
+          "openstack": {
+            "estimate": 0.02300884955752212,
+            "low": 0.0,
+            "high": 0.04572564612326043,
+            "clusters": 235.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          },
+          "qt": {
+            "estimate": 0.031578947368421074,
+            "low": 0.008916323731138523,
+            "high": 0.05673758865248224,
+            "clusters": 462.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          }
+        }
+      }
+    },
+    "change_averaged": {
+      "median_seed": {
+        "verdict": "mixed",
+        "per_org": {
+          "openstack": {
+            "estimate": 0.03718676122931442,
+            "low": -0.005264593562465903,
+            "high": 0.08069467175850153,
+            "clusters": 235.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          },
+          "qt": {
+            "estimate": 0.03500043727316454,
+            "low": 0.005682520942261202,
+            "high": 0.06499253512240526,
+            "clusters": 462.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        }
+      },
+      "crossed": {
+        "verdict": "pass",
+        "per_org": {
+          "openstack": {
+            "estimate": 0.03798405414175126,
+            "low": 0.0017478578992971986,
+            "high": 0.07588073054280814,
+            "clusters": 235.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          },
+          "qt": {
+            "estimate": 0.0333579124946581,
+            "low": 0.005448386884597732,
+            "high": 0.061530737180087836,
+            "clusters": 462.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          }
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-18T21:21:35.039741+00:00",
+    "git": {
+      "commit": "26fe99d4d7250949a79b9f144b8956f77ed597be",
+      "branch": "feat/wellposed-filter"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": null,
+      "job_id": null,
+      "account": null,
+      "partition": null,
+      "node": null
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 3060 Ti",
+      "total_gb": 8.59,
+      "peak_allocated_gb": 0.0,
+      "peak_reserved_gb": 0.0,
+      "cuda": "13.0"
+    }
+  }
+}

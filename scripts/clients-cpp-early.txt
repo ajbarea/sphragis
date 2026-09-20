@@ -1,0 +1,27 @@
+# The source list every committed RQ2 result was built from, at 64 and at 128 examples a client.
+# It lived only in $CLIENTS on the cluster, so the inputs behind the results were not in version
+# control and a third training length could not be submitted without reading the cluster to find
+# out what the first two had used. Three AOSP C++ projects against six of Qt's, which is where the
+# project-level permutation's 84 arrangements come from.
+#
+# `clients-cpp.txt` names a wider AOSP set whose corpora are still being built; the two are kept
+# apart so a run cannot silently change its source set while keeping its tag.
+# Paths are relative to $CLIENTS (see scripts/client_updates.sbatch).
+aosp:cpp/art=platform_art.jsonl
+aosp:cpp/frameworks-av=platform_frameworks_av.jsonl
+aosp:cpp/system-core=platform_system_core.jsonl
+qt:cpp/qt-creator=qt-creator_qt-creator.jsonl
+qt:cpp/qtbase=qt_qtbase.jsonl
+qt:cpp/qtdeclarative=qt_qtdeclarative.jsonl
+qt:cpp/qtmultimedia=qt_qtmultimedia.jsonl
+qt:cpp/qtgraphs=qt_qtgraphs.jsonl
+qt:cpp/qttools=qt_qttools.jsonl
+openstack:python/nova=openstack_nova.jsonl
+openstack:python/neutron=openstack_neutron.jsonl
+openstack:python/ironic=openstack_ironic.jsonl
+openstack:python/swift=openstack_swift.jsonl
+openstack:python/starlingx-test=starlingx_test.jsonl
+openstack:python/starlingx-config=starlingx_config.jsonl
+qt:python/pyside-setup=pyside_pyside-setup.jsonl
+openstack:docs/starlingx-docs=starlingx_docs.jsonl
+qt:docs/qtdoc=qt_qtdoc.jsonl

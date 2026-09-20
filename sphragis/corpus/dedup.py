@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
@@ -30,7 +31,18 @@ def jaccard(a: frozenset[str], b: frozenset[str]) -> float:
     return len(a & b) / len(union) if union else 0.0
 
 
-def _pair_text(example: Mapping[str, Any]) -> str:
+def boilerplate_threshold(n_documents: int, *, fraction: float, floor: int) -> int:
+    """Document-frequency cutoff above which a shingle counts as boilerplate.
+
+    Separate and public because the realized value depends on corpus size, and the Stage 1
+    report has to state the number that actually ran rather than the fraction it was
+    derived from.
+    """
+    return max(floor, math.ceil(fraction * n_documents))
+
+
+def pair_text(example: Mapping[str, Any]) -> str:
+    """The normalized before/after pair every duplicate comparison is made over."""
     return f"{normalize(str(example['before']))}\n{normalize(str(example['after']))}"
 
 
@@ -39,16 +51,30 @@ def dedup(
     *,
     threshold: float = 0.8,
     k: int = 5,
-    boilerplate_max_docs: int = 20,
+    boilerplate_document_fraction: float = 0.10,
+    boilerplate_min_docs: int = 5,
     boilerplate_fraction: float = 0.5,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Remove duplicates, near-duplicates and boilerplate; keep the earliest occurrence."""
-    removed: Counter[str] = Counter({"exact": 0, "near_duplicate": 0, "boilerplate": 0})
+    """Remove duplicates, near-duplicates and boilerplate; keep the earliest occurrence.
+
+    The boilerplate threshold is a FRACTION of the surviving corpus, not a document count.
+    An absolute count silently tightens as the corpus grows: 20 documents is 11.5% document
+    frequency at the pilot month's 174 examples and 0.4% at 5,000, where almost every
+    common 5-gram clears it and the stage stops removing boilerplate and starts removing
+    the corpus. A swept count on the pilot data confirms the cliff is close -- 20, 5 and 3
+    documents remove 0, 0 and 6, and 1 removes 54 of 174.
+
+    The floor keeps a small corpus from filtering itself: at 20 examples a 10% threshold
+    would be 2 documents, which is inside the destructive band.
+    """
+    removed: Counter[str] = Counter(
+        {"exact": 0, "near_duplicate": 0, "boilerplate": 0, "shared_change_id": 0}
+    )
     ordered = sorted(examples, key=lambda e: (str(e.get("created") or ""), str(e["id"])))
 
     by_hash: dict[str, dict[str, Any]] = {}
     for example in ordered:
-        key = hashlib.sha256(_pair_text(example).encode()).hexdigest()
+        key = hashlib.sha256(pair_text(example).encode()).hexdigest()
         if key in by_hash:
             removed["exact"] += 1
             continue
@@ -57,7 +83,7 @@ def dedup(
     kept: list[dict[str, Any]] = []
     signatures: list[frozenset[str]] = []
     for example in by_hash.values():
-        signature = shingles(_pair_text(example), k)
+        signature = shingles(pair_text(example), k)
         if any(jaccard(signature, seen) >= threshold for seen in signatures):
             removed["near_duplicate"] += 1
             continue
@@ -67,7 +93,10 @@ def dedup(
     document_frequency: Counter[str] = Counter()
     for signature in signatures:
         document_frequency.update(signature)
-    repeated = {s for s, n in document_frequency.items() if n > boilerplate_max_docs}
+    max_docs = boilerplate_threshold(
+        len(kept), fraction=boilerplate_document_fraction, floor=boilerplate_min_docs
+    )
+    repeated = {s for s, n in document_frequency.items() if n > max_docs}
 
     survivors: list[dict[str, Any]] = []
     for example, signature in zip(kept, signatures, strict=True):
@@ -76,4 +105,21 @@ def dedup(
             removed["boilerplate"] += 1
             continue
         survivors.append(example)
-    return survivors, dict(removed)
+
+    # Last, one example per id. An id is built from the Change-Id, which Gerrit shares across
+    # cherry-picks and re-uploads of one logical change, so two changes created weeks apart
+    # can produce the same id with different content, surviving every content check above.
+    # Qt carries three such pairs. The pipeline pairs arms by id, so a repeated id makes the
+    # matched and mismatched arms ambiguous; to_clusters refuses it, but only after
+    # evaluation, which is how job 148093 spent four GPU-hours and wrote nothing. Keeping the
+    # earliest matches the rest of this stage, and a cherry-pick is not an independent
+    # observation of the change it copies. Last so identical copies are still counted as exact.
+    seen_ids: set[str] = set()
+    unique: list[dict[str, Any]] = []
+    for example in survivors:
+        if example["id"] in seen_ids:
+            removed["shared_change_id"] += 1
+            continue
+        seen_ids.add(example["id"])
+        unique.append(example)
+    return unique, dict(removed)

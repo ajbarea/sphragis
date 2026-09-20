@@ -1,0 +1,103 @@
+{
+  "metric": "exact_match",
+  "provenance": {
+    "generated_at": "2026-09-19T21:15:16.996212+00:00",
+    "git": {
+      "commit": "a67fc519e5f72729d38a69d04cca40da275eb9e9",
+      "branch": "feat/wellposed-filter",
+      "uncommitted_code": [
+        "scripts/cluster_informativeness.py"
+      ],
+      "uncommitted_code_sha256": "251aa78380a065a53f3c1a6e6b84e89619db9d372ea6e40110ef95fe1ed5da02"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  },
+  "runs": {
+    "datasets/results/rq1-windows-qtfull-fp32.json": {
+      "openstack|s1": {
+        "changes": 235.0,
+        "examples": 565.0,
+        "largest_change": 45.0,
+        "size_contrast_correlation": -0.01809322369277213,
+        "pooled": 0.023008849557522137,
+        "change_averaged": 0.031733309799642714,
+        "estimand_distance": -0.008724460242120577
+      },
+      "qt|s1": {
+        "changes": 462.0,
+        "examples": 950.0,
+        "largest_change": 25.0,
+        "size_contrast_correlation": -0.020427733914380266,
+        "pooled": 0.027368421052631597,
+        "change_averaged": 0.03500043727316454,
+        "estimand_distance": -0.0076320162205329445
+      }
+    },
+    "datasets/results/rq1-windows-qtfull-fp32-s2.json": {
+      "openstack|s2": {
+        "changes": 235.0,
+        "examples": 565.0,
+        "largest_change": 45.0,
+        "size_contrast_correlation": -0.04108091159933535,
+        "pooled": 0.023008849557522082,
+        "change_averaged": 0.04503209139629665,
+        "estimand_distance": -0.02202324183877457
+      },
+      "qt|s2": {
+        "changes": 462.0,
+        "examples": 950.0,
+        "largest_change": 25.0,
+        "size_contrast_correlation": -0.006238752728186418,
+        "pooled": 0.037894736842105314,
+        "change_averaged": 0.04032223541390845,
+        "estimand_distance": -0.0024274985718031328
+      }
+    },
+    "datasets/results/rq1-windows-qtfull-fp32-s3.json": {
+      "openstack|s3": {
+        "changes": 235.0,
+        "examples": 565.0,
+        "largest_change": 45.0,
+        "size_contrast_correlation": -0.02639263876414372,
+        "pooled": 0.023008849557522137,
+        "change_averaged": 0.03718676122931442,
+        "estimand_distance": -0.014177911671792283
+      },
+      "qt|s3": {
+        "changes": 462.0,
+        "examples": 950.0,
+        "largest_change": 25.0,
+        "size_contrast_correlation": 0.012572524049703028,
+        "pooled": 0.02947368421052632,
+        "change_averaged": 0.024751064796901312,
+        "estimand_distance": 0.004722619413625007
+      }
+    }
+  },
+  "summary": {
+    "openstack": {
+      "seeds": 3.0,
+      "correlation_median": -0.02639263876414372,
+      "correlation_min": -0.04108091159933535,
+      "correlation_max": -0.01809322369277213,
+      "estimand_distance_median": -0.014177911671792283,
+      "estimand_distance_min": -0.02202324183877457,
+      "estimand_distance_max": -0.008724460242120577
+    },
+    "qt": {
+      "seeds": 3.0,
+      "correlation_median": -0.006238752728186418,
+      "correlation_min": -0.020427733914380266,
+      "correlation_max": 0.012572524049703028,
+      "estimand_distance_median": -0.0024274985718031328,
+      "estimand_distance_min": -0.0076320162205329445,
+      "estimand_distance_max": 0.004722619413625007
+    }
+  }
+}

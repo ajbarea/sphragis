@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-09-18T07:16:11.366468+00:00",
+  "git": {
+    "commit": "b86b687d44516357c94af2239ffd5047c4579776",
+    "branch": "feat/wellposed-filter"
+  },
+  "python": "3.14.4",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "packages": {
+    "torch": "2.14.0+cu130",
+    "transformers": "5.17.0",
+    "peft": "0.20.0"
+  },
+  "org": "qt",
+  "counts": {
+    "pilot": 1300,
+    "train": 8442,
+    "dev": 950,
+    "test": 0
+  },
+  "hashes": {
+    "pilot": "0294c00de9b5d0c704c8503a827265f39adf9af5b4aeb08892ecaf233c1ac9ff",
+    "train": "1d9b01ba1f1acc5730b1ba356a9336d9c2c4bf646a06577173a658d2e4d5f8c2",
+    "dev": "9a03e935e8768c743284d72053222c40652a58f45f252ebeb35056d25ccf7ea8",
+    "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stats": {
+    "built_drops": {
+      "acknowledgement": 1526,
+      "author_comment": 31429,
+      "comment_error": 7,
+      "diff_error": 17,
+      "ill_posed_contraction": 259,
+      "ill_posed_empty_after": 4391,
+      "ill_posed_empty_before": 452,
+      "ill_posed_expansion": 116,
+      "metadata_file": 57792,
+      "no_anchored_hunk": 45077,
+      "no_line_anchor": 8331,
+      "no_successor": 770
+    },
+    "deduped": {
+      "exact": 491,
+      "near_duplicate": 262,
+      "boilerplate": 0,
+      "shared_change_id": 3
+    },
+    "unassigned_changes": 0
+  }
+}

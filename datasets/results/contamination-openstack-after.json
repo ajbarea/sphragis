@@ -1,0 +1,915 @@
+{
+  "membership_model": "Qwen/Qwen2.5-Coder-7B",
+  "guided_model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+  "k": 20.0,
+  "min_tokens": 32,
+  "post": {
+    "path": "/home/ajb6289/corpus/openstack-2024-10.jsonl",
+    "examples": 197,
+    "after_dedup": 172,
+    "dedup_removed": {
+      "exact": 21,
+      "near_duplicate": 4,
+      "boilerplate": 0
+    },
+    "eligible": 35,
+    "guided_pairs": 33
+  },
+  "pre": {
+    "path": "/home/ajb6289/corpus/openstack-2024-01-control.jsonl",
+    "examples": 150,
+    "after_dedup": 133,
+    "dedup_removed": {
+      "exact": 8,
+      "near_duplicate": 9,
+      "boilerplate": 0
+    },
+    "eligible": 28,
+    "guided_pairs": 25
+  },
+  "report": {
+    "time_partition": {
+      "corpus_starts": "2024-10-01",
+      "model_published": "2024-09-17",
+      "corpus_starts_after_model": true
+    },
+    "min_k_plus_plus": {
+      "k": 20.0,
+      "undefined_positions": {
+        "post": 0,
+        "pre": 0
+      },
+      "post_cutoff": -1.6797055781840993,
+      "pre_cutoff": -1.9002913363739105,
+      "gap": 0.2205857581898112
+    },
+    "min_k_percent": {
+      "k": 20.0,
+      "post_cutoff": -7.65498752808216,
+      "pre_cutoff": -7.809694160458814,
+      "gap": 0.15470663237665327
+    },
+    "guided_completion": {
+      "post_cutoff": 0.0,
+      "pre_cutoff": 0.0,
+      "gap": 0.0
+    },
+    "limitation": "Min-K% and Min-K%++ detect verbatim overlap and degrade on paraphrase; a clean result bounds verbatim memorization and does not rule out paraphrased exposure."
+  },
+  "scores": [
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:helm-charts/custom/rook-ceph-provisioner-helm/rook-ceph-provisioner-helm/rook-ceph-provisioner/templates/job-sync-osds.yaml:5:160",
+      "window": "post",
+      "tokens": 66,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.400829059695178,
+      "min_k_percent": -7.383414103434636
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/helm/rook_ceph_provisioner.py:5:119",
+      "window": "post",
+      "tokens": 50,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.069984040479891,
+      "min_k_percent": -5.79001750946045
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/lifecycle/lifecycle_rook_ceph.py:3:1262",
+      "window": "post",
+      "tokens": 113,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5077591108421375,
+      "min_k_percent": -7.142742330377752
+    },
+    {
+      "id": "openstack:Ibe4828ef19aaae2df52f9d48c2c33341b6e8f746:distributedcloud/dcmanager/state/subcloud_state_manager.py:5:424",
+      "window": "post",
+      "tokens": 43,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.23803110071839,
+      "min_k_percent": -7.191088914871216
+    },
+    {
+      "id": "openstack:I027ec3815c741022d3860820e8ac8c521506c1c8:docs/target_link/diagnostics.md:2:12",
+      "window": "post",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.3067419952854413,
+      "min_k_percent": -9.810872691018242
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:11:91",
+      "window": "post",
+      "tokens": 33,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2393647437505584,
+      "min_k_percent": -8.02893328666687
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:6:120",
+      "window": "post",
+      "tokens": 93,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2363573187518255,
+      "min_k_percent": -5.552653272946675
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:126",
+      "window": "post",
+      "tokens": 57,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1366284261983728,
+      "min_k_percent": -7.144648595289751
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:31",
+      "window": "post",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.70252695981443,
+      "min_k_percent": -8.043962240219116
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:29",
+      "window": "post",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9987260065394203,
+      "min_k_percent": -8.733099063237509
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:15:271",
+      "window": "post",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9000853983820853,
+      "min_k_percent": -7.179980278015137
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:16:272",
+      "window": "post",
+      "tokens": 70,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -3.5880235155127846,
+      "min_k_percent": -8.16627243586949
+    },
+    {
+      "id": "openstack:I5aa3ebe6f387b3212b465279e2f9aeaa1d95b6b7:software/software/exceptions.py:7:64",
+      "window": "post",
+      "tokens": 31,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9164898406957382,
+      "min_k_percent": -8.12623397509257
+    },
+    {
+      "id": "openstack:Ibe8bda2f81bda7a89e3a994db55cd394a18decb8:neutron/services/ovn_l3/plugin.py:4:262",
+      "window": "post",
+      "tokens": 44,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.125164082552932,
+      "min_k_percent": -7.357842415571213
+    },
+    {
+      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
+      "window": "post",
+      "tokens": 153,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2226339105987516,
+      "min_k_percent": -5.8224120537439985
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
+      "window": "post",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9015827775079172,
+      "min_k_percent": -4.920987367630005
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
+      "window": "post",
+      "tokens": 37,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.588255194157719,
+      "min_k_percent": -7.39866624559675
+    },
+    {
+      "id": "openstack:I238f67942b1a831143d3bff0f095340dd3155386:charms/masakari-k8s/src/charm.py:2:338",
+      "window": "post",
+      "tokens": 32,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5322086254763987,
+      "min_k_percent": -8.104972124099731
+    },
+    {
+      "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
+      "window": "post",
+      "tokens": 64,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9709496917145168,
+      "min_k_percent": -8.407188375790914
+    },
+    {
+      "id": "openstack:I7f9c742f8f557d9faae2cd749d34dcb15d8005c0:oslo_messaging/_drivers/impl_rabbit.py:6:1104",
+      "window": "post",
+      "tokens": 98,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.366145624904713,
+      "min_k_percent": -6.9223472193667765
+    },
+    {
+      "id": "openstack:I3b44c8f4ff3c55023d8bab4e9a88a86ca72cae5d:ansible/roles/neutron/defaults/main.yml:2:431",
+      "window": "post",
+      "tokens": 31,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.721273117941494,
+      "min_k_percent": -10.081088542938232
+    },
+    {
+      "id": "openstack:Ife426c073048ff27bdfd9f3af30aaaab8c2e4497:docker/nova/nova-base/Dockerfile.j2:15:81",
+      "window": "post",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.434424138113435,
+      "min_k_percent": -5.8934969743092855
+    },
+    {
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "window": "post",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6575286277989938,
+      "min_k_percent": -9.373964873227207
+    },
+    {
+      "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:7:365",
+      "window": "post",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0672873177851603,
+      "min_k_percent": -8.615766742012717
+    },
+    {
+      "id": "openstack:I218fa6759df9af84002420a66a721740c0039003:swift/obj/updater.py:3:675",
+      "window": "post",
+      "tokens": 44,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0411782670971774,
+      "min_k_percent": -7.764283239841461
+    },
+    {
+      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:11:108",
+      "window": "post",
+      "tokens": 74,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0303101639373033,
+      "min_k_percent": -8.398765563964844
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:4:137",
+      "window": "post",
+      "tokens": 87,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.141031123183322,
+      "min_k_percent": -8.178148073308607
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:201",
+      "window": "post",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6215193199731865,
+      "min_k_percent": -7.571079254150391
+    },
+    {
+      "id": "openstack:I1a2285c9867a4c040306a235b848181e2930976f:utilities/platform-util/scripts/gen-bootloader-iso.sh:5:140",
+      "window": "post",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0083544176843917,
+      "min_k_percent": -8.505131244659424
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:11",
+      "window": "post",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.512906922017409,
+      "min_k_percent": -7.628868493166837
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:94",
+      "window": "post",
+      "tokens": 72,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -3.2964854335419713,
+      "min_k_percent": -7.220989908490862
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:2:22",
+      "window": "post",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.7647708167783402,
+      "min_k_percent": -7.700621128082275
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:10",
+      "window": "post",
+      "tokens": 37,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8683473965551534,
+      "min_k_percent": -9.059160573141915
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:7",
+      "window": "post",
+      "tokens": 45,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6184565934802304,
+      "min_k_percent": -9.204278681013319
+    },
+    {
+      "id": "openstack:I5da9df472198e47d9b277e7defab43ac2e817c14:ceph/ceph/debian/deb_folder/ceph-base.ceph.init:1:1108",
+      "window": "post",
+      "tokens": 142,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.057334156976703,
+      "min_k_percent": -5.500585692269461
+    },
+    {
+      "id": "openstack:Ided7a807575c676fd094c78103201e8dee575d59:releasenotes/notes/fix-prepare-mariadb-after-restore-472112bbcdcecdb9.yaml:4:4",
+      "window": "pre",
+      "tokens": 45,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5231510395832721,
+      "min_k_percent": -7.789304150475396
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:4:89",
+      "window": "pre",
+      "tokens": 32,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.46981976876176,
+      "min_k_percent": -6.463621695836385
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/prestage.py:7:355",
+      "window": "pre",
+      "tokens": 54,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6423162502305577,
+      "min_k_percent": -7.375350427627564
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/utils.py:10:861",
+      "window": "pre",
+      "tokens": 32,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3515609201124985,
+      "min_k_percent": -6.174078385035197
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/db/sqlalchemy/migrate_repo/versions/017_add_subcloud_prestage_columns.py:8:22",
+      "window": "pre",
+      "tokens": 32,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9118540501025167,
+      "min_k_percent": -8.380334695180258
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:905",
+      "window": "pre",
+      "tokens": 60,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.450864786167135,
+      "min_k_percent": -7.647610505421956
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:917",
+      "window": "pre",
+      "tokens": 52,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.340037705998457,
+      "min_k_percent": -7.467096900939941
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:945",
+      "window": "pre",
+      "tokens": 81,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7899025505701174,
+      "min_k_percent": -6.235052734613419
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:955",
+      "window": "pre",
+      "tokens": 111,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.768616156854845,
+      "min_k_percent": -6.995952649550005
+    },
+    {
+      "id": "openstack:I606ba5e5f8fd783d6c3f83356ded27a46e8bac56:openstack_releases/deliverable.py:3:62",
+      "window": "pre",
+      "tokens": 53,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.73018395628016,
+      "min_k_percent": -7.954335641860962
+    },
+    {
+      "id": "openstack:I8dbfc0deb9f547100bb63bd6b20737734e97667b:src/actions.yaml:13:114",
+      "window": "pre",
+      "tokens": 83,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.156674680034506,
+      "min_k_percent": -7.438812494277954
+    },
+    {
+      "id": "openstack:Icffcbad27d99a800e3f285565c0b823f697e388c:nova/tests/functional/test_boot_from_volume.py:2:203",
+      "window": "pre",
+      "tokens": 88,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.5964242451085688,
+      "min_k_percent": -4.406392630408792
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/common/base_agent_rpc.py:3:30",
+      "window": "pre",
+      "tokens": 35,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.6859685405999927,
+      "min_k_percent": -10.919956888471331
+    },
+    {
+      "id": "openstack:I4246dc8a80038358cd5b6e44e991b3e2ed72be0e:ansible/roles/glance/templates/glance-api.conf.j2:3:7",
+      "window": "pre",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.3552456459146867,
+      "min_k_percent": -9.82265329360962
+    },
+    {
+      "id": "openstack:Ib32c7b54d198f5013b930fadcb61e742f259dd03:roles/nebulous-promote-container-image/tasks/promote-retag-inner.yaml:1:11",
+      "window": "pre",
+      "tokens": 58,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9520210477294613,
+      "min_k_percent": -7.991434487429532
+    },
+    {
+      "id": "openstack:I078b40e51fef64a01757fb75ca8d5b032b971c60:doc/source/admin/security/tls.rst:11:213",
+      "window": "pre",
+      "tokens": 31,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.9668367511268148,
+      "min_k_percent": -10.7456005414327
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:doc/source/contributor/contributing.rst:2:17",
+      "window": "pre",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -3.131683440271379,
+      "min_k_percent": -6.851561963558197
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:3:20",
+      "window": "pre",
+      "tokens": 64,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.402137586578765,
+      "min_k_percent": -7.853873173395793
+    },
+    {
+      "id": "openstack:Ibee53e3e9ead9a0bbfdc0d60a35dcdd4b0a0dba7:zuul/driver/gitlab/gitlabconnection.py:2:158",
+      "window": "pre",
+      "tokens": 42,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.6300491059149267,
+      "min_k_percent": -8.599337637424469
+    },
+    {
+      "id": "openstack:Id16d4498ff5bdf61abc22c7c015167bc747a0278:upper-constraints.txt:6:630",
+      "window": "pre",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0589436289077587,
+      "min_k_percent": -3.8601968799318587
+    },
+    {
+      "id": "openstack:If520dc802bced4acfddd75a05a31dd83bc8c6354:releasenotes/notes/remove-nova_cert-e2ee70a40e117e8a.yaml:2:5",
+      "window": "pre",
+      "tokens": 32,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9730796360160678,
+      "min_k_percent": -9.553063233693441
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:7:9",
+      "window": "pre",
+      "tokens": 53,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.2744055615043357,
+      "min_k_percent": -9.356645822525024
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:8:10",
+      "window": "pre",
+      "tokens": 37,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7185424825978337,
+      "min_k_percent": -8.780221598488945
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:13",
+      "window": "pre",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9531841115102453,
+      "min_k_percent": -9.488547325134277
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:19",
+      "window": "pre",
+      "tokens": 124,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.301576799448935,
+      "min_k_percent": -6.4915333191553755
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:9",
+      "window": "pre",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7692395025081988,
+      "min_k_percent": -8.92501163482666
+    },
+    {
+      "id": "openstack:I4a24a953a61239a8a52c9e7a2b68a7ec779f7a3d:doc/source/kubernetes.rst:2:500",
+      "window": "pre",
+      "tokens": 148,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.457657861798401,
+      "min_k_percent": -6.289999657663806
+    },
+    {
+      "id": "openstack:Ic88027945c4d4ad04a4dec83e00e44aac5c0b890:roles/charm-publish/tasks/publish.yaml:1:36",
+      "window": "pre",
+      "tokens": 35,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8461796062372906,
+      "min_k_percent": -8.81385612487793
+    }
+  ],
+  "guided": [
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:helm-charts/custom/rook-ceph-provisioner-helm/rook-ceph-provisioner-helm/rook-ceph-provisioner/templates/job-sync-osds.yaml:5:160",
+      "window": "post",
+      "predicted": "            JOB_SYNC_OSDS_CMD=\"kubectl get pods -n rook-ceph -l app=rook-ceph-osd,topology-location-host=${HOST_NAME} -o jsonpath='{range .items[*]}{.metadata.name}{'\\t'}{.spec.nodeName}{'\\n'}{end}' > /tmp/osd_sync_${HOST_NAME}.txt\"\n",
+      "reference": "\n            COUNT_OSDS_DEPLOYMENT_CMD=\"${DEPLOYMENT_OSDS_CMD} | jq -r '.items | length'\""
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/helm/rook_ceph_provisioner.py:5:119",
+      "window": "post",
+      "predicted": "        os_username = self._get_config_value('OS_USERNAME')\n        os_password = self._get_config_value('OS_PASSWORD')",
+      "reference": "        os_user = self._get_admin_user_name(os_service)\n        os_password = self._get_keyring_password(os_service, os_user)"
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/lifecycle/lifecycle_rook_ceph.py:3:1262",
+      "window": "post",
+      "predicted": "                    # Prepare disk (wipe disk)\n                    rpcapi = agent_rpcapi.AgentAPI()\n\n                    # Wipe the disk to ensure a clean state",
+      "reference": "                    idisk = dbapi.idisk_get(stor.get('idisk_uuid'))\n                    LOG.info(\"Wiping device %s from %s\" % (idisk.get('device_node'), host.get('hostname')))\n                    rpcapi.disk_prepare(context, host.get('uuid'), idisk.as_dict(), True, False)\n                    sleep(5)"
+    },
+    {
+      "id": "openstack:Ibe4828ef19aaae2df52f9d48c2c33341b6e8f746:distributedcloud/dcmanager/state/subcloud_state_manager.py:5:424",
+      "window": "post",
+      "predicted": "```\n# When the request is performed through RPC, the subcloud object is sent as an argument to the method.",
+      "reference": "        # a dict and needs to be redefined as a model\n        subcloud = Subcloud(**simplified_subcloud)"
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:11:91",
+      "window": "post",
+      "predicted": "                 interval='0.2', script_path=METADATA_SCRIPT_PATH,\n                 timeout=30):",
+      "reference": "                 output_path=METADATA_RESULTS_PATH,\n                 pidfile_path=METADATA_PID_PATH):"
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:6:120",
+      "window": "post",
+      "predicted": "            if 'starttime:' in line:\n                this_request_starttime = line.split('starttime:')[-1]\n                request_duration = float(this_request_endtime) - float(this_request_starttime)\n                downtime += request_duration\n",
+      "reference": "            prev_request_endtime = output_lines[i - 1].split('endtime:')[-1]\n            downtime += (float(this_request_endtime) -\n                         float(prev_request_endtime))\n\n        results['downtime'] = downtime"
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:126",
+      "window": "post",
+      "predicted": "                failed_requests.append(this_request_endtime)\n            elif 'SUCCESS' in line:\n                this_request_endtime = float(line.split('endtime:')[-1])",
+      "reference": "                prev_request_endtime = float(\n                    output_lines[i - 1].split('endtime:')[-1])\n                downtime += this_request_endtime - prev_request_endtime"
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:31",
+      "window": "post",
+      "predicted": "'echo \"FAILED endtime:$(cut -F1 /proc/uptime)\"'",
+      "reference": "    'echo \"FAILED endtime:$(cut -F1 /proc/uptime)\"',"
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:29",
+      "window": "post",
+      "predicted": "# This script is used to simulate network downtime for testing purposes.\n# It will stop all network interfaces on the system and then restart them after a specified delay.",
+      "reference": "echo $$ > %(metadata_meter_pidfile)s\nold_time=$(cut -d\" \" -f1 /proc/uptime)"
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:15:271",
+      "window": "post",
+      "predicted": "After executing the Apply command, it may take some time for the changes to propagate and be fully applied across all hosts. During this period, the system might experience temporary disruptions or reduced performance. It is important to monitor the progress and ensure that all configurations have been successfully updated before proceeding with further steps.",
+      "reference": "    in the file /etc/mtc.ini. So, it's necessary wait a few seconds before\n    validate the action. The maximum time of execution is 9 seconds."
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:16:272",
+      "window": "post",
+      "predicted": "    # Wait for the service parameter changes to take effect\n    time.sleep(60)  # Adjust the sleep duration based on expected completion time\n",
+      "reference": "    This function verifies the heartbeat_failure_action value in /etc/mtc.ini\n    every 03 seconds (maximum wait time: 09 seconds) in order to validate\n    that the parameter was updated."
+    },
+    {
+      "id": "openstack:I5aa3ebe6f387b3212b465279e2f9aeaa1d95b6b7:software/software/exceptions.py:7:64",
+      "window": "post",
+      "predicted": "                    \"and accessible.\" % self.agent_name)",
+      "reference": "                               \"and software-agent process is running\\n\" % hostname)"
+    },
+    {
+      "id": "openstack:Ibe8bda2f81bda7a89e3a994db55cd394a18decb8:neutron/services/ovn_l3/plugin.py:4:262",
+      "window": "post",
+      "predicted": "```python",
+      "reference": "                txn.add(self._nb_ovn.db_set(\"Logical_Switch_Port\", port[\"id\"], ext_ids))"
+    },
+    {
+      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
+      "window": "post",
+      "predicted": "    DEPLOY_STATES.RELEASE.value: \"run 'software deploy release <release>' to finalize the deployment\",\n    DEPLOY_STATES.RELEASE_FAILED.value: \"run 'software deploy release <release> --force' to force the release or 'software deploy abort' to abort\",\n    DEPLOY_STATES.COMMIT.value: \"run 'software deploy commit' to commit the changes\",",
+      "reference": "    DEPLOY_STATES.HOST_ROLLBACK.value: \"reattempt 'software deploy host-rollback <hostname>'\",\n    DEPLOY_STATES.ACTIVATE.value: \"reattempt 'software deploy activate' or 'software deploy abort' to abort\",\n    DEPLOY_STATES.ACTIVATE_ROLLBACK.value: \"reattempt 'software deploy activate rollback'\""
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
+      "window": "post",
+      "predicted": "- op: add",
+      "reference": "    --patch='[{\"op\":\"add\",\"path\":\"/rules/0\",\"value\":{\"apiGroups\":[\"\"],\"resources\":[\"namespaces\"],\"verbs\":[\"get\",\"list\"]}}]')"
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
+      "window": "post",
+      "predicted": "        echo \"No k8s nodes found to update.\"\n        exit 0",
+      "reference": "        log \"Failed to get compute hosts. Error code: ${RC}\"\n        exit ${RC}"
+    },
+    {
+      "id": "openstack:I238f67942b1a831143d3bff0f095340dd3155386:charms/masakari-k8s/src/charm.py:2:338",
+      "window": "post",
+      "predicted": "        ) -> None:",
+      "reference": "    ) -> list[sunbeam_rhandlers.RelationHandler]:"
+    },
+    {
+      "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
+      "window": "post",
+      "predicted": "            branches: ^stable/.*\n            jobs:\n              - zuul:zuul-jobs\n              - zuul:zuul-templates",
+      "reference": "              include:\n                - job\n                - secret\n                - nodeset"
+    },
+    {
+      "id": "openstack:I7f9c742f8f557d9faae2cd749d34dcb15d8005c0:oslo_messaging/_drivers/impl_rabbit.py:6:1104",
+      "window": "post",
+      "predicted": "                if self.consumer_offset_reset == 'last':\n                    self._consumer = self.connection.Consumer(\n                        exchange=self.exchange,\n                        routing_key=self.routing_key,\n                        auto_ack=True,",
+      "reference": "                LOG.warn('[%s] Basic.cancel received. '\n                         'Resetting consumers offsets to last.',\n                         self.connection_id)\n                for consumer in self._consumers:\n                    consumer.reset_stream_offset()"
+    },
+    {
+      "id": "openstack:Ife426c073048ff27bdfd9f3af30aaaab8c2e4497:docker/nova/nova-base/Dockerfile.j2:15:81",
+      "window": "post",
+      "predicted": "```dockerfile\n        echo \"tss:x:1001:1001::/home/tss:/sbin/nologin\" >> /etc/passwd \\",
+      "reference": "        useradd -c \"TPM software stack\" -d /var/lib/tpm -s /usr/sbin/nologin tss ; \\\n       fi"
+    },
+    {
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "window": "post",
+      "predicted": "review the Starlingx summary of Vuls scan reports, and the OpenStack Security Advisories and Notes. I then analyze these documents to identify potential security vulnerabilities and assess their impact on the Starlingx platform. Based on this analysis, I recommend appropriate mitigation strategies or patches to address the identified issues. Additionally, I ensure that all security updates are integrated into the Starlingx release cycle to maintain the highest level of security for our users.",
+      "reference": "contribute to Starlingx security related features and code reviews\nincluding: oidc, vault, portieris."
+    },
+    {
+      "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:7:365",
+      "window": "post",
+      "predicted": "        # Delete network\n        delete_network(network_uuid)\n\n        # Delete routes associated with the network",
+      "reference": "        try:\n            # When the bootstrap is incomplete, the host is not created\n            host = client.sysinv.ihost.get('controller-0')\n"
+    },
+    {
+      "id": "openstack:I218fa6759df9af84002420a66a721740c0039003:swift/obj/updater.py:3:675",
+      "window": "post",
+      "predicted": "                    'Update redirected for %(path)s %(update_path)s to '\n                    '%(shard)s',",
+      "reference": "                    {'path': path, 'update_path': update_path,\n                     'shard': update['container_path']})"
+    },
+    {
+      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:11:108",
+      "window": "post",
+      "predicted": "                pxeboot_dst_dir = \"/var/pxeboot/pxelinux.cfg.files/\"\n",
+      "reference": "                pxeboot_src_dir = \"/ostree/1\" + pxeboot_dst_dir  # deployed to-release ostree dir\n                cmd = \"rsync -ac %s %s\" % (pxeboot_src_dir, pxeboot_dst_dir)"
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:4:137",
+      "window": "post",
+      "predicted": "```",
+      "reference": "Additionally, you need an external bridge (which is typically named, though the name can be anything `br-ex`) configured for Open vSwitch (OVS). If this bridge is not yet set up, refer to the guide on `creating an OVS bridge`_ The reasoning for creating this bridge using MAAS is that it allows assigning an IP to it or one of its VLAN sub-interfaces."
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:201",
+      "window": "post",
+      "predicted": "network:",
+      "reference": "VLAN (``br-ex.42``), while maintaining DPDK compatibility:"
+    },
+    {
+      "id": "openstack:I1a2285c9867a4c040306a235b848181e2930976f:utilities/platform-util/scripts/gen-bootloader-iso.sh:5:140",
+      "window": "post",
+      "predicted": "        5 - AIO High-latency, Serial Console (Only for stx 8)",
+      "reference": "        5 - AIO Low-latency, Graphical Console (Only for stx 8)"
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:11",
+      "window": "post",
+      "predicted": "The specified list of one or more Linux groups. The mapping allows Linux capabilities (via the Linux groups) to be assigned to the |LDAP| users/groups. This configuration ensures that users authenticated through LDAP can inherit specific permissions and access controls based on their group membership within the Linux environment. This integration enhances security by leveraging existing Linux group policies for user management and authorization.",
+      "reference": "The mapping will occur after the |SSSD| service has discovered the |LDAP| users\nand groups and cached them on the host."
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:94",
+      "window": "post",
+      "predicted": "[managers]\nmembers = sys_protected, root, sudo",
+      "reference": "\n.. code-block::\n\n    *;*;%managers;Al0000-2400;sys_protected,root,sudo"
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:2:22",
+      "window": "post",
+      "predicted": "who need to be added to Linux groups using PAM (Pluggable Authentication Modules) configuration on StarlingX systems. This process ensures that LDAP users can authenticate and access system resources based on their group memberships defined within the LDAP directory.",
+      "reference": "    both Local |LDAP| and |LDAP| users in the remote Windows Active Directory\n    servers."
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:10",
+      "window": "post",
+      "predicted": "   sudo groupadd denyssh",
+      "reference": "the |SSHD| configuration such that any member of this group is denied |SSH| access."
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:7",
+      "window": "post",
+      "predicted": "To selectively disable SSH access for users authenticated through local OpenLDAP and WAD (Web Authentication Daemon) servers in a Kubernetes environment, follow these steps:\n",
+      "reference": "In some cases, it may be necessary to disallow |SSH| authentication for selective users or a\ngroup of users."
+    },
+    {
+      "id": "openstack:I5da9df472198e47d9b277e7defab43ac2e817c14:ceph/ceph/debian/deb_folder/ceph-base.ceph.init:1:1108",
+      "window": "post",
+      "predicted": "                if [ -n \"$CEPH_DAEMON_STATUS\" ]; then\n                    echo \"Ceph OSD $name status: $CEPH_DAEMON_STATUS\"\n                else\n                    echo \"Failed to get Ceph OSD $name status.\"\n                fi\n",
+      "reference": "                if [ $? -eq 0 ]; then\n                    state=$(echo \"$CEPH_DAEMON_STATUS\" | awk -F ':' '/state/{gsub(/[,[:space:]]/, \"\", $2);print $2}')\n                    if [ \"$state\" != \"active\" ]; then\n                        log $name \"INFO\" \"$name has the following state: $state\"\n                    fi\n                else"
+    },
+    {
+      "id": "openstack:Ided7a807575c676fd094c78103201e8dee575d59:releasenotes/notes/fix-prepare-mariadb-after-restore-472112bbcdcecdb9.yaml:4:4",
+      "window": "pre",
+      "predicted": "    - title: \"Fix MariaDB failed to start after restoring from an unprepared backup file.\"\n      description: |",
+      "reference": "    This bug will appear if the backup file is created while MariaDB is processing\n    too many update requests. See the following for more details:"
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:4:89",
+      "window": "pre",
+      "predicted": "        if not self.suite:\n            self.suite = get_current_debian_version()",
+      "reference": "        suite = config.get(\"suite\")\n        if suite:"
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/prestage.py:7:355",
+      "window": "pre",
+      "predicted": "```python\n        subcloud.name,\n        subcloud.management_subnet,",
+      "reference": "        ansible_subcloud_inventory_file,\n        oam_floating_ip,\n        ansible_pass=utils.decode_and_normalize_passwd(sysadmin_password))"
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/utils.py:10:861",
+      "window": "pre",
+      "predicted": "        return\n",
+      "reference": "        raise Exception(\"Log file %s and its latest rotated file don't exist.\"\n                        % log_file)"
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/db/sqlalchemy/migrate_repo/versions/017_add_subcloud_prestage_columns.py:8:22",
+      "window": "pre",
+      "predicted": "        subclouds.c.id == subcloud_id).values(\n            prestage_status=new_prestage_status,",
+      "reference": "        subclouds.c.deploy_status.like('prestage%')).values(\n        {'deploy_status': 'complete'}).execute()"
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:905",
+      "window": "pre",
+      "predicted": "// Create controller directory on luks volume if doesn't exist.\n// This directory is needed for syncing files between active-standby\n// instances to ensure data consistency and availability.",
+      "reference": "    // controllers.\n    // Note: Do not delete this directory in failure path of this function.\n    // This is to avoid rsync failure in standby controller."
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:917",
+      "window": "pre",
+      "predicted": "        LOG_ERROR(\"Failed to execute kubernetes directory command: %d\", rc);\n        return -1;\n    }",
+      "reference": "        log(\"Command failed:  \" + kubernetesDirCmd+\" Error code: \"\n             +to_string(rc), LOG_ERR);\n        return rc;"
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:945",
+      "window": "pre",
+      "predicted": "    }\n\n    // Extract the version number from the output\n    std::string versionStr;\n    size_t pos = outResult.find(\"version\");",
+      "reference": "    }\n\n    if (outResult.empty()) {\n        log(swVersionCmd +\n        \": Could not get software version from /etc/build.info\", LOG_ERR);"
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:955",
+      "window": "pre",
+      "predicted": "```\n        int result = system(moveEncryptionFileCmd.c_str());\n        if (result != 0) {\n            log(\"Failed to move encryption-provider.yaml file\", LOG_ERROR);\n            return -1;",
+      "reference": "        rc = execCmd(moveEncryptionFileCmd, outResult);\n        if (rc != 0) {\n            log(\"Command failed:  \" + moveEncryptionFileCmd +\n                \" Error code: \" + to_string(rc), LOG_ERR);\n            return rc;"
+    },
+    {
+      "id": "openstack:I606ba5e5f8fd783d6c3f83356ded27a46e8bac56:openstack_releases/deliverable.py:3:62",
+      "window": "pre",
+      "predicted": "# NOTE(dhellmann): We want EOL, EOM and EM tags to sort last. This\n# ensures that they appear at the end of the list when sorted alphabetically.",
+      "reference": "    # assumes we won't have more than 1000 major releases of anything,\n    # and I surely hope that is a safe assumption."
+    },
+    {
+      "id": "openstack:I8dbfc0deb9f547100bb63bd6b20737734e97667b:src/actions.yaml:13:114",
+      "window": "pre",
+      "predicted": "        and CRLs to this location. The URL should be accessible from the\n        machines where Vault will operate.\n\n      crl_distribution_point: |",
+      "reference": "        revoked in Vault to this external distribution point and should only\n        be used when the Vault infrastructure is not generally accessible to\n        client endpoints used to access services secured by the Vault\n        Intermediate CA. "
+    },
+    {
+      "id": "openstack:Icffcbad27d99a800e3f285565c0b823f697e388c:nova/tests/functional/test_boot_from_volume.py:2:203",
+      "window": "pre",
+      "predicted": "            'uuid': self.image_ref,\n            'boot_index': 0,\n            'delete_on_termination': True\n        }]\n\n        server = self.servers_client.create_server(",
+      "reference": "            'boot_index': 0,\n            'uuid': self.bfv_image_id,\n            'volume_size': 1,\n        }]\n\n        server = self.api.post_server({'server': server})"
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/common/base_agent_rpc.py:3:30",
+      "window": "pre",
+      "predicted": "        # NOTE(mtomaska): The MetadataRpcCallback (server side) API version 1.0",
+      "reference": "        # exposes get_ports, under the PLUGIN topic and None namespace."
+    },
+    {
+      "id": "openstack:I078b40e51fef64a01757fb75ca8d5b032b971c60:doc/source/admin/security/tls.rst:11:213",
+      "window": "pre",
+      "predicted": "     listener \"tcp\" {\n       address = \"0.0.0.0:8200\"",
+      "reference": "used to access services secured by the Vault intermediate CA a CRL\ndistribution point can be used:"
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:doc/source/contributor/contributing.rst:2:17",
+      "window": "pre",
+      "predicted": "* `Bug tracker <https://bugs.launchpad.net/tempest>`_\n* `Code review <https://review.opendev.org/projects/openstack/tempest>`_",
+      "reference": "  (prefix subjects with ``[qa]`` for faster responses)\n"
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:3:20",
+      "window": "pre",
+      "predicted": "from tempest.lib import decorators\n\nclass TestSerialExample(base.BaseV2ComputeTest):",
+      "reference": "compute nodes without any running nova server to be able to move compute hosts\nbetween availability zones. But many tempest tests start one or more nova\nservers."
+    },
+    {
+      "id": "openstack:Ibee53e3e9ead9a0bbfdc0d60a35dcdd4b0a0dba7:zuul/driver/gitlab/gitlabconnection.py:2:158",
+      "window": "pre",
+      "predicted": "        # As stated in the merge-request-event doc 'oldrev' attribute\n        oldrev = self.payload.get('object_attributes', {}).get('oldrev')",
+      "reference": "        # is set when there is code change.\n        elif attrs['action'] == 'update' and attrs.get(\"oldrev\"):"
+    },
+    {
+      "id": "openstack:Id16d4498ff5bdf61abc22c7c015167bc747a0278:upper-constraints.txt:6:630",
+      "window": "pre",
+      "predicted": "scipy===1.9.4;python_version=='3.8'",
+      "reference": "scikit-learn===1.4.0;python_version>='3.9'"
+    },
+    {
+      "id": "openstack:If520dc802bced4acfddd75a05a31dd83bc8c6354:releasenotes/notes/remove-nova_cert-e2ee70a40e117e8a.yaml:2:5",
+      "window": "pre",
+      "predicted": "    - Removed support for the `nova-cert` service. This service was deprecated and removed in the 16.0.0 (Ocata) release of OpenStack Nova. Users are encouraged to migrate to more secure and scalable alternatives such as using certificates managed through the ` Barbican` service or other external certificate authorities.",
+      "reference": "    Tests of compute root certificates API have also been removed."
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:7:9",
+      "window": "pre",
+      "predicted": "In a |prod-dc| configuration, you can configure |OIDC| authentication in a distributed or centralized setup. For other configurations, like All-in-One (AIO), the setup process may vary slightly. In an AIO environment, the OIDC authentication is typically configured on a single node to handle both identity and access management for the entire cluster. This approach simplifies the deployment and management but may not scale as well as a distributed setup in larger environments. The choice between distributed and centralized OIDC authentication depends on the specific requirements of your deployment, including scalability, security, and administrative overhead.",
+      "reference": "Simplex, All-in-One Duplex or Standard Cloud, follow the instructions of\ndistributed setup."
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:8:10",
+      "window": "pre",
+      "predicted": "For other configurations, like |AIO-SX|, the OIDC authentication setup may vary based on the specific requirements and architecture of the deployment. In such cases, it is recommended to refer to the official documentation for detailed instructions tailored to those environments. Additionally, consulting with the StarlingX community or support team can provide valuable guidance and assistance in configuring OIDC authentication for your particular use case.",
+      "reference": "|AIO-DX| or Standard Cloud, follow the instructions in the distributed setup\ndocumented below."
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:13",
+      "window": "pre",
+      "predicted": "server is not present. In these environments, the |LDAP| server is hosted externally and accessed via a secure connection. This setup ensures high availability and scalability for authentication and authorization processes within the StarlingX platform.",
+      "reference": "server runs only on the SystemController's controllers, it is not present in\nthe subcloud's controllers."
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:19",
+      "window": "pre",
+      "predicted": "```rst\n<https://github.com/dexidp/dex>`_.\n\nDex is an open-source identity provider that supports multiple authentication methods and can be easily integrated into Kubernetes for handling user authentication. It acts as a bridge between Kubernetes and various identity providers, including LDAP, SAML, and OAuth2.",
+      "reference": "<https://github.com/dexidp/dex>`__. The **oidc-auth-apps** application also\nprovides an |OIDC| client for accessing the username and password |OIDC| login\npage for user authentication and retrieval of tokens. An **oidc-auth** CLI\nscript can also be used for |OIDC| user authentication and retrieval of tokens."
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:9",
+      "window": "pre",
+      "predicted": "|OpenLDAP| or |Microsoft Active Directory|. This allows for centralized user and group management, enhancing security and simplifying access control within the Kubernetes environment. To configure |prod-long| to use an LDAP server, follow these steps:\n",
+      "reference": "Windows Active Directory server or the Local |LDAP| server, to authenticate\nusers of the Kubernetes API, using the **oidc-auth-apps** application."
+    },
+    {
+      "id": "openstack:I4a24a953a61239a8a52c9e7a2b68a7ec779f7a3d:doc/source/kubernetes.rst:2:500",
+      "window": "pre",
+      "predicted": "            :attr:`providers.[kubernetes].pools.labels.name`,\n            :attr:`providers.[kubernetes].pools.labels.type`,\n            :attr:`providers.[kubernetes].pools.labels.annotations`,\n            :attr:`providers.[kubernetes].pools.labels.labels` and\n            :attr:`providers.[kubernetes].pools.labels.dynamic-labels`.\n",
+      "reference": "            If a `spec` is provided, then Nodepool will supply the\n            contents of this value verbatim to Kubernetes as the\n            ``spec`` attribute of the Kubernetes ``Pod`` definition.\n            No other Nodepool attributes are used, including any\n            default values set at the provider level (such as\n            `default-label-cpu` and similar)."
+    }
+  ]
+}

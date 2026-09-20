@@ -1,0 +1,74 @@
+{
+  "organizations": [
+    "openstack",
+    "qt"
+  ],
+  "suffix": ".py",
+  "months_per_slice": 3,
+  "slices": {
+    "2024-10+": {
+      "months": [
+        "2024-10",
+        "2024-11",
+        "2024-12"
+      ],
+      "accuracy": 0.8804537831577679,
+      "folds_scored": 5.0,
+      "documents": 406.0,
+      "changes": 154.0,
+      "low": 0.7966313394337812,
+      "high": 0.9368710768116408,
+      "interval": "out_of_fold_percentile"
+    },
+    "2025-01+": {
+      "months": [
+        "2025-01",
+        "2025-02",
+        "2025-03"
+      ],
+      "accuracy": 0.6562698412698412,
+      "folds_scored": 5.0,
+      "documents": 80.0,
+      "changes": 58.0,
+      "low": 0.5191919191919192,
+      "high": 0.7567765567765568,
+      "interval": "out_of_fold_percentile"
+    },
+    "2025-04+": {
+      "months": [
+        "2025-04",
+        "2025-05",
+        "2025-06"
+      ],
+      "accuracy": NaN,
+      "documents": 14.0,
+      "changes": 0.0,
+      "low": NaN,
+      "high": NaN
+    },
+    "2025-07+": {
+      "months": [
+        "2025-07",
+        "2025-08",
+        "2025-09"
+      ],
+      "accuracy": 0.7241125541125542,
+      "folds_scored": 5.0,
+      "documents": 108.0,
+      "changes": 66.0,
+      "low": 0.6413003663003662,
+      "high": 0.8301875901875903,
+      "interval": "out_of_fold_percentile"
+    },
+    "2025-10+": {
+      "months": [
+        "2025-10"
+      ],
+      "accuracy": NaN,
+      "documents": 8.0,
+      "changes": 0.0,
+      "low": NaN,
+      "high": NaN
+    }
+  }
+}

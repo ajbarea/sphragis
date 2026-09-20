@@ -1,0 +1,326 @@
+{
+  "content": "cpp",
+  "round_size": 8,
+  "draws": 200,
+  "dimension": 50176,
+  "provenance": {
+    "generated_at": "2026-09-20T02:47:07.394260+00:00",
+    "git": {
+      "commit": "1911427603f4c1bb4bca6fbd455d39429c8fb8af",
+      "branch": "feat/wellposed-filter"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  },
+  "targets": {
+    "aosp": {
+      "10": {
+        "0.0": {
+          "auc": 0.879325,
+          "tpr_at_1pct_fpr": 0.3125,
+          "auc_sd_over_splits": 0.06479469821418007,
+          "splits": 4.0,
+          "mean_present": 0.056366335205417256,
+          "mean_absent": -0.0001154746564859753
+        },
+        "0.5": {
+          "auc": 0.88306875,
+          "tpr_at_1pct_fpr": 0.34625,
+          "auc_sd_over_splits": 0.0636333749399637,
+          "splits": 4.0,
+          "mean_present": 0.04706662195611158,
+          "mean_absent": -0.00011302063046425472
+        },
+        "1.0": {
+          "auc": 0.8849375,
+          "tpr_at_1pct_fpr": 0.35000000000000003,
+          "auc_sd_over_splits": 0.06323388299269099,
+          "splits": 4.0,
+          "mean_present": 0.034194816254209184,
+          "mean_absent": -9.66820945198485e-05
+        },
+        "2.0": {
+          "auc": 0.87675625,
+          "tpr_at_1pct_fpr": 0.3525,
+          "auc_sd_over_splits": 0.06409723529854208,
+          "splits": 4.0,
+          "mean_present": 0.02022413086195566,
+          "mean_absent": -6.351475520226094e-05
+        },
+        "4.0": {
+          "auc": 0.8423375000000001,
+          "tpr_at_1pct_fpr": 0.31375,
+          "auc_sd_over_splits": 0.06929219683100447,
+          "splits": 4.0,
+          "mean_present": 0.01073919854963987,
+          "mean_absent": -3.435820308809762e-05
+        },
+        "8.0": {
+          "auc": 0.7629062500000001,
+          "tpr_at_1pct_fpr": 0.13374999999999998,
+          "auc_sd_over_splits": 0.07288808880457306,
+          "splits": 4.0,
+          "mean_present": 0.005538955960822224,
+          "mean_absent": -1.6959403828270395e-05
+        }
+      },
+      "30": {
+        "0.0": {
+          "auc": 0.9661625,
+          "tpr_at_1pct_fpr": 0.6375,
+          "auc_sd_over_splits": 0.02905374688974442,
+          "splits": 4.0,
+          "mean_present": 0.08675828634474789,
+          "mean_absent": 0.0005431366952145765
+        },
+        "0.5": {
+          "auc": 0.9713625,
+          "tpr_at_1pct_fpr": 0.685,
+          "auc_sd_over_splits": 0.026665626281788316,
+          "splits": 4.0,
+          "mean_present": 0.07495677641499515,
+          "mean_absent": 0.0005309039037465633
+        },
+        "1.0": {
+          "auc": 0.974725,
+          "tpr_at_1pct_fpr": 0.7112499999999999,
+          "auc_sd_over_splits": 0.02553366242172606,
+          "splits": 4.0,
+          "mean_present": 0.05659432245559799,
+          "mean_absent": 0.0004407515371292715
+        },
+        "2.0": {
+          "auc": 0.9736,
+          "tpr_at_1pct_fpr": 0.7075,
+          "auc_sd_over_splits": 0.026740621408885286,
+          "splits": 4.0,
+          "mean_present": 0.03444177764784142,
+          "mean_absent": 0.000312649940107638
+        },
+        "4.0": {
+          "auc": 0.95720625,
+          "tpr_at_1pct_fpr": 0.56,
+          "auc_sd_over_splits": 0.03583579085565157,
+          "splits": 4.0,
+          "mean_present": 0.018453996204790424,
+          "mean_absent": 0.00021591904305617138
+        },
+        "8.0": {
+          "auc": 0.890925,
+          "tpr_at_1pct_fpr": 0.36750000000000005,
+          "auc_sd_over_splits": 0.04765597199372468,
+          "splits": 4.0,
+          "mean_present": 0.00949422383072189,
+          "mean_absent": 0.0001608307632311335
+        }
+      },
+      "50": {
+        "0.0": {
+          "auc": 0.98449375,
+          "tpr_at_1pct_fpr": 0.79375,
+          "auc_sd_over_splits": 0.020193164839865992,
+          "splits": 4.0,
+          "mean_present": 0.10287152821787818,
+          "mean_absent": 0.000612865723319407
+        },
+        "0.5": {
+          "auc": 0.987075,
+          "tpr_at_1pct_fpr": 0.8525,
+          "auc_sd_over_splits": 0.01782314740255863,
+          "splits": 4.0,
+          "mean_present": 0.09096884693784194,
+          "mean_absent": 0.000594304570495935
+        },
+        "1.0": {
+          "auc": 0.9890249999999999,
+          "tpr_at_1pct_fpr": 0.885,
+          "auc_sd_over_splits": 0.015544666823919584,
+          "splits": 4.0,
+          "mean_present": 0.07082676633854477,
+          "mean_absent": 0.00048519427289796105
+        },
+        "2.0": {
+          "auc": 0.9880562500000001,
+          "tpr_at_1pct_fpr": 0.86,
+          "auc_sd_over_splits": 0.016441986079850545,
+          "splits": 4.0,
+          "mean_present": 0.04419306011807415,
+          "mean_absent": 0.00035514437285668417
+        },
+        "4.0": {
+          "auc": 0.97716875,
+          "tpr_at_1pct_fpr": 0.78875,
+          "auc_sd_over_splits": 0.027551515195780675,
+          "splits": 4.0,
+          "mean_present": 0.02382075760388926,
+          "mean_absent": 0.0002618431320127265
+        },
+        "8.0": {
+          "auc": 0.9302375,
+          "tpr_at_1pct_fpr": 0.45125,
+          "auc_sd_over_splits": 0.05357504277490902,
+          "splits": 4.0,
+          "mean_present": 0.012150780896505755,
+          "mean_absent": 0.00020898640544128534
+        }
+      }
+    },
+    "qt": {
+      "10": {
+        "0.0": {
+          "auc": 0.37348750000000003,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.005098141001057809,
+          "splits": 4.0,
+          "mean_present": -0.014315081511646984,
+          "mean_absent": -0.00011955553668351198
+        },
+        "0.5": {
+          "auc": 0.37331875,
+          "tpr_at_1pct_fpr": 0.0025,
+          "auc_sd_over_splits": 0.004427394596900836,
+          "splits": 4.0,
+          "mean_present": -0.011763161903229642,
+          "mean_absent": -0.0002375678060722793
+        },
+        "1.0": {
+          "auc": 0.37586875,
+          "tpr_at_1pct_fpr": 0.00375,
+          "auc_sd_over_splits": 0.006189115950602307,
+          "splits": 4.0,
+          "mean_present": -0.00839910982541519,
+          "mean_absent": -0.0002777037531111758
+        },
+        "2.0": {
+          "auc": 0.3847,
+          "tpr_at_1pct_fpr": 0.007500000000000001,
+          "auc_sd_over_splits": 0.01124794425661863,
+          "splits": 4.0,
+          "mean_present": -0.004842355539995182,
+          "mean_absent": -0.00028089805368089455
+        },
+        "4.0": {
+          "auc": 0.40870625,
+          "tpr_at_1pct_fpr": 0.007500000000000001,
+          "auc_sd_over_splits": 0.021929293336767602,
+          "splits": 4.0,
+          "mean_present": -0.002463157494582562,
+          "mean_absent": -0.00026719212382657787
+        },
+        "8.0": {
+          "auc": 0.44715000000000005,
+          "tpr_at_1pct_fpr": 0.00625,
+          "auc_sd_over_splits": 0.03509878915290385,
+          "splits": 4.0,
+          "mean_present": -0.0011668478132554666,
+          "mean_absent": -0.0002553116553651115
+        }
+      },
+      "30": {
+        "0.0": {
+          "auc": 0.283825,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.10143389062175753,
+          "splits": 4.0,
+          "mean_present": -0.026103188021517593,
+          "mean_absent": -0.0006484293753938016
+        },
+        "0.5": {
+          "auc": 0.2780875,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.10383808208777098,
+          "splits": 4.0,
+          "mean_present": -0.022125178295998263,
+          "mean_absent": -0.000420305948712944
+        },
+        "1.0": {
+          "auc": 0.2745125,
+          "tpr_at_1pct_fpr": 0.00125,
+          "auc_sd_over_splits": 0.10532767620620896,
+          "splits": 4.0,
+          "mean_present": -0.016353937866148912,
+          "mean_absent": -0.00023611098476625385
+        },
+        "2.0": {
+          "auc": 0.28249375,
+          "tpr_at_1pct_fpr": 0.00125,
+          "auc_sd_over_splits": 0.10146272586316284,
+          "splits": 4.0,
+          "mean_present": -0.00969891131362711,
+          "mean_absent": -7.099886209505627e-05
+        },
+        "4.0": {
+          "auc": 0.3141125,
+          "tpr_at_1pct_fpr": 0.0025,
+          "auc_sd_over_splits": 0.08933896243147967,
+          "splits": 4.0,
+          "mean_present": -0.005020708871223404,
+          "mean_absent": 3.106985204544339e-05
+        },
+        "8.0": {
+          "auc": 0.37131250000000005,
+          "tpr_at_1pct_fpr": 0.005,
+          "auc_sd_over_splits": 0.06915433373983151,
+          "splits": 4.0,
+          "mean_present": -0.002425474222733465,
+          "mean_absent": 8.49740531554166e-05
+        }
+      },
+      "50": {
+        "0.0": {
+          "auc": 0.23401249999999998,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.09269881674002103,
+          "splits": 4.0,
+          "mean_present": -0.03044791592868958,
+          "mean_absent": -0.00046681913405895875
+        },
+        "0.5": {
+          "auc": 0.22049375,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.09443269511270976,
+          "splits": 4.0,
+          "mean_present": -0.02664055279370024,
+          "mean_absent": -0.0003727675777738514
+        },
+        "1.0": {
+          "auc": 0.21020000000000003,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.09539687494881581,
+          "splits": 4.0,
+          "mean_present": -0.020454864469311745,
+          "mean_absent": -0.00024436176565390455
+        },
+        "2.0": {
+          "auc": 0.20965,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.09482532186429248,
+          "splits": 4.0,
+          "mean_present": -0.012594241276698087,
+          "mean_absent": -8.613048150367647e-05
+        },
+        "4.0": {
+          "auc": 0.24175625000000003,
+          "tpr_at_1pct_fpr": 0.0,
+          "auc_sd_over_splits": 0.08564444274392044,
+          "splits": 4.0,
+          "mean_present": -0.006734480332239981,
+          "mean_absent": 2.2923522431413763e-05
+        },
+        "8.0": {
+          "auc": 0.31451875,
+          "tpr_at_1pct_fpr": 0.00375,
+          "auc_sd_over_splits": 0.06144125709095368,
+          "splits": 4.0,
+          "mean_present": -0.0034110465378328065,
+          "mean_absent": 8.193196669488447e-05
+        }
+      }
+    }
+  }
+}

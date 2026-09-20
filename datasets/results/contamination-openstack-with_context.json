@@ -1,0 +1,2991 @@
+{
+  "membership_model": "Qwen/Qwen2.5-Coder-7B",
+  "guided_model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+  "k": 20.0,
+  "min_tokens": 32,
+  "scored_text": "with_context",
+  "post": {
+    "path": "/home/ajb6289/corpus/openstack-2024-10.jsonl",
+    "examples": 197,
+    "after_dedup": 172,
+    "dedup_removed": {
+      "exact": 21,
+      "near_duplicate": 4,
+      "boilerplate": 0
+    },
+    "eligible": 161,
+    "guided_pairs": 55
+  },
+  "pre": {
+    "path": "/home/ajb6289/corpus/openstack-2024-01-control.jsonl",
+    "examples": 150,
+    "after_dedup": 133,
+    "dedup_removed": {
+      "exact": 8,
+      "near_duplicate": 9,
+      "boilerplate": 0
+    },
+    "eligible": 116,
+    "guided_pairs": 46
+  },
+  "report": {
+    "time_partition": {
+      "corpus_starts": "2024-10-01",
+      "model_published": "2024-09-17",
+      "corpus_starts_after_model": true
+    },
+    "min_k_plus_plus": {
+      "k": 20.0,
+      "undefined_positions": {
+        "post": 0,
+        "pre": 0
+      },
+      "post_cutoff": -1.7485558401556618,
+      "pre_cutoff": -1.690456841554096,
+      "gap": -0.058098998601565865
+    },
+    "min_k_percent": {
+      "k": 20.0,
+      "post_cutoff": -7.304428055611802,
+      "pre_cutoff": -7.087998572220094,
+      "gap": -0.21642948339170776
+    },
+    "guided_completion": {
+      "post_cutoff": 0.0,
+      "pre_cutoff": 0.021739130434782608,
+      "gap": -0.021739130434782608
+    },
+    "limitation": "Min-K% and Min-K%++ detect verbatim overlap and degrade on paraphrase; a clean result bounds verbatim memorization and does not rule out paraphrased exposure."
+  },
+  "guided_edit_similarity": {
+    "post": 0.380304701452712,
+    "pre": 0.3874416972649374
+  },
+  "scores": [
+    {
+      "id": "openstack:I0fc609cbc5f9341210097920ca1eb8e43875449c:manila/api/views/limits.py:2:105",
+      "window": "post",
+      "tokens": 63,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.314300561666993,
+      "min_k_percent": -6.109614193439484
+    },
+    {
+      "id": "openstack:I0fc609cbc5f9341210097920ca1eb8e43875449c:manila/share/drivers/netapp/dataontap/cluster_mode/lib_base.py:2:2881",
+      "window": "post",
+      "tokens": 73,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.887958098739136,
+      "min_k_percent": -6.777613605771746
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:helm-charts/custom/rook-ceph-provisioner-helm/rook-ceph-provisioner-helm/rook-ceph-provisioner/templates/job-sync-osds.yaml:5:160",
+      "window": "post",
+      "tokens": 158,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.720086541457201,
+      "min_k_percent": -6.405455889240388
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/helm/rook_ceph_provisioner.py:5:119",
+      "window": "post",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2932342198495184,
+      "min_k_percent": -5.9575764536857605
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/lifecycle/lifecycle_rook_ceph.py:3:1262",
+      "window": "post",
+      "tokens": 141,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7822688188621088,
+      "min_k_percent": -7.266922644206455
+    },
+    {
+      "id": "openstack:I8db7a79085945c0c7b0fb6607d522c0972c7a5e8:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/ceph_mon.py:1:509",
+      "window": "post",
+      "tokens": 71,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.454175875139271,
+      "min_k_percent": -10.167580366134644
+    },
+    {
+      "id": "openstack:I8db7a79085945c0c7b0fb6607d522c0972c7a5e8:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/ceph_mon.py:2:503",
+      "window": "post",
+      "tokens": 95,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.552652928293468,
+      "min_k_percent": -8.91043926540174
+    },
+    {
+      "id": "openstack:I60f05c5949728ce8eceb81bb122cb9138889fbea:neutron/tests/functional/resources/process.py:6:27",
+      "window": "post",
+      "tokens": 39,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3816206403391165,
+      "min_k_percent": -6.22029447555542
+    },
+    {
+      "id": "openstack:I2b4c6913210ffc1f8606eee9bd81b332a2e66ffb:swift/common/middleware/mpu.py:3:93",
+      "window": "post",
+      "tokens": 44,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.460165916933134,
+      "min_k_percent": -10.235223352909088
+    },
+    {
+      "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:131",
+      "window": "post",
+      "tokens": 105,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1644517569438255,
+      "min_k_percent": -8.82446983882359
+    },
+    {
+      "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:3",
+      "window": "post",
+      "tokens": 35,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9136987810285822,
+      "min_k_percent": -3.475128412246704
+    },
+    {
+      "id": "openstack:I5478fe068279cd30be2338de2748945a56b95097:controllerconfig/controllerconfig/upgrade-scripts/04-add-tls-version-cipher-parameters.sh:5:49",
+      "window": "post",
+      "tokens": 63,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.729857417593245,
+      "min_k_percent": -8.06635089715322
+    },
+    {
+      "id": "openstack:I5478fe068279cd30be2338de2748945a56b95097:controllerconfig/controllerconfig/upgrade-scripts/06-security-kubeapi-service-parameters-apply.py:5:104",
+      "window": "post",
+      "tokens": 56,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.376362895524544,
+      "min_k_percent": -7.078729369423606
+    },
+    {
+      "id": "openstack:I5478fe068279cd30be2338de2748945a56b95097:controllerconfig/controllerconfig/upgrade-scripts/06-security-kubeapi-service-parameters-apply.py:7:7",
+      "window": "post",
+      "tokens": 71,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6174489495735591,
+      "min_k_percent": -8.332985503332955
+    },
+    {
+      "id": "openstack:I10f69ec048944c2c961f957b4125f29aceee977e:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:1:19705",
+      "window": "post",
+      "tokens": 61,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8611239103108195,
+      "min_k_percent": -7.7303697268168134
+    },
+    {
+      "id": "openstack:I7f30e6e030292b762dc9fc785c494c0dc215c749:neutron/common/ovn/constants.py:1:60",
+      "window": "post",
+      "tokens": 87,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.7840486766221457,
+      "min_k_percent": -7.448593756731818
+    },
+    {
+      "id": "openstack:I7f30e6e030292b762dc9fc785c494c0dc215c749:neutron/plugins/ml2/drivers/ovn/mech_driver/ovsdb/maintenance.py:1:1336",
+      "window": "post",
+      "tokens": 65,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8587805070736987,
+      "min_k_percent": -8.384379056783823
+    },
+    {
+      "id": "openstack:Ic77001276e09288debc27258728dc039193bf6cb:.zuul.yaml:1:16",
+      "window": "post",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.150680246391855,
+      "min_k_percent": -5.842521508534749
+    },
+    {
+      "id": "openstack:I1ffcbe2d3118191ca521cd03dd967a26d371b8f6:deliverables/dalmatian/puppet-cloudkitty.yaml:6:12",
+      "window": "post",
+      "tokens": 35,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9765388021714227,
+      "min_k_percent": -7.0765275955200195
+    },
+    {
+      "id": "openstack:I4e2f9c85e0919db54a7acc52ce8f7eeea1068508:software/software/utilities/migrate.py:5:73",
+      "window": "post",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3398267816284495,
+      "min_k_percent": -7.25300817489624
+    },
+    {
+      "id": "openstack:Ia8dfb6cc244facd02a76ca21fdd08e9bb687140c:charms/neutron-k8s/config.yaml:2:7",
+      "window": "post",
+      "tokens": 55,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.710885751837838,
+      "min_k_percent": -7.758751782503995
+    },
+    {
+      "id": "openstack:I1f1d5c75f10b6f232dd2bf23fc963693f8388f98:taskflow/version.py:1:23",
+      "window": "post",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -4.567261425335079,
+      "min_k_percent": -8.89353773328993
+    },
+    {
+      "id": "openstack:I1eac8820627cbe627cc57bee996a28ded37125af:tox.ini:3:96",
+      "window": "post",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9461777433327487,
+      "min_k_percent": -7.551308250427246
+    },
+    {
+      "id": "openstack:I59c12602929a8da1c5076c27243d6e6dca951c61:stx/toCOPY/pkgbuilder/debbuilder.py:1:350",
+      "window": "post",
+      "tokens": 41,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.8579170060481247,
+      "min_k_percent": -6.170293211936951
+    },
+    {
+      "id": "openstack:Ibe4828ef19aaae2df52f9d48c2c33341b6e8f746:distributedcloud/dcmanager/audit/subcloud_audit_worker_manager.py:3:799",
+      "window": "post",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8896548505262198,
+      "min_k_percent": -9.009595076243082
+    },
+    {
+      "id": "openstack:Ibe4828ef19aaae2df52f9d48c2c33341b6e8f746:distributedcloud/dcmanager/state/subcloud_state_manager.py:5:424",
+      "window": "post",
+      "tokens": 93,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6899703911384654,
+      "min_k_percent": -8.100058688057793
+    },
+    {
+      "id": "openstack:I2e632b2706a39020f2a5d30025a4c8091d7000b8:distributedcloud/dcmanager/manager/subcloud_manager.py:4:1307",
+      "window": "post",
+      "tokens": 39,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.883929687818361,
+      "min_k_percent": -7.505085332053048
+    },
+    {
+      "id": "openstack:I28ae75d0e825c1c844c47d98731a1c1d12e203b1:software/software/software_controller.py:1:3364",
+      "window": "post",
+      "tokens": 78,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.6286578446714315,
+      "min_k_percent": -7.833689530690511
+    },
+    {
+      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:110",
+      "window": "post",
+      "tokens": 57,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.513845794726427,
+      "min_k_percent": -7.395278757268732
+    },
+    {
+      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
+      "window": "post",
+      "tokens": 69,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9156038382652767,
+      "min_k_percent": -4.902888261354887
+    },
+    {
+      "id": "openstack:I027ec3815c741022d3860820e8ac8c521506c1c8:docs/target_link/diagnostics.md:2:12",
+      "window": "post",
+      "tokens": 41,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.2521055120558815,
+      "min_k_percent": -9.649600267410278
+    },
+    {
+      "id": "openstack:I027ec3815c741022d3860820e8ac8c521506c1c8:docs/target_link/enumerations.md:2:239",
+      "window": "post",
+      "tokens": 61,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0383216570191207,
+      "min_k_percent": -9.481764833132425
+    },
+    {
+      "id": "openstack:I1b478a63ad1d73f9f3528939362797ea1fc68534:neutron/conf/db/migration_cli.py:1:23",
+      "window": "post",
+      "tokens": 56,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.502497626421762,
+      "min_k_percent": -6.425941857424649
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:11:91",
+      "window": "post",
+      "tokens": 78,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2918377730990058,
+      "min_k_percent": -6.768873151143392
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:6:120",
+      "window": "post",
+      "tokens": 124,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7634227581810986,
+      "min_k_percent": -6.313842395941417
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:126",
+      "window": "post",
+      "tokens": 115,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4617854752057382,
+      "min_k_percent": -6.225743812063466
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:31",
+      "window": "post",
+      "tokens": 113,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8047928165720264,
+      "min_k_percent": -5.9372712482105605
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:116",
+      "window": "post",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6996546096852507,
+      "min_k_percent": -6.586419916152954
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:134",
+      "window": "post",
+      "tokens": 79,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.298510161645109,
+      "min_k_percent": -5.4548228740692135
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:29",
+      "window": "post",
+      "tokens": 114,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7805071792369602,
+      "min_k_percent": -7.757374438372525
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/scenario/test_network_advanced_server_ops.py:6:241",
+      "window": "post",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7178111571792696,
+      "min_k_percent": -7.5123285293579105
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/scenario/test_network_advanced_server_ops.py:9:250",
+      "window": "post",
+      "tokens": 69,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1268481759593034,
+      "min_k_percent": -6.426488858002883
+    },
+    {
+      "id": "openstack:I7efc09215f0a4eaa75a109b180039902461654ec:syslog-ng-config/debian-source/syslog-ng.conf:6:273",
+      "window": "post",
+      "tokens": 65,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1598530044493423,
+      "min_k_percent": -9.7140091749338
+    },
+    {
+      "id": "openstack:I32f4e479e3d91d6f44b1ecc5025ee5524f043246:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:3:1683",
+      "window": "post",
+      "tokens": 66,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6257297785477545,
+      "min_k_percent": -8.052934866685133
+    },
+    {
+      "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:3:233",
+      "window": "post",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.555039399427087,
+      "min_k_percent": -8.345190525054932
+    },
+    {
+      "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:4:225",
+      "window": "post",
+      "tokens": 38,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7973315540143084,
+      "min_k_percent": -9.617008345467704
+    },
+    {
+      "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:2:424",
+      "window": "post",
+      "tokens": 72,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6270173939937203,
+      "min_k_percent": -8.03999478476388
+    },
+    {
+      "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:3:444",
+      "window": "post",
+      "tokens": 74,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6610280557315682,
+      "min_k_percent": -7.372534070696149
+    },
+    {
+      "id": "openstack:I27e22f7109bb49db5d70a33d5d2c7e683b391562:setup.cfg:1:9",
+      "window": "post",
+      "tokens": 56,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9409908805803116,
+      "min_k_percent": -4.855989499525591
+    },
+    {
+      "id": "openstack:I15832375e62118df52bc4dd80738bc4b2b14cd46:setup.cfg:1:9",
+      "window": "post",
+      "tokens": 58,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.108037069745568,
+      "min_k_percent": -5.02493836662986
+    },
+    {
+      "id": "openstack:Ic73def44d03fb28b5975c1d96a471e0463d01740:whitebox_neutron_tempest_plugin/tests/scenario/test_metadata_rate_limiting.py:3:165",
+      "window": "post",
+      "tokens": 42,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2617453396028306,
+      "min_k_percent": -6.457859575748444
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:15:271",
+      "window": "post",
+      "tokens": 78,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4115651229636283,
+      "min_k_percent": -6.688556702931722
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:16:272",
+      "window": "post",
+      "tokens": 97,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.9135438113589087,
+      "min_k_percent": -7.131182645496569
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:17:275",
+      "window": "post",
+      "tokens": 80,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.9419618779278185,
+      "min_k_percent": -7.707372963428497
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:18:278",
+      "window": "post",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1330723167983887,
+      "min_k_percent": -6.765133380889893
+    },
+    {
+      "id": "openstack:I5aa3ebe6f387b3212b465279e2f9aeaa1d95b6b7:software/software/exceptions.py:7:64",
+      "window": "post",
+      "tokens": 64,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6632470771362708,
+      "min_k_percent": -7.3823386033376055
+    },
+    {
+      "id": "openstack:I0cb4d6d0f5ae8d77c4e551cd2ac1154bc9a62278:Puppetfile:1:109",
+      "window": "post",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.649966630776062,
+      "min_k_percent": -5.642365717887879
+    },
+    {
+      "id": "openstack:Ibe8bda2f81bda7a89e3a994db55cd394a18decb8:neutron/services/ovn_l3/plugin.py:4:262",
+      "window": "post",
+      "tokens": 82,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4037366319581588,
+      "min_k_percent": -6.442914083600044
+    },
+    {
+      "id": "openstack:Ibe8bda2f81bda7a89e3a994db55cd394a18decb8:neutron/services/ovn_l3/plugin.py:6:264",
+      "window": "post",
+      "tokens": 57,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6003446969196469,
+      "min_k_percent": -7.174508745020086
+    },
+    {
+      "id": "openstack:I5f2177b7c2edc0e35ed2e8e9bdfc4be2f262309f:test-requirements.txt:1:6",
+      "window": "post",
+      "tokens": 104,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0958065031299655,
+      "min_k_percent": -3.894236958026886
+    },
+    {
+      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
+      "window": "post",
+      "tokens": 177,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.454503142869856,
+      "min_k_percent": -6.050527334213257
+    },
+    {
+      "id": "openstack:I97b05918b80223add692a8e09790a08cfe1fe0a2:controllerconfig/controllerconfig/upgrade-scripts/35-sync-system-local-ca-in-subclouds.py:13:1",
+      "window": "post",
+      "tokens": 31,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.825255282038874,
+      "min_k_percent": -3.6087173422177634
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
+      "window": "post",
+      "tokens": 81,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.096440708253925,
+      "min_k_percent": -4.727524116635323
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:169",
+      "window": "post",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.924283548884305,
+      "min_k_percent": -8.174760500590006
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
+      "window": "post",
+      "tokens": 37,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.588255194157719,
+      "min_k_percent": -7.39866624559675
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:66",
+      "window": "post",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.60173239171612,
+      "min_k_percent": -6.226499124006792
+    },
+    {
+      "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/__init__.py:14:270",
+      "window": "post",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9719467171030804,
+      "min_k_percent": -9.986491084098816
+    },
+    {
+      "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/reorder_apps.py:14:23",
+      "window": "post",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0932511015417954,
+      "min_k_percent": -9.450090845425924
+    },
+    {
+      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/privileged/ovs_vsctl.py:3:32",
+      "window": "post",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0570479065967564,
+      "min_k_percent": -5.294468402862549
+    },
+    {
+      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:189",
+      "window": "post",
+      "tokens": 52,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3476112954965758,
+      "min_k_percent": -6.659944200515747
+    },
+    {
+      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:191",
+      "window": "post",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4024661725769987,
+      "min_k_percent": -7.295512056350708
+    },
+    {
+      "id": "openstack:Ib8ee872d4bd587ade325bc4f6da3e9d8804c28c0:ovn_bgp_agent/tests/unit/drivers/openstack/utils/test_ovs.py:6:257",
+      "window": "post",
+      "tokens": 94,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1782486712792823,
+      "min_k_percent": -6.4546770917044745
+    },
+    {
+      "id": "openstack:I238f67942b1a831143d3bff0f095340dd3155386:charms/masakari-k8s/src/charm.py:2:338",
+      "window": "post",
+      "tokens": 58,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3541201952768753,
+      "min_k_percent": -6.793761730194092
+    },
+    {
+      "id": "openstack:I24358274ee8c36d96981557fd487c346e21f10de:playbookconfig/src/playbooks/roles/prestage/sync-software-metadata/tasks/main.yml:1:303",
+      "window": "post",
+      "tokens": 38,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.100839329535751,
+      "min_k_percent": -8.204827240535192
+    },
+    {
+      "id": "openstack:I24358274ee8c36d96981557fd487c346e21f10de:playbookconfig/src/playbooks/roles/prestage/sync-software-metadata/tasks/main.yml:1:307",
+      "window": "post",
+      "tokens": 56,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3466405543561086,
+      "min_k_percent": -8.42731202732433
+    },
+    {
+      "id": "openstack:Ie3c17f58c09ae08df8cd9f0c92f50ab0c556c263:distributedcloud/dccommon/drivers/openstack/vim.py:16:108",
+      "window": "post",
+      "tokens": 41,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3029976118487068,
+      "min_k_percent": -7.956232309341431
+    },
+    {
+      "id": "openstack:Ie3c17f58c09ae08df8cd9f0c92f50ab0c556c263:distributedcloud/dccommon/tests/unit/test_endpoint_cache.py:13:281",
+      "window": "post",
+      "tokens": 46,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.415860384021438,
+      "min_k_percent": -6.5815689828660755
+    },
+    {
+      "id": "openstack:Ie3c17f58c09ae08df8cd9f0c92f50ab0c556c263:distributedcloud/dcmanager/common/config.py:14:139",
+      "window": "post",
+      "tokens": 35,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3747843689477897,
+      "min_k_percent": -6.281391552516392
+    },
+    {
+      "id": "openstack:Iafcb614532639391b6c2612f4ca5546f5940a912:manifests/keystone/auth.pp:1:158",
+      "window": "post",
+      "tokens": 134,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.8288493152225986,
+      "min_k_percent": -4.310522029033074
+    },
+    {
+      "id": "openstack:I3665b2b9d7dbdb7a974a10f2ed9b3722fb51c1ae:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/lifecycle/lifecycle_openstack.py:1:95",
+      "window": "post",
+      "tokens": 64,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6466493055075062,
+      "min_k_percent": -7.231144825617473
+    },
+    {
+      "id": "openstack:I9222bbe482bf84fe5dc5d79c31e476cfc078c6c9:fm-doc/fm_doc/events.yaml:2:3752",
+      "window": "post",
+      "tokens": 60,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.659925647074066,
+      "min_k_percent": -9.12770676612854
+    },
+    {
+      "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
+      "window": "post",
+      "tokens": 84,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8617532160167196,
+      "min_k_percent": -7.3681820929050446
+    },
+    {
+      "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
+      "window": "post",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5234561966457418,
+      "min_k_percent": -7.198817888895671
+    },
+    {
+      "id": "openstack:I7f9c742f8f557d9faae2cd749d34dcb15d8005c0:oslo_messaging/_drivers/impl_rabbit.py:6:1102",
+      "window": "post",
+      "tokens": 43,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6980251287096189,
+      "min_k_percent": -8.574373662471771
+    },
+    {
+      "id": "openstack:I7f9c742f8f557d9faae2cd749d34dcb15d8005c0:oslo_messaging/_drivers/impl_rabbit.py:6:1104",
+      "window": "post",
+      "tokens": 121,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8671917875583146,
+      "min_k_percent": -7.186098178227742
+    },
+    {
+      "id": "openstack:I8ad60bd1eae4a6a624e122acbb7d2e5e4576870c:.pre-commit-config.yaml:1:22",
+      "window": "post",
+      "tokens": 58,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.719567414271837,
+      "min_k_percent": -6.810913519425825
+    },
+    {
+      "id": "openstack:I8ad60bd1eae4a6a624e122acbb7d2e5e4576870c:.pre-commit-config.yaml:1:3",
+      "window": "post",
+      "tokens": 45,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.3885349972054364,
+      "min_k_percent": -5.091926866107517
+    },
+    {
+      "id": "openstack:I3b44c8f4ff3c55023d8bab4e9a88a86ca72cae5d:ansible/roles/neutron/defaults/main.yml:2:431",
+      "window": "post",
+      "tokens": 125,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.965136990865344,
+      "min_k_percent": -4.820918226242066
+    },
+    {
+      "id": "openstack:Ife426c073048ff27bdfd9f3af30aaaab8c2e4497:docker/nova/nova-base/Dockerfile.j2:15:81",
+      "window": "post",
+      "tokens": 138,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.82307442914844,
+      "min_k_percent": -5.364165615152429
+    },
+    {
+      "id": "openstack:Ife426c073048ff27bdfd9f3af30aaaab8c2e4497:docker/nova/nova-compute/Dockerfile.j2:1:11",
+      "window": "post",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2213421560243674,
+      "min_k_percent": -6.723829030990601
+    },
+    {
+      "id": "openstack:Ife426c073048ff27bdfd9f3af30aaaab8c2e4497:releasenotes/notes/fix_nova_tpm_user-98f56190196a00d2.yaml:20:5",
+      "window": "post",
+      "tokens": 69,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.8625463983685856,
+      "min_k_percent": -5.961820639096773
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:2:17",
+      "window": "post",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -4.39877556058713,
+      "min_k_percent": -11.351899782816568
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:119",
+      "window": "post",
+      "tokens": 57,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.241336911213875,
+      "min_k_percent": -9.110266642137008
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:153",
+      "window": "post",
+      "tokens": 60,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9525643864304936,
+      "min_k_percent": -8.13100035985311
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:4:187",
+      "window": "post",
+      "tokens": 50,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1694724728672083,
+      "min_k_percent": -9.317165565490722
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:111",
+      "window": "post",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2418066338269453,
+      "min_k_percent": -6.653604825337728
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:146",
+      "window": "post",
+      "tokens": 55,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7786917927694943,
+      "min_k_percent": -8.309133312918924
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:40",
+      "window": "post",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9446725487500502,
+      "min_k_percent": -9.102022488911947
+    },
+    {
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "window": "post",
+      "tokens": 92,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.384683913146209,
+      "min_k_percent": -7.703844732708401
+    },
+    {
+      "id": "openstack:I68abfb36d209e4130d67af08b5b2de3dbffad903:deliverables/caracal/manila.yaml:2:49",
+      "window": "post",
+      "tokens": 71,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0709369506796973,
+      "min_k_percent": -6.645789861679077
+    },
+    {
+      "id": "openstack:I0e9658ab2632be6aa97d99aa51648c74e85ba2c5:zuul.d/tempest-multinode.yaml:1:222",
+      "window": "post",
+      "tokens": 75,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9698858178826535,
+      "min_k_percent": -5.67920282681783
+    },
+    {
+      "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:6:397",
+      "window": "post",
+      "tokens": 43,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8080020669299064,
+      "min_k_percent": -7.63124680519104
+    },
+    {
+      "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:7:365",
+      "window": "post",
+      "tokens": 89,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7263833339944714,
+      "min_k_percent": -7.533598451053395
+    },
+    {
+      "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:9:355",
+      "window": "post",
+      "tokens": 42,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5284301410680816,
+      "min_k_percent": -7.551122605800629
+    },
+    {
+      "id": "openstack:I1bd59fb1f0e83cf2b3279087d884c87547e9611f:doc/source/backup/kubernetes/running-ansible-backup-playbook-locally-on-the-controller.rst:1:123",
+      "window": "post",
+      "tokens": 65,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.857551377776557,
+      "min_k_percent": -7.604734310737023
+    },
+    {
+      "id": "openstack:I1bd59fb1f0e83cf2b3279087d884c87547e9611f:doc/source/backup/kubernetes/running-ansible-backup-playbook-locally-on-the-controller.rst:1:125",
+      "window": "post",
+      "tokens": 55,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.105018406434613,
+      "min_k_percent": -7.443807601928711
+    },
+    {
+      "id": "openstack:I9e120fcaedfa39fc08f3bc5f189976706ae72778:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:4:8633",
+      "window": "post",
+      "tokens": 71,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0175015928569686,
+      "min_k_percent": -7.735045228685651
+    },
+    {
+      "id": "openstack:I02c5cd4f9bcaf69011f3b59d853931a2ce5a714b:whitebox_neutron_tempest_plugin/tests/scenario/base.py:1:1435",
+      "window": "post",
+      "tokens": 65,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.174073328145611,
+      "min_k_percent": -5.976460255109346
+    },
+    {
+      "id": "openstack:Ib2ece4141a3732674ec87614da10b9249f6dbbab:playbookconfig/src/playbooks/roles/backup/prepare-env/tasks/main.yml:9:84",
+      "window": "post",
+      "tokens": 38,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8489637477581002,
+      "min_k_percent": -8.336416857583183
+    },
+    {
+      "id": "openstack:Ic621998ac317080b59f8f6b3b93a0a936367719b:playbookconfig/src/playbooks/roles/backup/backup-system/files/fm_alarm.py:3:4",
+      "window": "post",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1873426588003073,
+      "min_k_percent": -3.8911337852478027
+    },
+    {
+      "id": "openstack:Iacc3f13c69cf8a9b76c8019203e514fe3885e24c:playbookconfig/src/playbooks/roles/backup/prepare-env/tasks/main.yml:2:129",
+      "window": "post",
+      "tokens": 60,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6096895192348404,
+      "min_k_percent": -5.6606669425964355
+    },
+    {
+      "id": "openstack:Iacc3f13c69cf8a9b76c8019203e514fe3885e24c:playbookconfig/src/playbooks/roles/backup/prepare-env/tasks/main.yml:3:126",
+      "window": "post",
+      "tokens": 54,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0414720867479477,
+      "min_k_percent": -6.355299758911133
+    },
+    {
+      "id": "openstack:I9b07653c9039b4d9e4c7e60d3b33ce4d0f60a17a:doc/source/reference/cryptography.rst:1:35",
+      "window": "post",
+      "tokens": 82,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5353893655191522,
+      "min_k_percent": -6.344800889492035
+    },
+    {
+      "id": "openstack:I218fa6759df9af84002420a66a721740c0039003:swift/obj/updater.py:1:628",
+      "window": "post",
+      "tokens": 76,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8402053563442007,
+      "min_k_percent": -8.027688852945964
+    },
+    {
+      "id": "openstack:I218fa6759df9af84002420a66a721740c0039003:swift/obj/updater.py:2:706",
+      "window": "post",
+      "tokens": 105,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5849511403304777,
+      "min_k_percent": -6.21009856178647
+    },
+    {
+      "id": "openstack:I218fa6759df9af84002420a66a721740c0039003:swift/obj/updater.py:3:675",
+      "window": "post",
+      "tokens": 83,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5162241638233305,
+      "min_k_percent": -7.342070758342743
+    },
+    {
+      "id": "openstack:I32524af08dce007ed344de62e1ea53a98a95405a:README.md:2:37",
+      "window": "post",
+      "tokens": 71,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7497247503342321,
+      "min_k_percent": -7.046970435551235
+    },
+    {
+      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:11:108",
+      "window": "post",
+      "tokens": 129,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6713675327775883,
+      "min_k_percent": -6.8863059997558596
+    },
+    {
+      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:6:167",
+      "window": "post",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1872578292391824,
+      "min_k_percent": -8.361059188842773
+    },
+    {
+      "id": "openstack:I1c894f4bde6f3a1d758be550fab946fedaa672e6:openstack_dashboard/test/selenium/integration/conftest.py:1:209",
+      "window": "post",
+      "tokens": 33,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5523518022188503,
+      "min_k_percent": -8.473406155904135
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:4:137",
+      "window": "post",
+      "tokens": 108,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0527991340336746,
+      "min_k_percent": -7.371537549155099
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:4:164",
+      "window": "post",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0978395789413704,
+      "min_k_percent": -9.28745994567871
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:139",
+      "window": "post",
+      "tokens": 107,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.941569814072268,
+      "min_k_percent": -7.0812289374215265
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:146",
+      "window": "post",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6633299884157466,
+      "min_k_percent": -8.400003841945104
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:148",
+      "window": "post",
+      "tokens": 55,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7172781698388377,
+      "min_k_percent": -8.260826761072332
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:161",
+      "window": "post",
+      "tokens": 32,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1415844134083608,
+      "min_k_percent": -7.414406140645345
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:190",
+      "window": "post",
+      "tokens": 52,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0206126003603613,
+      "min_k_percent": -9.039333534240722
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:201",
+      "window": "post",
+      "tokens": 46,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4277676510039201,
+      "min_k_percent": -7.00462171766493
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:225",
+      "window": "post",
+      "tokens": 71,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9513106662625403,
+      "min_k_percent": -7.1996122768947055
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:227",
+      "window": "post",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1297970072440378,
+      "min_k_percent": -7.878805780410767
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:230",
+      "window": "post",
+      "tokens": 56,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6903674554140744,
+      "min_k_percent": -8.479785485701127
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:234",
+      "window": "post",
+      "tokens": 90,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.844459015554055,
+      "min_k_percent": -7.764748043484158
+    },
+    {
+      "id": "openstack:I1a2285c9867a4c040306a235b848181e2930976f:utilities/platform-util/scripts/gen-bootloader-iso.sh:5:140",
+      "window": "post",
+      "tokens": 93,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.493081081470339,
+      "min_k_percent": -7.418944173389011
+    },
+    {
+      "id": "openstack:I2c6717c200ebcdf7dc5ab6f2d2c5ee05ed5f7a8a:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/helm/cinder.py:1:306",
+      "window": "post",
+      "tokens": 39,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.2840208731008675,
+      "min_k_percent": -7.293263844081333
+    },
+    {
+      "id": "openstack:I6598bb69168c132a8b460cda4a56c8d53484ef76:controllerconfig/controllerconfig/upgrade-scripts/01-remove-armada-if-unused.py:9:255",
+      "window": "post",
+      "tokens": 55,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.580944689542786,
+      "min_k_percent": -6.06785681030967
+    },
+    {
+      "id": "openstack:Iec3b92fc5fd85b594b6c3eac3fd97b045e7c8e0c:nova-api-proxy/nova-api-proxy/nova_api_proxy/apps/acceptor.py:3:83",
+      "window": "post",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.877983078101436,
+      "min_k_percent": -8.14762282371521
+    },
+    {
+      "id": "openstack:Iaef31b91b0f4d5724726ded177e2e107f40adf30:releasenotes/notes/deprecate-default-backend-2f553e0771ae4aeb.yaml:1:5",
+      "window": "post",
+      "tokens": 53,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3205879610772604,
+      "min_k_percent": -6.163255453109741
+    },
+    {
+      "id": "openstack:I3850c97d17707f9bc03640bd1d997508637d97ba:powertrain_build/cli.py:29:72",
+      "window": "post",
+      "tokens": 75,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5606249300174673,
+      "min_k_percent": -8.561733881632486
+    },
+    {
+      "id": "openstack:Ifbeaba033c6dae0fa704a2be568b2f4e2cb7426a:openstack_dashboard/api/cinder.py:3:217",
+      "window": "post",
+      "tokens": 45,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7082093952335071,
+      "min_k_percent": -6.8275281058417425
+    },
+    {
+      "id": "openstack:Idd5d171cbdd4a1538ae8bbfd90165e150addefec:nfv/nfv-client/nfv_client/openstack/rest_api.py:8:52",
+      "window": "post",
+      "tokens": 75,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -3.1309279020611434,
+      "min_k_percent": -7.699919319152832
+    },
+    {
+      "id": "openstack:Idd5d171cbdd4a1538ae8bbfd90165e150addefec:nfv/nfv-common/nfv_common/strategy/_strategy_step.py:8:201",
+      "window": "post",
+      "tokens": 74,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5249815178771198,
+      "min_k_percent": -7.701333250318255
+    },
+    {
+      "id": "openstack:I32aca026570edb406ba90ec1e91b1d86bb70a582:swift/common/middleware/mpu.py:2:902",
+      "window": "post",
+      "tokens": 38,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.354966839930927,
+      "min_k_percent": -7.038678986685617
+    },
+    {
+      "id": "openstack:I32aca026570edb406ba90ec1e91b1d86bb70a582:test/functional/test_mpu.py:2:448",
+      "window": "post",
+      "tokens": 53,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5636323702033048,
+      "min_k_percent": -7.57875542640686
+    },
+    {
+      "id": "openstack:I6a6bb45671f3db113f5ff72b88adbd22bee7ac22:upper-constraints.txt:2:499",
+      "window": "post",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.19207707582602,
+      "min_k_percent": -6.483869155248006
+    },
+    {
+      "id": "openstack:I9d000fc9e385286122d818bb5490d6aa07ecd800:tests/unit/test_openstack_driver.py:2:105",
+      "window": "post",
+      "tokens": 52,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5536433106060437,
+      "min_k_percent": -8.389531660079957
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:11",
+      "window": "post",
+      "tokens": 111,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7799281623776742,
+      "min_k_percent": -6.748971505598589
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:94",
+      "window": "post",
+      "tokens": 107,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.218092051120635,
+      "min_k_percent": -6.983747618538993
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:2:22",
+      "window": "post",
+      "tokens": 47,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9588747759836816,
+      "min_k_percent": -7.708858225080702
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:2:93",
+      "window": "post",
+      "tokens": 68,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1482453801612027,
+      "min_k_percent": -10.259129230792706
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:2:96",
+      "window": "post",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.193152732193699,
+      "min_k_percent": -8.86529212527805
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:10",
+      "window": "post",
+      "tokens": 37,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8683473965551534,
+      "min_k_percent": -9.059160573141915
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:123",
+      "window": "post",
+      "tokens": 37,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6459039002863427,
+      "min_k_percent": -9.659021718161446
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:3",
+      "window": "post",
+      "tokens": 42,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7108266495486146,
+      "min_k_percent": -7.242625176906586
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:32",
+      "window": "post",
+      "tokens": 53,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.488110604925594,
+      "min_k_percent": -9.073777008056641
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:7",
+      "window": "post",
+      "tokens": 45,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6184565934802304,
+      "min_k_percent": -9.204278681013319
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:70",
+      "window": "post",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3042456901294002,
+      "min_k_percent": -7.653332829475403
+    },
+    {
+      "id": "openstack:I6e18d4f1377732c89f67b39748c5cabb26ebcc1e:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/helm/dcdbsync.py:14:2",
+      "window": "post",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": 0.0036136524820029065,
+      "min_k_percent": -1.7005258897940319
+    },
+    {
+      "id": "openstack:I5da9df472198e47d9b277e7defab43ac2e817c14:ceph/ceph/debian/deb_folder/ceph-base.ceph.init:1:1108",
+      "window": "post",
+      "tokens": 163,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4111126319294618,
+      "min_k_percent": -5.620335169136524
+    },
+    {
+      "id": "openstack:I5da9df472198e47d9b277e7defab43ac2e817c14:ceph/ceph/debian/deb_folder/ceph-base.ceph.init:1:304",
+      "window": "post",
+      "tokens": 65,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6459447297656224,
+      "min_k_percent": -6.630160276706402
+    },
+    {
+      "id": "openstack:I5423bc5793cacc6cb41c44ae21d0c52f208fba5d:sysinv/sysinv/sysinv/sysinv/common/exception.py:2:1671",
+      "window": "post",
+      "tokens": 61,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.200031362975382,
+      "min_k_percent": -8.966580788294474
+    },
+    {
+      "id": "openstack:I6315b6018e755cf80d7e1f6a01909fb5ddb15ba4:software/scripts/deploy-precheck:8:284",
+      "window": "post",
+      "tokens": 79,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7970712817407752,
+      "min_k_percent": -8.78938995997111
+    },
+    {
+      "id": "openstack:Ided7a807575c676fd094c78103201e8dee575d59:releasenotes/notes/fix-prepare-mariadb-after-restore-472112bbcdcecdb9.yaml:4:4",
+      "window": "pre",
+      "tokens": 85,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8841237864318776,
+      "min_k_percent": -6.99720183540793
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:2:78",
+      "window": "pre",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0832949879228946,
+      "min_k_percent": -6.982595602671306
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:2:97",
+      "window": "pre",
+      "tokens": 65,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.767200212253767,
+      "min_k_percent": -6.228695722726675
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:4:74",
+      "window": "pre",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3885584699071496,
+      "min_k_percent": -6.699690471995961
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:4:78",
+      "window": "pre",
+      "tokens": 39,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9691173865940891,
+      "min_k_percent": -6.78987625667027
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:4:89",
+      "window": "pre",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3590847451471548,
+      "min_k_percent": -7.279814863204956
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:5:111",
+      "window": "pre",
+      "tokens": 50,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9272159687912701,
+      "min_k_percent": -6.433337306976318
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:config/debian/trixie/image/scripts/setup-uefi-bootloader.sh:2:23",
+      "window": "pre",
+      "tokens": 55,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8352340469136146,
+      "min_k_percent": -7.136451179330999
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/audit/subcloud_audit_worker_manager.py:7:432",
+      "window": "pre",
+      "tokens": 91,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7674482041005242,
+      "min_k_percent": -7.622583945592244
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/prestage.py:10:281",
+      "window": "pre",
+      "tokens": 68,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1319800925654988,
+      "min_k_percent": -7.0555345461918755
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/prestage.py:7:355",
+      "window": "pre",
+      "tokens": 83,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.729581213779513,
+      "min_k_percent": -6.946320980787277
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/utils.py:10:861",
+      "window": "pre",
+      "tokens": 64,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2139904254207945,
+      "min_k_percent": -5.218521952629089
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/db/sqlalchemy/migrate_repo/versions/017_add_subcloud_prestage_columns.py:8:22",
+      "window": "pre",
+      "tokens": 70,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2879024962869503,
+      "min_k_percent": -6.9202404362814764
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/tests/unit/orchestrator/states/prestage/test_states.py:10:196",
+      "window": "pre",
+      "tokens": 58,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0803617389124325,
+      "min_k_percent": -8.442014434120871
+    },
+    {
+      "id": "openstack:If9501d51b4ed3bf6c75cba636227943dcbfff61d:playbookconfig/src/playbooks/prestage_sw_packages.yml:4:3",
+      "window": "pre",
+      "tokens": 35,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4535020311057207,
+      "min_k_percent": -3.382238064493452
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:1321",
+      "window": "pre",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.837569582640123,
+      "min_k_percent": -7.5496556758880615
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:905",
+      "window": "pre",
+      "tokens": 111,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.672257595850355,
+      "min_k_percent": -7.073789585720409
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:917",
+      "window": "pre",
+      "tokens": 98,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6069025197195637,
+      "min_k_percent": -6.294542224783647
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:945",
+      "window": "pre",
+      "tokens": 132,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.521857738106006,
+      "min_k_percent": -5.4564881049669705
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:955",
+      "window": "pre",
+      "tokens": 148,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5631902066989478,
+      "min_k_percent": -6.1579244794516725
+    },
+    {
+      "id": "openstack:I4dff67cd3b0eb72bca2dd8d53f27c19967c5696c:setup.cfg:1:6",
+      "window": "pre",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.620139288479815,
+      "min_k_percent": -7.59998443391588
+    },
+    {
+      "id": "openstack:Ifcbba34f432ffbeffb12ae99039de12af2933329:setup.cfg:1:22",
+      "window": "pre",
+      "tokens": 63,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0099014851792403,
+      "min_k_percent": -3.685602441430092
+    },
+    {
+      "id": "openstack:Icfa91de50220c8ebcd88bf9c7ae55bd0650589e0:gerrit/projects.yaml:1:238",
+      "window": "pre",
+      "tokens": 84,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0774675370557953,
+      "min_k_percent": -7.657765835523605
+    },
+    {
+      "id": "openstack:Icfa91de50220c8ebcd88bf9c7ae55bd0650589e0:gerrit/projects.yaml:2:260",
+      "window": "pre",
+      "tokens": 87,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9974013219933051,
+      "min_k_percent": -7.0306329446680405
+    },
+    {
+      "id": "openstack:I78e27370d65c83ce7f8d36d5c38ab905a8da2a24:puppet-manifests/src/modules/platform/manifests/multipath.pp:3:21",
+      "window": "pre",
+      "tokens": 44,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6649601816690318,
+      "min_k_percent": -7.045835763216019
+    },
+    {
+      "id": "openstack:I38921730eeca11071d35f1e9667e472816d17ee1:distributedcloud/dcmanager/common/utils.py:7:1262",
+      "window": "pre",
+      "tokens": 58,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1384748201429031,
+      "min_k_percent": -6.040685003454035
+    },
+    {
+      "id": "openstack:I38921730eeca11071d35f1e9667e472816d17ee1:distributedcloud/dcmanager/manager/subcloud_manager.py:6:1069",
+      "window": "pre",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3647955811519916,
+      "min_k_percent": -7.760166962941487
+    },
+    {
+      "id": "openstack:I38921730eeca11071d35f1e9667e472816d17ee1:distributedcloud/dcmanager/manager/subcloud_manager.py:7:1064",
+      "window": "pre",
+      "tokens": 70,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7600536540528366,
+      "min_k_percent": -7.765329190662929
+    },
+    {
+      "id": "openstack:I606ba5e5f8fd783d6c3f83356ded27a46e8bac56:openstack_releases/deliverable.py:3:62",
+      "window": "pre",
+      "tokens": 102,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.517027997164799,
+      "min_k_percent": -5.782627856731414
+    },
+    {
+      "id": "openstack:I91ed6a2f8bd0478d845a68716ea6e19b978c47f9:controllerconfig/controllerconfig/upgrade-scripts/76-remove-armada-if-unused.py:10:317",
+      "window": "pre",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3975160436501721,
+      "min_k_percent": -7.053460756937663
+    },
+    {
+      "id": "openstack:I91ed6a2f8bd0478d845a68716ea6e19b978c47f9:controllerconfig/controllerconfig/upgrade-scripts/76-remove-armada-if-unused.py:6:334",
+      "window": "pre",
+      "tokens": 32,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.6462960100704264,
+      "min_k_percent": -7.413192629814148
+    },
+    {
+      "id": "openstack:I91ed6a2f8bd0478d845a68716ea6e19b978c47f9:controllerconfig/controllerconfig/upgrade-scripts/76-remove-armada-if-unused.py:7:315",
+      "window": "pre",
+      "tokens": 53,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1402864916309845,
+      "min_k_percent": -8.6117431640625
+    },
+    {
+      "id": "openstack:I8dbfc0deb9f547100bb63bd6b20737734e97667b:src/README.md:14:235",
+      "window": "pre",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.275976875343385,
+      "min_k_percent": -9.127848863601685
+    },
+    {
+      "id": "openstack:I8dbfc0deb9f547100bb63bd6b20737734e97667b:src/actions.yaml:13:114",
+      "window": "pre",
+      "tokens": 111,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7297500642995347,
+      "min_k_percent": -6.314028523185036
+    },
+    {
+      "id": "openstack:Icffcbad27d99a800e3f285565c0b823f697e388c:nova/tests/functional/test_boot_from_volume.py:2:203",
+      "window": "pre",
+      "tokens": 118,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.666998066058279,
+      "min_k_percent": -5.15764045715332
+    },
+    {
+      "id": "openstack:I056cefbf0894dbc68b9a6eb3d76ec4dc0a72de0d:swift/container/backend.py:3:1856",
+      "window": "pre",
+      "tokens": 48,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0489530135650493,
+      "min_k_percent": -8.200648148854574
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/common/base_agent_rpc.py:1:26",
+      "window": "pre",
+      "tokens": 40,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.280931299116895,
+      "min_k_percent": -7.000615358352661
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/common/base_agent_rpc.py:3:30",
+      "window": "pre",
+      "tokens": 85,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8661679731551666,
+      "min_k_percent": -8.055090118856992
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/dhcp/agent.py:2:867",
+      "window": "pre",
+      "tokens": 45,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3635462433422936,
+      "min_k_percent": -6.015162256028917
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/dhcp/agent.py:2:927",
+      "window": "pre",
+      "tokens": 45,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.199423705439586,
+      "min_k_percent": -6.806872500313653
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/dhcp/agent.py:3:40",
+      "window": "pre",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9548783723489629,
+      "min_k_percent": -4.281539058685302
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/metadata/agent.py:2:63",
+      "window": "pre",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.9442128621836327,
+      "min_k_percent": -5.410652365003314
+    },
+    {
+      "id": "openstack:I4246dc8a80038358cd5b6e44e991b3e2ed72be0e:ansible/roles/glance/templates/glance-api.conf.j2:3:7",
+      "window": "pre",
+      "tokens": 92,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.5070122314900436,
+      "min_k_percent": -8.931415478388468
+    },
+    {
+      "id": "openstack:I6bfd486bf037da5b4d2dd61c84a50d6a7fbfb39d:ovsdbapp/schema/ovn_northbound/commands.py:3:245",
+      "window": "pre",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.931363018936661,
+      "min_k_percent": -6.140329664403742
+    },
+    {
+      "id": "openstack:Ib32c7b54d198f5013b930fadcb61e742f259dd03:roles/nebulous-promote-container-image/tasks/promote-retag-inner.yaml:1:11",
+      "window": "pre",
+      "tokens": 92,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3687027667362592,
+      "min_k_percent": -6.351142194535997
+    },
+    {
+      "id": "openstack:Iaa271bd13e3a62c4a3b35b6e6b556984f7b1d09c:releasenotes/notes/legacy-rbac-policy-disabled-6fc45ad1237f4d57.yaml:4:28",
+      "window": "pre",
+      "tokens": 71,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.510866246549064,
+      "min_k_percent": -9.173524039132255
+    },
+    {
+      "id": "openstack:I4bcfe53fe87d7c9218dd0db9d7224bb323709a21:neutron/services/trunk/drivers/openvswitch/agent/trunk_manager.py:2:128",
+      "window": "pre",
+      "tokens": 76,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2699771950204404,
+      "min_k_percent": -5.786671082178752
+    },
+    {
+      "id": "openstack:I2a3631a8bedec962df5b41c1a114e5ef5afab560:software/software/apt_utils.py:3:45",
+      "window": "pre",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.328277124658235,
+      "min_k_percent": -7.604431072870891
+    },
+    {
+      "id": "openstack:I2a3631a8bedec962df5b41c1a114e5ef5afab560:software/software/apt_utils.py:3:53",
+      "window": "pre",
+      "tokens": 33,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4626895857795779,
+      "min_k_percent": -6.430884758631389
+    },
+    {
+      "id": "openstack:I3cb4219b173cce13354a024ce445865e5724d654:ovn_bgp_agent/drivers/openstack/ovn_stretched_l2_bgp_driver.py:1:100",
+      "window": "pre",
+      "tokens": 43,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.77189233517482,
+      "min_k_percent": -7.3528260588645935
+    },
+    {
+      "id": "openstack:I5bf587fe3d8327c17d71908104c0896f8baf0973:playbooks/roles/keycloak/templates/docker-compose.yaml.j2:8:11",
+      "window": "pre",
+      "tokens": 39,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0180718963614825,
+      "min_k_percent": -5.906216212681362
+    },
+    {
+      "id": "openstack:I5bf587fe3d8327c17d71908104c0896f8baf0973:playbooks/roles/keycloak/templates/docker-compose.yaml.j2:9:12",
+      "window": "pre",
+      "tokens": 46,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5068699591781405,
+      "min_k_percent": -5.160474406348334
+    },
+    {
+      "id": "openstack:I2710805c781d6c3447fb3a50505595dc9bfc6e42:ansible/roles/octavia/templates/octavia.conf.j2:2:104",
+      "window": "pre",
+      "tokens": 151,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.768967506948132,
+      "min_k_percent": -6.02761090596517
+    },
+    {
+      "id": "openstack:I39fe2db9182de23c1df814d911eec15e86317702:ansible/group_vars/all.yml:2:1132",
+      "window": "pre",
+      "tokens": 73,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.7566297165682245,
+      "min_k_percent": -7.084212643759591
+    },
+    {
+      "id": "openstack:I39fe2db9182de23c1df814d911eec15e86317702:ansible/roles/nova/templates/nova.conf.j2:1:19",
+      "window": "pre",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6340709862039406,
+      "min_k_percent": -8.061859464645385
+    },
+    {
+      "id": "openstack:Ia00ebbd8bac6ea8f004e295b30d63c2e07016382:doc/source/security/openstack/security-system-account-password-rules.rst:1:34",
+      "window": "pre",
+      "tokens": 91,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.574449780184985,
+      "min_k_percent": -6.3558823400073585
+    },
+    {
+      "id": "openstack:Ib702fcf318d01bd7bfa8a19ec2aee516f6089cb0:distributedcloud/dcmanager/manager/peer_group_audit_manager.py:1:160",
+      "window": "pre",
+      "tokens": 80,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.485348333293833,
+      "min_k_percent": -8.06104627251625
+    },
+    {
+      "id": "openstack:I078b40e51fef64a01757fb75ca8d5b032b971c60:doc/source/admin/security/tls.rst:11:213",
+      "window": "pre",
+      "tokens": 72,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6051363206202758,
+      "min_k_percent": -7.350797925676618
+    },
+    {
+      "id": "openstack:I078b40e51fef64a01757fb75ca8d5b032b971c60:doc/source/admin/security/tls.rst:14:222",
+      "window": "pre",
+      "tokens": 63,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.3666568000758255,
+      "min_k_percent": -8.775040427843729
+    },
+    {
+      "id": "openstack:I078b40e51fef64a01757fb75ca8d5b032b971c60:doc/source/admin/security/tls.rst:7:185",
+      "window": "pre",
+      "tokens": 72,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8546603441655038,
+      "min_k_percent": -7.903065068381173
+    },
+    {
+      "id": "openstack:I8e2c7b88fcea44d5ede851b40657b0acc3cf9e54:zuul.d/ironic-lib-jobs.yaml:2:55",
+      "window": "pre",
+      "tokens": 41,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.837702148094683,
+      "min_k_percent": -5.724130719900131
+    },
+    {
+      "id": "openstack:Ic52f0ddb0c94410dd854ee525e3c57b2e78ea84d:ironic/common/image_service.py:1:327",
+      "window": "pre",
+      "tokens": 52,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5285175967455493,
+      "min_k_percent": -7.067974543571472
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:doc/source/contributor/contributing.rst:2:17",
+      "window": "pre",
+      "tokens": 67,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -3.1419583731710423,
+      "min_k_percent": -5.664390362226046
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:doc/source/index.rst:5:86",
+      "window": "pre",
+      "tokens": 35,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9278006359207842,
+      "min_k_percent": -10.000302927834648
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:doc/source/library/api_microversion_testing.rst:2:14",
+      "window": "pre",
+      "tokens": 69,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5717927869521586,
+      "min_k_percent": -8.202099763430082
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/README.rst:3:20",
+      "window": "pre",
+      "tokens": 54,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.397641283200424,
+      "min_k_percent": -8.513261127471925
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/README.rst:3:55",
+      "window": "pre",
+      "tokens": 36,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.4368794078031544,
+      "min_k_percent": -8.58718306677682
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/README.rst:5:52",
+      "window": "pre",
+      "tokens": 33,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7168298957866392,
+      "min_k_percent": -9.313603639602661
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:2:37",
+      "window": "pre",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.199866652652785,
+      "min_k_percent": -7.388778765996297
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:3:20",
+      "window": "pre",
+      "tokens": 94,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.2316091832579725,
+      "min_k_percent": -8.092490434646606
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:3:37",
+      "window": "pre",
+      "tokens": 47,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0924854664625538,
+      "min_k_percent": -7.704518371158176
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:3:51",
+      "window": "pre",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.95498867035705,
+      "min_k_percent": -7.1824352091008965
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:ansible/roles/neutron/defaults/main.yml:28:932",
+      "window": "pre",
+      "tokens": 41,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.34768719982966,
+      "min_k_percent": -8.353168547153473
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:ansible/roles/neutron/defaults/main.yml:5:700",
+      "window": "pre",
+      "tokens": 53,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.993850774679288,
+      "min_k_percent": -7.03092942237854
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:doc/source/reference/networking/designate-guide.rst:24:35",
+      "window": "pre",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6290146277057336,
+      "min_k_percent": -7.321534792582194
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:doc/source/reference/networking/designate-guide.rst:28:31",
+      "window": "pre",
+      "tokens": 56,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.998197786879106,
+      "min_k_percent": -6.295574795116078
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:doc/source/reference/networking/designate-guide.rst:28:36",
+      "window": "pre",
+      "tokens": 63,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7407185445206457,
+      "min_k_percent": -7.171287298202515
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:releasenotes/notes/fix-neutron-and-designate-DNS-integration-5abedb5e09e4fc15.yaml:24:4",
+      "window": "pre",
+      "tokens": 33,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8894157540217293,
+      "min_k_percent": -8.000690539677938
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:releasenotes/notes/fix-neutron-and-designate-DNS-integration-5abedb5e09e4fc15.yaml:24:6",
+      "window": "pre",
+      "tokens": 38,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.601803606252108,
+      "min_k_percent": -9.42442764554705
+    },
+    {
+      "id": "openstack:I32fc624bda2177eb52bbeca8867ac0ad867b0fda:sysinv/ipsec-auth/debian/deb_folder/copyright:2:6",
+      "window": "pre",
+      "tokens": 68,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.6969200034180596,
+      "min_k_percent": -6.083140795047466
+    },
+    {
+      "id": "openstack:I4dbaaa16e40f6a214bbb93f9e48f614c10de7d42:distributedcloud/dcmanager/common/phased_subcloud_deploy.py:3:994",
+      "window": "pre",
+      "tokens": 81,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6248271932334588,
+      "min_k_percent": -7.988977789878845
+    },
+    {
+      "id": "openstack:I2f8411cac1403568afb13c2b96ba452c4c81f126:tools/run-ansible-sanity.sh:3:33",
+      "window": "pre",
+      "tokens": 57,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3626306979534721,
+      "min_k_percent": -4.076631871136752
+    },
+    {
+      "id": "openstack:Ibee53e3e9ead9a0bbfdc0d60a35dcdd4b0a0dba7:zuul/driver/gitlab/gitlabconnection.py:2:158",
+      "window": "pre",
+      "tokens": 73,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6161680591685965,
+      "min_k_percent": -6.63654088973999
+    },
+    {
+      "id": "openstack:Id16d4498ff5bdf61abc22c7c015167bc747a0278:upper-constraints.txt:6:630",
+      "window": "pre",
+      "tokens": 88,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.5399055081270014,
+      "min_k_percent": -4.940828211167279
+    },
+    {
+      "id": "openstack:If520dc802bced4acfddd75a05a31dd83bc8c6354:releasenotes/notes/remove-nova_cert-e2ee70a40e117e8a.yaml:2:5",
+      "window": "pre",
+      "tokens": 51,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.204804137557995,
+      "min_k_percent": -9.501360416412354
+    },
+    {
+      "id": "openstack:I3501e6bf17ccb94adfcdb62956dceba9d67b0881:tests/templates/globals-default.j2:3:91",
+      "window": "pre",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7739393652955417,
+      "min_k_percent": -7.307515700658162
+    },
+    {
+      "id": "openstack:I226c1a4030491efd803baa30c00a601bd170ba58:software/software/software_controller.py:2:1886",
+      "window": "pre",
+      "tokens": 55,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1465275309684908,
+      "min_k_percent": -6.088091200048273
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:7:9",
+      "window": "pre",
+      "tokens": 87,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.9773919395361428,
+      "min_k_percent": -8.123854132259593
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:8:10",
+      "window": "pre",
+      "tokens": 82,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.2061166709777886,
+      "min_k_percent": -8.059713572263718
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/deprovision-ldap-server-authentication.rst:8:9",
+      "window": "pre",
+      "tokens": 34,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.6673558490494873,
+      "min_k_percent": -9.563297748565674
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:13",
+      "window": "pre",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7561130261153863,
+      "min_k_percent": -8.918490314483643
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:19",
+      "window": "pre",
+      "tokens": 168,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2408749428547214,
+      "min_k_percent": -6.122115438634699
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:9",
+      "window": "pre",
+      "tokens": 59,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6948686640516148,
+      "min_k_percent": -7.368296189741655
+    },
+    {
+      "id": "openstack:I53d0ccea59bdee4cd6d974dc13a4c49eb51a8597:sysinv/sysinv/sysinv/sysinv/api/middleware/parsable_error.py:7:108",
+      "window": "pre",
+      "tokens": 73,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8117092381341213,
+      "min_k_percent": -6.832753964832851
+    },
+    {
+      "id": "openstack:I53d0ccea59bdee4cd6d974dc13a4c49eb51a8597:sysinv/sysinv/sysinv/sysinv/api/middleware/parsable_error.py:8:19",
+      "window": "pre",
+      "tokens": 61,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.3576662578824328,
+      "min_k_percent": -5.595223108927409
+    },
+    {
+      "id": "openstack:I4ad239f7d37ec0f62243f1b88e537c4511d48b03:build-tools/build-docker-images/tag-management/image-tags.yaml:2:58",
+      "window": "pre",
+      "tokens": 219,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.949440714856506,
+      "min_k_percent": -6.447568106096845
+    },
+    {
+      "id": "openstack:If9adeb5f9be1e7d79ac05076589374a045246668:logscraper/logscraper.py:4:511",
+      "window": "pre",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.0887699706615486,
+      "min_k_percent": -4.954304734865825
+    },
+    {
+      "id": "openstack:I1a289e26db0a95619c8107a3e734e8531e77592e:playbookconfig/src/playbooks/roles/rehome-subcloud/validate-before-rehome/tasks/main.yml:6:19",
+      "window": "pre",
+      "tokens": 65,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5191418144372075,
+      "min_k_percent": -7.1206254959106445
+    },
+    {
+      "id": "openstack:I5dda9767c1c66597291211a087f7c917ba990651:test/unit/common/middleware/test_proxy_logging.py:1:859",
+      "window": "pre",
+      "tokens": 47,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1512794940726234,
+      "min_k_percent": -8.07129462560018
+    },
+    {
+      "id": "openstack:I37fd53dfd4be6d4204d90fd1c6c508b20d46f617:ironic_prometheus_exporter/tests/json_samples/notification-ipmi-1.json:1:1445",
+      "window": "pre",
+      "tokens": 73,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8357066655010457,
+      "min_k_percent": -8.413731064115252
+    },
+    {
+      "id": "openstack:I1efadb54995b0f5a2a8b672f017831a3009cb6d2:ironic_ui/locale/de/LC_MESSAGES/djangojs.po:1:40",
+      "window": "pre",
+      "tokens": 31,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -0.5250557132794152,
+      "min_k_percent": -4.537184397379558
+    },
+    {
+      "id": "openstack:I563e316ba9955766e28d9cec702387fac472c414:sushy_tools/tests/unit/emulator/resources/systems/test_libvirt.py:1:270",
+      "window": "pre",
+      "tokens": 88,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.1908971911126995,
+      "min_k_percent": -6.094573315452127
+    },
+    {
+      "id": "openstack:I66638be398ffaee743640e86fc0188c500958e89:upper-constraints.txt:2:166",
+      "window": "pre",
+      "tokens": 77,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6025919880967519,
+      "min_k_percent": -6.751528612772623
+    },
+    {
+      "id": "openstack:I66638be398ffaee743640e86fc0188c500958e89:upper-constraints.txt:2:323",
+      "window": "pre",
+      "tokens": 73,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.5901147916881344,
+      "min_k_percent": -7.361832465444293
+    },
+    {
+      "id": "openstack:I27ed3c7427b2f4bbfbe0d23ee9a5fca8b606efc7:gerrit/projects.yaml:1:363",
+      "window": "pre",
+      "tokens": 94,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6242715400919938,
+      "min_k_percent": -8.735623545116848
+    },
+    {
+      "id": "openstack:I27ed3c7427b2f4bbfbe0d23ee9a5fca8b606efc7:gerrit/projects.yaml:4:365",
+      "window": "pre",
+      "tokens": 82,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.5212828027895406,
+      "min_k_percent": -6.836985558271408
+    },
+    {
+      "id": "openstack:I27ed3c7427b2f4bbfbe0d23ee9a5fca8b606efc7:zuul/main.yaml:1:144",
+      "window": "pre",
+      "tokens": 64,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1273205207097095,
+      "min_k_percent": -7.308692892392476
+    },
+    {
+      "id": "openstack:Icdfa1bb2b1866020964ef22efe5fbced10618ff8:playbookconfig/src/playbooks/roles/bootstrap/validate-config/files/parse_user_dns_host_record.py:1:4",
+      "window": "pre",
+      "tokens": 39,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1767560896435618,
+      "min_k_percent": -3.3012964384896413
+    },
+    {
+      "id": "openstack:I4a24a953a61239a8a52c9e7a2b68a7ec779f7a3d:doc/source/kubernetes.rst:2:500",
+      "window": "pre",
+      "tokens": 183,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.1341145519936604,
+      "min_k_percent": -5.974075761106279
+    },
+    {
+      "id": "openstack:I4a24a953a61239a8a52c9e7a2b68a7ec779f7a3d:nodepool/driver/openshiftpods/config.py:2:93",
+      "window": "pre",
+      "tokens": 56,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.0831537519902374,
+      "min_k_percent": -9.283911661668258
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/debian/deb_folder/patches/0001-Add-vault-manager-termination-wait-time.patch:1:25",
+      "window": "pre",
+      "tokens": 61,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.6556797494791553,
+      "min_k_percent": -8.17258326212565
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/debian/deb_folder/patches/0001-Add-vault-manager-termination-wait-time.patch:1:28",
+      "window": "pre",
+      "tokens": 38,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.7213282421299414,
+      "min_k_percent": -9.41010229928153
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/debian/deb_folder/patches/0001-Add-vault-manager-termination-wait-time.patch:1:31",
+      "window": "pre",
+      "tokens": 62,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.8560789554594903,
+      "min_k_percent": -8.292465885480246
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/vault-helm/helm-charts/vault-init.yaml:1:1522",
+      "window": "pre",
+      "tokens": 43,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.568564560070258,
+      "min_k_percent": -7.927352726459503
+    },
+    {
+      "id": "openstack:Ic6e999214210383f17c29982bf5673eea1bb55c0:neutron/agent/linux/dhcp.py:3:606",
+      "window": "pre",
+      "tokens": 42,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -2.493269112295443,
+      "min_k_percent": -9.646969020366669
+    },
+    {
+      "id": "openstack:Ic88027945c4d4ad04a4dec83e00e44aac5c0b890:roles/charm-publish/tasks/publish.yaml:1:36",
+      "window": "pre",
+      "tokens": 72,
+      "undefined_positions": 0,
+      "min_k_plus_plus": -1.2944214371110463,
+      "min_k_percent": -6.377446872847421
+    }
+  ],
+  "guided": [
+    {
+      "id": "openstack:I0fc609cbc5f9341210097920ca1eb8e43875449c:manila/api/views/limits.py:2:105",
+      "window": "post",
+      "predicted": "            next_avail = datetime.datetime.fromtimestamp(\n                int(next_avail_str)",
+      "reference": "            rate_limit[\"resetTime\"],\n            tz=datetime.timezone.utc).replace(tzinfo=None)",
+      "edit_similarity": 0.39361702127659576
+    },
+    {
+      "id": "openstack:I0fc609cbc5f9341210097920ca1eb8e43875449c:manila/share/drivers/netapp/dataontap/cluster_mode/lib_base.py:2:2881",
+      "window": "post",
+      "predicted": "                    int(self._api_client.get_volume_info(volume_id)['creation_time'])\n                )",
+      "reference": "                    last_update_timestamp,\n                    tz=datetime.timezone.utc).replace(tzinfo=None)",
+      "edit_similarity": 0.4716981132075472
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:helm-charts/custom/rook-ceph-provisioner-helm/rook-ceph-provisioner-helm/rook-ceph-provisioner/templates/job-sync-osds.yaml:5:160",
+      "window": "post",
+      "predicted": "```yaml\n            JOB_SYNC_OSDS_CMD=\"kubectl get pods -n rook-ceph -l app=rook-ceph-osd,topology-location-host=${HOST_NAME} -o jsonpath='{range .items[*]}{.metadata.name}{'\\t'}{.status.phase}{'\\n'}{end}'\"",
+      "reference": "\n            COUNT_OSDS_DEPLOYMENT_CMD=\"${DEPLOYMENT_OSDS_CMD} | jq -r '.items | length'\"",
+      "edit_similarity": 0.2983050847457627
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/helm/rook_ceph_provisioner.py:5:119",
+      "window": "post",
+      "predicted": "        os_username = self._get_config_value('OS_USERNAME')\n        os_password = self._get_config_value('OS_PASSWORD')",
+      "reference": "        os_user = self._get_admin_user_name(os_service)\n        os_password = self._get_keyring_password(os_service, os_user)",
+      "edit_similarity": 0.6147540983606558
+    },
+    {
+      "id": "openstack:I1d48f634dcaf1ca4ebd5db375c5bd9c3d36b3967:python3-k8sapp-rook-ceph/k8sapp_rook_ceph/k8sapp_rook_ceph/lifecycle/lifecycle_rook_ceph.py:3:1262",
+      "window": "post",
+      "predicted": "                    # Prepare disk (wipe disk)\n                    rpcapi = agent_rpcapi.AgentAPI()\n\n                    # Wipe the disk to ensure a clean state",
+      "reference": "                    idisk = dbapi.idisk_get(stor.get('idisk_uuid'))\n                    LOG.info(\"Wiping device %s from %s\" % (idisk.get('device_node'), host.get('hostname')))\n                    rpcapi.disk_prepare(context, host.get('uuid'), idisk.as_dict(), True, False)\n                    sleep(5)",
+      "edit_similarity": 0.39913232104121477
+    },
+    {
+      "id": "openstack:I60f05c5949728ce8eceb81bb122cb9138889fbea:neutron/tests/functional/resources/process.py:6:27",
+      "window": "post",
+      "predicted": "    \"\"\"Kill process if it exists.\"\"\"",
+      "reference": "    _pid = helpers.pgrep(command)",
+      "edit_similarity": 0.2898550724637681
+    },
+    {
+      "id": "openstack:I2b4c6913210ffc1f8606eee9bd81b332a2e66ffb:swift/common/middleware/mpu.py:3:93",
+      "window": "post",
+      "predicted": "    if not re.match(r'^[a-zA-Z0-9-_~]+$', obj['name']):",
+      "reference": "    ID_DELIMITER = '~'",
+      "edit_similarity": 0.23376623376623376
+    },
+    {
+      "id": "openstack:I5478fe068279cd30be2338de2748945a56b95097:controllerconfig/controllerconfig/upgrade-scripts/06-security-kubeapi-service-parameters-apply.py:5:104",
+      "window": "post",
+      "predicted": "```python",
+      "reference": "            if len(ready_controllers) == n_controllers:",
+      "edit_similarity": 0.09375
+    },
+    {
+      "id": "openstack:I4e2f9c85e0919db54a7acc52ce8f7eeea1068508:software/software/utilities/migrate.py:5:73",
+      "window": "post",
+      "predicted": "        raise FileNotFoundError(f\"The directory {constants.KEYRING_DIR_PATH} does not exist\")",
+      "reference": "        raise Exception(\"keyring directory cannot be found\")",
+      "edit_similarity": 0.49673202614379086
+    },
+    {
+      "id": "openstack:I1f1d5c75f10b6f232dd2bf23fc963693f8388f98:taskflow/version.py:1:23",
+      "window": "post",
+      "predicted": "version_string = _version_info.version_string()",
+      "reference": "version_string = _version_info.version_string",
+      "edit_similarity": 0.9782608695652174
+    },
+    {
+      "id": "openstack:Ibe4828ef19aaae2df52f9d48c2c33341b6e8f746:distributedcloud/dcmanager/state/subcloud_state_manager.py:5:424",
+      "window": "post",
+      "predicted": "```\n# When the request is performed through RPC, the subcloud object is sent as an argument to the method.",
+      "reference": "        # a dict and needs to be redefined as a model\n        subcloud = Subcloud(**simplified_subcloud)",
+      "edit_similarity": 0.3047619047619048
+    },
+    {
+      "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
+      "window": "post",
+      "predicted": "            if error:\n                raise Exception(f\"Error occurred during upgrade: {error}\")",
+      "reference": "            LOG.error(f\"Command failed: {error}\")\n            return error",
+      "edit_similarity": 0.49411764705882355
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:11:91",
+      "window": "post",
+      "predicted": "                 interval='0.2', script_path=METADATA_SCRIPT_PATH,\n                 timeout=300):",
+      "reference": "                 output_path=METADATA_RESULTS_PATH,\n                 pidfile_path=METADATA_PID_PATH):",
+      "edit_similarity": 0.6565656565656566
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:6:120",
+      "window": "post",
+      "predicted": "            if 'starttime:' in line:\n                this_request_starttime = line.split('starttime:')[-1]\n                request_duration = float(this_request_endtime) - float(this_request_starttime)\n                downtime += request_duration\n",
+      "reference": "            prev_request_endtime = output_lines[i - 1].split('endtime:')[-1]\n            downtime += (float(this_request_endtime) -\n                         float(prev_request_endtime))\n\n        results['downtime'] = downtime",
+      "edit_similarity": 0.5605095541401274
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:126",
+      "window": "post",
+      "predicted": "                failed_requests.append(this_request_endtime)\n            elif 'SUCCESS' in line:\n                this_request_endtime = float(line.split('endtime:')[-1])",
+      "reference": "                prev_request_endtime = float(\n                    output_lines[i - 1].split('endtime:')[-1])\n                downtime += this_request_endtime - prev_request_endtime",
+      "edit_similarity": 0.40114613180515757
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:7:31",
+      "window": "post",
+      "predicted": "'echo \"FAILED endtime:$(cut -F1 /proc/uptime)\"'",
+      "reference": "    'echo \"FAILED endtime:$(cut -F1 /proc/uptime)\"',",
+      "edit_similarity": 0.9494949494949495
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:116",
+      "window": "post",
+      "predicted": "            command='sudo systemctl stop neutron-server',",
+      "reference": "            'cat {}'.format(METADATA_METER_PIDFILE)).strip()",
+      "edit_similarity": 0.3247863247863248
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:134",
+      "window": "post",
+      "predicted": "            if \"Network Downtime\" in line:",
+      "reference": "            key, value = line.strip().split()",
+      "edit_similarity": 0.45977011494252873
+    },
+    {
+      "id": "openstack:Id1c58a2fec14ff268c22efc3551fa36f3480f1a0:tempest/common/utils/net_downtime.py:9:29",
+      "window": "post",
+      "predicted": "# This script is used to simulate network downtime for testing purposes.\n# It will stop all network interfaces on the system and then restart them after a specified delay.",
+      "reference": "echo $$ > %(metadata_meter_pidfile)s\nold_time=$(cut -d\" \" -f1 /proc/uptime)",
+      "edit_similarity": 0.16260162601626016
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:15:271",
+      "window": "post",
+      "predicted": "After executing the Apply command, it may take some time for the changes to propagate and be fully applied across all hosts. During this period, the system might experience temporary disruptions or reduced performance. It is important to monitor the progress and ensure that all configurations have been successfully updated before proceeding with further steps.",
+      "reference": "    in the file /etc/mtc.ini. So, it's necessary wait a few seconds before\n    validate the action. The maximum time of execution is 9 seconds.",
+      "edit_similarity": 0.09900990099009901
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:16:272",
+      "window": "post",
+      "predicted": "    # Wait for the service parameter changes to take effect\n    time.sleep(60)  # Adjust the sleep duration based on expected completion time\n",
+      "reference": "    This function verifies the heartbeat_failure_action value in /etc/mtc.ini\n    every 03 seconds (maximum wait time: 09 seconds) in order to validate\n    that the parameter was updated.",
+      "edit_similarity": 0.23170731707317074
+    },
+    {
+      "id": "openstack:Id2ff6887de8e71a6f5039bc78df1273d605f8732:controllerconfig/controllerconfig/upgrade-scripts/101-configure-ipsec-on-hosts.py:18:278",
+      "window": "post",
+      "predicted": "        # Perform some operations here",
+      "reference": "        time.sleep(3)",
+      "edit_similarity": 0.3728813559322034
+    },
+    {
+      "id": "openstack:I5aa3ebe6f387b3212b465279e2f9aeaa1d95b6b7:software/software/exceptions.py:7:64",
+      "window": "post",
+      "predicted": "                    \"and accessible.\" % self.agent_name)",
+      "reference": "                               \"and software-agent process is running\\n\" % hostname)",
+      "edit_similarity": 0.5285714285714286
+    },
+    {
+      "id": "openstack:Ibe8bda2f81bda7a89e3a994db55cd394a18decb8:neutron/services/ovn_l3/plugin.py:4:262",
+      "window": "post",
+      "predicted": "```python",
+      "reference": "                txn.add(self._nb_ovn.db_set(\"Logical_Switch_Port\", port[\"id\"], ext_ids))",
+      "edit_similarity": 0.041237113402061855
+    },
+    {
+      "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
+      "window": "post",
+      "predicted": "    DEPLOY_STATES.RELEASE.value: \"run 'software deploy release <release>' to apply the new release\",\n    DEPLOY_STATES.RELEASE_DONE.value: \"run 'software deploy release <release>' to apply the new release\",\n    DEPLOY_STATES.FINALIZE.value: \"run 'software deploy finalize' to complete the deployment process\",",
+      "reference": "    DEPLOY_STATES.HOST_ROLLBACK.value: \"reattempt 'software deploy host-rollback <hostname>'\",\n    DEPLOY_STATES.ACTIVATE.value: \"reattempt 'software deploy activate' or 'software deploy abort' to abort\",\n    DEPLOY_STATES.ACTIVATE_ROLLBACK.value: \"reattempt 'software deploy activate rollback'\"",
+      "edit_similarity": 0.6026490066225165
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
+      "window": "post",
+      "predicted": "- op: add",
+      "reference": "    --patch='[{\"op\":\"add\",\"path\":\"/rules/0\",\"value\":{\"apiGroups\":[\"\"],\"resources\":[\"namespaces\"],\"verbs\":[\"get\",\"list\"]}}]')",
+      "edit_similarity": 0.10526315789473684
+    },
+    {
+      "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
+      "window": "post",
+      "predicted": "        echo \"No k8s nodes found to update.\"\n        exit 0",
+      "reference": "        log \"Failed to get compute hosts. Error code: ${RC}\"\n        exit ${RC}",
+      "edit_similarity": 0.5217391304347826
+    },
+    {
+      "id": "openstack:I238f67942b1a831143d3bff0f095340dd3155386:charms/masakari-k8s/src/charm.py:2:338",
+      "window": "post",
+      "predicted": "        ) -> None:",
+      "reference": "    ) -> list[sunbeam_rhandlers.RelationHandler]:",
+      "edit_similarity": 0.3880597014925373
+    },
+    {
+      "id": "openstack:I3665b2b9d7dbdb7a974a10f2ed9b3722fb51c1ae:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/lifecycle/lifecycle_openstack.py:1:95",
+      "window": "post",
+      "predicted": "        # Check if the current node is a subcloud\n        return self.node_type == 'subcloud'",
+      "reference": "        \"\"\"Check if in a subcloud\n        \"\"\"",
+      "edit_similarity": 0.5507246376811594
+    },
+    {
+      "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
+      "window": "post",
+      "predicted": "            'svm_name': 'fake_svm',",
+      "reference": "            protocols=['NFS', 'CIFS'])",
+      "edit_similarity": 0.4657534246575342
+    },
+    {
+      "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
+      "window": "post",
+      "predicted": "            branches: ^stable/.*\n            jobs:\n              - zuul:zuul-jobs\n              - zuul:zuul-templates",
+      "reference": "              include:\n                - job\n                - secret\n                - nodeset",
+      "edit_similarity": 0.5283018867924528
+    },
+    {
+      "id": "openstack:I7f9c742f8f557d9faae2cd749d34dcb15d8005c0:oslo_messaging/_drivers/impl_rabbit.py:6:1104",
+      "window": "post",
+      "predicted": "                if self.consumer_offset_reset == 'last':\n                    self._consumer = self.connection.Consumer(\n                        exchange=self.exchange,\n                        routing_key=self.routing_key,\n                        auto_ack=True,",
+      "reference": "                LOG.warn('[%s] Basic.cancel received. '\n                         'Resetting consumers offsets to last.',\n                         self.connection_id)\n                for consumer in self._consumers:\n                    consumer.reset_stream_offset()",
+      "edit_similarity": 0.44571428571428573
+    },
+    {
+      "id": "openstack:Ife426c073048ff27bdfd9f3af30aaaab8c2e4497:docker/nova/nova-base/Dockerfile.j2:15:81",
+      "window": "post",
+      "predicted": "```dockerfile\n        echo \"tss:x:1001:1001::/home/tss:/sbin/nologin\" >> /etc/passwd \\",
+      "reference": "        useradd -c \"TPM software stack\" -d /var/lib/tpm -s /usr/sbin/nologin tss ; \\\n       fi",
+      "edit_similarity": 0.4222222222222222
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/shutting-down-starlingx.rst:5:146",
+      "window": "post",
+      "predicted": "        $ openstack server stop <node_id>",
+      "reference": "        $ system ceph-mon-list",
+      "edit_similarity": 0.4507042253521127
+    },
+    {
+      "id": "openstack:I9174b1afdf36f6d49c98e05cfafa10036a72968d:doc/source/node_management/kubernetes/node_inventory_tasks/starting-starlingx.rst:4:40",
+      "window": "post",
+      "predicted": "This step applies to Ceph-backend systems  (systems with dedicated",
+      "reference": "        storage nodes) only.",
+      "edit_similarity": 0.23404255319148937
+    },
+    {
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "window": "post",
+      "predicted": "review the Starlingx summary of Vuls scan reports, and the OpenStack Security Advisories and Notes. I then analyze these documents to identify potential security vulnerabilities and assess their impact on the Starlingx platform. Based on this analysis, I recommend appropriate mitigation strategies or patches to address the identified issues. Additionally, I ensure that all security updates are integrated into the Starlingx release cycle to maintain the highest level of security for our users.",
+      "reference": "contribute to Starlingx security related features and code reviews\nincluding: oidc, vault, portieris.",
+      "edit_similarity": 0.1806020066889632
+    },
+    {
+      "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:7:365",
+      "window": "post",
+      "predicted": "        # Delete network\n        delete_network(network_uuid)\n\n        # Delete routes associated with the network",
+      "reference": "        try:\n            # When the bootstrap is incomplete, the host is not created\n            host = client.sysinv.ihost.get('controller-0')\n",
+      "edit_similarity": 0.29457364341085274
+    },
+    {
+      "id": "openstack:I9e120fcaedfa39fc08f3bc5f189976706ae72778:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:4:8633",
+      "window": "post",
+      "predicted": "                    \"kubernetes is not enabled\")",
+      "reference": "                \"skip_k8s_application_audit config option is set to true.\")",
+      "edit_similarity": 0.4878048780487805
+    },
+    {
+      "id": "openstack:Ib2ece4141a3732674ec87614da10b9249f6dbbab:playbookconfig/src/playbooks/roles/backup/prepare-env/tasks/main.yml:9:84",
+      "window": "post",
+      "predicted": "    command: kubectl version --short | grep Server | awk '{print $3}'\n    register: kubernetes_version",
+      "reference": "    import_role:\n      name: common/get-kube-version",
+      "edit_similarity": 0.2597402597402597
+    },
+    {
+      "id": "openstack:I9b07653c9039b4d9e4c7e60d3b33ce4d0f60a17a:doc/source/reference/cryptography.rst:1:35",
+      "window": "post",
+      "predicted": "as distributed in Ubuntu provides the cryptographic functions necessary for OpenStack operations. This includes functionalities such as encryption, decryption, hashing, and key management, which are essential for securing data within an OpenStack environment. The package ensures that all cryptographic operations adhere to industry standards and best practices, thereby enhancing the security posture of OpenStack deployments.",
+      "reference": "token generation and validation.",
+      "edit_similarity": 0.12636165577342048
+    },
+    {
+      "id": "openstack:I218fa6759df9af84002420a66a721740c0039003:swift/obj/updater.py:3:675",
+      "window": "post",
+      "predicted": "                    'Update redirected for %(path)s %(update_path)s to '\n                    '%(shard)s',",
+      "reference": "                    {'path': path, 'update_path': update_path,\n                     'shard': update['container_path']})",
+      "edit_similarity": 0.3125
+    },
+    {
+      "id": "openstack:I4157f7af367b4bd3086f3ab31155a43bfea8b9f6:software/software/agent_hooks.py:11:108",
+      "window": "post",
+      "predicted": "                pxeboot_dst_dir = \"/var/pxeboot/pxelinux.cfg.files/\"\n",
+      "reference": "                pxeboot_src_dir = \"/ostree/1\" + pxeboot_dst_dir  # deployed to-release ostree dir\n                cmd = \"rsync -ac %s %s\" % (pxeboot_src_dir, pxeboot_dst_dir)",
+      "edit_similarity": 0.4049586776859504
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:4:137",
+      "window": "post",
+      "predicted": "```",
+      "reference": "Additionally, you need an external bridge (which is typically named, though the name can be anything `br-ex`) configured for Open vSwitch (OVS). If this bridge is not yet set up, refer to the guide on `creating an OVS bridge`_ The reasoning for creating this bridge using MAAS is that it allows assigning an IP to it or one of its VLAN sub-interfaces.",
+      "edit_similarity": 0.01694915254237288
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:4:164",
+      "window": "post",
+      "predicted": "To enable DPDK mode in the OpenStack charm, you need to set the appropriate configuration options in the charm's configuration file. This typically involves specifying parameters such as `dpdk-enabled`, `dpdk-core-mask`, and `dpdk-mtu`. After configuring these settings, apply the changes using the `juju config` command. Once configured, restart the relevant services for the changes to take effect. It's important to ensure that your hardware supports DPDK and that all necessary drivers are installed before enabling this mode. For detailed instructions, refer to the official OpenStack documentation or the charm's README file.",
+      "reference": "",
+      "edit_similarity": 0.0
+    },
+    {
+      "id": "openstack:I1f5fecf2e9497766e71409587e905d70d3669e63:doc/source/admin/networking/ovn/dpdk.rst:9:201",
+      "window": "post",
+      "predicted": "network:",
+      "reference": "VLAN (``br-ex.42``), while maintaining DPDK compatibility:",
+      "edit_similarity": 0.12121212121212122
+    },
+    {
+      "id": "openstack:I1a2285c9867a4c040306a235b848181e2930976f:utilities/platform-util/scripts/gen-bootloader-iso.sh:5:140",
+      "window": "post",
+      "predicted": "        5 - AIO High-latency, Serial Console (Only for stx 8)",
+      "reference": "        5 - AIO Low-latency, Graphical Console (Only for stx 8)",
+      "edit_similarity": 0.8870967741935484
+    },
+    {
+      "id": "openstack:Iec3b92fc5fd85b594b6c3eac3fd97b045e7c8e0c:nova-api-proxy/nova-api-proxy/nova_api_proxy/apps/acceptor.py:3:83",
+      "window": "post",
+      "predicted": "                  remote_port,\n                  local_addr,",
+      "reference": "                  environ.get('REQUEST_METHOD', 'UNDEFINED'),\n                  construct_url(environ)))",
+      "edit_similarity": 0.5365853658536586
+    },
+    {
+      "id": "openstack:Idd5d171cbdd4a1538ae8bbfd90165e150addefec:nfv/nfv-common/nfv_common/strategy/_strategy_step.py:8:201",
+      "window": "post",
+      "predicted": "        if self._timeout > 0 and time.time() - self._start_time > self._timeout:",
+      "reference": "        return STRATEGY_STEP_RESULT.TIMED_OUT, timedout_step",
+      "edit_similarity": 0.3
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:11",
+      "window": "post",
+      "predicted": "The specified list of one or more Linux groups. The mapping allows Linux capabilities (via the Linux groups) to be assigned to the |LDAP| users/groups. This configuration ensures that users authenticated through LDAP can inherit specific permissions and access controls based on their group membership within the Linux environment. This integration enhances security by leveraging existing Linux group policies for user management and authorization.",
+      "reference": "The mapping will occur after the |SSSD| service has discovered the |LDAP| users\nand groups and cached them on the host.",
+      "edit_similarity": 0.27816901408450706
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:94",
+      "window": "post",
+      "predicted": "[managers]\nmembers = sys_protected, root, sudo",
+      "reference": "\n.. code-block::\n\n    *;*;%managers;Al0000-2400;sys_protected,root,sudo",
+      "edit_similarity": 0.5299145299145299
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:2:22",
+      "window": "post",
+      "predicted": "who need to be added to Linux groups using PAM (Pluggable Authentication Modules) configuration on StarlingX systems. This process ensures that LDAP users can authenticate and access system resources based on their group memberships defined within the LDAP directory.",
+      "reference": "    both Local |LDAP| and |LDAP| users in the remote Windows Active Directory\n    servers.",
+      "edit_similarity": 0.2184873949579832
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:10",
+      "window": "post",
+      "predicted": "   sudo groupadd denyssh",
+      "reference": "the |SSHD| configuration such that any member of this group is denied |SSH| access.",
+      "edit_similarity": 0.3364485981308411
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:3",
+      "window": "post",
+      "predicted": "```\n.. _security_kubernetes_selectively_disable_ssh_for_local_openldap_and_wad_users:",
+      "reference": "Selectively Disable SSH for Local LDAP and WAD Users\n====================================================",
+      "edit_similarity": 0.3157894736842105
+    },
+    {
+      "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/selectively-disable-ssh-for-local-openldap-and-wad-users-e5aaf09e790c.rst:1:7",
+      "window": "post",
+      "predicted": "To selectively disable SSH access for users authenticated through local OpenLDAP and WAD (Web Authentication Daemon) servers in a Kubernetes environment, follow these steps:\n",
+      "reference": "In some cases, it may be necessary to disallow |SSH| authentication for selective users or a\ngroup of users.",
+      "edit_similarity": 0.3416370106761566
+    },
+    {
+      "id": "openstack:I5da9df472198e47d9b277e7defab43ac2e817c14:ceph/ceph/debian/deb_folder/ceph-base.ceph.init:1:1108",
+      "window": "post",
+      "predicted": "                if [ -n \"$CEPH_DAEMON_STATUS\" ]; then\n                    echo \"Ceph OSD $name status: $CEPH_DAEMON_STATUS\"\n                else\n                    echo \"Failed to get Ceph OSD $name status.\"\n                fi\n",
+      "reference": "                if [ $? -eq 0 ]; then\n                    state=$(echo \"$CEPH_DAEMON_STATUS\" | awk -F ':' '/state/{gsub(/[,[:space:]]/, \"\", $2);print $2}')\n                    if [ \"$state\" != \"active\" ]; then\n                        log $name \"INFO\" \"$name has the following state: $state\"\n                    fi\n                else",
+      "edit_similarity": 0.39572192513368987
+    },
+    {
+      "id": "openstack:Ided7a807575c676fd094c78103201e8dee575d59:releasenotes/notes/fix-prepare-mariadb-after-restore-472112bbcdcecdb9.yaml:4:4",
+      "window": "pre",
+      "predicted": "    - title: \"Fix MariaDB failed to start after restoring from an unprepared backup file.\"\n      description: |",
+      "reference": "    This bug will appear if the backup file is created while MariaDB is processing\n    too many update requests. See the following for more details:",
+      "edit_similarity": 0.23166023166023167
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:2:97",
+      "window": "pre",
+      "predicted": "            raise Exception(\"Unable to determine architecture.\")",
+      "reference": "        cmd += [f\"--architectures={arcitecture}\")",
+      "edit_similarity": 0.4424778761061947
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:4:74",
+      "window": "pre",
+      "predicted": "                f\"Failed to install package {package_name}: {error}\"\n            self.log.error(msg)",
+      "reference": "                \"Error reading bootstrap.yaml. Mmdebstrap section missing.\"\n            raise exceptions.ConfigError(msg)",
+      "edit_similarity": 0.4343891402714932
+    },
+    {
+      "id": "openstack:Idd38c6417769296d7ab4d6640624a18d5de74da4:apt_ostree/bootstrap.py:4:89",
+      "window": "pre",
+      "predicted": "        if not self.suite:\n            self.suite = get_current_debian_version()",
+      "reference": "        suite = config.get(\"suite\")\n        if suite:",
+      "edit_similarity": 0.2556390977443609
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/prestage.py:7:355",
+      "window": "pre",
+      "predicted": "```python\n        subcloud.name,\n        subcloud.management_subnet,",
+      "reference": "        ansible_subcloud_inventory_file,\n        oam_floating_ip,\n        ansible_pass=utils.decode_and_normalize_passwd(sysadmin_password))",
+      "edit_similarity": 0.3557692307692308
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/common/utils.py:10:861",
+      "window": "pre",
+      "predicted": "        return\n",
+      "reference": "        raise Exception(\"Log file %s and its latest rotated file don't exist.\"\n                        % log_file)",
+      "edit_similarity": 0.203125
+    },
+    {
+      "id": "openstack:Ica65b1e2e8e44b96352e7d45439a2e7a9063f7c9:distributedcloud/dcmanager/db/sqlalchemy/migrate_repo/versions/017_add_subcloud_prestage_columns.py:8:22",
+      "window": "pre",
+      "predicted": "        subclouds.c.id == subcloud_id).values(\n            prestage_status=new_prestage_status,",
+      "reference": "        subclouds.c.deploy_status.like('prestage%')).values(\n        {'deploy_status': 'complete'}).execute()",
+      "edit_similarity": 0.5392156862745098
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:905",
+      "window": "pre",
+      "predicted": "// Create controller directory on luks volume if doesn't exist.\n// This directory is needed for syncing files between active-standby instances.\nstd::string controller_dir = \"/path/to/controller/directory\";",
+      "reference": "    // controllers.\n    // Note: Do not delete this directory in failure path of this function.\n    // This is to avoid rsync failure in standby controller.",
+      "edit_similarity": 0.3601108033240997
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:917",
+      "window": "pre",
+      "predicted": "        LOG_ERROR(\"Failed to execute kubernetes directory command: %d\", rc);\n        return -1;\n    }",
+      "reference": "        log(\"Command failed:  \" + kubernetesDirCmd+\" Error code: \"\n             +to_string(rc), LOG_ERR);\n        return rc;",
+      "edit_similarity": 0.5333333333333333
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:945",
+      "window": "pre",
+      "predicted": "    }\n\n    // Extract the version number from the output\n    std::string versionStr;\n    size_t pos = outResult.find(\"version\");",
+      "reference": "    }\n\n    if (outResult.empty()) {\n        log(swVersionCmd +\n        \": Could not get software version from /etc/build.info\", LOG_ERR);",
+      "edit_similarity": 0.3169811320754717
+    },
+    {
+      "id": "openstack:I26e7f5c72baf2095bea4df4ef34bec22d0f93aed:filesystem/luks/src/encryption/luks-fs-mgr.cpp:3:955",
+      "window": "pre",
+      "predicted": "```\n        int result = system(moveEncryptionFileCmd.c_str());\n        if (result != 0) {\n            log(\"Failed to move encryption-provider.yaml file\", LOG_ERROR);\n            return -1;",
+      "reference": "        rc = execCmd(moveEncryptionFileCmd, outResult);\n        if (rc != 0) {\n            log(\"Command failed:  \" + moveEncryptionFileCmd +\n                \" Error code: \" + to_string(rc), LOG_ERR);\n            return rc;",
+      "edit_similarity": 0.6618004866180048
+    },
+    {
+      "id": "openstack:Ifcbba34f432ffbeffb12ae99039de12af2933329:setup.cfg:1:22",
+      "window": "pre",
+      "predicted": "    Programming Language :: Python :: 3.11",
+      "reference": "    Programming Language :: Python :: 3.11",
+      "edit_similarity": 1.0
+    },
+    {
+      "id": "openstack:I78e27370d65c83ce7f8d36d5c38ab905a8da2a24:puppet-manifests/src/modules/platform/manifests/multipath.pp:3:21",
+      "window": "pre",
+      "predicted": "        command => '/usr/bin/systemctl enable multipathd',",
+      "reference": "      command => '/usr/bin/systemctl enable multipathd.service',",
+      "edit_similarity": 0.9180327868852459
+    },
+    {
+      "id": "openstack:I606ba5e5f8fd783d6c3f83356ded27a46e8bac56:openstack_releases/deliverable.py:3:62",
+      "window": "pre",
+      "predicted": "# NOTE(dhellmann): We want EOL, EOM and EM tags to sort last. This\n# ensures that they appear at the end of the list when sorted alphabetically.",
+      "reference": "    # assumes we won't have more than 1000 major releases of anything,\n    # and I surely hope that is a safe assumption.",
+      "edit_similarity": 0.2943396226415094
+    },
+    {
+      "id": "openstack:I91ed6a2f8bd0478d845a68716ea6e19b978c47f9:controllerconfig/controllerconfig/upgrade-scripts/76-remove-armada-if-unused.py:10:317",
+      "window": "pre",
+      "predicted": "                \" This may indicate that there are no images available for the specified architecture or that the image registry is not accessible.\")",
+      "reference": "                    \"Aborting image cleanup\")",
+      "edit_similarity": 0.32989690721649484
+    },
+    {
+      "id": "openstack:I91ed6a2f8bd0478d845a68716ea6e19b978c47f9:controllerconfig/controllerconfig/upgrade-scripts/76-remove-armada-if-unused.py:7:315",
+      "window": "pre",
+      "predicted": "    if 'filter_out_untagged' not in config:\n        config['filter_out_untagged'] = filter_out_untagged",
+      "reference": "    image_list = client.sysinv.registry_image.list(int(filter_out_untagged))\n",
+      "edit_similarity": 0.28888888888888886
+    },
+    {
+      "id": "openstack:I8dbfc0deb9f547100bb63bd6b20737734e97667b:src/actions.yaml:13:114",
+      "window": "pre",
+      "predicted": "        and CRLs to this location. The URL should be accessible from the\n        machines where Vault will operate.\n\n      crl_distribution_point: |",
+      "reference": "        revoked in Vault to this external distribution point and should only\n        be used when the Vault infrastructure is not generally accessible to\n        client endpoints used to access services secured by the Vault\n        Intermediate CA. ",
+      "edit_similarity": 0.42317380352644834
+    },
+    {
+      "id": "openstack:Icffcbad27d99a800e3f285565c0b823f697e388c:nova/tests/functional/test_boot_from_volume.py:2:203",
+      "window": "pre",
+      "predicted": "            'uuid': self.image_id,\n            'boot_index': 0,\n            'delete_on_termination': True\n        }]\n\n        server = self.servers_client.create_server(",
+      "reference": "            'boot_index': 0,\n            'uuid': self.bfv_image_id,\n            'volume_size': 1,\n        }]\n\n        server = self.api.post_server({'server': server})",
+      "edit_similarity": 0.5535714285714286
+    },
+    {
+      "id": "openstack:Icd7c55d2a5103bdbd90907b1dbfb9ccfe34c020a:neutron/agent/common/base_agent_rpc.py:3:30",
+      "window": "pre",
+      "predicted": "```python",
+      "reference": "        # exposes get_ports, under the PLUGIN topic and None namespace.",
+      "edit_similarity": 0.125
+    },
+    {
+      "id": "openstack:I4bcfe53fe87d7c9218dd0db9d7224bb323709a21:neutron/services/trunk/drivers/openvswitch/agent/trunk_manager.py:2:128",
+      "window": "pre",
+      "predicted": "                                 ('trunk_types', ['vlan']),",
+      "reference": "                                 ('tag', 0)))",
+      "edit_similarity": 0.7692307692307693
+    },
+    {
+      "id": "openstack:I5bf587fe3d8327c17d71908104c0896f8baf0973:playbooks/roles/keycloak/templates/docker-compose.yaml.j2:8:11",
+      "window": "pre",
+      "predicted": "      KEYCLOAK_ADMIN_PASSWORD: \"{{ keycloak_admin_password }}\"",
+      "reference": "      KEYCLOAK_ADMIN_PASSWORD: {{ keycloak_admin_password }}",
+      "edit_similarity": 0.9836065573770492
+    },
+    {
+      "id": "openstack:I078b40e51fef64a01757fb75ca8d5b032b971c60:doc/source/admin/security/tls.rst:11:213",
+      "window": "pre",
+      "predicted": "     listener \"tcp\" {\n       address = \"0.0.0.0:8200\"",
+      "reference": "used to access services secured by the Vault intermediate CA a CRL\ndistribution point can be used:",
+      "edit_similarity": 0.13245033112582782
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:doc/source/contributor/contributing.rst:2:17",
+      "window": "pre",
+      "predicted": "* `Bug tracker <https://bugs.launchpad.net/tempest>`_\n* `Code review <https://review.opendev.org/projects/openstack/tempest>`_",
+      "reference": "  (prefix subjects with ``[qa]`` for faster responses)\n",
+      "edit_similarity": 0.20994475138121546
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/README.rst:3:55",
+      "window": "pre",
+      "predicted": "tests. This ensures that any dependencies or state changes made during one test do not affect subsequent tests. Serial execution helps in maintaining the integrity and reliability of the test suite, especially when dealing with shared resources or configurations.",
+      "reference": "the test cases.",
+      "edit_similarity": 0.09352517985611511
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:2:37",
+      "window": "pre",
+      "predicted": "The tests should always use the Tempest implementation of the OpenStack API, ensuring consistency and leveraging Tempest's comprehensive test coverage and infrastructure. This approach helps maintain high standards for testing OpenStack components and services.",
+      "reference": "as we want to ensure that bugs aren't hidden by the official clients.",
+      "edit_similarity": 0.2545454545454545
+    },
+    {
+      "id": "openstack:I07a8cf9508d3cba33bd04afdc301bb7145153d59:tempest/serial_tests/README.rst:3:20",
+      "window": "pre",
+      "predicted": "from tempest.lib import decorators\n\nclass TestSerialExample(base.BaseV2ComputeTest):",
+      "reference": "compute nodes without any running nova server to be able to move compute hosts\nbetween availability zones. But many tempest tests start one or more nova\nservers.",
+      "edit_similarity": 0.20408163265306123
+    },
+    {
+      "id": "openstack:I90f0f8dcec6fa0112179f050d96e9d9db5956cf8:doc/source/reference/networking/designate-guide.rst:24:35",
+      "window": "pre",
+      "predicted": "   and then restarting the Neutron service to apply the changes:",
+      "reference": "   and reconfiguring with --tags neutron.",
+      "edit_similarity": 0.4380952380952381
+    },
+    {
+      "id": "openstack:I4dbaaa16e40f6a214bbb93f9e48f614c10de7d42:distributedcloud/dcmanager/common/phased_subcloud_deploy.py:3:994",
+      "window": "pre",
+      "predicted": "       payload[consts.DEPLOY_STATE_SECONDARY] == 'active':",
+      "reference": "            utils.is_req_from_another_dc(request):",
+      "edit_similarity": 0.25925925925925924
+    },
+    {
+      "id": "openstack:Ibee53e3e9ead9a0bbfdc0d60a35dcdd4b0a0dba7:zuul/driver/gitlab/gitlabconnection.py:2:158",
+      "window": "pre",
+      "predicted": "        # As stated in the merge-request-event doc 'oldrev' attribute\n        oldrev = self.payload.get('object_attributes', {}).get('oldrev')",
+      "reference": "        # is set when there is code change.\n        elif attrs['action'] == 'update' and attrs.get(\"oldrev\"):",
+      "edit_similarity": 0.3187250996015936
+    },
+    {
+      "id": "openstack:Id16d4498ff5bdf61abc22c7c015167bc747a0278:upper-constraints.txt:6:630",
+      "window": "pre",
+      "predicted": "scipy===1.9.4;python_version=='3.8'",
+      "reference": "scikit-learn===1.4.0;python_version>='3.9'",
+      "edit_similarity": 0.7532467532467533
+    },
+    {
+      "id": "openstack:If520dc802bced4acfddd75a05a31dd83bc8c6354:releasenotes/notes/remove-nova_cert-e2ee70a40e117e8a.yaml:2:5",
+      "window": "pre",
+      "predicted": "    - Removed support for the `nova-cert` service. This service was deprecated and removed in the 16.0.0 (Ocata) release of OpenStack Nova. Users are encouraged to migrate to more secure and scalable alternatives such as using certificates managed through the ` Barbican` service or other external certificate authorities.",
+      "reference": "    Tests of compute root certificates API have also been removed.",
+      "edit_similarity": 0.21649484536082475
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:7:9",
+      "window": "pre",
+      "predicted": "In a |prod-dc| configuration, you can configure |OIDC| authentication in a distributed or centralized setup. For other configurations, like All-in-One (AIO), the setup process may vary slightly. In an AIO environment, the OIDC authentication is typically configured on a single node to handle both identity and access management for the entire cluster. This approach simplifies the deployment and management but may not scale as well as a distributed setup in larger environments. The choice between distributed and centralized OIDC authentication depends on the specific requirements of your deployment, including scalability, security, and administrative overhead.",
+      "reference": "Simplex, All-in-One Duplex or Standard Cloud, follow the instructions of\ndistributed setup.",
+      "edit_similarity": 0.13210039630118892
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/centralized-vs-distributed-oidc-auth-setup.rst:8:10",
+      "window": "pre",
+      "predicted": "For other configurations, like |AIO-SX|, the OIDC authentication setup may vary based on the specific requirements and architecture of the deployment. In such cases, it is recommended to refer to the official documentation for detailed instructions tailored to those environments. Additionally, consulting with the StarlingX community or support team can provide valuable guidance and assistance in configuring OIDC authentication for your particular use case.",
+      "reference": "|AIO-DX| or Standard Cloud, follow the instructions in the distributed setup\ndocumented below.",
+      "edit_similarity": 0.16606498194945848
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/deprovision-ldap-server-authentication.rst:8:9",
+      "window": "pre",
+      "predicted": "   kubectl delete pod kube-apiserver -n kube-system",
+      "reference": "|prod-long|.",
+      "edit_similarity": 0.15873015873015872
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:13",
+      "window": "pre",
+      "predicted": "server is not present. In these environments, the |LDAP| server is hosted externally and accessed via a secure connection. This setup ensures high availability and scalability for authentication and authorization processes within the StarlingX platform.",
+      "reference": "server runs only on the SystemController's controllers, it is not present in\nthe subcloud's controllers.",
+      "edit_similarity": 0.2184873949579832
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:19",
+      "window": "pre",
+      "predicted": "```rst\n<https://github.com/dexidp/dex>`_.\n\nDex is an open-source identity provider that supports multiple authentication methods and can be easily integrated into Kubernetes for handling user authentication. It acts as a bridge between Kubernetes and various identity providers, including LDAP, SAML, and OAuth2.",
+      "reference": "<https://github.com/dexidp/dex>`__. The **oidc-auth-apps** application also\nprovides an |OIDC| client for accessing the username and password |OIDC| login\npage for user authentication and retrieval of tokens. An **oidc-auth** CLI\nscript can also be used for |OIDC| user authentication and retrieval of tokens.",
+      "edit_similarity": 0.37037037037037035
+    },
+    {
+      "id": "openstack:I61c5b7f322ac8159b649c70eeaa0195d97ab12c7:doc/source/security/kubernetes/overview-of-ldap-servers.rst:8:9",
+      "window": "pre",
+      "predicted": "|OpenLDAP| or |Microsoft Active Directory|. This allows for centralized user and group management, enhancing security and simplifying access control within the Kubernetes environment. To configure |prod-long| to use an LDAP server, follow these steps:\n",
+      "reference": "Windows Active Directory server or the Local |LDAP| server, to authenticate\nusers of the Kubernetes API, using the **oidc-auth-apps** application.",
+      "edit_similarity": 0.33753148614609574
+    },
+    {
+      "id": "openstack:I53d0ccea59bdee4cd6d974dc13a4c49eb51a8597:sysinv/sysinv/sysinv/sysinv/api/middleware/parsable_error.py:7:108",
+      "window": "pre",
+      "predicted": "# HTML unescape converts HTML entities back into their corresponding characters.",
+      "reference": "                    # corresponding chars for human-readable text",
+      "edit_similarity": 0.31724137931034485
+    },
+    {
+      "id": "openstack:If9adeb5f9be1e7d79ac05076589374a045246668:logscraper/logscraper.py:4:511",
+      "window": "pre",
+      "predicted": "                            \"log formats: %s and %s\",",
+      "reference": "                                 \"types\", type(merged[k]), type(v))",
+      "edit_similarity": 0.55
+    },
+    {
+      "id": "openstack:I5dda9767c1c66597291211a087f7c917ba990651:test/unit/common/middleware/test_proxy_logging.py:1:859",
+      "window": "pre",
+      "predicted": "            # Create a mock response object",
+      "reference": "            fake_app = FakeApp(body=body_iter,",
+      "edit_similarity": 0.38202247191011235
+    },
+    {
+      "id": "openstack:I4a24a953a61239a8a52c9e7a2b68a7ec779f7a3d:doc/source/kubernetes.rst:2:500",
+      "window": "pre",
+      "predicted": "            :attr:`providers.[kubernetes].pools.labels.name`,\n            :attr:`providers.[kubernetes].pools.labels.type`,\n            :attr:`providers.[kubernetes].pools.labels.annotations`,\n            :attr:`providers.[kubernetes].pools.labels.labels` and\n            :attr:`providers.[kubernetes].pools.labels.dynamic-labels`.\n",
+      "reference": "            If a `spec` is provided, then Nodepool will supply the\n            contents of this value verbatim to Kubernetes as the\n            ``spec`` attribute of the Kubernetes ``Pod`` definition.\n            No other Nodepool attributes are used, including any\n            default values set at the provider level (such as\n            `default-label-cpu` and similar).",
+      "edit_similarity": 0.44886363636363635
+    },
+    {
+      "id": "openstack:I4a24a953a61239a8a52c9e7a2b68a7ec779f7a3d:nodepool/driver/openshiftpods/config.py:2:93",
+      "window": "pre",
+      "predicted": "            'annotations': dict,\n            'nodeSelector': dict,",
+      "reference": "            'dynamic-labels': dict,\n            'annotations': dict,",
+      "edit_similarity": 0.47761194029850745
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/debian/deb_folder/patches/0001-Add-vault-manager-termination-wait-time.patch:1:25",
+      "window": "pre",
+      "predicted": "+    # to terminate before proceding with the conversion of storage from PVC to EBS volumes.",
+      "reference": "+    # kubernetes secrets.",
+      "edit_similarity": 0.2542372881355932
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/debian/deb_folder/patches/0001-Add-vault-manager-termination-wait-time.patch:1:28",
+      "window": "pre",
+      "predicted": "+    # The maximum tries before proceding with the conversion of storage",
+      "reference": "+    # from PVC to kubernetes secrets.",
+      "edit_similarity": 0.34545454545454546
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/debian/deb_folder/patches/0001-Add-vault-manager-termination-wait-time.patch:1:31",
+      "window": "pre",
+      "predicted": "+    # Number of seconds slept between each tries before proceeding with the next iteration.",
+      "reference": "+    # the conversion of storage from PVC to kubernetes secrets.",
+      "edit_similarity": 0.32051282051282054
+    },
+    {
+      "id": "openstack:Ie0d4c1fffccf59618cb10bc1e201468f5ffceed0:vault-helm/vault-helm/helm-charts/vault-init.yaml:1:1522",
+      "window": "pre",
+      "predicted": "            log $WARNING \"Maximum time reached waiting\" \\",
+      "reference": "                \"for the previous pod to be terminated.\"",
+      "edit_similarity": 0.4424778761061947
+    }
+  ]
+}

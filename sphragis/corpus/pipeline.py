@@ -14,7 +14,7 @@ from typing import Any
 
 from sphragis.corpus.dedup import dedup
 from sphragis.corpus.manifest import corpus_manifest
-from sphragis.corpus.split import assign_windows, straddling_changes
+from sphragis.corpus.split import partition, straddling_changes
 
 
 def run_dedup(
@@ -26,10 +26,15 @@ def run_dedup(
 
 def run_split(
     examples: Sequence[Mapping[str, Any]], bounds: Mapping[str, tuple[str, str]]
-) -> tuple[dict[str, list[dict[str, Any]]], list[str]]:
-    """Time windows, plus the straddling-change check that must always come back empty."""
-    windows = assign_windows(examples, bounds)
-    return windows, straddling_changes(windows)
+) -> tuple[dict[str, list[dict[str, Any]]], list[str], list[str]]:
+    """Time windows, plus the two checks that must both come back empty.
+
+    Straddling changes would put one change on both sides of a boundary. Unassigned
+    changes match no window at all and vanish without trace, which is the worse of the two
+    because nothing downstream can tell it happened.
+    """
+    windows, unassigned = partition(examples, bounds)
+    return windows, straddling_changes(windows), unassigned
 
 
 def freeze_windows(

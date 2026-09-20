@@ -1,0 +1,27 @@
+# The third training length: 256 examples a client, on the rebuilt AOSP corpus.
+#
+# 64 and 128 gave a detector that rises with local training and a classifier that does not
+# survive a repacking. Whether the detector keeps rising needs a third point, and 256 is the
+# largest this corpus supports: a project must hold 256 usable examples after deduplication
+# to fill even one client, which leaves five AOSP C++ projects against four of Qt's,
+# C(9, 5) = 126 groupings and a permutation floor of 0.008.
+#
+# Left out because they cannot fill one client at this size, not by choice: AOSP's bionic
+# (191), adb (114), update-engine (32), netd (9) and frameworks-native (239); Qt's qtgraphs
+# (281) and qttools (258), too close to the line once refused rows are removed; and every
+# OpenStack Python project, the largest of which is starlingx-test at 370 but whose siblings
+# are near 200. The Python cell is therefore absent at this length rather than half present,
+# since a content control with one organization in it controls nothing.
+#
+# Corpora live in $CLIENTS = $HOME/corpus/clients3. Paths are relative to $CLIENTS.
+aosp:cpp/art=platform_art.jsonl
+aosp:cpp/perfetto=platform_external_perfetto.jsonl
+aosp:cpp/frameworks-av=platform_frameworks_av.jsonl
+aosp:cpp/hardware-interfaces=platform_hardware_interfaces.jsonl
+aosp:cpp/system-core=platform_system_core.jsonl
+qt:cpp/qt-creator=qt-creator_qt-creator.jsonl
+qt:cpp/qtbase=qt_qtbase.jsonl
+qt:cpp/qtdeclarative=qt_qtdeclarative.jsonl
+qt:cpp/qtmultimedia=qt_qtmultimedia.jsonl
+openstack:docs/starlingx-docs=starlingx_docs.jsonl
+qt:docs/qtdoc=qt_qtdoc.jsonl

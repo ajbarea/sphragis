@@ -1,0 +1,25 @@
+# RQ2's second client run: the cell that separates an organization from its codebase family,
+# several projects per organization in one language on both sides. C++ in AOSP and in Qt, with
+# the Python and documentation cells of the first run kept for comparison.
+# Paths are relative to $CLIENTS (see scripts/client_updates.sbatch).
+aosp:cpp/art=platform_art.jsonl
+aosp:cpp/frameworks-av=platform_frameworks_av.jsonl
+aosp:cpp/system-core=platform_system_core.jsonl
+aosp:cpp/hardware-interfaces=platform_hardware_interfaces.jsonl
+aosp:cpp/adb=platform_packages_modules_adb.jsonl
+aosp:cpp/update-engine=platform_system_update_engine.jsonl
+qt:cpp/qt-creator=qt-creator_qt-creator.jsonl
+qt:cpp/qtbase=qt_qtbase.jsonl
+qt:cpp/qtdeclarative=qt_qtdeclarative.jsonl
+qt:cpp/qtmultimedia=qt_qtmultimedia.jsonl
+qt:cpp/qtgraphs=qt_qtgraphs.jsonl
+qt:cpp/qttools=qt_qttools.jsonl
+openstack:python/nova=openstack_nova.jsonl
+openstack:python/neutron=openstack_neutron.jsonl
+openstack:python/ironic=openstack_ironic.jsonl
+openstack:python/swift=openstack_swift.jsonl
+openstack:python/starlingx-test=starlingx_test.jsonl
+openstack:python/starlingx-config=starlingx_config.jsonl
+qt:python/pyside-setup=pyside_pyside-setup.jsonl
+openstack:docs/starlingx-docs=starlingx_docs.jsonl
+qt:docs/qtdoc=qt_qtdoc.jsonl

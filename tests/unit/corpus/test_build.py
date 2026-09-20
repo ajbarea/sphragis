@@ -101,6 +101,19 @@ def test_a_diff_failure_is_counted_not_raised() -> None:
     assert examples == [] and drops["diff_error"] == 1
 
 
+def test_a_comments_failure_is_counted_not_raised() -> None:
+    """Mirrors the diff-failure test: one unreachable change must not abort a month's build."""
+    _, diff_for, calls = _fetchers()
+
+    def failing_comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        raise RuntimeError("gerrit returned 503 after 5 attempts")
+
+    examples, drops = build_from_change("openstack", CHANGE, failing_comments, diff_for)
+    assert examples == []
+    assert drops["comment_error"] == 1
+    assert calls == [], "no diff is requested for a change whose comments never arrived"
+
+
 def test_several_comments_on_one_hunk_make_one_example_carrying_all_of_them() -> None:
     # The spec says "the inline reviewer comments anchored inside that hunk", plural.
     # One example per comment would emit identical before/after rows that dedup then
@@ -203,3 +216,86 @@ def test_consistently_scrubbed_ids_compare_fine() -> None:
 
     assert is_reviewer_comment({"author": {"_account_id": "aaa"}}, "bbb") is True
     assert is_reviewer_comment({"author": {"_account_id": "aaa"}}, "aaa") is False
+
+
+def test_ill_posed_examples_are_dropped_and_counted_by_reason() -> None:
+    # The drop profile is the Stage 1 sampling section; a silent drop would make the
+    # corpus look cleaner than it is.
+    def comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        return {"nova/f.py": [{"patch_set": 1, "line": 2, "message": "unused import"}]}
+
+    def deletion(number: int, rev: int, path: str, base: int) -> dict[str, Any]:
+        return {"content": [{"ab": ["def f(x):"]}, {"a": ["    import os"], "b": []}]}
+
+    examples, drops = build_from_change("openstack", CHANGE, comments, deletion)
+    assert examples == []
+    assert drops["ill_posed_empty_after"] == 1
+
+
+def test_a_well_posed_example_is_unaffected_by_the_filter() -> None:
+    comments, diff_for, _ = _fetchers()
+    examples, drops = build_from_change("openstack", CHANGE, comments, diff_for)
+    assert len(examples) == 1
+    assert all(v == 0 for k, v in drops.items() if k.startswith("ill_posed_"))
+
+
+@pytest.mark.parametrize(
+    "message", ["Done", "done.", " Ditto ", "+1", "LGTM!", "Thanks :)", "Fixed"]
+)
+def test_an_acknowledgement_is_not_an_instruction(message: str) -> None:
+    from sphragis.corpus.build import is_acknowledgement
+
+    assert is_acknowledgement(message)
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["done, but rename the variable", "Done? This still leaks the handle", "spaces around +1", ""],
+)
+def test_a_comment_with_anything_to_act_on_survives(message: str) -> None:
+    from sphragis.corpus.build import is_acknowledgement
+
+    assert not is_acknowledgement(message)
+
+
+def test_a_hunk_whose_only_comment_is_an_acknowledgement_yields_no_example() -> None:
+    """The target is unreachable from a prompt that says only "Done"."""
+    only_ack = {"nova/f.py": [{"patch_set": 1, "line": 2, "message": "Done"}]}
+    _, diff_for, calls = _fetchers()
+    examples, drops = build_from_change("openstack", CHANGE, lambda n: only_ack, diff_for)
+    assert examples == []
+    assert drops["acknowledgement"] == 1
+    assert calls == [], "an acknowledgement is dropped before its diff is fetched"
+
+
+def test_an_acknowledgement_beside_a_real_comment_is_dropped_and_the_example_kept() -> None:
+    mixed = {
+        "nova/f.py": [
+            {"patch_set": 1, "line": 2, "message": "spaces around the operator"},
+            {"patch_set": 1, "line": 2, "message": "+1"},
+        ]
+    }
+    comments, diff_for, _ = _fetchers()
+    examples, drops = build_from_change("openstack", CHANGE, lambda n: mixed, diff_for)
+    assert [e["comments"] for e in examples] == [["spaces around the operator"]]
+    assert drops["acknowledgement"] == 1
+
+
+def test_context_is_carried_and_changes_nothing_else() -> None:
+    """Adding context must be purely additive: same examples, same targets, same drops."""
+    comments, diff_for, _ = _fetchers()
+    without, drops_without = build_from_change(
+        "openstack", CHANGE, comments, diff_for, context_lines=0
+    )
+    with_ctx, drops_with = build_from_change(
+        "openstack", CHANGE, comments, diff_for, context_lines=3
+    )
+
+    def strip(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [{k: v for k, v in r.items() if not k.startswith("context_")} for r in rows]
+
+    assert strip(with_ctx) == strip(without)
+    assert drops_with == drops_without
+    assert with_ctx[0]["context_before"] == "def f(x):"
+    assert with_ctx[0]["context_after"] == "\ndef g():"
+    assert without[0]["context_before"] == "" and without[0]["context_after"] == ""

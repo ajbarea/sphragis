@@ -1,0 +1,98 @@
+[project]
+site_name = "Sphragis"
+site_description = "A pre-registered test of whether an organization's house style is learnable from the code it reviews"
+site_author = "AJ Barea"
+site_url = "https://ajbarea.github.io/sphragis/"
+repo_url = "https://github.com/ajbarea/sphragis"
+repo_name = "ajbarea/sphragis"
+copyright = "AJ Barea"
+
+nav = [
+  { "Home" = "index.md" },
+  { "Registered decisions" = "registered-decisions.md" },
+  { "Outcome-neutral tests" = "outcome-neutral.md" },
+  { "Artifact index" = "artifacts.md" },
+  { "Research log" = "research-log.md" },
+]
+
+extra_css = ["stylesheets/extra.css"]
+
+# ---------------------------------------------------------------------------
+# Theme
+# ---------------------------------------------------------------------------
+[project.theme]
+name = "material"
+language = "en"
+custom_dir = "overrides"
+
+features = [
+    # Announcement bar
+    "announce.dismiss",
+
+    # Code blocks
+    "content.code.annotate",
+    "content.code.copy",
+    "content.code.select",
+
+    # Content features
+    "content.footnote.tooltips",
+    "content.tabs.link",
+    "content.tooltips",
+
+    # Navigation
+    "navigation.footer",
+    "navigation.indexes",
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    "navigation.instant.progress",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.top",
+    "navigation.tracking",
+
+    # Search
+    "search.highlight",
+    "search.suggest",
+]
+
+# ---------------------------------------------------------------------------
+# Color palette — light/dark toggle. Sealing wax against ink, which is the one
+# pairing the name earns; the sisters take indigo/amber and teal/deep-purple.
+# ---------------------------------------------------------------------------
+[[project.theme.palette]]
+scheme = "slate"
+primary = "deep-orange"
+accent = "indigo"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "deep-orange"
+accent = "indigo"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to dark mode"
+
+# ---------------------------------------------------------------------------
+# Fonts
+# ---------------------------------------------------------------------------
+[project.theme.font]
+text = "Inter"
+code = "JetBrains Mono"
+
+# ---------------------------------------------------------------------------
+# Icon
+# ---------------------------------------------------------------------------
+[project.theme.icon]
+logo = "material/seal"
+
+# ---------------------------------------------------------------------------
+# Social links (footer)
+# ---------------------------------------------------------------------------
+[project.extra]
+generator = false
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/ajbarea/sphragis"
+name = "Sphragis on GitHub"
