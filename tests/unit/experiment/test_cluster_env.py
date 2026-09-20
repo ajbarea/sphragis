@@ -7,7 +7,6 @@ the real file under bash rather than reading it.
 
 from __future__ import annotations
 
-import os
 import platform
 import re
 import subprocess
@@ -396,15 +395,13 @@ def test_every_machine_builds_on_one_pinned_interpreter(tmp_path: Path) -> None:
 def test_a_job_records_the_commit_its_checkout_holds_at_start(tmp_path: Path) -> None:
     _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
     _fake_venv(tmp_path)
-    # Hooks export GIT_INDEX_FILE and friends; inherited, they point these commands at the
-    # repository being committed to instead of the scratch one.
-    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
 
+    # No env filtering here: `tests/conftest.py` strips git's exported environment once for
+    # the whole run, because one test file defending itself left the next one exposed.
     def git(*args: str) -> str:
         return subprocess.run(
             ["git", "-c", "user.email=t@t", "-c", "user.name=t", *args],
             cwd=tmp_path,
-            env=env,
             capture_output=True,
             text=True,
             check=True,
