@@ -231,7 +231,11 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   removed the sampling term. The null is deflated more (0.627 against 0.844 at 200 rounds) and
   the separation widens. A per-draw model predicts every cell within 0.01
   (`scripts/masking_mechanism.py`). Below some mask size, masking is worse than nothing against
-  a scale-free statistic.
+  a scale-free statistic. **Reproduced on the rebuilt corpus at 128 examples a client**
+  (`defence-curve-cpp-rebuilt-c128-mid.json`): five of six rows peak at a 1x mask read as distance
+  from chance, and AOSP's true-positive rate at 1% false alarms goes 0.794 to 0.885 at 50 rounds.
+  Qt's detector is inverted there, which is signal once the rule is flipped. The script's default
+  rounds of 1, 10 and 100 cannot show any of this, since the detector saturates by 100.
 - [x] **The motivating deployment, cited** (Luo et al., arXiv:2412.01072, TOSEM): federated
   program repair over up to 100 clients with QLoRA and FedAvg, adapters uploaded to a central
   server, privacy claimed from not centralizing raw data, no threat model, DP and secure

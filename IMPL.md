@@ -27,7 +27,7 @@ they transmit. FedSA-LoRA's A is the best identifier of the three factor reading
 that finds Qt on the rebuilt corpus. PFAdapter's q and k carry AOSP at 0.778 against 0.842 for the
 whole update. SDFLoRA's shared subspace reaches 0.917 at a family-wise p of 0.0012 where the intact
 update identifies nothing, so the cut is what makes the source readable rather than what hides it.
-Masking fails against a scale-free detector and can help it.
+Masking fails against a scale-free detector and can help it, on both corpora: on the rebuilt one a 1x mask raises AOSP's catch rate at one false alarm in a hundred from 0.794 to 0.885.
 
 **The second packing landed** (job 149607, analysed 2026-09-19). Same clients, same training seed,
 another assignment of examples to clients: the detector's rise with training length replicates
