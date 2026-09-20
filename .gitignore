@@ -32,3 +32,6 @@ COMMITS.md
 # at IO setup after the queue wait.
 logs/*
 !logs/.gitkeep
+
+# The built docs site. `zensical build` writes it; the workflow publishes from the job.
+site/

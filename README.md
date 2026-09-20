@@ -50,6 +50,9 @@ sphragis/
   corpus/      fetch, scrub, build, dedup, split, freeze   the review corpus
   measure/     score, stats, contamination                 the instruments the gate reads
   provenance.py                                            commit, versions, platform
+docs/                       the documentation site: the question, the registered
+                            decisions, the outcome-neutral tests, the artifact index
+docs/research-log.md                                       the dated record
 docs/superpowers/specs/                                    the design of record
 docs/superpowers/plans/                                    task-by-task execution plans
 ```
@@ -60,7 +63,32 @@ docs/superpowers/plans/                                    task-by-task executio
 make sync          # install
 make test          # the suite
 make lint          # ruff format + ruff check + ty
+make docs          # build the documentation site into site/
 ```
+
+## Documentation
+
+The site is what a reader who is not going to read the code needs: the question and the
+gate, every decision that is fixed before the seal opens with the evidence that chose it,
+the checks that have to pass before the gate is read at all, and an index of every
+committed measurement with the script that wrote it.
+
+| page | holds |
+|---|---|
+| `docs/index.md` | the question, the directional hypothesis, the pass rule, the seal |
+| `docs/registered-decisions.md` | every registered choice, and the measurement behind it |
+| `docs/outcome-neutral.md` | what must hold for the study to be interpretable |
+| `docs/artifacts.md` | generated: every artifact under `datasets/results/` and its writer |
+| `docs/research-log.md` | the dated record, superseded readings included |
+
+`make docs-serve` renders it locally with live reload. It is not published: this repository
+is private and the test window is sealed, so the workflow builds the site on every push and
+the publish step waits on that decision.
+
+Every figure on the site is asserted against the artifact that produced it. `make
+docs-harvest` fails on a number that has drifted from its measurement or on a stale artifact
+index, and the test suite runs the same check, so a page cannot quietly outlive the
+apparatus.
 
 ## Building a corpus
 

@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify
+.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -136,6 +136,20 @@ cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aa
 	    --export=ALL,UV_VERSION=\$$version scripts/cluster_env.sh); \
 	    log=logs/sphragis-cluster-env-$(CLUSTER)-\$${job%%;*}.log; [ -n \"\$${job%%;*}\" ] && cat \$$log; \
 	    grep -q CLUSTER_ENV_OK \$$log 2>/dev/null || { echo 'the build job did not finish: no CLUSTER_ENV_OK'; exit 1; }; fi"
+
+docs:                      ## Build the documentation site into site/
+	uv run --no-sync --no-active zensical build --clean
+
+docs-serve:                ## Serve the documentation site with live reload
+	uv run --no-sync --no-active zensical serve
+
+docs-index:                ## Regenerate docs/artifacts.md from what the scripts declare they write
+	uv run --no-sync --no-active python harvest.py --index
+
+docs-harvest:              ## Assert every figure on the site against its artifact
+	@# Also fails when docs/artifacts.md is stale. The test suite runs the same check, so a
+	@# page that has drifted from its measurement fails CI rather than waiting for a reader.
+	uv run --no-sync --no-active python harvest.py --check
 
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify
