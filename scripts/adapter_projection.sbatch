@@ -26,13 +26,17 @@ PATTERN="${PATTERN:-sphragis-adapters-clients/*-c*/adapter_model.safetensors}"
 # client-adapters directory: a glob or another prefix there would name the output after nothing.
 FIRST="${PATTERN%%/*}"
 case "$FIRST" in
-  sphragis-adapters-clients*) ;;
-  *) echo "PATTERN must start with a sphragis-adapters-clients directory, got $FIRST" >&2; exit 1 ;;
-esac
-case "$FIRST" in
   *[\*\?\[]*) echo "PATTERN's first directory must be literal, got $FIRST" >&2; exit 1 ;;
 esac
-RESULT_SUFFIX="${FIRST#sphragis-adapters-clients}"
+# The suffix is derived from the adapters read, so two runs over different adapters can never
+# share an output name. `sphragis-adapters-clients-X` gives `-X`, which is what every committed
+# result is named after; any other `sphragis-adapters-Y` gives `-Y`, so the dual-adapter runs
+# name themselves without colliding with the single-adapter ones.
+case "$FIRST" in
+  sphragis-adapters-clients*) RESULT_SUFFIX="${FIRST#sphragis-adapters-clients}" ;;
+  sphragis-adapters-*) RESULT_SUFFIX="-${FIRST#sphragis-adapters-}" ;;
+  *) echo "PATTERN must start with a sphragis-adapters directory, got $FIRST" >&2; exit 1 ;;
+esac
 # Another sketch width is another set of vectors, so it names its own file.
 [ "${SKETCH:-16}" = 16 ] || RESULT_SUFFIX="$RESULT_SUFFIX-w$SKETCH"
 export RESULT_SUFFIX
