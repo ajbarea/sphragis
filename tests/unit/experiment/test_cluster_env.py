@@ -137,6 +137,88 @@ def test_no_job_replaces_the_release_trap(script: Path) -> None:
     assert not offending, f"{script.name} replaces the release trap: {offending}"
 
 
+def _name_after(home: Path, pattern: str) -> subprocess.CompletedProcess[str]:
+    _fake_uv(home / ".local" / "bin" / _MACHINE)
+    _fake_venv(home)
+    return _source(home, home, f'name_result_after_adapters "{pattern}"; echo "[$RESULT_SUFFIX]"')
+
+
+def _adapters(home: Path, directory: str, *clients: str) -> None:
+    for client in clients:
+        (home / "scratch" / directory / client).mkdir(parents=True, exist_ok=True)
+
+
+def test_the_result_is_named_after_the_adapters_it_reads(tmp_path: Path) -> None:
+    result = _name_after(
+        tmp_path, "sphragis-adapters-clients-cpp-early/*-c*/adapter_model.safetensors"
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("[-cpp-early]")
+
+
+def test_the_default_adapters_keep_the_empty_suffix(tmp_path: Path) -> None:
+    result = _name_after(tmp_path, "sphragis-adapters-clients/*-c*/adapter_model.safetensors")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("[]")
+
+
+def test_the_withheld_adapters_name_themselves_apart(tmp_path: Path) -> None:
+    """Both halves live in one directory, so the selector is what tells the two geometries apart."""
+    _adapters(tmp_path, "sphragis-adapters-dual-t2", "a-c0", "a-c0-local")
+    result = _name_after(tmp_path, "sphragis-adapters-dual-t2/*-local/adapter_model.safetensors")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("[-dual-t2-local]")
+
+
+def test_a_selector_spanning_both_halves_is_refused(tmp_path: Path) -> None:
+    """`*-c*` matches `a-c0-local` too, and one file cannot hold two geometries."""
+    _adapters(tmp_path, "sphragis-adapters-dual-t2", "a-c0", "a-c0-local")
+    result = _name_after(tmp_path, "sphragis-adapters-dual-t2/*-c*/adapter_model.safetensors")
+    assert result.returncode != 0
+    assert "two geometries" in result.stderr
+
+
+def test_a_selector_that_cannot_reach_the_withheld_half_is_the_transmitted_one(
+    tmp_path: Path,
+) -> None:
+    _adapters(tmp_path, "sphragis-adapters-dual-t2", "a-c0", "a-c0-local")
+    result = _name_after(tmp_path, "sphragis-adapters-dual-t2/*-c[0-9]/adapter_model.safetensors")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("[-dual-t2]")
+
+
+def test_a_directory_without_withheld_adapters_keeps_its_name(tmp_path: Path) -> None:
+    """A single-adapter run's `*-c*` is not ambiguous, and must not start being refused."""
+    _adapters(tmp_path, "sphragis-adapters-clients-cpp-rebuilt", "a-c0", "a-c1")
+    result = _name_after(
+        tmp_path, "sphragis-adapters-clients-cpp-rebuilt/*-c*/adapter_model.safetensors"
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("[-cpp-rebuilt]")
+
+
+def test_a_globbed_first_directory_is_refused(tmp_path: Path) -> None:
+    result = _name_after(tmp_path, "sphragis-adapters-*/*-c*/adapter_model.safetensors")
+    assert result.returncode != 0
+    assert "must be literal" in result.stderr
+
+
+def test_a_directory_that_is_not_an_adapters_directory_is_refused(tmp_path: Path) -> None:
+    result = _name_after(tmp_path, "scratch/*-c*/adapter_model.safetensors")
+    assert result.returncode != 0
+    assert "must start with a sphragis-adapters directory" in result.stderr
+
+
+@pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
+def test_no_job_derives_the_adapters_name_for_itself(script: Path) -> None:
+    """One definition: a job with its own copy drifts from the other's."""
+    text = script.read_text()
+    if "PATTERN=" not in text:
+        pytest.skip("reads no adapters")
+    assert "name_result_after_adapters" in text
+    assert "sphragis-adapters-clients*)" not in text, "a second copy of the derivation"
+
+
 def test_there_are_scripts_to_check() -> None:
     assert len(_SCRIPTS) >= 5
 
