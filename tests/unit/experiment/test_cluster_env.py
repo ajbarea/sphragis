@@ -7,8 +7,10 @@ the real file under bash rather than reading it.
 
 from __future__ import annotations
 
+import os
 import platform
 import re
+import signal
 import subprocess
 import time
 from pathlib import Path
@@ -782,3 +784,170 @@ def test_a_job_outside_slurm_is_not_renamed(tmp_path: Path) -> None:
 
     assert "claimed" in result.stdout
     assert not recorded.exists(), "a local run tried to rename a job"
+
+
+def _kill_mid_job(root: Path, signal_number: int, **env: str) -> Path:
+    """Start pilot.sbatch, stop it while its work is running, and return the claim it left.
+
+    The whole process group goes, so the fake uv cannot finish writing after its job is gone,
+    which is what a SIGKILLed Slurm job looks like from the filesystem.
+    """
+    home, checkout = _prepare(root)
+    job = subprocess.Popen(
+        ["bash", str(checkout / "scripts" / "pilot.sbatch")],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=checkout,
+        env=_job_env(home, checkout, {"FAKE_ID": "killed", "FAKE_SLEEP": "30", **env}),
+        start_new_session=True,
+    )
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and not sorted(home.glob("*.json")):
+        time.sleep(0.05)
+    claims = sorted(home.glob("*.json"))
+    os.killpg(os.getpgid(job.pid), signal_number)
+    job.communicate(timeout=30)
+    assert len(claims) == 1, f"the job did not reach its claim: {claims}"
+    return claims[0]
+
+
+def test_a_killed_job_leaves_an_empty_claim_that_records_who_made_it(tmp_path: Path) -> None:
+    claim = _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
+    assert claim.read_text() == "", "a killed job's claim holds no result"
+    assert claim.with_suffix(".json.claim").read_text().strip() == "1001"
+
+
+def test_a_requeued_job_reclaims_the_empty_claim_its_kill_left(tmp_path: Path) -> None:
+    """Slurm keeps the job id across a requeue, so the leftover is this job's own."""
+    _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
+    requeued = _run_job("pilot.sbatch", tmp_path, FAKE_ID="requeued", SLURM_JOB_ID="1001")
+    assert requeued.returncode == 0, requeued.stderr
+    assert "reclaiming it" in requeued.stderr
+    assert set(_results(tmp_path).values()) == {"written by requeued\n"}
+
+
+def test_another_job_does_not_take_over_a_claim_it_cannot_prove_is_dead(tmp_path: Path) -> None:
+    """Without Slurm to ask, an empty claim owned by someone else may still be live work."""
+    _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
+    other = _run_job("pilot.sbatch", tmp_path, FAKE_ID="other", SLURM_JOB_ID="2002")
+    assert other.returncode != 0
+    assert "another job has claimed it" in other.stderr
+    assert set(_results(tmp_path).values()) == {""}, "the claim is intact and still unfilled"
+
+
+def test_a_claim_whose_owner_has_left_the_queue_is_reclaimed(tmp_path: Path) -> None:
+    claim = _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    squeue = bin_dir / "squeue"
+    squeue.write_text("#!/bin/sh\nexit 0\n")  # the job is gone, so the listing is empty
+    squeue.chmod(0o755)
+    later = _run_job(
+        "pilot.sbatch",
+        tmp_path,
+        FAKE_ID="later",
+        SLURM_JOB_ID="2002",
+        PATH=f"{bin_dir}:/usr/bin:/bin",
+    )
+    assert later.returncode == 0, later.stderr
+    assert "no longer queued" in later.stderr
+    assert claim.read_text() == "written by later\n"
+
+
+def test_an_empty_claim_with_no_owner_recorded_is_left_alone(tmp_path: Path) -> None:
+    """Claims made before the record existed, and by runs outside Slurm, name nobody."""
+    home, _ = _prepare(tmp_path)
+    (home / "pilot-outcomes-some-other-run.json").touch()
+    job = _run_job("pilot.sbatch", tmp_path, FAKE_ID="job", SLURM_JOB_ID="1001")
+    assert job.returncode != 0
+    assert "another job has claimed it" in job.stderr
+    assert set(_results(tmp_path).values()) == {""}
+
+
+def test_a_claim_whose_owner_is_still_queued_is_left_alone(tmp_path: Path) -> None:
+    """An empty claim is what a running job's claim looks like before it writes."""
+    _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    squeue = bin_dir / "squeue"
+    squeue.write_text(
+        '#!/bin/sh\necho "        1001 tigris sphragis ajb6289  R  0:42      1 node1"\n'
+    )
+    squeue.chmod(0o755)
+    later = _run_job(
+        "pilot.sbatch",
+        tmp_path,
+        FAKE_ID="later",
+        SLURM_JOB_ID="2002",
+        PATH=f"{bin_dir}:/usr/bin:/bin",
+    )
+    assert later.returncode != 0
+    assert "another job has claimed it" in later.stderr
+    assert set(_results(tmp_path).values()) == {""}
+
+
+def test_a_result_already_written_is_never_reclaimed_by_its_own_job(tmp_path: Path) -> None:
+    """Only an empty claim is abandoned; a finished measurement still needs OVERWRITE."""
+    assert _run_job("pilot.sbatch", tmp_path, FAKE_ID="first", SLURM_JOB_ID="1001").returncode == 0
+    again = _run_job("pilot.sbatch", tmp_path, FAKE_ID="again", SLURM_JOB_ID="1001")
+    assert again.returncode != 0
+    assert "OVERWRITE=1" in again.stderr
+    assert set(_results(tmp_path).values()) == {"written by first\n"}
+
+
+def test_a_result_written_before_the_kill_is_not_reclaimed(tmp_path: Path) -> None:
+    """A job can be killed after writing its result; what it left is a measurement, not a claim."""
+    home, _ = _prepare(tmp_path)
+    result = home / "pilot-outcomes-some-other-run.json"
+    result.write_text("written by killed\n")
+    result.with_suffix(".json.claim").write_text("1001\n")
+    requeued = _run_job("pilot.sbatch", tmp_path, FAKE_ID="requeued", SLURM_JOB_ID="1001")
+    assert requeued.returncode != 0
+    assert "OVERWRITE=1" in requeued.stderr
+    assert result.read_text() == "written by killed\n"
+
+
+def test_a_cancelled_job_releases_its_claim_before_slurm_kills_it(tmp_path: Path) -> None:
+    """scancel sends SIGTERM first; the claim goes with it, leaving nothing to reclaim."""
+    claim = _kill_mid_job(tmp_path, signal.SIGTERM, SLURM_JOB_ID="1001")
+    assert not claim.exists(), "a cancelled job left its claim behind"
+    assert not claim.with_suffix(".json.claim").exists()
+
+
+def test_a_term_between_commands_still_releases_the_claim(tmp_path: Path) -> None:
+    """scancel's SIGTERM releases the claim even when no child is running to carry it.
+
+    The shell busy-waits in bash itself rather than in a child, so the signal reaches the shell
+    directly rather than failing a command that `set -e` then acts on. Bash runs the EXIT trap
+    on a fatal signal, and this holds it to that.
+    """
+    home = tmp_path / "home"
+    home.mkdir()
+    claim = home / "result.json"
+    shell = subprocess.Popen(
+        [
+            "bash",
+            "-c",
+            f'set -euo pipefail; SPHRAGIS_BUILDING_ENV=1 source "{_ENV}"; '
+            f'claim_result OUT "{claim}"; while :; do :; done',
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(home), "PATH": "/usr/bin:/bin", "SLURM_JOB_ID": "1001"},
+    )
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline and not claim.exists():
+        time.sleep(0.05)
+    assert claim.exists(), "the shell never reached its claim"
+    shell.terminate()
+    shell.communicate(timeout=30)
+    assert not claim.exists(), "a shell signalled between commands kept its claim"
+
+
+def test_a_finished_job_leaves_no_claim_record_beside_its_result(tmp_path: Path) -> None:
+    home, _ = _prepare(tmp_path)
+    assert _run_job("pilot.sbatch", tmp_path, FAKE_ID="done", SLURM_JOB_ID="1001").returncode == 0
+    assert sorted(home.glob("*.claim")) == []

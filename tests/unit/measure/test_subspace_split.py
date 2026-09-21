@@ -56,3 +56,47 @@ def test_balanced_accuracy_does_not_reward_answering_the_larger_class() -> None:
     accuracy, balanced = split.attribute(rows, labels, projects)
     assert accuracy == pytest.approx(0.8)
     assert balanced == pytest.approx(0.5)
+
+
+def _cell(accuracy: float, null: list[float]) -> dict:
+    return {"accuracy": accuracy, "null_accuracies": null}
+
+
+def test_the_family_p_prices_the_choice_of_rank_not_one_cell() -> None:
+    """Each relabeling picks its own best rank, as the reported cell did.
+
+    Cell A alone reads p = 0.25. Pricing the search doubles it, because a second rank gives the
+    relabelings a second chance to beat 0.9.
+    """
+    cells = [_cell(0.9, [0.2, 0.95, 0.1, 0.1]), _cell(0.8, [0.95, 0.2, 0.1, 0.1])]
+    family = split.max_over_ranks(cells, null_size=4)
+    assert family == {"accuracy": 0.9, "p": pytest.approx(0.5)}
+
+
+def test_the_family_p_is_never_below_the_best_cells_own() -> None:
+    cells = [_cell(0.9, [0.2, 0.95, 0.1, 0.1]), _cell(0.8, [0.95, 0.2, 0.1, 0.1])]
+    own = float(np.mean([a >= 0.9 for a in cells[0]["null_accuracies"]]))
+    assert split.max_over_ranks(cells, null_size=4)["p"] >= own
+
+
+def test_a_degenerate_cell_is_not_part_of_the_family() -> None:
+    """A rank that was refused as degenerate has no accuracy to win with, and no null to lose to."""
+    cells = [
+        _cell(0.9, [0.2, 0.95, 0.1, 0.1]),
+        _cell(0.8, [0.95, 0.2, 0.1, 0.1]),
+        {"degenerate": True},
+    ]
+    assert split.max_over_ranks(cells, null_size=4) == {"accuracy": 0.9, "p": pytest.approx(0.5)}
+
+
+def test_a_family_of_only_degenerate_cells_is_not_reported() -> None:
+    assert split.max_over_ranks([{"degenerate": True}], null_size=4) is None
+
+
+def test_the_truth_counts_itself_so_the_family_p_keeps_its_floor() -> None:
+    """The true grouping is one of the relabelings, so it ties the reported cell exactly.
+
+    A strict comparison would drop that tie and report p = 0, a value the null cannot reach.
+    """
+    cells = [_cell(0.9, [0.9, 0.2, 0.1, 0.1]), _cell(0.8, [0.8, 0.2, 0.1, 0.1])]
+    assert split.max_over_ranks(cells, null_size=4)["p"] == pytest.approx(0.25)

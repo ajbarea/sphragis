@@ -4445,3 +4445,38 @@ room to raise it, and at 1 round averaging has not yet opened the gap the effect
 informative band is in between, which is why this run uses 10, 30 and 50. A defence evaluation that
 takes the defaults would report no effect and be wrong about the regime rather than about the
 mechanism.
+
+### The two items the reviews left open, closed (2026-09-21)
+
+The three adversarial reviews on 2026-09-18 and 2026-09-19 each ended with a list recorded rather
+than fixed. Re-reading those lists against the code, most had been overtaken: the permutation now
+has behavioural tests rather than text searches, the enumeration counts distinct groupings, the
+overwrite guard claims exclusively at job start, and the contamination battery's partial output is
+claimed under its own name. Two were still standing, and both are closed here.
+
+**The family-wise step had no test, and it carries a quoted number.** Choosing the rank after
+seeing the table is a search, so `subspace_split.py` compares the family's best cell to the null's
+best cell over the same ranks, taken per relabeling. That was ten lines inside `main()`, unreachable
+from a test, and it produces the 0.0012 that the report gives for SDFLoRA's shared half. It is now
+`max_over_ranks(cells, null_size)`, and five mutants that the previous suite would have accepted
+each fail: taking the minimum over relabelings rather than the maximum, scoring the best cell
+against its own null instead of the family's, pooling every cell's null draws into one maximum,
+counting degenerate cells as part of the family, and comparing strictly so the truth no longer ties
+itself and the p-value loses its floor. All six committed family-wise values re-derive from the
+extracted function unchanged, the rebuilt corpus's 0.001166 among them.
+
+**A killed job's claim could not be told from a live one.** `claim_result` creates the result path
+exclusively and fills it later, and an EXIT trap releases it if the job never writes. Bash runs that
+trap even when a fatal signal takes it, so a cancel or a time limit releases cleanly; SIGKILL does
+not, and the empty file it strands is byte for byte what a running job's fresh claim looks like. A
+requeue of that same job then refused its own leftover. The claim now records the job that made it
+in a `.claim` beside the result, and an empty claim is treated as abandoned only on evidence: its
+owner is this job, which a requeue keeps, or Slurm no longer lists that job. A claim with a result
+in it is never reclaimed, nor is an empty one whose owner cannot be read or whose owner is still
+queued, since that is exactly what a live claim looks like. Eight tests hold those cases, four of
+them driving a real job to its claim and killing the process group.
+
+One thing found on the way and left alone: a `trap 'exit 143' TERM` added to carry a cancel to the
+release turned out to be redundant, since bash already runs the EXIT trap on a fatal signal. It was
+removed rather than kept as insurance, and the test written for it now states the behaviour bash
+actually has.
