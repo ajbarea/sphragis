@@ -4476,6 +4476,22 @@ in it is never reclaimed, nor is an empty one whose owner cannot be read or whos
 queued, since that is exactly what a live claim looks like. Eight tests hold those cases, four of
 them driving a real job to its claim and killing the process group.
 
+**What an independent review of that extraction added.** A reviewer given the function and the
+committed results, and told to reproduce rather than read, confirmed the six values and killed
+eleven mutants of its own, including the five above. It found one the suite could not see: the
+`null_size` argument was unconstrained, so a cell carrying fewer relabelings than the caller
+claimed truncated the family silently and read as more significant, while one carrying more raised
+an IndexError. The k-th entry has to mean the same relabeling in every cell for the maximum to be
+a correction at all, so the function now refuses a family whose cells disagree with the declared
+null, and refuses an empty null rather than returning a NaN p that `f"{p:.3f}"` prints as "nan".
+The same review confirmed the relabelings do line up: `main()` builds the null once, before the
+rank loop, and passes that one list into every cell.
+
+**Recorded, not changed:** `balanced_accuracy` is reported beside `accuracy` at every rank and is
+not family-wise corrected, because `scored()` keeps only the accuracy column of the null. Nothing
+quotes a family-wise p for it, so no number is wrong, but the asymmetry should be either closed or
+stated before the report goes out.
+
 One thing found on the way and left alone: a `trap 'exit 143' TERM` added to carry a cancel to the
 release turned out to be redundant, since bash already runs the EXIT trap on a fatal signal. It was
 removed rather than kept as insurance, and the test written for it now states the behaviour bash

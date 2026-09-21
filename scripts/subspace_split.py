@@ -206,6 +206,16 @@ def max_over_ranks(cells: list[dict], null_size: int) -> dict | None:
     scored_cells = [cell for cell in cells if not cell.get("degenerate")]
     if not scored_cells:
         return None
+    # The k-th entry means the same relabeling in every cell, which is what makes a maximum over
+    # ranks a correction rather than a mixture of unrelated draws. A cell short of the full null
+    # would truncate the family silently and read as more significant than it is.
+    if null_size < 1:
+        raise ValueError("a family-wise p needs a null to judge the family against")
+    lengths = {len(cell["null_accuracies"]) for cell in scored_cells}
+    if lengths != {null_size}:
+        raise ValueError(
+            f"every cell must carry all {null_size} relabelings, found {sorted(lengths)}"
+        )
     best = max(cell["accuracy"] for cell in scored_cells)
     null_best = [max(cell["null_accuracies"][k] for cell in scored_cells) for k in range(null_size)]
     return {"accuracy": best, "p": float(np.mean([b >= best for b in null_best]))}

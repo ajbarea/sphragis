@@ -100,3 +100,22 @@ def test_the_truth_counts_itself_so_the_family_p_keeps_its_floor() -> None:
     """
     cells = [_cell(0.9, [0.9, 0.2, 0.1, 0.1]), _cell(0.8, [0.8, 0.2, 0.1, 0.1])]
     assert split.max_over_ranks(cells, null_size=4)["p"] == pytest.approx(0.25)
+
+
+def test_a_cell_missing_relabelings_is_refused_rather_than_truncating_the_family() -> None:
+    """A short cell would drop relabelings from the maximum and read as more significant."""
+    cells = [_cell(0.9, [0.2, 0.95, 0.1, 0.1]), _cell(0.8, [0.95, 0.2])]
+    with pytest.raises(ValueError, match="all 4 relabelings"):
+        split.max_over_ranks(cells, null_size=4)
+
+
+def test_a_null_size_the_cells_do_not_carry_is_refused() -> None:
+    """The size is the caller's claim about the null, and it has to match the rows."""
+    cells = [_cell(0.9, [0.2, 0.95, 0.1, 0.1])]
+    with pytest.raises(ValueError, match="all 5 relabelings"):
+        split.max_over_ranks(cells, null_size=5)
+
+
+def test_a_family_with_no_null_is_refused_rather_than_scored_as_nan() -> None:
+    with pytest.raises(ValueError, match="needs a null"):
+        split.max_over_ranks([_cell(0.9, [])], null_size=0)
