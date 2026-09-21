@@ -115,6 +115,48 @@ _abandoned_claim() {
   return 0
 }
 
+# Two jobs read client adapters through a PATTERN and name their output after the adapters they
+# read rather than after RUN_TAG: the pattern is what selects the input, and a run over one client
+# size that inherited another's suffix would overwrite the geometry every committed RQ2 number was
+# computed from. One definition, because the two jobs must agree on the name.
+name_result_after_adapters() {
+  local pattern="$1" first selector spans_withheld
+  # The name comes from the pattern's first directory, so that directory must be literal: a glob
+  # there would name the output after nothing.
+  first="${pattern%%/*}"
+  case "$first" in
+    *[\*\?\[]*) echo "PATTERN's first directory must be literal, got $first" >&2; return 1 ;;
+  esac
+  # `sphragis-adapters-clients-X` gives `-X`, which is what every committed result is named after;
+  # any other `sphragis-adapters-Y` gives `-Y`, so the dual-adapter runs name themselves without
+  # colliding with the single-adapter ones.
+  case "$first" in
+    sphragis-adapters-clients*) RESULT_SUFFIX="${first#sphragis-adapters-clients}" ;;
+    sphragis-adapters-*) RESULT_SUFFIX="-${first#sphragis-adapters-}" ;;
+    *) echo "PATTERN must start with a sphragis-adapters directory, got $first" >&2; return 1 ;;
+  esac
+  # A dual-adapter run saves two adapters a client in one directory: the transmitted one under the
+  # client's own name and the withheld one under `<client>-local`. They are two geometries over one
+  # set of adapters, so the selector that picks between them has to name them apart, and one that
+  # spans both is refused rather than written to whichever name it inherits. Only where withheld
+  # adapters exist: every single-adapter directory keeps the names it already has.
+  compgen -G "$HOME/scratch/$first/*-local" >/dev/null 2>&1 || { export RESULT_SUFFIX; return 0; }
+  selector="${pattern#*/}"
+  selector="${selector%%/*}"
+  spans_withheld=0
+  case "a-c0-local" in $selector) spans_withheld=1 ;; esac
+  case "$selector:$spans_withheld" in
+    *-local:*) RESULT_SUFFIX="$RESULT_SUFFIX-local" ;;
+    *:1)
+      echo "PATTERN selects the transmitted and the withheld adapters of $first together, and" \
+        "they are two geometries: select one, with */*-local/* or a selector that cannot" \
+        "match it" >&2
+      return 1
+      ;;
+  esac
+  export RESULT_SUFFIX
+}
+
 claim_result() {
   local name="$1" path="$2" why claimed=0
   if [ "${OVERWRITE:-0}" != 1 ]; then
