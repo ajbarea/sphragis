@@ -9,10 +9,14 @@ What is being built right now. The dated record of findings, numbers and correct
 
 **PR #13** merged 2026-09-20: the whole apparatus, from corpus to gate and both RQ2 threat models.
 
-**Open:** the two items the adversarial reviews left standing, closed on a branch. The family-wise
-step over ranks is now a function with mutant-proven tests, and a SIGKILLed job's empty claim is
-told from a live one by the `.claim` record beside it, so a requeue no longer refuses its own
-leftover.
+**The adapter-instance cut is read on the half that leaves** (PR #17 and #18 merged). FedDPA's
+iterative variant, two rounds at 128 examples: the transmitted global adapter keeps AOSP at the
+floor of 1,716 groupings at every seed and costs the detector five to twelve points of catch rate
+against the single adapter (0.787 to 0.732 at one false alarm in a hundred, rounds of 16). The
+classifier reads it *better* than the single adapter, 0.750 at p 0.036 against 0.583 at p 0.30,
+because the schedule trains the communicated adapter twice where the single-adapter run trains
+once. Next: job 162578 is the geometry of the withheld `-local` halves, which the same two
+instruments then read, and that is the comparison FedDPA and FDLoRA never make.
 
 **RQ1, dev window, three seeds, fp32:** Qt +0.0316 [+0.0089, +0.0567], OpenStack +0.0230
 [+0.0000, +0.0457], mixed. The test window stays sealed until in-principle acceptance.
