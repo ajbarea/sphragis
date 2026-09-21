@@ -318,14 +318,22 @@ identifies its source; PFAdapter states the gap in its own words. This apparatus
   the paper's own reason for sharing it.
 - [x] **SecureGate's scrubbing baseline**: already applied. The corpus is identity-scrubbed at
   ingestion and every RQ2 number was measured on it.
-- [ ] **FDLoRA and FedDPA's adapter-instance cut**: both read in full 2026-09-19. Both upload
-  both factors of one adapter and nothing else, so the attack surface is the one this apparatus
-  already reads; neither claims the uploaded part hides its source and neither runs an attack.
-  What a measurement needs is two adapters per client under two schedules: FedDPA's, where the
-  local adapter trains on top of a frozen global one and never moves, and FDLoRA's, whose global
-  module is seeded from the average of the personalized ones and periodically overwrites them, with
-  a sweep over its inner steps and sync period. Those endpoints test whether its boundary exists in
-  the numbers at all.
+- [x] **FedDPA's adapter-instance cut** (jobs 150272 and 150904, withheld half 162578): the only
+  one of the four that holds back more than it sends, and still not source-hiding. The transmitted
+  global adapter puts AOSP at the floor of 1,716 groupings at every seed and catches 73% of
+  two-client rounds at one false alarm in a hundred; nearest-class attribution beyond projects
+  reads it at 0.750 (p 0.036), above the single adapter's 0.583 (p 0.30), because the iterative
+  schedule trains the communicated adapter twice where the single-adapter run trains once. The
+  withheld local adapter, same run and same number of passes, reaches **1.000 at the floor**, and
+  the detector swaps organizations: AOSP is readable only in what is sent, Qt only in what is kept.
+  The mechanism is the schedule, not the instance boundary. The local adapter fits what the frozen
+  global one has not explained, and that residue is both what personalization is for and what an
+  attacker wants, so the defence works here because the two coincide.
+- [ ] **FDLoRA's schedule**, the remaining half of the instance cut: its global module is seeded
+  from the average of the personalized ones and periodically overwrites them, with inner steps and
+  a sync period to sweep. FedDPA's result makes the question sharper rather than answered: if what
+  leaks is the residue the local adapter fits, a schedule that keeps overwriting the local adapter
+  should move the leak back into what is transmitted.
 - [ ] **SecureGate's learned secure adapter**, which is not the same object as a scrubber.
 - [ ] **Fed-DiffLoRA's content/style cut** (IEEE TIP 2026, `# research(2026-09)`): splits each
   client's adapter into orthogonal content and style subspaces and aggregates the style half
