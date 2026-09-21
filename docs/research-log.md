@@ -4549,3 +4549,39 @@ training it needs.
 
 What this cannot say yet is what the withheld half holds, which is the comparison the papers never
 make. That geometry is job 162578.
+
+### The nearest neighbour now shares our venue and our retired word, for a different unit (2026-09-21)
+
+`# research(2026-09)`. Two papers by the same author attribute *agents* from pull requests, and
+both are close enough to RQ1 that a reviewer will raise them.
+
+**Fingerprinting AI Coding Agents on GitHub** (Ghaleb, MSR '26, arXiv:2601.17406) reads 33,580 PRs
+from Codex, Copilot, Devin, Cursor and Claude Code, builds 41 features over commit messages, PR
+structure and code characteristics, and reports 97.2% macro F1 from XGBoost for "identifying the
+submitting agent". **AgenTag** (arXiv:2608.00966) extends the same unit to an open-world setting,
+"a multimodal, learned, open-world problem rather than a closed-set classification task", at
+weighted F1 0.96 and AUC 0.84 for unseen agents.
+
+**What they are not.** The unit is the tool that wrote the change, never the organization that
+reviewed it. The first paper's only use of our unit is as a threat: "We do not test generalizability
+to private repositories or other platforms (e.g., GitLab), where agent behavior may differ due to
+stricter style guides or organizational practices." Organizational practice is the confound they
+cannot control, which is the thing this study measures. Their evidence is hand-built features over
+commit and PR metadata read by a tree ensemble, not what a model learns from review content, and
+neither paper reports a true-positive rate at a fixed false-positive rate: macro precision, recall
+and F1 in the first, F1 and AUC in the second. The first reports Claude Code at 57% recall with 82%
+precision and does not say what the operating point costs, which is the reading this study refuses
+to leave out.
+
+**What this changes here.** Nothing in the design, three things in how it is written.
+
+1. The related-work section gains these two as the nearest neighbours in our own venue, and the
+   contrast is stated as unit, evidence and operating point rather than as novelty by absence.
+2. Retiring "fingerprint" was decided on other grounds and is now also forced: in MSR '26 the word
+   names agent attribution, and using it for organizational house style would collide with a paper
+   the same readers have just seen.
+3. AgenTag's future work names the closest anyone comes to our question and leaves it open:
+   "quantify how repository-specific instruction files (e.g., CLAUDE.md, AGENTS.md) affect
+   behavioral fingerprints and attribution accuracy." Project-level configuration as a modifier of
+   attribution is one step from organizational convention as the thing attributed, and nobody has
+   taken it.
