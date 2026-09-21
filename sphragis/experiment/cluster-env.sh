@@ -38,7 +38,9 @@ export RESULT_SUFFIX="${RUN_TAG:+-$RUN_TAG}"
 # and `_abandoned_claim` reads the record when a kill left no chance to. OVERWRITE=1 replaces a
 # result deliberately and claims nothing. Call it as a plain command in the job's own shell,
 # never inside $(...), or the release on exit belongs to a subshell that has already gone.
-SPHRAGIS_CLAIMS=()
+# Only on the first source: a second one in the same shell would drop the claims already made,
+# and they would then survive an exit that should have released them.
+declare -p SPHRAGIS_CLAIMS >/dev/null 2>&1 || SPHRAGIS_CLAIMS=()
 _release_unfilled_claims() {
   local path
   for path in ${SPHRAGIS_CLAIMS[@]+"${SPHRAGIS_CLAIMS[@]}"}; do
@@ -67,8 +69,14 @@ name_job_after_result() {
 # two can be told apart: an empty claim is abandoned when its owner is this job (a requeue keeps
 # the id) or when Slurm no longer lists that job. A claim with a result in it is never abandoned,
 # and an empty claim whose owner cannot be read is left alone, since nothing says it is dead.
+#
+# The owner is a cluster and an id, never an id alone. TIGRIS and SPORC are separate Slurm
+# installations over one $HOME, so their job-id counters run independently: an id can name a live
+# job on the other cluster, and `squeue` answers only for the local one, reporting a foreign id as
+# unknown, which reads as "gone". Both branches below therefore require the cluster to match, and
+# a claim from the other cluster is refused rather than guessed at.
 _abandoned_claim() {
-  local path="$1" owner listing held
+  local path="$1" owner owner_cluster owner_id here listing held
   [ -e "$path" ] && [ ! -s "$path" ] || return 1
   # A claim this run already holds is live by definition. Without this, two calls naming one path
   # in a single job would read the second as a requeue of the first and let it through, where the
@@ -80,16 +88,30 @@ _abandoned_claim() {
   # running job's claim looks like before it writes.
   owner="$(cat -- "$path.claim" 2>/dev/null)"
   [ -n "$owner" ] || return 1
-  if [ "$owner" = "${SLURM_JOB_ID:-}" ]; then
+  case "$owner" in
+    # A record from before the cluster was written names no cluster, so it identifies nobody.
+    *:*) ;;
+    *) return 1 ;;
+  esac
+  owner_cluster="${owner%%:*}"
+  owner_id="${owner#*:}"
+  here="${SLURM_CLUSTER_NAME:-none}"
+  if [ "$owner_cluster" != "$here" ] || [ "$here" = none ]; then
+    echo "$path was claimed on $owner_cluster by job $owner_id, and this runs on $here:" \
+      "pass OVERWRITE=1 if that job is known to be dead" >&2
+    return 1
+  fi
+  if [ "$owner_id" = "${SLURM_JOB_ID:-}" ]; then
     echo "$path was claimed by this job and left empty: reclaiming it" >&2
     return 0
   fi
   command -v squeue >/dev/null 2>&1 || return 1
   # A squeue that cannot answer is not evidence. Only an empty listing for a job it recognises
   # says the owner has left; an unknown id, which is what a long-finished job becomes, refuses.
-  listing="$(squeue -h -j "$owner" 2>/dev/null)" || return 1
+  listing="$(squeue -h -j "$owner_id" 2>/dev/null)" || return 1
   [ -z "$listing" ] || return 1
-  echo "$path was claimed by job $owner, which is no longer queued: reclaiming it" >&2
+  echo "$path was claimed by job $owner_id on $owner_cluster, which is no longer queued:" \
+    "reclaiming it" >&2
   return 0
 }
 
@@ -113,7 +135,10 @@ claim_result() {
       return 1
     fi
     SPHRAGIS_CLAIMS+=("$path")
-    [ -z "${SLURM_JOB_ID:-}" ] || printf '%s\n' "$SLURM_JOB_ID" >"$path.claim" 2>/dev/null || true
+    # The cluster belongs in the record: an id alone is ambiguous across the two installations.
+    [ -z "${SLURM_JOB_ID:-}" ] ||
+      printf '%s:%s\n' "${SLURM_CLUSTER_NAME:-unknown}" "$SLURM_JOB_ID" >"$path.claim" 2>/dev/null ||
+      true
   fi
   name_job_after_result "$path"
   printf -v "$name" '%s' "$path"

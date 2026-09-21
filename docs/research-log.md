@@ -4476,6 +4476,23 @@ in it is never reclaimed, nor is an empty one whose owner cannot be read or whos
 queued, since that is exactly what a live claim looks like. Eight tests hold those cases, four of
 them driving a real job to its claim and killing the process group.
 
+**What an independent review of the claim found, and it was worse than the bug it fixed.** A
+reviewer given the claim functions and told to reproduce rather than read built the input matrix
+and broke the fix twice, both times by remembering that TIGRIS and SPORC are two Slurm
+installations over one `$HOME`. `squeue` answers for the cluster it runs on, so a foreign job id
+comes back unknown, which the fix read as "gone" and reclaimed: a job genuinely running on the
+other cluster loses its claim, and whichever finishes last overwrites the other's measurement with
+no error and no OVERWRITE. Worse, the two clusters run independent id counters, so a job whose own
+id happens to equal the record's took the shorter path and reclaimed without asking Slurm at all.
+The owner is now a cluster and an id, both branches require the cluster to match, and a claim from
+the other cluster is refused with a message naming it rather than guessed at. A record from before
+the cluster was written names nobody and is refused too.
+
+Two smaller things from the same review, both fixed: sourcing the environment twice reset the
+claims list, so a claim made before the second source outlived the exit that should have released
+it; and a script that sets its own `trap ... EXIT` silently replaces the release, which no job does
+today and none may, so the suite now refuses one that does.
+
 **What an independent review of that extraction added.** A reviewer given the function and the
 committed results, and told to reproduce rather than read, confirmed the six values and killed
 eleven mutants of its own, including the five above. It found one the suite could not see: the

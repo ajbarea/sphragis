@@ -124,6 +124,19 @@ def test_every_script_sources_the_environment_from_the_checkout(script: Path) ->
     assert not re.search(r"^export (PATH|HF_HUB_CACHE|CC|TOKENIZERS_PARALLELISM)=", text, re.M)
 
 
+@pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
+def test_no_job_replaces_the_release_trap(script: Path) -> None:
+    """A second `trap ... EXIT` silently replaces the claim release, and the claim then outlives
+    the job that made it. Jobs claim results, so none of them may set its own. The environment
+    builder does set one and is not a job: it claims nothing, and is not in this list."""
+    offending = [
+        line
+        for line in script.read_text().splitlines()
+        if re.match(r"\s*trap\b", line) and "EXIT" in line
+    ]
+    assert not offending, f"{script.name} replaces the release trap: {offending}"
+
+
 def test_there_are_scripts_to_check() -> None:
     assert len(_SCRIPTS) >= 5
 
@@ -799,7 +812,11 @@ def _kill_mid_job(root: Path, signal_number: int, **env: str) -> Path:
         stderr=subprocess.PIPE,
         text=True,
         cwd=checkout,
-        env=_job_env(home, checkout, {"FAKE_ID": "killed", "FAKE_SLEEP": "30", **env}),
+        env=_job_env(
+            home,
+            checkout,
+            {"FAKE_ID": "killed", "FAKE_SLEEP": "30", "SLURM_CLUSTER_NAME": "tigris", **env},
+        ),
         start_new_session=True,
     )
     deadline = time.monotonic() + 30
@@ -815,13 +832,19 @@ def _kill_mid_job(root: Path, signal_number: int, **env: str) -> Path:
 def test_a_killed_job_leaves_an_empty_claim_that_records_who_made_it(tmp_path: Path) -> None:
     claim = _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
     assert claim.read_text() == "", "a killed job's claim holds no result"
-    assert claim.with_suffix(".json.claim").read_text().strip() == "1001"
+    assert claim.with_suffix(".json.claim").read_text().strip() == "tigris:1001"
 
 
 def test_a_requeued_job_reclaims_the_empty_claim_its_kill_left(tmp_path: Path) -> None:
     """Slurm keeps the job id across a requeue, so the leftover is this job's own."""
     _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
-    requeued = _run_job("pilot.sbatch", tmp_path, FAKE_ID="requeued", SLURM_JOB_ID="1001")
+    requeued = _run_job(
+        "pilot.sbatch",
+        tmp_path,
+        FAKE_ID="requeued",
+        SLURM_JOB_ID="1001",
+        SLURM_CLUSTER_NAME="tigris",
+    )
     assert requeued.returncode == 0, requeued.stderr
     assert "reclaiming it" in requeued.stderr
     assert set(_results(tmp_path).values()) == {"written by requeued\n"}
@@ -830,7 +853,9 @@ def test_a_requeued_job_reclaims_the_empty_claim_its_kill_left(tmp_path: Path) -
 def test_another_job_does_not_take_over_a_claim_it_cannot_prove_is_dead(tmp_path: Path) -> None:
     """Without Slurm to ask, an empty claim owned by someone else may still be live work."""
     _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
-    other = _run_job("pilot.sbatch", tmp_path, FAKE_ID="other", SLURM_JOB_ID="2002")
+    other = _run_job(
+        "pilot.sbatch", tmp_path, FAKE_ID="other", SLURM_JOB_ID="2002", SLURM_CLUSTER_NAME="tigris"
+    )
     assert other.returncode != 0
     assert "another job has claimed it" in other.stderr
     assert set(_results(tmp_path).values()) == {""}, "the claim is intact and still unfilled"
@@ -848,6 +873,7 @@ def test_a_claim_whose_owner_has_left_the_queue_is_reclaimed(tmp_path: Path) -> 
         tmp_path,
         FAKE_ID="later",
         SLURM_JOB_ID="2002",
+        SLURM_CLUSTER_NAME="tigris",
         PATH=f"{bin_dir}:/usr/bin:/bin",
     )
     assert later.returncode == 0, later.stderr
@@ -870,7 +896,12 @@ def test_one_job_claiming_a_path_twice_is_still_refused(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         cwd=tmp_path,
-        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", "SLURM_JOB_ID": "1001"},
+        env={
+            "HOME": str(tmp_path),
+            "PATH": "/usr/bin:/bin",
+            "SLURM_JOB_ID": "1001",
+            "SLURM_CLUSTER_NAME": "tigris",
+        },
     )
     assert result.returncode != 0
     assert "reached" not in result.stdout
@@ -881,7 +912,9 @@ def test_an_empty_claim_with_no_owner_recorded_is_left_alone(tmp_path: Path) -> 
     """Claims made before the record existed, and by runs outside Slurm, name nobody."""
     home, _ = _prepare(tmp_path)
     (home / "pilot-outcomes-some-other-run.json").touch()
-    job = _run_job("pilot.sbatch", tmp_path, FAKE_ID="job", SLURM_JOB_ID="1001")
+    job = _run_job(
+        "pilot.sbatch", tmp_path, FAKE_ID="job", SLURM_JOB_ID="1001", SLURM_CLUSTER_NAME="tigris"
+    )
     assert job.returncode != 0
     assert "another job has claimed it" in job.stderr
     assert set(_results(tmp_path).values()) == {""}
@@ -902,6 +935,7 @@ def test_a_claim_whose_owner_is_still_queued_is_left_alone(tmp_path: Path) -> No
         tmp_path,
         FAKE_ID="later",
         SLURM_JOB_ID="2002",
+        SLURM_CLUSTER_NAME="tigris",
         PATH=f"{bin_dir}:/usr/bin:/bin",
     )
     assert later.returncode != 0
@@ -911,11 +945,97 @@ def test_a_claim_whose_owner_is_still_queued_is_left_alone(tmp_path: Path) -> No
 
 def test_a_result_already_written_is_never_reclaimed_by_its_own_job(tmp_path: Path) -> None:
     """Only an empty claim is abandoned; a finished measurement still needs OVERWRITE."""
-    assert _run_job("pilot.sbatch", tmp_path, FAKE_ID="first", SLURM_JOB_ID="1001").returncode == 0
-    again = _run_job("pilot.sbatch", tmp_path, FAKE_ID="again", SLURM_JOB_ID="1001")
+    assert (
+        _run_job(
+            "pilot.sbatch",
+            tmp_path,
+            FAKE_ID="first",
+            SLURM_JOB_ID="1001",
+            SLURM_CLUSTER_NAME="tigris",
+        ).returncode
+        == 0
+    )
+    again = _run_job(
+        "pilot.sbatch", tmp_path, FAKE_ID="again", SLURM_JOB_ID="1001", SLURM_CLUSTER_NAME="tigris"
+    )
     assert again.returncode != 0
     assert "OVERWRITE=1" in again.stderr
     assert set(_results(tmp_path).values()) == {"written by first\n"}
+
+
+def test_a_job_on_the_other_cluster_does_not_take_a_live_claim(tmp_path: Path) -> None:
+    """`squeue` answers for its own cluster, and reports the other's live job as unknown.
+
+    TIGRIS and SPORC are separate installations over one $HOME, so an empty listing for a foreign
+    id says nothing about whether that job is running.
+    """
+    _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    squeue = bin_dir / "squeue"
+    squeue.write_text("#!/bin/sh\nexit 0\n")  # the local cluster has never heard of job 1001
+    squeue.chmod(0o755)
+    elsewhere = _run_job(
+        "pilot.sbatch",
+        tmp_path,
+        FAKE_ID="elsewhere",
+        SLURM_JOB_ID="4004",
+        SLURM_CLUSTER_NAME="sporc",
+        PATH=f"{bin_dir}:/usr/bin:/bin",
+    )
+    assert elsewhere.returncode != 0
+    assert "was claimed on tigris" in elsewhere.stderr
+    assert set(_results(tmp_path).values()) == {""}
+
+
+def test_a_same_numbered_job_on_the_other_cluster_does_not_take_a_live_claim(
+    tmp_path: Path,
+) -> None:
+    """The two clusters run independent id counters, so an id alone is not an identity."""
+    _kill_mid_job(tmp_path, signal.SIGKILL, SLURM_JOB_ID="1001")
+    twin = _run_job(
+        "pilot.sbatch",
+        tmp_path,
+        FAKE_ID="twin",
+        SLURM_JOB_ID="1001",
+        SLURM_CLUSTER_NAME="sporc",
+    )
+    assert twin.returncode != 0
+    assert "was claimed on tigris" in twin.stderr
+    assert set(_results(tmp_path).values()) == {""}
+
+
+def test_a_claim_naming_no_cluster_is_left_alone(tmp_path: Path) -> None:
+    """Records written before the cluster was part of them identify nobody."""
+    home, _ = _prepare(tmp_path)
+    result = home / "pilot-outcomes-some-other-run.json"
+    result.touch()
+    result.with_suffix(".json.claim").write_text("1001\n")
+    job = _run_job(
+        "pilot.sbatch", tmp_path, FAKE_ID="job", SLURM_JOB_ID="1001", SLURM_CLUSTER_NAME="tigris"
+    )
+    assert job.returncode != 0
+    assert "another job has claimed it" in job.stderr
+
+
+def test_sourcing_the_environment_twice_keeps_the_claims_already_made(tmp_path: Path) -> None:
+    """A second source used to reset the list, and the first claim then outlived its job."""
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    claim = tmp_path / "r.json"
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            f'set -euo pipefail; source "{_ENV}"; claim_result OUT "{claim}"; source "{_ENV}"',
+        ],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin"},
+    )
+    assert result.returncode == 0, result.stderr
+    assert not claim.exists(), "the claim survived an exit that should have released it"
 
 
 def test_a_result_written_before_the_kill_is_not_reclaimed(tmp_path: Path) -> None:
@@ -923,8 +1043,14 @@ def test_a_result_written_before_the_kill_is_not_reclaimed(tmp_path: Path) -> No
     home, _ = _prepare(tmp_path)
     result = home / "pilot-outcomes-some-other-run.json"
     result.write_text("written by killed\n")
-    result.with_suffix(".json.claim").write_text("1001\n")
-    requeued = _run_job("pilot.sbatch", tmp_path, FAKE_ID="requeued", SLURM_JOB_ID="1001")
+    result.with_suffix(".json.claim").write_text("tigris:1001\n")
+    requeued = _run_job(
+        "pilot.sbatch",
+        tmp_path,
+        FAKE_ID="requeued",
+        SLURM_JOB_ID="1001",
+        SLURM_CLUSTER_NAME="tigris",
+    )
     assert requeued.returncode != 0
     assert "OVERWRITE=1" in requeued.stderr
     assert result.read_text() == "written by killed\n"
@@ -958,7 +1084,12 @@ def test_a_term_between_commands_still_releases_the_claim(tmp_path: Path) -> Non
         stderr=subprocess.PIPE,
         text=True,
         cwd=tmp_path,
-        env={"HOME": str(home), "PATH": "/usr/bin:/bin", "SLURM_JOB_ID": "1001"},
+        env={
+            "HOME": str(home),
+            "PATH": "/usr/bin:/bin",
+            "SLURM_JOB_ID": "1001",
+            "SLURM_CLUSTER_NAME": "tigris",
+        },
     )
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline and not claim.exists():
@@ -971,5 +1102,14 @@ def test_a_term_between_commands_still_releases_the_claim(tmp_path: Path) -> Non
 
 def test_a_finished_job_leaves_no_claim_record_beside_its_result(tmp_path: Path) -> None:
     home, _ = _prepare(tmp_path)
-    assert _run_job("pilot.sbatch", tmp_path, FAKE_ID="done", SLURM_JOB_ID="1001").returncode == 0
+    assert (
+        _run_job(
+            "pilot.sbatch",
+            tmp_path,
+            FAKE_ID="done",
+            SLURM_JOB_ID="1001",
+            SLURM_CLUSTER_NAME="tigris",
+        ).returncode
+        == 0
+    )
     assert sorted(home.glob("*.claim")) == []
