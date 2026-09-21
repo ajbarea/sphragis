@@ -71,8 +71,14 @@ Every job claims its result file exclusively when it starts, so neither an exist
   which the registered tests on the rebuilt corpus supply. The permutation's move into
   `aggregate.py` with behavioural tests, its enumeration over distinct groupings, Qt's p over
   seeds and provenance's dirty-tree flag are in.
-- FDLoRA and FedDPA's adapter-instance cut, which needs clients training a global and a personal
-  adapter jointly.
+- **The adapter-instance cut is trained and waiting to be read.** Job 150272 ran FedDPA's
+  iterative schedule on the rebuilt corpus (65 clients, 128 examples, two rounds, five and a half
+  hours); `client-updates-dual-cpp-rebuilt-c128-t2.json` is committed and the adapters are at
+  `~/scratch/sphragis-adapters-dual-cpp-rebuilt-c128-t2` on the cluster, the transmitted halves in
+  `<client>-c<n>/` and the withheld ones in `<client>-c<n>-local/`. Job 150904 computes the
+  geometry of the transmitted halves. Next: pull it, run `aggregate_attack` and
+  `client_attribution` with `--content cpp --beyond-project`, and repeat on the withheld halves,
+  which is the comparison neither FedDPA nor FDLoRA makes.
 - The registered subspace tests, which read the rebuilt corpus's clients: the detector on the
   shared half at rank 4, the classifier on the residual at rank 1.
 
