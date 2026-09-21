@@ -855,6 +855,28 @@ def test_a_claim_whose_owner_has_left_the_queue_is_reclaimed(tmp_path: Path) -> 
     assert claim.read_text() == "written by later\n"
 
 
+def test_one_job_claiming_a_path_twice_is_still_refused(tmp_path: Path) -> None:
+    """The second call is not a requeue of the first; it is two outputs sharing one name."""
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            f'set -euo pipefail; source "{_ENV}"; '
+            f'claim_result FIRST "{tmp_path}/r.json"; claim_result SECOND "{tmp_path}/r.json"; '
+            "echo reached",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", "SLURM_JOB_ID": "1001"},
+    )
+    assert result.returncode != 0
+    assert "reached" not in result.stdout
+    assert "another job has claimed it" in result.stderr
+
+
 def test_an_empty_claim_with_no_owner_recorded_is_left_alone(tmp_path: Path) -> None:
     """Claims made before the record existed, and by runs outside Slurm, name nobody."""
     home, _ = _prepare(tmp_path)

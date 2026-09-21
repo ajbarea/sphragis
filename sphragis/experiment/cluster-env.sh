@@ -68,8 +68,14 @@ name_job_after_result() {
 # the id) or when Slurm no longer lists that job. A claim with a result in it is never abandoned,
 # and an empty claim whose owner cannot be read is left alone, since nothing says it is dead.
 _abandoned_claim() {
-  local path="$1" owner listing
+  local path="$1" owner listing held
   [ -e "$path" ] && [ ! -s "$path" ] || return 1
+  # A claim this run already holds is live by definition. Without this, two calls naming one path
+  # in a single job would read the second as a requeue of the first and let it through, where the
+  # exclusive create used to catch the duplicate.
+  for held in ${SPHRAGIS_CLAIMS[@]+"${SPHRAGIS_CLAIMS[@]}"}; do
+    [ "$held" != "$path" ] || return 1
+  done
   # No record of an owner, so nothing says the claim is dead: an empty file is also what a
   # running job's claim looks like before it writes.
   owner="$(cat -- "$path.claim" 2>/dev/null)"
