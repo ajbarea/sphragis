@@ -4513,3 +4513,39 @@ One thing found on the way and left alone: a `trap 'exit 143' TERM` added to car
 release turned out to be redundant, since bash already runs the EXIT trap on a fatal signal. It was
 removed rather than kept as insurance, and the test written for it now states the behaviour bash
 actually has.
+
+### The adapter-instance cut transmits the source, and its own schedule sharpens it (2026-09-21, jobs 150272 and 150904)
+
+`*-dual-cpp-rebuilt-c128-t2.json`. FedDPA's iterative variant on the rebuilt corpus, 128 examples
+a client, two rounds: each client holds a global adapter that is communicated and a local adapter
+that never is. What the server receives is the global half, and that is what the two instruments
+read here. Neither FedDPA nor FDLoRA attacks the half that leaves; FedDPA states the assumption
+instead, that "all clients are trusted ... and the whole process does not suffer from any attacks".
+
+**The detector loses a little and keeps everything that matters.** Against the single-adapter run
+on the same corpus at the same client size:
+
+| | single AUC | transmitted AUC | single TPR at 1% FPR | transmitted TPR |
+|---|---|---|---|---|
+| AOSP, rounds of 16, 2 clients | 0.972 | 0.965 | 0.787 | 0.732 |
+| AOSP, rounds of 8, 2 clients | 0.963 | 0.944 | 0.716 | 0.600 |
+| AOSP, rounds of 4, 2 clients | 0.966 | 0.952 | 0.698 | 0.624 |
+| Qt, rounds of 16, 2 clients | 0.928 | 0.907 | 0.564 | 0.493 |
+
+The project-level permutation is unmoved: AOSP sits at the floor of 1,716 groupings at every seed
+in both runs (p = 0.0006), and Qt is found by neither, at a median of 0.070 both times. Withholding
+a personal adapter costs the attacker five to twelve points of catch rate and no significance.
+
+**The classifier reads the transmitted half better than the whole single adapter.** Nearest-class
+attribution beyond the target's own projects goes from 0.583 at p 0.30 on the single adapter to
+0.750 at p 0.036 on the transmitted half, over the same 1,716 relabelings. That is the opposite of
+what the cut is for, and the reason is the cut's own schedule: the iterative variant trains the
+global adapter once per round, so at two rounds the communicated adapter has had two passes over
+the client's data against the single-adapter run's one. Leakage is a function of how long each
+client trains locally, which this study measured before touching FedDPA, and the personalization
+schedule buys its personalization with exactly that. The comparison is therefore not cut against
+no cut; it is a cut that costs the detector a little while handing the classifier the extra local
+training it needs.
+
+What this cannot say yet is what the withheld half holds, which is the comparison the papers never
+make. That geometry is job 162578.
