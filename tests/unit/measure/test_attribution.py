@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from sphragis.measure import attribution
 from sphragis.measure.attribution import (
     Source,
     _arrangements,
@@ -119,3 +120,43 @@ def test_an_organization_shared_across_its_projects_survives_leaving_them_out() 
 def test_a_group_with_two_labels_is_refused() -> None:
     with pytest.raises(ValueError, match="more than one label"):
         group_permutation_p([[1, 0], [0, 1]], ["x", "y"], ["g", "g"], draws=10, seed=0)
+
+
+def _geometry(*adapters: str) -> dict:
+    return {"adapters": [f"dual-t2/{name}" for name in adapters]}
+
+
+def _report(*clients: str, withheld: str | None = None) -> dict:
+    out: dict = {"clients": {name: {"source": "aosp:cpp/art"} for name in clients}}
+    if withheld is not None:
+        out["withheld"] = withheld
+    return out
+
+
+def test_the_transmitted_half_maps_to_the_clients_by_name() -> None:
+    names = attribution.client_names(_geometry("a-c0", "a-c1"), _report("a-c0", "a-c1"))
+    assert names == ["a-c0", "a-c1"]
+
+
+def test_the_withheld_half_maps_back_through_the_runs_own_record() -> None:
+    """The adapters carry a suffix the clients file never does, and the run says which."""
+    names = attribution.client_names(
+        _geometry("a-c0-local", "a-c1-local"), _report("a-c0", "a-c1", withheld="local")
+    )
+    assert names == ["a-c0", "a-c1"]
+
+
+def test_a_geometry_holding_both_halves_is_refused() -> None:
+    with pytest.raises(SystemExit, match="one half or the other"):
+        attribution.client_names(_geometry("a-c0", "a-c0-local"), _report("a-c0", withheld="local"))
+
+
+def test_the_suffix_is_the_recorded_one_and_not_whatever_trails_the_name() -> None:
+    """A single-adapter run records no withheld half, so nothing is stripped."""
+    with pytest.raises(SystemExit, match="no recorded source"):
+        attribution.client_names(_geometry("a-c0-local"), _report("a-c0"))
+
+
+def test_a_client_the_run_never_recorded_is_refused() -> None:
+    with pytest.raises(SystemExit, match="no recorded source"):
+        attribution.client_names(_geometry("a-c9"), _report("a-c0", withheld="local"))
