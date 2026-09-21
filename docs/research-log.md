@@ -4630,3 +4630,55 @@ frozen global one, so it fits what the global adapter has not already explained,
 over is the client's own. That is exactly the quantity personalization is for, and it is the
 quantity an attacker wants. The defence works here because the two coincide, not because the
 instance boundary hides anything.
+
+### Registered before computing: how we read FDLoRA's algorithm, and the step it does not account for (2026-09-21)
+
+`# research(2026-09)`. FDLoRA (Lu et al., arXiv:2406.07925) is the remaining half of the
+adapter-instance cut. Its paper leaves three things a measurement must decide, so the reading is
+registered here, before any of it is implemented or run.
+
+**The paper's own claim.** "The personalized LoRA primarily focuses on acquiring knowledge from
+local data and remains uninvolved in the federated learning process. The global LoRA aggregates
+knowledge from diverse clients." Privacy is asserted twice and measured nowhere: the framing
+paragraph credits FL with "mitigating privacy risks associated with transmitting private data to
+central servers", and the conclusion lists "data privacy protection" among FDLoRA's benefits.
+
+**1. The personalized module does leave the client, once, and the paper does not say so.**
+Algorithm 1 line 7 initializes the shared module from the personalized ones:
+`theta_s(0) <- (1/N) sum_i theta_p(i)`, described as "the average of all clients theta_p(i) is used
+to initialize the global LoRA parameters theta_s for the subsequent federated learning process".
+An average over N clients is computed where all N are visible, so either the personalized modules
+are uploaded once or their average is, and in both cases the tensor the design promises never
+participates is the seed of the one that does. The paper states no mechanism, secure aggregation or
+otherwise, and its "remains uninvolved" sentence is written as though line 7 were not there. **Our
+reading:** the server receives each client's personalized module at initialization, because that is
+what the pseudocode's placement outside the per-client loop describes and it is the only reading
+that needs no unstated machinery. This is registered as a *finding about the design*, not a
+modelling convenience: our attacks read the personalized modules at round 0 as transmitted, and the
+measurement reports what that one round costs.
+
+**2. Prose and pseudocode disagree about what the inner loop trains.** The prose says each client
+"updates its personalized LoRA module parameters (Algorithm 1, line 12)"; line 12 reads
+`theta_s(i)(t) <- InnerOpt(theta_s(i)(t), D(i), K)`, which updates the global module. **Our
+reading: the pseudocode.** The outer step at line 17 differences the global module against the
+dispatched one, so an inner loop that trained the personalized module would send a zero update and
+the federation would learn nothing. The prose is the error.
+
+**3. The sync test is written so that it fires when it should not.** Line 9 is
+`is_sync <- t % H` and line 14 overwrites the personalized module with the locally optimized global
+one. As written, `t % H` is true whenever `t` is *not* a multiple of `H`, so the personalized module
+would be overwritten on every round except the periodic one. **Our reading: `t % H == 0`**, the
+only reading consistent with "update the personalized LoRA module every H communication rounds" in
+the comment directly above it, and with calling `H` the asynchronous update frequency.
+
+**What this predicts, registered before it is run.** Our FedDPA result says the leak lives in the
+residue the local adapter fits once the frozen global one has explained what it can. FDLoRA's
+boundary closes and reopens: every `H` rounds the personalized module is overwritten by the global
+one, so the residue is destroyed and rebuilt rather than accumulated. If the residue account is
+right, then as `H` falls the two halves should converge and the transmitted half should carry more
+of the source, with `H = 1` the endpoint where the withheld half is a copy of what was just sent.
+`K`, the inner steps, moves it the other way, by the paper's own words: "Increasing K will give
+more attention to local knowledge", default 3. A sweep whose endpoints are `H = 1` against large
+`H`, and `K = 1` against `K` well above 3, is therefore a test between the residue account and an
+account where the instance boundary itself does the work. We predict the residue account: the
+withheld half's advantage should shrink monotonically with `H`.
