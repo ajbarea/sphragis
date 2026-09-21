@@ -21,6 +21,7 @@ from sphragis.measure.attribution import (
     ALTITUDES,
     Source,
     accuracy,
+    client_names,
     group_permutation_p,
     permutation_p,
     relation_means,
@@ -38,11 +39,9 @@ parser.add_argument("--out", type=Path, required=True)
 def main() -> None:
     args = parser.parse_args()
     geometry = json.loads(args.geometry.read_text())
-    clients = json.loads(args.clients.read_text())["clients"]
-    names = [name.split("/", 1)[1] for name in geometry["adapters"]]
-    missing = [n for n in names if n not in clients]
-    if missing:
-        raise SystemExit(f"adapters with no recorded source: {missing[:5]}")
+    report_in = json.loads(args.clients.read_text())
+    clients = report_in["clients"]
+    names = client_names(geometry, report_in)
     sources = [Source.parse(clients[n]["source"]) for n in names]
     cosine = geometry["cosine"]
     report: dict = {"clients": len(names), "altitudes": {}}

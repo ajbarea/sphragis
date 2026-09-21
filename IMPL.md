@@ -15,8 +15,15 @@ floor of 1,716 groupings at every seed and costs the detector five to twelve poi
 against the single adapter (0.787 to 0.732 at one false alarm in a hundred, rounds of 16). The
 classifier reads it *better* than the single adapter, 0.750 at p 0.036 against 0.583 at p 0.30,
 because the schedule trains the communicated adapter twice where the single-adapter run trains
-once. Next: job 162578 is the geometry of the withheld `-local` halves, which the same two
-instruments then read, and that is the comparison FedDPA and FDLoRA never make.
+once.
+
+**And the half it withholds identifies best** (job 162578), the comparison neither paper makes.
+Same run, same clients, two passes each, so no length confound: nearest-class attribution beyond
+projects reaches 1.000 at the floor of 1,716 groupings on the local adapter against 0.750 on the
+transmitted one, and the detector swaps organizations, AOSP at the floor on what is sent and Qt at
+0.009 on what is kept. The adapter-instance cut is the only one of the four splits that holds back
+more than it sends, and the reason is the schedule: the local adapter fits what the global one has
+not explained, which is both what personalization is for and what an attacker wants.
 
 **RQ1, dev window, three seeds, fp32:** Qt +0.0316 [+0.0089, +0.0567], OpenStack +0.0230
 [+0.0000, +0.0457], mixed. The test window stays sealed until in-principle acceptance.

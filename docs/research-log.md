@@ -4585,3 +4585,48 @@ to leave out.
    behavioral fingerprints and attribution accuracy." Project-level configuration as a modifier of
    attribution is one step from organizational convention as the thing attributed, and nobody has
    taken it.
+
+### What FedDPA withholds is the half that identifies best (2026-09-21, job 162578)
+
+`*-dual-cpp-rebuilt-c128-t2-local.json`. The same run, the same clients, the same two rounds: the
+local adapter each client keeps, read by the two instruments that read the global one it sends.
+Both halves had two training passes over the same 128 examples, so this comparison carries none of
+the length confound that separates the dual run from the single-adapter one. Neither FedDPA nor
+FDLoRA makes it.
+
+**The classifier finds the organization perfectly in the half that never leaves.** Nearest-class
+attribution beyond the target's own projects, within C++:
+
+| | accuracy | p over 1,716 relabelings |
+|---|---|---|
+| single adapter | 0.583 | 0.302 |
+| the half FedDPA transmits | 0.750 | 0.036 |
+| the half FedDPA withholds | **1.000** | **0.0006**, the floor |
+
+**The detector swaps which organization it can see.** On the transmitted half AOSP sits at the
+permutation floor and Qt does not; on the withheld half that reverses.
+
+| rounds of 16, two of its clients | transmitted AUC / TPR | withheld AUC / TPR |
+|---|---|---|
+| AOSP | 0.965 / 0.732 | 0.659 / 0.094 |
+| Qt | 0.907 / 0.493 | 0.822 / 0.329 |
+
+| project permutation, median p | transmitted | withheld |
+|---|---|---|
+| AOSP | 0.0006 (floor) | 0.115 |
+| Qt | 0.070 | 0.009 |
+
+**What this says about the defence.** The adapter-instance cut is the only one of the four splits
+read here that holds back more than it sends. It is still not source-hiding: the transmitted half
+alone puts AOSP at the floor of 1,716 groupings at every seed and catches 73% of two-client rounds
+at one false alarm in a hundred. But the half kept local is where the organization is most legible,
+1.000 against 0.750, and for Qt it is the only half a detector can read at all. A cut that leaves
+the source readable in the part it transmits is the pattern for the other three; this one leaves
+the source *more* readable in the part it does not, which is a different statement and a better one
+for the defence.
+
+The mechanism is the schedule rather than the instance. The local adapter trains alongside the
+frozen global one, so it fits what the global adapter has not already explained, and what is left
+over is the client's own. That is exactly the quantity personalization is for, and it is the
+quantity an attacker wants. The defence works here because the two coincide, not because the
+instance boundary hides anything.

@@ -47,6 +47,33 @@ class Source:
 ALTITUDES = ("project", "organization", "content")
 
 
+def client_names(geometry: dict, report: dict) -> list[str]:
+    """The client each saved adapter belongs to, whichever half of a dual run it is.
+
+    A dual-adapter run saves two adapters a client: the transmitted one under the client's name
+    and the withheld one under `<client>-<withheld>`. The updates file records which suffix the
+    withheld half carries, so a geometry over that half is mapped back by the run's own record
+    rather than by stripping whatever is on the end. A geometry mixing the two halves is refused:
+    the two are different experiments, and every statistic here assumes one adapter a client.
+    """
+    clients = report["clients"]
+    names = [name.split("/", 1)[1] for name in geometry["adapters"]]
+    withheld = report.get("withheld")
+    if withheld:
+        marked = [name for name in names if name.endswith(f"-{withheld}")]
+        if marked and len(marked) != len(names):
+            raise SystemExit(
+                f"{len(marked)} of {len(names)} adapters are the withheld half: a geometry holds "
+                "one half or the other, never both"
+            )
+        if marked:
+            names = [name[: -len(withheld) - 1] for name in names]
+    missing = [name for name in names if name not in clients]
+    if missing:
+        raise SystemExit(f"adapters with no recorded source: {missing[:5]}")
+    return names
+
+
 def relation(a: Source, b: Source) -> str:
     """How two sources relate, from most to least shared."""
     if a == b:

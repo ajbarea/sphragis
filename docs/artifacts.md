@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 121 artifacts under
+repository. This page is generated from those scripts: 124 artifacts under
 29 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -23,7 +23,8 @@ How alike are two LoRA updates, and is it the data or the initialization that de
 | `client-geometry-cpp-early-c128-p2.json` | `client-geometry-cpp-early-c128.json` |
 | `client-geometry-cpp-early.json` | `client-geometry-cpp-rebuilt-c128-a.json` |
 | `client-geometry-cpp-rebuilt-c128-b.json` | `client-geometry-cpp-rebuilt-c128.json` |
-| `client-geometry-dual-cpp-rebuilt-c128-t2.json` | `client-geometry.json` |
+| `client-geometry-dual-cpp-rebuilt-c128-t2-local.json` | `client-geometry-dual-cpp-rebuilt-c128-t2.json` |
+| `client-geometry.json` |  |
 
 ## `scripts/adapter_projection.py`
 
@@ -46,8 +47,9 @@ RQ2 under secure aggregation: does a round's aggregate betray whose clients were
 | `aggregate-attack-cpp-beyond-project-c128.json` | `aggregate-attack-cpp-beyond-project.json` |
 | `aggregate-attack-cpp-early.json` | `aggregate-attack-cpp-only.json` |
 | `aggregate-attack-cpp-rebuilt-c128-a.json` | `aggregate-attack-cpp-rebuilt-c128-b.json` |
-| `aggregate-attack-cpp-rebuilt-c128.json` | `aggregate-attack-dual-cpp-rebuilt-c128-t2.json` |
-| `aggregate-attack-project.json` | `aggregate-attack.json` |
+| `aggregate-attack-cpp-rebuilt-c128.json` | `aggregate-attack-dual-cpp-rebuilt-c128-t2-local.json` |
+| `aggregate-attack-dual-cpp-rebuilt-c128-t2.json` | `aggregate-attack-project.json` |
+| `aggregate-attack.json` |  |
 
 ## `scripts/censoring.py`
 
@@ -65,8 +67,8 @@ Read the client updates' geometry as a source-attribution attack, at three altit
 |---|---|
 | `client-attribution-cpp-256-c256.json` | `client-attribution-cpp-early-c128-p2.json` |
 | `client-attribution-cpp-early-c128.json` | `client-attribution-cpp-early.json` |
-| `client-attribution-cpp-rebuilt-c128.json` | `client-attribution-dual-cpp-rebuilt-c128-t2.json` |
-| `client-attribution.json` |  |
+| `client-attribution-cpp-rebuilt-c128.json` | `client-attribution-dual-cpp-rebuilt-c128-t2-local.json` |
+| `client-attribution-dual-cpp-rebuilt-c128-t2.json` | `client-attribution.json` |
 
 ## `scripts/client_updates.py`
 

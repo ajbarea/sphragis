@@ -35,7 +35,7 @@ from sphragis.measure.aggregate import (
     paired_subset_difference,
     project_permutation,
 )
-from sphragis.measure.attribution import Source
+from sphragis.measure.attribution import Source, client_names
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
@@ -73,8 +73,9 @@ def main() -> None:
             "--beyond-project splits over projects, so it has nothing to test at --altitude project"
         )
     geometry = json.loads(args.geometry.read_text())
-    clients = json.loads(args.clients.read_text())["clients"]
-    names = [name.split("/", 1)[1] for name in geometry["adapters"]]
+    report_in = json.loads(args.clients.read_text())
+    clients = report_in["clients"]
+    names = client_names(geometry, report_in)
     sources = [Source.parse(clients[n]["source"]) for n in names]
     norms = [geometry["update_norm"][name] for name in geometry["adapters"]]
     products = gram(geometry["cosine"], norms)
