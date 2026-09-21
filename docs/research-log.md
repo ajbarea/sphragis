@@ -4445,3 +4445,71 @@ room to raise it, and at 1 round averaging has not yet opened the gap the effect
 informative band is in between, which is why this run uses 10, 30 and 50. A defence evaluation that
 takes the defaults would report no effect and be wrong about the regime rather than about the
 mechanism.
+
+### The two items the reviews left open, closed (2026-09-21)
+
+The three adversarial reviews on 2026-09-18 and 2026-09-19 each ended with a list recorded rather
+than fixed. Re-reading those lists against the code, most had been overtaken: the permutation now
+has behavioural tests rather than text searches, the enumeration counts distinct groupings, the
+overwrite guard claims exclusively at job start, and the contamination battery's partial output is
+claimed under its own name. Two were still standing, and both are closed here.
+
+**The family-wise step had no test, and it carries a quoted number.** Choosing the rank after
+seeing the table is a search, so `subspace_split.py` compares the family's best cell to the null's
+best cell over the same ranks, taken per relabeling. That was ten lines inside `main()`, unreachable
+from a test, and it produces the 0.0012 that the report gives for SDFLoRA's shared half. It is now
+`max_over_ranks(cells, null_size)`, and five mutants that the previous suite would have accepted
+each fail: taking the minimum over relabelings rather than the maximum, scoring the best cell
+against its own null instead of the family's, pooling every cell's null draws into one maximum,
+counting degenerate cells as part of the family, and comparing strictly so the truth no longer ties
+itself and the p-value loses its floor. All six committed family-wise values re-derive from the
+extracted function unchanged, the rebuilt corpus's 0.001166 among them.
+
+**A killed job's claim could not be told from a live one.** `claim_result` creates the result path
+exclusively and fills it later, and an EXIT trap releases it if the job never writes. Bash runs that
+trap even when a fatal signal takes it, so a cancel or a time limit releases cleanly; SIGKILL does
+not, and the empty file it strands is byte for byte what a running job's fresh claim looks like. A
+requeue of that same job then refused its own leftover. The claim now records the job that made it
+in a `.claim` beside the result, and an empty claim is treated as abandoned only on evidence: its
+owner is this job, which a requeue keeps, or Slurm no longer lists that job. A claim with a result
+in it is never reclaimed, nor is an empty one whose owner cannot be read or whose owner is still
+queued, since that is exactly what a live claim looks like. Eight tests hold those cases, four of
+them driving a real job to its claim and killing the process group.
+
+**What an independent review of the claim found, and it was worse than the bug it fixed.** A
+reviewer given the claim functions and told to reproduce rather than read built the input matrix
+and broke the fix twice, both times by remembering that TIGRIS and SPORC are two Slurm
+installations over one `$HOME`. `squeue` answers for the cluster it runs on, so a foreign job id
+comes back unknown, which the fix read as "gone" and reclaimed: a job genuinely running on the
+other cluster loses its claim, and whichever finishes last overwrites the other's measurement with
+no error and no OVERWRITE. Worse, the two clusters run independent id counters, so a job whose own
+id happens to equal the record's took the shorter path and reclaimed without asking Slurm at all.
+The owner is now a cluster and an id, both branches require the cluster to match, and a claim from
+the other cluster is refused with a message naming it rather than guessed at. A record from before
+the cluster was written names nobody and is refused too.
+
+Two smaller things from the same review, both fixed: sourcing the environment twice reset the
+claims list, so a claim made before the second source outlived the exit that should have released
+it; and a script that sets its own `trap ... EXIT` silently replaces the release, which no job does
+today and none may, so the suite now refuses one that does.
+
+**What an independent review of that extraction added.** A reviewer given the function and the
+committed results, and told to reproduce rather than read, confirmed the six values and killed
+eleven mutants of its own, including the five above. It found one the suite could not see: the
+`null_size` argument was unconstrained, so a cell carrying fewer relabelings than the caller
+claimed truncated the family silently and read as more significant, while one carrying more raised
+an IndexError. The k-th entry has to mean the same relabeling in every cell for the maximum to be
+a correction at all, so the function now refuses a family whose cells disagree with the declared
+null, and refuses an empty null rather than returning a NaN p that `f"{p:.3f}"` prints as "nan".
+The same review confirmed the relabelings do line up: `main()` builds the null once, before the
+rank loop, and passes that one list into every cell.
+
+**Recorded, not changed:** `balanced_accuracy` is reported beside `accuracy` at every rank and is
+not family-wise corrected, because `scored()` keeps only the accuracy column of the null. Nothing
+quotes a family-wise p for it, so no number is wrong, but the asymmetry should be either closed or
+stated before the report goes out.
+
+One thing found on the way and left alone: a `trap 'exit 143' TERM` added to carry a cancel to the
+release turned out to be redundant, since bash already runs the EXIT trap on a fatal signal. It was
+removed rather than kept as insurance, and the test written for it now states the behaviour bash
+actually has.

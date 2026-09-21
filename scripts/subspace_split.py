@@ -195,6 +195,32 @@ def scored(rows: np.ndarray | None, labels: list[str], projects: list[str], null
     }
 
 
+def max_over_ranks(cells: list[dict], null_size: int) -> dict | None:
+    """The family's best cell, judged against the null's best cell over the same family.
+
+    Choosing the rank after seeing the table is a search, and the best cell's own p prices one
+    choice rather than the search. The maximum is taken per relabeling, so each null draw gets
+    the same freedom to pick its best rank that the reported cell took. Degenerate cells were
+    never scored and are not part of the family.
+    """
+    scored_cells = [cell for cell in cells if not cell.get("degenerate")]
+    if not scored_cells:
+        return None
+    # The k-th entry means the same relabeling in every cell, which is what makes a maximum over
+    # ranks a correction rather than a mixture of unrelated draws. A cell short of the full null
+    # would truncate the family silently and read as more significant than it is.
+    if null_size < 1:
+        raise ValueError("a family-wise p needs a null to judge the family against")
+    lengths = {len(cell["null_accuracies"]) for cell in scored_cells}
+    if lengths != {null_size}:
+        raise ValueError(
+            f"every cell must carry all {null_size} relabelings, found {sorted(lengths)}"
+        )
+    best = max(cell["accuracy"] for cell in scored_cells)
+    null_best = [max(cell["null_accuracies"][k] for cell in scored_cells) for k in range(null_size)]
+    return {"accuracy": best, "p": float(np.mean([b >= best for b in null_best]))}
+
+
 def main() -> None:
     args = parser.parse_args()
     loaded = np.load(args.vectors, allow_pickle=False)
@@ -268,24 +294,14 @@ def main() -> None:
         print(f"rank {rank:3}: {share:5.1f}% energy | " + " | ".join(parts))
         args.out.write_text(json.dumps(report, indent=2))
 
-    # Choosing the rank after seeing the table is a search, so the family's best cell is judged
-    # against the null's best cell over the same family: the maximum over ranks, per relabeling.
     for half in ("shared", "residual"):
-        cells = [
-            report["ranks"][rank][half]
-            for rank in report["ranks"]
-            if not report["ranks"][rank][half].get("degenerate")
-        ]
-        if not cells:
+        family = max_over_ranks(
+            [report["ranks"][rank][half] for rank in report["ranks"]], len(null)
+        )
+        if family is None:
             continue
-        best = max(c["accuracy"] for c in cells)
-        null_best = [max(c["null_accuracies"][k] for c in cells) for k in range(len(null))]
-        report[f"max_over_ranks_{half}"] = {
-            "accuracy": best,
-            "p": float(np.mean([b >= best for b in null_best])),
-        }
-        family_p = report[f"max_over_ranks_{half}"]["p"]
-        print(f"best {half} cell over ranks: {best:.3f}, p {family_p:.3f}")
+        report[f"max_over_ranks_{half}"] = family
+        print(f"best {half} cell over ranks: {family['accuracy']:.3f}, p {family['p']:.3f}")
     report["complete"] = True
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")

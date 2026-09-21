@@ -7,8 +7,12 @@ What is being built right now. The dated record of findings, numbers and correct
 
 ## In flight
 
-**PR #13** (`feat/wellposed-filter`), open for AJ: the whole apparatus, from corpus to gate and
-both RQ2 threat models. Its description was rewritten on 2026-09-18 against current evidence.
+**PR #13** merged 2026-09-20: the whole apparatus, from corpus to gate and both RQ2 threat models.
+
+**Open:** the two items the adversarial reviews left standing, closed on a branch. The family-wise
+step over ranks is now a function with mutant-proven tests, and a SIGKILLed job's empty claim is
+told from a live one by the `.claim` record beside it, so a requeue no longer refuses its own
+leftover.
 
 **RQ1, dev window, three seeds, fp32:** Qt +0.0316 [+0.0089, +0.0567], OpenStack +0.0230
 [+0.0000, +0.0457], mixed. The test window stays sealed until in-principle acceptance.
