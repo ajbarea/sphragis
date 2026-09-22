@@ -32,7 +32,7 @@ MODE="${MODE:-pilot}"
 # Submit from the checkout: --output is relative and is opened before this body runs.
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
-tag_result_suffix SEEDS
+tag_result_suffix SEEDS LORA_RANK
 
 if [ "$MODE" = "windows" ]; then
   SOURCE=(--root "$HOME/corpus-windows" --org openstack --org qt)
@@ -47,6 +47,7 @@ claim_result OUT "$HOME/rq1-$MODE$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/rq1_pilot.py \
   "${SOURCE[@]}" \
   --seeds "${SEEDS:-1}" \
+  --lora-rank "${LORA_RANK:-32}" \
   --equalize-train \
   --adapters "$HOME/scratch/sphragis-adapters-rq1-$MODE$RESULT_SUFFIX" \
   --out "$OUT"

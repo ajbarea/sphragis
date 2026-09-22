@@ -545,6 +545,18 @@ def test_a_different_client_size_names_its_own_results(tmp_path: Path) -> None:
     ) == ("[-c128]")
 
 
+def test_a_rerun_at_another_rank_names_its_own_result(tmp_path: Path) -> None:
+    """The conditional branch reruns an arm at rank 256. Sharing a name with the registered
+    rank-32 result would overwrite the very thing the branch exists to be compared against."""
+    assert _suffix(tmp_path, tags="LORA_RANK", SLURM_CLUSTER_NAME="tigris", LORA_RANK="256") == (
+        "[-r256]"
+    )
+
+
+def test_the_registered_rank_keeps_the_existing_names(tmp_path: Path) -> None:
+    assert _suffix(tmp_path, tags="LORA_RANK", SLURM_CLUSTER_NAME="tigris", LORA_RANK="32") == "[]"
+
+
 _GEOMETRY_JOBS = {
     "adapter_geometry.sbatch": "client-geometry{}.json",
     "adapter_projection.sbatch": "client-vectors{}.npz",
