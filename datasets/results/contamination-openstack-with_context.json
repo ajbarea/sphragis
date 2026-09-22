@@ -847,12 +847,13 @@
       "min_k_percent": -9.102022488911947
     },
     {
-      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
       "window": "post",
       "tokens": 92,
       "undefined_positions": 0,
       "min_k_plus_plus": -2.384683913146209,
-      "min_k_percent": -7.703844732708401
+      "min_k_percent": -7.703844732708401,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I68abfb36d209e4130d67af08b5b2de3dbffad903:deliverables/caracal/manila.yaml:2:49",
@@ -2526,11 +2527,12 @@
       "edit_similarity": 0.23404255319148937
     },
     {
-      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
       "window": "post",
       "predicted": "review the Starlingx summary of Vuls scan reports, and the OpenStack Security Advisories and Notes. I then analyze these documents to identify potential security vulnerabilities and assess their impact on the Starlingx platform. Based on this analysis, I recommend appropriate mitigation strategies or patches to address the identified issues. Additionally, I ensure that all security updates are integrated into the Starlingx release cycle to maintain the highest level of security for our users.",
       "reference": "contribute to Starlingx security related features and code reviews\nincluding: oidc, vault, portieris.",
-      "edit_similarity": 0.1806020066889632
+      "edit_similarity": 0.1806020066889632,
+      "identities_redacted": true
     },
     {
       "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:7:365",

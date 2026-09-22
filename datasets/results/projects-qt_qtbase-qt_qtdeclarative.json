@@ -8108,11 +8108,12 @@
       {
         "id": "qt:Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0:src/corelib/global/qalloc.h:1:1",
         "change_id": "Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0",
-        "prediction": "// Copyright (C) 2025 <aurelien.brooke@free.fr>",
+        "prediction": "// Copyright (C) 2025 <<redacted-email>>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.7037037037037037
+        "edit_similarity": 0.7037037037037037,
+        "identities_redacted": true
       },
       {
         "id": "qt:I7adff41fa006669677df457704d20c02f1af7197:src/corelib/serialization/qxmlstream.cpp:1:2955",
@@ -11224,11 +11225,12 @@
       {
         "id": "qt:I55c5de140fe8175e9deaca519bb734654dc366f4:tests/auto/qml/qqmljslogger/tst_qqmljslogger.cpp:2:1",
         "change_id": "I55c5de140fe8175e9deaca519bb734654dc366f4",
-        "prediction": "// Copyright (C) 2016 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com, author Sergio Martins <sergio.martins@kdab.com>",
+        "prediction": "// Copyright (C) 2016 Klaralvdalens Datakonsult AB, a KDAB Group company, <redacted-email>, author Sergio Martins <<redacted-email>>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.3728813559322034
+        "edit_similarity": 0.3728813559322034,
+        "identities_redacted": true
       },
       {
         "id": "qt:I9da962b671dfe1f9e29fb260655f4f37132c6815:src/qmlls/qqmllsutils.cpp:1:2006",
@@ -13629,11 +13631,12 @@
       {
         "id": "qt:Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0:src/corelib/global/qalloc.h:1:1",
         "change_id": "Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0",
-        "prediction": "// Copyright (C) 2025 Aur\u00e9lien Brooke <aurelien.brooke@free.fr>",
+        "prediction": "// Copyright (C) 2025 Aur\u00e9lien Brooke <<redacted-email>>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.8709677419354839
+        "edit_similarity": 0.8709677419354839,
+        "identities_redacted": true
       },
       {
         "id": "qt:I7adff41fa006669677df457704d20c02f1af7197:src/corelib/serialization/qxmlstream.cpp:1:2955",

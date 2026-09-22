@@ -605,13 +605,14 @@
         "edit_similarity": 0.5355648535564853
       },
       {
-        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
         "change_id": "Ie328f46368fafa5deeff763b414e49b7941bb366",
         "prediction": "related to the Starlingx product. I review the Starlingx summary of Vuls scan reports, as well as the OpenStack Security Advisories and Notes.",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.6531645569620254
+        "edit_similarity": 0.6531645569620254,
+        "identities_redacted": true
       },
       {
         "id": "openstack:Iacc3f13c69cf8a9b76c8019203e514fe3885e24c:playbookconfig/src/playbooks/roles/backup/prepare-env/tasks/main.yml:2:129",
@@ -9276,13 +9277,14 @@
         "edit_similarity": 0.9223300970873787
       },
       {
-        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
         "change_id": "Ie328f46368fafa5deeff763b414e49b7941bb366",
         "prediction": "related to the Starlingx project.  I review the Starlingx summary of\nVuls scan reports, and the OpenStack Security Advisories and Notes.",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.6940874035989717
+        "edit_similarity": 0.6940874035989717,
+        "identities_redacted": true
       },
       {
         "id": "openstack:Iacc3f13c69cf8a9b76c8019203e514fe3885e24c:playbookconfig/src/playbooks/roles/backup/prepare-env/tasks/main.yml:2:129",
@@ -17947,13 +17949,14 @@
         "edit_similarity": 0.912621359223301
       },
       {
-        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
         "change_id": "Ie328f46368fafa5deeff763b414e49b7941bb366",
         "prediction": "related to the StarlingX project.  I review the StarlingX summary of\nVuls scan reports, and the Openstack Security Advisories and Notes.",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.6889460154241646
+        "edit_similarity": 0.6889460154241646,
+        "identities_redacted": true
       },
       {
         "id": "openstack:Iacc3f13c69cf8a9b76c8019203e514fe3885e24c:playbookconfig/src/playbooks/roles/backup/prepare-env/tasks/main.yml:2:129",

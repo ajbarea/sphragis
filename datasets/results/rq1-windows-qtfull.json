@@ -2686,11 +2686,12 @@
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:1:378",
         "change_id": "I110dc88b2032971049e4676a5fc3b112cf8e916f",
-        "prediction": "```yaml\nemail: lazekteam@gmail.com\n```",
+        "prediction": "```yaml\nemail: <redacted-email>\n```",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.5625
+        "edit_similarity": 0.5625,
+        "identities_redacted": true
       },
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:2:180",
@@ -16325,11 +16326,12 @@
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:1:378",
         "change_id": "I110dc88b2032971049e4676a5fc3b112cf8e916f",
-        "prediction": "    email: josh.lakeman@redhat.com",
+        "prediction": "    email: <redacted-email>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.5555555555555556
+        "edit_similarity": 0.5555555555555556,
+        "identities_redacted": true
       },
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:2:180",
@@ -29964,11 +29966,12 @@
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:1:378",
         "change_id": "I110dc88b2032971049e4676a5fc3b112cf8e916f",
-        "prediction": "    email: lazkezteam@gmail.com",
+        "prediction": "    email: <redacted-email>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.6376811594202898
+        "edit_similarity": 0.6376811594202898,
+        "identities_redacted": true
       },
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:2:180",

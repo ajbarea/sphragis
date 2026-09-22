@@ -498,13 +498,14 @@
         "edit_similarity": 1.0
       },
       {
-        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
         "change_id": "Ie328f46368fafa5deeff763b414e49b7941bb366",
         "prediction": "related to the Starlingx product. I review the Starlingx summary of Vuls scan reports, as well as the OpenStack Security Advisories and Notes.",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.6736292428198434
+        "edit_similarity": 0.6736292428198434,
+        "identities_redacted": true
       },
       {
         "id": "openstack:I99c0eb76d63a5902555f5527dbfdaf96c47a098f:bindep.txt:3:53",
@@ -8476,13 +8477,14 @@
         "edit_similarity": 0.9620253164556962
       },
       {
-        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
         "change_id": "Ie328f46368fafa5deeff763b414e49b7941bb366",
         "prediction": "related to the Starlingx project.  I review the Starlingx summary of\nVuls scan reports, and the OpenStack Security Advisories and Notes.",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.7161803713527851
+        "edit_similarity": 0.7161803713527851,
+        "identities_redacted": true
       },
       {
         "id": "openstack:I99c0eb76d63a5902555f5527dbfdaf96c47a098f:bindep.txt:3:53",
@@ -16454,13 +16456,14 @@
         "edit_similarity": 1.0
       },
       {
-        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+        "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
         "change_id": "Ie328f46368fafa5deeff763b414e49b7941bb366",
         "prediction": "related to the StarlingX project.  I review the StarlingX summary of\nVuls scan reports, and the OpenStack Security Advisories and Notes.",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.7055702917771883
+        "edit_similarity": 0.7055702917771883,
+        "identities_redacted": true
       },
       {
         "id": "openstack:I99c0eb76d63a5902555f5527dbfdaf96c47a098f:bindep.txt:3:53",

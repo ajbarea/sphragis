@@ -25,6 +25,7 @@ from pathlib import Path
 from statistics import pstdev
 from typing import Any
 
+from sphragis.corpus.redact import redact_text
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.model import run_provenance
 from sphragis.experiment.runner import to_clusters
@@ -84,7 +85,12 @@ def merge(paths: list[Path]) -> tuple[dict[str, list[dict[str, Any]]], tuple[int
             if arm in merged:
                 raise SystemExit(f"{path} repeats arm {arm}: two runs used the same seed")
             reference = first["results"].get(f"{arm.rsplit('|', 1)[0]}|s{first['seeds'][0]}")
-            if reference is not None and {r["id"] for r in rows} != {r["id"] for r in reference}:
+            # Compared through the redaction, because a stored run whose ids were redacted
+            # and a fresh one whose ids were not are the same examples under different
+            # spellings, and this guard exists to catch different examples.
+            if reference is not None and {redact_text(r["id"]) for r in rows} != {
+                redact_text(r["id"]) for r in reference
+            }:
                 raise SystemExit(f"{path} scored different examples on {arm}")
             merged[arm] = rows
     return merged, tuple(seeds)
