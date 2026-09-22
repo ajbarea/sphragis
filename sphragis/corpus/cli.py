@@ -485,3 +485,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "verify": _stage_verify,
     }
     return stages[args.stage](args)
+
+
+if __name__ == "__main__":  # pragma: no cover - exercised by the module-entry test
+    # Without this, `python -m sphragis.corpus.cli fetch ...` imports the module, runs
+    # nothing and exits 0, which reads as a fetch that succeeded and wrote no snapshot.
+    raise SystemExit(main())

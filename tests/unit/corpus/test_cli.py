@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -788,3 +790,29 @@ def test_fetch_restricted_to_projects_asks_for_those_and_records_it(
     raw = snapshot_path(tmp_path, "aosp", "2025-03")
     record = json.loads((raw.parent / "2025-03.record.json").read_text())
     assert record["query"] == query
+
+
+def test_the_module_entry_runs_the_cli_rather_than_exiting_silently() -> None:
+    """`python -m sphragis.corpus.cli` used to import, run nothing and exit 0.
+
+    A fetch invoked that way reported success and wrote no snapshot, which is the one failure
+    shape this repository treats as worse than a crash.
+    """
+    result = subprocess.run(
+        [sys.executable, "-m", "sphragis.corpus.cli", "--help"],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[3],
+    )
+    assert result.returncode == 0, result.stderr
+    assert "fetch" in result.stdout, result.stdout
+
+
+def test_the_module_entry_refuses_an_unknown_stage() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "sphragis.corpus.cli", "nonsense"],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[3],
+    )
+    assert result.returncode != 0, "an unknown stage must not look like a clean run"
