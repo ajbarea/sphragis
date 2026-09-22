@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs
+.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs redact redact-check
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -172,6 +172,15 @@ docs-harvest:              ## Assert every figure on the site against its artifa
 	@# Also fails when docs/artifacts.md is stale. The test suite runs the same check, so a
 	@# page that has drifted from its measurement fails CI rather than waiting for a reader.
 	uv run --no-sync --no-active python harvest.py --check
+
+redact:                    ## Take third-party addresses out of the result artifacts
+	@# Run before committing a fresh result. The corpus keeps addresses that appear in code,
+	@# deliberately, so every run writes some into its predictions; the released artifacts are
+	@# the side that has to be clean. Staging one without this fails the suite and names it.
+	uv run --no-sync --no-active python scripts/redact_identities.py --write
+
+redact-check:              ## Report third-party addresses in the result artifacts
+	uv run --no-sync --no-active python scripts/redact_identities.py --check
 
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify
