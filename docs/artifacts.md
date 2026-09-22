@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 127 artifacts under
+repository. This page is generated from those scripts: 134 artifacts under
 30 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -197,7 +197,10 @@ Two pseudo-organizations built from one organization's own projects.
 
 | artifact | |
 |---|---|
-| `rq1-placebo-openstack.json` | `rq1-placebo-qt.json` |
+| `rq1-placebo-openstack-s2.json` | `rq1-placebo-openstack-s3.json` |
+| `rq1-placebo-openstack-seeds.json` | `rq1-placebo-openstack.json` |
+| `rq1-placebo-qt-s2.json` | `rq1-placebo-qt-s3.json` |
+| `rq1-placebo-qt-seeds.json` | `rq1-placebo-qt.json` |
 
 ## `scripts/power_rq1.py`
 
@@ -241,7 +244,8 @@ Pilot-scale RQ1: does the matched adapter beat the mismatched one, per organizat
 | `rq1-windows-qtfull-fp32-s2.json` | `rq1-windows-qtfull-fp32-s3.json` |
 | `rq1-windows-qtfull-fp32.json` | `rq1-windows-qtfull-s2.json` |
 | `rq1-windows-qtfull-s3.json` | `rq1-windows-qtfull.json` |
-| `rq1-windows-r256.json` | `rq1-windows.json` |
+| `rq1-windows-r256.json` | `rq1-windows-s2-r256.json` |
+| `rq1-windows.json` |  |
 
 ## `scripts/seed_effect.py`
 

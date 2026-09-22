@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest
+.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -120,6 +120,25 @@ submit-pinned:             ## Submit scripts/JOB.sbatch from a worktree pinned a
 	  && { [ -f \$$W/.venv-$$machine/pyvenv.cfg ] || { echo 'no .venv-$$machine on the cluster: make cluster-env CLUSTER=$(CLUSTER)'; exit 1; }; } \
 	  && cd \$$W && mkdir -p logs \
 	  && SPHRAGIS_CHECKOUT=\$$W sbatch $$flags scripts/$(JOB).sbatch"
+
+pull-logs:                 ## Copy the cluster's job logs into datasets/logs, the only other copy
+	@# A result carries its provenance, but the run's stdout lives only on the cluster: the
+	@# outcome-neutral lines, the printed contrasts, the warnings. They are a few kilobytes
+	@# each and they are the record that a job ran as specified, so they are kept here rather
+	@# than left on a filesystem this study does not control.
+	@mkdir -p datasets/logs
+	@# The count is the check, not the pipeline's exit code. An earlier form of this target
+	@# flattened with --strip-components and extracted nothing, and the pipeline still exited
+	@# 0, which is the shape of failure this repository treats as worse than a crash.
+	@before=$$(ls datasets/logs/*.log 2>/dev/null | wc -l); \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'find $$HOME/sphragis-pinned -name "sphragis-*.log" -print0 2>/dev/null | tar -czf - --null -T -' \
+	  | tar -xzf - -C datasets/logs --transform 's#.*/##' 2>/dev/null; \
+	after=$$(ls datasets/logs/*.log 2>/dev/null | wc -l); \
+	if [ "$$after" -eq 0 ]; then \
+	  echo "pull-logs copied nothing; is the cluster reachable and are there logs?" >&2; \
+	  exit 1; \
+	fi; \
+	echo "datasets/logs holds $$after job log(s), $$((after - before)) new"
 
 cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aarch64 TIGRIS, x86_64 SPORC)
 	@# The login node is aarch64 and builds its own venv in place. An x86_64 venv can only be

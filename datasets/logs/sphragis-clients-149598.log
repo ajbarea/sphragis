@@ -1,0 +1,19 @@
+aosp:cpp/art: 883 examples, 0 refused -> 3 clients
+aosp:cpp/frameworks-av: 297 examples, 0 refused -> 1 clients
+aosp:cpp/system-core: 204 examples, 0 refused -> 0 clients
+qt:cpp/qt-creator: 2366 examples, 2 refused -> 6 clients
+qt:cpp/qtbase: 2153 examples, 2 refused -> 6 clients
+qt:cpp/qtdeclarative: 1219 examples, 1 refused -> 4 clients
+qt:cpp/qtmultimedia: 458 examples, 0 refused -> 1 clients
+qt:cpp/qtgraphs: 281 examples, 0 refused -> 1 clients
+qt:cpp/qttools: 258 examples, 1 refused -> 1 clients
+openstack:python/nova: 221 examples, 0 refused -> 0 clients
+openstack:python/neutron: 216 examples, 0 refused -> 0 clients
+openstack:python/ironic: 193 examples, 1 refused -> 0 clients
+openstack:python/swift: 212 examples, 0 refused -> 0 clients
+openstack:python/starlingx-test: 370 examples, 0 refused -> 1 clients
+openstack:python/starlingx-config: 235 examples, 0 refused -> 0 clients
+qt:python/pyside-setup: 287 examples, 0 refused -> 1 clients
+openstack:docs/starlingx-docs: 632 examples, 1 refused -> 2 clients
+qt:docs/qtdoc: 630 examples, 0 refused -> 2 clients
+a source yields no full client at this size

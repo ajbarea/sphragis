@@ -1,0 +1,86 @@
+aosp:cpp/art: 1298 examples, 0 refused -> 5 clients
+aosp:cpp/perfetto: 1635 examples, 0 refused -> 6 clients
+aosp:cpp/frameworks-av: 528 examples, 1 refused -> 2 clients
+aosp:cpp/hardware-interfaces: 505 examples, 0 refused -> 1 clients
+aosp:cpp/system-core: 310 examples, 0 refused -> 1 clients
+qt:cpp/qt-creator: 2366 examples, 2 refused -> 6 clients
+qt:cpp/qtbase: 2153 examples, 2 refused -> 6 clients
+qt:cpp/qtdeclarative: 1219 examples, 1 refused -> 4 clients
+qt:cpp/qtmultimedia: 458 examples, 0 refused -> 1 clients
+openstack:docs/starlingx-docs: 632 examples, 1 refused -> 2 clients
+qt:docs/qtdoc: 630 examples, 0 refused -> 2 clients
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|▏         | 5/339 [00:00<00:58,  5.74it/s]Loading weights:   4%|▍         | 15/339 [00:00<00:17, 18.73it/s]Loading weights:   6%|▌         | 21/339 [00:01<00:20, 15.25it/s]Loading weights:   8%|▊         | 26/339 [00:01<00:16, 18.89it/s]Loading weights:   9%|▉         | 30/339 [00:02<00:24, 12.48it/s]Loading weights:  10%|█         | 35/339 [00:02<00:18, 16.42it/s]Loading weights:  12%|█▏        | 39/339 [00:02<00:16, 17.77it/s]Loading weights:  13%|█▎        | 43/339 [00:03<00:29, 10.00it/s]Loading weights:  14%|█▎        | 46/339 [00:03<00:27, 10.77it/s]Loading weights:  15%|█▌        | 51/339 [00:03<00:20, 14.35it/s]Loading weights:  16%|█▌        | 54/339 [00:04<00:26, 10.61it/s]Loading weights:  17%|█▋        | 56/339 [00:04<00:26, 10.61it/s]Loading weights:  18%|█▊        | 61/339 [00:04<00:20, 13.59it/s]Loading weights:  19%|█▉        | 64/339 [00:04<00:19, 14.21it/s]Loading weights:  19%|█▉        | 66/339 [00:05<00:27, 10.02it/s]Loading weights:  21%|██        | 71/339 [00:05<00:19, 13.82it/s]Loading weights:  22%|██▏       | 74/339 [00:05<00:17, 15.58it/s]Loading weights:  23%|██▎       | 77/339 [00:05<00:21, 12.41it/s]Loading weights:  23%|██▎       | 79/339 [00:06<00:28,  9.09it/s]Loading weights:  25%|██▍       | 84/339 [00:06<00:22, 11.28it/s]Loading weights:  26%|██▌       | 88/339 [00:06<00:17, 14.25it/s]Loading weights:  27%|██▋       | 90/339 [00:07<00:25,  9.81it/s]Loading weights:  28%|██▊       | 95/339 [00:07<00:17, 14.04it/s]Loading weights:  29%|██▉       | 98/339 [00:07<00:19, 12.16it/s]Loading weights:  29%|██▉       | 100/339 [00:08<00:24,  9.61it/s]Loading weights:  30%|███       | 102/339 [00:08<00:27,  8.73it/s]Loading weights:  32%|███▏      | 107/339 [00:08<00:17, 13.18it/s]Loading weights:  33%|███▎      | 111/339 [00:08<00:17, 13.14it/s]Loading weights:  33%|███▎      | 113/339 [00:09<00:19, 11.41it/s]Loading weights:  34%|███▍      | 115/339 [00:09<00:22,  9.78it/s]Loading weights:  35%|███▍      | 118/339 [00:09<00:19, 11.35it/s]Loading weights:  37%|███▋      | 124/339 [00:09<00:13, 15.89it/s]Loading weights:  37%|███▋      | 126/339 [00:10<00:16, 12.97it/s]Loading weights:  38%|███▊      | 130/339 [00:10<00:16, 12.82it/s]Loading weights:  40%|████      | 136/339 [00:10<00:11, 18.33it/s]Loading weights:  41%|████      | 139/339 [00:11<00:15, 12.57it/s]Loading weights:  42%|████▏     | 141/339 [00:11<00:14, 13.21it/s]Loading weights:  44%|████▎     | 148/339 [00:11<00:10, 17.72it/s]Loading weights:  45%|████▍     | 151/339 [00:11<00:15, 11.99it/s]Loading weights:  46%|████▋     | 157/339 [00:12<00:11, 15.76it/s]Loading weights:  47%|████▋     | 161/339 [00:12<00:10, 17.51it/s]Loading weights:  48%|████▊     | 164/339 [00:12<00:13, 12.97it/s]Loading weights:  50%|████▉     | 169/339 [00:12<00:10, 16.06it/s]Loading weights:  51%|█████     | 172/339 [00:13<00:09, 17.93it/s]Loading weights:  52%|█████▏    | 175/339 [00:13<00:14, 11.49it/s]Loading weights:  53%|█████▎    | 179/339 [00:13<00:11, 14.29it/s]Loading weights:  54%|█████▍    | 183/339 [00:13<00:10, 14.68it/s]Loading weights:  55%|█████▍    | 185/339 [00:14<00:11, 12.94it/s]Loading weights:  55%|█████▌    | 187/339 [00:14<00:14, 10.85it/s]Loading weights:  57%|█████▋    | 192/339 [00:14<00:10, 14.70it/s]Loading weights:  57%|█████▋    | 194/339 [00:14<00:09, 15.39it/s]Loading weights:  58%|█████▊    | 197/339 [00:15<00:14,  9.57it/s]Loading weights:  59%|█████▊    | 199/339 [00:15<00:15,  8.84it/s]Loading weights:  60%|██████    | 205/339 [00:15<00:09, 13.51it/s]Loading weights:  61%|██████▏   | 208/339 [00:16<00:09, 13.45it/s]Loading weights:  62%|██████▏   | 210/339 [00:16<00:14,  8.64it/s]Loading weights:  64%|██████▍   | 217/339 [00:16<00:08, 13.75it/s]Loading weights:  65%|██████▍   | 220/339 [00:16<00:07, 15.21it/s]Loading weights:  66%|██████▌   | 223/339 [00:17<00:08, 14.46it/s]Loading weights:  67%|██████▋   | 226/339 [00:17<00:07, 15.29it/s]Loading weights:  68%|██████▊   | 229/339 [00:17<00:06, 17.00it/s]Loading weights:  68%|██████▊   | 232/339 [00:17<00:05, 18.50it/s]Loading weights:  69%|██████▉   | 235/339 [00:18<00:09, 11.33it/s]Loading weights:  71%|███████   | 240/339 [00:18<00:06, 16.21it/s]Loading weights:  72%|███████▏  | 243/339 [00:18<00:05, 17.24it/s]Loading weights:  73%|███████▎  | 246/339 [00:19<00:09,  9.92it/s]Loading weights:  74%|███████▍  | 251/339 [00:19<00:06, 13.03it/s]Loading weights:  75%|███████▌  | 255/339 [00:19<00:05, 15.45it/s]Loading weights:  76%|███████▌  | 258/339 [00:19<00:06, 13.10it/s]Loading weights:  78%|███████▊  | 265/339 [00:19<00:03, 19.69it/s]Loading weights:  79%|███████▉  | 268/339 [00:20<00:03, 18.96it/s]Loading weights:  80%|███████▉  | 271/339 [00:20<00:04, 14.18it/s]Loading weights:  82%|████████▏ | 278/339 [00:20<00:03, 19.30it/s]Loading weights:  83%|████████▎ | 281/339 [00:20<00:03, 15.70it/s]Loading weights:  83%|████████▎ | 283/339 [00:21<00:04, 13.16it/s]Loading weights:  85%|████████▌ | 289/339 [00:21<00:04, 10.28it/s]Loading weights:  86%|████████▋ | 293/339 [00:22<00:03, 11.68it/s]Loading weights:  87%|████████▋ | 295/339 [00:22<00:04, 10.42it/s]Loading weights:  88%|████████▊ | 298/339 [00:23<00:04,  8.57it/s]Loading weights:  89%|████████▉ | 303/339 [00:23<00:02, 12.40it/s]Loading weights:  90%|████████▉ | 305/339 [00:23<00:03, 10.67it/s]Loading weights:  91%|█████████ | 307/339 [00:23<00:02, 10.98it/s]Loading weights:  92%|█████████▏| 312/339 [00:23<00:02, 13.21it/s]Loading weights:  94%|█████████▎| 317/339 [00:24<00:01, 13.93it/s]Loading weights:  94%|█████████▍| 319/339 [00:24<00:01, 10.75it/s]Loading weights:  96%|█████████▌| 325/339 [00:24<00:00, 16.18it/s]Loading weights:  97%|█████████▋| 328/339 [00:24<00:00, 14.90it/s]Loading weights:  97%|█████████▋| 330/339 [00:25<00:00, 10.82it/s]Loading weights:  99%|█████████▊| 334/339 [00:25<00:00, 13.89it/s]Loading weights: 100%|██████████| 339/339 [00:25<00:00, 13.28it/s]
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.04, "peak_reserved_gb": 34.64, "cuda": "13.0"}
+aosp-cpp_art-c0: 32 steps, loss 0.877 -> 0.120
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.04, "peak_reserved_gb": 34.64, "cuda": "13.0"}
+aosp-cpp_art-c1: 32 steps, loss 0.878 -> 0.394
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.04, "peak_reserved_gb": 34.64, "cuda": "13.0"}
+aosp-cpp_art-c2: 32 steps, loss 0.756 -> 0.298
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.04, "peak_reserved_gb": 34.64, "cuda": "13.0"}
+aosp-cpp_art-c3: 32 steps, loss 0.877 -> 0.434
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.04, "peak_reserved_gb": 34.64, "cuda": "13.0"}
+aosp-cpp_art-c4: 32 steps, loss 0.524 -> 0.171
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.04, "peak_reserved_gb": 34.64, "cuda": "13.0"}
+aosp-cpp_perfetto-c0: 32 steps, loss 1.126 -> 0.289
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.04, "peak_reserved_gb": 34.65, "cuda": "13.0"}
+aosp-cpp_perfetto-c1: 32 steps, loss 1.246 -> 0.265
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.91, "peak_reserved_gb": 37.24, "cuda": "13.0"}
+aosp-cpp_perfetto-c2: 32 steps, loss 0.875 -> 0.472
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.91, "peak_reserved_gb": 37.24, "cuda": "13.0"}
+aosp-cpp_perfetto-c3: 32 steps, loss 1.334 -> 0.331
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.91, "peak_reserved_gb": 37.24, "cuda": "13.0"}
+aosp-cpp_perfetto-c4: 32 steps, loss 1.020 -> 0.482
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.91, "peak_reserved_gb": 37.24, "cuda": "13.0"}
+aosp-cpp_perfetto-c5: 32 steps, loss 1.164 -> 0.216
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.91, "peak_reserved_gb": 37.24, "cuda": "13.0"}
+aosp-cpp_frameworks-av-c0: 32 steps, loss 0.606 -> 0.321
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.91, "peak_reserved_gb": 37.24, "cuda": "13.0"}
+aosp-cpp_frameworks-av-c1: 32 steps, loss 0.513 -> 0.364
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 35.1, "peak_reserved_gb": 40.01, "cuda": "13.0"}
+aosp-cpp_hardware-interfaces-c0: 32 steps, loss 0.597 -> 0.262
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+aosp-cpp_system-core-c0: 32 steps, loss 0.789 -> 0.381
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qt-creator-c0: 32 steps, loss 0.883 -> 0.387
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qt-creator-c1: 32 steps, loss 0.729 -> 0.173
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qt-creator-c2: 32 steps, loss 1.319 -> 0.342
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qt-creator-c3: 32 steps, loss 0.960 -> 0.139
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qt-creator-c4: 32 steps, loss 0.825 -> 0.141
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qt-creator-c5: 32 steps, loss 0.836 -> 0.331
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtbase-c0: 32 steps, loss 0.955 -> 0.254
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtbase-c1: 32 steps, loss 0.768 -> 0.240
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtbase-c2: 32 steps, loss 0.713 -> 0.283
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtbase-c3: 32 steps, loss 0.635 -> 0.161
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtbase-c4: 32 steps, loss 0.661 -> 0.184
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtbase-c5: 32 steps, loss 0.564 -> 0.181
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c0: 32 steps, loss 0.709 -> 0.114
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c1: 32 steps, loss 0.891 -> 0.398
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c2: 32 steps, loss 0.982 -> 0.263
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c3: 32 steps, loss 0.606 -> 0.416
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-cpp_qtmultimedia-c0: 32 steps, loss 0.485 -> 0.190
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+openstack-docs_starlingx-docs-c0: 32 steps, loss 0.558 -> 0.159
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+openstack-docs_starlingx-docs-c1: 32 steps, loss 0.762 -> 0.163
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-docs_qtdoc-c0: 32 steps, loss 1.149 -> 0.184
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 41.07, "peak_reserved_gb": 45.08, "cuda": "13.0"}
+qt-docs_qtdoc-c1: 32 steps, loss 0.434 -> 0.239
+wrote /home/ajb6289/client-updates-cpp-256-c256.json
+CLIENT_UPDATES_OK

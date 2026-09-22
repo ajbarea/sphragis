@@ -1,0 +1,350 @@
+aosp:cpp/art: 1298 examples -> 6 clients
+aosp:cpp/perfetto: 1635 examples -> 6 clients
+aosp:cpp/frameworks-av: 528 examples -> 4 clients
+aosp:cpp/hardware-interfaces: 505 examples -> 3 clients
+aosp:cpp/system-core: 310 examples -> 2 clients
+aosp:cpp/frameworks-native: 239 examples -> 1 clients
+aosp:cpp/bionic: 191 examples -> 1 clients
+qt:cpp/qt-creator: 2366 examples -> 6 clients
+qt:cpp/qtbase: 2153 examples -> 6 clients
+qt:cpp/qtdeclarative: 1219 examples -> 6 clients
+qt:cpp/qtmultimedia: 458 examples -> 3 clients
+qt:cpp/qtgraphs: 281 examples -> 2 clients
+qt:cpp/qttools: 258 examples -> 2 clients
+openstack:python/nova: 221 examples -> 1 clients
+openstack:python/neutron: 216 examples -> 1 clients
+openstack:python/ironic: 193 examples -> 1 clients
+openstack:python/swift: 212 examples -> 1 clients
+openstack:python/starlingx-test: 370 examples -> 2 clients
+openstack:python/starlingx-config: 235 examples -> 1 clients
+qt:python/pyside-setup: 287 examples -> 2 clients
+openstack:docs/starlingx-docs: 632 examples -> 4 clients
+qt:docs/qtdoc: 630 examples -> 4 clients
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|▏         | 5/339 [00:00<00:18, 17.63it/s]Loading weights:   2%|▏         | 7/339 [00:00<00:32, 10.14it/s]Loading weights:   3%|▎         | 10/339 [00:00<00:24, 13.51it/s]Loading weights:   4%|▍         | 14/339 [00:00<00:19, 16.73it/s]Loading weights:   5%|▍         | 16/339 [00:01<00:19, 16.38it/s]Loading weights:   5%|▌         | 18/339 [00:01<00:39,  8.07it/s]Loading weights:   7%|▋         | 25/339 [00:01<00:22, 14.02it/s]Loading weights:   9%|▊         | 29/339 [00:02<00:22, 13.51it/s]Loading weights:   9%|▉         | 31/339 [00:02<00:26, 11.52it/s]Loading weights:  10%|█         | 35/339 [00:02<00:20, 14.97it/s]Loading weights:  11%|█         | 38/339 [00:02<00:19, 15.34it/s]Loading weights:  12%|█▏        | 41/339 [00:03<00:30,  9.78it/s]Loading weights:  14%|█▍        | 49/339 [00:03<00:19, 14.75it/s]Loading weights:  16%|█▌        | 53/339 [00:04<00:23, 12.20it/s]Loading weights:  16%|█▌        | 55/339 [00:04<00:26, 10.68it/s]Loading weights:  18%|█▊        | 61/339 [00:04<00:18, 14.78it/s]Loading weights:  19%|█▉        | 64/339 [00:04<00:16, 16.37it/s]Loading weights:  20%|█▉        | 67/339 [00:05<00:25, 10.57it/s]Loading weights:  21%|██        | 70/339 [00:05<00:22, 12.11it/s]Loading weights:  22%|██▏       | 74/339 [00:05<00:17, 15.01it/s]Loading weights:  23%|██▎       | 77/339 [00:06<00:24, 10.62it/s]Loading weights:  23%|██▎       | 79/339 [00:06<00:27,  9.32it/s]Loading weights:  25%|██▌       | 85/339 [00:06<00:17, 14.13it/s]Loading weights:  26%|██▌       | 88/339 [00:06<00:18, 13.70it/s]Loading weights:  27%|██▋       | 90/339 [00:07<00:24, 10.22it/s]Loading weights:  28%|██▊       | 95/339 [00:07<00:18, 13.36it/s]Loading weights:  29%|██▊       | 97/339 [00:07<00:17, 13.78it/s]Loading weights:  29%|██▉       | 100/339 [00:07<00:20, 11.50it/s]Loading weights:  30%|███       | 102/339 [00:08<00:29,  8.08it/s]Loading weights:  31%|███       | 105/339 [00:08<00:23, 10.05it/s]Loading weights:  32%|███▏      | 107/339 [00:08<00:20, 11.11it/s]Loading weights:  33%|███▎      | 111/339 [00:09<00:18, 12.18it/s]Loading weights:  33%|███▎      | 113/339 [00:09<00:20, 10.85it/s]Loading weights:  34%|███▍      | 115/339 [00:09<00:23,  9.52it/s]Loading weights:  36%|███▌      | 121/339 [00:09<00:16, 13.53it/s]Loading weights:  37%|███▋      | 125/339 [00:10<00:20, 10.24it/s]Loading weights:  39%|███▉      | 132/339 [00:10<00:12, 16.55it/s]Loading weights:  40%|███▉      | 135/339 [00:10<00:11, 17.55it/s]Loading weights:  41%|████      | 138/339 [00:11<00:18, 10.83it/s]Loading weights:  42%|████▏     | 141/339 [00:11<00:15, 12.78it/s]Loading weights:  43%|████▎     | 146/339 [00:11<00:11, 17.47it/s]Loading weights:  44%|████▍     | 149/339 [00:11<00:14, 13.31it/s]Loading weights:  45%|████▍     | 152/339 [00:12<00:15, 11.92it/s]Loading weights:  46%|████▌     | 155/339 [00:12<00:13, 14.11it/s]Loading weights:  47%|████▋     | 160/339 [00:12<00:10, 17.20it/s]Loading weights:  48%|████▊     | 163/339 [00:13<00:15, 11.37it/s]Loading weights:  49%|████▉     | 167/339 [00:13<00:11, 14.58it/s]Loading weights:  50%|█████     | 170/339 [00:13<00:10, 16.71it/s]Loading weights:  51%|█████     | 173/339 [00:13<00:16,  9.77it/s]Loading weights:  53%|█████▎    | 180/339 [00:14<00:09, 16.24it/s]Loading weights:  54%|█████▍    | 184/339 [00:14<00:10, 15.49it/s]Loading weights:  55%|█████▌    | 187/339 [00:14<00:15,  9.94it/s]Loading weights:  57%|█████▋    | 193/339 [00:15<00:10, 14.55it/s]Loading weights:  58%|█████▊    | 196/339 [00:15<00:10, 13.46it/s]Loading weights:  59%|█████▊    | 199/339 [00:15<00:13, 10.03it/s]Loading weights:  60%|██████    | 205/339 [00:16<00:10, 13.25it/s]Loading weights:  61%|██████▏   | 208/339 [00:16<00:09, 13.23it/s]Loading weights:  62%|██████▏   | 210/339 [00:16<00:14,  8.70it/s]Loading weights:  64%|██████▍   | 217/339 [00:17<00:08, 14.68it/s]Loading weights:  65%|██████▍   | 220/339 [00:17<00:07, 14.91it/s]Loading weights:  66%|██████▌   | 223/339 [00:17<00:10, 11.45it/s]Loading weights:  67%|██████▋   | 228/339 [00:17<00:07, 14.17it/s]Loading weights:  68%|██████▊   | 231/339 [00:18<00:06, 15.67it/s]Loading weights:  69%|██████▉   | 234/339 [00:18<00:09, 11.45it/s]Loading weights:  70%|██████▉   | 236/339 [00:18<00:08, 12.22it/s]Loading weights:  71%|███████   | 239/339 [00:18<00:07, 13.51it/s]Loading weights:  72%|███████▏  | 244/339 [00:19<00:06, 15.71it/s]Loading weights:  73%|███████▎  | 246/339 [00:19<00:09,  9.54it/s]Loading weights:  74%|███████▍  | 252/339 [00:19<00:06, 13.72it/s]Loading weights:  76%|███████▌  | 256/339 [00:20<00:06, 13.74it/s]Loading weights:  76%|███████▌  | 258/339 [00:20<00:08,  9.49it/s]Loading weights:  78%|███████▊  | 265/339 [00:20<00:04, 15.70it/s]Loading weights:  79%|███████▉  | 268/339 [00:21<00:05, 13.43it/s]Loading weights:  80%|███████▉  | 271/339 [00:21<00:07,  9.46it/s]Loading weights:  82%|████████▏ | 277/339 [00:21<00:04, 14.27it/s]Loading weights:  83%|████████▎ | 280/339 [00:22<00:04, 13.13it/s]Loading weights:  83%|████████▎ | 283/339 [00:22<00:05, 10.43it/s]Loading weights:  85%|████████▍ | 287/339 [00:22<00:04, 11.74it/s]Loading weights:  86%|████████▌ | 292/339 [00:23<00:03, 14.09it/s]Loading weights:  87%|████████▋ | 294/339 [00:23<00:04,  9.27it/s]Loading weights:  88%|████████▊ | 300/339 [00:23<00:02, 13.47it/s]Loading weights:  89%|████████▉ | 303/339 [00:23<00:02, 15.29it/s]Loading weights:  90%|█████████ | 306/339 [00:24<00:03, 10.07it/s]Loading weights:  92%|█████████▏| 311/339 [00:24<00:01, 14.19it/s]Loading weights:  93%|█████████▎| 315/339 [00:24<00:01, 17.34it/s]Loading weights:  94%|█████████▍| 318/339 [00:25<00:02,  9.81it/s]Loading weights:  95%|█████████▍| 321/339 [00:25<00:01, 11.82it/s]Loading weights:  96%|█████████▌| 325/339 [00:25<00:00, 15.34it/s]Loading weights:  97%|█████████▋| 328/339 [00:25<00:00, 15.31it/s]Loading weights:  98%|█████████▊| 331/339 [00:26<00:00, 10.30it/s]Loading weights:  99%|█████████▉| 336/339 [00:26<00:00, 14.50it/s]Loading weights: 100%|██████████| 339/339 [00:26<00:00, 12.78it/s]
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 29.19, "peak_reserved_gb": 31.64, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 30.6, "peak_reserved_gb": 31.95, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 30.6, "peak_reserved_gb": 31.95, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 30.61, "peak_reserved_gb": 31.95, "cuda": "13.0"}
+aosp-cpp_art-c0: global 0.592 -> 0.061, local 0.173 -> 0.014
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 33.29, "peak_reserved_gb": 34.91, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.72, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.72, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+aosp-cpp_art-c1: global 0.976 -> 0.101, local 0.319 -> 0.023
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+aosp-cpp_art-c2: global 0.901 -> 0.098, local 0.255 -> 0.010
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+aosp-cpp_art-c3: global 0.652 -> 0.133, local 0.201 -> 0.021
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+aosp-cpp_art-c4: global 0.697 -> 0.123, local 0.190 -> 0.028
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+aosp-cpp_art-c5: global 0.854 -> 0.144, local 0.311 -> 0.045
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+aosp-cpp_perfetto-c0: global 1.478 -> 0.380, local 0.605 -> 0.118
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 34.73, "peak_reserved_gb": 36.48, "cuda": "13.0"}
+aosp-cpp_perfetto-c1: global 0.806 -> 0.204, local 0.213 -> 0.051
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 35.23, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_perfetto-c2: global 1.120 -> 0.120, local 0.454 -> 0.031
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_perfetto-c3: global 1.371 -> 0.047, local 0.483 -> 0.013
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_perfetto-c4: global 0.843 -> 0.161, local 0.326 -> 0.017
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_perfetto-c5: global 1.058 -> 0.099, local 0.372 -> 0.012
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_frameworks-av-c0: global 0.673 -> 0.136, local 0.233 -> 0.038
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_frameworks-av-c1: global 0.764 -> 0.065, local 0.256 -> 0.012
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_frameworks-av-c2: global 0.795 -> 0.104, local 0.286 -> 0.021
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 39.07, "cuda": "13.0"}
+aosp-cpp_frameworks-av-c3: global 0.506 -> 0.120, local 0.201 -> 0.025
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 36.85, "peak_reserved_gb": 41.84, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.84, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.84, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+aosp-cpp_hardware-interfaces-c0: global 0.991 -> 0.057, local 0.362 -> 0.016
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+aosp-cpp_hardware-interfaces-c1: global 0.717 -> 0.121, local 0.181 -> 0.035
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+aosp-cpp_hardware-interfaces-c2: global 0.819 -> 0.130, local 0.271 -> 0.023
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 38.15, "peak_reserved_gb": 41.85, "cuda": "13.0"}
+aosp-cpp_system-core-c0: global 0.745 -> 0.120, local 0.176 -> 0.013
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 42.42, "peak_reserved_gb": 45.54, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+aosp-cpp_system-core-c1: global 0.828 -> 0.217, local 0.289 -> 0.069
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+aosp-cpp_frameworks-native-c0: global 1.059 -> 0.164, local 0.332 -> 0.026
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+aosp-cpp_bionic-c0: global 1.221 -> 0.105, local 0.458 -> 0.031
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qt-creator-c0: global 0.579 -> 0.140, local 0.201 -> 0.028
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qt-creator-c1: global 1.313 -> 0.055, local 0.430 -> 0.016
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qt-creator-c2: global 0.848 -> 0.128, local 0.202 -> 0.084
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qt-creator-c3: global 0.816 -> 0.053, local 0.146 -> 0.005
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qt-creator-c4: global 1.058 -> 0.073, local 0.383 -> 0.024
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qt-creator-c5: global 0.649 -> 0.055, local 0.174 -> 0.016
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtbase-c0: global 0.894 -> 0.197, local 0.303 -> 0.039
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtbase-c1: global 0.315 -> 0.243, local 0.075 -> 0.067
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtbase-c2: global 0.738 -> 0.098, local 0.214 -> 0.005
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtbase-c3: global 0.658 -> 0.239, local 0.304 -> 0.080
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtbase-c4: global 0.702 -> 0.185, local 0.224 -> 0.041
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtbase-c5: global 0.791 -> 0.031, local 0.106 -> 0.008
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c0: global 0.687 -> 0.095, local 0.287 -> 0.026
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c1: global 1.237 -> 0.074, local 0.487 -> 0.026
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c2: global 1.009 -> 0.052, local 0.280 -> 0.004
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c3: global 0.760 -> 0.201, local 0.229 -> 0.033
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c4: global 0.740 -> 0.099, local 0.229 -> 0.029
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtdeclarative-c5: global 0.618 -> 0.119, local 0.151 -> 0.036
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtmultimedia-c0: global 0.518 -> 0.103, local 0.159 -> 0.014
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtmultimedia-c1: global 0.827 -> 0.104, local 0.314 -> 0.007
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtmultimedia-c2: global 1.130 -> 0.055, local 0.423 -> 0.007
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtgraphs-c0: global 0.644 -> 0.028, local 0.137 -> 0.004
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qtgraphs-c1: global 0.651 -> 0.090, local 0.225 -> 0.023
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+qt-cpp_qttools-c0: global 0.595 -> 0.098, local 0.226 -> 0.057
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.76, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+qt-cpp_qttools-c1: global 0.977 -> 0.178, local 0.334 -> 0.047
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-python_nova-c0: global 1.396 -> 0.204, local 0.441 -> 0.082
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-python_neutron-c0: global 0.833 -> 0.045, local 0.274 -> 0.006
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-python_ironic-c0: global 1.180 -> 0.130, local 0.335 -> 0.056
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-python_swift-c0: global 0.664 -> 0.293, local 0.196 -> 0.117
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-python_starlingx-test-c0: global 1.240 -> 0.281, local 0.473 -> 0.041
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-python_starlingx-test-c1: global 1.290 -> 0.168, local 0.385 -> 0.052
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-python_starlingx-config-c0: global 0.511 -> 0.186, local 0.184 -> 0.040
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+qt-python_pyside-setup-c0: global 0.596 -> 0.101, local 0.173 -> 0.031
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+qt-python_pyside-setup-c1: global 0.597 -> 0.046, local 0.160 -> 0.008
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-docs_starlingx-docs-c0: global 1.119 -> 0.074, local 0.583 -> 0.018
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-docs_starlingx-docs-c1: global 0.680 -> 0.058, local 0.175 -> 0.011
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-docs_starlingx-docs-c2: global 1.208 -> 0.104, local 0.448 -> 0.019
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+openstack-docs_starlingx-docs-c3: global 0.865 -> 0.147, local 0.315 -> 0.066
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+qt-docs_qtdoc-c0: global 0.941 -> 0.161, local 0.326 -> 0.051
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+qt-docs_qtdoc-c1: global 0.630 -> 0.182, local 0.207 -> 0.065
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+qt-docs_qtdoc-c2: global 0.347 -> 0.095, local 0.065 -> 0.017
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allocated_gb": 44.65, "peak_reserved_gb": 46.77, "cuda": "13.0"}
+qt-docs_qtdoc-c3: global 0.797 -> 0.047, local 0.155 -> 0.011
+wrote /home/ajb6289/client-updates-dual-cpp-rebuilt-c128-t2.json
+DUAL_ADAPTER_UPDATES_OK
