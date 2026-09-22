@@ -77,6 +77,3 @@ train_adapter: gpu {"name": "NVIDIA GH200 480GB", "total_gb": 102.01, "peak_allo
 qt-cpp_qtbase-c5: 8 steps, loss 0.976 -> 0.572
 wrote /home/ajb6289/client-updates.json
 CLIENT_UPDATES_OK
-
-
-
