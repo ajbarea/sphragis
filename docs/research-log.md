@@ -4889,3 +4889,40 @@ were quoted as though they were the registered ones. The artifacts were on disk 
 `scripts/reading.py` exists because of it, printing estimand, rule, arm and run beside every
 figure and refusing a filter that matches no cell, since empty output reads as no effect rather
 than no such cell.
+
+### Rank 256 at three seeds: capacity is not why the null arm is null (2026-09-22, jobs 164573, 165609, 165612)
+
+The conditional analysis pre-commits to rerunning both adapters at rank 256 when an arm returns no
+gain, on the argument that LoRA learns less than full fine-tuning and a null at rank 32 is equally
+consistent with insufficient capacity. That branch is now executed, at the registered three seeds.
+Read with `scripts/reading.py --registered --markdown`.
+
+| run | estimand | rule | arm | estimate | interval |
+|---|---|---|---|---|---|
+| rq1-r256-seeds.json | pooled | crossed | openstack | +0.0136 | [-0.0100, +0.0360] |
+| rq1-r256-seeds.json | pooled | crossed | qt | +0.0309 | [+0.0068, +0.0567] |
+| rq1-qtfull-fp32-seeds.json | pooled | crossed | openstack | +0.0230 | [+0.0000, +0.0457] |
+| rq1-qtfull-fp32-seeds.json | pooled | crossed | qt | +0.0316 | [+0.0089, +0.0567] |
+
+Eight times the adapter capacity moves Qt by seven ten-thousandths and moves OpenStack the wrong
+way, from a lower bound of exactly zero to one below it. The capacity explanation does not hold,
+and the branch closes on evidence rather than on argument.
+
+**The seed spread says the same thing from another angle.** At rank 256, Qt's per-seed pooled
+contrasts are +0.0326, +0.0284 and +0.0316, a standard deviation of 0.0018; OpenStack's are
++0.0071, +0.0159 and +0.0177, a standard deviation of 0.0046 on an effect of 0.014. Qt is stable
+across seeds at both ranks and OpenStack is not, which is the same asymmetry the placebo found by
+a different route.
+
+**Where this leaves the decision tree.** The registered branch fires only when *neither* interval
+excludes zero, and the dev reading is mixed, so on the letter of the protocol this rerun was not
+required. It was run anyway because the capacity objection applies per arm rather than to the
+gate, and a reviewer asking whether OpenStack's null is a capacity artefact deserves a measurement
+rather than a reading of the tree. Making the branch per-arm is a protocol amendment that is
+legitimate while the test window is sealed and indefensible afterwards; it is recorded here as
+open rather than taken.
+
+**Three hardening results now point the same way.** The placebo says an arbitrary project boundary
+does what the organizational one does, in Qt. Rank 256 says OpenStack's null is not capacity. The
+language histogram says the two organizations barely share a file type and the pair cannot supply
+a matched arm. None of them is about the apparatus; all three are about the unit.

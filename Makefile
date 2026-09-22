@@ -163,6 +163,9 @@ docs-serve:                ## Serve the documentation site with live reload
 	uv run --no-sync --no-active zensical serve
 
 docs-index:                ## Regenerate docs/artifacts.md from what the scripts declare they write
+	@# STAGE NEW RESULTS FIRST. The index lists tracked artifacts, so running this before
+	@# `git add` writes an index that omits exactly the files being added, and the commit is
+	@# then refused by a staleness check that is correct. Caught twice on 2026-09-22.
 	uv run --no-sync --no-active python harvest.py --index
 
 docs-harvest:              ## Assert every figure on the site against its artifact

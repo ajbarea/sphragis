@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 134 artifacts under
+repository. This page is generated from those scripts: 135 artifacts under
 30 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -245,7 +245,7 @@ Pilot-scale RQ1: does the matched adapter beat the mismatched one, per organizat
 | `rq1-windows-qtfull-fp32.json` | `rq1-windows-qtfull-s2.json` |
 | `rq1-windows-qtfull-s3.json` | `rq1-windows-qtfull.json` |
 | `rq1-windows-r256.json` | `rq1-windows-s2-r256.json` |
-| `rq1-windows.json` |  |
+| `rq1-windows-s3-r256.json` | `rq1-windows.json` |
 
 ## `scripts/seed_effect.py`
 
@@ -305,3 +305,4 @@ script name accounts for. Each is a measurement whose producer has to be read ou
 of the research log rather than out of the code.
 
 - `rq1-qtfull-fp32-seeds.json`
+- `rq1-r256-seeds.json`
