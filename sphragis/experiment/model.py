@@ -52,22 +52,40 @@ MEMBERSHIP_MODEL_ID = "Qwen/Qwen2.5-Coder-7B"
 # adapters at the same rank, and because the positive controls show this rank adapts: the
 # capacity objection bites on a null, and the conditional branch answers it by rerunning at
 # 256 rather than by assuming 32 was enough.
-LORA = LoraConfig(
-    r=32,
-    lora_alpha=64,
-    lora_dropout=0.05,
-    bias="none",
-    task_type="CAUSAL_LM",
-    target_modules=[
-        "q_proj",
-        "k_proj",
-        "v_proj",
-        "o_proj",
-        "gate_proj",
-        "up_proj",
-        "down_proj",
-    ],
+#: The registered rank. The conditional branch reruns at 256, so the rank has to be a knob the
+#: apparatus can turn; it was a constant, which made a pre-registered branch unexecutable.
+REGISTERED_RANK = 32
+LORA_TARGETS = (
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj",
 )
+
+
+def lora_config(rank: int = REGISTERED_RANK) -> LoraConfig:
+    """The adapter at a rank, with alpha tied to it.
+
+    Alpha is 2r by construction rather than by argument, because the scaling the report cites
+    is stated at that relation and a rank changed without it is a second intervention wearing
+    one name.
+    """
+    if rank < 1:
+        raise ValueError(f"rank must be at least 1, got {rank}")
+    return LoraConfig(
+        r=rank,
+        lora_alpha=2 * rank,
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+        target_modules=list(LORA_TARGETS),
+    )
+
+
+LORA = lora_config()
 
 
 @dataclass(frozen=True)
@@ -256,13 +274,17 @@ def cast_trainable_to_fp32(model: Any) -> int:
 
 
 def attach_adapter(
-    model_id: str, seed: int, device: str = "cuda:0"
+    model_id: str, seed: int, device: str = "cuda:0", rank: int = REGISTERED_RANK
 ) -> tuple[PeftModel | PeftMixedModel, PreTrainedTokenizerBase]:
     """A fresh LoRA adapter on the base model, seeded so the init replays.
 
     `device` exists so a schedule can be exercised on a CPU with the small development model
     before it costs GPU hours. Every recorded run uses the default, and a result produced on
     another device would say so in its provenance rather than silently match.
+
+    `rank` defaults to the registered one. It is an argument because the report pre-commits to
+    rerunning at 256 when an arm returns no gain, and a branch the apparatus cannot execute is
+    not a registered branch.
     """
     # Seed BEFORE get_peft_model: the LoRA initialization draws from the global RNG, so
     # seeding afterwards leaves it dependent on whatever ran before. scripts/pilot.py had
@@ -271,7 +293,7 @@ def attach_adapter(
     tokenizer = _require_tokenizer(model_id)
     dtype = torch.bfloat16 if device.startswith("cuda") else torch.float32
     base = AutoModelForCausalLM.from_pretrained(model_id, dtype=dtype, device_map=device)
-    adapted = get_peft_model(base, LORA)
+    adapted = get_peft_model(base, lora_config(rank))
     # Not dead code: PEFT returns fp32 adapter parameters on a bf16 base under its current
     # default, so this casts nothing and returns 0. Calling it keeps that invariant enforced
     # rather than assumed, and bf16 adapter parameters are a known source of NaN gradients.

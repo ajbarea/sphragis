@@ -206,3 +206,62 @@ def test_the_precision_can_be_overridden_to_measure_what_it_replaced(
     generator = HFGenerator(device="cpu", dtype="bfloat16")
     assert fake.dtype is torch.bfloat16
     assert generator.computed_dtype == "bfloat16", "read back from the model, not the request"
+
+
+def test_the_registered_rank_is_what_the_report_states() -> None:
+    assert model_module.REGISTERED_RANK == 32
+    assert model_module.LORA.r == 32 and model_module.LORA.lora_alpha == 64
+
+
+def test_alpha_follows_the_rank_rather_than_being_passed_separately() -> None:
+    """The scaling the report cites is stated at alpha = 2r, so a rank moved without it is a
+    second intervention wearing one name."""
+    for rank in (16, 32, 64, 256):
+        assert model_module.lora_config(rank).lora_alpha == 2 * rank
+
+
+def test_the_conditional_branchs_rank_is_reachable() -> None:
+    """A branch the apparatus cannot execute is not a registered branch."""
+    config = model_module.lora_config(256)
+    assert config.r == 256
+    assert sorted(config.target_modules or ()) == sorted(model_module.LORA_TARGETS)
+    assert config.lora_dropout == model_module.LORA.lora_dropout
+
+
+def test_a_rank_below_one_is_refused() -> None:
+    with pytest.raises(ValueError, match="at least 1"):
+        model_module.lora_config(0)
+
+
+def test_the_rank_asked_for_is_the_rank_built(monkeypatch) -> None:
+    """A branch that appears to run at 256 and quietly builds 32 is worse than no branch.
+
+    The model load is stubbed: what is under test is that the argument reaches the config,
+    which a hardcoded constant silently ignored.
+    """
+    seen: dict[str, Any] = {}
+
+    class _Base:
+        def parameters(self):
+            return iter(())
+
+    monkeypatch.setattr(
+        model_module.AutoModelForCausalLM,
+        "from_pretrained",
+        classmethod(lambda cls, *a, **k: _Base()),
+    )
+    monkeypatch.setattr(model_module, "_require_tokenizer", lambda model_id: object())
+    monkeypatch.setattr(model_module, "cast_trainable_to_fp32", lambda m: 0)
+
+    def _peft(base, config):
+        seen["rank"] = config.r
+        seen["alpha"] = config.lora_alpha
+        return base
+
+    monkeypatch.setattr(model_module, "get_peft_model", _peft)
+
+    model_module.attach_adapter("stub", seed=1, device="cpu", rank=256)
+    assert seen == {"rank": 256, "alpha": 512}
+
+    model_module.attach_adapter("stub", seed=1, device="cpu")
+    assert seen == {"rank": model_module.REGISTERED_RANK, "alpha": 2 * model_module.REGISTERED_RANK}

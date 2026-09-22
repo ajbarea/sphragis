@@ -25,6 +25,7 @@ from sphragis.experiment.holdout import (
 from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
     MODEL_ID,
+    REGISTERED_RANK,
     TRAINING,
     HFGenerator,
     attach_adapter,
@@ -78,6 +79,12 @@ parser.add_argument(
     "--train-size",
     type=int,
     help="with --equalize-train: cut every training set to this size, below the smallest",
+)
+parser.add_argument(
+    "--lora-rank",
+    type=int,
+    default=REGISTERED_RANK,
+    help="the registered rank by default; the conditional branch reruns an arm at 256",
 )
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 parser.add_argument(
@@ -168,7 +175,7 @@ class InProcessTrainer:
         self.losses: dict[str, list[float]] = {}
 
     def train(self, org: str, seed: int) -> str:
-        model, tok = attach_adapter(MODEL_ID, seed)
+        model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
             tok.pad_token = tok.eos_token
         items, refused = [], 0
@@ -277,6 +284,9 @@ args.out.write_text(
         {
             "provenance": run_provenance(),
             "model_id": MODEL_ID,
+            # Recorded, not assumed: a rank-256 rerun and the registered run must never be
+            # told apart by their filenames alone.
+            "lora_rank": args.lora_rank,
             "seeds": seeds,
             "split_seed": args.split_seed,
             "equalize_train": args.equalize_train,
