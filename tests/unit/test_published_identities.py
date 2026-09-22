@@ -88,10 +88,15 @@ def test_the_results_directory_is_scanned_whole() -> None:
 
     The directory holds `.npz` and `.txt` beside the JSON, and the first version of this
     guard globbed `*.json`, so a planted address in `power-rq1-windows.txt` passed.
+
+    Committed files only, like the scan above. Walking the directory instead made this
+    test fail on any working tree holding a fresh job result or a gitignored corpus slice,
+    which is the normal state of this repository: green in CI, red for whoever just ran a
+    job. A new result is caught when it is staged, because `git ls-files` reads the index.
     """
-    scanned = [path for path in RESULTS.rglob("*") if path.is_file()]
+    scanned = [path for path in _tracked_files() if RESULTS in path.parents]
     suffixes = {path.suffix for path in scanned}
-    assert len(scanned) > 100, f"only {len(scanned)} artifacts found under {RESULTS}"
+    assert len(scanned) > 100, f"only {len(scanned)} committed artifacts under {RESULTS}"
     assert {".json", ".npz", ".txt"} <= suffixes, f"expected more than JSON here, saw {suffixes}"
     assert not {path.name for path in scanned if addresses_in(path)}
 
@@ -164,7 +169,9 @@ def test_redacted_records_say_so() -> None:
 
     unmarked: list[str] = []
     carrying = 0
-    for path in sorted(RESULTS.rglob("*.json")):
+    for path in sorted(
+        path for path in _tracked_files() if path.suffix == ".json" and RESULTS in path.parents
+    ):
         text = path.read_text()
         if PLACEHOLDER not in text:
             continue
