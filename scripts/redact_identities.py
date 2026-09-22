@@ -15,8 +15,8 @@ re-run reproduces the artifact, and a re-run reproduces the measured value. Reco
 text changed carry `identities_redacted: true`, so the gap between the published text and
 the published number is stated rather than discovered as apparent drift.
 
-Run: uv run --no-sync --no-active python scripts/redact_identities.py --check
-     uv run --no-sync --no-active python scripts/redact_identities.py --write
+Run: make redact-check    # report
+     make redact          # apply
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ def main() -> None:
         address for path in RESULTS.rglob("*") if path.is_file() for address in addresses_in(path)
     }
     if remaining:
-        print(f"\n{len(remaining)} address(es) remain; run --write", file=sys.stderr)
+        print(f"\n{len(remaining)} address(es) remain; run `make redact`", file=sys.stderr)
         sys.exit(1)
 
 

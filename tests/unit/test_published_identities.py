@@ -79,7 +79,7 @@ def test_no_committed_file_discloses_a_third_party_address() -> None:
     }
     assert not disclosed, (
         "third-party addresses in committed files; for artifacts run "
-        f"`python scripts/redact_identities.py --write`:\n{json.dumps(disclosed, indent=2)}"
+        f"`make redact`:\n{json.dumps(disclosed, indent=2)}"
     )
 
 
