@@ -4765,3 +4765,39 @@ review culture yields *anchored* inline comments at a usable rate is a separate 
 a build answers, and AOSP's own drop counts are the warning: 15,880 author comments and 7,305
 unanchored hunks against 5,133 usable examples. Adding a host is also a corpus-scope decision that
 touches the ethics determination, so it is recorded here rather than taken.
+
+### Chromium yields reviewer comments at Qt's rate, and the two live organizations are stable to the seal (2026-09-21)
+
+`# research(2026-09)`. Two measurements, both taken because the AOSP collapse made them necessary.
+
+**The yield a candidate host actually delivers.** Volume is not the quantity the corpus is built
+from: AOSP produced 5,133 usable examples while dropping 15,880 author comments and 7,305
+unanchored hunks. What matters is inline comments that carry a line anchor and were written by
+somebody other than the change owner. Measured directly against the Gerrit API over 2025-10,
+nothing written into the corpus:
+
+| host | changes read | anchored comments | by a reviewer | per change |
+|---|---|---|---|---|
+| chromium-review, `chromium/src` | 25 | 33 | 17 | 0.7 |
+| codereview.qt-project.org | 10 | 8 | 5 | 0.5 |
+
+Chromium's review culture yields at least as well as Qt's, and `chromium/src` alone merges
+hundreds of changes a month, so a Chromium arm is not volume-limited. Two caveats stand. The
+design refuses an organization of one project, since it could not then be told apart from that
+project, so a Chromium arm means several of its projects rather than `chromium/src` alone. And
+adding a host is a corpus-scope decision that touches the ethics determination, which the report
+says is initiated through the institution rather than asserted by the plan.
+
+**The two organizations the study already has are not going the way AOSP went.** Merged changes a
+month, from the fetch records, through the last month before the seal:
+
+| | 2024-10 to 2025-03 | 2025-04 to 2025-10 |
+|---|---|---|
+| Qt | 3,681 to 4,923 | 3,321 to 4,814 |
+| OpenStack | 1,175 to 2,480 | 1,746 to 2,771 |
+
+Neither trends down, and neither shows anything like AOSP's ninety-five percent drop. This is a
+check on the *sealed* window that does not spend it: the test window cannot be inspected, so the
+best available evidence that it will carry data is that change volume is steady right up to its
+boundary. It bounds volume only. Whether the content of those months resembles the training
+window is a separate question, and the drift probes are what answer it.
