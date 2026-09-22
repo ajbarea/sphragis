@@ -6,20 +6,113 @@
     "dedup_removed": {
       "exact": 265,
       "near_duplicate": 196,
-      "boilerplate": 0
+      "boilerplate": 0,
+      "shared_change_id": 0
     },
     "windows": {
       "pilot": {
         "examples": 606,
-        "changes": 194
+        "changes": 194,
+        "content": {
+          ".py": 307,
+          ".rst": 203,
+          ".yaml": 38,
+          ".yml": 15,
+          ".sh": 9,
+          "(none)": 4,
+          ".j2": 4,
+          ".pp": 4,
+          ".md": 3,
+          ".txt": 3,
+          ".json": 2,
+          ".cfg": 2,
+          ".patch": 2,
+          ".init": 2,
+          ".inc": 1,
+          ".ini": 1,
+          ".conf": 1,
+          ".com": 1,
+          ".noble": 1,
+          ".pmon": 1,
+          ".kubernetes": 1,
+          ".js": 1
+        }
       },
       "train": {
         "examples": 4327,
-        "changes": 1737
+        "changes": 1737,
+        "content": {
+          ".py": 2054,
+          ".rst": 1184,
+          ".yaml": 462,
+          ".yml": 143,
+          "(none)": 135,
+          ".sh": 69,
+          ".j2": 52,
+          ".pp": 28,
+          ".txt": 26,
+          ".ini": 20,
+          ".patch": 20,
+          ".cfg": 16,
+          ".go": 11,
+          ".md": 10,
+          ".conf": 7,
+          ".html": 7,
+          ".cpp": 7,
+          ".po": 7,
+          ".toml": 5,
+          ".lst": 5,
+          ".rest": 5,
+          ".tpl": 5,
+          ".c": 5,
+          ".js": 5,
+          ".erb": 4,
+          ".inc": 3,
+          ".config": 3,
+          ".json": 3,
+          ".jsx": 3,
+          ".sql": 3,
+          ".rb": 3,
+          ".json5": 3,
+          ".service": 2,
+          ".stable_docker_image": 2,
+          ".init": 1,
+          ".rabbitmq-server": 1,
+          ".dockerfile": 1,
+          ".controller": 1,
+          ".jinja": 1,
+          ".pem": 1,
+          ".h": 1,
+          ".tmpl": 1,
+          ".debian": 1,
+          ".centos": 1
+        }
       },
       "dev": {
         "examples": 565,
-        "changes": 235
+        "changes": 235,
+        "content": {
+          ".py": 243,
+          ".rst": 135,
+          ".yaml": 55,
+          ".rest": 45,
+          ".yml": 39,
+          "(none)": 10,
+          ".j2": 6,
+          ".sh": 6,
+          ".patch": 5,
+          ".pp": 3,
+          ".toml": 3,
+          ".txt": 3,
+          ".ini": 2,
+          ".conf": 2,
+          ".c": 2,
+          ".cpp": 2,
+          ".inc": 1,
+          ".html": 1,
+          ".json5": 1,
+          ".rb": 1
+        }
       }
     },
     "straddling_changes": 0,
@@ -65,5 +158,23 @@
       }
     },
     "dedup_note": "dedup runs before the split at Jaccard 0.8, so the 0.8 rate is partly zero by construction; read the looser thresholds"
+  },
+  "provenance": {
+    "generated_at": "2026-09-22T00:37:05.289033+00:00",
+    "git": {
+      "commit": "df0dd083d9e6399360a31760370ce7d13d894d39",
+      "branch": "feat/language-composition-is-measured",
+      "uncommitted_code": [
+        "scripts/window_report.py"
+      ],
+      "uncommitted_code_sha256": "54949d3ddf8028a24cdbee621ac23c73fa69d2dd0996b456b42e4eb193ba90e1"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
   }
 }
