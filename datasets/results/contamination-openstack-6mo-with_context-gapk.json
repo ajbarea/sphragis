@@ -2142,7 +2142,8 @@
       "undefined_positions": 0,
       "min_k_plus_plus": -2.3915298231449373,
       "min_k_percent": -7.701053169038561,
-      "gap_k_percent": -2.143573133502075
+      "gap_k_percent": -2.143573133502075,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I68abfb36d209e4130d67af08b5b2de3dbffad903:deliverables/caracal/manila.yaml:2:49",

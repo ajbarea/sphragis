@@ -88,7 +88,7 @@ leaves the diff payload alone on purpose, because rewriting anything in the sour
 looks like an address would alter the code the study measures. An address written *inside* a
 config file or a DNS record therefore survives into the corpus, and the published artifacts are
 redacted separately: `scripts/redact_identities.py` removes third-party addresses from
-everything under `datasets/results/`, and a test holds every commit to it.
+everything under `datasets/results/`, and a test scans every committed file for one.
 
 | window | OpenStack | Qt |
 |---|---|---|

@@ -29967,11 +29967,12 @@
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:1:378",
         "change_id": "I110dc88b2032971049e4676a5fc3b112cf8e916f",
-        "prediction": "    email: 3c51c6aa26f4+1@users.noreply.github.com",
+        "prediction": "    email: <redacted-email>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.4318181818181818
+        "edit_similarity": 0.4318181818181818,
+        "identities_redacted": true
       },
       {
         "id": "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:2:180",

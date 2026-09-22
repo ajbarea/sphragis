@@ -239,7 +239,8 @@
       "tokens": 59,
       "undefined_positions": 0,
       "min_k_plus_plus": -1.6575286277989938,
-      "min_k_percent": -9.373964873227207
+      "min_k_percent": -9.373964873227207,
+      "identities_redacted": true
     },
     {
       "id": "openstack:Icb6ec7a874553ea6873a53037fbf3666baed111f:playbookconfig/src/playbooks/roles/bootstrap/persist-config/files/populate_initial_config.py:7:365",

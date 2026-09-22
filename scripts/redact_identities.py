@@ -25,7 +25,7 @@ import argparse
 import pathlib
 import sys
 
-from sphragis.corpus.redact import redact_file
+from sphragis.corpus.redact import addresses_in, redact_file
 
 RESULTS = pathlib.Path(__file__).resolve().parents[1] / "datasets" / "results"
 
@@ -38,7 +38,9 @@ def main() -> None:
 
     everything: set[str] = set()
     changed: list[str] = []
-    for path in sorted(RESULTS.rglob("*.json")):
+    # Every file, not only *.json: the directory also holds .txt and .npz, and a file class
+    # nobody scans is how a guard passes while the disclosure stands.
+    for path in sorted(p for p in RESULTS.rglob("*") if p.is_file()):
         found, redacted = redact_file(path)
         if not found:
             continue
@@ -51,8 +53,16 @@ def main() -> None:
     print(f"{len(everything)} third-party address(es) {verb} {len(changed)} artifact(s)")
     for name in changed:
         print(f"  {name}")
-    if args.check and everything:
-        print("\nrun `python scripts/redact_identities.py --write`", file=sys.stderr)
+
+    if not args.check:
+        return
+    # Re-scan rather than reusing the pre-write tally, so `--write --check` means "fix it
+    # and confirm it is clean" instead of always failing on what it just repaired.
+    remaining = {
+        address for path in RESULTS.rglob("*") if path.is_file() for address in addresses_in(path)
+    }
+    if remaining:
+        print(f"\n{len(remaining)} address(es) remain; run --write", file=sys.stderr)
         sys.exit(1)
 
 

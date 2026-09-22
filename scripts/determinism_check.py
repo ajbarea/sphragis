@@ -57,16 +57,21 @@ def stored_predictions(paths: list[Path], arm: str) -> dict[str, dict[str, str]]
 def generate(args: argparse.Namespace) -> None:
     import torch
 
+    from sphragis.corpus.redact import redact_text
     from sphragis.experiment.model import HFGenerator, run_provenance
     from sphragis.experiment.runner import build_prompt
 
     stored = stored_predictions(args.stored, f"base|{args.half}")
     ids = sorted(next(iter(stored.values())))[: args.examples]
+    # The corpus keeps an address that appears in a file path, and the published runs have
+    # it redacted, so a stored id can carry `<redacted-email>` where the corpus id carries
+    # the address. Keying the corpus side through the same substitution is what keeps the
+    # two joinable; without it those rows land in `missing` and abort the run.
     rows = {}
     for line in (args.corpus_dir / f"{args.condition}-{args.half}.jsonl").open():
         if line.strip():
             row = json.loads(line)
-            rows[row["id"]] = row
+            rows[redact_text(row["id"])] = row
     missing = [i for i in ids if i not in rows]
     if missing:
         raise SystemExit(

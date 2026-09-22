@@ -852,7 +852,8 @@
       "tokens": 92,
       "undefined_positions": 0,
       "min_k_plus_plus": -2.384683913146209,
-      "min_k_percent": -7.703844732708401
+      "min_k_percent": -7.703844732708401,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I68abfb36d209e4130d67af08b5b2de3dbffad903:deliverables/caracal/manila.yaml:2:49",
