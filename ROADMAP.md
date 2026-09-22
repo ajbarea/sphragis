@@ -316,8 +316,11 @@ identifies its source; PFAdapter states the gap in its own words. This apparatus
   thirteen-project corpus it is the only reading that finds Qt at all: p 0.023 against 0.100 for
   the whole update and 0.106 for B. A is by far the more similar factor across clients, which is
   the paper's own reason for sharing it.
-- [x] **SecureGate's scrubbing baseline**: already applied. The corpus is identity-scrubbed at
-  ingestion and every RQ2 number was measured on it.
+- [x] **SecureGate's scrubbing baseline**: already applied. Account objects and review comment
+  text are pseudonymised at ingestion and every RQ2 number was measured on that corpus. The
+  diff payload is deliberately not swept, so an address inside a config file reaches the corpus;
+  the published artifacts are redacted separately (`scripts/redact_identities.py`, guarded by a
+  test) because a released dataset retaining contributor addresses is not defensible practice.
 - [x] **FedDPA's adapter-instance cut** (jobs 150272 and 150904, withheld half 162578): the only
   one of the four that holds back more than it sends, and still not source-hiding. The transmitted
   global adapter puts AOSP at the floor of 1,716 groupings at every seed and catches 73% of

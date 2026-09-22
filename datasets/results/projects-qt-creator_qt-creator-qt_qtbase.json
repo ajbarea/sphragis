@@ -13267,11 +13267,12 @@
       {
         "id": "qt:Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0:src/corelib/global/qalloc.h:1:1",
         "change_id": "Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0",
-        "prediction": "// Copyright (C) 2025 Aur\u00e9lien Brooke <aurelien@brooke.fr>",
+        "prediction": "// Copyright (C) 2025 Aur\u00e9lien Brooke <<redacted-email>>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.907563025210084
+        "edit_similarity": 0.907563025210084,
+        "identities_redacted": true
       },
       {
         "id": "qt:I7adff41fa006669677df457704d20c02f1af7197:src/corelib/serialization/qxmlstream.cpp:1:2955",
@@ -20291,11 +20292,12 @@
       {
         "id": "qt:Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0:src/corelib/global/qalloc.h:1:1",
         "change_id": "Ie27ecb62097e9bcb33cc0ceb10c97743bce0b0e0",
-        "prediction": "// Copyright (C) 2025 Aur\u00e9lien Brooke <aurelien.brooke@qt.io>",
+        "prediction": "// Copyright (C) 2025 Aur\u00e9lien Brooke <<redacted-email>>",
         "exact_match": 0.0,
         "exact_match_raw": 0.0,
         "normalized_exact_match": 0.0,
-        "edit_similarity": 0.8524590163934426
+        "edit_similarity": 0.8524590163934426,
+        "identities_redacted": true
       },
       {
         "id": "qt:I7adff41fa006669677df457704d20c02f1af7197:src/corelib/serialization/qxmlstream.cpp:1:2955",

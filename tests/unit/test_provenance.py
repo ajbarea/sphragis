@@ -329,6 +329,9 @@ PROVENANCE_EXEMPT = {
     "preflight_pilot.py": "checks the cluster before a job; writes nothing",
     "bench_throughput.py": "a timing probe, not a study result",
     "power_rq1.py": "prints; the sensitivity analysis that replaced it writes its own artifact",
+    # Rewrites artifacts in place rather than producing one. Stamping it would overwrite the
+    # provenance of the run being redacted, which is the record that has to survive.
+    "redact_identities.py": "redacts committed artifacts; produces no measurement of its own",
 }
 
 

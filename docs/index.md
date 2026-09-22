@@ -81,7 +81,14 @@ and is reported as an apparatus failure rather than as a result.
 ## The corpus, and the seal
 
 Two public Gerrit instances mined for hunk-level refinement pairs anchored to inline reviewer
-comments, deduplicated, identity-scrubbed at ingestion, and split into windows by change.
+comments, deduplicated, pseudonymised at ingestion, and split into windows by change.
+
+The scrub replaces Gerrit account objects and sweeps addresses out of review comment text. It
+leaves the diff payload alone on purpose, because rewriting anything in the source that merely
+looks like an address would alter the code the study measures. An address written *inside* a
+config file or a DNS record therefore survives into the corpus, and the published artifacts are
+redacted separately: `scripts/redact_identities.py` removes third-party addresses from
+everything under `datasets/results/`, and a test holds every commit to it.
 
 | window | OpenStack | Qt |
 |---|---|---|

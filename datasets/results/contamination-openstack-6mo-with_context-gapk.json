@@ -2136,7 +2136,7 @@
       "gap_k_percent": -2.1489173764511955
     },
     {
-      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
       "window": "post",
       "tokens": 92,
       "undefined_positions": 0,
@@ -41058,11 +41058,12 @@
       "edit_similarity": 0.23404255319148937
     },
     {
-      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/michel.thebeau@windriver.com:1:6",
+      "id": "openstack:Ie328f46368fafa5deeff763b414e49b7941bb366:candidates/2024_H2/security/tl/<redacted-email>:1:6",
       "window": "post",
       "predicted": "review the Starlingx summary of Vuls scan reports, and the OpenStack Security Advisories and Notes. I then analyze these documents to identify potential security vulnerabilities and assess their impact on the Starlingx platform. Based on this analysis, I recommend appropriate mitigation strategies or patches to address the identified issues. Additionally, I ensure that all security updates are integrated into the Starlingx release cycle to maintain the highest level of security for our users.",
       "reference": "contribute to Starlingx security related features and code reviews\nincluding: oidc, vault, portieris.",
-      "edit_similarity": 0.1806020066889632
+      "edit_similarity": 0.1806020066889632,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I31961219849a35f790f64be497d8a046a87fae38:os_brick/tests/initiator/test_storpool_utils.py:21:26",
@@ -41355,8 +41356,9 @@
       "id": "openstack:I8507849c2258b4c47c2b275c1d56c014d617e020:reference/projects.yaml:3:2587",
       "window": "post",
       "predicted": "        irc: chenke",
-      "reference": "        email: chen.ke14@zte.com.cn",
-      "edit_similarity": 0.6296296296296297
+      "reference": "        email: <redacted-email>",
+      "edit_similarity": 0.6296296296296297,
+      "identities_redacted": true
     },
     {
       "id": "openstack:Ic89d72757099f39f2072fd652ebb5ed0e2d2b4ca:doc/source/security/kubernetes/add-ldap-users-to-linux-groups-using-pamcconfiguration-d31d95e255e1.rst:1:11",
@@ -42593,9 +42595,10 @@
     {
       "id": "openstack:Id49f7312381622c0a97928a0685bd42ec96883b8:doc/source/_vendor/vendor_strings.txt:1:1",
       "window": "post",
-      "predicted": "```\n.. Product version used in patch file names\n\n.. |pv| replace:: 21.04\n\n.. Product release date used in patch file names\n\n.. |pr| replace:: 2021-07-01\n\n.. Product build number used in patch file names\n\n.. |pb| replace:: 1\n\n.. Product architecture used in patch file names\n\n.. |pa| replace:: x86_64\n\n.. Product license used in patch file names\n\n.. |pl| replace:: Apache License 2.0\n\n.. Product support contact used in patch file names\n\n.. |ps| replace:: support@starlingx.io\n\n.. Product documentation URL used in patch file names\n\n.. |pd| replace:: https://docs.starlingx.io/\n\n.. Product download URL used in patch file names\n\n.. |pdn| replace:: https://download.starlingx.io/\n\n.. Product bug tracker URL used in patch file names\n\n.. |pbt| replace:: https://bugs.starlingx.io/\n\n.. Product mailing list URL used in patch file names\n\n.. |pm| replace:: https://lists.starlingx.io/\n\n.. Product chat URL used in patch file names\n\n.. |pc| replace:: https://",
+      "predicted": "```\n.. Product version used in patch file names\n\n.. |pv| replace:: 21.04\n\n.. Product release date used in patch file names\n\n.. |pr| replace:: 2021-07-01\n\n.. Product build number used in patch file names\n\n.. |pb| replace:: 1\n\n.. Product architecture used in patch file names\n\n.. |pa| replace:: x86_64\n\n.. Product license used in patch file names\n\n.. |pl| replace:: Apache License 2.0\n\n.. Product support contact used in patch file names\n\n.. |ps| replace:: <redacted-email>\n\n.. Product documentation URL used in patch file names\n\n.. |pd| replace:: https://docs.starlingx.io/\n\n.. Product download URL used in patch file names\n\n.. |pdn| replace:: https://download.starlingx.io/\n\n.. Product bug tracker URL used in patch file names\n\n.. |pbt| replace:: https://bugs.starlingx.io/\n\n.. Product mailing list URL used in patch file names\n\n.. |pm| replace:: https://lists.starlingx.io/\n\n.. Product chat URL used in patch file names\n\n.. |pc| replace:: https://",
       "reference": ".. versioning\n\n.. StarlingX (|prod|)\n\n.. |prod-ver|  replace:: |this-ver|\n\n.. Version at which we cut over to Deb.\n.. |deb-release-ver| replace:: release 8.0\n\n.. StX OpenStack (|prod-os|)\n\n.. |prod-os-ver| replace:: |prod-ver|\n\n\n.. Product version used in patch file names\n\n.. |pvr| replace:: 00004\n\n.. |release-caveat| replace:: This is a pre-release feature and may not function as described in |prod| 5 documentation.\n\n..\n.. Misc\n..\n\n.. |installer-image-name| replace:: bootimage\n\n.. |OVS-DPDK| replace:: |OVS|-|DPDK|\n.. |ovs-dpdk| replace:: ovs-dpdk\n\n.. |vswitch-label| replace:: openvswitch=enabled\n\n.. |registry-url| replace:: https://hub.docker.com/layers\n\n.. |only-target| replace:: StarlingX\n\n.. |bare-metal| replace:: bare metal\n\n.. |reg-string| replace:: public open source registries\n\n..\n.. Custom refs\n..\n\n\n.. Used in installing-a-subcloud-without-redfish-platform-management-service.rst\n   because target lable differs here/partner contexts.\n\n.. |_link-inst-book| replace:: :ref:`Installation guide <index-install-e083ca818006>`\n\n.. Used in security/openstack/install-rest-api-and-horizon-certificate.rst\n\n.. |_security-firewall-options| replace:: :ref:`Security Firewall Options <security-firewall-options>`\n\n.. Used in Apps Ref\n\n.. |_os-install-guide| replace:: :ref:`index-install-r7-os-adc44604968c`\n\n.. Debian Tech Preview\n\n.. |deb-prev-prods| replace:: |prod|\n.. |deb-510-kernel-release| replace:: release 6.0\n.. |deb-eval-release| replace:: release 7.0\n.. |deb-production-release| replace:: release 8.0\n.. |deb-install-step-change| replace:: \\\n.. |deb-dup-std-na| replace:: Duplex, and standard configurations are not available.\n.. |deb-update-iso| replace:: \\\n\n\n.. Initial version for k8s multi-ver upgrade orch strategy\n\n.. |k8s-multi-ver-orch-strategy-release| replace:: release 8.0\n\n.. Paired release values\n.. Used to expand to different values in different contexts, i.e. stx vs partner\n\n.. |v_master| replace:: r10",
-      "edit_similarity": 0.16793365583966827
+      "edit_similarity": 0.16793365583966827,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I4283d7a63c4dcd30463e6b56e6430722fa51ce32:doc/source/usertasks/kubernetes/using-container-based-remote-clis-and-clients.rst:1:51",
@@ -44869,8 +44872,9 @@
       "id": "openstack:I008d007cb840ff39ad78d2189819f3c3f4083b1d:kubernetes/flux2/local_debian/deb_folder/copyright:1:3",
       "window": "post",
       "predicted": "```\nUpstream-Version: 0.31.0",
-      "reference": "Upstream-Contact: cncf-flux-dev@lists.cncf.io\nSource: https://github.com/fluxcd",
-      "edit_similarity": 0.29906542056074764
+      "reference": "Upstream-Contact: <redacted-email>\nSource: https://github.com/fluxcd",
+      "edit_similarity": 0.29906542056074764,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I008d007cb840ff39ad78d2189819f3c3f4083b1d:kubernetes/flux2/local_debian/deb_folder/rules:1:7",
@@ -51806,15 +51810,17 @@
       "id": "openstack:I9cf37ecf21fab1033f169af7dd481d5ae47cccdb:zones/opendev.org/zone.db:3:431",
       "window": "pre",
       "predicted": "mirror03.ord.rax\t\t\tIN\tCAA\t0\tissue\t\"letsencrypt.org\"",
-      "reference": "mirror02.ord.rax\t\t\tIN\tCAA\t0\tiodef\t\"mailto:infra-root@openstack.org\"",
-      "edit_similarity": 0.6949152542372882
+      "reference": "mirror02.ord.rax\t\t\tIN\tCAA\t0\tiodef\t\"mailto:<redacted-email>\"",
+      "edit_similarity": 0.6949152542372882,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I9cf37ecf21fab1033f169af7dd481d5ae47cccdb:zones/opendev.org/zone.db:3:435",
       "window": "pre",
       "predicted": "_acme-challenge.mirror03-int.ord.rax\tIN\tCNAME\tacme.opendev.org.",
-      "reference": "mirror02-int.ord.rax\t\t\tIN\tCAA\t0\tissue\t\"letsencrypt.org\"\nmirror02-int.ord.rax\t\t\tIN\tCAA\t0\tiodef\t\"mailto:infra-root@openstack.org\"",
-      "edit_similarity": 0.37894736842105264
+      "reference": "mirror02-int.ord.rax\t\t\tIN\tCAA\t0\tissue\t\"letsencrypt.org\"\nmirror02-int.ord.rax\t\t\tIN\tCAA\t0\tiodef\t\"mailto:<redacted-email>\"",
+      "edit_similarity": 0.37894736842105264,
+      "identities_redacted": true
     },
     {
       "id": "openstack:I4dea75f85d2e4a2287bdcce845c4b5fa05da0ddc:manifests/wsgi/apache.pp:2:222",
