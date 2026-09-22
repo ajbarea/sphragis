@@ -1,0 +1,147 @@
+{
+  "runs": [
+    "datasets/results/rq1-placebo-qt.json",
+    "datasets/results/rq1-placebo-qt-s2.json",
+    "datasets/results/rq1-placebo-qt-s3.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "orgs": [
+    "qt-a",
+    "qt-b"
+  ],
+  "bootstrap_seed": 7,
+  "per_seed_pooled_contrast": {
+    "qt-a": {
+      "1": 0.02987697715289983,
+      "2": 0.02636203866432335,
+      "3": 0.03514938488576452
+    },
+    "qt-b": {
+      "1": -0.00536193029490617,
+      "2": 0.034852546916890104,
+      "3": -0.01608579088471851
+    }
+  },
+  "readings": {
+    "pooled": {
+      "median_seed": {
+        "verdict": "mixed",
+        "per_org": {
+          "qt-a": {
+            "estimate": 0.02987697715289983,
+            "low": 0.001526717557251922,
+            "high": 0.05985915492957744,
+            "clusters": 248.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          },
+          "qt-b": {
+            "estimate": -0.00536193029490617,
+            "low": -0.040816326530612235,
+            "high": 0.030054644808743147,
+            "clusters": 208.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        }
+      },
+      "crossed": {
+        "verdict": "mixed",
+        "per_org": {
+          "qt-a": {
+            "estimate": 0.030462800234329235,
+            "low": 0.003676470588235318,
+            "high": 0.056533333333333304,
+            "clusters": 248.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          },
+          "qt-b": {
+            "estimate": 0.004468275245755142,
+            "low": -0.03504043126684636,
+            "high": 0.043835616438356206,
+            "clusters": 208.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          }
+        }
+      }
+    },
+    "change_averaged": {
+      "median_seed": {
+        "verdict": "fail",
+        "per_org": {
+          "qt-a": {
+            "estimate": 0.03732709995043961,
+            "low": -0.0003174603174603196,
+            "high": 0.07491990589001975,
+            "clusters": 248.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          },
+          "qt-b": {
+            "estimate": -0.010096153846153847,
+            "low": -0.053125000000000006,
+            "high": 0.03325320512820513,
+            "clusters": 208.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        }
+      },
+      "crossed": {
+        "verdict": "mixed",
+        "per_org": {
+          "qt-a": {
+            "estimate": 0.03894522846610133,
+            "low": 0.004016373411534702,
+            "high": 0.07226211810889231,
+            "clusters": 248.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          },
+          "qt-b": {
+            "estimate": -0.0007084350834350826,
+            "low": -0.047779304029304026,
+            "high": 0.045729039479039474,
+            "clusters": 208.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          }
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-22T13:37:02.004712+00:00",
+    "git": {
+      "commit": "5a188a544d59c4afea216a99dcb2e769dbe69c18",
+      "branch": "main"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": null,
+      "job_id": null,
+      "account": null,
+      "partition": null,
+      "node": null
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 3060 Ti",
+      "total_gb": 8.59,
+      "peak_allocated_gb": 0.0,
+      "peak_reserved_gb": 0.0,
+      "cuda": "13.0"
+    }
+  }
+}

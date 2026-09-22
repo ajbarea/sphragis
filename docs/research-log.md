@@ -4842,3 +4842,50 @@ organization as separable as two organizations, 0.828 and 0.872 within against 0
 project contrast has qt-creator's adapter beating qtbase's on qt-creator's own refinements by
 +0.079, about four times the organizational effect. Style is learnable and it attaches to
 codebases; an organization is a bundle of codebases whose coherence varies.
+
+### The placebo at three seeds: it fires on Qt and not on OpenStack (2026-09-22, jobs 165607 to 165611)
+
+The single-seed reading entered above was reported as firing on both organizations. At the
+registered three seeds it does not, and the entry above stands as written rather than being
+edited, with this as its correction.
+
+Registered rule throughout: pooled estimand, crossed interval, three seeds. Generated with
+`scripts/reading.py --registered --markdown` rather than transcribed.
+
+| run | estimand | rule | arm | estimate | interval |
+|---|---|---|---|---|---|
+| rq1-placebo-qt-seeds.json | pooled | crossed | qt-a | +0.0305 | [+0.0037, +0.0565] |
+| rq1-placebo-qt-seeds.json | pooled | crossed | qt-b | +0.0045 | [-0.0350, +0.0438] |
+| rq1-placebo-openstack-seeds.json | pooled | crossed | openstack-a | +0.0099 | [-0.0273, +0.0463] |
+| rq1-placebo-openstack-seeds.json | pooled | crossed | openstack-b | +0.0013 | [-0.0375, +0.0402] |
+| rq1-qtfull-fp32-seeds.json | pooled | crossed | openstack | +0.0230 | [+0.0000, +0.0457] |
+| rq1-qtfull-fp32-seeds.json | pooled | crossed | qt | +0.0316 | [+0.0089, +0.0567] |
+
+**Qt's placebo and Qt's organizational effect are indistinguishable.** An arbitrary half of Qt's
+own projects reads +0.0305 [+0.0037, +0.0565] where Qt against OpenStack reads +0.0316 [+0.0089,
++0.0567]. Same point estimate to a thousandth, near-coincident intervals, both excluding zero. The
+rule registered before the run says a placebo of the same order as the cross-organization contrast
+is evidence that the gate responds to any project boundary. For Qt it does.
+
+**OpenStack's placebo does not reproduce.** +0.0099 covering zero, against an organizational
+contrast of +0.0230 whose lower bound is exactly 0.0000. Both arms of the placebo cover zero and
+the gate verdict is a fail.
+
+**So the two organizations fail the unit assumption differently**, which fits everything else
+measured. Qt's projects are separate codebases under one name, so any split of them behaves like
+the real boundary. OpenStack's projects are independent enough that splitting them yields nothing,
+and its own organizational contrast only just clears zero to begin with. Neither supports the
+organization as the unit; only Qt supports "any project boundary would do".
+
+**How the single-seed claim survived long enough to be reported.** The per-seed pooled contrasts
+on openstack-a were +0.0265, -0.0166 and +0.0199, a standard deviation of 0.019 on an effect of
+0.01. One seed of that is noise reported as signal, which is what the three-seed rule exists to
+prevent and why it is registered.
+
+**Recorded about the reporting rather than the result.** The correction above was itself stated
+wrongly twice before this entry, both times by reading a truncated console tail and attributing a
+rule to numbers whose position in the output was guessed: the change-averaged median-seed figures
+were quoted as though they were the registered ones. The artifacts were on disk throughout.
+`scripts/reading.py` exists because of it, printing estimand, rule, arm and run beside every
+figure and refusing a filter that matches no cell, since empty output reads as no effect rather
+than no such cell.

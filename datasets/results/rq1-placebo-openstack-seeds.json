@@ -1,0 +1,147 @@
+{
+  "runs": [
+    "datasets/results/rq1-placebo-openstack.json",
+    "datasets/results/rq1-placebo-openstack-s2.json",
+    "datasets/results/rq1-placebo-openstack-s3.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "orgs": [
+    "openstack-a",
+    "openstack-b"
+  ],
+  "bootstrap_seed": 7,
+  "per_seed_pooled_contrast": {
+    "openstack-a": {
+      "1": 0.026490066225165587,
+      "2": -0.016556291390728506,
+      "3": 0.019867549668874163
+    },
+    "openstack-b": {
+      "1": 0.003984063745019917,
+      "2": -0.015936254980079667,
+      "3": 0.015936254980079667
+    }
+  },
+  "readings": {
+    "pooled": {
+      "median_seed": {
+        "verdict": "fail",
+        "per_org": {
+          "openstack-a": {
+            "estimate": 0.019867549668874163,
+            "low": -0.024489795918367308,
+            "high": 0.05167173252279633,
+            "clusters": 103.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          },
+          "openstack-b": {
+            "estimate": 0.003984063745019917,
+            "low": -0.040485829959514164,
+            "high": 0.047794117647058876,
+            "clusters": 126.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        }
+      },
+      "crossed": {
+        "verdict": "fail",
+        "per_org": {
+          "openstack-a": {
+            "estimate": 0.009933774834437081,
+            "low": -0.02734375,
+            "high": 0.04633204633204635,
+            "clusters": 103.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          },
+          "openstack-b": {
+            "estimate": 0.0013280212483399723,
+            "low": -0.03751803751803753,
+            "high": 0.040160642570281124,
+            "clusters": 126.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          }
+        }
+      }
+    },
+    "change_averaged": {
+      "median_seed": {
+        "verdict": "fail",
+        "per_org": {
+          "openstack-a": {
+            "estimate": -0.019154866327910303,
+            "low": -0.07098166127292341,
+            "high": 0.02854486081213666,
+            "clusters": 103.0,
+            "resamples": 10000.0,
+            "binding_seed": 3.0
+          },
+          "openstack-b": {
+            "estimate": -0.01624779541446208,
+            "low": -0.06598324514991181,
+            "high": 0.03209876543209876,
+            "clusters": 126.0,
+            "resamples": 10000.0,
+            "binding_seed": 1.0
+          }
+        }
+      },
+      "crossed": {
+        "verdict": "fail",
+        "per_org": {
+          "openstack-a": {
+            "estimate": -0.011609076457734367,
+            "low": -0.06466406660581418,
+            "high": 0.042805983068690094,
+            "clusters": 103.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          },
+          "openstack-b": {
+            "estimate": -0.01743827160493827,
+            "low": -0.061419753086419754,
+            "high": 0.02699882422104644,
+            "clusters": 126.0,
+            "seeds": 3.0,
+            "resamples": 10000.0
+          }
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-22T13:37:21.396714+00:00",
+    "git": {
+      "commit": "5a188a544d59c4afea216a99dcb2e769dbe69c18",
+      "branch": "main"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": null,
+      "job_id": null,
+      "account": null,
+      "partition": null,
+      "node": null
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 3060 Ti",
+      "total_gb": 8.59,
+      "peak_allocated_gb": 0.0,
+      "peak_reserved_gb": 0.0,
+      "cuda": "13.0"
+    }
+  }
+}
