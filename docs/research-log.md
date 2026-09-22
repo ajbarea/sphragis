@@ -4682,3 +4682,42 @@ more attention to local knowledge", default 3. A sweep whose endpoints are `H = 
 `H`, and `K = 1` against `K` well above 3, is therefore a test between the residue account and an
 account where the instance boundary itself does the work. We predict the residue account: the
 withheld half's advantage should shrink monotonically with `H`.
+
+### Registered before computing: the placebo gate, and how it will be read (2026-09-21)
+
+The registered gate compares an adapter trained on one organization against one trained on
+another, on the first organization's held-out refinements. It cannot say on its own that the
+*organization* is what the adapters learned. A project, a codebase family or a document type would
+all produce the same reading, and this study's own separability probe already reports that two
+projects inside one organization separate as well as two organizations do (0.828 and 0.872 within,
+against 0.849 across, on matched Python).
+
+**The control.** One organization's projects are split into two halves and each half is written as
+its own pseudo-organization, then the registered runner is pointed at the result with nothing else
+changed: same windows, same equalisation, same three seeds, same fp32, same crossed interval. The
+split is deterministic and unseeded, projects sorted by training-window example count and each
+assigned to whichever side is smaller so far, so the partition is a function of the corpus and
+cannot be reshuffled until the control behaves. Built: Qt 38 and 36 projects at 4,539 and 4,538
+train examples, evaluating on 601 and 415; OpenStack 122 and 124 projects at 2,346 each,
+evaluating on 338 and 264.
+
+**How it will be read, fixed here rather than after the numbers land.** The placebo arms evaluate
+on roughly half the examples the real arms do, so a placebo interval that covers zero is weaker
+evidence than a real interval that excludes it, and "the placebo did not pass" is not by itself the
+result. The comparison is between *point estimates at comparable precision*: we report the placebo
+contrast beside the cross-organization contrast with both intervals, and read
+
+- a placebo point estimate of the same order as the cross-organization one as evidence that the
+  gate responds to any project boundary and the organization is not the unit, whatever either
+  interval does;
+- a placebo near zero with the cross-organization contrast clearly above it as evidence that the
+  organizational boundary is carrying the effect;
+- a placebo interval so wide that both readings sit inside it as an underpowered control, reported
+  as such, with the pooled dev size the reason.
+
+**What it does not settle.** Within one organization both halves write the same languages, so the
+placebo removes the language difference along with the organizational one. It therefore separates
+"organization" from "any project boundary" and says nothing about language. The language confound
+needs a cross-organization pair that shares a language, which the current two do not: the Qt dev
+window holds eight Python examples against OpenStack's 243, so a matched arm is not evaluable on
+this pair at all.

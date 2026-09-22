@@ -571,6 +571,7 @@ _JOB_DEFAULTS = {
     "TEMPERATURE": "1.0",
     "POST": "/unused/post.jsonl",
     "PRE": "/unused/pre.jsonl",
+    "ORG": "qt",
 }
 
 
