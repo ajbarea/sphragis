@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 124 artifacts under
-29 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 127 artifacts under
+30 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -191,6 +191,14 @@ Pilot: does an ADAPTED 7B clear the exact-match floor on this corpus?
 |---|---|
 | `pilot-outcomes.json` |  |
 
+## `scripts/placebo_corpus.py`
+
+Two pseudo-organizations built from one organization's own projects.
+
+| artifact | |
+|---|---|
+| `rq1-placebo-openstack.json` | `rq1-placebo-qt.json` |
+
 ## `scripts/power_rq1.py`
 
 Minimum detectable matched-minus-mismatched exact-match difference, from an RQ1 pilot.
@@ -233,7 +241,7 @@ Pilot-scale RQ1: does the matched adapter beat the mismatched one, per organizat
 | `rq1-windows-qtfull-fp32-s2.json` | `rq1-windows-qtfull-fp32-s3.json` |
 | `rq1-windows-qtfull-fp32.json` | `rq1-windows-qtfull-s2.json` |
 | `rq1-windows-qtfull-s3.json` | `rq1-windows-qtfull.json` |
-| `rq1-windows.json` |  |
+| `rq1-windows-r256.json` | `rq1-windows.json` |
 
 ## `scripts/seed_effect.py`
 
