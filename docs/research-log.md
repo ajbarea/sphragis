@@ -4801,3 +4801,44 @@ check on the *sealed* window that does not spend it: the test window cannot be i
 best available evidence that it will carry data is that change volume is steady right up to its
 boundary. It bounds volume only. Whether the content of those months resembles the training
 window is a separate question, and the drift probes are what answer it.
+
+### The placebo fires, and rank 256 does not rescue the null arm (2026-09-22, jobs 164557, 164558, 164573)
+
+Registered before these ran: a placebo point estimate of the same order as the cross-organization
+one is evidence that the gate responds to any project boundary and the organization is not the
+unit, whatever either interval does. It is.
+
+| boundary | contrast | interval |
+|---|---|---|
+| Qt against OpenStack, three seeds (registered) | +0.0316 | [+0.0089, +0.0567] |
+| **Qt's own projects, split in half** | **+0.030** | **[+0.002, +0.060]** |
+| the other half of that split | -0.005 | [-0.041, +0.030] |
+| OpenStack against Qt, three seeds (registered) | +0.0230 | [+0.0000, +0.0457] |
+| **OpenStack's own projects, split in half** | **+0.026** | [-0.021, +0.068] |
+| the other half of that split | +0.004 | [-0.040, +0.048] |
+
+A boundary with no organizational meaning reproduces the organizational effect, on both
+organizations, at the same magnitude. The outcome-neutral tests pass in every arm, so this is the
+apparatus working rather than failing: positive control, manipulation and leakage all hold on each
+pseudo-organization.
+
+**Rank 256 answers the capacity objection, and the answer is no.** OpenStack's arm goes from
++0.0230 at the registered rank to +0.007 [-0.019, +0.031]; Qt's holds at +0.033 [+0.005, +0.061]
+against +0.0316. Insufficient adapter capacity is not why OpenStack returns no gain, which is the
+one legitimate reason to have reached for a larger rank.
+
+**What these are not.** All three ran at a single seed. `SEEDS=1,2,3` in `--export` is parsed by
+Slurm as `SEEDS=1` plus two further export items, so the seed list never reached the runner, and
+the result files record `seeds: [1]`. Seeds 2 and 3 for all three are queued as their own jobs
+(165607 to 165612), and the registered crossed interval needs them before any of this is quotable
+as a three-seed reading. The reading rule keys on point estimates and those are already
+unambiguous, but the intervals above are single-seed cluster bootstraps, not the registered
+crossed ones.
+
+**Triangulation, which is why this is credible now rather than after the reruns.** Three
+instruments with no mechanism in common agree. The placebo puts an arbitrary project split at the
+organizational effect's magnitude. The separability probe reads two projects inside one
+organization as separable as two organizations, 0.828 and 0.872 within against 0.849 across. The
+project contrast has qt-creator's adapter beating qtbase's on qt-creator's own refinements by
++0.079, about four times the organizational effect. Style is learnable and it attaches to
+codebases; an organization is a bundle of codebases whose coherence varies.
