@@ -10,7 +10,8 @@ Reads built examples only. The test window is sealed and is not read, listed or 
 
 import argparse
 import json
-from pathlib import Path
+from collections import Counter
+from pathlib import Path, PurePosixPath
 
 from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.pipeline import run_dedup, run_split
@@ -51,6 +52,15 @@ for org in args.org or ["openstack", "qt"]:
         name: {
             "examples": len(windows[name]),
             "changes": len({r["change_id"] for r in windows[name]}),
+            # The variables table names language mix a confound and promises this histogram.
+            # It is the number the gate's rival explanation rests on: the two organizations
+            # barely share a file type, so an adapter that learned nothing but the language
+            # would beat the other organization's adapter on its own held-out data.
+            "content": dict(
+                Counter(
+                    PurePosixPath(r["path"]).suffix.lower() or "(none)" for r in windows[name]
+                ).most_common()
+            ),
         }
         for name in COLLECTED
     }

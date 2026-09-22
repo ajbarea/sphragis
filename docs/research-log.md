@@ -4721,3 +4721,47 @@ placebo removes the language difference along with the organizational one. It th
 needs a cross-organization pair that shares a language, which the current two do not: the Qt dev
 window holds eight Python examples against OpenStack's 243, so a matched arm is not evaluable on
 this pair at all.
+
+### AOSP stopped reviewing in public, and it takes the language-matched arm with it (2026-09-21)
+
+`# research(2026-09)`. The gate compares an OpenStack adapter against a Qt one. The two
+organizations barely share a file type, so an adapter that learned nothing but the language would
+beat the other's on its own held-out data and pass. The window reports now carry the histogram the
+variables table promised: OpenStack's training window is 2,054 Python and 1,184 reStructuredText
+of 4,327; Qt's is 4,211 C++, 1,427 qdoc and 807 headers of 8,442. In the dev window Qt holds
+**eight** Python examples against OpenStack's 243, so the matched arm cannot be evaluated on this
+pair at all.
+
+AOSP was the obvious fix, already fetched, C++ like Qt. It is not available, and the reason is
+upstream rather than ours.
+
+| months | merged changes fetched per month | examples built |
+|---|---|---|
+| 2024-11 to 2025-03 | 684 to 964 | 207 to 450 |
+| 2025-04 to 2025-10 | 26 to 63 | 0 to 6 |
+
+`aosp-main` became read-only on **2025-03-27** and all Android development moved to Google's
+internal branches; external contributions still reach the public Gerrit, which is the residue the
+later months show. The cliff in our own corpus sits exactly there, and it was measured before the
+cause was looked up.
+
+**What it costs, in three places.**
+
+1. **RQ1 cannot use AOSP as a third arm.** Its dev window holds three examples. No widening of the
+   project list fixes a review process that stopped: the ten projects fetched average one to six
+   examples a month since April 2025.
+2. **RQ2's AOSP results rest entirely on the period before the change.** They were built with
+   `--window all` and are unaffected as measurements, but the organization they describe no longer
+   reviews in public at that volume, and the study should say so rather than let a reader assume
+   the corpus could be extended.
+3. **The sealed test window would be nearly empty for AOSP**, so this is permanent, not a gap to
+   wait out.
+
+**What is still available.** Probed directly, three public Gerrit hosts answer and are busy in the
+dev window's own months, each returning a full page of merged changes with more behind it where
+AOSP returned 43 for the month: Chromium (`chromium/src` dominant, C++), Fuchsia (C++) and Go. Of
+the three, Chromium is the natural language-matched partner for Qt on size and language. Whether a
+review culture yields *anchored* inline comments at a usable rate is a separate question that only
+a build answers, and AOSP's own drop counts are the warning: 15,880 author comments and 7,305
+unanchored hunks against 5,133 usable examples. Adding a host is also a corpus-scope decision that
+touches the ethics determination, so it is recorded here rather than taken.
