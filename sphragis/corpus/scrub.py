@@ -30,16 +30,6 @@ def _scrub_text(text: str, salt: str) -> str:
     return _EMAIL.sub(lambda m: pseudonym(m.group(0), salt), text)
 
 
-# What the scrub before chained addresses were one address left of one: the domains after the
-# first, behind the 12-hex pseudonym written for the first ("<pseudonym>@example.com").
-_RESIDUE = re.compile(r"(?<![0-9A-Za-z])([0-9a-f]{12})((?:@[A-Za-z0-9.-]+\.[A-Za-z]{2,})+)")
-
-
-def sweep_address_residue(text: str) -> tuple[str, int]:
-    """Text with any domain left behind a pseudonym removed, and how many were."""
-    return _RESIDUE.subn(r"\1", text)
-
-
 def scrub(obj: Any, salt: str) -> Any:
     """Recursively replace Gerrit account identities with salted pseudonyms."""
     if isinstance(obj, dict):

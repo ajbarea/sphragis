@@ -195,6 +195,7 @@ def test_a_derived_record_under_other_rules_is_refused(tmp_path: Path) -> None:
 
 
 def test_a_derived_file_is_read_while_it_matches_its_record(tmp_path: Path) -> None:
+    _month(tmp_path)
     path = tmp_path / "nova.jsonl"
     write_derived_file(path, [{"id": "a"}, {"id": "b"}], sources=[(tmp_path, "o")])
     assert [r["id"] for r in derived_file_rows(path)] == ["a", "b"]
@@ -209,6 +210,7 @@ def test_a_file_with_no_record_is_refused_unless_read_as_legacy(tmp_path: Path) 
 
 
 def test_an_edited_derived_file_is_refused(tmp_path: Path) -> None:
+    _month(tmp_path)
     path = tmp_path / "nova.jsonl"
     write_derived_file(path, [{"id": "a"}], sources=[(tmp_path, "o")])
     path.write_text(path.read_text() + '{"id": "injected"}\n')
@@ -217,6 +219,7 @@ def test_an_edited_derived_file_is_refused(tmp_path: Path) -> None:
 
 
 def test_a_derived_file_cut_under_other_rules_is_refused(tmp_path: Path) -> None:
+    _month(tmp_path)
     path = tmp_path / "nova.jsonl"
     write_derived_file(path, [{"id": "a"}], sources=[(tmp_path, "o")])
     record = file_record(path)
@@ -236,6 +239,7 @@ def test_a_derived_file_whose_source_was_re_refined_is_refused(tmp_path: Path) -
 
 
 def test_an_empty_derived_file_is_refused(tmp_path: Path) -> None:
+    _month(tmp_path)
     path = tmp_path / "nova.jsonl"
     write_derived_file(path, [], sources=[(tmp_path, "o")])
     with pytest.raises(SystemExit, match="no examples"):
@@ -244,3 +248,59 @@ def test_an_empty_derived_file_is_refused(tmp_path: Path) -> None:
 
 def test_files_that_differ_only_in_suffix_keep_separate_records(tmp_path: Path) -> None:
     assert file_record(tmp_path / "nova.jsonl") != file_record(tmp_path / "nova.json")
+
+
+def test_an_unreadable_build_record_is_refused_rather_than_raised(tmp_path: Path) -> None:
+    built, _ = _month(tmp_path)
+    build_record(built).write_text("")
+    assert "unreadable build record" in stale_refinements(tmp_path, "o")[0]
+    build_record(built).write_text("[]")
+    assert "unreadable build record" in stale_refinements(tmp_path, "o")[0]
+
+
+def test_a_derived_record_with_no_months_is_refused(tmp_path: Path) -> None:
+    half = _derived(tmp_path)
+    (half / "2024-10.jsonl").unlink()
+    assert "no months" in stale_refinements(tmp_path / "out", "half")[0]
+
+
+def test_a_source_gone_from_a_root_that_is_still_here_is_refused(tmp_path: Path) -> None:
+    import shutil
+
+    _derived(tmp_path)
+    shutil.rmtree(refined_dir(tmp_path / "src", "o"))
+    assert "gone" in stale_refinements(tmp_path / "out", "half")[0]
+
+
+def test_a_copy_away_from_its_source_root_is_checked_against_its_own_record(
+    tmp_path: Path,
+) -> None:
+    import shutil
+
+    _derived(tmp_path)
+    shutil.rmtree(tmp_path / "src")
+    assert stale_refinements(tmp_path / "out", "half") == []
+
+
+def test_derived_corpora_that_cite_each_other_are_refused_not_recursed(tmp_path: Path) -> None:
+    for org in ("a", "b"):
+        half = refined_dir(tmp_path, org)
+        half.mkdir(parents=True)
+        (half / "2024-10.jsonl").write_text(f'{{"id": "{org}"}}\n')
+    mark_derived(tmp_path, "a", source_root=tmp_path, source_org="b")
+    mark_derived(tmp_path, "b", source_root=tmp_path, source_org="a")
+    assert stale_refinements(tmp_path, "a")
+    with pytest.raises(ValueError, match="itself"):
+        mark_derived(tmp_path, "a", source_root=tmp_path, source_org="a")
+
+
+def test_a_file_cut_from_a_changed_intermediate_is_refused(tmp_path: Path) -> None:
+    _month(tmp_path)
+    middle = tmp_path / "nova.jsonl"
+    write_derived_file(middle, [{"id": "a"}, {"id": "b"}], sources=[(tmp_path, "o")])
+    half = tmp_path / "planted-a.jsonl"
+    write_derived_file(half, [{"id": "a"}], sources=[(tmp_path, "o")], via=[middle])
+    assert derived_file_rows(half) == [{"id": "a"}]
+    write_derived_file(middle, [{"id": "c"}], sources=[(tmp_path, "o")])
+    with pytest.raises(SystemExit, match="nova.jsonl"):
+        derived_file_rows(half)

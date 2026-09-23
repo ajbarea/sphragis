@@ -308,24 +308,27 @@ def _only(comment: dict[str, Any]):
     return comments
 
 
-def test_a_bot_template_is_not_a_review_comment() -> None:
-    _, diff_for, calls = _fetchers()
-    examples, drops = build_from_change(
+def test_a_bot_template_is_left_to_refine() -> None:
+    """Label rules are refine's alone, so a change to them never needs a refetch."""
+    _, diff_for, _ = _fetchers()
+    examples, _ = build_from_change(
         "openstack", CHANGE, _only({"message": "Hint: Trailing whitespace"}), diff_for
     )
-    assert examples == []
-    assert drops["automated_comment"] == 1
-    assert calls == [], "a bot's comment should cost no diff request"
+    assert [e["comments"] for e in examples] == [["Hint: Trailing whitespace"]]
 
 
 def test_a_service_account_is_not_a_reviewer_whatever_it_writes() -> None:
-    _, diff_for, _ = _fetchers()
+    from sphragis.corpus.build import is_service_user
+
+    _, diff_for, calls = _fetchers()
     author = {"_account_id": "abc", "tags": ["SERVICE_USER"]}
     examples, drops = build_from_change(
         "openstack", CHANGE, _only({"message": "rename this", "author": author}), diff_for
     )
     assert examples == []
-    assert drops["automated_comment"] == 1
+    assert drops["service_user"] == 1
+    assert calls == [], "a service account's comment should cost no diff request"
+    assert not is_service_user({"_account_id": "abc"}) and not is_service_user(None)
 
 
 def test_acknowledged_is_an_acknowledgement() -> None:
@@ -337,22 +340,11 @@ def test_acknowledged_is_an_acknowledgement() -> None:
     assert drops["acknowledgement"] == 1
 
 
-@pytest.mark.parametrize("kind", ["TRIVIAL_REBASE", "NO_CODE_CHANGE", "NO_CHANGE"])
-def test_a_successor_that_changed_no_code_yields_no_example(kind: str) -> None:
-    comments, diff_for, calls = _fetchers()
-    change = {**CHANGE, "revisions": {"aaa": {"_number": 1}, "bbb": {"_number": 2, "kind": kind}}}
-    examples, drops = build_from_change("openstack", change, comments, diff_for)
-    assert examples == []
-    assert drops["not_rework_successor"] == 1
-    assert calls == []
-
-
-def test_a_rework_successor_is_unaffected() -> None:
+def test_the_successor_kind_is_left_to_refine() -> None:
     comments, diff_for, _ = _fetchers()
-    change = {
-        **CHANGE,
-        "revisions": {"aaa": {"_number": 1}, "bbb": {"_number": 2, "kind": "REWORK"}},
-    }
-    examples, drops = build_from_change("openstack", change, comments, diff_for)
+    revisions = {"aaa": {"_number": 1}, "bbb": {"_number": 2, "kind": "TRIVIAL_REBASE"}}
+    examples, drops = build_from_change(
+        "openstack", {**CHANGE, "revisions": revisions}, comments, diff_for
+    )
     assert len(examples) == 1
-    assert drops["not_rework_successor"] == 0
+    assert "not_rework_successor" not in drops

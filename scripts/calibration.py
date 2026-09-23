@@ -70,6 +70,8 @@ parser.add_argument(
 def main() -> None:
     args = parser.parse_args()
     fractions = args.fraction or [0.0, 0.05, 0.1, 0.25, 0.5, 1.0]
+    if args.org and args.legacy_corpus:
+        parser.error("--legacy-corpus reads a file: pass --examples, not --org")
     sources: list[tuple[Path, str]] | None
     if args.org:
         rows, sources = refined_examples(args.root, args.org), [(args.root, args.org)]
@@ -107,7 +109,8 @@ def main() -> None:
             if sources is None:
                 path.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in half))
             else:
-                write_derived_file(path, half, sources=sources)
+                via = [args.examples] if args.examples else []
+                write_derived_file(path, half, sources=sources, via=via)
             paths[side] = str(path)
         manifest["conditions"].append({"tag": tag, **report, "paths": paths})
         print(

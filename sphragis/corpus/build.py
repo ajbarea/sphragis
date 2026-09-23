@@ -12,14 +12,11 @@ from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
-from sphragis.corpus.automated import is_automated
 from sphragis.corpus.examples import (
     Hunk,
     has_successor_revision,
     hunks_from_diff,
     is_code_file,
-    revision_kind,
-    successor_changed_code,
 )
 from sphragis.corpus.wellposed import ILL_POSED_REASONS, classify
 
@@ -38,15 +35,25 @@ DROP_REASONS = (
     *(f"ill_posed_{reason}" for reason in ILL_POSED_REASONS),
     "metadata_file",
     "author_comment",
-    "automated_comment",
+    "service_user",
     "acknowledgement",
     "no_line_anchor",
     "no_successor",
-    "not_rework_successor",
     "diff_error",
     "comment_error",
     "no_anchored_hunk",
 )
+
+
+# Gerrit tags a service account `SERVICE_USER` on `AccountInfo.tags`. Who wrote a comment is known
+# only here, where its author is, so this is a build rule; what a bot writes is a label rule,
+# which `refine` applies against the registered templates (`sphragis.corpus.automated`).
+SERVICE_USER = "SERVICE_USER"
+
+
+def is_service_user(author: Mapping[str, Any] | None) -> bool:
+    """Whether a comment's author is tagged a service account by the host."""
+    return bool(author) and SERVICE_USER in (author.get("tags") or [])
 
 
 def is_reviewer_comment(comment: Mapping[str, Any], owner_id: Any) -> bool:
@@ -147,8 +154,8 @@ def build_from_change(
                 continue
             # A bot enforces written rules, the opposite of what the study measures, and only
             # some hosts run one, so its comments would read as that host's house style.
-            if is_automated(comment):
-                drops["automated_comment"] += 1
+            if is_service_user(comment.get("author")):
+                drops["service_user"] += 1
                 continue
             if is_acknowledgement(str(comment.get("message", ""))):
                 drops["acknowledgement"] += 1
@@ -159,11 +166,6 @@ def build_from_change(
                 continue
             if not has_successor_revision(patch_set=patch_set, revision_count=revision_count):
                 drops["no_successor"] += 1
-                continue
-            # A successor that is a rebase or a message-only edit changed no code, so any hunk
-            # that differs across it is what the rebase swept in, not the author's answer.
-            if not successor_changed_code(revision_kind(change, patch_set + 1)):
-                drops["not_rework_successor"] += 1
                 continue
             try:
                 diff = fetch_diff(number, patch_set + 1, path, patch_set)

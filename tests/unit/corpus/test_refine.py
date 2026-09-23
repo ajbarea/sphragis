@@ -159,3 +159,9 @@ def test_an_address_domain_left_behind_a_pseudonym_is_removed() -> None:
     )
     assert kept[0]["comments"] == ["ask 0123456789ab, and see @mock.patch"]
     assert counts[ADDRESS_RESIDUE] == 1
+
+
+def test_a_hex_run_inside_a_longer_token_is_not_taken_for_a_pseudonym() -> None:
+    kept, counts = refine([_row(["see x0123456789ab@example.com"])], index_changes([_change(10)]))
+    assert kept[0]["comments"] == ["see x0123456789ab@example.com"]
+    assert counts[ADDRESS_RESIDUE] == 0

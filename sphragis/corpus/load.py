@@ -74,6 +74,15 @@ def write_source_record(root: Path, org: str, built: Path, refined: Path) -> Non
     )
 
 
+def _read_json(path: Path) -> dict[str, Any] | None:
+    """A record as a dict, or None when it is missing, unreadable or not an object."""
+    try:
+        record = json.loads(Path(path).read_text())
+    except (ValueError, OSError):
+        return None
+    return record if isinstance(record, dict) else None
+
+
 def _months(root: Path, org: str) -> dict[str, str]:
     return {p.name: sha256(p) for p in sorted(refined_dir(root, org).glob("*.jsonl"))}
 
@@ -83,16 +92,22 @@ def _source(root: Path, org: str) -> dict[str, Any]:
     return {"root": str(Path(root).resolve()), "org": org, "months": _months(root, org)}
 
 
-def _stale_source(source: Mapping[str, Any]) -> str | None:
+Seen = frozenset[tuple[str, str]]
+
+
+def _stale_source(source: Mapping[str, Any], seen: Seen) -> str | None:
     """Why a recorded source no longer backs what was cut from it, or None.
 
-    A derived corpus copied away from its source (to a cluster) is checked against its own
-    record alone; next to its source, the source must be current and must not have moved.
+    A derived corpus copied to a machine that does not hold its source's root (a cluster) is
+    checked against its own record alone. Where the root exists, the source must too, must be
+    current, and must not have moved.
     """
     root, org = Path(source["root"]), source["org"]
-    if not refined_dir(root, org).is_dir():
+    if not root.is_dir():
         return None
-    if stale_refinements(root, org):
+    if not refined_dir(root, org).is_dir():
+        return f"its source {org} is gone from {root}"
+    if stale_refinements(root, org, _seen=seen):
         return f"its source {org} is itself stale"
     if _months(root, org) != source.get("months"):
         return f"its source {org} was re-refined since it was cut"
@@ -105,6 +120,8 @@ def mark_derived(root: Path, org: str, *, source_root: Path, source_org: str) ->
     The record holds this corpus's own month hashes and its source's, so an edit to either, or a
     re-refinement of the source, makes it stale.
     """
+    if (Path(root).resolve(), org) == (Path(source_root).resolve(), source_org):
+        raise ValueError(f"{org} cannot be derived from itself")
     out = refined_dir(root, org)
     out.mkdir(parents=True, exist_ok=True)
     (out / DERIVED).write_text(
@@ -119,11 +136,13 @@ def mark_derived(root: Path, org: str, *, source_root: Path, source_org: str) ->
     )
 
 
-def _stale_derived(root: Path, org: str) -> list[str]:
+def _stale_derived(root: Path, org: str, seen: Seen) -> list[str]:
     record_path = refined_dir(root, org) / DERIVED
     if not record_path.exists():
         return [f"{org}: no built months and no derived record"]
-    record = json.loads(record_path.read_text())
+    record = _read_json(record_path)
+    if record is None:
+        return [f"{org}: unreadable derived record"]
     if record.get("rules") != RULES_VERSION:
         return [f"{org}: derived under other rules"]
     months = _months(root, org)
@@ -133,7 +152,7 @@ def _stale_derived(root: Path, org: str) -> list[str]:
         return [f"{org}: derived months differ from their record"]
     if "source" not in record:
         return [f"{org}: derived record names no source"]
-    reason = _stale_source(record["source"])
+    reason = _stale_source(record["source"], seen)
     return [f"{org}: {reason}"] if reason else []
 
 
@@ -141,7 +160,9 @@ def _stale_build(built: Path) -> str | None:
     record_path = build_record(built)
     if not record_path.is_file():
         return f"{built.name}: no build record"
-    record = json.loads(record_path.read_text())
+    record = _read_json(record_path)
+    if record is None:
+        return f"{built.name}: unreadable build record"
     # Records written before the completion marker carry no `complete` key and were closed.
     if not record.get("complete", True):
         return f"{built.name}: build did not complete"
@@ -153,10 +174,13 @@ def _stale_build(built: Path) -> str | None:
     return None
 
 
-def stale_refinements(root: Path, org: str) -> list[str]:
+def stale_refinements(root: Path, org: str, *, _seen: Seen = frozenset()) -> list[str]:
     """What stops this corpus being read: a reason per stale month, empty when current."""
+    key = (str(Path(root).resolve()), org)
+    if key in _seen:
+        return [f"{org}: derived, through its sources, from itself"]
     if not built_dir(root, org).is_dir():
-        return _stale_derived(root, org)
+        return _stale_derived(root, org, _seen | {key})
     built_months = sorted(built_dir(root, org).glob("*.jsonl"))
     if not built_months:
         return [f"{org}: no built months"]
@@ -171,8 +195,10 @@ def stale_refinements(root: Path, org: str) -> list[str]:
         if not record_path.exists() or not refined.exists():
             stale.append(f"{built.name}: not refined")
             continue
-        record = json.loads(record_path.read_text())
-        if record.get("rules") != RULES_VERSION:
+        record = _read_json(record_path)
+        if record is None:
+            stale.append(f"{built.name}: unreadable refinement record")
+        elif record.get("rules") != RULES_VERSION:
             stale.append(f"{built.name}: refined under other rules")
         elif record.get("examples_sha256") != sha256(built):
             stale.append(f"{built.name}: rebuilt since it was refined")
@@ -211,12 +237,17 @@ def file_record(path: Path) -> Path:
 
 
 def write_derived_file(
-    path: Path, rows: Iterable[Mapping[str, Any]], *, sources: Sequence[tuple[Path, str]]
+    path: Path,
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    sources: Sequence[tuple[Path, str]],
+    via: Sequence[Path] = (),
 ) -> None:
     """Write a corpus file cut from refined examples, with a record of its rules and sources.
 
     Files handed to a job by path (a project's examples, a client's) carry no directory for
-    `stale_refinements` to check, so each carries its own record instead.
+    `stale_refinements` to check, so each carries its own record instead. `via` names derived
+    files this one was cut from in turn, which are checked the same way.
     """
     path = Path(path)
     path.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
@@ -226,6 +257,7 @@ def write_derived_file(
                 "rules": RULES_VERSION,
                 "sha256": sha256(path),
                 "sources": [_source(root, org) for root, org in sources],
+                "via": [{"path": str(Path(v).resolve()), "sha256": sha256(v)} for v in via],
             },
             indent=2,
         )
@@ -237,7 +269,9 @@ def stale_derived_file(path: Path) -> str | None:
     record_path = file_record(path)
     if not record_path.exists():
         return f"{path}: no record; cut it from refined examples (scripts/project_corpora.py)"
-    record = json.loads(record_path.read_text())
+    record = _read_json(record_path)
+    if record is None:
+        return f"{path}: unreadable record"
     if record.get("rules") != RULES_VERSION:
         return f"{path}: cut under other rules"
     if record.get("sha256") != sha256(Path(path)):
@@ -245,15 +279,21 @@ def stale_derived_file(path: Path) -> str | None:
     if not record.get("sources"):
         return f"{path}: its record names no source"
     for source in record["sources"]:
-        if reason := _stale_source(source):
+        if reason := _stale_source(source, frozenset()):
             return f"{path}: {reason}"
+    for step in record.get("via", []):
+        intermediate = Path(step["path"])
+        if not intermediate.parent.is_dir():
+            continue
+        if not intermediate.is_file() or sha256(intermediate) != step["sha256"]:
+            return f"{path}: {intermediate.name}, which it was cut from, changed or is gone"
     return None
 
 
 def derived_sources(path: Path) -> list[tuple[Path, str]]:
     """The sources a derived file was cut from, for a file cut from it in turn."""
-    record = json.loads(file_record(path).read_text())
-    return [(Path(source["root"]), source["org"]) for source in record["sources"]]
+    record = _read_json(file_record(path)) or {}
+    return [(Path(source["root"]), source["org"]) for source in record.get("sources", [])]
 
 
 def derived_file_rows(path: Path, *, legacy: bool = False) -> list[dict[str, Any]]:

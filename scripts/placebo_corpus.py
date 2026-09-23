@@ -28,11 +28,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 from pathlib import Path
 
-from sphragis.corpus.load import mark_derived, refined_dir, refined_month_files
+from sphragis.corpus.load import built_dir, mark_derived, refined_dir, refined_month_files
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -100,8 +101,15 @@ def main() -> None:
     names = args.names or [f"{args.org}-a", f"{args.org}-b"]
     if len(set(names)) != 2:
         raise SystemExit(f"two distinct half names are needed, got {names}")
-    if args.org in names and args.out_root.resolve() == args.root.resolve():
-        raise SystemExit(f"a half named {args.org} under --root would overwrite its own source")
+    for name in names:
+        # A half is written over whatever corpus already carries its name under --out-root, so
+        # a name must be a plain name, and never one a built corpus (its source included) has.
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name):
+            raise SystemExit(f"{name!r} is not a plain corpus name")
+        if built_dir(args.out_root, name).exists():
+            raise SystemExit(
+                f"{name} is a built corpus under {args.out_root}; it would be overwritten"
+            )
     # A reused out-root would keep months an earlier split wrote for a half that now has none.
     for name in names:
         for stale in refined_dir(args.out_root, name).glob("*"):

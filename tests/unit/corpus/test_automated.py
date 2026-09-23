@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from sphragis.corpus.automated import is_automated, is_service_user, matched_bot
+from sphragis.corpus.automated import matched_bot
 
 REGISTRY = Path(__file__).resolve().parents[3] / "sphragis/corpus/automated/qt-sanity-bot.json"
 
@@ -51,18 +51,6 @@ def test_bot_messages_are_recognised(text: str, bot: str) -> None:
 )
 def test_reviewer_messages_are_not_taken_for_bots(text: str) -> None:
     assert matched_bot(text) is None
-
-
-def test_a_service_user_is_automated_whatever_it_writes() -> None:
-    comment = {"author": {"_account_id": "abc", "tags": ["SERVICE_USER"]}, "message": "typo"}
-    assert is_service_user(comment["author"])
-    assert is_automated(comment)
-
-
-def test_an_untagged_author_is_judged_by_the_message() -> None:
-    assert not is_automated({"author": {"_account_id": "abc"}, "message": "typo"})
-    assert is_automated({"author": {"_account_id": "abc"}, "message": "Hint: Leading tabs"})
-    assert not is_service_user(None)
 
 
 def test_the_registry_records_where_it_came_from() -> None:

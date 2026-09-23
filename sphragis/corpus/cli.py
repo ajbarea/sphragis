@@ -361,54 +361,86 @@ def built_under_current_rules(target: Path) -> bool | None:
     return None if recorded is None else recorded == BUILD_RULES
 
 
-# Written into a record the stamp accepts; the research log entry of the same date holds the
-# audit of every build-code change since those months were built.
+# The months accepted without a rebuild, by snapshot digest, and the build rules the acceptance
+# holds for. The research log entry of 2026-09-23 holds the audit behind it.
+STAMP_ALLOWLIST = Path(__file__).resolve().parent / "stamped-months.json"
 STAMP_NOTE = (
-    "built before build rules were recorded; accepted under these rules on 2026-09-23 after "
-    "every build-code change since was found reapplied by refine or not to change output"
+    "built before build rules were recorded; accepted without a rebuild on 2026-09-23 after every "
+    "build-code change since was found reapplied by refine or not to change output"
 )
 
 
-def _stage_stamp(args: argparse.Namespace) -> int:
-    """Record the current build rules on months built before the build recorded them.
+def _stamp_allowlist() -> dict[str, Any]:
+    return json.loads(STAMP_ALLOWLIST.read_text())
 
-    One-time by construction: it writes only records that carry no build rules, and refuses a
-    month recorded under other rules, which must be rebuilt. Whether the months it accepts
-    really are equivalent to a build under these rules is a judgement made once, in the
-    research log, not something this stage checks.
+
+def _read_record(record: Path) -> dict[str, Any] | None:
+    try:
+        recorded = json.loads(record.read_text())
+    except (ValueError, OSError):
+        return None
+    return recorded if isinstance(recorded, dict) else None
+
+
+def _stage_stamp(args: argparse.Namespace) -> int:
+    """Record the build rules on the months the 2026-09-23 audit accepted without a rebuild.
+
+    Those months were built before the build recorded its rules and judged equivalent to a build
+    under the rules `stamped-months.json` names. A month is stamped only while the code's build
+    rules are still those, its snapshot is one the audit covered and is still the one on disk,
+    and its record carries no build rules; anything else must be rebuilt. Every month is checked
+    before any is written.
     """
+    allowed = _stamp_allowlist()
+    if allowed["build_rules"] != BUILD_RULES:
+        print(
+            f"refusing to stamp: the build rules are {BUILD_RULES}, and the audit covered "
+            f"{allowed['build_rules']}; rebuild instead"
+        )
+        return 1
     built = sorted(_examples_dir(args).glob("*.jsonl"))
     if not built:
         print(f"no examples under {_examples_dir(args)}; run build first")
         return 1
-    records = {path: source_path(path) for path in built}
+    raw = Path(args.root) / args.org / "raw"
+    plans: list[tuple[Path, dict[str, Any]]] = []
     refused = []
-    for path, record in records.items():
-        recorded = json.loads(record.read_text()) if record.is_file() else None
-        if not isinstance(recorded, dict) or not recorded.get("snapshot_sha256"):
-            refused.append(f"{path.name}: no build record")
-        elif recorded.get("build_rules") not in (None, BUILD_RULES):
+    for path in built:
+        month = path.name.removesuffix(".jsonl")
+        recorded = _read_record(source_path(path))
+        snapshot = raw / f"{month}.ndjson.gz"
+        digest = recorded.get("snapshot_sha256") if recorded else None
+        if recorded is None:
+            refused.append(f"{path.name}: no readable build record")
+        elif recorded.get("build_rules") == BUILD_RULES:
+            continue
+        elif recorded.get("build_rules") is not None:
             refused.append(f"{path.name}: built under other build rules; rebuild it")
         elif not recorded.get("complete", True):
             refused.append(f"{path.name}: build did not complete")
+        elif not digest or not snapshot.is_file() or digest != snapshot_digest(snapshot):
+            refused.append(f"{path.name}: its snapshot is missing or was refetched since")
+        elif allowed["snapshots"].get(digest) != f"{args.org}/{month}":
+            refused.append(f"{path.name}: not a month the audit covered")
+        else:
+            try:
+                rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+            except ValueError:
+                refused.append(f"{path.name}: unreadable examples")
+                continue
+            stamp = {**recorded, "build_rules": BUILD_RULES, "stamped": STAMP_NOTE}
+            # Built before prompt context existed: the same examples, without context, which the
+            # contamination battery refuses; counted so the record says so.
+            without = sum("context_before" not in row for row in rows)
+            if without:
+                stamp["without_context"] = without
+            plans.append((source_path(path), stamp))
     if refused:
         print(f"refusing to stamp {args.org}: {refused}")
         return 1
-    stamped = 0
-    for path, record in records.items():
-        recorded = json.loads(record.read_text())
-        if recorded.get("build_rules") == BUILD_RULES:
-            continue
-        recorded.update(build_rules=BUILD_RULES, stamped=STAMP_NOTE)
-        # A month built before context lines existed has the same examples and no prompt
-        # context; the only consumer of context refuses such a row, and the record says so.
-        rows = [json.loads(line) for line in path.read_text().splitlines() if line]
-        without = sum("context_before" not in row for row in rows)
-        if without:
-            recorded["without_context"] = without
-        record.write_text(json.dumps(recorded, indent=2) + "\n")
-        stamped += 1
-    print(f"{args.org}: stamped {stamped} of {len(built)} months with build rules {BUILD_RULES}")
+    for record, stamp in plans:
+        record.write_text(json.dumps(stamp, indent=2) + "\n")
+    print(f"{args.org}: stamped {len(plans)} of {len(built)} months with build rules {BUILD_RULES}")
     return 0
 
 
