@@ -5029,3 +5029,28 @@ window, its sibling's, and the foreign organization's. Generated from
 Every sibling rate is at or below the same half's own rate, and all are below the registered 2%
 at Jaccard 0.7, so shared boilerplate is not what a sibling adapter would be credited with on the
 dev window. The check is registered for the test window and runs again there.
+
+### The gate's stratified interval holds nominal at both Holm levels, in H2's regime (2026-09-23)
+
+`scripts/crossed_coverage.py --strata 2` simulates the interval the decomposition gate reads: two
+equally weighted strata, changes resampled within each, five seeds, 4,000 trials a cell (Monte
+Carlo error about 0.002 at the 0.0125 level). One-sided false-positive rate, the lower bound above
+zero under a true null, beside the unstratified crossed interval on the same runs. Generated from
+`stratified-coverage-0.975.json` and `stratified-coverage-0.95.json`.
+
+| level | nominal | sigma_b | stratified | crossed |
+|---|---|---|---|---|
+| 0.975 | 0.0125 | 0.0 | 0.0105 | 0.0100 |
+| 0.975 | 0.0125 | 0.005 | 0.0112 | 0.0110 |
+| 0.975 | 0.0125 | 0.01 | 0.0145 | 0.0150 |
+| 0.975 | 0.0125 | 0.02 | 0.0132 | 0.0130 |
+| 0.95 | 0.025 | 0.0 | 0.0222 | 0.0208 |
+| 0.95 | 0.025 | 0.005 | 0.0230 | 0.0222 |
+| 0.95 | 0.025 | 0.01 | 0.0238 | 0.0230 |
+| 0.95 | 0.025 | 0.02 | 0.0260 | 0.0257 |
+
+Within Monte Carlo error of nominal at both levels up to a seed effect of 0.02. **These runs are
+H2's regime** (equal halves, the same treatment arm in both), as the re-review pointed out. H1's
+second half swaps treatment and control, so an adapter-level seed shift enters the two halves
+with opposite signs; that regime (`--flip-second`) is measured next, before the report states a
+coverage for H1.

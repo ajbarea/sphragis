@@ -315,3 +315,5 @@ of the research log rather than out of the code.
 
 - `rq1-qtfull-fp32-seeds.json`
 - `rq1-r256-seeds.json`
+- `stratified-coverage-0.95.json`
+- `stratified-coverage-0.975.json`
