@@ -2,83 +2,125 @@
 
 from __future__ import annotations
 
-from sphragis.corpus.refine import REFINE_REASONS, refine, revision_kinds
+from typing import Any
+
+from sphragis.corpus.refine import (
+    KEPT_UNCHECKED,
+    REFINE_REASONS,
+    index_changes,
+    refine,
+    rules_version,
+    successor_kind,
+)
+
+CREATED = "2024-10-05 10:00:00.000000000"
 
 
-def _row(comments: list[str], patch_set: int = 1, change: str = "I1") -> dict:
+def _change(number: int, kind: str | None = "REWORK", *, branch: str = "master") -> dict:
+    second: dict[str, Any] = {"_number": 2}
+    if kind is not None:
+        second["kind"] = kind
     return {
-        "id": f"qt:{change}:a.cpp:{patch_set}:10",
-        "change_id": change,
+        "_number": number,
+        "change_id": "I1",
         "project": "qt/qtbase",
-        "patch_set": patch_set,
-        "comments": comments,
-        "before": "x",
-        "after": "y",
+        "branch": branch,
+        "created": CREATED,
+        "revisions": {"p1": {"_number": 1, "kind": "REWORK"}, "p2": second},
     }
 
 
-def _kinds(kind: str = "REWORK", change: str = "I1", patch_set: int = 2) -> dict:
-    return {(change, "qt/qtbase", patch_set): kind}
+def _row(comments: list[str], **extra: Any) -> dict:
+    return {
+        "id": "qt:I1:a.cpp:1:10",
+        "change_id": "I1",
+        "project": "qt/qtbase",
+        "created": CREATED,
+        "patch_set": 1,
+        "comments": comments,
+        **extra,
+    }
 
 
 def test_a_reviewer_comment_survives_untouched() -> None:
-    kept, drops = refine([_row(["rename this"])], _kinds())
+    kept, counts = refine([_row(["rename this"])], index_changes([_change(10)]))
     assert [r["comments"] for r in kept] == [["rename this"]]
-    assert sum(drops.values()) == 0
+    assert sum(counts.values()) == 0
 
 
 def test_a_bot_comment_is_removed_and_the_reviewer_beside_it_kept() -> None:
-    kept, drops = refine([_row(["Hint: Trailing whitespace", "rename this"])], _kinds())
+    kept, counts = refine(
+        [_row(["Hint: Trailing whitespace", "rename this"])], index_changes([_change(10)])
+    )
     assert kept[0]["comments"] == ["rename this"]
-    assert drops["automated_comment"] == 1
-    assert drops["automated_only"] == 0
+    assert counts["automated_comment"] == 1
+    assert counts["automated_only"] == 0
 
 
 def test_an_example_resting_only_on_a_bot_is_dropped() -> None:
-    kept, drops = refine([_row(["Hint: Leading tabs", "Unresolved merge conflict"])], _kinds())
+    kept, counts = refine(
+        [_row(["Hint: Leading tabs", "Unresolved merge conflict"])], index_changes([_change(10)])
+    )
     assert kept == []
-    assert drops["automated_comment"] == 2
-    assert drops["automated_only"] == 1
+    assert counts["automated_comment"] == 2
+    assert counts["automated_only"] == 1
 
 
 def test_an_example_resting_only_on_acknowledged_is_dropped() -> None:
-    kept, drops = refine([_row(["Acknowledged"])], _kinds())
+    kept, counts = refine([_row(["Acknowledged"])], index_changes([_change(10)]))
     assert kept == []
-    assert drops["acknowledgement_comment"] == 1
-    assert drops["acknowledgement_only"] == 1
+    assert counts["acknowledgement_only"] == 1
 
 
-def test_a_rebase_successor_drops_the_example() -> None:
+def test_a_rebase_successor_of_the_examples_own_change_drops_it() -> None:
     for kind in ("TRIVIAL_REBASE", "TRIVIAL_REBASE_WITH_MESSAGE_UPDATE", "NO_CODE_CHANGE"):
-        kept, drops = refine([_row(["rename this"])], _kinds(kind))
+        kept, counts = refine([_row(["rename this"])], index_changes([_change(10, kind)]))
         assert kept == []
-        assert drops["not_rework_successor"] == 1
+        assert counts["not_rework_successor"] == 1
 
 
-def test_an_unrecorded_successor_is_dropped_and_counted_apart() -> None:
-    kept, drops = refine([_row(["rename this"])], {})
-    assert kept == []
-    assert drops["unknown_successor"] == 1
-    assert drops["not_rework_successor"] == 0
+def test_a_cherry_pick_on_another_branch_does_not_lend_its_kind() -> None:
+    # The same Change-Id on two branches: the example's own change reworked, the stable copy
+    # only rebased. Keyed on the Change-Id, the copy's kind used to overwrite the example's.
+    original = _change(10, "REWORK")
+    stable_copy = {**_change(11, "NO_CODE_CHANGE", branch="stable"), "created": "2024-11-01"}
+    index = index_changes([original, stable_copy])
+    kept, counts = refine([_row(["rename this"])], index)
+    assert len(kept) == 1
+    assert counts["not_rework_successor"] == 0
+    assert successor_kind(_row([]), index) == "REWORK"
 
 
-def test_the_successor_looked_up_is_the_next_patch_set() -> None:
-    kinds = {("I1", "qt/qtbase", 3): "TRIVIAL_REBASE", ("I1", "qt/qtbase", 4): "REWORK"}
-    assert refine([_row(["x"], patch_set=3)], kinds)[0] != []
-    assert refine([_row(["x"], patch_set=2)], kinds)[0] == []
+def test_a_change_number_resolves_the_change_directly() -> None:
+    index = index_changes([_change(10, "REWORK"), _change(11, "TRIVIAL_REBASE")])
+    assert successor_kind(_row([], change_number=11), index) == "TRIVIAL_REBASE"
+    assert successor_kind(_row([], change_number=10), index) == "REWORK"
+
+
+def test_changes_that_cannot_be_told_apart_are_kept_and_counted() -> None:
+    # Same Change-Id, project and creation time, different numbers, no number on the row.
+    index = index_changes([_change(10, "REWORK"), _change(11, "TRIVIAL_REBASE")])
+    kept, counts = refine([_row(["rename this"])], index)
+    assert len(kept) == 1
+    assert counts[KEPT_UNCHECKED] == 1
+
+
+def test_an_unrecorded_kind_is_kept_and_counted_as_the_build_keeps_it() -> None:
+    kept, counts = refine([_row(["rename this"])], index_changes([_change(10, None)]))
+    assert len(kept) == 1
+    assert counts[KEPT_UNCHECKED] == 1
+    assert counts["not_rework_successor"] == 0
 
 
 def test_every_reason_is_reported_even_at_zero() -> None:
-    _, drops = refine([], {})
-    assert set(drops) == set(REFINE_REASONS)
+    _, counts = refine([], index_changes([]))
+    assert set(counts) == {*REFINE_REASONS, KEPT_UNCHECKED}
 
 
-def test_revision_kinds_reads_raw_changes() -> None:
-    raw = [
-        {
-            "change_id": "I1",
-            "project": "qt/qtbase",
-            "revisions": {"a": {"_number": 1, "kind": "REWORK"}, "b": {"_number": 2}},
-        }
-    ]
-    assert revision_kinds(raw) == {("I1", "qt/qtbase", 1): "REWORK"}
+def test_the_rules_version_moves_with_every_input() -> None:
+    sources = {"refine.py": "a", "build.py": "b", "examples.py": "c", "automated/__init__.py": "d"}
+    base = rules_version(sources, "reg")
+    for name in sources:
+        assert rules_version({**sources, name: sources[name] + " "}, "reg") != base
+    assert rules_version(sources, "reg2") != base
+    assert rules_version(dict(reversed(list(sources.items()))), "reg") == base

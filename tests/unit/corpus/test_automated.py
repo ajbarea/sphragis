@@ -67,7 +67,55 @@ def test_an_untagged_author_is_judged_by_the_message() -> None:
 
 def test_the_registry_records_where_it_came_from() -> None:
     registry = json.loads(REGISTRY.read_text())
-    assert registry["source_commit"] and len(registry["source_commit"]) == 40
+    assert all(len(v["commit"]) == 40 for v in registry["versions"])
     assert registry["source"].endswith("/git-hooks/sanitize-commit")
     assert len(registry["templates"]) > 50
     assert not any(t["pattern"].startswith(".+?") for t in registry["templates"])
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "E501: please wrap.\n\nAlso this function name is misleading",
+        "Semicolon after the closing brace is redundant,\nand the whole block can go",
+        "Pick-to entry '6.5' is not a valid branch in qtbase. Please drop it\n\nand fix the typo",
+        "ABC123: not a flake8 code",
+        "E5011: four digits",
+        "C101: mccabe codes are C9",
+    ],
+)
+def test_reviewer_prose_around_a_template_is_not_a_bot(text: str) -> None:
+    assert matched_bot(text) is None
+
+
+def test_several_complaints_on_one_line_are_one_bot_comment() -> None:
+    assert matched_bot("Hint: Trailing whitespace\n\nHint: Leading tabs") == "Qt Sanity Bot"
+    assert matched_bot("Hint: Semicolon after Q_OBJECT\n\nHint: Trailing whitespace") == (
+        "Qt Sanity Bot"
+    )
+
+
+def test_a_bot_paragraph_followed_by_a_reviewer_one_is_not_a_bot() -> None:
+    assert matched_bot("Hint: Leading tabs\n\nand please rename this variable") is None
+
+
+def test_the_registry_spans_every_hook_version_in_the_corpus() -> None:
+    registry = json.loads(REGISTRY.read_text())
+    assert registry["since"] <= "2024-10-01"
+    assert len(registry["versions"]) > 1
+    patterns = {t["pattern"] for t in registry["templates"]}
+    # Present only in hook versions live early in the corpus span.
+    assert any("upstream" in p for p in patterns)
+
+
+def test_the_digest_follows_templates_not_provenance(monkeypatch: pytest.MonkeyPatch) -> None:
+    import sphragis.corpus.automated as automated
+
+    data = automated._registries_data()
+    base = automated.registry_digest()
+    renamed = [{**r, "provenance": {"generated_at": "later"}} for r in data]
+    monkeypatch.setattr(automated, "_registries_data", lambda: renamed)
+    assert automated.registry_digest() == base
+    changed = [data[0], data[1], {**data[2], "templates": [{"pattern": "X"}]}]
+    monkeypatch.setattr(automated, "_registries_data", lambda: changed)
+    assert automated.registry_digest() != base

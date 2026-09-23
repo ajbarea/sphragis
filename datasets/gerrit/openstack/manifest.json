@@ -1,36 +1,35 @@
 {
-  "generated_at": "2026-09-23T12:14:14.723312+00:00",
+  "generated_at": "2026-09-23T14:20:56.034465+00:00",
   "git": {
-    "commit": "cb431c86000606642b0af750cacd409683087007",
+    "commit": "c24a1d9e5f17f2556f8e9a38dd60b5a8392a1ab3",
     "branch": "docs/granularity-redesign",
     "uncommitted_code": [
+      "scripts/data_audit.py",
       "scripts/extract_bot_templates.py",
+      "scripts/placebo_corpus.py",
       "sphragis/corpus/automated/__init__.py",
       "sphragis/corpus/automated/qt-sanity-bot.json",
       "sphragis/corpus/build.py",
       "sphragis/corpus/cli.py",
-      "sphragis/corpus/refine.py",
-      "sphragis/corpus/scrub.py"
+      "sphragis/corpus/examples.py",
+      "sphragis/corpus/load.py",
+      "sphragis/corpus/refine.py"
     ],
-    "uncommitted_code_sha256": "1fb8fb4bdc20e7d44fd479723424d1e85224822df2187c80b7f045fe34acbb0d"
+    "uncommitted_code_sha256": "1472bfe4637ac07e9cb003b0000a72b4a49ed7a6d855f126b8891a2a5c88b249"
   },
   "python": "3.14.4",
   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-  "packages": {
-    "torch": "2.14.0+cu130",
-    "transformers": "5.17.0",
-    "peft": "0.20.0"
-  },
+  "packages": {},
   "org": "openstack",
   "counts": {
     "pilot": 600,
-    "train": 4304,
+    "train": 4322,
     "dev": 565,
     "test": 0
   },
   "hashes": {
     "pilot": "9aa633e05d1f22e0df0bee96d8199a614e8e39a71e5b5e5f3abec78efbebacd2",
-    "train": "8574221b14f5339b78570d1ec21e589658901c4bc541d2bbde20d31188e46ef9",
+    "train": "e6c6ad6d22c40418eb0894ebb425388dd21a1580365efed74a0e6656de54bd3e",
     "dev": "77d0217c3e5fce63725aaee808541046a1587a7c6f2cc4854252912565aed4b5",
     "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -49,12 +48,21 @@
       "no_line_anchor": 86,
       "no_successor": 2695
     },
+    "refine_counts": {
+      "automated_comment": 0,
+      "acknowledgement_comment": 154,
+      "automated_only": 0,
+      "acknowledgement_only": 13,
+      "not_rework_successor": 0,
+      "successor_kind_unknown": 0
+    },
     "deduped": {
-      "exact": 262,
-      "near_duplicate": 195,
+      "exact": 263,
+      "near_duplicate": 196,
       "boilerplate": 0,
       "shared_change_id": 0
     },
-    "unassigned_changes": 0
+    "unassigned_changes": 0,
+    "rules": "d0e85870504190a0"
   }
 }

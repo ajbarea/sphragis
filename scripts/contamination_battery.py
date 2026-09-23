@@ -16,6 +16,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
@@ -53,6 +54,12 @@ parser.add_argument(
     default="after",
     help="what Min-K%%++ scores: the bare revised hunk, or the hunk with its context lines",
 )
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="read inputs not cut under the current label rules, to reproduce an earlier result; "
+    "recorded in the output",
+)
 parser.add_argument("--out", type=Path, default=Path("contamination.json"))
 args = parser.parse_args()
 
@@ -78,9 +85,10 @@ def scored_text(row: dict) -> str:
 
 
 def load(path: Path) -> tuple[list[dict], dict]:
-    rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+    rows = derived_file_rows(path, legacy=args.legacy_corpus)
     kept, removed = run_dedup(rows)
-    return kept, {"examples": len(rows), "after_dedup": len(kept), "dedup_removed": removed}
+    counts = {"examples": len(rows), "after_dedup": len(kept), "dedup_removed": removed}
+    return kept, {**counts, "legacy_corpus": args.legacy_corpus}
 
 
 post_rows, post_counts = load(args.post)

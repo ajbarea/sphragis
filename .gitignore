@@ -12,19 +12,14 @@ build/
 *.egg-info/
 .env
 
-# Corpus artifacts: derived data is regenerated from the frozen raw snapshots,
-# and raw snapshots are large. Manifests and seals ARE committed.
-datasets/gerrit/*/raw/
-datasets/gerrit-control/*/raw/
-datasets/gerrit-control/*/examples/
-datasets/gerrit/*/examples/
-datasets/gerrit/*/splits/
-datasets/gerrit/*/refined/
-!datasets/gerrit/*/manifest.json
+# Corpus text: everything under a corpus root is ignored except what results cite, so a stage
+# added later is out of git without anyone listing it. Manifests and seals ARE committed.
+datasets/gerrit*/*/*
+!datasets/gerrit*/*/manifest.json
+!datasets/gerrit*/*/seal.json
 # Battery inputs are concatenated and deduplicated from those examples by
 # scripts/contamination_windows.py, so they are derived twice over.
 datasets/results/contamination-inputs/
-!datasets/gerrit/*/seal.json
 
 COMMITS.md
 

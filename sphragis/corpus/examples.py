@@ -47,6 +47,25 @@ def is_code_file(path: str) -> bool:
     return path not in METADATA_FILES
 
 
+# Gerrit's ChangeKind for a patch set that changed the code. Every other kind (TRIVIAL_REBASE,
+# TRIVIAL_REBASE_WITH_MESSAGE_UPDATE, MERGE_FIRST_PARENT_UPDATE, NO_CODE_CHANGE, NO_CHANGE)
+# means the author edited nothing, so a hunk that differs across it is not the author's answer.
+REWORK = "REWORK"
+
+
+def revision_kind(change: Mapping[str, Any], patch_set: int) -> str | None:
+    """The ChangeKind Gerrit recorded for one patch set of this change, or None if unrecorded.
+
+    Read from the change itself, never from a table keyed on the Change-Id: a cherry-pick keeps
+    its Change-Id on every branch it lands on, so that id names several changes whose patch sets
+    differ in kind (a keyed table once reported every non-rework successor in the corpus falsely).
+    """
+    for revision in (change.get("revisions") or {}).values():
+        if int(revision.get("_number", -1)) == patch_set:
+            return revision.get("kind")
+    return None
+
+
 def has_successor_revision(*, patch_set: int, revision_count: int) -> bool:
     """Whether patch set ``patch_set`` has an n+1 to diff against.
 

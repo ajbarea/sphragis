@@ -14,10 +14,12 @@ from typing import Any
 
 from sphragis.corpus.automated import is_automated
 from sphragis.corpus.examples import (
+    REWORK,
     Hunk,
     has_successor_revision,
     hunks_from_diff,
     is_code_file,
+    revision_kind,
 )
 from sphragis.corpus.wellposed import ILL_POSED_REASONS, classify
 
@@ -120,11 +122,6 @@ def build_from_change(
     number = int(change["_number"])
     owner_id = (change.get("owner") or {}).get("_account_id")
     revision_count = len(change.get("revisions", {}))
-    successor_kinds = {
-        int(revision["_number"]): revision["kind"]
-        for revision in change.get("revisions", {}).values()
-        if "_number" in revision and revision.get("kind")
-    }
     examples: list[dict[str, Any]] = []
 
     # Mirrors the diff guard below. A comments request that exhausts its retries used to abort
@@ -164,8 +161,10 @@ def build_from_change(
                 drops["no_successor"] += 1
                 continue
             # A successor that is a rebase or a message-only edit changed no code, so any hunk
-            # that differs across it is what the rebase swept in, not the author's answer.
-            if successor_kinds.get(patch_set + 1, "REWORK") != "REWORK":
+            # that differs across it is what the rebase swept in, not the author's answer. An
+            # unrecorded kind is kept: the git route records none, and detects rebase edits from
+            # parent commits instead.
+            if revision_kind(change, patch_set + 1) not in (None, REWORK):
                 drops["not_rework_successor"] += 1
                 continue
             try:
@@ -197,6 +196,7 @@ def build_from_change(
                     "org": org,
                     "project": change.get("project"),
                     "change_id": change["change_id"],
+                    "change_number": number,
                     "created": change.get("created"),
                     "path": path,
                     "patch_set": patch_set,

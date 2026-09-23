@@ -36,6 +36,8 @@ SOURCES="${SOURCES:-scripts/clients-cpp.txt}"
 # CLIENT_SIZE sets how much local training a client does: 64 examples is 8 optimiser steps,
 # 128 is 16. The RQ1 geometry says training length moves updates apart, so the attack has to be
 # read at more than one length.
+# Corpus files must be cut from refined examples (scripts/project_corpora.py writes each one a
+# record); LEGACY_CORPUS=1 reads an older file anyway, to reproduce an earlier result.
 claim_result OUT "$HOME/client-updates$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/client_updates.py \
   --clients "${CLIENTS_PER_SOURCE:-6}" \
@@ -43,5 +45,6 @@ uv run --no-sync python scripts/client_updates.py \
   ${PACKING_SEED:+--packing-seed "$PACKING_SEED"} \
   --sources-file "$SOURCES" \
   --corpus-root "$C" \
+  ${LEGACY_CORPUS:+--legacy-corpus} \
   --adapters "$HOME/scratch/sphragis-adapters-clients$RESULT_SUFFIX" \
   --out "$OUT"

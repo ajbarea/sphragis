@@ -1,426 +1,1754 @@
 {
   "bot": "Qt Sanity Bot",
-  "source": "https://github.com/qt/qtrepotools/blob/309df8d5eefb86d6a3c8d9cb42fcfbca1c7cd547/git-hooks/sanitize-commit",
-  "source_commit": "309df8d5eefb86d6a3c8d9cb42fcfbca1c7cd547",
+  "source": "https://github.com/qt/qtrepotools/blob/<version>/git-hooks/sanitize-commit",
+  "versions": [
+    {
+      "commit": "56f21565346ec229b12faa762d052a0f67404bc5",
+      "date": "2024-09-16"
+    },
+    {
+      "commit": "40d8a7b7a0594d88c57c96555f53d4bd8935a0fc",
+      "date": "2025-03-05"
+    },
+    {
+      "commit": "ae7616a0196c5de55316042884ce32b9e2f9fd36",
+      "date": "2025-05-06"
+    },
+    {
+      "commit": "a83819f9c4eddd5b0cd5234f54427a93e59057fe",
+      "date": "2025-05-06"
+    },
+    {
+      "commit": "c4da0dbfd0c0eb5ce15b2f0cca52502f8fba5007",
+      "date": "2025-05-06"
+    },
+    {
+      "commit": "bc3407b440b087db90fc84c817d5c6d1c920c676",
+      "date": "2025-06-04"
+    },
+    {
+      "commit": "07e83fe951143178260eee045010700da6351416",
+      "date": "2025-07-01"
+    },
+    {
+      "commit": "e09e2ff8248272d070408556ddac05365d648649",
+      "date": "2025-09-09"
+    },
+    {
+      "commit": "e2bf9392470a0efa6ca4e8c1799eaaef9fe03d5f",
+      "date": "2025-10-28"
+    },
+    {
+      "commit": "0c9e500e057e2491c3783459b34dd858d3063005",
+      "date": "2026-07-31"
+    },
+    {
+      "commit": "309df8d5eefb86d6a3c8d9cb42fcfbca1c7cd547",
+      "date": "2026-08-25"
+    }
+  ],
+  "since": "2024-10-01",
   "prefixes": [
     "Hint: "
   ],
   "templates": [
     {
       "pattern": "2nd\\ line\\ is\\ not\\ empty",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Adding\\ backup\\ file",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Adding\\ build\\ artifact",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Adding\\ file\\ with\\ set\\*id\\ permissions",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Adding\\ generated\\ file\\ \\(inferred\\ from\\ line\\ .+?\\)",
-      "call": "complain"
+      "pattern": "Adding\\ generated\\ file\\ \\(inferred\\ from\\ line\\ [^\\n]+?\\)",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Adding\\ header\\ file\\ with\\ a\\ non\\-\\.h\\ extension",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Adding\\ huge\\ file\\ \\(.+?\\ >\\ 2MiB\\)",
-      "call": "complain"
+      "pattern": "Adding\\ huge\\ file\\ \\([^\\n]+?\\ >\\ 2MiB\\)",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Adding\\ implausibly\\ executable\\ file",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Adding\\ temporary\\ file\\ from\\ merge\\ conflict\\ resolution",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Aim\\ for\\ shorter\\ summaries",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Bad\\ form\\ of\\ \\[ChangeLog\\]\\ tag",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Bad\\ form\\ of\\ \\[Third\\-Party\\ Code\\]\\ tag",
-      "call": "complain_ln"
-    },
-    {
-      "pattern": "Bogus\\ .+?\\ address",
-      "call": "do_complain"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Bogus\\ Reviewed\\-by\\ footer",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
+    },
+    {
+      "pattern": "Bogus\\ [^\\n]+?\\ address",
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Bogus\\ address",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Bug\\ reference\\ in\\ summary",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "CRLF\\ line\\ endings",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Capitalization\\ of\\ \"Coverity\\-Id\"\\ is\\ wrong",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Capitalization\\ of\\ \"Pick\\-to\"\\ is\\ wrong",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Capitalization\\ of\\ \"QUIP\"\\ is\\ wrong",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Capitalization\\ of\\ \"Task\\-number\"\\ is\\ wrong",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Changing\\ huge\\ binary\\ file\\ \\(.+?\\ >\\ 2MiB\\)",
-      "call": "complain"
+      "pattern": "Changing\\ huge\\ binary\\ file\\ \\([^\\n]+?\\ >\\ 2MiB\\)",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Cherry\\-pick's\\ source\\ is\\ not\\ a\\ valid\\ merged\\ commit",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
+    },
+    {
+      "pattern": "Cherry\\-pick's\\ source\\ is\\ not\\ an\\ upstream\\ commit",
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0"
+      ]
     },
     {
       "pattern": "Cherry\\-pick\\ will\\ be\\ subsequently\\ merged\\ with\\ its\\ source\\ branch",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Cherry\\-picks\\ are\\ strongly\\ discouraged",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Commit\\ on\\ LTS\\ branch\\ is\\ not\\ a\\ cherry\\-pick",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Defect\\ in\\ PNG\\ format,\\ see:\\ identify\\ .+?",
-      "call": "complain"
+      "pattern": "Defect\\ in\\ PNG\\ format,\\ see:\\ identify\\ [^\\n]+?",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Deprecation\\ adjustments\\ already\\ submitted\\?",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Duplicate\\ entry\\ '.+?'\\ in\\ Pick\\-to\\ footer",
-      "call": "complain_ln"
+      "pattern": "Duplicate\\ entry\\ '[^\\n]+?'\\ in\\ Pick\\-to\\ footer",
+      "call": "complain_ln",
+      "versions": [
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Empty\\ lines\\ between\\ footers",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Executable\\ file\\ with\\ no\\ initial\\ \\#!\\ line",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Flow\\ control\\ keywords\\ must\\ be\\ followed\\ by\\ a\\ single\\ space",
-      "call": "styleFail"
+      "call": "styleFail",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Gerrit\\ change\\ id\\ outside\\ Change\\-Id\\ footer",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Inclusion\\ of\\ Reopens\\ on\\ a\\ cherry\\-pick\\ is\\ probably\\ incorrect\\.",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Invisible\\ Unicode\\ characters\\ detected\\ \\(possible\\ stealth\\ payload\\)",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "JIRA\\ task\\ referenced\\ from\\ ChangeLog",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Leading\\ tabs",
-      "call": "styleFail"
+      "call": "styleFail",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Leading\\ zero",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Likely\\ change\\-log\\ entry\\ without\\ \\[ChangeLog\\]\\ tag",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Mention\\ of\\ Coverity\\ without\\ Coverity\\-Id\\ footer\\ is\\ probably\\ incorrect",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Missing\\ copyright\\ header",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Missing\\ empty\\ line\\ between\\ text\\ and\\ footers",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Missing\\ space\\ after\\ colon\\ in\\ footer",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Missing\\ space\\ between\\ ChangeLog\\ tags\\ and\\ text",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Mixing\\ spaces\\ with\\ TABs",
-      "call": "styleFail"
+      "call": "styleFail",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Mixing\\ whitespace\\-only\\ changes\\ with\\ other\\ changes",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Multiple\\ CIDs\\ in\\ one\\ footer",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Multiple\\ QUIPs\\ in\\ one\\ footer",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Multiple\\ tasks\\ in\\ one\\ footer",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "No\\ newline\\ at\\ end\\ of\\ file",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Non\\-numeric\\ CID",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Non\\-numeric\\ QUIP\\ identifier",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Obsolete\\ domain\\ in\\ .+?\\ address\\.\\ Please\\ update\\ to\\ qt\\.io\\.",
-      "call": "do_complain"
+      "pattern": "Obsolete\\ domain\\ in\\ [^\\n]+?\\ address\\.\\ Please\\ update\\ to\\ qt\\.io\\.",
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Obsolete\\ domain\\.\\ Please\\ update\\ to\\ qt\\.io\\.",
-      "call": "do_complain"
-    },
-    {
-      "pattern": "Omission\\ of\\ .+?\\ from\\ Pick\\-to\\ footer\\ might\\ be\\ incorrect",
-      "call": "complain"
-    },
-    {
-      "pattern": "Omission\\ of\\ .+?\\ from\\ cherry\\-pick\\ targets\\ is\\ probably\\ incorrect",
-      "call": "complain"
-    },
-    {
-      "pattern": "Omission\\ of\\ .+?\\ from\\ the\\ Pick\\-to\\ footer\\ is\\ probably\\ incorrect",
-      "call": "complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Omission\\ of\\ Pick\\-to\\ footer\\ is\\ probably\\ incorrect",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Pick\\-to\\ entry\\ '.+?'\\ equals\\ source\\ branch",
-      "call": "complain_ln"
+      "pattern": "Omission\\ of\\ [^\\n]+?\\ from\\ Pick\\-to\\ footer\\ might\\ be\\ incorrect",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Pick\\-to\\ entry\\ '.+?'\\ is\\ not\\ a\\ valid\\ branch\\ in\\ .+?",
-      "call": "complain_ln"
+      "pattern": "Omission\\ of\\ [^\\n]+?\\ from\\ cherry\\-pick\\ targets\\ is\\ probably\\ incorrect",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Picking\\ downward\\ from\\ .+?\\ is\\ preferred",
-      "call": "complain"
+      "pattern": "Omission\\ of\\ [^\\n]+?\\ from\\ the\\ Pick\\-to\\ footer\\ is\\ probably\\ incorrect",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
+    },
+    {
+      "pattern": "Pick\\-to\\ entry\\ '[^\\n]+?'\\ equals\\ source\\ branch",
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
+    },
+    {
+      "pattern": "Pick\\-to\\ entry\\ '[^\\n]+?'\\ is\\ not\\ a\\ valid\\ branch\\ in\\ [^\\n]+?",
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
+    },
+    {
+      "pattern": "Picking\\ downward\\ from\\ [^\\n]+?\\ is\\ preferred",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Possible\\ incorrect\\ use\\ of\\ Apple\\-related\\ terminology;\\ the\\ correct\\ name\\ of\\ Apple's\\ desktop\\ operating\\ system\\ is\\ 'macOS'",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Possible\\ spelling\\ errors",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Real\\ Name\\ has\\ an\\ unexpected\\ form",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Redundant\\ repository\\ reference\\ in\\ ChangeLog",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Revert\\ without\\ explanation",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Semicolon\\ after\\ .+?",
-      "call": "styleFail"
+      "pattern": "Semicolon\\ after\\ [^\\n]+?",
+      "call": "styleFail",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Space\\ indent\\ followed\\ by\\ a\\ TAB\\ character",
-      "call": "styleFail"
+      "call": "styleFail",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Style\\ issues",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Summary\\ does\\ not\\ use\\ imperative\\ mood",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Summary\\ ends\\ with\\ period",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Summary\\ is\\ excessively\\ long",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Summary\\ is\\ too\\ short",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Summary\\ of\\ revert\\ mentions\\ only\\ SHA1",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
+    },
+    {
+      "pattern": "Suspicious\\ [^\\n]+?\\ real\\ name",
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e"
+      ]
+    },
+    {
+      "pattern": "Suspicious\\ real\\ name",
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e"
+      ]
     },
     {
       "pattern": "TAB\\ character\\ in\\ non\\-leading\\ whitespace",
-      "call": "styleFail"
+      "call": "styleFail",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Text\\ following\\ footers",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Trailing\\ whitespace",
-      "call": "styleFail"
+      "call": "styleFail",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Two\\ trailing\\ newlines",
-      "call": "complain_cln"
+      "call": "complain_cln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "URL\\ pointing\\ to\\ Gerrit\\ or\\ JIRA",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Unicode\\ bi\\-directional\\ override\\ characters",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Unnecessary\\ Signed\\-off\\-by\\ footer",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Unresolved\\ merge\\ conflict",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Usage\\ of\\ qWait\\(\\)\\ is\\ discouraged",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Use\\ \\[ChangeLog\\]\\ tag\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Use\\ of\\ deprecated\\ idiom\\ 'defined\\(Q_OS_MAC\\)\\ \\&\\&\\ !defined\\(Q_OS_IOS\\)';\\ use\\ Q_OS_MACOS\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Use\\ of\\ deprecated\\ idiom\\ 'mac:!ios',\\ use\\ 'macos'\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Using\\ deprecated\\ define\\ Q_CLANG_QDOC;\\ use\\ Q_QDOC\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Using\\ deprecated\\ define\\ Q_OS_MAC;\\ use\\ Q_OS_MACOS\\ \\(for\\ macOS\\ only\\)\\ or\\ Q_OS_DARWIN\\ \\(for\\ all\\ Apple\\ platforms\\)\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Using\\ deprecated\\ define\\ Q_OS_MACX;\\ use\\ Q_OS_MACOS\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Using\\ deprecated\\ define\\ Q_OS_OSX;\\ use\\ Q_OS_MACOS\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Using\\ deprecated\\ qmake\\ scope\\ 'mac':\\ use\\ 'macos'\\ \\(for\\ macOS\\ only\\)\\ or\\ 'darwin'\\ \\(for\\ all\\ Apple\\ platforms\\)\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Using\\ deprecated\\ qmake\\ scope\\ 'macx';\\ use\\ 'macos'\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Using\\ deprecated\\ qmake\\ scope\\ 'osx';\\ use\\ 'macos'\\ instead",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "WS\\-only\\ change",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "Warning:\\ Adding\\ alien\\ build\\ system\\ file",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Warning:\\ Adding\\ big\\ file\\ \\(.+?\\ >=\\ 50KiB\\)",
-      "call": "complain"
+      "pattern": "Warning:\\ Adding\\ big\\ file\\ \\([^\\n]+?\\ >=\\ 50KiB\\)",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
-      "pattern": "Warning:\\ Increasing\\ file\\ size\\ by\\ more\\ than\\ 50%\\ \\(.+?\\ =>\\ .+?\\)",
-      "call": "complain"
+      "pattern": "Warning:\\ Increasing\\ file\\ size\\ by\\ more\\ than\\ 50%\\ \\([^\\n]+?\\ =>\\ [^\\n]+?\\)",
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "[a-z']+ \\-> [A-Za-z' \\-]+\\?(?: \\[\\*\\])?",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "\\[ChangeLog\\]\\[Third\\-Party\\ Code\\]\\ entry\\ without\\ change\\ to\\ qt_attribution\\.json",
-      "call": "do_complain"
+      "call": "do_complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "__OBJC__\\ will\\ never\\ be\\ defined\\ for\\ non\\-Objective\\-C/C\\+\\+\\ source\\ files",
-      "call": "complain_ln"
+      "call": "complain_ln",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     },
     {
       "pattern": "qt_attribution\\.json\\ changed\\ without\\ \\[ChangeLog\\]\\[Third\\-Party\\ Code\\]\\ in\\ the\\ commit\\ message",
-      "call": "complain"
+      "call": "complain",
+      "versions": [
+        "56f21565346e",
+        "40d8a7b7a059",
+        "ae7616a0196c",
+        "a83819f9c4ed",
+        "c4da0dbfd0c0",
+        "bc3407b440b0",
+        "07e83fe95114",
+        "e09e2ff82482",
+        "e2bf9392470a",
+        "0c9e500e057e",
+        "309df8d5eefb"
+      ]
     }
   ],
   "provenance": {
-    "generated_at": "2026-09-23T11:58:21.070042+00:00",
+    "generated_at": "2026-09-23T14:08:57.351335+00:00",
     "git": {
-      "commit": "cb431c86000606642b0af750cacd409683087007",
+      "commit": "c24a1d9e5f17f2556f8e9a38dd60b5a8392a1ab3",
       "branch": "docs/granularity-redesign",
       "uncommitted_code": [
-        "scripts/extract_bot_templates.py",
-        "sphragis/corpus/automated/qt-sanity-bot.json"
+        "scripts/extract_bot_templates.py"
       ],
-      "uncommitted_code_sha256": "3b5ff6013bbd4499c9fa8aa327932e859cd293b91bcb5fbe2b7e1660caa2e837"
+      "uncommitted_code_sha256": "46acba1dd4b9d0b35fb49bc2e06cdb7f192f86c8fd09cd227b973b196075019b"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

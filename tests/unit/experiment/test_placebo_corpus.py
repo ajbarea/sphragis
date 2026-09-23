@@ -28,19 +28,16 @@ def _build(src: Path, out: Path, org: str = "qt") -> None:
 
 def _corpus(root: Path, org: str, rows: list[dict]) -> None:
     """One built and refined month, as the refine stage leaves it."""
-    from sphragis.corpus.load import refined_dir, sha256
-    from sphragis.corpus.refine import RULES_VERSION
+    from sphragis.corpus.load import refined_dir, write_source_record
 
     text = "".join(json.dumps(r) + "\n" for r in rows)
     built = root / org / "examples" / "2024-11.jsonl"
     built.parent.mkdir(parents=True)
     built.write_text(text)
-    refined = refined_dir(root, org)
-    refined.mkdir(parents=True)
-    (refined / "2024-11.jsonl").write_text(text)
-    (refined / "2024-11.source.json").write_text(
-        json.dumps({"examples_sha256": sha256(built), "rules": RULES_VERSION})
-    )
+    refined = refined_dir(root, org) / "2024-11.jsonl"
+    refined.parent.mkdir(parents=True)
+    refined.write_text(text)
+    write_source_record(root, org, built, refined)
 
 
 def _row(project: str, day: str, ident: str) -> dict:
@@ -80,6 +77,20 @@ def test_each_half_becomes_a_corpus_the_registered_runner_can_read(tmp_path: Pat
         assert {row["org"] for row in kept} == {name}
     assert manifest["projects"]["qt-a"] and manifest["projects"]["qt-b"]
     assert not set(manifest["projects"]["qt-a"]) & set(manifest["projects"]["qt-b"])
+    # Each half is a derived corpus the loader accepts, which it only does with a derived record.
+    from sphragis.corpus.load import refined_examples
+
+    for name in manifest["names"]:
+        assert refined_examples(tmp_path / "out", name)
+
+
+def test_a_reused_out_root_keeps_no_month_from_an_earlier_split(tmp_path: Path) -> None:
+    _corpus(tmp_path / "src", "qt", [_row(f"p{i % 4}", "2024-11-05", f"x{i}") for i in range(40)])
+    stale = tmp_path / "out" / "qt-a" / "refined" / "2020-01.jsonl"
+    stale.parent.mkdir(parents=True)
+    stale.write_text('{"id": "old"}\n')
+    _build(tmp_path / "src", tmp_path / "out")
+    assert not stale.exists()
 
 
 def test_a_project_outside_the_training_window_is_dropped_not_silently_sided(
