@@ -1,0 +1,75 @@
+{
+  "runs": [
+    "datasets/results/rq1-placebo-openstack.json",
+    "datasets/results/rq1-placebo-openstack-s2.json",
+    "datasets/results/rq1-placebo-openstack-s3.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "bot_registry": "bbfd02ce7633",
+  "removed_share": {
+    "openstack-a": 0.0,
+    "openstack-b": 0.0
+  },
+  "readings": {
+    "registered": {
+      "verdict": "fail",
+      "per_org": {
+        "openstack-a": {
+          "estimate": 0.009933774834437081,
+          "low": -0.028697571743929395,
+          "high": 0.046737213403880075,
+          "clusters": 103.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "openstack-b": {
+          "estimate": 0.0013280212483399723,
+          "low": -0.036437246963562764,
+          "high": 0.03968253968253971,
+          "clusters": 126.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    },
+    "without_automated": {
+      "verdict": "fail",
+      "per_org": {
+        "openstack-a": {
+          "estimate": 0.009933774834437081,
+          "low": -0.028697571743929395,
+          "high": 0.046737213403880075,
+          "clusters": 103.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "openstack-b": {
+          "estimate": 0.0013280212483399723,
+          "low": -0.036437246963562764,
+          "high": 0.03968253968253971,
+          "clusters": 126.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-23T21:25:59.707571+00:00",
+    "git": {
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

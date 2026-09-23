@@ -299,3 +299,52 @@ def test_context_is_carried_and_changes_nothing_else() -> None:
     assert with_ctx[0]["context_before"] == "def f(x):"
     assert with_ctx[0]["context_after"] == "\ndef g():"
     assert without[0]["context_before"] == "" and without[0]["context_after"] == ""
+
+
+def _only(comment: dict[str, Any]):
+    def comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        return {"nova/f.py": [{"patch_set": 1, "line": 2, **comment}]}
+
+    return comments
+
+
+def test_a_bot_template_is_left_to_refine() -> None:
+    """Label rules are refine's alone, so a change to them never needs a refetch."""
+    _, diff_for, _ = _fetchers()
+    examples, _ = build_from_change(
+        "openstack", CHANGE, _only({"message": "Hint: Trailing whitespace"}), diff_for
+    )
+    assert [e["comments"] for e in examples] == [["Hint: Trailing whitespace"]]
+
+
+def test_a_service_account_is_not_a_reviewer_whatever_it_writes() -> None:
+    from sphragis.corpus.build import is_service_user
+
+    _, diff_for, calls = _fetchers()
+    author = {"_account_id": "abc", "tags": ["SERVICE_USER"]}
+    examples, drops = build_from_change(
+        "openstack", CHANGE, _only({"message": "rename this", "author": author}), diff_for
+    )
+    assert examples == []
+    assert drops["service_user"] == 1
+    assert calls == [], "a service account's comment should cost no diff request"
+    assert not is_service_user({"_account_id": "abc"}) and not is_service_user(None)
+
+
+def test_acknowledged_is_an_acknowledgement() -> None:
+    _, diff_for, _ = _fetchers()
+    examples, drops = build_from_change(
+        "openstack", CHANGE, _only({"message": "Acknowledged"}), diff_for
+    )
+    assert examples == []
+    assert drops["acknowledgement"] == 1
+
+
+def test_the_successor_kind_is_left_to_refine() -> None:
+    comments, diff_for, _ = _fetchers()
+    revisions = {"aaa": {"_number": 1}, "bbb": {"_number": 2, "kind": "TRIVIAL_REBASE"}}
+    examples, drops = build_from_change(
+        "openstack", {**CHANGE, "revisions": revisions}, comments, diff_for
+    )
+    assert len(examples) == 1
+    assert "not_rework_successor" not in drops

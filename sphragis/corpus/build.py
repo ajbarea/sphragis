@@ -35,6 +35,7 @@ DROP_REASONS = (
     *(f"ill_posed_{reason}" for reason in ILL_POSED_REASONS),
     "metadata_file",
     "author_comment",
+    "service_user",
     "acknowledgement",
     "no_line_anchor",
     "no_successor",
@@ -42,6 +43,17 @@ DROP_REASONS = (
     "comment_error",
     "no_anchored_hunk",
 )
+
+
+# Gerrit tags a service account `SERVICE_USER` on `AccountInfo.tags`. Who wrote a comment is known
+# only here, where its author is, so this is a build rule; what a bot writes is a label rule,
+# which `refine` applies against the registered templates (`sphragis.corpus.automated`).
+SERVICE_USER = "SERVICE_USER"
+
+
+def is_service_user(author: Mapping[str, Any] | None) -> bool:
+    """Whether a comment's author is tagged a service account by the host."""
+    return bool(author) and SERVICE_USER in (author.get("tags") or [])
 
 
 def is_reviewer_comment(comment: Mapping[str, Any], owner_id: Any) -> bool:
@@ -74,8 +86,22 @@ def is_reviewer_comment(comment: Mapping[str, Any], owner_id: Any) -> bool:
 # were of this kind, leaving a target the prompt gives no way to reach. "ditto" points at
 # another comment the prompt does not carry, so it is no instruction either. A
 # pre-registration item: it changes which examples exist.
+# "acknowledged" is Gerrit's one-click reply, which the first list missed (data audit,
+# 2026-09-23).
 ACKNOWLEDGEMENTS = frozenset(
-    {"done", "ditto", "+1", "ack", "acked", "fixed", "thanks", "thank you", "ok", "lgtm"}
+    {
+        "done",
+        "ditto",
+        "+1",
+        "ack",
+        "acked",
+        "acknowledged",
+        "fixed",
+        "thanks",
+        "thank you",
+        "ok",
+        "lgtm",
+    }
 )
 _TRAILING = " .!:)"
 
@@ -126,6 +152,11 @@ def build_from_change(
             if owner_id is not None and not is_reviewer_comment(comment, owner_id):
                 drops["author_comment"] += 1
                 continue
+            # A bot enforces written rules, the opposite of what the study measures, and only
+            # some hosts run one, so its comments would read as that host's house style.
+            if is_service_user(comment.get("author")):
+                drops["service_user"] += 1
+                continue
             if is_acknowledgement(str(comment.get("message", ""))):
                 drops["acknowledgement"] += 1
                 continue
@@ -165,6 +196,7 @@ def build_from_change(
                     "org": org,
                     "project": change.get("project"),
                     "change_id": change["change_id"],
+                    "change_number": number,
                     "created": change.get("created"),
                     "path": path,
                     "patch_set": patch_set,

@@ -49,3 +49,27 @@ def test_scrub_preserves_structural_fields_and_does_not_mutate_input() -> None:
     assert out["created"] == "2024-10-02 11:00:00.000000000"
     assert out["revisions"]["abc"]["_number"] == 1
     assert change["owner"]["name"] == "Carol"
+
+
+def test_scrub_keeps_the_service_user_tag_and_nothing_else_from_tags() -> None:
+    bot = {"author": {"_account_id": 7, "name": "Sanity Bot", "tags": ["SERVICE_USER", "X"]}}
+    out = scrub(bot, SALT)
+    assert out["author"] == {"_account_id": pseudonym(7, SALT), "tags": ["SERVICE_USER"]}
+    assert "Sanity" not in repr(out)
+
+
+def test_scrub_adds_no_tags_field_to_an_untagged_account() -> None:
+    out = scrub({"author": {"_account_id": 7, "tags": []}}, SALT)
+    assert out["author"] == {"_account_id": pseudonym(7, SALT)}
+
+
+def test_a_chained_address_is_scrubbed_as_one() -> None:
+    out = scrub({"message": "ping name@corp.com@google.com please"}, SALT)["message"]
+    assert "@" not in out
+    assert out.startswith("ping ") and out.endswith(" please")
+
+
+def test_a_python_decorator_is_not_an_address() -> None:
+    assert scrub({"message": "use @mock.patch.object here"}, SALT)["message"] == (
+        "use @mock.patch.object here"
+    )

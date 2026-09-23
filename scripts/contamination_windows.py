@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from sphragis.corpus.load import refined_month_files, write_derived_file
 from sphragis.corpus.pipeline import run_dedup
 
 OUT = Path("datasets/results/contamination-inputs")
@@ -21,23 +22,26 @@ OUT = Path("datasets/results/contamination-inputs")
 POST = ("2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03")
 PRE = ("2023-08", "2023-09", "2023-10", "2023-11", "2023-12", "2024-01")
 SIDES = {
-    "post": (Path("datasets/gerrit/openstack/examples"), POST),
-    "pre": (Path("datasets/gerrit-control/openstack/examples"), PRE),
+    "post": (Path("datasets/gerrit"), POST),
+    "pre": (Path("datasets/gerrit-control"), PRE),
 }
 
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    for side, (source, months) in SIDES.items():
+    for side, (root, months) in SIDES.items():
+        available = {p.stem: p for p in refined_month_files(root, "openstack")}
         rows: list[dict] = []
         for month in months:
-            path = source / f"{month}.jsonl"
-            if not path.is_file():
-                raise SystemExit(f"missing {path}; the {side} side is incomplete")
+            path = available.get(month)
+            if path is None:
+                raise SystemExit(
+                    f"missing refined {month} under {root}; the {side} side is incomplete"
+                )
             rows.extend(json.loads(line) for line in path.open() if line.strip())
         kept, removed = run_dedup(rows)
         target = OUT / f"openstack-{side}.jsonl"
-        target.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in kept))
+        write_derived_file(target, kept, sources=[(root, "openstack")])
         changes = len({r["change_id"] for r in kept})
         print(
             f"{side}: {len(months)} months, {len(rows)} examples, {len(kept)} after dedup "

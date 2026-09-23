@@ -21,6 +21,7 @@ import torch
 from peft import get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.holdout import holdout_by_change, verbatim_overlap
 from sphragis.experiment.model import (
@@ -38,13 +39,19 @@ from sphragis.measure.stats import cluster_bootstrap
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("examples", nargs="?", type=Path, default=Path("pilot-examples.jsonl"))
 parser.add_argument("--out", type=Path, default=Path("pilot-outcomes.json"))
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="read a file not cut under the current label rules, to reproduce an earlier result; "
+    "recorded in the output",
+)
 parser.add_argument("--split-seed", type=int, default=0, help="which changes land in eval")
 parser.add_argument("--train-seed", type=int, default=1, help="adapter initialisation + order")
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 args = parser.parse_args()
 
-rows = [json.loads(line) for line in args.examples.read_text().splitlines() if line]
+rows = derived_file_rows(args.examples, legacy=args.legacy_corpus)
 
 # Deduplicate FIRST, exactly as the real pipeline does. Skipping it measured the pilot
 # under conditions the study will never reproduce: 27 of 201 OpenStack examples are
@@ -185,6 +192,7 @@ args.out.write_text(
     json.dumps(
         {
             "provenance": run_provenance(),
+            "legacy_corpus": args.legacy_corpus,
             "model_id": MODEL_ID,
             "split_seed": args.split_seed,
             "train_seed": args.train_seed,

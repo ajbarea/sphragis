@@ -19,13 +19,22 @@ from typing import Any
 from sphragis.corpus.build import build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
+from sphragis.corpus.load import (
+    build_record,
+    refined_dir,
+    refined_examples,
+    write_build_record,
+    write_source_record,
+)
 from sphragis.corpus.manifest import verify
 from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
+from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
+from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import is_test_window_unlocked
 from sphragis.corpus.storage import read_snapshot, write_snapshot
 
-STAGES = ("fetch", "build", "dedup", "split", "freeze", "verify")
+STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "verify")
 
 # One Gerrit instance is one organization. OpenStack and Qt checked live 2026-09-14. AOSP
 # checked live 2026-09-18: it answers residential addresses and refuses datacenter ranges, so it
@@ -251,12 +260,50 @@ def _examples_dir(args: argparse.Namespace) -> Path:
     return Path(args.root) / args.org / "examples"
 
 
+def _refined_dir(args: argparse.Namespace) -> Path:
+    return refined_dir(Path(args.root), args.org)
+
+
 def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
-    directory = _examples_dir(args)
-    rows: list[dict[str, Any]] = []
-    for path in sorted(directory.glob("*.jsonl")):
-        rows.extend(json.loads(line) for line in path.read_text().splitlines() if line)
-    return rows
+    """Refined examples: dedup, split and freeze never read the built files."""
+    return refined_examples(Path(args.root), args.org)
+
+
+def _stage_refine(args: argparse.Namespace) -> int:
+    """Apply the data audit's label rules to every built month, from its raw snapshots."""
+    raw = Path(args.root) / args.org / "raw"
+    index = index_changes(
+        change for path in sorted(raw.glob("*.ndjson.gz")) for change in read_snapshot(path)
+    )
+    built = sorted(_examples_dir(args).glob("*.jsonl"))
+    if not built:
+        print(f"no examples under {_examples_dir(args)}; run build first")
+        return 1
+    out = _refined_dir(args)
+    out.mkdir(parents=True, exist_ok=True)
+    # A refined month whose built month is gone is derived output with nothing to derive from.
+    names = {path.name for path in built}
+    for orphan in out.glob("*.jsonl"):
+        if orphan.name not in names:
+            orphan.unlink()
+            for sidecar in (".drops.json", ".source.json"):
+                out.joinpath(orphan.name.replace(".jsonl", sidecar)).unlink(missing_ok=True)
+    totals: Counter[str] = Counter()
+    kept_total = 0
+    for path in built:
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+        kept, counts = refine(rows, index)
+        totals.update(counts)
+        kept_total += len(kept)
+        target = out / path.name
+        tmp = target.with_suffix(".jsonl.tmp")
+        tmp.write_text("".join(json.dumps(r) + "\n" for r in kept))
+        (out / path.name.replace(".jsonl", ".drops.json")).write_text(json.dumps(counts, indent=2))
+        os.replace(tmp, target)
+        # Written last: a refined month counts as current only once its examples have landed.
+        write_source_record(Path(args.root), args.org, path, target)
+    print(f"{args.org}: {kept_total} examples kept over {len(built)} months, {dict(totals)}")
+    return 0
 
 
 def drops_path(examples_file: Path) -> Path:
@@ -266,7 +313,7 @@ def drops_path(examples_file: Path) -> Path:
 
 def source_path(examples_file: Path) -> Path:
     """Where the digest of the snapshot a month was built from lives."""
-    return examples_file.with_name(examples_file.name.removesuffix(".jsonl") + ".source.json")
+    return build_record(examples_file)
 
 
 def snapshot_digest(snapshot: Path) -> str:
@@ -305,6 +352,98 @@ def built_from_current_snapshot(target: Path, snapshot: Path) -> bool | None:
     return recorded.get("snapshot_sha256") == snapshot_digest(snapshot)
 
 
+def built_under_current_rules(target: Path) -> bool | None:
+    """Whether a month was built under the build rules now in the code; None if unrecorded."""
+    try:
+        recorded = json.loads(source_path(target).read_text()).get("build_rules")
+    except (ValueError, OSError, AttributeError):
+        return None
+    return None if recorded is None else recorded == BUILD_RULES
+
+
+# The months accepted without a rebuild, by snapshot digest, and the build rules the acceptance
+# holds for. The research log entry of 2026-09-23 holds the audit behind it.
+STAMP_ALLOWLIST = Path(__file__).resolve().parent / "stamped-months.json"
+STAMP_NOTE = (
+    "built before build rules were recorded; accepted without a rebuild on 2026-09-23 after every "
+    "build-code change since was found reapplied by refine or not to change output"
+)
+
+
+def _stamp_allowlist() -> dict[str, Any]:
+    return json.loads(STAMP_ALLOWLIST.read_text())
+
+
+def _read_record(record: Path) -> dict[str, Any] | None:
+    try:
+        recorded = json.loads(record.read_text())
+    except (ValueError, OSError):
+        return None
+    return recorded if isinstance(recorded, dict) else None
+
+
+def _stage_stamp(args: argparse.Namespace) -> int:
+    """Record the build rules on the months the 2026-09-23 audit accepted without a rebuild.
+
+    Those months were built before the build recorded its rules and judged equivalent to a build
+    under the rules `stamped-months.json` names. A month is stamped only while the code's build
+    rules are still those, its snapshot is one the audit covered and is still the one on disk,
+    and its record carries no build rules; anything else must be rebuilt. Every month is checked
+    before any is written.
+    """
+    allowed = _stamp_allowlist()
+    if allowed["build_rules"] != BUILD_RULES:
+        print(
+            f"refusing to stamp: the build rules are {BUILD_RULES}, and the audit covered "
+            f"{allowed['build_rules']}; rebuild instead"
+        )
+        return 1
+    built = sorted(_examples_dir(args).glob("*.jsonl"))
+    if not built:
+        print(f"no examples under {_examples_dir(args)}; run build first")
+        return 1
+    raw = Path(args.root) / args.org / "raw"
+    plans: list[tuple[Path, dict[str, Any]]] = []
+    refused = []
+    for path in built:
+        month = path.name.removesuffix(".jsonl")
+        recorded = _read_record(source_path(path))
+        snapshot = raw / f"{month}.ndjson.gz"
+        digest = recorded.get("snapshot_sha256") if recorded else None
+        if recorded is None:
+            refused.append(f"{path.name}: no readable build record")
+        elif recorded.get("build_rules") == BUILD_RULES:
+            continue
+        elif recorded.get("build_rules") is not None:
+            refused.append(f"{path.name}: built under other build rules; rebuild it")
+        elif not recorded.get("complete", True):
+            refused.append(f"{path.name}: build did not complete")
+        elif not digest or not snapshot.is_file() or digest != snapshot_digest(snapshot):
+            refused.append(f"{path.name}: its snapshot is missing or was refetched since")
+        elif allowed["snapshots"].get(digest) != f"{args.org}/{month}":
+            refused.append(f"{path.name}: not a month the audit covered")
+        else:
+            try:
+                rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+            except ValueError:
+                refused.append(f"{path.name}: unreadable examples")
+                continue
+            stamp = {**recorded, "build_rules": BUILD_RULES, "stamped": STAMP_NOTE}
+            # Built before prompt context existed: the same examples, without context, which the
+            # contamination battery refuses; counted so the record says so.
+            without = sum("context_before" not in row for row in rows)
+            if without:
+                stamp["without_context"] = without
+            plans.append((source_path(path), stamp))
+    if refused:
+        print(f"refusing to stamp {args.org}: {refused}")
+        return 1
+    for record, stamp in plans:
+        record.write_text(json.dumps(stamp, indent=2) + "\n")
+    print(f"{args.org}: stamped {len(plans)} of {len(built)} months with build rules {BUILD_RULES}")
+    return 0
+
+
 def _load_drops(args: argparse.Namespace) -> dict[str, int]:
     """Build-stage drop counts summed over every month on disk."""
     total: Counter[str] = Counter()
@@ -338,6 +477,15 @@ def _stage_build(args: argparse.Namespace) -> int:
         matches = built_from_current_snapshot(target, snapshot) if target.exists() else None
         if matches is False:
             print(f"{args.org} {month}: built from a different snapshot, rebuilding")
+        elif matches is True and built_under_current_rules(target) is False:
+            # Refining it again would stamp the old build's output as current.
+            print(f"{args.org} {month}: built under other build rules, rebuilding")
+            matches = False
+        elif matches is True and built_under_current_rules(target) is None:
+            print(
+                f"{args.org} {month}: no build rules recorded; the loader refuses it until it "
+                "is stamped or rebuilt"
+            )
         if matches is None and target.exists() and not args.overwrite:
             print(f"{args.org} {month}: no snapshot digest recorded, cannot check staleness")
         if target.exists() and not args.overwrite and matches is not False:
@@ -373,14 +521,11 @@ def _stage_build(args: argparse.Namespace) -> int:
         # matches, and the next run certifies it as finished and counts its truncated tail as
         # an example.
         digest = snapshot_digest(snapshot)
-        record = source_path(target)
-        record.write_text(json.dumps({"snapshot_sha256": digest, "complete": False}) + "\n")
+        write_build_record(target, digest, complete=False)
         staging = target.with_suffix(".jsonl.partial")
         staging.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
         staging.replace(target)
-        record.write_text(
-            json.dumps({"snapshot_sha256": digest, "complete": True}, indent=2) + "\n"
-        )
+        write_build_record(target, digest, complete=True)
         drops.update(month_drops)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)
@@ -440,10 +585,25 @@ def _stage_freeze(args: argparse.Namespace) -> int:
         Path(args.root),
         args.org,
         windows,
-        stats={"built_drops": _load_drops(args), "deduped": dict(removed), "unassigned_changes": 0},
+        stats={
+            "built_drops": _load_drops(args),
+            "refine_counts": _load_refine_counts(args),
+            "deduped": dict(removed),
+            "unassigned_changes": 0,
+            # The rules the corpus was built and refined under; verify fails when either moves.
+            "build_rules": BUILD_RULES,
+            "rules": RULES_VERSION,
+        },
     )
     print(f"{args.org}: froze {manifest['counts']}")
     return 0
+
+
+def _load_refine_counts(args: argparse.Namespace) -> dict[str, int]:
+    total: Counter[str] = Counter()
+    for path in sorted(_refined_dir(args).glob("*.drops.json")):
+        total.update(json.loads(path.read_text()))
+    return dict(total)
 
 
 def _stage_verify(args: argparse.Namespace) -> int:
@@ -463,6 +623,13 @@ def _stage_verify(args: argparse.Namespace) -> int:
         for name in manifest["counts"]
     }
     problems = verify(manifest, windows)
+    stats = manifest.get("stats", {})
+    for key, current in (("build_rules", BUILD_RULES), ("rules", RULES_VERSION)):
+        if stats.get(key) != current:
+            problems.append(
+                f"frozen under {key} {stats.get(key)}, current are {current}: rebuild or refine "
+                "and refreeze, or check out the code the manifest was frozen with"
+            )
     if problems:
         for problem in problems:
             print(f"DRIFT {problem}")
@@ -479,6 +646,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     stages = {
         "fetch": _stage_fetch,
         "build": _stage_build,
+        "stamp": _stage_stamp,
+        "refine": _stage_refine,
         "dedup": _stage_dedup,
         "split": _stage_split,
         "freeze": _stage_freeze,

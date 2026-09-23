@@ -22,6 +22,7 @@ from statistics import median
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from sphragis.corpus.load import derived_file_rows
 from sphragis.experiment.model import MODEL_ID, run_provenance
 from sphragis.experiment.runner import build_prompt, evaluate, to_clusters
 from sphragis.measure.stats import cluster_bootstrap
@@ -29,12 +30,18 @@ from sphragis.measure.stats import cluster_bootstrap
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("examples", nargs="?", type=Path, default=Path("pilot-examples.jsonl"))
 parser.add_argument("--out", type=Path, default=Path("prompt-format-probe.json"))
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="read a file not cut under the current label rules, to reproduce an earlier result; "
+    "recorded in the output",
+)
 parser.add_argument("--split-seed", type=int, default=0)
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--max-new-tokens", type=int, default=96)
 args = parser.parse_args()
 
-rows = [json.loads(line) for line in args.examples.read_text().splitlines() if line]
+rows = derived_file_rows(args.examples, legacy=args.legacy_corpus)
 
 # The pilot's split, reproduced exactly, so the comparison is on the same 45 examples.
 changes = sorted({r["change_id"] for r in rows})
@@ -117,6 +124,7 @@ args.out.write_text(
     json.dumps(
         {
             "provenance": run_provenance(),
+            "legacy_corpus": args.legacy_corpus,
             "model_id": MODEL_ID,
             "raw_prompt_tokens": len(raw_ids),
             "chat_prompt_tokens": len(chat_ids),

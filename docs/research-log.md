@@ -4926,3 +4926,260 @@ open rather than taken.
 does what the organizational one does, in Qt. Rank 256 says OpenStack's null is not capacity. The
 language histogram says the two organizations barely share a file type and the pair cannot supply
 a matched arm. None of them is about the apparatus; all three are about the unit.
+
+### A data audit: nearly half of Qt's organizational effect was its lint bot (2026-09-23)
+
+Stage 1's labels were audited before anything else is built on them, in three parts.
+
+**Are the labels real?** A stratified sample of 120 examples (15 per organization, window and placebo
+half, one per change, `scripts/label_audit_sample.py`, seed 20260923) was labelled against a
+five-class rubric drawn from the refinement-noise literature (Too Noisy To Learn, MSR 2025;
+"Rethinking Training Data for Generating Code Review Comments", arXiv 2607.25851): valid, comment
+not actionable, rewrite unrelated to the comment, partial, or context-dependent (the right rewrite
+needs information the prompt does not carry). **Model-assisted labels, disclosed as such**; a blind
+subset goes to AJ for a human agreement figure before any of this is quoted. 92 of 120 valid, 77%
+(Wilson 95% [68, 83]); OpenStack 42 of 60 and Qt 50 of 60. The dominant non-valid class is
+context-dependent (16), then partial (7), unrelated (4), not actionable (1). CodeReviewer-derived
+data measured about 64% valid under a comparable rubric, so the pipeline's existing filters earn
+their keep. Because every adapter is scored on the identical examples, noise in held-out labels can
+dilute a contrast and cannot manufacture one; noise that differs between training halves is what
+the equally weighted two-half design cancels to first order.
+
+**Does the pipeline treat the organizations alike?** Two filters do not.
+
+- *Automated reviewers.* Qt's Sanity Bot posts templated inline comments ("Hint: Trailing
+  whitespace", "Hint: Leading tabs", "Hint: WS-only change", "Hint: Flow control keywords must be
+  followed by a single space", about 900 of them), which the build keeps as reviewer comments.
+  8.1% of Qt's built examples rest on automated comments alone, and none of OpenStack's. A bot
+  enforces written rules, the opposite of what the study measures, and it runs on one organization.
+- *Rebases.* The label is the hunk that changed from patch set n to n+1, and the build never reads
+  the diff's `due_to_rebase` flag. Where the successor revision's `kind` is a rebase or a message
+  edit with no code change, the label can only be what the rebase swept in: 0.34% of OpenStack's
+  kept examples and 1.65% of Qt's. How many reworked successors also carry rebase edits the REST
+  snapshots cannot say; the git route can, and measures it.
+- The acknowledgement list misses Gerrit's one-click "Acknowledged" (13 and 6 examples rest on it
+  alone).
+
+**What the bot did to the pilot.** Every registered dev-window reading re-read with the examples
+whose comments are all automated removed (`scripts/bot_sensitivity.py`, fixed prefix list, same
+rows, same crossed interval and pooled estimand):
+
+| run | cell | registered | automated-only removed | share removed |
+|---|---|---|---|---|
+| organization, rank 32 | openstack | +0.0230 [+0.0000, +0.0458] | +0.0230 [+0.0000, +0.0458] | 0.000 |
+| organization, rank 32 | qt | +0.0316 [+0.0089, +0.0562] | +0.0173 [-0.0022, +0.0373] | 0.049 |
+| organization, rank 256 | openstack | +0.0136 [-0.0097, +0.0361] | +0.0136 [-0.0097, +0.0361] | 0.000 |
+| organization, rank 256 | qt | +0.0309 [+0.0067, +0.0565] | +0.0170 [-0.0044, +0.0384] | 0.049 |
+| Qt split in half | qt-a | +0.0305 [+0.0046, +0.0573] | +0.0288 [+0.0019, +0.0555] | 0.044 |
+| Qt split in half | qt-b | +0.0045 [-0.0349, +0.0432] | +0.0038 [-0.0363, +0.0429] | 0.056 |
+| OpenStack split in half | openstack-a | +0.0099 [-0.0287, +0.0467] | +0.0099 [-0.0287, +0.0467] | 0.000 |
+| OpenStack split in half | openstack-b | +0.0013 [-0.0364, +0.0397] | +0.0013 [-0.0364, +0.0397] | 0.000 |
+
+Verdicts: organization, rank 32: mixed → fail; organization, rank 256: mixed → fail; Qt split in half: mixed → mixed; OpenStack split in half: fail → fail.
+
+**Qt's organizational contrast falls from +0.0316 to +0.0173 and no longer excludes zero, at both
+ranks, from removing 4.9% of its held-out examples.** An adapter trained on Qt had learned Qt's bot,
+which an OpenStack adapter never saw. The placebo barely moves (+0.0305 to +0.0288), because the bot
+runs across all of Qt and both halves learned it. So once the artifact is out, **the within-Qt
+half-split effect is larger than Qt's cross-organization effect**, which is the granularity
+hypothesis read directly off the data. OpenStack has no bot and does not move.
+
+**Consequences, all taken before any test data exists:** automated-reviewer comments are excluded
+from the corpus by a registered rule (account type where the host exposes it, the prefix list
+otherwise, both reported), successors that are not reworks are dropped, "Acknowledged" joins the
+acknowledgement list, and every pilot figure quoted in the Stage 1 report is re-read on the cleaned
+corpus. The registered dev-window verdict under the organization gate was already superseded; this
+says the part of it that looked strongest was partly an instrument artefact.
+
+### Corpus v2: the audit's rules, applied at the source and to what was already built (2026-09-23)
+
+The fixes are in the builder, so every corpus collected from here on is clean at collection, and in
+a new `refine` stage that brings corpora built before them to the same rules from their own
+examples and raw snapshots, with nothing refetched.
+
+**Bots are recognised from their source, not from a guessed list.** Identity first: Gerrit tags
+service accounts `SERVICE_USER`, and the scrub used to replace every account object with its
+pseudonym alone, discarding that tag at ingestion; it now keeps it. Where a host does not expose
+the tag, and for corpora collected before, the fallback is each bot's own message templates:
+`sphragis/corpus/automated/qt-sanity-bot.json` holds all 101 complaints
+`git-hooks/sanitize-commit` posts, extracted from qt/qtrepotools at `309df8d5eefb` by
+`scripts/extract_bot_templates.py` (spelling complaints pinned to the exact shape the code writes,
+so a reviewer's "a -> b?" is not taken for the bot); Qt's QUIP-23 integration posts one fixed
+message on files carrying a `Qt-Security` header; and flake8 output is posted inline on
+pyside/pyside-setup. The earlier prefix scan had missed the last two and most of the spelling
+complaints. Recognised in Qt's built examples: Qt Sanity Bot 1,347, flake8 lint output 338, Qt QUIP-23 security review integration 54; in OpenStack's, none. Templates match whole
+comments. Every recognised string was inspected, and a repeated-text queue of the rest, which a new
+bot would surface in, holds only reviewer language.
+
+| organization | built | bot comments removed | examples resting only on bots | rebase-only successor | acknowledgement only | refined |
+|---|---|---|---|---|---|---|
+| openstack | 5,959 | 0 | 0 | 20 | 13 | 5,926 |
+| qt | 11,448 | 1,672 | 1,240 | 189 | 6 | 10,013 |
+
+Refrozen as corpus v2 (the v1 manifests stay in git history, and every earlier result cites them):
+
+| organization | pilot | train | dev |
+|---|---|---|---|
+| openstack | 600 | 4,304 | 565 |
+| qt | 1,134 | 7,456 | 897 |
+
+**Re-read under the registry** rather than the prefix list: Qt's organizational contrast is
++0.0182 [-0.0022, +0.0388] with
+0.055 of its held-out examples removed, the same reading as before.
+
+**What else changed with it.** Everything that trains or measures now reads refined examples
+through one loader (`sphragis/corpus/load.py`) that refuses a refinement made from other examples
+or under other rules; nine scripts had read the built files directly, and a fix that reached only
+the CLI would have left them on the old data. A placebo's halves are derived corpora carrying the
+rules version they were cut under. The rules version is a digest of the registries and the
+acknowledgement list, so it cannot fall behind them. `make data-audit` re-runs this audit on any
+corpus and writes `data-audit-<org>.json`. The scrub treats a chained address as one.
+
+**Not yet done:** the pilot adapters were trained on v1, including the bot examples; retraining on
+v2 waits on Qt's answer about access, since training is where the Qt data is used again. RQ2's
+project corpora are rebuilt from v2 by `project_corpora.py` before its next run.
+
+**Leakage re-measured on v2** (`sibling-leakage.json`, `window-report-*.json` regenerated). OpenStack
+train into dev at Jaccard 0.7 is 0.0106, unchanged. Sibling-half rates at Jaccard 0.7:
+
+| evaluated half | own | sibling | foreign |
+|---|---|---|---|
+| openstack-a | 0.0030 | 0.0060 | qt 0.0000 |
+| openstack-b | 0.0137 | 0.0046 | qt 0.0000 |
+| qt-a | 0.0055 | 0.0018 | openstack 0.0000 |
+| qt-b | 0.0030 | 0.0000 | openstack 0.0000 |
+
+All below 2%. openstack-a's sibling rate exceeds its own half's, so the threshold, not an
+ordering between the own half and the sibling, is the property to rely on.
+
+### Correction: every successor is a rework, and corpus v2 is refrozen under the corrected rules (2026-09-23)
+
+**Retracted: the rebase-only-successor finding** in the two entries above (0.34% of OpenStack's
+kept examples and 1.65% of Qt's in the audit, 20 and 189 in the v2 table). It was an artifact of
+the audit's own lookup, which keyed a change's revisions on its Change-Id. A cherry-pick carries
+the Change-Id to another branch, so a stable-branch copy that was only rebased lent its kind to
+the original. Resolved per change (by number, else by Change-Id, project and creation time
+together), every OpenStack successor and 11,444 of Qt's 11,448 are reworks; the other 4 are
+changes that cannot be told apart and are kept and counted. The rule stays as a guard, and now
+removes nothing. A review of the v2 branch caught it. Rebase edits carried inside a
+reworked successor remain the open question the audit entry names.
+
+**Two more corrections from that review.** A comment is automated only when every paragraph of it
+matches a template, since the Sanity Bot joins its complaints for one line with a blank line;
+and the Sanity Bot's templates are the union over every version of its hook in effect across the
+corpus span, not the current version alone.
+
+| organization | built | bot comments removed | examples resting only on bots | acknowledgement only | refined |
+|---|---|---|---|---|---|
+| openstack | 5,959 | 0 | 0 | 13 | 5,946 |
+| qt | 11,448 | 1,747 | 1,304 | 6 | 10,138 |
+
+Recognised in Qt: Qt Sanity Bot 1,355, flake8 lint output 338, Qt QUIP-23 security review
+integration 54 (`data-audit-qt.json`).
+
+Refrozen as corpus v2 under these rules; the manifests of the entry above are replaced, and each
+manifest now records the build and label rule digests, which `verify` checks:
+
+| organization | pilot | train | dev |
+|---|---|---|---|
+| openstack | 600 | 4,322 | 565 |
+| qt | 1,146 | 7,563 | 897 |
+
+**Re-read.** Qt's organizational contrast without automated examples is +0.0171
+[-0.0034, +0.0374] (5.7% of its held-out examples removed), against +0.0316 [+0.0089, +0.0562]
+as registered; at rank 256, +0.0164 [-0.0051, +0.0384]. Qt's firing placebo half, qt-a, is
++0.0288 [+0.0019, +0.0555] without them. The finding of the audit entry stands: nearly half of
+Qt's organizational effect was its lint bot, and the half-split survives
+(`bot-sensitivity-*.json`). OpenStack train into dev at Jaccard 0.7 is 1.06%, unchanged
+(`window-report-openstack.json`).
+
+**Leakage re-measured** (`sibling-leakage.json`), Jaccard 0.7:
+
+| evaluated half | own | sibling | foreign |
+|---|---|---|---|
+| openstack-a | 0.0031 | 0.0031 | qt 0.0000 |
+| openstack-b | 0.0132 | 0.0088 | qt 0.0000 |
+| qt-a | 0.0020 | 0.0020 | openstack 0.0000 |
+| qt-b | 0.0079 | 0.0000 | openstack 0.0000 |
+
+All below 2%. The v2 entry's remark that openstack-a's sibling rate exceeded its
+own was read from the refinement that dropped the 20 examples in error, and does not survive:
+the two are equal. The threshold remains the property to rely on, not the ordering.
+
+**AOSP audited the same way** before RQ2 trains on it (`data-audit-aosp.json`): 5,133 built,
+no comment matching a registered bot, every successor a rework, and a repeated-text queue holding
+only reviewer language ("typo" on 25 changes, "2024" on 24). 5,130 refined.
+
+**The build and the label rules are now separate stages with separate digests.** Review of the
+fixes found that the build applied the bot templates and the successor rule that `refine` applies
+too, and that a change to the build's own rules moved one rules version while `refine` re-ran
+only the label rules: a refreeze would have certified the old build's output, a new bot template
+would have meant refetching every organization, and `refine`, which only removes, could not undo a
+build that had removed too much. The build now keeps only what needs the network or the comment's
+author (the author, service-account and acknowledgement filters, well-posedness, the scrub) and
+records the build rules each month was built under; every label rule is `refine`'s, and a change
+to one is a re-refine from disk. The loader refuses a month built under other build rules, and
+each manifest records both digests for `verify`.
+
+The months on disk were built before the build recorded anything, so they were accepted once
+without a rebuild (`python -m sphragis.corpus stamp`, limited to the 54 snapshots listed in
+`sphragis/corpus/stamped-months.json` and to the build rules named there), on this evidence:
+every month's drop profile carries exactly the drop reasons of the build that added the
+well-posedness filter, and that filter and the fetchers are unchanged since; that build applied
+neither the bot templates nor the successor rule, so `refine` applies both to what it kept, and
+its acknowledgement list lacks only "Acknowledged", which `refine` adds; the build's other later
+additions are the service-account filter, which the raw snapshots give nothing to act on (they hold no account
+tags), and the change number, which names a change and removes none; and the scrub's one change,
+chained addresses, is reapplied by `refine` as a sweep of domains left behind a pseudonym (one
+AOSP comment). One month differs: Qt's 2024-10 was built before prompt context was added, and its
+582 examples carry none. They are the same examples with the same text; context is in no prompt;
+the month is the pilot window, which no contrast trains or evaluates on; the contamination
+battery refuses a row without context and the label-audit sample draws from train and dev. The
+stamp records the count in that month's build record.
+
+**Files handed to a job by path now fail closed.** Project, client, contamination and planted
+corpora are cut with a record of the rules, their hash and the sources they came from beside each
+file, and every job that reads one (the client runs, the project and calibration contrasts, the
+contamination battery, the pilot replay and the prompt probe) refuses a file without a matching
+record, or one whose source has since moved or gone stale; `--legacy-corpus` (`LEGACY_CORPUS=1`
+in the sbatch scripts) reads an older one to reproduce an earlier result, and the output records
+it. Every corpus root's files are now ignored by an
+allowlist, manifests and seals excepted, so a later stage's text cannot be committed by omission.
+
+**Open.** The committed contamination results carry the scored half of each example's rewrite as
+`reference` text, so code from the corpus is in git; it predates these rules and stays until the
+battery can be re-read from example ids and hashes, which it must before the repository is public.
+
+### Label audit v2: two blind model raters agree at kappa 0.56, and validity does not differ between the units a contrast compares (2026-09-23)
+
+The first audit's context-dependent class folded two questions together: whether the request can
+be understood from what the example shows, and whether the rewrite uses names the example does not
+show. A clear request answered with a project's own constant is a valid label that no prompt alone
+reproduces, which is house-style knowledge an adapter can learn, not label noise. Rubric version 2
+asks the two separately (`scripts/label_audit/rubric.md`).
+
+A fresh sample of 384 refined v2 examples, 48 per organization, window and placebo half, one per
+change (`label_audit_sample.py`, seed 20260923), was blinded under neutral ids in a seeded order
+with the organization, project, window and half removed (`label_audit_blind.py`). Two model raters
+labelled every item alone, blind to each other: rater A on Claude Opus 5.5, rater B on Claude
+Sonnet 5 (`scripts/label_audit/rater-prompt.md`). The rubric's worked example is item-001, which is
+excluded from every figure. A first run of rater B split its batches across copies of itself and
+was lost before it was committed; it is not reported, and the run below was one rater under an
+added rule against delegation.
+
+Over 383 items (`label-audit-v2.json`): the label agrees on 86.4% of items, Cohen's kappa 0.557
+[0.454, 0.652]; the outside-names question on 94.8%, kappa 0.825 [0.745, 0.894]. The main
+disagreement is one boundary: 19 items rater A read as partial and rater B as valid, against 5 the
+other way. For comparison, two human raters reached 0.758 on 383 comment-generation pairs
+(arXiv 2607.25851) and 0.56 independently on a nine-label taxonomy (arXiv 2604.23667).
+
+Validity does not differ between the units a contrast compares. Share valid, 95% Wilson interval:
+
+| rater | openstack | qt | openstack-a | openstack-b | qt-a | qt-b |
+|---|---|---|---|---|---|---|
+| A | 0.827 [0.767, 0.874] | 0.797 [0.734, 0.848] | 0.802 | 0.853 | 0.802 | 0.792 |
+| B | 0.848 [0.790, 0.892] | 0.839 [0.780, 0.884] | 0.854 | 0.842 | 0.875 | 0.802 |
+
+Every interval overlaps every other, so label noise is no route by which an organization or a half
+would read as having a style it does not have. A human's blind check of rater A is in progress;
+the human-to-model kappa is what decides how far these model labels can be relied on.

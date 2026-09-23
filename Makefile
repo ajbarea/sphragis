@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs redact redact-check
+.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs redact redact-check
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -178,6 +178,9 @@ redact:                    ## Take third-party addresses out of the result artif
 	@# deliberately, so every run writes some into its predictions; the released artifacts are
 	@# the side that has to be clean. Staging one without this fails the suite and names it.
 	uv run --no-sync --no-active python scripts/redact_identities.py --write
+
+data-audit:                ## Audit a built+refined corpus: drops, bots, successor kinds, unregistered-bot queue
+	uv run --no-sync --no-active python scripts/data_audit.py --root datasets/gerrit $(foreach o,$(or $(ORGS),openstack qt),--org $(o)) --out-dir datasets/results
 
 redact-check:              ## Report third-party addresses in the result artifacts
 	uv run --no-sync --no-active python scripts/redact_identities.py --check

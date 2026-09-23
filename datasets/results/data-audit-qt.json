@@ -1,0 +1,88 @@
+{
+  "org": "qt",
+  "rules": "0292fd614738792f",
+  "bot_registry": "bbfd02ce7633",
+  "built_examples": 11448,
+  "refined_examples": 10138,
+  "build_drops": {
+    "acknowledgement": 1526,
+    "author_comment": 31429,
+    "diff_error": 17,
+    "ill_posed_contraction": 259,
+    "ill_posed_empty_after": 4391,
+    "ill_posed_empty_before": 452,
+    "ill_posed_expansion": 116,
+    "metadata_file": 57792,
+    "no_anchored_hunk": 45077,
+    "no_line_anchor": 8331,
+    "no_successor": 770,
+    "comment_error": 7
+  },
+  "refine_drops": {
+    "automated_comment": 1747,
+    "acknowledgement_comment": 117,
+    "automated_only": 1304,
+    "acknowledgement_only": 6,
+    "not_rework_successor": 0,
+    "successor_kind_unknown": 4,
+    "address_residue": 0
+  },
+  "automated_comments_by_bot": {
+    "Qt Sanity Bot": 1355,
+    "flake8 lint output": 338,
+    "Qt QUIP-23 security review integration": 54
+  },
+  "successor_kinds": {
+    "REWORK": 11444,
+    "UNRESOLVED": 4
+  },
+  "candidate_unregistered_bots": [
+    {
+      "text": "typo",
+      "changes": 42
+    },
+    {
+      "text": "remove",
+      "changes": 35
+    },
+    {
+      "text": "nit: line length",
+      "changes": 24
+    },
+    {
+      "text": "repeats",
+      "changes": 24
+    },
+    {
+      "text": "the",
+      "changes": 21
+    },
+    {
+      "text": "same here",
+      "changes": 19
+    },
+    {
+      "text": "const",
+      "changes": 18
+    },
+    {
+      "text": "?",
+      "changes": 16
+    }
+  ],
+  "min_changes": 15,
+  "provenance": {
+    "generated_at": "2026-09-23T21:25:13.228732+00:00",
+    "git": {
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

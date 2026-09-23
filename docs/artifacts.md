@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 135 artifacts under
-30 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 144 artifacts under
+34 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -50,6 +50,15 @@ RQ2 under secure aggregation: does a round's aggregate betray whose clients were
 | `aggregate-attack-cpp-rebuilt-c128.json` | `aggregate-attack-dual-cpp-rebuilt-c128-t2-local.json` |
 | `aggregate-attack-dual-cpp-rebuilt-c128-t2.json` | `aggregate-attack-project.json` |
 | `aggregate-attack.json` |  |
+
+## `scripts/bot_sensitivity.py`
+
+The registered dev-window reading with examples that rest only on automated reviewers removed.
+
+| artifact | |
+|---|---|
+| `bot-sensitivity-placebo-openstack.json` | `bot-sensitivity-placebo-qt.json` |
+| `bot-sensitivity-qtfull-fp32.json` | `bot-sensitivity-r256.json` |
 
 ## `scripts/censoring.py`
 
@@ -126,6 +135,15 @@ Re-read single-seed runs as one multi-seed study, under both gates.
 |---|---|
 | `rq1-qtfull-seeds.json` |  |
 
+## `scripts/data_audit.py`
+
+A repeatable data audit of a built and refined corpus, one artifact per organization.
+
+| artifact | |
+|---|---|
+| `data-audit-aosp.json` | `data-audit-openstack.json` |
+| `data-audit-qt.json` |  |
+
 ## `scripts/decoding_check.py`
 
 Is greedy decoding what amplifies a planted convention?
@@ -166,6 +184,14 @@ False-positive rate of the registered pairs cluster bootstrap, under a true null
 | artifact | |
 |---|---|
 | `interval-calibration.json` |  |
+
+## `scripts/label_audit_agreement.py`
+
+Agreement on the label audit: two blind model raters, and a human's blind check of one.
+
+| artifact | |
+|---|---|
+| `label-audit-v2.json` |  |
 
 ## `scripts/masking_mechanism.py`
 
@@ -280,6 +306,14 @@ Is the organizational signal fading while the study measures it?
 |---|---|
 | `separability-over-time.json` | `style-drift-code.json` |
 | `style-drift.json` |  |
+
+## `scripts/sibling_leakage.py`
+
+How much of an evaluated half's dev window a sibling half's training data already holds.
+
+| artifact | |
+|---|---|
+| `sibling-leakage.json` |  |
 
 ## `scripts/subspace_split.py`
 

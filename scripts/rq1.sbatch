@@ -43,9 +43,12 @@ else
   )
 fi
 
+# Corpus files must be cut from refined examples (scripts/project_corpora.py writes each one a
+# record); LEGACY_CORPUS=1 reads an older file anyway, to reproduce an earlier result.
 claim_result OUT "$HOME/rq1-$MODE$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/rq1_pilot.py \
   "${SOURCE[@]}" \
+  $(legacy_corpus_flag) \
   --seeds "${SEEDS:-1}" \
   --lora-rank "${LORA_RANK:-32}" \
   --equalize-train \

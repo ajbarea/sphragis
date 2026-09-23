@@ -28,6 +28,8 @@ SCORED_TEXT="${SCORED_TEXT:-with_context}"
 POST="${POST:-$HOME/corpus/openstack-post.jsonl}"
 PRE="${PRE:-$HOME/corpus/openstack-pre.jsonl}"
 TAG="${TAG:-6mo}"
+# Inputs must come from scripts/contamination_windows.py, which records each; LEGACY_CORPUS=1
+# reads an older file anyway, to reproduce an earlier result.
 claim_result OUT "$HOME/contamination-openstack-$TAG-$SCORED_TEXT$RESULT_SUFFIX.json"
 # The script also writes the membership half early, beside the result, so a run that hits its wall
 # during guided completion keeps the primary instrument. That file is a result too.
@@ -35,5 +37,6 @@ claim_result PARTIAL "${OUT%.json}.partial.json"
 uv run --no-sync python scripts/contamination_battery.py \
   --post "$POST" \
   --pre "$PRE" \
+  $(legacy_corpus_flag) \
   --scored-text "$SCORED_TEXT" \
   --out "$OUT"

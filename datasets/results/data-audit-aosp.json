@@ -1,0 +1,59 @@
+{
+  "org": "aosp",
+  "rules": "0292fd614738792f",
+  "bot_registry": "bbfd02ce7633",
+  "built_examples": 5133,
+  "refined_examples": 5130,
+  "build_drops": {
+    "acknowledgement": 645,
+    "author_comment": 15880,
+    "comment_error": 0,
+    "diff_error": 0,
+    "ill_posed_contraction": 154,
+    "ill_posed_empty_after": 1306,
+    "ill_posed_empty_before": 373,
+    "ill_posed_expansion": 111,
+    "metadata_file": 10161,
+    "no_anchored_hunk": 7305,
+    "no_line_anchor": 89,
+    "no_successor": 1051
+  },
+  "refine_drops": {
+    "automated_comment": 0,
+    "acknowledgement_comment": 66,
+    "automated_only": 0,
+    "acknowledgement_only": 3,
+    "not_rework_successor": 0,
+    "successor_kind_unknown": 0,
+    "address_residue": 1
+  },
+  "automated_comments_by_bot": {},
+  "successor_kinds": {
+    "REWORK": 5133
+  },
+  "candidate_unregistered_bots": [
+    {
+      "text": "typo",
+      "changes": 25
+    },
+    {
+      "text": "2024",
+      "changes": 24
+    }
+  ],
+  "min_changes": 15,
+  "provenance": {
+    "generated_at": "2026-09-23T21:25:13.747516+00:00",
+    "git": {
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

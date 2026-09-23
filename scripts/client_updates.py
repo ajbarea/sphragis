@@ -27,6 +27,7 @@ from pathlib import Path
 import torch
 from peft import get_peft_model_state_dict, set_peft_model_state_dict
 
+from sphragis.corpus.load import derived_file_rows
 from sphragis.experiment.clients import partition
 from sphragis.experiment.model import (
     MODEL_ID,
@@ -66,6 +67,12 @@ parser.add_argument(
 )
 parser.add_argument("--adapters", type=Path, required=True)
 parser.add_argument("--out", type=Path, required=True)
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="read corpus files not cut under the current label rules, to reproduce an earlier "
+    "result; recorded in the output",
+)
 parser.add_argument("--dry-run", action="store_true", help="partition only, no model")
 parser.add_argument(
     "--model-id", default=MODEL_ID, help="a smaller model of the same family for a smoke run"
@@ -97,9 +104,7 @@ def main() -> None:
     specs = sources(args)
     for spec in specs:
         name, _, path = spec.partition("=")
-        rows = [
-            json.loads(line) for line in (args.corpus_root / path).read_text().splitlines() if line
-        ]
+        rows = derived_file_rows(args.corpus_root / path, legacy=args.legacy_corpus)
         usable = []
         for row in rows:
             try:
@@ -175,6 +180,7 @@ def main() -> None:
                 # says otherwise; one such job died only because a listed source happened to be
                 # missing from the corpus it defaulted to.
                 "corpus_root": str(args.corpus_root),
+                "legacy_corpus": args.legacy_corpus,
                 "sources": sorted(specs),
                 "client_size": args.client_size,
                 "max_per_change": args.max_per_change or max(1, args.client_size // 4),

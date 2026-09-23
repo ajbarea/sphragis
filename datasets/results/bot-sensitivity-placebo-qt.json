@@ -1,0 +1,75 @@
+{
+  "runs": [
+    "datasets/results/rq1-placebo-qt.json",
+    "datasets/results/rq1-placebo-qt-s2.json",
+    "datasets/results/rq1-placebo-qt-s3.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "bot_registry": "bbfd02ce7633",
+  "removed_share": {
+    "qt-a": 0.043936731107205626,
+    "qt-b": 0.07506702412868632
+  },
+  "readings": {
+    "registered": {
+      "verdict": "mixed",
+      "per_org": {
+        "qt-a": {
+          "estimate": 0.030462800234329235,
+          "low": 0.00462160600808779,
+          "high": 0.05734767025089604,
+          "clusters": 248.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt-b": {
+          "estimate": 0.004468275245755142,
+          "low": -0.03492063492063494,
+          "high": 0.043243243243243246,
+          "clusters": 208.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    },
+    "without_automated": {
+      "verdict": "mixed",
+      "per_org": {
+        "qt-a": {
+          "estimate": 0.02879901960784313,
+          "low": 0.0018587360594795599,
+          "high": 0.05545509342977695,
+          "clusters": 238.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt-b": {
+          "estimate": 0.0009661835748792277,
+          "low": -0.03973509933774832,
+          "high": 0.04069767441860461,
+          "clusters": 194.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-23T21:25:52.460722+00:00",
+    "git": {
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

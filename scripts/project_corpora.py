@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.load import refined_month_files, write_derived_file
 from sphragis.corpus.pipeline import run_dedup
 
 parser = argparse.ArgumentParser()
@@ -46,7 +47,7 @@ def load(org: str, window: str) -> list[dict[str, Any]]:
     # fetched, so there is nothing of it on disk for `all` to reach.
     first, last = ("0000-00-00", "9999-99-99") if window == "all" else WINDOWS[window]
     rows: list[dict[str, Any]] = []
-    for path in sorted(Path(f"datasets/gerrit/{org}/examples").glob("*.jsonl")):
+    for path in refined_month_files(Path("datasets/gerrit"), org):
         if not (first[:7] <= path.stem < last[:7]):
             continue
         rows.extend(json.loads(line) for line in path.open() if line.strip())
@@ -80,7 +81,7 @@ def main() -> None:
         slug = project.replace("/", "_")
         path = args.out_dir / f"{slug}.jsonl"
         examples = by_project[project]
-        path.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in examples))
+        write_derived_file(path, examples, sources=[(Path("datasets/gerrit"), args.org)])
         manifest["projects"][project] = {
             "path": str(path),
             "examples": len(examples),

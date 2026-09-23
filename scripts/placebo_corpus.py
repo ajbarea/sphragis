@@ -28,9 +28,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 
+from sphragis.corpus.load import built_dir, mark_derived, refined_dir, refined_month_files
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -67,12 +70,17 @@ def assign(counts: dict[str, int]) -> dict[str, int]:
     return out
 
 
+def project_counts(rows: Iterable[dict], window: tuple[str, str]) -> Counter[str]:
+    """Examples per project created inside one window: what `assign` balances."""
+    start, end = window
+    return Counter(row["project"] for row in rows if start <= row["created"][:10] < end)
+
+
 def main() -> None:
     args = parser.parse_args()
-    directory = args.root / args.org / "examples"
-    months = sorted(directory.glob("*.jsonl"))
+    months = refined_month_files(args.root, args.org)
     if not months:
-        raise SystemExit(f"no examples under {directory}")
+        raise SystemExit(f"no refined examples under {args.root / args.org}")
 
     rows_by_month = {
         month.name: [json.loads(line) for line in month.read_text().splitlines() if line]
@@ -83,17 +91,30 @@ def main() -> None:
     # window is balanced twice and the evaluation sets are whatever the assignment gives.
     from sphragis.corpus.cli import WINDOWS
 
-    start, end = WINDOWS[args.train_window]
-    train_counts: Counter[str] = Counter()
-    for rows in rows_by_month.values():
-        for row in rows:
-            if start <= row["created"][:10] < end:
-                train_counts[row["project"]] += 1
+    train_counts = project_counts(
+        (row for rows in rows_by_month.values() for row in rows), WINDOWS[args.train_window]
+    )
     if len(train_counts) < 2:
         raise SystemExit(f"{args.org} has {len(train_counts)} projects in {args.train_window}")
 
     side_of = assign(dict(train_counts))
     names = args.names or [f"{args.org}-a", f"{args.org}-b"]
+    if len(set(names)) != 2:
+        raise SystemExit(f"two distinct half names are needed, got {names}")
+    for name in names:
+        # A half is written over whatever corpus already carries its name under --out-root, so
+        # a name must be a plain name, and never one a built corpus (its source included) has.
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name):
+            raise SystemExit(f"{name!r} is not a plain corpus name")
+        if built_dir(args.out_root, name).exists():
+            raise SystemExit(
+                f"{name} is a built corpus under {args.out_root}; it would be overwritten"
+            )
+    # A reused out-root would keep months an earlier split wrote for a half that now has none.
+    for name in names:
+        for stale in refined_dir(args.out_root, name).glob("*"):
+            if stale.is_file():
+                stale.unlink()
     per_side: dict[int, Counter[str]] = {0: Counter(), 1: Counter()}
     written: dict[int, int] = {0: 0, 1: 0}
 
@@ -108,12 +129,16 @@ def main() -> None:
             row = dict(row, org=names[side])
             halves[side].append(row)
         for side, kept in halves.items():
-            out = args.out_root / names[side] / "examples"
+            # Written as refined months of a derived corpus: the halves have no builds of their
+            # own, and the loader checks them against the rules their source was refined under.
+            out = refined_dir(args.out_root, names[side])
             out.mkdir(parents=True, exist_ok=True)
             (out / month).write_text("".join(json.dumps(r) + "\n" for r in kept))
             written[side] += len(kept)
             per_side[side][month] += len(kept)
 
+    for name in names:
+        mark_derived(args.out_root, name, source_root=args.root, source_org=args.org)
     manifest = {
         "provenance": provenance_header(),
         "source_root": str(args.root),

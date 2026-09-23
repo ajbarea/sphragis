@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-09-18T07:16:11.366468+00:00",
+  "generated_at": "2026-09-23T21:25:08.324583+00:00",
   "git": {
-    "commit": "b86b687d44516357c94af2239ffd5047c4579776",
-    "branch": "feat/wellposed-filter"
+    "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+    "branch": "corpus/v2"
   },
   "python": "3.14.4",
   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -13,15 +13,15 @@
   },
   "org": "qt",
   "counts": {
-    "pilot": 1300,
-    "train": 8442,
-    "dev": 950,
+    "pilot": 1146,
+    "train": 7563,
+    "dev": 897,
     "test": 0
   },
   "hashes": {
-    "pilot": "0294c00de9b5d0c704c8503a827265f39adf9af5b4aeb08892ecaf233c1ac9ff",
-    "train": "1d9b01ba1f1acc5730b1ba356a9336d9c2c4bf646a06577173a658d2e4d5f8c2",
-    "dev": "9a03e935e8768c743284d72053222c40652a58f45f252ebeb35056d25ccf7ea8",
+    "pilot": "7c643d1d156aa628af541d0ee32cbef094e05d06a02f539f5c2d2935bfde1f81",
+    "train": "039983934af1fd7272351b35c3e760a36324493c0bcac73fd75a751c14290dcc",
+    "dev": "a68f99846153cee907c0443dae4044cdaa56b2585682d2f14f3260c192b22191",
     "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "stats": {
@@ -39,12 +39,23 @@
       "no_line_anchor": 8331,
       "no_successor": 770
     },
-    "deduped": {
-      "exact": 491,
-      "near_duplicate": 262,
-      "boilerplate": 0,
-      "shared_change_id": 3
+    "refine_counts": {
+      "automated_comment": 1747,
+      "acknowledgement_comment": 117,
+      "automated_only": 1304,
+      "acknowledgement_only": 6,
+      "not_rework_successor": 0,
+      "successor_kind_unknown": 4,
+      "address_residue": 0
     },
-    "unassigned_changes": 0
+    "deduped": {
+      "exact": 320,
+      "near_duplicate": 212,
+      "boilerplate": 0,
+      "shared_change_id": 0
+    },
+    "unassigned_changes": 0,
+    "build_rules": "3d29d529390c1eea",
+    "rules": "0292fd614738792f"
   }
 }

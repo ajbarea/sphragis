@@ -30,6 +30,10 @@ if [ -z "${RUN_TAG+set}" ]; then
   [ "$RUN_TAG" != tigris ] || RUN_TAG=""
 fi
 export RESULT_SUFFIX="${RUN_TAG:+-$RUN_TAG}"
+# LEGACY_CORPUS=1 lets a job read corpus files cut before the current label rules, to reproduce an
+# earlier result, and the result records it. Any other value, 0 included, leaves the check on.
+legacy_corpus_flag() { if [ "${LEGACY_CORPUS:-0}" = 1 ]; then echo --legacy-corpus; fi; }
+
 # A recorded measurement is written once. `claim_result NAME PATH` creates PATH exclusively and
 # sets NAME to it, so a result that already exists, or that a concurrent job has claimed, stops
 # this job before its work starts. The check runs when the job starts, after the queue wait. The

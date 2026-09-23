@@ -462,6 +462,9 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-23** — Stage 1 data audit: lint-bot comments (in Qt only) and one-click "Acknowledged" removed by a `refine` stage that alone applies label rules; the rebase-only-successor finding retracted; build and label rules recorded per month and checked by the loader; corpus v2 refrozen and every result it feeds regenerated at one commit (research log).
+- **2026-09-23** — AOSP audited the same way: no bot comments, every successor a rework.
+- **2026-09-23** — Label audit v2: 384 examples, two blind model raters under a two-question rubric, and a page for a human's blind check of one (`scripts/label_audit_*`).
 - **2026-09-19** — The interval's own false-positive rate measured into an artifact (`scripts/interval_calibration.py`): 5.7% at 19 changes, 4.7% at 91, against a nominal 5%, at the accuracy the gate operates at.
 - **2026-09-19** — Second packing at 128 examples a client: the detector's rise with training length replicates, nearest-class attribution does not.
 - **2026-09-19** — AOSP rebuilt over ten projects, 5,130 examples, 2024-01 to 2025-08.

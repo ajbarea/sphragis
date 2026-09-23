@@ -1,0 +1,75 @@
+{
+  "runs": [
+    "datasets/results/rq1-windows-r256.json",
+    "datasets/results/rq1-windows-s2-r256.json",
+    "datasets/results/rq1-windows-s3-r256.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "bot_registry": "bbfd02ce7633",
+  "removed_share": {
+    "openstack": 0.0,
+    "qt": 0.056842105263157895
+  },
+  "readings": {
+    "registered": {
+      "verdict": "mixed",
+      "per_org": {
+        "openstack": {
+          "estimate": 0.013569321533923298,
+          "low": -0.009722222222222224,
+          "high": 0.036116044997039666,
+          "clusters": 235.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt": {
+          "estimate": 0.03087719298245613,
+          "low": 0.006749156355455532,
+          "high": 0.05649157581764119,
+          "clusters": 462.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    },
+    "without_automated": {
+      "verdict": "fail",
+      "per_org": {
+        "openstack": {
+          "estimate": 0.013569321533923298,
+          "low": -0.009722222222222224,
+          "high": 0.036116044997039666,
+          "clusters": 235.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt": {
+          "estimate": 0.016369047619047616,
+          "low": -0.005086071987480456,
+          "high": 0.03839055001845698,
+          "clusters": 437.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-23T21:25:42.364621+00:00",
+    "git": {
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

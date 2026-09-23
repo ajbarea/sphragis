@@ -1,20 +1,20 @@
 {
   "openstack": {
     "months_built": 13,
-    "examples": 5959,
-    "after_dedup": 5498,
+    "examples": 5946,
+    "after_dedup": 5487,
     "dedup_removed": {
-      "exact": 265,
+      "exact": 263,
       "near_duplicate": 196,
       "boilerplate": 0,
       "shared_change_id": 0
     },
     "windows": {
       "pilot": {
-        "examples": 606,
+        "examples": 600,
         "changes": 194,
         "content": {
-          ".py": 307,
+          ".py": 301,
           ".rst": 203,
           ".yaml": 38,
           ".yml": 15,
@@ -39,12 +39,12 @@
         }
       },
       "train": {
-        "examples": 4327,
-        "changes": 1737,
+        "examples": 4322,
+        "changes": 1736,
         "content": {
-          ".py": 2054,
+          ".py": 2051,
           ".rst": 1184,
-          ".yaml": 462,
+          ".yaml": 460,
           ".yml": 143,
           "(none)": 135,
           ".sh": 69,
@@ -124,15 +124,15 @@
           "near_duplicates": 0
         },
         "0.7": {
-          "rate": 0.002542177027963947,
+          "rate": 0.0025451180009254974,
           "near_duplicates": 11
         },
         "0.6": {
-          "rate": 0.005546568061012249,
+          "rate": 0.005552984729291994,
           "near_duplicates": 24
         },
         "0.5": {
-          "rate": 0.007164317078807488,
+          "rate": 0.0071726052753354926,
           "near_duplicates": 31
         },
         "max_similarity": 0.7931034482758621
@@ -160,14 +160,10 @@
     "dedup_note": "dedup runs before the split at Jaccard 0.8, so the 0.8 rate is partly zero by construction; read the looser thresholds"
   },
   "provenance": {
-    "generated_at": "2026-09-22T00:37:05.289033+00:00",
+    "generated_at": "2026-09-23T21:28:35.401984+00:00",
     "git": {
-      "commit": "df0dd083d9e6399360a31760370ce7d13d894d39",
-      "branch": "feat/language-composition-is-measured",
-      "uncommitted_code": [
-        "scripts/window_report.py"
-      ],
-      "uncommitted_code_sha256": "54949d3ddf8028a24cdbee621ac23c73fa69d2dd0996b456b42e4eb193ba90e1"
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
