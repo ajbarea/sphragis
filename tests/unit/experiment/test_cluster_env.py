@@ -914,8 +914,18 @@ def _kill_mid_job(root: Path, signal_number: int, **env: str) -> Path:
         ),
         start_new_session=True,
     )
+    # The result is created a line before its owner record; a job with an id is killed only
+    # once both exist, or the kill can land between them and leave a claim with no owner.
+    recorded = "SLURM_JOB_ID" in env
+
+    def reached() -> bool:
+        claims = sorted(home.glob("*.json"))
+        return bool(claims) and (
+            not recorded or all(c.with_suffix(".json.claim").exists() for c in claims)
+        )
+
     deadline = time.monotonic() + 30
-    while time.monotonic() < deadline and not sorted(home.glob("*.json")):
+    while time.monotonic() < deadline and not reached():
         time.sleep(0.05)
     claims = sorted(home.glob("*.json"))
     os.killpg(os.getpgid(job.pid), signal_number)
