@@ -134,9 +134,19 @@ def test_two_halves_with_one_name_are_refused(tmp_path: Path) -> None:
         _build(tmp_path / "src", tmp_path / "out", names=["h", "h"])
 
 
-def test_a_half_named_for_its_source_cannot_be_written_over_it(tmp_path: Path) -> None:
+@pytest.mark.parametrize("names", [["qt", "qt-b"], ["openstack", "qt-b"]])
+def test_a_half_cannot_be_written_over_a_built_corpus(tmp_path: Path, names: list[str]) -> None:
     rows = [_row(p, "2024-11-05", f"{p}{i}") for p in ("x", "y") for i in range(3)]
     _corpus(tmp_path / "src", "qt", rows)
-    with pytest.raises(SystemExit, match="overwrite its own source"):
-        _build(tmp_path / "src", tmp_path / "src", names=["qt", "qt-b"])
-    assert (tmp_path / "src" / "qt" / "refined" / "2024-11.jsonl").exists()
+    _corpus(tmp_path / "src", "openstack", rows)
+    with pytest.raises(SystemExit, match="built corpus"):
+        _build(tmp_path / "src", tmp_path / "src", names=names)
+    for org in ("qt", "openstack"):
+        assert (tmp_path / "src" / org / "refined" / "2024-11.jsonl").exists()
+
+
+def test_a_half_name_that_is_a_path_is_refused(tmp_path: Path) -> None:
+    rows = [_row(p, "2024-11-05", f"{p}{i}") for p in ("x", "y") for i in range(3)]
+    _corpus(tmp_path / "src", "qt", rows)
+    with pytest.raises(SystemExit, match="plain corpus name"):
+        _build(tmp_path / "src", tmp_path / "out", names=["../src/qt", "x"])

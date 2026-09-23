@@ -13,15 +13,16 @@ cherry-pick shares across branches.
 
 One scrub correction is carried here too: an older scrub pseudonymized only the first address of
 a chained one ("a@b.com@example.com"), leaving the later domains behind the pseudonym, and
-those are removed (`scrub.sweep_address_residue`).
+those are removed (`sweep_address_residue`).
 
-The build applies the same rules as it reads comments, so a corpus built after them passes
-through here unchanged; one built before is brought to the same rules from its examples and raw
-snapshots, nothing refetched. Every removal is counted by reason, as the build counts its own.
+These are applied here and only here, never by the build, so a change to them is a re-refine from
+the examples and raw snapshots already on disk, nothing refetched; the build keeps what needs the
+network or the comment's author. Every removal is counted by reason, as the build counts its own.
 """
 
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
@@ -30,7 +31,6 @@ from sphragis.corpus.automated import matched_bot
 from sphragis.corpus.build import is_acknowledgement
 from sphragis.corpus.examples import revision_kind, successor_changed_code
 from sphragis.corpus.rules import RULES_VERSION, rules_version
-from sphragis.corpus.scrub import sweep_address_residue
 
 __all__ = [
     "ADDRESS_RESIDUE",
@@ -59,6 +59,16 @@ ADDRESS_RESIDUE = "address_residue"
 
 
 ChangeIndex = dict[str, Any]
+
+# What the scrub before chained addresses were one address left of one: the domains after the
+# first, behind the 12-hex pseudonym written for the first ("<pseudonym>@example.com"). The scrub
+# now takes the whole chain, so this matches only what an earlier build left.
+_RESIDUE = re.compile(r"(?<![0-9A-Za-z])([0-9a-f]{12})((?:@[A-Za-z0-9.-]+\.[A-Za-z]{2,})+)")
+
+
+def sweep_address_residue(text: str) -> tuple[str, int]:
+    """Text with any domain left behind a pseudonym removed, and how many were."""
+    return _RESIDUE.subn(r"\1", text)
 
 
 def _identity(record: Mapping[str, Any]) -> tuple[str, str, str]:
