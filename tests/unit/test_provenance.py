@@ -325,6 +325,8 @@ PROVENANCE_EXEMPT = {
     "contamination_windows.py": "writes window slices of the corpus, not a measurement",
     "project_windows.py": "writes window slices of the corpus, not a measurement",
     "label_audit_sample.py": "writes a local annotation sheet of corpus text, never committed",
+    "label_audit_blind.py": "writes blinded batches of corpus text and their key, never committed",
+    "label_audit_page.py": "writes the local check page, corpus text, never committed",
     # Tools that print rather than record.
     "estimands.py": "prints both estimands for a committed run; writes nothing",
     "preflight_pilot.py": "checks the cluster before a job; writes nothing",

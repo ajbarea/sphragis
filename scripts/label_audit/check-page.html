@@ -1,0 +1,220 @@
+<title>Label Audit Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f3f5f7; --panel:#ffffff; --ink:#1b2430; --muted:#5b6778; --rule:#dbe1e8;
+  --accent:#2f5d8a; --accent-ink:#ffffff;
+  --del-bg:#fbe9e7; --del-ink:#8a2b1f; --add-bg:#e6f4ea; --add-ink:#1e5e33;
+  --ctx:#7a8595; --chip:#eef2f6; --done:#1e7a4a; --focus:#2f5d8a;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#12171e; --panel:#1a212b; --ink:#e3e8ef; --muted:#9aa6b6; --rule:#2c3643;
+    --accent:#7fb0e0; --accent-ink:#0e1620;
+    --del-bg:#3a1f1c; --del-ink:#f2b8ad; --add-bg:#16321f; --add-ink:#a6dcb5;
+    --ctx:#7f8b9b; --chip:#232c38; --done:#6fcf97; --focus:#7fb0e0;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#12171e; --panel:#1a212b; --ink:#e3e8ef; --muted:#9aa6b6; --rule:#2c3643;
+  --accent:#7fb0e0; --accent-ink:#0e1620;
+  --del-bg:#3a1f1c; --del-ink:#f2b8ad; --add-bg:#16321f; --add-ink:#a6dcb5;
+  --ctx:#7f8b9b; --chip:#232c38; --done:#6fcf97; --focus:#7fb0e0;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:15px/1.55 var(--sans);margin:0}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:24px 64px}
+header h1{font-size:22px;font-weight:600;margin:0 0 6px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:68ch}
+.status{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ground);padding-block:12px;margin-top:16px;border-bottom:1px solid var(--rule);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.meter{flex:1 1 240px;height:8px;background:var(--chip);border-radius:4px;overflow:hidden}
+.meter span{display:block;height:100%;background:var(--done);width:0;transition:width .3s}
+.count{font-variant-numeric:tabular-nums;font-weight:500}
+.note{font-size:13px;color:var(--muted)}
+details.rubric{margin-top:16px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 16px}
+details.rubric summary{cursor:pointer;font-weight:600}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:12px 0 0}
+dt{font-family:var(--mono);font-size:13px;font-weight:500}
+dd{margin:0;color:var(--muted)}
+.card{margin-top:20px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:16px;display:grid;gap:12px}
+.card.current{outline:2px solid var(--focus);outline-offset:2px}
+.card>*{min-width:0}
+.card-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline;justify-content:space-between}
+.num{font-weight:600;font-variant-numeric:tabular-nums}
+.path{font-family:var(--mono);font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.comments{display:grid;gap:8px}
+.comment{border-left:3px solid var(--accent);padding:4px 0 4px 12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.label-small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.diff{border:1px solid var(--rule);border-radius:6px;overflow-x:auto}
+.diff pre{margin:0;font:12.5px/1.5 var(--mono);white-space:pre;padding:8px 12px;min-width:max-content}
+.ctx{color:var(--ctx)}
+.del{background:var(--del-bg);color:var(--del-ink)}
+.add{background:var(--add-bg);color:var(--add-ink)}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choices button{font:500 13.5px var(--sans);border:1px solid var(--rule);background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.choices button kbd{font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:6px}
+.choices button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.choices button[aria-pressed="true"] kbd{color:inherit}
+.choices button:focus-visible,textarea:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+textarea{width:100%;min-height:38px;font:14px var(--sans);color:var(--ink);background:var(--ground);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;resize:vertical}
+.saved{font-size:12.5px;color:var(--muted);min-height:1em}
+.saved.ok{color:var(--done)}
+.banner{margin-top:12px;padding:10px 14px;border-radius:6px;background:var(--chip);color:var(--muted);font-size:13.5px}
+@media (prefers-reduced-motion: reduce){.meter span{transition:none}}
+.reveal{border-top:1px dashed var(--rule);padding-top:10px;display:grid;gap:6px}
+.reveal .verdict{font-family:var(--mono);font-size:13.5px}
+.agree{color:var(--done)} .differ{color:var(--del-ink)}
+.nav{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nav button{font:500 13.5px var(--sans);border:1px solid var(--rule);background:var(--panel);color:var(--ink);border-radius:6px;padding:6px 14px;cursor:pointer}
+.nav button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.nav button:disabled{opacity:.45;cursor:default}
+.nav button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.tally{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+</style>
+<div class="wrap">
+  <header>
+    <h1>Label audit: blind check of rater A</h1>
+    <p>384 examples from the Stage 1 training and dev windows, in a fixed random order. Label each one blind, then reveal what rater A chose. Your blind label is locked when you reveal, and it is the one agreement is computed from, so any stopping point gives a fair sample. The organization is not shown, though a file path can give it away; judge only what the comment asked and what the rewrite did.</p>
+  </header>
+
+  <details class="rubric" open>
+    <summary>How to label: two questions per example</summary>
+    <p class="note"><b>1. The label.</b> Did the reviewer ask for a change, and is the rewrite the author's answer to it?</p>
+    <dl>
+      <dt>valid</dt><dd>The comment asks for a change and the rewrite makes it. Extra edits alongside are fine.</dd>
+      <dt>non_actionable</dt><dd>The comment asks for no change (praise, FYI, agreement, a question answerable in words), or withdraws the request.</dd>
+      <dt>unrelated_rewrite</dt><dd>The requested change is absent; the code changed for some other reason.</dd>
+      <dt>partial</dt><dd>The rewrite makes part of what was asked, or makes it clearly differently than suggested.</dd>
+      <dt>context_dependent</dt><dd>You cannot tell what the comment asks for from what is shown: "same here", "see above", other lines or patch sets, a bare "?", "remove" without saying what, only a link.</dd>
+    </dl>
+    <p class="note">context_dependent is about understanding the <i>request</i>. A clear request answered with names defined elsewhere is still valid; that is question 2. Several comments: all actionable requests made is valid, some is partial, none is unrelated_rewrite.</p>
+    <p class="note"><b>2. Names from outside.</b> Does the rewrite use a name or value that appears nowhere in the example (a helper, constant, module, config key, version or hash)? Names the comment spells out count as shown; new local names and ordinary library names do not count.</p>
+    <p class="note">Keys: <b>1</b>–<b>5</b> label, <b>x</b> names from outside, <b>Enter</b> reveal, <b>n</b> / <b>p</b> next and previous. Example 1 is a worked example and is not counted.</p>
+  </details>
+
+  <div class="status" role="status">
+    <span class="count" id="count">0 of 384 checked</span>
+    <div class="meter" aria-hidden="true"><span id="bar"></span></div>
+    <span class="tally" id="tally"></span>
+    <span class="note" id="conn">Connecting…</span>
+  </div>
+  <div class="banner" id="offline" hidden>Saving is unavailable in this view, so checks stay on this page only until it is reloaded.</div>
+
+  <main id="stage"></main>
+</div>
+
+<script>
+const ITEMS = __DATA__;
+const LABELS = ["valid","non_actionable","unrelated_rewrite","partial","context_dependent"];
+const state = {};
+let db = null, canWrite = true, current = 0, choice = null, outside = false;
+const RUBRIC = "v2";
+// Example 1 is the rubric's worked example, answered in the rubric itself, so it is not counted.
+const PRACTICE = "item-001";
+
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function diffBlock(ex){
+  const box=el("div","diff"), pre=el("pre");
+  const add=(text,cls,prefix)=>{ if(!text) return; for(const line of text.split("\n")) pre.appendChild(el("span",cls,prefix+line+"\n")); };
+  add(ex.cb,"ctx","  "); add(ex.b,"del","- "); add(ex.a,"add","+ "); add(ex.ca,"ctx","  ");
+  box.appendChild(pre); return box;
+}
+function firstOpen(){
+  if(!Object.keys(state).length) return 0;  // a first visit opens on the worked example
+  const i=ITEMS.findIndex(x=>x.item!==PRACTICE&&!state[x.item]?.label); return i<0?ITEMS.length-1:i;
+}
+function progress(){
+  const done=ITEMS.filter(x=>x.item!==PRACTICE&&state[x.item]?.label);
+  const agree=done.filter(x=>state[x.item].label===x.rater).length;
+  document.getElementById("count").textContent=done.length+" of "+(ITEMS.length-1)+" checked";
+  document.getElementById("bar").style.width=(100*done.length/(ITEMS.length-1))+"%";
+  document.getElementById("tally").textContent=done.length?agree+" agree with rater A":"";
+}
+function render(){
+  const ex=ITEMS[current], s=state[ex.item]||{}, locked=!!s.label;
+  const stage=document.getElementById("stage"); stage.textContent="";
+  const card=el("section","card current");
+  const head=el("div","card-head");
+  head.appendChild(el("span","num",ex.item===PRACTICE?"Example 1: worked example, not counted":"Example "+(current+1)+" of "+ITEMS.length));
+  head.appendChild(el("span","path",ex.path));
+  card.appendChild(head);
+  const cs=el("div","comments");
+  cs.appendChild(el("span","label-small","Reviewer comment"+(ex.comments.length>1?"s":"")));
+  ex.comments.forEach(c=>cs.appendChild(el("div","comment",c)));
+  card.appendChild(cs);
+  const d=el("div"); d.appendChild(el("span","label-small","Next patch set (− before, + after)")); d.appendChild(diffBlock(ex)); card.appendChild(d);
+  const ch=el("div","choices"); ch.setAttribute("role","group"); ch.setAttribute("aria-label","Your label");
+  LABELS.forEach((lab,k)=>{
+    const b=el("button"); b.type="button"; b.disabled=locked;
+    b.appendChild(el("kbd",null,String(k+1))); b.appendChild(document.createTextNode(lab));
+    b.setAttribute("aria-pressed",String((locked?s.label:choice)===lab));
+    b.addEventListener("click",()=>{ choice=lab; render(); });
+    ch.appendChild(b);
+  });
+  card.appendChild(ch);
+  const flag=el("label","note"); const box=el("input"); box.type="checkbox"; box.disabled=locked;
+  box.checked=locked?!!s.outside:outside; box.addEventListener("change",()=>{ outside=box.checked; });
+  flag.append(box, document.createTextNode(" Rewrite uses names or values not shown (x)")); card.appendChild(flag);
+  const nav=el("div","nav");
+  const prev=el("button",null,"Previous"); prev.type="button"; prev.disabled=current===0; prev.onclick=()=>go(-1);
+  const rev=el("button","primary",locked?"Revealed":"Reveal rater A"); rev.type="button"; rev.disabled=locked||!choice; rev.onclick=reveal;
+  const next=el("button",null,"Next"); next.type="button"; next.disabled=current===ITEMS.length-1; next.onclick=()=>go(1);
+  const jump=el("button",null,"First unchecked"); jump.type="button"; jump.onclick=()=>{ current=firstOpen(); choice=null; outside=false; render(); };
+  nav.append(prev,rev,next,jump); card.appendChild(nav);
+  if(locked){
+    const r=el("div","reveal");
+    const same=s.label===ex.rater;
+    r.appendChild(el("div","verdict "+(same?"agree":"differ"),"Rater A: "+ex.rater+(same?"  (agrees)":"  (differs from your "+s.label+")")));
+    const sameFlag=!!s.outside===!!ex.outside;
+    r.appendChild(el("div","verdict "+(sameFlag?"agree":"differ"),"Names from outside, rater A: "+(ex.outside?"yes":"no")+(sameFlag?"  (agrees)":"  (you said "+(s.outside?"yes":"no")+")")));
+    if(ex.reason) r.appendChild(el("div","note",ex.reason));
+    const ta=el("textarea"); ta.placeholder="Optional note, e.g. why rater A is right or wrong"; ta.value=s.note||"";
+    let t; ta.addEventListener("input",()=>{ clearTimeout(t); t=setTimeout(()=>{ state[ex.item]={...state[ex.item],note:ta.value}; write(ex.item); },700); });
+    r.appendChild(ta);
+    r.appendChild(el("div","saved"+(s.pending?"":" ok"),s.pending?"Saving…":"Saved"));
+    card.appendChild(r);
+  }
+  stage.appendChild(card);
+  progress();
+}
+function go(step){ current=Math.max(0,Math.min(ITEMS.length-1,current+step)); choice=null; outside=false; render(); window.scrollTo({top:0}); }
+function reveal(){
+  const ex=ITEMS[current]; if(!choice||state[ex.item]?.label) return;
+  state[ex.item]={label:choice,outside,note:"",pending:true,rater:ex.rater}; render(); write(ex.item);
+}
+async function write(item){
+  const s=state[item];
+  if(!db||!canWrite){ s.pending=false; if(ITEMS[current].item===item) render(); return; }
+  try{ await db.doc("checks/"+item).set({rubric:RUBRIC,label:s.label,outside_names:!!s.outside,rater_a:s.rater??ITEMS.find(x=>x.item===item).rater,note:s.note||"",at:new Date().toISOString()}); s.pending=false; }
+  catch(e){ s.pending=false; if(e&&(e.code==="invalid_argument"||e.code==="not_granted")){ canWrite=false; document.getElementById("offline").hidden=false; } }
+  if(ITEMS[current].item===item) render();
+}
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="TEXTAREA") return;
+  const locked=!!state[ITEMS[current].item]?.label;
+  if(e.key>="1"&&e.key<="5"&&!locked){ choice=LABELS[+e.key-1]; render(); }
+  else if(e.key==="x"&&!locked){ outside=!outside; render(); }
+  else if(e.key==="Enter"&&!locked&&choice){ e.preventDefault(); reveal(); }
+  else if(e.key==="n") go(1); else if(e.key==="p") go(-1);
+});
+render();
+(async()=>{
+  try{ db = await window.claude?.use?.("db"); }catch(e){ db=null; }
+  const conn=document.getElementById("conn");
+  if(!db){ conn.textContent="Not saving"; document.getElementById("offline").hidden=false; return; }
+  conn.textContent="Saving to this page";
+  let first=true;
+  db.collection("checks").onSnapshot(snap=>{
+    // Checks saved under an earlier rubric are not this audit's; they are left unshown.
+    for(const d of snap.docs){ const v=d.data(); if(!v||v.rubric!==RUBRIC||state[d.id]?.pending) continue; state[d.id]={label:v.label,outside:!!v.outside_names,note:v.note||"",rater:v.rater_a}; }
+    if(first){ first=false; current=firstOpen(); choice=null; outside=false; }
+    render();
+  },()=>{ conn.textContent="Not saving"; document.getElementById("offline").hidden=false; });
+})();
+</script>
