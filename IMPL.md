@@ -26,22 +26,24 @@ are read from each bot's own source.
 
 ## In flight
 
-- **Retraining on v2** waits on Qt's answer about access; RQ2's client corpora are recut with
-  records before its next run, and TIGRIS gets refined corpora before any GPU job.
+- **Label audit v2.** 384 examples under a two-question rubric; two blind model raters, and a
+  human's blind check of rater A on a published page. Agreement is reported once the check is in.
+- **Retraining on v2** waits on Qt's answer about access; TIGRIS gets the refined corpora, and
+  RQ2's client corpora are recut with records, before any GPU job.
 - **RQ1 re-registered around granularity** (AJ, 2026-09-22). Spec
   `docs/superpowers/specs/2026-09-22-granularity-redesign.md`, gate as code in
   `sphragis/experiment/decomposition.py`, Stage 1 text in `papers` on branch
   `p4/granularity-registration`. Crossed-interval coverage is being re-measured at 97.5%.
 - **Chromium, the third organization.** Host added and project set being scoped; the split has to
   qualify by 2026-10-23 or H2 has no confirmatory cell.
-- **FDLoRA's schedule**, the last unmeasured adapter cut: implementation and TIGRIS run.
+- **FDLoRA's schedule**, the last unmeasured adapter cut (PR #36).
 
 ## Next
 
 1. ✅ The seed effect at the half size is above 0.01 on both placebos, so five seeds (research log,
    2026-09-23).
-2. The sensitivity analysis recomputed at the half size, at five seeds, at 97.5% and 95%, for the three-cell
-   intersection, against the smallest effect of interest.
+2. The sensitivity analysis recomputed at the half size, at five seeds, at 97.5% and 95%, for the
+   three-cell intersection, against the smallest effect of interest.
 3. ✅ Sibling-half leakage on the dev window is below the registered threshold (research log,
    2026-09-23). 📋 The C++-restricted estimand beside H2.
 4. The decomposition's pilot on the dev window before 2026-11-20.

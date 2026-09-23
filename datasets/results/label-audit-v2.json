@@ -1,0 +1,4132 @@
+{
+  "provenance": {
+    "generated_at": "2026-09-23T21:45:50.291770+00:00",
+    "git": {
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  },
+  "rubric": [
+    "valid",
+    "non_actionable",
+    "unrelated_rewrite",
+    "partial",
+    "context_dependent"
+  ],
+  "models": {
+    "A": "claude-opus-5-5",
+    "B": "claude-sonnet-5"
+  },
+  "items": 383,
+  "excluded": [
+    "item-001"
+  ],
+  "labels": {
+    "qt:I47805c606fa32b6f370e0214829f2ea3e9bce83d:src/plugins/platforms/windows/qwindowswindow.cpp:4:4013": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Iddcaa8723b364fe4e8619f8fc2b03c93b685db86:doc/source/contributor/contributing.rst:1:111": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id2b311d12d5359086dbc1f7c09d24c362030eaca:keywords/cloud_platform/dcmanager/dcmanager_subcloud_backup_keywords.py:1:106": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I7bdc7bba2283cfc50fff6096560fdff88ceb3698:doc/source/storage/kubernetes/performance-configurations-rook-ceph-9e719a652b02.rst:2:188": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I7584e060b9fe3a1d81f98be624eab6176b92354b:controllerconfig/controllerconfig/upgrade-scripts/200-cis-benchmark-support.sh:1:8": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I5f289f09830e309ea76988c4ff44acf7d7ddf998:qsr/2.2.0.xml:2:3": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ibcbd931af9a3558cf7244699216bc716eba4850c:src/plugins/platforms/wayland/qwaylandwindow.cpp:11:601": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I90650c5550c812955fa57baae3044c89e427a34d:build-tools/create-prepatched-iso:1:340": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I6fd55cc9631f2b3fcb2f8fbef744d886f1fe3934:watcher_tempest_plugin/tests/scenario/base.py:8:954": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I259511f84cf8a71f46fc3df698cb9a8a462dc559:tests/auto/qml/qmlformat/tst_qmlformat.cpp:1:216": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Ia4e93e3df58180a9b525bda5dac48b5fea7b5779:keywords/cloud_platform/dcmanager/dcmanager_subcloud_prestage.py:2:31": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I3ea3d0cf42dc8e89a23a763defe84389da56366b:openstack_dashboard/test/integration_tests/config.py:6:229": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I83bd10033188d4adf3dc0f78ecd81bcafc68ccaa:cmake/QtCreatorTranslations.cmake:6:231": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ibe1633eef905053488b443bd0c9f62d11f24abc1:src/corelib/kernel/qmetaobjectbuilder.cpp:1:45": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia0e84b50941f84855c4a1525f97a0d21da0f3947:src/qmlls/qqmlsemantictokens_p.h:2:135": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I406fba710d005cd455588185b971567bbe1b8f57:src/plugins/languageclient/callandtypehierarchy.cpp:1:343": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:I7d2b31e5d6184f09d5e0c0fdc9e46f779878b7ca:roles/lxc_container_setup/tasks/main.yml:1:55": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I5d02e065ca383e776da540f82afe9a9afd1781b5:releasenotes/notes/transient_queues_ttl-d93c0e84d9ebc86a.yaml:3:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I96dc8a53bf31190d8c2f84421dc0790026e8a656:sysinv/sysinv/sysinv/sysinv/common/utils.py:1:4936": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1a6608a4c355a10a825f2614d7b708a165debf80:deliverables/flamingo/ironic-inspector.yaml:2:11": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Icb6878f7b27f96796f3418d4ad44d525add41ef0:distributedcloud/dcmanager/orchestrator/strategies/base.py:4:75": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I2bb4b6ea4314a219df083b9ef46b19b3eadcbf62:src/plugins/projectexplorer/projectwelcomepage.cpp:1:536": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I9fed464b84ae857bcc565145245ac287e8b22347:doc/source/updates/kubernetes/manual-rollback-host-software-deployment-9295ce1e6e29.rst:1:10": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I0cf6e3d961cab63079ebae76b9f1f5c6ae84802b:src/plugins/multimedia/gstreamer/mediacapture/qgstreamerimagecapture.cpp:2:91": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": true
+      }
+    },
+    "qt:I9c4cccf1b60c55320a149f97c86edea92a47bbb5:examples/demos/calqlatr/content/BackspaceButton.qml:1:60": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I0780b342d0886efa773a5af24066de11b6f3b621:src/corelib/text/qstringtokenizer.cpp:2:3": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": true
+      }
+    },
+    "openstack:I64dddbaba37f3f92b999845575223f8df7b9b945:doc/source/user/troubleshooting.rst:7:178": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:Id0e1ebe6af156a742b3c099104854cc9abaec14f:playbookconfig/src/playbooks/roles/common/usm-deploy-releases/tasks/main.yml:5:54": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": true
+      }
+    },
+    "openstack:Ib8a93336e41f7fa326d3a4be53f757fee3923643:tests/check-logs.sh:13:204": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:If6bcffa7bad3d9dc4c2d51f7f0629f725c536a04:src/Qt.DotNet.Adapter/build/Qt.DotNet.props:1:53": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Iae154b34109496f65277b481068d47b8c1043d11:share/qtcreator/qmldesigner/aiAssistantQmlSources/PromptTextBox.qml:1:97": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I45cf3bcf6e542319fed83613919d2e1398fcb2bb:magnum/api/controllers/v1/cluster_template.py:2:273": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I509d9e8c94fd968639f2c4eeb2bbbbd359331695:src/oauth/doc/src/qtnetworkauth-oauth2-overview.qdoc:6:91": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I81038d31e84763699355a2aeb125e81a1b0abe95:tests/auto/qttasktree/CMakeLists.txt:15:3": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I7a10ff06a08ed3c23c6596612c512fd76fe429ba:src/libs/qlicenseservice/httprequestmanager.cpp:6:68": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id161531af8f1dc083a321eac359f7178fb108abf:reference/projects.yaml:2:2613": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": true
+      }
+    },
+    "openstack:I223b035220788111502f4187dcb75f1d456c72f1:manila/share/manager.py:1:528": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie7c304a0dd76c8096e7c1f9b7cc3cfe7471649da:src/qml/jsapi/qjsmanagedvalue_p.h:9:22": {
+      "A": {
+        "label": "non_actionable",
+        "outside_names": false
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": true
+      }
+    },
+    "qt:Ia7d90951fd527433c6106fe5ef68b4ef1332f10c:src/libs/qmljs/qmljscheck.h:1:133": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": true
+      }
+    },
+    "openstack:Id40aad02198747112e10d9457b350cee6f6d643e:.zuul.yaml:10:67": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I9b6e31294ecd73dcc80ec541d6e9e27a303276a4:src/plugins/multimedia/ffmpeg/darwin/qavfcamera.mm:5:158": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I0091e403f208f8fcfb1dab72c121aebb9161a05f:src/plugins/qmldesigner/components/componentcore/utils3d.cpp:3:249": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Ia0fc953602b4495b1bb004f990814907084e761c:l3-routing-modules-config/debian/deb_folder/copyright:4:6": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I8d811479aaf82f94476c754520a0aa0d339b1413:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:5:9998": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I837b5d1571dce38801d6a0433e960734f573fedc:roles/build-diskimage/defaults/main.yaml:1:2": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:Ib100d4974474142e68f22372472a5bf4a0c801e8:horizon/values.yaml:2:342": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I9b586a86aacd776e2ed7261a37c441be9fff38b0:doc/qtcreator/src/debugger/creator-debug-views.qdoc:1:259": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      }
+    },
+    "openstack:I59b25093df9cf5aa77767492a5b9008bfa11cc07:releasenotes/notes/add-7c25db94790c671c.yaml:5:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie2ee9e62f9bc10753bd527a2b1a7edc5de46ca60:coin/platform_configs/cmake_platforms_static_release.yaml:2:18": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I869f1f64c7813965c713a2e8e21a307244afe730:src/plugins/multimedia/ffmpeg/darwin/qavfsamplebufferdelegate.mm:1:106": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I545ff38b990e642696dbce997a4ca77c6842b99c:src/plugins/qmakeprojectmanager/qmakebuildconfiguration.cpp:5:187": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ia6bc8b8213861486a0ab6209d16c1c3547e03562:controllerconfig/controllerconfig/upgrade-scripts/199-reconfigure-keystone-endpoints.py:10:75": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1b71990af38a8fd6c6258a49d2b94e16496fb274:releasenotes/notes/fixes-regression-network-connectivity-no-ip-a37a2d97379a93e7.yaml:2:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ibe21c342ae4c4d79c16d4058f90f5763e94d231c:roles/kolla-ansible-reconfigure/tasks/main.yml:3:13": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ie62c898f7d029caff797fd9eba4c5ddb36a90b78:lib/puppet/type/cinder_qos.rb:9:36": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie75baabe2bde8f61557d910b9623d4cc54e97ebb:src/oauth/doc/snippets/main.cpp:26:26": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ifa41d72ba8e5d5591e6a4850a5ada9d2a664f88b:src/multimedia/audio/qaudioformat.cpp:2:284": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ide96a4ef7d081fd38f96c65ff0d526f53729ef3e:share/qtcreator/translations/qtcreator_de.ts:1:53744": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I72701359de27561fa5082fab63386072828e981a:playbookconfig/src/playbooks/restore_subcloud_backup.yml:2:48": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6fdd804cf544511e5b6dae7c0c77b0791aebc469:doc/reference/modules/cpp-module.qdoc:13:2004": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": true
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": true
+      }
+    },
+    "openstack:Idaab3c0d1fdca4b15505a949182ceb1d987d3a7f:magnum/api/controllers/v1/credential.py:2:61": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:If6725257ed540f8bf5c47116800d884d93b4ea32:src/plugins/android/androiddevice.cpp:5:212": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:If03e083ffee3446341a37b8fd8fd8978bfc20745:src/plugins/qmldesigner/components/listmodeleditor/listmodeleditordialog.cpp:16:191": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I6b727deedf0c9ed10e2426d6bdc969b1acabd517:cmake/QtFeature.cmake:4:1141": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Icd4360093587fd4f70a122bcdcaac3ad9e949a79:src/plugins/qmldesignerai/aiassistantwidget.cpp:1:84": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Iaad9eb034348d559809108d254601d51719ff3e0:functions-common:6:441": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I132a5cb255be21a603bf92a50810450ff35a52cb:releasenotes/notes/podman-containers-config-154f36cbd6fd3f3a.yaml:2:2": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I19d5674fa9a4e3fa7df21e3e4e6c8c2b23259a4c:testcases/cloud_platform/regression/storage/test_ceph_robustness.py:1:30": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I0d7ff44d92bb6454101c6763bed29d9d8c92c136:helm-charts/custom/vault-manager-helm/vault-manager-helm/vault-manager/templates/vault-init.yaml:9:3906": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ib21a5a2670a67c8be2ba2606372bcdcc1c427676:cmake/QtHeadersClean.cmake:1:119": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I3280a9ebd342f74c48da2bf42dc23b7e9212accb:src/corelib/io/qdirlisting.cpp:1:520": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I1d84d56c9b984ff99683ef6f3cc3c5f3359b90a0:src/graphs2d/barchart/qbarseries.cpp:1:119": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I083284285879b5c2cbc9c41615767224faad05b2:ansible/roles/prometheus/tasks/bootstrap.yml:1:26": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": true
+      }
+    },
+    "qt:I02678169887048678e5e694b3b34246cb720aac5:src/xr/quick3dxr/qquick3dxrview.cpp:3:143": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Ia4b0ec7ec62d9de86f78a5dc398f1cf3bf95a1f9:software/software/software_controller.py:7:1994": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I956804491170b92686dc4de7b924371356b2626a:glance/api/v2/images.py:1:241": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I303619b415bcfbde359c8ec1f87d1d4a681c1d16:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/host.py:4:2610": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I451f73098ee8af9b562fe19fae8a92cfb2d8a5d0:releasenotes/notes/add-tenant_id-for-physnet-and-router.yaml:3:4": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I1e90cbb08d5268e54132e4c3dba510d211e11007:ironic/command/status.py:2:187": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Iafdba2c7579c742050ac8388d635fdd77d50a383:src/libs/qlicenseservice/servicecontroller.cpp:1:157": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia892eddfa0d0ae51b8db4719c9b932b707885509:src/common-lib/systemd.cpp:4:436": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie7329a36d17e7e3ae023e0bbe7fdbae0d8c18fd6:src/qdoc/qdoc/src/qdoc/qdocindexfiles.cpp:1:408": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I71f0880b973c2526cab3c83d80164b894d3698b5:src/svg/css/qsvgcssproperties.cpp:1:9": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Iaeb6786625c8c0c71c7b4e0ab9450c67bc13ed1c:roles/kolla-ansible-test-dashboard/tasks/main.yml:17:17": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I77acc2bcf207da2acd64af360f566b205d501cac:src/positioningquick/positioningplugin.cpp:1:54": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Icc66434781e779a98db40acc36afba31107ffd05:distributedcloud/dcmanager/orchestrator/states/prestage/states.py:5:92": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I7816edb6ebd8c95412a6833ea20b32193c2d1415:docker/mariadb/mariadb-base/Dockerfile.j2:10:39": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I025638528c7b7d17438a14b804e0b51de0eb1f1c:src/plugins/coreplugin/foldernavigationwidget.cpp:1:295": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I813cab3c89554d1e319b2b3e5c3affd8ec5d887e:lib/nova:5:1091": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      }
+    },
+    "openstack:I8f59ef9186431cdc377cf9060d179f2beb253944:releasenotes/notes/rabbit_transient_queues_ttl-046d931781e0a101.yaml:2:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Id330b1933f56ff845fa02d91680cec27855e56e3:src/gui/painting/qbrush.cpp:10:2424": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I3883268b30a9065757dcfffd6da4705a4aa44d7a:src/corelib/text/qstring.cpp:1:9355": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ibc104e6738b6b522880ab0306c2bf4a536652087:doc/source/admin/openstack-operations/network-service.rst:3:8": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Ie43bd590ba78977aaa5d8c395951780f81e7f140:cinder/volume/drivers/netapp/dataontap/block_base.py:1:261": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I3ca00cfd68e08278024b77095ae0cf865ec31084:playbookconfig/src/playbooks/roles/prestage/get-prestage-versions/tasks/main.yml:2:30": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I585e8a916d947c3da8d7c0e8a85cf0a8ab85f7f0:swift/obj/ssync_receiver.py:3:134": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      }
+    },
+    "openstack:Iddfdfd848b0c1ecf7619066d05bd2f06ff7ce92a:puppet-manifests/src/modules/platform/manifests/params.pp:2:116": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ieda9f7874d1b88d9bfeb593243eb867d0c274e9f:src/plugins/platforms/android/qandroidplatformiconengine.cpp:1:208": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I2fd3152d75b043a396f7c9b6269e623700077b98:cmake/QtFrameworkHelpers.cmake:1:58": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:I1ec8c790afc554e11431c5062187c4c2c6ce7178:src/lib/charm/openstack/gnocchi.py:2:110": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6b7e3e3d879454f29c0e8665b59f1eca6a88fea2:src/quicktemplates/qquickpopupwindow.cpp:6:357": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Id8852c35e9f3c415822ae96653560d6912681501:src/plugins/multimedia/ffmpeg/qandroidcameraframe.cpp:5:135": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I2ed989bc405d6dbcb6f169afef0eaf7170f34dbd:doc/source/deploy_install_guides/release/openstack/convert-worker-nodes-0007b1532308.rst:1:77": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I5baaccd0d4da7eb3451c64db67728c71d21c4e59:share/qtcreator/translations/qtcreator_de.ts:1:20926": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I417ee8fb5593f2206137d050fba2e7d497b3c7a9:playbookconfig/src/playbooks/factory_install.yml:1:19": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:I665ed178e4a2e01d7f94cac6b9d3b482c3ed17a8:neutron/conf/policies/router.py:5:219": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id0938c3fef6ccb9ceb556ce68a442393eabf2624:ansible/inventory/group_vars/all/ipa:15:87": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ie3bfb5544c2e2743e5ca7cb8f8cd1adfd8fb80ed:playbookconfig/src/playbooks/roles/rehome-enroll-common/update-ca-cert/tasks/main.yml:3:38": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I3f4ba272f44f2fd3132741ccc30b4442064dabdd:neutron_tempest_plugin/scenario/test_vlan_transparency.py:3:125": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I4783c1efebc067532f1392d1d5c2d841ad895f39:doc/source/index.rst:5:173": {
+      "A": {
+        "label": "non_actionable",
+        "outside_names": false
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": false
+      }
+    },
+    "qt:Ib202c9a65b7f8c37efa365ab8901e22709ed60ba:src/libs/utils/devicefileaccess.cpp:1:808": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I45291bc0f25b4f54d462db575fa3199e32dbd023:zuul/launcher/server.py:4:2304": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Icaeef15adebedc547cbe6a4150fa0584bcb4f4bc:tests/auto/corelib/kernel/qvariant/tst_qvariant.cpp:1:5749": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "qt:I5925fc6404d82a328c106cab784bd2176e4167b9:src/graphs2d/customchart/qcustomseries.h:1:55": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ib8a6d4ed7a3688bc543e51ea7e9f012746c9630f:src/plugins/texteditor/texteditor.cpp:1:1285": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ic37e67665205c3b735c97a3671b9480d244e6340:tox.ini:3:46": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Iee15c510a3c225f0142a518b7ba75c68a7bb0fa2:tests/auto/corelib/io/qsettings/tst_qsettings.cpp:1:3009": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I4fd93eab4bc0d6f28e193fc9db40954d9d0ec0fb:zuul.d/2025_1_jobs.yaml:6:147": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I95cde0545782400bdbb0e53d5a559f28a1184f06:src/core5/tools/qlinkedlist.h:1:3": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I3dc9530a5c239b708ce2f1068e12c7aa25bcd2b8:src/widgets/doc/src/qtwidgets-examples.qdoc:1:167": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I23af0d36448e9b659f6383d602d9dfa0e2798e60:nova/pci/devspec.py:2:418": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ifbd19947ba992589a00fdf7527380450aa328269:nova/conductor/tasks/live_migrate.py:3:232": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Iae02366e180eb9c4f304b68a3eea06119b017c58:share/qbs/modules/bundle/bundle.js:14:370": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1ec49e35a53abb8efdae639629cd819ccabbe620:sushy/resources/system/pcie_device.py:2:66": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I54ec9f11f92009fae70d0f97b70e8f2ba01c02ea:src/plugins/projectexplorer/devicesupport/idevice.h:3:57": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": true
+      }
+    },
+    "qt:I14fbe416567d552e7729ad8579fd9a763a3f6749:src/libraries/qmfmessageserver/qmailcredentials.h:1:71": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": true
+      }
+    },
+    "qt:Id00afe23000fc9e1ac3bfffd3ba9a8c7a531d8f6:src/corelib/text/qtextboundaryfinder.h:2:11": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I8d964c575ee0a4638c5f43cfa89745c783e036ae:releasenotes/notes/bug-2125572-fix-b0de27626125e6f1.yaml:4:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I12b0155a46b6e53c7870876b68cb389d737ed9f9:doc/source/storage/kubernetes/host-delete-of-a-rook-ceph-cluster-member-d4892a8f4364.rst:8:6": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6862beb8d61b1cf8a747bdc3ad02226691e6c3eb:src/quick/items/qquickrepeater.cpp:11:347": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I1418c8c144747b25d4cc39cad887560931ea7a1d:tests/manual/iconbrowser/main.cpp:1:393": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I5a0bc0aa4f79a04c81dfa0fee1d37cfee5935b0f:cmake/QtTransitiveExtras.cmake.in:7:27": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I1f6308e9c73da684cc564cfaddcd52e9dae824fb:src/multimedia/doc/src/includes/building-FFmpeg-configure.qdocinc:2:302": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I1769d2c0985a9a2a455d487490c240d08db45911:examples/multimedia/video/recorder/main.cpp:3:16": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I3a4279178a39a4ad9f834832f3616acaff092212:etc/kayobe/monitoring.yml:1:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I1006bf1464aa7cc4d7bc4991f90202e416859200:tests/auto/corelib/io/qsettings/tst_qsettings.cpp:2:2970": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I21e084d1dda95b0d08ea7c517a5651caf01697f9:src/multimedia/doc/src/includes/building-FFmpeg-prerequisites.qdocinc:2:179": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:Ia915a65313394910c74ae826c912b5549e833a7b:test/s3api/test_versioning.py:2:675": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": true
+      }
+    },
+    "openstack:Iba84bbe5da541700d20a445818a4a0d584f1eca8:ironic/common/image_service.py:5:542": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I2ed9693aea1bf7ab6d3f4ca1646ec095f8f7f82e:src/libs/qlicenseclient/licenseclient_p.cpp:1:641": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I4cc522856bf9a7fefeea2ea498de5f67d503b86a:src/libs/utils/macroexpander.cpp:2:656": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I01b314678ffe376faa4de36fe8a8b599269a1933:src/plugins/qmldesigner/components/componentcore/modelnodeoperations.cpp:5:938": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I5193b17b50a245c80136e770a9ee962ea184e466:pyproject.toml:5:7": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ie20150450564ef8eb9c810e2873a826e7fb466f9:doc/source/locale/ru/LC_MESSAGES/doc-admin.po:2:553": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I62fcde6ca244419e7772f591e77b6131d064f432:scripts/qmlbenchrunner/build_and_test.sh:1:80": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "qt:Icd700154dc89219f115fa3187c037d65451d0059:src/qmlcompiler/qqmljscontextproperties.cpp:21:118": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": true
+      }
+    },
+    "openstack:I662721d3e1e81af0324fe4fc83ca352425f497e4:tools/nocloud-factory-install/seed-config/run-cloud-init-from-seed.sh:2:150": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I9dfcfe4a0d2c0be36fb0a5fbf5975c7d466ddef2:src/plugins/platforms/android/qandroidplatformscreen.cpp:11:128": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ia591a4868856f1f90a49c2dc13119f4ba307ca79:distributedcloud/dcmanager/cmd/orchestrator.py:8:1": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia4d80455a04453d2e6b173a9d7e7c5df39e696ce:tests/auto/widgets/widgets/qmenubar/tst_qmenubar.cpp:5:1568": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Iadbbeba73d0411f6c13b1aae49438684e00d2362:doc/source/backup/openstack/back-up-openstack.rst:1:21": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ib574efb19840a7c857707cb08c9817197868f24d:www/2026.1/index.html:2:16": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I7175688e1cadb25fdb43297cb6e6e9b9e28cd128:specs/2025.2/approved/add-skip-actions.rst:2:113": {
+      "A": {
+        "label": "non_actionable",
+        "outside_names": true
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": true
+      }
+    },
+    "qt:I83d7a3ea7b9bab98889791bb807988a74e355b93:src/widgets/itemviews/qtableview.cpp:13:1063": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "qt:Ia8e11779859195e1bd4e08417c365a030cd5ac4c:src/dbus/qdbusargument.h:1:125": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I7689161adcc002d3b45c69a03fcd1deb0fe18fe2:doc/src/platforms/android/android-publishing-to-googleplay.qdoc:12:135": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I2f22ebdc3cce709d31d7fbc266ef00e12647a9ec:testcases/cloud_platform/regression/security/test_cert_manager.py:2:89": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Iea48c2b125d2a6121555999c1f0f239283eeb722:src/plugins/android/androidbuildapkstep.cpp:1:688": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I06fae1ca546a11a71c33e4f154f202977494ca51:src/qmlls/qqmlcodemodel_p.h:3:186": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Ia808898d07d08b9d81184696068bbda65ba330d2:src/3rdparty/yoga/REUSE.toml:2:4": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I02cb446cc67e446886f4c54e7e72ccc3f4484f54:include/qdotnetobject.h:7:355": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I0d88b08bcf66b60f1be01156f1ae723b04507e12:src/graphs2d/piechart/qpieseries.cpp:7:1184": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6d504d354f63f441c90df21f933fd800fafa655f:src/network/socket/qnativesocketengine_unix.cpp:2:241": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      }
+    },
+    "qt:Ic91cd88d74502668726a3a159b6db13cbfdfa6c0:chromium/chrome/tools/convert_dict/hunspell_reader.cc:3:33": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I6b840877180bd4c301627694cc98670001567373:playbookconfig/src/playbooks/roles/prestage/sync-software-metadata/tasks/main.yml:7:80": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1f08f9b9064d9f7e95b07944db0e7ebac3120c57:zuul.d/base.yaml:7:9": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I7653eb186091a84559ae28935f7af9a72bbeee91:doc/qtdesignstudio/src/components/qtquick-components-custom.qdoc:1:110": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I8d6c9571f9a00ab36f09537a6be4a343b3fd9a84:src/libs/cplusplus/TypePrettyPrinter.cpp:1:347": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ia7b69ab9ed83c672d39d9fe2248ee35fc20424f9:software/software/software_controller.py:1:2237": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ibb8e8d8a1d66fcfa1ece425edf01208870b10f36:configure.cmake:3:1577": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I897ebead743f78d2a957a09469ce7ff3317aa930:tests/auto/qmldom/reformatter/tst_reformatter.h:8:453": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I79f48ef021d19dcba0923ef06690433d167c4ea6:src/plugins/networkinformation/apple/qapplenetworkinformationbackend.mm:2:202": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I24bc3e97194286d9a06116562a392e2395382258:zuul.d/devstack-tobiko-neutron.yaml:1:62": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Icd8f8d80c6a4b9bd2b33c660394b9cf5a228a346:src/qml/jsruntime/qv4function.cpp:12:151": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I63b17d640efa240e223f506333538a54b121de2c:src/libs/nanotrace/staticstring.h:3:57": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Ibea47feefeffebd64a43a1a1ec5f00687b246ea6:tests/auto/qhttpserver/tst_qhttpserver.cpp:3:339": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I90cbcaa801790910aa9880060b4d0d7f9a999dad:src/core/doc/src/qtwebengine-security.qdoc:2:14": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I12b201da3e742b55f6cfcf71bdd4413cbf3ee4e5:watcher/conf/cinder_client.py:3:30": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I1b5c441cd7448898e44f8d829b91202e68168666:sources/pyside6/tests/QtWebView/test_webview.py:5:21": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I1035e70f79226da1a0b222127764ff3296a0b37c:src/plugins/android/androidrunnerworker.cpp:1:861": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I2c76b23536ee96379373504ffbff9e709531a0cf:src/runtimerender/rendererimpl/qssgrenderdata.cpp:7:748": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I3ad086fa3222eda6edd1d3a314b13cb0bde161ef:distributedcloud/dcmanager/db/sqlalchemy/api.py:22:1796": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I33679c68e8e984deb92ff117bf5dd9d4fa4e351b:src/plugins/tls/schannel/qtls_schannel.cpp:1:1244": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I7153d5ac02e35c94693414f8c025dfa438475874:releasenotes/notes/rabbit_transient_queues_ttl-a2e5b7f03fb3a60e.yaml:2:5": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:I2aa6e0d349d7fe3931cf95e0375aafa362a47bd4:specs/2025.2/vim-key-for-multi-master.rst:3:37": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Ib1c29645e091cf2f3c08db4d7129b045898440bb:src/plugins/ios/iosrunner.cpp:24:592": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I869d2517b166e29023351a681127b7b0aa4bf692:patch-scripts/install-scripts/24.09.400/post-install.sh:1:61": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I6b77e0737af7313fba199afc6b9721c7ef48e2c0:mtce/src/heartbeat/hbsAgent.cpp:1:2": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:If2a387ad9ad437c05b0397a9bf86604180f15c18:software/software/software_functions.py:3:1041": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      }
+    },
+    "openstack:I4fd2fd89bd666c2466be5af2c15eb5134de0ce48:ceilometer/volume/cinder.py:2:35": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "qt:I1b9efd998922f4e6fa20564710266a012b9de600:src/quicktemplates/qquickscrollview.cpp:4:514": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id9f851f33c2cb3d2c2759a3c66adf2599a3122fe:neutron/plugins/ml2/drivers/ovn/mech_driver/mech_driver.py:9:320": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I4eb6fd5c70809cc7dd3ac86f206f3e8434ecb1de:collectd-extensions/src/plugin_common.py:5:105": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ib4c7903e85ba9cb75a9e013d1032653ea0ab8b84:src/corelib/thread/qthreadpool.cpp:2:484": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I3ff3cc51fc980e7ef7f199648d6f00a6a94093e5:doc/source/deploy_install_guides/release/bare_metal/pxe-boot-controller-0-d5da025c2524.rst:5:153": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6b6f91c5c5369d8dee828e00067b064c9bab3969:src/linguist/linguist/doc/src/linguist-manual.qdoc:2:576": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia21fd9a75d14fadefd4f9dd392aa908e1c84d274:src/client/CMakeLists.txt:3:189": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I7d98921fe6f2819a6427bc826d640a6685a00da7:openstackclient/tests/unit/network/v2/test_network.py:1:340": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I56aa406a3c629acb2a5cc2b9ec9e5323743898d9:src/qmlls/qqmlcodemodel.cpp:2:748": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie2ad3268d15db59359bc83485ce48784ed29538c:src/libs/3rdparty/cplusplus/Bind.cpp:1:2109": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I18b7b75586bede3d2abd777b19fc26cd9c47c40b:src/plugins/multimedia/ffmpeg/qandroidvideoframebuffer_p.h:2:31": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ibfec384b6e5421cb64255a5a52a43001724bf301:src/core/web_engine_library_info.cpp:4:168": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I45e12ce715708eb67449dc73db8cffcf3cc70234:reference/charter.rst:1:172": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "qt:I390aaba45f324693dc47d7d0110fdb22dc9aca61:src/android/jar/src/org/qtproject/qt/android/QtSurface.java:3:40": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I66060939b27c561a43cc7642521de44f785b9fef:share/qtcreator/translations/qtcreator_de.ts:1:19441": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I1978ea26d3946c8f905f76d18192c5f1ced1e647:src/qml/jsruntime/qv4urlobject_p.h:1:127": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I8aea53d300631b0e855ce0209534d5f73bae29af:keywords/k8s/files/kubectl_file_delete_keywords.py:2:20": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I52e81bd588e0b535d358a5e6c624f5feb80341d9:software/software/software_controller.py:2:3225": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I456b35e6ddd0e048ee64e868ba8a9dcab06ee482:doc/qtcreator/src/howto/creator-only/creator-autotest.qdoc:1:36": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Idad308d8523120a2b6a2cfa76207f9fbcc3802ef:testcases/cloud_platform/regression/dc/backup_restore/test_verify_backup_without_images.py:1:49": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I7ef325e513f70a5c71cd1b9bf9cd9e142bde4b02:playbookconfig/src/playbooks/roles/prestage/sync-software-metadata/files/ostree-metadata-sync.sh:4:536": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I5fd593e58b0d33541a63ebb817ed8f3c0a62071c:ironic/api/controllers/v1/ramdisk.py:8:61": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ifde81be654ca73cb88515804b38a6e053f1409ac:manifests/designate.pp:1:54": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I75e4b4b552172fb33b06e2d404ddd53b5813b916:sushy/connector.py:1:405": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id1eced2e0a30044b0da7dd5f4f2dedc50a5297b6:ironic/tests/unit/drivers/modules/test_image_cache.py:2:264": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I8260a742c7ce03d9ae08d78e7bfdc37d8965d7f5:src/qdoc/qdoc/src/qdoc/location.cpp:2:333": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I78b33cbef4f94abbeef88c7a970d3c33bbeda274:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:1:20011": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ie1b9d224d1281000fb44732e8e9735a015370cfb:tests/all-k8s/smoke.yaml.j2:4:408": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia1b9b91d3e0d4458698d982b6aa590121dca37de:doc/src/legal/licensechanges.qdoc:1:131": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Iebe7de0833a47955d5f5b3cca454da96a7d8c5e2:doc/qtcreator/src/ios/creator-ios-dev.qdoc:1:89": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I5b3aea4676909317cc28b86c2b8fc5e71f8f8a70:src/httpserver/qhttpserverhttp2protocolhandler.cpp:1:312": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I56088673271ee6410ad712ff6152969aae390bf1:whitebox_neutron_tempest_plugin/tests/scenario/base.py:7:66": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I1a67ab33c3040cfab0538f9d7cf9eb14ee2dd302:watcher/common/executor.py:4:55": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      }
+    },
+    "openstack:I02743fed90cb44c1b9e92666c1db257a5f4cd810:distributedcloud/dcmanager/manager/subcloud_manager.py:1:3549": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Idde6ec9a9997dfb917c2b2402a4dff4f909c965c:python3-k8sapp-openstack/k8sapp_openstack/k8sapp_openstack/lifecycle/lifecycle_openstack.py:3:191": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I64690202979a0206fea9ea1d05c9e345168869ce:src/main/resources/cpp-qt6-client/api-base-header.mustache:1:161": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I3d18ad117dd0c49fcec2fffdcb29534e64a438d9:tests/auto/network/kernel/qnetworkinterface/tst_qnetworkinterface.cpp:1:201": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1258398790a2e377db7282a7a4b84a5409cf09b4:manila_ui/dashboards/admin/shares/templates/shares/_manage_share.html:1:10": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I9127d7c1b4a30b9a8279a73787a7ea75a3e0966b:src/plugins/python/tests/pyprojecttoml_test.cpp:10:7": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I31fbb3c5e689302713bfb7a254c5d0cc12de2dc4:nova/api/openstack/api_version_request.py:2:260": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ib87a6c8ee29952616152c2098853078b7a8de116:doc/source/admintasks/kubernetes/harbor-as-system-app-1d1e3ec59823.rst:11:10": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I3e8afba8986011ae3b1371e93297963d57fc9a87:releasenotes/notes/drop-tinyipa-support-628b5a8d92b4af15.yaml:5:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I658d5d195bec26938f1939ab89c7a12f2231d9eb:doc/source/updates/openstack/apply-update-to-the-openstack-application.rst:2:117": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I0c544bd712d3b0726a1f557bbcd238f17adde948:src/tools/qtopenapi-generator/src/main/resources/cpp-qt6-client/common/HttpRequest.cpp.mustache:3:461": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I564e692881693abd4794df3c444e245705d24b54:roles/image-upload-swift/library/image_upload_swift.py:1:144": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      }
+    },
+    "openstack:I412cb9933c4cdd2662561fafcfc1c18fceccc0c3:tobiko/openstack/nova/_checks.py:10:127": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "qt:I76009831fe1161445869dc4ee96b715e613c73cb:src/android/jar/src/org/qtproject/qt/android/multimedia/QtCameraAvailabilityListener.java:3:87": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I94d3ef9ccdeea45c5ef1c1eca2b49eebb6883cc4:src/multimedia/darwin/qavfcamerautility_p.h:1:106": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id7d0c8e7ba37993b1084519d05e7e2eac095b81b:neutron/extensions/tagging.py:1:175": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "qt:Ieb89cc9fc34078017f792965fd1b8dca3a3bf503:examples/demos/CMakeLists.txt:24:48": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ic7613c16a2c38b9ff89884f50001c9c90c401850:octavia/templates/deployment-api.yaml:1:22": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": true
+      }
+    },
+    "qt:Id5bef60ae7c6e178ed9b2f8391224d05eda54662:src/remoteobjects/qremoteobjectrepparser.cpp:4:33": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I35e93d2257bd65b7010d14293c2aff17e45302a4:zuul/launcher/server.py:1:375": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id04b66bc446035e200ae1a5efbac12bf69f48282:doc/source/_includes/deploy-software-releases-using-the-cli.rest:12:5": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ic63ac71c3253fb24ffef8c954bc86fcb46e59ad7:nova/tests/functional/regressions/test_bug_2044235.py:5:22": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I3c509c1804a14bbdf724f47b24100feaaf2c4e09:testcases/cloud_platform/sanity/test_dc_sanity.py:1:211": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Ib10be3461d8bfccc610482dea0090432088ca553:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:2:10771": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I0ab856f56ff4e03cfff30075de938ae7178ebbff:api-ref/source/v2/routers.inc:2:167": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I91a3b6766974b3643b75b604cae2c046848b171d:src/libs/qlicensecore/pipe.cpp:2:75": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ibe9b54285bdc3f9906f485e865632bb7633b609a:src/plugins/qmldesigner/components/contentlibrary/contentlibraryview.cpp:1:83": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Ia36027269da51fb2d7e0223daef9fcbf642a8b52:openstack_election/cmds/update_governance.py:1:79": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I796f445e0b883abc2aea613f1fed6f17c4d93dcd:src/xml/dom/qdom.cpp:11:1047": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I06d6f0f0bf6beb758f54423e16e9c5653ed8edf1:src/gui/painting/qstroker.cpp:3:1198": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      }
+    },
+    "openstack:I6b17f6de9137a2e37f77113ce40db7350faa50a3:doc/source/planning/kubernetes/verified-commercial-hardware.rst:3:125": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia2c375ee590a59a86b598d0f6c3ac179b418143e:src/multimedia/pipewire/qpipewire_spa_pod_support.cpp:13:101": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I517aa1da90ed53a5fc013d28530aa1d41a946a79:src/oauth/qoauthglobal.h:2:12": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I0c6ef4ca8170929360bdaef33882acee209eb7e9:src/corelib/itemmodels/qrangemodel.cpp:2:16": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I22d9aaa7dfcb586e0fcb940090ff4b9516229c71:tests/auto/utils/process/tst_process.cpp:2:981": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ic31847e2119b0d28bee0897a7d7f36aca1311813:software/scripts/deploy-precheck:3:113": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ida25ec148ff4f28a15a28818a15d811df84b7cb5:config/security/files/default.json5:2:15": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Ie34d7d0b22a62c9f454f13652eaaf48f70251477:src/plugins/cmakeprojectmanager/cmakekitaspect.cpp:1:960": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I110c0fff29407f47685f3b8920824e46b7e811a9:src/common-lib/console.cpp:1:226": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I64052894ccd1f2cc97ba1be1b82f33a6d741c15c:kubernetes/kubernetes-1.32.2/debian/deb_folder/patches/kubeadm-platform-pods-zero-cpu-resources-readiness-p.patch:2:84": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I2d5ae43bd378f52ecb30769efc3f362cb24cb489:releasenotes/notes/bug-2114737-29d8a4ff2b76e3e0.yaml:4:4": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I101e399d708829f93fe734fc67543bf7655220df:pbr/_compat/metadata.py:5:211": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ib73c04d94690440533e75779633e434c6ed82c30:playbookconfig/src/playbooks/roles/common/install-sync-software-metadata/tasks/main.yml:2:64": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I57b52e5cd3261396d6d73fe13a9683d7cede9386:include/qdotnetmarshal.h:3:38": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I7d0789e0272aa43e18dd5de55656f046f0d381d9:software/software/lvm_snapshot.py:16:255": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6ac4fe10b5a1091f524cbe0f359bdcd50dd5cfa3:tests/benchmarks/corelib/platform/androiditemmodel/testdata/src/org/qtproject/qt/android/benchmark/BenchQtAbstractItemModel.java:8:22": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I5c6beff1a670ead5a545d7c94417ce240d5d831f:kickstart/files/kickstart.cfg:2:3188": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I32b58022c67305b138e0546409d579e2ad0b5b1d:nfv/nfv-common/nfv_common/state_machine/_state_task.py:1:16": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I09fef07438a569c5db6f4e28803a7aaf2a57089f:neutron/conf/plugins/ml2/drivers/ovn/ovn_conf.py:1:175": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1a8ebc171da8990b21f03e6d5c3da296eef92e28:tests/test-openbao-passwords.sh:5:25": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id055a4ddbde3dbe336717e5f06ca6eb024b90c9f:ironic/conductor/servicing.py:1:98": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I97a208fe92ac56921f47fbe49086d9a9d95ef7c9:src/plugins/cmakeprojectmanager/cmakeprojectmanager.cpp:2:390": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I780b4631e5826aceba15406ebbcb06ca55a9ea2b:neutron/tests/functional/plugins/ml2/drivers/ovn/mech_driver/test_mech_driver.py:1:115": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I77a3acdd20c694dce38d809db9c3051949a98fa3:src/plugins/styles/modernwindows/qwindows11style.cpp:1:920": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": true
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": true
+      }
+    },
+    "openstack:Ia4d13ff6a2aff464b9c97b1c17266b03b64eccd5:specs/2025.1/approved/image-props-in-server-show.rst:2:36": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ib45005e0d88d9fa0eeee504000c948a55afa770d:doc/source/admin/troubleshooting.rst:12:197": {
+      "A": {
+        "label": "non_actionable",
+        "outside_names": false
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": false
+      }
+    },
+    "qt:Ic16643ed53766104cdca464c269baddb0100e69b:src/plugins/projectexplorer/windowsappsdksettings.cpp:2:414": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1469d4e1ffc219f233a6c28db5c551ee2900e121:helm-charts/upstream/telegraf-helm/debian/deb_folder/copyright:6:26": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Ie37d5ce2211294a80fc9165bb09dacc0acc10095:examples/demos/mediaplayer/doc/src/mediaplayer.qdoc:1:16": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I764c25386803982644ce05403810dedc3bb7ddcf:distributedcloud/dcmanager/manager/subcloud_manager.py:5:595": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": true
+      }
+    },
+    "openstack:I3aa0ed8431b3a94bb8c36b90bdad5aab336add7f:framework/runner/scripts/test_executor.py:1:115": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Iacf1aca27a8f6142756860e5d89130d50178d259:doc/source/releasenotes/index.rst:2:83": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Idbfbdd8b072d46b61f01ab377b9d6b11c73d0ea9:doc/qtdesignstudio/examples/doc/treadmilMcu.qdoc:1:105": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:I3c32e4e050363dbbe431dbe7ad2e5aa310767410:keywords/cloud_platform/sync_files/sync_deployment_assets.py:3:60": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Idc7cf78213c6784650f9efa838f7fcec4d1c24c0:src/plugins/qmldesigner/components/componentcore/viewmanager.cpp:2:638": {
+      "A": {
+        "label": "non_actionable",
+        "outside_names": true
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": true
+      }
+    },
+    "openstack:I894af04db659f8a0d92f6d57bacb052c5728e9a8:zuul/model.py:2:2949": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:If00f3b87922c19eb59df1d6c73afdba46172f5a1:doc/reference/modules/cpp-module.qdoc:1:188": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I17e95b27c0f51c92dfce30f7ad3dcdf1c98fc55e:requirements.yml:3:24": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I4751efbaaf9398ff8e15bcc50ab86a970cbf0476:sysinv/sysinv/sysinv/sysinv/tests/common/test_app_dependents.py:4:440": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ia69603c8ffe85a9b29bb699a3dea560516f82d40:heat/engine/clients/os/nova.py:3:824": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I383c67a16c7f778a5ffdeca494388c134543c64b:share/qtcreator/qmldesigner/statusbar/IssuesPanel.qml:2:75": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ib655eae79ba73f4582b29fef82c2d882a474329b:ansible/group_vars/all/mariadb.yml:16:23": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I5dd66a175b3f7eecf793d67394cde136175e5d1f:src/corelib/io/qfileselector.cpp:3:344": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I54fb4b2f379c2d06a7c49402d32403aa2ee67e70:ironic/conf/conductor.py:4:558": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I8d48c597a85e063c585a433adc8d5d513b0a5cd6:distributedcloud/dcmanager/common/utils.py:2:1309": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      }
+    },
+    "qt:I5e08973fb2d227c735a40d01f6404f4424897272:src/qmlls/qqmllshelputils.cpp:3:107": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Id6ab9de0972c9756aaa66adda4e5bbe4884c82b6:src/gui/image/qimagereader.cpp:1:162": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Id74829752a1c4dceb9dcce40ef9e4ba5aea65dd9:doc/source/guest_integration/kubernetes/integrate-application-with-notification-client-sidecar.rst:1:113": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I267250faae4a062ed514a2e0bccca57f7bd8a0b3:src/network/kernel/qnetworkinformation.cpp:1:426": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I98c246739d3157e02da77b885520f3db3bd6510d:doc/reference/items/convenience/loadablemodule.qdoc:5:44": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I40f2be4d12258eb600e9b23b2869fbaa18f40650:keywords/cloud_platform/system/host/system_host_swact_keywords.py:2:51": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Idf10d481cedfe1cb5bd08c86e57a844e502bd6ff:src/android/templates_cmake/dynamic_feature/build.gradle.in:83:8": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I58445f18fc1989a57c49b438137d76b8cdf87768:doc/qtcreator/src/overview/creator-only/creator-configuring.qdoc:3:150": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ifbe88a0617d7a342df8d1980e6cd44425313c487:doc/source/dist_cloud/kubernetes/subclouds-previous-release-management-5e986615cb4b.rst:2:645": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie9f252b972bd7ee176723afd8a2328b301e65a2e:doc/qtcreator/src/howto/creator-only/creator-telemetry.qdoc:1:23": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Ie53f34d32978b453ccb66d5d2e93b5c9a8c0713b:service-mgmt/sm-common/src/sm_hw.c:2:2": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I8e4422871e577848d6831fc4e360e22072bbb2db:debian-mirror-tools/config/debian/common/base-bullseye.lst:1:786": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I9cc8e54cf94ecc65ac93d01671f8778be2f6dc78:devstack/lib/ironic:2:183": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I2745978bce62b1ea247277316cf50cb28385fe17:zuul/manager/__init__.py:2:344": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie3ed8237295395f2707e48b10d422aec6f14bff3:tests/auto/gui/painting/qpainter/tst_qpainter.cpp:2:5688": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I11696bc158b89fda23ce328c7f34773b093b0575:releasenotes/notes/supermicro-vmedia-dev-workaround-cc7a870c9a99d92b.yaml:3:4": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:I31a4148adaecc019f4f0df068dda88d2f4558efd:manila_tempest_tests/tests/api/test_rules_negative.py:1:374": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ib432c7e76c8fdc0aace13a07b6db2cc7bc2f3854:src/plugins/qmldesigner/project/qmldesignerprojectmanager.cpp:3:204": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Iaf3c4de859986629f9768563a319fe0385acff6a:doc/source/contributor/versions.rst:4:36": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I54fe9590cf2d2a4595e57bfc6e46a46deb982471:README.md:1:61": {
+      "A": {
+        "label": "partial",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ie23b747382094d91476457ebbeee0af768902e9f:distributedcloud-client/dcmanagerclient/commands/v1/subcloud_backup_manager.py:3:362": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I08a44995d007fdff839291b8fc7db9fe3079af31:src/quick3d/qquick3dviewport.cpp:6:254": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I97e3415ec3110374cf95d244cd75bcdf6c5e7871:doc/source/user/resources/compute/v2/console_auth_token.rst:6:2": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I4c3fde7dc566a4f0d191106e0c37bcce907edd75:src/qdoc/qdoc/src/qdoc/aggregate.cpp:1:351": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I77d255d7c868779e9ea700ab83c7e77373fdffb5:glance_store/_drivers/s3.py:1:851": {
+      "A": {
+        "label": "non_actionable",
+        "outside_names": false
+      },
+      "B": {
+        "label": "non_actionable",
+        "outside_names": false
+      }
+    },
+    "qt:If538ed3dac4d8195e96157c595bc63e991a5ee90:build_scripts/utils.py:8:1174": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I7372e541faccdb7dec9083e36b673013a9a4ce5e:src/protobuf/qprotobufjsonserializer.cpp:14:219": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ib84f4c9f694a92c93dc94ceee85244b95ef2f644:doc/src/getting-started/installation.qdoc:3:34": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6f3f5db1a3f81100f316af70ded1c75ec0acb245:src/corelib/doc/src/qt6-changes.qdoc:1:493": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I197107c03ae7b4f2c3422e213faff7b181b29d19:src/libs/utils/layoutbuilder.cpp:1:1108": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1128f44c2d1731407969fdea337f7923efe91ade:requirements.txt:18:14": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ife470888c8e62039e6157ff2ab86a2a628f2e3e2:doc/install-guide/source/openstack-services.rst:2:21": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I47eb96da87bf4e3f1052e9f455943d9dea3121d1:src/corelib/text/qtextboundaryfinder.h:2:68": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:Icccc5057c316ea325fee2b62807e14b201c6ca89:doc/source/developer/specs/kubernetes-operator.rst:3:289": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": true
+      }
+    },
+    "qt:Ib00c26989b0400d3aad48882f5c9f8fc1b5bef40:src/plugins/qmldesigner/libs/designercore/metainfo/subcomponentmanager.cpp:5:375": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ica87d2cae2db957beb2fb0a305410e5711354a44:src/Qt.DotNet.GenerationRules/Qt/DotNet/CodeGeneration/Rules/Models/GenerateModel.cs:19:156": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Ie77ffec5016dd6a969ae5e327f40800cf9df74ff:doc/qtcreator/src/projects/creator-only/creator-files-creating.qdoc:1:100": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I9764c615e38c82a83d93fb6e36a50b98b4ecef4c:share/qtcreator/qmldesigner/effectComposerQmlSources/EffectCompositionNode.qml:8:319": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I431e7e1aba6f7e64a2d5a0c1273ab7b008b962de:src/quickwidgets/qquickwidget.cpp:3:179": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I11263d2cf97088fcb495bce6ae7f1551ab1c9ad3:testcases/cloud_platform/regression/storage/test_ceph_rook_operations.py:1:162": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I2d6a74b407a7981905a9b86e97004cf0609a4bf0:src/quickcontrols/basic/qquickbasictheme.cpp:6:17": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I89a2a7eb802879ee9a4ae42fe21dd7a2cea1ee46:test/s3api/test_input_errors.py:2:1598": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I80c0ac47b48ed1b32b0a91f75ff77613c07eede1:patch-scripts/activate-scripts/examples/01-restart-services.py:10:178": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ic5ab1ea84063d9fc93d3f7e920ab305c5b049076:src/libs/utils/qtcwidgets.cpp:1:608": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I5b6efe423ede6fce66e2a8b6d39136f1dba2a21e:share/qtcreator/templates/wizards/projects/consoleapp/wizard.json:1:57": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:If89905f686148bf0fa359023d98f14e1f5993fe8:doc/src/cmake/cmake-manual.qdoc:1:587": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I5252164c46de1c29f1af45b89a186caace36259e:src/libs/utils/textcodec.cpp:2:114": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I04c8a3f1ffb9e4a649024087626c4d7846ca01a0:tests/auto/quickcontrols/qquickcontainer/data/zeroSizeWithRepeater.qml:7:56": {
+      "A": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      },
+      "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      }
+    },
+    "qt:I3c1c0bd1c86988285af2c3cba74add01ca9dfefb:doc/src/platforms/windows.qdoc:1:1109": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I6410963385c15899f49b60cae60b2200e8d13012:sources/pyside-tools/deploy_lib/deploy_util.py:2:45": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I08296a614fc7d6944de0f99cd6519fa7d8316143:tools/nocloud-factory-install/factory-install/systemd/utils/send-factory-sel-event:2:41": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I9a799096d876953f6e3818d49a661155e11d5ee3:meta-boot2qt/classes/qbsp.bbclass:1:136": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I60fbc2bf6f3f998694257a62c8c1bfb2ce4995a2:doc/source/node_management/kubernetes/configurable-power-manager-04c24b536696.rst:1:163": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I8b4f0a40ee0825216e214ccee2c48d56e285d88d:doc/source/admin/scale-environment/replacing-failed-hardware.rst:2:21": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ia814e1f719b2b77db9868b8cd82515886da74596:sysinv/sysinv/sysinv/sysinv/common/kubernetes.py:4:1417": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:Ic3473dfc33dcf22f5be727236fe546b70b2b015b:src/tools/qdbusxml2cpp/qdbusxml2cpp.cpp:5:83": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "openstack:I0e4585e85426e57d3a2d6fc86ac2d6df00c09c79:vars/redhat.yml:9:42": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "partial",
+        "outside_names": false
+      }
+    },
+    "qt:I3a0f0f0e79d6490a1e37b84fafaea7980797ef25:src/plugins/qmldesigner/libs/designercore/projectstorage/projectstorageupdater.cpp:2:1449": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I382af7eaa644b43474336bf6e1b1c3c2afc648c3:.zuul.d/project.yaml:30:55": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I056beb9e878318da6f3aa249384ded7a8f614a1f:nfv/nfv-plugins/nfv_plugins/nfvi_plugins/clients/kubernetes_client.py:8:532": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": true
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": true
+      }
+    },
+    "openstack:I6de041f5c12dca2618d22d1271efe242b2f35258:swift/cli/manage_shard_ranges.py:4:967": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Ie1707864d34e098ba758d9daddf21cd8811cda7c:patch-scripts/start-scripts/24.09.400/pre-start.sh:2:32": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Icba6cc0768169ef0b7110dce4502d4fef7c73e2d:cinder/templates/job-clean.yaml:1:58": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia8375615ade18fa1fea3bb42fb6dc560398166d3:src/core/profile_adapter.cpp:1:901": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I86bfe53193a7ecfe857a16e19e81ea20650c5c06:doc/source/security/kubernetes/https-access-overview.rst:1:131": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ie113a47f0ff0e9a7b26a6d0f47e17d24a4a88465:src/corelib/tools/qlist.qdoc:2:1643": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I116a5e1da6c9df5e4237073481d71efbf956f27f:src/corelib/text/qunicodetools.cpp:1:126": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:Ib3c7623e954de1849ea3c89a01498ebd12d5d923:zuul/driver/openstack/openstackendpoint.py:2:794": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Id60df140f410ecc878f6c28f0ca0e8c6cb0ac611:keywords/cloud_platform/system/host/objects/system_host_route_list_output.py:2:97": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I5b0118dc8ae19f446c64be33fe3c03b45c5b4527:src/plugins/platforms/wasm/qwasmaccessibility.cpp:2:105": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ib9f76743436249fbd44c26322ed81408b8cc01b2:src/multimedia/configure.cmake:1:319": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I1edbff98cdcea2903181723c43c41ed812b4b845:src/android/jar/src/org/qtproject/qt/android/multimedia/QtAudioDeviceManager.java:1:320": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I1dd553a2dabd6d184abd9f29a02985cf0d9daeb4:testcases/cloud_platform/regression/dc/backup_restore/test_verify_backup_inactive_load.py:2:143": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "openstack:Iff221f279c098fd69a35eb1658cc70fa34c71a0a:aodh/service.py:1:60": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I97e279d9ac8a252fed260b3ffc7dd7ebc0135d7d:doc/qtcreatordev/src/plugin-metadata.qdoc:1:229": {
+      "A": {
+        "label": "context_dependent",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:Iafc96c93a0d4c406b77902942b2940653441fe38:nova/conductor/manager.py:1:2101": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I48a72860fe9d06cde1f014298e68fa28caff730d:coin/provisioning/common/unix/install-patchelf.sh:4:31": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia1b7311fec72cf8d843683d531f789d980cafaf2:src/plugins/multimedia/ffmpeg/darwin/qavfcamera.mm:12:495": {
+      "A": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I347175c018963130f403f8e9fe764e77203383a9:src/mqtt/qmqttconnection_p.h:5:89": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "openstack:I9c8212408c21e09895ee5805011aecb40b689a13:defaults/main.yml:1:333": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    },
+    "qt:I391fafcf2418dac39b4aea3b3a3a675114233dff:src/corelib/text/qunicodetools.cpp:2:291": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia80fa289f9ecbfd4bceabd60688a40149ac6324d:src/plugins/ctfvisualizer/ctfvisualizertool.cpp:3:167": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:I99664a53da674bcbd992fffd5f290cfe51259d5b:tests/auto/corelib/kernel/qvariant/tst_qvariant.cpp:3:1243": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": false
+      }
+    },
+    "qt:Ia45a52e9d8759f6a4641f8a121e8e05cd60c2eaf:src/core/api/qwebengineframe.h:11:68": {
+      "A": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "B": {
+        "label": "context_dependent",
+        "outside_names": false
+      }
+    },
+    "openstack:Id68798a0a00c390de38816c4a2427090c68f7f57:deliverables/epoxy/os-ken.yaml:1:25": {
+      "A": {
+        "label": "valid",
+        "outside_names": true
+      },
+      "B": {
+        "label": "valid",
+        "outside_names": true
+      }
+    }
+  },
+  "outside_names": {
+    "A": 68,
+    "B": 72
+  },
+  "pairs": {
+    "A~B": {
+      "items": 383,
+      "raw_agreement": 0.8642297650130548,
+      "kappa": 0.5569496351663997,
+      "kappa_95": [
+        0.4543465540488973,
+        0.651591942820013
+      ],
+      "confusion": {
+        "valid": {
+          "valid": 297,
+          "non_actionable": 2,
+          "unrelated_rewrite": 2,
+          "partial": 5,
+          "context_dependent": 5
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 6,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 1,
+          "unrelated_rewrite": 5,
+          "partial": 0,
+          "context_dependent": 3
+        },
+        "partial": {
+          "valid": 19,
+          "non_actionable": 0,
+          "unrelated_rewrite": 4,
+          "partial": 15,
+          "context_dependent": 4
+        },
+        "context_dependent": {
+          "valid": 6,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 8
+        }
+      }
+    },
+    "A~B outside_names": {
+      "items": 383,
+      "raw_agreement": 0.9477806788511749,
+      "kappa": 0.8252258829971706,
+      "kappa_95": [
+        0.7452581362812778,
+        0.893888180861085
+      ],
+      "confusion": {
+        "True": {
+          "True": 60,
+          "False": 8
+        },
+        "False": {
+          "True": 12,
+          "False": 303
+        }
+      }
+    }
+  },
+  "valid_rates": {
+    "A": {
+      "openstack": {
+        "n": 191,
+        "valid": 158,
+        "share": 0.8272251308900523,
+        "share_95": [
+          0.767299513901769,
+          0.8742477253592201
+        ],
+        "counts": {
+          "valid": 158,
+          "partial": 17,
+          "context_dependent": 7,
+          "unrelated_rewrite": 5,
+          "non_actionable": 4
+        }
+      },
+      "openstack-a": {
+        "n": 96,
+        "valid": 77,
+        "share": 0.8020833333333334,
+        "share_95": [
+          0.7114483305401257,
+          0.869472668462529
+        ],
+        "counts": {
+          "valid": 77,
+          "unrelated_rewrite": 4,
+          "partial": 7,
+          "non_actionable": 3,
+          "context_dependent": 5
+        }
+      },
+      "openstack-b": {
+        "n": 95,
+        "valid": 81,
+        "share": 0.8526315789473684,
+        "share_95": [
+          0.7677140150925396,
+          0.9101391934638322
+        ],
+        "counts": {
+          "valid": 81,
+          "partial": 10,
+          "context_dependent": 2,
+          "non_actionable": 1,
+          "unrelated_rewrite": 1
+        }
+      },
+      "qt": {
+        "n": 192,
+        "valid": 153,
+        "share": 0.796875,
+        "share_95": [
+          0.7344044198137055,
+          0.8476990872091593
+        ],
+        "counts": {
+          "valid": 153,
+          "partial": 25,
+          "unrelated_rewrite": 5,
+          "non_actionable": 2,
+          "context_dependent": 7
+        }
+      },
+      "qt-a": {
+        "n": 96,
+        "valid": 77,
+        "share": 0.8020833333333334,
+        "share_95": [
+          0.7114483305401257,
+          0.869472668462529
+        ],
+        "counts": {
+          "valid": 77,
+          "unrelated_rewrite": 1,
+          "partial": 13,
+          "context_dependent": 4,
+          "non_actionable": 1
+        }
+      },
+      "qt-b": {
+        "n": 96,
+        "valid": 76,
+        "share": 0.7916666666666666,
+        "share_95": [
+          0.6999975294751408,
+          0.8608917109412153
+        ],
+        "counts": {
+          "valid": 76,
+          "partial": 12,
+          "non_actionable": 1,
+          "context_dependent": 3,
+          "unrelated_rewrite": 4
+        }
+      }
+    },
+    "B": {
+      "openstack": {
+        "n": 191,
+        "valid": 162,
+        "share": 0.8481675392670157,
+        "share_95": [
+          0.7904493146725555,
+          0.8921569479011369
+        ],
+        "counts": {
+          "valid": 162,
+          "partial": 7,
+          "context_dependent": 10,
+          "unrelated_rewrite": 7,
+          "non_actionable": 5
+        }
+      },
+      "openstack-a": {
+        "n": 96,
+        "valid": 82,
+        "share": 0.8541666666666666,
+        "share_95": [
+          0.7699818497355329,
+          0.9110979421986138
+        ],
+        "counts": {
+          "valid": 82,
+          "context_dependent": 6,
+          "unrelated_rewrite": 2,
+          "partial": 2,
+          "non_actionable": 4
+        }
+      },
+      "openstack-b": {
+        "n": 95,
+        "valid": 80,
+        "share": 0.8421052631578947,
+        "share_95": [
+          0.7557039468613879,
+          0.9019148375589726
+        ],
+        "counts": {
+          "valid": 80,
+          "partial": 5,
+          "context_dependent": 4,
+          "unrelated_rewrite": 5,
+          "non_actionable": 1
+        }
+      },
+      "qt": {
+        "n": 192,
+        "valid": 161,
+        "share": 0.8385416666666666,
+        "share_95": [
+          0.7799416918138318,
+          0.8838605530368033
+        ],
+        "counts": {
+          "valid": 161,
+          "context_dependent": 10,
+          "partial": 13,
+          "non_actionable": 4,
+          "unrelated_rewrite": 4
+        }
+      },
+      "qt-a": {
+        "n": 96,
+        "valid": 84,
+        "share": 0.875,
+        "share_95": [
+          0.794115318705986,
+          0.9270279904007575
+        ],
+        "counts": {
+          "valid": 84,
+          "context_dependent": 4,
+          "non_actionable": 2,
+          "unrelated_rewrite": 1,
+          "partial": 5
+        }
+      },
+      "qt-b": {
+        "n": 96,
+        "valid": 77,
+        "share": 0.8020833333333334,
+        "share_95": [
+          0.7114483305401257,
+          0.869472668462529
+        ],
+        "counts": {
+          "valid": 77,
+          "partial": 8,
+          "non_actionable": 2,
+          "context_dependent": 6,
+          "unrelated_rewrite": 3
+        }
+      }
+    }
+  }
+}

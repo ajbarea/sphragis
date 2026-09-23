@@ -5238,9 +5238,8 @@ train into dev at Jaccard 0.7 is 0.0106, unchanged. Sibling-half rates at Jaccar
 | qt-a | 0.0055 | 0.0018 | openstack 0.0000 |
 | qt-b | 0.0030 | 0.0000 | openstack 0.0000 |
 
-All below the registered 2%. One reading does not survive from v1: openstack-a's sibling rate now
-exceeds its own half's, so "a sibling never holds more near-copies than the own half" is not a
-property of this corpus, only the threshold is.
+All below 2%. openstack-a's sibling rate exceeds its own half's, so the threshold, not an
+ordering between the own half and the sibling, is the property to rely on.
 
 ### Correction: every successor is a rework, and corpus v2 is refrozen under the corrected rules (2026-09-23)
 
@@ -5278,7 +5277,7 @@ manifest now records the build and label rule digests, which `verify` checks:
 **Re-read.** Qt's organizational contrast without automated examples is +0.0171
 [-0.0034, +0.0374] (5.7% of its held-out examples removed), against +0.0316 [+0.0089, +0.0562]
 as registered; at rank 256, +0.0164 [-0.0051, +0.0384]. Qt's firing placebo half, qt-a, is
-+0.0288 [+0.0019, +0.0555] without them. The finding of the entry above stands: nearly half of
++0.0288 [+0.0019, +0.0555] without them. The finding of the audit entry stands: nearly half of
 Qt's organizational effect was its lint bot, and the half-split survives
 (`bot-sensitivity-*.json`). OpenStack train into dev at Jaccard 0.7 is 1.06%, unchanged
 (`window-report-openstack.json`).
@@ -5292,7 +5291,7 @@ Qt's organizational effect was its lint bot, and the half-split survives
 | qt-a | 0.0020 | 0.0020 | openstack 0.0000 |
 | qt-b | 0.0079 | 0.0000 | openstack 0.0000 |
 
-All below the registered 2%. The v2 entry's remark that openstack-a's sibling rate exceeded its
+All below 2%. The v2 entry's remark that openstack-a's sibling rate exceeded its
 own was read from the refinement that dropped the 20 examples in error, and does not survive:
 the two are equal. The threshold remains the property to rely on, not the ordering.
 
@@ -5339,3 +5338,37 @@ allowlist, manifests and seals excepted, so a later stage's text cannot be commi
 **Open.** The committed contamination results carry the scored half of each example's rewrite as
 `reference` text, so code from the corpus is in git; it predates these rules and stays until the
 battery can be re-read from example ids and hashes, which it must before the repository is public.
+
+### Label audit v2: two blind model raters agree at kappa 0.56, and validity does not differ between the units a contrast compares (2026-09-23)
+
+The first audit's context-dependent class folded two questions together: whether the request can
+be understood from what the example shows, and whether the rewrite uses names the example does not
+show. A clear request answered with a project's own constant is a valid label that no prompt alone
+reproduces, which is house-style knowledge an adapter can learn, not label noise. Rubric version 2
+asks the two separately (`scripts/label_audit/rubric.md`).
+
+A fresh sample of 384 refined v2 examples, 48 per organization, window and placebo half, one per
+change (`label_audit_sample.py`, seed 20260923), was blinded under neutral ids in a seeded order
+with the organization, project, window and half removed (`label_audit_blind.py`). Two model raters
+labelled every item alone, blind to each other: rater A on Claude Opus 5.5, rater B on Claude
+Sonnet 5 (`scripts/label_audit/rater-prompt.md`). The rubric's worked example is item-001, which is
+excluded from every figure. A first run of rater B split its batches across copies of itself and
+was lost before it was committed; it is not reported, and the run below was one rater under an
+added rule against delegation.
+
+Over 383 items (`label-audit-v2.json`): the label agrees on 86.4% of items, Cohen's kappa 0.557
+[0.454, 0.652]; the outside-names question on 94.8%, kappa 0.825 [0.745, 0.894]. The main
+disagreement is one boundary: 19 items rater A read as partial and rater B as valid, against 5 the
+other way. For comparison, two human raters reached 0.758 on 383 comment-generation pairs
+(arXiv 2607.25851) and 0.56 independently on a nine-label taxonomy (arXiv 2604.23667).
+
+Validity does not differ between the units a contrast compares. Share valid, 95% Wilson interval:
+
+| rater | openstack | qt | openstack-a | openstack-b | qt-a | qt-b |
+|---|---|---|---|---|---|---|
+| A | 0.827 [0.767, 0.874] | 0.797 [0.734, 0.848] | 0.802 | 0.853 | 0.802 | 0.792 |
+| B | 0.848 [0.790, 0.892] | 0.839 [0.780, 0.884] | 0.854 | 0.842 | 0.875 | 0.802 |
+
+Every interval overlaps every other, so label noise is no route by which an organization or a half
+would read as having a style it does not have. A human's blind check of rater A is in progress;
+the human-to-model kappa is what decides how far these model labels can be relied on.
