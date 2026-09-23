@@ -1,9 +1,9 @@
 {
   "org": "qt",
-  "rules": "2026-09-23:f6630953a4bd:1cf3aa71",
-  "bot_registry": "f6630953a4bd",
+  "rules": "0292fd614738792f",
+  "bot_registry": "bbfd02ce7633",
   "built_examples": 11448,
-  "refined_examples": 10013,
+  "refined_examples": 10138,
   "build_drops": {
     "acknowledgement": 1526,
     "author_comment": 31429,
@@ -19,24 +19,22 @@
     "comment_error": 7
   },
   "refine_drops": {
-    "automated_comment": 1672,
-    "acknowledgement_comment": 116,
-    "automated_only": 1240,
+    "automated_comment": 1747,
+    "acknowledgement_comment": 117,
+    "automated_only": 1304,
     "acknowledgement_only": 6,
-    "not_rework_successor": 189,
-    "unknown_successor": 0
+    "not_rework_successor": 0,
+    "successor_kind_unknown": 4,
+    "address_residue": 0
   },
   "automated_comments_by_bot": {
-    "Qt Sanity Bot": 1347,
+    "Qt Sanity Bot": 1355,
     "flake8 lint output": 338,
     "Qt QUIP-23 security review integration": 54
   },
   "successor_kinds": {
-    "REWORK": 11259,
-    "TRIVIAL_REBASE_WITH_MESSAGE_UPDATE": 69,
-    "NO_CODE_CHANGE": 51,
-    "NO_CHANGE": 8,
-    "TRIVIAL_REBASE": 61
+    "REWORK": 11444,
+    "UNRESOLVED": 4
   },
   "candidate_unregistered_bots": [
     {
@@ -74,35 +72,17 @@
   ],
   "min_changes": 15,
   "provenance": {
-    "generated_at": "2026-09-23T12:27:56.002786+00:00",
+    "generated_at": "2026-09-23T15:38:16.509704+00:00",
     "git": {
-      "commit": "cb431c86000606642b0af750cacd409683087007",
-      "branch": "docs/granularity-redesign",
-      "uncommitted_code": [
-        "scripts/bot_sensitivity.py",
-        "scripts/contamination_windows.py",
-        "scripts/data_audit.py",
-        "scripts/extract_bot_templates.py",
-        "scripts/label_audit_sample.py",
-        "scripts/placebo_corpus.py",
-        "scripts/project_corpora.py",
-        "scripts/rq1_pilot.py",
-        "scripts/separability.py",
-        "scripts/separability_over_time.py",
-        "scripts/sibling_leakage.py",
-        "scripts/window_report.py",
-        "sphragis/corpus/automated/__init__.py",
-        "sphragis/corpus/automated/qt-sanity-bot.json",
-        "sphragis/corpus/build.py",
-        "sphragis/corpus/cli.py",
-        "sphragis/corpus/load.py",
-        "sphragis/corpus/refine.py",
-        "sphragis/corpus/scrub.py"
-      ],
-      "uncommitted_code_sha256": "5f72f65d080c33d80089f55a2cb1566ecfa8cb2b096bc8c5dcd374f766fb2bc7"
+      "commit": "9cfc517078d1b0e88ea5d2a69da9d7a274bac273",
+      "branch": "docs/granularity-redesign"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
   }
 }

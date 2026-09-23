@@ -1,25 +1,16 @@
 {
-  "generated_at": "2026-09-23T14:26:46.641095+00:00",
+  "generated_at": "2026-09-23T15:38:11.280191+00:00",
   "git": {
-    "commit": "c24a1d9e5f17f2556f8e9a38dd60b5a8392a1ab3",
-    "branch": "docs/granularity-redesign",
-    "uncommitted_code": [
-      "scripts/data_audit.py",
-      "scripts/extract_bot_templates.py",
-      "scripts/placebo_corpus.py",
-      "sphragis/corpus/automated/__init__.py",
-      "sphragis/corpus/automated/qt-sanity-bot.json",
-      "sphragis/corpus/build.py",
-      "sphragis/corpus/cli.py",
-      "sphragis/corpus/examples.py",
-      "sphragis/corpus/load.py",
-      "sphragis/corpus/refine.py"
-    ],
-    "uncommitted_code_sha256": "1472bfe4637ac07e9cb003b0000a72b4a49ed7a6d855f126b8891a2a5c88b249"
+    "commit": "9cfc517078d1b0e88ea5d2a69da9d7a274bac273",
+    "branch": "docs/granularity-redesign"
   },
   "python": "3.14.4",
   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-  "packages": {},
+  "packages": {
+    "torch": "2.14.0+cu130",
+    "transformers": "5.17.0",
+    "peft": "0.20.0"
+  },
   "org": "qt",
   "counts": {
     "pilot": 1146,
@@ -54,7 +45,8 @@
       "automated_only": 1304,
       "acknowledgement_only": 6,
       "not_rework_successor": 0,
-      "successor_kind_unknown": 4
+      "successor_kind_unknown": 4,
+      "address_residue": 0
     },
     "deduped": {
       "exact": 320,
@@ -63,6 +55,7 @@
       "shared_change_id": 0
     },
     "unassigned_changes": 0,
-    "rules": "d0e85870504190a0"
+    "build_rules": "3d29d529390c1eea",
+    "rules": "0292fd614738792f"
   }
 }

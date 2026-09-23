@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 146 artifacts under
+repository. This page is generated from those scripts: 147 artifacts under
 34 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -141,7 +141,8 @@ A repeatable data audit of a built and refined corpus, one artifact per organiza
 
 | artifact | |
 |---|---|
-| `data-audit-openstack.json` | `data-audit-qt.json` |
+| `data-audit-aosp.json` | `data-audit-openstack.json` |
+| `data-audit-qt.json` |  |
 
 ## `scripts/decoding_check.py`
 

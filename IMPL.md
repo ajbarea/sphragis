@@ -8,27 +8,26 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## Just landed
 
-**RQ1's hardening is complete, and all three results say the same thing.** Registered rule
-throughout: pooled estimand, crossed interval, three seeds.
+**Corpus v2, the Stage 1 data audit's label rules.** Two defects passed the build's filters:
+comments written by bots (Qt's Sanity Bot, flake8 output on pyside-setup, the QUIP-23 notice),
+in Qt only, and Gerrit's one-click "Acknowledged". Both are removed by `refine`, which alone
+applies label rules, so changing one is a re-refine from disk and never a refetch; bot templates
+are read from each bot's own source.
 
-| | the organization | an arbitrary half of it | eight times the rank |
-|---|---|---|---|
-| Qt | +0.0316 [+0.0089, +0.0567] | +0.0305 [+0.0037, +0.0565] | +0.0309 [+0.0068, +0.0567] |
-| OpenStack | +0.0230 [+0.0000, +0.0457] | +0.0099 [-0.0273, +0.0463] | +0.0136 [-0.0100, +0.0360] |
-
-The placebo splits one organization's own projects in half, a boundary with no organizational
-meaning. In Qt it is indistinguishable from the real one. In OpenStack it returns nothing, and
-the organizational contrast only just clears zero to begin with. Eight times the adapter capacity
-moves Qt by seven ten-thousandths and moves OpenStack the wrong way, so the pre-registered
-capacity explanation for a null arm does not hold.
-
-**Language is the rival explanation and cannot be controlled on this pair.** OpenStack's training
-window is 47% Python, Qt's is 50% C++, and the dev window holds eight Qt Python examples against
-OpenStack's 243. AOSP would have fixed it and cannot: its public review stopped on 2025-03-27 and
-its dev window holds three examples.
+- The build records the build rules each month was built under; the loader refuses a month built
+  under other rules, a refinement under other label rules, and any derived corpus or file whose
+  source moved or went stale. Manifests record both digests for `verify`.
+- The months on disk predate those records and were stamped once, limited to the 54 audited
+  snapshots in `sphragis/corpus/stamped-months.json`; Qt's 2024-10 carries no prompt context.
+- Nearly half of Qt's organizational effect was its bot: +0.0316 as registered, +0.0171
+  [-0.0034, +0.0374] without it. The placebo half survives.
+- The rebase-only-successor finding was retracted: a Change-Id collision across cherry-picks.
+  Every successor is a rework. AOSP audited the same way: no bot comments.
 
 ## In flight
 
+- **Retraining on v2** waits on Qt's answer about access; RQ2's client corpora are recut with
+  records before its next run, and TIGRIS gets refined corpora before any GPU job.
 - **RQ1 re-registered around granularity** (AJ, 2026-09-22). Spec
   `docs/superpowers/specs/2026-09-22-granularity-redesign.md`, gate as code in
   `sphragis/experiment/decomposition.py`, Stage 1 text in `papers` on branch
