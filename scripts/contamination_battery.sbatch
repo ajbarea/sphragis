@@ -37,6 +37,6 @@ claim_result PARTIAL "${OUT%.json}.partial.json"
 uv run --no-sync python scripts/contamination_battery.py \
   --post "$POST" \
   --pre "$PRE" \
-  ${LEGACY_CORPUS:+--legacy-corpus} \
+  $(legacy_corpus_flag) \
   --scored-text "$SCORED_TEXT" \
   --out "$OUT"

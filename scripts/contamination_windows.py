@@ -41,7 +41,7 @@ def main() -> None:
             rows.extend(json.loads(line) for line in path.open() if line.strip())
         kept, removed = run_dedup(rows)
         target = OUT / f"openstack-{side}.jsonl"
-        write_derived_file(target, kept)
+        write_derived_file(target, kept, sources=[(root, "openstack")])
         changes = len({r["change_id"] for r in kept})
         print(
             f"{side}: {len(months)} months, {len(rows)} examples, {len(kept)} after dedup "

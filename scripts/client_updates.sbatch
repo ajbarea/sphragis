@@ -45,6 +45,6 @@ uv run --no-sync python scripts/client_updates.py \
   ${PACKING_SEED:+--packing-seed "$PACKING_SEED"} \
   --sources-file "$SOURCES" \
   --corpus-root "$C" \
-  ${LEGACY_CORPUS:+--legacy-corpus} \
+  $(legacy_corpus_flag) \
   --adapters "$HOME/scratch/sphragis-adapters-clients$RESULT_SUFFIX" \
   --out "$OUT"

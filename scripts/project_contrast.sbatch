@@ -37,7 +37,7 @@ claim_result OUT "$HOME/projects-$A-$B$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/rq1_pilot.py \
   --corpus "a=$PROJECTS/$A.jsonl" \
   --corpus "b=$PROJECTS/$B.jsonl" \
-  ${LEGACY_CORPUS:+--legacy-corpus} \
+  $(legacy_corpus_flag) \
   --seeds "${SEEDS:-1}" \
   --equalize-train "${SIZE[@]}" \
   --adapters "$HOME/scratch/sphragis-adapters-projects-$A-$B$RESULT_SUFFIX" \

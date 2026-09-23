@@ -11,6 +11,10 @@ rebase or a message-only edit, where the "rewrite" would be whatever the rebase 
 applied per change (`examples.revision_kind`), never through the Change-Id alone, which a
 cherry-pick shares across branches.
 
+One scrub correction is carried here too: an older scrub pseudonymized only the first address of
+a chained one ("a@b.com@example.com"), leaving the later domains behind the pseudonym, and
+those are removed (`scrub.sweep_address_residue`).
+
 The build applies the same rules as it reads comments, so a corpus built after them passes
 through here unchanged; one built before is brought to the same rules from its examples and raw
 snapshots, nothing refetched. Every removal is counted by reason, as the build counts its own.
@@ -18,15 +22,26 @@ snapshots, nothing refetched. Every removal is counted by reason, as the build c
 
 from __future__ import annotations
 
-import hashlib
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
-from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.automated import matched_bot, registry_digest
+from sphragis.corpus.automated import matched_bot
 from sphragis.corpus.build import is_acknowledgement
-from sphragis.corpus.examples import REWORK, revision_kind
+from sphragis.corpus.examples import revision_kind, successor_changed_code
+from sphragis.corpus.rules import RULES_VERSION, rules_version
+from sphragis.corpus.scrub import sweep_address_residue
+
+__all__ = [
+    "ADDRESS_RESIDUE",
+    "KEPT_UNCHECKED",
+    "REFINE_REASONS",
+    "RULES_VERSION",
+    "index_changes",
+    "refine",
+    "rules_version",
+    "successor_kind",
+]
 
 REFINE_REASONS = (
     "automated_comment",
@@ -35,44 +50,38 @@ REFINE_REASONS = (
     "acknowledgement_only",
     "not_rework_successor",
 )
-# Counted and kept: an example whose successor kind was never recorded, or whose change cannot
-# be told apart from another with the same Change-Id, project and creation time.
+# Counted: an example whose successor kind was never recorded, or whose change cannot be told
+# apart from another with the same Change-Id, project and creation time. It is kept unless
+# another rule removes it.
 KEPT_UNCHECKED = "successor_kind_unknown"
-
-_CORPUS = Path(__file__).resolve().parent
-_RULE_SOURCES = ("refine.py", "build.py", "examples.py", "automated/__init__.py")
-
-
-def rules_version(sources: Mapping[str, str], registry: str) -> str:
-    """A digest of the code that decides what an example is, and of the bot registries.
-
-    Hashing the rule code itself means a changed rule is a changed version without anyone
-    remembering to bump one; a comment edit also changes it, which errs toward re-refining.
-    """
-    digest = hashlib.sha256()
-    for name in sorted(sources):
-        digest.update(name.encode() + b"\0" + sources[name].encode() + b"\0")
-    digest.update(registry.encode())
-    return digest.hexdigest()[:16]
-
-
-RULES_VERSION = rules_version(
-    {name: (_CORPUS / name).read_text() for name in _RULE_SOURCES}, registry_digest()
-)
+# Counted, and the text kept: an address domain left behind a pseudonym by an older scrub.
+ADDRESS_RESIDUE = "address_residue"
 
 
 ChangeIndex = dict[str, Any]
 
 
+def _identity(record: Mapping[str, Any]) -> tuple[str, str, str]:
+    return (str(record.get("change_id")), str(record.get("project")), str(record.get("created")))
+
+
 def index_changes(changes: Iterable[Mapping[str, Any]]) -> ChangeIndex:
-    """Raw changes by number, and by (Change-Id, project, created) for examples without one."""
-    by_number: dict[int, Mapping[str, Any]] = {}
-    by_identity: dict[tuple[str, str, str], dict[int, Mapping[str, Any]]] = defaultdict(dict)
+    """Raw changes by number, and by (Change-Id, project, created) for examples without one.
+
+    A number seen twice with different content (the same change fetched in two months, say) is
+    ambiguous rather than resolved to whichever file was read last.
+    """
+    by_number: dict[int, Mapping[str, Any] | None] = {}
+    by_identity: dict[tuple[str, str, str], list[Mapping[str, Any]]] = defaultdict(list)
     for change in changes:
+        by_identity[_identity(change)].append(change)
+        if change.get("_number") is None:
+            continue
         number = int(change["_number"])
-        by_number[number] = change
-        key = (change["change_id"], change["project"], str(change.get("created")))
-        by_identity[key][number] = change
+        if number in by_number and by_number[number] != change:
+            by_number[number] = None
+        elif number not in by_number:
+            by_number[number] = change
     return {"by_number": by_number, "by_identity": by_identity}
 
 
@@ -82,11 +91,11 @@ def successor_kind(row: Mapping[str, Any], index: ChangeIndex) -> str | None:
     if row.get("change_number") is not None:
         change = index["by_number"].get(int(row["change_number"]))
     else:
-        candidates = index["by_identity"].get(
-            (row["change_id"], row["project"], str(row.get("created")))
-        )
-        change = next(iter(candidates.values())) if candidates and len(candidates) == 1 else None
-    return None if change is None else revision_kind(change, int(row["patch_set"]) + 1)
+        candidates = index["by_identity"].get(_identity(row), [])
+        change = candidates[0] if len(candidates) == 1 else None
+    if change is None or row.get("patch_set") is None:
+        return None
+    return revision_kind(change, int(row["patch_set"]) + 1)
 
 
 def refine(
@@ -97,13 +106,15 @@ def refine(
     Comments are removed one at a time, so an example with a bot's hint and a reviewer's
     instruction keeps the instruction; an example left with no comment is dropped.
     """
-    counts: Counter[str] = Counter(dict.fromkeys((*REFINE_REASONS, KEPT_UNCHECKED), 0))
+    counts: Counter[str] = Counter(
+        dict.fromkeys((*REFINE_REASONS, KEPT_UNCHECKED, ADDRESS_RESIDUE), 0)
+    )
     kept: list[dict[str, Any]] = []
     for row in rows:
         kind = successor_kind(row, index)
         if kind is None:
             counts[KEPT_UNCHECKED] += 1
-        elif kind != REWORK:
+        elif not successor_changed_code(kind):
             counts["not_rework_successor"] += 1
             continue
         comments: list[str] = []
@@ -114,7 +125,9 @@ def refine(
             elif is_acknowledgement(text):
                 acknowledged += 1
             else:
-                comments.append(text)
+                swept, residues = sweep_address_residue(text)
+                counts[ADDRESS_RESIDUE] += residues
+                comments.append(swept)
         counts["automated_comment"] += automated
         counts["acknowledgement_comment"] += acknowledged
         if not comments:

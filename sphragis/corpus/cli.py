@@ -19,15 +19,22 @@ from typing import Any
 from sphragis.corpus.build import build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
-from sphragis.corpus.load import refined_dir, refined_examples, write_source_record
+from sphragis.corpus.load import (
+    build_record,
+    refined_dir,
+    refined_examples,
+    write_build_record,
+    write_source_record,
+)
 from sphragis.corpus.manifest import verify
 from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
 from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
+from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import is_test_window_unlocked
 from sphragis.corpus.storage import read_snapshot, write_snapshot
 
-STAGES = ("fetch", "build", "refine", "dedup", "split", "freeze", "verify")
+STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "verify")
 
 # One Gerrit instance is one organization. OpenStack and Qt checked live 2026-09-14. AOSP
 # checked live 2026-09-18: it answers residential addresses and refuses datacenter ranges, so it
@@ -306,7 +313,7 @@ def drops_path(examples_file: Path) -> Path:
 
 def source_path(examples_file: Path) -> Path:
     """Where the digest of the snapshot a month was built from lives."""
-    return examples_file.with_name(examples_file.name.removesuffix(".jsonl") + ".source.json")
+    return build_record(examples_file)
 
 
 def snapshot_digest(snapshot: Path) -> str:
@@ -345,6 +352,66 @@ def built_from_current_snapshot(target: Path, snapshot: Path) -> bool | None:
     return recorded.get("snapshot_sha256") == snapshot_digest(snapshot)
 
 
+def built_under_current_rules(target: Path) -> bool | None:
+    """Whether a month was built under the build rules now in the code; None if unrecorded."""
+    try:
+        recorded = json.loads(source_path(target).read_text()).get("build_rules")
+    except (ValueError, OSError, AttributeError):
+        return None
+    return None if recorded is None else recorded == BUILD_RULES
+
+
+# Written into a record the stamp accepts; the research log entry of the same date holds the
+# audit of every build-code change since those months were built.
+STAMP_NOTE = (
+    "built before build rules were recorded; accepted under these rules on 2026-09-23 after "
+    "every build-code change since was found reapplied by refine or not to change output"
+)
+
+
+def _stage_stamp(args: argparse.Namespace) -> int:
+    """Record the current build rules on months built before the build recorded them.
+
+    One-time by construction: it writes only records that carry no build rules, and refuses a
+    month recorded under other rules, which must be rebuilt. Whether the months it accepts
+    really are equivalent to a build under these rules is a judgement made once, in the
+    research log, not something this stage checks.
+    """
+    built = sorted(_examples_dir(args).glob("*.jsonl"))
+    if not built:
+        print(f"no examples under {_examples_dir(args)}; run build first")
+        return 1
+    records = {path: source_path(path) for path in built}
+    refused = []
+    for path, record in records.items():
+        recorded = json.loads(record.read_text()) if record.is_file() else None
+        if not isinstance(recorded, dict) or not recorded.get("snapshot_sha256"):
+            refused.append(f"{path.name}: no build record")
+        elif recorded.get("build_rules") not in (None, BUILD_RULES):
+            refused.append(f"{path.name}: built under other build rules; rebuild it")
+        elif not recorded.get("complete", True):
+            refused.append(f"{path.name}: build did not complete")
+    if refused:
+        print(f"refusing to stamp {args.org}: {refused}")
+        return 1
+    stamped = 0
+    for path, record in records.items():
+        recorded = json.loads(record.read_text())
+        if recorded.get("build_rules") == BUILD_RULES:
+            continue
+        recorded.update(build_rules=BUILD_RULES, stamped=STAMP_NOTE)
+        # A month built before context lines existed has the same examples and no prompt
+        # context; the only consumer of context refuses such a row, and the record says so.
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+        without = sum("context_before" not in row for row in rows)
+        if without:
+            recorded["without_context"] = without
+        record.write_text(json.dumps(recorded, indent=2) + "\n")
+        stamped += 1
+    print(f"{args.org}: stamped {stamped} of {len(built)} months with build rules {BUILD_RULES}")
+    return 0
+
+
 def _load_drops(args: argparse.Namespace) -> dict[str, int]:
     """Build-stage drop counts summed over every month on disk."""
     total: Counter[str] = Counter()
@@ -378,6 +445,15 @@ def _stage_build(args: argparse.Namespace) -> int:
         matches = built_from_current_snapshot(target, snapshot) if target.exists() else None
         if matches is False:
             print(f"{args.org} {month}: built from a different snapshot, rebuilding")
+        elif matches is True and built_under_current_rules(target) is False:
+            # Refining it again would stamp the old build's output as current.
+            print(f"{args.org} {month}: built under other build rules, rebuilding")
+            matches = False
+        elif matches is True and built_under_current_rules(target) is None:
+            print(
+                f"{args.org} {month}: no build rules recorded; the loader refuses it until it "
+                "is stamped or rebuilt"
+            )
         if matches is None and target.exists() and not args.overwrite:
             print(f"{args.org} {month}: no snapshot digest recorded, cannot check staleness")
         if target.exists() and not args.overwrite and matches is not False:
@@ -413,14 +489,11 @@ def _stage_build(args: argparse.Namespace) -> int:
         # matches, and the next run certifies it as finished and counts its truncated tail as
         # an example.
         digest = snapshot_digest(snapshot)
-        record = source_path(target)
-        record.write_text(json.dumps({"snapshot_sha256": digest, "complete": False}) + "\n")
+        write_build_record(target, digest, complete=False)
         staging = target.with_suffix(".jsonl.partial")
         staging.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
         staging.replace(target)
-        record.write_text(
-            json.dumps({"snapshot_sha256": digest, "complete": True}, indent=2) + "\n"
-        )
+        write_build_record(target, digest, complete=True)
         drops.update(month_drops)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)
@@ -485,7 +558,8 @@ def _stage_freeze(args: argparse.Namespace) -> int:
             "refine_counts": _load_refine_counts(args),
             "deduped": dict(removed),
             "unassigned_changes": 0,
-            # The rules the corpus was refined under; verify fails when they have moved.
+            # The rules the corpus was built and refined under; verify fails when either moves.
+            "build_rules": BUILD_RULES,
             "rules": RULES_VERSION,
         },
     )
@@ -517,12 +591,13 @@ def _stage_verify(args: argparse.Namespace) -> int:
         for name in manifest["counts"]
     }
     problems = verify(manifest, windows)
-    frozen_rules = manifest.get("stats", {}).get("rules")
-    if frozen_rules != RULES_VERSION:
-        problems.append(
-            f"frozen under rules {frozen_rules}, current rules are {RULES_VERSION}: refine and "
-            "refreeze, or check out the code the manifest was frozen with"
-        )
+    stats = manifest.get("stats", {})
+    for key, current in (("build_rules", BUILD_RULES), ("rules", RULES_VERSION)):
+        if stats.get(key) != current:
+            problems.append(
+                f"frozen under {key} {stats.get(key)}, current are {current}: rebuild or refine "
+                "and refreeze, or check out the code the manifest was frozen with"
+            )
     if problems:
         for problem in problems:
             print(f"DRIFT {problem}")
@@ -539,6 +614,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     stages = {
         "fetch": _stage_fetch,
         "build": _stage_build,
+        "stamp": _stage_stamp,
         "refine": _stage_refine,
         "dedup": _stage_dedup,
         "split": _stage_split,

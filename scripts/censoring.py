@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from sphragis.corpus.cli import WINDOWS as _CLI_WINDOWS
+from sphragis.corpus.load import refined_month_files
 from sphragis.provenance import provenance_header
 
 
@@ -82,7 +83,7 @@ def change_key(row: Mapping[str, Any]) -> tuple[str, str, str]:
 def example_bearing(org: str) -> set[tuple[str, str, str]]:
     """Changes the corpus actually keeps: those with a comment anchored to a code hunk."""
     kept: set[tuple[str, str, str]] = set()
-    for path in sorted(Path(EXAMPLES.format(org=org)).glob("*.jsonl")):
+    for path in refined_month_files(Path(EXAMPLES.format(org=org)).parent.parent, org):
         with path.open() as handle:
             for line in handle:
                 kept.add(change_key(json.loads(line)))

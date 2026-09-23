@@ -19,4 +19,5 @@ source sphragis/experiment/cluster-env.sh
 claim_result OUT "$HOME/pilot-outcomes$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/pilot.py \
   "$HOME/pilot-examples.jsonl" \
+  $(legacy_corpus_flag) \
   --out "$OUT"

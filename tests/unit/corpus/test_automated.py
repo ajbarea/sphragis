@@ -119,3 +119,13 @@ def test_the_digest_follows_templates_not_provenance(monkeypatch: pytest.MonkeyP
     changed = [data[0], data[1], {**data[2], "templates": [{"pattern": "X"}]}]
     monkeypatch.setattr(automated, "_registries_data", lambda: changed)
     assert automated.registry_digest() != base
+
+
+@pytest.mark.parametrize("separator", ["\r", "\u2028", "\u2029", "\v", "\x85"])
+def test_a_reviewer_sentence_after_any_line_break_is_not_swallowed_by_a_template(
+    separator: str,
+) -> None:
+    from sphragis.corpus.automated import matched_bot
+
+    assert matched_bot(f"E501: line too long{separator}I think we should refactor this") is None
+    assert matched_bot(f"E501: line too long{separator}{separator}W291: trailing whitespace")

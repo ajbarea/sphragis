@@ -14,9 +14,12 @@ build/
 
 # Corpus text: everything under a corpus root is ignored except what results cite, so a stage
 # added later is out of git without anyone listing it. Manifests and seals ARE committed.
-datasets/gerrit*/*/*
+datasets/gerrit*/**
+!datasets/gerrit*/*/
 !datasets/gerrit*/*/manifest.json
 !datasets/gerrit*/*/seal.json
+# Label-audit sheets and other working copies of corpus text.
+scratch/
 # Battery inputs are concatenated and deduplicated from those examples by
 # scripts/contamination_windows.py, so they are derived twice over.
 datasets/results/contamination-inputs/
