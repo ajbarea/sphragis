@@ -37,6 +37,9 @@ SESOI = 0.01
 # One-sided family-wise level across the confirmatory hypotheses, held by Holm's step-down.
 FAMILY_ALPHA = 0.025
 
+# The summed contrast is reported, never tested, so it reads the family's own level.
+SUMMED_CONFIDENCE = 0.95
+
 # Below this the percentile ranks of neighbouring Holm levels can coincide.
 MIN_RESAMPLES = 1_000
 
@@ -219,8 +222,10 @@ def _hypothesis(cells: Mapping[str, Mapping[str, Any]], confidence: float) -> st
     return "inconclusive"
 
 
-def holm_verdicts(per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]]) -> dict[str, str]:
-    """Holm's step-down over the hypotheses, read off each cell's interval at each level.
+def holm_steps(
+    per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]],
+) -> tuple[dict[str, str], dict[str, float | None]]:
+    """Holm's step-down over the hypotheses, and the level at which each one passed.
 
     Every hypothesis is first read at the strictest level. Those that pass leave the family,
     and the rest are read again at the next level, until a step passes nothing. A later step
@@ -229,6 +234,9 @@ def holm_verdicts(per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]])
     """
     levels = holm_levels(len(per_hypothesis))
     verdicts = {name: _hypothesis(cells, levels[0]) for name, cells in per_hypothesis.items()}
+    passed_at: dict[str, float | None] = {
+        name: levels[0] if verdict == "pass" else None for name, verdict in verdicts.items()
+    }
     remaining = [name for name, verdict in verdicts.items() if verdict != "pass"]
     step = len(per_hypothesis) - len(remaining)
     while remaining and 0 < step < len(levels):
@@ -237,9 +245,29 @@ def holm_verdicts(per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]])
             break
         for name in passed:
             verdicts[name] = "pass"
+            passed_at[name] = levels[step]
         remaining = [n for n in remaining if n not in passed]
         step += len(passed)
-    return verdicts
+    return verdicts, passed_at
+
+
+def holm_verdicts(per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]]) -> dict[str, str]:
+    """The verdicts of `holm_steps` alone."""
+    return holm_steps(per_hypothesis)[0]
+
+
+def below_sesoi(
+    per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]],
+    passed_at: Mapping[str, float | None],
+) -> list[str]:
+    """Passing cells whose interval, at the level the hypothesis passed at, sits inside SESOI."""
+    return sorted(
+        f"{name}:{org}"
+        for name, cells in per_hypothesis.items()
+        if passed_at[name] is not None
+        for org, cell in cells.items()
+        if cell["intervals"][passed_at[name]]["high"] < SESOI
+    )
 
 
 def decomposition_gate(
@@ -283,32 +311,44 @@ def decomposition_gate(
             roles["H1"] = "confirmatory"
         if org in h2_pairs:
             foreign, roles["H2"] = h2_pairs[org]
-            contrasts["H2"] = _strata(
-                [
-                    organization_clusters(results, org=org, foreign=foreign, seed=s, metric=metric)
-                    for s in seeds
-                ]
-            )
+            try:
+                contrasts["H2"] = _strata(
+                    [
+                        organization_clusters(
+                            results, org=org, foreign=foreign, seed=s, metric=metric
+                        )
+                        for s in seeds
+                    ]
+                )
+            except ValueError as error:
+                if roles["H2"] == "confirmatory":
+                    raise
+                # An exploratory cell never decides a verdict, so it cannot withhold one either.
+                per_org["H2"][org] = {
+                    "role": "exploratory",
+                    "foreign": foreign,
+                    "error": str(error),
+                }
+        if not contrasts:
+            continue
         estimates, draws = stratified_crossed_draws(
             contrasts, seed=bootstrap_seed, resamples=resamples, estimator=estimator
         )
         for name, values in draws.items():
             intervals = {c: percentile_interval(values, c) for c in levels}
-            strict_low, strict_high = intervals[levels[0]]
             per_org[name][org] = {
                 "role": roles[name],
                 "foreign": h2_pairs[org][0] if name == "H2" else None,
                 "estimate": estimates[name],
                 "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
                 "verdicts": {c: cell_verdict(lo, hi) for c, (lo, hi) in intervals.items()},
-                "below_sesoi": strict_low > 0.0 and strict_high < SESOI,
                 "clusters_per_half": [len(runs[0]) for runs in contrasts[name]],
                 "seeds": len(seeds),
             }
         if len(draws) == 2:
             pairs = list(zip(draws["H1"], draws["H2"], strict=True))
             summed = [a + b for a, b in pairs]
-            low, high = percentile_interval(summed, 0.95)
+            low, high = percentile_interval(summed, SUMMED_CONFIDENCE)
             joint[org] = {
                 "shares": {
                     f"H1{'>' if a else '<='}0,H2{'>' if b else '<='}0": sum(
@@ -318,25 +358,25 @@ def decomposition_gate(
                     for a in (True, False)
                     for b in (True, False)
                 },
-                "summed": {"estimate": estimates["H1"] + estimates["H2"], "low": low, "high": high},
+                "summed": {
+                    "estimate": estimates["H1"] + estimates["H2"],
+                    "low": low,
+                    "high": high,
+                    "confidence": SUMMED_CONFIDENCE,
+                },
             }
 
     tested = {
-        name: {org: cell for org, cell in per_org[name].items() if cell["role"] == "confirmatory"}
+        name: {o: cell for o, cell in per_org[name].items() if cell["role"] == "confirmatory"}
         for name in confirmatory
     }
-    verdicts = holm_verdicts(tested)
+    verdicts, passed_at = holm_steps(tested)
     return {
         "design": design,
         "verdicts": verdicts,
+        "passed_at": passed_at,
         "reading": reading(verdicts["H1"], verdicts.get("H2")),
-        "below_sesoi": sorted(
-            f"{name}:{org}"
-            for name, orgs in tested.items()
-            if verdicts[name] == "pass"
-            for org, cell in orgs.items()
-            if cell["below_sesoi"]
-        ),
+        "below_sesoi": below_sesoi(tested, passed_at),
         "per_org": per_org,
         "joint": joint,
         "sesoi": SESOI,

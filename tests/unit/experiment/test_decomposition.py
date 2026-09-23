@@ -10,10 +10,13 @@ import pytest
 from sphragis.experiment.decomposition import (
     DESIGNS,
     MIN_RESAMPLES,
+    SUMMED_CONFIDENCE,
+    below_sesoi,
     cell_verdict,
     decomposition_gate,
     halves,
     holm_levels,
+    holm_steps,
     holm_verdicts,
     organization_clusters,
     project_clusters,
@@ -316,9 +319,60 @@ def test_the_strict_interval_is_wider_than_the_lax_one() -> None:
 
 
 def test_a_passing_cell_clear_of_the_sesoi_is_not_flagged() -> None:
-    outcome = _gate(_by_relation(0.75, 0.25, 0.25))
-    assert outcome["below_sesoi"] == []
-    assert outcome["per_org"]["H1"]["qt"]["below_sesoi"] is False
+    assert _gate(_by_relation(0.75, 0.25, 0.25))["below_sesoi"] == []
+
+
+def _interval_cells(**by_level: tuple[float, float]) -> dict[str, Any]:
+    """One cell with an interval at each Holm level, keyed '975' and '95'."""
+    intervals = {0.975: by_level["strict"], 0.95: by_level["lax"]}
+    return {
+        "org0": {
+            "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
+            "verdicts": {c: cell_verdict(lo, hi) for c, (lo, hi) in intervals.items()},
+        }
+    }
+
+
+def test_below_sesoi_is_read_at_the_level_the_hypothesis_passed_at() -> None:
+    per = {
+        "H1": _interval_cells(strict=(0.02, 0.09), lax=(0.03, 0.08)),
+        "H2": _interval_cells(strict=(-0.001, 0.008), lax=(0.001, 0.007)),
+    }
+    verdicts, passed_at = holm_steps(per)
+    assert verdicts == {"H1": "pass", "H2": "pass"}
+    assert passed_at == {"H1": 0.975, "H2": 0.95}
+    assert below_sesoi(per, passed_at) == ["H2:org0"]
+
+
+def test_below_sesoi_ignores_hypotheses_that_did_not_pass() -> None:
+    per = {
+        "H1": _interval_cells(strict=(-0.02, 0.005), lax=(-0.01, 0.004)),
+        "H2": _interval_cells(strict=(0.02, 0.09), lax=(0.03, 0.08)),
+    }
+    _, passed_at = holm_steps(per)
+    assert passed_at["H1"] is None
+    assert below_sesoi(per, passed_at) == []
+
+
+def test_the_fallback_readings_are_the_registered_ones() -> None:
+    assert reading("pass", None) == "within-half"
+    assert reading("absent", None) == "no within-half transfer"
+    assert reading("inconclusive", None) == "unresolved"
+
+
+def test_a_broken_exploratory_cell_does_not_withhold_the_verdicts() -> None:
+    results = _results(_by_relation(0.75, 0.25, 0.25))
+    del results[run_id(EvalRun("adapter:qt-b", "openstack-a", 1))]
+    outcome = decomposition_gate(results, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES)
+    assert outcome["verdicts"] == {"H1": "pass", "H2": "absent"}
+    assert "not scored" in outcome["per_org"]["H2"]["openstack"]["error"]
+
+
+def test_a_broken_confirmatory_cell_is_still_refused() -> None:
+    results = _results(_by_relation(0.75, 0.25, 0.25))
+    del results[run_id(EvalRun("adapter:chromium-b", "qt-a", 1))]
+    with pytest.raises(ValueError, match="not scored"):
+        decomposition_gate(results, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES)
 
 
 # The bootstrap behind the verdicts
@@ -351,6 +405,22 @@ def test_joint_readings_exist_only_where_an_organization_carries_both_contrasts(
     assert set(joint) == {"openstack", "qt", "chromium"}
     assert sum(joint["qt"]["shares"].values()) == pytest.approx(1.0)
     assert joint["qt"]["summed"]["estimate"] == pytest.approx(0.5)
+
+
+def test_the_summed_interval_is_read_at_its_registered_level() -> None:
+    # Sibling and foreign agree on every example, so the organization contrast is zero on
+    # every draw and the sum's interval must be the half-split's interval at the same level.
+    def score(trained: str, window: str, seed: int, change: int) -> float:
+        if trained == window:
+            return 1.0 if change % 3 == 0 else 0.0
+        return 1.0 if change < 3 else 0.0
+
+    outcome = _gate(score)
+    summed = outcome["joint"]["qt"]["summed"]
+    h1 = outcome["per_org"]["H1"]["qt"]["intervals"][0.95]
+    assert SUMMED_CONFIDENCE == 0.95
+    assert (summed["low"], summed["high"]) == (h1["low"], h1["high"])
+    assert summed["high"] > summed["low"]
 
 
 def test_cells_report_their_clusters_and_seeds() -> None:
