@@ -84,12 +84,14 @@ def test_fetch_writes_a_snapshot_and_reports_the_cutoff_drop(
             "_number": 1,
             "change_id": "I1",
             "created": "2024-10-05 00:00:00.000000000",
+            "updated": "2024-10-06 00:00:00.000000000",
             "owner": {"_account_id": 7, "name": "Alice"},
         },
         {
             "_number": 2,
             "change_id": "I2",
             "created": "2024-08-01 00:00:00.000000000",
+            "updated": "2024-10-02 00:00:00.000000000",
             "owner": {"_account_id": 8},
         },
     ]

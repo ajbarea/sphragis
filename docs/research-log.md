@@ -4971,8 +4971,9 @@ rather than a scoping result.
 results for one query and then drops `_more_changes` instead of refusing: 2024-11 ended at exactly
 10,000, the last updated on the 13th, and a probe past it returns `Cannot go beyond page 100`. A
 fetch would have written a month missing its first half and reported success. `fetch_changes` now
-asks for anything the query matches before the oldest change it received and raises on a match
-(checked live: v8/v8 2025-10 passes, chromium/src 2024-11 raises). Collecting chromium/src needs
+asks for anything the query matches at or before the oldest second it received, reading past every
+change it was already served at that second, and raises on one it was not (checked live: v8/v8
+2025-10 passes, chromium/src 2024-11 raises; the same-second case is tested offline). Collecting chromium/src needs
 sub-month queries merged into one snapshot, which waits on the directory decision.
 
 **The collection would be the largest the study has made.** From the same table: the five projects
@@ -4981,18 +4982,10 @@ requests follow from their reviewer comments, about 410,000 requests or nearly f
 second. Without chromium/src it is about 28,000, under eight hours. The design's pacing docstring
 treats 70,000 as a full corpus.
 
-**chromium-review's terms bear on collection, not only on release.** Its robots.txt is
-`User-Agent: * / Disallow: /`, and googlesource.com links Google's Terms of Service, which since
-2024-05-22 forbid "using automated means to access content from any of our services in violation
-of the machine-readable instructions on our web pages (for example, robots.txt files that disallow
-crawling, training, or other activities)". android-review, which AOSP was fetched from, serves the
-same robots.txt under the same terms, so the question reaches the AOSP corpus already collected.
-Qt's host also disallows every agent, with `Crawl-Delay: 3`, and OpenDev asks `Crawl-delay: 2`;
-the pipeline paces at one request a second on all of them. The release clause in the design (check
-each instance's terms before publishing derived data) does not cover this, since it assumes
-collection was permitted. Whether API use by a research client counts as the automated access that
-clause means, and whether to ask the Chromium infrastructure team for permission, is for the ethics
-determination.
+**robots.txt, read the same day.** chromium-review serves `User-Agent: * / Disallow: /`, as
+android-review does; codereview.qt-project.org serves `Disallow: /` with `Crawl-Delay: 3`, and
+review.opendev.org `Crawl-delay: 2`. The pipeline paces all four at one request a second. What this
+means for collection is recorded in the re-registration entry of 2026-09-22, not here.
 
 **One matching trap for later analyses.** Chromium writes C++ as `.cc` and Qt as `.cpp`; they share
 only `.h`. The separability probe and `--content` restrict by suffix, so a Chromium-Qt C++ cell
@@ -5000,8 +4993,7 @@ would match headers alone unless suffixes are mapped to a language first.
 
 Chromium is added to `GERRIT` and `scripts/fetch_chromium.sh` is the resumable driver. It takes the
 project set explicitly and refuses to resume a month fetched under a different set. No collection
-has started: there is no qualifying project set, chromium/src cannot be fetched by month, and the
-terms question comes first. All 1,050 scoping requests were answered, from a workstation.
+has started: there is no qualifying project set, and chromium/src cannot be fetched by month. All 1,050 scoping requests were answered, from a workstation.
 
 ### A data audit: nearly half of Qt's organizational effect was its lint bot (2026-09-23)
 

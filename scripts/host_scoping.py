@@ -12,6 +12,9 @@ than the change owner per sampled change, the quantity examples are built from.
     summarize <dir> <out>                the feasibility table, the selection rule applied,
                                          and the greedy placebo split of what it admits
 
+Every month from the sealed test window's start onward is refused before any request, by the
+same check fetch applies.
+
 The owner filter is for scoping only. The pipeline filters no owners; a roller's change
 reaches no example because the author filter and the anchor requirement drop it.
 
@@ -32,7 +35,7 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 
 from sphragis.corpus.build import is_acknowledgement
-from sphragis.corpus.cli import GERRIT, http_transport
+from sphragis.corpus.cli import GERRIT, http_transport, refuse_if_sealed
 from sphragis.corpus.examples import is_code_file
 from sphragis.corpus.gerrit import _get, parse_response
 from sphragis.provenance import provenance_header
@@ -308,6 +311,10 @@ def main(argv: list[str]) -> None:
     if argv[:1] != ["measure"] or len(argv) < 4:
         raise SystemExit(__doc__)
     kind, project, arg = argv[1], argv[2], argv[3]
+    # The same refusal fetch applies, before any request: every month from the sealed test
+    # window's start onward, under the corpus root's seal for this host.
+    for month in arg.split(","):
+        refuse_if_sealed(Path("datasets/gerrit"), "chromium", month)
     if kind == "volume":
         measure_volume(project, arg.split(","))
     elif kind == "ranged":

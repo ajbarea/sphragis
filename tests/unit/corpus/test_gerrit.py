@@ -27,10 +27,15 @@ def test_parse_response_rejects_a_body_without_the_prefix() -> None:
         parse_response('{"a": 1}')
 
 
+def _c(cid: str, second: int = 0) -> dict[str, Any]:
+    return {"id": cid, "updated": f"2024-11-13 08:00:{second:02d}.000000000"}
+
+
 def test_fetch_changes_pages_until_more_changes_is_absent() -> None:
     pages = [
-        _page([{"id": "c1"}, {"id": "c2"}], more=True),
-        _page([{"id": "c3"}], more=False),
+        _page([_c("c1", 3), _c("c2", 2)], more=True),
+        _page([_c("c3", 1)], more=False),
+        _page([_c("c3", 1)], more=False),  # the truncation probe finds nothing unserved
     ]
     seen: list[str] = []
 
@@ -47,7 +52,11 @@ def test_fetch_changes_pages_until_more_changes_is_absent() -> None:
 
 
 def test_fetch_changes_retries_on_429_and_honours_retry_after() -> None:
-    replies = [(429, {"Retry-After": "7"}, ""), (200, {}, _page([{"id": "c1"}], more=False))]
+    replies = [
+        (429, {"Retry-After": "7"}, ""),
+        (200, {}, _page([_c("c1")], more=False)),
+        (200, {}, _page([_c("c1")], more=False)),
+    ]
     slept: list[float] = []
 
     def transport(url: str) -> tuple[int, dict[str, str], str]:
@@ -97,7 +106,7 @@ def test_fetch_changes_refuses_a_query_the_server_cut_short() -> None:
         fetch_changes("https://g/", "status:merged", transport=transport)
     from urllib.parse import unquote
 
-    assert unquote(asked[1]).endswith('(status:merged) before:"2024-11-13 08:28:51 +0000"&n=5')
+    assert unquote(asked[1]).endswith('(status:merged) before:"2024-11-13 08:28:51 +0000"&n=2&S=0')
 
 
 def test_fetch_changes_accepts_a_probe_that_finds_only_the_oldest_change_again() -> None:
@@ -107,3 +116,54 @@ def test_fetch_changes_accepts_a_probe_that_finds_only_the_oldest_change_again()
     transport, asked = _served_then_probed(served, served)
     changes, record = fetch_changes("https://g/", "q", transport=transport)
     assert [c["id"] for c in changes] == ["c1"] and len(asked) == 2
+
+
+def _capped_gerrit(changes: list[dict[str, Any]], cap: int, page: int):
+    """A fake host that serves at most `cap` results and then drops `_more_changes`.
+
+    Newest-updated first, as Gerrit orders them, and `before:` inclusive of its own second.
+    Changes within one second come back in a fixed order, as a real index returns them.
+    """
+    from urllib.parse import parse_qs, urlsplit
+
+    ordered = sorted(changes, key=lambda c: c["updated"], reverse=True)
+
+    def transport(url: str) -> tuple[int, dict[str, str], str]:
+        params = parse_qs(urlsplit(url).query)
+        query, n, start = params["q"][0], int(params["n"][0]), int(params.get("S", ["0"])[0])
+        rows = ordered
+        if ' before:"' in query:
+            bound = query.split(' before:"')[1][:19]
+            rows = [c for c in rows if c["updated"][:19] <= bound]
+        served = rows[: min(len(rows), cap)][start : start + min(n, page)]
+        more = start + len(served) < min(len(rows), cap)
+        return 200, {}, _page([dict(c) for c in served], more=more)
+
+    return transport
+
+
+def test_fetch_changes_refuses_a_cut_inside_a_run_of_one_second() -> None:
+    """Cap 10, 12 matching, the last 7 sharing one second: the cut falls inside that second.
+
+    A fixed five-result probe returned five served changes from that second and accepted
+    10 of 12 as complete.
+    """
+    changes = [_c(f"n{i}", 59 - i) for i in range(5)] + [_c(f"s{i}", 0) for i in range(7)]
+    transport = _capped_gerrit(changes, cap=10, page=4)
+    with pytest.raises(RuntimeError, match="truncated"):
+        fetch_changes("https://g/", "status:merged", transport=transport)
+
+
+def test_fetch_changes_accepts_a_complete_query_ending_in_a_run_of_one_second() -> None:
+    changes = [_c(f"n{i}", 59 - i) for i in range(3)] + [_c(f"s{i}", 0) for i in range(7)]
+    transport = _capped_gerrit(changes, cap=10, page=4)
+    served, record = fetch_changes("https://g/", "status:merged", transport=transport)
+    assert len(served) == 10 and record["count"] == 10
+
+
+def test_fetch_changes_refuses_changes_it_cannot_check() -> None:
+    def transport(url: str) -> tuple[int, dict[str, str], str]:
+        return 200, {}, _page([{"id": "c1"}], more=False)
+
+    with pytest.raises(RuntimeError, match="without `updated`"):
+        fetch_changes("https://g/", "q", transport=transport)

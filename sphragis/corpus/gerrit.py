@@ -97,26 +97,40 @@ def _refuse_if_truncated(
     A missing `_more_changes` is not proof of the end. chromium-review stops at 10,000 results
     and drops the flag on the last page it serves: measured 2026-09-22, chromium/src's merged
     changes for 2024-11 ended at exactly 10,000, the last one updated on the 13th. Results come
-    newest-updated first, so anything the query matches from before the oldest change served
-    means the tail was cut. One small request per fetch.
+    newest-updated first, so anything the query matches at or before the oldest second served
+    that was not served means the tail was cut.
+
+    `before:` includes its own second, and a cut can fall inside a run of changes sharing that
+    second, so the probe reads until it has one more change than were served at that second,
+    paging if the host serves fewer a page. An unserved change then always has room to appear
+    rather than being crowded out by served ones.
     """
-    stamps = [str(c["updated"]) for c in changes if "updated" in c]
-    if not stamps or len(stamps) != len(changes):
+    if not changes:
         return
-    oldest = min(stamps)[:19]
+    missing_stamp = [c.get("id", c.get("_number")) for c in changes if "updated" not in c]
+    if missing_stamp:
+        raise RuntimeError(
+            f"{base_url} returned changes without `updated` ({missing_stamp[:3]}), so whether "
+            f"{query!r} was truncated cannot be checked"
+        )
+    oldest = min(str(c["updated"])[:19] for c in changes)
+    at_oldest = sum(1 for c in changes if str(c["updated"])[:19] == oldest)
     seen = {c.get("id", c.get("_number")) for c in changes}
-    probe = f'({query}) before:"{oldest} +0000"'
-    url = f"{base_url.rstrip('/')}/changes/?q={quote(probe)}&n=5"
-    missing = [
-        c
-        for c in parse_response(_get(url, transport, sleep, retries))
-        if c.get("id", c.get("_number")) not in seen
-    ]
+    probe = quote(f'({query}) before:"{oldest} +0000"')
+    missing: list[Mapping[str, Any]] = []
+    read = 0
+    while not missing and read <= at_oldest:
+        url = f"{base_url.rstrip('/')}/changes/?q={probe}&n={at_oldest + 1 - read}&S={read}"
+        page = parse_response(_get(url, transport, sleep, retries))
+        read += len(page)
+        missing = [c for c in page if c.get("id", c.get("_number")) not in seen]
+        if not page or not page[-1].get("_more_changes"):
+            break
     if missing:
         raise RuntimeError(
             f"{base_url} stopped after {len(changes)} results for {query!r} but more match "
-            f"before {oldest}: the server truncated the query. Narrow it (fewer projects or a "
-            "shorter date range) rather than keep a partial snapshot."
+            f"at or before {oldest}: the server truncated the query. Narrow it (fewer projects "
+            "or a shorter date range) rather than keep a partial snapshot."
         )
 
 
