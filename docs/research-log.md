@@ -5009,3 +5009,23 @@ Both point estimates are above 0.01, so **five seeds**, by the rule fixed before
 upper bounds are wide because two contrasts of three seeds each give two degrees of freedom, which
 is itself the reason not to rest a three-seed decision on them. This is the case the spec named:
 three seeds only if the effect at the half size is bounded below 0.01, and it is not.
+
+### Sibling-half leakage is below the registered threshold on the dev window (2026-09-23)
+
+H2 would credit the organization with shared boilerplate if a sibling half's training data
+already held near-copies of the evaluated half's refinements. `scripts/sibling_leakage.py`
+assigns halves exactly as the placebo does and measures, for each half's dev window, the share of
+examples whose closest training example reaches a Jaccard threshold: from its own half's train
+window, its sibling's, and the foreign organization's. Generated from
+`datasets/results/sibling-leakage.json`.
+
+| evaluated half | dev examples | own J>=0.7 | sibling J>=0.7 | foreign J>=0.7 | own J>=0.5 | sibling J>=0.5 | foreign J>=0.5 |
+|---|---|---|---|---|---|---|---|
+| openstack-a | 300 | 0.0033 | 0.0000 | 0.0033 | 0.0133 | 0.0000 | 0.0033 |
+| openstack-b | 251 | 0.0159 | 0.0080 | 0.0000 | 0.0239 | 0.0159 | 0.0000 |
+| qt-a | 568 | 0.0018 | 0.0018 | 0.0000 | 0.0070 | 0.0035 | 0.0000 |
+| qt-b | 372 | 0.0081 | 0.0000 | 0.0000 | 0.0296 | 0.0054 | 0.0000 |
+
+Every sibling rate is at or below the same half's own rate, and all are below the registered 2%
+at Jaccard 0.7, so shared boilerplate is not what a sibling adapter would be credited with on the
+dev window. The check is registered for the test window and runs again there.

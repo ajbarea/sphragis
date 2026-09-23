@@ -391,7 +391,8 @@ as the unit; the evidence says the codebase is.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.
 - [ ] The crossed interval's coverage at 97.5%, and the sensitivity analysis at the half size
   against the smallest effect of interest.
-- [ ] Sibling-half leakage and the C++-restricted estimand beside H2.
+- [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
+- [ ] The C++-restricted estimand beside H2.
 - [ ] The decomposition's pilot on the dev window.
 
 ## Plan C — the experiment

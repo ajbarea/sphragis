@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 137 artifacts under
-30 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 138 artifacts under
+31 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -281,6 +281,14 @@ Is the organizational signal fading while the study measures it?
 |---|---|
 | `separability-over-time.json` | `style-drift-code.json` |
 | `style-drift.json` |  |
+
+## `scripts/sibling_leakage.py`
+
+How much of an evaluated half's dev window a sibling half's training data already holds.
+
+| artifact | |
+|---|---|
+| `sibling-leakage.json` |  |
 
 ## `scripts/subspace_split.py`
 
