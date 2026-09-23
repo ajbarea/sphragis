@@ -124,7 +124,8 @@ _abandoned_claim() {
 # size that inherited another's suffix would overwrite the geometry every committed RQ2 number was
 # computed from. One definition, because the two jobs must agree on the name.
 name_result_after_adapters() {
-  local pattern="$1" first selector spans_withheld
+  local pattern="$1" first selector shape count_word has_local has_p0
+  local -a shapes matched
   # The name comes from the pattern's first directory, so that directory must be literal: a glob
   # there would name the output after nothing.
   first="${pattern%%/*}"
@@ -139,24 +140,41 @@ name_result_after_adapters() {
     sphragis-adapters-*) RESULT_SUFFIX="-${first#sphragis-adapters-}" ;;
     *) echo "PATTERN must start with a sphragis-adapters directory, got $first" >&2; return 1 ;;
   esac
-  # A dual-adapter run saves two adapters a client in one directory: the transmitted one under the
-  # client's own name and the withheld one under `<client>-local`. They are two geometries over one
-  # set of adapters, so the selector that picks between them has to name them apart, and one that
-  # spans both is refused rather than written to whichever name it inherits. Only where withheld
-  # adapters exist: every single-adapter directory keeps the names it already has.
-  compgen -G "$HOME/scratch/$first/*-local" >/dev/null 2>&1 || { export RESULT_SUFFIX; return 0; }
+  # A dual-adapter run saves more than one adapter a client in one directory: the transmitted one
+  # under the client's own name, and one or more withheld ones beside it (FedDPA's `-local`;
+  # FDLoRA's `-local` and `-p0`, the round-0 average of the personalized modules). Each shape is
+  # its own geometry over one set of adapters, so a selector has to name exactly one apart, and
+  # one that spans more than one is refused rather than written to whichever name it inherits
+  # first. Only where a withheld shape exists at all: a single-adapter directory keeps the names
+  # it already has.
+  compgen -G "$HOME/scratch/$first/*-local" >/dev/null 2>&1 && has_local=1 || has_local=0
+  compgen -G "$HOME/scratch/$first/*-p0" >/dev/null 2>&1 && has_p0=1 || has_p0=0
+  if [ "$has_local" = 0 ] && [ "$has_p0" = 0 ]; then export RESULT_SUFFIX; return 0; fi
   selector="${pattern#*/}"
   selector="${selector%%/*}"
-  spans_withheld=0
-  case "a-c0-local" in $selector) spans_withheld=1 ;; esac
-  case "$selector:$spans_withheld" in
-    *-local:*) RESULT_SUFFIX="$RESULT_SUFFIX-local" ;;
-    *:1)
-      echo "PATTERN selects the transmitted and the withheld adapters of $first together, and" \
-        "they are two geometries: select one, with */*-local/* or a selector that cannot" \
-        "match it" >&2
-      return 1
-      ;;
+  # Only the shapes actually present in this directory are candidates: a directory with just
+  # FedDPA's `-local` must still be refused only for spanning those two, not FDLoRA's `-p0` too.
+  shapes=(a-c0)
+  [ "$has_local" = 0 ] || shapes+=(a-c0-local)
+  [ "$has_p0" = 0 ] || shapes+=(a-c0-p0)
+  matched=()
+  for shape in "${shapes[@]}"; do
+    case "$shape" in $selector) matched+=("$shape") ;; esac
+  done
+  if [ "${#matched[@]}" -gt 1 ]; then
+    case "${#matched[@]}" in
+      2) count_word=two ;;
+      3) count_word=three ;;
+      *) count_word="${#matched[@]}" ;;
+    esac
+    echo "PATTERN selects more than one of $first's adapter shapes together" \
+      "(${matched[*]}), and they are $count_word geometries: select one, with */*-local/*," \
+      "*/*-p0/* or a selector that cannot match them" >&2
+    return 1
+  fi
+  case "$selector" in
+    *-local) RESULT_SUFFIX="$RESULT_SUFFIX-local" ;;
+    *-p0) RESULT_SUFFIX="$RESULT_SUFFIX-p0" ;;
   esac
   export RESULT_SUFFIX
 }

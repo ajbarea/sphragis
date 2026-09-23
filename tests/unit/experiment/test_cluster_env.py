@@ -178,6 +178,35 @@ def test_a_selector_spanning_both_halves_is_refused(tmp_path: Path) -> None:
     assert "two geometries" in result.stderr
 
 
+def test_the_round_zero_personalized_adapters_name_themselves_apart(tmp_path: Path) -> None:
+    """FDLoRA's round-0 average is a third shape beside the transmitted and withheld halves."""
+    _adapters(tmp_path, "sphragis-adapters-fdlora-r6-k3-h3", "a-c0", "a-c0-local", "a-c0-p0")
+    result = _name_after(
+        tmp_path, "sphragis-adapters-fdlora-r6-k3-h3/*-p0/adapter_model.safetensors"
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("[-fdlora-r6-k3-h3-p0]")
+
+
+def test_a_selector_spanning_all_three_fdlora_shapes_is_refused(tmp_path: Path) -> None:
+    _adapters(tmp_path, "sphragis-adapters-fdlora-r6-k3-h3", "a-c0", "a-c0-local", "a-c0-p0")
+    result = _name_after(
+        tmp_path, "sphragis-adapters-fdlora-r6-k3-h3/*-c*/adapter_model.safetensors"
+    )
+    assert result.returncode != 0
+    assert "three geometries" in result.stderr
+
+
+def test_a_selector_reaching_only_the_transmitted_fdlora_half_is_unsuffixed(tmp_path: Path) -> None:
+    """Narrow enough to exclude both `-local` and `-p0`, the transmitted half keeps its name."""
+    _adapters(tmp_path, "sphragis-adapters-fdlora-r6-k3-h3", "a-c0", "a-c0-local", "a-c0-p0")
+    result = _name_after(
+        tmp_path, "sphragis-adapters-fdlora-r6-k3-h3/*-c[0-9]/adapter_model.safetensors"
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("[-fdlora-r6-k3-h3]")
+
+
 def test_a_selector_that_cannot_reach_the_withheld_half_is_the_transmitted_one(
     tmp_path: Path,
 ) -> None:
