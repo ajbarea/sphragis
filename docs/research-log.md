@@ -4990,3 +4990,65 @@ otherwise, both reported), successors that are not reworks are dropped, "Acknowl
 acknowledgement list, and every pilot figure quoted in the Stage 1 report is re-read on the cleaned
 corpus. The registered dev-window verdict under the organization gate was already superseded; this
 says the part of it that looked strongest was partly an instrument artefact.
+
+### Corpus v2: the audit's rules, applied at the source and to what was already built (2026-09-23)
+
+The fixes are in the builder, so every corpus collected from here on is clean at collection, and in
+a new `refine` stage that brings corpora built before them to the same rules from their own
+examples and raw snapshots, with nothing refetched.
+
+**Bots are recognised from their source, not from a guessed list.** Identity first: Gerrit tags
+service accounts `SERVICE_USER`, and the scrub used to replace every account object with its
+pseudonym alone, discarding that tag at ingestion; it now keeps it. Where a host does not expose
+the tag, and for corpora collected before, the fallback is each bot's own message templates:
+`sphragis/corpus/automated/qt-sanity-bot.json` holds all 101 complaints
+`git-hooks/sanitize-commit` posts, extracted from qt/qtrepotools at `309df8d5eefb` by
+`scripts/extract_bot_templates.py` (spelling complaints pinned to the exact shape the code writes,
+so a reviewer's "a -> b?" is not taken for the bot); Qt's QUIP-23 integration posts one fixed
+message on files carrying a `Qt-Security` header; and flake8 output is posted inline on
+pyside/pyside-setup. The earlier prefix scan had missed the last two and most of the spelling
+complaints. Recognised in Qt's built examples: Qt Sanity Bot 1,347, flake8 lint output 338, Qt QUIP-23 security review integration 54; in OpenStack's, none. Templates match whole
+comments. Every recognised string was inspected, and a repeated-text queue of the rest, which a new
+bot would surface in, holds only reviewer language.
+
+| organization | built | bot comments removed | examples resting only on bots | rebase-only successor | acknowledgement only | refined |
+|---|---|---|---|---|---|---|
+| openstack | 5,959 | 0 | 0 | 20 | 13 | 5,926 |
+| qt | 11,448 | 1,672 | 1,240 | 189 | 6 | 10,013 |
+
+Refrozen as corpus v2 (the v1 manifests stay in git history, and every earlier result cites them):
+
+| organization | pilot | train | dev |
+|---|---|---|---|
+| openstack | 600 | 4,304 | 565 |
+| qt | 1,134 | 7,456 | 897 |
+
+**Re-read under the registry** rather than the prefix list: Qt's organizational contrast is
++0.0182 [-0.0022, +0.0388] with
+0.055 of its held-out examples removed, the same reading as before.
+
+**What else changed with it.** Everything that trains or measures now reads refined examples
+through one loader (`sphragis/corpus/load.py`) that refuses a refinement made from other examples
+or under other rules; nine scripts had read the built files directly, and a fix that reached only
+the CLI would have left them on the old data. A placebo's halves are derived corpora carrying the
+rules version they were cut under. The rules version is a digest of the registries and the
+acknowledgement list, so it cannot fall behind them. `make data-audit` re-runs this audit on any
+corpus and writes `data-audit-<org>.json`. The scrub treats a chained address as one.
+
+**Not yet done:** the pilot adapters were trained on v1, including the bot examples; retraining on
+v2 waits on Qt's answer about access, since training is where the Qt data is used again. RQ2's
+project corpora are rebuilt from v2 by `project_corpora.py` before its next run.
+
+**Leakage re-measured on v2** (`sibling-leakage.json`, `window-report-*.json` regenerated). OpenStack
+train into dev at Jaccard 0.7 is 0.0106, unchanged. Sibling-half rates at Jaccard 0.7:
+
+| evaluated half | own | sibling | foreign |
+|---|---|---|---|
+| openstack-a | 0.0030 | 0.0060 | qt 0.0000 |
+| openstack-b | 0.0137 | 0.0046 | qt 0.0000 |
+| qt-a | 0.0055 | 0.0018 | openstack 0.0000 |
+| qt-b | 0.0030 | 0.0000 | openstack 0.0000 |
+
+All below the registered 2%. One reading does not survive from v1: openstack-a's sibling rate now
+exceeds its own half's, so "a sibling never holds more near-copies than the own half" is not a
+property of this corpus, only the threshold is.

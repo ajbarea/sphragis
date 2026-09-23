@@ -19,13 +19,15 @@ from typing import Any
 from sphragis.corpus.build import build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
+from sphragis.corpus.load import refined_dir, refined_examples, sha256
 from sphragis.corpus.manifest import verify
 from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
+from sphragis.corpus.refine import RULES_VERSION, refine, revision_kinds
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import is_test_window_unlocked
 from sphragis.corpus.storage import read_snapshot, write_snapshot
 
-STAGES = ("fetch", "build", "dedup", "split", "freeze", "verify")
+STAGES = ("fetch", "build", "refine", "dedup", "split", "freeze", "verify")
 
 # One Gerrit instance is one organization. OpenStack and Qt checked live 2026-09-14. AOSP
 # checked live 2026-09-18: it answers residential addresses and refuses datacenter ranges, so it
@@ -251,12 +253,47 @@ def _examples_dir(args: argparse.Namespace) -> Path:
     return Path(args.root) / args.org / "examples"
 
 
+def _refined_dir(args: argparse.Namespace) -> Path:
+    return refined_dir(Path(args.root), args.org)
+
+
 def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
-    directory = _examples_dir(args)
-    rows: list[dict[str, Any]] = []
-    for path in sorted(directory.glob("*.jsonl")):
-        rows.extend(json.loads(line) for line in path.read_text().splitlines() if line)
-    return rows
+    """Refined examples: dedup, split and freeze never read the built files."""
+    return refined_examples(Path(args.root), args.org)
+
+
+def _stage_refine(args: argparse.Namespace) -> int:
+    """Apply the data audit's label rules to every built month, from its raw snapshots."""
+    raw = Path(args.root) / args.org / "raw"
+    kinds = revision_kinds(
+        change for path in sorted(raw.glob("*.ndjson.gz")) for change in read_snapshot(path)
+    )
+    built = sorted(_examples_dir(args).glob("*.jsonl"))
+    if not built:
+        print(f"no examples under {_examples_dir(args)}; run build first")
+        return 1
+    out = _refined_dir(args)
+    out.mkdir(parents=True, exist_ok=True)
+    totals: Counter[str] = Counter()
+    kept_total = 0
+    for path in built:
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+        kept, drops = refine(rows, kinds)
+        totals.update(drops)
+        kept_total += len(kept)
+        target = out / path.name
+        tmp = target.with_suffix(".jsonl.tmp")
+        tmp.write_text("".join(json.dumps(r) + "\n" for r in kept))
+        (out / path.name.replace(".jsonl", ".drops.json")).write_text(json.dumps(drops, indent=2))
+        os.replace(tmp, target)
+        # Written last: a refined month counts as current only once its examples have landed.
+        (out / path.name.replace(".jsonl", ".source.json")).write_text(
+            json.dumps({"examples_sha256": sha256(path), "rules": RULES_VERSION}, indent=2)
+        )
+    print(
+        f"{args.org}: {kept_total} examples kept over {len(built)} months, removed {dict(totals)}"
+    )
+    return 0
 
 
 def drops_path(examples_file: Path) -> Path:
@@ -479,6 +516,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     stages = {
         "fetch": _stage_fetch,
         "build": _stage_build,
+        "refine": _stage_refine,
         "dedup": _stage_dedup,
         "split": _stage_split,
         "freeze": _stage_freeze,

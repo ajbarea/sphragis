@@ -9,11 +9,7 @@
     2,
     3
   ],
-  "bot_prefixes": [
-    "Hint: ",
-    "Modifying security sensitive file.",
-    "Unresolved merge conflict"
-  ],
+  "bot_registry": "f6630953a4bd",
   "removed_share": {
     "openstack-a": 0.0,
     "openstack-b": 0.0
@@ -63,14 +59,31 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-09-23T11:41:39.325051+00:00",
+    "generated_at": "2026-09-23T12:26:09.350841+00:00",
     "git": {
-      "commit": "823c319b09b82cfbeacc852402b0f25b43c1a438",
+      "commit": "cb431c86000606642b0af750cacd409683087007",
       "branch": "docs/granularity-redesign",
       "uncommitted_code": [
-        "scripts/bot_sensitivity.py"
+        "scripts/bot_sensitivity.py",
+        "scripts/contamination_windows.py",
+        "scripts/extract_bot_templates.py",
+        "scripts/label_audit_sample.py",
+        "scripts/placebo_corpus.py",
+        "scripts/project_corpora.py",
+        "scripts/rq1_pilot.py",
+        "scripts/separability.py",
+        "scripts/separability_over_time.py",
+        "scripts/sibling_leakage.py",
+        "scripts/window_report.py",
+        "sphragis/corpus/automated/__init__.py",
+        "sphragis/corpus/automated/qt-sanity-bot.json",
+        "sphragis/corpus/build.py",
+        "sphragis/corpus/cli.py",
+        "sphragis/corpus/load.py",
+        "sphragis/corpus/refine.py",
+        "sphragis/corpus/scrub.py"
       ],
-      "uncommitted_code_sha256": "6c84a8b4aca7bd448a0a58e7d08e02e5cb37064160a5721a13cd2ace46241cad"
+      "uncommitted_code_sha256": "7ec2dfea5cb0a8cc540ea86576d49427d3f3925318c1061cc206543852f5169c"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from placebo_corpus import assign, project_counts  # noqa: E402
 
 from sphragis.corpus.cli import WINDOWS  # noqa: E402
+from sphragis.corpus.load import refined_examples  # noqa: E402
 from sphragis.corpus.pipeline import run_dedup, run_split  # noqa: E402
 from sphragis.experiment.neutral import closest_training_match  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
@@ -39,14 +40,9 @@ parser.add_argument("--out", type=Path, default=None)
 
 def windows_by_half(root: Path, org: str) -> dict[str, dict[str, list[dict]]]:
     """Train and dev windows for each placebo half of one organization."""
-    rows = [
-        json.loads(line)
-        for path in sorted((root / org / "examples").glob("*.jsonl"))
-        for line in path.read_text().splitlines()
-        if line
-    ]
+    rows = refined_examples(root, org)
     if not rows:
-        raise SystemExit(f"{org}: no examples under {root / org / 'examples'}")
+        raise SystemExit(f"{org}: no refined examples under {root / org}")
     # The assignment is the placebo's own: counted on the built rows before dedup, exactly as
     # `placebo_corpus.main` counts them, so these are the halves the gate trains on.
     side_of = assign(dict(project_counts(rows, WINDOWS["train"])))

@@ -79,14 +79,14 @@ NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
 #: or `occurrences` (the literal is quoted more than once).
 CLAIMS: list[tuple[Any, ...]] = [
     # ---- index.md: the corpus, and where the dev-window reading stands ----
-    ("corpus_os", "index.md", "5,498", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
-    ("corpus_qt", "index.md", "10,692", MANIFEST_QT, ["counts"], {"reduce": "sum"}),
-    ("seal_os", "index.md", "606", MANIFEST_OS, ["counts", "pilot"]),
-    ("train_os", "index.md", "4,327", MANIFEST_OS, ["counts", "train"]),
+    ("corpus_os", "index.md", "5,469", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
+    ("corpus_qt", "index.md", "9,487", MANIFEST_QT, ["counts"], {"reduce": "sum"}),
+    ("seal_os", "index.md", "600", MANIFEST_OS, ["counts", "pilot"]),
+    ("train_os", "index.md", "4,304", MANIFEST_OS, ["counts", "train"]),
     ("dev_os_n", "index.md", "565", MANIFEST_OS, ["counts", "dev"]),
-    ("seal_qt", "index.md", "1,300", MANIFEST_QT, ["counts", "pilot"]),
-    ("train_qt", "index.md", "8,442", MANIFEST_QT, ["counts", "train"]),
-    ("dev_qt_n", "index.md", "950", MANIFEST_QT, ["counts", "dev"]),
+    ("seal_qt", "index.md", "1,134", MANIFEST_QT, ["counts", "pilot"]),
+    ("train_qt", "index.md", "7,456", MANIFEST_QT, ["counts", "train"]),
+    ("dev_qt_n", "index.md", "897", MANIFEST_QT, ["counts", "dev"]),
     # The seal itself: the test window's content hash over no content. Quoted rather than
     # its count, because a page saying the window holds "0" examples is a page whose claim
     # any stray zero satisfies.
@@ -326,7 +326,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         [*NEAR_DUPLICATE, "0.5", "rate"],
         {"scale": 100},
     ),
-    ("on_corpus", "outcome-neutral.md", "5,498", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
+    ("on_corpus", "outcome-neutral.md", "5,469", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
     (
         "on_marker_a",
         "outcome-neutral.md",

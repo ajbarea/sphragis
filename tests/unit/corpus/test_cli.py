@@ -376,16 +376,9 @@ def test_build_reports_a_missing_snapshot_rather_than_raising(
 def test_dedup_and_split_report_without_writing(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    import json
 
-    examples = tmp_path / "openstack" / "examples"
-    examples.mkdir(parents=True)
-    rows = [
-        {"id": "a", "change_id": "I1", "created": "2024-10-05", "before": "x", "after": "y"},
-        {"id": "b", "change_id": "I1", "created": "2024-10-05", "before": "x", "after": "y"},
-    ]
-    (examples / "2024-10.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
-
+    _built_corpus(tmp_path)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
     assert main(["dedup", "--org", "openstack", "--root", str(tmp_path)]) == 0
     out = capsys.readouterr().out
     assert "exact" in out
@@ -816,3 +809,64 @@ def test_the_module_entry_refuses_an_unknown_stage() -> None:
         cwd=Path(__file__).resolve().parents[3],
     )
     assert result.returncode != 0, "an unknown stage must not look like a clean run"
+
+
+def _built_corpus(root: Path, kind: str = "REWORK") -> Path:
+    """One built month of two duplicate examples, and the raw snapshot they came from."""
+    import json
+
+    from sphragis.corpus.storage import write_snapshot
+
+    base = {"change_id": "I1", "project": "openstack/nova", "created": "2024-10-05"}
+    rows = [
+        {**base, "id": i, "patch_set": 1, "comments": ["rename"], "before": "x", "after": "y"}
+        for i in ("a", "b")
+    ]
+    examples = root / "openstack" / "examples"
+    examples.mkdir(parents=True, exist_ok=True)
+    (examples / "2024-10.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    change = {**base, "revisions": {"p1": {"_number": 1}, "p2": {"_number": 2, "kind": kind}}}
+    write_snapshot(root, "openstack", "2024-10", [change], record={"query": "test"})
+    return examples / "2024-10.jsonl"
+
+
+def test_dedup_refuses_a_corpus_that_was_never_refined(tmp_path: Path) -> None:
+    _built_corpus(tmp_path)
+    with pytest.raises(SystemExit, match="not refined"):
+        main(["dedup", "--org", "openstack", "--root", str(tmp_path)])
+
+
+def test_refine_writes_examples_drops_and_a_source_record(tmp_path: Path) -> None:
+    import json
+
+    _built_corpus(tmp_path)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    refined = tmp_path / "openstack" / "refined"
+    assert len((refined / "2024-10.jsonl").read_text().splitlines()) == 2
+    assert json.loads((refined / "2024-10.drops.json").read_text())["not_rework_successor"] == 0
+    assert "examples_sha256" in json.loads((refined / "2024-10.source.json").read_text())
+
+
+def test_refine_drops_examples_whose_successor_only_rebased(tmp_path: Path) -> None:
+    _built_corpus(tmp_path, kind="TRIVIAL_REBASE")
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert (tmp_path / "openstack" / "refined" / "2024-10.jsonl").read_text() == ""
+
+
+def test_a_rebuilt_month_makes_its_refinement_stale(tmp_path: Path) -> None:
+    built = _built_corpus(tmp_path)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    built.write_text(built.read_text() + "\n")
+    with pytest.raises(SystemExit, match="not refined"):
+        main(["split", "--org", "openstack", "--root", str(tmp_path)])
+
+
+def test_a_refinement_under_other_rules_is_stale(tmp_path: Path) -> None:
+    import json
+
+    _built_corpus(tmp_path)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    record = tmp_path / "openstack" / "refined" / "2024-10.source.json"
+    record.write_text(json.dumps({**json.loads(record.read_text()), "rules": "old"}))
+    with pytest.raises(SystemExit, match="not refined"):
+        main(["freeze", "--org", "openstack", "--root", str(tmp_path)])

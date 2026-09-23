@@ -27,9 +27,20 @@ def _build(src: Path, out: Path, org: str = "qt") -> None:
 
 
 def _corpus(root: Path, org: str, rows: list[dict]) -> None:
-    out = root / org / "examples"
-    out.mkdir(parents=True)
-    (out / "2024-11.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    """One built and refined month, as the refine stage leaves it."""
+    from sphragis.corpus.load import refined_dir, sha256
+    from sphragis.corpus.refine import RULES_VERSION
+
+    text = "".join(json.dumps(r) + "\n" for r in rows)
+    built = root / org / "examples" / "2024-11.jsonl"
+    built.parent.mkdir(parents=True)
+    built.write_text(text)
+    refined = refined_dir(root, org)
+    refined.mkdir(parents=True)
+    (refined / "2024-11.jsonl").write_text(text)
+    (refined / "2024-11.source.json").write_text(
+        json.dumps({"examples_sha256": sha256(built), "rules": RULES_VERSION})
+    )
 
 
 def _row(project: str, day: str, ident: str) -> dict:
@@ -62,7 +73,7 @@ def test_each_half_becomes_a_corpus_the_registered_runner_can_read(tmp_path: Pat
     manifest = json.loads((tmp_path / "out" / "placebo.json").read_text())
     assert set(manifest["names"]) == {"qt-a", "qt-b"}
     for name in manifest["names"]:
-        written = (tmp_path / "out" / name / "examples" / "2024-11.jsonl").read_text()
+        written = (tmp_path / "out" / name / "refined" / "2024-11.jsonl").read_text()
         kept = [json.loads(line) for line in written.splitlines() if line]
         assert kept, f"{name} got no rows"
         # The rows must claim the pseudo-organization, or the runner labels both halves 'qt'.
@@ -90,7 +101,7 @@ def test_a_project_outside_the_training_window_is_dropped_not_silently_sided(
     written = [
         json.loads(line)
         for name in manifest["names"]
-        for month in (tmp_path / "out" / name / "examples").glob("*.jsonl")
+        for month in (tmp_path / "out" / name / "refined").glob("*.jsonl")
         for line in month.read_text().splitlines()
         if line
     ]

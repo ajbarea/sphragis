@@ -8,7 +8,8 @@ organization-specific adaptation. This re-reads the registered run (merged seeds
 interval, pooled estimand) twice, as registered and with every example whose comments are all
 automated removed, from the same held-out rows.
 
-The rule is a fixed prefix list, stated before the re-read: `BOT_PREFIXES`.
+The rule is the registered bot templates (`sphragis.corpus.automated`), the same the corpus
+refinement applies; the artifact records the registry's digest.
 
     uv run --no-sync --no-active python scripts/bot_sensitivity.py \\
         datasets/results/rq1-windows-qtfull-fp32.json \\
@@ -27,10 +28,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from crossed_reread import merge  # noqa: E402
 
+from sphragis.corpus.automated import matched_bot, registry_digest  # noqa: E402
 from sphragis.experiment.walk import crossed_gate  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
-
-BOT_PREFIXES = ("Hint: ", "Modifying security sensitive file.", "Unresolved merge conflict")
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("runs", type=Path, nargs="+")
@@ -39,12 +39,12 @@ parser.add_argument("--bootstrap-seed", type=int, default=0)
 parser.add_argument("--out", type=Path, required=True)
 
 
-def is_automated(comment: str) -> bool:
-    return comment.strip().startswith(BOT_PREFIXES)
-
-
 def automated_ids(corpus: Path, orgs: list[str]) -> set[str]:
-    """Ids of examples whose every anchored comment is automated."""
+    """Ids of examples whose every anchored comment is automated.
+
+    Reads the built examples, not the refined ones, on purpose: its subject is the examples the
+    refinement removes, and a run scored before the refinement names built example ids.
+    """
     found: set[str] = set()
     # A placebo's pseudo-organizations (qt-a, qt-b) are halves of a real one's corpus.
     sources = {org if (corpus / org).is_dir() else org.rsplit("-", 1)[0] for org in orgs}
@@ -58,7 +58,7 @@ def automated_ids(corpus: Path, orgs: list[str]) -> set[str]:
                     continue
                 row = json.loads(line)
                 comments = row.get("comments") or []
-                if comments and all(is_automated(c) for c in comments):
+                if comments and all(matched_bot(c) is not None for c in comments):
                     found.add(row["id"])
     return found
 
@@ -86,7 +86,7 @@ def main() -> None:
             {
                 "runs": [str(p) for p in args.runs],
                 "seeds": list(seeds),
-                "bot_prefixes": list(BOT_PREFIXES),
+                "bot_registry": registry_digest(),
                 "removed_share": removed,
                 "readings": readings,
                 "provenance": provenance_header(),
