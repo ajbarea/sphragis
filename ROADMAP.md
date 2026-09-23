@@ -82,6 +82,13 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] State the dev window's censoring wherever dev numbers appear; they are pre-registration
   estimates, not unbiased previews. Stated with the three-seed RQ1 result: 39.1% and 28.8% of the
   dev window's changes were still open at collection, against 1.1% and 0.7% in the test window.
+- [x] **Chromium approved as a third organization and scoped** (2026-09-22): a C++ organization
+  with several projects, the pairing for Qt that controls language. In `GERRIT`; fetch now refuses
+  a query the host truncated. Selection rule, feasibility and split outcome are in the research log.
+- [ ] **Collect Chromium** over train and dev with `scripts/fetch_chromium.sh`, frozen by
+  2026-10-23. Blocked on the cut of chromium/src below the project (no project-level set meets the
+  split criteria), on the robots.txt and terms question for googlesource hosts, and then on
+  sub-month fetching for chromium/src.
 
 ## Plan B — measurement
 

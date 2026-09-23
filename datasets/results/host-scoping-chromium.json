@@ -1,0 +1,1083 @@
+{
+  "provenance": {
+    "generated_at": "2026-09-23T06:24:57.289756+00:00",
+    "git": {
+      "commit": "a7ebafb2c77eae779bdea61f898c1f4f98469ec6",
+      "branch": "feat/chromium-organization",
+      "uncommitted_code": [
+        "scripts/fetch_chromium.sh",
+        "scripts/host_scoping.py",
+        "sphragis/corpus/cli.py",
+        "sphragis/corpus/gerrit.py"
+      ],
+      "uncommitted_code_sha256": "65dc5333032aa62b210031e724d4b12ec40e132e5321c0323a9afcad8f5d6122"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  },
+  "host": "https://chromium-review.googlesource.com",
+  "rule": {
+    "cpp_extensions": [
+      ".cc",
+      ".cpp",
+      ".cxx",
+      ".hh",
+      ".hpp",
+      ".mm"
+    ],
+    "min_projected_window_examples": 256,
+    "examples_per_reviewer_comment": 0.42,
+    "split": {
+      "min_projects_a_half": 3,
+      "max_share_of_half": 0.5,
+      "min_half_train_examples": 2163
+    }
+  },
+  "projects": {
+    "chromium/src": {
+      "months_counted": [
+        "2024-11",
+        "2025-04",
+        "2025-10"
+      ],
+      "merged_per_month": 18509,
+      "human_per_month": 9780,
+      "bot_share": 0.472,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 1.35,
+      "strict_per_change": 1.32,
+      "cpp_file_share": 0.557,
+      "cpp_dominant": true,
+      "projected_train_examples": 55453,
+      "projected_window_examples": 66543,
+      "file_ext": [
+        [
+          ".cc",
+          70
+        ],
+        [
+          ".h",
+          39
+        ],
+        [
+          ".java",
+          36
+        ],
+        [
+          ".xml",
+          9
+        ],
+        [
+          ".gn",
+          9
+        ],
+        [
+          ".mm",
+          8
+        ],
+        [
+          ".gni",
+          5
+        ],
+        [
+          "(none)",
+          4
+        ],
+        [
+          ".html",
+          4
+        ],
+        [
+          ".json",
+          4
+        ],
+        [
+          ".css",
+          4
+        ],
+        [
+          ".ts",
+          4
+        ],
+        [
+          ".py",
+          3
+        ],
+        [
+          ".grd",
+          2
+        ],
+        [
+          ".sha1",
+          2
+        ],
+        [
+          ".txt",
+          1
+        ],
+        [
+          ".pydeps",
+          1
+        ],
+        [
+          ".star",
+          1
+        ],
+        [
+          ".json5",
+          1
+        ],
+        [
+          ".spec",
+          1
+        ],
+        [
+          ".svg",
+          1
+        ],
+        [
+          ".grdp",
+          1
+        ]
+      ]
+    },
+    "v8/v8": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 818,
+      "human_per_month": 504,
+      "bot_share": 0.384,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 1.18,
+      "strict_per_change": 1.15,
+      "cpp_file_share": 0.791,
+      "cpp_dominant": true,
+      "projected_train_examples": 2387,
+      "projected_window_examples": 2985,
+      "file_ext": [
+        [
+          ".cc",
+          76
+        ],
+        [
+          ".h",
+          49
+        ],
+        [
+          ".js",
+          22
+        ],
+        [
+          ".tq",
+          3
+        ],
+        [
+          ".status",
+          3
+        ],
+        [
+          ".json",
+          2
+        ],
+        [
+          "(none)",
+          1
+        ],
+        [
+          ".gn",
+          1
+        ],
+        [
+          ".py",
+          1
+        ]
+      ]
+    },
+    "angle/angle": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 190,
+      "human_per_month": 140,
+      "bot_share": 0.263,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 2.02,
+      "strict_per_change": 1.98,
+      "cpp_file_share": 0.78,
+      "cpp_dominant": true,
+      "projected_train_examples": 1145,
+      "projected_window_examples": 1433,
+      "file_ext": [
+        [
+          ".cpp",
+          98
+        ],
+        [
+          ".h",
+          58
+        ],
+        [
+          ".json",
+          8
+        ],
+        [
+          ".gni",
+          8
+        ],
+        [
+          ".gn",
+          5
+        ],
+        [
+          ".txt",
+          4
+        ],
+        [
+          ".cfg",
+          4
+        ],
+        [
+          ".chromium",
+          3
+        ],
+        [
+          "(none)",
+          3
+        ],
+        [
+          ".bc",
+          2
+        ],
+        [
+          ".star",
+          2
+        ],
+        [
+          ".c",
+          1
+        ],
+        [
+          ".y",
+          1
+        ],
+        [
+          ".lock",
+          1
+        ],
+        [
+          ".md",
+          1
+        ],
+        [
+          ".py",
+          1
+        ]
+      ]
+    },
+    "chromiumos/platform2": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 247,
+      "human_per_month": 217,
+      "bot_share": 0.123,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 0.47,
+      "strict_per_change": 0.47,
+      "cpp_file_share": 0.778,
+      "cpp_dominant": true,
+      "projected_train_examples": 467,
+      "projected_window_examples": 519,
+      "file_ext": [
+        [
+          ".cc",
+          62
+        ],
+        [
+          ".h",
+          29
+        ],
+        [
+          ".json",
+          9
+        ],
+        [
+          ".policy",
+          5
+        ],
+        [
+          ".md",
+          4
+        ],
+        [
+          ".gn",
+          3
+        ],
+        [
+          ".sh",
+          2
+        ],
+        [
+          ".yaml",
+          1
+        ],
+        [
+          ".go",
+          1
+        ],
+        [
+          ".conf",
+          1
+        ]
+      ]
+    },
+    "crashpad/crashpad": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 8,
+      "human_per_month": 8,
+      "bot_share": 0.01,
+      "sampled_changes": 4,
+      "reviewer_anchored_per_change": 11.0,
+      "strict_per_change": 11.0,
+      "cpp_file_share": 0.933,
+      "cpp_dominant": true,
+      "projected_train_examples": 425,
+      "projected_window_examples": 453,
+      "file_ext": [
+        [
+          ".cc",
+          8
+        ],
+        [
+          ".h",
+          5
+        ],
+        [
+          ".mm",
+          1
+        ],
+        [
+          ".gn",
+          1
+        ]
+      ]
+    },
+    "openscreen": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 4,
+      "human_per_month": 4,
+      "bot_share": 0.02,
+      "sampled_changes": 5,
+      "reviewer_anchored_per_change": 0.0,
+      "strict_per_change": 0.0,
+      "cpp_file_share": 0.833,
+      "cpp_dominant": true,
+      "projected_train_examples": 0,
+      "projected_window_examples": 0,
+      "file_ext": [
+        [
+          ".cc",
+          20
+        ],
+        [
+          ".h",
+          15
+        ],
+        [
+          ".gn",
+          5
+        ],
+        [
+          ".md",
+          2
+        ]
+      ]
+    },
+    "devtools/devtools-frontend": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 491,
+      "human_per_month": 392,
+      "bot_share": 0.201,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 0.75,
+      "strict_per_change": 0.72,
+      "cpp_file_share": 0.0,
+      "cpp_dominant": false,
+      "projected_train_examples": 1229,
+      "projected_window_examples": 1483,
+      "file_ext": [
+        [
+          ".ts",
+          170
+        ],
+        [
+          ".gn",
+          39
+        ],
+        [
+          ".gni",
+          5
+        ],
+        [
+          ".css",
+          3
+        ],
+        [
+          ".txt",
+          2
+        ],
+        [
+          ".html",
+          1
+        ],
+        [
+          ".svg",
+          1
+        ],
+        [
+          ".chromium",
+          1
+        ],
+        [
+          ".md",
+          1
+        ],
+        [
+          ".py",
+          1
+        ],
+        [
+          ".gz",
+          1
+        ],
+        [
+          ".js",
+          1
+        ]
+      ]
+    },
+    "catapult": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 39,
+      "human_per_month": 39,
+      "bot_share": 0.011,
+      "sampled_changes": 35,
+      "reviewer_anchored_per_change": 0.74,
+      "strict_per_change": 0.74,
+      "cpp_file_share": 0.0,
+      "cpp_dominant": false,
+      "projected_train_examples": 117,
+      "projected_window_examples": 145,
+      "file_ext": [
+        [
+          ".py",
+          38
+        ],
+        [
+          ".yaml",
+          14
+        ],
+        [
+          ".js",
+          3
+        ],
+        [
+          ".html",
+          3
+        ],
+        [
+          "(none)",
+          2
+        ],
+        [
+          ".md",
+          2
+        ],
+        [
+          ".json",
+          1
+        ],
+        [
+          ".chromium",
+          1
+        ],
+        [
+          ".txt",
+          1
+        ]
+      ]
+    },
+    "chromiumos/platform/ec": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 352,
+      "human_per_month": 336,
+      "bot_share": 0.046,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 0.57,
+      "strict_per_change": 0.57,
+      "cpp_file_share": 0.117,
+      "cpp_dominant": false,
+      "projected_train_examples": 795,
+      "projected_window_examples": 974,
+      "file_ext": [
+        [
+          ".conf",
+          26
+        ],
+        [
+          ".c",
+          20
+        ],
+        [
+          ".dtsi",
+          19
+        ],
+        [
+          ".txt",
+          13
+        ],
+        [
+          ".h",
+          13
+        ],
+        [
+          ".overlay",
+          10
+        ],
+        [
+          ".yaml",
+          4
+        ],
+        [
+          "(none)",
+          3
+        ],
+        [
+          ".py",
+          3
+        ],
+        [
+          ".rs",
+          2
+        ],
+        [
+          ".xml",
+          1
+        ],
+        [
+          ".usbc",
+          1
+        ],
+        [
+          ".cc",
+          1
+        ],
+        [
+          ".tasks",
+          1
+        ],
+        [
+          ".defconfig",
+          1
+        ],
+        [
+          ".mkbp_event",
+          1
+        ],
+        [
+          ".md",
+          1
+        ]
+      ]
+    },
+    "chromiumos/platform/depthcharge": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 135,
+      "human_per_month": 90,
+      "bot_share": 0.332,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 1.23,
+      "strict_per_change": 1.23,
+      "cpp_file_share": 0.0,
+      "cpp_dominant": false,
+      "projected_train_examples": 378,
+      "projected_window_examples": 558,
+      "file_ext": [
+        [
+          ".c",
+          69
+        ],
+        [
+          "(none)",
+          42
+        ],
+        [
+          ".h",
+          33
+        ],
+        [
+          ".inc",
+          3
+        ],
+        [
+          ".quenbi",
+          1
+        ],
+        [
+          ".yoda",
+          1
+        ],
+        [
+          ".caboc",
+          1
+        ],
+        [
+          ".kaladin",
+          1
+        ],
+        [
+          ".lapis",
+          1
+        ]
+      ]
+    },
+    "chromiumos/third_party/kernel": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 453,
+      "human_per_month": 392,
+      "bot_share": 0.136,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 1.95,
+      "strict_per_change": 1.88,
+      "cpp_file_share": 0.0,
+      "cpp_dominant": false,
+      "projected_train_examples": 3282,
+      "projected_window_examples": 3849,
+      "file_ext": [
+        [
+          ".c",
+          36
+        ],
+        [
+          ".h",
+          13
+        ],
+        [
+          ".config",
+          5
+        ],
+        [
+          ".py",
+          4
+        ],
+        [
+          ".dtsi",
+          4
+        ],
+        [
+          "(none)",
+          2
+        ],
+        [
+          ".yaml",
+          2
+        ],
+        [
+          ".dts",
+          2
+        ]
+      ]
+    },
+    "infra/luci/luci-go": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 183,
+      "human_per_month": 181,
+      "bot_share": 0.01,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 1.25,
+      "strict_per_change": 1.25,
+      "cpp_file_share": 0.0,
+      "cpp_dominant": false,
+      "projected_train_examples": 950,
+      "projected_window_examples": 1139,
+      "file_ext": [
+        [
+          ".ts",
+          108
+        ],
+        [
+          ".go",
+          100
+        ],
+        [
+          ".tsx",
+          45
+        ],
+        [
+          ".proto",
+          6
+        ],
+        [
+          "(none)",
+          2
+        ],
+        [
+          ".sql",
+          2
+        ],
+        [
+          ".css",
+          2
+        ],
+        [
+          ".yaml",
+          2
+        ],
+        [
+          ".js",
+          2
+        ],
+        [
+          ".sh",
+          1
+        ],
+        [
+          ".json",
+          1
+        ],
+        [
+          ".html",
+          1
+        ]
+      ]
+    },
+    "crosvm/crosvm": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 105,
+      "human_per_month": 44,
+      "bot_share": 0.578,
+      "sampled_changes": 22,
+      "reviewer_anchored_per_change": 1.23,
+      "strict_per_change": 1.18,
+      "cpp_file_share": 0.0,
+      "cpp_dominant": false,
+      "projected_train_examples": 245,
+      "projected_window_examples": 274,
+      "file_ext": [
+        [
+          ".rs",
+          103
+        ],
+        [
+          ".c",
+          14
+        ],
+        [
+          ".toml",
+          9
+        ],
+        [
+          "(none)",
+          7
+        ],
+        [
+          ".md",
+          3
+        ],
+        [
+          ".cfg",
+          2
+        ],
+        [
+          ".lock",
+          2
+        ],
+        [
+          ".star",
+          1
+        ],
+        [
+          ".h",
+          1
+        ],
+        [
+          ".py",
+          1
+        ],
+        [
+          ".policy",
+          1
+        ],
+        [
+          ".proto",
+          1
+        ]
+      ]
+    },
+    "chromium/tools/depot_tools": {
+      "months_counted": [
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_per_month": 68,
+      "human_per_month": 47,
+      "bot_share": 0.309,
+      "sampled_changes": 40,
+      "reviewer_anchored_per_change": 1.57,
+      "strict_per_change": 1.57,
+      "cpp_file_share": 0.0,
+      "cpp_dominant": false,
+      "projected_train_examples": 307,
+      "projected_window_examples": 375,
+      "file_ext": [
+        [
+          ".py",
+          58
+        ],
+        [
+          ".md",
+          3
+        ],
+        [
+          "(none)",
+          3
+        ],
+        [
+          ".txt",
+          2
+        ],
+        [
+          ".versions",
+          2
+        ],
+        [
+          ".multi-valid",
+          1
+        ],
+        [
+          ".warnings",
+          1
+        ],
+        [
+          ".vpython3",
+          1
+        ]
+      ]
+    }
+  },
+  "admitted": [
+    "chromium/src",
+    "v8/v8",
+    "angle/angle",
+    "chromiumos/platform2",
+    "crashpad/crashpad"
+  ],
+  "split_of_admitted": [
+    {
+      "projects": [
+        "chromium/src"
+      ],
+      "train_examples": 55453,
+      "largest": "chromium/src",
+      "largest_share": 1.0,
+      "qualifies": false
+    },
+    {
+      "projects": [
+        "angle/angle",
+        "chromiumos/platform2",
+        "crashpad/crashpad",
+        "v8/v8"
+      ],
+      "train_examples": 4424,
+      "largest": "v8/v8",
+      "largest_share": 0.54,
+      "qualifies": false
+    }
+  ],
+  "split_without_largest": [
+    {
+      "projects": [
+        "v8/v8"
+      ],
+      "train_examples": 2387,
+      "largest": "v8/v8",
+      "largest_share": 1.0,
+      "qualifies": false
+    },
+    {
+      "projects": [
+        "angle/angle",
+        "chromiumos/platform2",
+        "crashpad/crashpad"
+      ],
+      "train_examples": 2037,
+      "largest": "angle/angle",
+      "largest_share": 0.562,
+      "qualifies": false
+    }
+  ],
+  "qualifying_subsets": []
+}

@@ -73,3 +73,37 @@ def test_fetch_changes_does_not_retry_a_client_error() -> None:
 
     with pytest.raises(RuntimeError, match="404"):
         fetch_changes("https://g/", "q", transport=transport, sleep=lambda _: None)
+
+
+def _served_then_probed(served: list[dict[str, Any]], probe: list[dict[str, Any]]):
+    asked: list[str] = []
+
+    def transport(url: str) -> tuple[int, dict[str, str], str]:
+        asked.append(url)
+        return 200, {}, _page(served if len(asked) == 1 else probe, more=False)
+
+    return transport, asked
+
+
+def test_fetch_changes_refuses_a_query_the_server_cut_short() -> None:
+    """chromium-review ends at 10,000 results with no `_more_changes`, mid-month."""
+    served = [
+        {"id": "c1", "updated": "2024-11-20 10:00:00.000000000"},
+        {"id": "c2", "updated": "2024-11-13 08:28:51.000000000"},
+    ]
+    older = [served[1], {"id": "c3", "updated": "2024-11-13 08:27:51.000000000"}]
+    transport, asked = _served_then_probed(served, older)
+    with pytest.raises(RuntimeError, match="truncated"):
+        fetch_changes("https://g/", "status:merged", transport=transport)
+    from urllib.parse import unquote
+
+    assert unquote(asked[1]).endswith('(status:merged) before:"2024-11-13 08:28:51 +0000"&n=5')
+
+
+def test_fetch_changes_accepts_a_probe_that_finds_only_the_oldest_change_again() -> None:
+    # Gerrit's before: includes its own second, so a complete query's probe returns the
+    # oldest change it already served. Checked live against v8/v8 2025-10.
+    served = [{"id": "c1", "updated": "2025-10-01 01:58:13.000000000"}]
+    transport, asked = _served_then_probed(served, served)
+    changes, record = fetch_changes("https://g/", "q", transport=transport)
+    assert [c["id"] for c in changes] == ["c1"] and len(asked) == 2

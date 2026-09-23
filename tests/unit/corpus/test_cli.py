@@ -25,9 +25,18 @@ def test_main_exits_for_an_unknown_stage() -> None:
         main(["nonsense"])
 
 
-def test_both_organizations_have_a_gerrit_instance() -> None:
-    assert GERRIT["openstack"] == "https://review.opendev.org"
-    assert GERRIT["qt"] == "https://codereview.qt-project.org"
+def test_every_organization_has_its_gerrit_instance() -> None:
+    # Exact, so an organization added or dropped is a deliberate edit here too.
+    assert GERRIT == {
+        "aosp": "https://android-review.googlesource.com",
+        "chromium": "https://chromium-review.googlesource.com",
+        "openstack": "https://review.opendev.org",
+        "qt": "https://codereview.qt-project.org",
+    }
+
+
+def test_chromium_is_an_org_choice() -> None:
+    assert build_parser().parse_args(["fetch", "--org", "chromium"]).org == "chromium"
 
 
 def test_org_choices_come_from_the_instance_table() -> None:

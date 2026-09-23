@@ -84,6 +84,42 @@ def created_on_or_after(changes: Sequence[Mapping[str, Any]], cutoff: str) -> li
     return [dict(c) for c in changes if c["created"][:10] >= cutoff[:10]]
 
 
+def _refuse_if_truncated(
+    base_url: str,
+    query: str,
+    changes: Sequence[Mapping[str, Any]],
+    transport: Transport,
+    sleep: Callable[[float], None],
+    retries: list[int],
+) -> None:
+    """Raise if the server stopped paging before ``query`` was exhausted.
+
+    A missing `_more_changes` is not proof of the end. chromium-review stops at 10,000 results
+    and drops the flag on the last page it serves: measured 2026-09-22, chromium/src's merged
+    changes for 2024-11 ended at exactly 10,000, the last one updated on the 13th. Results come
+    newest-updated first, so anything the query matches from before the oldest change served
+    means the tail was cut. One small request per fetch.
+    """
+    stamps = [str(c["updated"]) for c in changes if "updated" in c]
+    if not stamps or len(stamps) != len(changes):
+        return
+    oldest = min(stamps)[:19]
+    seen = {c.get("id", c.get("_number")) for c in changes}
+    probe = f'({query}) before:"{oldest} +0000"'
+    url = f"{base_url.rstrip('/')}/changes/?q={quote(probe)}&n=5"
+    missing = [
+        c
+        for c in parse_response(_get(url, transport, sleep, retries))
+        if c.get("id", c.get("_number")) not in seen
+    ]
+    if missing:
+        raise RuntimeError(
+            f"{base_url} stopped after {len(changes)} results for {query!r} but more match "
+            f"before {oldest}: the server truncated the query. Narrow it (fewer projects or a "
+            "shorter date range) rather than keep a partial snapshot."
+        )
+
+
 def fetch_changes(
     base_url: str,
     query: str,
@@ -111,6 +147,7 @@ def fetch_changes(
         if not page or not page[-1].get("_more_changes"):
             break
         start += len(page)
+    _refuse_if_truncated(base_url, query, changes, transport, sleep, retries)
     record = {
         "base_url": base_url,
         "query": query,

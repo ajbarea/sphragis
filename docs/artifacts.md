@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 144 artifacts under
-34 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 145 artifacts under
+35 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -176,6 +176,14 @@ The adapter-instance cut: two adapters per client, and only one of them leaves.
 | artifact | |
 |---|---|
 | `client-updates-dual-cpp-rebuilt-c128-t2.json` |  |
+
+## `scripts/host_scoping.py`
+
+Which projects on a candidate Gerrit host could carry an organization, before collecting it.
+
+| artifact | |
+|---|---|
+| `host-scoping-chromium.json` |  |
 
 ## `scripts/interval_calibration.py`
 
