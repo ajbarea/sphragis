@@ -1,11 +1,11 @@
 {
   "openstack": {
     "months_built": 13,
-    "examples": 5926,
-    "after_dedup": 5469,
+    "examples": 5946,
+    "after_dedup": 5487,
     "dedup_removed": {
-      "exact": 262,
-      "near_duplicate": 195,
+      "exact": 263,
+      "near_duplicate": 196,
       "boilerplate": 0,
       "shared_change_id": 0
     },
@@ -39,12 +39,12 @@
         }
       },
       "train": {
-        "examples": 4304,
-        "changes": 1733,
+        "examples": 4322,
+        "changes": 1736,
         "content": {
-          ".py": 2042,
-          ".rst": 1176,
-          ".yaml": 459,
+          ".py": 2051,
+          ".rst": 1184,
+          ".yaml": 460,
           ".yml": 143,
           "(none)": 135,
           ".sh": 69,
@@ -124,15 +124,15 @@
           "near_duplicates": 0
         },
         "0.7": {
-          "rate": 0.0025557620817843866,
+          "rate": 0.0025451180009254974,
           "near_duplicates": 11
         },
         "0.6": {
-          "rate": 0.0055762081784386614,
+          "rate": 0.005552984729291994,
           "near_duplicates": 24
         },
         "0.5": {
-          "rate": 0.007202602230483271,
+          "rate": 0.0071726052753354926,
           "near_duplicates": 31
         },
         "max_similarity": 0.7931034482758621
@@ -160,32 +160,10 @@
     "dedup_note": "dedup runs before the split at Jaccard 0.8, so the 0.8 rate is partly zero by construction; read the looser thresholds"
   },
   "provenance": {
-    "generated_at": "2026-09-23T12:29:07.008084+00:00",
+    "generated_at": "2026-09-23T21:28:35.401984+00:00",
     "git": {
-      "commit": "cb431c86000606642b0af750cacd409683087007",
-      "branch": "docs/granularity-redesign",
-      "uncommitted_code": [
-        "scripts/bot_sensitivity.py",
-        "scripts/contamination_windows.py",
-        "scripts/data_audit.py",
-        "scripts/extract_bot_templates.py",
-        "scripts/label_audit_sample.py",
-        "scripts/placebo_corpus.py",
-        "scripts/project_corpora.py",
-        "scripts/rq1_pilot.py",
-        "scripts/separability.py",
-        "scripts/separability_over_time.py",
-        "scripts/sibling_leakage.py",
-        "scripts/window_report.py",
-        "sphragis/corpus/automated/__init__.py",
-        "sphragis/corpus/automated/qt-sanity-bot.json",
-        "sphragis/corpus/build.py",
-        "sphragis/corpus/cli.py",
-        "sphragis/corpus/load.py",
-        "sphragis/corpus/refine.py",
-        "sphragis/corpus/scrub.py"
-      ],
-      "uncommitted_code_sha256": "5f72f65d080c33d80089f55a2cb1566ecfa8cb2b096bc8c5dcd374f766fb2bc7"
+      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+      "branch": "corpus/v2"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

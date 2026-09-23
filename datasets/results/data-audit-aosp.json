@@ -1,49 +1,49 @@
 {
-  "org": "openstack",
+  "org": "aosp",
   "rules": "0292fd614738792f",
   "bot_registry": "bbfd02ce7633",
-  "built_examples": 5959,
-  "refined_examples": 5946,
+  "built_examples": 5133,
+  "refined_examples": 5130,
   "build_drops": {
-    "acknowledgement": 2047,
-    "author_comment": 18362,
-    "diff_error": 13,
-    "ill_posed_contraction": 179,
-    "ill_posed_empty_after": 1534,
-    "ill_posed_empty_before": 316,
-    "ill_posed_expansion": 153,
-    "metadata_file": 42811,
-    "no_anchored_hunk": 9086,
-    "no_line_anchor": 86,
-    "no_successor": 2695,
-    "comment_error": 8
+    "acknowledgement": 645,
+    "author_comment": 15880,
+    "comment_error": 0,
+    "diff_error": 0,
+    "ill_posed_contraction": 154,
+    "ill_posed_empty_after": 1306,
+    "ill_posed_empty_before": 373,
+    "ill_posed_expansion": 111,
+    "metadata_file": 10161,
+    "no_anchored_hunk": 7305,
+    "no_line_anchor": 89,
+    "no_successor": 1051
   },
   "refine_drops": {
     "automated_comment": 0,
-    "acknowledgement_comment": 154,
+    "acknowledgement_comment": 66,
     "automated_only": 0,
-    "acknowledgement_only": 13,
+    "acknowledgement_only": 3,
     "not_rework_successor": 0,
     "successor_kind_unknown": 0,
-    "address_residue": 0
+    "address_residue": 1
   },
   "automated_comments_by_bot": {},
   "successor_kinds": {
-    "REWORK": 5959
+    "REWORK": 5133
   },
   "candidate_unregistered_bots": [
     {
-      "text": "2025",
-      "changes": 19
+      "text": "typo",
+      "changes": 25
     },
     {
-      "text": "typo",
-      "changes": 17
+      "text": "2024",
+      "changes": 24
     }
   ],
   "min_changes": 15,
   "provenance": {
-    "generated_at": "2026-09-23T21:25:10.324036+00:00",
+    "generated_at": "2026-09-23T21:25:13.747516+00:00",
     "git": {
       "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
       "branch": "corpus/v2"
