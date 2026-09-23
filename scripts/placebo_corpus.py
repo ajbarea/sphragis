@@ -98,10 +98,15 @@ def main() -> None:
 
     side_of = assign(dict(train_counts))
     names = args.names or [f"{args.org}-a", f"{args.org}-b"]
+    if len(set(names)) != 2:
+        raise SystemExit(f"two distinct half names are needed, got {names}")
+    if args.org in names and args.out_root.resolve() == args.root.resolve():
+        raise SystemExit(f"a half named {args.org} under --root would overwrite its own source")
     # A reused out-root would keep months an earlier split wrote for a half that now has none.
     for name in names:
         for stale in refined_dir(args.out_root, name).glob("*"):
-            stale.unlink()
+            if stale.is_file():
+                stale.unlink()
     per_side: dict[int, Counter[str]] = {0: Counter(), 1: Counter()}
     written: dict[int, int] = {0: 0, 1: 0}
 

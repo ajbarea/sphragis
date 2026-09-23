@@ -27,6 +27,12 @@ import json
 from pathlib import Path
 from typing import Any
 
+from sphragis.corpus.load import (
+    derived_file_rows,
+    derived_sources,
+    refined_examples,
+    write_derived_file,
+)
 from sphragis.experiment.planted import (
     append_marker,
     flip_quotes,
@@ -37,7 +43,17 @@ from sphragis.experiment.planted import (
 TRANSFORMS = {"marker": append_marker, "quotes": flip_quotes}
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--examples", type=Path, required=True, help="one organization's JSONL")
+source = parser.add_mutually_exclusive_group(required=True)
+source.add_argument("--org", help="one organization's refined examples, under --root")
+source.add_argument("--examples", type=Path, help="a corpus file cut from refined examples")
+parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="with --examples: read a file not cut under the current label rules, to reproduce an "
+    "earlier result; the planted halves are then written without a record, so every later "
+    "read of them must say --legacy-corpus too",
+)
 parser.add_argument("--out-dir", type=Path, required=True, help="where the planted corpora go")
 parser.add_argument("--transform", choices=sorted(TRANSFORMS), default="marker")
 parser.add_argument(
@@ -54,18 +70,24 @@ parser.add_argument(
 def main() -> None:
     args = parser.parse_args()
     fractions = args.fraction or [0.0, 0.05, 0.1, 0.25, 0.5, 1.0]
-    rows = [json.loads(line) for line in args.examples.open() if line.strip()]
+    sources: list[tuple[Path, str]] | None
+    if args.org:
+        rows, sources = refined_examples(args.root, args.org), [(args.root, args.org)]
+    else:
+        rows = derived_file_rows(args.examples, legacy=args.legacy_corpus)
+        sources = None if args.legacy_corpus else derived_sources(args.examples)
     transform = TRANSFORMS[args.transform]
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     manifest: dict[str, Any] = {
-        "source": str(args.examples),
+        "source": str(args.examples) if args.examples else f"{args.root}/{args.org}",
+        "legacy_corpus": args.legacy_corpus,
         "transform": args.transform,
         "seed": args.seed,
         "examples": len(rows),
         "conditions": [],
     }
-    print(f"{len(rows)} examples from {args.examples}, convention '{args.transform}'")
+    print(f"{len(rows)} examples from {manifest['source']}, convention '{args.transform}'")
     if args.symmetric and args.transform != "marker":
         raise SystemExit("--symmetric is defined for the marker convention only")
     for fraction in fractions:
@@ -82,7 +104,10 @@ def main() -> None:
         paths = {}
         for side, half in (("a", left), ("b", right)):
             path = args.out_dir / f"{tag}-{side}.jsonl"
-            path.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in half))
+            if sources is None:
+                path.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in half))
+            else:
+                write_derived_file(path, half, sources=sources)
             paths[side] = str(path)
         manifest["conditions"].append({"tag": tag, **report, "paths": paths})
         print(

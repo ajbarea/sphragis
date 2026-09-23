@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from sphragis.corpus.refine import (
+    ADDRESS_RESIDUE,
     KEPT_UNCHECKED,
     REFINE_REASONS,
     index_changes,
@@ -114,7 +115,7 @@ def test_an_unrecorded_kind_is_kept_and_counted_as_the_build_keeps_it() -> None:
 
 def test_every_reason_is_reported_even_at_zero() -> None:
     _, counts = refine([], index_changes([]))
-    assert set(counts) == {*REFINE_REASONS, KEPT_UNCHECKED}
+    assert set(counts) == {*REFINE_REASONS, KEPT_UNCHECKED, ADDRESS_RESIDUE}
 
 
 def test_the_rules_version_moves_with_every_input() -> None:
@@ -124,3 +125,37 @@ def test_the_rules_version_moves_with_every_input() -> None:
         assert rules_version({**sources, name: sources[name] + " "}, "reg") != base
     assert rules_version(sources, "reg2") != base
     assert rules_version(dict(reversed(list(sources.items()))), "reg") == base
+
+
+def test_a_change_number_seen_twice_with_different_content_is_ambiguous() -> None:
+    fetched_early = _change(10, "REWORK")
+    fetched_late = {**_change(10, "TRIVIAL_REBASE"), "updated": "later"}
+    index = index_changes([fetched_early, fetched_late])
+    assert successor_kind(_row([], change_number=10), index) is None
+
+
+def test_the_same_change_read_twice_still_resolves() -> None:
+    index = index_changes([_change(10, "REWORK"), _change(10, "REWORK")])
+    assert successor_kind(_row([], change_number=10), index) == "REWORK"
+
+
+def test_missing_fields_are_unresolved_rather_than_fatal() -> None:
+    no_number = {k: v for k, v in _change(10).items() if k != "_number"}
+    index = index_changes([no_number])
+    row = {k: v for k, v in _row(["rename this"]).items() if k != "project"}
+    kept, counts = refine([row], index)
+    assert len(kept) == 1 and counts[KEPT_UNCHECKED] == 1
+    assert successor_kind({**_row([]), "patch_set": None}, index) is None
+
+
+def test_an_empty_recorded_kind_is_unrecorded() -> None:
+    kept, counts = refine([_row(["rename this"])], index_changes([_change(10, "")]))
+    assert len(kept) == 1 and counts[KEPT_UNCHECKED] == 1
+
+
+def test_an_address_domain_left_behind_a_pseudonym_is_removed() -> None:
+    kept, counts = refine(
+        [_row(["ask 0123456789ab@example.com, and see @mock.patch"])], index_changes([_change(10)])
+    )
+    assert kept[0]["comments"] == ["ask 0123456789ab, and see @mock.patch"]
+    assert counts[ADDRESS_RESIDUE] == 1

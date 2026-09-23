@@ -61,9 +61,18 @@ def revision_kind(change: Mapping[str, Any], patch_set: int) -> str | None:
     differ in kind (a keyed table once reported every non-rework successor in the corpus falsely).
     """
     for revision in (change.get("revisions") or {}).values():
-        if int(revision.get("_number", -1)) == patch_set:
-            return revision.get("kind")
+        if revision.get("_number") is not None and int(revision["_number"]) == patch_set:
+            return revision.get("kind") or None
     return None
+
+
+def successor_changed_code(kind: str | None) -> bool:
+    """Whether a successor of this kind can carry the author's answer: a rework, or unrecorded.
+
+    An unrecorded kind is kept: the git route records none, and detects rebase edits from
+    parent commits instead.
+    """
+    return kind is None or kind == REWORK
 
 
 def has_successor_revision(*, patch_set: int, revision_count: int) -> bool:

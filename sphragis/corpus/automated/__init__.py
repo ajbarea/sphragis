@@ -53,6 +53,7 @@ FLAKE8: dict[str, Any] = {
 }
 
 _PARAGRAPH = re.compile(r"\n\s*\n")
+_LINE_BREAKS = re.compile("\r\n|[\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]")
 
 
 def _registries_data() -> list[dict[str, Any]]:
@@ -99,6 +100,10 @@ def matched_bot(text: str) -> str | None:
 
     Every paragraph must match a template; the first paragraph's bot is reported.
     """
+    # Every line break a template's "[^\n]" would otherwise read through becomes a newline, so a
+    # reviewer's sentence after a bot line on a carriage return or a Unicode separator is not
+    # swallowed into the bot's template.
+    text = _LINE_BREAKS.sub("\n", text)
     paragraphs = [p.strip() for p in _PARAGRAPH.split(text.strip()) if p.strip()]
     if not paragraphs:
         return None

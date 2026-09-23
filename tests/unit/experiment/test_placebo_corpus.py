@@ -16,10 +16,11 @@ placebo = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(placebo)
 
 
-def _build(src: Path, out: Path, org: str = "qt") -> None:
+def _build(src: Path, out: Path, org: str = "qt", names: list[str] | None = None) -> None:
     """Run the builder the way the job does, through its own argument parser."""
     argv = sys.argv
     sys.argv = ["placebo_corpus.py", "--root", str(src), "--org", org, "--out-root", str(out)]
+    sys.argv += ["--names", *names] if names else []
     try:
         placebo.main()
     finally:
@@ -28,12 +29,13 @@ def _build(src: Path, out: Path, org: str = "qt") -> None:
 
 def _corpus(root: Path, org: str, rows: list[dict]) -> None:
     """One built and refined month, as the refine stage leaves it."""
-    from sphragis.corpus.load import refined_dir, write_source_record
+    from sphragis.corpus.load import refined_dir, write_build_record, write_source_record
 
     text = "".join(json.dumps(r) + "\n" for r in rows)
     built = root / org / "examples" / "2024-11.jsonl"
     built.parent.mkdir(parents=True)
     built.write_text(text)
+    write_build_record(built, None, complete=True)
     refined = refined_dir(root, org) / "2024-11.jsonl"
     refined.parent.mkdir(parents=True)
     refined.write_text(text)
@@ -123,3 +125,18 @@ def test_an_organization_of_one_project_cannot_be_split(tmp_path: Path) -> None:
     _corpus(tmp_path / "src", "qt", [_row("only", "2024-11-05", f"a{i}") for i in range(4)])
     with pytest.raises(SystemExit, match="1 projects"):
         _build(tmp_path / "src", tmp_path / "out")
+
+
+def test_two_halves_with_one_name_are_refused(tmp_path: Path) -> None:
+    rows = [_row(p, "2024-11-05", f"{p}{i}") for p in ("x", "y") for i in range(3)]
+    _corpus(tmp_path / "src", "qt", rows)
+    with pytest.raises(SystemExit, match="two distinct"):
+        _build(tmp_path / "src", tmp_path / "out", names=["h", "h"])
+
+
+def test_a_half_named_for_its_source_cannot_be_written_over_it(tmp_path: Path) -> None:
+    rows = [_row(p, "2024-11-05", f"{p}{i}") for p in ("x", "y") for i in range(3)]
+    _corpus(tmp_path / "src", "qt", rows)
+    with pytest.raises(SystemExit, match="overwrite its own source"):
+        _build(tmp_path / "src", tmp_path / "src", names=["qt", "qt-b"])
+    assert (tmp_path / "src" / "qt" / "refined" / "2024-11.jsonl").exists()

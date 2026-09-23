@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 from sphragis.corpus.cli import GERRIT, STAGES, build_parser, main, require_salt
+from sphragis.corpus.rules import BUILD_RULES
 
 
 def test_every_stage_is_accepted() -> None:
@@ -123,7 +124,9 @@ def test_verify_is_clean_on_a_freshly_frozen_corpus(
     }
     from sphragis.corpus.refine import RULES_VERSION
 
-    freeze_windows(tmp_path, "openstack", windows, stats={"rules": RULES_VERSION})
+    freeze_windows(
+        tmp_path, "openstack", windows, stats={"rules": RULES_VERSION, "build_rules": BUILD_RULES}
+    )
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 0
     assert "clean" in capsys.readouterr().out
 
@@ -135,7 +138,9 @@ def test_verify_fails_on_a_corpus_frozen_under_other_rules(
     from sphragis.corpus.pipeline import freeze_windows
 
     windows = {"pilot": [{"id": "a", "change_id": "I1", "created": "2024-10-02"}]}
-    freeze_windows(tmp_path, "openstack", windows, stats={"rules": "old"})
+    freeze_windows(
+        tmp_path, "openstack", windows, stats={"rules": "old", "build_rules": BUILD_RULES}
+    )
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
     assert "frozen under rules old" in capsys.readouterr().out
 
@@ -154,7 +159,9 @@ def test_verify_fails_when_a_window_no_longer_matches_its_manifest(
     }
     from sphragis.corpus.refine import RULES_VERSION
 
-    freeze_windows(tmp_path, "openstack", windows, stats={"rules": RULES_VERSION})
+    freeze_windows(
+        tmp_path, "openstack", windows, stats={"rules": RULES_VERSION, "build_rules": BUILD_RULES}
+    )
     splits = tmp_path / "openstack" / "splits"
     (splits / "pilot.jsonl").write_text('{"id": "tampered", "change_id": "I1"}\n')
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
@@ -606,7 +613,7 @@ def test_build_resumes_a_month_built_from_the_snapshot_on_disk(
     built = examples / "2024-10.jsonl"
     built.write_text('{"id": "already-built"}\n')
     cli.source_path(built).write_text(
-        json.dumps({"snapshot_sha256": cli.snapshot_digest(snapshot)})
+        json.dumps({"snapshot_sha256": cli.snapshot_digest(snapshot), "build_rules": BUILD_RULES})
     )
 
     monkeypatch.setattr(cli, "http_transport", lambda **_: lambda url: (200, {}, ")]}'\n{}"))
@@ -831,6 +838,8 @@ def _built_corpus(root: Path, kind: str = "REWORK") -> Path:
     """One built month of two duplicate examples, and the raw snapshot they came from."""
     import json
 
+    from sphragis.corpus.cli import snapshot_digest
+    from sphragis.corpus.load import write_build_record
     from sphragis.corpus.storage import write_snapshot
 
     base = {"change_id": "I1", "project": "openstack/nova", "created": "2024-10-05"}
@@ -844,6 +853,8 @@ def _built_corpus(root: Path, kind: str = "REWORK") -> Path:
     revisions = {"p1": {"_number": 1}, "p2": {"_number": 2, "kind": kind}}
     change = {**base, "_number": 7, "revisions": revisions}
     write_snapshot(root, "openstack", "2024-10", [change], record={"query": "test"})
+    snapshot = root / "openstack" / "raw" / "2024-10.ndjson.gz"
+    write_build_record(examples / "2024-10.jsonl", snapshot_digest(snapshot), complete=True)
     return examples / "2024-10.jsonl"
 
 
@@ -874,7 +885,7 @@ def test_a_rebuilt_month_makes_its_refinement_stale(tmp_path: Path) -> None:
     built = _built_corpus(tmp_path)
     assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
     built.write_text(built.read_text() + "\n")
-    with pytest.raises(SystemExit, match="not refined"):
+    with pytest.raises(SystemExit, match="rebuilt since it was refined"):
         main(["split", "--org", "openstack", "--root", str(tmp_path)])
 
 
@@ -885,5 +896,73 @@ def test_a_refinement_under_other_rules_is_stale(tmp_path: Path) -> None:
     assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
     record = tmp_path / "openstack" / "refined" / "2024-10.source.json"
     record.write_text(json.dumps({**json.loads(record.read_text()), "rules": "old"}))
-    with pytest.raises(SystemExit, match="not refined"):
+    with pytest.raises(SystemExit, match="refined under other rules"):
         main(["freeze", "--org", "openstack", "--root", str(tmp_path)])
+
+
+def test_a_month_built_under_other_build_rules_is_rebuilt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Refining it again would stamp the old build's output as current."""
+    from sphragis.corpus import cli
+
+    _offline(monkeypatch)
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    snapshot = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
+    built = tmp_path / "openstack" / "examples" / "2024-10.jsonl"
+    built.parent.mkdir(parents=True)
+    built.write_text('{"id": "old-build"}\n')
+    cli.source_path(built).write_text(
+        json.dumps({"snapshot_sha256": cli.snapshot_digest(snapshot), "build_rules": "old"})
+    )
+    assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert "built under other build rules, rebuilding" in capsys.readouterr().out
+    assert built.read_text() == ""
+    assert json.loads(cli.source_path(built).read_text())["build_rules"] == BUILD_RULES
+
+
+def _unstamped(root: Path) -> Path:
+    built = _built_corpus(root)
+    record = built.with_name("2024-10.source.json")
+    record.write_text(
+        json.dumps({"snapshot_sha256": json.loads(record.read_text())["snapshot_sha256"]})
+    )
+    return record
+
+
+def test_an_unstamped_month_is_refused_until_stamped(tmp_path: Path) -> None:
+    from sphragis.corpus.load import refined_examples
+
+    record = _unstamped(tmp_path)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    with pytest.raises(SystemExit, match="other build rules"):
+        refined_examples(tmp_path, "openstack")
+    assert main(["stamp", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    stamped = json.loads(record.read_text())
+    assert stamped["build_rules"] == BUILD_RULES and stamped["stamped"]
+    assert stamped["without_context"] == 2, "the fixture's rows carry no context"
+    assert len(refined_examples(tmp_path, "openstack")) == 2
+
+
+def test_stamp_refuses_a_month_built_under_other_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    record = _unstamped(tmp_path)
+    record.write_text(json.dumps({**json.loads(record.read_text()), "build_rules": "old"}))
+    assert main(["stamp", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert "rebuild it" in capsys.readouterr().out
+    assert json.loads(record.read_text())["build_rules"] == "old"
+
+
+def test_verify_fails_on_a_corpus_frozen_under_other_build_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from sphragis.corpus.pipeline import freeze_windows
+    from sphragis.corpus.refine import RULES_VERSION
+
+    windows = {"pilot": [{"id": "a", "change_id": "I1", "created": "2024-10-02"}]}
+    freeze_windows(
+        tmp_path, "openstack", windows, stats={"rules": RULES_VERSION, "build_rules": "old"}
+    )
+    assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert "frozen under build_rules old" in capsys.readouterr().out

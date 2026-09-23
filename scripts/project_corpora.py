@@ -81,7 +81,7 @@ def main() -> None:
         slug = project.replace("/", "_")
         path = args.out_dir / f"{slug}.jsonl"
         examples = by_project[project]
-        write_derived_file(path, examples)
+        write_derived_file(path, examples, sources=[(Path("datasets/gerrit"), args.org)])
         manifest["projects"][project] = {
             "path": str(path),
             "examples": len(examples),

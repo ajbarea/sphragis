@@ -25,6 +25,17 @@ def test_corpus_text_directories_are_ignored(root: str, directory: str) -> None:
     assert result.returncode == 0, f"{probe} would be committable; add it to .gitignore"
 
 
+@pytest.mark.parametrize(
+    "probe",
+    ["datasets/gerrit/qt.jsonl", "datasets/gerritx/o/x.jsonl", "scratch/label-audit-sheet.jsonl"],
+)
+def test_corpus_text_beside_the_org_directories_is_ignored(probe: str) -> None:
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "check-ignore", "-q", probe], capture_output=True
+    )
+    assert result.returncode == 0, f"{probe} would be committable; add it to .gitignore"
+
+
 @pytest.mark.parametrize("name", ("manifest.json", "seal.json"))
 def test_manifests_and_seals_are_committable(name: str) -> None:
     result = subprocess.run(

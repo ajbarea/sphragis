@@ -48,7 +48,7 @@ fi
 claim_result OUT "$HOME/rq1-$MODE$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/rq1_pilot.py \
   "${SOURCE[@]}" \
-  ${LEGACY_CORPUS:+--legacy-corpus} \
+  $(legacy_corpus_flag) \
   --seeds "${SEEDS:-1}" \
   --lora-rank "${LORA_RANK:-32}" \
   --equalize-train \

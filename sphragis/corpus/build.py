@@ -14,12 +14,12 @@ from typing import Any
 
 from sphragis.corpus.automated import is_automated
 from sphragis.corpus.examples import (
-    REWORK,
     Hunk,
     has_successor_revision,
     hunks_from_diff,
     is_code_file,
     revision_kind,
+    successor_changed_code,
 )
 from sphragis.corpus.wellposed import ILL_POSED_REASONS, classify
 
@@ -161,10 +161,8 @@ def build_from_change(
                 drops["no_successor"] += 1
                 continue
             # A successor that is a rebase or a message-only edit changed no code, so any hunk
-            # that differs across it is what the rebase swept in, not the author's answer. An
-            # unrecorded kind is kept: the git route records none, and detects rebase edits from
-            # parent commits instead.
-            if revision_kind(change, patch_set + 1) not in (None, REWORK):
+            # that differs across it is what the rebase swept in, not the author's answer.
+            if not successor_changed_code(revision_kind(change, patch_set + 1)):
                 drops["not_rework_successor"] += 1
                 continue
             try:
