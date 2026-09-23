@@ -35,6 +35,7 @@ from pathlib import Path
 
 from peft import get_peft_model_state_dict, set_peft_model_state_dict
 
+from sphragis.corpus.load import derived_file_rows
 from sphragis.experiment.clients import partition
 from sphragis.experiment.model import (
     LORA,
@@ -60,6 +61,12 @@ parser.add_argument("--clients", type=int, default=8, help="at most this many pe
 parser.add_argument("--max-per-change", type=int)
 parser.add_argument("--seed", type=int, default=1, help="the shared initialization")
 parser.add_argument("--packing-seed", type=int)
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="read corpus files not cut under the current label rules, to reproduce an earlier "
+    "result; recorded in the output",
+)
 parser.add_argument(
     "--schedule",
     default="feddpa-t",
@@ -122,9 +129,7 @@ def main() -> None:
     items: dict[str, dict] = {}
     for spec in sources(args):
         name, _, path = spec.partition("=")
-        rows = [
-            json.loads(line) for line in (args.corpus_root / path).read_text().splitlines() if line
-        ]
+        rows = derived_file_rows(args.corpus_root / path, legacy=args.legacy_corpus)
         usable = []
         for row in rows:
             try:
@@ -230,6 +235,7 @@ def main() -> None:
                 "transmitted": GLOBAL,
                 "withheld": LOCAL,
                 "corpus_root": str(args.corpus_root),
+                "legacy_corpus": args.legacy_corpus,
                 "sources": sorted(sources(args)),
                 "client_size": args.client_size,
                 "max_per_change": args.max_per_change or max(1, args.client_size // 4),

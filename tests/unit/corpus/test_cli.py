@@ -121,9 +121,23 @@ def test_verify_is_clean_on_a_freshly_frozen_corpus(
         "dev": [],
         "test": [],
     }
-    freeze_windows(tmp_path, "openstack", windows, stats={})
+    from sphragis.corpus.refine import RULES_VERSION
+
+    freeze_windows(tmp_path, "openstack", windows, stats={"rules": RULES_VERSION})
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 0
     assert "clean" in capsys.readouterr().out
+
+
+def test_verify_fails_on_a_corpus_frozen_under_other_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from sphragis.corpus.cli import main
+    from sphragis.corpus.pipeline import freeze_windows
+
+    windows = {"pilot": [{"id": "a", "change_id": "I1", "created": "2024-10-02"}]}
+    freeze_windows(tmp_path, "openstack", windows, stats={"rules": "old"})
+    assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert "frozen under rules old" in capsys.readouterr().out
 
 
 def test_verify_fails_when_a_window_no_longer_matches_its_manifest(
@@ -138,7 +152,9 @@ def test_verify_fails_when_a_window_no_longer_matches_its_manifest(
         "dev": [],
         "test": [],
     }
-    freeze_windows(tmp_path, "openstack", windows, stats={})
+    from sphragis.corpus.refine import RULES_VERSION
+
+    freeze_windows(tmp_path, "openstack", windows, stats={"rules": RULES_VERSION})
     splits = tmp_path / "openstack" / "splits"
     (splits / "pilot.jsonl").write_text('{"id": "tampered", "change_id": "I1"}\n')
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
@@ -825,7 +841,8 @@ def _built_corpus(root: Path, kind: str = "REWORK") -> Path:
     examples = root / "openstack" / "examples"
     examples.mkdir(parents=True, exist_ok=True)
     (examples / "2024-10.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
-    change = {**base, "revisions": {"p1": {"_number": 1}, "p2": {"_number": 2, "kind": kind}}}
+    revisions = {"p1": {"_number": 1}, "p2": {"_number": 2, "kind": kind}}
+    change = {**base, "_number": 7, "revisions": revisions}
     write_snapshot(root, "openstack", "2024-10", [change], record={"query": "test"})
     return examples / "2024-10.jsonl"
 

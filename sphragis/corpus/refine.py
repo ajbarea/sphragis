@@ -1,37 +1,32 @@
 """The label rules found by the Stage 1 data audit, applied to built examples.
 
-Three things passed the build's filters that are not what an adapter should learn, and each
-reached one organization more than the other (research log, 2026-09-23):
+Two things passed the build's filters that are not what an adapter should learn, and the first
+reached one organization and not the other (research log, 2026-09-23):
 
 - comments written by a bot, which enforce written rules (`sphragis.corpus.automated`);
-- a next patch set that is a rebase or a message-only edit, so the "rewrite" is whatever the
-  rebase swept in rather than anything the author did;
 - Gerrit's one-click "Acknowledged", which the acknowledgement list missed.
 
-The build applies the same rules to comments as it reads them, so a corpus built after this
-passes through here unchanged; a corpus built before is brought to the same rules without
-refetching anything, from its examples and the raw snapshots they came from. Every removal is
-counted by reason, as the build counts its own.
+A third rule guards a case the corpus turned out not to contain: a next patch set that is a
+rebase or a message-only edit, where the "rewrite" would be whatever the rebase swept in. It is
+applied per change (`examples.revision_kind`), never through the Change-Id alone, which a
+cherry-pick shares across branches.
+
+The build applies the same rules as it reads comments, so a corpus built after them passes
+through here unchanged; one built before is brought to the same rules from its examples and raw
+snapshots, nothing refetched. Every removal is counted by reason, as the build counts its own.
 """
 
 from __future__ import annotations
 
 import hashlib
-from collections import Counter
+from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.automated import matched_bot, registry_digest
-from sphragis.corpus.build import ACKNOWLEDGEMENTS, is_acknowledgement
-
-# The CLI refuses a corpus refined under another version, so a changed rule cannot be half
-# applied. The tag changes with this module's rules; the digest changes with any bot registry
-# or the builder's acknowledgement list, without anyone remembering to bump it.
-_RULES_TAG = "2026-09-23"
-RULES_VERSION = (
-    f"{_RULES_TAG}:{registry_digest()}:"
-    + hashlib.sha256(",".join(sorted(ACKNOWLEDGEMENTS)).encode()).hexdigest()[:8]
-)
+from sphragis.corpus.build import is_acknowledgement
+from sphragis.corpus.examples import REWORK, revision_kind
 
 REFINE_REASONS = (
     "automated_comment",
@@ -39,53 +34,77 @@ REFINE_REASONS = (
     "automated_only",
     "acknowledgement_only",
     "not_rework_successor",
-    "unknown_successor",
+)
+# Counted and kept: an example whose successor kind was never recorded, or whose change cannot
+# be told apart from another with the same Change-Id, project and creation time.
+KEPT_UNCHECKED = "successor_kind_unknown"
+
+_CORPUS = Path(__file__).resolve().parent
+_RULE_SOURCES = ("refine.py", "build.py", "examples.py", "automated/__init__.py")
+
+
+def rules_version(sources: Mapping[str, str], registry: str) -> str:
+    """A digest of the code that decides what an example is, and of the bot registries.
+
+    Hashing the rule code itself means a changed rule is a changed version without anyone
+    remembering to bump one; a comment edit also changes it, which errs toward re-refining.
+    """
+    digest = hashlib.sha256()
+    for name in sorted(sources):
+        digest.update(name.encode() + b"\0" + sources[name].encode() + b"\0")
+    digest.update(registry.encode())
+    return digest.hexdigest()[:16]
+
+
+RULES_VERSION = rules_version(
+    {name: (_CORPUS / name).read_text() for name in _RULE_SOURCES}, registry_digest()
 )
 
-# Gerrit's ChangeKind for a patch set that changed the code. Every other kind (TRIVIAL_REBASE,
-# TRIVIAL_REBASE_WITH_MESSAGE_UPDATE, MERGE_FIRST_PARENT_UPDATE, NO_CODE_CHANGE, NO_CHANGE)
-# means the author edited nothing, so a hunk that differs across it is not the author's answer.
-REWORK = "REWORK"
+
+ChangeIndex = dict[str, Any]
 
 
-def revision_kinds(changes: Iterable[Mapping[str, Any]]) -> dict[tuple[str, str, int], str]:
-    """(change id, project, patch set number) to that revision's ChangeKind, from raw changes."""
-    kinds: dict[tuple[str, str, int], str] = {}
+def index_changes(changes: Iterable[Mapping[str, Any]]) -> ChangeIndex:
+    """Raw changes by number, and by (Change-Id, project, created) for examples without one."""
+    by_number: dict[int, Mapping[str, Any]] = {}
+    by_identity: dict[tuple[str, str, str], dict[int, Mapping[str, Any]]] = defaultdict(dict)
     for change in changes:
-        for revision in (change.get("revisions") or {}).values():
-            kind = revision.get("kind")
-            if kind is not None:
-                kinds[(change["change_id"], change["project"], int(revision["_number"]))] = kind
-    return kinds
+        number = int(change["_number"])
+        by_number[number] = change
+        key = (change["change_id"], change["project"], str(change.get("created")))
+        by_identity[key][number] = change
+    return {"by_number": by_number, "by_identity": by_identity}
 
 
-def successor_is_rework(kind: str | None) -> bool | None:
-    """Whether the next patch set changed code; None when its kind was never recorded."""
-    return None if kind is None else kind == REWORK
+def successor_kind(row: Mapping[str, Any], index: ChangeIndex) -> str | None:
+    """The kind of this example's next patch set, from its own change; None if unresolvable."""
+    change: Mapping[str, Any] | None
+    if row.get("change_number") is not None:
+        change = index["by_number"].get(int(row["change_number"]))
+    else:
+        candidates = index["by_identity"].get(
+            (row["change_id"], row["project"], str(row.get("created")))
+        )
+        change = next(iter(candidates.values())) if candidates and len(candidates) == 1 else None
+    return None if change is None else revision_kind(change, int(row["patch_set"]) + 1)
 
 
 def refine(
-    rows: Sequence[Mapping[str, Any]],
-    kinds: Mapping[tuple[str, str, int], str],
+    rows: Sequence[Mapping[str, Any]], index: ChangeIndex
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Examples under the audit's rules, and the count removed for each reason.
+    """Examples under the audit's rules, and the count for each reason.
 
     Comments are removed one at a time, so an example with a bot's hint and a reviewer's
-    instruction keeps the instruction; an example left with no comment is dropped. An example
-    whose successor kind was never recorded is dropped and counted apart, since keeping it would
-    assume the one thing this checks.
+    instruction keeps the instruction; an example left with no comment is dropped.
     """
-    drops: Counter[str] = Counter(dict.fromkeys(REFINE_REASONS, 0))
+    counts: Counter[str] = Counter(dict.fromkeys((*REFINE_REASONS, KEPT_UNCHECKED), 0))
     kept: list[dict[str, Any]] = []
     for row in rows:
-        rework = successor_is_rework(
-            kinds.get((row["change_id"], row["project"], int(row["patch_set"]) + 1))
-        )
-        if rework is None:
-            drops["unknown_successor"] += 1
-            continue
-        if not rework:
-            drops["not_rework_successor"] += 1
+        kind = successor_kind(row, index)
+        if kind is None:
+            counts[KEPT_UNCHECKED] += 1
+        elif kind != REWORK:
+            counts["not_rework_successor"] += 1
             continue
         comments: list[str] = []
         automated = acknowledged = 0
@@ -96,10 +115,10 @@ def refine(
                 acknowledged += 1
             else:
                 comments.append(text)
-        drops["automated_comment"] += automated
-        drops["acknowledgement_comment"] += acknowledged
+        counts["automated_comment"] += automated
+        counts["acknowledgement_comment"] += acknowledged
         if not comments:
-            drops["automated_only" if automated else "acknowledgement_only"] += 1
+            counts["automated_only" if automated else "acknowledgement_only"] += 1
             continue
         kept.append({**row, "comments": comments})
-    return kept, dict(drops)
+    return kept, dict(counts)

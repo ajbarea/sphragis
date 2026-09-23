@@ -9,21 +9,24 @@ Identity from the source comes first: Gerrit tags service accounts `SERVICE_USER
 Hosts that do not expose the tag, and corpora collected before it was kept, fall back to the
 bots' own message templates, each registered with the source it was read from:
 
-- `qt-sanity-bot.json`, every complaint `git-hooks/sanitize-commit` in qt/qtrepotools posts,
-  extracted by `scripts/extract_bot_templates.py` at a pinned commit;
+- `qt-sanity-bot.json`, every complaint `git-hooks/sanitize-commit` in qt/qtrepotools posts, the
+  union over every version of the hook in effect across the corpus span, extracted by
+  `scripts/extract_bot_templates.py`;
 - Qt's QUIP-23 review integration, which posts one fixed message on changes to files carrying a
   `Qt-Security` header (https://contribute.qt-project.org/quips/23);
 - flake8 lint output posted inline on pyside/pyside-setup, "CODE: message" with the code families
-  flake8's default checkers emit (pycodestyle E/W, pyflakes F, mccabe C9). The posting bot's
-  own script is not published; the text is flake8's, and 338 of the 339 matches in the Qt corpus
-  are on that one project.
+  flake8's default checkers emit (pycodestyle E/W, pyflakes F, mccabe C9). The posting bot's own
+  script is not published; the text is flake8's, and all 338 matches in the Qt corpus are on that
+  one project.
 
-A template matches the whole comment, so a reviewer who writes a sentence around "Trailing
-whitespace" is not taken for the bot.
+A template matches a whole line, and a comment is automated only when every paragraph of it is:
+the Sanity Bot joins the complaints it has for one line with a blank line, while a reviewer who
+writes a sentence around "Trailing whitespace", or a paragraph after a bot's text, is not a bot.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections.abc import Mapping
@@ -42,46 +45,65 @@ QUIP23: dict[str, Any] = {
     "prefixes": [],
 }
 
-
 FLAKE8: dict[str, Any] = {
     "bot": "flake8 lint output",
     "source": "https://flake8.pycqa.org/en/latest/user/error-codes.html",
-    "templates": [{"pattern": r"(?:[EW]\d{3}|F\d{3}|C9\d{2}): .+"}],
+    "templates": [{"pattern": r"(?:[EW]\d{3}|F\d{3}|C9\d{2}): [^\n]+"}],
     "prefixes": [],
 }
+
+_PARAGRAPH = re.compile(r"\n\s*\n")
+
+
+def _registries_data() -> list[dict[str, Any]]:
+    return [json.loads((_HERE / "qt-sanity-bot.json").read_text()), QUIP23, FLAKE8]
 
 
 @cache
 def _registries() -> tuple[tuple[str, re.Pattern[str]], ...]:
-    registries: list[dict[str, Any]] = [
-        json.loads((_HERE / "qt-sanity-bot.json").read_text()),
-        QUIP23,
-        FLAKE8,
-    ]
     compiled = []
-    for registry in registries:
+    for registry in _registries_data():
         prefixes = "|".join(re.escape(p) for p in registry.get("prefixes", []))
         lead = f"(?:{prefixes})?" if prefixes else ""
         body = "|".join(f"(?:{t['pattern']})" for t in registry["templates"])
-        compiled.append((registry["bot"], re.compile(rf"{lead}(?:{body})", re.DOTALL)))
+        compiled.append((registry["bot"], re.compile(rf"{lead}(?:{body})")))
     return tuple(compiled)
 
 
 def registry_digest() -> str:
-    """A digest of every registered template, so a changed registry is a changed rule."""
-    import hashlib
+    """A digest of what the registries match: bot, prefixes and patterns, nothing else.
 
-    text = (_HERE / "qt-sanity-bot.json").read_text() + json.dumps([QUIP23, FLAKE8], sort_keys=True)
-    return hashlib.sha256(text.encode()).hexdigest()[:12]
+    Provenance fields (when a registry was generated, by what) are left out, so regenerating a
+    registry with the same templates does not mark every refinement stale.
+    """
+    content = [
+        {
+            "bot": r["bot"],
+            "prefixes": r.get("prefixes", []),
+            "patterns": sorted(t["pattern"] for t in r["templates"]),
+        }
+        for r in _registries_data()
+    ]
+    return hashlib.sha256(json.dumps(content, sort_keys=True).encode()).hexdigest()[:12]
+
+
+def _line_bot(paragraph: str) -> str | None:
+    for bot, pattern in _registries():
+        if pattern.fullmatch(paragraph):
+            return bot
+    return None
 
 
 def matched_bot(text: str) -> str | None:
-    """The registered bot whose template this whole comment matches, or None."""
-    stripped = text.strip()
-    for bot, pattern in _registries():
-        if pattern.fullmatch(stripped):
-            return bot
-    return None
+    """The registered bot that wrote this whole comment, or None.
+
+    Every paragraph must match a template; the first paragraph's bot is reported.
+    """
+    paragraphs = [p.strip() for p in _PARAGRAPH.split(text.strip()) if p.strip()]
+    if not paragraphs:
+        return None
+    bots = [_line_bot(p) for p in paragraphs]
+    return bots[0] if all(bots) else None
 
 
 def is_service_user(author: Mapping[str, Any] | None) -> bool:

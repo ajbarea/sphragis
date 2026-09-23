@@ -9,12 +9,15 @@ this reads them from the hook itself rather than from a list someone typed.
 
 Each message becomes an anchored regular expression: string literals are escaped, and Perl
 interpolations (`$word`, `$1`) and concatenated expressions (`formatSize($size)`) become a
-non-empty wildcard. The output records the source commit, so the registry can be regenerated
-when the bot changes.
+wildcard bounded to one line, so a template cannot swallow a reviewer's paragraph after it.
 
-    git clone --depth 1 https://github.com/qt/qtrepotools.git /tmp/qtrepotools
+The bot's wording changes over time, so the registry is the union over every version of the hook
+in effect across a span: the version current at `--since` and every commit touching the hook up
+to now. Each template records the versions it appears in.
+
+    git clone https://github.com/qt/qtrepotools.git /tmp/qtrepotools
     uv run --no-sync --no-active python scripts/extract_bot_templates.py \\
-        --hook /tmp/qtrepotools/git-hooks/sanitize-commit \\
+        --repo /tmp/qtrepotools --since 2024-10-01 \\
         --out sphragis/corpus/automated/qt-sanity-bot.json
 """
 
@@ -29,7 +32,7 @@ from pathlib import Path
 from sphragis.provenance import provenance_header
 
 CALLS = ("complain_cln", "complain_ln", "complain", "styleFail", "do_complain")
-WILD = ".+?"
+WILD = "[^\\n]+?"
 
 # check_spelling posts "$word -> $correction?$sfx": one lowercased dictionary word, its
 # correction, and " [*]" when the correction is the American spelling. Read as a bare wildcard it
@@ -37,7 +40,8 @@ WILD = ".+?"
 SPELLING = (r"\$word -> \$correction\?\$sfx", r"[a-z']+ \-> [A-Za-z' \-]+\?(?: \[\*\])?")
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--hook", type=Path, required=True, help="path to git-hooks/sanitize-commit")
+parser.add_argument("--repo", type=Path, required=True, help="a full clone of qt/qtrepotools")
+parser.add_argument("--since", required=True, help="YYYY-MM-DD: the corpus span's first day")
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -112,25 +116,45 @@ def extract(source: str) -> list[dict[str, str]]:
     return sorted(templates.values(), key=lambda t: t["pattern"])
 
 
+HOOK = "git-hooks/sanitize-commit"
+
+
+def _git(repo: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args], capture_output=True, text=True, check=True
+    ).stdout
+
+
+def versions(repo: Path, since: str) -> list[tuple[str, str]]:
+    """(commit, date) of the hook version in effect on `since` and of every later change."""
+    first = _git(repo, "log", "-1", "--format=%H %cs", f"--before={since}", "--", HOOK).split()
+    later = [
+        line.split()
+        for line in _git(
+            repo, "log", "--format=%H %cs", f"--since={since}", "--", HOOK
+        ).splitlines()
+    ]
+    found = ([tuple(first)] if first else []) + [tuple(v) for v in reversed(later)]
+    return [(c, d) for c, d in found]
+
+
 def main() -> None:
     args = parser.parse_args()
-    source = args.hook.read_text()
-    commit = subprocess.run(
-        ["git", "-C", str(args.hook.parent), "rev-parse", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
-    templates = extract(source)
+    union: dict[str, dict] = {}
+    span = versions(args.repo, args.since)
+    for commit, _ in span:
+        for template in extract(_git(args.repo, "show", f"{commit}:{HOOK}")):
+            entry = union.setdefault(template["pattern"], {**template, "versions": []})
+            entry["versions"].append(commit[:12])
+    templates = sorted(union.values(), key=lambda t: t["pattern"])
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
         json.dumps(
             {
                 "bot": "Qt Sanity Bot",
-                "source": "https://github.com/qt/qtrepotools/blob/"
-                + commit
-                + "/git-hooks/sanitize-commit",
-                "source_commit": commit,
+                "source": "https://github.com/qt/qtrepotools/blob/<version>/" + HOOK,
+                "versions": [{"commit": c, "date": d} for c, d in span],
+                "since": args.since,
                 "prefixes": ["Hint: "],
                 "templates": templates,
                 "provenance": provenance_header(),
@@ -139,7 +163,7 @@ def main() -> None:
         )
         + "\n"
     )
-    print(f"{len(templates)} templates from {commit[:12]} -> {args.out}")
+    print(f"{len(templates)} templates over {len(span)} hook versions -> {args.out}")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ from pathlib import Path
 import torch
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.load import refined_examples
+from sphragis.corpus.load import derived_file_rows, refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.experiment.holdout import (
     equalize_training,
@@ -58,6 +58,12 @@ source.add_argument(
     help="built corpus root; splits by TIME WINDOW, which is the study's own split",
 )
 parser.add_argument("--org", action="append", default=[], help="with --root; repeatable")
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="with --corpus: read files not cut under the current label rules, to reproduce an "
+    "earlier result; recorded in the output",
+)
 parser.add_argument("--train-window", default="train")
 parser.add_argument("--eval-window", default="dev", help="never the sealed test window")
 parser.add_argument("--seeds", default="1", help="comma-separated; an odd count")
@@ -110,7 +116,7 @@ for org in orgs:
         # Pilot shape: one month, held out by change. No time separation, so it measures
         # whether the apparatus runs, not the contrast the report claims.
         path = dict(e.split("=", 1) for e in args.corpus)[org]
-        rows = [json.loads(line) for line in Path(path).read_text().splitlines() if line]
+        rows = derived_file_rows(Path(path), legacy=args.legacy_corpus)
         kept, removed = run_dedup(rows)
         train, evaluate_on = holdout_by_change(kept, seed=args.split_seed)
         source_note = f"holdout seed {args.split_seed} over {path}"
@@ -136,6 +142,7 @@ for org in orgs:
     train_rows[org], held_out[org] = train, evaluate_on
     summary[org] = {
         "source": source_note,
+        "legacy_corpus": bool(args.corpus) and args.legacy_corpus,
         "examples": len(rows),
         "dedup_removed": removed,
         "train_examples": len(train),

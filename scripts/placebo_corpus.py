@@ -98,6 +98,10 @@ def main() -> None:
 
     side_of = assign(dict(train_counts))
     names = args.names or [f"{args.org}-a", f"{args.org}-b"]
+    # A reused out-root would keep months an earlier split wrote for a half that now has none.
+    for name in names:
+        for stale in refined_dir(args.out_root, name).glob("*"):
+            stale.unlink()
     per_side: dict[int, Counter[str]] = {0: Counter(), 1: Counter()}
     written: dict[int, int] = {0: 0, 1: 0}
 
@@ -121,7 +125,7 @@ def main() -> None:
             per_side[side][month] += len(kept)
 
     for name in names:
-        mark_derived(args.out_root, name, source=f"{args.root}/{args.org}")
+        mark_derived(args.out_root, name, source_root=args.root, source_org=args.org)
     manifest = {
         "provenance": provenance_header(),
         "source_root": str(args.root),

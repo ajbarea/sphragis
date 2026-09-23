@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from sphragis.corpus.load import refined_month_files
+from sphragis.corpus.load import refined_month_files, write_derived_file
 from sphragis.corpus.pipeline import run_dedup
 
 OUT = Path("datasets/results/contamination-inputs")
@@ -41,7 +41,7 @@ def main() -> None:
             rows.extend(json.loads(line) for line in path.open() if line.strip())
         kept, removed = run_dedup(rows)
         target = OUT / f"openstack-{side}.jsonl"
-        target.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in kept))
+        write_derived_file(target, kept)
         changes = len({r["change_id"] for r in kept})
         print(
             f"{side}: {len(months)} months, {len(rows)} examples, {len(kept)} after dedup "

@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.load import refined_month_files
+from sphragis.corpus.load import refined_month_files, write_derived_file
 from sphragis.corpus.pipeline import run_dedup
 
 parser = argparse.ArgumentParser()
@@ -81,7 +81,7 @@ def main() -> None:
         slug = project.replace("/", "_")
         path = args.out_dir / f"{slug}.jsonl"
         examples = by_project[project]
-        path.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in examples))
+        write_derived_file(path, examples)
         manifest["projects"][project] = {
             "path": str(path),
             "examples": len(examples),

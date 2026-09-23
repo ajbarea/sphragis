@@ -1,9 +1,9 @@
 """A repeatable data audit of a built and refined corpus, one artifact per organization.
 
-The Stage 1 audit found three label defects by looking (research log, 2026-09-23): lint-bot
-comments kept as reviewers, rebase-only successors kept as rewrites, and a missed one-click
-acknowledgement. This makes the looking a command, so a new organization or a new project is
-audited the same way before anything is trained on it:
+The Stage 1 audit found two label defects by looking (research log, 2026-09-23): lint-bot
+comments kept as reviewers and a missed one-click acknowledgement. This makes the looking a
+command, so a new organization or a new project is audited the same way before anything is
+trained on it:
 
 - the drop profile of the build and of the refinement, by reason;
 - automated comments the registry recognises, by bot;
@@ -31,7 +31,7 @@ from pathlib import Path
 from sphragis.corpus.automated import matched_bot, registry_digest
 from sphragis.corpus.build import is_acknowledgement
 from sphragis.corpus.load import built_examples, refined_dir, refined_examples
-from sphragis.corpus.refine import RULES_VERSION, revision_kinds
+from sphragis.corpus.refine import RULES_VERSION, index_changes, successor_kind
 from sphragis.corpus.storage import read_snapshot
 from sphragis.provenance import provenance_header
 
@@ -54,11 +54,8 @@ def audit(root: Path, org: str, *, min_changes: int, top: int) -> dict:
     built = built_examples(root, org)
     refined = refined_examples(root, org)
     raw = root / org / "raw"
-    kinds = revision_kinds(c for p in sorted(raw.glob("*.ndjson.gz")) for c in read_snapshot(p))
-    successor = Counter(
-        kinds.get((e["change_id"], e["project"], int(e["patch_set"]) + 1), "UNRECORDED")
-        for e in built
-    )
+    index = index_changes(c for p in sorted(raw.glob("*.ndjson.gz")) for c in read_snapshot(p))
+    successor = Counter(successor_kind(e, index) or "UNRESOLVED" for e in built)
     by_bot: Counter[str] = Counter()
     changes_by_text: dict[str, set[str]] = defaultdict(set)
     for e in built:

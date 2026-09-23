@@ -19,10 +19,10 @@ from typing import Any
 from sphragis.corpus.build import build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
-from sphragis.corpus.load import refined_dir, refined_examples, sha256
+from sphragis.corpus.load import refined_dir, refined_examples, write_source_record
 from sphragis.corpus.manifest import verify
 from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
-from sphragis.corpus.refine import RULES_VERSION, refine, revision_kinds
+from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import is_test_window_unlocked
 from sphragis.corpus.storage import read_snapshot, write_snapshot
@@ -265,7 +265,7 @@ def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
 def _stage_refine(args: argparse.Namespace) -> int:
     """Apply the data audit's label rules to every built month, from its raw snapshots."""
     raw = Path(args.root) / args.org / "raw"
-    kinds = revision_kinds(
+    index = index_changes(
         change for path in sorted(raw.glob("*.ndjson.gz")) for change in read_snapshot(path)
     )
     built = sorted(_examples_dir(args).glob("*.jsonl"))
@@ -274,25 +274,28 @@ def _stage_refine(args: argparse.Namespace) -> int:
         return 1
     out = _refined_dir(args)
     out.mkdir(parents=True, exist_ok=True)
+    # A refined month whose built month is gone is derived output with nothing to derive from.
+    names = {path.name for path in built}
+    for orphan in out.glob("*.jsonl"):
+        if orphan.name not in names:
+            orphan.unlink()
+            for sidecar in (".drops.json", ".source.json"):
+                out.joinpath(orphan.name.replace(".jsonl", sidecar)).unlink(missing_ok=True)
     totals: Counter[str] = Counter()
     kept_total = 0
     for path in built:
         rows = [json.loads(line) for line in path.read_text().splitlines() if line]
-        kept, drops = refine(rows, kinds)
-        totals.update(drops)
+        kept, counts = refine(rows, index)
+        totals.update(counts)
         kept_total += len(kept)
         target = out / path.name
         tmp = target.with_suffix(".jsonl.tmp")
         tmp.write_text("".join(json.dumps(r) + "\n" for r in kept))
-        (out / path.name.replace(".jsonl", ".drops.json")).write_text(json.dumps(drops, indent=2))
+        (out / path.name.replace(".jsonl", ".drops.json")).write_text(json.dumps(counts, indent=2))
         os.replace(tmp, target)
         # Written last: a refined month counts as current only once its examples have landed.
-        (out / path.name.replace(".jsonl", ".source.json")).write_text(
-            json.dumps({"examples_sha256": sha256(path), "rules": RULES_VERSION}, indent=2)
-        )
-    print(
-        f"{args.org}: {kept_total} examples kept over {len(built)} months, removed {dict(totals)}"
-    )
+        write_source_record(Path(args.root), args.org, path, target)
+    print(f"{args.org}: {kept_total} examples kept over {len(built)} months, {dict(totals)}")
     return 0
 
 
@@ -477,10 +480,24 @@ def _stage_freeze(args: argparse.Namespace) -> int:
         Path(args.root),
         args.org,
         windows,
-        stats={"built_drops": _load_drops(args), "deduped": dict(removed), "unassigned_changes": 0},
+        stats={
+            "built_drops": _load_drops(args),
+            "refine_counts": _load_refine_counts(args),
+            "deduped": dict(removed),
+            "unassigned_changes": 0,
+            # The rules the corpus was refined under; verify fails when they have moved.
+            "rules": RULES_VERSION,
+        },
     )
     print(f"{args.org}: froze {manifest['counts']}")
     return 0
+
+
+def _load_refine_counts(args: argparse.Namespace) -> dict[str, int]:
+    total: Counter[str] = Counter()
+    for path in sorted(_refined_dir(args).glob("*.drops.json")):
+        total.update(json.loads(path.read_text()))
+    return dict(total)
 
 
 def _stage_verify(args: argparse.Namespace) -> int:
@@ -500,6 +517,12 @@ def _stage_verify(args: argparse.Namespace) -> int:
         for name in manifest["counts"]
     }
     problems = verify(manifest, windows)
+    frozen_rules = manifest.get("stats", {}).get("rules")
+    if frozen_rules != RULES_VERSION:
+        problems.append(
+            f"frozen under rules {frozen_rules}, current rules are {RULES_VERSION}: refine and "
+            "refreeze, or check out the code the manifest was frozen with"
+        )
     if problems:
         for problem in problems:
             print(f"DRIFT {problem}")
