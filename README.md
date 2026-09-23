@@ -110,6 +110,16 @@ anything is committed. `freeze` is the single stage that writes windows to disk,
 dedup and split from the refined examples and compares each window with its frozen file byte for
 byte, which catches a change to code the rule digests do not cover.
 
+AOSP and Chromium are fetched from their git hosts instead, because their review UIs forbid
+crawlers in robots.txt while the git hosts do not. Gerrit keeps each change's review record in
+the repository (NoteDb), and `--via git` reads it, one repository per `--project`, into the same
+snapshot shape; `build` then needs no network for those rows:
+
+```bash
+uv run python -m sphragis.corpus fetch --via git --org aosp --month 2024-11 \
+    --project platform/hardware/interfaces
+```
+
 `fetch` and `build` are both resumable: an existing snapshot or an already-built month is
 skipped unless `--overwrite` is passed. This matters more than it sounds. A month of
 OpenStack is 24 requests; the same month of Qt is 387, because Qt caps a page at ten

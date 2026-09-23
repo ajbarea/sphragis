@@ -44,6 +44,9 @@ DROP_REASONS = (
     "no_anchored_hunk",
 )
 
+#: Counted only when `drop_rebase_edits` is on, so a REST build's drop profile is unchanged.
+REBASE_EDIT = "rebase_edit"
+
 
 # Gerrit tags a service account `SERVICE_USER` on `AccountInfo.tags`. Who wrote a comment is known
 # only here, where its author is, so this is a build rule; what a bot writes is a label rule,
@@ -123,9 +126,18 @@ def build_from_change(
     fetch_diff: DiffFetcher,
     *,
     context_lines: int = CONTEXT_LINES,
+    drop_rebase_edits: bool = False,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Every refinement example one change yields, with the reason for each drop."""
+    """Every refinement example one change yields, with the reason for each drop.
+
+    `drop_rebase_edits` drops a comment whose anchoring hunk Gerrit marks `due_to_rebase`:
+    between patch sets n and n+1 the change was rebased and the parents, not the author,
+    made that edit, so it is no response to the comment. The NoteDb route turns it on; the
+    REST route leaves it off, and its corpus is built as it was.
+    """
     drops: Counter[str] = Counter(dict.fromkeys(DROP_REASONS, 0))
+    if drop_rebase_edits:
+        drops[REBASE_EDIT] = 0
     number = int(change["_number"])
     owner_id = (change.get("owner") or {}).get("_account_id")
     revision_count = len(change.get("revisions", {}))
@@ -177,6 +189,9 @@ def build_from_change(
             )
             if hit is None:
                 drops["no_anchored_hunk"] += 1
+                continue
+            if drop_rebase_edits and hit.due_to_rebase:
+                drops[REBASE_EDIT] += 1
                 continue
             key = (patch_set, hit.before_start)
             grouped.setdefault(key, (hit, []))[1].append(str(comment["message"]))

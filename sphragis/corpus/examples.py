@@ -24,6 +24,8 @@ class Hunk:
     after: tuple[str, ...]
     context_before: tuple[str, ...] = ()
     context_after: tuple[str, ...] = ()
+    #: Gerrit's `due_to_rebase` on the block: the parents made this edit, not the author.
+    due_to_rebase: bool = False
 
 
 def changed_hunks(before: Sequence[str], after: Sequence[str]) -> list[Hunk]:
@@ -132,6 +134,7 @@ def hunks_from_diff(diff: Mapping[str, Any], *, context: int = 0) -> list[Hunk]:
                     added,
                     _context(blocks, index, -1, context),
                     _context(blocks, index, 1, context),
+                    bool(block.get("due_to_rebase")),
                 )
             )
             before_line += len(removed)

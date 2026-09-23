@@ -43,6 +43,22 @@ research log records what is and is not known about those requests.
   (2026-09-24). Job 183579 was cancelled before it ran. No job is queued: it trains on the v2
   client corpora, which wait on the recut above.
 
+**A NoteDb route for hosts whose review UI robots.txt closes** (android-review, chromium-review,
+codereview.qt-project.org). `fetch --via git` reads review records from the git hosts, which
+allow fetching, into the same snapshot shape; `build` answers those rows from their own data and
+drops rebase-made hunks as `rebase_edit`. On AOSP it reproduces the REST corpus exactly; the
+research log's 2026-09-23 entry has the parity figures. In review as a PR, not merged.
+
+Waiting on that route:
+
+- Chromium bulk collection waits for the answer from Chromium's infra-dev list to the request for
+  permission. One probe commit has been fetched, nothing more.
+- `scripts/censoring.py` models creation to last update; an organization fetched by git is
+  selected by creation to merge and needs that variable instead.
+- The REST `build` stage re-fetches comments and diffs from the review host, so the Qt corpus can
+  no longer be rebuilt from REST now that codereview.qt-project.org is closed to crawlers. Its
+  frozen splits stand; whether Qt needs a git-side source is a decision, not work.
+
 ## Next
 
 1. The granularity re-registration (PR #37) rebases onto this corpus once it merges; it carries

@@ -1170,6 +1170,37 @@ def test_http_transport_paces_a_permitted_host_at_its_crawl_delay(
     from sphragis.corpus import cli
 
     _scripted_connections(monkeypatch, [_FakeResponse(200)] * 2)
+
+
+def _fetch_git(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, month: str, *extra: str
+) -> list[str]:
+    """Run the git-route fetch with NoteDb replaced; return the months that reached it."""
+    from sphragis.corpus import cli
+
+    months: list[str] = []
+
+    def fake_fetch_month(org, projects, month, salt, *, pacer, branch):
+        months.append(month)
+        return [], {"http_requests": 0, "git_operations": 0}
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "fetch_month", fake_fetch_month)
+    cli.main(
+        [
+            "fetch",
+            "--via",
+            "git",
+            "--org",
+            "aosp",
+            "--month",
+            month,
+            "--root",
+            str(tmp_path),
+            *extra,
+        ]
+    )
+    return months
     now, slept = [0.0], []
 
     def sleep(seconds: float) -> None:
@@ -1209,3 +1240,42 @@ def test_the_resume_script_refuses_a_disallowed_host_before_any_request(org: str
     )
     assert result.returncode == 1
     assert "disallows automated clients" in result.stdout
+
+    transport("https://review.opendev.org/b")
+    transport("https://codereview.qt-project.org/a")
+    transport("https://codereview.qt-project.org/b")
+    assert slept == pytest.approx([2.0, 1.0])
+
+
+def test_build_answers_a_notedb_row_from_its_own_data_without_the_network(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json
+
+    from sphragis.corpus import cli
+
+    def no_network(**_: object) -> object:
+        raise AssertionError("a NoteDb row must not reach the REST transport")
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "http_transport", no_network)
+    row: dict[str, object] = {
+        "_number": 1,
+        "change_id": "I1",
+        "project": "p",
+        "created": "2024-10-05 00:00:00.000000000",
+        "owner": {"_account_id": "owner"},
+        "revisions": {"a": {}, "b": {}},
+        "notedb": {
+            "comments": {
+                "f.py": [
+                    {"patch_set": 1, "line": 1, "message": "fix", "author": {"_account_id": "rev"}}
+                ]
+            },
+            "diffs": {"1:f.py": {"content": [{"a": ["x=1"], "b": ["x = 1"]}]}},
+        },
+    }
+    _snapshot(tmp_path, "chromium", "2024-10", [row])
+    assert cli.main(["build", "--org", "chromium", "--root", str(tmp_path)]) == 0
+    built = (tmp_path / "chromium" / "examples" / "2024-10.jsonl").read_text().splitlines()
+    assert [json.loads(line)["comments"] for line in built] == [["fix"]]

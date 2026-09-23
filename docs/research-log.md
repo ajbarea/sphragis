@@ -5381,6 +5381,137 @@ mislabeling where `main`'s original two-shape version had refused the same patte
 guard now globs the real client directories the selector resolves to and classifies each match by
 its own suffix, so the result depends on what is actually on disk rather than on the selector's
 spelling.
+### The review UIs are closed to crawlers and the git hosts are not: a NoteDb route, checked against the REST corpus (2026-09-23)
+
+`# research(2026-09)`. `scripts/notedb_parity.py` fetched every change NoteDb records as submitted
+in 2024-11 and 2025-01 on AOSP's `platform/hardware/interfaces`, over git, built them with the same
+`build_from_change` as the REST corpus, and compared the two into
+`datasets/results/notedb-parity-aosp.json`. Every example both routes hold is byte-identical.
+
+**Why a second route.** The robots.txt of android-review, chromium-review and
+codereview.qt-project.org is `Disallow: /` as read on 2026-09-23, and Google's terms forbid automated access that
+violates robots.txt, so REST collection from those three hosts stopped. The git hosts behind the
+first two, android.googlesource.com and chromium.googlesource.com, disallow only some gitiles web
+views (`+log`, `+blame`, `+archive`, `?format=JSON` and `TEXT`); the git fetch paths are allowed.
+Gerrit 3.x keeps the review record in the repository as NoteDb: `refs/changes/NN/<n>/meta` is a
+commit chain whose footers carry status, patch sets and votes, and whose tip tree is a notes map of
+per-patch-set JSON holding the inline comments with their ranges, authors and patch sets.
+
+**Probes.** `ls-remote` on hardware/interfaces lists change 2923712's patch sets and meta ref, and
+its fetched notes carry the comment our REST-built example holds. v8/v8 serves meta refs too. A
+wildcard `ls-remote` over chromium/src timed out, so Chromium changes are found from its branch
+history instead: the one commit fetched from chromium/src (`refs/branch-heads/6099`, committed
+2024-10-01, depth 1, no trees) carries `Reviewed-on:
+https://chromium-review.googlesource.com/c/chromium/src/+/5901656`. AOSP's commits carry no such
+trailer: in the artifact every candidate was mapped to its change through the patch-set refs, none
+by trailer.
+
+**How a month is enumerated.** Candidates are the commits on one branch whose committer date falls
+from `SLACK_DAYS` before the month to its end. They map to changes by `Reviewed-on:` (Chromium) or
+by joining their ids against a `refs/changes/*` listing (AOSP). A change belongs to the month in
+which NoteDb records its submission. Commit dates cannot decide that, because AOSP merges the
+uploaded commit unchanged, so its date is the upload's. Of the 9,645 `main` changes in the AOSP REST
+corpus, 191 merged more than 14 days after their final upload and 26 more than 90, so AOSP's slack
+is 90 days, and at 90 the parity run misses no change REST holds on `main`.
+Metas, patch-set commits, trees and blobs are each one batched fetch.
+
+**Diffs are Gerrit's, reproduced.** The REST build cut hunks from Gerrit's `/diff`, whose default
+whitespace mode is `IGNORE_LEADING_AND_TRAILING` (JGit's `WS_IGNORE_CHANGE`) and whose algorithm is
+JGit's HistogramDiff with a Myers fallback. Git's own histogram diff split one change's hunks
+differently from Gerrit on this sample, and no combination of git's options reproduced Gerrit's, so
+`sphragis/corpus/gerrit_diff.py` ports JGit's diff and Gerrit's content blocks. It reproduces the
+captured review.opendev.org payload block for block. A one-off comparison against JGit 7.8.0
+itself, over the sample's file pairs and generated adversarial ones, found no disagreement.
+`tests/fixtures/jgit_edits.json` keeps 70 of those cases, 25 of them through the Myers fallback.
+
+**Parity, from the artifact.**
+
+| | REST | git | both | REST only | git only |
+|---|---|---|---|---|---|
+| 2024-11 | 113 | 99 | 96 | 17 | 3 |
+| 2025-01 | 158 | 110 | 109 | 49 | 1 |
+
+Each difference has one explanation:
+
+- 63 REST-only changes are on other branches (`sdk-release`, `android15-tests-*`) and never
+  reached `main`, the one branch read.
+- 3 REST-only changes merged in another month and were last updated in this one.
+- The 4 git-only changes are the converse: REST filed them under their later update's month.
+
+On the 205 changes both hold, every field REST stored and NoteDb can state agrees. That is 17
+change fields and 769 patch sets' number, creation time, uploader, ref and branch, with owners and
+submitters as the same salted pseudonyms. Hashtags agree as a set: REST returns them in hash-set
+order, which differs between changes with identical footers. `files`, counted with git's histogram
+algorithm because its default Myers counts disagreed with REST, matches REST's
+`insertions`/`deletions` on all 176 changes where it is computed. The other 29 are changes whose own
+commit is a merge.
+Examples: 164 on each side, 164 identical in id, hunk, context and comment texts in order.
+
+**Fields NoteDb cannot supply** (`notedb.GAPS`, carried in every snapshot record):
+
+- `revisions.*.kind`, which the server computes;
+- the change-level `insertions`/`deletions`, replaced by `files`;
+- attention set and comment counts;
+- `change_message_id` on comments.
+
+Nothing under `sphragis/` or `scripts/` reads any of them. Diffs are stored with the change, so a
+NoteDb build makes no request. Two fields exist for the component mapping stage:
+
+- `merged_commit`, the commit on the branch that carries the change;
+- `files`, path to `lines_inserted`/`lines_deleted` against its first parent.
+
+Each revision also records `parents`.
+
+**Rebase edits.** Between patch sets n and n+1 a rebase can sweep upstream edits into the diff that
+labels an example. Gerrit marks such edits `due_to_rebase` and `hunks_from_diff` ignores the flag.
+The port reproduces Gerrit's attribution: an edit is due to the rebase when it equals one of the
+parents' own edits, carried into each patch set's coordinates, where a parent edit the change's own
+edits touch is left unattributed. On the sample:
+
+- 60 of the 164 examples sit on a rebase step (the two patch sets have different parents).
+- None of their hunks is attributed to the rebase. One overlaps an upstream edit under a looser
+  test.
+- 27 of 813 edit blocks in these diffs are marked. In the 35 rebased file steps, 38 of the parents'
+  53 edits were placed and 15 collided with the author's own.
+- Every successor is REWORK by REST's `kind`.
+
+The NoteDb build now drops a hunk marked `due_to_rebase` as `rebase_edit`; on this sample it drops
+nothing. The REST build is unchanged.
+
+**What the route changes about windows.** Windows are assigned by creation time on both routes, so
+a change lands in the same window either way. Only the month a change is filed under differs: 322
+of 12,145 merged AOSP changes (2.65%) were last updated in a later month than they merged. At the
+collection boundary the git route truncates on creation to merge, where REST truncates on creation
+to last update, so it loses no more changes than REST does. `scripts/censoring.py` models the
+creation-to-last-update lag and would need the submission time for an organization fetched this
+way. Because a change merges no earlier than it is created, a permitted month cannot contain a
+change created in the sealed window, and the git route goes through the same `refuse_if_sealed` as
+REST. Two exposures remain that REST did not have:
+
+- The history fetch transfers commit headers up to the branch tip, merges after the month
+  included, into a scratch repository that is filtered and deleted.
+- AOSP's ref listing names every change number in the project.
+
+**Found while building it.** Each of these three failures was silent, and each is now a test:
+
+- A filtered fetch records its filter as the remote default, so the meta fetch silently arrived
+  without note blobs. The route now clears the recorded filter after each fetch.
+- A depth fetch into a shallow repository marks a held parent shallow, which cut 107 commits out of
+  every later walk of `main` and a rerun's changes from 536 to 430. Marks whose parents are held
+  are now removed.
+- `git cat-file --batch` reports a missing object as a line rather than an error, and the reader
+  had skipped it. It now raises.
+
+**Requests.** All paced at one a second or the host's crawl delay, whichever is longer; a git fetch
+is several HTTP requests and is billed for all of them.
+
+- android.googlesource.com: 20 fetches and 66 HTTP requests for the parity run, 3 of them
+  estimated for one untraced lazy fetch during manual inspection, plus 7 fetches and 21 requests
+  for one end-to-end run of `fetch --via git` and `build` over 2024-11, whose 141 examples matched
+  REST's exactly (a check, not kept as an artifact).
+- chromium.googlesource.com: 1 fetch, 3 requests.
+- Nothing else was contacted.
+
 
 ### Registered before the human's figures: a reported slip stays as locked (2026-09-24)
 

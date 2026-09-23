@@ -217,6 +217,14 @@ Does the organization survive in the modules a selective scheme actually transmi
 |---|---|
 | `module-split-cpp-rebuilt-c128.json` | `module-split.json` |
 
+## `scripts/notedb_parity.py`
+
+The NoteDb git route against the REST-built AOSP corpus: enumeration, fields and examples.
+
+| artifact | |
+|---|---|
+| `notedb-parity-aosp.json` |  |
+
 ## `scripts/pilot.py`
 
 Pilot: does an ADAPTED 7B clear the exact-match floor on this corpus?

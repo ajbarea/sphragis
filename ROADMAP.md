@@ -80,6 +80,15 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   no mechanism in common with it.
 - [x] Registered: the test window is fetched no earlier than three months after its final
   month (`FETCH_HORIZON_MONTHS`).
+- [x] **A NoteDb route** (`sphragis/corpus/notedb.py`, `gerrit_diff.py`; `fetch --via git`). The
+  review UIs of AOSP, Chromium and Qt publish `Disallow: /`; their git hosts allow fetching and
+  carry the review record as NoteDb. The route reproduces Gerrit's own diff, pseudonymises through
+  the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
+  the AOSP REST corpus: every shared example identical (research log, 2026-09-23).
+- [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
+  request, with its projects scoped by the component mapping stage.
+- [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to
+  merge, not creation to last update.
 - [x] State the dev window's censoring wherever dev numbers appear; they are pre-registration
   estimates, not unbiased previews. Stated with the three-seed RQ1 result: 39.1% and 28.8% of the
   dev window's changes were still open at collection, against 1.1% and 0.7% in the test window.

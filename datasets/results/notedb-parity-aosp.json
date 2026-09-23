@@ -1,0 +1,288 @@
+{
+  "generated_at": "2026-09-23T11:53:40.641864+00:00",
+  "git": {
+    "commit": "a7ebafb2c77eae779bdea61f898c1f4f98469ec6",
+    "branch": "feat/notedb-route",
+    "uncommitted_code": [
+      "scripts/notedb_parity.py",
+      "sphragis/corpus/build.py",
+      "sphragis/corpus/cli.py",
+      "sphragis/corpus/examples.py",
+      "sphragis/corpus/gerrit_diff.py",
+      "sphragis/corpus/notedb.py",
+      "sphragis/corpus/pacing.py"
+    ],
+    "uncommitted_code_sha256": "fade7815a80b85c8934defec6c4a0f5d4e923f5b82cd5e065ed1e7acd1c28cb0"
+  },
+  "python": "3.14.4",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "packages": {},
+  "org": "aosp",
+  "project": "platform/hardware/interfaces",
+  "branch": "main",
+  "months": [
+    "2024-11",
+    "2025-01"
+  ],
+  "rest_root": "aosp",
+  "requests": {
+    "host": [
+      "android.googlesource.com"
+    ],
+    "operations": 20,
+    "http_requests": 66,
+    "http_requests_estimated": 3,
+    "first": "2026-09-23T10:05:35.228981+00:00",
+    "last": "2026-09-23T11:50:31.209994+00:00",
+    "by_purpose": {
+      "history": {
+        "operations": 2,
+        "http": 6
+      },
+      "patch_set_refs": {
+        "operations": 1,
+        "http": 2
+      },
+      "meta": {
+        "operations": 2,
+        "http": 11
+      },
+      "manual_inspection_lazy_fetch": {
+        "operations": 1,
+        "http": 3
+      },
+      "notes": {
+        "operations": 2,
+        "http": 4
+      },
+      "patch_sets": {
+        "operations": 3,
+        "http": 18
+      },
+      "blobs": {
+        "operations": 6,
+        "http": 12
+      },
+      "parents": {
+        "operations": 1,
+        "http": 6
+      },
+      "trees": {
+        "operations": 2,
+        "http": 4
+      }
+    }
+  },
+  "collect": {
+    "meta_missing": 0,
+    "rebase_steps": 79,
+    "files_unavailable_parent_outside_history": 7,
+    "files_unavailable_merge_commit": 100,
+    "changes": 536,
+    "diff_binary": 0
+  },
+  "enumeration": {
+    "2024-11": {
+      "candidate_commits": {
+        "commits": 1697,
+        "merge_commit": 1146,
+        "by_patch_set_ref": 346,
+        "no_change": 205
+      },
+      "rest": 113,
+      "git": 99,
+      "both": 96,
+      "rest_only": {
+        "other_branch_never_reached_main": 17
+      },
+      "git_only": {
+        "in_rest_snapshot_2024-12": 1,
+        "in_rest_snapshot_2025-03": 1,
+        "in_rest_snapshot_2025-01": 1
+      },
+      "rest_only_changes": {
+        "other_branch_never_reached_main": [
+          3327223,
+          3328342,
+          3336558,
+          3340819,
+          3343064,
+          3345686,
+          3349412,
+          3355820,
+          3358490,
+          3365747
+        ]
+      },
+      "git_only_changes": {
+        "in_rest_snapshot_2024-12": [
+          3341443
+        ],
+        "in_rest_snapshot_2025-03": [
+          3343649
+        ],
+        "in_rest_snapshot_2025-01": [
+          3344725
+        ]
+      }
+    },
+    "2025-01": {
+      "candidate_commits": {
+        "commits": 1622,
+        "by_patch_set_ref": 392,
+        "merge_commit": 1047,
+        "no_change": 183
+      },
+      "rest": 158,
+      "git": 110,
+      "both": 109,
+      "rest_only": {
+        "submitted_outside_month_updated_inside": 3,
+        "other_branch_never_reached_main": 46
+      },
+      "git_only": {
+        "in_rest_snapshot_2025-04": 1
+      },
+      "rest_only_changes": {
+        "submitted_outside_month_updated_inside": [
+          2950589,
+          3309938,
+          3344725
+        ],
+        "other_branch_never_reached_main": [
+          3311749,
+          3431681,
+          3432192,
+          3434725,
+          3435064,
+          3436139,
+          3436879,
+          3437719,
+          3440005,
+          3440720
+        ]
+      },
+      "git_only_changes": {
+        "in_rest_snapshot_2025-04": [
+          3455328
+        ]
+      }
+    }
+  },
+  "fields": {
+    "changes": 205,
+    "agree": {
+      "branch": 205,
+      "change_id": 205,
+      "created": 205,
+      "current_revision": 205,
+      "current_revision_number": 205,
+      "hashtags": 204,
+      "hashtags_as_set": 1,
+      "id": 205,
+      "lines.insertions_deletions": 176,
+      "meta_rev_id": 205,
+      "owner": 205,
+      "project": 205,
+      "revisions._number": 769,
+      "revisions.branch": 769,
+      "revisions.created": 769,
+      "revisions.ref": 769,
+      "revisions.set": 205,
+      "revisions.uploader": 769,
+      "status": 205,
+      "subject": 205,
+      "submission_id": 205,
+      "submitted": 205,
+      "submitter": 205,
+      "triplet_id": 205,
+      "updated": 205
+    },
+    "differ": {
+      "lines.unavailable": 29
+    },
+    "differ_changes": {
+      "lines.unavailable": [
+        3326389,
+        3349468,
+        3378631,
+        3379875,
+        3431557,
+        3431558,
+        3432195,
+        3434393,
+        3438894,
+        3440004
+      ]
+    },
+    "meta_rev_id_advanced_since_rest_fetch": 0
+  },
+  "rest_timing": {
+    "merged_changes": 12145,
+    "updated_in_a_later_month": 322,
+    "updated_in_a_later_month_pct": 2.65,
+    "main_changes": 9645,
+    "merged_more_than_n_days_after_final_upload": {
+      "14": 191,
+      "30": 71,
+      "60": 44,
+      "90": 26,
+      "180": 14
+    }
+  },
+  "rebase": {
+    "counts": {
+      "examples": 164,
+      "on_rebase_step": 60,
+      "overlaps_upstream": 1,
+      "overlaps_upstream_not_attributed": 1
+    },
+    "by_successor_kind": {
+      "REWORK": {
+        "examples": 164,
+        "on_rebase_step": 60,
+        "overlaps_upstream": 1
+      }
+    },
+    "upstream_edits": {
+      "diff_edit_blocks": 813,
+      "diff_edit_blocks_due_to_rebase": 27,
+      "file_steps": 35,
+      "upstream_edits": 53,
+      "placed": 38,
+      "lost_to_the_authors_edits": 15
+    },
+    "with_rebase_edit_drop": {
+      "examples_kept_with_drop": 164,
+      "comments_dropped_rebase_edit": 0
+    },
+    "ids": {
+      "overlaps_upstream": [
+        "aosp:I6b31ba94ffed15b4ac467eec87e45c4c5f5b3805:audio/aidl/vts/EffectHelper.h:4:448"
+      ]
+    }
+  },
+  "examples": {
+    "counts": {
+      "git_examples": 164,
+      "identical": 164,
+      "rest_examples": 164,
+      "same_id": 164
+    },
+    "ids": {},
+    "git_drops": {
+      "acknowledgement": 25,
+      "author_comment": 421,
+      "comment_error": 0,
+      "diff_error": 0,
+      "ill_posed_contraction": 5,
+      "ill_posed_empty_after": 40,
+      "ill_posed_empty_before": 5,
+      "ill_posed_expansion": 5,
+      "metadata_file": 212,
+      "no_anchored_hunk": 183,
+      "no_line_anchor": 0,
+      "no_successor": 36
+    }
+  }
+}
