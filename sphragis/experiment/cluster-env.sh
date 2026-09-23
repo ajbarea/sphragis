@@ -124,8 +124,8 @@ _abandoned_claim() {
 # size that inherited another's suffix would overwrite the geometry every committed RQ2 number was
 # computed from. One definition, because the two jobs must agree on the name.
 name_result_after_adapters() {
-  local pattern="$1" first selector shape count_word has_local has_p0
-  local -a shapes matched
+  local pattern="$1" first selector name class count_word
+  local -a classes
   # The name comes from the pattern's first directory, so that directory must be literal: a glob
   # there would name the output after nothing.
   first="${pattern%%/*}"
@@ -145,38 +145,46 @@ name_result_after_adapters() {
   # FDLoRA's `-local` and `-p0`, the round-0 average of the personalized modules). Each shape is
   # its own geometry over one set of adapters, so a selector has to name exactly one apart, and
   # one that spans more than one is refused rather than written to whichever name it inherits
-  # first. Only where a withheld shape exists at all: a single-adapter directory keeps the names
-  # it already has.
-  compgen -G "$HOME/scratch/$first/*-local" >/dev/null 2>&1 && has_local=1 || has_local=0
-  compgen -G "$HOME/scratch/$first/*-p0" >/dev/null 2>&1 && has_p0=1 || has_p0=0
-  if [ "$has_local" = 0 ] && [ "$has_p0" = 0 ]; then export RESULT_SUFFIX; return 0; fi
+  # first. The selector is matched against the real client directories, not a synthetic name
+  # standing in for one: a selector's own spelling (`*local` with no hyphen, `*-local*`, an
+  # organization prefix such as `aosp-*`) says nothing about which shapes it reaches, only what
+  # actually glob-matches does.
   selector="${pattern#*/}"
   selector="${selector%%/*}"
-  # Only the shapes actually present in this directory are candidates: a directory with just
-  # FedDPA's `-local` must still be refused only for spanning those two, not FDLoRA's `-p0` too.
-  shapes=(a-c0)
-  [ "$has_local" = 0 ] || shapes+=(a-c0-local)
-  [ "$has_p0" = 0 ] || shapes+=(a-c0-p0)
-  matched=()
-  for shape in "${shapes[@]}"; do
-    case "$shape" in $selector) matched+=("$shape") ;; esac
-  done
-  if [ "${#matched[@]}" -gt 1 ]; then
-    case "${#matched[@]}" in
-      2) count_word=two ;;
-      3) count_word=three ;;
-      *) count_word="${#matched[@]}" ;;
+  classes=()
+  shopt -s nullglob
+  for name in "$HOME/scratch/$first"/$selector; do
+    name="$(basename "$name")"
+    case "$name" in
+      *-local) class=local ;;
+      *-p0) class=p0 ;;
+      *) class=transmitted ;;
     esac
-    echo "PATTERN selects more than one of $first's adapter shapes together" \
-      "(${matched[*]}), and they are $count_word geometries: select one, with */*-local/*," \
-      "*/*-p0/* or a selector that cannot match them" >&2
-    return 1
+    case " ${classes[*]-} " in
+      *" $class "*) ;;
+      *) classes+=("$class") ;;
+    esac
+  done
+  shopt -u nullglob
+  # No real directory matches at all: an empty or not-yet-written adapters directory, or a
+  # single-adapter run this check does not apply to. Keep the name the first directory gave.
+  if [ "${#classes[@]}" -le 1 ]; then
+    case "${classes[0]-}" in
+      local) RESULT_SUFFIX="$RESULT_SUFFIX-local" ;;
+      p0) RESULT_SUFFIX="$RESULT_SUFFIX-p0" ;;
+    esac
+    export RESULT_SUFFIX
+    return 0
   fi
-  case "$selector" in
-    *-local) RESULT_SUFFIX="$RESULT_SUFFIX-local" ;;
-    *-p0) RESULT_SUFFIX="$RESULT_SUFFIX-p0" ;;
+  case "${#classes[@]}" in
+    2) count_word=two ;;
+    3) count_word=three ;;
+    *) count_word="${#classes[@]}" ;;
   esac
-  export RESULT_SUFFIX
+  echo "PATTERN selects more than one of $first's adapter shapes together" \
+    "(${classes[*]}), and they are $count_word geometries: select one, with */*-local/*," \
+    "*/*-p0/* or a selector that cannot match them" >&2
+  return 1
 }
 
 claim_result() {

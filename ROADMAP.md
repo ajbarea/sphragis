@@ -346,8 +346,11 @@ identifies its source; PFAdapter states the gap in its own words. This apparatus
   a sync period to sweep. FedDPA's result makes the question sharper rather than answered: if what
   leaks is the residue the local adapter fits, a schedule that keeps overwriting the local adapter
   should move the leak back into what is transmitted. Implemented (`scripts/fdlora_schedule.py`);
-  a job is running at the paper's own default inner-step count and a mid-sweep sync period. The
-  H=1 and H > T endpoints the prediction turns on are still to run.
+  a review before the first job ran found the round-0 average was scoped per source rather than
+  over every client, and a default schedule where the withheld half equalled the transmitted half
+  by construction. Both fixed; job 183579, which ran the unfixed code, was cancelled as invalid.
+  Resubmission is on hold behind an open question about the corpora's terms of use
+  (`docs/research-log.md`, 2026-09-22).
 - [ ] **SecureGate's learned secure adapter**, which is not the same object as a scrubber.
 - [ ] **Fed-DiffLoRA's content/style cut** (IEEE TIP 2026, `# research(2026-09)`): splits each
   client's adapter into orthogonal content and style subspaces and aggregates the style half

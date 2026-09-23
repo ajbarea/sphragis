@@ -197,6 +197,54 @@ def test_a_selector_spanning_all_three_fdlora_shapes_is_refused(tmp_path: Path) 
     assert "three geometries" in result.stderr
 
 
+def _mixed_organization_adapters(tmp_path: Path) -> str:
+    """Two organizations, each with a client's full FDLoRA triple: what a real run writes."""
+    directory = "sphragis-adapters-fdlora-mixed"
+    _adapters(
+        tmp_path,
+        directory,
+        "aosp-c0",
+        "aosp-c0-local",
+        "aosp-c0-p0",
+        "qt-c1",
+        "qt-c1-local",
+        "qt-c1-p0",
+    )
+    return directory
+
+
+@pytest.mark.parametrize(
+    ("selector", "suffix"),
+    [
+        # No hyphen before "local": a selector's own spelling must not decide the class, only
+        # what it actually matches on disk. Silently kept the default (transmitted) name before
+        # this was fixed to classify by the real matched directories.
+        ("*local", "-local"),
+        ("*-local*", "-local"),
+        ("*p0", "-p0"),
+        ("*-p0*", "-p0"),
+    ],
+)
+def test_a_selector_is_classified_by_what_it_matches_not_by_its_own_spelling(
+    tmp_path: Path, selector: str, suffix: str
+) -> None:
+    directory = _mixed_organization_adapters(tmp_path)
+    result = _name_after(tmp_path, f"{directory}/{selector}/adapter_model.safetensors")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith(f"[-fdlora-mixed{suffix}]")
+
+
+@pytest.mark.parametrize("selector", ["aosp-*", "qt-*", "*-c1*"])
+def test_an_organization_or_client_prefix_alone_still_spans_every_shape(
+    tmp_path: Path, selector: str
+) -> None:
+    """Scoping to one organization or one client does not disambiguate the shape by itself."""
+    directory = _mixed_organization_adapters(tmp_path)
+    result = _name_after(tmp_path, f"{directory}/{selector}/adapter_model.safetensors")
+    assert result.returncode != 0
+    assert "three geometries" in result.stderr
+
+
 def test_a_selector_reaching_only_the_transmitted_fdlora_half_is_unsuffixed(tmp_path: Path) -> None:
     """Narrow enough to exclude both `-local` and `-p0`, the transmitted half keeps its name."""
     _adapters(tmp_path, "sphragis-adapters-fdlora-r6-k3-h3", "a-c0", "a-c0-local", "a-c0-p0")
