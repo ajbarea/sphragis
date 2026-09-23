@@ -24,7 +24,7 @@ capacity explanation for a null arm does not hold.
 
 **Language is the rival explanation and cannot be controlled on this pair.** OpenStack's training
 window is 47% Python, Qt's is 50% C++, and the dev window holds eight Qt Python examples against
-OpenStack's 243. AOSP would have fixed it and cannot: its public review stopped on 2026-03-27 and
+OpenStack's 243. AOSP would have fixed it and cannot: its public review stopped on 2025-03-27 and
 its dev window holds three examples.
 
 ## In flight

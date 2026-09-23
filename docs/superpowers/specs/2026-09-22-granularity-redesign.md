@@ -170,7 +170,7 @@ as many training examples as OpenStack's smaller half. The project set is select
 (merged human changes, anchored comments, language) before any contrast is computed.
 
 **Deadline: frozen by 2026-10-23.** If Chromium misses the deadline or the criteria, H2 has **no
-confirmatory cell**, since AOSP's public review stopped on 2026-03-27 and OpenStack and Qt share no
+confirmatory cell**, since AOSP's public review stopped on 2025-03-27 and OpenStack and Qt share no
 language. H2 is then registered as exploratory and H1 runs on OpenStack and Qt at their own `N`. The
 report states this plainly.
 

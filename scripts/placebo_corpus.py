@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 
 from sphragis.provenance import provenance_header
@@ -67,6 +68,12 @@ def assign(counts: dict[str, int]) -> dict[str, int]:
     return out
 
 
+def project_counts(rows: Iterable[dict], window: tuple[str, str]) -> Counter[str]:
+    """Examples per project created inside one window: what `assign` balances."""
+    start, end = window
+    return Counter(row["project"] for row in rows if start <= row["created"][:10] < end)
+
+
 def main() -> None:
     args = parser.parse_args()
     directory = args.root / args.org / "examples"
@@ -83,12 +90,9 @@ def main() -> None:
     # window is balanced twice and the evaluation sets are whatever the assignment gives.
     from sphragis.corpus.cli import WINDOWS
 
-    start, end = WINDOWS[args.train_window]
-    train_counts: Counter[str] = Counter()
-    for rows in rows_by_month.values():
-        for row in rows:
-            if start <= row["created"][:10] < end:
-                train_counts[row["project"]] += 1
+    train_counts = project_counts(
+        (row for rows in rows_by_month.values() for row in rows), WINDOWS[args.train_window]
+    )
     if len(train_counts) < 2:
         raise SystemExit(f"{args.org} has {len(train_counts)} projects in {args.train_window}")
 
