@@ -12,6 +12,7 @@ from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+from sphragis.corpus.automated import is_automated
 from sphragis.corpus.examples import (
     Hunk,
     has_successor_revision,
@@ -35,9 +36,11 @@ DROP_REASONS = (
     *(f"ill_posed_{reason}" for reason in ILL_POSED_REASONS),
     "metadata_file",
     "author_comment",
+    "automated_comment",
     "acknowledgement",
     "no_line_anchor",
     "no_successor",
+    "not_rework_successor",
     "diff_error",
     "comment_error",
     "no_anchored_hunk",
@@ -74,8 +77,22 @@ def is_reviewer_comment(comment: Mapping[str, Any], owner_id: Any) -> bool:
 # were of this kind, leaving a target the prompt gives no way to reach. "ditto" points at
 # another comment the prompt does not carry, so it is no instruction either. A
 # pre-registration item: it changes which examples exist.
+# "acknowledged" is Gerrit's one-click reply, which the first list missed (data audit,
+# 2026-09-23).
 ACKNOWLEDGEMENTS = frozenset(
-    {"done", "ditto", "+1", "ack", "acked", "fixed", "thanks", "thank you", "ok", "lgtm"}
+    {
+        "done",
+        "ditto",
+        "+1",
+        "ack",
+        "acked",
+        "acknowledged",
+        "fixed",
+        "thanks",
+        "thank you",
+        "ok",
+        "lgtm",
+    }
 )
 _TRAILING = " .!:)"
 
@@ -103,6 +120,11 @@ def build_from_change(
     number = int(change["_number"])
     owner_id = (change.get("owner") or {}).get("_account_id")
     revision_count = len(change.get("revisions", {}))
+    successor_kinds = {
+        int(revision["_number"]): revision["kind"]
+        for revision in change.get("revisions", {}).values()
+        if "_number" in revision and revision.get("kind")
+    }
     examples: list[dict[str, Any]] = []
 
     # Mirrors the diff guard below. A comments request that exhausts its retries used to abort
@@ -126,6 +148,11 @@ def build_from_change(
             if owner_id is not None and not is_reviewer_comment(comment, owner_id):
                 drops["author_comment"] += 1
                 continue
+            # A bot enforces written rules, the opposite of what the study measures, and only
+            # some hosts run one, so its comments would read as that host's house style.
+            if is_automated(comment):
+                drops["automated_comment"] += 1
+                continue
             if is_acknowledgement(str(comment.get("message", ""))):
                 drops["acknowledgement"] += 1
                 continue
@@ -135,6 +162,11 @@ def build_from_change(
                 continue
             if not has_successor_revision(patch_set=patch_set, revision_count=revision_count):
                 drops["no_successor"] += 1
+                continue
+            # A successor that is a rebase or a message-only edit changed no code, so any hunk
+            # that differs across it is what the rebase swept in, not the author's answer.
+            if successor_kinds.get(patch_set + 1, "REWORK") != "REWORK":
+                drops["not_rework_successor"] += 1
                 continue
             try:
                 diff = fetch_diff(number, patch_set + 1, path, patch_set)

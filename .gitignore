@@ -19,6 +19,7 @@ datasets/gerrit-control/*/raw/
 datasets/gerrit-control/*/examples/
 datasets/gerrit/*/examples/
 datasets/gerrit/*/splits/
+datasets/gerrit/*/refined/
 !datasets/gerrit/*/manifest.json
 # Battery inputs are concatenated and deduplicated from those examples by
 # scripts/contamination_windows.py, so they are derived twice over.

@@ -9,101 +9,123 @@
     "openstack-a": {
       "own": {
         "0.8": 0.0,
-        "0.7": 0.0033333333333333335,
-        "0.6": 0.01,
-        "0.5": 0.013333333333333334,
-        "dev_examples": 300.0
+        "0.7": 0.0030120481927710845,
+        "0.6": 0.012048192771084338,
+        "0.5": 0.018072289156626505,
+        "dev_examples": 332.0
       },
       "sibling": {
+        "0.8": 0.0,
+        "0.7": 0.006024096385542169,
+        "0.6": 0.006024096385542169,
+        "0.5": 0.009036144578313253,
+        "dev_examples": 332.0
+      },
+      "foreign:qt": {
         "0.8": 0.0,
         "0.7": 0.0,
         "0.6": 0.0,
         "0.5": 0.0,
-        "dev_examples": 300.0
-      },
-      "foreign:qt": {
-        "0.8": 0.0033333333333333335,
-        "0.7": 0.0033333333333333335,
-        "0.6": 0.0033333333333333335,
-        "0.5": 0.0033333333333333335,
-        "dev_examples": 300.0
+        "dev_examples": 332.0
       }
     },
     "openstack-b": {
       "own": {
         "0.8": 0.0,
-        "0.7": 0.01593625498007968,
-        "0.6": 0.0199203187250996,
-        "0.5": 0.02390438247011952,
-        "dev_examples": 251.0
+        "0.7": 0.0136986301369863,
+        "0.6": 0.0182648401826484,
+        "0.5": 0.0182648401826484,
+        "dev_examples": 219.0
       },
       "sibling": {
         "0.8": 0.0,
-        "0.7": 0.00796812749003984,
-        "0.6": 0.01195219123505976,
-        "0.5": 0.01593625498007968,
-        "dev_examples": 251.0
+        "0.7": 0.0045662100456621,
+        "0.6": 0.0045662100456621,
+        "0.5": 0.0045662100456621,
+        "dev_examples": 219.0
       },
       "foreign:qt": {
         "0.8": 0.0,
         "0.7": 0.0,
         "0.6": 0.0,
         "0.5": 0.0,
-        "dev_examples": 251.0
+        "dev_examples": 219.0
       }
     },
     "qt-a": {
       "own": {
         "0.8": 0.0,
-        "0.7": 0.0017605633802816902,
-        "0.6": 0.0035211267605633804,
-        "0.5": 0.007042253521126761,
-        "dev_examples": 568.0
+        "0.7": 0.00546448087431694,
+        "0.6": 0.00546448087431694,
+        "0.5": 0.012750455373406194,
+        "dev_examples": 549.0
       },
       "sibling": {
         "0.8": 0.0,
-        "0.7": 0.0017605633802816902,
-        "0.6": 0.0035211267605633804,
-        "0.5": 0.0035211267605633804,
-        "dev_examples": 568.0
+        "0.7": 0.0018214936247723133,
+        "0.6": 0.0018214936247723133,
+        "0.5": 0.0018214936247723133,
+        "dev_examples": 549.0
       },
       "foreign:openstack": {
         "0.8": 0.0,
         "0.7": 0.0,
         "0.6": 0.0,
         "0.5": 0.0,
-        "dev_examples": 568.0
+        "dev_examples": 549.0
       }
     },
     "qt-b": {
       "own": {
         "0.8": 0.0,
-        "0.7": 0.008064516129032258,
-        "0.6": 0.010752688172043012,
-        "0.5": 0.02956989247311828,
-        "dev_examples": 372.0
+        "0.7": 0.0029585798816568047,
+        "0.6": 0.008875739644970414,
+        "0.5": 0.014792899408284023,
+        "dev_examples": 338.0
       },
       "sibling": {
         "0.8": 0.0,
         "0.7": 0.0,
-        "0.6": 0.0,
-        "0.5": 0.005376344086021506,
-        "dev_examples": 372.0
+        "0.6": 0.0029585798816568047,
+        "0.5": 0.005917159763313609,
+        "dev_examples": 338.0
       },
       "foreign:openstack": {
         "0.8": 0.0,
         "0.7": 0.0,
         "0.6": 0.0,
         "0.5": 0.0,
-        "dev_examples": 372.0
+        "dev_examples": 338.0
       }
     }
   },
   "provenance": {
-    "generated_at": "2026-09-23T07:28:28.839665+00:00",
+    "generated_at": "2026-09-23T12:36:18.708505+00:00",
     "git": {
-      "commit": "68af76a5073f11736f9cfbd929363a305cbbf3cf",
-      "branch": "docs/granularity-redesign"
+      "commit": "cb431c86000606642b0af750cacd409683087007",
+      "branch": "docs/granularity-redesign",
+      "uncommitted_code": [
+        "scripts/bot_sensitivity.py",
+        "scripts/contamination_windows.py",
+        "scripts/data_audit.py",
+        "scripts/extract_bot_templates.py",
+        "scripts/label_audit_sample.py",
+        "scripts/placebo_corpus.py",
+        "scripts/project_corpora.py",
+        "scripts/rq1_pilot.py",
+        "scripts/separability.py",
+        "scripts/separability_over_time.py",
+        "scripts/sibling_leakage.py",
+        "scripts/window_report.py",
+        "sphragis/corpus/automated/__init__.py",
+        "sphragis/corpus/automated/qt-sanity-bot.json",
+        "sphragis/corpus/build.py",
+        "sphragis/corpus/cli.py",
+        "sphragis/corpus/load.py",
+        "sphragis/corpus/refine.py",
+        "sphragis/corpus/scrub.py"
+      ],
+      "uncommitted_code_sha256": "5f72f65d080c33d80089f55a2cb1566ecfa8cb2b096bc8c5dcd374f766fb2bc7"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

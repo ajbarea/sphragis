@@ -32,6 +32,7 @@ from collections import Counter, defaultdict
 from collections.abc import Iterable
 from pathlib import Path
 
+from sphragis.corpus.load import mark_derived, refined_dir, refined_month_files
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -76,10 +77,9 @@ def project_counts(rows: Iterable[dict], window: tuple[str, str]) -> Counter[str
 
 def main() -> None:
     args = parser.parse_args()
-    directory = args.root / args.org / "examples"
-    months = sorted(directory.glob("*.jsonl"))
+    months = refined_month_files(args.root, args.org)
     if not months:
-        raise SystemExit(f"no examples under {directory}")
+        raise SystemExit(f"no refined examples under {args.root / args.org}")
 
     rows_by_month = {
         month.name: [json.loads(line) for line in month.read_text().splitlines() if line]
@@ -112,12 +112,16 @@ def main() -> None:
             row = dict(row, org=names[side])
             halves[side].append(row)
         for side, kept in halves.items():
-            out = args.out_root / names[side] / "examples"
+            # Written as refined months of a derived corpus: the halves have no builds of their
+            # own, and the loader checks them against the rules their source was refined under.
+            out = refined_dir(args.out_root, names[side])
             out.mkdir(parents=True, exist_ok=True)
             (out / month).write_text("".join(json.dumps(r) + "\n" for r in kept))
             written[side] += len(kept)
             per_side[side][month] += len(kept)
 
+    for name in names:
+        mark_derived(args.out_root, name, source=f"{args.root}/{args.org}")
     manifest = {
         "provenance": provenance_header(),
         "source_root": str(args.root),

@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.load import refined_month_files
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
 from sphragis.provenance import provenance_header
@@ -77,7 +78,7 @@ SEALED_FROM = WINDOWS["test"][0][:7]
 def by_month(org: str) -> dict[str, list[dict[str, Any]]]:
     """Every built month of an organization before the seal, deduplicated within the month."""
     out: dict[str, list[dict[str, Any]]] = {}
-    for path in sorted(Path(f"datasets/gerrit/{org}/examples").glob("*.jsonl")):
+    for path in refined_month_files(Path("datasets/gerrit"), org):
         if path.stem >= SEALED_FROM:
             print(f"refusing {org} {path.stem}: at or past the sealed window {SEALED_FROM}")
             continue

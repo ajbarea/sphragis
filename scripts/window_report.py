@@ -14,6 +14,7 @@ from collections import Counter
 from pathlib import Path, PurePosixPath
 
 from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.load import refined_month_files
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.experiment.neutral import closest_training_match
 from sphragis.provenance import provenance_header
@@ -36,15 +37,10 @@ COLLECTED = [name for name in WINDOWS if name != "test"]
 report: dict[str, dict] = {}
 
 for org in args.org or ["openstack", "qt"]:
-    directory = args.root / org / "examples"
-    rows = [
-        json.loads(line)
-        for path in sorted(directory.glob("*.jsonl"))
-        for line in path.read_text().splitlines()
-        if line
-    ]
+    months = refined_month_files(args.root, org)
+    rows = [json.loads(line) for path in months for line in path.read_text().splitlines() if line]
     if not rows:
-        print(f"{org}: no examples under {directory}; build first")
+        print(f"{org}: no refined examples under {args.root / org}; build and refine first")
         continue
     kept, removed = run_dedup(rows)
     windows, straddling, unassigned = run_split(kept, WINDOWS)
@@ -87,7 +83,7 @@ for org in args.org or ["openstack", "qt"]:
             "max_similarity": max(similarities, default=0.0),
         }
     report[org] = {
-        "months_built": len(list(directory.glob("*.jsonl"))),
+        "months_built": len(months),
         "examples": len(rows),
         "after_dedup": len(kept),
         "dedup_removed": removed,

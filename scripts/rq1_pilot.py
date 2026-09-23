@@ -15,6 +15,7 @@ from pathlib import Path
 import torch
 
 from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.experiment.holdout import (
     equalize_training,
@@ -115,15 +116,9 @@ for org in orgs:
         source_note = f"holdout seed {args.split_seed} over {path}"
     else:
         # Study shape: train and evaluate on separate time windows.
-        directory = args.root / org / "examples"
-        rows = [
-            json.loads(line)
-            for month in sorted(directory.glob("*.jsonl"))
-            for line in month.read_text().splitlines()
-            if line
-        ]
+        rows = refined_examples(args.root, org)
         if not rows:
-            raise SystemExit(f"no examples under {directory}; build first")
+            raise SystemExit(f"no refined examples under {args.root / org}; build and refine first")
         kept, removed = run_dedup(rows)
         windows, straddling, unassigned = run_split(kept, WINDOWS)
         if straddling or unassigned:
@@ -133,7 +128,9 @@ for org in orgs:
         train, evaluate_on = split_by_window(
             windows, train_window=args.train_window, eval_window=args.eval_window
         )
-        source_note = f"{args.train_window} -> {args.eval_window} windows under {directory}"
+        source_note = (
+            f"{args.train_window} -> {args.eval_window} windows under {args.root / org / 'refined'}"
+        )
     leaked = verbatim_overlap(train, evaluate_on)
     assert not leaked, f"{org}: {len(leaked)} held-out examples repeat a training pair"
     train_rows[org], held_out[org] = train, evaluate_on

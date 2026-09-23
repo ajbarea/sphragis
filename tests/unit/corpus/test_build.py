@@ -299,3 +299,60 @@ def test_context_is_carried_and_changes_nothing_else() -> None:
     assert with_ctx[0]["context_before"] == "def f(x):"
     assert with_ctx[0]["context_after"] == "\ndef g():"
     assert without[0]["context_before"] == "" and without[0]["context_after"] == ""
+
+
+def _only(comment: dict[str, Any]):
+    def comments(number: int) -> dict[str, list[dict[str, Any]]]:
+        return {"nova/f.py": [{"patch_set": 1, "line": 2, **comment}]}
+
+    return comments
+
+
+def test_a_bot_template_is_not_a_review_comment() -> None:
+    _, diff_for, calls = _fetchers()
+    examples, drops = build_from_change(
+        "openstack", CHANGE, _only({"message": "Hint: Trailing whitespace"}), diff_for
+    )
+    assert examples == []
+    assert drops["automated_comment"] == 1
+    assert calls == [], "a bot's comment should cost no diff request"
+
+
+def test_a_service_account_is_not_a_reviewer_whatever_it_writes() -> None:
+    _, diff_for, _ = _fetchers()
+    author = {"_account_id": "abc", "tags": ["SERVICE_USER"]}
+    examples, drops = build_from_change(
+        "openstack", CHANGE, _only({"message": "rename this", "author": author}), diff_for
+    )
+    assert examples == []
+    assert drops["automated_comment"] == 1
+
+
+def test_acknowledged_is_an_acknowledgement() -> None:
+    _, diff_for, _ = _fetchers()
+    examples, drops = build_from_change(
+        "openstack", CHANGE, _only({"message": "Acknowledged"}), diff_for
+    )
+    assert examples == []
+    assert drops["acknowledgement"] == 1
+
+
+@pytest.mark.parametrize("kind", ["TRIVIAL_REBASE", "NO_CODE_CHANGE", "NO_CHANGE"])
+def test_a_successor_that_changed_no_code_yields_no_example(kind: str) -> None:
+    comments, diff_for, calls = _fetchers()
+    change = {**CHANGE, "revisions": {"aaa": {"_number": 1}, "bbb": {"_number": 2, "kind": kind}}}
+    examples, drops = build_from_change("openstack", change, comments, diff_for)
+    assert examples == []
+    assert drops["not_rework_successor"] == 1
+    assert calls == []
+
+
+def test_a_rework_successor_is_unaffected() -> None:
+    comments, diff_for, _ = _fetchers()
+    change = {
+        **CHANGE,
+        "revisions": {"aaa": {"_number": 1}, "bbb": {"_number": 2, "kind": "REWORK"}},
+    }
+    examples, drops = build_from_change("openstack", change, comments, diff_for)
+    assert len(examples) == 1
+    assert drops["not_rework_successor"] == 0

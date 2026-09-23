@@ -43,6 +43,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.load import refined_month_files
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
 from sphragis.provenance import provenance_header
@@ -65,7 +66,7 @@ def load(org: str) -> list[dict[str, Any]]:
     first = min(WINDOWS[w][0] for w in READ_WINDOWS)
     last = max(WINDOWS[w][1] for w in READ_WINDOWS)
     rows: list[dict[str, Any]] = []
-    for path in sorted(Path(f"datasets/gerrit/{org}/examples").glob("*.jsonl")):
+    for path in refined_month_files(Path("datasets/gerrit"), org):
         if not (first[:7] <= path.stem < last[:7]):
             continue
         rows.extend(json.loads(line) for line in path.open() if line.strip())

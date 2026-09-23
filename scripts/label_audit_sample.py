@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from placebo_corpus import assign, project_counts  # noqa: E402
 
 from sphragis.corpus.cli import WINDOWS  # noqa: E402
+from sphragis.corpus.load import refined_examples  # noqa: E402
 from sphragis.corpus.pipeline import run_dedup, run_split  # noqa: E402
 
 LABELS = ("valid", "non_actionable", "unrelated_rewrite", "partial", "context_dependent")
@@ -41,12 +42,7 @@ parser.add_argument("--out", type=Path, required=True)
 
 
 def sample(root: Path, org: str, windows: list[str], per_cell: int, seed: int) -> list[dict]:
-    rows = [
-        json.loads(line)
-        for path in sorted((root / org / "examples").glob("*.jsonl"))
-        for line in path.read_text().splitlines()
-        if line
-    ]
+    rows = refined_examples(root, org)
     side_of = assign(dict(project_counts(rows, WINDOWS["train"])))
     kept, _ = run_dedup(rows)
     split, _, _ = run_split(kept, WINDOWS)

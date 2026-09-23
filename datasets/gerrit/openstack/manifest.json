@@ -1,8 +1,18 @@
 {
-  "generated_at": "2026-09-18T07:08:39.863049+00:00",
+  "generated_at": "2026-09-23T12:14:14.723312+00:00",
   "git": {
-    "commit": "b86b687d44516357c94af2239ffd5047c4579776",
-    "branch": "feat/wellposed-filter"
+    "commit": "cb431c86000606642b0af750cacd409683087007",
+    "branch": "docs/granularity-redesign",
+    "uncommitted_code": [
+      "scripts/extract_bot_templates.py",
+      "sphragis/corpus/automated/__init__.py",
+      "sphragis/corpus/automated/qt-sanity-bot.json",
+      "sphragis/corpus/build.py",
+      "sphragis/corpus/cli.py",
+      "sphragis/corpus/refine.py",
+      "sphragis/corpus/scrub.py"
+    ],
+    "uncommitted_code_sha256": "1fb8fb4bdc20e7d44fd479723424d1e85224822df2187c80b7f045fe34acbb0d"
   },
   "python": "3.14.4",
   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -13,14 +23,14 @@
   },
   "org": "openstack",
   "counts": {
-    "pilot": 606,
-    "train": 4327,
+    "pilot": 600,
+    "train": 4304,
     "dev": 565,
     "test": 0
   },
   "hashes": {
-    "pilot": "c35c642530b4edee4f25edacc3e03237583ce705c46860d5cac41357a18001ab",
-    "train": "16c2d18bb716b29f6151c0c9d6a1c0b483229e96f09282635f3b10f7814727a9",
+    "pilot": "9aa633e05d1f22e0df0bee96d8199a614e8e39a71e5b5e5f3abec78efbebacd2",
+    "train": "8574221b14f5339b78570d1ec21e589658901c4bc541d2bbde20d31188e46ef9",
     "dev": "77d0217c3e5fce63725aaee808541046a1587a7c6f2cc4854252912565aed4b5",
     "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -40,8 +50,8 @@
       "no_successor": 2695
     },
     "deduped": {
-      "exact": 265,
-      "near_duplicate": 196,
+      "exact": 262,
+      "near_duplicate": 195,
       "boilerplate": 0,
       "shared_change_id": 0
     },

@@ -1,0 +1,433 @@
+{
+  "bot": "Qt Sanity Bot",
+  "source": "https://github.com/qt/qtrepotools/blob/309df8d5eefb86d6a3c8d9cb42fcfbca1c7cd547/git-hooks/sanitize-commit",
+  "source_commit": "309df8d5eefb86d6a3c8d9cb42fcfbca1c7cd547",
+  "prefixes": [
+    "Hint: "
+  ],
+  "templates": [
+    {
+      "pattern": "2nd\\ line\\ is\\ not\\ empty",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "Adding\\ backup\\ file",
+      "call": "complain"
+    },
+    {
+      "pattern": "Adding\\ build\\ artifact",
+      "call": "complain"
+    },
+    {
+      "pattern": "Adding\\ file\\ with\\ set\\*id\\ permissions",
+      "call": "complain"
+    },
+    {
+      "pattern": "Adding\\ generated\\ file\\ \\(inferred\\ from\\ line\\ .+?\\)",
+      "call": "complain"
+    },
+    {
+      "pattern": "Adding\\ header\\ file\\ with\\ a\\ non\\-\\.h\\ extension",
+      "call": "complain"
+    },
+    {
+      "pattern": "Adding\\ huge\\ file\\ \\(.+?\\ >\\ 2MiB\\)",
+      "call": "complain"
+    },
+    {
+      "pattern": "Adding\\ implausibly\\ executable\\ file",
+      "call": "complain"
+    },
+    {
+      "pattern": "Adding\\ temporary\\ file\\ from\\ merge\\ conflict\\ resolution",
+      "call": "complain"
+    },
+    {
+      "pattern": "Aim\\ for\\ shorter\\ summaries",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "Bad\\ form\\ of\\ \\[ChangeLog\\]\\ tag",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Bad\\ form\\ of\\ \\[Third\\-Party\\ Code\\]\\ tag",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Bogus\\ .+?\\ address",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Bogus\\ Reviewed\\-by\\ footer",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Bogus\\ address",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Bug\\ reference\\ in\\ summary",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "CRLF\\ line\\ endings",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Capitalization\\ of\\ \"Coverity\\-Id\"\\ is\\ wrong",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Capitalization\\ of\\ \"Pick\\-to\"\\ is\\ wrong",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Capitalization\\ of\\ \"QUIP\"\\ is\\ wrong",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Capitalization\\ of\\ \"Task\\-number\"\\ is\\ wrong",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Changing\\ huge\\ binary\\ file\\ \\(.+?\\ >\\ 2MiB\\)",
+      "call": "complain"
+    },
+    {
+      "pattern": "Cherry\\-pick's\\ source\\ is\\ not\\ a\\ valid\\ merged\\ commit",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Cherry\\-pick\\ will\\ be\\ subsequently\\ merged\\ with\\ its\\ source\\ branch",
+      "call": "complain"
+    },
+    {
+      "pattern": "Cherry\\-picks\\ are\\ strongly\\ discouraged",
+      "call": "complain"
+    },
+    {
+      "pattern": "Commit\\ on\\ LTS\\ branch\\ is\\ not\\ a\\ cherry\\-pick",
+      "call": "complain"
+    },
+    {
+      "pattern": "Defect\\ in\\ PNG\\ format,\\ see:\\ identify\\ .+?",
+      "call": "complain"
+    },
+    {
+      "pattern": "Deprecation\\ adjustments\\ already\\ submitted\\?",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Duplicate\\ entry\\ '.+?'\\ in\\ Pick\\-to\\ footer",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Empty\\ lines\\ between\\ footers",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Executable\\ file\\ with\\ no\\ initial\\ \\#!\\ line",
+      "call": "complain"
+    },
+    {
+      "pattern": "Flow\\ control\\ keywords\\ must\\ be\\ followed\\ by\\ a\\ single\\ space",
+      "call": "styleFail"
+    },
+    {
+      "pattern": "Gerrit\\ change\\ id\\ outside\\ Change\\-Id\\ footer",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Inclusion\\ of\\ Reopens\\ on\\ a\\ cherry\\-pick\\ is\\ probably\\ incorrect\\.",
+      "call": "complain"
+    },
+    {
+      "pattern": "Invisible\\ Unicode\\ characters\\ detected\\ \\(possible\\ stealth\\ payload\\)",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "JIRA\\ task\\ referenced\\ from\\ ChangeLog",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Leading\\ tabs",
+      "call": "styleFail"
+    },
+    {
+      "pattern": "Leading\\ zero",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Likely\\ change\\-log\\ entry\\ without\\ \\[ChangeLog\\]\\ tag",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Mention\\ of\\ Coverity\\ without\\ Coverity\\-Id\\ footer\\ is\\ probably\\ incorrect",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Missing\\ copyright\\ header",
+      "call": "complain"
+    },
+    {
+      "pattern": "Missing\\ empty\\ line\\ between\\ text\\ and\\ footers",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Missing\\ space\\ after\\ colon\\ in\\ footer",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Missing\\ space\\ between\\ ChangeLog\\ tags\\ and\\ text",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Mixing\\ spaces\\ with\\ TABs",
+      "call": "styleFail"
+    },
+    {
+      "pattern": "Mixing\\ whitespace\\-only\\ changes\\ with\\ other\\ changes",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Multiple\\ CIDs\\ in\\ one\\ footer",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Multiple\\ QUIPs\\ in\\ one\\ footer",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Multiple\\ tasks\\ in\\ one\\ footer",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "No\\ newline\\ at\\ end\\ of\\ file",
+      "call": "complain"
+    },
+    {
+      "pattern": "Non\\-numeric\\ CID",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Non\\-numeric\\ QUIP\\ identifier",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Obsolete\\ domain\\ in\\ .+?\\ address\\.\\ Please\\ update\\ to\\ qt\\.io\\.",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Obsolete\\ domain\\.\\ Please\\ update\\ to\\ qt\\.io\\.",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Omission\\ of\\ .+?\\ from\\ Pick\\-to\\ footer\\ might\\ be\\ incorrect",
+      "call": "complain"
+    },
+    {
+      "pattern": "Omission\\ of\\ .+?\\ from\\ cherry\\-pick\\ targets\\ is\\ probably\\ incorrect",
+      "call": "complain"
+    },
+    {
+      "pattern": "Omission\\ of\\ .+?\\ from\\ the\\ Pick\\-to\\ footer\\ is\\ probably\\ incorrect",
+      "call": "complain"
+    },
+    {
+      "pattern": "Omission\\ of\\ Pick\\-to\\ footer\\ is\\ probably\\ incorrect",
+      "call": "complain"
+    },
+    {
+      "pattern": "Pick\\-to\\ entry\\ '.+?'\\ equals\\ source\\ branch",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Pick\\-to\\ entry\\ '.+?'\\ is\\ not\\ a\\ valid\\ branch\\ in\\ .+?",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Picking\\ downward\\ from\\ .+?\\ is\\ preferred",
+      "call": "complain"
+    },
+    {
+      "pattern": "Possible\\ incorrect\\ use\\ of\\ Apple\\-related\\ terminology;\\ the\\ correct\\ name\\ of\\ Apple's\\ desktop\\ operating\\ system\\ is\\ 'macOS'",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Possible\\ spelling\\ errors",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Real\\ Name\\ has\\ an\\ unexpected\\ form",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Redundant\\ repository\\ reference\\ in\\ ChangeLog",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Revert\\ without\\ explanation",
+      "call": "complain"
+    },
+    {
+      "pattern": "Semicolon\\ after\\ .+?",
+      "call": "styleFail"
+    },
+    {
+      "pattern": "Space\\ indent\\ followed\\ by\\ a\\ TAB\\ character",
+      "call": "styleFail"
+    },
+    {
+      "pattern": "Style\\ issues",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Summary\\ does\\ not\\ use\\ imperative\\ mood",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "Summary\\ ends\\ with\\ period",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "Summary\\ is\\ excessively\\ long",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "Summary\\ is\\ too\\ short",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "Summary\\ of\\ revert\\ mentions\\ only\\ SHA1",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "TAB\\ character\\ in\\ non\\-leading\\ whitespace",
+      "call": "styleFail"
+    },
+    {
+      "pattern": "Text\\ following\\ footers",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Trailing\\ whitespace",
+      "call": "styleFail"
+    },
+    {
+      "pattern": "Two\\ trailing\\ newlines",
+      "call": "complain_cln"
+    },
+    {
+      "pattern": "URL\\ pointing\\ to\\ Gerrit\\ or\\ JIRA",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Unicode\\ bi\\-directional\\ override\\ characters",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Unnecessary\\ Signed\\-off\\-by\\ footer",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Unresolved\\ merge\\ conflict",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Usage\\ of\\ qWait\\(\\)\\ is\\ discouraged",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Use\\ \\[ChangeLog\\]\\ tag\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Use\\ of\\ deprecated\\ idiom\\ 'defined\\(Q_OS_MAC\\)\\ \\&\\&\\ !defined\\(Q_OS_IOS\\)';\\ use\\ Q_OS_MACOS\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Use\\ of\\ deprecated\\ idiom\\ 'mac:!ios',\\ use\\ 'macos'\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Using\\ deprecated\\ define\\ Q_CLANG_QDOC;\\ use\\ Q_QDOC\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Using\\ deprecated\\ define\\ Q_OS_MAC;\\ use\\ Q_OS_MACOS\\ \\(for\\ macOS\\ only\\)\\ or\\ Q_OS_DARWIN\\ \\(for\\ all\\ Apple\\ platforms\\)\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Using\\ deprecated\\ define\\ Q_OS_MACX;\\ use\\ Q_OS_MACOS\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Using\\ deprecated\\ define\\ Q_OS_OSX;\\ use\\ Q_OS_MACOS\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Using\\ deprecated\\ qmake\\ scope\\ 'mac':\\ use\\ 'macos'\\ \\(for\\ macOS\\ only\\)\\ or\\ 'darwin'\\ \\(for\\ all\\ Apple\\ platforms\\)\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Using\\ deprecated\\ qmake\\ scope\\ 'macx';\\ use\\ 'macos'\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "Using\\ deprecated\\ qmake\\ scope\\ 'osx';\\ use\\ 'macos'\\ instead",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "WS\\-only\\ change",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "Warning:\\ Adding\\ alien\\ build\\ system\\ file",
+      "call": "complain"
+    },
+    {
+      "pattern": "Warning:\\ Adding\\ big\\ file\\ \\(.+?\\ >=\\ 50KiB\\)",
+      "call": "complain"
+    },
+    {
+      "pattern": "Warning:\\ Increasing\\ file\\ size\\ by\\ more\\ than\\ 50%\\ \\(.+?\\ =>\\ .+?\\)",
+      "call": "complain"
+    },
+    {
+      "pattern": "[a-z']+ \\-> [A-Za-z' \\-]+\\?(?: \\[\\*\\])?",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "\\[ChangeLog\\]\\[Third\\-Party\\ Code\\]\\ entry\\ without\\ change\\ to\\ qt_attribution\\.json",
+      "call": "do_complain"
+    },
+    {
+      "pattern": "__OBJC__\\ will\\ never\\ be\\ defined\\ for\\ non\\-Objective\\-C/C\\+\\+\\ source\\ files",
+      "call": "complain_ln"
+    },
+    {
+      "pattern": "qt_attribution\\.json\\ changed\\ without\\ \\[ChangeLog\\]\\[Third\\-Party\\ Code\\]\\ in\\ the\\ commit\\ message",
+      "call": "complain"
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-09-23T11:58:21.070042+00:00",
+    "git": {
+      "commit": "cb431c86000606642b0af750cacd409683087007",
+      "branch": "docs/granularity-redesign",
+      "uncommitted_code": [
+        "scripts/extract_bot_templates.py",
+        "sphragis/corpus/automated/qt-sanity-bot.json"
+      ],
+      "uncommitted_code_sha256": "3b5ff6013bbd4499c9fa8aa327932e859cd293b91bcb5fbe2b7e1660caa2e837"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

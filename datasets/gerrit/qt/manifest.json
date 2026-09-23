@@ -1,8 +1,18 @@
 {
-  "generated_at": "2026-09-18T07:16:11.366468+00:00",
+  "generated_at": "2026-09-23T12:20:09.851126+00:00",
   "git": {
-    "commit": "b86b687d44516357c94af2239ffd5047c4579776",
-    "branch": "feat/wellposed-filter"
+    "commit": "cb431c86000606642b0af750cacd409683087007",
+    "branch": "docs/granularity-redesign",
+    "uncommitted_code": [
+      "scripts/extract_bot_templates.py",
+      "sphragis/corpus/automated/__init__.py",
+      "sphragis/corpus/automated/qt-sanity-bot.json",
+      "sphragis/corpus/build.py",
+      "sphragis/corpus/cli.py",
+      "sphragis/corpus/refine.py",
+      "sphragis/corpus/scrub.py"
+    ],
+    "uncommitted_code_sha256": "1fb8fb4bdc20e7d44fd479723424d1e85224822df2187c80b7f045fe34acbb0d"
   },
   "python": "3.14.4",
   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -13,15 +23,15 @@
   },
   "org": "qt",
   "counts": {
-    "pilot": 1300,
-    "train": 8442,
-    "dev": 950,
+    "pilot": 1134,
+    "train": 7456,
+    "dev": 897,
     "test": 0
   },
   "hashes": {
-    "pilot": "0294c00de9b5d0c704c8503a827265f39adf9af5b4aeb08892ecaf233c1ac9ff",
-    "train": "1d9b01ba1f1acc5730b1ba356a9336d9c2c4bf646a06577173a658d2e4d5f8c2",
-    "dev": "9a03e935e8768c743284d72053222c40652a58f45f252ebeb35056d25ccf7ea8",
+    "pilot": "eea953fd09e02e93818281af0f87ed7793aad23ca722d217e07b7957d7919b9d",
+    "train": "39e89cb713a1580472b4e47d58fab8fb02ccb5f5cbc8dca522f2f391b122bec0",
+    "dev": "262236676b5297ea8dea89213cea26f26fc2eb830bc804c71c53736acba9eacc",
     "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "stats": {
@@ -40,10 +50,10 @@
       "no_successor": 770
     },
     "deduped": {
-      "exact": 491,
-      "near_duplicate": 262,
+      "exact": 316,
+      "near_duplicate": 210,
       "boilerplate": 0,
-      "shared_change_id": 3
+      "shared_change_id": 0
     },
     "unassigned_changes": 0
   }
