@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 135 artifacts under
-30 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 139 artifacts under
+31 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -50,6 +50,15 @@ RQ2 under secure aggregation: does a round's aggregate betray whose clients were
 | `aggregate-attack-cpp-rebuilt-c128.json` | `aggregate-attack-dual-cpp-rebuilt-c128-t2-local.json` |
 | `aggregate-attack-dual-cpp-rebuilt-c128-t2.json` | `aggregate-attack-project.json` |
 | `aggregate-attack.json` |  |
+
+## `scripts/bot_sensitivity.py`
+
+The registered dev-window reading with examples that rest only on automated reviewers removed.
+
+| artifact | |
+|---|---|
+| `bot-sensitivity-placebo-openstack.json` | `bot-sensitivity-placebo-qt.json` |
+| `bot-sensitivity-qtfull-fp32.json` | `bot-sensitivity-r256.json` |
 
 ## `scripts/censoring.py`
 

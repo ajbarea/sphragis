@@ -1,0 +1,83 @@
+{
+  "runs": [
+    "datasets/results/rq1-windows-r256.json",
+    "datasets/results/rq1-windows-s2-r256.json",
+    "datasets/results/rq1-windows-s3-r256.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "bot_prefixes": [
+    "Hint: ",
+    "Modifying security sensitive file.",
+    "Unresolved merge conflict"
+  ],
+  "removed_share": {
+    "openstack": 0.0,
+    "qt": 0.049473684210526316
+  },
+  "readings": {
+    "registered": {
+      "verdict": "mixed",
+      "per_org": {
+        "openstack": {
+          "estimate": 0.013569321533923298,
+          "low": -0.009722222222222224,
+          "high": 0.036116044997039666,
+          "clusters": 235.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt": {
+          "estimate": 0.03087719298245613,
+          "low": 0.006749156355455532,
+          "high": 0.05649157581764119,
+          "clusters": 462.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    },
+    "without_automated": {
+      "verdict": "fail",
+      "per_org": {
+        "openstack": {
+          "estimate": 0.013569321533923298,
+          "low": -0.009722222222222224,
+          "high": 0.036116044997039666,
+          "clusters": 235.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt": {
+          "estimate": 0.016980435585086735,
+          "low": -0.004359889021006739,
+          "high": 0.03844758795792528,
+          "clusters": 442.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-23T11:41:04.386605+00:00",
+    "git": {
+      "commit": "823c319b09b82cfbeacc852402b0f25b43c1a438",
+      "branch": "docs/granularity-redesign",
+      "uncommitted_code": [
+        "scripts/bot_sensitivity.py"
+      ],
+      "uncommitted_code_sha256": "250b6ff2e3fa732f863ea0d0a33241ef4cf38c81ecc8e482c17604d9af8144af"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}
