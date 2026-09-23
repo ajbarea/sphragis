@@ -13,6 +13,7 @@ from sphragis.experiment.power import (
     seed_runs,
     seed_trial,
     simulate_power,
+    stratified_seed_trial,
 )
 from sphragis.measure.stats import Cluster, paired_difference
 
@@ -179,3 +180,58 @@ def test_the_lift_found_realises_the_effect_asked_for() -> None:
     assert realised_difference(pilot, lift=lift, seed=3, draws=200) == pytest.approx(
         0.05, abs=0.003
     )
+
+
+def _half(n: int, treatment: float, control: float) -> list[Cluster]:
+    return [Cluster(f"c{i}", (treatment,) * 2, (control,) * 2) for i in range(n)]
+
+
+def _trial(halves, lift: float, seed: int = 0):
+    return stratified_seed_trial(
+        halves,
+        lift=lift,
+        n_changes=[40, 40],
+        seeds=3,
+        sigma_b=0.0,
+        redraw=0.0,
+        resamples=400,
+        seed=seed,
+        confidences=[0.975, 0.95],
+        sesoi=0.01,
+    )
+
+
+def test_a_large_lift_is_supported_at_both_levels() -> None:
+    halves = [_half(30, 0.0, 0.0), _half(30, 0.0, 0.0)]
+    trial = _trial(halves, lift=0.6)
+    assert trial.supported == {0.975: True, 0.95: True}
+    assert trial.absent == {0.975: False, 0.95: False}
+
+
+def test_identical_arms_read_absent_and_unsupported() -> None:
+    halves = [_half(30, 1.0, 1.0), _half(30, 0.0, 0.0)]
+    trial = _trial(halves, lift=0.0)
+    assert trial.absent == {0.975: True, 0.95: True}
+    assert trial.supported == {0.975: False, 0.95: False}
+
+
+def test_the_sign_flip_null_is_not_supported_on_average() -> None:
+    halves = [_half(30, 1.0, 0.0), _half(30, 0.0, 1.0)]
+    rate = sum(_trial(halves, lift=0.0, seed=s).supported[0.975] for s in range(40)) / 40
+    assert rate < 0.1
+
+
+def test_one_planned_size_per_half_is_required() -> None:
+    with pytest.raises(ValueError, match="one planned size per half"):
+        stratified_seed_trial(
+            [_half(10, 0.0, 0.0)],
+            lift=0.1,
+            n_changes=[10, 10],
+            seeds=3,
+            sigma_b=0.0,
+            redraw=0.0,
+            resamples=100,
+            seed=0,
+            confidences=[0.95],
+            sesoi=0.01,
+        )

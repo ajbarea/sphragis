@@ -169,6 +169,18 @@ projects, no project holds more than 50% of its half's training examples, and ea
 as many training examples as OpenStack's smaller half. The project set is selected on feasibility
 (merged human changes, anchored comments, language) before any contrast is computed.
 
+**What counts as a Chromium project** (registered 2026-09-23, before any Chromium contrast
+exists). Every repository on chromium-review other than `chromium/src` (v8, angle, crashpad,
+platform2) is a project, as in the other organizations. `chromium/src` is one repository holding
+most of Chromium's changes, and as a single project it would fill a half on its own (scoping, PR
+#35). Inside it, the project is the **top level of the component a file is assigned by its nearest
+`DIR_METADATA`** (`Blink`, `UI`, `Internals`, ...), Chromium's own declared ownership boundary,
+read from the tree at the commit the change merged into. A change touching several components
+belongs to the component holding most of its changed lines, ties by name. Files with no component
+are excluded and counted. This is chosen over a directory depth because a depth is the analyst's
+boundary and a component is the organization's; it is fixed before the split is computed so the
+split cannot be tuned against the criteria below.
+
 **Deadline: frozen by 2026-10-23.** If Chromium misses the deadline or the criteria, H2 has **no
 confirmatory cell**, since AOSP's public review stopped on 2025-03-27 and OpenStack and Qt share no
 language. H2 is then registered as exploratory and H1 runs on OpenStack and Qt at their own `N`. The

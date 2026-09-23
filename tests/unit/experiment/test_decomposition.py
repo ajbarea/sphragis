@@ -13,14 +13,17 @@ from sphragis.experiment.decomposition import (
     SUMMED_CONFIDENCE,
     below_sesoi,
     cell_verdict,
+    cpp_supplement,
     decomposition_gate,
     halves,
     holm_levels,
     holm_steps,
     holm_verdicts,
+    is_cpp,
     organization_clusters,
     project_clusters,
     reading,
+    row_path,
 )
 from sphragis.experiment.grid import EvalRun, run_id
 
@@ -32,7 +35,9 @@ ORGS = ("openstack", "qt", "chromium")
 Score = Callable[[str, str, int, int], float]
 
 
-def _results(score: Score, orgs: tuple[str, ...] = ORGS) -> dict[str, list[dict[str, Any]]]:
+def _results(
+    score: Score, orgs: tuple[str, ...] = ORGS, n_changes: int = N_CHANGES
+) -> dict[str, list[dict[str, Any]]]:
     """Every adapter half scored on every half, two examples a change."""
     all_halves = [h for org in orgs for h in halves(org)]
     return {
@@ -42,7 +47,7 @@ def _results(score: Score, orgs: tuple[str, ...] = ORGS) -> dict[str, list[dict[
                 "change_id": f"{window}-I{c}",
                 "exact_match": score(trained, window, seed, c),
             }
-            for c in range(N_CHANGES)
+            for c in range(n_changes)
             for e in range(2)
         ]
         for trained in all_halves
@@ -427,3 +432,73 @@ def test_cells_report_their_clusters_and_seeds() -> None:
     cell = _gate(_by_relation(0.75, 0.25, 0.25))["per_org"]["H2"]["qt"]
     assert cell["clusters_per_half"] == [N_CHANGES, N_CHANGES]
     assert cell["seeds"] == len(SEEDS)
+
+
+# The C++-restricted supplement
+
+
+@pytest.mark.parametrize(
+    ("row", "expected"),
+    [
+        ({"id": "qt:I1:src/corelib/qstring.cpp:3:120"}, "src/corelib/qstring.cpp"),
+        ({"id": "chromium:I2:base/a:b.cc:1:4"}, "base/a:b.cc"),
+        ({"id": "x:I3:ignored:1:1", "path": "real/path.h"}, "real/path.h"),
+    ],
+)
+def test_row_path_reads_the_path_out_of_the_id(row: dict[str, str], expected: str) -> None:
+    assert row_path(row) == expected
+
+
+def test_row_path_refuses_an_id_with_no_path() -> None:
+    with pytest.raises(ValueError, match="carries no path"):
+        row_path({"id": "qt:I1"})
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("a/b.cpp", True),
+        ("a/b.cc", True),
+        ("a/b.H", True),
+        ("a/b.py", False),
+        ("a.cc/Makefile", False),
+        ("a/b", False),
+    ],
+)
+def test_is_cpp_by_suffix(path: str, expected: bool) -> None:
+    assert is_cpp({"id": "x", "path": path}) is expected
+
+
+def _with_paths(score: Score) -> dict[str, list[dict[str, Any]]]:
+    """Even changes are C++ and carry the organization effect; odd changes are Python and do not."""
+    results = _results(score, n_changes=2 * N_CHANGES)
+    for rows in results.values():
+        for row in rows:
+            change = int(row["change_id"].rsplit("I", 1)[1])
+            row["path"] = f"src/f{change}.{'cc' if change % 2 == 0 else 'py'}"
+    return results
+
+
+def test_the_cpp_supplement_reads_only_cpp_examples() -> None:
+    def score(trained: str, window: str, seed: int, change: int) -> float:
+        if change % 2 == 1:
+            return 0.5 * (change % 4 == 1)
+        return 1.0 if _org(trained) == _org(window) else 0.0
+
+    outcome = cpp_supplement(
+        _with_paths(score), seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+    )
+    assert outcome["role"] == "supplementary"
+    qt = outcome["cells"]["qt"]
+    assert qt["estimate"] == pytest.approx(1.0)
+    assert qt["clusters_per_half"] == [N_CHANGES, N_CHANGES]
+    assert qt["cpp_share"] == {"qt-a": 0.5, "qt-b": 0.5}
+
+
+def test_a_half_with_too_few_cpp_changes_is_reported_not_raised() -> None:
+    results = _results(_by_relation(0.5, 0.5, 0.25))
+    for rows in results.values():
+        for row in rows:
+            row["path"] = "src/f.py"
+    outcome = cpp_supplement(results, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES)
+    assert "error" in outcome["cells"]["qt"]

@@ -64,6 +64,10 @@ EXPLORATORY_H2: Mapping[str, tuple[tuple[str, str], ...]] = {
     "without_chromium": (("openstack", "qt"), ("qt", "openstack")),
 }
 
+# C++ source and header suffixes. Qt writes .cpp and Chromium .cc, so a suffix match that
+# compared file types directly would find the two organizations sharing only headers.
+CPP_SUFFIXES = frozenset({".cc", ".cpp", ".cxx", ".c++", ".h", ".hh", ".hpp", ".hxx", ".inl"})
+
 READINGS = {
     ("pass", "absent"): "within-half",
     ("pass", "inconclusive"): "within-half, organization unresolved",
@@ -382,3 +386,93 @@ def decomposition_gate(
         "sesoi": SESOI,
         "holm_levels": levels,
     }
+
+
+def row_path(row: Mapping[str, Any]) -> str:
+    """The file an example was drawn from.
+
+    Rows scored before `evaluate` recorded the path carry it only in the example id,
+    `org:change_id:path:patch_set:start`, so it is read from there.
+    """
+    if row.get("path"):
+        return str(row["path"])
+    parts = str(row["id"]).split(":", 2)
+    if len(parts) < 3:
+        raise ValueError(f"example id {row['id']!r} carries no path")
+    path, _, _ = parts[2].rpartition(":")
+    path, _, _ = path.rpartition(":")
+    if not path:
+        raise ValueError(f"example id {row['id']!r} carries no path")
+    return path
+
+
+def is_cpp(row: Mapping[str, Any]) -> bool:
+    """Whether an example comes from a C++ source or header file."""
+    path = row_path(row)
+    dot = path.rfind(".")
+    return dot > path.rfind("/") and path[dot:].lower() in CPP_SUFFIXES
+
+
+def cpp_supplement(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    design: str = "registered",
+    seeds: Sequence[int],
+    metric: str = "exact_match",
+    bootstrap_seed: int,
+    resamples: int = 10_000,
+    estimator: Estimator = paired_difference,
+) -> dict[str, Any]:
+    """H2 restricted to C++ hunks: a supplementary estimand, reported and never tested.
+
+    "Both organizations write C++" is measured rather than assumed, so the organization contrast
+    is recomputed on the examples from C++ files alone. A restricted population estimates a
+    different quantity, so this carries no verdict; a half left with too few C++ changes is
+    reported with its error.
+    """
+    if design not in DESIGNS:
+        raise ValueError(f"unknown design {design!r}; registered designs are {sorted(DESIGNS)}")
+    if resamples < MIN_RESAMPLES:
+        raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
+    _require_registered_seeds(seeds)
+    restricted = {key: [row for row in rows if is_cpp(row)] for key, rows in results.items()}
+    cells: dict[str, Any] = {}
+    for org, foreign in DESIGNS[design]["H2"]:
+        try:
+            strata = _strata(
+                [
+                    organization_clusters(
+                        restricted, org=org, foreign=foreign, seed=s, metric=metric
+                    )
+                    for s in seeds
+                ]
+            )
+            estimates, draws = stratified_crossed_draws(
+                {"H2": strata}, seed=bootstrap_seed, resamples=resamples, estimator=estimator
+            )
+        except ValueError as error:
+            cells[org] = {"foreign": foreign, "error": str(error)}
+            continue
+        low, high = percentile_interval(draws["H2"], SUMMED_CONFIDENCE)
+        cells[org] = {
+            "foreign": foreign,
+            "estimate": estimates["H2"],
+            "low": low,
+            "high": high,
+            "confidence": SUMMED_CONFIDENCE,
+            "clusters_per_half": [len(runs[0]) for runs in strata],
+            "cpp_share": {
+                window: _share(results[_key(org, window, seeds[0])]) for window in halves(org)
+            },
+        }
+    return {"design": design, "role": "supplementary", "cells": cells}
+
+
+def _key(org: str, window: str, seed: int) -> str:
+    """One scored cell of a window, for counting what the window holds."""
+    sibling = next(h for h in halves(org) if h != window)
+    return run_id(EvalRun(f"adapter:{sibling}", window, seed))
+
+
+def _share(rows: Sequence[Mapping[str, Any]]) -> float:
+    return sum(is_cpp(r) for r in rows) / len(rows) if rows else 0.0
