@@ -35,3 +35,6 @@ logs/*
 
 # The built docs site. `zensical build` writes it; the workflow publishes from the job.
 site/
+
+# Claude Code session worktrees
+.claude/worktrees/

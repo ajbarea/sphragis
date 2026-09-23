@@ -32,8 +32,8 @@ experiment = [
 dev = [
     "pytest>=9.0.3",
     "pytest-cov>=6.0",
-    "ruff>=0.15.16",
-    "ty>=0.0.44,<0.1",
+    "ruff>=0.16.8",
+    "ty>=0.0.82,<0.1",
     # The docs site. In `dev` rather than run through `uv tool` because the docs workflow
     # builds with `uv run zensical`, matching the sister repositories, and a tool-run
     # version is not pinned by uv.lock, so CI and a local build could drift.
