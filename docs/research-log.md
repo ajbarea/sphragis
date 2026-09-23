@@ -5054,3 +5054,64 @@ H2's regime** (equal halves, the same treatment arm in both), as the re-review p
 second half swaps treatment and control, so an adapter-level seed shift enters the two halves
 with opposite signs; that regime (`--flip-second`) is measured next, before the report states a
 coverage for H1.
+
+### At the test window's size each H1 cell detects about three exact-match points, and absence is out of reach (2026-09-23)
+
+`scripts/decomposition_sensitivity.py` simulates one H1 cell as the gate reads it: the placebo's
+own-against-sibling contrast on each half as the variance model, the test window's projected
+changes split between the halves in their dev-window proportion, five seeds at each
+organization's half-size seed effect, and the stratified crossed interval. Marginal power
+0.928 per cell, so three independent cells pass together about four
+times in five. Generated from `decomposition-sensitivity.json` (100 trials a step,
+1000 resamples).
+
+| cell | planned changes (halves) | sigma_b | level | detectable effect | null reads absent |
+|---|---|---|---|---|---|
+| openstack | 814 + 995 | 0.0106 | 0.975 | +0.0273 | 0.000 |
+| openstack | 814 + 995 | 0.0106 | 0.95 | +0.0257 | 0.000 |
+| qt | 1784 + 1497 | 0.0148 | 0.975 | +0.0283 | 0.000 |
+| qt | 1784 + 1497 | 0.0148 | 0.95 | +0.0235 | 0.000 |
+
+**The detectable effect is two to three times the smallest effect of interest, and no null study
+in the simulation read absent**: the interval at the test window's size is wider than the
+(-0.01, +0.01) band, so a cell can pass or be inconclusive and cannot be absent. The spec named
+this case and committed to stating it before the test rather than discovering it after. Every
+pre-committed negative reading ("an organization adds nothing", "no transferable style") rests on
+absence, so as registered those readings could never be reached. What replaces them is the next
+entry. One caveat on the variance model: Qt's placebo halves trained on about 4,200 examples each,
+twice the half size every adapter will train at, so Qt's row describes a better-trained adapter's
+variance than the design will have.
+
+**H1's own regime holds nominal.** The coverage runs with the second half's arms swapped
+(`--flip-second`), as H1 swaps them, so a seed shift enters the halves with opposite signs.
+Generated from `stratified-coverage-h1-0.975.json` and `stratified-coverage-h1-0.95.json`.
+
+| level | nominal | sigma_b | stratified |
+|---|---|---|---|
+| 0.975 | 0.0125 | 0.0 | 0.0155 |
+| 0.975 | 0.0125 | 0.005 | 0.0100 |
+| 0.975 | 0.0125 | 0.01 | 0.0120 |
+| 0.975 | 0.0125 | 0.02 | 0.0107 |
+| 0.95 | 0.025 | 0.0 | 0.0257 |
+| 0.95 | 0.025 | 0.005 | 0.0245 |
+| 0.95 | 0.025 | 0.01 | 0.0205 |
+| 0.95 | 0.025 | 0.02 | 0.0213 |
+
+Within Monte Carlo error of nominal at both levels, in both regimes now measured.
+
+### Pooling does not make absence reachable either (2026-09-23)
+
+The registered pooled estimate is sharper than any one cell, so it was the natural home for the
+negative readings. Simulated the same way, H1 pooled over openstack, qt with
+every half one equally weighted stratum (planned changes [814, 995, 1784, 1497]): a true
+null reads absent 0.040 of the time at 97.5% and
+0.145 at 95% (`decomposition-sensitivity-pooled.json`). Chromium
+would add a third organization and narrow the interval by roughly a further fifth, which does not
+change the picture. At this test window, 0.01 is not a resolvable equivalence bound.
+
+**Proposed, not yet registered:** anchor the negative readings to the design's own resolution.
+A cell is *bounded* when its interval's upper bound lies below the effect the sensitivity
+analysis says that cell detects, a number fixed now, before any test data (Lakens, Scheel and
+Isager 2018 list "the effect the study was designed to detect" among the justifications for an
+equivalence bound). The substantive SESOI stays reported beside it. A null then reads "no effect as
+large as this design was built to detect", which is what the design can actually support.

@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 138 artifacts under
-31 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 140 artifacts under
+32 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -133,6 +133,14 @@ Is greedy decoding what amplifies a planted convention?
 | artifact | |
 |---|---|
 | `decoding-marker-0.25-t1.0.json` |  |
+
+## `scripts/decomposition_sensitivity.py`
+
+The smallest half-split effect the decomposition gate detects, and whether absence is reachable.
+
+| artifact | |
+|---|---|
+| `decomposition-sensitivity-pooled.json` | `decomposition-sensitivity.json` |
 
 ## `scripts/defence_curve.py`
 
@@ -317,3 +325,5 @@ of the research log rather than out of the code.
 - `rq1-r256-seeds.json`
 - `stratified-coverage-0.95.json`
 - `stratified-coverage-0.975.json`
+- `stratified-coverage-h1-0.95.json`
+- `stratified-coverage-h1-0.975.json`

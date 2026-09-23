@@ -46,6 +46,15 @@ parser.add_argument("--resamples", type=int, default=1000)
 parser.add_argument("--steps", type=int, default=7, help="bisection steps on the lift")
 parser.add_argument("--seed", type=int, default=41)
 parser.add_argument("--workers", type=int, default=6)
+parser.add_argument(
+    "--pooled",
+    action="store_true",
+    help="also simulate H1 pooled across the organizations, every half one equally weighted "
+    "stratum, and report how often a null reads absent there",
+)
+parser.add_argument(
+    "--pooled-only", action="store_true", help="skip the per-organization bisection"
+)
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -92,6 +101,7 @@ def main() -> None:
         "resamples": args.resamples,
         "cells": {},
     }
+    cells: dict[str, dict] = {}
     with ProcessPoolExecutor(args.workers) as pool:
         for org, path in placebos.items():
             results = json.loads(path.read_text())["results"]
@@ -104,6 +114,9 @@ def main() -> None:
             planned = sizes.get(org, total)
             half_sizes = [max(10, round(planned * len(h) / total)) for h in cell]
             sigma_b = sigma.get(org, 0.013)
+            cells[org] = {"cell": cell, "sizes": half_sizes, "sigma_b": sigma_b}
+            if args.pooled_only:
+                continue
             null = run_trials(pool, cell, 0.0, half_sizes, sigma_b, args, levels)
             entry: dict = {
                 "pilot_changes_per_half": [len(h) for h in cell],
@@ -132,6 +145,23 @@ def main() -> None:
                     flush=True,
                 )
             report["cells"][org] = entry
+        if args.pooled:
+            strata = [h for org in placebos for h in cells[org]["cell"]]
+            planned = [n for org in placebos for n in cells[org]["sizes"]]
+            sigma_b = max(cells[org]["sigma_b"] for org in placebos)
+            null = run_trials(pool, strata, 0.0, planned, sigma_b, args, levels)
+            report["pooled"] = {
+                "organizations": list(placebos),
+                "planned_changes_per_half": planned,
+                "sigma_b": sigma_b,
+                "null_false_positive": {c: fmean(t.supported[c] for t in null) for c in levels},
+                "null_reads_absent": {c: fmean(t.absent[c] for t in null) for c in levels},
+            }
+            print(
+                f"pooled H1 over {list(placebos)}: null reads absent "
+                f"{report['pooled']['null_reads_absent']}",
+                flush=True,
+            )
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2))
     print(f"wrote {args.out}")

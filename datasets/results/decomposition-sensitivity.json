@@ -1,0 +1,85 @@
+{
+  "seeds": 5,
+  "target_marginal_power": 0.928,
+  "sesoi": 0.01,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 100,
+  "resamples": 1000,
+  "cells": {
+    "openstack": {
+      "pilot_changes_per_half": [
+        103,
+        126
+      ],
+      "planned_changes_per_half": [
+        814,
+        995
+      ],
+      "sigma_b": 0.0106,
+      "null_false_positive": {
+        "0.975": 0.01,
+        "0.95": 0.02
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "by_level": {
+        "0.975": {
+          "lift": 0.03984375,
+          "minimum_detectable_effect": 0.02733281004019244
+        },
+        "0.95": {
+          "lift": 0.0375,
+          "minimum_detectable_effect": 0.025709304064096817
+        }
+      }
+    },
+    "qt": {
+      "pilot_changes_per_half": [
+        248,
+        208
+      ],
+      "planned_changes_per_half": [
+        1784,
+        1497
+      ],
+      "sigma_b": 0.0148,
+      "null_false_positive": {
+        "0.975": 0.0,
+        "0.95": 0.02
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "by_level": {
+        "0.975": {
+          "lift": 0.0421875,
+          "minimum_detectable_effect": 0.02828448856702649
+        },
+        "0.95": {
+          "lift": 0.03515625,
+          "minimum_detectable_effect": 0.023528869455687135
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-23T11:06:51.956556+00:00",
+    "git": {
+      "commit": "0bc29f0d13aa45ac3735b0f0cb4e03ee9ffedf14",
+      "branch": "docs/granularity-redesign"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}
