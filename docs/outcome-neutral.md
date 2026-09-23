@@ -78,7 +78,7 @@ across the boundary between two windows rather than within one, and the caller p
 threshold rather than inheriting a default, so the threshold that ran is always the one
 written down.
 
-Measured on the complete OpenStack corpus v2 of 5,469 deduplicated examples, train into dev:
+Measured on the complete OpenStack corpus v2 of 5,487 deduplicated examples, train into dev:
 
 | Jaccard | rate |
 |---|---|

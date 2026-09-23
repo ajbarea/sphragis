@@ -5052,3 +5052,101 @@ train into dev at Jaccard 0.7 is 0.0106, unchanged. Sibling-half rates at Jaccar
 All below the registered 2%. One reading does not survive from v1: openstack-a's sibling rate now
 exceeds its own half's, so "a sibling never holds more near-copies than the own half" is not a
 property of this corpus, only the threshold is.
+
+### Correction: every successor is a rework, and corpus v2 is refrozen under the corrected rules (2026-09-23)
+
+**Retracted: the rebase-only-successor finding** in the two entries above (0.34% of OpenStack's
+kept examples and 1.65% of Qt's in the audit, 20 and 189 in the v2 table). It was an artifact of
+the audit's own lookup, which keyed a change's revisions on its Change-Id. A cherry-pick carries
+the Change-Id to another branch, so a stable-branch copy that was only rebased lent its kind to
+the original. Resolved per change (by number, else by Change-Id, project and creation time
+together), every OpenStack successor and 11,444 of Qt's 11,448 are reworks; the other 4 are
+changes that cannot be told apart and are kept and counted. The rule stays as a guard, and now
+removes nothing. A review of the v2 branch caught it. Rebase edits carried inside a
+reworked successor remain the open question the audit entry names.
+
+**Two more corrections from that review.** A comment is automated only when every paragraph of it
+matches a template, since the Sanity Bot joins its complaints for one line with a blank line;
+and the Sanity Bot's templates are the union over every version of its hook in effect across the
+corpus span, not the current version alone.
+
+| organization | built | bot comments removed | examples resting only on bots | acknowledgement only | refined |
+|---|---|---|---|---|---|
+| openstack | 5,959 | 0 | 0 | 13 | 5,946 |
+| qt | 11,448 | 1,747 | 1,304 | 6 | 10,138 |
+
+Recognised in Qt: Qt Sanity Bot 1,355, flake8 lint output 338, Qt QUIP-23 security review
+integration 54 (`data-audit-qt.json`).
+
+Refrozen as corpus v2 under these rules; the manifests of the entry above are replaced, and each
+manifest now records the build and label rule digests, which `verify` checks:
+
+| organization | pilot | train | dev |
+|---|---|---|---|
+| openstack | 600 | 4,322 | 565 |
+| qt | 1,146 | 7,563 | 897 |
+
+**Re-read.** Qt's organizational contrast without automated examples is +0.0171
+[-0.0034, +0.0374] (5.7% of its held-out examples removed), against +0.0316 [+0.0089, +0.0562]
+as registered; at rank 256, +0.0164 [-0.0051, +0.0384]. Qt's firing placebo half, qt-a, is
++0.0288 [+0.0019, +0.0555] without them. The finding of the entry above stands: nearly half of
+Qt's organizational effect was its lint bot, and the half-split survives
+(`bot-sensitivity-*.json`). OpenStack train into dev at Jaccard 0.7 is 1.06%, unchanged
+(`window-report-openstack.json`).
+
+**Leakage re-measured** (`sibling-leakage.json`), Jaccard 0.7:
+
+| evaluated half | own | sibling | foreign |
+|---|---|---|---|
+| openstack-a | 0.0031 | 0.0031 | qt 0.0000 |
+| openstack-b | 0.0132 | 0.0088 | qt 0.0000 |
+| qt-a | 0.0020 | 0.0020 | openstack 0.0000 |
+| qt-b | 0.0079 | 0.0000 | openstack 0.0000 |
+
+All below the registered 2%. The v2 entry's remark that openstack-a's sibling rate exceeded its
+own was read from the refinement that dropped the 20 examples in error, and does not survive:
+the two are equal. The threshold remains the property to rely on, not the ordering.
+
+**AOSP audited the same way** before RQ2 trains on it (`data-audit-aosp.json`): 5,133 built,
+no comment matching a registered bot, every successor a rework, and a repeated-text queue holding
+only reviewer language ("typo" on 25 changes, "2024" on 24). 5,130 refined.
+
+**The build and the label rules are now separate stages with separate digests.** Review of the
+fixes found that the build applied the bot templates and the successor rule that `refine` applies
+too, and that a change to the build's own rules moved one rules version while `refine` re-ran
+only the label rules: a refreeze would have certified the old build's output, a new bot template
+would have meant refetching every organization, and `refine`, which only removes, could not undo a
+build that had removed too much. The build now keeps only what needs the network or the comment's
+author (the author, service-account and acknowledgement filters, well-posedness, the scrub) and
+records the build rules each month was built under; every label rule is `refine`'s, and a change
+to one is a re-refine from disk. The loader refuses a month built under other build rules, and
+each manifest records both digests for `verify`.
+
+The months on disk were built before the build recorded anything, so they were accepted once
+without a rebuild (`python -m sphragis.corpus stamp`, limited to the 54 snapshots listed in
+`sphragis/corpus/stamped-months.json` and to the build rules named there), on this evidence:
+every month's drop profile carries exactly the drop reasons of the build that added the
+well-posedness filter, and that filter and the fetchers are unchanged since; that build applied
+neither the bot templates nor the successor rule, so `refine` applies both to what it kept, and
+its acknowledgement list lacks only "Acknowledged", which `refine` adds; the build's other later
+additions are the service-account filter, which the raw snapshots give nothing to act on (they hold no account
+tags), and the change number, which names a change and removes none; and the scrub's one change,
+chained addresses, is reapplied by `refine` as a sweep of domains left behind a pseudonym (one
+AOSP comment). One month differs: Qt's 2024-10 was built before prompt context was added, and its
+582 examples carry none. They are the same examples with the same text; context is in no prompt;
+the month is the pilot window, which no contrast trains or evaluates on; the contamination
+battery refuses a row without context and the label-audit sample draws from train and dev. The
+stamp records the count in that month's build record.
+
+**Files handed to a job by path now fail closed.** Project, client, contamination and planted
+corpora are cut with a record of the rules, their hash and the sources they came from beside each
+file, and every job that reads one (the client runs, the project and calibration contrasts, the
+contamination battery, the pilot replay and the prompt probe) refuses a file without a matching
+record, or one whose source has since moved or gone stale; `--legacy-corpus` (`LEGACY_CORPUS=1`
+in the sbatch scripts) reads an older one to reproduce an earlier result, and the output records
+it. Every corpus root's files are now ignored by an
+allowlist, manifests and seals excepted, so a later stage's text cannot be committed by omission.
+
+**Open.** The committed contamination results carry the scored half of each example's rewrite as
+`reference` text, so code from the corpus is in git; it predates these rules and stays until the
+battery can be re-read from example ids and hashes, which it must before the repository is public.

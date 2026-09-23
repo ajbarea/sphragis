@@ -92,15 +92,14 @@ everything under `datasets/results/`, and a test scans every committed file for 
 
 | window | OpenStack | Qt |
 |---|---|---|
-| pilot | 600 | 1,134 |
-| train | 4,304 | 7,456 |
+| pilot | 600 | 1,146 |
+| train | 4,322 | 7,563 |
 | dev | 565 | 897 |
 | **test** | **sealed** | **sealed** |
-| total collected | 5,469 | 9,487 |
+| total collected | 5,487 | 9,606 |
 
-Corpus v2, frozen 2026-09-23 after the Stage 1 data audit: comments written by bots, examples whose
-next patch set only rebased, and one-click "Acknowledged" replies are removed. The audit and what
-it changed are in the research log.
+Corpus v2, frozen 2026-09-23 after the Stage 1 data audit: comments written by bots and one-click
+"Acknowledged" replies are removed. The audit and what it changed are in the research log.
 
 The test window is defined and hash-sealed now and fetched only after in-principle
 acceptance, no earlier than three months after the window's final month. Its content hash in
