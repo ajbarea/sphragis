@@ -5115,3 +5115,67 @@ analysis says that cell detects, a number fixed now, before any test data (Laken
 Isager 2018 list "the effect the study was designed to detect" among the justifications for an
 equivalence bound). The substantive SESOI stays reported beside it. A null then reads "no effect as
 large as this design was built to detect", which is what the design can actually support.
+
+### A data audit: nearly half of Qt's organizational effect was its lint bot (2026-09-23)
+
+Stage 1's labels were audited before anything else is built on them, in three parts.
+
+**Are the labels real?** A stratified sample of 120 examples (15 per organization, window and placebo
+half, one per change, `scripts/label_audit_sample.py`, seed 20260923) was labelled against a
+five-class rubric drawn from the refinement-noise literature (Too Noisy To Learn, MSR 2025;
+"Rethinking Training Data for Generating Code Review Comments", arXiv 2607.25851): valid, comment
+not actionable, rewrite unrelated to the comment, partial, or context-dependent (the right rewrite
+needs information the prompt does not carry). **Model-assisted labels, disclosed as such**; a blind
+subset goes to AJ for a human agreement figure before any of this is quoted. 92 of 120 valid, 77%
+(Wilson 95% [68, 83]); OpenStack 42 of 60 and Qt 50 of 60. The dominant non-valid class is
+context-dependent (16), then partial (7), unrelated (4), not actionable (1). CodeReviewer-derived
+data measured about 64% valid under a comparable rubric, so the pipeline's existing filters earn
+their keep. Because every adapter is scored on the identical examples, noise in held-out labels can
+dilute a contrast and cannot manufacture one; noise that differs between training halves is what
+the equally weighted two-half design cancels to first order.
+
+**Does the pipeline treat the organizations alike?** Two filters do not.
+
+- *Automated reviewers.* Qt's Sanity Bot posts templated inline comments ("Hint: Trailing
+  whitespace", "Hint: Leading tabs", "Hint: WS-only change", "Hint: Flow control keywords must be
+  followed by a single space", about 900 of them), which the build keeps as reviewer comments.
+  8.1% of Qt's built examples rest on automated comments alone, and none of OpenStack's. A bot
+  enforces written rules, the opposite of what the study measures, and it runs on one organization.
+- *Rebases.* The label is the hunk that changed from patch set n to n+1, and the build never reads
+  the diff's `due_to_rebase` flag. Where the successor revision's `kind` is a rebase or a message
+  edit with no code change, the label can only be what the rebase swept in: 0.34% of OpenStack's
+  kept examples and 1.65% of Qt's. How many reworked successors also carry rebase edits the REST
+  snapshots cannot say; the git route can, and measures it.
+- The acknowledgement list misses Gerrit's one-click "Acknowledged" (13 and 6 examples rest on it
+  alone).
+
+**What the bot did to the pilot.** Every registered dev-window reading re-read with the examples
+whose comments are all automated removed (`scripts/bot_sensitivity.py`, fixed prefix list, same
+rows, same crossed interval and pooled estimand):
+
+| run | cell | registered | automated-only removed | share removed |
+|---|---|---|---|---|
+| organization, rank 32 | openstack | +0.0230 [+0.0000, +0.0458] | +0.0230 [+0.0000, +0.0458] | 0.000 |
+| organization, rank 32 | qt | +0.0316 [+0.0089, +0.0562] | +0.0173 [-0.0022, +0.0373] | 0.049 |
+| organization, rank 256 | openstack | +0.0136 [-0.0097, +0.0361] | +0.0136 [-0.0097, +0.0361] | 0.000 |
+| organization, rank 256 | qt | +0.0309 [+0.0067, +0.0565] | +0.0170 [-0.0044, +0.0384] | 0.049 |
+| Qt split in half | qt-a | +0.0305 [+0.0046, +0.0573] | +0.0288 [+0.0019, +0.0555] | 0.044 |
+| Qt split in half | qt-b | +0.0045 [-0.0349, +0.0432] | +0.0038 [-0.0363, +0.0429] | 0.056 |
+| OpenStack split in half | openstack-a | +0.0099 [-0.0287, +0.0467] | +0.0099 [-0.0287, +0.0467] | 0.000 |
+| OpenStack split in half | openstack-b | +0.0013 [-0.0364, +0.0397] | +0.0013 [-0.0364, +0.0397] | 0.000 |
+
+Verdicts: organization, rank 32: mixed → fail; organization, rank 256: mixed → fail; Qt split in half: mixed → mixed; OpenStack split in half: fail → fail.
+
+**Qt's organizational contrast falls from +0.0316 to +0.0173 and no longer excludes zero, at both
+ranks, from removing 4.9% of its held-out examples.** An adapter trained on Qt had learned Qt's bot,
+which an OpenStack adapter never saw. The placebo barely moves (+0.0305 to +0.0288), because the bot
+runs across all of Qt and both halves learned it. So once the artifact is out, **the within-Qt
+half-split effect is larger than Qt's cross-organization effect**, which is the granularity
+hypothesis read directly off the data. OpenStack has no bot and does not move.
+
+**Consequences, all taken before any test data exists:** automated-reviewer comments are excluded
+from the corpus by a registered rule (account type where the host exposes it, the prefix list
+otherwise, both reported), successors that are not reworks are dropped, "Acknowledged" joins the
+acknowledgement list, and every pilot figure quoted in the Stage 1 report is re-read on the cleaned
+corpus. The registered dev-window verdict under the organization gate was already superseded; this
+says the part of it that looked strongest was partly an instrument artefact.

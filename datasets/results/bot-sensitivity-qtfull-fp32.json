@@ -1,0 +1,83 @@
+{
+  "runs": [
+    "datasets/results/rq1-windows-qtfull-fp32.json",
+    "datasets/results/rq1-windows-qtfull-fp32-s2.json",
+    "datasets/results/rq1-windows-qtfull-fp32-s3.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "bot_prefixes": [
+    "Hint: ",
+    "Modifying security sensitive file.",
+    "Unresolved merge conflict"
+  ],
+  "removed_share": {
+    "openstack": 0.0,
+    "qt": 0.049473684210526316
+  },
+  "readings": {
+    "registered": {
+      "verdict": "mixed",
+      "per_org": {
+        "openstack": {
+          "estimate": 0.02300884955752212,
+          "low": 0.0,
+          "high": 0.04584040747028867,
+          "clusters": 235.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt": {
+          "estimate": 0.031578947368421074,
+          "low": 0.008908685968819607,
+          "high": 0.05620155038759689,
+          "clusters": 462.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    },
+    "without_automated": {
+      "verdict": "fail",
+      "per_org": {
+        "openstack": {
+          "estimate": 0.02300884955752212,
+          "low": 0.0,
+          "high": 0.04584040747028867,
+          "clusters": 235.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        },
+        "qt": {
+          "estimate": 0.017349575489110387,
+          "low": -0.0022371364653244186,
+          "high": 0.037259615384615384,
+          "clusters": 442.0,
+          "seeds": 3.0,
+          "resamples": 10000.0
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-23T11:40:13.079903+00:00",
+    "git": {
+      "commit": "823c319b09b82cfbeacc852402b0f25b43c1a438",
+      "branch": "docs/granularity-redesign",
+      "uncommitted_code": [
+        "scripts/bot_sensitivity.py"
+      ],
+      "uncommitted_code_sha256": "250b6ff2e3fa732f863ea0d0a33241ef4cf38c81ecc8e482c17604d9af8144af"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}
