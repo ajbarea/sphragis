@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from statistics import fmean
+
 import pytest
 
 from sphragis.measure.stats import (
@@ -13,7 +16,9 @@ from sphragis.measure.stats import (
     excludes_zero,
     gate_verdict,
     paired_difference,
+    percentile_interval,
     percentile_ranks,
+    stratified_crossed_draws,
     supports_direction,
 )
 
@@ -264,3 +269,106 @@ def test_crossed_bootstrap_refuses_runs_over_different_examples() -> None:
 def test_crossed_bootstrap_enforces_the_cluster_floor() -> None:
     with pytest.raises(ValueError, match="at least 10 clusters"):
         crossed_bootstrap([_mixed(5), _mixed(5)], seed=0, resamples=10)
+
+
+def _stratum(
+    wins: Callable[[int, int], bool], n: int, seeds: int = 3, size: int = 1
+) -> list[list[Cluster]]:
+    """`seeds` runs of `n` changes; treatment wins change i at seed k when `wins(k, i)`."""
+    return [
+        [
+            Cluster(f"c{i}", (1.0,) * size, (0.0,) * size if wins(k, i) else (1.0,) * size)
+            for i in range(n)
+        ]
+        for k in range(seeds)
+    ]
+
+
+def _draws(strata: list[list[list[Cluster]]], resamples: int = 2_000) -> list[float]:
+    return stratified_crossed_draws({"c": strata}, seed=0, resamples=resamples)[1]["c"]
+
+
+def test_stratified_draws_weight_every_stratum_equally_in_every_draw() -> None:
+    # A small half won everywhere, a large half won nowhere and ten times the examples. With
+    # no variance inside either half, every equally weighted draw is exactly 0.5; pooling by
+    # examples would put every draw near 0.024.
+    small = _stratum(lambda k, i: True, n=10, size=1)
+    large = _stratum(lambda k, i: False, n=40, size=10)
+    estimates, draws = stratified_crossed_draws({"c": [small, large]}, seed=0, resamples=200)
+    assert estimates["c"] == pytest.approx(0.5)
+    assert all(d == pytest.approx(0.5) for d in draws["c"])
+
+
+def test_each_stratum_is_resampled_from_its_own_changes() -> None:
+    # Half A is won on its first five of ten changes, half B on its last twenty of forty. A draw
+    # that reused A's indices for B would only ever see B's first ten changes, all lost.
+    a = _stratum(lambda k, i: i < 5, n=10)
+    b = _stratum(lambda k, i: i >= 20, n=40)
+    draws = _draws([a, b])
+    assert fmean(draws) == pytest.approx(0.5, abs=0.02)
+
+
+def test_changes_are_resampled() -> None:
+    draws = _draws([_stratum(lambda k, i: i % 2 == 0, n=20)])
+    assert max(draws) - min(draws) > 0.2
+
+
+def test_seeds_are_resampled_and_every_seed_counts() -> None:
+    # Seed 0 wins every change, seeds 1 and 2 none: the estimate is a third, and a draw that
+    # never resampled seeds, or read seed 0 alone, would have no spread or sit at 1.0.
+    draws = _draws([_stratum(lambda k, i: k == 0, n=12)])
+    assert fmean(draws) == pytest.approx(1 / 3, abs=0.03)
+    assert min(draws) == pytest.approx(0.0)
+    assert max(draws) == pytest.approx(1.0)
+
+
+def test_stratified_draws_share_resamples_across_contrasts() -> None:
+    a = _stratum(lambda k, i: i < 5, n=12)
+    _, draws = stratified_crossed_draws({"x": [a], "y": [a]}, seed=3, resamples=200)
+    assert draws["x"] == draws["y"]
+
+
+def test_stratified_draws_refuse_contrasts_over_different_changes() -> None:
+    a = _stratum(lambda k, i: i < 5, n=12)
+    b = _stratum(lambda k, i: i < 5, n=13)
+    with pytest.raises(ValueError, match="different changes"):
+        stratified_crossed_draws({"x": [a], "y": [b]}, seed=0, resamples=10)
+
+
+def test_stratified_draws_refuse_seed_runs_over_different_changes() -> None:
+    runs = _stratum(lambda k, i: i < 5, n=12)
+    runs[2] = [Cluster(f"other{i}", c.treatment, c.control) for i, c in enumerate(runs[2])]
+    with pytest.raises(ValueError, match="same changes"):
+        stratified_crossed_draws({"x": [runs]}, seed=0, resamples=10)
+
+
+def test_stratified_draws_refuse_strata_with_different_seed_counts() -> None:
+    with pytest.raises(ValueError, match="seed count"):
+        stratified_crossed_draws(
+            {
+                "x": [
+                    _stratum(lambda k, i: i < 5, 12, seeds=3),
+                    _stratum(lambda k, i: i < 5, 12, seeds=5),
+                ]
+            },
+            seed=0,
+            resamples=10,
+        )
+
+
+def test_stratified_draws_enforce_the_cluster_floor_per_stratum() -> None:
+    with pytest.raises(ValueError, match="floor"):
+        stratified_crossed_draws(
+            {"x": [_stratum(lambda k, i: i < 5, 12), _stratum(lambda k, i: i < 2, 4)]},
+            seed=0,
+            resamples=10,
+        )
+
+
+@pytest.mark.parametrize(
+    ("confidence", "expected"), [(0.95, (249.0, 9750.0)), (0.975, (124.0, 9875.0))]
+)
+def test_percentile_interval_reads_the_ranks_of_its_level(
+    confidence: float, expected: tuple[float, float]
+) -> None:
+    assert percentile_interval([float(i) for i in range(10_000)], confidence) == expected

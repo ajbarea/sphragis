@@ -4926,3 +4926,86 @@ open rather than taken.
 does what the organizational one does, in Qt. Rank 256 says OpenStack's null is not capacity. The
 language histogram says the two organizations barely share a file type and the pair cannot supply
 a matched arm. None of them is about the apparatus; all three are about the unit.
+
+### RQ1 re-registered around granularity, and Chromium added as a third organization (2026-09-22)
+
+**Decided by AJ.** Of the two framings the hardening results left open, keep the organization and
+report three controls against it, or ask at what boundary adaptation transfers, AJ chose the
+second, and added Chromium. This entry records the decision and the design; it adds no figure.
+
+**Why the second framing uses every measurement.** The placebo, rank 256 and the language
+histogram are each an embarrassment to an organization-level hypothesis and each a datum for a
+granularity one. A single-level test cannot tell a project effect from an organization effect,
+because an organization's projects are where its adapter's training data comes from. So the
+contrast is decomposed: each organization is split in half by the placebo's own rule, and on a
+refinement from one half three adapters are scored on the identical example, its own half's, its
+sibling half's, and a foreign organization's halves. Own minus sibling is H1; sibling minus
+foreign is H2. Neither adapter in H2 has seen the evaluated projects.
+
+**Why Chromium.** H2 is only an organizational test when the two organizations write the same
+language, and OpenStack and Qt do not. Qt and Chromium do, so H2 is confirmatory on that pair
+alone, with a supplementary estimand on C++ hunks because "both C++" is measured, not assumed. Human-subjects
+review is not specific to Chromium: it was deferred for every host on 2026-09-14 and is still due
+before submission. **A terms-of-use question found the same day is host-specific and stops
+collection.** robots.txt reads `Disallow: /` for all agents on chromium-review, android-review and
+codereview.qt-project.org (fetched 2026-09-23); review.opendev.org allows access with
+`Crawl-delay: 2`. Google's Terms of Service (effective 2026-07-30) prohibit "using automated means
+to access content from any of our services in violation of the machine-readable instructions on
+our web pages (for example, robots.txt files that disallow crawling, training, or other
+activities)", which reaches the AOSP corpus already collected as well as a Chromium one. No host is
+fetched again until AJ decides; nothing collected is deleted. The pipeline's pacing, one request a
+second to every host, is also faster than the two and three seconds OpenDev and Qt ask for.
+
+**An independent adversarial review of the first draft returned eleven findings, four blocking,
+and all were taken.** The ones that changed the design:
+
+- The pilot predicts the decomposition is underpowered at half-organization size, and a
+  non-significant cell cannot carry "an organization adds nothing". So a smallest effect of
+  interest is registered (0.01 exact match, the seed-effect bound, fixed before any contrast), and
+  a cell is supported, absent (inside the band, two one-sided tests) or inconclusive. Only absence
+  supports a negative reading.
+- Half-organization adapters train near the 1,800-example setting where the seed effect measured
+  0.013, above the 0.01 at which three seeds stop holding nominal, so the registered seed rule
+  itself calls for five seeds unless the effect at the half size is bounded below 0.01.
+- The pooled estimand would let a difference in how well each half's data teaches survive the
+  symmetric design; the halves are now weighted equally and resampled within themselves.
+- Chromium could collapse the split: if `chromium/src` holds most of its examples, one half is one
+  project. The split now has to qualify (three projects a half, no project over half its half,
+  each half at least OpenStack's smaller half), by 2026-10-23, or H2 has no confirmatory cell and
+  is reported as exploratory.
+- Bonferroni was replaced by Holm, which dominates it, and the family-wise level stated in the
+  draft was wrong: two tests at one-sided 0.0125 hold 0.025, not 0.05.
+- The two hypotheses share the sibling adapter with opposite signs, so they are bootstrapped on
+  the same draws and the share of draws in each reading is reported.
+
+**The rank branch is amended in the same change.** It fired only when neither organization
+excluded zero, so a per-arm capacity artefact was never checked, and "if rank 256 also produces no
+gain" left open a second look that could turn a fail into a pass. Rank 256 now runs on the whole
+grid, is a supplementary analysis in ICH E9(R1)'s sense (a different estimand, "given lower
+priority"), never changes a verdict, and a negative reading needs absence at both ranks.
+
+**Recorded rather than taken:** `crossed_bootstrap` draws one seed index for every adapter in a
+contrast although the adapters are independent training runs. That was already true of the
+registered gate; it is to be measured against the coverage simulation before Stage 1.
+
+Design of record: `docs/superpowers/specs/2026-09-22-granularity-redesign.md`. The gate as code:
+`sphragis/experiment/decomposition.py`, beside the unchanged `walk.gate`.
+
+### The seed effect at the half size is above 0.01, so the decomposition runs at five seeds (2026-09-23)
+
+The registered seed rule says three seeds up to a seed main effect of 0.01 and five above it. It
+was measured at 0.000 on the full organizations and 0.013 at about 1,800 examples; the
+re-registration trains on halves, so the rule has to be read at the half size. The three-seed
+placebo runs already are that measurement: OpenStack's halves trained on 2,157 and 2,159 examples,
+at the size every half-adapter will train on, and Qt's on 4,205 and 4,206. Read with
+`scripts/seed_effect.py` over each placebo's three single-seed runs.
+
+| placebo | sigma_b | one-sided 95% upper bound | artifact |
+|---|---|---|---|
+| OpenStack halves | 0.0106 | 0.086 | `seed-effect-placebo-openstack.json` |
+| Qt halves | 0.0148 | 0.084 | `seed-effect-placebo-qt.json` |
+
+Both point estimates are above 0.01, so **five seeds**, by the rule fixed before either run. The
+upper bounds are wide because two contrasts of three seeds each give two degrees of freedom, which
+is itself the reason not to rest a three-seed decision on them. This is the case the spec named:
+three seeds only if the effect at the half size is bounded below 0.01, and it is not.

@@ -29,22 +29,26 @@ its dev window holds three examples.
 
 ## In flight
 
-Nothing. The queue is empty and every result is committed.
+- **RQ1 re-registered around granularity** (AJ, 2026-09-22). Spec
+  `docs/superpowers/specs/2026-09-22-granularity-redesign.md`, gate as code in
+  `sphragis/experiment/decomposition.py`, Stage 1 text in `papers` on branch
+  `p4/granularity-registration`. Crossed-interval coverage is being re-measured at 97.5%.
+- **Chromium, the third organization.** Host added and project set being scoped; the split has to
+  qualify by 2026-10-23 or H2 has no confirmatory cell.
+- **FDLoRA's schedule**, the last unmeasured adapter cut: implementation and TIGRIS run.
 
-## Next, and blocked on a decision rather than on work
+## Next
 
-1. **The unit.** Keep the organization and report three controls against it, or ask at what
-   granularity adaptation transfers. The second uses every measurement, including the nulls.
-2. **A third organization.** Chromium yields 0.7 reviewer-anchored comments a change against Qt's
-   0.5 and is still active, so it clears the bar; adding a host touches the ethics determination.
-3. **The rank branch fires on the wrong condition.** It requires *neither* arm to exclude zero,
-   so a per-arm capacity artefact is never checked. Amending is legitimate while the test window
-   is sealed.
-4. **FDLoRA's schedule**, the last unmeasured cut. Its reading is registered; the implementation
-   is not written.
+1. ✅ The seed effect at the half size is above 0.01 on both placebos, so five seeds (research log,
+   2026-09-23).
+2. The sensitivity analysis recomputed at the half size, at five seeds, at 97.5% and 95%, for the three-cell
+   intersection, against the smallest effect of interest.
+3. Sibling-half leakage and the C++-restricted estimand, both reported beside H2.
+4. The decomposition's pilot on the dev window before 2026-11-20.
 
 ## Standing
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
-2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
+2026-11-13. Human-subjects review, deferred for every host on 2026-09-14, is due before
+submission. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before.

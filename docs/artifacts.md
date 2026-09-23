@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 135 artifacts under
+repository. This page is generated from those scripts: 137 artifacts under
 30 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -253,6 +253,7 @@ How large is the seed main effect: the shift a retrained seed gives every change
 
 | artifact | |
 |---|---|
+| `seed-effect-placebo-openstack.json` | `seed-effect-placebo-qt.json` |
 | `seed-effect-qtfull.json` | `seed-effect-rq1-qtfull.json` |
 | `seed-effect-sym-0.json` |  |
 
