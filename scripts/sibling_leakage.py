@@ -1,11 +1,11 @@
 """How much of an evaluated half's dev window a sibling half's training data already holds.
 
-H2 credits the organization with whatever the sibling half's adapter gains over a foreign
-one. Boilerplate shared across an organization's projects (build and CI configuration, licence
-headers, dependency bumps) would raise the sibling's score for a reason that is not style, so
-near-duplicate leakage from the sibling's train window into the evaluated half's dev window is
-measured beside the own half's and a foreign organization's, at the thresholds
-`window_report.py` reports.
+A contrast that credits an organization with whatever a sibling half's adapter gains over a
+foreign one reads shared text as style. Boilerplate shared across an organization's projects
+(build and CI configuration, licence headers, dependency bumps) would raise the sibling's score
+for a reason that is not style, so near-duplicate leakage from the sibling's train window into
+the evaluated half's dev window is measured beside the own half's and a foreign organization's,
+at the thresholds `window_report.py` reports.
 
 Halves are assigned exactly as `placebo_corpus.py` assigns them; windows are deduplicated and
 split as `window_report.py` does. The test window is sealed and never read.

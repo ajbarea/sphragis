@@ -33,8 +33,9 @@ are read from each bot's own source.
 
 ## Next
 
-The granularity re-registration (PR #37) rebases onto this corpus once it merges: its spec, the
-decomposition gate and Chromium as H2's third organization.
+1. The granularity re-registration (PR #37) rebases onto this corpus once it merges; it carries
+   the choice of unit, Chromium as a third organization and the rank-branch amendment.
+2. **FDLoRA's schedule**, the last unmeasured adapter cut (PR #36).
 
 ## Standing
 
