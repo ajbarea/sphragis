@@ -267,6 +267,7 @@ class StratifiedTrial:
 
     supported: Mapping[float, bool]
     absent: Mapping[float, bool]
+    high: Mapping[float, float]
 
 
 def stratified_seed_trial(
@@ -305,4 +306,5 @@ def stratified_seed_trial(
     return StratifiedTrial(
         supported={c: low > 0.0 for c, (low, _) in intervals.items()},
         absent={c: -sesoi < low and high < sesoi for c, (low, high) in intervals.items()},
+        high={c: high for c, (_, high) in intervals.items()},
     )

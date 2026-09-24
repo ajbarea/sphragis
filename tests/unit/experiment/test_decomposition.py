@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -15,6 +17,7 @@ from sphragis.experiment.decomposition import (
     cell_verdict,
     cpp_supplement,
     decomposition_gate,
+    detectable_effects,
     halves,
     holm_levels,
     holm_steps,
@@ -75,7 +78,16 @@ def _by_relation(own: float, sibling: float, foreign: float) -> Score:
     return score
 
 
+# A registered bound for every cell either design reads, at both Holm levels.
+BOUND = 0.05
+DETECTABLE = {
+    name: {org: {0.975: BOUND, 0.95: BOUND} for org in ("openstack", "qt", "chromium")}
+    for name in ("H1", "H2")
+}
+
+
 def _gate(score: Score, **kwargs: Any) -> dict[str, Any]:
+    kwargs.setdefault("detectable", DETECTABLE)
     return decomposition_gate(
         _results(score), seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES, **kwargs
     )
@@ -172,7 +184,12 @@ def test_an_exploratory_cell_never_decides_a_verdict() -> None:
 def test_the_fallback_design_tests_h1_alone_at_the_whole_family_level() -> None:
     results = _results(_by_relation(0.75, 0.25, 0.25), orgs=("openstack", "qt"))
     outcome = decomposition_gate(
-        results, design="without_chromium", seeds=SEEDS, bootstrap_seed=0, resamples=1_000
+        results,
+        design="without_chromium",
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=1_000,
+        detectable=DETECTABLE,
     )
     assert outcome["holm_levels"] == [0.95]
     assert set(outcome["verdicts"]) == {"H1"}
@@ -198,13 +215,18 @@ def test_the_gate_refuses_an_unregistered_seed_count() -> None:
             seeds=(1, 2),
             bootstrap_seed=0,
             resamples=MIN_RESAMPLES,
+            detectable=DETECTABLE,
         )
 
 
 def test_the_gate_refuses_too_few_resamples() -> None:
     with pytest.raises(ValueError, match="resamples"):
         decomposition_gate(
-            _results(_by_relation(0.75, 0.25, 0.25)), seeds=SEEDS, bootstrap_seed=0, resamples=40
+            _results(_by_relation(0.75, 0.25, 0.25)),
+            seeds=SEEDS,
+            bootstrap_seed=0,
+            resamples=40,
+            detectable=DETECTABLE,
         )
 
 
@@ -213,13 +235,13 @@ def test_the_gate_refuses_too_few_resamples() -> None:
 
 def test_a_half_split_effect_alone_reads_as_within_half() -> None:
     outcome = _gate(_by_relation(0.75, 0.25, 0.25))
-    assert outcome["verdicts"] == {"H1": "pass", "H2": "absent"}
+    assert outcome["verdicts"] == {"H1": "pass", "H2": "bounded"}
     assert outcome["reading"] == "within-half"
 
 
 def test_an_organization_effect_alone_reads_as_the_organization() -> None:
     outcome = _gate(_by_relation(0.5, 0.5, 0.0))
-    assert outcome["verdicts"] == {"H1": "absent", "H2": "pass"}
+    assert outcome["verdicts"] == {"H1": "bounded", "H2": "pass"}
     assert outcome["reading"] == "organization"
 
 
@@ -232,41 +254,81 @@ def test_one_organization_without_the_effect_leaves_the_hypothesis_unpassed() ->
     outcome = _gate(score)
     assert outcome["verdicts"]["H1"] == "inconclusive"
     assert outcome["per_org"]["H1"]["qt"]["verdicts"][0.975] == "supported"
-    assert outcome["per_org"]["H1"]["openstack"]["verdicts"][0.975] == "absent"
+    assert outcome["per_org"]["H1"]["openstack"]["verdicts"][0.975] == "bounded"
 
 
-def test_a_reversed_effect_does_not_pass() -> None:
-    assert _gate(_by_relation(0.25, 0.75, 0.75))["verdicts"]["H1"] == "inconclusive"
+def test_a_reversed_effect_is_bounded_not_passed() -> None:
+    # H1 predicts own above sibling; a clear reversal rules out a transfer as large as detectable.
+    assert _gate(_by_relation(0.25, 0.75, 0.75))["verdicts"]["H1"] == "bounded"
+
+
+def test_a_cell_without_a_registered_bound_is_refused() -> None:
+    partial = {
+        "H1": {o: b for o, b in DETECTABLE["H1"].items() if o != "chromium"},
+        "H2": DETECTABLE["H2"],
+    }
+    with pytest.raises(ValueError, match="H1:chromium"):
+        _gate(_by_relation(0.75, 0.25, 0.25), detectable=partial)
+
+
+def test_a_bound_missing_at_the_laxer_holm_level_is_refused() -> None:
+    lax_missing = {n: {o: {0.975: BOUND} for o in c} for n, c in DETECTABLE.items()}
+    with pytest.raises(ValueError, match="no registered detectable effect"):
+        _gate(_by_relation(0.75, 0.25, 0.25), detectable=lax_missing)
+
+
+def test_the_fallback_design_reads_the_bound_registered_at_its_one_level() -> None:
+    results = _results(_by_relation(0.25, 0.75, 0.75), orgs=("openstack", "qt"))
+    only_lax = {"H1": {o: {0.95: BOUND} for o in ("openstack", "qt")}}
+    outcome = decomposition_gate(
+        results,
+        design="without_chromium",
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=1_000,
+        detectable=only_lax,
+    )
+    assert outcome["verdicts"] == {"H1": "bounded"}
+    assert outcome["reading"] == "no within-half transfer"
+
+
+def test_within_sesoi_is_reported_beside_the_verdict() -> None:
+    cell = _gate(_by_relation(0.75, 0.25, 0.25))["per_org"]["H2"]["qt"]
+    assert set(cell["within_sesoi"]) == {0.975, 0.95}
 
 
 @pytest.mark.parametrize(
-    ("low", "high", "expected"),
+    ("low", "high", "bound", "expected"),
     [
-        (0.001, 0.05, "supported"),
-        (0.002, 0.008, "supported"),
-        (-0.009, 0.009, "absent"),
-        (0.0, 0.0, "absent"),
-        (0.0, 0.05, "inconclusive"),
-        (-0.01, 0.0, "inconclusive"),
-        (-0.005, 0.01, "inconclusive"),
-        (-0.011, 0.005, "inconclusive"),
-        (-0.05, -0.02, "inconclusive"),
+        (0.001, 0.05, 0.01, "supported"),
+        (0.002, 0.008, 0.01, "supported"),
+        (-0.009, 0.009, 0.01, "bounded"),
+        (0.0, 0.0, 0.01, "bounded"),
+        (0.0, 0.05, 0.01, "inconclusive"),
+        (-0.01, 0.0, 0.01, "bounded"),
+        (-0.005, 0.01, 0.01, "inconclusive"),
+        (-0.011, 0.005, 0.01, "bounded"),
+        (-0.05, -0.02, 0.01, "bounded"),
+        (-0.02, 0.026, 0.0273, "bounded"),
+        (-0.02, 0.0273, 0.0273, "inconclusive"),
+        (-0.02, 0.005, None, "inconclusive"),
+        (0.001, 0.05, None, "supported"),
     ],
 )
-def test_cell_verdicts(low: float, high: float, expected: str) -> None:
-    assert cell_verdict(low, high) == expected
+def test_cell_verdicts(low: float, high: float, bound: float | None, expected: str) -> None:
+    assert cell_verdict(low, high, bound=bound) == expected
 
 
 @pytest.mark.parametrize(
     ("h1", "h2", "expected"),
     [
-        ("pass", "absent", "within-half"),
+        ("pass", "bounded", "within-half"),
         ("pass", "inconclusive", "within-half, organization unresolved"),
-        ("absent", "pass", "organization"),
+        ("bounded", "pass", "organization"),
         ("inconclusive", "pass", "organization"),
         ("pass", "pass", "nested"),
-        ("absent", "absent", "neither"),
-        ("inconclusive", "absent", "unresolved"),
+        ("bounded", "bounded", "neither"),
+        ("inconclusive", "bounded", "unresolved"),
         ("inconclusive", "inconclusive", "unresolved"),
     ],
 )
@@ -304,7 +366,7 @@ def test_holm_does_not_relax_when_nothing_passes_at_the_strict_level() -> None:
 
 
 def test_holm_never_reads_absence_at_the_laxer_level() -> None:
-    per = {"H1": _cells(("supported", "supported")), "H2": _cells(("inconclusive", "absent"))}
+    per = {"H1": _cells(("supported", "supported")), "H2": _cells(("inconclusive", "bounded"))}
     assert holm_verdicts(per)["H2"] == "inconclusive"
 
 
@@ -333,7 +395,7 @@ def _interval_cells(**by_level: tuple[float, float]) -> dict[str, Any]:
     return {
         "org0": {
             "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
-            "verdicts": {c: cell_verdict(lo, hi) for c, (lo, hi) in intervals.items()},
+            "verdicts": {c: cell_verdict(lo, hi, bound=BOUND) for c, (lo, hi) in intervals.items()},
         }
     }
 
@@ -361,15 +423,21 @@ def test_below_sesoi_ignores_hypotheses_that_did_not_pass() -> None:
 
 def test_the_fallback_readings_are_the_registered_ones() -> None:
     assert reading("pass", None) == "within-half"
-    assert reading("absent", None) == "no within-half transfer"
+    assert reading("bounded", None) == "no within-half transfer"
     assert reading("inconclusive", None) == "unresolved"
 
 
 def test_a_broken_exploratory_cell_does_not_withhold_the_verdicts() -> None:
     results = _results(_by_relation(0.75, 0.25, 0.25))
     del results[run_id(EvalRun("adapter:qt-b", "openstack-a", 1))]
-    outcome = decomposition_gate(results, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES)
-    assert outcome["verdicts"] == {"H1": "pass", "H2": "absent"}
+    outcome = decomposition_gate(
+        results,
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+        detectable=DETECTABLE,
+    )
+    assert outcome["verdicts"] == {"H1": "pass", "H2": "bounded"}
     assert "not scored" in outcome["per_org"]["H2"]["openstack"]["error"]
 
 
@@ -377,7 +445,13 @@ def test_a_broken_confirmatory_cell_is_still_refused() -> None:
     results = _results(_by_relation(0.75, 0.25, 0.25))
     del results[run_id(EvalRun("adapter:chromium-b", "qt-a", 1))]
     with pytest.raises(ValueError, match="not scored"):
-        decomposition_gate(results, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES)
+        decomposition_gate(
+            results,
+            seeds=SEEDS,
+            bootstrap_seed=0,
+            resamples=MIN_RESAMPLES,
+            detectable=DETECTABLE,
+        )
 
 
 # The bootstrap behind the verdicts
@@ -502,3 +576,12 @@ def test_a_half_with_too_few_cpp_changes_is_reported_not_raised() -> None:
             row["path"] = "src/f.py"
     outcome = cpp_supplement(results, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES)
     assert "error" in outcome["cells"]["qt"]
+
+
+def test_detectable_effects_are_read_from_the_sensitivity_artifact() -> None:
+    path = Path(__file__).resolve().parents[3] / "datasets/results/decomposition-sensitivity.json"
+    artifact = json.loads(path.read_text())
+    bounds = detectable_effects(artifact)
+    for org, cell in artifact["cells"].items():
+        for level, entry in cell["by_level"].items():
+            assert bounds["H1"][org][float(level)] == entry["minimum_detectable_effect"]

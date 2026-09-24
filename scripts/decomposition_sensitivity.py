@@ -138,10 +138,17 @@ def main() -> None:
                 effect = fmean(
                     realised_difference(h, lift=high, seed=args.seed, draws=300) for h in cell
                 )
-                entry["by_level"][level] = {"lift": high, "minimum_detectable_effect": effect}
+                entry["by_level"][level] = {
+                    "lift": high,
+                    "minimum_detectable_effect": effect,
+                    # How often a null's upper bound falls below the effect found here: the
+                    # registered negative reading, "bounded" in `decomposition.cell_verdict`.
+                    "null_reads_bounded": fmean(t.high[level] < effect for t in null),
+                }
                 print(
                     f"{org} H1 {half_sizes} at {level}: detects {effect:+.4f} at power "
-                    f"{args.target}; null reads absent {entry['null_reads_absent'][level]:.3f}",
+                    f"{args.target}; null reads absent {entry['null_reads_absent'][level]:.3f}, "
+                    f"bounded {entry['by_level'][level]['null_reads_bounded']:.3f}",
                     flush=True,
                 )
             report["cells"][org] = entry

@@ -31,7 +31,8 @@ from sphragis.measure.stats import (
 )
 
 # Smallest effect of interest, in exact match. About 4% of the pilot's adaptation gain and the
-# size of the seed-effect upper bound. Fixed in advance; never derived from a contrast.
+# size of the seed-effect upper bound. Fixed in advance; never derived from a contrast. Reported
+# beside every cell; at the test window's size no interval fits inside it, so it decides nothing.
 SESOI = 0.01
 
 # One-sided family-wise level across the confirmatory hypotheses, held by Holm's step-down.
@@ -69,12 +70,12 @@ EXPLORATORY_H2: Mapping[str, tuple[tuple[str, str], ...]] = {
 CPP_SUFFIXES = frozenset({".cc", ".cpp", ".cxx", ".c++", ".h", ".hh", ".hpp", ".hxx", ".inl"})
 
 READINGS = {
-    ("pass", "absent"): "within-half",
+    ("pass", "bounded"): "within-half",
     ("pass", "inconclusive"): "within-half, organization unresolved",
-    ("absent", "pass"): "organization",
+    ("bounded", "pass"): "organization",
     ("inconclusive", "pass"): "organization",
     ("pass", "pass"): "nested",
-    ("absent", "absent"): "neither",
+    ("bounded", "bounded"): "neither",
 }
 
 
@@ -89,7 +90,7 @@ def reading(h1: str, h2: str | None) -> str:
     `h2` is None under the fallback design, where only H1 is confirmatory.
     """
     if h2 is None:
-        return {"pass": "within-half", "absent": "no within-half transfer"}.get(h1, "unresolved")
+        return {"pass": "within-half", "bounded": "no within-half transfer"}.get(h1, "unresolved")
     return READINGS.get((h1, h2), "unresolved")
 
 
@@ -100,16 +101,36 @@ def holm_levels(hypotheses: int) -> list[float]:
     return [1.0 - 2.0 * FAMILY_ALPHA / k for k in range(hypotheses, 0, -1)]
 
 
-def cell_verdict(low: float, high: float, *, sesoi: float = SESOI) -> str:
-    """Supported above zero, absent within the SESOI band, or inconclusive.
+def cell_verdict(low: float, high: float, *, bound: float | None) -> str:
+    """Supported above zero, bounded below the cell's detectable effect, or inconclusive.
 
-    An interval above zero and inside the band is supported; `below_sesoi` flags it.
+    `bound` is the effect the sensitivity analysis says this cell detects at its Holm level,
+    registered before any test data (`detectable_effects`). Bounded reads "no effect as large as
+    this design detects"; a cell without a registered bound can be supported but never bounded.
     """
     if low > 0.0:
         return "supported"
-    if -sesoi < low and high < sesoi:
-        return "absent"
+    if bound is not None and high < bound:
+        return "bounded"
     return "inconclusive"
+
+
+def within_sesoi(low: float, high: float) -> bool:
+    """Whether the interval sits inside the SESOI band: reported, never a verdict."""
+    return low > -SESOI and high < SESOI
+
+
+def detectable_effects(sensitivity: Mapping[str, Any]) -> dict[str, dict[str, dict[float, float]]]:
+    """The registered bounds, by hypothesis and cell, read from a `decomposition_sensitivity.py`
+    artifact so no figure is transcribed. Only H1 cells are simulated there; an H2 cell's bound
+    is registered the same way once its cells exist.
+    """
+    return {
+        "H1": {
+            org: {float(c): v["minimum_detectable_effect"] for c, v in cell["by_level"].items()}
+            for org, cell in sensitivity["cells"].items()
+        }
+    }
 
 
 def _cell(
@@ -215,14 +236,14 @@ def _strata(per_seed: Sequence[list[list[Cluster]]]) -> list[list[list[Cluster]]
 
 
 def _hypothesis(cells: Mapping[str, Mapping[str, Any]], confidence: float) -> str:
-    """Intersection-union over cells at one level: pass, absent, or inconclusive."""
+    """Intersection-union over cells at one level: pass, bounded, or inconclusive."""
     if not cells:
         raise ValueError("a hypothesis with no confirmatory cells has no verdict")
     verdicts = [cell["verdicts"][confidence] for cell in cells.values()]
     if all(v == "supported" for v in verdicts):
         return "pass"
-    if all(v == "absent" for v in verdicts):
-        return "absent"
+    if all(v == "bounded" for v in verdicts):
+        return "bounded"
     return "inconclusive"
 
 
@@ -233,7 +254,7 @@ def holm_steps(
 
     Every hypothesis is first read at the strictest level. Those that pass leave the family,
     and the rest are read again at the next level, until a step passes nothing. A later step
-    can only turn a verdict into a pass: absence is an equivalence claim, read at the
+    can only turn a verdict into a pass: bounded is an equivalence claim, read at the
     strictest level alone.
     """
     levels = holm_levels(len(per_hypothesis))
@@ -283,11 +304,14 @@ def decomposition_gate(
     bootstrap_seed: int,
     resamples: int = 10_000,
     estimator: Estimator = paired_difference,
+    detectable: Mapping[str, Mapping[str, Mapping[float, float]]],
 ) -> dict[str, Any]:
     """The registered verdicts, their reading, and every cell behind them.
 
     Within an organization all of its contrasts are bootstrapped on the same draws, so the
-    share of draws in which each is above zero, and their sum, are read jointly.
+    share of draws in which each is above zero, and their sum, are read jointly. `detectable`
+    holds each cell's registered bound by Holm level (`detectable_effects`); a confirmatory cell
+    without one at every level the design reads is refused, so no bound is chosen after the data.
     """
     if design not in DESIGNS:
         raise ValueError(f"unknown design {design!r}; registered designs are {sorted(DESIGNS)}")
@@ -297,6 +321,18 @@ def decomposition_gate(
     cells = DESIGNS[design]
     confirmatory = {name: tuple(c) for name, c in cells.items() if c}
     levels = holm_levels(len(confirmatory))
+    bounds = {
+        name: {
+            org: {round(c, 9): b for c, b in by_level.items()} for org, by_level in cells_.items()
+        }
+        for name, cells_ in detectable.items()
+    }
+    for name, units in confirmatory.items():
+        for unit in units:
+            org = unit if name == "H1" else unit[0]
+            missing = [c for c in levels if round(c, 9) not in bounds.get(name, {}).get(org, {})]
+            if missing:
+                raise ValueError(f"no registered detectable effect for {name}:{org} at {missing}")
 
     h1_orgs = set(cells["H1"])
     h2_pairs = {org: (foreign, "confirmatory") for org, foreign in cells["H2"]}
@@ -345,7 +381,13 @@ def decomposition_gate(
                 "foreign": h2_pairs[org][0] if name == "H2" else None,
                 "estimate": estimates[name],
                 "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
-                "verdicts": {c: cell_verdict(lo, hi) for c, (lo, hi) in intervals.items()},
+                "verdicts": {
+                    c: cell_verdict(
+                        lo, hi, bound=bounds.get(name, {}).get(org, {}).get(round(c, 9))
+                    )
+                    for c, (lo, hi) in intervals.items()
+                },
+                "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
                 "clusters_per_half": [len(runs[0]) for runs in contrasts[name]],
                 "seeds": len(seeds),
             }
@@ -384,6 +426,7 @@ def decomposition_gate(
         "per_org": per_org,
         "joint": joint,
         "sesoi": SESOI,
+        "detectable": {n: {o: dict(b) for o, b in c.items()} for n, c in bounds.items()},
         "holm_levels": levels,
     }
 

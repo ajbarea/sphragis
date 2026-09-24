@@ -206,6 +206,7 @@ def test_a_large_lift_is_supported_at_both_levels() -> None:
     trial = _trial(halves, lift=0.6)
     assert trial.supported == {0.975: True, 0.95: True}
     assert trial.absent == {0.975: False, 0.95: False}
+    assert set(trial.high) == {0.975, 0.95}
 
 
 def test_identical_arms_read_absent_and_unsupported() -> None:
