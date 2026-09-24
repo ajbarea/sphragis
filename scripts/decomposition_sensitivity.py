@@ -1,4 +1,4 @@
-"""The smallest half-split effect the decomposition gate detects, and whether absence is reachable.
+"""The smallest half-split effect the decomposition gate detects, and how often a null is bounded.
 
 A sensitivity analysis, as `sensitivity.py` is for the organization-level gate, rebuilt for the
 decomposition: each H1 cell is two equally weighted halves read off `stratified_crossed_draws`
@@ -10,8 +10,9 @@ Two numbers per cell and level:
 
 - the realised exact-match difference detected with marginal power `--target` (0.928 per cell
   gives about 0.80 across three independent cells, the intersection-union test's joint power);
-- the share of null studies whose interval sits inside the SESOI band, which says whether the
-  registered "absent" verdict is reachable at all at this design's size.
+- the share of null studies whose upper bound falls below that effect (`null_reads_bounded`), the
+  registered negative reading, and the share whose interval sits inside the SESOI band
+  (`null_reads_absent`), which says absence at the SESOI is out of reach at this design's size.
 
     uv run --no-sync --no-active python scripts/decomposition_sensitivity.py \\
         --placebo openstack=datasets/results/rq1-placebo-openstack.json \\

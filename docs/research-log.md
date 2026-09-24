@@ -5406,3 +5406,27 @@ Model raters with a human check are a design MSR has seen: Ahmed et al. (MSR 202
 arXiv 2408.05534) found model-model agreement predicts human-model agreement and used it to
 decide whether a task suits model raters; their further step, choosing items by model
 confidence, is not used here.
+
+### Registered: negative readings are bounded by each cell's detectable effect, and rebase edits get a sensitivity analysis (2026-09-24)
+
+**Negative readings.** The proposal of 2026-09-23 is adopted. A cell reads *bounded* when its
+interval's upper bound lies below the effect the sensitivity analysis says that cell detects at
+the Holm level it is read at; the gate reads the bounds from `decomposition-sensitivity.json`
+(`detectable_effects`) and refuses a confirmatory cell without one at every level. The SESOI band
+is reported beside every cell and decides nothing. Justification: Lakens, Scheel and Isager (2018)
+list the effect a study was designed to detect among the bases for an equivalence bound, and
+Lakens (2022) asks a design to say which effects it is informative about when it cannot resolve
+the SESOI. The bound is reachable where absence was not: the regenerated sensitivity artifact
+records `null_reads_bounded` per cell and level beside `null_reads_absent`: a true null reads
+bounded 0.97 of the time in three of the four H1 cells and 0.94 in Qt's at 95%, against 0.000
+absent in all four; every other figure in the artifact reproduced exactly. The bounds are
+recomputed at `N` on corpus v2 before the seal opens. A reversed effect now reads bounded, since
+H1 is directional.
+
+**Rebase edits.** Kept in the primary label on every organization. The stored REST snapshots
+hold neither Gerrit's `due_to_rebase` flag (the build fetches each diff and keeps its hunks) nor
+patch-set parents, so a drop could reach no held REST corpus without refetching, which robots.txt
+forbids on Qt. The test window is collected fresh, so its collection records the flag per hunk
+beside the build output, and H1 and H2 are re-read with flagged hunks removed as a registered
+sensitivity analysis. Paixão and Maia (SCAM 2019) find rebasing in 75% of Gerrit reviews and ask
+review-mining studies to handle it rather than filter reviews out.

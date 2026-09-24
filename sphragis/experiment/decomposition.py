@@ -382,8 +382,14 @@ def decomposition_gate(
                 "estimate": estimates[name],
                 "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
                 "verdicts": {
+                    # Bounds are registered per confirmatory cell; an exploratory cell shares its
+                    # organization with no registered pair, so it can be supported, never bounded.
                     c: cell_verdict(
-                        lo, hi, bound=bounds.get(name, {}).get(org, {}).get(round(c, 9))
+                        lo,
+                        hi,
+                        bound=bounds.get(name, {}).get(org, {}).get(round(c, 9))
+                        if roles[name] == "confirmatory"
+                        else None,
                     )
                     for c, (lo, hi) in intervals.items()
                 },

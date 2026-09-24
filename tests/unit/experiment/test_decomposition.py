@@ -585,3 +585,23 @@ def test_detectable_effects_are_read_from_the_sensitivity_artifact() -> None:
     for org, cell in artifact["cells"].items():
         for level, entry in cell["by_level"].items():
             assert bounds["H1"][org][float(level)] == entry["minimum_detectable_effect"]
+
+
+def test_the_registered_design_refuses_h2_cells_without_bounds() -> None:
+    with pytest.raises(ValueError, match="H2:"):
+        _gate(_by_relation(0.75, 0.25, 0.25), detectable={"H1": DETECTABLE["H1"]})
+
+
+def test_an_exploratory_cell_never_reads_bounded() -> None:
+    results = _results(_by_relation(0.75, 0.25, 0.25), orgs=("openstack", "qt"))
+    outcome = decomposition_gate(
+        results,
+        design="without_chromium",
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=1_000,
+        detectable=DETECTABLE,
+    )
+    for cell in outcome["per_org"]["H2"].values():
+        assert cell["role"] == "exploratory"
+        assert "bounded" not in cell["verdicts"].values()

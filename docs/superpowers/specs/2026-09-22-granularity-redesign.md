@@ -91,13 +91,20 @@ should do. Fixed here, not derived from any contrast.
 Each cell gets one of three verdicts, read off its crossed interval:
 
 - **supported**: the lower bound lies strictly above zero;
-- **absent**: the interval lies inside `(-SESOI, +SESOI)`. This is two one-sided tests at the same
-  level (Lakens et al., AMPPS 2018);
+- **bounded**: the interval's upper bound lies below the cell's **registered detectable effect**, the
+  effect the sensitivity analysis says that cell detects at that Holm level with marginal power
+  0.928, fixed before any test data (amended 2026-09-24; it replaced "absent", an interval inside
+  `(-SESOI, +SESOI)`, which the sensitivity analysis showed no cell can reach at the test window's
+  size). This is a one-sided equivalence test against a bound justified by the design's own
+  resolution, one of the justifications Lakens, Scheel and Isager (AMPPS 2018) list, and it reads
+  "no effect as large as this design detects". Because the bound is the effect detected at power
+  0.928, a true null reads bounded about as often as that effect reads supported. Whether the
+  interval also sits inside the SESOI band is reported beside every cell and decides nothing;
 - **inconclusive**: anything else. It is reported with its upper bound as "not detected above X".
 
 A hypothesis **passes** only when every confirmatory cell is supported. Requiring all cells makes it
 an intersection-union test, which holds its level without adjustment across cells (Berger,
-Technometrics 1982). It is **absent** only when every cell is absent; otherwise it is
+Technometrics 1982). It is **bounded** only when every cell is bounded; otherwise it is
 **inconclusive**.
 
 Across the two hypotheses the family-wise rate is held at one-sided 0.025, the level the original
@@ -126,14 +133,14 @@ one-sided 0.025, a 95% interval. The confirmatory cells of both designs are cons
 
 | H1 | H2 | reading |
 |---|---|---|
-| pass | absent | style transfers within a half and an organization adds nothing detectable above SESOI; a perimeter drawn around an organization is drawn in the wrong place |
+| pass | bounded | style transfers within a half and an organization adds nothing as large as this design detects; a perimeter drawn around an organization is drawn in the wrong place |
 | pass | inconclusive | style transfers within a half; whether an organization adds anything is not resolved at this design's sensitivity |
-| absent or inconclusive | pass | an organization carries style beyond the evaluated projects |
+| bounded or inconclusive | pass | an organization carries style beyond the evaluated projects |
 | pass | pass | nested: both boundaries carry style, and the decomposition says how much each carries |
-| absent | absent | no transferable style above SESOI at either boundary; the federated direction does not proceed on the assumption that one exists |
+| bounded | bounded | no transferable style as large as this design detects at either boundary; the federated direction does not proceed on the assumption that one exists |
 | otherwise | | not resolved at this design's sensitivity, reported with the upper bounds |
 
-Negative readings ("adds nothing", "no transferable style") need **absent at both ranks** (see
+Negative readings ("adds nothing", "no transferable style") need **bounded at both ranks** (see
 below). A cell that fails where the others pass is characterised against the measured confounds,
 as exploratory.
 
@@ -192,8 +199,10 @@ Training at `N`, at most OpenStack's smaller half, costs power. On the dev windo
 contrast halved with half the data (research log, 2026-09-18; one pair, one seed, one direction).
 Before the report states a resolution, the sensitivity analysis is recomputed at `N`, at five seeds,
 at 97.5% and 95%, and for the three-cell intersection. The report registers the minimum detectable
-effect per cell and the SESOI side by side. If the design cannot reach absent at SESOI, the
-"absent" readings are stated as unreachable in advance rather than discovered after the test.
+effect per cell and the SESOI side by side. The design cannot reach absence at SESOI (research log,
+2026-09-23), so that is stated in advance, and the registered detectable effects are the bounds the
+negative readings are judged against. They are recomputed at `N` on corpus v2 before the seal
+opens, and the gate refuses a confirmatory cell without one (`detectable_effects`).
 
 ## Compute
 

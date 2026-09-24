@@ -154,7 +154,7 @@ Is greedy decoding what amplifies a planted convention?
 
 ## `scripts/decomposition_sensitivity.py`
 
-The smallest half-split effect the decomposition gate detects, and whether absence is reachable.
+The smallest half-split effect the decomposition gate detects, and how often a null is bounded.
 
 | artifact | |
 |---|---|
