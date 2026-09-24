@@ -5475,8 +5475,12 @@ edits touch is left unattributed. On the sample:
   53 edits were placed and 15 collided with the author's own.
 - Every successor is REWORK by REST's `kind`.
 
-The NoteDb build now drops a hunk marked `due_to_rebase` as `rebase_edit`; on this sample it drops
-nothing. The REST build is unchanged.
+The build reads the flag on neither route. Dropping a marked hunk only where the git route built a
+month would build two organizations under different rules, the asymmetry the data audit exists to
+remove, and would change the build rules every month on disk was built and stamped under. On this
+sample such a drop would remove nothing (`with_rebase_edit_drop` in the artifact). Whether rebase
+edits leave the label is a rule for every organization at once, and the REST snapshots do not hold
+the diffs to apply it.
 
 **What the route changes about windows.** Windows are assigned by creation time on both routes, so
 a change lands in the same window either way. Only the month a change is filed under differs: 322

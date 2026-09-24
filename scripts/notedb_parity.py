@@ -392,15 +392,32 @@ def _touches(a: tuple[int, int], b: tuple[int, int]) -> bool:
     return max(a[0], b[0]) < min(a[1], b[1])
 
 
+def _block_due_to_rebase(diff: Mapping[str, Any], before_start: int) -> bool:
+    """Whether the edit block whose old side starts at `before_start` is marked a rebase edit.
+
+    `hunks_from_diff` numbers an edit block by the old-side line it starts on, counting every
+    block's `ab` or `a` lines, so walking the blocks the same way finds the hunk's own.
+    """
+    line = 1
+    for block in diff["content"]:
+        if "ab" in block:
+            line += len(block["ab"])
+            continue
+        if line == before_start:
+            return bool(block.get("due_to_rebase"))
+        line += len(block.get("a", []))
+    return False
+
+
 def measure_rebases(
     repo: Repo, pairs: Sequence[tuple[dict[str, Any], dict[str, Any]]]
 ) -> dict[str, Any]:
     """Per example, whether its n -> n+1 step was a rebase and whether its hunk is upstream's.
 
-    Built without the `rebase_edit` drop, so these are the examples the REST corpus holds.
-    `due_to_rebase` is Gerrit's exact attribution, which the NoteDb route now drops;
-    `overlaps_upstream` is looser (`_carried`), and REST's own successor `kind` is crossed
-    with both.
+    Built as the REST corpus was, which never reads the flag, so these are the examples it
+    holds. `due_to_rebase` is Gerrit's exact attribution, and `with_rebase_edit_drop` counts
+    what dropping it would remove; `overlaps_upstream` is looser (`_carried`), and REST's own
+    successor `kind` is crossed with both.
     """
     counts: Counter[str] = Counter()
     by_kind: dict[str, Counter[str]] = defaultdict(Counter)
@@ -414,11 +431,13 @@ def measure_rebases(
             upstream["diff_edit_blocks_due_to_rebase"] += sum(
                 bool(b.get("due_to_rebase")) for b in edits
             )
-        fetchers = embedded_fetchers(git)
-        built, _ = build_from_change(ORG, git, *fetchers)
-        kept, drops = build_from_change(ORG, git, *fetchers, drop_rebase_edits=True)
-        dropped["examples_kept_with_drop"] += len(kept)
-        dropped["comments_dropped_rebase_edit"] += drops.get("rebase_edit", 0)
+        built, _ = build_from_change(ORG, git, *embedded_fetchers(git))
+        for example in built:
+            diff = git[NOTEDB_KEY]["diffs"][diff_key(example["patch_set"], example["path"])]
+            if _block_due_to_rebase(diff, int(example["id"].rsplit(":", 1)[1])):
+                dropped["comments_dropped_rebase_edit"] += len(example["comments"])
+            else:
+                dropped["examples_kept_with_drop"] += 1
         by_number = {rev["_number"]: (sha, rev) for sha, rev in git["revisions"].items()}
         measured: dict[tuple[int, str], Any] = {}
         for example in built:
@@ -463,15 +482,18 @@ def measure_rebases(
             overlaps = any(
                 _touches(span_a, ra) or _touches(span_b, rb) for ra, rb in measured[(ps, path)]
             )
+            due_to_rebase = _block_due_to_rebase(
+                git[NOTEDB_KEY]["diffs"][diff_key(ps, path)], hunk.before_start
+            )
             for name, hit in (
-                ("due_to_rebase", hunk.due_to_rebase),
+                ("due_to_rebase", due_to_rebase),
                 ("overlaps_upstream", overlaps),
             ):
                 if hit:
                     counts[name] += 1
                     by_kind[kind][name] += 1
                     ids[name].append(example["id"])
-            if overlaps and not hunk.due_to_rebase:
+            if overlaps and not due_to_rebase:
                 counts["overlaps_upstream_not_attributed"] += 1
     return {
         "counts": dict(sorted(counts.items())),

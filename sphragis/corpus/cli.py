@@ -592,12 +592,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
         for change in read_snapshot(snapshot):
-            built, dropped = build_from_change(
-                args.org,
-                change,
-                *fetchers_for(change),
-                drop_rebase_edits=NOTEDB_KEY in change,
-            )
+            built, dropped = build_from_change(args.org, change, *fetchers_for(change))
             rows.extend(built)
             month_drops.update(dropped)
         # Drop counts beside the examples, written first so a month with examples always has

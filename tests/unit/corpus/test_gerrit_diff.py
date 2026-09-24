@@ -110,8 +110,7 @@ def test_an_edit_the_parents_made_is_marked_due_to_rebase_and_the_authors_is_not
         {"a": ["x=1"], "b": ["x = 1"]},
         {"ab": [""]},
     ]
-    hunks = hunks_from_diff({"content": content})
-    assert [h.due_to_rebase for h in hunks] == [True, False]
+    assert [h.before for h in hunks_from_diff({"content": content})] == [("b",), ("x=1",)]
 
 
 def test_without_parents_nothing_is_marked() -> None:

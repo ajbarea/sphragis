@@ -423,11 +423,12 @@ def test_candidates_reach_back_further_for_a_host_that_merges_uploads_unchanged(
     assert notedb.candidates_since("chromium", "2024-11-01") == "2024-10-18"
 
 
-def test_a_rebased_step_records_parents_and_drops_the_upstream_hunk(tmp_path: Path) -> None:
+def test_a_rebased_step_marks_the_upstream_hunk_and_builds_as_rest_does(tmp_path: Path) -> None:
     """Patch set 2 sits on a newer base that changed line 2; the author fixed line 4.
 
-    The reviewer commented on both lines. Only the author's fix answers a comment; the other
-    hunk is the rebase, and the NoteDb build drops it as `rebase_edit`.
+    The reviewer commented on both lines. The diff marks the upstream hunk `due_to_rebase`, as
+    Gerrit's REST payload does, and the build ignores the flag on both routes, so a NoteDb
+    organization is built under the same rules as a REST one.
     """
     s = Server(tmp_path / "server")
     old_base = s.commit(s.tree({"f.py": b"a\nb\nc\n"}), "base", "2024-10-01T00:00:00Z")
@@ -491,12 +492,8 @@ def test_a_rebased_step_records_parents_and_drops_the_upstream_hunk(tmp_path: Pa
     blocks = row[notedb.NOTEDB_KEY]["diffs"]["1:f.py"]["content"]
     assert [b.get("due_to_rebase", False) for b in blocks if "ab" not in b] == [True, False]
 
-    fetchers = notedb.embedded_fetchers(row)
-    kept, drops = build_from_change("aosp", row, *fetchers, drop_rebase_edits=True)
-    assert [e["comments"] for e in kept] == [["spaces"]]
-    assert drops["rebase_edit"] == 1
-    everything, legacy = build_from_change("aosp", row, *fetchers)
-    assert len(everything) == 2 and "rebase_edit" not in legacy, "the REST build is unchanged"
+    built, _ = build_from_change("aosp", row, *notedb.embedded_fetchers(row))
+    assert sorted(e["comments"] for e in built) == [["spaces"], ["why b?"]]
 
 
 def test_a_depth_fetch_does_not_cut_the_branch_history_short(tmp_path: Path) -> None:

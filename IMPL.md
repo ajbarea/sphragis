@@ -45,8 +45,8 @@ research log records what is and is not known about those requests.
 
 **A NoteDb route for hosts whose review UI robots.txt closes** (android-review, chromium-review,
 codereview.qt-project.org). `fetch --via git` reads review records from the git hosts, which
-allow fetching, into the same snapshot shape; `build` answers those rows from their own data and
-drops rebase-made hunks as `rebase_edit`. On AOSP it reproduces the REST corpus exactly; the
+allow fetching, into the same snapshot shape; `build` answers those rows from their own data under
+the REST build rules, unchanged. On AOSP it reproduces the REST corpus exactly; the
 research log's 2026-09-23 entry has the parity figures. In review as a PR, not merged.
 
 Waiting on that route:
