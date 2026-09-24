@@ -37,6 +37,11 @@ def run_split(
     return windows, straddling_changes(windows), unassigned
 
 
+def window_body(rows: Sequence[Mapping[str, Any]]) -> str:
+    """A window's split file, byte for byte: one sorted-key JSON row per line, in order."""
+    return "".join(json.dumps(dict(row), sort_keys=True) + "\n" for row in rows)
+
+
 def freeze_windows(
     root: Path,
     org: str,
@@ -55,8 +60,7 @@ def freeze_windows(
     splits = org_dir / "splits"
     splits.mkdir(parents=True, exist_ok=True)
     for name, rows in windows.items():
-        body = "".join(json.dumps(dict(row), sort_keys=True) + "\n" for row in rows)
-        (splits / f"{name}.jsonl").write_text(body)
+        (splits / f"{name}.jsonl").write_text(window_body(rows))
 
     manifest = corpus_manifest(
         org=org,

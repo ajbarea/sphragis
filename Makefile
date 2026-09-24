@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs redact redact-check
+.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify corpus-reproduce clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs redact redact-check
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -187,6 +187,9 @@ redact-check:              ## Report third-party addresses in the result artifac
 
 corpus-verify:             ## Re-derive the corpus manifest and fail on any mismatch
 	uv run --no-active python -m sphragis.corpus verify
+
+corpus-reproduce:          ## Also rerun dedup and split and compare every window byte for byte
+	uv run --no-active python -m sphragis.corpus verify --reproduce
 
 clean:                     ## Remove caches + build artifacts
 	rm -rf .pytest_cache .ruff_cache .coverage coverage.xml dist build

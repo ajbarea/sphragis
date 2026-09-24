@@ -101,11 +101,14 @@ uv run python -m sphragis.corpus dedup  --org openstack   # reports, writes noth
 uv run python -m sphragis.corpus split  --org openstack   # reports, writes nothing
 uv run python -m sphragis.corpus freeze --org openstack
 uv run python -m sphragis.corpus verify --org openstack
+uv run python -m sphragis.corpus verify --org openstack --reproduce   # reruns dedup and split
 ```
 
 `dedup` and `split` deliberately only report, so the corpus can be inspected before
 anything is committed. `freeze` is the single stage that writes windows to disk, and
-`verify` re-derives every window's hash and fails on drift.
+`verify` re-derives every window's hash and fails on drift. With `--reproduce` it also reruns
+dedup and split from the refined examples and compares each window with its frozen file byte for
+byte, which catches a change to code the rule digests do not cover.
 
 `fetch` and `build` are both resumable: an existing snapshot or an already-built month is
 skipped unless `--overwrite` is passed. This matters more than it sounds. A month of

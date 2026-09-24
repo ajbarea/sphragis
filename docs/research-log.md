@@ -5285,3 +5285,15 @@ Model raters with a human check are a design MSR has seen: Ahmed et al. (MSR 202
 arXiv 2408.05534) found model-model agreement predicts human-model agreement and used it to
 decide whether a task suits model raters; their further step, choosing items by model
 confidence, is not used here.
+
+### Both corpus v2 manifests reproduce from the refined examples (2026-09-23)
+
+The build and refine rule digests make a month built or refined under other code unreadable, but
+dedup and split sit under neither, so a change to either would leave the frozen windows intact and
+`verify` clean: the failure that let Qt verify at 10,695 while the pipeline yielded 10,692.
+`verify --reproduce` reruns dedup and split in memory from the refined examples and compares every
+window byte for byte with its frozen split file, over every window either side names, and the
+dedup counts with the manifest. Comparing ids alone would pass a dedup that kept a different copy
+of an id, and comparing only the rerun's windows would pass one dropped from the bounds (both
+found in review). On the corpus v2 data, OpenStack and Qt both reproduce byte for byte. The check takes minutes on Qt, so it is a flag rather than the default.
+
