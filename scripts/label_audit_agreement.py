@@ -2,14 +2,14 @@
 
 `label_audit_sample.py` draws the sheet. Each item gets a label (is the rewrite the author's answer
 to the comment) and, separately, `outside_names` (does the rewrite use names or values the item
-does not show), since a clear request answered with a project's own names is a valid label that
-no prompt alone can reproduce. Each rater labels it without seeing the organization,
-project, window or half, under neutral item ids, and without seeing the other's labels. The
-human then labels the items blind in a fixed random order and only then sees rater A's label, so
-any prefix of the check is a fair sample. Reported: Cohen's kappa for each pair with a bootstrap
-interval, the confusion tables, and the share of valid labels per organization and half with
-Wilson intervals, since a validity rate that differs between the units a contrast compares is
-the noise the design cannot cancel.
+does not show), since a clear request answered with a project's own names is a valid label that no
+prompt alone can reproduce. Each rater labels it without seeing the organization, project, window
+or half, under neutral item ids, and without seeing the other's labels. The human then labels the
+items blind in a fixed random order and only then sees rater A's label, so any prefix of the check
+is a fair sample. Reported: raw agreement, Cohen's kappa and Gwet's AC1 for each pair with
+bootstrap intervals, specific agreement per label, the confusion tables, and the share of valid
+labels per organization and half with Wilson intervals, since a validity rate that differs between
+the units a contrast compares is the noise the design cannot cancel.
 
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
@@ -33,9 +33,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from label_audit_sample import LABELS  # noqa: E402
 
 from sphragis.measure.agreement import (  # noqa: E402
+    ac1_interval,
     cohen_kappa,
     confusion,
+    gwet_ac1,
     kappa_interval,
+    specific_agreement,
     wilson_interval,
 )
 from sphragis.provenance import provenance_header  # noqa: E402
@@ -64,14 +67,23 @@ def _labels(path: Path) -> tuple[dict[str, str], dict[str, bool]]:
     return labels, flags
 
 
+def _is_valid(labels: dict[str, str]) -> dict[str, bool]:
+    """The label collapsed to the question the corpus depends on: valid or not."""
+    return {item: label == "valid" for item, label in labels.items()}
+
+
 def _pair(first: dict, second: dict, items: list[str], categories: list) -> dict:
     a, b = [first[i] for i in items], [second[i] for i in items]
     low, high = kappa_interval(a, b, seed=20260924)
+    ac1_low, ac1_high = ac1_interval(a, b, categories, seed=20260924)
     return {
         "items": len(items),
         "raw_agreement": sum(x == y for x, y in zip(a, b, strict=True)) / len(items),
         "kappa": cohen_kappa(a, b),
         "kappa_95": [low, high],
+        "ac1": gwet_ac1(a, b, categories),
+        "ac1_95": [ac1_low, ac1_high],
+        "specific_agreement": {str(k): v for k, v in specific_agreement(a, b, categories).items()},
         "confusion": {
             str(k): {str(j): n for j, n in row.items()}
             for k, row in confusion(a, b, categories).items()
@@ -131,6 +143,9 @@ def main() -> None:
         for second in names[x + 1 :]:
             pair = f"{first}~{second}"
             report["pairs"][pair] = _pair(raters[first], raters[second], items, list(LABELS))
+            report["pairs"][f"{pair} valid_vs_rest"] = _pair(
+                _is_valid(raters[first]), _is_valid(raters[second]), items, [True, False]
+            )
             report["pairs"][f"{pair} outside_names"] = _pair(
                 flags[first], flags[second], items, [True, False]
             )
@@ -142,6 +157,9 @@ def main() -> None:
         against = args.checked_against
         pair = f"human~{against}"
         report["pairs"][pair] = _pair(human, raters[against], checked, list(LABELS))
+        report["pairs"][f"{pair} valid_vs_rest"] = _pair(
+            _is_valid(human), _is_valid(raters[against]), checked, [True, False]
+        )
         report["pairs"][f"{pair} outside_names"] = _pair(
             human_flags, flags[against], checked, [True, False]
         )
@@ -150,7 +168,11 @@ def main() -> None:
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     for pair, stats in report["pairs"].items():
         low, high = stats["kappa_95"]
-        print(f"{pair}: {stats['items']} items, kappa {stats['kappa']:.3f} [{low:.3f}, {high:.3f}]")
+        ac1_low, ac1_high = stats["ac1_95"]
+        print(
+            f"{pair}: {stats['items']} items, kappa {stats['kappa']:.3f} [{low:.3f}, {high:.3f}],"
+            f" AC1 {stats['ac1']:.3f} [{ac1_low:.3f}, {ac1_high:.3f}]"
+        )
     print(f"wrote {args.out}")
 
 

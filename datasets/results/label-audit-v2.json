@@ -1,9 +1,9 @@
 {
   "provenance": {
-    "generated_at": "2026-09-23T21:45:50.291770+00:00",
+    "generated_at": "2026-09-24T00:35:47.507812+00:00",
     "git": {
-      "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
-      "branch": "corpus/v2"
+      "commit": "cc2fff6156cb852b640f9d958972d1b7f7d4ad07",
+      "branch": "measure/label-ac1"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -3873,6 +3873,18 @@
         0.4543465540488973,
         0.651591942820013
       ],
+      "ac1": 0.8530109922551421,
+      "ac1_95": [
+        0.8125538774125495,
+        0.8902020166751506
+      ],
+      "specific_agreement": {
+        "valid": 0.9369085173501577,
+        "non_actionable": 0.8,
+        "unrelated_rewrite": 0.47619047619047616,
+        "partial": 0.4838709677419355,
+        "context_dependent": 0.47058823529411764
+      },
       "confusion": {
         "valid": {
           "valid": 297,
@@ -3911,6 +3923,34 @@
         }
       }
     },
+    "A~B valid_vs_rest": {
+      "items": 383,
+      "raw_agreement": 0.8955613577023499,
+      "kappa": 0.6345071094570094,
+      "kappa_95": [
+        0.5252957746478871,
+        0.7304060778174226
+      ],
+      "ac1": 0.8538795364585817,
+      "ac1_95": [
+        0.8041221295964814,
+        0.8973403886591029
+      ],
+      "specific_agreement": {
+        "True": 0.9369085173501577,
+        "False": 0.696969696969697
+      },
+      "confusion": {
+        "True": {
+          "True": 297,
+          "False": 14
+        },
+        "False": {
+          "True": 26,
+          "False": 46
+        }
+      }
+    },
     "A~B outside_names": {
       "items": 383,
       "raw_agreement": 0.9477806788511749,
@@ -3919,6 +3959,15 @@
         0.7452581362812778,
         0.893888180861085
       ],
+      "ac1": 0.9255363617805169,
+      "ac1_95": [
+        0.8904096523439363,
+        0.9561638609375744
+      ],
+      "specific_agreement": {
+        "True": 0.8571428571428571,
+        "False": 0.9680511182108626
+      },
       "confusion": {
         "True": {
           "True": 60,

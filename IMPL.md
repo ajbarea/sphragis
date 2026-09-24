@@ -27,7 +27,8 @@ are read from each bot's own source.
 ## In flight
 
 - **Label audit v2.** 384 examples under a two-question rubric; two blind model raters, and a
-  human's blind check of rater A on a published page. Agreement is reported once the check is in.
+  human's blind check of rater A on a published page. Kappa, AC1 and specific agreement are in the
+  artifact; the human's are added once the check is in.
 - **Retraining on v2** waits on Qt's answer about access; TIGRIS gets the refined corpora, and
   RQ2's client corpora are recut with records, before any GPU job.
 - **RQ1 re-registered around granularity** (AJ, 2026-09-22). Spec
