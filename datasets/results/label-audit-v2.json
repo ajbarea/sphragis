@@ -1,13 +1,17 @@
 {
   "provenance": {
-    "generated_at": "2026-09-24T00:19:11.597338+00:00",
+    "generated_at": "2026-09-24T00:35:47.507812+00:00",
     "git": {
-      "commit": "6516cf3fbdcda23333170b064b0d941d371da535",
+      "commit": "cc2fff6156cb852b640f9d958972d1b7f7d4ad07",
       "branch": "measure/label-ac1"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
   },
   "rubric": [
     "valid",
@@ -3916,6 +3920,34 @@
           "unrelated_rewrite": 0,
           "partial": 0,
           "context_dependent": 8
+        }
+      }
+    },
+    "A~B valid_vs_rest": {
+      "items": 383,
+      "raw_agreement": 0.8955613577023499,
+      "kappa": 0.6345071094570094,
+      "kappa_95": [
+        0.5252957746478871,
+        0.7304060778174226
+      ],
+      "ac1": 0.8538795364585817,
+      "ac1_95": [
+        0.8041221295964814,
+        0.8973403886591029
+      ],
+      "specific_agreement": {
+        "True": 0.9369085173501577,
+        "False": 0.696969696969697
+      },
+      "confusion": {
+        "True": {
+          "True": 297,
+          "False": 14
+        },
+        "False": {
+          "True": 26,
+          "False": 46
         }
       }
     },
