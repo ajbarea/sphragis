@@ -46,6 +46,8 @@ Repo-specific facts the techne skills read. Logic lives in the skills; only fact
 - `make redact-check` → reports third-party addresses in the result artifacts
 - `make corpus-verify` → re-derives the corpus manifest; needs the raw snapshots under
   `datasets/gerrit/*/raw/`, which are gitignored, so it fails on a fresh clone
+- `make corpus-reproduce` → the same, plus a rerun of dedup and split compared byte for byte with
+  the frozen windows; minutes on Qt
 
 ### Fast audit
 

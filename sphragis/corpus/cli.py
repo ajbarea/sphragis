@@ -27,7 +27,7 @@ from sphragis.corpus.load import (
     write_source_record,
 )
 from sphragis.corpus.manifest import verify
-from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
+from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split, window_body
 from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
 from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
@@ -663,11 +663,22 @@ def _reproduce(args: argparse.Namespace, manifest: Mapping[str, Any]) -> list[st
     """
     kept, removed = run_dedup(_load_examples(args))
     windows, straddling, unassigned = run_split(kept, WINDOWS)
-    problems = verify(
-        manifest, {name: [row["id"] for row in rows] for name, rows in windows.items()}
-    )
+    splits = Path(args.root) / args.org / "splits"
+    problems = []
+    # Byte for byte, over every window either side names: ids alone pass a dedup that keeps a
+    # different copy of an id, and the rerun's names alone pass a window dropped from WINDOWS.
+    for name in sorted(set(manifest["counts"]) | set(windows)):
+        frozen = splits / f"{name}.jsonl"
+        if name not in windows:
+            problems.append(f"{name}: frozen, but the current bounds yield no such window")
+        elif not frozen.is_file():
+            problems.append(f"{name}: the current bounds yield it, but nothing was frozen")
+        elif window_body(windows[name]) != frozen.read_text():
+            problems.append(f"{name}: the rerun differs from the frozen split file")
     recorded = manifest.get("stats", {}).get("deduped")
-    if recorded is not None and dict(removed) != recorded:
+    if recorded is None:
+        problems.append("the manifest records no dedup counts to compare against")
+    elif dict(removed) != recorded:
         problems.append(f"deduped {dict(removed)}, manifest records {recorded}")
     if straddling or unassigned:
         problems.append(f"{len(straddling)} straddling and {len(unassigned)} unassigned change(s)")

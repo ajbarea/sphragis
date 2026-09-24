@@ -1079,3 +1079,33 @@ def test_verify_reproduce_catches_a_dedup_change_that_plain_verify_passes(
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 1
     out = capsys.readouterr().out
     assert "DRIFT reproduce" in out and "deduped" in out
+
+
+def test_verify_reproduce_catches_same_ids_with_different_content(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from sphragis.corpus import cli
+
+    _frozen_corpus(tmp_path)
+    real = cli.run_dedup
+
+    def keeps_another_copy(examples, **options):
+        kept, removed = real(examples, **options)
+        return [{**row, "comments": ["a different copy"]} for row in kept], removed
+
+    monkeypatch.setattr(cli, "run_dedup", keeps_another_copy)
+    capsys.readouterr()
+    assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 1
+    assert "DRIFT reproduce" in capsys.readouterr().out
+
+
+def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from sphragis.corpus import cli
+
+    _frozen_corpus(tmp_path)
+    monkeypatch.setattr(cli, "WINDOWS", {k: v for k, v in cli.WINDOWS.items() if k != "test"})
+    capsys.readouterr()
+    assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 1
+    assert "test" in capsys.readouterr().out

@@ -5292,6 +5292,8 @@ The build and refine rule digests make a month built or refined under other code
 dedup and split sit under neither, so a change to either would leave the frozen windows intact and
 `verify` clean: the failure that let Qt verify at 10,695 while the pipeline yielded 10,692.
 `verify --reproduce` reruns dedup and split in memory from the refined examples and compares every
-window's ids and the dedup counts with the manifest. On the corpus v2 data, OpenStack and Qt both
-reproduce exactly. The check takes minutes on Qt, so it is a flag rather than the default.
+window byte for byte with its frozen split file, over every window either side names, and the
+dedup counts with the manifest. Comparing ids alone would pass a dedup that kept a different copy
+of an id, and comparing only the rerun's windows would pass one dropped from the bounds (both
+found in review). On the corpus v2 data, OpenStack and Qt both reproduce byte for byte. The check takes minutes on Qt, so it is a flag rather than the default.
 

@@ -470,6 +470,9 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-23** — `verify --reproduce`: dedup and split rerun from the refined examples and compared byte for byte with every frozen window; both corpus v2 manifests reproduce (#42).
+- **2026-09-23** — Label audit agreement read with Gwet's AC1 and specific agreement beside kappa: the kappa of 0.557 is the prevalence paradox, AC1 0.853 (#41).
+- **2026-09-23** — Chromium scoped as an organization; fetch refuses a truncated query and a listing that moves while it is paged (#35).
 - **2026-09-23** — Stage 1 data audit: lint-bot comments (in Qt only) and one-click "Acknowledged" removed by a `refine` stage that alone applies label rules; the rebase-only-successor finding retracted; build and label rules recorded per month and checked by the loader; corpus v2 refrozen and every result it feeds regenerated at one commit (research log).
 - **2026-09-23** — AOSP audited the same way: no bot comments, every successor a rework.
 - **2026-09-23** — Label audit v2: 384 examples, two blind model raters under a two-question rubric, and a page for a human's blind check of one (`scripts/label_audit_*`).
