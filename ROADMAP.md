@@ -52,9 +52,10 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   cherry-picks, so three Qt pairs created weeks apart shared an example id; one crashed RQ1 job
   148093 after 4h13m of evaluation. Dedup now keeps the earliest per id. Both manifests were
   deleted deliberately and refrozen so they cite one pipeline version; the old ones are in git.
-- [ ] `verify` checks that the frozen files are intact, not that current code reproduces them:
-  before the refreeze it reported Qt clean at 10,695 while the pipeline yielded 10,692. Decide
-  whether a reproduction check belongs beside it.
+- [x] **`verify --reproduce`** reruns dedup and split from the refined examples and compares every
+  window and the dedup counts with the manifest, since the rule digests cover build and refine
+  only. Before the refreeze, plain `verify` reported Qt clean at 10,695 while the pipeline
+  yielded 10,692. Both corpus v2 manifests reproduce (2026-09-23).
 - [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the changes the corpus
   keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev window
   abutting the collection boundary (39.1% of OpenStack's example-bearing cohort missing

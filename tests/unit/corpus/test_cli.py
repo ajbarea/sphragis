@@ -1044,3 +1044,38 @@ def test_verify_fails_on_a_corpus_frozen_under_other_build_rules(
     )
     assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 1
     assert "frozen under build_rules old" in capsys.readouterr().out
+
+
+def _frozen_corpus(tmp_path: Path) -> None:
+    _built_corpus(tmp_path)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert main(["freeze", "--org", "openstack", "--root", str(tmp_path)]) == 0
+
+
+def test_verify_reproduce_is_clean_when_the_code_still_yields_the_frozen_windows(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _frozen_corpus(tmp_path)
+    capsys.readouterr()
+    assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 0
+    assert "reproduced" in capsys.readouterr().out
+
+
+def test_verify_reproduce_catches_a_dedup_change_that_plain_verify_passes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from sphragis.corpus import cli
+
+    _frozen_corpus(tmp_path)
+    real = cli.run_dedup
+
+    def drops_one_more(examples, **options):
+        kept, removed = real(examples, **options)
+        return kept[1:], {**removed, "exact": removed.get("exact", 0) + 1}
+
+    monkeypatch.setattr(cli, "run_dedup", drops_one_more)
+    capsys.readouterr()
+    assert main(["verify", "--org", "openstack", "--root", str(tmp_path)]) == 0
+    assert main(["verify", "--org", "openstack", "--root", str(tmp_path), "--reproduce"]) == 1
+    out = capsys.readouterr().out
+    assert "DRIFT reproduce" in out and "deduped" in out

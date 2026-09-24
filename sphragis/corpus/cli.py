@@ -12,7 +12,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -85,6 +85,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="fetch only these projects; repeatable, recorded in the snapshot's query",
     )
     parser.add_argument("--overwrite", action="store_true", help="replace an existing snapshot")
+    parser.add_argument(
+        "--reproduce",
+        action="store_true",
+        help="verify: also rerun dedup and split from the refined examples and compare windows",
+    )
     parser.add_argument(
         "--request-interval",
         type=float,
@@ -636,13 +641,37 @@ def _stage_verify(args: argparse.Namespace) -> int:
                 f"frozen under {key} {stats.get(key)}, current are {current}: rebuild or refine "
                 "and refreeze, or check out the code the manifest was frozen with"
             )
+    if args.reproduce:
+        problems.extend(f"reproduce: {p}" for p in _reproduce(args, manifest))
     if problems:
         for problem in problems:
             print(f"DRIFT {problem}")
         return 1
     total = sum(manifest["counts"].values())
-    print(f"{args.org}: clean, {total} examples across {len(manifest['counts'])} windows")
+    reproduced = ", reproduced from the refined examples" if args.reproduce else ""
+    print(
+        f"{args.org}: clean{reproduced}, {total} examples across {len(manifest['counts'])} windows"
+    )
     return 0
+
+
+def _reproduce(args: argparse.Namespace, manifest: Mapping[str, Any]) -> list[str]:
+    """Rerun dedup and split in memory; what the frozen windows no longer match.
+
+    The rule digests cover build and refine. Dedup and split are covered only here, so a change
+    to either leaves the frozen files intact and `verify` clean without this check.
+    """
+    kept, removed = run_dedup(_load_examples(args))
+    windows, straddling, unassigned = run_split(kept, WINDOWS)
+    problems = verify(
+        manifest, {name: [row["id"] for row in rows] for name, rows in windows.items()}
+    )
+    recorded = manifest.get("stats", {}).get("deduped")
+    if recorded is not None and dict(removed) != recorded:
+        problems.append(f"deduped {dict(removed)}, manifest records {recorded}")
+    if straddling or unassigned:
+        problems.append(f"{len(straddling)} straddling and {len(unassigned)} unassigned change(s)")
+    return problems
 
 
 def main(argv: Sequence[str] | None = None) -> int:
