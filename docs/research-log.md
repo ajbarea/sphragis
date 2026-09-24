@@ -4927,6 +4927,74 @@ does what the organizational one does, in Qt. Rank 256 says OpenStack's null is 
 language histogram says the two organizations barely share a file type and the pair cannot supply
 a matched arm. None of them is about the apparatus; all three are about the unit.
 
+### Chromium scoped: five C++ projects clear the rule, and no split of them meets the criteria (2026-09-22)
+
+`datasets/results/host-scoping-chromium.json`, written by `scripts/host_scoping.py` from the raw
+counts committed beside it; about 1,050 requests at one a second, nothing written into the corpus.
+The selection rule (`host-scoping-chromium/selection-rule.txt`) was written at 21:58 EDT, before any
+per-project yield was read: C++ the dominant file type among what sampled human changes touch, and
+at least 256 projected examples over the train and dev months (2024-11 to 2025-10, cutoff
+2024-11-01). Projected examples are human changes times reviewer-anchored comments per sampled
+change times 0.42, which is Qt's 0.219 examples per fetched change over those months (its
+examples and fetch records on disk) against its 0.5 comments a change of 2026-09-21. The 0.5
+comes from ten changes, so the projections give orders of magnitude and nothing finer.
+
+| project | merged a month | human a month | sampled | reviewer comments a change | C++ share of files | projected train examples |
+|---|---|---|---|---|---|---|
+| chromium/src | 18,509 | 9,780 | 40 | 1.35 | 0.557 | 55,453 |
+| v8/v8 | 818 | 504 | 40 | 1.18 | 0.791 | 2,387 |
+| angle/angle | 190 | 140 | 40 | 2.02 | 0.78 | 1,145 |
+| chromiumos/platform2 | 247 | 217 | 40 | 0.47 | 0.778 | 467 |
+| crashpad/crashpad | 8 | 8 | 4 | 11.0 | 0.933 | 425 |
+| openscreen | 4 | 4 | 5 | 0.0 | 0.833 | 0 |
+
+The other eight candidates are not C++ and the rule stops there: devtools-frontend (TypeScript),
+catapult and depot_tools (Python), luci-go (Go and TypeScript), crosvm (Rust), and the ChromiumOS
+C trees (kernel, ec, depthcharge). A two-week tally of the rest of the host found only small C++
+projects (libyuv, libchrome, breakpad, under 30 human changes a month each). chromium/src's row
+averages three months (2024-11, 2025-04, 2025-10) counted in sub-month ranges; the others count
+all twelve. Human here means an owner that is no service account or roller, which is scoping only:
+the pipeline filters no owners, and a roller's change yields nothing once the author filter and the
+anchor requirement have run. 47% of chromium/src's merged changes are a roller's.
+
+**The rule admits five projects and the split criteria admit none.** Under `placebo_corpus.py`'s
+greedy rule, chromium/src takes a half alone (1 project, 100% of its half's 55,453) and the other
+four make 4,424 with v8 at 54%. Without chromium/src, v8 takes a half alone and the other half is
+three projects at 2,037, short of OpenStack's smaller half (2,163, from its frozen train split).
+No subset of the five passes, and admitting the C trees does not rescue it: the kernel would hold
+74% of its half. chromium/src projects twenty-three times the next largest, so every set containing it
+fails on share, and every set without it fails on volume. A qualifying Chromium arm needs
+chromium/src cut below the project, by directory or component, and that is a design decision
+rather than a scoping result.
+
+**chromium/src cannot be fetched by month as the CLI stands.** The host serves at most 10,000
+results for one query and then drops `_more_changes` instead of refusing: 2024-11 ended at exactly
+10,000, the last updated on the 13th, and a probe past it returns `Cannot go beyond page 100`. A
+fetch would have written a month missing its first half and reported success. `fetch_changes` now
+asks for anything the query matches at or before the oldest second it received, reading past every
+change it was already served at that second, and raises on one it was not (checked live: v8/v8
+2025-10 passes, chromium/src 2024-11 raises; the same-second case is tested offline). Collecting chromium/src needs
+sub-month queries merged into one snapshot, which waits on the directory decision.
+
+**The collection would be the largest the study has made.** From the same table: the five projects
+merge about 237,000 changes over the window, one comments request each, and about 169,000 diff
+requests follow from their reviewer comments, about 410,000 requests or nearly five days at one a
+second. Without chromium/src it is about 28,000, under eight hours. The design's pacing docstring
+treats 70,000 as a full corpus.
+
+**robots.txt, read the same day.** chromium-review serves `User-Agent: * / Disallow: /`, as
+android-review does; codereview.qt-project.org serves `Disallow: /` with `Crawl-Delay: 3`, and
+review.opendev.org `Crawl-delay: 2`. The pipeline paces all four at one request a second. What this
+means for collection is recorded in the re-registration entry of 2026-09-22, not here.
+
+**One matching trap for later analyses.** Chromium writes C++ as `.cc` and Qt as `.cpp`; they share
+only `.h`. The separability probe and `--content` restrict by suffix, so a Chromium-Qt C++ cell
+would match headers alone unless suffixes are mapped to a language first.
+
+Chromium is added to `GERRIT` and `scripts/fetch_chromium.sh` is the resumable driver. It takes the
+project set explicitly and refuses to resume a month fetched under a different set. No collection
+has started: there is no qualifying project set, and chromium/src cannot be fetched by month. All 1,050 scoping requests were answered, from a workstation.
+
 ### RQ1 re-registered around granularity, and Chromium added as a third organization (2026-09-22)
 
 **Decided by AJ.** Of the two framings the hardening results left open, keep the organization and
@@ -5406,6 +5474,62 @@ Model raters with a human check are a design MSR has seen: Ahmed et al. (MSR 202
 arXiv 2408.05534) found model-model agreement predicts human-model agreement and used it to
 decide whether a task suits model raters; their further step, choosing items by model
 confidence, is not used here.
+
+### Both corpus v2 manifests reproduce from the refined examples (2026-09-23)
+
+The build and refine rule digests make a month built or refined under other code unreadable, but
+dedup and split sit under neither, so a change to either would leave the frozen windows intact and
+`verify` clean: the failure that let Qt verify at 10,695 while the pipeline yielded 10,692.
+`verify --reproduce` reruns dedup and split in memory from the refined examples and compares every
+window byte for byte with its frozen split file, over every window either side names, and the
+dedup counts with the manifest. Comparing ids alone would pass a dedup that kept a different copy
+of an id, and comparing only the rerun's windows would pass one dropped from the bounds (both
+found in review). On the corpus v2 data, OpenStack and Qt both reproduce byte for byte. The check takes minutes on Qt, so it is a flag rather than the default.
+
+### A rebased test reached chromium-review; the suite is now offline and REST refuses unpermitted hosts (2026-09-23)
+
+**What happened.** #35 gave Chromium a REST host. #39's test that an organization without one is
+not fetched over REST (`fetch --org chromium`) therefore stopped being refused once #39 was rebased
+onto #35, and ran a real fetch. Two local `make verify` runs in #39's worktree each sent at least
+one request for `status:merged after:2025-10-01 before:2025-11-01` to
+`chromium-review.googlesource.com/changes/`. How many attempts each made, and what came back, was
+not recorded and cannot be reconstructed: the retry budget bounds one URL's attempts, not a
+run's, and the second run held a connection for about eleven minutes before it was killed. No snapshot from the test
+survives: pytest keeps its recent runs' temporary directories, and none holds one (checked). Writing
+the guard's own test first then opened one TCP connection to a Google address (no request sent)
+and made one DNS lookup. The rebased branch was never pushed, so CI sent nothing. This is a breach
+of the collection stop of 2026-09-22, caused by an unfaked network path in a test.
+
+Review of the fix found two more departures from the hosts' terms. `scripts/resume_when_allowed.sh
+qt` probes codereview.qt-project.org with curl outside the transport; it was not running (checked:
+no process, crontab or tmux session). And the REST transport paced review.opendev.org at the CLI's
+1 s default, below the Crawl-delay of 2 its robots.txt asks for; the earlier builds this log
+records ran at about 20 and then 5 requests a second (2026-09-15), so the OpenStack corpus was
+collected well above the requested rate throughout.
+
+**What changed.** The test suite refuses connections, datagrams and messages to any address but
+loopback, and forward and reverse name lookups of remote hosts, from collection onward
+(`tests/conftest.py`). It raises an error the transport cannot mistake for a retryable 503, fails
+the test that tried even when its code catches the refusal, and fails the run when a refusal is
+caught outside any test. Subprocesses and raw `_socket` calls are outside that guard; the suite
+passes under `unshare -n`. The REST transport refuses any host not in
+`REST_PERMITTED`, before a connection opens, and names the reason each permitted host may be
+called: only review.opendev.org, whose robots.txt allows `/changes/`. android-review,
+chromium-review and codereview.qt-project.org are refused, which enforces in code the stop that was
+until now a decision in this log. `fetch`, `build` and the Chromium scoping script all go through
+that transport; the resume script refuses the same three organizations before its first request.
+Each permitted host records its crawl delay, and the transport paces by host name, retries
+included, never faster than it.
+
+### Registered before the human's figures: a reported slip stays as locked (2026-09-24)
+
+The check page locks the human's label and outside-names answer before it reveals rater A's. A
+checker can notice a mis-click only after the reveal, and a correction made after seeing the rater
+is no longer blind, so it does not replace the locked answer. The rule, fixed before any human
+agreement is computed: every human figure is read on the answers as locked, and each pair a
+reported slip touches is also reported without that item (`human_slips` and the `without slips`
+pairs). Slips are marked on the page beside the locked answer and saved with the check;
+`label_audit_agreement.py` reads them from there, and `--slip ITEM:FIELD` adds one by hand.
 
 ### Registered: negative readings are bounded by each cell's detectable effect, and rebase edits get a sensitivity analysis (2026-09-24)
 

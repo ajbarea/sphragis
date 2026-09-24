@@ -1,0 +1,26 @@
+Chromium project selection rule, written 2026-09-22 before any per-project yield was read.
+
+Candidates: projects on chromium-review.googlesource.com that the API shows merging changes in the
+train+dev months (2024-11 to 2025-10), from a one-day tally of 2025-10-01 plus the named list
+(chromium/src, v8/v8, angle/angle, devtools/devtools-frontend, chromiumos/platform2, catapult,
+crashpad/crashpad).
+
+A human change is one whose owner email is not a service account (*.gserviceaccount.com) and
+whose local part names no bot or roller (autoroll, -bot, bot@). Scoping only: the pipeline itself
+filters no owners, and bot changes reach no example because the author filter and the anchor
+requirement drop them.
+
+A project enters the set when all of:
+ 1. C++ is its dominant language: .cc/.cpp/.cxx/.hpp/.hh files outnumber every other single
+    language among the code files the sampled human changes touch (.h counts as C++ only in a
+    project that also has .cc/.cpp; C, TS, Python, Go, Rust projects are out).
+ 2. Feasibility: projected usable examples over train+dev >= 256, the RQ2 client length used in
+    clients-cpp-256.txt. Projection = human changes merged over the window x sampled
+    reviewer-anchored comments per change (line-anchored, by a non-owner: the 2026-09-21
+    table's definition, so the calibration applies; the stricter count with successor and
+    acknowledgement filters is reported beside it) x 0.42, the examples-per-such-comment ratio from Qt's recorded
+    figures (0.5 per change, research log 2026-09-21; about 0.21 examples per change from its
+    frozen corpus).
+ 3. Several projects: the rule is applied to every candidate; if fewer than three pass, the
+    Chromium arm is recorded as infeasible rather than admitted as a one- or two-project org.
+No cap on the number admitted; order is by projected examples only for reporting.

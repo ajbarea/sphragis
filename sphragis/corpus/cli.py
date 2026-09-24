@@ -12,9 +12,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from sphragis.corpus.build import build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
@@ -27,7 +27,7 @@ from sphragis.corpus.load import (
     write_source_record,
 )
 from sphragis.corpus.manifest import verify
-from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split
+from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split, window_body
 from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
 from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
@@ -40,10 +40,32 @@ STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "veri
 # checked live 2026-09-18: it answers residential addresses and refuses datacenter ranges, so it
 # is fetched from a workstation, and its volume needs --project to stay bounded. AOSP is RQ2's
 # third organization, for a cross-organization C++ cell beside Qt; RQ1 is registered on two.
+# Chromium checked live 2026-09-22, from a workstation as AOSP is fetched. Like AOSP it needs
+# --project, and chromium/src alone merges more in a month than the 10,000 results the host
+# serves for one query, which fetch_changes refuses rather than truncates. It is the C++
+# organization beside Qt that the study's windows can still use: AOSP's public review stopped
+# on 2025-03-27.
 GERRIT = {
     "aosp": "https://android-review.googlesource.com",
+    "chromium": "https://chromium-review.googlesource.com",
     "openstack": "https://review.opendev.org",
     "qt": "https://codereview.qt-project.org",
+}
+
+
+# The review hosts a REST client may call, each with the reason it may. robots.txt is
+# Disallow: / on android-review, chromium-review and codereview.qt-project.org, and Google's
+# terms bar automated access that ignores it, so those are fetched over git where a git host
+# serves NoteDb, or not at all until the host grants permission. A host absent here is refused.
+class RestPermission(NamedTuple):
+    reason: str
+    crawl_delay: float  # seconds between requests the host asks for; pacing never goes below it
+
+
+REST_PERMITTED = {
+    "review.opendev.org": RestPermission(
+        "robots.txt disallows no path and asks Crawl-delay 2 (checked 2026-09-23)", 2.0
+    ),
 }
 
 SALT_ENV = "SPHRAGIS_CORPUS_SALT"
@@ -79,6 +101,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="fetch only these projects; repeatable, recorded in the snapshot's query",
     )
     parser.add_argument("--overwrite", action="store_true", help="replace an existing snapshot")
+    parser.add_argument(
+        "--reproduce",
+        action="store_true",
+        help="verify: also rerun dedup and split from the refined examples and compare windows",
+    )
     parser.add_argument(
         "--request-interval",
         type=float,
@@ -127,11 +154,13 @@ def http_transport(
         A frozen corpus is fetched once and reused; an overnight collection costs nothing a
         second run would not cost more.
         """
-        if min_interval <= 0:
+        permission = REST_PERMITTED.get(host)
+        interval = max(min_interval, permission.crawl_delay if permission else 0.0)
+        if interval <= 0:
             return
         previous = last_start.get(host)
         if previous is not None:
-            wait = previous + min_interval - clock()
+            wait = previous + interval - clock()
             if wait > 0:
                 sleep(wait)
         last_start[host] = clock()
@@ -151,11 +180,21 @@ def http_transport(
 
     def transport(url: str) -> tuple[int, dict[str, str], str]:
         parts = urllib.parse.urlsplit(url)
+        host = parts.hostname or ""  # lower-cased, without port or userinfo
+        if host not in REST_PERMITTED:
+            raise SystemExit(
+                f"refusing {host}: no REST permission recorded, and robots.txt "
+                "disallows automated clients on the review hosts other than review.opendev.org. "
+                "Fetch over git (--via git) where a git host serves NoteDb, or record the host's "
+                "permission in REST_PERMITTED"
+            )
         target = parts.path + (f"?{parts.query}" if parts.query else "")
-        pace(parts.netloc)
         # One silent retry only for a keep-alive the server closed while idle, which is
         # routine and not a failure; anything else is reported and left to the retry budget.
+        # Paced by host name, as permission is, so a port or letter case cannot open a second
+        # pace, and the retry is a request like any other.
         for attempt in range(2):
+            pace(host)
             connection = connect(parts.scheme, parts.netloc)
             try:
                 connection.request("GET", target, headers={"Accept": "application/json"})
@@ -630,13 +669,48 @@ def _stage_verify(args: argparse.Namespace) -> int:
                 f"frozen under {key} {stats.get(key)}, current are {current}: rebuild or refine "
                 "and refreeze, or check out the code the manifest was frozen with"
             )
+    if args.reproduce:
+        problems.extend(f"reproduce: {p}" for p in _reproduce(args, manifest))
     if problems:
         for problem in problems:
             print(f"DRIFT {problem}")
         return 1
     total = sum(manifest["counts"].values())
-    print(f"{args.org}: clean, {total} examples across {len(manifest['counts'])} windows")
+    reproduced = ", reproduced from the refined examples" if args.reproduce else ""
+    print(
+        f"{args.org}: clean{reproduced}, {total} examples across {len(manifest['counts'])} windows"
+    )
     return 0
+
+
+def _reproduce(args: argparse.Namespace, manifest: Mapping[str, Any]) -> list[str]:
+    """Rerun dedup and split in memory; what the frozen windows no longer match.
+
+    The rule digests cover build and refine. Dedup and split are covered only here, so a change
+    to either leaves the frozen files intact and `verify` clean without this check.
+    """
+    kept, removed = run_dedup(_load_examples(args))
+    windows, straddling, unassigned = run_split(kept, WINDOWS)
+    splits = Path(args.root) / args.org / "splits"
+    problems = []
+    # Byte for byte, over every window either side names: ids alone pass a dedup that keeps a
+    # different copy of an id, and the rerun's names alone pass a window dropped from WINDOWS.
+    for name in sorted(set(manifest["counts"]) | set(windows)):
+        frozen = splits / f"{name}.jsonl"
+        if name not in windows:
+            problems.append(f"{name}: frozen, but the current bounds yield no such window")
+        elif not frozen.is_file():
+            problems.append(f"{name}: the current bounds yield it, but nothing was frozen")
+        elif window_body(windows[name]) != frozen.read_text():
+            problems.append(f"{name}: the rerun differs from the frozen split file")
+    recorded = manifest.get("stats", {}).get("deduped")
+    if recorded is None:
+        problems.append("the manifest records no dedup counts to compare against")
+    elif dict(removed) != recorded:
+        problems.append(f"deduped {dict(removed)}, manifest records {recorded}")
+    if straddling or unassigned:
+        problems.append(f"{len(straddling)} straddling and {len(unassigned)} unassigned change(s)")
+    return problems
 
 
 def main(argv: Sequence[str] | None = None) -> int:

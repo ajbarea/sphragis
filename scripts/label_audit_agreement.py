@@ -11,6 +11,11 @@ bootstrap intervals, specific agreement per label, the confusion tables, and the
 labels per organization and half with Wilson intervals, since a validity rate that differs between
 the units a contrast compares is the noise the design cannot cancel.
 
+A human answer the checker reports, after the reveal, as a slip (the check page's `slips` field,
+or `--slip ITEM:FIELD`) stays as it was locked: a correction made after seeing rater A's answer
+is no longer blind. Every human pair the slip touches is reported again without that item,
+beside the locked reading.
+
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
 
@@ -49,6 +54,13 @@ parser.add_argument("--key", type=Path, required=True, help="neutral item id -> 
 parser.add_argument("--rater", action="append", required=True, metavar="NAME=LABELS.json")
 parser.add_argument("--human", type=Path, help="neutral item id -> {label, ...}, blind checks")
 parser.add_argument("--checked-against", default="A", help="the rater the human checked")
+parser.add_argument(
+    "--slip",
+    action="append",
+    default=[],
+    metavar="ITEM:FIELD",
+    help="a human answer reported as a slip after the reveal (FIELD: label or outside_names)",
+)
 parser.add_argument("--models", default="", help="NAME=model,... recorded beside the labels")
 parser.add_argument(
     "--exclude", action="append", default=[], help="item ids left out, e.g. the rubric's example"
@@ -65,6 +77,19 @@ def _labels(path: Path) -> tuple[dict[str, str], dict[str, bool]]:
     if bad:
         raise SystemExit(f"{path}: labels outside the rubric: {bad}")
     return labels, flags
+
+
+def _slips(values: list[str], checked: list[str]) -> dict[str, set[str]]:
+    """Reported slips by field; each must name a checked item and a field the human answers."""
+    slips: dict[str, set[str]] = {"label": set(), "outside_names": set()}
+    for value in values:
+        item, _, field = value.partition(":")
+        if field not in slips:
+            raise SystemExit(f"--slip {value}: field must be label or outside_names")
+        if item not in checked:
+            raise SystemExit(f"--slip {value}: {item} is not a checked item")
+        slips[field].add(item)
+    return slips
 
 
 def _is_valid(labels: dict[str, str]) -> dict[str, bool]:
@@ -164,6 +189,26 @@ def main() -> None:
             human_flags, flags[against], checked, [True, False]
         )
         report["valid_rates"]["human"] = _valid_rates({i: human[i] for i in checked}, cell_of)
+        recorded = [
+            f"{i}:{f}"
+            for i, v in json.loads(args.human.read_text()).items()
+            for f in v.get("slips", [])
+        ]
+        slips = _slips(args.slip + [r for r in recorded if r.split(":", 1)[0] in checked], checked)
+        report["human_slips"] = {f: sorted(items) for f, items in slips.items() if items}
+        if slips["label"]:
+            kept = [i for i in checked if i not in slips["label"]]
+            report["pairs"][f"{pair} without slips"] = _pair(
+                human, raters[against], kept, list(LABELS)
+            )
+            report["pairs"][f"{pair} valid_vs_rest without slips"] = _pair(
+                _is_valid(human), _is_valid(raters[against]), kept, [True, False]
+            )
+        if slips["outside_names"]:
+            kept = [i for i in checked if i not in slips["outside_names"]]
+            report["pairs"][f"{pair} outside_names without slips"] = _pair(
+                human_flags, flags[against], kept, [True, False]
+            )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     for pair, stats in report["pairs"].items():

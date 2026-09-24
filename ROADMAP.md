@@ -52,9 +52,10 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   cherry-picks, so three Qt pairs created weeks apart shared an example id; one crashed RQ1 job
   148093 after 4h13m of evaluation. Dedup now keeps the earliest per id. Both manifests were
   deleted deliberately and refrozen so they cite one pipeline version; the old ones are in git.
-- [ ] `verify` checks that the frozen files are intact, not that current code reproduces them:
-  before the refreeze it reported Qt clean at 10,695 while the pipeline yielded 10,692. Decide
-  whether a reproduction check belongs beside it.
+- [x] **`verify --reproduce`** reruns dedup and split from the refined examples and compares every
+  window and the dedup counts with the manifest, since the rule digests cover build and refine
+  only. Before the refreeze, plain `verify` reported Qt clean at 10,695 while the pipeline
+  yielded 10,692. Both corpus v2 manifests reproduce (2026-09-23).
 - [x] **Decide how windows are assigned.** Measured by Lynden-Bell on the changes the corpus
   keeps (`scripts/censoring.py`): creation windows stand. The confound is the dev window
   abutting the collection boundary (39.1% of OpenStack's example-bearing cohort missing
@@ -82,6 +83,13 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] State the dev window's censoring wherever dev numbers appear; they are pre-registration
   estimates, not unbiased previews. Stated with the three-seed RQ1 result: 39.1% and 28.8% of the
   dev window's changes were still open at collection, against 1.1% and 0.7% in the test window.
+- [x] **Chromium approved as a third organization and scoped** (2026-09-22): a C++ organization
+  with several projects, the pairing for Qt that controls language. In `GERRIT`; fetch now refuses
+  a query the host truncated. Selection rule, feasibility and split outcome are in the research log.
+- [ ] **Collect Chromium** over train and dev with `scripts/fetch_chromium.sh`, frozen by
+  2026-10-23. Blocked on the cut of chromium/src below the project (no project-level set meets the
+  split criteria), on the robots.txt and terms question for googlesource hosts, and then on
+  sub-month fetching for chromium/src.
 
 ## Plan B — measurement
 
@@ -473,6 +481,9 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-23** — `verify --reproduce`: dedup and split rerun from the refined examples and compared byte for byte with every frozen window; both corpus v2 manifests reproduce (#42).
+- **2026-09-23** — Label audit agreement read with Gwet's AC1 and specific agreement beside kappa: the kappa of 0.557 is the prevalence paradox, AC1 0.853 (#41).
+- **2026-09-23** — Chromium scoped as an organization; fetch refuses a truncated query and a listing that moves while it is paged (#35).
 - **2026-09-23** — Stage 1 data audit: lint-bot comments (in Qt only) and one-click "Acknowledged" removed by a `refine` stage that alone applies label rules; the rebase-only-successor finding retracted; build and label rules recorded per month and checked by the loader; corpus v2 refrozen and every result it feeds regenerated at one commit (research log).
 - **2026-09-23** — AOSP audited the same way: no bot comments, every successor a rework.
 - **2026-09-23** — Label audit v2: 384 examples, two blind model raters under a two-question rubric, and a page for a human's blind check of one (`scripts/label_audit_*`).
