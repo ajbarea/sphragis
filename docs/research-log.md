@@ -5342,7 +5342,3 @@ agreement computed: every human figure is read on the answers as locked, and eac
 slip touches is also reported without that item (`label_audit_agreement.py --slip ITEM:FIELD`,
 written to `human_slips` and the `without slips` pairs). Slips are taken from the checker's own
 notes on the page, and the list passed to the script is the complete set of notes that report one.
-
-The check restarted the same day on a fresh page, since answers had been saved to two
-accounts' copies. Slips are now marked on the page itself, beside the locked answer. item-002 was
-seen before the restart and is excluded from the human's figures, with the worked example.
