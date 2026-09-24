@@ -4927,6 +4927,74 @@ does what the organizational one does, in Qt. Rank 256 says OpenStack's null is 
 language histogram says the two organizations barely share a file type and the pair cannot supply
 a matched arm. None of them is about the apparatus; all three are about the unit.
 
+### Chromium scoped: five C++ projects clear the rule, and no split of them meets the criteria (2026-09-22)
+
+`datasets/results/host-scoping-chromium.json`, written by `scripts/host_scoping.py` from the raw
+counts committed beside it; about 1,050 requests at one a second, nothing written into the corpus.
+The selection rule (`host-scoping-chromium/selection-rule.txt`) was written at 21:58 EDT, before any
+per-project yield was read: C++ the dominant file type among what sampled human changes touch, and
+at least 256 projected examples over the train and dev months (2024-11 to 2025-10, cutoff
+2024-11-01). Projected examples are human changes times reviewer-anchored comments per sampled
+change times 0.42, which is Qt's 0.219 examples per fetched change over those months (its
+examples and fetch records on disk) against its 0.5 comments a change of 2026-09-21. The 0.5
+comes from ten changes, so the projections give orders of magnitude and nothing finer.
+
+| project | merged a month | human a month | sampled | reviewer comments a change | C++ share of files | projected train examples |
+|---|---|---|---|---|---|---|
+| chromium/src | 18,509 | 9,780 | 40 | 1.35 | 0.557 | 55,453 |
+| v8/v8 | 818 | 504 | 40 | 1.18 | 0.791 | 2,387 |
+| angle/angle | 190 | 140 | 40 | 2.02 | 0.78 | 1,145 |
+| chromiumos/platform2 | 247 | 217 | 40 | 0.47 | 0.778 | 467 |
+| crashpad/crashpad | 8 | 8 | 4 | 11.0 | 0.933 | 425 |
+| openscreen | 4 | 4 | 5 | 0.0 | 0.833 | 0 |
+
+The other eight candidates are not C++ and the rule stops there: devtools-frontend (TypeScript),
+catapult and depot_tools (Python), luci-go (Go and TypeScript), crosvm (Rust), and the ChromiumOS
+C trees (kernel, ec, depthcharge). A two-week tally of the rest of the host found only small C++
+projects (libyuv, libchrome, breakpad, under 30 human changes a month each). chromium/src's row
+averages three months (2024-11, 2025-04, 2025-10) counted in sub-month ranges; the others count
+all twelve. Human here means an owner that is no service account or roller, which is scoping only:
+the pipeline filters no owners, and a roller's change yields nothing once the author filter and the
+anchor requirement have run. 47% of chromium/src's merged changes are a roller's.
+
+**The rule admits five projects and the split criteria admit none.** Under `placebo_corpus.py`'s
+greedy rule, chromium/src takes a half alone (1 project, 100% of its half's 55,453) and the other
+four make 4,424 with v8 at 54%. Without chromium/src, v8 takes a half alone and the other half is
+three projects at 2,037, short of OpenStack's smaller half (2,163, from its frozen train split).
+No subset of the five passes, and admitting the C trees does not rescue it: the kernel would hold
+74% of its half. chromium/src projects twenty-three times the next largest, so every set containing it
+fails on share, and every set without it fails on volume. A qualifying Chromium arm needs
+chromium/src cut below the project, by directory or component, and that is a design decision
+rather than a scoping result.
+
+**chromium/src cannot be fetched by month as the CLI stands.** The host serves at most 10,000
+results for one query and then drops `_more_changes` instead of refusing: 2024-11 ended at exactly
+10,000, the last updated on the 13th, and a probe past it returns `Cannot go beyond page 100`. A
+fetch would have written a month missing its first half and reported success. `fetch_changes` now
+asks for anything the query matches at or before the oldest second it received, reading past every
+change it was already served at that second, and raises on one it was not (checked live: v8/v8
+2025-10 passes, chromium/src 2024-11 raises; the same-second case is tested offline). Collecting chromium/src needs
+sub-month queries merged into one snapshot, which waits on the directory decision.
+
+**The collection would be the largest the study has made.** From the same table: the five projects
+merge about 237,000 changes over the window, one comments request each, and about 169,000 diff
+requests follow from their reviewer comments, about 410,000 requests or nearly five days at one a
+second. Without chromium/src it is about 28,000, under eight hours. The design's pacing docstring
+treats 70,000 as a full corpus.
+
+**robots.txt, read the same day.** chromium-review serves `User-Agent: * / Disallow: /`, as
+android-review does; codereview.qt-project.org serves `Disallow: /` with `Crawl-Delay: 3`, and
+review.opendev.org `Crawl-delay: 2`. The pipeline paces all four at one request a second. What this
+means for collection is recorded in the re-registration entry of 2026-09-22, not here.
+
+**One matching trap for later analyses.** Chromium writes C++ as `.cc` and Qt as `.cpp`; they share
+only `.h`. The separability probe and `--content` restrict by suffix, so a Chromium-Qt C++ cell
+would match headers alone unless suffixes are mapped to a language first.
+
+Chromium is added to `GERRIT` and `scripts/fetch_chromium.sh` is the resumable driver. It takes the
+project set explicitly and refuses to resume a month fetched under a different set. No collection
+has started: there is no qualifying project set, and chromium/src cannot be fetched by month. All 1,050 scoping requests were answered, from a workstation.
+
 ### A data audit: nearly half of Qt's organizational effect was its lint bot (2026-09-23)
 
 Stage 1's labels were audited before anything else is built on them, in three parts.

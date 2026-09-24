@@ -84,6 +84,56 @@ def created_on_or_after(changes: Sequence[Mapping[str, Any]], cutoff: str) -> li
     return [dict(c) for c in changes if c["created"][:10] >= cutoff[:10]]
 
 
+def _refuse_if_truncated(
+    base_url: str,
+    query: str,
+    changes: Sequence[Mapping[str, Any]],
+    transport: Transport,
+    sleep: Callable[[float], None],
+    retries: list[int],
+) -> None:
+    """Raise if the server stopped paging before ``query`` was exhausted.
+
+    A missing `_more_changes` is not proof of the end. chromium-review stops at 10,000 results
+    and drops the flag on the last page it serves: measured 2026-09-22, chromium/src's merged
+    changes for 2024-11 ended at exactly 10,000, the last one updated on the 13th. Results come
+    newest-updated first, so anything the query matches at or before the oldest second served
+    that was not served means the tail was cut.
+
+    `before:` includes its own second, and a cut can fall inside a run of changes sharing that
+    second, so the probe reads until it has one more change than were served at that second,
+    paging if the host serves fewer a page. An unserved change then always has room to appear
+    rather than being crowded out by served ones.
+    """
+    if not changes:
+        return
+    missing_stamp = [c.get("id", c.get("_number")) for c in changes if "updated" not in c]
+    if missing_stamp:
+        raise RuntimeError(
+            f"{base_url} returned changes without `updated` ({missing_stamp[:3]}), so whether "
+            f"{query!r} was truncated cannot be checked"
+        )
+    oldest = min(str(c["updated"])[:19] for c in changes)
+    at_oldest = sum(1 for c in changes if str(c["updated"])[:19] == oldest)
+    seen = {c.get("id", c.get("_number")) for c in changes}
+    probe = quote(f'({query}) before:"{oldest} +0000"')
+    missing: list[Mapping[str, Any]] = []
+    read = 0
+    while not missing and read <= at_oldest:
+        url = f"{base_url.rstrip('/')}/changes/?q={probe}&n={at_oldest + 1 - read}&S={read}"
+        page = parse_response(_get(url, transport, sleep, retries))
+        read += len(page)
+        missing = [c for c in page if c.get("id", c.get("_number")) not in seen]
+        if not page or not page[-1].get("_more_changes"):
+            break
+    if missing:
+        raise RuntimeError(
+            f"{base_url} stopped after {len(changes)} results for {query!r} but more match "
+            f"at or before {oldest}: the server truncated the query. Narrow it (fewer projects "
+            "or a shorter date range) rather than keep a partial snapshot."
+        )
+
+
 def fetch_changes(
     base_url: str,
     query: str,
@@ -93,24 +143,43 @@ def fetch_changes(
     options: tuple[str, ...] = ("ALL_REVISIONS", "ALL_FILES", "DETAILED_ACCOUNTS"),
     sleep: Callable[[float], None] = time.sleep,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Page through ``query``; return the changes and the record of how they were fetched."""
+    """Page through ``query``; return the changes and the record of how they were fetched.
+
+    `S=` is an offset into a live index. A change updated while the query is paged leaves the
+    results, everything after it moves up one, and the change at the next page's first offset
+    is never served. Each page after the first therefore starts one change early and must
+    begin with the change the previous page ended on; if it does not, the listing moved and
+    the fetch raises rather than keep a snapshot with a hole in it.
+    """
     started = datetime.now(UTC).isoformat()
     option_params = "".join(f"&o={opt}" for opt in options)
     changes: list[dict[str, Any]] = []
     retries = [0]
     pages = 0
     start = 0
+    anchor: Any = None
     while True:
+        overlap = 0 if anchor is None else 1
         url = (
             f"{base_url.rstrip('/')}/changes/?q={quote(query)}"
-            f"&n={page_size}&S={start}{option_params}"
+            f"&n={page_size + overlap}&S={start - overlap}{option_params}"
         )
-        page = parse_response(_get(url, transport, sleep, retries))
+        raw = parse_response(_get(url, transport, sleep, retries))
         pages += 1
+        if overlap and (not raw or raw[0].get("id", raw[0].get("_number")) != anchor):
+            raise RuntimeError(
+                f"{base_url} moved {query!r} while it was paged: offset {start - 1} no longer "
+                f"holds {anchor}, so a change was skipped or repeated. Fetch it again."
+            )
+        page = raw[overlap:]
         changes.extend(page)
-        if not page or not page[-1].get("_more_changes"):
+        if not raw or not raw[-1].get("_more_changes"):
             break
+        if not page:
+            raise RuntimeError(f"{base_url} served no new change past offset {start} for {query!r}")
+        anchor = raw[-1].get("id", raw[-1].get("_number"))
         start += len(page)
+    _refuse_if_truncated(base_url, query, changes, transport, sleep, retries)
     record = {
         "base_url": base_url,
         "query": query,

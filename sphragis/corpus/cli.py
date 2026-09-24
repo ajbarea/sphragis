@@ -40,8 +40,14 @@ STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "veri
 # checked live 2026-09-18: it answers residential addresses and refuses datacenter ranges, so it
 # is fetched from a workstation, and its volume needs --project to stay bounded. AOSP is RQ2's
 # third organization, for a cross-organization C++ cell beside Qt; RQ1 is registered on two.
+# Chromium checked live 2026-09-22, from a workstation as AOSP is fetched. Like AOSP it needs
+# --project, and chromium/src alone merges more in a month than the 10,000 results the host
+# serves for one query, which fetch_changes refuses rather than truncates. It is the C++
+# organization beside Qt that the study's windows can still use: AOSP's public review stopped
+# on 2025-03-27.
 GERRIT = {
     "aosp": "https://android-review.googlesource.com",
+    "chromium": "https://chromium-review.googlesource.com",
     "openstack": "https://review.opendev.org",
     "qt": "https://codereview.qt-project.org",
 }
