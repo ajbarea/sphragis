@@ -132,7 +132,7 @@ function firstOpen(){
 function progress(){
   const done=ITEMS.filter(x=>x.item!==PRACTICE&&state[x.item]?.label);
   const agree=done.filter(x=>state[x.item].label===x.rater).length;
-  document.getElementById("count").textContent=done.length+" of "+(ITEMS.length-1)+" checked";
+  document.getElementById("count").textContent=done.length+" of "+(ITEMS.length-1)+" checked · aim for 100 to 150";
   document.getElementById("bar").style.width=(100*done.length/(ITEMS.length-1))+"%";
   document.getElementById("tally").textContent=done.length?agree+" agree with rater A":"";
 }
@@ -177,6 +177,14 @@ function render(){
     const ta=el("textarea"); ta.placeholder="Optional note, e.g. why rater A is right or wrong"; ta.value=s.note||"";
     let t; ta.addEventListener("input",()=>{ clearTimeout(t); t=setTimeout(()=>{ state[ex.item]={...state[ex.item],note:ta.value}; write(ex.item); },700); });
     r.appendChild(ta);
+    // A slip is recorded beside the locked answer, never in place of it: the answer stays blind.
+    const slips=el("div","note"); slips.appendChild(el("span",null,"Mis-click? Mark it, your locked answer stays as it is: "));
+    for(const [field,text] of [["label","label was a slip"],["outside_names","names answer was a slip"]]){
+      const lab=el("label"); lab.style.marginInlineEnd="14px"; const cb=el("input"); cb.type="checkbox"; cb.checked=(s.slips||[]).includes(field);
+      cb.addEventListener("change",()=>{ const cur=new Set(state[ex.item].slips||[]); cb.checked?cur.add(field):cur.delete(field); state[ex.item]={...state[ex.item],slips:[...cur].sort()}; write(ex.item); });
+      lab.append(cb," "+text); slips.appendChild(lab);
+    }
+    r.appendChild(slips);
     r.appendChild(el("div","saved"+(s.pending?"":" ok"),s.pending?"Saving…":"Saved"));
     card.appendChild(r);
   }
@@ -191,7 +199,7 @@ function reveal(){
 async function write(item){
   const s=state[item];
   if(!db||!canWrite){ s.pending=false; if(ITEMS[current].item===item) render(); return; }
-  try{ await db.doc("checks/"+item).set({rubric:RUBRIC,label:s.label,outside_names:!!s.outside,rater_a:s.rater??ITEMS.find(x=>x.item===item).rater,note:s.note||"",at:new Date().toISOString()}); s.pending=false; }
+  try{ await db.doc("checks/"+item).set({rubric:RUBRIC,label:s.label,outside_names:!!s.outside,rater_a:s.rater??ITEMS.find(x=>x.item===item).rater,note:s.note||"",slips:s.slips||[],at:new Date().toISOString()}); s.pending=false; }
   catch(e){ s.pending=false; if(e&&(e.code==="invalid_argument"||e.code==="not_granted")){ canWrite=false; document.getElementById("offline").hidden=false; } }
   if(ITEMS[current].item===item) render();
 }
@@ -212,7 +220,7 @@ render();
   let first=true;
   db.collection("checks").onSnapshot(snap=>{
     // Checks saved under an earlier rubric are not this audit's; they are left unshown.
-    for(const d of snap.docs){ const v=d.data(); if(!v||v.rubric!==RUBRIC||state[d.id]?.pending) continue; state[d.id]={label:v.label,outside:!!v.outside_names,note:v.note||"",rater:v.rater_a}; }
+    for(const d of snap.docs){ const v=d.data(); if(!v||v.rubric!==RUBRIC||state[d.id]?.pending) continue; state[d.id]={label:v.label,outside:!!v.outside_names,note:v.note||"",slips:v.slips||[],rater:v.rater_a}; }
     if(first){ first=false; current=firstOpen(); choice=null; outside=false; }
     render();
   },()=>{ conn.textContent="Not saving"; document.getElementById("offline").hidden=false; });
