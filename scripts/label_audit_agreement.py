@@ -11,9 +11,10 @@ bootstrap intervals, specific agreement per label, the confusion tables, and the
 labels per organization and half with Wilson intervals, since a validity rate that differs between
 the units a contrast compares is the noise the design cannot cancel.
 
-A human answer the checker reports, after the reveal, as a slip (`--slip ITEM:FIELD`) stays as it
-was locked: a correction made after seeing rater A's answer is no longer blind. Every human pair
-the slip touches is reported again without that item, beside the locked reading.
+A human answer the checker reports, after the reveal, as a slip (the check page's `slips` field,
+or `--slip ITEM:FIELD`) stays as it was locked: a correction made after seeing rater A's answer
+is no longer blind. Every human pair the slip touches is reported again without that item,
+beside the locked reading.
 
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
@@ -188,7 +189,12 @@ def main() -> None:
             human_flags, flags[against], checked, [True, False]
         )
         report["valid_rates"]["human"] = _valid_rates({i: human[i] for i in checked}, cell_of)
-        slips = _slips(args.slip, checked)
+        recorded = [
+            f"{i}:{f}"
+            for i, v in json.loads(args.human.read_text()).items()
+            for f in v.get("slips", [])
+        ]
+        slips = _slips(args.slip + [r for r in recorded if r.split(":", 1)[0] in checked], checked)
         report["human_slips"] = {f: sorted(items) for f, items in slips.items() if items}
         if slips["label"]:
             kept = [i for i in checked if i not in slips["label"]]
