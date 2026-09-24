@@ -64,7 +64,7 @@ class RestPermission(NamedTuple):
 
 REST_PERMITTED = {
     "review.opendev.org": RestPermission(
-        "robots.txt allows /changes/ with Crawl-delay 2 (checked 2026-09-23)", 2.0
+        "robots.txt disallows no path and asks Crawl-delay 2 (checked 2026-09-23)", 2.0
     ),
 }
 
@@ -154,7 +154,7 @@ def http_transport(
         A frozen corpus is fetched once and reused; an overnight collection costs nothing a
         second run would not cost more.
         """
-        permission = REST_PERMITTED.get(host.split(":")[0].lower())
+        permission = REST_PERMITTED.get(host)
         interval = max(min_interval, permission.crawl_delay if permission else 0.0)
         if interval <= 0:
             return
@@ -180,18 +180,21 @@ def http_transport(
 
     def transport(url: str) -> tuple[int, dict[str, str], str]:
         parts = urllib.parse.urlsplit(url)
-        if parts.hostname not in REST_PERMITTED:
+        host = parts.hostname or ""  # lower-cased, without port or userinfo
+        if host not in REST_PERMITTED:
             raise SystemExit(
-                f"refusing {parts.hostname}: no REST permission recorded, and robots.txt "
+                f"refusing {host}: no REST permission recorded, and robots.txt "
                 "disallows automated clients on the review hosts other than review.opendev.org. "
                 "Fetch over git (--via git) where a git host serves NoteDb, or record the host's "
                 "permission in REST_PERMITTED"
             )
         target = parts.path + (f"?{parts.query}" if parts.query else "")
-        pace(parts.netloc)
         # One silent retry only for a keep-alive the server closed while idle, which is
         # routine and not a failure; anything else is reported and left to the retry budget.
+        # Paced by host name, as permission is, so a port or letter case cannot open a second
+        # pace, and the retry is a request like any other.
         for attempt in range(2):
+            pace(host)
             connection = connect(parts.scheme, parts.netloc)
             try:
                 connection.request("GET", target, headers={"Accept": "application/json"})

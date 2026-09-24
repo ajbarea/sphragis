@@ -5304,8 +5304,8 @@ not fetched over REST (`fetch --org chromium`) therefore stopped being refused o
 onto #35, and ran a real fetch. Two local `make verify` runs in #39's worktree each sent at least
 one request for `status:merged after:2025-10-01 before:2025-11-01` to
 `chromium-review.googlesource.com/changes/`. How many attempts each made, and what came back, was
-not recorded and cannot be reconstructed: the retry budget bounds a run at about three minutes,
-yet the second held a connection for about eleven before it was killed. No snapshot from the test
+not recorded and cannot be reconstructed: the retry budget bounds one URL's attempts, not a
+run's, and the second run held a connection for about eleven minutes before it was killed. No snapshot from the test
 survives: pytest keeps its recent runs' temporary directories, and none holds one (checked). Writing
 the guard's own test first then opened one TCP connection to a Google address (no request sent)
 and made one DNS lookup. The rebased branch was never pushed, so CI sent nothing. This is a breach
@@ -5314,16 +5314,20 @@ of the collection stop of 2026-09-22, caused by an unfaked network path in a tes
 Review of the fix found two more departures from the hosts' terms. `scripts/resume_when_allowed.sh
 qt` probes codereview.qt-project.org with curl outside the transport; it was not running (checked:
 no process, crontab or tmux session). And the REST transport paced review.opendev.org at the CLI's
-1 s default, below the Crawl-delay of 2 its robots.txt asks for, so the corpus's OpenStack
-collection ran at twice the requested rate.
+1 s default, below the Crawl-delay of 2 its robots.txt asks for; the earlier builds this log
+records ran at about 20 and then 5 requests a second (2026-09-15), so the OpenStack corpus was
+collected well above the requested rate throughout.
 
-**What changed.** The test suite refuses every in-process connection, datagram and name lookup
-to a host other than loopback from collection onward (`tests/conftest.py`), raises an error the
-transport cannot mistake for a retryable 503, and fails the test that tried even when its code
-catches the refusal. A subprocess is outside that guard; the suite passes under `unshare -n`. The REST transport refuses any host not in
+**What changed.** The test suite refuses connections, datagrams and messages to any address but
+loopback, and forward and reverse name lookups of remote hosts, from collection onward
+(`tests/conftest.py`). It raises an error the transport cannot mistake for a retryable 503, fails
+the test that tried even when its code catches the refusal, and fails the run when a refusal is
+caught outside any test. Subprocesses and raw `_socket` calls are outside that guard; the suite
+passes under `unshare -n`. The REST transport refuses any host not in
 `REST_PERMITTED`, before a connection opens, and names the reason each permitted host may be
 called: only review.opendev.org, whose robots.txt allows `/changes/`. android-review,
 chromium-review and codereview.qt-project.org are refused, which enforces in code the stop that was
 until now a decision in this log. `fetch`, `build` and the Chromium scoping script all go through
 that transport; the resume script refuses the same three organizations before its first request.
-Each permitted host records its crawl delay, and the transport never paces it faster.
+Each permitted host records its crawl delay, and the transport paces by host name, retries
+included, never faster than it.

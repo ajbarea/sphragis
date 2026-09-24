@@ -26,12 +26,28 @@ def test_a_datagram_to_a_remote_address_is_refused(offline_refusals: list[str]) 
         s.sendto(b"x", ("192.0.2.1", 53))
 
 
-@pytest.mark.parametrize(("name", "args"), [("getaddrinfo", (443,)), ("gethostbyname", ())])
+@pytest.mark.parametrize(
+    ("name", "args"),
+    [
+        ("getaddrinfo", ("gerrit.invalid", 443)),
+        ("gethostbyname", ("gerrit.invalid",)),
+        ("gethostbyaddr", ("192.0.2.1",)),
+        ("getnameinfo", (("192.0.2.1", 80), 0)),
+    ],
+)
 def test_a_name_lookup_for_a_remote_host_is_refused(
     offline_refusals: list[str], name: str, args: tuple[int, ...]
 ) -> None:
     with pytest.raises(RuntimeError, match="offline"):
-        getattr(socket, name)("gerrit.invalid", *args)
+        getattr(socket, name)(*args)
+
+
+def test_a_message_to_a_remote_address_is_refused(offline_refusals: list[str]) -> None:
+    with (
+        socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s,
+        pytest.raises(RuntimeError, match="offline"),
+    ):
+        s.sendmsg([b"x"], [], 0, ("192.0.2.1", 53))
 
 
 def test_a_leak_through_the_rest_transport_raises_rather_than_reading_as_a_503(

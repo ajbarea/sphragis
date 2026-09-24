@@ -79,11 +79,14 @@ def _refuse(what: str) -> OfflineViolation:
 _real_connect = socket.socket.connect
 _real_connect_ex = socket.socket.connect_ex
 _real_sendto = socket.socket.sendto
+_real_sendmsg = socket.socket.sendmsg
 _real_lookups = {
     "getaddrinfo": socket.getaddrinfo,
     "gethostbyname": socket.gethostbyname,
     "gethostbyname_ex": socket.gethostbyname_ex,
+    "gethostbyaddr": socket.gethostbyaddr,
 }
+_real_getnameinfo = socket.getnameinfo
 
 
 def _connect(self: socket.socket, address: Any) -> None:
@@ -103,6 +106,18 @@ def _sendto(self: socket.socket, data: Any, *args: Any) -> int:
     if not _is_local(address):
         raise _refuse(f"a datagram to {address!r}")
     return _real_sendto(self, data, *args)
+
+
+def _sendmsg(self: socket.socket, buffers: Any, *args: Any) -> int:
+    if len(args) >= 3 and not _is_local(args[2]):
+        raise _refuse(f"a message to {args[2]!r}")
+    return _real_sendmsg(self, buffers, *args)
+
+
+def _getnameinfo(address: Any, flags: int) -> Any:
+    if not _is_local(address):
+        raise _refuse(f"a reverse lookup of {address!r}")
+    return _real_getnameinfo(address, flags)
 
 
 def _lookup(name: str) -> Any:
@@ -129,6 +144,9 @@ def pytest_configure(config: pytest.Config) -> None:
     socket.getaddrinfo = _lookup("getaddrinfo")
     socket.gethostbyname = _lookup("gethostbyname")
     socket.gethostbyname_ex = _lookup("gethostbyname_ex")
+    socket.gethostbyaddr = _lookup("gethostbyaddr")
+    socket.socket.sendmsg = _sendmsg  # ty: ignore[invalid-assignment]
+    socket.getnameinfo = _getnameinfo  # ty: ignore[invalid-assignment]
 
 
 def pytest_unconfigure(config: pytest.Config) -> None:
@@ -138,6 +156,16 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     socket.getaddrinfo = _real_lookups["getaddrinfo"]  # ty: ignore[invalid-assignment]
     socket.gethostbyname = _real_lookups["gethostbyname"]  # ty: ignore[invalid-assignment]
     socket.gethostbyname_ex = _real_lookups["gethostbyname_ex"]  # ty: ignore[invalid-assignment]
+    socket.gethostbyaddr = _real_lookups["gethostbyaddr"]  # ty: ignore[invalid-assignment]
+    socket.socket.sendmsg = _real_sendmsg  # ty: ignore[invalid-assignment]
+    socket.getnameinfo = _real_getnameinfo
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """A refusal caught where no test's teardown sees it, as in a module fixture, fails the run."""
+    if _VIOLATIONS:
+        print(f"\noffline test suite: the network was tried: {_VIOLATIONS}")
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
 @pytest.fixture(autouse=True)

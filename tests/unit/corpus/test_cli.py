@@ -1178,7 +1178,26 @@ def test_http_transport_paces_a_permitted_host_at_its_crawl_delay(
 
     transport = cli.http_transport(min_interval=1.0, clock=lambda: now[0], sleep=sleep)
     transport("https://review.opendev.org/a")
-    transport("https://review.opendev.org/b")
+    transport("https://Review.OpenDev.org:443/b")
+    assert slept == [2.0], "a port or letter case must not open a second pace"
+
+
+def test_http_transport_paces_the_keep_alive_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    import http.client
+
+    from sphragis.corpus import cli
+
+    _scripted_connections(
+        monkeypatch, [http.client.RemoteDisconnected("idle close"), _FakeResponse(200)]
+    )
+    now, slept = [0.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    transport = cli.http_transport(clock=lambda: now[0], sleep=sleep)
+    assert transport("https://review.opendev.org/a")[0] == 200
     assert slept == [2.0]
 
 
