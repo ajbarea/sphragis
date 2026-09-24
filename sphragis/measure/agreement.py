@@ -66,6 +66,11 @@ def specific_agreement(
     first: Sequence[Hashable], second: Sequence[Hashable], categories: Sequence[Hashable]
 ) -> dict[Hashable, float | None]:
     """Per label, 2 * n_kk / (n_k by the first rater + n_k by the second); None if unused."""
+    if len(first) != len(second):
+        raise ValueError("both raters must label the same items")
+    scale = set(categories)
+    if not scale.issuperset(first) or not scale.issuperset(second):
+        raise ValueError("a label is not on the scale")
     both = Counter(a for a, b in zip(first, second, strict=True) if a == b)
     left, right = Counter(first), Counter(second)
     return {
@@ -83,6 +88,8 @@ def bootstrap_interval(
     seed: int = 0,
 ) -> tuple[float, float]:
     """A percentile bootstrap interval for a two-rater statistic, resampling items."""
+    if len(first) != len(second):
+        raise ValueError("both raters must label the same items")
     rng = random.Random(seed)
     n = len(first)
     draws = []
@@ -91,6 +98,8 @@ def bootstrap_interval(
         value = statistic([first[i] for i in picks], [second[i] for i in picks])
         if not math.isnan(value):
             draws.append(value)
+    if not draws:
+        raise ValueError("the statistic is undefined on every resample")
     draws.sort()
     tail = (1 - confidence) / 2
     return draws[int(tail * (len(draws) - 1))], draws[int((1 - tail) * (len(draws) - 1))]

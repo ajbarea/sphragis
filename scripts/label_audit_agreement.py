@@ -67,6 +67,11 @@ def _labels(path: Path) -> tuple[dict[str, str], dict[str, bool]]:
     return labels, flags
 
 
+def _is_valid(labels: dict[str, str]) -> dict[str, bool]:
+    """The label collapsed to the question the corpus depends on: valid or not."""
+    return {item: label == "valid" for item, label in labels.items()}
+
+
 def _pair(first: dict, second: dict, items: list[str], categories: list) -> dict:
     a, b = [first[i] for i in items], [second[i] for i in items]
     low, high = kappa_interval(a, b, seed=20260924)
@@ -138,6 +143,9 @@ def main() -> None:
         for second in names[x + 1 :]:
             pair = f"{first}~{second}"
             report["pairs"][pair] = _pair(raters[first], raters[second], items, list(LABELS))
+            report["pairs"][f"{pair} valid_vs_rest"] = _pair(
+                _is_valid(raters[first]), _is_valid(raters[second]), items, [True, False]
+            )
             report["pairs"][f"{pair} outside_names"] = _pair(
                 flags[first], flags[second], items, [True, False]
             )
@@ -149,6 +157,9 @@ def main() -> None:
         against = args.checked_against
         pair = f"human~{against}"
         report["pairs"][pair] = _pair(human, raters[against], checked, list(LABELS))
+        report["pairs"][f"{pair} valid_vs_rest"] = _pair(
+            _is_valid(human), _is_valid(raters[against]), checked, [True, False]
+        )
         report["pairs"][f"{pair} outside_names"] = _pair(
             human_flags, flags[against], checked, [True, False]
         )

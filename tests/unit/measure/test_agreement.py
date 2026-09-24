@@ -113,3 +113,20 @@ def test_specific_agreement_per_label() -> None:
     assert shares["y"] == pytest.approx(40 / 55)
     assert shares["n"] == pytest.approx(30 / 45)
     assert shares["z"] is None
+
+
+def test_the_bootstrap_refuses_unpaired_labels() -> None:
+    with pytest.raises(ValueError, match="same items"):
+        kappa_interval(["a", "b"], ["a", "b", "a"], resamples=10)
+
+
+def test_the_bootstrap_refuses_a_statistic_undefined_on_every_resample() -> None:
+    # A short human-check prefix where both raters call everything valid: kappa is NaN on
+    # every resample, and the interval must say so rather than index an empty list.
+    with pytest.raises(ValueError, match="undefined"):
+        kappa_interval(["valid"] * 5, ["valid"] * 5, resamples=50)
+
+
+def test_specific_agreement_refuses_labels_off_the_scale() -> None:
+    with pytest.raises(ValueError, match="scale"):
+        specific_agreement(["a", "z"], ["a", "b"], ["a", "b"])
