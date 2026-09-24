@@ -5183,3 +5183,37 @@ Validity does not differ between the units a contrast compares. Share valid, 95%
 Every interval overlaps every other, so label noise is no route by which an organization or a half
 would read as having a style it does not have. A human's blind check of rater A is in progress;
 the human-to-model kappa is what decides how far these model labels can be relied on.
+
+### The audit's kappa is the prevalence paradox: AC1 0.853, and the raters part mostly on whether an item is valid (2026-09-23)
+
+Rater A calls 311 of 383 items valid and rater B 323, so both raters' marginals sit on one label
+and chance agreement under kappa is high. That depresses kappa at high raw agreement (Feinstein and
+Cicchetti 1990), which is why kappa is reported beside raw agreement and a paradox-resistant
+coefficient rather than alone (James, LREC 2026, arXiv 2603.06865). Gwet's AC1 takes chance
+agreement over the whole five-label scale (Gwet 2008). Same items, same bootstrap seed, so the
+kappa intervals reproduce byte for byte (`label-audit-v2.json`, regenerated):
+
+| question | raw | kappa | AC1 |
+|---|---|---|---|
+| label | 0.864 | 0.557 [0.454, 0.652] | 0.853 [0.813, 0.890] |
+| outside names | 0.948 | 0.825 [0.745, 0.894] | 0.926 [0.890, 0.956] |
+
+Specific agreement per label, 2 n_kk / (n_k by A + n_k by B), says where the raters part:
+
+| label | A | B | specific agreement |
+|---|---|---|---|
+| valid | 311 | 323 | 0.937 |
+| non_actionable | 6 | 9 | 0.800 |
+| unrelated_rewrite | 10 | 11 | 0.476 |
+| partial | 42 | 20 | 0.484 |
+| context_dependent | 14 | 20 | 0.471 |
+
+Most disagreements are valid against some other label, the partial-against-valid boundary
+above most of all, and the non-valid labels rarely trade among themselves. Collapsed to the
+question the corpus depends on, valid or not, the raters reach kappa 0.635 [0.525, 0.730] and AC1
+0.854 [0.804, 0.897] (`valid_vs_rest` in the artifact). The human check is read with all three
+coefficients, the collapse and specific agreement, and the Stage 1 report quotes AC1 beside kappa.
+Model raters with a human check are a design MSR has seen: Ahmed et al. (MSR 2025,
+arXiv 2408.05534) found model-model agreement predicts human-model agreement and used it to
+decide whether a task suits model raters; their further step, choosing items by model
+confidence, is not used here.
