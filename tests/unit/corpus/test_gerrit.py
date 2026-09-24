@@ -34,7 +34,7 @@ def _c(cid: str, second: int = 0) -> dict[str, Any]:
 def test_fetch_changes_pages_until_more_changes_is_absent() -> None:
     pages = [
         _page([_c("c1", 3), _c("c2", 2)], more=True),
-        _page([_c("c3", 1)], more=False),
+        _page([_c("c2", 2), _c("c3", 1)], more=False),  # starts on the change page 1 ended on
         _page([_c("c3", 1)], more=False),  # the truncation probe finds nothing unserved
     ]
     seen: list[str] = []
@@ -45,7 +45,7 @@ def test_fetch_changes_pages_until_more_changes_is_absent() -> None:
 
     changes, record = fetch_changes("https://g/", "status:merged", transport=transport, page_size=2)
     assert [c["id"] for c in changes] == ["c1", "c2", "c3"]
-    assert "S=0" in seen[0] and "S=2" in seen[1]
+    assert "n=2&S=0" in seen[0] and "n=3&S=1" in seen[1]
     assert record["pages"] == 2 and record["count"] == 3
     assert record["query"] == "status:merged"
     assert record["started_at"] and record["finished_at"]
@@ -167,3 +167,35 @@ def test_fetch_changes_refuses_changes_it_cannot_check() -> None:
 
     with pytest.raises(RuntimeError, match="without `updated`"):
         fetch_changes("https://g/", "q", transport=transport)
+
+
+def test_fetch_changes_refuses_a_listing_that_moved_while_it_was_paged() -> None:
+    """A post-merge comment on a served change moves it out of the month mid-fetch.
+
+    Without the overlap, offsets shift by one and the change at the next page's first offset
+    is never served: six matching, five returned, and nothing said.
+    """
+    from urllib.parse import parse_qs, urlsplit
+
+    live = [_c(f"c{i}", 59 - i) for i in range(6)]
+    calls = [0]
+
+    def transport(url: str) -> tuple[int, dict[str, str], str]:
+        calls[0] += 1
+        if calls[0] == 2:
+            live.pop(0)
+        params = parse_qs(urlsplit(url).query)
+        n, start = int(params["n"][0]), int(params["S"][0])
+        served = live[start : start + n]
+        return 200, {}, _page([dict(c) for c in served], more=start + len(served) < len(live))
+
+    with pytest.raises(RuntimeError, match="moved"):
+        fetch_changes("https://g/", "q", transport=transport, page_size=3)
+
+
+def test_fetch_changes_pages_a_capped_host_without_losing_a_change() -> None:
+    changes = [_c(f"c{i}", 59 - i) for i in range(9)]
+    served, record = fetch_changes(
+        "https://g/", "q", transport=_capped_gerrit(changes, cap=100, page=4), page_size=2
+    )
+    assert [c["id"] for c in served] == [c["id"] for c in changes] and record["count"] == 9

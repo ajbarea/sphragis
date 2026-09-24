@@ -223,6 +223,11 @@ def summarize(directory: Path, out: Path) -> None:
     volume: dict[str, dict[str, dict]] = collections.defaultdict(dict)
     for line in (directory / "volume.jsonl").read_text().splitlines():
         row = json.loads(line)
+        if row.get("capped"):
+            raise SystemExit(
+                f"{row['project']} {row['month']}: a sub-range reached the host's cap, so its "
+                "count is a floor; measure it in narrower ranges"
+            )
         # A plain listing that reached 10,000 was cut by the host; only ranged counts stand.
         if "month" in row and (row.get("ranged") or row["merged"] < 10000):
             volume[row["project"]][row["month"]] = row

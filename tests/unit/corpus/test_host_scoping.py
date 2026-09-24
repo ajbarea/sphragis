@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -51,3 +52,13 @@ def test_measure_allows_the_last_dev_month(
     asked = _offline(monkeypatch, tmp_path)
     scoping.main(["measure", "volume", "v8/v8", "2025-10"])
     assert asked and '"merged": 0' in capsys.readouterr().out
+
+
+def test_summarize_refuses_a_ranged_count_that_hit_the_cap(tmp_path: Path) -> None:
+    row = {"project": "chromium/src", "month": "2024-11", "merged": 10000, "created_in_window": 1}
+    (tmp_path / "volume.jsonl").write_text(
+        json.dumps({**row, "human": 1, "capped": True, "ranged": True}) + "\n"
+    )
+    (tmp_path / "yield.jsonl").write_text("")
+    with pytest.raises(SystemExit, match="floor"):
+        scoping.summarize(tmp_path, tmp_path / "out.json")

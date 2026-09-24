@@ -143,23 +143,41 @@ def fetch_changes(
     options: tuple[str, ...] = ("ALL_REVISIONS", "ALL_FILES", "DETAILED_ACCOUNTS"),
     sleep: Callable[[float], None] = time.sleep,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Page through ``query``; return the changes and the record of how they were fetched."""
+    """Page through ``query``; return the changes and the record of how they were fetched.
+
+    `S=` is an offset into a live index. A change updated while the query is paged leaves the
+    results, everything after it moves up one, and the change at the next page's first offset
+    is never served. Each page after the first therefore starts one change early and must
+    begin with the change the previous page ended on; if it does not, the listing moved and
+    the fetch raises rather than keep a snapshot with a hole in it.
+    """
     started = datetime.now(UTC).isoformat()
     option_params = "".join(f"&o={opt}" for opt in options)
     changes: list[dict[str, Any]] = []
     retries = [0]
     pages = 0
     start = 0
+    anchor: Any = None
     while True:
+        overlap = 0 if anchor is None else 1
         url = (
             f"{base_url.rstrip('/')}/changes/?q={quote(query)}"
-            f"&n={page_size}&S={start}{option_params}"
+            f"&n={page_size + overlap}&S={start - overlap}{option_params}"
         )
-        page = parse_response(_get(url, transport, sleep, retries))
+        raw = parse_response(_get(url, transport, sleep, retries))
         pages += 1
+        if overlap and (not raw or raw[0].get("id", raw[0].get("_number")) != anchor):
+            raise RuntimeError(
+                f"{base_url} moved {query!r} while it was paged: offset {start - 1} no longer "
+                f"holds {anchor}, so a change was skipped or repeated. Fetch it again."
+            )
+        page = raw[overlap:]
         changes.extend(page)
-        if not page or not page[-1].get("_more_changes"):
+        if not raw or not raw[-1].get("_more_changes"):
             break
+        if not page:
+            raise RuntimeError(f"{base_url} served no new change past offset {start} for {query!r}")
+        anchor = raw[-1].get("id", raw[-1].get("_number"))
         start += len(page)
     _refuse_if_truncated(base_url, query, changes, transport, sleep, retries)
     record = {
