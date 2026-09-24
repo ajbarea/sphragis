@@ -14,7 +14,7 @@ import urllib.request
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from sphragis.corpus.build import build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
@@ -50,6 +50,22 @@ GERRIT = {
     "chromium": "https://chromium-review.googlesource.com",
     "openstack": "https://review.opendev.org",
     "qt": "https://codereview.qt-project.org",
+}
+
+
+# The review hosts a REST client may call, each with the reason it may. robots.txt is
+# Disallow: / on android-review, chromium-review and codereview.qt-project.org, and Google's
+# terms bar automated access that ignores it, so those are fetched over git where a git host
+# serves NoteDb, or not at all until the host grants permission. A host absent here is refused.
+class RestPermission(NamedTuple):
+    reason: str
+    crawl_delay: float  # seconds between requests the host asks for; pacing never goes below it
+
+
+REST_PERMITTED = {
+    "review.opendev.org": RestPermission(
+        "robots.txt disallows no path and asks Crawl-delay 2 (checked 2026-09-23)", 2.0
+    ),
 }
 
 SALT_ENV = "SPHRAGIS_CORPUS_SALT"
@@ -138,11 +154,13 @@ def http_transport(
         A frozen corpus is fetched once and reused; an overnight collection costs nothing a
         second run would not cost more.
         """
-        if min_interval <= 0:
+        permission = REST_PERMITTED.get(host)
+        interval = max(min_interval, permission.crawl_delay if permission else 0.0)
+        if interval <= 0:
             return
         previous = last_start.get(host)
         if previous is not None:
-            wait = previous + min_interval - clock()
+            wait = previous + interval - clock()
             if wait > 0:
                 sleep(wait)
         last_start[host] = clock()
@@ -162,11 +180,21 @@ def http_transport(
 
     def transport(url: str) -> tuple[int, dict[str, str], str]:
         parts = urllib.parse.urlsplit(url)
+        host = parts.hostname or ""  # lower-cased, without port or userinfo
+        if host not in REST_PERMITTED:
+            raise SystemExit(
+                f"refusing {host}: no REST permission recorded, and robots.txt "
+                "disallows automated clients on the review hosts other than review.opendev.org. "
+                "Fetch over git (--via git) where a git host serves NoteDb, or record the host's "
+                "permission in REST_PERMITTED"
+            )
         target = parts.path + (f"?{parts.query}" if parts.query else "")
-        pace(parts.netloc)
         # One silent retry only for a keep-alive the server closed while idle, which is
         # routine and not a failure; anything else is reported and left to the retry budget.
+        # Paced by host name, as permission is, so a port or letter case cannot open a second
+        # pace, and the retry is a request like any other.
         for attempt in range(2):
+            pace(host)
             connection = connect(parts.scheme, parts.netloc)
             try:
                 connection.request("GET", target, headers={"Accept": "application/json"})
