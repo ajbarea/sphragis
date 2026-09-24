@@ -5331,3 +5331,14 @@ until now a decision in this log. `fetch`, `build` and the Chromium scoping scri
 that transport; the resume script refuses the same three organizations before its first request.
 Each permitted host records its crawl delay, and the transport paces by host name, retries
 included, never faster than it.
+
+### Registered before the human's figures: a reported slip stays as locked (2026-09-24)
+
+The check page locks the human's label and outside-names answer before it reveals rater A's. On
+item-002 the human reported, after the reveal, that the outside-names box had been ticked by
+accident. A correction made after seeing the rater is no longer blind, so it does not replace the
+locked answer. The rule, fixed with two of the planned 100 to 150 checks made and no human
+agreement computed: every human figure is read on the answers as locked, and each pair a reported
+slip touches is also reported without that item (`label_audit_agreement.py --slip ITEM:FIELD`,
+written to `human_slips` and the `without slips` pairs). Slips are taken from the checker's own
+notes on the page, and the list passed to the script is the complete set of notes that report one.
