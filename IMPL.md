@@ -24,6 +24,10 @@ are read from each bot's own source.
 - The rebase-only-successor finding was retracted: a Change-Id collision across cherry-picks.
   Every successor is a rework. AOSP audited the same way: no bot comments.
 
+**The collection stop, in code.** REST requests go only to hosts in `REST_PERMITTED`
+(review.opendev.org), and the test suite refuses any non-loopback socket. A rebased test had
+reached chromium-review; the research log accounts for every request.
+
 ## In flight
 
 - **Label audit v2.** 384 examples under a two-question rubric; two blind model raters, and a

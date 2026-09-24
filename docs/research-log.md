@@ -5297,3 +5297,25 @@ dedup counts with the manifest. Comparing ids alone would pass a dedup that kept
 of an id, and comparing only the rerun's windows would pass one dropped from the bounds (both
 found in review). On the corpus v2 data, OpenStack and Qt both reproduce byte for byte. The check takes minutes on Qt, so it is a flag rather than the default.
 
+### A rebased test reached chromium-review; the suite is now offline and REST refuses unpermitted hosts (2026-09-23)
+
+**What happened.** #35 gave Chromium a REST host. #39's test that an organization without one is
+not fetched over REST (`fetch --org chromium`) therefore stopped being refused once #39 was rebased
+onto #35, and ran a real fetch. Two local `make verify` runs in #39's worktree each sent the
+query `status:merged after:2025-10-01 before:2025-11-01` to
+`chromium-review.googlesource.com/changes/`, retried up to five times; the second held an
+established connection for about eleven minutes and was killed. The responses were not recorded
+and anything they returned went to pytest's temporary directories, so nothing was kept. Writing
+the guard's own test first then opened one TCP connection to a Google address (no request sent) and
+made one DNS lookup. The rebased branch was never pushed, so CI sent nothing. No other host was
+contacted. This is a breach of the collection stop of 2026-09-22, caused by an unfaked network path
+in a test, and it is recorded here in full for that reason.
+
+**What changed.** The test suite refuses every socket to a host other than loopback and every
+remote name lookup (`tests/conftest.py`), so no test can reach a live host whatever it forgets to
+fake; the suite passes with no network at all. The REST transport refuses any host not in
+`REST_PERMITTED`, before a connection opens, and names the reason each permitted host may be
+called: only review.opendev.org, whose robots.txt allows `/changes/`. android-review,
+chromium-review and codereview.qt-project.org are refused, which enforces in code the stop that was
+until now a decision in this log. `fetch`, `build` and the Chromium scoping script all go through
+that transport.

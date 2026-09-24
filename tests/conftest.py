@@ -23,8 +23,11 @@ and cannot reintroduce the hazard by forgetting one.
 
 from __future__ import annotations
 
+import ipaddress
 import os
+import socket
 from collections.abc import Iterator
+from typing import Any
 
 import pytest
 
@@ -45,3 +48,46 @@ def _no_inherited_git_environment() -> Iterator[None]:
         del os.environ[name]
     yield
     os.environ.update(inherited)
+
+
+def _is_local(address: Any) -> bool:
+    if not isinstance(address, tuple):
+        return True  # AF_UNIX paths and the like
+    try:
+        return ipaddress.ip_address(address[0]).is_loopback
+    except ValueError:
+        return address[0] == "localhost"
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _offline() -> Iterator[None]:
+    """Refuse every socket to a host other than loopback, and every remote name lookup.
+
+    A unit test that reaches a live host is a collection the study did not decide on: a rebased
+    test once sent a REST query to chromium-review, whose robots.txt disallows it. Refusing at
+    the socket makes the suite offline whatever a test forgets to fake.
+    """
+    real_connect, real_connect_ex = socket.socket.connect, socket.socket.connect_ex
+    real_getaddrinfo = socket.getaddrinfo
+
+    def connect(self: socket.socket, address: Any) -> None:
+        if not _is_local(address):
+            raise OSError(f"offline test suite: refused a connection to {address!r}")
+        return real_connect(self, address)
+
+    def connect_ex(self: socket.socket, address: Any) -> int:
+        if not _is_local(address):
+            raise OSError(f"offline test suite: refused a connection to {address!r}")
+        return real_connect_ex(self, address)
+
+    def getaddrinfo(host: Any, *args: Any, **kwargs: Any) -> Any:
+        if host not in (None, "localhost") and not _is_local((host,)):
+            raise OSError(f"offline test suite: refused a lookup of {host!r}")
+        return real_getaddrinfo(host, *args, **kwargs)
+
+    mp = pytest.MonkeyPatch()
+    mp.setattr(socket.socket, "connect", connect)
+    mp.setattr(socket.socket, "connect_ex", connect_ex)
+    mp.setattr(socket, "getaddrinfo", getaddrinfo)
+    yield
+    mp.undo()

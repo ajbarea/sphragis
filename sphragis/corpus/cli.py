@@ -52,6 +52,14 @@ GERRIT = {
     "qt": "https://codereview.qt-project.org",
 }
 
+# The review hosts a REST client may call, each with the reason it may. robots.txt is
+# Disallow: / on android-review, chromium-review and codereview.qt-project.org, and Google's
+# terms bar automated access that ignores it, so those are fetched over git where a git host
+# serves NoteDb, or not at all until the host grants permission. A host absent here is refused.
+REST_PERMITTED = {
+    "review.opendev.org": "robots.txt allows /changes/ with Crawl-delay 2 (checked 2026-09-23)",
+}
+
 SALT_ENV = "SPHRAGIS_CORPUS_SALT"
 
 
@@ -162,6 +170,13 @@ def http_transport(
 
     def transport(url: str) -> tuple[int, dict[str, str], str]:
         parts = urllib.parse.urlsplit(url)
+        if parts.hostname not in REST_PERMITTED:
+            raise SystemExit(
+                f"refusing {parts.hostname}: no REST permission recorded, and robots.txt "
+                "disallows automated clients on the review hosts other than review.opendev.org. "
+                "Fetch over git (--via git) where a git host serves NoteDb, or record the host's "
+                "permission in REST_PERMITTED"
+            )
         target = parts.path + (f"?{parts.query}" if parts.query else "")
         pace(parts.netloc)
         # One silent retry only for a keep-alive the server closed while idle, which is
