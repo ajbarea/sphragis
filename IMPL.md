@@ -25,8 +25,9 @@ are read from each bot's own source.
   Every successor is a rework. AOSP audited the same way: no bot comments.
 
 **The collection stop, in code.** REST requests go only to hosts in `REST_PERMITTED`
-(review.opendev.org), and the test suite refuses any non-loopback socket. A rebased test had
-reached chromium-review; the research log accounts for every request.
+(review.opendev.org, paced at its 2 s crawl delay), and the test suite refuses in-process
+network access to anything but loopback. A rebased test had reached chromium-review; the
+research log records what is and is not known about those requests.
 
 ## In flight
 

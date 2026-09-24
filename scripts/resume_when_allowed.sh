@@ -21,7 +21,8 @@ MONTH=${2:?usage: resume_when_allowed.sh <org> <month> [cutoff]}
 CUTOFF=${3:-2024-10-01}
 
 case "$ORG" in
-  qt) HOST=https://codereview.qt-project.org ;;
+  # robots.txt is Disallow: / on these review hosts (REST_PERMITTED in sphragis/corpus/cli.py).
+  qt|aosp|chromium) echo "refusing $ORG: its review host disallows automated clients"; exit 1 ;;
   openstack) HOST=https://review.opendev.org ;;
   *) echo "unknown org $ORG"; exit 1 ;;
 esac

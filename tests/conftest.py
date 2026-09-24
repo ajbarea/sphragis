@@ -50,6 +50,18 @@ def _no_inherited_git_environment() -> Iterator[None]:
     os.environ.update(inherited)
 
 
+class OfflineViolation(RuntimeError):
+    """A test tried to reach a host other than loopback.
+
+    Not an OSError: the REST transport turns OSError into a retryable 503, which a build then
+    counts as a drop, so a leak raised as OSError finished green with the word never printed.
+    """
+
+
+#: Every refused attempt, so a test whose code swallows the exception still fails.
+_VIOLATIONS: list[str] = []
+
+
 def _is_local(address: Any) -> bool:
     if not isinstance(address, tuple):
         return True  # AF_UNIX paths and the like
@@ -59,35 +71,90 @@ def _is_local(address: Any) -> bool:
         return address[0] == "localhost"
 
 
-@pytest.fixture(autouse=True, scope="session")
-def _offline() -> Iterator[None]:
-    """Refuse every socket to a host other than loopback, and every remote name lookup.
+def _refuse(what: str) -> OfflineViolation:
+    _VIOLATIONS.append(what)
+    return OfflineViolation(f"offline test suite: refused {what}")
+
+
+_real_connect = socket.socket.connect
+_real_connect_ex = socket.socket.connect_ex
+_real_sendto = socket.socket.sendto
+_real_lookups = {
+    "getaddrinfo": socket.getaddrinfo,
+    "gethostbyname": socket.gethostbyname,
+    "gethostbyname_ex": socket.gethostbyname_ex,
+}
+
+
+def _connect(self: socket.socket, address: Any) -> None:
+    if not _is_local(address):
+        raise _refuse(f"a connection to {address!r}")
+    return _real_connect(self, address)
+
+
+def _connect_ex(self: socket.socket, address: Any) -> int:
+    if not _is_local(address):
+        raise _refuse(f"a connection to {address!r}")
+    return _real_connect_ex(self, address)
+
+
+def _sendto(self: socket.socket, data: Any, *args: Any) -> int:
+    address = args[-1]
+    if not _is_local(address):
+        raise _refuse(f"a datagram to {address!r}")
+    return _real_sendto(self, data, *args)
+
+
+def _lookup(name: str) -> Any:
+    def lookup(host: Any, *args: Any, **kwargs: Any) -> Any:
+        if host not in (None, "localhost") and not _is_local((host,)):
+            raise _refuse(f"a lookup of {host!r}")
+        return _real_lookups[name](host, *args, **kwargs)
+
+    return lookup
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Refuse every in-process socket to a non-loopback host, from collection onward.
 
     A unit test that reaches a live host is a collection the study did not decide on: a rebased
-    test once sent a REST query to chromium-review, whose robots.txt disallows it. Refusing at
-    the socket makes the suite offline whatever a test forgets to fake.
+    test once sent a REST query to chromium-review, whose robots.txt disallows it. Installed at
+    configure time rather than in a fixture so code run while test modules are collected is
+    covered too. A subprocess is outside this guard; no test runs one against a remote host,
+    and the suite passes under `unshare -n`.
     """
-    real_connect, real_connect_ex = socket.socket.connect, socket.socket.connect_ex
-    real_getaddrinfo = socket.getaddrinfo
+    socket.socket.connect = _connect  # ty: ignore[invalid-assignment]
+    socket.socket.connect_ex = _connect_ex  # ty: ignore[invalid-assignment]
+    socket.socket.sendto = _sendto  # ty: ignore[invalid-assignment]
+    socket.getaddrinfo = _lookup("getaddrinfo")
+    socket.gethostbyname = _lookup("gethostbyname")
+    socket.gethostbyname_ex = _lookup("gethostbyname_ex")
 
-    def connect(self: socket.socket, address: Any) -> None:
-        if not _is_local(address):
-            raise OSError(f"offline test suite: refused a connection to {address!r}")
-        return real_connect(self, address)
 
-    def connect_ex(self: socket.socket, address: Any) -> int:
-        if not _is_local(address):
-            raise OSError(f"offline test suite: refused a connection to {address!r}")
-        return real_connect_ex(self, address)
+def pytest_unconfigure(config: pytest.Config) -> None:
+    socket.socket.connect = _real_connect  # ty: ignore[invalid-assignment]
+    socket.socket.connect_ex = _real_connect_ex  # ty: ignore[invalid-assignment]
+    socket.socket.sendto = _real_sendto  # ty: ignore[invalid-assignment]
+    socket.getaddrinfo = _real_lookups["getaddrinfo"]  # ty: ignore[invalid-assignment]
+    socket.gethostbyname = _real_lookups["gethostbyname"]  # ty: ignore[invalid-assignment]
+    socket.gethostbyname_ex = _real_lookups["gethostbyname_ex"]  # ty: ignore[invalid-assignment]
 
-    def getaddrinfo(host: Any, *args: Any, **kwargs: Any) -> Any:
-        if host not in (None, "localhost") and not _is_local((host,)):
-            raise OSError(f"offline test suite: refused a lookup of {host!r}")
-        return real_getaddrinfo(host, *args, **kwargs)
 
-    mp = pytest.MonkeyPatch()
-    mp.setattr(socket.socket, "connect", connect)
-    mp.setattr(socket.socket, "connect_ex", connect_ex)
-    mp.setattr(socket, "getaddrinfo", getaddrinfo)
+@pytest.fixture(autouse=True)
+def _no_network_attempt() -> Iterator[None]:
+    """Fail the test that tried, even when its code caught the refusal."""
+    before = len(_VIOLATIONS)
     yield
-    mp.undo()
+    attempted = _VIOLATIONS[before:]
+    if attempted:
+        pytest.fail(f"tried to reach the network: {attempted}")
+
+
+@pytest.fixture
+def offline_refusals() -> Iterator[list[str]]:
+    """For the guard's own tests: the refusals they trip on purpose, cleared before the check."""
+    before = len(_VIOLATIONS)
+    tripped: list[str] = []
+    yield tripped
+    tripped.extend(_VIOLATIONS[before:])
+    del _VIOLATIONS[before:]

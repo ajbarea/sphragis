@@ -5301,21 +5301,29 @@ found in review). On the corpus v2 data, OpenStack and Qt both reproduce byte fo
 
 **What happened.** #35 gave Chromium a REST host. #39's test that an organization without one is
 not fetched over REST (`fetch --org chromium`) therefore stopped being refused once #39 was rebased
-onto #35, and ran a real fetch. Two local `make verify` runs in #39's worktree each sent the
-query `status:merged after:2025-10-01 before:2025-11-01` to
-`chromium-review.googlesource.com/changes/`, retried up to five times; the second held an
-established connection for about eleven minutes and was killed. The responses were not recorded
-and anything they returned went to pytest's temporary directories, so nothing was kept. Writing
-the guard's own test first then opened one TCP connection to a Google address (no request sent) and
-made one DNS lookup. The rebased branch was never pushed, so CI sent nothing. No other host was
-contacted. This is a breach of the collection stop of 2026-09-22, caused by an unfaked network path
-in a test, and it is recorded here in full for that reason.
+onto #35, and ran a real fetch. Two local `make verify` runs in #39's worktree each sent at least
+one request for `status:merged after:2025-10-01 before:2025-11-01` to
+`chromium-review.googlesource.com/changes/`. How many attempts each made, and what came back, was
+not recorded and cannot be reconstructed: the retry budget bounds a run at about three minutes,
+yet the second held a connection for about eleven before it was killed. No snapshot from the test
+survives: pytest keeps its recent runs' temporary directories, and none holds one (checked). Writing
+the guard's own test first then opened one TCP connection to a Google address (no request sent)
+and made one DNS lookup. The rebased branch was never pushed, so CI sent nothing. This is a breach
+of the collection stop of 2026-09-22, caused by an unfaked network path in a test.
 
-**What changed.** The test suite refuses every socket to a host other than loopback and every
-remote name lookup (`tests/conftest.py`), so no test can reach a live host whatever it forgets to
-fake; the suite passes with no network at all. The REST transport refuses any host not in
+Review of the fix found two more departures from the hosts' terms. `scripts/resume_when_allowed.sh
+qt` probes codereview.qt-project.org with curl outside the transport; it was not running (checked:
+no process, crontab or tmux session). And the REST transport paced review.opendev.org at the CLI's
+1 s default, below the Crawl-delay of 2 its robots.txt asks for, so the corpus's OpenStack
+collection ran at twice the requested rate.
+
+**What changed.** The test suite refuses every in-process connection, datagram and name lookup
+to a host other than loopback from collection onward (`tests/conftest.py`), raises an error the
+transport cannot mistake for a retryable 503, and fails the test that tried even when its code
+catches the refusal. A subprocess is outside that guard; the suite passes under `unshare -n`. The REST transport refuses any host not in
 `REST_PERMITTED`, before a connection opens, and names the reason each permitted host may be
 called: only review.opendev.org, whose robots.txt allows `/changes/`. android-review,
 chromium-review and codereview.qt-project.org are refused, which enforces in code the stop that was
 until now a decision in this log. `fetch`, `build` and the Chromium scoping script all go through
-that transport.
+that transport; the resume script refuses the same three organizations before its first request.
+Each permitted host records its crawl delay, and the transport never paces it faster.

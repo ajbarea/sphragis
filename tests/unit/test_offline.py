@@ -10,17 +10,38 @@ import socket
 import pytest
 
 
-def test_a_socket_to_a_remote_address_is_refused() -> None:
+def test_a_socket_to_a_remote_address_is_refused(offline_refusals: list[str]) -> None:
     with (
         socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s,
-        pytest.raises(OSError, match="offline"),
+        pytest.raises(RuntimeError, match="offline"),
     ):
         s.connect(("192.0.2.1", 443))
 
 
-def test_a_name_lookup_for_a_remote_host_is_refused() -> None:
-    with pytest.raises(OSError, match="offline"):
-        socket.getaddrinfo("gerrit.invalid", 443)
+def test_a_datagram_to_a_remote_address_is_refused(offline_refusals: list[str]) -> None:
+    with (
+        socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s,
+        pytest.raises(RuntimeError, match="offline"),
+    ):
+        s.sendto(b"x", ("192.0.2.1", 53))
+
+
+@pytest.mark.parametrize(("name", "args"), [("getaddrinfo", (443,)), ("gethostbyname", ())])
+def test_a_name_lookup_for_a_remote_host_is_refused(
+    offline_refusals: list[str], name: str, args: tuple[int, ...]
+) -> None:
+    with pytest.raises(RuntimeError, match="offline"):
+        getattr(socket, name)("gerrit.invalid", *args)
+
+
+def test_a_leak_through_the_rest_transport_raises_rather_than_reading_as_a_503(
+    offline_refusals: list[str],
+) -> None:
+    """OSError would become a retryable 503 there; the refusal must surface instead."""
+    from sphragis.corpus import cli
+
+    with pytest.raises(RuntimeError, match="offline"):
+        cli.http_transport()("https://review.opendev.org/config/server/version")
 
 
 def test_loopback_stays_open() -> None:

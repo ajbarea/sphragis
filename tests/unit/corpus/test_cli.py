@@ -209,7 +209,10 @@ def _scripted_connections(monkeypatch: pytest.MonkeyPatch, script: list[object])
 
     from sphragis.corpus import cli
 
-    monkeypatch.setattr(cli, "REST_PERMITTED", {**cli.REST_PERMITTED, "g": "test", "h": "test"})
+    test_host = cli.RestPermission("test placeholder", 0.0)
+    monkeypatch.setattr(
+        cli, "REST_PERMITTED", {**cli.REST_PERMITTED, "g": test_host, "h": test_host}
+    )
 
     instances: list[Any] = []
 
@@ -1155,4 +1158,35 @@ def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
     assert set(cli.REST_PERMITTED) == {"review.opendev.org"}
-    assert all("robots.txt" in reason for reason in cli.REST_PERMITTED.values())
+    for permission in cli.REST_PERMITTED.values():
+        assert "robots.txt" in permission.reason and "checked 20" in permission.reason
+        assert permission.crawl_delay > 0
+
+
+def test_http_transport_paces_a_permitted_host_at_its_crawl_delay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """review.opendev.org asks for 2 s; a 1 s request interval must not undercut it."""
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [_FakeResponse(200)] * 2)
+    now, slept = [0.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    transport = cli.http_transport(min_interval=1.0, clock=lambda: now[0], sleep=sleep)
+    transport("https://review.opendev.org/a")
+    transport("https://review.opendev.org/b")
+    assert slept == [2.0]
+
+
+@pytest.mark.parametrize("org", ["qt", "aosp", "chromium"])
+def test_the_resume_script_refuses_a_disallowed_host_before_any_request(org: str) -> None:
+    script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
+    result = subprocess.run(
+        ["bash", str(script), org, "2024-10"], capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode == 1
+    assert "disallows automated clients" in result.stdout
