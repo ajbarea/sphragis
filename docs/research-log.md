@@ -5183,3 +5183,35 @@ Validity does not differ between the units a contrast compares. Share valid, 95%
 Every interval overlaps every other, so label noise is no route by which an organization or a half
 would read as having a style it does not have. A human's blind check of rater A is in progress;
 the human-to-model kappa is what decides how far these model labels can be relied on.
+
+### The audit's kappa is the prevalence paradox: AC1 0.853, and the disagreement is in the rare labels (2026-09-23)
+
+Rater A calls 311 of 383 items valid and rater B 323, so both raters' marginals sit on one label
+and chance agreement under kappa is high. That depresses kappa at high raw agreement (Feinstein and
+Cicchetti 1990), which is why kappa is reported beside raw agreement and a paradox-resistant
+coefficient rather than alone (James, LREC 2026, arXiv 2603.06865). Gwet's AC1 takes chance
+agreement over the whole five-label scale (Gwet 2008). Same items, same bootstrap seed, so the
+kappa intervals reproduce byte for byte (`label-audit-v2.json`, regenerated):
+
+| question | raw | kappa | AC1 |
+|---|---|---|---|
+| label | 0.864 | 0.557 [0.454, 0.652] | 0.853 [0.813, 0.890] |
+| outside names | 0.948 | 0.825 [0.745, 0.894] | 0.926 [0.890, 0.956] |
+
+Specific agreement per label, 2 n_kk / (n_k by A + n_k by B), says where the raters part:
+
+| label | A | B | specific agreement |
+|---|---|---|---|
+| valid | 311 | 323 | 0.937 |
+| non_actionable | 6 | 9 | 0.800 |
+| unrelated_rewrite | 10 | 11 | 0.476 |
+| partial | 42 | 20 | 0.484 |
+| context_dependent | 14 | 20 | 0.471 |
+
+The raters agree on what the corpus mostly is and disagree on the three rare labels, which is what
+the partial-against-valid boundary above already showed. For the study that is the reassuring
+direction: the gate reads exact match on every example, and a rare-label disagreement moves few of
+them. The human check is read the same way, with all three coefficients and specific agreement,
+and the Stage 1 report quotes AC1 beside kappa. This matches the mixed human-LLM protocol MSR has
+already seen (Ahmed et al., MSR 2025, arXiv 2408.05534): model-model agreement decides whether a
+task suits model raters, and a human sample checks one of them.
