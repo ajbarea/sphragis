@@ -37,6 +37,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import tempfile
@@ -795,19 +796,11 @@ def fetch_history(repo: Repo, refs: Sequence[str], since: str) -> tuple[list[str
     """
     if not refs:
         return [], 0
-    vanished = set(
-        repo.fetch_refs("history_tips", refs, "--depth=1", "--filter=tree:0", force=True)
-    )
-    present = [ref for ref in refs if ref not in vanished]
+    tips, present = _branch_tips(repo, refs)
     if not present:
         return [], 0
-    raw = repo.git("for-each-ref", "--format=%(refname)%09%(objectname)", *present)
-    tips = dict(line.split("\t") for line in raw.decode().splitlines())
-    objects = repo.read_objects(tips.values())
     floor = datetime.fromisoformat(since).replace(tzinfo=UTC).timestamp()
-    walked = sorted(
-        ref for ref, oid in tips.items() if _commit_committer_time(objects[oid]) >= floor
-    )
+    walked = sorted(ref for ref, time_ in tips.items() if time_ >= floor)
     if walked:
         repo.fetch(
             "history",
@@ -816,6 +809,37 @@ def fetch_history(repo: Repo, refs: Sequence[str], since: str) -> tuple[list[str
             f"--shallow-since={since}",
         )
     return walked, len(present) - len(walked)
+
+
+def _branch_tips(repo: Repo, refs: Sequence[str]) -> tuple[dict[str, float], list[str]]:
+    """Each branch's tip committer time, read in a throwaway repository beside `repo`.
+
+    Probing the tips at depth 1 inside `repo` itself left shallow marks that the later
+    `--shallow-since` history fetch did not reconcile on android.googlesource.com: a walk of a
+    deepened branch then reached a commit that was never sent. Probing elsewhere leaves `repo`
+    to take one clean shallow-since fetch of the branches that qualify. The probe shares
+    `repo`'s host, pacer and ledger, and its counts are added to `repo`'s.
+    """
+    probe_dir = Path(tempfile.mkdtemp(prefix="tips-", dir=repo.path.parent))
+    try:
+        probe = Repo.open(probe_dir / "tips.git", repo.url, repo.pacer, ledger=repo.ledger)
+        vanished = set(
+            probe.fetch_refs("history_tips", refs, "--depth=1", "--filter=tree:0", force=True)
+        )
+        present = [ref for ref in refs if ref not in vanished]
+        tips: dict[str, float] = {}
+        if present:
+            raw = probe.git("for-each-ref", "--format=%(refname)%09%(objectname)", *present)
+            oids = dict(line.split("\t") for line in raw.decode().splitlines())
+            objects = probe.read_objects(oids.values())
+            tips = {ref: _commit_committer_time(objects[oid]) for ref, oid in oids.items()}
+        repo.operations += probe.operations
+        repo.http_requests += probe.http_requests
+        repo.log.extend(probe.log)
+        return tips, present
+    finally:
+        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+            shutil.rmtree(probe_dir, ignore_errors=True)
 
 
 def reviewed_on(message: str, review_host: str, project: str) -> int | None:

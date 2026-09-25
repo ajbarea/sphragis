@@ -768,6 +768,28 @@ def test_fetch_history_excludes_a_dormant_branch_from_the_shallow_fetch(
     )
 
 
+def test_the_tip_probe_leaves_nothing_in_the_repository_it_serves(tmp_path: Path) -> None:
+    """The tips are read in a throwaway repository: the one enumeration walks holds no dormant
+    tip and no shallow mark from the probe, and the probe's directory is gone afterwards."""
+    s = Server(tmp_path / "server")
+    ancient = s.commit(s.tree({"f": b"0\n"}), "ancient", "2015-01-01T00:00:00Z")
+    s.ref("refs/heads/dormant", ancient)
+    s.ref("refs/heads/main", s.commit(s.tree({"f": b"1\n"}), "recent", "2024-11-10T00:00:00Z"))
+    scratch = tmp_path / "scratch"
+    repo = notedb.Repo.open(scratch / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    notedb.fetch_history(repo, ["refs/heads/dormant", "refs/heads/main"], "2024-10-01")
+    held = subprocess.run(
+        ["git", "-C", str(repo.path), "cat-file", "-e", ancient],
+        capture_output=True,
+        env={**os.environ, "GIT_NO_LAZY_FETCH": "1"},
+    )
+    assert held.returncode != 0, "the dormant tip must not be in the walked repository"
+    shallow = repo.path / "shallow"
+    assert ancient not in (shallow.read_text() if shallow.exists() else "")
+    assert sorted(path.name for path in scratch.iterdir()) == ["c.git"]
+    assert repo.operations >= 2, "the probe's fetch is counted against the repository it serves"
+
+
 def test_fetch_history_skips_the_shallow_fetch_when_every_branch_is_dormant(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
