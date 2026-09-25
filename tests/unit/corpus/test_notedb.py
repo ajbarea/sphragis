@@ -1391,6 +1391,45 @@ def test_successor_kind_no_code_change_same_tree_and_parents_different_message(
     assert _kind(tmp_path, s, a, b) == notedb.NO_CODE_CHANGE_KIND
 
 
+def test_successor_kind_compares_parent_trees_not_parent_ids(tmp_path: Path) -> None:
+    """Gerrit's NO_CHANGE is the same tree over parents with the same trees: a patch set moved
+    onto a different parent commit whose tree is identical is not a rebase."""
+    s = Server(tmp_path / "server")
+    base = s.tree({"f": b"0\n"})
+    p1 = s.commit(base, "p1", "2024-10-01T00:00:00Z")
+    p2 = s.commit(base, "p2, same tree", "2024-10-02T00:00:00Z")
+    tree = s.tree({"f": b"1\n"})
+    a = s.commit(tree, "same\n\nChange-Id: I1", "2024-11-01T00:00:00Z", (p1,))
+    b = s.commit(tree, "same\n\nChange-Id: I1", "2024-11-02T00:00:00Z", (p2,))
+    c = s.commit(tree, "edited\n\nChange-Id: I1", "2024-11-03T00:00:00Z", (p2,))
+    assert p1 != p2
+    assert _kind(tmp_path / "ab", s, a, b) == notedb.NO_CHANGE_KIND
+    assert _kind(tmp_path / "ac", s, a, c) == notedb.NO_CODE_CHANGE_KIND
+
+
+def test_successor_kind_a_different_parent_tree_is_not_no_change(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    p1 = s.commit(s.tree({"f": b"0\n"}), "p1", "2024-10-01T00:00:00Z")
+    p2 = s.commit(s.tree({"f": b"0\n", "g": b"x\n"}), "p2", "2024-10-02T00:00:00Z")
+    tree = s.tree({"f": b"1\n", "g": b"x\n"})
+    a = s.commit(tree, "same\n\nChange-Id: I1", "2024-11-01T00:00:00Z", (p1,))
+    b = s.commit(tree, "same\n\nChange-Id: I1", "2024-11-02T00:00:00Z", (p2,))
+    assert _kind(tmp_path, s, a, b) not in (notedb.NO_CHANGE_KIND, notedb.NO_CODE_CHANGE_KIND)
+
+
+def test_successor_kind_a_same_tree_merge_over_different_parent_trees_is_rework(
+    tmp_path: Path,
+) -> None:
+    s = Server(tmp_path / "server")
+    p1 = s.commit(s.tree({"f": b"1\n"}), "p1", "2024-10-01T00:00:00Z")
+    p2 = s.commit(s.tree({"g": b"2\n"}), "p2", "2024-10-01T00:00:00Z")
+    p3 = s.commit(s.tree({"g": b"3\n"}), "p3", "2024-10-01T00:00:00Z")
+    tree = s.tree({"f": b"1\n", "g": b"2\n"})
+    a = s.commit(tree, "merge\n\nChange-Id: I1", "2024-10-02T00:00:00Z", (p1, p2))
+    b = s.commit(tree, "merge\n\nChange-Id: I1", "2024-10-03T00:00:00Z", (p1, p3))
+    assert _kind(tmp_path, s, a, b) == notedb.REWORK
+
+
 def test_successor_kind_same_parent_different_tree_is_rework(tmp_path: Path) -> None:
     s = Server(tmp_path / "server")
     root = s.commit(s.tree({"f": b"0\n"}), "root", "2024-10-01T00:00:00Z")

@@ -1317,18 +1317,29 @@ def _replay_tree(repo: Repo, *, base: str, onto: str, commit: str) -> tuple[str 
     return None, False
 
 
+def _parent_trees(repo: Repo, parents: Sequence[str]) -> tuple[str, ...] | None:
+    """Each parent commit's tree id, or None when any parent commit is not held."""
+    if not parents:
+        return ()
+    if repo.missing(parents):
+        return None
+    objects = repo.read_objects(parents)
+    return tuple(_commit_info(objects[parent]).tree for parent in parents)
+
+
 def _successor_kind(
     repo: Repo, a_commit: str, b_commit: str, a: _CommitInfo, b: _CommitInfo
 ) -> tuple[str, bool]:
     """Gerrit's ChangeKind of a successor revision `b`, relative to its predecessor `a`.
 
-    Returns (kind, verified). NO_CHANGE: same tree, same parents, same message. NO_CODE_CHANGE:
-    same tree and parents, a different message. TRIVIAL_REBASE(_WITH_MESSAGE_UPDATE): a single,
-    different parent on each side, and replaying `a` onto `b`'s parent (three-way, base `a`'s
-    parent) reproduces `b`'s tree exactly (`_replay_tree`). MERGE_FIRST_PARENT_UPDATE is not
-    attempted: a merge commit on either side is told apart from REWORK only by whether the trees
-    already match (documented simplification -- Gerrit's own same-tree-after-replay check on the
-    first parent is not run), so a merge pair only reaches NO_CHANGE/NO_CODE_CHANGE or REWORK.
+    Returns (kind, verified). NO_CHANGE: the same tree, the same number of parents with the same
+    trees pairwise, and the same message; NO_CODE_CHANGE: the same with a different message.
+    Gerrit compares the parents' trees, not their ids (`isSameDeltaAndTree`), so a patch set
+    moved onto another parent commit with an identical tree is NO_CHANGE, not a rebase.
+    TRIVIAL_REBASE(_WITH_MESSAGE_UPDATE): a single, different parent on each side, and replaying
+    `a` onto `b`'s parent (three-way, base `a`'s parent) reproduces `b`'s tree exactly
+    (`_replay_tree`). MERGE_FIRST_PARENT_UPDATE is not attempted: a merge pair that is not
+    NO_CHANGE or NO_CODE_CHANGE is REWORK.
 
     `verified` is False only when `_replay_tree` could not attempt the replay at all for lack of
     data; REWORK is still the conservative answer in that case, but the caller counts it
@@ -1337,10 +1348,16 @@ def _successor_kind(
     fetch-ordering or a genuinely absent object cannot pass itself off as a confirmed kind.
     """
     same_message = a.message == b.message
+    if a.tree == b.tree and len(a.parents) == len(b.parents):
+        if a.parents == b.parents:
+            return (NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND), True
+        trees = _parent_trees(repo, a.parents + b.parents)
+        if trees is None:
+            return REWORK, False
+        if trees[: len(a.parents)] == trees[len(a.parents) :]:
+            return (NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND), True
     if a.parents == b.parents:
-        if a.tree != b.tree:
-            return REWORK, True
-        return (NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND), True
+        return REWORK, True
     if len(a.parents) == 1 and len(b.parents) == 1:
         merged_tree, verified = _replay_tree(
             repo, base=a.parents[0], onto=b.parents[0], commit=a_commit
@@ -1350,12 +1367,9 @@ def _successor_kind(
         if merged_tree is None or merged_tree != b.tree:
             return REWORK, True
         return (TRIVIAL_REBASE_KIND if same_message else TRIVIAL_REBASE_MESSAGE_KIND), True
-    if len(a.parents) > 1 and len(b.parents) > 1:
-        if a.tree != b.tree:
-            return REWORK, True
-        return (NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND), True
-    # A root commit on one side, or one side a merge and the other not: not attempted, but not
-    # for lack of data -- a documented scope limit, so this counts as a confirmed REWORK.
+    # A merge whose trees or parent trees differ, a root commit on one side, or one side a merge
+    # and the other not: not attempted, but not for lack of data -- a documented scope limit, so
+    # this counts as a confirmed REWORK.
     return REWORK, True
 
 
