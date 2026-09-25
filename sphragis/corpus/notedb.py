@@ -194,6 +194,11 @@ _SHA1 = re.compile(r"\b[0-9a-f]{40}\b")
 _CURL_REQUEST = re.compile(rb"=> Send header: (?:GET|POST) ")
 
 
+#: HEAD names a ref no fetch writes. A bare repository reads defaults from HEAD's tree
+#: (`.mailmap` for a log, `.gitattributes` for a diff), and a commits-only fetch of the branch
+#: HEAD would otherwise name never holds that tree, so every such command failed on a lazy fetch.
+NO_HEAD = "refs/sphragis/no-head"
+
 #: A bare repository reads `HEAD:.mailmap` on every `git log`, and a commits-only fetch never
 #: holds that tree, so the log fails on a lazy fetch once HEAD resolves (reading every branch
 #: brings in the one HEAD names). A mailmap would also rewrite the identities a log reports.
@@ -472,6 +477,7 @@ class Repo:
                     f"{path} already holds a remote for {configured!r}, this run asked for "
                     f"{url!r}: refusing to reuse a scratch repository pointed elsewhere"
                 )
+        repo.git("symbolic-ref", "HEAD", NO_HEAD)
         return repo
 
     @property
