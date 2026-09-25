@@ -183,6 +183,10 @@ _REVIEWED_ON = re.compile(
     re.M,
 )
 _MISSING_REF = re.compile(r"couldn't find remote ref (\S+)")
+#: A commit id git's error text names, however it phrases the refusal ("not our ref <oid>",
+#: "no such remote ref <oid>", and the like) -- used to tell a vanished pin apart in
+#: `Repo.fetch_pinned` without depending on one exact wording.
+_SHA1 = re.compile(r"\b[0-9a-f]{40}\b")
 _CURL_REQUEST = re.compile(rb"=> Send header: (?:GET|POST) ")
 
 
@@ -613,6 +617,32 @@ class Repo:
                 pending.remove(gone.group(1))
                 missing.append(gone.group(1))
         return missing
+
+    def fetch_pinned(self, purpose: str, pins: Mapping[str, str], *options: str) -> list[str]:
+        """Fetch each ref (key) to the exact commit id pinned for it (value); return vanished ids.
+
+        Unlike `fetch_refs`, which follows a ref name and so fetches whatever it names *now*,
+        this fetches an object id established earlier -- the sealed test window's tip probe --
+        so a ref that moved between the probe and this call cannot substitute a different
+        commit for the one actually checked. Always forced, one refspec per ref
+        (`+<oid>:<ref>`), so a local ref an earlier run already holds is still overwritten to
+        the pin rather than left as is. A pin the server can no longer produce (the change was
+        deleted, or the commit pruned) is dropped and the batch retried, one extra fetch per
+        vanished pin, exactly as `fetch_refs` drops a vanished ref.
+        """
+        missing_oids: list[str] = []
+        pending = dict(pins)
+        while pending:
+            try:
+                self.fetch(purpose, [f"+{oid}:{ref}" for ref, oid in pending.items()], *options)
+                return missing_oids
+            except GitError as error:
+                gone = set(_SHA1.findall(str(error))) & set(pending.values())
+                if not gone:
+                    raise
+                pending = {ref: oid for ref, oid in pending.items() if oid not in gone}
+                missing_oids.extend(gone)
+        return missing_oids
 
     def fetch_objects(self, purpose: str, oids: Iterable[str], *options: str) -> None:
         """Fetch objects by id, in batches, skipping any already present."""
@@ -1360,15 +1390,26 @@ def _commit_committer_time(raw: bytes) -> int:
     return int(line.rsplit(" ", 2)[1])
 
 
-def _meta_tips(repo: Repo, numbers: Sequence[int]) -> tuple[dict[int, int], list[int]]:
-    """Each candidate's meta-ref tip commit time, fetched at depth 1 without blobs.
+def _meta_tips(repo: Repo, numbers: Sequence[int]) -> tuple[dict[int, tuple[str, int]], list[int]]:
+    """Each candidate's meta-ref tip -- commit id and committer time -- at depth 1, no notes.
 
-    Read before any fuller fetch, so a change whose last NoteDb update reaches the sealed
-    test window is dropped before its meta chain or notes cost anything. Returns (committer
-    time by number, numbers whose ref the server lacks).
+    Read before any fuller fetch, so a change whose last NoteDb update reaches the sealed test
+    window is dropped before its meta chain or notes cost anything: `--filter=tree:0` fetches
+    the tip commit alone, not even its notes tree. Always forced (`force=True`): unforced, a
+    rerun over a kept work directory skips this fetch entirely (the local ref from an earlier
+    run is already "held") and answers from that stale tip, never seeing a comment landed on
+    the change since -- the probe must read what upstream holds *now*, every time.
+
+    The commit id returned is what the caller fetches the full meta chain by afterward
+    (`Repo.fetch_pinned`), not the ref name: between this probe and that later fetch the ref
+    can move again, and a ref-named fetch would silently follow it there.
+
+    Returns ({number: (tip commit id, committer time)}, numbers whose ref the server lacks).
     """
     refs = {change_ref(n, "meta"): n for n in numbers}
-    missing_refs = set(repo.fetch_refs("meta_tip", list(refs), "--depth=1", "--filter=blob:none"))
+    missing_refs = set(
+        repo.fetch_refs("meta_tip", list(refs), "--depth=1", "--filter=tree:0", force=True)
+    )
     tips: dict[str, str] = {}
     if set(refs) - missing_refs:
         raw = repo.git("for-each-ref", "--format=%(refname)%09%(objectname)", "refs/changes/")
@@ -1377,8 +1418,8 @@ def _meta_tips(repo: Repo, numbers: Sequence[int]) -> tuple[dict[int, int], list
             if ref in refs and ref not in missing_refs:
                 tips[ref] = oid
     objects = repo.read_objects(tips.values())
-    times = {refs[ref]: _commit_committer_time(objects[oid]) for ref, oid in tips.items()}
-    return times, [refs[r] for r in missing_refs]
+    result = {refs[ref]: (oid, _commit_committer_time(objects[oid])) for ref, oid in tips.items()}
+    return result, [refs[r] for r in missing_refs]
 
 
 def collect(
@@ -1392,41 +1433,58 @@ def collect(
     """Fetch and read `numbers` from one project: unscrubbed rows with their comments and diffs.
 
     A fixed number of batched fetches, whatever the number of changes. First, the tip of each
-    candidate's meta ref alone (depth 1, no blobs): a change last updated at or after the
-    sealed test window's start is dropped there, before its meta chain or notes are fetched at
-    all, and counted `touches_test_window`. For the rest: the full meta refs and their note
-    blobs; the patch-set commits the comments need, by id and without blobs or history; the
-    trees of the merged commits and their parents; then exactly the blobs those diffs and the
-    `files` counts read. A change NoteDb does not record as submitted inside
-    `submitted_between` costs one meta-chain-and-notes fetch to learn that (its submission
-    time is not known any sooner), then is dropped before anything else -- patch sets, diffs
-    or blobs.
+    candidate's meta ref alone (depth 1, no notes tree, always re-probed against upstream): a
+    change last updated at or after the sealed test window's start is dropped there, before its
+    meta chain or notes are fetched at all, and counted `touches_test_window`. The full meta
+    chain is then fetched by the id just probed, not the ref name, so a ref that moves again
+    before that fetch cannot substitute a different commit for the one actually checked; after
+    it is read, its own id and update time are checked again against that same probe and
+    against the window, and a mismatch either way drops the change and counts it the same way.
+    For the rest: the note blobs; the patch-set commits the comments need, by id and without
+    blobs or history; the trees of the merged commits and their parents; then exactly the blobs
+    those diffs and the `files` counts read. A change NoteDb does not record as submitted
+    inside `submitted_between` costs one meta-chain-and-notes fetch to learn that (its
+    submission time is not known any sooner), then is dropped before anything else -- patch
+    sets, diffs or blobs.
     """
     merged = merged or {}
     counts: Counter[str] = Counter()
-    tip_times, tip_missing = _meta_tips(repo, numbers)
-    sealed = {n for n, when in tip_times.items() if gerrit_timestamp(when) >= TEST_WINDOW_START}
+    tip_info, tip_missing = _meta_tips(repo, numbers)
+    sealed = {n for n, (_, when) in tip_info.items() if gerrit_timestamp(when) >= TEST_WINDOW_START}
     counts["touches_test_window"] = len(sealed)
     skip = sealed | set(tip_missing)
     candidates = [n for n in numbers if n not in skip]
-    missing = set(
-        repo.fetch_refs(
-            "meta",
-            [change_ref(n, "meta") for n in candidates],
-            f"--depth={_META_FULL_DEPTH}",
-            force=True,
-        )
+    pins = {change_ref(n, "meta"): tip_info[n][0] for n in candidates}
+    # The full chain's ancestry, headers only, same filter the probe already used
+    # (`--filter=tree:0`): widening how *deep* an already-known, filtered commit's history goes
+    # is a plain fetch git honors. Its notes tree is a separate step just below -- a plain fetch
+    # of a filter *wider* than what an already-known object was fetched under is not honored
+    # the same way (once git has any copy of an id, it will not renegotiate for it), so the
+    # probed tip's own tree has to be fetched explicitly, forced.
+    vanished = set(
+        repo.fetch_pinned("meta", pins, f"--depth={_META_FULL_DEPTH}", "--filter=tree:0")
     )
-    counts["meta_missing"] = len(tip_missing) + sum(
-        change_ref(n, "meta") in missing for n in candidates
-    )
+    missing = {ref for ref, oid in pins.items() if oid in vanished}
+    counts["meta_missing"] = len(tip_missing) + len(missing)
     held = [n for n in candidates if change_ref(n, "meta") not in missing]
+    held_tips = {n: tip_info[n][0] for n in held}
+    tip_trees = {info.tree for info in _commit_infos(repo, held_tips.values()).values()}
+    repo.fetch_objects("meta_trees", tip_trees, "--filter=blob:none", "--refetch")
     repo.fetch_objects(
         "notes", [oid for n in held for oid in _note_blobs(repo, change_ref(n, "meta"))]
     )
     records = {}
     for number in held:
         record = read_change(repo, number)
+        probed_id, _ = tip_info[number]
+        # Belt and braces alongside the probe-based `sealed` check above: the same commit id,
+        # read in full, must still be dated before the window. A mismatch here means something
+        # moved the local ref, or the upstream ref, between the probe and this read -- exactly
+        # the race a ref-named fetch would have silently absorbed -- and is treated the same as
+        # a sealed change: dropped before it reaches a row, not merely before it is persisted.
+        if record.meta != probed_id or gerrit_timestamp(record.updated or 0) >= TEST_WINDOW_START:
+            counts["touches_test_window"] += 1
+            continue
         counts["note_parse_errors"] += record.note_parse_errors
         counts["comment_timestamp_errors"] += record.comment_timestamp_errors
         if submitted_between is not None:

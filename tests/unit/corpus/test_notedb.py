@@ -1820,3 +1820,164 @@ def test_network_charges_the_pacer_for_extra_http_requests(
     assert slept == pytest.approx([3.0]), (
         "a fetch counted as 3 HTTP requests must charge 2 extra, not just the base interval"
     )
+
+
+# ---------------------------------------------------------------------------
+# The sealed test window's tip probe: forced, and pinned by commit id (item 1)
+# ---------------------------------------------------------------------------
+
+
+def test_a_rerun_over_a_kept_repo_drops_a_change_updated_since_the_first_run(
+    tmp_path: Path,
+) -> None:
+    """NB1: an unforced probe on a second `collect` over the same scratch repository read back
+    the ref it already held from the first run (`fetch_refs` skips a ref already held unless
+    `force`), never learning the change had a window-dated comment added upstream since."""
+    s = Server(tmp_path / "server")
+    ps1 = s.commit(s.tree({"f": b"1\n"}), "one", "2025-10-01T00:00:00Z")
+    steps = [
+        (
+            OWNER,
+            "2025-10-01T00:00:00Z",
+            f"Create\n\nPatch-set: 1\nChange-id: I99\nCommit: {ps1}",
+            {},
+        ),
+    ]
+    _meta(s, 99, steps)
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+
+    rows, counts = notedb.collect(repo, [99], project=PROJECT)
+    assert [r["_number"] for r in rows] == [99]
+    assert counts["touches_test_window"] == 0
+
+    # Upstream: a comment lands on the change, dated inside the sealed window.
+    late_note = json.dumps(
+        {"comments": [_comment("late", 1, 1, REVIEWER, "2025-11-03T00:00:00Z", "late", ps1)]}
+    ).encode()
+    steps.append(
+        (
+            REVIEWER,
+            "2025-11-03T00:00:00Z",
+            "Update patch set 1\n\nPatch-set: 1",
+            {ps1: late_note},
+        )
+    )
+    _meta(s, 99, steps)
+
+    rows2, counts2 = notedb.collect(repo, [99], project=PROJECT)
+    assert rows2 == [], "the rerun must re-probe upstream and drop the now-sealed change"
+    assert counts2["touches_test_window"] == 1
+
+
+def test_a_ref_advanced_between_probe_and_full_fetch_persists_nothing_window_dated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """NB2: the race. The probe reads a safe (pre-window) tip; before the full meta chain is
+    fetched, the ref advances upstream to a window-dated commit. Fetching the full chain BY
+    THE PROBED COMMIT ID (not the ref name) must land on the same, still-safe commit the probe
+    checked -- a ref-named fetch would silently follow the ref to the new, sealed tip instead."""
+    s = Server(tmp_path / "server")
+    ps1 = s.commit(s.tree({"f": b"1\n"}), "one", "2025-10-01T00:00:00Z")
+    steps = [
+        (
+            OWNER,
+            "2025-10-01T00:00:00Z",
+            f"Create\n\nPatch-set: 1\nChange-id: I100\nCommit: {ps1}",
+            {},
+        ),
+    ]
+    _meta(s, 100, steps)
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+
+    real_meta_tips = notedb._meta_tips
+
+    def advance_then_probe(repo_, numbers):
+        result = real_meta_tips(repo_, numbers)
+        late_note = json.dumps(
+            {"comments": [_comment("late", 1, 1, REVIEWER, "2025-11-03T00:00:00Z", "late", ps1)]}
+        ).encode()
+        steps.append(
+            (
+                REVIEWER,
+                "2025-11-03T00:00:00Z",
+                "Update patch set 1\n\nPatch-set: 1",
+                {ps1: late_note},
+            )
+        )
+        _meta(s, 100, steps)  # the server's ref moves after the probe, before the full fetch
+        return result
+
+    monkeypatch.setattr(notedb, "_meta_tips", advance_then_probe)
+    rows, counts = notedb.collect(repo, [100], project=PROJECT)
+    assert [r["_number"] for r in rows] == [100], "the probed (pre-window) commit is what lands"
+    assert counts["touches_test_window"] == 0
+    for row in rows:
+        assert "late" not in json.dumps(row), "nothing window-dated reaches a persisted row"
+
+
+def test_a_read_record_disagreeing_with_the_probed_id_is_dropped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The belt-and-braces check after `read_change`: even if some other path let a record
+    through whose own `meta` differs from what was probed (or whose `updated` time reaches the
+    window despite that), it is dropped and counted -- not merely trusted because the earlier
+    probe-based gate happened to pass."""
+    s = Server(tmp_path / "server")
+    ps1 = s.commit(s.tree({"f": b"1\n"}), "one", "2025-10-01T00:00:00Z")
+    _meta(
+        s,
+        101,
+        [
+            (
+                OWNER,
+                "2025-10-01T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I101\nCommit: {ps1}",
+                {},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    real_read_change = notedb.read_change
+
+    def wrong_meta(repo_, number):
+        record = real_read_change(repo_, number)
+        record.meta = "0" * 40  # disagrees with what was just probed and fetched
+        return record
+
+    monkeypatch.setattr(notedb, "read_change", wrong_meta)
+    rows, counts = notedb.collect(repo, [101], project=PROJECT)
+    assert rows == []
+    assert counts["touches_test_window"] == 1
+
+
+def test_a_read_record_updated_at_the_window_is_dropped_even_if_the_meta_id_matches(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    s = Server(tmp_path / "server")
+    ps1 = s.commit(s.tree({"f": b"1\n"}), "one", "2025-10-01T00:00:00Z")
+    _meta(
+        s,
+        102,
+        [
+            (
+                OWNER,
+                "2025-10-01T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I102\nCommit: {ps1}",
+                {},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    real_read_change = notedb.read_change
+
+    def late_updated(repo_, number):
+        record = real_read_change(repo_, number)
+        record.updated = int(
+            __import__("datetime").datetime.fromisoformat("2025-11-05T00:00:00+00:00").timestamp()
+        )
+        return record
+
+    monkeypatch.setattr(notedb, "read_change", late_updated)
+    rows, counts = notedb.collect(repo, [102], project=PROJECT)
+    assert rows == []
+    assert counts["touches_test_window"] == 1
