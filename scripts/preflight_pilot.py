@@ -27,8 +27,8 @@ parser.add_argument("--split-seed", type=int, default=0)
 parser.add_argument(
     "--legacy-corpus",
     action="store_true",
-    help="read corpus files not cut under the current label rules, to reproduce an earlier "
-    "result; recorded in the output",
+    help="check the corpus files not cut under the current label rules, the same way the job "
+    "will read them with --legacy-corpus",
 )
 args = parser.parse_args()
 

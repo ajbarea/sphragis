@@ -21,7 +21,11 @@ LOCAL = "local"
 
 
 def sources(args: argparse.Namespace) -> list[str]:
-    """`--source` flags plus a `--sources-file`'s lines, comments and blanks stripped."""
+    """`--source` flags plus a `--sources-file`'s lines, comments and blanks stripped.
+
+    Refuses a name given twice: `plan` is a dict keyed by name, so a repeat would train one
+    source's clients and silently drop the other's under the shared key.
+    """
     specs = list(args.source)
     if args.sources_file:
         for line in args.sources_file.read_text().splitlines():
@@ -30,6 +34,12 @@ def sources(args: argparse.Namespace) -> list[str]:
                 specs.append(line)
     if not specs:
         raise SystemExit("no sources given")
+    seen: set[str] = set()
+    for spec in specs:
+        name = spec.partition("=")[0]
+        if name in seen:
+            raise SystemExit(f"source name {name!r} is given twice; each source needs its own name")
+        seen.add(name)
     return specs
 
 

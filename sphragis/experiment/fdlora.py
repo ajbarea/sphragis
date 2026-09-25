@@ -64,9 +64,10 @@ def average_state_dicts(state_dicts: Sequence[Mapping[str, Any]]) -> dict[str, A
 def round0_seed(personalized: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
     """Algorithm 1, line 7's average, over every client label the caller passes in.
 
-    Takes the one mapping keyed by every client across every source, so a caller cannot average
-    one source's clients at a time by construction the way a bare `average_state_dicts` call
-    over a per-source slice would.
+    Averages exactly the mapping it is given: the caller decides the scope by what it puts in
+    `personalized`, so a caller that passes one source's clients still gets that source's own
+    average, not the paper's cross-client one. `scripts/fdlora_schedule.py` calls this once, with
+    every client across every source, which is what makes the average the paper's own.
     """
     return average_state_dicts(list(personalized.values()))
 

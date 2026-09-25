@@ -46,6 +46,20 @@ class TestSources:
         with pytest.raises(SystemExit, match="no sources"):
             sources(_args())
 
+    def test_a_repeated_source_name_is_refused(self) -> None:
+        # plan is a dict keyed by name; unrefused, the second silently trains and the first's
+        # clients are never seen.
+        with pytest.raises(SystemExit, match="given twice"):
+            sources(_args(source=["a:cpp/x=f1.jsonl", "a:cpp/x=f2.jsonl"]))
+
+    def test_a_name_repeated_between_flags_and_the_sources_file_is_refused(
+        self, tmp_path: Path
+    ) -> None:
+        path = tmp_path / "sources.txt"
+        path.write_text("a=y.jsonl\n")
+        with pytest.raises(SystemExit, match="given twice"):
+            sources(_args(source=["a=x.jsonl"], sources_file=path))
+
 
 class TestClientLabel:
     def test_a_colon_and_a_slash_both_become_path_safe(self) -> None:

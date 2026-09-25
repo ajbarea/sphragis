@@ -51,27 +51,47 @@ def client_names(geometry: dict, report: dict) -> list[str]:
     """The client each saved adapter belongs to, whichever half of a dual run it is.
 
     A dual-adapter run saves two adapters a client: the transmitted one under the client's name
-    and the withheld one under `<client>-<withheld>`. The updates file records which suffix the
-    withheld half carries, so a geometry over that half is mapped back by the run's own record
-    rather than by stripping whatever is on the end. A geometry mixing the two halves is refused:
-    the two are different experiments, and every statistic here assumes one adapter a client.
+    and a withheld one under `<client>-<suffix>`. The updates file records which suffix a
+    withheld half carries under `withheld` and, for FDLoRA's second withheld half (the round-0
+    personalized module, `-p0`), under `withheld_round0`; a FedDPA report carries no
+    `withheld_round0` key. A geometry over a withheld half is mapped back by whichever of the
+    run's own recorded suffixes it carries, rather than by stripping whatever is on the end. A
+    geometry mixing halves is refused: they are different experiments, and every statistic here
+    assumes one adapter a client.
     """
     clients = report["clients"]
     names = [name.split("/", 1)[1] for name in geometry["adapters"]]
-    withheld = report.get("withheld")
-    if withheld:
-        marked = [name for name in names if name.endswith(f"-{withheld}")]
+    for key in ("withheld", "withheld_round0"):
+        suffix = report.get(key)
+        if not suffix:
+            continue
+        marked = [name for name in names if name.endswith(f"-{suffix}")]
         if marked and len(marked) != len(names):
             raise SystemExit(
                 f"{len(marked)} of {len(names)} adapters are the withheld half: a geometry holds "
                 "one half or the other, never both"
             )
         if marked:
-            names = [name[: -len(withheld) - 1] for name in names]
+            names = [name[: -len(suffix) - 1] for name in names]
+            break
     missing = [name for name in names if name not in clients]
     if missing:
         raise SystemExit(f"adapters with no recorded source: {missing[:5]}")
     return names
+
+
+def reads_local(geometry: dict, report: dict) -> bool:
+    """True when every one of the geometry's adapters is the report's withheld `-local` half.
+
+    Distinguishes a geometry over the withheld half from one over the transmitted half or, under
+    an FDLoRA report, the round-0 personalized half (`-p0`): only the withheld half is what the
+    report's own `local_equals` describes.
+    """
+    suffix = report.get("withheld")
+    if not suffix:
+        return False
+    names = [name.split("/", 1)[1] for name in geometry["adapters"]]
+    return bool(names) and all(name.endswith(f"-{suffix}") for name in names)
 
 
 def relation(a: Source, b: Source) -> str:

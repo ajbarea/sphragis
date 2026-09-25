@@ -36,7 +36,7 @@ def _source(home: Path, workdir: Path, probe: str) -> subprocess.CompletedProces
 
 
 def _fake_uv(directory: Path) -> None:
-    directory.mkdir(parents=True)
+    directory.mkdir(parents=True, exist_ok=True)
     uv = directory / "uv"
     uv.write_text("#!/bin/sh\necho uv-for-this-machine\n")
     uv.chmod(0o755)
@@ -44,7 +44,7 @@ def _fake_uv(directory: Path) -> None:
 
 def _fake_venv(workdir: Path) -> None:
     python = workdir / f".venv-{_MACHINE}" / "bin" / "python"
-    python.parent.mkdir(parents=True)
+    python.parent.mkdir(parents=True, exist_ok=True)
     python.write_text("#!/bin/sh\n")
     python.chmod(0o755)
 
@@ -793,7 +793,9 @@ def test_a_second_packing_names_its_own_results_and_adapters(tmp_path: Path) -> 
 
 
 def test_a_second_fdlora_packing_names_its_own_results_and_adapters(tmp_path: Path) -> None:
-    """FDLoRA's schedule follows the same convention client_updates.sbatch already does."""
+    """FDLoRA's schedule follows the same convention client_updates.sbatch already does, tagged
+    "-pack" rather than client_updates.sbatch's "-p": a raw "-p2" would read as the round-0
+    personalized adapters' own "-p2" class suffix once name_result_after_adapters saw it."""
     second = _run_job(
         "fdlora_schedule.sbatch",
         tmp_path / "second",
@@ -802,8 +804,8 @@ def test_a_second_fdlora_packing_names_its_own_results_and_adapters(tmp_path: Pa
         PACKING_SEED="2",
     )
     assert second.returncode == 0, second.stderr
-    assert "client-updates-fdlora-cpp-early-c128-r6-k3-h5-p2.json" in second.stdout
-    assert "sphragis-adapters-fdlora-cpp-early-c128-r6-k3-h5-p2" in second.stdout
+    assert "client-updates-fdlora-cpp-early-c128-r6-k3-h5-pack2.json" in second.stdout
+    assert "sphragis-adapters-fdlora-cpp-early-c128-r6-k3-h5-pack2" in second.stdout
     assert "--packing-seed 2" in second.stdout
     first = _run_job(
         "fdlora_schedule.sbatch", tmp_path / "first", RUN_TAG="cpp-early", CLIENT_SIZE="128"
@@ -811,6 +813,26 @@ def test_a_second_fdlora_packing_names_its_own_results_and_adapters(tmp_path: Pa
     assert first.returncode == 0, first.stderr
     assert "client-updates-fdlora-cpp-early-c128-r6-k3-h5.json" in first.stdout
     assert "--packing-seed" not in first.stdout, "the first packing must reproduce as it ran"
+
+
+def test_the_packing_seed_zero_tag_no_longer_collides_with_round_zero_adapters(
+    tmp_path: Path,
+) -> None:
+    """PACKING_SEED=0's outer directory ("-pack0") and the round-0 personalized adapters' own
+    class suffix ("-p0") used to both resolve to "-p0", naming two different geometries alike."""
+    _adapters(tmp_path, "sphragis-adapters-fdlora-r6-k3-h5-pack0", "a-c0")
+    packing = _name_after(
+        tmp_path, "sphragis-adapters-fdlora-r6-k3-h5-pack0/*-c*/adapter_model.safetensors"
+    )
+    assert packing.returncode == 0, packing.stderr
+    _adapters(tmp_path, "sphragis-adapters-fdlora-r6-k3-h5", "a-c0", "a-c0-local", "a-c0-p0")
+    round_zero = _name_after(
+        tmp_path, "sphragis-adapters-fdlora-r6-k3-h5/*-p0/adapter_model.safetensors"
+    )
+    assert round_zero.returncode == 0, round_zero.stderr
+    assert packing.stdout.strip() != round_zero.stdout.strip()
+    assert packing.stdout.strip().endswith("[-fdlora-r6-k3-h5-pack0]")
+    assert round_zero.stdout.strip().endswith("[-fdlora-r6-k3-h5-p0]")
 
 
 def test_the_default_fdlora_packing_under_a_new_name_is_refused(tmp_path: Path) -> None:
@@ -831,6 +853,20 @@ def test_allow_final_sync_only_enables_on_the_value_one(
     result = _run_job("fdlora_schedule.sbatch", tmp_path, **env)
     assert result.returncode == 0, result.stderr
     assert ("--allow-final-sync" in result.stdout) == expect_flag
+
+
+@pytest.mark.parametrize(
+    ("value", "expect_flag"),
+    [("1", True), ("0", False), ("yes", False), (None, False)],
+)
+def test_fdlora_legacy_corpus_only_enables_on_the_value_one(
+    value: str | None, expect_flag: bool, tmp_path: Path
+) -> None:
+    """`$(legacy_corpus_flag)` had no test of its own on this job's command line."""
+    env = {"LEGACY_CORPUS": value} if value is not None else {}
+    result = _run_job("fdlora_schedule.sbatch", tmp_path, **env)
+    assert result.returncode == 0, result.stderr
+    assert ("--legacy-corpus" in result.stdout) == expect_flag
 
 
 def _results(root: Path) -> dict[str, str]:

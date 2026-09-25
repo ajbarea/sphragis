@@ -47,7 +47,10 @@ if [ "${PACKING_SEED:-}" = 1 ]; then
   echo "PACKING_SEED=1 is the default packing; draw another seed" >&2
   exit 1
 fi
-[ -z "${PACKING_SEED:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-p$PACKING_SEED"
+# "-pack", not client_updates.sbatch's "-p": name_result_after_adapters appends "-p0" to the
+# round-0 personalized adapters' own geometry, and PACKING_SEED=0 under "-p0" would collide with
+# it, naming two different geometries alike.
+[ -z "${PACKING_SEED:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-pack$PACKING_SEED"
 export RESULT_SUFFIX
 
 # ALLOW_FINAL_SYNC=1 permits the final-sync collision the script otherwise refuses. Any other

@@ -16,14 +16,16 @@ scripts that read this output, but the one cross-client mixing event this readin
 paper's own, over everyone the server sees.
 
 What is saved per client: the global module (what the server receives every round, saved once
-after the last), the personalized module beside it under `-local` (what stays withheld, mirroring
-`dual_adapter_updates.py`), and the round-0 personalized module under `-p0` -- the transmission
-this reading finds and the paper does not name. `-local` is read as of the client's most recent
-sync (or its Stage 1 value, if `--sync-period` never fired): when the final round is itself a
-sync round, `-local` equals the transmitted global by construction, which is a legitimate reading
-only at the deliberate `--sync-period 1` (synchronous) endpoint, so any other configuration where
-`rounds` is a multiple of `sync_period` is refused unless `--allow-final-sync` says the collision
-is intended.
+after the last), the personalized module beside it under `-local` -- the half the design
+withholds, mirroring `dual_adapter_updates.py` -- and the round-0 personalized module under
+`-p0`, the transmission this reading finds and the paper does not name. `-local` is read as of
+the client's most recent sync (or its Stage 1 value, if `--sync-period` never fired): under the
+registered reading it therefore equals a past transmission rather than a tensor that never left
+the client, and which one is recorded in the output's `local_equals`. When the final round is
+itself a sync round, `-local` equals the transmitted global by construction, which is a
+legitimate reading only at the deliberate `--sync-period 1` (synchronous) endpoint, so any other
+configuration where `rounds` is a multiple of `sync_period` is refused unless `--allow-final-sync`
+says the collision is intended.
 
 This script does not simulate the server's own per-round outer aggregation of the global module
 (Algorithm 1, lines 17-18: Nesterov momentum over every client's change, applied once a round).
