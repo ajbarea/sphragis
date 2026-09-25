@@ -296,6 +296,7 @@ def compare_fields(
     """Field-by-field agreement on changes both routes hold."""
     agree: Counter[str] = Counter()
     differ: dict[str, list[int]] = defaultdict(list)
+    kind_pairs: Counter[str] = Counter()
     meta_advanced = 0
     for git, rest in pairs:
         number = rest["_number"]
@@ -322,6 +323,8 @@ def compare_fields(
                     agree[key] += 1
                 else:
                     differ[key].append(number)
+                    if name == "kind":
+                        kind_pairs[f"{r_rev[sha].get(name)} -> {g_rev[sha].get(name)}"] += 1
         files = git.get("files")
         if files is None:
             differ[f"lines.{_lines_unavailable_reason(repo, git)}"].append(number)
@@ -340,6 +343,7 @@ def compare_fields(
         "agree": dict(sorted(agree.items())),
         "differ": {k: len(v) for k, v in sorted(differ.items())},
         "differ_changes": {k: v[:SHOWN] for k, v in sorted(differ.items())},
+        "kind_rest_to_git": dict(sorted(kind_pairs.items())),
         "meta_rev_id_advanced_since_rest_fetch": meta_advanced,
     }
 
