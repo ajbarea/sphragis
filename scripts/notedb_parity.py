@@ -730,6 +730,10 @@ def main() -> None:
     )
     args = parser.parse_args()
     salt = require_salt()
+    if not (args.rest_root / "raw").is_dir():
+        raise SystemExit(
+            f"--rest-root {args.rest_root} holds no raw/ REST snapshots; nothing to compare"
+        )
     _refuse_unsafe_work(args.work, args.rest_root, args.out)
     scratch = _find_marked_scratch(args.work) or _make_scratch(args.work)
     try:

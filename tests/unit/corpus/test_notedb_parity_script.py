@@ -266,6 +266,13 @@ def test_record_history_fetch_unions_branches_across_reruns(
 # ---------------------------------------------------------------------------
 
 
+def _rest_root(tmp_path: Path) -> Path:
+    """A REST root the startup check accepts: it holds a raw/ directory."""
+    root = tmp_path / "rr"
+    (root / "raw").mkdir(parents=True, exist_ok=True)
+    return root
+
+
 def _patch_run_to_raise(parity: types.ModuleType, monkeypatch: pytest.MonkeyPatch) -> None:
     def boom(args: Any, salt: Any, scratch: Path) -> None:
         raise RuntimeError("simulated failure mid-run")
@@ -287,7 +294,9 @@ def test_main_deletes_only_the_scratch_directory_it_created_on_error(
 
     _patch_run_to_raise(parity, monkeypatch)
     monkeypatch.setattr(
-        sys, "argv", ["notedb_parity.py", "--work", str(work), "--rest-root", str(tmp_path / "rr")]
+        sys,
+        "argv",
+        ["notedb_parity.py", "--work", str(work), "--rest-root", str(_rest_root(tmp_path))],
     )
     with pytest.raises(RuntimeError, match="simulated failure"):
         parity.main()
@@ -314,7 +323,7 @@ def test_keep_work_flag_preserves_the_marked_scratch_directory_on_error(
             "--work",
             str(work),
             "--rest-root",
-            str(tmp_path / "rr"),
+            str(_rest_root(tmp_path)),
             "--keep-work",
         ],
     )
@@ -347,7 +356,7 @@ def test_a_kept_scratch_directory_is_reused_by_the_next_run(
         "--work",
         str(work),
         "--rest-root",
-        str(tmp_path / "rr"),
+        str(_rest_root(tmp_path)),
         "--keep-work",
     ]
     monkeypatch.setattr(sys, "argv", argv)
@@ -454,7 +463,7 @@ def test_cleanup_survives_a_second_signal_via_subprocess(tmp_path: Path) -> None
     rather than losing its own process to a stray SIGTERM."""
     work = tmp_path / "work"
     work.mkdir()
-    rest_root = tmp_path / "rr"
+    rest_root = _rest_root(tmp_path)
     script = f"""
 import os
 import signal
@@ -491,3 +500,27 @@ print("DONE")
     assert proc.returncode == 0, proc.stderr
     assert "DONE" in proc.stdout
     assert list(work.iterdir()) == [], "cleanup must survive a second signal mid-rmtree"
+
+
+def test_a_rest_root_without_raw_snapshots_is_refused_before_any_fetch(
+    parity: types.ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A mistyped --rest-root must stop the run before it spends a request on the host."""
+    ran = []
+    monkeypatch.setattr(parity, "_run", lambda *a: ran.append(a))
+    monkeypatch.setattr(parity, "require_salt", lambda: "salt")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "notedb_parity.py",
+            "--work",
+            str(tmp_path / "w"),
+            "--rest-root",
+            str(tmp_path / "missing"),
+        ],
+    )
+    (tmp_path / "w").mkdir()
+    with pytest.raises(SystemExit, match="no raw/ REST snapshots"):
+        parity.main()
+    assert not ran
