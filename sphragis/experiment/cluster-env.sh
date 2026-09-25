@@ -124,7 +124,8 @@ _abandoned_claim() {
 # size that inherited another's suffix would overwrite the geometry every committed RQ2 number was
 # computed from. One definition, because the two jobs must agree on the name.
 name_result_after_adapters() {
-  local pattern="$1" first selector spans_withheld
+  local pattern="$1" first selector name class count_word restore
+  local -a classes
   # The name comes from the pattern's first directory, so that directory must be literal: a glob
   # there would name the output after nothing.
   first="${pattern%%/*}"
@@ -139,26 +140,54 @@ name_result_after_adapters() {
     sphragis-adapters-*) RESULT_SUFFIX="-${first#sphragis-adapters-}" ;;
     *) echo "PATTERN must start with a sphragis-adapters directory, got $first" >&2; return 1 ;;
   esac
-  # A dual-adapter run saves two adapters a client in one directory: the transmitted one under the
-  # client's own name and the withheld one under `<client>-local`. They are two geometries over one
-  # set of adapters, so the selector that picks between them has to name them apart, and one that
-  # spans both is refused rather than written to whichever name it inherits. Only where withheld
-  # adapters exist: every single-adapter directory keeps the names it already has.
-  compgen -G "$HOME/scratch/$first/*-local" >/dev/null 2>&1 || { export RESULT_SUFFIX; return 0; }
+  # A dual-adapter run saves more than one adapter a client in one directory: the transmitted one
+  # under the client's own name, and one or more withheld ones beside it (FedDPA's `-local`;
+  # FDLoRA's `-local` and `-p0`, the round-0 average of the personalized modules). Each shape is
+  # its own geometry over one set of adapters, so a selector has to name exactly one apart, and
+  # one that spans more than one is refused rather than written to whichever name it inherits
+  # first. The selector is matched against the real client directories, not a synthetic name
+  # standing in for one: a selector's own spelling (`*local` with no hyphen, `*-local*`, an
+  # organization prefix such as `aosp-*`) says nothing about which shapes it reaches, only what
+  # actually glob-matches does.
   selector="${pattern#*/}"
   selector="${selector%%/*}"
-  spans_withheld=0
-  case "a-c0-local" in $selector) spans_withheld=1 ;; esac
-  case "$selector:$spans_withheld" in
-    *-local:*) RESULT_SUFFIX="$RESULT_SUFFIX-local" ;;
-    *:1)
-      echo "PATTERN selects the transmitted and the withheld adapters of $first together, and" \
-        "they are two geometries: select one, with */*-local/* or a selector that cannot" \
-        "match it" >&2
-      return 1
-      ;;
+  classes=()
+  # `shopt -p nullglob` exits 1 when the option is off, which is its default state, and would
+  # abort the caller under `set -e`; the printed command is what matters, not its exit status.
+  restore="$(shopt -p nullglob)" || true
+  shopt -s nullglob
+  for name in "$HOME/scratch/$first"/$selector; do
+    name="$(basename "$name")"
+    case "$name" in
+      *-local) class=local ;;
+      *-p0) class=p0 ;;
+      *) class=transmitted ;;
+    esac
+    case " ${classes[*]-} " in
+      *" $class "*) ;;
+      *) classes+=("$class") ;;
+    esac
+  done
+  eval "$restore"
+  # No real directory matches at all: an empty or not-yet-written adapters directory, or a
+  # single-adapter run this check does not apply to. Keep the name the first directory gave.
+  if [ "${#classes[@]}" -le 1 ]; then
+    case "${classes[0]-}" in
+      local) RESULT_SUFFIX="$RESULT_SUFFIX-local" ;;
+      p0) RESULT_SUFFIX="$RESULT_SUFFIX-p0" ;;
+    esac
+    export RESULT_SUFFIX
+    return 0
+  fi
+  case "${#classes[@]}" in
+    2) count_word=two ;;
+    3) count_word=three ;;
+    *) count_word="${#classes[@]}" ;;
   esac
-  export RESULT_SUFFIX
+  echo "PATTERN selects more than one of $first's adapter shapes together" \
+    "(${classes[*]}), and they are $count_word geometries: select one, with */*-local/*," \
+    "*/*-p0/* or a selector that cannot match them" >&2
+  return 1
 }
 
 claim_result() {

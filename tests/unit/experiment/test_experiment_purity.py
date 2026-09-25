@@ -13,6 +13,8 @@ _HEAVY = {"torch", "transformers", "peft", "datasets"}
 _ORCHESTRATION = (
     "clients.py",
     "decomposition.py",
+    "dual_adapter.py",
+    "fdlora.py",
     "grid.py",
     "holdout.py",
     "neutral.py",

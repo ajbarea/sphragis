@@ -160,3 +160,54 @@ def test_the_suffix_is_the_recorded_one_and_not_whatever_trails_the_name() -> No
 def test_a_client_the_run_never_recorded_is_refused() -> None:
     with pytest.raises(SystemExit, match="no recorded source"):
         attribution.client_names(_geometry("a-c9"), _report("a-c0", withheld="local"))
+
+
+def _fdlora_report(*clients: str) -> dict:
+    out = _report(*clients, withheld="local")
+    out["withheld_round0"] = "p0"
+    return out
+
+
+def test_the_round_zero_half_maps_back_through_withheld_round0() -> None:
+    """FDLoRA's second withheld half, the round-0 personalized module, carries its own suffix."""
+    names = attribution.client_names(
+        _geometry("a-c0-p0", "a-c1-p0"), _fdlora_report("a-c0", "a-c1")
+    )
+    assert names == ["a-c0", "a-c1"]
+
+
+def test_the_local_half_still_resolves_under_an_fdlora_report() -> None:
+    names = attribution.client_names(
+        _geometry("a-c0-local", "a-c1-local"), _fdlora_report("a-c0", "a-c1")
+    )
+    assert names == ["a-c0", "a-c1"]
+
+
+def test_the_transmitted_half_still_resolves_under_an_fdlora_report() -> None:
+    names = attribution.client_names(_geometry("a-c0", "a-c1"), _fdlora_report("a-c0", "a-c1"))
+    assert names == ["a-c0", "a-c1"]
+
+
+def test_a_geometry_mixing_transmitted_and_round_zero_is_refused() -> None:
+    with pytest.raises(SystemExit, match="one half or the other"):
+        attribution.client_names(_geometry("a-c0", "a-c0-p0"), _fdlora_report("a-c0"))
+
+
+def test_a_feddpa_report_carries_no_withheld_round0_key() -> None:
+    """A plain FedDPA report has no round-0 half at all; the second suffix is simply absent."""
+    names = attribution.client_names(_geometry("a-c0-local"), _report("a-c0", withheld="local"))
+    assert names == ["a-c0"]
+
+
+class TestReadsLocal:
+    def test_true_for_the_withheld_half(self) -> None:
+        assert attribution.reads_local(_geometry("a-c0-local"), _report("a-c0", withheld="local"))
+
+    def test_false_for_the_transmitted_half(self) -> None:
+        assert not attribution.reads_local(_geometry("a-c0"), _report("a-c0", withheld="local"))
+
+    def test_false_for_the_round_zero_half(self) -> None:
+        assert not attribution.reads_local(_geometry("a-c0-p0"), _fdlora_report("a-c0"))
+
+    def test_false_when_the_report_names_no_withheld_half(self) -> None:
+        assert not attribution.reads_local(_geometry("a-c0"), _report("a-c0"))

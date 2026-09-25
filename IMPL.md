@@ -42,7 +42,12 @@ research log records what is and is not known about those requests.
   `p4/granularity-registration`. Crossed-interval coverage is being re-measured at 97.5%.
 - **Chromium, the third organization.** Host added and project set being scoped; the split has to
   qualify by 2026-10-23 or H2 has no confirmatory cell.
-- **FDLoRA's schedule**, the last unmeasured adapter cut (PR #36).
+- **FDLoRA's schedule** (`sphragis/experiment/fdlora.py`, `scripts/fdlora_schedule.py`) follows
+  the registered reading of Algorithm 1 except the outer aggregation step (lines 17 and 18), a
+  recorded confound (`docs/research-log.md`, 2026-09-21 and 2026-09-23). Under that reading
+  `-local` is always a past transmission, and the output's `local_equals` says which
+  (2026-09-24). Job 183579 was cancelled before it ran. No job is queued: it trains on the v2
+  client corpora, which wait on the recut above.
 
 ## Next
 
@@ -53,6 +58,7 @@ research log records what is and is not known about those requests.
 3. ✅ Sibling-half leakage on the dev window is below the registered threshold (research log,
    2026-09-23). 📋 The C++-restricted estimand beside H2.
 4. The decomposition's pilot on the dev window before 2026-11-20.
+5. **FDLoRA's measurement**, the last unmeasured adapter cut, once a job may read the corpora.
 
 ## Standing
 
