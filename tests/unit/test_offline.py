@@ -5,7 +5,9 @@ The addresses are reserved (RFC 5737, RFC 2606), so a guard that failed would st
 
 from __future__ import annotations
 
+import os
 import socket
+import subprocess
 
 import pytest
 
@@ -58,6 +60,19 @@ def test_a_leak_through_the_rest_transport_raises_rather_than_reading_as_a_503(
 
     with pytest.raises(RuntimeError, match="offline"):
         cli.http_transport()("https://review.opendev.org/config/server/version")
+
+
+def test_an_https_git_fetch_is_refused_by_the_suites_own_environment() -> None:
+    """`GIT_ALLOW_PROTOCOL=file`, set on `os.environ` for the whole session: a second guard,
+    for the git subprocesses the in-process socket guard above cannot see at all."""
+    assert os.environ.get("GIT_ALLOW_PROTOCOL") == "file"
+    done = subprocess.run(
+        ["git", "ls-remote", "https://example.invalid/repo.git"],
+        capture_output=True,
+        text=True,
+    )
+    assert done.returncode != 0
+    assert "not allowed" in done.stderr or "protocol" in done.stderr.lower()
 
 
 def test_loopback_stays_open() -> None:
