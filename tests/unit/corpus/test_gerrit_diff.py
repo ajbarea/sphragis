@@ -23,7 +23,7 @@ def test_the_jgit_fixture_exercises_the_myers_fallback() -> None:
     assert sum(case["myers_fallback"] for case in _jgit_cases()) >= 20
 
 
-@pytest.mark.parametrize("index", range(70))
+@pytest.mark.parametrize("index", range(len(_jgit_cases())))
 def test_edits_match_what_jgit_computed(index: int) -> None:
     case = _jgit_cases()[index]
     a = gerrit_diff.RawText(case["a"].encode())
