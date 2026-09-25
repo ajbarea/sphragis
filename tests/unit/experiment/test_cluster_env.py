@@ -286,6 +286,22 @@ def test_a_directory_that_is_not_an_adapters_directory_is_refused(tmp_path: Path
     assert "must start with a sphragis-adapters directory" in result.stderr
 
 
+def test_name_result_after_adapters_restores_the_callers_nullglob_state(tmp_path: Path) -> None:
+    """The guard used to leave nullglob off unconditionally, however the caller had it set."""
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    _adapters(tmp_path, "sphragis-adapters-clients-cpp-early", "a-c0")
+    result = _source(
+        tmp_path,
+        tmp_path,
+        "shopt -s nullglob; "
+        'name_result_after_adapters "sphragis-adapters-clients-cpp-early/*-c*/'
+        'adapter_model.safetensors" >/dev/null; shopt nullglob',
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip().endswith("on")
+
+
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
 def test_no_job_derives_the_adapters_name_for_itself(script: Path) -> None:
     """One definition: a job with its own copy drifts from the other's."""
@@ -774,6 +790,47 @@ def test_a_second_packing_names_its_own_results_and_adapters(tmp_path: Path) -> 
     assert first.returncode == 0, first.stderr
     assert "client-updates-cpp-early-c128.json" in first.stdout
     assert "--packing-seed" not in first.stdout, "the first packing must reproduce as it ran"
+
+
+def test_a_second_fdlora_packing_names_its_own_results_and_adapters(tmp_path: Path) -> None:
+    """FDLoRA's schedule follows the same convention client_updates.sbatch already does."""
+    second = _run_job(
+        "fdlora_schedule.sbatch",
+        tmp_path / "second",
+        RUN_TAG="cpp-early",
+        CLIENT_SIZE="128",
+        PACKING_SEED="2",
+    )
+    assert second.returncode == 0, second.stderr
+    assert "client-updates-fdlora-cpp-early-c128-r6-k3-h5-p2.json" in second.stdout
+    assert "sphragis-adapters-fdlora-cpp-early-c128-r6-k3-h5-p2" in second.stdout
+    assert "--packing-seed 2" in second.stdout
+    first = _run_job(
+        "fdlora_schedule.sbatch", tmp_path / "first", RUN_TAG="cpp-early", CLIENT_SIZE="128"
+    )
+    assert first.returncode == 0, first.stderr
+    assert "client-updates-fdlora-cpp-early-c128-r6-k3-h5.json" in first.stdout
+    assert "--packing-seed" not in first.stdout, "the first packing must reproduce as it ran"
+
+
+def test_the_default_fdlora_packing_under_a_new_name_is_refused(tmp_path: Path) -> None:
+    result = _run_job("fdlora_schedule.sbatch", tmp_path, PACKING_SEED="1")
+    assert result.returncode != 0
+    assert "default packing" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("value", "expect_flag"),
+    [("1", True), ("0", False), ("yes", False), (None, False)],
+)
+def test_allow_final_sync_only_enables_on_the_value_one(
+    value: str | None, expect_flag: bool, tmp_path: Path
+) -> None:
+    """The same convention as LEGACY_CORPUS: only "1" turns the check off, not any truthy value."""
+    env = {"ALLOW_FINAL_SYNC": value} if value is not None else {}
+    result = _run_job("fdlora_schedule.sbatch", tmp_path, **env)
+    assert result.returncode == 0, result.stderr
+    assert ("--allow-final-sync" in result.stdout) == expect_flag
 
 
 def _results(root: Path) -> dict[str, str]:

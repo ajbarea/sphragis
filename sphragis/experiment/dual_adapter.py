@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,28 @@ def sources(args: argparse.Namespace) -> list[str]:
     if not specs:
         raise SystemExit("no sources given")
     return specs
+
+
+def client_label(source: str, index: int) -> str:
+    """A client's own name: its source spec munged into a path-safe stem, plus its index."""
+    return f"{source.replace(':', '-').replace('/', '_')}-c{index}"
+
+
+def check_label_collisions(plan: Mapping[str, Sequence[Any]]) -> None:
+    """Refuse when two source specs munge to the same client label.
+
+    `a-x:cpp/p` and `a:x-cpp/p` both give `a-x-cpp_p-c0`: undetected, one source's client
+    silently replaces the other's wherever clients are keyed by label (the round-0 average, the
+    saved adapter path).
+    """
+    seen: dict[str, str] = {}
+    for source, clients in plan.items():
+        for index in range(len(clients)):
+            label = client_label(source, index)
+            other = seen.get(label)
+            if other is not None and other != source:
+                raise SystemExit(f"{source!r} and {other!r} both yield client label {label!r}")
+            seen[label] = source
 
 
 def freeze(model: Any, adapter: str) -> None:

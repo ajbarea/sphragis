@@ -124,7 +124,7 @@ _abandoned_claim() {
 # size that inherited another's suffix would overwrite the geometry every committed RQ2 number was
 # computed from. One definition, because the two jobs must agree on the name.
 name_result_after_adapters() {
-  local pattern="$1" first selector name class count_word
+  local pattern="$1" first selector name class count_word restore
   local -a classes
   # The name comes from the pattern's first directory, so that directory must be literal: a glob
   # there would name the output after nothing.
@@ -152,6 +152,9 @@ name_result_after_adapters() {
   selector="${pattern#*/}"
   selector="${selector%%/*}"
   classes=()
+  # `shopt -p nullglob` exits 1 when the option is off, which is its default state, and would
+  # abort the caller under `set -e`; the printed command is what matters, not its exit status.
+  restore="$(shopt -p nullglob)" || true
   shopt -s nullglob
   for name in "$HOME/scratch/$first"/$selector; do
     name="$(basename "$name")"
@@ -165,7 +168,7 @@ name_result_after_adapters() {
       *) classes+=("$class") ;;
     esac
   done
-  shopt -u nullglob
+  eval "$restore"
   # No real directory matches at all: an empty or not-yet-written adapters directory, or a
   # single-adapter run this check does not apply to. Keep the name the first directory gave.
   if [ "${#classes[@]}" -le 1 ]; then

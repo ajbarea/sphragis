@@ -12,7 +12,14 @@ from pathlib import Path
 
 import pytest
 
-from sphragis.experiment.dual_adapter import freeze, save_adapter, sources, unfreeze
+from sphragis.experiment.dual_adapter import (
+    check_label_collisions,
+    client_label,
+    freeze,
+    save_adapter,
+    sources,
+    unfreeze,
+)
 
 
 def _args(
@@ -38,6 +45,24 @@ class TestSources:
     def test_no_sources_at_all_is_refused(self) -> None:
         with pytest.raises(SystemExit, match="no sources"):
             sources(_args())
+
+
+class TestClientLabel:
+    def test_a_colon_and_a_slash_both_become_path_safe(self) -> None:
+        assert client_label("a:x-cpp/p", 0) == "a-x-cpp_p-c0"
+
+
+class TestCheckLabelCollisions:
+    def test_distinct_sources_that_munge_to_the_same_label_are_refused(self) -> None:
+        plan = {"a-x:cpp/p": [["e1"]], "a:x-cpp/p": [["e2"]]}
+        with pytest.raises(SystemExit, match="a-x-cpp_p-c0"):
+            check_label_collisions(plan)
+
+    def test_distinct_labels_pass_silently(self) -> None:
+        check_label_collisions({"a": [["e1"], ["e2"]], "b": [["e3"]]})
+
+    def test_a_source_alone_never_collides_with_itself(self) -> None:
+        check_label_collisions({"a": [["e1"], ["e2"], ["e3"]]})
 
 
 class _Param:

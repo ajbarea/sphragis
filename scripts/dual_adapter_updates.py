@@ -36,7 +36,16 @@ from peft import get_peft_model_state_dict, set_peft_model_state_dict
 
 from sphragis.corpus.load import derived_file_rows
 from sphragis.experiment.clients import partition
-from sphragis.experiment.dual_adapter import GLOBAL, LOCAL, freeze, save_adapter, sources, unfreeze
+from sphragis.experiment.dual_adapter import (
+    GLOBAL,
+    LOCAL,
+    check_label_collisions,
+    client_label,
+    freeze,
+    save_adapter,
+    sources,
+    unfreeze,
+)
 from sphragis.experiment.model import (
     LORA,
     MODEL_ID,
@@ -112,6 +121,7 @@ def main() -> None:
         print(f"{name}: {len(rows)} examples -> {len(plan[name])} clients", flush=True)
     if any(not clients for clients in plan.values()):
         raise SystemExit("a source yields no full client at this size")
+    check_label_collisions(plan)
     if args.dry_run:
         print("DRY RUN: partition only, no model loaded")
         return
@@ -136,7 +146,7 @@ def main() -> None:
             for name in (GLOBAL, LOCAL):
                 set_peft_model_state_dict(model, initial[name], adapter_name=name)
             batch = [items[r["id"]] for r in client]
-            label = f"{source.replace(':', '-').replace('/', '_')}-c{index}"
+            label = client_label(source, index)
             losses: dict[str, list[float]] = {GLOBAL: [], LOCAL: []}
 
             rounds = 1 if args.schedule == "feddpa-f" else args.rounds

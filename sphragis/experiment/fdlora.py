@@ -59,3 +59,54 @@ def average_state_dicts(state_dicts: Sequence[Mapping[str, Any]]) -> dict[str, A
             total = total + state_dict[key]
         averaged[key] = total / n
     return averaged
+
+
+def round0_seed(personalized: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+    """Algorithm 1, line 7's average, over every client label the caller passes in.
+
+    Takes the one mapping keyed by every client across every source, so a caller cannot average
+    one source's clients at a time by construction the way a bare `average_state_dicts` call
+    over a per-source slice would.
+    """
+    return average_state_dicts(list(personalized.values()))
+
+
+def validate_schedule(
+    rounds: int, inner_steps: int, sync_period: int, *, allow_final_sync: bool
+) -> None:
+    """Refuse a bad R/K/H before Stage 1 trains anything.
+
+    `rounds`, `inner_steps` and `sync_period` all read as counts and must be at least 1; checked
+    here rather than left to `should_sync`/`with_inner_steps` so the message names the argument
+    before either is called. The final-sync collision (`rounds` a multiple of `sync_period`) is
+    the same refusal the script already carried, unless `allow_final_sync` says the collision
+    (the synchronous `sync-period=1` endpoint) is intended.
+    """
+    if rounds < 1:
+        raise SystemExit(f"rounds must be at least 1, got {rounds}")
+    if inner_steps < 1:
+        raise SystemExit(f"inner_steps must be at least 1, got {inner_steps}")
+    if sync_period < 1:
+        raise SystemExit(f"sync_period must be at least 1, got {sync_period}")
+    if should_sync(rounds - 1, sync_period) and not allow_final_sync:
+        raise SystemExit(
+            f"rounds={rounds} is a multiple of sync_period={sync_period} (H): the "
+            "final round syncs, so the saved -local would equal the transmitted global by "
+            "construction. Pass --allow-final-sync if that is the point (the synchronous "
+            "sync-period=1 endpoint), or choose rounds/sync_period so the last round does not "
+            "coincide with a sync."
+        )
+
+
+def local_provenance(rounds: int, sync_period: int) -> dict[str, Any]:
+    """What the saved `-local` module equals, under the registered reading of line 14.
+
+    `-local` is overwritten with that round's transmitted upload on every sync round
+    (`should_sync`), so its final saved value is the last sync's upload, or, when no round in
+    `rounds` syncs at all, still Stage 1's personalized module (`-p0`). `round` is 1-based, the
+    same count `should_sync`'s own docstring maps `round_index` onto.
+    """
+    last_sync = max((r for r in range(rounds) if should_sync(r, sync_period)), default=None)
+    if last_sync is None:
+        return {"equals": "p0"}
+    return {"equals": "sync_upload", "round": last_sync + 1}

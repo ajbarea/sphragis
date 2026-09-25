@@ -49,9 +49,23 @@ from pathlib import Path
 
 from peft import get_peft_model_state_dict, set_peft_model_state_dict
 
+from sphragis.corpus.load import derived_file_rows
 from sphragis.experiment.clients import partition
-from sphragis.experiment.dual_adapter import GLOBAL, LOCAL, save_adapter, sources
-from sphragis.experiment.fdlora import average_state_dicts, should_sync, with_inner_steps
+from sphragis.experiment.dual_adapter import (
+    GLOBAL,
+    LOCAL,
+    check_label_collisions,
+    client_label,
+    save_adapter,
+    sources,
+)
+from sphragis.experiment.fdlora import (
+    local_provenance,
+    round0_seed,
+    should_sync,
+    validate_schedule,
+    with_inner_steps,
+)
 from sphragis.experiment.model import (
     LORA,
     MODEL_ID,
@@ -73,6 +87,12 @@ parser.add_argument("--clients", type=int, default=8, help="at most this many pe
 parser.add_argument("--max-per-change", type=int)
 parser.add_argument("--seed", type=int, default=1, help="the shared initialization")
 parser.add_argument("--packing-seed", type=int)
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="read corpus files not cut under the current label rules, to reproduce an earlier "
+    "result; recorded in the output",
+)
 parser.add_argument("--rounds", type=int, default=6, help="T: the outer communication rounds")
 parser.add_argument(
     "--inner-steps",
@@ -105,23 +125,16 @@ def _clone(state: dict) -> dict:
 
 def main() -> None:
     args = parser.parse_args()
-    if should_sync(args.rounds - 1, args.sync_period) and not args.allow_final_sync:
-        raise SystemExit(
-            f"rounds={args.rounds} is a multiple of sync_period={args.sync_period} (H): the "
-            "final round syncs, so the saved -local would equal the transmitted global by "
-            "construction. Pass --allow-final-sync if that is the point (the synchronous "
-            "sync-period=1 endpoint), or choose rounds/sync_period so the last round does not "
-            "coincide with a sync."
-        )
+    validate_schedule(
+        args.rounds, args.inner_steps, args.sync_period, allow_final_sync=args.allow_final_sync
+    )
     tok = _require_tokenizer(args.model_id)
 
     plan: dict[str, list[list[dict]]] = {}
     items: dict[str, dict] = {}
     for spec in sources(args):
         name, _, path = spec.partition("=")
-        rows = [
-            json.loads(line) for line in (args.corpus_root / path).read_text().splitlines() if line
-        ]
+        rows = derived_file_rows(args.corpus_root / path, legacy=args.legacy_corpus)
         usable = []
         for row in rows:
             try:
@@ -141,6 +154,7 @@ def main() -> None:
         print(f"{name}: {len(rows)} examples -> {len(plan[name])} clients", flush=True)
     if any(not clients for clients in plan.values()):
         raise SystemExit("a source yields no full client at this size")
+    check_label_collisions(plan)
     if args.dry_run:
         print("DRY RUN: partition only, no model loaded")
         return
@@ -150,7 +164,7 @@ def main() -> None:
     # simulated federations for the attack scripts that read this output, and the schedule must
     # not silently re-scope the one cross-client mixing event this reading exists to measure.
     clients_flat: list[tuple[str, str, list[dict]]] = [
-        (source, f"{source.replace(':', '-').replace('/', '_')}-c{index}", client)
+        (source, client_label(source, index), client)
         for source, clients in plan.items()
         for index, client in enumerate(clients)
     ]
@@ -182,7 +196,7 @@ def main() -> None:
     # N clients regardless of source. Our reading: this is the one round that leaves every
     # client, uncounted by the paper's own "remains uninvolved in the federated learning
     # process".
-    theta_s0 = average_state_dicts(list(personalized.values()))
+    theta_s0 = round0_seed(personalized)
     for _source, label, _client in clients_flat:
         set_peft_model_state_dict(model, personalized[label], adapter_name=LOCAL)
         save_adapter(model, LOCAL, args.adapters / f"{label}-p0")
@@ -243,8 +257,10 @@ def main() -> None:
                 "allow_final_sync": args.allow_final_sync,
                 "transmitted": GLOBAL,
                 "withheld": LOCAL,
+                "local_equals": local_provenance(args.rounds, args.sync_period),
                 "withheld_round0": "p0",
                 "corpus_root": str(args.corpus_root),
+                "legacy_corpus": args.legacy_corpus,
                 "sources": sorted(sources(args)),
                 "client_size": args.client_size,
                 "max_per_change": args.max_per_change or max(1, args.client_size // 4),

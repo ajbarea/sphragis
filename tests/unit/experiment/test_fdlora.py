@@ -9,7 +9,14 @@ from __future__ import annotations
 
 import pytest
 
-from sphragis.experiment.fdlora import average_state_dicts, should_sync, with_inner_steps
+from sphragis.experiment.fdlora import (
+    average_state_dicts,
+    local_provenance,
+    round0_seed,
+    should_sync,
+    validate_schedule,
+    with_inner_steps,
+)
 
 
 class TestShouldSync:
@@ -95,3 +102,63 @@ class TestAverageStateDicts:
 
         averaged = average_state_dicts([{"a": Vector([2.0, 4.0])}, {"a": Vector([4.0, 8.0])}])
         assert list(averaged["a"]) == [3.0, 6.0]
+
+
+class TestRound0Seed:
+    def test_averages_across_every_source_not_per_source(self) -> None:
+        # Source "a" has two clients (mean 1.5), source "b" has three (mean 20.0); the round-0
+        # seed is the mean of all five, not either source's own mean.
+        personalized = {
+            "a-c0": {"w": 1.0},
+            "a-c1": {"w": 2.0},
+            "b-c0": {"w": 10.0},
+            "b-c1": {"w": 20.0},
+            "b-c2": {"w": 30.0},
+        }
+        assert round0_seed(personalized) == {"w": 12.6}
+
+    def test_one_client_returns_its_own_state(self) -> None:
+        assert round0_seed({"a-c0": {"w": 5.0}}) == {"w": 5.0}
+
+
+class TestValidateSchedule:
+    def test_a_schedule_that_does_not_collide_passes_silently(self) -> None:
+        validate_schedule(6, 3, 5, allow_final_sync=False)
+
+    def test_rounds_below_one_is_refused(self) -> None:
+        with pytest.raises(SystemExit, match="rounds must be at least 1"):
+            validate_schedule(0, 3, 5, allow_final_sync=False)
+
+    def test_inner_steps_below_one_is_refused(self) -> None:
+        with pytest.raises(SystemExit, match="inner_steps must be at least 1"):
+            validate_schedule(6, 0, 5, allow_final_sync=False)
+
+    def test_sync_period_below_one_is_refused(self) -> None:
+        with pytest.raises(SystemExit, match="sync_period must be at least 1"):
+            validate_schedule(6, 3, 0, allow_final_sync=False)
+
+    def test_a_final_sync_collision_is_refused_unless_allowed(self) -> None:
+        with pytest.raises(SystemExit, match="final round syncs"):
+            validate_schedule(6, 3, 3, allow_final_sync=False)
+        validate_schedule(6, 3, 3, allow_final_sync=True)
+
+    def test_bad_counts_are_caught_before_the_final_sync_check(self) -> None:
+        # rounds=0 with sync_period=0 would divide by nothing inside should_sync; the count
+        # checks must run first, or the collision check itself would raise the wrong error.
+        with pytest.raises(SystemExit, match="rounds must be at least 1"):
+            validate_schedule(0, 3, 0, allow_final_sync=False)
+
+
+class TestLocalProvenance:
+    def test_a_mid_sweep_sync_period_reads_its_last_sync_round(self) -> None:
+        assert local_provenance(6, 5) == {"equals": "sync_upload", "round": 5}
+
+    def test_a_sync_period_longer_than_the_run_never_fires(self) -> None:
+        assert local_provenance(6, 7) == {"equals": "p0"}
+        assert local_provenance(6, 10) == {"equals": "p0"}
+
+    def test_the_synchronous_endpoint_reads_the_last_round(self) -> None:
+        assert local_provenance(6, 1) == {"equals": "sync_upload", "round": 6}
+
+    def test_one_round_below_the_sync_period_never_fires(self) -> None:
+        assert local_provenance(1, 2) == {"equals": "p0"}
