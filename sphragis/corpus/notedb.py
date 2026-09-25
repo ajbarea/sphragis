@@ -195,12 +195,12 @@ _CURL_REQUEST = re.compile(rb"=> Send header: (?:GET|POST) ")
 
 
 #: Seconds to wait before each retry of a network command that failed for a transient reason
-#: (a connection that never opened or dropped, a server error). Every try is paced, counted
-#: and ledgered like the first; any other failure is raised at once.
+#: (a connection that never opened or dropped, a 5xx server error). Every try is paced, counted
+#: and ledgered like the first; any other failure, a 403 or 429 refusal included, is raised at once.
 RETRY_WAITS = (30.0, 120.0)
 _TRANSIENT = re.compile(
     r"Failed to connect|Couldn't connect|Connection timed out|Connection reset|"
-    r"Could not resolve host|RPC failed|early EOF|unexpected disconnect|"
+    r"Could not resolve host|RPC failed; HTTP 5\d\d|early EOF|unexpected disconnect|"
     r"The requested URL returned error: 5\d\d"
 )
 _sleep = time.sleep

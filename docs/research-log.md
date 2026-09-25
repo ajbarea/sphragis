@@ -5555,8 +5555,9 @@ each is now a test:
 
 **Requests.** All paced at one a second or the host's crawl delay, whichever is longer; a git fetch
 is several HTTP requests and is billed for all of them. A command that fails for a transient reason
-(a connection that never opened, a server error) is retried twice, after 30 s and 120 s, each try
-paced and ledgered; three of the runs below needed it for blob or history fetches.
+(a connection that never opened or dropped, a 5xx server error) is retried twice, after 30 s and
+120 s, each try paced and ledgered; a 403 or 429 refusal is never retried. Three of the runs below
+needed a retry for blob or history fetches.
 
 - 2026-09-23, first run: android.googlesource.com, 20 fetches and 66 HTTP requests, 3 of them
   entered by hand for one untraced lazy fetch during manual inspection, plus 7 fetches and 21

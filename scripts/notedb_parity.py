@@ -720,6 +720,16 @@ def _refuse_unsafe_work(work: Path, rest_root: Path, out: Path) -> None:
                 f"--work {work} is, or contains, {label} ({target}); refusing before doing any "
                 "work, since a directory under --work is deleted when this run finishes"
             )
+    checkout = targets["the repository checkout this script runs from"]
+    if _is_or_ancestor_of(checkout, work_r):
+        ignored = subprocess.run(
+            ["git", "-C", str(checkout), "check-ignore", "-q", str(work_r)], check=False
+        )
+        if ignored.returncode != 0:
+            raise SystemExit(
+                f"--work {work} is inside the checkout and git does not ignore it: the scratch "
+                "repository holds raw identities, so it must never sit where it could be committed"
+            )
 
 
 def _find_marked_scratch(work: Path) -> Path | None:

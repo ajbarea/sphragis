@@ -639,3 +639,28 @@ def test_compare_examples_refines_the_git_side_when_given_an_index(
     )
     assert plain["counts"].get("identical", 0) == 0
     assert both["counts"]["identical"] == 1
+
+
+def test_main_refuses_an_unsafe_work_before_any_fetch(
+    parity: types.ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    ran = []
+    monkeypatch.setattr(parity, "_run", lambda *a: ran.append(a))
+    monkeypatch.setattr(parity, "require_salt", lambda: "salt")
+    checkout = parity._checkout_root()
+    argv = ["notedb_parity.py", "--work", str(checkout), "--rest-root", str(_rest_root(tmp_path))]
+    monkeypatch.setattr(sys, "argv", argv)
+    with pytest.raises(SystemExit, match="repository checkout"):
+        parity.main()
+    assert not ran
+
+
+def test_a_work_inside_the_checkout_must_be_ignored_by_git(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    """The scratch repository holds raw identities, so it may only sit where git ignores it."""
+    checkout = parity._checkout_root()
+    rest, out = _rest_root(tmp_path), tmp_path / "out" / "a.json"
+    with pytest.raises(SystemExit, match="does not ignore"):
+        parity._refuse_unsafe_work(checkout / "docs" / "parity-scratch", rest, out)
+    parity._refuse_unsafe_work(checkout / "scratch" / "parity-work", rest, out)

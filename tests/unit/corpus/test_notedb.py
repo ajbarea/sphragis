@@ -2395,3 +2395,34 @@ def test_retries_stop_after_the_last_wait(tmp_path: Path, monkeypatch: pytest.Mo
     with pytest.raises(notedb.GitError, match="Connection timed out"):
         repo._network("blobs", ["fetch"], None, 1)
     assert waits == list(notedb.RETRY_WAITS)
+
+
+@pytest.mark.parametrize("status", ["403", "429"])
+def test_a_refusal_is_not_retried(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, status: str
+) -> None:
+    """A host that refuses or rate-limits the route is not asked again."""
+    err = f"error: RPC failed; HTTP {status} curl 22 The requested URL returned error: {status}"
+    repo, waits = _scripted_repo(tmp_path, monkeypatch, [(128, err.encode())])
+    with pytest.raises(notedb.GitError, match=status):
+        repo._network("blobs", ["fetch"], None, 1)
+    assert waits == []
+
+
+def test_a_server_error_during_negotiation_is_retried(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    err = b"error: RPC failed; HTTP 503 curl 22 The requested URL returned error: 503"
+    repo, waits = _scripted_repo(tmp_path, monkeypatch, [(128, err), (0, b"")])
+    repo._network("blobs", ["fetch"], None, 1)
+    assert waits == [notedb.RETRY_WAITS[0]]
+
+
+def test_the_tip_probe_is_ledgered_against_the_repository_it_serves(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    s.ref("refs/heads/main", s.commit(s.tree({"f": b"1\n"}), "recent", "2024-11-10T00:00:00Z"))
+    ledger = tmp_path / "ledger.jsonl"
+    repo = notedb.Repo.open(tmp_path / "s" / "c.git", f"{s.url}/{PROJECT}", Pacer(0), ledger=ledger)
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
+    purposes = [json.loads(line)["purpose"] for line in ledger.read_text().splitlines()]
+    assert "history_tips" in purposes
