@@ -2308,3 +2308,51 @@ def test_a_read_record_updated_at_the_window_is_dropped_even_if_the_meta_id_matc
     rows, counts = notedb.collect(repo, [102], project=PROJECT)
     assert rows == []
     assert counts["touches_test_window"] == 1
+
+
+def _scripted_repo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, results: list[tuple[int, bytes]]
+) -> tuple[notedb.Repo, list[float]]:
+    """A repo whose network commands return `results` in order, and the waits it slept."""
+    repo = notedb.Repo(tmp_path / "x.git", "file:///nowhere", Pacer(0), ledger=tmp_path / "l.jsonl")
+    queue = list(results)
+
+    def run(args, **_):
+        code, err = queue.pop(0)
+        return subprocess.CompletedProcess(args, code, b"", err)
+
+    waits: list[float] = []
+    monkeypatch.setattr(repo, "_run", run)
+    monkeypatch.setattr(notedb, "_sleep", waits.append)
+    return repo, waits
+
+
+def test_a_transient_network_failure_is_retried_and_every_try_ledgered(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, waits = _scripted_repo(
+        tmp_path, monkeypatch, [(128, b"Failed to connect to host port 443"), (0, b"")]
+    )
+    repo._network("blobs", ["fetch"], None, 1)
+    assert waits == [notedb.RETRY_WAITS[0]]
+    lines = [json.loads(x) for x in (tmp_path / "l.jsonl").read_text().splitlines()]
+    assert [(x["attempt"], x["returncode"]) for x in lines] == [(0, 128), (1, 0)]
+
+
+def test_a_non_transient_network_failure_is_raised_without_retrying(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, waits = _scripted_repo(
+        tmp_path, monkeypatch, [(128, b"fatal: couldn't find remote ref refs/x")]
+    )
+    with pytest.raises(notedb.GitError, match="couldn't find remote ref"):
+        repo._network("refs", ["fetch"], None, 1)
+    assert waits == []
+
+
+def test_retries_stop_after_the_last_wait(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    transient = (128, b"Connection timed out")
+    repo, waits = _scripted_repo(tmp_path, monkeypatch, [transient] * (len(notedb.RETRY_WAITS) + 1))
+    with pytest.raises(notedb.GitError, match="Connection timed out"):
+        repo._network("blobs", ["fetch"], None, 1)
+    assert waits == list(notedb.RETRY_WAITS)

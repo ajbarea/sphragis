@@ -194,6 +194,17 @@ _SHA1 = re.compile(r"\b[0-9a-f]{40}\b")
 _CURL_REQUEST = re.compile(rb"=> Send header: (?:GET|POST) ")
 
 
+#: Seconds to wait before each retry of a network command that failed for a transient reason
+#: (a connection that never opened or dropped, a server error). Every try is paced, counted
+#: and ledgered like the first; any other failure is raised at once.
+RETRY_WAITS = (30.0, 120.0)
+_TRANSIENT = re.compile(
+    r"Failed to connect|Couldn't connect|Connection timed out|Connection reset|"
+    r"Could not resolve host|RPC failed|early EOF|unexpected disconnect|"
+    r"The requested URL returned error: 5\d\d"
+)
+_sleep = time.sleep
+
 #: HEAD names a ref no fetch writes. A bare repository reads defaults from HEAD's tree
 #: (`.mailmap` for a log, `.gitattributes` for a diff), and a commits-only fetch of the branch
 #: HEAD would otherwise name never holds that tree, so every such command failed on a lazy fetch.
@@ -516,6 +527,20 @@ class Repo:
         if not _is_local_url(self.url) and (permission is None or not permission.permitted):
             reason = permission.reason if permission else "not recorded in GIT_PERMITTED"
             raise GitError(f"refusing to contact {self.host} over the network: {reason}")
+        for attempt in range(len(RETRY_WAITS) + 1):
+            done = self._attempt(purpose, args, stdin, items, attempt)
+            if done.returncode == 0:
+                return done.stdout
+            stderr = done.stderr.decode(errors="replace")
+            if attempt == len(RETRY_WAITS) or not _TRANSIENT.search(stderr):
+                raise GitError(stderr.strip()[-2000:])
+            _sleep(RETRY_WAITS[attempt])
+        raise AssertionError("unreachable")
+
+    def _attempt(
+        self, purpose: str, args: Sequence[str], stdin: bytes | None, items: int, attempt: int
+    ) -> subprocess.CompletedProcess[bytes]:
+        """One paced, traced, ledgered try of a network command."""
         self.pacer.wait(self.host)
         with tempfile.NamedTemporaryFile(prefix="sphragis-curl-", suffix=".trace") as trace:
             started = time.monotonic()
@@ -545,14 +570,13 @@ class Repo:
             "http_requests": requests,
             "seconds": round(time.monotonic() - started, 2),
             "returncode": done.returncode,
+            "attempt": attempt,
         }
         self.log.append(entry)
         if self.ledger is not None:
             with self.ledger.open("a") as handle:
                 handle.write(json.dumps(entry) + "\n")
-        if done.returncode != 0:
-            raise GitError(done.stderr.decode(errors="replace").strip()[-2000:])
-        return done.stdout
+        return done
 
     def fetch(self, purpose: str, refspecs: Sequence[str], *options: str) -> None:
         """One paced `git fetch` of `refspecs`, read from stdin so a batch has no length limit."""
