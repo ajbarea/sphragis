@@ -36,10 +36,12 @@ research log records what is and is not known about those requests.
   artifact; the human's are added once the check is in.
 - **Retraining on v2** waits on Qt's answer about access; TIGRIS gets the refined corpora, and
   RQ2's client corpora are recut with records, before any GPU job.
-- **FDLoRA's schedule** (`sphragis/experiment/fdlora.py`, `scripts/fdlora_schedule.py`) matches
-  the registered reading of Algorithm 1 (`docs/research-log.md`, 2026-09-21). Job 183579 ran the
-  pre-review code and was cancelled before a result; both defects are fixed (2026-09-23). No job
-  is queued: a TIGRIS job reads the AOSP and Qt corpora only after the ruling on their terms of use.
+- **FDLoRA's schedule** (`sphragis/experiment/fdlora.py`, `scripts/fdlora_schedule.py`) follows
+  the registered reading of Algorithm 1 except the outer aggregation step (lines 17 and 18), a
+  recorded confound (`docs/research-log.md`, 2026-09-21 and 2026-09-23). Under that reading
+  `-local` is always a past transmission, and the output's `local_equals` says which
+  (2026-09-24). Job 183579 was cancelled before it ran. No job is queued: it trains on the v2
+  client corpora, which wait on the recut above.
 
 ## Next
 

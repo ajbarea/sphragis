@@ -5391,3 +5391,65 @@ agreement is computed: every human figure is read on the answers as locked, and 
 reported slip touches is also reported without that item (`human_slips` and the `without slips`
 pairs). Slips are marked on the page beside the locked answer and saved with the check;
 `label_audit_agreement.py` reads them from there, and `--slip ITEM:FIELD` adds one by hand.
+
+### Registered before the next job: under our reading, FDLoRA's personalized module is always something the server has received (2026-09-24)
+
+A second review of PR #36 ran the script against a fake model stack and found that the saved
+`-local` module is never a withheld tensor. This follows from the reading registered on
+2026-09-21, not from the code.
+
+**Why.** Under reading 2, the pseudocode's, the personalized module trains only in Stage 1
+(Algorithm 1, lines 1 to 6). Stage 2 trains the global module (line 12), and on a sync round line
+14 sets the personalized module to the client's own locally optimized global, `theta_s(i)(t)`,
+which is the tensor line 17 averages that round. After Stage 1, then, a client's personalized
+module is one of two things:
+
+- its Stage 1 module, which reading 1 already counts as transmitted at initialization (line 7);
+- its upload from the most recent sync round.
+
+**What that means for each schedule.**
+
+- `H <= T`: `-local` is the upload of the last sync round. At the default `ROUNDS=6 SYNC_PERIOD=5`
+  it is the round-5 upload.
+- `H > T`, including the paper's `H = 10` and `H = infinity` at `T = 6`: no sync fires and `-local`
+  is byte-identical to `-p0`.
+- `H` dividing `T`, including `H = T`, which the paper tests: `-local` equals the final upload, the
+  case the final-sync refusal already excludes.
+
+The 2026-09-23 entry's reason for `SYNC_PERIOD=5` is corrected here. Reading the withheld half "one
+round after its last sync" keeps it from equalling the final upload. It does not keep it from being
+an upload.
+
+**Consequence, registered before any job.** Read by its pseudocode, FDLoRA's split withholds no
+parameters, and "remains uninvolved in the federated learning process" holds for no schedule. The
+script records what `-local` equals in its output (`local_equals`), and an attack that reads
+`-local` is reported as reading a past transmission. The 2026-09-21 prediction is restated: `H`
+changes how many rounds old that copy is when the run ends, not whether it was sent.
+
+The prose reading, where the inner loop trains the personalized module, would make it a withheld
+tensor between syncs. It was rejected on 2026-09-21 because the outer step would then receive a
+zero update. This finding rests on that choice, and the report says so.
+
+**Implementation choices the registration did not state**, disclosed here before any run:
+
+- `K` is read as epochs. The paper calls `K` inner "steps" (Section 3.4) and "the local update
+  epochs K = 3" (Section 4.2).
+- Stage 1 trains for the same two epochs as every other adapter here (`TRAINING`).
+- Each round restarts AdamW and its warmup and cosine schedule under the same seed, so a client
+  sees its data in the same order every round.
+
+**Also fixed, found by the same review.**
+
+- The script read client corpora without the loader, so it would have trained on v1 client corpora
+  (which still hold Qt's bot comments) without noticing. It now reads through `derived_file_rows`
+  like every other training script and records `legacy_corpus`. `scripts/preflight_pilot.py` had
+  the same gap. A test now requires every script that builds training items to read through
+  `sphragis.corpus.load`.
+- The schedule's refusals (`validate_schedule`), the round-0 average over every client
+  (`round0_seed`) and what `-local` equals (`local_provenance`) are pure, tested functions in
+  `sphragis/experiment/fdlora.py`. A reintroduced per-source average now fails the suite, and a bad
+  `K` or `T` is refused before Stage 1 writes anything.
+- Two source specs that map to one client label are refused; before, the second silently replaced
+  the first and the round-0 average lost a client.
+- `fdlora_schedule.sbatch` tags results with the packing seed, so two draws no longer collide, and
+  only `ALLOW_FINAL_SYNC=1` enables the override.

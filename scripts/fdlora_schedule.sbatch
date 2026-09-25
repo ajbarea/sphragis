@@ -18,10 +18,10 @@
 # H > ROUNDS never syncs at all, and H=3 with ROUNDS=6 syncs on the final round too -- the same
 # construction as H=1, by coincidence rather than intent -- which is why the script itself refuses
 # any ROUNDS/SYNC_PERIOD pair where the last round syncs unless ALLOW_FINAL_SYNC=1 says so. H=5
-# is the paper's own tested value that does not divide 6, so the withheld half is read one round
-# after its last sync rather than the round it was just overwritten in. Stage 1 plus six rounds of
-# three-epoch InnerOpt a client is a little over twice dual_adapter_updates' feddpa-t2 budget (that
-# run took 90 minutes at this client size), so twelve hours holds with margin.
+# is the paper's own tested value that does not divide 6. Under the registered reading the saved
+# -local is then the round-5 upload rather than a withheld tensor (docs/research-log.md,
+# 2026-09-24); the output's local_equals records which. The twelve-hour limit is
+# dual_adapter_updates.sbatch's; no FDLoRA job has run, so it is not yet measured.
 #
 # The H sweep this job is one point of needs at least two packing draws a point (PACKING_SEED),
 # the same rule client_updates.sbatch already follows (docs/research-log.md, 2026-09-18, "256
