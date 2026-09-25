@@ -5332,6 +5332,56 @@ that transport; the resume script refuses the same three organizations before it
 Each permitted host records its crawl delay, and the transport paces by host name, retries
 included, never faster than it.
 
+### FDLoRA's implementation, corrected before it ran: what job 183579 would have measured wrong (2026-09-23)
+
+An independent review of PR #36 found the round-0 average (Algorithm 1, line 7) was computed
+per source rather than over every client the plan builds, before job 183579 reached its queue
+slot. The paper's N is every client the server sees; this repository's `sources` name separate
+simulated federations for the attack scripts, and the two are not the same population. Fixed by
+flattening `plan` into one list before Stage 1 runs and averaging over all of it, so `theta_s0` is
+one value shared across every client regardless of source. Job 183579 was cancelled as invalid
+before it produced a result; nothing from it is quoted anywhere.
+
+**Registered before the next job: when the withheld half is read.** `-local` is saved as of a
+client's most recent sync, or its Stage 1 value if `--sync-period` never fired. When the final
+round is itself a sync round, that value is identical to the transmitted global by construction --
+correct and intended only at the deliberate synchronous `--sync-period 1` endpoint, where every
+round syncs and the collision is the point. The default job's first choice, `ROUNDS=6
+SYNC_PERIOD=3`, hit the same construction by coincidence (6 is a multiple of 3), which would have
+made its withheld/transmitted comparison vacuous without saying so. `scripts/fdlora_schedule.py`
+now refuses any `rounds`/`sync_period` pair where the last round syncs unless `--allow-final-sync`
+states the collision is intended, and the default `SYNC_PERIOD` moves to 5 -- the paper's own
+tested value that does not divide 6, so the withheld half is read one round after its last sync
+rather than the round it was just overwritten in.
+
+**Recorded as a limitation rather than resolved by a claim the code does not support.** The
+docstring previously called training each client's global module independently across rounds,
+rather than simulating the paper's real per-round outer aggregation (Nesterov momentum over every
+client's change, Algorithm 1 lines 17-18), "the conservative direction... it can only overstate
+what a real, further-averaged deployment would leak." That claim does not hold: in the real
+algorithm the server can subtract its previous global from what it receives and recover each
+client's K-epoch change, T times over, so the paper's own per-client contribution is bounded by
+roughly `inner_steps` epochs from a shared seed. This script's saved global module instead carries
+roughly `rounds * inner_steps` continuous epochs, uninterrupted by any outer step. A difference in
+measured leakage against FedDPA may therefore reflect this length gap rather than the schedule,
+and the comparison is not compute-matched. The docstring now calls it what it is -- an upper bound
+confounded by training length -- and drops "conservative": overstating leakage is not a safe
+direction for a measurement that is looking for leakage, it is a bias toward the hypothesis.
+Implementing the real outer step (rounds outer, clients inner, one Nesterov update a round over
+every client's change, each round's upload saved) is the fix that removes the confound; it is not
+done here.
+
+**Also fixed, found by the same review:** the adapter-shape naming guard in
+`sphragis/experiment/cluster-env.sh` classified a selector by testing it as a glob pattern against
+a synthetic placeholder name (`a-c0`, `a-c0-local`, `a-c0-p0`), which a selector spelled without
+the assumed hyphen (`*local`, `*-local*`) or scoped to an organization prefix (`aosp-*`) could
+defeat: `*local` matched none of the placeholders' suffix-based case arms, so it fell through to
+the unsuffixed transmitted name while actually selecting only the withheld adapters -- a silent
+mislabeling where `main`'s original two-shape version had refused the same pattern outright. The
+guard now globs the real client directories the selector resolves to and classifies each match by
+its own suffix, so the result depends on what is actually on disk rather than on the selector's
+spelling.
+
 ### Registered before the human's figures: a reported slip stays as locked (2026-09-24)
 
 The check page locks the human's label and outside-names answer before it reveals rater A's. A
@@ -5341,3 +5391,65 @@ agreement is computed: every human figure is read on the answers as locked, and 
 reported slip touches is also reported without that item (`human_slips` and the `without slips`
 pairs). Slips are marked on the page beside the locked answer and saved with the check;
 `label_audit_agreement.py` reads them from there, and `--slip ITEM:FIELD` adds one by hand.
+
+### Registered before the next job: under our reading, FDLoRA's personalized module is always something the server has received (2026-09-24)
+
+A second review of PR #36 ran the script against a fake model stack and found that the saved
+`-local` module is never a withheld tensor. This follows from the reading registered on
+2026-09-21, not from the code.
+
+**Why.** Under reading 2, the pseudocode's, the personalized module trains only in Stage 1
+(Algorithm 1, lines 1 to 6). Stage 2 trains the global module (line 12), and on a sync round line
+14 sets the personalized module to the client's own locally optimized global, `theta_s(i)(t)`,
+which is the upload that round: line 17 averages its difference from the dispatched global.
+After Stage 1, then, a client's personalized module is one of two things:
+
+- its Stage 1 module, which reading 1 already counts as transmitted at initialization (line 7);
+- its upload from the most recent sync round.
+
+**What that means for each schedule.**
+
+- `H <= T`: `-local` is the upload of the last sync round. At the default `ROUNDS=6 SYNC_PERIOD=5`
+  it is the round-5 upload.
+- `H > T`, including the paper's `H = 10` and `H = infinity` at `T = 6`: no sync fires and
+  `-local` equals `-p0`.
+- `H` dividing `T`, including `H = T`, which the paper tests: `-local` equals the final upload, the
+  case the final-sync refusal already excludes.
+
+The 2026-09-23 entry's reason for `SYNC_PERIOD=5` is corrected here. Reading the withheld half "one
+round after its last sync" keeps it from equalling the final upload. It does not keep it from being
+an upload.
+
+**Consequence, registered before any job.** Read by its pseudocode, FDLoRA's split withholds no
+parameters, and "remains uninvolved in the federated learning process" holds for no schedule. The
+script records what `-local` equals in its output (`local_equals`), and an attack that reads
+`-local` is reported as reading a past transmission. The 2026-09-21 prediction is restated: `H`
+changes how many rounds old that copy is when the run ends, not whether it was sent.
+
+The prose reading, where the inner loop trains the personalized module, would make it a withheld
+tensor between syncs. It was rejected on 2026-09-21 because the outer step would then receive a
+zero update. This finding rests on that choice, and the report says so.
+
+**Implementation choices the registration did not state**, disclosed here before any run:
+
+- `K` is read as epochs. The paper calls `K` inner "steps" (Section 3.4) and "the local update
+  epochs K = 3" (Section 4.2).
+- Stage 1 trains for the same two epochs as every other adapter here (`TRAINING`).
+- Each round restarts AdamW and its warmup and cosine schedule under the same seed, so a client
+  sees its data in the same order every round.
+
+**Also fixed, found by the same review.**
+
+- The script read client corpora without the loader, so it would have trained on v1 client corpora
+  (which still hold Qt's bot comments) without noticing. It now reads through `derived_file_rows`
+  like every other training script and records `legacy_corpus`. `scripts/preflight_pilot.py` had
+  the same gap. A test now requires every script that builds training items to read through
+  `sphragis.corpus.load`.
+- The schedule's refusals (`validate_schedule`), the round-0 average over every client
+  (`round0_seed`) and what `-local` equals (`local_provenance`) are pure, tested functions in
+  `sphragis/experiment/fdlora.py`. A reintroduced per-source average now fails the suite, and a bad
+  `K` or `T` is refused before Stage 1 writes anything.
+- Two source specs that map to one client label are refused; before, the second silently replaced
+  the first and the round-0 average lost a client.
+- `fdlora_schedule.sbatch` tags results with the packing seed, so two draws no longer collide, and
+  only `ALLOW_FINAL_SYNC=1` enables the override.

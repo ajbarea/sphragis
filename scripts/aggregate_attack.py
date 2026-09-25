@@ -35,7 +35,7 @@ from sphragis.measure.aggregate import (
     paired_subset_difference,
     project_permutation,
 )
-from sphragis.measure.attribution import Source, client_names
+from sphragis.measure.attribution import Source, client_names, reads_local
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
@@ -98,6 +98,8 @@ def main() -> None:
         "provenance": provenance_header(),
         "targets": {},
     }
+    if "local_equals" in report_in and reads_local(geometry, report_in):
+        report["local_equals"] = report_in["local_equals"]
     for label in sorted(set(labels)):
         mine = [i for i, other in enumerate(labels) if other == label]
         outside = [i for i, other in enumerate(labels) if other != label]

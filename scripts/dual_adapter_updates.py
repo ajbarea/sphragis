@@ -30,13 +30,22 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 from pathlib import Path
 
 from peft import get_peft_model_state_dict, set_peft_model_state_dict
 
 from sphragis.corpus.load import derived_file_rows
 from sphragis.experiment.clients import partition
+from sphragis.experiment.dual_adapter import (
+    GLOBAL,
+    LOCAL,
+    check_label_collisions,
+    client_label,
+    freeze,
+    save_adapter,
+    sources,
+    unfreeze,
+)
 from sphragis.experiment.model import (
     LORA,
     MODEL_ID,
@@ -48,9 +57,6 @@ from sphragis.experiment.model import (
 )
 from sphragis.experiment.runner import build_prompt
 from sphragis.experiment.training import build_supervised
-
-GLOBAL = "global"
-LOCAL = "local"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--source", action="append", default=[], metavar="ORG:CONTENT/PROJECT=PATH")
@@ -87,40 +93,6 @@ parser.add_argument("--device", default="cuda:0", help="cpu exercises the schedu
 parser.add_argument("--dry-run", action="store_true", help="partition only, no model")
 
 
-def sources(args: argparse.Namespace) -> list[str]:
-    specs = list(args.source)
-    if args.sources_file:
-        for line in args.sources_file.read_text().splitlines():
-            line = line.split("#", 1)[0].strip()
-            if line:
-                specs.append(line)
-    if not specs:
-        raise SystemExit("no sources given")
-    return specs
-
-
-def freeze(model, adapter: str) -> None:
-    """Hold one adapter's parameters still while another trains against them."""
-    for name, parameter in model.named_parameters():
-        if "lora_" in name and f".{adapter}." in name:
-            parameter.requires_grad_(False)
-
-
-def save_adapter(model, adapter: str, destination: Path) -> None:
-    """Write one adapter where the geometry and attack scripts expect to find it.
-
-    `save_pretrained` with a selection writes `<destination>/<adapter>/adapter_model.safetensors`,
-    and every reader in this repository globs `<client>/adapter_model.safetensors`, so the files
-    are lifted one level rather than teaching each reader a second layout.
-    """
-    destination.mkdir(parents=True, exist_ok=True)
-    model.save_pretrained(destination, selected_adapters=[adapter])
-    nested = destination / adapter
-    for path in nested.iterdir():
-        shutil.move(str(path), destination / path.name)
-    nested.rmdir()
-
-
 def main() -> None:
     args = parser.parse_args()
     tok = _require_tokenizer(args.model_id)
@@ -149,6 +121,7 @@ def main() -> None:
         print(f"{name}: {len(rows)} examples -> {len(plan[name])} clients", flush=True)
     if any(not clients for clients in plan.values()):
         raise SystemExit("a source yields no full client at this size")
+    check_label_collisions(plan)
     if args.dry_run:
         print("DRY RUN: partition only, no model loaded")
         return
@@ -173,7 +146,7 @@ def main() -> None:
             for name in (GLOBAL, LOCAL):
                 set_peft_model_state_dict(model, initial[name], adapter_name=name)
             batch = [items[r["id"]] for r in client]
-            label = f"{source.replace(':', '-').replace('/', '_')}-c{index}"
+            label = client_label(source, index)
             losses: dict[str, list[float]] = {GLOBAL: [], LOCAL: []}
 
             rounds = 1 if args.schedule == "feddpa-f" else args.rounds
@@ -204,9 +177,7 @@ def main() -> None:
                     )
                 losses[LOCAL].extend(report.losses)
                 # The global phase of the next round needs its parameters back.
-                for name, parameter in model.named_parameters():
-                    if "lora_" in name and f".{GLOBAL}." in name:
-                        parameter.requires_grad_(True)
+                unfreeze(model, GLOBAL)
 
             save_adapter(model, GLOBAL, args.adapters / label)
             save_adapter(model, LOCAL, args.adapters / f"{label}-local")

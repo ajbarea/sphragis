@@ -12,10 +12,10 @@ itself, required a hand-copied script the deploy discipline forbids, and validat
 """
 
 import argparse
-import json
 import subprocess
 from pathlib import Path
 
+from sphragis.corpus.load import derived_file_rows
 from sphragis.experiment.preflight import check_paths_exist, check_repo_matches
 
 REPO = Path(__file__).resolve().parents[1]
@@ -24,6 +24,12 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("corpora", nargs="+", help="PATH, or ORG=PATH for a multi-organization job")
 parser.add_argument("--script", type=Path, default=Path("scripts/pilot.py"))
 parser.add_argument("--split-seed", type=int, default=0)
+parser.add_argument(
+    "--legacy-corpus",
+    action="store_true",
+    help="check the corpus files not cut under the current label rules, the same way the job "
+    "will read them with --legacy-corpus",
+)
 args = parser.parse_args()
 
 corpora = {
@@ -66,7 +72,7 @@ for org, path in corpora.items():
     try:
         if tok is None:
             tok = AutoTokenizer.from_pretrained(MODEL_ID)
-        rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+        rows = derived_file_rows(path, legacy=args.legacy_corpus)
         kept, removed = run_dedup(rows)
         train, held_out = holdout_by_change(kept, seed=args.split_seed)
         refused = 0
@@ -95,6 +101,8 @@ for org, path in corpora.items():
                 f"{org}: {held_changes} held-out changes, below the bootstrap's floor of "
                 f"{MIN_CLUSTERS}; the job would fail at the interval"
             )
+    except SystemExit as refused:
+        problems.append(f"{org}: {refused}")
     except Exception as e:
         problems.append(f"{org}: data path failed: {type(e).__name__}: {e}")
 

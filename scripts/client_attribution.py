@@ -24,6 +24,7 @@ from sphragis.measure.attribution import (
     client_names,
     group_permutation_p,
     permutation_p,
+    reads_local,
     relation_means,
 )
 from sphragis.provenance import provenance_header
@@ -45,6 +46,8 @@ def main() -> None:
     sources = [Source.parse(clients[n]["source"]) for n in names]
     cosine = geometry["cosine"]
     report: dict = {"clients": len(names), "altitudes": {}}
+    if "local_equals" in report_in and reads_local(geometry, report_in):
+        report["local_equals"] = report_in["local_equals"]
     for altitude in ALTITUDES:
         labels = [s.at(altitude) for s in sources]
         counts = Counter(labels)
