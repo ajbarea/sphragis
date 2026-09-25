@@ -49,7 +49,7 @@ project_args=()
 for p in $PROJECTS; do
   project_args+=(--project "$p")
 done
-current_projects=$(printf '%s\n' $PROJECTS | sort | tr '\n' ' ')
+current_projects=$(printf '%s\n' $PROJECTS | LC_ALL=C sort | tr '\n' ' ')
 current_projects=${current_projects% }
 
 for m in $MONTHS; do

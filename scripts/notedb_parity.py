@@ -8,14 +8,18 @@ corpus went through, then compared with that corpus three ways:
 2. fields: every REST change field the git route fills, on the changes both hold;
 3. examples: ids, before/after hunks, context and comment texts, on the changes both hold.
 
-The REST corpus is read only. Git objects go to `--work`, a scratch directory the caller
-deletes afterwards: they carry raw identities, and only counts and ids reach the artifact.
-Every network operation is appended to `<work>/ledger.jsonl`, so a rerun over the same work
-directory costs no requests and the artifact reports what the whole comparison cost.
+The REST corpus is read only. Git objects go to `--work`, a scratch directory this script
+deletes when the run finishes -- on an error or a signal too -- because it carries raw
+identities and only counts and ids reach the artifact; pass `--keep-work` to keep it instead.
+Every network operation is appended to `<work>/ledger.jsonl`, so the artifact reports what the
+whole comparison cost. A rerun over a kept work directory does *not* cost no requests: reading
+which branches to enumerate (`branch_refs`) runs one `ls-remote` every time regardless, and the
+sealed test window's meta-tip probe is re-forced every time by design (item 1); what a kept
+directory actually saves is not refetching blobs, trees and patch-set commits already held.
 
 Run: set -a; . ./.env; set +a
      uv run --no-active python scripts/notedb_parity.py \
-         --rest-root <checkout>/datasets/gerrit/aosp --work <scratch>/notedb-parity
+         --rest-root <checkout>/datasets/gerrit/aosp --work <scratch>/notedb-parity --keep-work
 """
 
 from __future__ import annotations
@@ -23,6 +27,8 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import shutil
+import signal
 import subprocess
 from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
@@ -41,6 +47,8 @@ from sphragis.corpus.notedb import (
     REVIEW_HOSTS,
     MergedCommit,
     Repo,
+    _raise_on_sigterm,
+    _uninterruptible,
     branch_refs,
     candidates_since,
     collect,
@@ -184,11 +192,17 @@ def classify_enumeration(
     git: Mapping[int, dict[str, Any]],
     rest: Mapping[str, list[dict[str, Any]]],
     on_branch: Mapping[str, int],
+    branches_read: Sequence[str],
 ) -> dict[str, Any]:
     """Which changes each route holds for one month, with a reason for every difference.
 
     The REST snapshot holds changes by last update; the git route by NoteDb submission time on
-    one branch. Each difference is attributed to the first reason that explains it.
+    the branches this run actually read. Each difference is attributed to the first reason that
+    explains it. `branches_read` is `branch_refs`'s own result -- the branches this run actually
+    asked NoteDb for, not `--branch` as requested, which can name a branch the project has none
+    of -- so a REST-only change on a branch outside that set is `branch_not_read`, whatever was
+    requested; a run restricted to fewer branches than the comparison's usual default sees more
+    of these, not a different label for the same cause.
     """
     start, end = month_bounds(month)
     since = _since(start)
@@ -196,6 +210,7 @@ def classify_enumeration(
     elsewhere = {
         r["_number"]: other for other, rows in rest.items() if other != month for r in rows
     }
+    read_branch_names = {ref.rsplit("/", 1)[-1] for ref in branches_read}
     rest_only: Counter[str] = Counter()
     rest_only_ids: dict[str, list[int]] = defaultdict(list)
     for number, row in sorted(here.items()):
@@ -210,8 +225,8 @@ def classify_enumeration(
         elif landed:
             floor = datetime.fromisoformat(since).replace(tzinfo=UTC).timestamp()
             reason = "committed_before_candidate_slack" if max(landed) < floor else "unexplained"
-        elif row.get("branch") != BRANCH_DEFAULT:
-            reason = "other_branch_never_reached_main"
+        elif row.get("branch") not in read_branch_names:
+            reason = "branch_not_read"
         elif uploaded < since:
             reason = "uploaded_before_fetched_history"
         else:
@@ -535,10 +550,18 @@ def measure_rebases(
 
 
 def _relative_to_repo(path: Path) -> str:
-    """`path` relative to the repository root, or its resolved form outside the repository."""
+    """`path` relative to the git top-level of the checkout that *contains it*, not this
+    process's own cwd: `--rest-root` can be a path in another checkout, or in a worktree of
+    this one, whose top-level a plain `git rev-parse` run from cwd would get wrong -- or, run
+    from outside any checkout at all, would misreport as whatever repository cwd happens to sit
+    in. Never an absolute path in the artifact, which would otherwise carry `/home/<user>/...`.
+    """
     resolved = path.resolve()
     top = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False
+        ["git", "-C", str(resolved), "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if top.returncode == 0:
         try:
@@ -546,6 +569,42 @@ def _relative_to_repo(path: Path) -> str:
         except ValueError:
             pass
     return str(resolved)
+
+
+def _history_fetched(marker: Path, branches: Sequence[str], since: str) -> dict[str, Any] | None:
+    """The branch set and `since` date `fetch_history` was last run for, or None if it must run.
+
+    None when there is no marker, when it does not parse, when a branch this run reads is not
+    among those already fetched (a rerun asking for more branches than before must still fetch
+    the ones it has not seen), or when `since` is earlier than what was fetched (deepening the
+    history already held).
+    """
+    if not marker.is_file():
+        return None
+    try:
+        held = json.loads(marker.read_text())
+    except ValueError:
+        return None
+    if not isinstance(held, dict) or "branches" not in held or "since" not in held:
+        return None
+    if not set(branches) <= set(held["branches"]):
+        return None
+    if since < held["since"]:
+        return None
+    return held
+
+
+def _record_history_fetch(marker: Path, branches: Sequence[str], since: str) -> None:
+    """Record the union of branches fetched so far and the earliest `since` reached."""
+    held: dict[str, Any] = {}
+    if marker.is_file():
+        try:
+            held = json.loads(marker.read_text())
+        except ValueError:
+            held = {}
+    branches_held = set(branches) | set(held.get("branches", []))
+    since_held = min(since, held.get("since", since))
+    marker.write_text(json.dumps({"branches": sorted(branches_held), "since": since_held}) + "\n")
 
 
 def main() -> None:
@@ -559,26 +618,42 @@ def main() -> None:
         "--branch",
         action="append",
         default=[],
-        help="restrict enumeration to this branch (repeatable); default matches the existing "
-        f"comparison, {BRANCH_DEFAULT} only, not every branch (item 6's 'all')",
+        help="restrict enumeration to this branch (repeatable); default is every branch Gerrit "
+        "accepts changes on, the same default the CLI's --via git uses",
+    )
+    parser.add_argument(
+        "--keep-work",
+        action="store_true",
+        help="keep --work after this run instead of deleting it; a rerun then reuses the "
+        "fetched git objects (see fetch_month for what that still costs)",
     )
     args = parser.parse_args()
     salt = require_salt()
     args.work.mkdir(parents=True, exist_ok=True)
+    try:
+        with _raise_on_sigterm():
+            _run(args, salt)
+    finally:
+        if not args.keep_work:
+            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                shutil.rmtree(args.work, ignore_errors=True)
+
+
+def _run(args: argparse.Namespace, salt: str) -> None:
     ledger = args.work / "ledger.jsonl"
-    branches = args.branch or [BRANCH_DEFAULT]
+    # Empty means every branch Gerrit accepts changes on, exactly as `branch_refs` (and so the
+    # CLI's `--via git`) reads an empty `--branch` list; --branch repeated restricts it.
+    branches = args.branch
 
     url = f"{GIT_HOSTS[ORG]}/{PROJECT}"
     repo = Repo.open(args.work / "hardware-interfaces.git", url, Pacer(1.0), ledger=ledger)
     bounds = {month: month_bounds(month) for month in MONTHS}
     earliest = min(_since(start) for start, _ in bounds.values())
     branch_ref_names = branch_refs(repo, ORG, branches)
-    # The history is fetched once per start date; an earlier start deepens it.
     marker = args.work / "history-since.txt"
-    held = marker.read_text().strip() if marker.is_file() else None
-    if held is None or earliest < held:
+    if _history_fetched(marker, branch_ref_names, earliest) is None:
         fetch_history(repo, branch_ref_names, earliest)
-        marker.write_text(earliest + "\n")
+        _record_history_fetch(marker, branch_ref_names, earliest)
     listing = args.work / "refs-changes.tsv"
     if not listing.is_file():
         pairs = repo.list_remote("patch_set_refs", "refs/changes/*")
@@ -623,7 +698,7 @@ def main() -> None:
         }
         enumeration[month] = {
             "candidate_commits": enumeration_counts[month],
-            **classify_enumeration(month, in_month, rest, on_branch),
+            **classify_enumeration(month, in_month, rest, on_branch, branch_ref_names),
         }
         pairs += [
             (row, rest_by_number[n])
@@ -635,7 +710,9 @@ def main() -> None:
         **provenance_header(),
         "org": ORG,
         "project": PROJECT,
-        "branches": branches,
+        # The branches actually read (`branch_refs`'s own result), not `--branch` as requested:
+        # a requested branch the project has none of would otherwise read as having been read.
+        "branches": branch_ref_names,
         "months": list(MONTHS),
         "rest_root": _relative_to_repo(args.rest_root),
         "requests": ledger_totals(ledger),

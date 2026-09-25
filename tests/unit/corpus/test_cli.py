@@ -1361,3 +1361,16 @@ def test_fetch_chromium_script_refuses_before_any_request() -> None:
     assert result.returncode == 1
     assert "not permitted" in result.stdout
     assert "GIT_PERMITTED" in result.stdout
+
+
+def test_fetch_chromium_script_sorts_projects_with_the_c_locale() -> None:
+    """The recorded project set is compared against Python's `sorted()` (ordinal, locale-free);
+    the shell side must sort the same way rather than under whatever locale the machine runs
+    under, or the two can disagree on projects whose names collate differently -- a false
+    "already fetched under a different project set" refusal on an unchanged rerun."""
+    script = Path(__file__).resolve().parents[3] / "scripts" / "fetch_chromium.sh"
+    text = script.read_text()
+    (sort_line,) = [line for line in text.splitlines() if "current_projects=$(printf" in line]
+    assert "LC_ALL=C sort" in sort_line, (
+        f"the projects sort must pin LC_ALL=C to match Python's ordinal sorted(): {sort_line!r}"
+    )
