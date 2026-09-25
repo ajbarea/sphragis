@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -1209,3 +1210,183 @@ def test_the_resume_script_refuses_a_disallowed_host_before_any_request(org: str
     )
     assert result.returncode == 1
     assert "disallows automated clients" in result.stdout
+
+
+def _fetch_git(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, month: str, *extra: str
+) -> list[str]:
+    """Run the git-route fetch with NoteDb replaced; return the months that reached it."""
+    from sphragis.corpus import cli
+
+    months: list[str] = []
+
+    def fake_fetch_month(org, projects, month, salt, *, pacer, branches):
+        months.append(month)
+        return [], {"http_requests": 0, "git_operations": 0}
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "fetch_month", fake_fetch_month)
+    cli.main(
+        [
+            "fetch",
+            "--via",
+            "git",
+            "--org",
+            "aosp",
+            "--month",
+            month,
+            "--root",
+            str(tmp_path),
+            *extra,
+        ]
+    )
+    return months
+
+
+@pytest.mark.parametrize("month", ["2025-11", "2026-03", "2026-09"])
+def test_the_git_route_refuses_a_sealed_month_before_any_request(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, month: str
+) -> None:
+    """The seal guards the confirmatory window whichever transport is asked to fetch it."""
+    with pytest.raises(SystemExit, match="sealed test window"):
+        _fetch_git(tmp_path, monkeypatch, month, "--project", "p")
+
+
+def test_the_git_route_fetches_the_last_dev_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert _fetch_git(tmp_path, monkeypatch, "2025-10", "--project", "p") == ["2025-10"]
+
+
+def test_the_git_route_needs_a_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(SystemExit, match="--project"):
+        _fetch_git(tmp_path, monkeypatch, "2025-10")
+
+
+def test_build_answers_a_notedb_row_from_its_own_data_without_the_network(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json
+
+    from sphragis.corpus import cli
+
+    def no_network(**_: object) -> object:
+        raise AssertionError("a NoteDb row must not reach the REST transport")
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "http_transport", no_network)
+    row: dict[str, object] = {
+        "_number": 1,
+        "change_id": "I1",
+        "project": "p",
+        "created": "2024-10-05 00:00:00.000000000",
+        "owner": {"_account_id": "owner"},
+        "revisions": {"a": {}, "b": {}},
+        "notedb": {
+            "comments": {
+                "f.py": [
+                    {"patch_set": 1, "line": 1, "message": "fix", "author": {"_account_id": "rev"}}
+                ]
+            },
+            "diffs": {"1:f.py": {"content": [{"a": ["x=1"], "b": ["x = 1"]}]}},
+        },
+    }
+    _snapshot(tmp_path, "chromium", "2024-10", [row])
+    assert cli.main(["build", "--org", "chromium", "--root", str(tmp_path)]) == 0
+    built = (tmp_path / "chromium" / "examples" / "2024-10.jsonl").read_text().splitlines()
+    assert [json.loads(line)["comments"] for line in built] == [["fix"]]
+
+
+# ---------------------------------------------------------------------------
+# Route mixing (item 10)
+# ---------------------------------------------------------------------------
+
+
+def test_refuse_mixed_routes_blocks_the_other_route(tmp_path: Path) -> None:
+    from sphragis.corpus import cli
+
+    raw = tmp_path / "org" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-10.record.json").write_text(json.dumps({"route": "rest"}))
+    with pytest.raises(SystemExit, match="already fetched via"):
+        cli.refuse_mixed_routes(tmp_path, "org", "notedb", allow=False)
+    cli.refuse_mixed_routes(tmp_path, "org", "notedb", allow=True)  # explicit override
+    cli.refuse_mixed_routes(tmp_path, "org", "rest", allow=False)  # same route, never refused
+
+
+def test_a_record_naming_no_route_is_treated_as_rest(tmp_path: Path) -> None:
+    """`_fetched_routes` ignored a record with no `route` key entirely, so an existing REST
+    corpus fetched before the field existed was invisible to the guard, and a git-route fetch
+    into that same org-month went through unrefused: not mixed routes on record, but a REST
+    corpus mixed with a git one on disk."""
+    from sphragis.corpus import cli
+
+    raw = tmp_path / "org" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-10.record.json").write_text(json.dumps({"pages": 1}))  # no "route" at all
+    assert cli._fetched_routes(tmp_path, "org") == {"rest"}
+    with pytest.raises(SystemExit, match="already fetched via"):
+        cli.refuse_mixed_routes(tmp_path, "org", "notedb", allow=False)
+    cli.refuse_mixed_routes(tmp_path, "org", "rest", allow=False)  # same route, never refused
+
+
+def test_the_git_route_refuses_to_mix_with_an_existing_rest_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw = tmp_path / "aosp" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-09.record.json").write_text(json.dumps({"route": "rest"}))
+    with pytest.raises(SystemExit, match="already fetched via"):
+        _fetch_git(tmp_path, monkeypatch, "2024-10", "--project", "p")
+
+
+def test_the_rest_route_refuses_to_mix_with_an_existing_git_route_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    raw = tmp_path / "openstack" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-09.record.json").write_text(json.dumps({"route": "notedb"}))
+    with pytest.raises(SystemExit, match="already fetched via"):
+        cli.main(["fetch", "--org", "openstack", "--month", "2024-10", "--root", str(tmp_path)])
+
+
+def test_allow_mixed_routes_lets_the_git_route_write_beside_a_rest_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw = tmp_path / "aosp" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-09.record.json").write_text(json.dumps({"route": "rest"}))
+    months = _fetch_git(tmp_path, monkeypatch, "2024-10", "--project", "p", "--allow-mixed-routes")
+    assert months == ["2024-10"]
+
+
+def test_fetch_chromium_script_refuses_before_any_request() -> None:
+    """chromium.googlesource.com is not yet in GIT_PERMITTED; the script must read that from
+    Python and refuse before ever fetching, without a fixed-up duplicate of the permission."""
+    script = Path(__file__).resolve().parents[3] / "scripts" / "fetch_chromium.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        env={**os.environ, "PROJECTS": "v8/v8"},
+    )
+    assert result.returncode == 1
+    assert "not permitted" in result.stdout
+    assert "GIT_PERMITTED" in result.stdout
+
+
+def test_fetch_chromium_script_sorts_projects_with_the_c_locale() -> None:
+    """The recorded project set is compared against Python's `sorted()` (ordinal, locale-free);
+    the shell side must sort the same way rather than under whatever locale the machine runs
+    under, or the two can disagree on projects whose names collate differently -- a false
+    "already fetched under a different project set" refusal on an unchanged rerun."""
+    script = Path(__file__).resolve().parents[3] / "scripts" / "fetch_chromium.sh"
+    text = script.read_text()
+    (sort_line,) = [line for line in text.splitlines() if "current_projects=$(printf" in line]
+    assert "LC_ALL=C sort" in sort_line, (
+        f"the projects sort must pin LC_ALL=C to match Python's ordinal sorted(): {sort_line!r}"
+    )

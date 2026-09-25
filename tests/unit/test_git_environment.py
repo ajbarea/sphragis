@@ -73,9 +73,12 @@ def test_the_same_sequence_touches_nothing_when_the_environment_is_clean(tmp_pat
 
 
 def test_no_git_variable_reaches_a_test() -> None:
-    """What the fixture promises. Fails if it is removed, narrowed, or scoped away."""
+    """What the fixture promises, `GIT_ALLOW_PROTOCOL` aside: that one is the fixture's own
+    deliberate addition (a git subprocess is refused http(s)/ssh, file only), not a leak.
+    Fails if it is removed, narrowed, or scoped away."""
     inherited = sorted(name for name in os.environ if name.startswith(GIT_PREFIX))
-    assert inherited == [], f"git's exported environment reached the suite: {inherited}"
+    assert inherited == ["GIT_ALLOW_PROTOCOL"], f"git's exported environment reached: {inherited}"
+    assert os.environ["GIT_ALLOW_PROTOCOL"] == "file"
 
 
 @pytest.mark.parametrize(
