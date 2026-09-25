@@ -822,6 +822,27 @@ def test_a_network_git_call_disables_http_redirects(
     assert all("http.followRedirects=false" in " ".join(c) for c in fetch_calls)
 
 
+def test_isolated_env_carries_the_suites_git_allow_protocol_through(
+    server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`GIT_ALLOW_PROTOCOL=file`, the suite's second offline guard (tests/conftest.py), is
+    itself a `GIT_*` variable, so `_isolated_env`'s blanket strip must not drop it: a route git
+    subprocess run under the suite's own environment has to see it too."""
+    assert os.environ.get("GIT_ALLOW_PROTOCOL") == "file", "conftest sets this for the session"
+    repo = _repo(server, tmp_path)
+    calls: list[dict[str, Any]] = []
+    real_run = notedb.subprocess.run
+
+    def spy(cmd: list[str], *a: Any, **kw: Any) -> subprocess.CompletedProcess[bytes]:
+        calls.append(kw)
+        return real_run(cmd, *a, **kw)
+
+    monkeypatch.setattr(notedb.subprocess, "run", spy)
+    repo.git("rev-parse", "--is-bare-repository")
+    assert calls, "the local command should have run"
+    assert calls[-1]["env"].get("GIT_ALLOW_PROTOCOL") == "file"
+
+
 def test_the_git_pacer_floors_a_zero_or_negative_request_interval() -> None:
     """A mutated CLI passing `--request-interval 0` (or less) must not remove Android's floor."""
     now, slept = [0.0], []
@@ -853,8 +874,12 @@ def test_lazy_fetch_probe_passes_under_this_process_git() -> None:
 def test_lazy_fetch_probe_raises_when_the_safety_variable_is_missing() -> None:
     """Simulates an old git: without `GIT_NO_LAZY_FETCH`, the promisor remote serves the blob."""
     env = {k: v for k, v in notedb._isolated_env().items() if k != "GIT_NO_LAZY_FETCH"}
-    with pytest.raises(notedb.GitError, match="lazily"):
+    with pytest.raises(notedb.GitError, match="lazily") as excinfo:
         notedb._require_lazy_fetch_disabled(env)
+    message = str(excinfo.value)
+    assert "2.36" not in message, "GIT_NO_LAZY_FETCH landed in git 2.44, not 2.36"
+    assert "2.44" in message
+    assert "behaviour" in message, "the probe tests behaviour, not a version number"
 
 
 # ---------------------------------------------------------------------------

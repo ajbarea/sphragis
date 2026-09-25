@@ -272,8 +272,10 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
         if probed.returncode == 0:
             raise GitError(
                 f"{_git_version()} fetched a filtered-out object lazily instead of failing under "
-                "GIT_NO_LAZY_FETCH=1: this git is too old to run the git route safely (needs a "
-                "git release that honors GIT_NO_LAZY_FETCH, 2.36 or later)"
+                "GIT_NO_LAZY_FETCH=1: this git is too old to run the git route safely. "
+                "GIT_NO_LAZY_FETCH landed in git 2.44 (also backported to some security point "
+                "releases of earlier branches), but this probe tests the actual behaviour rather "
+                "than trusting a version number: install a git that honors GIT_NO_LAZY_FETCH"
             )
 
 
@@ -357,6 +359,13 @@ def _isolated_env(extra: Mapping[str, str] | None = None) -> dict[str, str]:
     A user's config can rewrite URLs, attach credentials or change the diff algorithm, any
     of which would make a run depend on the machine. Inherited `GIT_*` variables are dropped
     for the reason `tests/conftest.py` records: a hook's `GIT_DIR` redirects every command.
+
+    `GIT_ALLOW_PROTOCOL` is carried through when set, rather than dropped with the rest: it is
+    itself a `GIT_*` variable, but it is a restriction, never a redirect, so keeping it cannot
+    reintroduce the hazard the blanket strip exists for. `tests/conftest.py` sets it to `file`
+    for the whole suite as a second, git-enforced offline guard; without this, the route's own
+    subprocesses built their environment from scratch and never saw it, so that guard covered
+    every other git subprocess in the suite but not this module's.
     """
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     env.update(
@@ -367,6 +376,8 @@ def _isolated_env(extra: Mapping[str, str] | None = None) -> dict[str, str]:
             "GIT_NO_LAZY_FETCH": "1",
         }
     )
+    if "GIT_ALLOW_PROTOCOL" in os.environ:
+        env["GIT_ALLOW_PROTOCOL"] = os.environ["GIT_ALLOW_PROTOCOL"]
     env.update(extra or {})
     return env
 
