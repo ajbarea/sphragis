@@ -49,7 +49,7 @@ allow fetching, into the same snapshot shape; `build` answers those rows from th
 the REST build rules, unchanged. It reads every branch and seals by last update, as REST does.
 On AOSP it holds every REST change but those on branches the host no longer lists or filed in
 another month, and the refined examples match but for one pseudonym from the older scrub (research
-log, NoteDb entry, rerun 2026-09-25). In review as a PR, not merged.
+log, NoteDb entry, rerun 2026-09-25).
 
 Waiting on that route:
 

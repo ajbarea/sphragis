@@ -81,8 +81,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] Registered: the test window is fetched no earlier than three months after its final
   month (`FETCH_HORIZON_MONTHS`).
 - [x] **A NoteDb route** (`sphragis/corpus/notedb.py`, `gerrit_diff.py`; `fetch --via git`). The
-  review UIs of AOSP, Chromium and Qt publish `Disallow: /`; their git hosts allow fetching and
-  carry the review record as NoteDb. The route reproduces Gerrit's own diff, pseudonymises through
+  review UIs of AOSP, Chromium and Qt publish `Disallow: /`; AOSP's and Chromium's git hosts allow
+  fetching and carry the review record as NoteDb (Qt's git host is closed too). The route reproduces Gerrit's own diff, pseudonymises through
   the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
   the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
   older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).

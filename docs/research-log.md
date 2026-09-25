@@ -5387,8 +5387,9 @@ spelling.
 in 2024-11 and 2025-01 on AOSP's `platform/hardware/interfaces`, over git and on every branch,
 builds them with the same `build_from_change` as the REST corpus, and compares the two into
 `datasets/results/notedb-parity-aosp.json`. The artifact was regenerated on 2026-09-25 from the
-branch as reviewed, so every figure below is from that run; the first run's figures (2026-09-23,
-`main` only) are superseded.
+branch as reviewed: the enumeration, field, example, rebase and timing figures below are from that
+run, and figures from earlier runs are dated where they appear. The first run's (2026-09-23, `main`
+only) are superseded.
 
 **Why a second route.** The robots.txt of android-review, chromium-review and
 codereview.qt-project.org is `Disallow: /` as read on 2026-09-23, and Google's terms forbid
@@ -5444,9 +5445,10 @@ could not tell apart.
 whose next patch set is not a rework. The git route computes `kind` with Gerrit's definitions:
 NO_CHANGE and NO_CODE_CHANGE when the trees match over parents with the same trees, and a trivial
 rebase when replaying the predecessor onto the successor's parent (`git merge-tree`) reproduces the
-successor's tree. A replay the objects cannot support is counted and read as REWORK, which keeps
-the example. Gerrit compares the parents' trees, not their ids: comparing ids first read 12 of the
-831 revisions REST records as NO_CHANGE or NO_CODE_CHANGE as trivial rebases.
+successor's tree. A replay the objects cannot support is counted (`kind_unverified`, none on this
+sample) and read as REWORK, which keeps the example. Gerrit compares the parents' trees, not their
+ids. Before that fix, an earlier rerun the same day read 12 revisions that REST records as
+NO_CHANGE (10) or NO_CODE_CHANGE (2) as trivial rebases; that run's artifact was overwritten.
 MERGE_FIRST_PARENT_UPDATE is not attempted.
 
 **Parity, from the artifact.**
@@ -5556,8 +5558,8 @@ each is now a test:
 **Requests.** All paced at one a second or the host's crawl delay, whichever is longer; a git fetch
 is several HTTP requests and is billed for all of them. A command that fails for a transient reason
 (a connection that never opened or dropped, a 5xx server error) is retried twice, after 30 s and
-120 s, each try paced and ledgered; a 403 or 429 refusal is never retried. Three of the runs below
-needed a retry for blob or history fetches.
+120 s, each try paced and ledgered; a 403 or 429 refusal is never retried. By the local run
+ledgers, three of the day's runs needed a retry for blob or history fetches.
 
 - 2026-09-23, first run: android.googlesource.com, 20 fetches and 66 HTTP requests, 3 of them
   entered by hand for one untraced lazy fetch during manual inspection, plus 7 fetches and 21
@@ -5565,7 +5567,8 @@ needed a retry for blob or history fetches.
   as an artifact); chromium.googlesource.com, 1 fetch, 3 requests.
 - 2026-09-25, rerun: android.googlesource.com only. The artifact's run made 26 operations and 62
   HTTP requests. Counting the attempts that failed on the bugs above and the diagnostic runs, the
-  day's ledgers hold 155 operations and 411 HTTP requests; the first failed attempt's ledger was
+  day's run ledgers (kept locally, not committed: they are per-run scratch output) hold 155
+  operations and 411 HTTP requests; the first failed attempt's ledger was
   deleted with its scratch directory before ledgers were kept, and it made one ref listing and one
   refused history fetch.
 - Nothing else was contacted by the route. Separately, at about 15:05 EDT on 2026-09-25 a review
