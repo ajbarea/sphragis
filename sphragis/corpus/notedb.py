@@ -194,6 +194,12 @@ _SHA1 = re.compile(r"\b[0-9a-f]{40}\b")
 _CURL_REQUEST = re.compile(rb"=> Send header: (?:GET|POST) ")
 
 
+#: A bare repository reads `HEAD:.mailmap` on every `git log`, and a commits-only fetch never
+#: holds that tree, so the log fails on a lazy fetch once HEAD resolves (reading every branch
+#: brings in the one HEAD names). A mailmap would also rewrite the identities a log reports.
+_NO_MAILMAP = ("-c", "log.mailmap=false", "-c", "mailmap.blob=", "-c", "mailmap.file=")
+
+
 class GitError(RuntimeError):
     """A git command failed."""
 
@@ -482,7 +488,7 @@ class Repo:
         cwd: bool = True,
         check: bool = True,
     ) -> subprocess.CompletedProcess[bytes]:
-        command = ["git", *(["--git-dir", str(self.path)] if cwd else []), *args]
+        command = ["git", *_NO_MAILMAP, *(["--git-dir", str(self.path)] if cwd else []), *args]
         done = subprocess.run(command, input=stdin, capture_output=True, env=_isolated_env(env))
         if check and done.returncode != 0:
             raise GitError(

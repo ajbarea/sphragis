@@ -790,6 +790,19 @@ def test_the_tip_probe_leaves_nothing_in_the_repository_it_serves(tmp_path: Path
     assert repo.operations >= 2, "the probe's fetch is counted against the repository it serves"
 
 
+def test_a_log_works_once_head_names_a_branch_whose_tree_was_never_fetched(
+    tmp_path: Path,
+) -> None:
+    """A bare repository's `git log` reads `HEAD:.mailmap`; after a commits-only fetch of the
+    branch HEAD names, that tree is absent and the log must not try to fetch it."""
+    s = Server(tmp_path / "server")
+    s.ref("refs/heads/master", s.commit(s.tree({".mailmap": b"x\n"}), "m", "2024-11-10T00:00:00Z"))
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    walked, _ = notedb.fetch_history(repo, ["refs/heads/master"], "2024-10-01")
+    assert walked == ["refs/heads/master"]
+    assert repo.git("log", "--format=%H", "refs/heads/master").strip()
+
+
 def test_fetch_history_skips_the_shallow_fetch_when_every_branch_is_dormant(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
