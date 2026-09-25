@@ -571,6 +571,23 @@ def _relative_to_repo(path: Path) -> str:
     return str(resolved)
 
 
+def collect_span(bounds: Mapping[str, tuple[str, str]], months: Sequence[str]) -> tuple[str, str]:
+    """One contiguous `submitted_between` span covering every month in `months`.
+
+    `collect`'s own `submitted_between` drops a change before its patch sets, diffs or blobs
+    are fetched -- not merely before it reaches a row -- so calling `collect` with none, as this
+    script once did over the whole `candidates` union, fetched a full meta chain and notes for
+    every candidate commit-dated near any compared month, however far its actual NoteDb
+    submission time landed. `months` need not be adjacent (there can be a gap, as between the
+    two months this comparison uses), so a change submitted in a gap month still reaches
+    `collect` unfiltered by this alone -- `submitted_between` takes one contiguous range, not a
+    set of months -- but everything outside the earliest start and the latest end is cut.
+    """
+    starts = [bounds[month][0] for month in months]
+    ends = [bounds[month][1] for month in months]
+    return min(starts), max(ends)
+
+
 def _history_fetched(marker: Path, branches: Sequence[str], since: str) -> dict[str, Any] | None:
     """The branch set and `since` date `fetch_history` was last run for, or None if it must run.
 
@@ -680,7 +697,13 @@ def _run(args: argparse.Namespace, salt: str) -> None:
         enumeration_counts[month] = counts
         candidates.update({m.number: m for m in found if m.number is not None})
 
-    rows, collect_counts = collect(repo, sorted(candidates), project=PROJECT, merged=candidates)
+    rows, collect_counts = collect(
+        repo,
+        sorted(candidates),
+        project=PROJECT,
+        merged=candidates,
+        submitted_between=collect_span(bounds, MONTHS),
+    )
     rest = rest_rows(args.rest_root)
     rest_by_number = {r["_number"]: r for rows_ in rest.values() for r in rows_}
     meta_ancestry = {

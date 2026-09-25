@@ -718,6 +718,100 @@ def test_chromium_also_reads_branch_heads(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Integration: a change's commit that is itself a branch tip (item 11A)
+# ---------------------------------------------------------------------------
+
+
+def _fetch_month_with_release_tip(
+    tmp_path: Path, branches: list[str]
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """`release` points directly at a change's patch set 2, `main` points elsewhere.
+
+    `fetch_history` shallow-fetches `release`'s tip (--filter=tree:0), so the scratch repo
+    already holds that patch-set commit -- without its tree -- before `collect` ever runs.
+    Reproduces the reviewer's trigger: `collect`'s later tree fetch, by resolved tree id, of a
+    commit already held this way failed with `fatal: bad revision ... did not send all
+    necessary objects`, git's own shallow/partial-clone negotiation getting confused about an
+    object it already partly holds.
+    """
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"line1\nline2\n"}), "root", "2024-09-01T00:00:00Z")
+    main_tip = s.commit(
+        s.tree({"f": b"line1\nMAIN\n"}), "unrelated", "2024-09-02T00:00:00Z", (root,)
+    )
+    ps1 = s.commit(
+        s.tree({"f": b"line1\nline2\n", "g": b"x\n"}), "Fix", "2024-09-05T00:00:00Z", (root,)
+    )
+    ps2 = s.commit(
+        s.tree({"f": b"line1\nline2\n", "g": b"y\n"}), "Fix", "2024-09-07T00:00:00Z", (root,)
+    )
+    s.ref("refs/heads/main", main_tip)
+    s.ref("refs/heads/release", ps2)
+    s.ref("refs/changes/98/98/1", ps1)
+    s.ref("refs/changes/98/98/2", ps2)
+    _meta(
+        s,
+        98,
+        [
+            (
+                OWNER,
+                "2024-09-05T00:00:00Z",
+                _message(
+                    "Create change",
+                    "Uploaded.",
+                    "Patch-set: 1",
+                    "Change-id: I98",
+                    "Branch: refs/heads/release",
+                    f"Commit: {ps1}",
+                ),
+                {},
+            ),
+            (
+                OWNER,
+                "2024-09-07T00:00:00Z",
+                _message("Update patch set 2", "Uploaded.", "Patch-set: 2", f"Commit: {ps2}"),
+                {},
+            ),
+            (
+                SUBMITTER,
+                "2024-09-08T00:00:00Z",
+                _message(
+                    "Update patch set 2",
+                    "Change has been successfully merged",
+                    "Patch-set: 2",
+                    "Status: merged",
+                    "Submission-id: 98-1",
+                ),
+                {},
+            ),
+        ],
+    )
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    return notedb.fetch_month(
+        "aosp", [PROJECT], "2024-09", "salt", pacer=Pacer(0), base_url=s.url, workdir=scratch,
+        branches=branches,
+    )  # fmt: skip
+
+
+def test_all_branches_does_not_crash_when_a_changes_commit_is_a_branch_tip(
+    tmp_path: Path,
+) -> None:
+    rows, record = _fetch_month_with_release_tip(tmp_path, [])
+    assert [row["_number"] for row in rows] == [98]
+    assert record["projects"][PROJECT]["branches_read"] == [
+        "refs/heads/main",
+        "refs/heads/release",
+    ]
+
+
+def test_restricting_to_the_tip_branch_does_not_crash_either(tmp_path: Path) -> None:
+    rows, record = _fetch_month_with_release_tip(tmp_path, ["release"])
+    assert [row["_number"] for row in rows] == [98]
+    assert record["projects"][PROJECT]["branches_read"] == ["refs/heads/release"]
+
+
+# ---------------------------------------------------------------------------
 # Host allowlist, pacing floor, redirects (item 2)
 # ---------------------------------------------------------------------------
 

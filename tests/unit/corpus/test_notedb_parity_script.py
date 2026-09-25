@@ -136,6 +136,30 @@ def test_classify_enumeration_does_not_mislabel_a_change_on_a_branch_that_was_re
 
 
 # ---------------------------------------------------------------------------
+# item 11B: collect() is called with a submitted_between span, not unbounded
+# ---------------------------------------------------------------------------
+
+
+def test_collect_span_covers_every_compared_month(parity: types.ModuleType) -> None:
+    bounds = {m: parity.month_bounds(m) for m in parity.MONTHS}
+    assert parity.collect_span(bounds, parity.MONTHS) == ("2024-11-01", "2025-02-01")
+
+
+def test_collect_span_is_the_min_start_and_max_end_whatever_the_month_order(
+    parity: types.ModuleType,
+) -> None:
+    bounds = {
+        "2024-11": ("2024-11-01", "2024-12-01"),
+        "2025-01": ("2025-01-01", "2025-02-01"),
+        "2025-06": ("2025-06-01", "2025-07-01"),
+    }
+    assert parity.collect_span(bounds, ["2025-06", "2024-11", "2025-01"]) == (
+        "2024-11-01",
+        "2025-07-01",
+    )
+
+
+# ---------------------------------------------------------------------------
 # item 13: the history-since marker is keyed on the branch set, not the date alone
 # ---------------------------------------------------------------------------
 

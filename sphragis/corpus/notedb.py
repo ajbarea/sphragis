@@ -1520,7 +1520,15 @@ def collect(
             "log", "--no-walk", "--stdin", "--format=%T", stdin="\n".join(roots).encode()
         )
         root_trees = listed.decode().split()
-        repo.fetch_objects("trees", root_trees, "--filter=blob:none")
+        # `--refetch`: a root here can be a commit `fetch_history` already holds shallowly (a
+        # branch tip -- `commits`/`kind_roots`/`counted` all draw from commits this scratch
+        # repository may already have, tree-less, from that earlier `--filter=tree:0` fetch).
+        # Asking for such a commit's tree by its resolved object id, by a plain negotiated
+        # fetch, failed with `fatal: bad revision ... did not send all necessary objects`:
+        # once git has any copy of an object it will not renegotiate a wider filter for the
+        # same id on a normal fetch. `--refetch` forces the transfer instead of trusting the
+        # client's partial "have".
+        repo.fetch_objects("trees", root_trees, "--filter=blob:none", "--refetch")
 
     blobs_needed: set[str] = set()
     # The replay's own blobs: everything either side touched (the change itself, `a`'s parent
@@ -1569,7 +1577,11 @@ def collect(
             continue
         changed = _changed_files(repo, commit.commit, commit.parents[0])
         blobs_needed.update(oid for _, old, new in changed for oid in (old, new) if oid)
-    repo.fetch_objects("blobs", blobs_needed, "--filter=blob:none")
+    # `--refetch` for the same reason the tree fetch above needs it: a blob can belong to a
+    # tree this scratch repository already partly holds (from the `--filter=blob:none` tree
+    # fetch just above, or from an earlier `--filter=tree:0` commit fetch), and a plain
+    # negotiated fetch of an id git already has some copy of does not widen the filter.
+    repo.fetch_objects("blobs", blobs_needed, "--filter=blob:none", "--refetch")
     contents = repo.read_objects(blobs_needed)
 
     # Kinds are computed only now, with every blob the replay could need already on disk: run
