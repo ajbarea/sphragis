@@ -5401,8 +5401,8 @@ A second review of PR #36 ran the script against a fake model stack and found th
 **Why.** Under reading 2, the pseudocode's, the personalized module trains only in Stage 1
 (Algorithm 1, lines 1 to 6). Stage 2 trains the global module (line 12), and on a sync round line
 14 sets the personalized module to the client's own locally optimized global, `theta_s(i)(t)`,
-which is the tensor line 17 averages that round. After Stage 1, then, a client's personalized
-module is one of two things:
+which is the upload that round: line 17 averages its difference from the dispatched global.
+After Stage 1, then, a client's personalized module is one of two things:
 
 - its Stage 1 module, which reading 1 already counts as transmitted at initialization (line 7);
 - its upload from the most recent sync round.
@@ -5411,8 +5411,8 @@ module is one of two things:
 
 - `H <= T`: `-local` is the upload of the last sync round. At the default `ROUNDS=6 SYNC_PERIOD=5`
   it is the round-5 upload.
-- `H > T`, including the paper's `H = 10` and `H = infinity` at `T = 6`: no sync fires and `-local`
-  is byte-identical to `-p0`.
+- `H > T`, including the paper's `H = 10` and `H = infinity` at `T = 6`: no sync fires and
+  `-local` equals `-p0`.
 - `H` dividing `T`, including `H = T`, which the paper tests: `-local` equals the final upload, the
   case the final-sync refusal already excludes.
 
