@@ -21,7 +21,8 @@ def snapshot_path(root: Path, org: str, month: str) -> Path:
     return Path(root) / org / "raw" / f"{month}.ndjson.gz"
 
 
-def _record_path(snapshot: Path) -> Path:
+def snapshot_record_path(snapshot: Path) -> Path:
+    """Where a snapshot's record of how it was fetched lives."""
     return snapshot.with_suffix("").with_suffix(".record.json")
 
 
@@ -43,7 +44,7 @@ def write_snapshot(
     path.parent.mkdir(parents=True, exist_ok=True)
     body = "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
     path.write_bytes(gzip.compress(body.encode()))
-    _record_path(path).write_text(
+    snapshot_record_path(path).write_text(
         json.dumps({**provenance_header(), **dict(record), "rows": len(rows)}, indent=2)
     )
     return path

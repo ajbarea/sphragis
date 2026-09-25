@@ -38,15 +38,23 @@ GIT_PREFIX = "GIT_"
 
 @pytest.fixture(autouse=True, scope="session")
 def _no_inherited_git_environment() -> Iterator[None]:
-    """Remove git's exported environment for the duration of the run.
+    """Remove git's exported environment for the duration of the run, and pin git to `file`.
 
     Session-scoped and autouse: the hazard is the environment the interpreter started
     with, so it is removed once rather than per test, and no test has to ask for it.
+
+    `GIT_ALLOW_PROTOCOL=file` is set alongside the removal: it is itself a `GIT_*` variable,
+    so a test that shells out to git without its own `env=` (the point of this fixture) still
+    gets it. Any test's git subprocess that tries http(s) or ssh is then refused by git itself,
+    before a socket is opened -- a second guard alongside the in-process one below, covering
+    exactly what that one does not (subprocess network I/O).
     """
     inherited = {name: os.environ[name] for name in list(os.environ) if name.startswith(GIT_PREFIX)}
     for name in inherited:
         del os.environ[name]
+    os.environ["GIT_ALLOW_PROTOCOL"] = "file"
     yield
+    del os.environ["GIT_ALLOW_PROTOCOL"]
     os.environ.update(inherited)
 
 

@@ -22,6 +22,8 @@ from sphragis.corpus.load import (
     write_derived_file,
     write_source_record,
 )
+from sphragis.corpus.rules import FETCH_RULES
+from sphragis.corpus.storage import snapshot_record_path
 
 
 def _month(root: Path, org: str = "o", name: str = "2024-10.jsonl", *, refine: bool = True):
@@ -304,3 +306,28 @@ def test_a_file_cut_from_a_changed_intermediate_is_refused(tmp_path: Path) -> No
     write_derived_file(middle, [{"id": "c"}], sources=[(tmp_path, "o")])
     with pytest.raises(SystemExit, match="nova.jsonl"):
         derived_file_rows(half)
+
+
+def test_a_git_route_month_fetched_under_other_fetch_rules_is_refused(tmp_path: Path) -> None:
+    _month(tmp_path)
+    snapshot = tmp_path / "o" / "raw" / "2024-10.ndjson.gz"
+    snapshot_record_path(snapshot).write_text(
+        json.dumps({"route": "notedb", "fetch_rules": "not-the-current-one"})
+    )
+    assert any("other fetch rules" in s for s in stale_refinements(tmp_path, "o"))
+
+
+def test_a_git_route_month_fetched_under_current_fetch_rules_is_not_refused(tmp_path: Path) -> None:
+    _month(tmp_path)
+    snapshot = tmp_path / "o" / "raw" / "2024-10.ndjson.gz"
+    snapshot_record_path(snapshot).write_text(
+        json.dumps({"route": "notedb", "fetch_rules": FETCH_RULES})
+    )
+    assert stale_refinements(tmp_path, "o") == []
+
+
+def test_a_rest_month_is_unaffected_by_fetch_rules(tmp_path: Path) -> None:
+    _month(tmp_path)
+    snapshot = tmp_path / "o" / "raw" / "2024-10.ndjson.gz"
+    snapshot_record_path(snapshot).write_text(json.dumps({"route": "rest"}))
+    assert stale_refinements(tmp_path, "o") == []

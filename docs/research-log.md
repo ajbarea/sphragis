@@ -5381,6 +5381,202 @@ mislabeling where `main`'s original two-shape version had refused the same patte
 guard now globs the real client directories the selector resolves to and classifies each match by
 its own suffix, so the result depends on what is actually on disk rather than on the selector's
 spelling.
+### The review UIs are closed to crawlers and the git hosts are not: a NoteDb route, checked against the REST corpus (2026-09-23, rerun 2026-09-25)
+
+`# research(2026-09)`. `scripts/notedb_parity.py` fetches every change NoteDb records as submitted
+in 2024-11 and 2025-01 on AOSP's `platform/hardware/interfaces`, over git and on every branch,
+builds them with the same `build_from_change` as the REST corpus, and compares the two into
+`datasets/results/notedb-parity-aosp.json`. The artifact was regenerated on 2026-09-25 from the
+branch as reviewed: the enumeration, field, example, rebase and timing figures below are from that
+run, and figures from earlier runs are dated where they appear. The first run's (2026-09-23, `main`
+only) are superseded.
+
+**Why a second route.** The robots.txt of android-review, chromium-review and
+codereview.qt-project.org is `Disallow: /` as read on 2026-09-23, and Google's terms forbid
+automated access that violates robots.txt, so REST collection from those three hosts stopped. The
+git hosts behind the first two, android.googlesource.com and chromium.googlesource.com, disallow
+only some gitiles web views (`+log`, `+blame`, `+archive`, `?format=JSON` and `TEXT`); the git fetch
+paths are allowed. Gerrit 3.x keeps the review record in the repository as NoteDb:
+`refs/changes/NN/<n>/meta` is a commit chain whose footers carry status, patch sets and votes, and
+whose tip tree is a notes map of per-patch-set JSON holding the inline comments with their ranges,
+authors and patch sets. `GIT_PERMITTED` lists the git hosts the route may contact: AOSP's is
+permitted; Chromium's is not until its maintainers answer.
+
+**Probes.** `ls-remote` on hardware/interfaces lists change 2923712's patch sets and meta ref, and
+its fetched notes carry the comment our REST-built example holds. v8/v8 serves meta refs too. A
+wildcard `ls-remote` over chromium/src timed out, so Chromium changes are found from its branch
+history instead: the one commit fetched from chromium/src (`refs/branch-heads/6099`, committed
+2024-10-01, depth 1, no trees) carries `Reviewed-on:
+https://chromium-review.googlesource.com/c/chromium/src/+/5901656`. AOSP's commits carry no such
+trailer, so every AOSP candidate is mapped to its change through the patch-set refs.
+
+**How a month is enumerated.** The REST query (`status:merged` with a date range) has no branch
+filter, so the git route reads every branch too: `refs/heads/*`, and `refs/branch-heads/*` for
+Chromium. Each branch's tip is read first, in a throwaway repository; a branch whose tip predates
+the month's slack cannot hold a candidate and is not walked (461 of the 516 listed, leaving 55).
+Candidates are the walked branches' commits whose committer date falls from `SLACK_DAYS` before the
+month to its end. They map to changes by `Reviewed-on:` (Chromium) or by joining their ids against a
+`refs/changes/*` listing (AOSP). A change belongs to the month in which NoteDb records its
+submission. Commit dates cannot decide that, because AOSP merges the uploaded commit unchanged, so
+its date is the upload's. Of the 9,645 `main` changes in the AOSP REST corpus, 191 merged more than
+14 days after their final upload and 26 more than 90, so AOSP's slack is 90 days.
+
+**The seal.** A change is collected only if its whole review record predates the test window.
+Before anything else about a candidate is fetched, the tip of its meta ref is fetched alone
+(depth 1, commit only), and a change last updated at or after 2025-11-01 is dropped and counted
+(`touches_test_window`: 1 on this sample). The full record is then fetched by that probed commit
+id, never by ref name, and checked again after it is read, so a change updated between the probe
+and the fetch, or a rerun over a kept repository, cannot bring window-dated text in. This mirrors
+REST, whose month query filters by last update and so never returns a change updated in a sealed
+month.
+
+**Diffs are Gerrit's, reproduced.** The REST build cut hunks from Gerrit's `/diff`, whose default
+whitespace mode is `IGNORE_LEADING_AND_TRAILING` (JGit's `WS_IGNORE_CHANGE`) and whose algorithm is
+JGit's HistogramDiff with a Myers fallback. Git's own histogram diff split one change's hunks
+differently from Gerrit on this sample, and no combination of git's options reproduced Gerrit's, so
+`sphragis/corpus/gerrit_diff.py` ports JGit's diff and Gerrit's content blocks. It reproduces the
+captured review.opendev.org payload block for block. `tests/fixtures/jgit_edits.json` holds 73
+cases, 28 through the Myers fallback, and `scripts/jgit_fixtures.py` rederives every one from
+JGit 7.8.0 (jar sha256 recorded; `--check` reproduces the file). Three of them are cases where JGit
+agrees with the port's Myers bounds handling and not with the idiomatic variant, which the first 70
+could not tell apart.
+
+**Successor kind, computed.** REST rows carry each revision's `kind`, and `refine` drops an example
+whose next patch set is not a rework. The git route computes `kind` with Gerrit's definitions:
+NO_CHANGE and NO_CODE_CHANGE when the trees match over parents with the same trees, and a trivial
+rebase when replaying the predecessor onto the successor's parent (`git merge-tree`) reproduces the
+successor's tree. A replay the objects cannot support is counted (`kind_unverified`, none on this
+sample) and read as REWORK, which keeps the example. Gerrit compares the parents' trees, not their
+ids. Before that fix, an earlier rerun the same day read 12 revisions that REST records as
+NO_CHANGE (10) or NO_CODE_CHANGE (2) as trivial rebases; that run's artifact was overwritten.
+MERGE_FIRST_PARENT_UPDATE is not attempted.
+
+**Parity, from the artifact.**
+
+| | REST | git | both | REST only | git only |
+|---|---|---|---|---|---|
+| 2024-11 | 113 | 116 | 113 | 0 | 3 |
+| 2025-01 | 158 | 152 | 151 | 7 | 1 |
+
+Each difference has one explanation:
+
+- 3 REST-only changes merged in another month and were last updated in this one.
+- 4 REST-only changes were merged into temporary branches (`snap-temp-*`, `sparse-*`) that the host
+  no longer lists, so no git route can reach them; REST keeps their review records. The artifact
+  labels them `branch_not_read`.
+- The 4 git-only changes are the converse of the first: REST filed them under their later update's
+  month.
+
+Reading `main` alone had missed 63 of the 271 REST changes in this sample (the 2026-09-23 run).
+
+On the 264 changes both hold, every field REST stored and NoteDb can state agrees: 17 change fields,
+and 831 revisions' number, creation time, uploader, ref, branch and kind, with owners and submitters
+as the same salted pseudonyms. Hashtags agree as a set: REST returns them in hash-set order, which
+differs between changes with identical footers. `files`, counted with git's histogram algorithm
+because its default Myers counts disagreed with REST, matches REST's `insertions`/`deletions` on 181
+changes. Of the other 83, 79 are changes whose own commit is a merge, and 4 differ for a reason the
+comparison does not classify.
+
+Examples, 164 on each side with the same ids:
+
+- Against the REST examples as built, 160 are identical. The other 4 each keep a one-click
+  "Acknowledged" the build now drops: the REST examples were built before that rule and stamped
+  once, and `refine` removes it.
+- Against the refined corpora, the ones that train, 163 are identical. The last differs only in one
+  @-mention's pseudonym: the REST corpus's came from the older scrub, which hashed part of a
+  chained address, and `refine` removes the leftover domain but cannot rehash without the raw text.
+
+**Fields NoteDb cannot supply** (`notedb.GAPS`, carried in every snapshot record):
+
+- the change-level `insertions`/`deletions`, replaced by `files`;
+- attention set and comment counts;
+- `change_message_id` on comments;
+- account tags, so the build's service-user rule cannot fire on git rows; the bot templates in
+  `refine` still apply.
+
+Nothing under `sphragis/` or `scripts/` reads any of them. Diffs are stored with the change, so a
+NoteDb build makes no request. Two fields exist for the component mapping stage:
+
+- `merged_commit`, the commit on the branch that carries the change;
+- `files`, path to `lines_inserted`/`lines_deleted` against its first parent.
+
+Each revision also records `parents`. A git-route month records the digest of the fetch code
+(`FETCH_RULES`), and the loader refuses one fetched under other code. An organization's months are
+all fetched by one route unless `--allow-mixed-routes` says otherwise, since REST files a change by
+its last update and the git route by its submission.
+
+**Rebase edits.** Between patch sets n and n+1 a rebase can sweep upstream edits into the diff that
+labels an example. Gerrit marks such edits `due_to_rebase` and `hunks_from_diff` ignores the flag.
+The port reproduces Gerrit's attribution: an edit is due to the rebase when it equals one of the
+parents' own edits, carried into each patch set's coordinates, where a parent edit the change's own
+edits touch is left unattributed. On the sample:
+
+- 60 of the 164 examples sit on a rebase step (the two patch sets have different parents).
+- None of their hunks is attributed to the rebase. One overlaps an upstream edit under a looser
+  test.
+- 27 of 813 edit blocks in these diffs are marked. In the 35 rebased file steps, 38 of the parents'
+  53 edits were placed and 15 collided with the author's own.
+- Every successor is REWORK, by REST's `kind` and by the git route's.
+
+The build reads the flag on neither route. Dropping a marked hunk only where the git route built a
+month would build two organizations under different rules, the asymmetry the data audit exists to
+remove, and would change the build rules every month on disk was built and stamped under. On this
+sample such a drop would remove nothing (`with_rebase_edit_drop` in the artifact). Whether rebase
+edits leave the label is a rule for every organization at once, and the REST snapshots do not hold
+the diffs to apply it.
+
+**What the route changes about windows.** Windows are assigned by creation time on both routes, so
+a change lands in the same window either way. Only the month a change is filed under differs: 322
+of 12,145 merged AOSP changes (2.65%) were last updated in a later month than they merged.
+`scripts/censoring.py` models the creation-to-last-update lag and would need the submission time
+for an organization fetched this way. Exposures REST did not have, all into a scratch repository
+that is deleted with the run:
+
+- The history fetch transfers every walked branch's commits up to its tip, merges after the month
+  included; enumeration parses only the commits inside the month's range.
+- The seal's probe transfers the newest meta commit of a change updated in the window (its latest
+  change message), read for its date and discarded.
+- AOSP's ref listing names every change number in the project.
+
+**Found while building it.** Each of these failures was silent or looked like a host problem, and
+each is now a test:
+
+- A filtered fetch records its filter as the remote default, so the meta fetch silently arrived
+  without note blobs. The route now clears the recorded filter after each fetch.
+- A depth fetch into a shallow repository marks a held parent shallow, which cut 107 commits out of
+  every later walk of `main` and a rerun's changes from 536 to 430. Marks whose parents are held
+  are now removed.
+- `git cat-file --batch` reports a missing object as a line rather than an error, and the reader
+  had skipped it. It now raises.
+- A bare repository reads `HEAD:.mailmap` for a log and `.gitattributes` from HEAD's tree for a
+  diff. Reading every branch fetched the one HEAD named, commits only, so every such command failed
+  on a lazy fetch. HEAD now names a ref no fetch writes, and no command reads a mailmap.
+- A shallow-since fetch over every branch at once was refused by the host when dormant branches
+  were included, and probing the tips inside the walked repository left shallow marks a later walk
+  tripped on. The tips are now read in a throwaway repository and dormant branches are not walked.
+
+**Requests.** All paced at one a second or the host's crawl delay, whichever is longer; a git fetch
+is several HTTP requests and is billed for all of them. A command that fails for a transient reason
+(a connection that never opened or dropped, a 5xx server error) is retried twice, after 30 s and
+120 s, each try paced and ledgered; a 403 or 429 refusal is never retried. By the local run
+ledgers, three of the day's runs needed a retry for blob or history fetches.
+
+- 2026-09-23, first run: android.googlesource.com, 20 fetches and 66 HTTP requests, 3 of them
+  entered by hand for one untraced lazy fetch during manual inspection, plus 7 fetches and 21
+  requests for one end-to-end run of `fetch --via git` and `build` over 2024-11 (a check, not kept
+  as an artifact); chromium.googlesource.com, 1 fetch, 3 requests.
+- 2026-09-25, rerun: android.googlesource.com only. The artifact's run made 26 operations and 62
+  HTTP requests. Counting the attempts that failed on the bugs above and the diagnostic runs, the
+  day's run ledgers (kept locally, not committed: they are per-run scratch output) hold 155
+  operations and 411 HTTP requests; the first failed attempt's ledger was
+  deleted with its scratch directory before ledgers were kept, and it made one ref listing and one
+  refused history fetch.
+- Nothing else was contacted by the route. Separately, at about 15:05 EDT on 2026-09-25 a review
+  subagent, meaning to print a command, ran `git ls-remote` on an scp-style address naming
+  chromium-review.googlesource.com: git read it as ssh, so there was a DNS lookup and one ssh
+  connection attempt to port 22, which hung about two minutes and was killed. No git request could
+  have been sent (no ssh identity or host key for that host; `~/.ssh/known_hosts` unchanged).
+  Review prompts now forbid running git against any non-`file://` URL.
 
 ### Registered before the human's figures: a reported slip stays as locked (2026-09-24)
 

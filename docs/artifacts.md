@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 145 artifacts under
-35 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 146 artifacts under
+36 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -216,6 +216,14 @@ Does the organization survive in the modules a selective scheme actually transmi
 | artifact | |
 |---|---|
 | `module-split-cpp-rebuilt-c128.json` | `module-split.json` |
+
+## `scripts/notedb_parity.py`
+
+The NoteDb git route against the REST-built AOSP corpus: enumeration, fields and examples.
+
+| artifact | |
+|---|---|
+| `notedb-parity-aosp.json` |  |
 
 ## `scripts/pilot.py`
 

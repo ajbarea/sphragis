@@ -16,7 +16,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from sphragis.corpus.build import build_from_change
+from sphragis.corpus.build import CommentFetcher, DiffFetcher, build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
 from sphragis.corpus.load import (
@@ -27,12 +27,23 @@ from sphragis.corpus.load import (
     write_source_record,
 )
 from sphragis.corpus.manifest import verify
+from sphragis.corpus.notedb import (
+    GIT_HOSTS,
+    GIT_PERMITTED,
+    NOTEDB_KEY,
+    _raise_on_sigterm,  # noqa: F401 -- fetch_month owns the handling; re-exported for test access
+    embedded_fetchers,
+    fetch_month,
+    valid_project_name,
+)
+from sphragis.corpus.pacing import Pacer
 from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split, window_body
 from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
 from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import is_test_window_unlocked
 from sphragis.corpus.storage import read_snapshot, write_snapshot
+from sphragis.corpus.windows import TEST_WINDOW_START
 
 STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "verify")
 
@@ -90,7 +101,7 @@ def require_salt() -> str:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sphragis.corpus")
     parser.add_argument("stage", choices=STAGES)
-    parser.add_argument("--org", default="openstack", choices=sorted(GERRIT))
+    parser.add_argument("--org", default="openstack", choices=sorted(set(GERRIT) | set(GIT_HOSTS)))
     parser.add_argument("--month", default="2024-10", help="YYYY-MM, for fetch")
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
     parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
@@ -107,10 +118,28 @@ def build_parser() -> argparse.ArgumentParser:
         help="verify: also rerun dedup and split from the refined examples and compare windows",
     )
     parser.add_argument(
+        "--via",
+        choices=("rest", "git"),
+        default="rest",
+        help="fetch through the REST API, or read NoteDb over git (fetch; see notedb.py)",
+    )
+    parser.add_argument(
+        "--branch",
+        action="append",
+        default=[],
+        help="with --via git: restrict enumeration to this branch (repeatable); default is "
+        "every branch Gerrit accepts changes on",
+    )
+    parser.add_argument(
         "--request-interval",
         type=float,
         default=1.0,
         help="minimum seconds between requests to one Gerrit host (fetch, build)",
+    )
+    parser.add_argument(
+        "--allow-mixed-routes",
+        action="store_true",
+        help="fetch: allow this month's route (rest/git) to differ from the org's other months",
     )
     return parser
 
@@ -119,6 +148,7 @@ def http_transport(
     timeout: float = 15.0,
     *,
     min_interval: float = 0.0,
+    host_intervals: Mapping[str, float] | None = None,
     clock: Callable[[], float] = time.monotonic,
     sleep: Callable[[float], None] = time.sleep,
 ) -> Transport:
@@ -134,36 +164,14 @@ def http_transport(
 
     Statuses are returned, never raised, so gerrit._get applies its retry budget and honours
     Retry-After. A connection failure is reported as 503, which is retryable.
+
+    Requests to one host are held `min_interval` apart, or further when `REST_PERMITTED` records
+    a longer crawl delay for it; `pacing.Pacer` records why the default is one a second.
     """
     connections: dict[str, http.client.HTTPConnection] = {}
-    last_start: dict[str, float] = {}
-
-    def pace(host: str) -> None:
-        """Hold requests to one host at least `min_interval` apart.
-
-        Measured 2026-09-15 against review.opendev.org: after hours of unpaced building
-        (about 20 requests a second) a quarter to a third of new handshakes were dropped;
-        after 20 quiet minutes, 0 of 30. The drops follow our volume, so the fix is to send
-        less, not to retry harder.
-
-        The interval was 0.2 s, and that only postponed it: both review.opendev.org and
-        codereview.qt-project.org went on to refuse handshakes after about three hours at
-        5 requests a second, and Qt's refusal outlasted 25 minutes of silence, which reads
-        as a firewall ban rather than load shedding. Building a full corpus is roughly
-        70,000 requests against a volunteer-run server, so the default is 1 request a second.
-        A frozen corpus is fetched once and reused; an overnight collection costs nothing a
-        second run would not cost more.
-        """
-        permission = REST_PERMITTED.get(host)
-        interval = max(min_interval, permission.crawl_delay if permission else 0.0)
-        if interval <= 0:
-            return
-        previous = last_start.get(host)
-        if previous is not None:
-            wait = previous + interval - clock()
-            if wait > 0:
-                sleep(wait)
-        last_start[host] = clock()
+    if host_intervals is None:
+        host_intervals = {host: p.crawl_delay for host, p in REST_PERMITTED.items()}
+    pacer = Pacer(min_interval, host_intervals=host_intervals, clock=clock, sleep=sleep)
 
     def connect(scheme: str, host: str) -> http.client.HTTPConnection:
         if host not in connections:
@@ -194,7 +202,7 @@ def http_transport(
         # Paced by host name, as permission is, so a port or letter case cannot open a second
         # pace, and the retry is a request like any other.
         for attempt in range(2):
-            pace(host)
+            pacer.wait(host)
             connection = connect(parts.scheme, parts.netloc)
             try:
                 connection.request("GET", target, headers={"Accept": "application/json"})
@@ -237,10 +245,49 @@ def refuse_if_sealed(root: Path, org: str, month: str) -> None:
         )
 
 
+def _fetched_routes(root: Path, org: str) -> set[str]:
+    """Every route this org's snapshot records were fetched by.
+
+    A record naming no `route` at all is a REST snapshot from before the field existed, not an
+    unknown route to ignore: without this, an existing REST corpus was invisible to the mixed
+    routes guard, and a git-route fetch into the same org-month went through unrefused.
+    """
+    raw = Path(root) / org / "raw"
+    routes = set()
+    for record_path in sorted(raw.glob("*.record.json")):
+        record = _read_record(record_path)
+        if record is not None:
+            routes.add(record.get("route") or "rest")
+    return routes
+
+
+def refuse_mixed_routes(root: Path, org: str, route: str, *, allow: bool) -> None:
+    """Refuse a fetch whose route differs from an org's other months, unless `allow` is set.
+
+    A REST and a git-route month of the same org-month would carry different fields for the
+    same reality (`kind` computed rather than server-cached, no `insertions`/`deletions`, and
+    so on), so mixing them silently would make later stages compare examples that were never
+    fetched the same way. `allow` records the decision, on the month that made it.
+    """
+    if allow:
+        return
+    other = _fetched_routes(root, org) - {route}
+    if other:
+        raise SystemExit(
+            f"refusing {org}: already fetched via {sorted(other)}, this run is {route!r}; "
+            "pass --allow-mixed-routes to mix, or fetch the rest of the org the same way"
+        )
+
+
 def _stage_fetch(args: argparse.Namespace) -> int:
     """One organization-month into an immutable snapshot, scrubbed on the way in."""
     salt = require_salt()
     refuse_if_sealed(Path(args.root), args.org, args.month)
+    if args.via == "git":
+        return _stage_fetch_git(args, salt)
+    if args.org not in GERRIT:
+        raise SystemExit(f"{args.org} has no REST host here; fetch it with --via git")
+    refuse_mixed_routes(Path(args.root), args.org, "rest", allow=args.allow_mixed_routes)
     year, month = args.month.split("-")
     following = (
         f"{int(year) + (month == '12')}-{'01' if month == '12' else f'{int(month) + 1:02d}'}"
@@ -256,6 +303,11 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     )
     kept = created_on_or_after(changes, args.cutoff)
     scrubbed = [scrub(change, salt) for change in kept]
+    record = {
+        **record,
+        "route": "rest",
+        "mixed_routes_allowed": bool(args.allow_mixed_routes),
+    }
     path = write_snapshot(
         args.root, args.org, args.month, scrubbed, record=record, overwrite=args.overwrite
     )
@@ -268,6 +320,62 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     derived = _examples_dir(args) / f"{args.month}.jsonl"
     if derived.is_file():
         print(f"note: {derived} was built from the replaced snapshot; build will redo it")
+    return 0
+
+
+def _git_pacer(min_interval: float) -> Pacer:
+    """A pacer for the git route: a host's floor from `GIT_PERMITTED` never goes away.
+
+    `min_interval` is the run's own `--request-interval`, which can slow a host down further
+    but, per `Pacer.interval`, can never go below what the host's entry records -- 0 or a
+    negative value included.
+    """
+    return Pacer(
+        min_interval,
+        host_intervals={host: p.min_interval for host, p in GIT_PERMITTED.items() if p.permitted},
+    )
+
+
+def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
+    """One organization-month from NoteDb over git into the same snapshot shape.
+
+    Reached only after the salt and the seal have been checked in `_stage_fetch`, which both
+    routes share. A month is the changes NoteDb records as submitted in it; each keeps its
+    NoteDb creation time, so window assignment is by creation exactly as for REST.
+    """
+    if args.org not in GIT_HOSTS:
+        raise SystemExit(f"{args.org} has no git host with NoteDb refs; use --via rest")
+    if not args.project:
+        raise SystemExit("--via git reads one repository per project: pass --project")
+    bad = [p for p in args.project if not valid_project_name(p)]
+    if bad:
+        raise SystemExit(f"refusing --project {bad}: not a plain project path")
+    refuse_mixed_routes(Path(args.root), args.org, "notedb", allow=args.allow_mixed_routes)
+    # `fetch_month` installs its own SIGTERM handling around the scratch repository it owns
+    # (item 4b): every caller gets it, so nothing extra is needed here.
+    rows, record = fetch_month(
+        args.org,
+        args.project,
+        args.month,
+        salt,
+        pacer=_git_pacer(args.request_interval),
+        branches=args.branch,
+    )
+    kept = created_on_or_after(rows, args.cutoff)
+    record = {
+        **record,
+        "cutoff": args.cutoff,
+        "created_before_cutoff": len(rows) - len(kept),
+        "mixed_routes_allowed": bool(args.allow_mixed_routes),
+    }
+    path = write_snapshot(
+        args.root, args.org, args.month, kept, record=record, overwrite=args.overwrite
+    )
+    print(
+        f"{args.org} {args.month} via git: {len(rows)} submitted, kept {len(kept)}, "
+        f"{record['http_requests']} HTTP requests in {record['git_operations']} fetches"
+    )
+    print(f"wrote {path}")
     return 0
 
 
@@ -284,8 +392,8 @@ def _stage_fetch(args: argparse.Namespace) -> int:
 WINDOWS = {
     "pilot": ("2024-10-01", "2024-11-01"),
     "train": ("2024-11-01", "2025-09-01"),
-    "dev": ("2025-09-01", "2025-11-01"),
-    "test": ("2025-11-01", "2026-11-01"),
+    "dev": ("2025-09-01", TEST_WINDOW_START),
+    "test": (TEST_WINDOW_START, "2026-11-01"),
 }
 
 # The test window is fetched no earlier than this many months after its final month, so that
@@ -499,9 +607,23 @@ def _stage_build(args: argparse.Namespace) -> int:
     if not snapshots:
         print(f"no snapshots under {raw}; run fetch first")
         return 1
-    transport = http_transport(min_interval=args.request_interval)
-    comments = scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport)
-    diffs = scrubbed_diff_fetcher(GERRIT[args.org], transport=transport)
+    rest: tuple[CommentFetcher, DiffFetcher] | None = None
+
+    def fetchers_for(change: dict[str, Any]) -> tuple[CommentFetcher, DiffFetcher]:
+        """A NoteDb row answers from what it carries; a REST row fetches, as it always has."""
+        nonlocal rest
+        if NOTEDB_KEY in change:
+            return embedded_fetchers(change)
+        if rest is None:
+            if args.org not in GERRIT:
+                raise SystemExit(f"{args.org} has no REST host, and a row carries no NoteDb data")
+            transport = http_transport(min_interval=args.request_interval)
+            rest = (
+                scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport),
+                scrubbed_diff_fetcher(GERRIT[args.org], transport=transport),
+            )
+        return rest
+
     out_dir = _examples_dir(args)
     out_dir.mkdir(parents=True, exist_ok=True)
     total, drops = 0, Counter()
@@ -544,7 +666,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
         for change in read_snapshot(snapshot):
-            built, dropped = build_from_change(args.org, change, comments, diffs)
+            built, dropped = build_from_change(args.org, change, *fetchers_for(change))
             rows.extend(built)
             month_drops.update(dropped)
         # Drop counts beside the examples, written first so a month with examples always has

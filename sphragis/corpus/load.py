@@ -20,7 +20,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.rules import BUILD_RULES, RULES_VERSION
+from sphragis.corpus.rules import BUILD_RULES, FETCH_RULES, RULES_VERSION
+from sphragis.corpus.storage import snapshot_record_path
 
 DERIVED = "derived.json"
 
@@ -171,6 +172,27 @@ def _stale_build(built: Path) -> str | None:
     snapshot = built.parent.parent / "raw" / built.name.replace(".jsonl", ".ndjson.gz")
     if snapshot.is_file() and record.get("snapshot_sha256") != sha256(snapshot):
         return f"{built.name}: built from a snapshot since refetched"
+    fetch_reason = _stale_fetch(snapshot)
+    if fetch_reason:
+        return f"{built.name}: {fetch_reason}"
+    return None
+
+
+def _stale_fetch(snapshot: Path) -> str | None:
+    """Whether a git-route snapshot was read under fetch rules other than the code's own.
+
+    Nothing to check for a REST snapshot, or one from before this was recorded: only a git
+    route names `fetch_rules`, the same way only a build names `build_rules`.
+    """
+    if not snapshot.is_file():
+        return None
+    record = _read_json(snapshot_record_path(snapshot))
+    if record is None or record.get("route") != "notedb":
+        return None
+    if "fetch_rules" not in record:
+        return None
+    if record["fetch_rules"] != FETCH_RULES:
+        return "fetched under other fetch rules (notedb.py/gerrit_diff.py changed); refetch it"
     return None
 
 
