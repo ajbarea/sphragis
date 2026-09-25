@@ -1155,52 +1155,67 @@ TRIVIAL_REBASE_KIND = "TRIVIAL_REBASE"
 TRIVIAL_REBASE_MESSAGE_KIND = "TRIVIAL_REBASE_WITH_MESSAGE_UPDATE"
 
 
-def _replay_tree(repo: Repo, *, base: str, onto: str, commit: str) -> str | None:
+def _replay_tree(repo: Repo, *, base: str, onto: str, commit: str) -> tuple[str | None, bool]:
     """The tree `git merge-tree` writes for replaying `commit` onto `onto`, base `base`.
 
-    None when the merge could not be verified: a real conflict (exit 1, and a conflicted tree
-    would not equal the successor's anyway) or a merge git could not attempt at all because
-    this repository lacks the blob content a content-level merge needs (a non-zero exit with
-    no usable tree). Either way the step is not confirmed trivial, so the caller treats it as
-    REWORK -- the same conservative call the spec makes for an actual conflict.
+    Returns (tree, verified). Git's own exit codes tell a completed merge apart from one it
+    could not even attempt: 0 is clean, 1 is a real conflict -- git read every object it needed
+    and the two sides genuinely disagree, which is a confirmed, verified REWORK, not a guess --
+    and anything else means the merge could not run at all, almost always because this
+    repository lacks a commit or blob the merge needs (`collect` fetches for exactly this
+    before calling here, but a truly vanished object still reaches this path). Only that last
+    case is unverified: the tree is None and the caller must not treat it as a confirmed kind.
     """
     done = repo._run(  # noqa: SLF001 - a local plumbing command, not a network operation
         ["merge-tree", "--write-tree", f"--merge-base={base}", onto, commit], check=False
     )
-    if done.returncode != 0:
-        return None
-    return done.stdout.decode().split()[0]
+    if done.returncode == 0:
+        return done.stdout.decode().split()[0], True
+    if done.returncode == 1:
+        return None, True
+    return None, False
 
 
 def _successor_kind(
     repo: Repo, a_commit: str, b_commit: str, a: _CommitInfo, b: _CommitInfo
-) -> str:
+) -> tuple[str, bool]:
     """Gerrit's ChangeKind of a successor revision `b`, relative to its predecessor `a`.
 
-    NO_CHANGE: same tree, same parents, same message. NO_CODE_CHANGE: same tree and parents,
-    a different message. TRIVIAL_REBASE(_WITH_MESSAGE_UPDATE): a single, different parent on
-    each side, and replaying `a` onto `b`'s parent (three-way, base `a`'s parent) reproduces
-    `b`'s tree exactly (`_replay_tree`). MERGE_FIRST_PARENT_UPDATE is not attempted: a merge
-    commit on either side is told apart from REWORK only by whether the trees already match
-    (documented simplification -- Gerrit's own same-tree-after-replay check on the first
-    parent is not run), so a merge pair only reaches NO_CHANGE/NO_CODE_CHANGE or REWORK.
+    Returns (kind, verified). NO_CHANGE: same tree, same parents, same message. NO_CODE_CHANGE:
+    same tree and parents, a different message. TRIVIAL_REBASE(_WITH_MESSAGE_UPDATE): a single,
+    different parent on each side, and replaying `a` onto `b`'s parent (three-way, base `a`'s
+    parent) reproduces `b`'s tree exactly (`_replay_tree`). MERGE_FIRST_PARENT_UPDATE is not
+    attempted: a merge commit on either side is told apart from REWORK only by whether the trees
+    already match (documented simplification -- Gerrit's own same-tree-after-replay check on the
+    first parent is not run), so a merge pair only reaches NO_CHANGE/NO_CODE_CHANGE or REWORK.
+
+    `verified` is False only when `_replay_tree` could not attempt the replay at all for lack of
+    data; REWORK is still the conservative answer in that case, but the caller counts it
+    separately (`kind_unverified`) from a REWORK git actually confirmed -- a real conflict, a
+    completed replay that lands on a different tree, or a definite tree mismatch -- so a
+    fetch-ordering or a genuinely absent object cannot pass itself off as a confirmed kind.
     """
     same_message = a.message == b.message
     if a.parents == b.parents:
         if a.tree != b.tree:
-            return REWORK
-        return NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND
+            return REWORK, True
+        return (NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND), True
     if len(a.parents) == 1 and len(b.parents) == 1:
-        merged_tree = _replay_tree(repo, base=a.parents[0], onto=b.parents[0], commit=a_commit)
+        merged_tree, verified = _replay_tree(
+            repo, base=a.parents[0], onto=b.parents[0], commit=a_commit
+        )
+        if not verified:
+            return REWORK, False
         if merged_tree is None or merged_tree != b.tree:
-            return REWORK
-        return TRIVIAL_REBASE_KIND if same_message else TRIVIAL_REBASE_MESSAGE_KIND
+            return REWORK, True
+        return (TRIVIAL_REBASE_KIND if same_message else TRIVIAL_REBASE_MESSAGE_KIND), True
     if len(a.parents) > 1 and len(b.parents) > 1:
         if a.tree != b.tree:
-            return REWORK
-        return NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND
-    # A root commit on one side, or one side a merge and the other not: not attempted.
-    return REWORK
+            return REWORK, True
+        return (NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND), True
+    # A root commit on one side, or one side a merge and the other not: not attempted, but not
+    # for lack of data -- a documented scope limit, so this counts as a confirmed REWORK.
+    return REWORK, True
 
 
 def tree_entries(repo: Repo, commit: str, paths: Sequence[str]) -> dict[str, str]:
@@ -1458,8 +1473,12 @@ def collect(
 
     # Which consecutive patch-set pairs need a trivial-rebase replay to tell REWORK apart from
     # TRIVIAL_REBASE: single, differing parents on each side. `a`, and both sides' parents, need
-    # their full tree (not just the commit header `every` already carries) for `git merge-tree`.
-    kind_roots: set[str] = set()
+    # their full tree (not just the commit header `every` already carries) for `git merge-tree`,
+    # and their commit objects need to actually be fetched first: unlike `upstream` above, a
+    # parent this shallow history never held was previously handed straight to `git log
+    # --no-walk --stdin` below, which aborts the *entire* batch -- every change in the
+    # project-month, not just this one revision -- on the first object it cannot find.
+    rebase_candidates: dict[tuple[int, int], tuple[str, str, str, str]] = {}
     for record in records.values():
         ordered = sorted(record.patch_sets)
         for prev_ps, ps in zip(ordered, ordered[1:], strict=False):
@@ -1469,7 +1488,26 @@ def collect(
             if a_info is None or b_info is None or a_info.parents == b_info.parents:
                 continue
             if len(a_info.parents) == 1 and len(b_info.parents) == 1:
-                kind_roots.update((a_commit, a_info.parents[0], b_info.parents[0]))
+                rebase_candidates[(record.number, prev_ps)] = (
+                    a_commit,
+                    b_commit,
+                    a_info.parents[0],
+                    b_info.parents[0],
+                )
+    kind_parents = {p for c in rebase_candidates.values() for p in (c[2], c[3])}
+    repo.fetch_objects("kind_parents", repo.missing(kind_parents), "--depth=1", "--filter=tree:0")
+    unfetchable_parents = set(repo.missing(kind_parents))
+    kind_unverified_steps = {
+        key
+        for key, (_, _, a_parent, b_parent) in rebase_candidates.items()
+        if a_parent in unfetchable_parents or b_parent in unfetchable_parents
+    }
+    kind_roots = {
+        oid
+        for key, (a_commit, _, a_parent, b_parent) in rebase_candidates.items()
+        if key not in kind_unverified_steps
+        for oid in (a_commit, a_parent, b_parent)
+    }
     roots = sorted(
         commits
         | upstream
@@ -1484,21 +1522,23 @@ def collect(
         root_trees = listed.decode().split()
         repo.fetch_objects("trees", root_trees, "--filter=blob:none")
 
-    kind_by_commit: dict[str, str] = {}
-    for record in records.values():
-        ordered = sorted(record.patch_sets)
-        if ordered:
-            kind_by_commit[record.patch_sets[ordered[0]]["commit"]] = REWORK
-        for prev_ps, ps in zip(ordered, ordered[1:], strict=False):
-            a_commit = record.patch_sets[prev_ps]["commit"]
-            b_commit = record.patch_sets[ps]["commit"]
-            a_info, b_info = infos.get(a_commit), infos.get(b_commit)
-            if a_info is None or b_info is None:
-                continue
-            kind_by_commit[b_commit] = _successor_kind(repo, a_commit, b_commit, a_info, b_info)
-    counts["kind_computed"] = len(kind_by_commit)
-
     blobs_needed: set[str] = set()
+    # The replay's own blobs: everything either side touched (the change itself, `a`'s parent
+    # to `a`; and upstream, `a`'s parent to `b`'s parent) so `git merge-tree` has real content
+    # for a content-level merge whenever both sides touched the same file, rather than running
+    # trees-only (`--filter=blob:none` fetched only structure) and falling back to REWORK for
+    # every step that needed one -- the bug `kind_computed` alone could not distinguish from a
+    # genuine REWORK.
+    kind_paths: dict[tuple[int, int], set[str]] = {}
+    for key, (a_commit, _b_commit, a_parent, b_parent) in rebase_candidates.items():
+        if key in kind_unverified_steps:
+            continue
+        own_changed = {path for path, _, _ in _changed_files(repo, a_commit, a_parent)}
+        upstream_changed = {path for path, _, _ in _changed_files(repo, b_parent, a_parent)}
+        kind_paths[key] = own_changed | upstream_changed
+        for commit in (a_parent, b_parent, a_commit):
+            blobs_needed.update(tree_entries(repo, commit, sorted(kind_paths[key])).values())
+
     trees: dict[tuple[int, int], dict[str, str]] = {}
     for number, wanted in pairs.items():
         for ps in {ps for ps, _ in wanted} | {ps + 1 for ps, _ in wanted}:
@@ -1531,6 +1571,31 @@ def collect(
         blobs_needed.update(oid for _, old, new in changed for oid in (old, new) if oid)
     repo.fetch_objects("blobs", blobs_needed, "--filter=blob:none")
     contents = repo.read_objects(blobs_needed)
+
+    # Kinds are computed only now, with every blob the replay could need already on disk: run
+    # any earlier and `git merge-tree` had trees but no content, so it fell back to REWORK on
+    # every step that touched the same file on both sides, indistinguishable from a real one.
+    kind_by_commit: dict[str, str] = {}
+    for record in records.values():
+        ordered = sorted(record.patch_sets)
+        if ordered:
+            kind_by_commit[record.patch_sets[ordered[0]]["commit"]] = REWORK
+        for prev_ps, ps in zip(ordered, ordered[1:], strict=False):
+            a_commit = record.patch_sets[prev_ps]["commit"]
+            b_commit = record.patch_sets[ps]["commit"]
+            a_info, b_info = infos.get(a_commit), infos.get(b_commit)
+            if a_info is None or b_info is None:
+                continue
+            key = (record.number, prev_ps)
+            if key in kind_unverified_steps:
+                kind_by_commit[b_commit] = REWORK
+                counts["kind_unverified"] += 1
+                continue
+            kind, verified = _successor_kind(repo, a_commit, b_commit, a_info, b_info)
+            kind_by_commit[b_commit] = kind
+            if not verified:
+                counts["kind_unverified"] += 1
+    counts["kind_computed"] = len(kind_by_commit)
 
     rows = []
     for number, record in records.items():

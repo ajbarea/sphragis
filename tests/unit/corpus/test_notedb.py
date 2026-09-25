@@ -1029,7 +1029,9 @@ def test_uninterruptible_cleanup_survives_a_second_signal_mid_rmtree(
 # ---------------------------------------------------------------------------
 
 
-def _kind(tmp_path: Path, server: Server, a: str, b: str, *, filtered: bool = False) -> str:
+def _kind_verified(
+    tmp_path: Path, server: Server, a: str, b: str, *, filtered: bool = False
+) -> tuple[str, bool]:
     """`_successor_kind(a, b)` after fetching just these two commits (with their history)."""
     repo = notedb.Repo.open(tmp_path / "kind.git", f"{server.url}/{PROJECT}", Pacer(0))
     server.ref("refs/tmp/a", a)
@@ -1038,6 +1040,10 @@ def _kind(tmp_path: Path, server: Server, a: str, b: str, *, filtered: bool = Fa
     repo.fetch("test", ["+refs/tmp/a:refs/tmp/a", "+refs/tmp/b:refs/tmp/b"], *options)
     infos = notedb._commit_infos(repo, [a, b])
     return notedb._successor_kind(repo, a, b, infos[a], infos[b])
+
+
+def _kind(tmp_path: Path, server: Server, a: str, b: str, *, filtered: bool = False) -> str:
+    return _kind_verified(tmp_path, server, a, b, filtered=filtered)[0]
 
 
 def test_successor_kind_no_change_same_tree_parents_and_message(tmp_path: Path) -> None:
@@ -1230,6 +1236,186 @@ def test_collect_writes_kind_and_kind_source_onto_each_revision(tmp_path: Path) 
     assert revisions[ps2]["kind"] == notedb.TRIVIAL_REBASE_KIND
     assert revisions[ps2]["kind_source"] == "git"
     assert counts["kind_computed"] == 2
+
+
+def test_collect_fetches_a_missing_kind_parent_instead_of_crashing_the_whole_batch(
+    tmp_path: Path,
+) -> None:
+    """item 9's reviewer trigger: patch set 1's commit is already held (as a shallow fetch --
+    e.g. from an earlier, narrower operation -- would leave it) but its parent is not, and
+    patch set 2's parent is a separate commit never otherwise fetched either. `kind_roots` used
+    to hand both parents straight to `git log --no-walk --stdin` with no `missing()`-and-fetch
+    guard (`upstream`, just above, gets one; `kind_roots` did not), so `collect` raised `fatal:
+    bad object` for the whole project-month, not just this one revision."""
+    s = Server(tmp_path / "server")
+    base = s.commit(s.tree({"f": b"base\n"}), "base", "2024-09-01T00:00:00Z")
+    other_base = s.commit(s.tree({"f": b"other\n"}), "other base", "2024-09-01T00:00:00Z")
+    ps1 = s.commit(s.tree({"f": b"base\nX\n"}), "Fix", "2024-09-05T00:00:00Z", (base,))
+    ps2 = s.commit(s.tree({"f": b"other\nY\n"}), "Fix", "2024-09-07T00:00:00Z", (other_base,))
+    s.ref("refs/changes/96/96/1", ps1)
+    s.ref("refs/changes/96/96/2", ps2)
+    _meta(
+        s,
+        96,
+        [
+            (
+                OWNER,
+                "2024-09-05T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I96\nCommit: {ps1}",
+                {},
+            ),
+            (
+                OWNER,
+                "2024-09-07T00:00:00Z",
+                f"Update patch set 2\n\nPatch-set: 2\nCommit: {ps2}",
+                {},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    # ps1 already held (shallowly, at depth 1: only the commit, not its parent), as an earlier,
+    # narrower fetch would leave it -- exactly the state `every`'s own depth=2 fetch does not
+    # reliably widen, since a shallow object already present is not refetched.
+    repo.fetch_objects("presim", [ps1], "--depth=1", "--filter=tree:0")
+    assert repo.missing([base]) == [base], "ps1's parent must start out genuinely unfetched"
+    assert repo.missing([other_base]) == [other_base]
+
+    rows, counts = notedb.collect(repo, [96], project=PROJECT)  # must not raise GitError
+
+    revisions = rows[0]["revisions"]
+    assert revisions[ps2]["kind"] in (notedb.REWORK,), "unrelated bases: a genuine rework"
+    assert counts["kind_computed"] == 2
+    assert counts.get("kind_unverified", 0) == 0, "both parents were fetchable, just not yet held"
+
+
+def test_collect_counts_kind_unverified_when_a_parent_stays_unfetchable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A parent that is still missing after the fetch attempt (genuinely gone, not merely
+    unfetched yet) must not crash `collect` or silently pass as a confirmed REWORK: it is
+    dropped from `kind_roots` and counted separately, `kind_unverified`, distinct from a REWORK
+    git actually confirmed."""
+    s = Server(tmp_path / "server")
+    base = s.commit(s.tree({"f": b"base\n"}), "base", "2024-09-01T00:00:00Z")
+    other_base = s.commit(s.tree({"f": b"other\n"}), "other base", "2024-09-01T00:00:00Z")
+    ps1 = s.commit(s.tree({"f": b"base\nX\n"}), "Fix", "2024-09-05T00:00:00Z", (base,))
+    ps2 = s.commit(s.tree({"f": b"other\nY\n"}), "Fix", "2024-09-07T00:00:00Z", (other_base,))
+    s.ref("refs/changes/97/97/1", ps1)
+    s.ref("refs/changes/97/97/2", ps2)
+    _meta(
+        s,
+        97,
+        [
+            (
+                OWNER,
+                "2024-09-05T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I97\nCommit: {ps1}",
+                {},
+            ),
+            (
+                OWNER,
+                "2024-09-07T00:00:00Z",
+                f"Update patch set 2\n\nPatch-set: 2\nCommit: {ps2}",
+                {},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    real_missing = repo.missing
+
+    def lying_missing(oids: Any) -> list[str]:
+        # `base` never becomes available, however many times a fetch is attempted for it.
+        return sorted({*real_missing(oids), base} & set(oids))
+
+    monkeypatch.setattr(repo, "missing", lying_missing)
+
+    rows, counts = notedb.collect(repo, [97], project=PROJECT)  # must not raise GitError
+
+    revisions = rows[0]["revisions"]
+    assert revisions[ps2]["kind"] == notedb.REWORK, "still the conservative fallback"
+    assert counts["kind_unverified"] == 1
+    assert counts["kind_computed"] == 2
+
+
+def test_collect_confirms_trivial_rebase_when_both_sides_touch_the_same_file(
+    tmp_path: Path,
+) -> None:
+    """item 8's reviewer case: `f` has 20 lines, upstream edits line 2, the change edits line
+    18, and patch set 2 is patch set 1 rebased cleanly onto that upstream commit -- through
+    `collect` end to end, not only `_successor_kind` with every object already fetched (the
+    existing unit tests above never touch the same file on both sides, so `git merge-tree`
+    never needed blob content and the ordering bug went unnoticed there). A comment sits on
+    line 2, the line only the rebase touched.
+    """
+    lines = [f"l{i}" for i in range(1, 21)]
+
+    def rendered(edited: dict[int, str]) -> bytes:
+        text = list(lines)
+        for line_no, value in edited.items():
+            text[line_no - 1] = value
+        return ("\n".join(text) + "\n").encode()
+
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": rendered({})}), "root", "2024-10-01T00:00:00Z")
+    upstream = s.commit(
+        s.tree({"f": rendered({2: "UPSTREAM"})}), "upstream", "2024-10-05T00:00:00Z", (root,)
+    )
+    ps1 = s.commit(s.tree({"f": rendered({18: "OWN"})}), "Fix", "2024-10-02T00:00:00Z", (root,))
+    ps2 = s.commit(
+        s.tree({"f": rendered({2: "UPSTREAM", 18: "OWN"})}),
+        "Fix",
+        "2024-10-06T00:00:00Z",
+        (upstream,),
+    )
+    s.ref("refs/changes/95/95/1", ps1)
+    s.ref("refs/changes/95/95/2", ps2)
+    comment = {
+        **_comment("u", 1, 2, REVIEWER, "2024-10-03T00:00:00Z", "upstream line", ps1),
+        "key": {"uuid": "u", "filename": "f", "patchSetId": 1},
+    }
+    note = json.dumps({"comments": [comment]}).encode()
+    _meta(
+        s,
+        95,
+        [
+            (
+                OWNER,
+                "2024-10-02T00:00:00Z",
+                _message(
+                    "Create change",
+                    "Uploaded.",
+                    "Patch-set: 1",
+                    "Change-id: I95",
+                    "Branch: refs/heads/main",
+                    f"Commit: {ps1}",
+                ),
+                {},
+            ),
+            (
+                REVIEWER,
+                "2024-10-03T00:00:00Z",
+                _message("Update patch set 1", "(1 comment)", "Patch-set: 1"),
+                {ps1: note},
+            ),
+            (
+                OWNER,
+                "2024-10-06T00:00:00Z",
+                _message("Update patch set 2", "Uploaded.", "Patch-set: 2", f"Commit: {ps2}"),
+                {ps1: note},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    rows, counts = notedb.collect(repo, [95], project=PROJECT)
+    revisions = rows[0]["revisions"]
+    assert revisions[ps2]["kind"] == notedb.TRIVIAL_REBASE_KIND, (
+        "both sides touched f (different lines): must still resolve via a real content merge, "
+        "not fall back to REWORK for lack of blob content"
+    )
+    assert counts["kind_computed"] == 2
+    assert counts.get("kind_unverified", 0) == 0, "every object needed was fetched in time"
+    block = rows[0][notedb.NOTEDB_KEY]["diffs"]["1:f"]["content"]
+    assert any(b.get("due_to_rebase") for b in block if "ab" not in b)
 
 
 # ---------------------------------------------------------------------------
