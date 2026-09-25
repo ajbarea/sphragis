@@ -86,7 +86,24 @@ GIT_PERMITTED = {
 }
 
 #: A `--project` value that could resolve outside its own repository once joined into a URL.
-_UNSAFE_PROJECT = re.compile(r"[+?#]|\.\.")
+#: `%` included: a percent-encoded byte (`%2e%2e` = `..`, `%2f` = `/`) is unsafe whether or not
+#: anything downstream actually decodes it -- refused rather than trusted not to be.
+_UNSAFE_PROJECT = re.compile(r"[+?#%]|\.\.")
+
+
+def _is_local_url(url: str) -> bool:
+    """True only for an explicit `file://` URL or a plain path that is an existing directory.
+
+    `urlsplit` reads an scp-style remote (`git@host:path`) as `scheme == ""`, the same as a
+    bare local path, so scheme alone cannot tell them apart: a `.is_dir()` check is what keeps
+    a network host out of the exemption meant for local scratch repositories in tests.
+    """
+    scheme = urlsplit(url).scheme
+    if scheme == "file":
+        return True
+    if scheme != "":
+        return False
+    return Path(url).is_dir()
 
 
 def valid_project_name(project: str) -> bool:
@@ -453,9 +470,7 @@ class Repo:
 
     def _network(self, purpose: str, args: Sequence[str], stdin: bytes | None, items: int) -> bytes:
         permission = GIT_PERMITTED.get(self.host)
-        if urlsplit(self.url).scheme not in ("file", "") and (
-            permission is None or not permission.permitted
-        ):
+        if not _is_local_url(self.url) and (permission is None or not permission.permitted):
             reason = permission.reason if permission else "not recorded in GIT_PERMITTED"
             raise GitError(f"refusing to contact {self.host} over the network: {reason}")
         self.pacer.wait(self.host)

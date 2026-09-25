@@ -763,8 +763,31 @@ def test_git_refuses_a_host_with_no_recorded_permission(
         repo.fetch("history", ["+refs/heads/main:refs/heads/main"])
 
 
+def test_an_scp_style_url_does_not_bypass_the_host_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`scheme == ""` also matches an scp-style remote (`git@host:path`), which is a network
+    URL, not a local path: the file-URL exemption must not let it through unchecked."""
+    repo = notedb.Repo.open(tmp_path / "c.git", "git@chromium-review.googlesource.com:x", Pacer(0))
+    _forbid_network_subprocess(monkeypatch)
+    with pytest.raises(notedb.GitError, match="refusing to contact"):
+        repo.fetch("history", ["+refs/heads/main:refs/heads/main"])
+
+
 @pytest.mark.parametrize(
-    "bad", ["a/../b", "a+b", "a?b", "a#b", "/etc/passwd", "..", "a/b/../../etc"]
+    "bad",
+    [
+        "a/../b",
+        "a+b",
+        "a?b",
+        "a#b",
+        "/etc/passwd",
+        "..",
+        "a/b/../../etc",
+        "a%2e%2e/b",
+        "platform%2fabc",
+        "a%b",
+    ],
 )
 def test_valid_project_name_refuses_path_and_url_escapes(bad: str) -> None:
     assert notedb.valid_project_name(bad) is False
