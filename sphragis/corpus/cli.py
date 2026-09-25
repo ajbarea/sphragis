@@ -246,13 +246,18 @@ def refuse_if_sealed(root: Path, org: str, month: str) -> None:
 
 
 def _fetched_routes(root: Path, org: str) -> set[str]:
-    """Every route named on this org's snapshot records, unrecorded ones ignored."""
+    """Every route this org's snapshot records were fetched by.
+
+    A record naming no `route` at all is a REST snapshot from before the field existed, not an
+    unknown route to ignore: without this, an existing REST corpus was invisible to the mixed
+    routes guard, and a git-route fetch into the same org-month went through unrefused.
+    """
     raw = Path(root) / org / "raw"
     routes = set()
     for record_path in sorted(raw.glob("*.record.json")):
         record = _read_record(record_path)
-        if record and record.get("route"):
-            routes.add(record["route"])
+        if record is not None:
+            routes.add(record.get("route") or "rest")
     return routes
 
 

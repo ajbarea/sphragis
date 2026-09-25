@@ -1314,6 +1314,22 @@ def test_refuse_mixed_routes_blocks_the_other_route(tmp_path: Path) -> None:
     cli.refuse_mixed_routes(tmp_path, "org", "rest", allow=False)  # same route, never refused
 
 
+def test_a_record_naming_no_route_is_treated_as_rest(tmp_path: Path) -> None:
+    """`_fetched_routes` ignored a record with no `route` key entirely, so an existing REST
+    corpus fetched before the field existed was invisible to the guard, and a git-route fetch
+    into that same org-month went through unrefused: not mixed routes on record, but a REST
+    corpus mixed with a git one on disk."""
+    from sphragis.corpus import cli
+
+    raw = tmp_path / "org" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-10.record.json").write_text(json.dumps({"pages": 1}))  # no "route" at all
+    assert cli._fetched_routes(tmp_path, "org") == {"rest"}
+    with pytest.raises(SystemExit, match="already fetched via"):
+        cli.refuse_mixed_routes(tmp_path, "org", "notedb", allow=False)
+    cli.refuse_mixed_routes(tmp_path, "org", "rest", allow=False)  # same route, never refused
+
+
 def test_the_git_route_refuses_to_mix_with_an_existing_rest_month(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
