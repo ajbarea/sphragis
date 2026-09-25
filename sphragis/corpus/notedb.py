@@ -37,11 +37,14 @@ from __future__ import annotations
 import json
 import os
 import re
+import signal
 import subprocess
 import tempfile
+import threading
 import time
 from collections import Counter
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from functools import cache
@@ -1580,6 +1583,54 @@ def month_bounds(month: str) -> tuple[str, str]:
     return f"{month}-01", f"{following}-01"
 
 
+@contextmanager
+def _raise_on_sigterm() -> Iterator[None]:
+    """Turn a SIGTERM into an exception for the duration, then restore the previous handler.
+
+    The git fetch path holds its scratch repository in a `TemporaryDirectory`, whose cleanup
+    runs on any exception unwound through it, SIGTERM included -- but only if SIGTERM raises
+    rather than the default terminate-the-process action, which skips every `finally` on the
+    stack and leaves the scratch repository, and the raw identities in it, on disk.
+
+    A no-op outside the main thread: `signal.signal` can only be called there, and a caller
+    running `fetch_month` off the main thread receives no OS signals of its own to convert
+    anyway, so there is nothing this context manager could usefully install.
+    """
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+
+    def handler(signum: int, frame: Any) -> None:
+        raise KeyboardInterrupt("SIGTERM")
+
+    previous = signal.signal(signal.SIGTERM, handler)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
+@contextmanager
+def _uninterruptible(*signals: int) -> Iterator[None]:
+    """Ignore `signals` for the duration, so a second one cannot abort work partway through.
+
+    Used around the scratch repository's cleanup: `_raise_on_sigterm` turns one SIGTERM into a
+    clean unwind, but the unwind itself -- `shutil.rmtree` of a directory holding raw identities
+    -- is exactly the work a second, impatient signal must not be allowed to interrupt, leaving
+    a partially deleted scratch repository behind. A no-op outside the main thread, for the same
+    reason `_raise_on_sigterm` is.
+    """
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+    previous = {sig: signal.signal(sig, signal.SIG_IGN) for sig in signals}
+    try:
+        yield
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+
+
 def fetch_month(
     org: str,
     projects: Sequence[str],
@@ -1611,43 +1662,52 @@ def fetch_month(
     rows: list[dict[str, Any]] = []
     per_project: dict[str, Any] = {}
     operations = requests = 0
-    with tempfile.TemporaryDirectory(prefix="sphragis-notedb-", dir=workdir) as scratch:
-        for index, project in enumerate(projects):
-            repo = Repo.open(Path(scratch) / f"{index}.git", f"{base}/{project}", pacer)
-            refs = branch_refs(repo, org, branches)
-            fetch_history(repo, refs, since)
-            by_commit = (
-                patch_set_commits(repo, repo.list_remote("patch_set_refs", "refs/changes/*"))
-                if by_patch_set_ref
-                else None
-            )
-            merged, enumeration = merged_commits(
-                repo,
-                refs,
-                since,
-                end,
-                review_host=REVIEW_HOSTS.get(org, ""),
-                project=project,
-                by_commit=by_commit,
-            )
-            by_number = {m.number: m for m in merged if m.number is not None}
-            found, counts = collect(
-                repo,
-                sorted(by_number),
-                project=project,
-                merged=by_number,
-                submitted_between=(start, end),
-            )
-            status = Counter(str(row["status"]) for row in found)
-            rows.extend(pseudonymise(row, salt) for row in found if row["status"] == "MERGED")
-            per_project[project] = {
-                "branches_read": refs,
-                "enumeration": enumeration,
-                "collect": counts,
-                "status": dict(status),
-            }
-            operations += repo.operations
-            requests += repo.http_requests
+    scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-notedb-", dir=workdir)
+    try:
+        with _raise_on_sigterm():
+            scratch = scratch_dir.name
+            for index, project in enumerate(projects):
+                repo = Repo.open(Path(scratch) / f"{index}.git", f"{base}/{project}", pacer)
+                refs = branch_refs(repo, org, branches)
+                fetch_history(repo, refs, since)
+                by_commit = (
+                    patch_set_commits(repo, repo.list_remote("patch_set_refs", "refs/changes/*"))
+                    if by_patch_set_ref
+                    else None
+                )
+                merged, enumeration = merged_commits(
+                    repo,
+                    refs,
+                    since,
+                    end,
+                    review_host=REVIEW_HOSTS.get(org, ""),
+                    project=project,
+                    by_commit=by_commit,
+                )
+                by_number = {m.number: m for m in merged if m.number is not None}
+                found, counts = collect(
+                    repo,
+                    sorted(by_number),
+                    project=project,
+                    merged=by_number,
+                    submitted_between=(start, end),
+                )
+                status = Counter(str(row["status"]) for row in found)
+                rows.extend(pseudonymise(row, salt) for row in found if row["status"] == "MERGED")
+                per_project[project] = {
+                    "branches_read": refs,
+                    "enumeration": enumeration,
+                    "collect": counts,
+                    "status": dict(status),
+                }
+                operations += repo.operations
+                requests += repo.http_requests
+    finally:
+        # SIGTERM raises above, but the cleanup this unwind lands on -- deleting a directory
+        # holding raw identities -- must itself run to completion: a second SIGTERM (or
+        # SIGINT) arriving mid-`rmtree` is ignored here rather than aborting it partway.
+        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+            scratch_dir.cleanup()
     record = {
         "route": "notedb",
         "base_url": base,

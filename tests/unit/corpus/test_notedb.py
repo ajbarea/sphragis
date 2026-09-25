@@ -7,6 +7,7 @@ import os
 import signal
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -890,22 +891,22 @@ def test_lazy_fetch_probe_raises_when_the_safety_variable_is_missing() -> None:
 def test_sigterm_during_a_git_fetch_leaves_no_scratch_repository(
     server: Server, tmp_path: Path
 ) -> None:
+    """`fetch_month` alone, with no CLI-level wrap: the handling has to live in `fetch_month`
+    itself (item 4b), so every caller gets it, not only `_stage_fetch_git`."""
     workdir = tmp_path / "work"
     workdir.mkdir()
     script = f"""
 import sys
 sys.path.insert(0, {str(Path(notedb.__file__).resolve().parents[2])!r})
 from pathlib import Path
-from sphragis.corpus import cli
 from sphragis.corpus.notedb import fetch_month
 from sphragis.corpus.pacing import Pacer
-with cli._raise_on_sigterm():
-    fetch_month(
-        "aosp", [{PROJECT!r}], "2024-11", "salt",
-        pacer=Pacer(5.0),
-        base_url={server.url!r},
-        workdir=Path({str(workdir)!r}),
-    )
+fetch_month(
+    "aosp", [{PROJECT!r}], "2024-11", "salt",
+    pacer=Pacer(5.0),
+    base_url={server.url!r},
+    workdir=Path({str(workdir)!r}),
+)
 """
     proc = subprocess.Popen([sys.executable, "-c", script])
     try:
@@ -920,6 +921,107 @@ with cli._raise_on_sigterm():
             proc.kill()
             proc.wait()
     assert list(workdir.iterdir()) == [], "the scratch repository must be gone after SIGTERM"
+
+
+def test_cli_stage_fetch_git_still_gets_sigterm_protection(server: Server, tmp_path: Path) -> None:
+    """The CLI path (`_stage_fetch_git`) no longer wraps `fetch_month` itself, so this proves
+    the protection it used to add explicitly still reaches it through `fetch_month` alone --
+    driven through `cli.main` end to end, `TMPDIR` pinned so the scratch directory is one this
+    test can watch."""
+    root = tmp_path / "root"
+    workdir = tmp_path / "cliwork"
+    workdir.mkdir()
+    script = f"""
+import sys
+sys.path.insert(0, {str(Path(notedb.__file__).resolve().parents[2])!r})
+import os
+os.environ["SPHRAGIS_CORPUS_SALT"] = "salt"
+from sphragis.corpus import cli
+cli.GIT_HOSTS["aosp"] = {server.url!r}  # same dict object notedb.fetch_month reads
+cli.main(["fetch", "--org", "aosp", "--project", {PROJECT!r}, "--month", "2024-11",
+          "--root", {str(root)!r}, "--via", "git"])
+"""
+    proc = subprocess.Popen(
+        [sys.executable, "-c", script], env={**os.environ, "TMPDIR": str(workdir)}
+    )
+    try:
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and not any(workdir.iterdir()):
+            time.sleep(0.05)
+        assert any(workdir.iterdir()), "the scratch repository never appeared to be killed mid-run"
+        proc.send_signal(signal.SIGTERM)
+        assert proc.wait(timeout=10) != 0
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+    assert list(workdir.iterdir()) == [], "the scratch repository must be gone after SIGTERM"
+
+
+def test_raise_on_sigterm_installs_no_handler_outside_the_main_thread() -> None:
+    """`signal.signal` raises ValueError off the main thread; the context manager must not try."""
+    errors: list[BaseException] = []
+
+    def worker() -> None:
+        try:
+            with notedb._raise_on_sigterm():
+                pass
+        except BaseException as error:  # noqa: BLE001 - captured across a thread boundary
+            errors.append(error)
+
+    thread = threading.Thread(target=worker)
+    thread.start()
+    thread.join()
+    assert errors == []
+
+
+def test_uninterruptible_ignores_a_second_signal_during_cleanup() -> None:
+    """A signal delivered while ignored is dropped, not deferred: it must not fire later either,
+    and the previous handler must be back in place and live once the block exits."""
+    fired: list[int] = []
+
+    def handler(signum: int, frame: Any) -> None:
+        fired.append(signum)
+
+    previous = signal.signal(signal.SIGTERM, handler)
+    try:
+        with notedb._uninterruptible(signal.SIGTERM):
+            os.kill(os.getpid(), signal.SIGTERM)
+            time.sleep(0.05)
+        assert fired == [], "a signal sent during the ignore window must not fire the handler"
+        os.kill(os.getpid(), signal.SIGTERM)
+        time.sleep(0.05)
+        assert fired == [signal.SIGTERM], "the previous handler must be restored and live"
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
+def test_uninterruptible_cleanup_survives_a_second_signal_mid_rmtree(
+    server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A slowed `TemporaryDirectory.cleanup`, self-signalled mid-way, still finishes: the
+    scratch repository is gone and `fetch_month` still returns normally."""
+    import tempfile as tempfile_module
+
+    real_cleanup = tempfile_module.TemporaryDirectory.cleanup
+
+    def slow_cleanup(self: Any) -> None:
+        os.kill(os.getpid(), signal.SIGTERM)
+        os.kill(os.getpid(), signal.SIGINT)
+        time.sleep(0.05)
+        real_cleanup(self)
+
+    # Warm the (`@cache`d) lazy-fetch probe first: it opens and closes its own, unrelated
+    # `TemporaryDirectory` inside `Repo.open`, which the patch below must not catch instead.
+    notedb._require_lazy_fetch_disabled()
+    monkeypatch.setattr(tempfile_module.TemporaryDirectory, "cleanup", slow_cleanup)
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    rows, _record = notedb.fetch_month(
+        "aosp", [PROJECT], "2024-11", "salt", pacer=Pacer(0), base_url=server.url, workdir=scratch
+    )
+    assert [row["_number"] for row in rows] == [1234]
+    assert list(scratch.iterdir()) == [], "cleanup must have finished despite the mid-way signals"
 
 
 # ---------------------------------------------------------------------------

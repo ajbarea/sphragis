@@ -7,14 +7,12 @@ import hashlib
 import http.client
 import json
 import os
-import signal
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from collections.abc import Callable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -33,6 +31,7 @@ from sphragis.corpus.notedb import (
     GIT_HOSTS,
     GIT_PERMITTED,
     NOTEDB_KEY,
+    _raise_on_sigterm,  # noqa: F401 -- fetch_month owns the handling; re-exported for test access
     embedded_fetchers,
     fetch_month,
     valid_project_name,
@@ -319,26 +318,6 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     return 0
 
 
-@contextmanager
-def _raise_on_sigterm() -> Iterator[None]:
-    """Turn a SIGTERM into an exception for the duration, then restore the previous handler.
-
-    The git fetch path holds its scratch repository in a `TemporaryDirectory`, whose cleanup
-    runs on any exception unwound through it, SIGTERM included -- but only if SIGTERM raises
-    rather than the default terminate-the-process action, which skips every `finally` on the
-    stack and leaves the scratch repository, and the raw identities in it, on disk.
-    """
-
-    def handler(signum: int, frame: Any) -> None:
-        raise KeyboardInterrupt("SIGTERM")
-
-    previous = signal.signal(signal.SIGTERM, handler)
-    try:
-        yield
-    finally:
-        signal.signal(signal.SIGTERM, previous)
-
-
 def _git_pacer(min_interval: float) -> Pacer:
     """A pacer for the git route: a host's floor from `GIT_PERMITTED` never goes away.
 
@@ -367,15 +346,16 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
     if bad:
         raise SystemExit(f"refusing --project {bad}: not a plain project path")
     refuse_mixed_routes(Path(args.root), args.org, "notedb", allow=args.allow_mixed_routes)
-    with _raise_on_sigterm():
-        rows, record = fetch_month(
-            args.org,
-            args.project,
-            args.month,
-            salt,
-            pacer=_git_pacer(args.request_interval),
-            branches=args.branch,
-        )
+    # `fetch_month` installs its own SIGTERM handling around the scratch repository it owns
+    # (item 4b): every caller gets it, so nothing extra is needed here.
+    rows, record = fetch_month(
+        args.org,
+        args.project,
+        args.month,
+        salt,
+        pacer=_git_pacer(args.request_interval),
+        branches=args.branch,
+    )
     kept = created_on_or_after(rows, args.cutoff)
     record = {
         **record,
