@@ -759,24 +759,63 @@ def branch_refs(repo: Repo, org: str, only: Sequence[str] = ()) -> list[str]:
     return sorted(ref for ref in available if ref in wanted or ref.rsplit("/", 1)[-1] in wanted)
 
 
-def fetch_history(repo: Repo, refs: Sequence[str], since: str) -> None:
-    """Every named branch's commits since `since`, without trees or blobs, in one fetch.
+def fetch_history(repo: Repo, refs: Sequence[str], since: str) -> tuple[list[str], int]:
+    """Every named branch's commits since `since`, without trees or blobs, fetched in one pass.
+
+    A `--shallow-since` fetch over every named branch in one request fails outright when
+    every one of them has a tip older than `since`: the server has no commit to send for such
+    a branch, so its ref cannot be updated (`fatal: bad object <oid>`, `error: remote did not
+    send all necessary objects`) -- hit fetching AOSP's platform/hardware/interfaces across all
+    branches, some of them long-dormant release or test branches whose last commit long
+    predates the candidate window. A mix of one active and one dormant branch does not
+    reproduce this against a local `file://` server (the failure needs *every* named branch to
+    predate the cutoff), so the fix avoids the condition by construction rather than by
+    reproducing the server's own negotiation: every branch's tip commit is fetched alone first,
+    in one batched `--depth=1` fetch with no shallow-since bound (so even a branch far older
+    than `since` still arrives), and only the branches whose tip committer time is at or after
+    `since` are then asked for their full shallow-since history. A branch whose tip predates
+    `since` cannot hold a commit in `[since, end)` -- history only ever gets older walking back
+    from a tip -- so skipping it drops no candidate `merged_commits` would otherwise have found.
 
     Commits alone are what enumeration reads, and they are small; the trees `files` needs
     are fetched afterwards for the merged commits only, which on a repository the size of
     chromium/src is the difference between a month's trees and every tree since `since`.
 
-    Git has no upper date bound on a fetch, so this transfers every commit up to each branch's
-    tip, including merges after the month being collected. They are filtered out in
-    `merged_commits` before anything is recorded, and the scratch repository holding them is
-    deleted with the run.
+    Git has no upper date bound on a fetch, so a walked branch's history transfers every
+    commit up to its tip, including merges after the month being collected. They are filtered
+    out in `merged_commits` before anything is recorded, and the scratch repository holding
+    them is deleted with the run.
+
+    Returns the branches actually walked (a subset of `refs`, sorted -- a vanished ref is
+    dropped silently, as `branch_refs`'s own listing already would be by the time this runs,
+    and the same as `fetch_refs` drops one elsewhere in this module) and how many of the
+    branches whose tip was actually read turned out dormant. Every later step that reads this
+    project's history (`merged_commits`, and callers' own branch bookkeeping) must use the
+    walked list, not `refs`, or it walks a branch whose full history was never fetched.
     """
-    repo.fetch(
-        "history",
-        [f"+{ref}:{ref}" for ref in refs],
-        "--filter=tree:0",
-        f"--shallow-since={since}",
+    if not refs:
+        return [], 0
+    vanished = set(
+        repo.fetch_refs("history_tips", refs, "--depth=1", "--filter=tree:0", force=True)
     )
+    present = [ref for ref in refs if ref not in vanished]
+    if not present:
+        return [], 0
+    raw = repo.git("for-each-ref", "--format=%(refname)%09%(objectname)", *present)
+    tips = dict(line.split("\t") for line in raw.decode().splitlines())
+    objects = repo.read_objects(tips.values())
+    floor = datetime.fromisoformat(since).replace(tzinfo=UTC).timestamp()
+    walked = sorted(
+        ref for ref, oid in tips.items() if _commit_committer_time(objects[oid]) >= floor
+    )
+    if walked:
+        repo.fetch(
+            "history",
+            [f"+{ref}:{ref}" for ref in walked],
+            "--filter=tree:0",
+            f"--shallow-since={since}",
+        )
+    return walked, len(present) - len(walked)
 
 
 def reviewed_on(message: str, review_host: str, project: str) -> int | None:
@@ -1482,8 +1521,15 @@ def collect(
     held_tips = {n: tip_info[n][0] for n in held}
     tip_trees = {info.tree for info in _commit_infos(repo, held_tips.values()).values()}
     repo.fetch_objects("meta_trees", tip_trees, "--filter=blob:none", "--refetch")
+    # `--refetch`: a plain fetch of a blob id, with no ref and no filter of its own, fails
+    # ("did not send all necessary objects") whenever this scratch repository carries *any*
+    # shallow boundary at all -- including one left by `fetch_history`'s own tip probe of a
+    # dormant branch, which is otherwise unrelated to these blobs. `--refetch` sidesteps that
+    # negotiation instead of asking git to reconcile it.
     repo.fetch_objects(
-        "notes", [oid for n in held for oid in _note_blobs(repo, change_ref(n, "meta"))]
+        "notes",
+        [oid for n in held for oid in _note_blobs(repo, change_ref(n, "meta"))],
+        "--refetch",
     )
     records = {}
     for number in held:
@@ -1799,6 +1845,10 @@ def fetch_month(
     change's NoteDb creation time, exactly as for the REST route. `by_patch_set_ref` adds the
     ref-listing fallback for hosts whose merged commits carry no `Reviewed-on:` trailer (AOSP);
     it lists every ref in the project, so it is for repositories of moderate size only.
+
+    A dormant branch -- one whose tip predates the candidate window (`fetch_history`) -- is
+    read no further than its tip: `branches_read` in the returned record names only the
+    branches actually walked, and `branches_dormant` counts the rest.
     """
     base = base_url or GIT_HOSTS[org]
     if by_patch_set_ref is None:
@@ -1816,7 +1866,7 @@ def fetch_month(
             for index, project in enumerate(projects):
                 repo = Repo.open(Path(scratch) / f"{index}.git", f"{base}/{project}", pacer)
                 refs = branch_refs(repo, org, branches)
-                fetch_history(repo, refs, since)
+                walked, dormant = fetch_history(repo, refs, since)
                 by_commit = (
                     patch_set_commits(repo, repo.list_remote("patch_set_refs", "refs/changes/*"))
                     if by_patch_set_ref
@@ -1824,7 +1874,7 @@ def fetch_month(
                 )
                 merged, enumeration = merged_commits(
                     repo,
-                    refs,
+                    walked,
                     since,
                     end,
                     review_host=REVIEW_HOSTS.get(org, ""),
@@ -1842,7 +1892,8 @@ def fetch_month(
                 status = Counter(str(row["status"]) for row in found)
                 rows.extend(pseudonymise(row, salt) for row in found if row["status"] == "MERGED")
                 per_project[project] = {
-                    "branches_read": refs,
+                    "branches_read": walked,
+                    "branches_dormant": dormant,
                     "enumeration": enumeration,
                     "collect": counts,
                     "status": dict(status),

@@ -20,6 +20,12 @@ a kept scratch directory does *not* cost no requests: reading which branches to 
 meta-tip probe is re-forced every time by design (item 1); what a kept directory actually saves
 is not refetching blobs, trees and patch-set commits already held.
 
+Before the scratch directory (and its ledger) is deleted, whether the run succeeded or raised,
+the ledger is copied out to `<work>/ledger-<timestamp>.jsonl` and its path printed -- otherwise a
+failed run's own record of what it asked the server for is lost along with the scratch directory
+that carried it. The ledger itself holds only operation counts, purposes and timings, never a
+raw identity.
+
 Run: set -a; . ./.env; set +a
      uv run --no-active python scripts/notedb_parity.py \
          --rest-root <checkout>/datasets/gerrit/aosp --work <scratch>/notedb-parity --keep-work
@@ -615,8 +621,16 @@ def _history_fetched(marker: Path, branches: Sequence[str], since: str) -> dict[
     return held
 
 
-def _record_history_fetch(marker: Path, branches: Sequence[str], since: str) -> None:
-    """Record the union of branches fetched so far and the earliest `since` reached."""
+def _record_history_fetch(
+    marker: Path, branches: Sequence[str], since: str, walked: Sequence[str] | None = None
+) -> None:
+    """Record the union of branches fetched so far, the earliest `since` reached, and which of
+    the requested branches actually turned out non-dormant (`walked`, `fetch_history`'s own
+    result -- defaults to `branches` when the caller has none, i.e. every requested branch was
+    walked). A branch once recorded walked stays walked: `since` only ever deepens (moves
+    earlier) between calls the marker accepts, and a branch whose tip cleared an earlier,
+    later `since` clears any earlier one too.
+    """
     held: dict[str, Any] = {}
     if marker.is_file():
         try:
@@ -625,7 +639,17 @@ def _record_history_fetch(marker: Path, branches: Sequence[str], since: str) -> 
             held = {}
     branches_held = set(branches) | set(held.get("branches", []))
     since_held = min(since, held.get("since", since))
-    marker.write_text(json.dumps({"branches": sorted(branches_held), "since": since_held}) + "\n")
+    walked_held = set(walked if walked is not None else branches) | set(held.get("walked", []))
+    marker.write_text(
+        json.dumps(
+            {
+                "branches": sorted(branches_held),
+                "since": since_held,
+                "walked": sorted(walked_held),
+            }
+        )
+        + "\n"
+    )
 
 
 #: Name of the marker file `_make_scratch` writes into every scratch directory it creates.
@@ -708,6 +732,28 @@ def _rmtree_marked(scratch: Path) -> None:
     shutil.rmtree(scratch, ignore_errors=True)
 
 
+def _preserve_ledger(scratch: Path, work: Path) -> Path | None:
+    """Copy the scratch ledger out to `work` before `scratch` (and the ledger with it) is
+    deleted, so a failed run's record of the network requests it made is not lost with it.
+
+    Named with a microsecond UTC timestamp and never overwritten: an existing path at that
+    name gets a numeric suffix instead, so two runs landing in the same microsecond -- or a
+    kept scratch directory reused across runs -- each get their own file. Returns None, writing
+    nothing, when this run made no ledger at all (a failure before `Repo.open`).
+    """
+    ledger = scratch / "ledger.jsonl"
+    if not ledger.is_file():
+        return None
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S.%f")
+    dest = work / f"ledger-{stamp}.jsonl"
+    suffix = 1
+    while dest.exists():
+        dest = work / f"ledger-{stamp}-{suffix}.jsonl"
+        suffix += 1
+    shutil.copyfile(ledger, dest)
+    return dest
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rest-root", type=Path, default=Path("datasets/gerrit/aosp"))
@@ -742,7 +788,10 @@ def main() -> None:
     finally:
         if not args.keep_work:
             with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                preserved = _preserve_ledger(scratch, args.work)
                 _rmtree_marked(scratch)
+            if preserved is not None:
+                print(f"wrote {preserved}")
 
 
 def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:
@@ -757,9 +806,16 @@ def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:
     earliest = min(_since(start) for start, _ in bounds.values())
     branch_ref_names = branch_refs(repo, ORG, branches)
     marker = scratch / "history-since.txt"
-    if _history_fetched(marker, branch_ref_names, earliest) is None:
-        fetch_history(repo, branch_ref_names, earliest)
-        _record_history_fetch(marker, branch_ref_names, earliest)
+    held = _history_fetched(marker, branch_ref_names, earliest)
+    if held is None:
+        walked, dormant = fetch_history(repo, branch_ref_names, earliest)
+        _record_history_fetch(marker, branch_ref_names, earliest, walked)
+    else:
+        # A rerun the marker already covers: `fetch_history` did not run this time, so the
+        # branches actually walked are whatever an earlier run over this same scratch
+        # directory recorded, restricted to what this run asked for.
+        walked = sorted(set(held.get("walked", branch_ref_names)) & set(branch_ref_names))
+        dormant = len(branch_ref_names) - len(walked)
     listing = scratch / "refs-changes.tsv"
     if not listing.is_file():
         pairs = repo.list_remote("patch_set_refs", "refs/changes/*")
@@ -767,16 +823,20 @@ def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:
     change_refs = [tuple(line.split("\t")) for line in listing.read_text().splitlines() if line]
     by_commit = patch_set_commits(repo, change_refs)
 
-    on_branch = {
-        line.split()[0]: int(line.split()[1])
-        for line in repo.git("log", "--format=%H %ct", *branch_ref_names).decode().splitlines()
-    }
+    on_branch = (
+        {
+            line.split()[0]: int(line.split()[1])
+            for line in repo.git("log", "--format=%H %ct", *walked).decode().splitlines()
+        }
+        if walked
+        else {}
+    )
     candidates: dict[int, MergedCommit] = {}
     enumeration_counts = {}
     for month, (start, end) in bounds.items():
         found, counts = merged_commits(
             repo,
-            branch_ref_names,
+            walked,
             _since(start),
             end,
             review_host=REVIEW_HOSTS[ORG],
@@ -810,7 +870,7 @@ def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:
         }
         enumeration[month] = {
             "candidate_commits": enumeration_counts[month],
-            **classify_enumeration(month, in_month, rest, on_branch, branch_ref_names),
+            **classify_enumeration(month, in_month, rest, on_branch, walked),
         }
         pairs += [
             (row, rest_by_number[n])
@@ -822,9 +882,15 @@ def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:
         **provenance_header(),
         "org": ORG,
         "project": PROJECT,
-        # The branches actually read (`branch_refs`'s own result), not `--branch` as requested:
-        # a requested branch the project has none of would otherwise read as having been read.
+        # Every branch the project could put a change on (`branch_refs`'s own result), not
+        # `--branch` as requested: a requested branch the project has none of would otherwise
+        # read as having been read. `branches_walked` is the subset `fetch_history` actually
+        # fetched full history for; a branch left out is either dormant (its tip predates the
+        # earliest candidate date, counted in `branches_dormant`) or vanished between listing
+        # and fetch.
         "branches": branch_ref_names,
+        "branches_walked": walked,
+        "branches_dormant": dormant,
         "months": list(MONTHS),
         "rest_root": _relative_to_repo(args.rest_root),
         "requests": ledger_totals(ledger),

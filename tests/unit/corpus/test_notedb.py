@@ -494,7 +494,9 @@ def test_a_missing_object_fails_rather_than_fetching_lazily(server: Server, tmp_
         notedb.GitError, match="lazy fetching disabled|could not fetch|not in the repository"
     ):
         repo.read_objects([blob])
-    assert repo.operations == 1, "the failed read made no network operation"
+    assert repo.operations == 2, (
+        "the tip probe and the shallow-since fetch, no more: the failed read made no operation"
+    )
 
 
 def test_git_operations_against_one_host_are_paced(server: Server, tmp_path: Path) -> None:
@@ -507,8 +509,8 @@ def test_git_operations_against_one_host_are_paced(server: Server, tmp_path: Pat
     repo = _repo(server, tmp_path, Pacer(1.5, clock=lambda: now[0], sleep=sleep))
     notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
     repo.fetch_refs("meta", [notedb.change_ref(1234, "meta")])
-    assert slept == pytest.approx([1.5])
-    assert [entry["purpose"] for entry in repo.log] == ["history", "meta"]
+    assert slept == pytest.approx([1.5, 1.5]), "the tip probe, the history fetch, then meta"
+    assert [entry["purpose"] for entry in repo.log] == ["history_tips", "history", "meta"]
 
 
 def test_month_bounds_roll_over_the_year() -> None:
@@ -717,6 +719,100 @@ def test_chromium_also_reads_branch_heads(tmp_path: Path) -> None:
     assert notedb.branch_refs(repo, "aosp", ()) == ["refs/heads/main"], (
         "an org with no extra namespace reads refs/heads/* only"
     )
+
+
+# ---------------------------------------------------------------------------
+# A dormant branch's tip predates `since`: a real android.googlesource.com run over every
+# branch of platform/hardware/interfaces failed the shallow-since fetch outright when a
+# dormant branch (tip older than the candidate window) was named in it alongside active ones
+# ("fatal: bad object ...", "remote did not send all necessary objects"). A mix of one active
+# and one dormant branch does not make a local file:// server refuse the same fetch -- the
+# failure needs *every* named branch to predate the cutoff -- so these check the fix by
+# construction (the refspecs actually sent) rather than by reproducing the server failure.
+# ---------------------------------------------------------------------------
+
+
+def _spy_on_fetch(
+    repo: notedb.Repo, monkeypatch: pytest.MonkeyPatch
+) -> list[tuple[str, list[str]]]:
+    """Every `(purpose, refspecs)` `repo.fetch` is actually called with, in order."""
+    calls: list[tuple[str, list[str]]] = []
+    real_fetch = repo.fetch
+
+    def spy(purpose: str, refspecs: Any, *options: str) -> None:
+        calls.append((purpose, list(refspecs)))
+        return real_fetch(purpose, refspecs, *options)
+
+    monkeypatch.setattr(repo, "fetch", spy)
+    return calls
+
+
+def test_fetch_history_excludes_a_dormant_branch_from_the_shallow_fetch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`dormant`'s tip predates `since` by years; only `main`'s tip qualifies, so only `main`
+    may reach the shallow-since fetch's own refspecs."""
+    s = Server(tmp_path / "server")
+    s.ref("refs/heads/dormant", s.commit(s.tree({"f": b"0\n"}), "ancient", "2015-01-01T00:00:00Z"))
+    s.ref("refs/heads/main", s.commit(s.tree({"f": b"1\n"}), "recent", "2024-11-10T00:00:00Z"))
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    calls = _spy_on_fetch(repo, monkeypatch)
+    walked, dormant = notedb.fetch_history(
+        repo, ["refs/heads/dormant", "refs/heads/main"], "2024-10-01"
+    )
+    assert walked == ["refs/heads/main"]
+    assert dormant == 1
+    history_calls = [refspecs for purpose, refspecs in calls if purpose == "history"]
+    assert history_calls == [["+refs/heads/main:refs/heads/main"]], (
+        "the dormant branch must never reach the shallow-since fetch's own refspecs"
+    )
+
+
+def test_fetch_history_skips_the_shallow_fetch_when_every_branch_is_dormant(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    s = Server(tmp_path / "server")
+    s.ref("refs/heads/dormant", s.commit(s.tree({"f": b"0\n"}), "ancient", "2015-01-01T00:00:00Z"))
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    calls = _spy_on_fetch(repo, monkeypatch)
+    walked, dormant = notedb.fetch_history(repo, ["refs/heads/dormant"], "2024-10-01")
+    assert walked == []
+    assert dormant == 1
+    assert not any(purpose == "history" for purpose, _ in calls), (
+        "no shallow-since fetch at all when every branch is dormant"
+    )
+
+
+def test_fetch_history_rerun_over_the_same_repo_works(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    s.ref("refs/heads/dormant", s.commit(s.tree({"f": b"0\n"}), "ancient", "2015-01-01T00:00:00Z"))
+    s.ref("refs/heads/main", s.commit(s.tree({"f": b"1\n"}), "recent", "2024-11-10T00:00:00Z"))
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    refs = ["refs/heads/dormant", "refs/heads/main"]
+    first = notedb.fetch_history(repo, refs, "2024-10-01")
+    second = notedb.fetch_history(repo, refs, "2024-10-01")
+    assert first == second == (["refs/heads/main"], 1)
+
+
+def test_fetch_month_counts_a_dormant_branch_and_still_finds_the_active_ones_change(
+    server: Server, tmp_path: Path
+) -> None:
+    """`server`'s `main` carries change 1234, merged in November; an added `dormant` branch,
+    whose tip long predates the candidate window, carries nothing. `fetch_month` must still
+    find 1234, name only `main` as read, and count the dormant branch."""
+    server.ref(
+        "refs/heads/dormant",
+        server.commit(server.tree({"f": b"0\n"}), "ancient", "2015-01-01T00:00:00Z"),
+    )
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    rows, record = notedb.fetch_month(
+        "aosp", [PROJECT], "2024-11", "salt", pacer=Pacer(0), base_url=server.url, workdir=scratch
+    )
+    assert [row["_number"] for row in rows] == [1234]
+    project_record = record["projects"][PROJECT]
+    assert project_record["branches_read"] == ["refs/heads/main"]
+    assert project_record["branches_dormant"] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -1895,8 +1991,10 @@ def test_network_charges_the_pacer_for_extra_http_requests(
     )
     notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
     pacer.wait("local")
-    assert slept == pytest.approx([3.0]), (
-        "a fetch counted as 3 HTTP requests must charge 2 extra, not just the base interval"
+    assert slept == pytest.approx([3.0, 3.0]), (
+        "the tip probe books the first interval uncharged; the history fetch then waits it "
+        "out and is itself counted as 3 HTTP requests, charging 2 extra -- as does the final "
+        "wait, since every fetch here is mocked to 3 requests"
     )
 
 

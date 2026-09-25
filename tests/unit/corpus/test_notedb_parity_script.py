@@ -308,6 +308,85 @@ def test_main_deletes_only_the_scratch_directory_it_created_on_error(
     )
 
 
+def test_ledger_is_copied_out_before_a_failed_runs_scratch_directory_is_deleted(
+    parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: Any
+) -> None:
+    """The ledger records what a run asked the server for, but it lives inside the scratch
+    directory `main()` deletes on the way out -- so without copying it out first, a failed
+    run's own record of its network requests is lost with the scratch dir that held it."""
+    work = tmp_path / "work"
+    work.mkdir()
+
+    def boom(args: Any, salt: Any, scratch: Path) -> None:
+        (scratch / "ledger.jsonl").write_text(
+            json.dumps(
+                {
+                    "at": "2026-01-01T00:00:00+00:00",
+                    "host": "example.invalid",
+                    "purpose": "history",
+                    "items": 2,
+                    "http_requests": 1,
+                    "seconds": 0.01,
+                    "returncode": 0,
+                }
+            )
+            + "\n"
+        )
+        raise RuntimeError("simulated failure mid-run")
+
+    monkeypatch.setattr(parity, "_run", boom)
+    monkeypatch.setattr(parity, "require_salt", lambda: "salt")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["notedb_parity.py", "--work", str(work), "--rest-root", str(_rest_root(tmp_path))],
+    )
+    with pytest.raises(RuntimeError, match="simulated failure"):
+        parity.main()
+
+    ledgers = sorted(work.glob("ledger-*.jsonl"))
+    assert len(ledgers) == 1, "the ledger must be copied out before the scratch dir is deleted"
+    entries = [json.loads(line) for line in ledgers[0].read_text().splitlines()]
+    assert entries == [
+        {
+            "at": "2026-01-01T00:00:00+00:00",
+            "host": "example.invalid",
+            "purpose": "history",
+            "items": 2,
+            "http_requests": 1,
+            "seconds": 0.01,
+            "returncode": 0,
+        }
+    ]
+    assert set(entries[0]) == {
+        "at",
+        "host",
+        "purpose",
+        "items",
+        "http_requests",
+        "seconds",
+        "returncode",
+    }, "the preserved ledger must hold no raw identity, only operation, purpose, counts and timing"
+    assert str(ledgers[0]) in capsys.readouterr().out, "the preserved path must be printed"
+
+
+def test_no_ledger_file_is_written_when_the_run_made_no_ledger(
+    parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A run that fails before `Repo.open` (no ledger at all) must not fabricate one."""
+    work = tmp_path / "work"
+    work.mkdir()
+    _patch_run_to_raise(parity, monkeypatch)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["notedb_parity.py", "--work", str(work), "--rest-root", str(_rest_root(tmp_path))],
+    )
+    with pytest.raises(RuntimeError, match="simulated failure"):
+        parity.main()
+    assert list(work.glob("ledger-*.jsonl")) == []
+
+
 def test_keep_work_flag_preserves_the_marked_scratch_directory_on_error(
     parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
