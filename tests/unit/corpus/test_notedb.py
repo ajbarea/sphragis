@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import select
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -869,6 +871,39 @@ def test_an_scp_style_url_does_not_bypass_the_host_guard(
         repo.fetch("history", ["+refs/heads/main:refs/heads/main"])
 
 
+def test_is_local_url_does_not_exempt_an_scp_style_name_that_exists_as_a_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """NS1 residual: the old code called `Path(url).is_dir()` for *any* no-scheme string, so an
+    scp-style remote (`git@host:x`) was wrongly treated as local whenever a directory happened
+    to exist with that exact literal name in the current directory -- git would still use ssh
+    for it. The fix must refuse `.is_dir()` for anything that is not an absolute path."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "git@chromium-review.googlesource.com:x").mkdir()
+    assert notedb._is_local_url("git@chromium-review.googlesource.com:x") is False
+
+
+def test_is_local_url_does_not_exempt_a_relative_path_that_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only an absolute path is exempt: a relative one is refused whether or not it exists."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "somedir").mkdir()
+    assert notedb._is_local_url("somedir") is False
+
+
+def test_is_local_url_exempts_an_existing_absolute_path() -> None:
+    assert notedb._is_local_url(str(Path.cwd())) is True
+
+
+def test_is_local_url_exempts_a_file_url() -> None:
+    assert notedb._is_local_url("file:///anywhere") is True
+
+
+def test_is_local_url_does_not_exempt_a_nonexistent_absolute_path(tmp_path: Path) -> None:
+    assert notedb._is_local_url(str(tmp_path / "does-not-exist")) is False
+
+
 @pytest.mark.parametrize(
     "bad",
     [
@@ -977,6 +1012,23 @@ def test_lazy_fetch_probe_raises_when_the_safety_variable_is_missing() -> None:
     assert "behaviour" in message, "the probe tests behaviour, not a version number"
 
 
+def test_lazy_fetch_probe_leaves_no_scratch_directory_behind(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The probe built its own `TemporaryDirectory` with no `dir=`, so it lands wherever
+    `tempfile.gettempdir()` points -- real `/tmp` outside a test. Pointing that root at
+    `tmp_path` here proves the probe's own scratch directory is actually gone afterwards, not
+    just that the probe itself doesn't raise."""
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    env = frozenset(notedb._isolated_env().items())
+    notedb._lazy_fetch_probe.cache_clear()
+    try:
+        notedb._lazy_fetch_probe(env)
+    finally:
+        notedb._lazy_fetch_probe.cache_clear()
+    assert list(tmp_path.iterdir()) == [], "no probe scratch directory must remain under tmpdir"
+
+
 # ---------------------------------------------------------------------------
 # SIGTERM cleanup (item 4)
 # ---------------------------------------------------------------------------
@@ -1021,7 +1073,14 @@ def test_cli_stage_fetch_git_still_gets_sigterm_protection(server: Server, tmp_p
     """The CLI path (`_stage_fetch_git`) no longer wraps `fetch_month` itself, so this proves
     the protection it used to add explicitly still reaches it through `fetch_month` alone --
     driven through `cli.main` end to end, `TMPDIR` pinned so the scratch directory is one this
-    test can watch."""
+    test can watch.
+
+    Synchronised on a line the child prints once it is genuinely inside `_raise_on_sigterm`'s
+    protected window, read with a generous, blocking `select` timeout -- not the wall-clock poll
+    this test used to run (sleep 0.05, deadline 5s), which raced under load: the child could
+    finish (and exit 0) before the parent's next poll noticed anything in `workdir`, or the
+    reverse, the deadline could expire before a slow child had created anything at all. Either
+    way the two assertions below would fail without any code defect."""
     root = tmp_path / "root"
     workdir = tmp_path / "cliwork"
     workdir.mkdir()
@@ -1029,26 +1088,45 @@ def test_cli_stage_fetch_git_still_gets_sigterm_protection(server: Server, tmp_p
 import sys
 sys.path.insert(0, {str(Path(notedb.__file__).resolve().parents[2])!r})
 import os
+import time
+from contextlib import contextmanager
 os.environ["SPHRAGIS_CORPUS_SALT"] = "salt"
-from sphragis.corpus import cli
+from sphragis.corpus import cli, notedb
+
+real_raise_on_sigterm = notedb._raise_on_sigterm
+
+@contextmanager
+def _synced_raise_on_sigterm():
+    with real_raise_on_sigterm():
+        print("READY", flush=True)
+        time.sleep(30)  # generous: interrupted by the parent's SIGTERM well before this elapses
+        yield
+
+notedb._raise_on_sigterm = _synced_raise_on_sigterm
 cli.GIT_HOSTS["aosp"] = {server.url!r}  # same dict object notedb.fetch_month reads
 cli.main(["fetch", "--org", "aosp", "--project", {PROJECT!r}, "--month", "2024-11",
           "--root", {str(root)!r}, "--via", "git"])
 """
     proc = subprocess.Popen(
-        [sys.executable, "-c", script], env={**os.environ, "TMPDIR": str(workdir)}
+        [sys.executable, "-c", script],
+        env={**os.environ, "TMPDIR": str(workdir)},
+        stdout=subprocess.PIPE,
+        text=True,
     )
+    assert proc.stdout is not None
     try:
-        deadline = time.monotonic() + 5
-        while time.monotonic() < deadline and not any(workdir.iterdir()):
-            time.sleep(0.05)
-        assert any(workdir.iterdir()), "the scratch repository never appeared to be killed mid-run"
+        ready, _, _ = select.select([proc.stdout], [], [], 30)
+        assert ready, "the child never signalled it was mid-run, inside the protected window"
+        line = proc.stdout.readline()
+        assert line.strip() == "READY", f"unexpected child output before READY: {line!r}"
         proc.send_signal(signal.SIGTERM)
         assert proc.wait(timeout=10) != 0
     finally:
         if proc.poll() is None:
             proc.kill()
             proc.wait()
+        if proc.stdout is not None:
+            proc.stdout.close()
     assert list(workdir.iterdir()) == [], "the scratch repository must be gone after SIGTERM"
 
 
@@ -1820,6 +1898,101 @@ def test_network_charges_the_pacer_for_extra_http_requests(
     assert slept == pytest.approx([3.0]), (
         "a fetch counted as 3 HTTP requests must charge 2 extra, not just the base interval"
     )
+
+
+def test_fetch_month_calls_cleanup_explicitly_not_relying_on_the_finalizer(
+    server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """M6: a mutant that dropped `fetch_month`'s explicit `scratch_dir.cleanup()` call still
+    passes a naive "is the directory gone after return" check, because CPython's refcounting
+    deallocates the now-unreferenced `TemporaryDirectory` the instant `fetch_month` returns,
+    running the very same cleanup through its finalizer -- `gc.disable()` alone does not stop
+    this, since it only suspends the *cyclic* collector, not ordinary refcounting. Capturing
+    every `TemporaryDirectory` instance into `kept` here holds an extra reference past the
+    return, so the finalizer cannot fire on its own: only the explicit call still deletes the
+    directory promptly."""
+    import gc
+    import tempfile as tempfile_module
+
+    # Warm the (`@cache`d) lazy-fetch probe first: it opens and closes its own, unrelated
+    # `TemporaryDirectory`, which the capture below must not hold onto instead.
+    notedb._require_lazy_fetch_disabled()
+    kept: list[Any] = []
+    real_init = tempfile_module.TemporaryDirectory.__init__
+
+    def capturing_init(self: Any, *a: Any, **kw: Any) -> None:
+        real_init(self, *a, **kw)
+        kept.append(self)
+
+    monkeypatch.setattr(tempfile_module.TemporaryDirectory, "__init__", capturing_init)
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    gc.disable()
+    try:
+        rows, _record = notedb.fetch_month(
+            "aosp",
+            [PROJECT],
+            "2024-11",
+            "salt",
+            pacer=Pacer(0),
+            base_url=server.url,
+            workdir=workdir,
+        )
+        assert [row["_number"] for row in rows] == [1234]
+        assert list(workdir.iterdir()) == [], (
+            "fetch_month must call cleanup() itself -- the finalizer must never be what deletes it"
+        )
+    finally:
+        gc.enable()
+        kept.clear()
+
+
+def test_fetch_month_cleanup_survives_a_second_signal_via_subprocess(
+    server: Server, tmp_path: Path
+) -> None:
+    """M21: a mutant that dropped the `_uninterruptible` wrap around `fetch_month`'s cleanup.
+    Sending the process a second real signal from inside a slowed `TemporaryDirectory.cleanup`
+    (the in-process version of this check self-signals the live pytest process, which a removed
+    guard kills outright -- SIGTERM's default disposition -- losing the test's own result along
+    with it) is done in a child process here instead, so an unprotected mutant only kills the
+    child: the parent still gets a clean, unambiguous failure from the leftover directory."""
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    root = str(Path(notedb.__file__).resolve().parents[2])
+    script = f"""
+import os
+import signal
+import sys
+import time
+
+sys.path.insert(0, {root!r})
+import tempfile as tempfile_module
+from pathlib import Path
+from sphragis.corpus.notedb import fetch_month, _require_lazy_fetch_disabled
+from sphragis.corpus.pacing import Pacer
+
+_require_lazy_fetch_disabled()
+real_cleanup = tempfile_module.TemporaryDirectory.cleanup
+
+def slow_cleanup(self):
+    os.kill(os.getpid(), signal.SIGTERM)
+    os.kill(os.getpid(), signal.SIGINT)
+    time.sleep(0.2)
+    real_cleanup(self)
+
+tempfile_module.TemporaryDirectory.cleanup = slow_cleanup
+rows, _record = fetch_month(
+    "aosp", [{PROJECT!r}], "2024-11", "salt",
+    pacer=Pacer(0), base_url={server.url!r}, workdir=Path({str(workdir)!r}),
+)
+print(f"ROWS {{len(rows)}}")
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=30
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "ROWS 1" in proc.stdout
+    assert list(workdir.iterdir()) == [], "cleanup must survive a second signal mid-rmtree"
 
 
 # ---------------------------------------------------------------------------

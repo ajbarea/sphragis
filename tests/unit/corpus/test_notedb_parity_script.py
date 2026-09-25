@@ -266,42 +266,46 @@ def test_record_history_fetch_unions_branches_across_reruns(
 # ---------------------------------------------------------------------------
 
 
-def test_work_directory_is_deleted_by_default_after_a_run(
-    parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """`main()`'s own cleanup, exercised directly: `_run` raising must still delete `--work`
-    unless `--keep-work` was passed."""
-    work = tmp_path / "work"
-    work.mkdir()
-    (work / "marker").write_text("x")
-
-    def boom(args: Any, salt: Any) -> None:
+def _patch_run_to_raise(parity: types.ModuleType, monkeypatch: pytest.MonkeyPatch) -> None:
+    def boom(args: Any, salt: Any, scratch: Path) -> None:
         raise RuntimeError("simulated failure mid-run")
 
     monkeypatch.setattr(parity, "_run", boom)
     monkeypatch.setattr(parity, "require_salt", lambda: "salt")
 
+
+def test_main_deletes_only_the_scratch_directory_it_created_on_error(
+    parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`main()`'s own cleanup, exercised directly: `_run` raising before any fetch must still
+    delete the scratch directory this run created under `--work`, but `--work` itself and
+    whatever it already held (a file this run never created) must survive untouched -- the
+    destructive bug fixed here once deleted `--work` wholesale."""
+    work = tmp_path / "work"
+    work.mkdir()
+    (work / "pre-existing-file").write_text("must survive")
+
+    _patch_run_to_raise(parity, monkeypatch)
     monkeypatch.setattr(
-        sys, "argv", ["notedb_parity.py", "--work", str(work), "--rest-root", str(tmp_path)]
+        sys, "argv", ["notedb_parity.py", "--work", str(work), "--rest-root", str(tmp_path / "rr")]
     )
     with pytest.raises(RuntimeError, match="simulated failure"):
         parity.main()
-    assert not work.exists(), "work must be deleted on an error, not just a clean exit"
+    assert work.is_dir(), "--work itself must never be deleted"
+    assert (work / "pre-existing-file").read_text() == "must survive"
+    remaining = list(work.iterdir())
+    assert remaining == [work / "pre-existing-file"], (
+        "cleanup must remove only the scratch dir this run made, leaving what --work already held"
+    )
 
 
-def test_keep_work_flag_preserves_the_directory_on_error(
+def test_keep_work_flag_preserves_the_marked_scratch_directory_on_error(
     parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     work = tmp_path / "work"
     work.mkdir()
-    (work / "marker").write_text("x")
 
-    def boom(args: Any, salt: Any) -> None:
-        raise RuntimeError("simulated failure mid-run")
-
-    monkeypatch.setattr(parity, "_run", boom)
-    monkeypatch.setattr(parity, "require_salt", lambda: "salt")
-
+    _patch_run_to_raise(parity, monkeypatch)
     monkeypatch.setattr(
         sys,
         "argv",
@@ -310,10 +314,180 @@ def test_keep_work_flag_preserves_the_directory_on_error(
             "--work",
             str(work),
             "--rest-root",
-            str(tmp_path),
+            str(tmp_path / "rr"),
             "--keep-work",
         ],
     )
     with pytest.raises(RuntimeError, match="simulated failure"):
         parity.main()
-    assert (work / "marker").is_file(), "--keep-work must preserve the directory on an error"
+    scratch = parity._find_marked_scratch(work)
+    assert scratch is not None, "--keep-work must preserve the marked scratch directory"
+
+
+def test_a_kept_scratch_directory_is_reused_by_the_next_run(
+    parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The rerun-cache semantics (history marker keyed on branches, ledger reuse) depend on a
+    second run finding the *same* scratch directory a first, kept run made -- not a new one."""
+    work = tmp_path / "work"
+    work.mkdir()
+
+    seen: list[Path] = []
+
+    def record(args: Any, salt: Any, scratch: Path) -> None:
+        seen.append(scratch)
+        (scratch / "history-since.txt").write_text(
+            '{"branches": ["refs/heads/main"], "since": "x"}'
+        )
+
+    monkeypatch.setattr(parity, "_run", record)
+    monkeypatch.setattr(parity, "require_salt", lambda: "salt")
+    argv = [
+        "notedb_parity.py",
+        "--work",
+        str(work),
+        "--rest-root",
+        str(tmp_path / "rr"),
+        "--keep-work",
+    ]
+    monkeypatch.setattr(sys, "argv", argv)
+    parity.main()
+    parity.main()
+    assert len(seen) == 2
+    assert seen[0] == seen[1], "the second run must reuse the first run's scratch directory"
+    assert (seen[0] / "history-since.txt").is_file(), "the reused directory keeps its contents"
+
+
+# ---------------------------------------------------------------------------
+# item 1: --work never deletes anything it did not create itself
+# ---------------------------------------------------------------------------
+
+
+def test_refuse_unsafe_work_when_work_is_the_checkout_root(parity: types.ModuleType) -> None:
+    """`--work .` (from inside the checkout) must be refused before doing any work."""
+    checkout = parity._checkout_root()
+    with pytest.raises(SystemExit, match="repository checkout"):
+        parity._refuse_unsafe_work(
+            checkout, checkout / "datasets/gerrit/aosp", checkout / "out.json"
+        )
+
+
+def test_refuse_unsafe_work_when_work_is_an_ancestor_of_rest_root(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    """`--work <checkout>/datasets/gerrit` is an ancestor of the default `--rest-root`; deleting
+    the scratch dir this run creates under it must never risk the REST corpus alongside it."""
+    rest_root = tmp_path / "datasets" / "gerrit" / "aosp"
+    rest_root.mkdir(parents=True)
+    work = rest_root.parent  # tmp_path/datasets/gerrit
+    with pytest.raises(SystemExit, match="--rest-root"):
+        parity._refuse_unsafe_work(work, rest_root, tmp_path / "out.json")
+
+
+def test_refuse_unsafe_work_when_work_is_the_out_directory(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    """`--work` naming the directory `--out` is written into must be refused: an artifact
+    written then swept up by cleanup is silently lost."""
+    out = tmp_path / "results" / "notedb-parity-aosp.json"
+    with pytest.raises(SystemExit, match="--out"):
+        parity._refuse_unsafe_work(out.parent, tmp_path / "rr", out)
+
+
+def test_refuse_unsafe_work_follows_a_symlinked_work_path(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    """A `--work` that is itself a symlink to a dangerous location must not slip past the guard
+    unresolved."""
+    checkout = parity._checkout_root()
+    link = tmp_path / "work-link"
+    link.symlink_to(checkout)
+    with pytest.raises(SystemExit):
+        parity._refuse_unsafe_work(link, tmp_path / "rr", tmp_path / "out.json")
+
+
+def test_refuse_unsafe_work_allows_an_ordinary_scratch_location(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    """The common case -- a `--work` unrelated to the checkout, rest-root or out -- is not
+    refused."""
+    work = tmp_path / "scratch"
+    parity._refuse_unsafe_work(work, tmp_path / "rr", tmp_path / "out.json")  # must not raise
+
+
+def test_rmtree_marked_refuses_an_unmarked_directory(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    """The last line of defence: even called directly, `_rmtree_marked` must refuse a directory
+    that does not carry the marker this script itself writes on creation."""
+    unmarked = tmp_path / "not-mine"
+    unmarked.mkdir()
+    (unmarked / "keepme").write_text("x")
+    with pytest.raises(RuntimeError, match="refusing to delete"):
+        parity._rmtree_marked(unmarked)
+    assert (unmarked / "keepme").is_file()
+
+
+def test_rmtree_marked_does_not_follow_a_symlink_to_the_checkout(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    """A symlink inside the scratch directory that points at the checkout (or anywhere else)
+    must not be traversed when the scratch directory itself is deleted."""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    sentinel = outside / "keepme"
+    sentinel.write_text("keep")
+
+    scratch = parity._make_scratch(tmp_path / "work")
+    (scratch / "link-to-outside").symlink_to(outside)
+    parity._rmtree_marked(scratch)
+    assert not scratch.exists()
+    assert sentinel.is_file(), "a symlink inside the deleted scratch dir must not be followed"
+
+
+def test_cleanup_survives_a_second_signal_via_subprocess(tmp_path: Path) -> None:
+    """M25: a mutant that dropped the `_uninterruptible` wrap around `main()`'s own cleanup call.
+    Run in a child process (as `test_fetch_month_cleanup_survives_a_second_signal_via_subprocess`
+    in `test_notedb.py` does for the route's own cleanup): an unprotected mutant kills the child
+    outright on the first self-signal, before it ever reaches the real `shutil.rmtree`, leaving
+    the marked scratch directory behind -- the parent sees that leftover as a clean failure
+    rather than losing its own process to a stray SIGTERM."""
+    work = tmp_path / "work"
+    work.mkdir()
+    rest_root = tmp_path / "rr"
+    script = f"""
+import os
+import signal
+import sys
+import time
+
+sys.path.insert(0, {str(_ROOT)!r})
+import shutil
+
+real_rmtree = shutil.rmtree
+
+def slow_rmtree(path, *a, **kw):
+    os.kill(os.getpid(), signal.SIGTERM)
+    os.kill(os.getpid(), signal.SIGINT)
+    time.sleep(0.2)
+    return real_rmtree(path, *a, **kw)
+
+shutil.rmtree = slow_rmtree
+
+import importlib.util
+spec = importlib.util.spec_from_file_location("_under_test_notedb_parity", {str(_SCRIPT)!r})
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+
+mod._run = lambda args, salt, scratch: None
+mod.require_salt = lambda: "salt"
+sys.argv = ["notedb_parity.py", "--work", {str(work)!r}, "--rest-root", {str(rest_root)!r}]
+mod.main()
+print("DONE")
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=30
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "DONE" in proc.stdout
+    assert list(work.iterdir()) == [], "cleanup must survive a second signal mid-rmtree"

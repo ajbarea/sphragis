@@ -95,16 +95,19 @@ _UNSAFE_PROJECT = re.compile(r"[+?#%]|\.\.")
 
 
 def _is_local_url(url: str) -> bool:
-    """True only for an explicit `file://` URL or a plain path that is an existing directory.
+    """True only for an explicit `file://` URL, or an absolute path that is an existing directory.
 
     `urlsplit` reads an scp-style remote (`git@host:path`) as `scheme == ""`, the same as a
-    bare local path, so scheme alone cannot tell them apart: a `.is_dir()` check is what keeps
-    a network host out of the exemption meant for local scratch repositories in tests.
+    bare local path, so scheme alone cannot tell them apart. Restricting the exemption to
+    strings that start with `/` -- never how git reads `[user@]host:path` scp syntax, or a
+    relative path -- is what keeps a network host out of the exemption, even one named by a
+    directory that happens to exist under the current directory with that exact literal name:
+    `.is_dir()` is only ever reached once the string cannot be scp syntax.
     """
     scheme = urlsplit(url).scheme
     if scheme == "file":
         return True
-    if scheme != "":
+    if scheme != "" or not url.startswith("/"):
         return False
     return Path(url).is_dir()
 
@@ -212,78 +215,87 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
     does not honor it fetches the blob anyway, `cat-file` succeeds, and that is refused.
     """
     env = dict(env_items)
-    with tempfile.TemporaryDirectory(prefix="sphragis-lazy-probe-") as scratch:
-        root = Path(scratch)
-        server = root / "server.git"
-        subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
-        blob = (
+    scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-lazy-probe-")
+    try:
+        with _raise_on_sigterm():
+            root = Path(scratch_dir.name)
+            server = root / "server.git"
+            subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
+            blob = (
+                subprocess.run(
+                    ["git", "--git-dir", str(server), "hash-object", "-w", "--stdin"],
+                    input=b"probe\n",
+                    capture_output=True,
+                    check=True,
+                )
+                .stdout.decode()
+                .strip()
+            )
+            tree = (
+                subprocess.run(
+                    ["git", "--git-dir", str(server), "mktree"],
+                    input=f"100644 blob {blob}\tf\n".encode(),
+                    capture_output=True,
+                    check=True,
+                )
+                .stdout.decode()
+                .strip()
+            )
+            ident = {
+                "GIT_AUTHOR_NAME": "probe",
+                "GIT_AUTHOR_EMAIL": "probe@example.invalid",
+                "GIT_COMMITTER_NAME": "probe",
+                "GIT_COMMITTER_EMAIL": "probe@example.invalid",
+            }
+            commit = (
+                subprocess.run(
+                    ["git", "--git-dir", str(server), "commit-tree", tree, "-m", "probe"],
+                    capture_output=True,
+                    check=True,
+                    env={**os.environ, **ident},
+                )
+                .stdout.decode()
+                .strip()
+            )
             subprocess.run(
-                ["git", "--git-dir", str(server), "hash-object", "-w", "--stdin"],
-                input=b"probe\n",
-                capture_output=True,
+                ["git", "--git-dir", str(server), "update-ref", "refs/heads/main", commit],
                 check=True,
             )
-            .stdout.decode()
-            .strip()
-        )
-        tree = (
+            for key, value in (("uploadpack.allowFilter", "true"),):
+                subprocess.run(["git", "--git-dir", str(server), "config", key, value], check=True)
+            clone = root / "clone.git"
             subprocess.run(
-                ["git", "--git-dir", str(server), "mktree"],
-                input=f"100644 blob {blob}\tf\n".encode(),
-                capture_output=True,
+                [
+                    "git",
+                    "clone",
+                    "--quiet",
+                    "--bare",
+                    "--filter=blob:none",
+                    f"file://{server}",
+                    str(clone),
+                ],
                 check=True,
+                env=_isolated_env(),
             )
-            .stdout.decode()
-            .strip()
-        )
-        ident = {
-            "GIT_AUTHOR_NAME": "probe",
-            "GIT_AUTHOR_EMAIL": "probe@example.invalid",
-            "GIT_COMMITTER_NAME": "probe",
-            "GIT_COMMITTER_EMAIL": "probe@example.invalid",
-        }
-        commit = (
-            subprocess.run(
-                ["git", "--git-dir", str(server), "commit-tree", tree, "-m", "probe"],
+            probed = subprocess.run(
+                ["git", "--git-dir", str(clone), "cat-file", "-p", blob],
                 capture_output=True,
-                check=True,
-                env={**os.environ, **ident},
+                env=env,
             )
-            .stdout.decode()
-            .strip()
-        )
-        subprocess.run(
-            ["git", "--git-dir", str(server), "update-ref", "refs/heads/main", commit], check=True
-        )
-        for key, value in (("uploadpack.allowFilter", "true"),):
-            subprocess.run(["git", "--git-dir", str(server), "config", key, value], check=True)
-        clone = root / "clone.git"
-        subprocess.run(
-            [
-                "git",
-                "clone",
-                "--quiet",
-                "--bare",
-                "--filter=blob:none",
-                f"file://{server}",
-                str(clone),
-            ],
-            check=True,
-            env=_isolated_env(),
-        )
-        probed = subprocess.run(
-            ["git", "--git-dir", str(clone), "cat-file", "-p", blob],
-            capture_output=True,
-            env=env,
-        )
-        if probed.returncode == 0:
-            raise GitError(
-                f"{_git_version()} fetched a filtered-out object lazily instead of failing under "
-                "GIT_NO_LAZY_FETCH=1: this git is too old to run the git route safely. "
-                "GIT_NO_LAZY_FETCH landed in git 2.44 (also backported to some security point "
-                "releases of earlier branches), but this probe tests the actual behaviour rather "
-                "than trusting a version number: install a git that honors GIT_NO_LAZY_FETCH"
-            )
+            if probed.returncode == 0:
+                raise GitError(
+                    f"{_git_version()} fetched a filtered-out object lazily instead of failing "
+                    "under GIT_NO_LAZY_FETCH=1: this git is too old to run the git route "
+                    "safely. GIT_NO_LAZY_FETCH landed in git 2.44 (also backported to some "
+                    "security point releases of earlier branches), but this probe tests the "
+                    "actual behaviour rather than trusting a version number: install a git "
+                    "that honors GIT_NO_LAZY_FETCH"
+                )
+    finally:
+        # Mirrors `fetch_month`'s own cleanup: a signal arriving mid-`rmtree` must not
+        # abort it partway and leave this scratch repository behind in the system temp dir.
+        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+            scratch_dir.cleanup()
 
 
 def _require_lazy_fetch_disabled(env: Mapping[str, str] | None = None) -> None:

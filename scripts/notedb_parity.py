@@ -8,14 +8,17 @@ corpus went through, then compared with that corpus three ways:
 2. fields: every REST change field the git route fills, on the changes both hold;
 3. examples: ids, before/after hunks, context and comment texts, on the changes both hold.
 
-The REST corpus is read only. Git objects go to `--work`, a scratch directory this script
-deletes when the run finishes -- on an error or a signal too -- because it carries raw
-identities and only counts and ids reach the artifact; pass `--keep-work` to keep it instead.
-Every network operation is appended to `<work>/ledger.jsonl`, so the artifact reports what the
-whole comparison cost. A rerun over a kept work directory does *not* cost no requests: reading
-which branches to enumerate (`branch_refs`) runs one `ls-remote` every time regardless, and the
-sealed test window's meta-tip probe is re-forced every time by design (item 1); what a kept
-directory actually saves is not refetching blobs, trees and patch-set commits already held.
+The REST corpus is read only. Git objects go to a scratch directory this script creates fresh
+under `--work` (never `--work` itself, which is never touched beyond that) and deletes when the
+run finishes -- on an error or a signal too -- because it carries raw identities and only counts
+and ids reach the artifact; pass `--keep-work` to keep it instead. A directory is only ever
+deleted if this script marked it as its own scratch on creation, so a pre-existing `--work` and
+anything else in it are left alone whatever happens mid-run. Every network operation is appended
+to `<scratch>/ledger.jsonl`, so the artifact reports what the whole comparison cost. A rerun over
+a kept scratch directory does *not* cost no requests: reading which branches to enumerate
+(`branch_refs`) runs one `ls-remote` every time regardless, and the sealed test window's
+meta-tip probe is re-forced every time by design (item 1); what a kept directory actually saves
+is not refetching blobs, trees and patch-set commits already held.
 
 Run: set -a; . ./.env; set +a
      uv run --no-active python scripts/notedb_parity.py \
@@ -30,6 +33,7 @@ import json
 import shutil
 import signal
 import subprocess
+import tempfile
 from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
@@ -624,11 +628,91 @@ def _record_history_fetch(marker: Path, branches: Sequence[str], since: str) -> 
     marker.write_text(json.dumps({"branches": sorted(branches_held), "since": since_held}) + "\n")
 
 
+#: Name of the marker file `_make_scratch` writes into every scratch directory it creates.
+#: `_rmtree_marked` refuses to delete anything lacking it, so cleanup can never reach a
+#: directory this script did not itself create -- including `--work` as named, which is never
+#: deleted, only ever a directory made fresh underneath it.
+_SCRATCH_MARKER = ".sphragis-notedb-parity-scratch"
+
+
+def _checkout_root() -> Path:
+    """The git checkout `scripts/notedb_parity.py` itself is running from."""
+    here = Path(__file__).resolve().parent
+    top = subprocess.run(
+        ["git", "-C", str(here), "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if top.returncode == 0:
+        return Path(top.stdout.strip()).resolve()
+    return here.parent
+
+
+def _is_or_ancestor_of(candidate: Path, other: Path) -> bool:
+    """True if `candidate` equals `other`, or `other` sits somewhere inside `candidate`."""
+    try:
+        other.relative_to(candidate)
+    except ValueError:
+        return False
+    return True
+
+
+def _refuse_unsafe_work(work: Path, rest_root: Path, out: Path) -> None:
+    """Refuse before any work if `--work` is, or contains, somewhere this script must not touch.
+
+    Cleanup only ever deletes a directory this script creates fresh under `--work` -- never
+    `--work` as named -- but that is no protection if `--work` (or an ancestor of it) *is* one
+    of these paths: everything under it, marker or not, is then somewhere this script has no
+    business creating scratch in. Every path is resolved (symlinks followed) first, so a
+    symlink cannot disguise one of these locations as somewhere safe.
+    """
+    work_r = work.resolve()
+    targets = {
+        "the repository checkout this script runs from": _checkout_root(),
+        "--rest-root": rest_root.resolve(),
+        "the --out directory": out.resolve().parent,
+    }
+    for label, target in targets.items():
+        if _is_or_ancestor_of(work_r, target):
+            raise SystemExit(
+                f"--work {work} is, or contains, {label} ({target}); refusing before doing any "
+                "work, since a directory under --work is deleted when this run finishes"
+            )
+
+
+def _find_marked_scratch(work: Path) -> Path | None:
+    """An existing scratch directory under `work` this script made on an earlier, kept run."""
+    if not work.is_dir():
+        return None
+    for child in sorted(work.iterdir()):
+        if not child.is_symlink() and child.is_dir() and (child / _SCRATCH_MARKER).is_file():
+            return child
+    return None
+
+
+def _make_scratch(work: Path) -> Path:
+    """A fresh, empty scratch directory under `work`, marked so only it is ever deleted."""
+    work.mkdir(parents=True, exist_ok=True)
+    scratch = Path(tempfile.mkdtemp(prefix="notedb-parity-", dir=str(work)))
+    (scratch / _SCRATCH_MARKER).write_text("")
+    return scratch
+
+
+def _rmtree_marked(scratch: Path) -> None:
+    """Delete `scratch`, refusing unless it is a real, marked directory this script created."""
+    if scratch.is_symlink() or not scratch.is_dir() or not (scratch / _SCRATCH_MARKER).is_file():
+        raise RuntimeError(
+            f"refusing to delete {scratch}: not a directory this script marked as its own scratch"
+        )
+    shutil.rmtree(scratch, ignore_errors=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rest-root", type=Path, default=Path("datasets/gerrit/aosp"))
     parser.add_argument(
-        "--work", type=Path, required=True, help="scratch directory for git objects"
+        "--work", type=Path, required=True, help="directory to hold this run's scratch git objects"
     )
     parser.add_argument("--out", type=Path, default=RESULTS)
     parser.add_argument(
@@ -646,32 +730,33 @@ def main() -> None:
     )
     args = parser.parse_args()
     salt = require_salt()
-    args.work.mkdir(parents=True, exist_ok=True)
+    _refuse_unsafe_work(args.work, args.rest_root, args.out)
+    scratch = _find_marked_scratch(args.work) or _make_scratch(args.work)
     try:
         with _raise_on_sigterm():
-            _run(args, salt)
+            _run(args, salt, scratch)
     finally:
         if not args.keep_work:
             with _uninterruptible(signal.SIGTERM, signal.SIGINT):
-                shutil.rmtree(args.work, ignore_errors=True)
+                _rmtree_marked(scratch)
 
 
-def _run(args: argparse.Namespace, salt: str) -> None:
-    ledger = args.work / "ledger.jsonl"
+def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:
+    ledger = scratch / "ledger.jsonl"
     # Empty means every branch Gerrit accepts changes on, exactly as `branch_refs` (and so the
     # CLI's `--via git`) reads an empty `--branch` list; --branch repeated restricts it.
     branches = args.branch
 
     url = f"{GIT_HOSTS[ORG]}/{PROJECT}"
-    repo = Repo.open(args.work / "hardware-interfaces.git", url, Pacer(1.0), ledger=ledger)
+    repo = Repo.open(scratch / "hardware-interfaces.git", url, Pacer(1.0), ledger=ledger)
     bounds = {month: month_bounds(month) for month in MONTHS}
     earliest = min(_since(start) for start, _ in bounds.values())
     branch_ref_names = branch_refs(repo, ORG, branches)
-    marker = args.work / "history-since.txt"
+    marker = scratch / "history-since.txt"
     if _history_fetched(marker, branch_ref_names, earliest) is None:
         fetch_history(repo, branch_ref_names, earliest)
         _record_history_fetch(marker, branch_ref_names, earliest)
-    listing = args.work / "refs-changes.tsv"
+    listing = scratch / "refs-changes.tsv"
     if not listing.is_file():
         pairs = repo.list_remote("patch_set_refs", "refs/changes/*")
         listing.write_text("".join(f"{oid}\t{ref}\n" for oid, ref in pairs))
@@ -745,7 +830,7 @@ def _run(args: argparse.Namespace, salt: str) -> None:
         "rest_timing": rest_timing(args.rest_root),
         "rebase": measure_rebases(repo, pairs),
         "examples": compare_examples(
-            pairs, rest_examples(args.rest_root), args.work / "example-diffs.jsonl"
+            pairs, rest_examples(args.rest_root), scratch / "example-diffs.jsonl"
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
