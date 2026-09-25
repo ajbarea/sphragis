@@ -84,7 +84,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   review UIs of AOSP, Chromium and Qt publish `Disallow: /`; their git hosts allow fetching and
   carry the review record as NoteDb. The route reproduces Gerrit's own diff, pseudonymises through
   the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
-  the AOSP REST corpus: every shared example identical (research log, 2026-09-23).
+  the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
+  older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).
 - [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
   request, with its projects scoped by the component mapping stage.
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to
