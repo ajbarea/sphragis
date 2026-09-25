@@ -1686,3 +1686,137 @@ def test_a_comment_with_an_unparseable_timestamp_is_dropped_not_fatal(tmp_path: 
     rows, counts = notedb.collect(repo, [93], project=PROJECT)
     assert counts["comment_timestamp_errors"] == 1
     assert rows[0]["_number"] == 93, "the change itself is not aborted"
+
+
+# ---------------------------------------------------------------------------
+# Guard-mutant kill tests (item 6)
+# ---------------------------------------------------------------------------
+
+
+def test_a_filtered_fetch_does_not_leak_its_filter_onto_a_later_one(
+    server: Server, tmp_path: Path
+) -> None:
+    """M8: a `--filter=tree:0` fetch (`fetch_history`'s own) must not linger as the remote's
+    default filter, or the next fetch -- naming none of its own -- inherits it. Here that next
+    fetch is the meta+notes fetch a real `collect` always makes; a leaked `tree:0` would strip
+    the notes tree, and a leaked `blob:none` would leave it present but content-less."""
+    repo = _repo(server, tmp_path)
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
+    assert repo.fetch_refs("meta", [notedb.change_ref(1234, "meta")]) == []
+    tip = repo.git("rev-parse", notedb.change_ref(1234, "meta")).decode().strip()
+    blobs = notedb._note_blobs(repo, tip)
+    assert blobs, "the notes tree must be present, not stripped by a leaked tree:0"
+    contents = repo.read_objects(blobs)
+    assert any(b"comments" in raw for raw in contents.values()), (
+        "note content must be present, not stripped by a leaked blob:none"
+    )
+
+
+def test_a_bad_project_name_is_refused_before_fetch_month_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """M13: `_stage_fetch_git`'s own project-name validation, not just `valid_project_name`
+    itself: a mutant that removed the CLI's `bad = [...]; raise SystemExit(...)` guard would
+    still pass every `valid_project_name` unit test while letting an unsafe --project through
+    to a real fetch."""
+    from sphragis.corpus import cli
+
+    called = []
+    monkeypatch.setattr(cli, "fetch_month", lambda *a, **kw: called.append(1) or ([], {}))
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    with pytest.raises(SystemExit, match="not a plain project path"):
+        cli.main(
+            [
+                "fetch",
+                "--via",
+                "git",
+                "--org",
+                "aosp",
+                "--month",
+                "2025-10",
+                "--root",
+                str(tmp_path),
+                "--project",
+                "a/../b",
+            ]
+        )
+    assert called == [], "fetch_month must never run for a refused project name"
+
+
+def test_the_git_pacer_is_actually_what_the_cli_fetch_stage_uses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """M7: a mutant that has `_stage_fetch_git` build a bare `Pacer(0)` (or otherwise bypass
+    `_git_pacer`) would still pass `test_the_git_pacer_floors_...` (which only unit-tests
+    `_git_pacer` in isolation) while removing every host floor from a real fetch."""
+    from sphragis.corpus import cli
+
+    captured: dict[str, Any] = {}
+
+    def fake_fetch_month(org, projects, month, salt, *, pacer, branches):
+        captured["pacer"] = pacer
+        return [], {"http_requests": 0, "git_operations": 0}
+
+    monkeypatch.setattr(cli, "fetch_month", fake_fetch_month)
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    cli.main(
+        [
+            "fetch",
+            "--via",
+            "git",
+            "--org",
+            "aosp",
+            "--month",
+            "2025-10",
+            "--root",
+            str(tmp_path),
+            "--project",
+            "p",
+            "--request-interval",
+            "0",
+        ]
+    )
+    pacer = captured["pacer"]
+    assert isinstance(pacer, Pacer)
+    assert pacer.interval("android.googlesource.com") >= 1.0, (
+        "the CLI's own Pacer must still carry android's GIT_PERMITTED floor"
+    )
+
+
+def test_repo_open_actually_calls_the_lazy_fetch_probe(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """M16: a mutant that dropped `_require_lazy_fetch_disabled()` from `Repo.open` would still
+    pass `test_lazy_fetch_probe_passes_under_this_process_git` (which calls the probe function
+    directly, not through `Repo.open`), while every route call would run on an unchecked git."""
+    calls = []
+    monkeypatch.setattr(notedb, "_require_lazy_fetch_disabled", lambda *a, **kw: calls.append(1))
+    notedb.Repo.open(tmp_path / "c.git", "file:///wherever", Pacer(0))
+    assert calls == [1]
+
+
+def test_network_charges_the_pacer_for_extra_http_requests(
+    server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """M3: `_network` must actually call `pacer.charge` with the requests a fetch made beyond
+    the first -- `test_pacing.py` only proves `Pacer.charge` itself works, not that `_network`
+    calls it; a mutant that dropped that call would still pass every local-fetch test, since a
+    `file://` transport never produces a real curl trace to charge for on its own."""
+    now, slept = [0.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    pacer = Pacer(1.0, clock=lambda: now[0], sleep=sleep)
+    repo = _repo(server, tmp_path, pacer)
+    monkeypatch.setattr(
+        notedb,
+        "_CURL_REQUEST",
+        type("R", (), {"findall": staticmethod(lambda b: [b"1", b"2", b"3"])})(),
+    )
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
+    pacer.wait("local")
+    assert slept == pytest.approx([3.0]), (
+        "a fetch counted as 3 HTTP requests must charge 2 extra, not just the base interval"
+    )
