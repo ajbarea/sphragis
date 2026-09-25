@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
+import sys
+import time
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-from sphragis.corpus import notedb
+from sphragis.corpus import cli, notedb
 from sphragis.corpus.build import build_from_change
 from sphragis.corpus.pacing import Pacer
 from sphragis.corpus.scrub import pseudonym
@@ -342,9 +346,14 @@ def test_the_trailer_finds_a_cherry_picked_change(tmp_path: Path) -> None:
     )
     s.ref("refs/heads/main", landed)
     repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
-    notedb.fetch_history(repo, "main", "2024-10-01")
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
     found, counts = notedb.merged_commits(
-        repo, "main", "2024-11-01", "2024-12-01", review_host="review.example", project="proj"
+        repo,
+        ["refs/heads/main"],
+        "2024-11-01",
+        "2024-12-01",
+        review_host="review.example",
+        project="proj",
     )
     assert [(m.number, m.via, m.commit) for m in found] == [(42, "trailer", landed)]
     assert counts == {"commits": 1, "by_trailer": 1}
@@ -381,6 +390,91 @@ def test_fetch_month_yields_scrubbed_rows_that_build_the_same_examples(
     assert drops["author_comment"] == 1 and drops["no_line_anchor"] == 1
 
 
+def test_a_change_touching_the_sealed_window_is_dropped_before_any_notes_fetch(
+    tmp_path: Path,
+) -> None:
+    """Its last NoteDb update (2025-11-03) reaches the sealed test window (starts 2025-11-01),
+    though the change itself is a candidate for 2025-10: dropped before the meta chain or
+    notes cost anything, not merely before it reaches a row."""
+    s = Server(tmp_path / "server")
+    commit = s.commit(s.tree({"f": b"1\n"}), "one", "2025-10-05T00:00:00Z")
+    note = json.dumps(
+        {"comments": [_comment("c1", 1, 1, REVIEWER, "2025-11-03T00:00:00Z", "hi", commit)]}
+    ).encode()
+    _meta(
+        s,
+        88,
+        [
+            (
+                OWNER,
+                "2025-10-05T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I88\nCommit: {commit}",
+                {},
+            ),
+            (
+                REVIEWER,
+                "2025-11-03T00:00:00Z",
+                "Update patch set 1\n\nPatch-set: 1",
+                {commit: note},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    rows, counts = notedb.collect(repo, [88], project=PROJECT)
+    assert rows == []
+    assert counts["touches_test_window"] == 1
+    purposes = {entry["purpose"] for entry in repo.log}
+    assert "notes" not in purposes and "meta" not in purposes, (
+        f"only the depth-1 tip probe should run, got {purposes}"
+    )
+
+
+def test_a_late_comment_on_an_earlier_change_never_reaches_a_persisted_row(
+    tmp_path: Path,
+) -> None:
+    """The change merged in September; a comment landed in November, inside the sealed
+    window. `fetch_month` for September must not persist that comment, or any row for it."""
+    s = Server(tmp_path / "server")
+    commit = s.commit(s.tree({"f": b"1\n"}), "one", "2025-09-05T00:00:00Z")
+    s.ref("refs/heads/main", commit)
+    s.ref("refs/changes/89/89/1", commit)
+    note = json.dumps(
+        {"comments": [_comment("c1", 1, 1, REVIEWER, "2025-11-03T00:00:00Z", "late", commit)]}
+    ).encode()
+    _meta(
+        s,
+        89,
+        [
+            (
+                OWNER,
+                "2025-09-05T00:00:00Z",
+                "Create\n\nPatch-set: 1\nChange-id: I89\nBranch: refs/heads/main\n"
+                f"Commit: {commit}",
+                {},
+            ),
+            (
+                SUBMITTER,
+                "2025-09-05T01:00:00Z",
+                "Update patch set 1\n\nPatch-set: 1\nStatus: merged\nSubmission-id: 89-1",
+                {},
+            ),
+            (
+                REVIEWER,
+                "2025-11-03T00:00:00Z",
+                "Update patch set 1\n\nPatch-set: 1",
+                {commit: note},
+            ),
+        ],
+    )
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    rows, record = notedb.fetch_month(
+        "aosp", [PROJECT], "2025-09", "salt", pacer=Pacer(0), base_url=s.url, workdir=scratch
+    )
+    assert rows == [], "no row -- and so no comment -- reaches the snapshot"
+    assert record["projects"][PROJECT]["collect"]["touches_test_window"] == 1
+
+
 def test_a_vanished_meta_ref_is_counted_not_fatal(server: Server, tmp_path: Path) -> None:
     repo = _repo(server, tmp_path)
     rows, counts = notedb.collect(repo, [1234, 5555], project=PROJECT)
@@ -390,7 +484,7 @@ def test_a_vanished_meta_ref_is_counted_not_fatal(server: Server, tmp_path: Path
 
 def test_a_missing_object_fails_rather_than_fetching_lazily(server: Server, tmp_path: Path) -> None:
     repo = _repo(server, tmp_path)
-    notedb.fetch_history(repo, "main", "2024-10-01")
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
     blob = server.git("rev-parse", "refs/heads/main:src/a.py")
     assert repo.missing([blob]) == [blob], "history is fetched without blobs"
     with pytest.raises(
@@ -408,7 +502,7 @@ def test_git_operations_against_one_host_are_paced(server: Server, tmp_path: Pat
         now[0] += seconds
 
     repo = _repo(server, tmp_path, Pacer(1.5, clock=lambda: now[0], sleep=sleep))
-    notedb.fetch_history(repo, "main", "2024-10-01")
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
     repo.fetch_refs("meta", [notedb.change_ref(1234, "meta")])
     assert slept == pytest.approx([1.5])
     assert [entry["purpose"] for entry in repo.log] == ["history", "meta"]
@@ -515,8 +609,650 @@ def test_a_depth_fetch_does_not_cut_the_branch_history_short(tmp_path: Path) -> 
     s.ref("refs/heads/main", tip)
     patch_set = commit("patch set", "06T00:00:00", side_2)
     repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
-    notedb.fetch_history(repo, "main", "2024-09-01T12:00:00")
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-09-01T12:00:00")
     walk = repo.git("rev-list", "refs/heads/main").decode().split()
     assert side_1 in walk and base not in walk, "a shallow history, as the route always has"
     repo.fetch_objects("patch_sets", [patch_set], "--depth=2", "--filter=tree:0")
     assert side_1 in repo.git("rev-list", "refs/heads/main").decode().split()
+
+
+# ---------------------------------------------------------------------------
+# Since/until bound on the merge-commit log, and branch scope (items 5, 6)
+# ---------------------------------------------------------------------------
+
+
+def test_merged_commits_git_log_is_bounded_by_since_and_until(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The `git log` call itself carries `--since`/`--until`, not only the Python-side check."""
+    s = Server(tmp_path / "server")
+    landed = s.commit(
+        s.tree({"f": b"1\n"}),
+        "Fix\n\nChange-Id: I1\nReviewed-on: https://review.example/c/proj/+/42",
+        "2024-11-10T00:00:00Z",
+    )
+    s.ref("refs/heads/main", landed)
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
+    calls: list[list[str]] = []
+    real_git = repo.git
+
+    def spy(*args: str, stdin: bytes | None = None) -> bytes:
+        calls.append(list(args))
+        return real_git(*args, stdin=stdin)
+
+    monkeypatch.setattr(repo, "git", spy)
+    notedb.merged_commits(
+        repo,
+        ["refs/heads/main"],
+        "2024-11-01",
+        "2024-12-01",
+        review_host="review.example",
+        project="proj",
+    )
+    log_call = next(c for c in calls if c[0] == "log")
+    assert any(a.startswith("--since=2024-11-01") for a in log_call)
+    assert any(a.startswith("--until=2024-12-01") for a in log_call)
+
+
+def test_branch_refs_defaults_to_every_branch_and_dedupes_a_cherry_pick(tmp_path: Path) -> None:
+    """`release` carries a change `main` never sees; change 20 lands separately on each, once."""
+    s = Server(tmp_path / "server")
+    base = s.commit(s.tree({"f": b"0\n"}), "base", "2024-10-01T00:00:00Z")
+    on_main = s.commit(
+        s.tree({"f": b"2\n"}),
+        "Cherry\n\nChange-Id: I2\nReviewed-on: https://review.example/c/proj/+/20",
+        "2024-11-06T00:00:00Z",
+        (base,),
+    )
+    release_only = s.commit(
+        s.tree({"f": b"1\n"}),
+        "Fix\n\nChange-Id: I1\nReviewed-on: https://review.example/c/proj/+/10",
+        "2024-11-05T00:00:00Z",
+        (base,),
+    )
+    on_release = s.commit(
+        s.tree({"f": b"2\n"}),
+        "Cherry\n\nChange-Id: I2\nReviewed-on: https://review.example/c/proj/+/20",
+        "2024-11-07T00:00:00Z",
+        (release_only,),
+    )
+    s.ref("refs/heads/main", on_main)
+    s.ref("refs/heads/release", on_release)
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+
+    refs = notedb.branch_refs(repo, "aosp", ())
+    assert refs == ["refs/heads/main", "refs/heads/release"]
+    notedb.fetch_history(repo, refs, "2024-10-01")
+    found, counts = notedb.merged_commits(
+        repo, refs, "2024-11-01", "2024-12-01", review_host="review.example", project="proj"
+    )
+    assert sorted(m.number for m in found if m.number is not None) == [10, 20], (
+        "release-only change is found too"
+    )
+    assert counts["duplicate_change"] == 1, "the cherry-picked change is counted, not doubled"
+
+    main_only = notedb.branch_refs(repo, "aosp", ["main"])
+    assert main_only == ["refs/heads/main"]
+    found_main, _ = notedb.merged_commits(
+        repo, main_only, "2024-11-01", "2024-12-01", review_host="review.example", project="proj"
+    )
+    assert sorted(m.number for m in found_main if m.number is not None) == [20], (
+        "release-only change is out of scope"
+    )
+
+
+def test_chromium_also_reads_branch_heads(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    s.ref("refs/heads/main", s.commit(s.tree({"f": b"1\n"}), "m", "2024-11-01T00:00:00Z"))
+    s.ref("refs/branch-heads/4.4", s.commit(s.tree({"f": b"2\n"}), "b", "2024-11-01T00:00:00Z"))
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    assert notedb.branch_refs(repo, "chromium", ()) == [
+        "refs/branch-heads/4.4",
+        "refs/heads/main",
+    ]
+    assert notedb.branch_refs(repo, "aosp", ()) == ["refs/heads/main"], (
+        "an org with no extra namespace reads refs/heads/* only"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Host allowlist, pacing floor, redirects (item 2)
+# ---------------------------------------------------------------------------
+
+
+def test_git_permitted_states_a_reason_and_a_positive_floor_for_every_host() -> None:
+    for permission in notedb.GIT_PERMITTED.values():
+        assert permission.reason
+        assert permission.min_interval > 0
+
+
+def test_android_is_permitted_and_chromium_is_not_yet() -> None:
+    assert notedb.GIT_PERMITTED["android.googlesource.com"].permitted is True
+    assert notedb.GIT_PERMITTED["chromium.googlesource.com"].permitted is False
+
+
+def _forbid_network_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:
+    """After this, a `git fetch` or `ls-remote` fails the test; local bookkeeping still runs."""
+    real_run = notedb.subprocess.run
+
+    def guarded(cmd: list[str], *a: Any, **kw: Any) -> subprocess.CompletedProcess[bytes]:
+        if any(verb in cmd for verb in ("fetch", "ls-remote")):
+            raise AssertionError(f"a network git command ran despite refused permission: {cmd!r}")
+        return real_run(cmd, *a, **kw)
+
+    monkeypatch.setattr(notedb.subprocess, "run", guarded)
+
+
+def test_git_refuses_an_unpermitted_host_before_touching_the_network(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Never a real subprocess: proven by a spy, not by reading a DNS failure's text."""
+    repo = notedb.Repo.open(tmp_path / "c.git", "https://chromium.googlesource.com/x", Pacer(0))
+    _forbid_network_subprocess(monkeypatch)
+    with pytest.raises(notedb.GitError, match="chromium.googlesource.com"):
+        repo.fetch("history", ["+refs/heads/main:refs/heads/main"])
+
+
+def test_git_refuses_a_host_with_no_recorded_permission(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = notedb.Repo.open(tmp_path / "c.git", "https://gerrit.example.org/x", Pacer(0))
+    _forbid_network_subprocess(monkeypatch)
+    with pytest.raises(notedb.GitError, match="not recorded"):
+        repo.fetch("history", ["+refs/heads/main:refs/heads/main"])
+
+
+@pytest.mark.parametrize(
+    "bad", ["a/../b", "a+b", "a?b", "a#b", "/etc/passwd", "..", "a/b/../../etc"]
+)
+def test_valid_project_name_refuses_path_and_url_escapes(bad: str) -> None:
+    assert notedb.valid_project_name(bad) is False
+
+
+def test_valid_project_name_accepts_a_plain_project_path() -> None:
+    assert notedb.valid_project_name("platform/hardware/interfaces") is True
+
+
+def test_repo_open_refuses_a_scratch_repository_pointed_elsewhere(tmp_path: Path) -> None:
+    path = tmp_path / "c.git"
+    notedb.Repo.open(path, "file:///a", Pacer(0))
+    with pytest.raises(notedb.GitError, match="pointed elsewhere"):
+        notedb.Repo.open(path, "file:///b", Pacer(0))
+
+
+def test_a_network_git_call_disables_http_redirects(
+    server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[list[str]] = []
+    real_run = notedb.subprocess.run
+
+    def spy(cmd: list[str], *a: Any, **kw: Any) -> subprocess.CompletedProcess[bytes]:
+        calls.append(list(cmd))
+        return real_run(cmd, *a, **kw)
+
+    monkeypatch.setattr(notedb.subprocess, "run", spy)
+    repo = _repo(server, tmp_path)
+    notedb.fetch_history(repo, ["refs/heads/main"], "2024-10-01")
+    fetch_calls = [c for c in calls if "fetch" in c]
+    assert fetch_calls, "the history fetch should have run"
+    assert all("http.followRedirects=false" in " ".join(c) for c in fetch_calls)
+
+
+def test_the_git_pacer_floors_a_zero_or_negative_request_interval() -> None:
+    """A mutated CLI passing `--request-interval 0` (or less) must not remove Android's floor."""
+    now, slept = [0.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    for interval in (0.0, -5.0):
+        pacer = cli._git_pacer(interval)
+        pacer._clock = lambda: now[0]  # noqa: SLF001 - test seam, no clock param on _git_pacer
+        pacer._sleep = sleep  # noqa: SLF001
+        slept.clear()
+        pacer.wait("android.googlesource.com")
+        pacer.wait("android.googlesource.com")
+        assert slept == pytest.approx([1.0]), interval
+
+
+# ---------------------------------------------------------------------------
+# Lazy fetch probe (item 3)
+# ---------------------------------------------------------------------------
+
+
+def test_lazy_fetch_probe_passes_under_this_process_git() -> None:
+    """This machine's git must actually fail the probe, or the whole route is unsafe to run."""
+    notedb._require_lazy_fetch_disabled()  # must not raise
+
+
+def test_lazy_fetch_probe_raises_when_the_safety_variable_is_missing() -> None:
+    """Simulates an old git: without `GIT_NO_LAZY_FETCH`, the promisor remote serves the blob."""
+    env = {k: v for k, v in notedb._isolated_env().items() if k != "GIT_NO_LAZY_FETCH"}
+    with pytest.raises(notedb.GitError, match="lazily"):
+        notedb._require_lazy_fetch_disabled(env)
+
+
+# ---------------------------------------------------------------------------
+# SIGTERM cleanup (item 4)
+# ---------------------------------------------------------------------------
+
+
+def test_sigterm_during_a_git_fetch_leaves_no_scratch_repository(
+    server: Server, tmp_path: Path
+) -> None:
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    script = f"""
+import sys
+sys.path.insert(0, {str(Path(notedb.__file__).resolve().parents[2])!r})
+from pathlib import Path
+from sphragis.corpus import cli
+from sphragis.corpus.notedb import fetch_month
+from sphragis.corpus.pacing import Pacer
+with cli._raise_on_sigterm():
+    fetch_month(
+        "aosp", [{PROJECT!r}], "2024-11", "salt",
+        pacer=Pacer(5.0),
+        base_url={server.url!r},
+        workdir=Path({str(workdir)!r}),
+    )
+"""
+    proc = subprocess.Popen([sys.executable, "-c", script])
+    try:
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and not any(workdir.iterdir()):
+            time.sleep(0.05)
+        assert any(workdir.iterdir()), "the scratch repository never appeared to be killed mid-run"
+        proc.send_signal(signal.SIGTERM)
+        assert proc.wait(timeout=10) != 0
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+    assert list(workdir.iterdir()) == [], "the scratch repository must be gone after SIGTERM"
+
+
+# ---------------------------------------------------------------------------
+# Successor kind, computed from git objects (item 7)
+# ---------------------------------------------------------------------------
+
+
+def _kind(tmp_path: Path, server: Server, a: str, b: str, *, filtered: bool = False) -> str:
+    """`_successor_kind(a, b)` after fetching just these two commits (with their history)."""
+    repo = notedb.Repo.open(tmp_path / "kind.git", f"{server.url}/{PROJECT}", Pacer(0))
+    server.ref("refs/tmp/a", a)
+    server.ref("refs/tmp/b", b)
+    options = ("--filter=tree:0",) if filtered else ()
+    repo.fetch("test", ["+refs/tmp/a:refs/tmp/a", "+refs/tmp/b:refs/tmp/b"], *options)
+    infos = notedb._commit_infos(repo, [a, b])
+    return notedb._successor_kind(repo, a, b, infos[a], infos[b])
+
+
+def test_successor_kind_no_change_same_tree_parents_and_message(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"0\n"}), "root", "2024-10-01T00:00:00Z")
+    tree = s.tree({"f": b"1\n"})
+    a = s.commit(tree, "same\n\nChange-Id: I1", "2024-11-01T00:00:00Z", (root,))
+    b = s.commit(tree, "same\n\nChange-Id: I1", "2024-11-02T00:00:00Z", (root,))
+    assert a != b
+    assert _kind(tmp_path, s, a, b) == notedb.NO_CHANGE_KIND
+
+
+def test_successor_kind_no_code_change_same_tree_and_parents_different_message(
+    tmp_path: Path,
+) -> None:
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"0\n"}), "root", "2024-10-01T00:00:00Z")
+    tree = s.tree({"f": b"1\n"})
+    a = s.commit(tree, "one\n\nChange-Id: I1", "2024-11-01T00:00:00Z", (root,))
+    b = s.commit(tree, "two\n\nChange-Id: I1", "2024-11-02T00:00:00Z", (root,))
+    assert _kind(tmp_path, s, a, b) == notedb.NO_CODE_CHANGE_KIND
+
+
+def test_successor_kind_same_parent_different_tree_is_rework(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"0\n"}), "root", "2024-10-01T00:00:00Z")
+    a = s.commit(s.tree({"f": b"1\n"}), "m\n\nChange-Id: I1", "2024-11-01T00:00:00Z", (root,))
+    b = s.commit(s.tree({"f": b"2\n"}), "m\n\nChange-Id: I1", "2024-11-02T00:00:00Z", (root,))
+    assert _kind(tmp_path, s, a, b) == notedb.REWORK
+
+
+def test_successor_kind_trivial_rebase(tmp_path: Path) -> None:
+    """Upstream changes `f`; the author's own edit only adds `g`. Replaying it lands cleanly."""
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"line1\nline2\n"}), "root", "2024-10-01T00:00:00Z")
+    upstream = s.commit(
+        s.tree({"f": b"line1\nCHANGED\n"}), "upstream", "2024-10-05T00:00:00Z", (root,)
+    )
+    a = s.commit(
+        s.tree({"f": b"line1\nline2\n", "g": b"new\n"}),
+        "add g\n\nChange-Id: I1",
+        "2024-10-02T00:00:00Z",
+        (root,),
+    )
+    b = s.commit(
+        s.tree({"f": b"line1\nCHANGED\n", "g": b"new\n"}),
+        "add g\n\nChange-Id: I1",
+        "2024-10-06T00:00:00Z",
+        (upstream,),
+    )
+    assert _kind(tmp_path, s, a, b) == notedb.TRIVIAL_REBASE_KIND
+
+
+def test_successor_kind_trivial_rebase_with_message_update(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"line1\nline2\n"}), "root", "2024-10-01T00:00:00Z")
+    upstream = s.commit(
+        s.tree({"f": b"line1\nCHANGED\n"}), "upstream", "2024-10-05T00:00:00Z", (root,)
+    )
+    a = s.commit(
+        s.tree({"f": b"line1\nline2\n", "g": b"new\n"}),
+        "add g\n\nChange-Id: I1",
+        "2024-10-02T00:00:00Z",
+        (root,),
+    )
+    b = s.commit(
+        s.tree({"f": b"line1\nCHANGED\n", "g": b"new\n"}),
+        "add g, reword\n\nChange-Id: I1",
+        "2024-10-06T00:00:00Z",
+        (upstream,),
+    )
+    assert _kind(tmp_path, s, a, b) == notedb.TRIVIAL_REBASE_MESSAGE_KIND
+
+
+def test_successor_kind_rework_across_a_rebase(tmp_path: Path) -> None:
+    """The author's own further edit (`g` differs from a plain replay) makes it a rework."""
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"base\n"}), "root", "2024-10-01T00:00:00Z")
+    upstream = s.commit(s.tree({"f": b"upstream\n"}), "upstream", "2024-10-05T00:00:00Z", (root,))
+    a = s.commit(
+        s.tree({"f": b"base\n", "g": b"new\n"}),
+        "m\n\nChange-Id: I1",
+        "2024-10-02T00:00:00Z",
+        (root,),
+    )
+    b = s.commit(
+        s.tree({"f": b"upstream\n", "g": b"different\n"}),
+        "m\n\nChange-Id: I1",
+        "2024-10-06T00:00:00Z",
+        (upstream,),
+    )
+    assert _kind(tmp_path, s, a, b) == notedb.REWORK
+
+
+def test_successor_kind_merge_commits_with_different_trees_are_rework(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    p1 = s.commit(s.tree({"f": b"1\n"}), "p1", "2024-10-01T00:00:00Z")
+    p2 = s.commit(s.tree({"g": b"2\n"}), "p2", "2024-10-01T00:00:00Z")
+    a = s.commit(
+        s.tree({"f": b"1\n", "g": b"2\n"}),
+        "merge\n\nChange-Id: I1",
+        "2024-10-02T00:00:00Z",
+        (p1, p2),
+    )
+    b = s.commit(
+        s.tree({"f": b"1\n", "g": b"3\n"}),
+        "merge\n\nChange-Id: I1",
+        "2024-10-03T00:00:00Z",
+        (p1, p2),
+    )
+    assert _kind(tmp_path, s, a, b) == notedb.REWORK
+
+
+def test_successor_kind_merge_commits_with_the_same_tree_are_not_rework(tmp_path: Path) -> None:
+    """Documented simplification: a same-tree merge pair is told apart from REWORK by tree
+    equality alone -- Gerrit's real MERGE_FIRST_PARENT_UPDATE replay is not attempted."""
+    s = Server(tmp_path / "server")
+    p1 = s.commit(s.tree({"f": b"1\n"}), "p1", "2024-10-01T00:00:00Z")
+    p2 = s.commit(s.tree({"g": b"2\n"}), "p2", "2024-10-01T00:00:00Z")
+    tree = s.tree({"f": b"1\n", "g": b"2\n"})
+    a = s.commit(tree, "merge\n\nChange-Id: I1", "2024-10-02T00:00:00Z", (p1, p2))
+    b = s.commit(tree, "merge\n\nChange-Id: I1", "2024-10-03T00:00:00Z", (p1, p2))
+    assert _kind(tmp_path, s, a, b) == notedb.NO_CHANGE_KIND
+
+
+def test_successor_kind_falls_back_to_rework_when_the_replay_cannot_be_verified(
+    tmp_path: Path,
+) -> None:
+    """Trees not fetched (`--filter=tree:0`): `git merge-tree` cannot run, so REWORK is the
+    conservative answer, the same call made for an actual conflict."""
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"base\n"}), "root", "2024-10-01T00:00:00Z")
+    upstream = s.commit(s.tree({"f": b"upstream\n"}), "upstream", "2024-10-05T00:00:00Z", (root,))
+    a = s.commit(
+        s.tree({"f": b"base\n", "g": b"new\n"}),
+        "m\n\nChange-Id: I1",
+        "2024-10-02T00:00:00Z",
+        (root,),
+    )
+    b = s.commit(
+        s.tree({"f": b"upstream\n", "g": b"new\n"}),
+        "m\n\nChange-Id: I1",
+        "2024-10-06T00:00:00Z",
+        (upstream,),
+    )
+    assert _kind(tmp_path, s, a, b, filtered=True) == notedb.REWORK
+
+
+def test_collect_writes_kind_and_kind_source_onto_each_revision(tmp_path: Path) -> None:
+    """End to end: `collect` attaches `kind`/`kind_source` the same way it attaches everything
+    else, for a change with a genuine trivial rebase between two of its patch sets."""
+    s = Server(tmp_path / "server")
+    root = s.commit(s.tree({"f": b"line1\nline2\n"}), "root", "2024-10-01T00:00:00Z")
+    upstream = s.commit(
+        s.tree({"f": b"line1\nCHANGED\n"}), "upstream", "2024-10-05T00:00:00Z", (root,)
+    )
+    ps1 = s.commit(
+        s.tree({"f": b"line1\nline2\n", "g": b"new\n"}), "Fix", "2024-10-02T00:00:00Z", (root,)
+    )
+    ps2 = s.commit(
+        s.tree({"f": b"line1\nCHANGED\n", "g": b"new\n"}),
+        "Fix",
+        "2024-10-06T00:00:00Z",
+        (upstream,),
+    )
+    s.ref("refs/changes/90/90/1", ps1)
+    s.ref("refs/changes/90/90/2", ps2)
+    _meta(
+        s,
+        90,
+        [
+            (
+                OWNER,
+                "2024-10-02T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I90\nCommit: {ps1}",
+                {},
+            ),
+            (
+                OWNER,
+                "2024-10-06T00:00:00Z",
+                f"Update patch set 2\n\nPatch-set: 2\nCommit: {ps2}",
+                {},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    rows, counts = notedb.collect(repo, [90], project=PROJECT)
+    revisions = rows[0]["revisions"]
+    assert revisions[ps1]["kind"] == "REWORK" and revisions[ps1]["kind_source"] == "git"
+    assert revisions[ps2]["kind"] == notedb.TRIVIAL_REBASE_KIND
+    assert revisions[ps2]["kind_source"] == "git"
+    assert counts["kind_computed"] == 2
+
+
+# ---------------------------------------------------------------------------
+# service_user gap and the bot-template rule on NoteDb rows (item 8)
+# ---------------------------------------------------------------------------
+
+
+def test_author_tags_is_a_recorded_gap() -> None:
+    assert "author.tags" in notedb.GAPS
+
+
+def test_is_service_user_never_matches_a_notedb_comment_author() -> None:
+    from sphragis.corpus.build import is_service_user
+
+    comment = {"key": {"uuid": "u", "filename": "f", "patchSetId": 1}, "author": {"id": 1}}
+    _, info = notedb.rest_comment(comment)
+    assert is_service_user(info.get("author")) is False
+
+
+def test_refine_drops_a_bot_comment_on_a_notedb_row_the_same_as_rest(tmp_path: Path) -> None:
+    from sphragis.corpus.refine import index_changes, refine
+
+    s = Server(tmp_path / "server")
+    ps1 = s.commit(s.tree({"src/a.py": b"1\n"}), "one", "2024-11-01T00:00:00Z")
+    ps2 = s.commit(s.tree({"src/a.py": b"2\n"}), "two", "2024-11-02T00:00:00Z", (ps1,))
+    s.ref("refs/changes/91/91/1", ps1)
+    s.ref("refs/changes/91/91/2", ps2)
+    note = json.dumps(
+        {
+            "comments": [
+                _comment(
+                    "b1",
+                    1,
+                    1,
+                    REVIEWER,
+                    "2024-11-01T09:00:00Z",
+                    "Modifying security sensitive file.",
+                    ps1,
+                )
+            ]
+        }
+    ).encode()
+    _meta(
+        s,
+        91,
+        [
+            (
+                OWNER,
+                "2024-11-01T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I91\nCommit: {ps1}",
+                {},
+            ),
+            (
+                REVIEWER,
+                "2024-11-01T09:00:00Z",
+                "Update patch set 1\n\nPatch-set: 1",
+                {ps1: note},
+            ),
+            (
+                OWNER,
+                "2024-11-02T00:00:00Z",
+                f"Update patch set 2\n\nPatch-set: 2\nCommit: {ps2}",
+                {ps1: note},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    rows, _ = notedb.collect(repo, [91], project=PROJECT)
+    row = rows[0]
+    examples, _ = build_from_change("aosp", row, *notedb.embedded_fetchers(row))
+    assert len(examples) == 1, "the comment anchors to a real hunk and reaches build"
+    kept, counts = refine(examples, index_changes([]))
+    assert kept == [], "the bot-template rule drops it, exactly as it would a REST row's"
+    assert counts["automated_only"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Note parsing robustness (item 11)
+# ---------------------------------------------------------------------------
+
+
+def test_the_legacy_written_on_format_parses(tmp_path: Path) -> None:
+    assert notedb._note_timestamp("Dec 18, 2024 10:50:22 PM") == "2024-12-18 22:50:22.000000000"
+    assert notedb._note_timestamp("Jan 1, 2025 12:00:00 AM") == "2025-01-01 00:00:00.000000000"
+
+
+def test_an_unparseable_written_on_is_none_not_a_crash() -> None:
+    assert notedb._note_timestamp("not a timestamp at all") is None
+    assert notedb._note_timestamp("") is None
+    assert notedb._note_timestamp(None) is None
+
+
+def test_a_corrupt_note_blob_is_counted_not_silently_skipped(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    ps1 = s.commit(s.tree({"src/a.py": b"1\n"}), "one", "2024-11-01T00:00:00Z")
+    ps2 = s.commit(s.tree({"src/a.py": b"2\n"}), "two", "2024-11-02T00:00:00Z", (ps1,))
+    s.ref("refs/changes/92/92/1", ps1)
+    s.ref("refs/changes/92/92/2", ps2)
+    good = json.dumps(
+        {"comments": [_comment("g1", 1, 1, REVIEWER, "2024-11-01T09:00:00Z", "real", ps1)]}
+    ).encode()
+    _meta(
+        s,
+        92,
+        [
+            (
+                OWNER,
+                "2024-11-01T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I92\nCommit: {ps1}",
+                {ps1: b"{not valid json"},
+            ),
+            (
+                REVIEWER,
+                "2024-11-01T09:00:00Z",
+                "Update patch set 1\n\nPatch-set: 1",
+                {ps1: b"{not valid json", ps2: good},
+            ),
+            (
+                OWNER,
+                "2024-11-02T00:00:00Z",
+                f"Update patch set 2\n\nPatch-set: 2\nCommit: {ps2}",
+                {ps1: b"{not valid json", ps2: good},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    repo.fetch_refs("meta", [notedb.change_ref(92, "meta")])
+    record = notedb.read_change(repo, 92)
+    assert record.note_parse_errors == 1, "the corrupt blob is counted"
+    assert len(record.comments) == 1, "the valid note's comment still reads"
+    rows, counts = notedb.collect(repo, [92], project=PROJECT)
+    assert counts["note_parse_errors"] == 1
+
+
+def test_a_comment_with_an_unparseable_timestamp_is_dropped_not_fatal(tmp_path: Path) -> None:
+    s = Server(tmp_path / "server")
+    ps1 = s.commit(s.tree({"src/a.py": b"1\n"}), "one", "2024-11-01T00:00:00Z")
+    ps2 = s.commit(s.tree({"src/a.py": b"2\n"}), "two", "2024-11-02T00:00:00Z", (ps1,))
+    s.ref("refs/changes/93/93/1", ps1)
+    s.ref("refs/changes/93/93/2", ps2)
+    bad = {
+        **_comment("b1", 1, 1, REVIEWER, "garbage-not-a-date", "bad", ps1),
+    }
+    note = json.dumps({"comments": [bad]}).encode()
+    _meta(
+        s,
+        93,
+        [
+            (
+                OWNER,
+                "2024-11-01T00:00:00Z",
+                f"Create\n\nPatch-set: 1\nChange-id: I93\nCommit: {ps1}",
+                {},
+            ),
+            (
+                REVIEWER,
+                "2024-11-01T09:00:00Z",
+                "Update patch set 1\n\nPatch-set: 1",
+                {ps1: note},
+            ),
+            (
+                OWNER,
+                "2024-11-02T00:00:00Z",
+                f"Update patch set 2\n\nPatch-set: 2\nCommit: {ps2}",
+                {ps1: note},
+            ),
+        ],
+    )
+    repo = notedb.Repo.open(tmp_path / "c.git", f"{s.url}/{PROJECT}", Pacer(0))
+    repo.fetch_refs("meta", [notedb.change_ref(93, "meta")])
+    record = notedb.read_change(repo, 93)
+    assert record.comments == [], "the unparseable-timestamp comment is dropped"
+    assert record.comment_timestamp_errors == 1
+    rows, counts = notedb.collect(repo, [93], project=PROJECT)
+    assert counts["comment_timestamp_errors"] == 1
+    assert rows[0]["_number"] == 93, "the change itself is not aborted"

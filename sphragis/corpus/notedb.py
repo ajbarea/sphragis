@@ -44,21 +44,55 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 from urllib.parse import quote, urlsplit
 
 from sphragis.corpus import gerrit_diff
 from sphragis.corpus.build import CommentFetcher, DiffFetcher
-from sphragis.corpus.examples import is_code_file
+from sphragis.corpus.examples import REWORK, is_code_file
 from sphragis.corpus.pacing import Pacer
+from sphragis.corpus.rules import FETCH_RULES
 from sphragis.corpus.scrub import scrub
+from sphragis.corpus.windows import TEST_WINDOW_START
 
 #: Git hosts serving each organization's repositories, with their NoteDb refs.
 GIT_HOSTS = {
     "aosp": "https://android.googlesource.com",
     "chromium": "https://chromium.googlesource.com",
 }
+
+
+class GitPermission(NamedTuple):
+    permitted: bool
+    reason: str
+    min_interval: float  # seconds between requests to this host; pacing never goes below it
+
+
+# Mirrors `cli.REST_PERMITTED`: one entry per git host this route may fetch from, so granting
+# Chromium permission later is a one-line change to an entry already here, not a new host to
+# wire up. android.googlesource.com serves no robots.txt path relevant to a git fetch and
+# answered a workstation address (checked 2026-09-18). chromium.googlesource.com is the same
+# kind of host, but bulk Chromium collection has not been granted permission (checked
+# 2026-09-22): it stays listed and refused until that changes.
+GIT_PERMITTED = {
+    "android.googlesource.com": GitPermission(
+        True, "no robots.txt restriction reaches a git fetch (checked 2026-09-18)", 1.0
+    ),
+    "chromium.googlesource.com": GitPermission(
+        False, "bulk Chromium collection waits for the host's permission (checked 2026-09-22)", 1.0
+    ),
+}
+
+#: A `--project` value that could resolve outside its own repository once joined into a URL.
+_UNSAFE_PROJECT = re.compile(r"[+?#]|\.\.")
+
+
+def valid_project_name(project: str) -> bool:
+    """False for a project name a URL or ref path could read as something other than itself."""
+    return bool(project) and not project.startswith("/") and not _UNSAFE_PROJECT.search(project)
+
 
 #: The review host a merged commit's `Reviewed-on:` trailer names. Parsed, never contacted.
 REVIEW_HOSTS = {
@@ -108,7 +142,6 @@ DIFF_METHOD = (
 #: `_number`, `change_id`, `owner`, `revisions` (its length), `project` and `created`, and
 #: `scripts/censoring.py` reads `id`, `project`, `change_id`, `created` and `updated`.
 GAPS = {
-    "revisions.*.kind": "computed by the server's change-kind cache, not stored in NoteDb",
     "revisions.*.fetch": "a server URL template; `ref` is kept",
     "insertions/deletions": "server-computed against the final patch set's parent; "
     "`files` counts lines against the merged commit's parent instead",
@@ -118,6 +151,8 @@ GAPS = {
     "diff.meta_a/meta_b/change_type/diff_header": "not reproduced; `build` reads `content` only",
     "diff.content": "recomputed by `gerrit_diff`, a port of what Gerrit runs; the charset "
     "is UTF-8 else ISO-8859-1 where Gerrit detects one",
+    "author.tags": "NoteDb states no account type; `is_service_user` never matches a NoteDb "
+    "comment, and refine's bot-template rule is what catches an automated one instead",
 }
 
 _TIMESTAMP = "%Y-%m-%d %H:%M:%S.000000000"
@@ -135,6 +170,106 @@ class GitError(RuntimeError):
     """A git command failed."""
 
 
+def _git_version() -> str:
+    return (
+        subprocess.run(["git", "--version"], capture_output=True, check=True)
+        .stdout.decode()
+        .strip()
+    )
+
+
+@cache
+def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
+    """Confirm a `cat-file` of an object outside a partial clone's filter fails under `env`.
+
+    Builds a real bare server repository with one blob and a real `--filter=blob:none` clone
+    of it, so the check exercises git's actual promisor-remote path rather than assuming one
+    git version behaves like another. `env` normally carries `GIT_NO_LAZY_FETCH=1`; a git that
+    does not honor it fetches the blob anyway, `cat-file` succeeds, and that is refused.
+    """
+    env = dict(env_items)
+    with tempfile.TemporaryDirectory(prefix="sphragis-lazy-probe-") as scratch:
+        root = Path(scratch)
+        server = root / "server.git"
+        subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
+        blob = (
+            subprocess.run(
+                ["git", "--git-dir", str(server), "hash-object", "-w", "--stdin"],
+                input=b"probe\n",
+                capture_output=True,
+                check=True,
+            )
+            .stdout.decode()
+            .strip()
+        )
+        tree = (
+            subprocess.run(
+                ["git", "--git-dir", str(server), "mktree"],
+                input=f"100644 blob {blob}\tf\n".encode(),
+                capture_output=True,
+                check=True,
+            )
+            .stdout.decode()
+            .strip()
+        )
+        ident = {
+            "GIT_AUTHOR_NAME": "probe",
+            "GIT_AUTHOR_EMAIL": "probe@example.invalid",
+            "GIT_COMMITTER_NAME": "probe",
+            "GIT_COMMITTER_EMAIL": "probe@example.invalid",
+        }
+        commit = (
+            subprocess.run(
+                ["git", "--git-dir", str(server), "commit-tree", tree, "-m", "probe"],
+                capture_output=True,
+                check=True,
+                env={**os.environ, **ident},
+            )
+            .stdout.decode()
+            .strip()
+        )
+        subprocess.run(
+            ["git", "--git-dir", str(server), "update-ref", "refs/heads/main", commit], check=True
+        )
+        for key, value in (("uploadpack.allowFilter", "true"),):
+            subprocess.run(["git", "--git-dir", str(server), "config", key, value], check=True)
+        clone = root / "clone.git"
+        subprocess.run(
+            [
+                "git",
+                "clone",
+                "--quiet",
+                "--bare",
+                "--filter=blob:none",
+                f"file://{server}",
+                str(clone),
+            ],
+            check=True,
+            env=_isolated_env(),
+        )
+        probed = subprocess.run(
+            ["git", "--git-dir", str(clone), "cat-file", "-p", blob],
+            capture_output=True,
+            env=env,
+        )
+        if probed.returncode == 0:
+            raise GitError(
+                f"{_git_version()} fetched a filtered-out object lazily instead of failing under "
+                "GIT_NO_LAZY_FETCH=1: this git is too old to run the git route safely (needs a "
+                "git release that honors GIT_NO_LAZY_FETCH, 2.36 or later)"
+            )
+
+
+def _require_lazy_fetch_disabled(env: Mapping[str, str] | None = None) -> None:
+    """Once per distinct environment, confirm this git fails a lazy fetch rather than making one.
+
+    `env=None` is the route's own isolated environment (checked once per process, the result
+    cached); a test passes a variant, such as one missing `GIT_NO_LAZY_FETCH`, to exercise the
+    refusal without a second git binary.
+    """
+    _lazy_fetch_probe(frozenset((env or _isolated_env()).items()))
+
+
 def change_ref(number: int, suffix: str | int) -> str:
     """`refs/changes/NN/<number>/<suffix>`, NN being the change number's last two digits."""
     return f"refs/changes/{number % 100:02d}/{number}/{suffix}"
@@ -145,11 +280,54 @@ def gerrit_timestamp(epoch: int | float) -> str:
     return datetime.fromtimestamp(int(epoch), UTC).strftime(_TIMESTAMP)
 
 
+#: `writtenOn`'s older, pre-ISO-8601 form: "Dec 18, 2024 10:50:22 PM". Matched and mapped by
+#: hand, not `strptime("%b")`, which reads the current locale's month names and would refuse
+#: this English text on a machine set to another language. UTC is assumed, as the ISO form
+#: this replaced always carried `Z`; nothing in the corpus has contradicted it so far.
+_LEGACY_MONTH_NAMES = (
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+)  # fmt: skip
+_LEGACY_MONTHS = {m: i for i, m in enumerate(_LEGACY_MONTH_NAMES, start=1)}
+_LEGACY_WRITTEN_ON = re.compile(
+    r"^(?P<mon>[A-Za-z]{3}) (?P<day>\d{1,2}), (?P<year>\d{4}) "
+    r"(?P<hour>\d{1,2}):(?P<minute>\d{2}):(?P<second>\d{2}) (?P<ampm>AM|PM)$"
+)
+
+
+def _legacy_written_on(value: str) -> datetime | None:
+    match = _LEGACY_WRITTEN_ON.match(value)
+    if match is None or match["mon"] not in _LEGACY_MONTHS:
+        return None
+    hour = int(match["hour"]) % 12 + (12 if match["ampm"] == "PM" else 0)
+    try:
+        return datetime(
+            int(match["year"]),
+            _LEGACY_MONTHS[match["mon"]],
+            int(match["day"]),
+            hour,
+            int(match["minute"]),
+            int(match["second"]),
+            tzinfo=UTC,
+        )
+    except ValueError:
+        return None
+
+
 def _note_timestamp(value: Any) -> str | None:
-    """A note JSON `writtenOn` (ISO 8601, e.g. `2024-12-18T22:50:22Z`) in Gerrit's REST format."""
+    """A note JSON `writtenOn` in Gerrit's REST format.
+
+    Accepts ISO 8601 (`2024-12-18T22:50:22Z`) and the legacy form `_legacy_written_on` reads.
+    Never raises: an unrecognised value is None, same as a missing one, so a corrupt timestamp
+    on one comment does not abort the whole project-month; the caller counts and drops it.
+    """
     if not isinstance(value, str) or not value:
         return None
-    moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    try:
+        moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        moment = _legacy_written_on(value)
+        if moment is None:
+            return None
     if moment.tzinfo is None:
         moment = moment.replace(tzinfo=UTC)
     moment = moment.astimezone(UTC)
@@ -205,6 +383,15 @@ class Repo:
 
     @classmethod
     def open(cls, path: Path, url: str, pacer: Pacer, ledger: Path | None = None) -> Repo:
+        """Open a scratch repository, refusing one already pointed at a different remote.
+
+        `remote.<name>.url` is multi-valued in git's own config model: an override on a single
+        command adds a value rather than replacing the first, so a reused directory's original
+        remote is what a fetch actually contacts however this call's `url` reads. A mismatch
+        here means the caller's accounting (host, pacing, permission) would not describe what
+        git does, so it is refused rather than silently followed.
+        """
+        _require_lazy_fetch_disabled()
         repo = cls(Path(path), url, pacer, ledger)
         if not (repo.path / "HEAD").is_file():
             repo.path.mkdir(parents=True, exist_ok=True)
@@ -220,11 +407,23 @@ class Repo:
                 ("maintenance.auto", "false"),
             ):
                 repo.git("config", key, value)
+        else:
+            configured = (
+                repo._run(["config", "--get", "remote.origin.url"], check=False)
+                .stdout.decode()
+                .strip()
+            )
+            if configured != url:
+                raise GitError(
+                    f"{path} already holds a remote for {configured!r}, this run asked for "
+                    f"{url!r}: refusing to reuse a scratch repository pointed elsewhere"
+                )
         return repo
 
     @property
     def host(self) -> str:
-        return urlsplit(self.url).netloc or "local"
+        """The host git will contact, lowercased and without a port: the pacer's own key."""
+        return urlsplit(self.url).hostname or "local"
 
     def _run(
         self,
@@ -245,16 +444,33 @@ class Repo:
         return done
 
     def git(self, *args: str, stdin: bytes | None = None) -> bytes:
-        """A local command. A lazy fetch fails rather than reaching the network."""
-        local = ["-c", "remote.origin.url=/nonexistent/lazy-fetch-disabled"]
-        return self._run([*local, *args], stdin=stdin).stdout
+        """A local command. A lazy fetch fails rather than reaching the network.
+
+        `GIT_NO_LAZY_FETCH=1` in `_isolated_env` is what makes that failure happen; `Repo.open`
+        checks once per process that this git actually honors it.
+        """
+        return self._run(list(args), stdin=stdin).stdout
 
     def _network(self, purpose: str, args: Sequence[str], stdin: bytes | None, items: int) -> bytes:
+        permission = GIT_PERMITTED.get(self.host)
+        if urlsplit(self.url).scheme not in ("file", "") and (
+            permission is None or not permission.permitted
+        ):
+            reason = permission.reason if permission else "not recorded in GIT_PERMITTED"
+            raise GitError(f"refusing to contact {self.host} over the network: {reason}")
         self.pacer.wait(self.host)
         with tempfile.NamedTemporaryFile(prefix="sphragis-curl-", suffix=".trace") as trace:
             started = time.monotonic()
             done = self._run(
-                ["-c", "http.cookieFile=", "-c", "credential.helper=", *args],
+                [
+                    "-c",
+                    "http.cookieFile=",
+                    "-c",
+                    "credential.helper=",
+                    "-c",
+                    "http.followRedirects=false",
+                    *args,
+                ],
                 stdin=stdin,
                 env={"GIT_TRACE_CURL": trace.name, "GIT_TRACE_CURL_NO_DATA": "1"},
                 check=False,
@@ -337,19 +553,26 @@ class Repo:
                 keep.append(oid)
         shallow.write_text("".join(f"{oid}\n" for oid in keep))
 
-    def fetch_refs(self, purpose: str, refs: Sequence[str], *options: str) -> list[str]:
+    def fetch_refs(
+        self, purpose: str, refs: Sequence[str], *options: str, force: bool = False
+    ) -> list[str]:
         """Fetch exact refs to the same names locally; return the ones the server lacks.
 
         A missing ref fails the whole fetch, and a change can vanish upstream (deleted, made
         private). The missing ref is dropped and the batch retried, one extra fetch per
         vanished change rather than one request per change. Refs already held are not
-        fetched again, so a rerun over the same scratch repository costs no requests.
+        fetched again, so a rerun over the same scratch repository costs no requests -- unless
+        `force`, which always fetches: a ref an earlier, shallower fetch already holds (the
+        seal's tip probe) must still be re-requested to deepen it.
         """
         missing: list[str] = []
-        held = set(
-            self.git("for-each-ref", "--format=%(refname)", "refs/changes/").decode().split()
-        )
-        pending = [r for r in refs if r not in held]
+        if force:
+            pending = list(refs)
+        else:
+            held = set(
+                self.git("for-each-ref", "--format=%(refname)", "refs/changes/").decode().split()
+            )
+            pending = [r for r in refs if r not in held]
         while pending:
             try:
                 self.fetch(purpose, [f"+{r}:{r}" for r in pending], *options)
@@ -368,14 +591,14 @@ class Repo:
         for start in range(0, len(wanted), BATCH):
             self.fetch(purpose, wanted[start : start + BATCH], *options)
 
-    def list_remote(self, purpose: str, pattern: str) -> list[tuple[str, str]]:
-        """`git ls-remote` for one pattern: (object id, ref name) pairs.
+    def list_remote(self, purpose: str, *patterns: str) -> list[tuple[str, str]]:
+        """`git ls-remote` for one or more patterns, in one request: (object id, ref name) pairs.
 
         Git sends no ref prefix for an ls-remote pattern, so the server lists every ref and
         the client filters. That is one request, but a large one: a wildcard listing over
         chromium/src timed out. Use it only on repositories of moderate size.
         """
-        out = self._network(purpose, ["ls-remote", "origin", pattern], None, 1)
+        out = self._network(purpose, ["ls-remote", "origin", *patterns], None, 1)
         pairs = []
         for line in out.decode().splitlines():
             oid, _, ref = line.partition("\t")
@@ -437,21 +660,49 @@ class MergedCommit:
     via: str
 
 
-def fetch_history(repo: Repo, branch: str, since: str) -> None:
-    """The branch's commits since `since`, without trees or blobs.
+#: `refs/heads/*` is read for every organization: REST's `status:merged` query has no branch
+#: filter, so the git route reads every branch Gerrit can accept a change on. Chromium also
+#: submits onto release branches under this second namespace.
+EXTRA_BRANCH_NAMESPACES = {"chromium": ("refs/branch-heads/*",)}
+DEFAULT_BRANCH_NAMESPACES = ("refs/heads/*",)
+
+
+def branch_namespaces(org: str) -> tuple[str, ...]:
+    """The ref-listing patterns this org's changes can be merged under."""
+    return DEFAULT_BRANCH_NAMESPACES + EXTRA_BRANCH_NAMESPACES.get(org, ())
+
+
+def branch_refs(repo: Repo, org: str, only: Sequence[str] = ()) -> list[str]:
+    """Every branch ref Gerrit accepts changes on for this org, or just `only` if given.
+
+    One `ls-remote` of every namespace the org uses, since a wildcard listing over a
+    repository the size of chromium/src is one large request, not many small ones. `only`
+    matches a full ref (`refs/heads/main`) or a bare name (`main`), against what the listing
+    actually holds -- a name that does not exist yields nothing rather than a guessed ref.
+    """
+    pairs = repo.list_remote("branch_refs", *branch_namespaces(org))
+    available = sorted({ref for _, ref in pairs if ref})
+    if not only:
+        return available
+    wanted = set(only)
+    return sorted(ref for ref in available if ref in wanted or ref.rsplit("/", 1)[-1] in wanted)
+
+
+def fetch_history(repo: Repo, refs: Sequence[str], since: str) -> None:
+    """Every named branch's commits since `since`, without trees or blobs, in one fetch.
 
     Commits alone are what enumeration reads, and they are small; the trees `files` needs
     are fetched afterwards for the merged commits only, which on a repository the size of
     chromium/src is the difference between a month's trees and every tree since `since`.
 
-    Git has no upper date bound on a fetch, so this transfers every commit up to the branch
+    Git has no upper date bound on a fetch, so this transfers every commit up to each branch's
     tip, including merges after the month being collected. They are filtered out in
     `merged_commits` before anything is recorded, and the scratch repository holding them is
     deleted with the run.
     """
     repo.fetch(
         "history",
-        [f"+refs/heads/{branch}:refs/heads/{branch}"],
+        [f"+{ref}:{ref}" for ref in refs],
         "--filter=tree:0",
         f"--shallow-since={since}",
     )
@@ -485,7 +736,7 @@ def patch_set_commits(repo: Repo, project_refs: Sequence[tuple[str, str]]) -> di
 
 def merged_commits(
     repo: Repo,
-    branch: str,
+    refs: Sequence[str],
     since: str,
     end: str,
     *,
@@ -493,7 +744,14 @@ def merged_commits(
     project: str,
     by_commit: Mapping[str, int] | None = None,
 ) -> tuple[list[MergedCommit], dict[str, int]]:
-    """Candidate changes: commits on `branch` committed in [since, end), mapped to a change.
+    """Candidate changes: commits on any of `refs` committed in [since, end), mapped to a change.
+
+    Every branch is walked in one `git log` over all `refs`: a commit reachable from more than
+    one is still shown once, so only a change whose commit differs per branch (a cherry-pick)
+    can be found twice, and `seen` dedups it to one entry by change number. `--since`/`--until`
+    let git skip most of the walk itself; the same bound is re-checked on each commit's own
+    timestamp, since git's date filters stop at the first commit outside the window along a
+    parent chain, which a history combining several branches cannot rely on.
 
     A commit's date is a candidate filter, never the merge date. Under the rewriting submit
     strategies (Chromium's cherry-pick) the committer date is the merge; AOSP merges the
@@ -504,12 +762,23 @@ def merged_commits(
     inside it is still a candidate. One uploaded more than that before its merge is missed.
 
     A change is found by its `Reviewed-on:` trailer, or else by its commit id among the
-    patch-set refs (`by_commit`), for hosts that stamp no trailer.
+    patch-set refs (`by_commit`), for hosts that stamp no trailer; neither depends on which
+    branch carried the commit.
     """
     start = since
     lower = datetime.fromisoformat(start).replace(tzinfo=UTC).timestamp()
     upper = datetime.fromisoformat(end).replace(tzinfo=UTC).timestamp()
-    raw = repo.git("log", "--format=%H%x00%P%x00%ct%x00%B%x1e", f"refs/heads/{branch}")
+    if not refs:
+        return [], {}
+    raw = repo.git(
+        "log",
+        "--format=%H%x00%P%x00%ct%x00%B%x1e",
+        # An explicit UTC offset, so this does not depend on the process's local timezone the
+        # way a bare date string parsed by git's approxidate would.
+        f"--since={start} 00:00:00 +0000",
+        f"--until={end} 00:00:00 +0000",
+        *refs,
+    )
     found: list[MergedCommit] = []
     counts: Counter[str] = Counter()
     seen: set[int] = set()
@@ -586,6 +855,8 @@ class ChangeRecord:
     hashtags: list[str] = field(default_factory=list)
     patch_sets: dict[int, dict[str, Any]] = field(default_factory=dict)
     comments: list[dict[str, Any]] = field(default_factory=list)
+    note_parse_errors: int = 0
+    comment_timestamp_errors: int = 0
 
 
 def read_change(repo: Repo, number: int) -> ChangeRecord:
@@ -648,7 +919,8 @@ def read_change(repo: Repo, number: int) -> ChangeRecord:
                 }
     for ps in deleted:
         record.patch_sets.pop(ps, None)
-    record.comments = _note_comments(repo, tip)
+    raw_comments, record.note_parse_errors = _note_comments(repo, tip)
+    record.comments, record.comment_timestamp_errors = _filter_bad_timestamps(raw_comments)
     return record
 
 
@@ -658,16 +930,43 @@ def _note_blobs(repo: Repo, tip: str) -> list[str]:
     return [entry.split()[2] for entry in listing.split("\0") if entry and " blob " in entry]
 
 
-def _note_comments(repo: Repo, tip: str) -> list[dict[str, Any]]:
-    """Every published inline comment in the notes tree at `tip`."""
+def _note_comments(repo: Repo, tip: str) -> tuple[list[dict[str, Any]], int]:
+    """Every published inline comment in the notes tree at `tip`, and note blobs that failed.
+
+    A blob that is not valid JSON is counted (`note_parse_errors`) rather than skipped without
+    a trace, so a corrupt or truncated note is visible in the month record instead of quietly
+    reducing a change's comments.
+    """
     comments: list[dict[str, Any]] = []
+    errors = 0
     for blob in repo.read_objects(_note_blobs(repo, tip)).values():
         try:
             note = json.loads(blob)
         except ValueError:
+            errors += 1
             continue
         comments.extend(note.get("comments") or [])
-    return comments
+    return comments, errors
+
+
+def _filter_bad_timestamps(
+    comments: Iterable[Mapping[str, Any]],
+) -> tuple[list[dict[str, Any]], int]:
+    """Drop a comment whose `writtenOn` is a non-empty string `_note_timestamp` cannot read.
+
+    Counted rather than left to abort the project-month: an absent or empty `writtenOn` is not
+    an error (`rest_comment` already tolerates it, as REST's own payload can), only one that is
+    present and unreadable.
+    """
+    kept: list[dict[str, Any]] = []
+    errors = 0
+    for comment in comments:
+        written = comment.get("writtenOn")
+        if isinstance(written, str) and written and _note_timestamp(written) is None:
+            errors += 1
+            continue
+        kept.append(dict(comment))
+    return kept, errors
 
 
 def rest_comment(comment: Mapping[str, Any]) -> tuple[str, dict[str, Any]]:
@@ -793,13 +1092,86 @@ def _diff_pairs(record: ChangeRecord) -> set[tuple[int, str]]:
     return pairs
 
 
+@dataclass(frozen=True)
+class _CommitInfo:
+    """A commit's own header fields, which a shallow graft does not rewrite."""
+
+    tree: str
+    parents: tuple[str, ...]
+    message: str
+
+
+def _commit_info(raw: bytes) -> _CommitInfo:
+    header, _, message = raw.partition(b"\n\n")
+    lines = header.decode(errors="replace").splitlines()
+    tree = next(line[5:] for line in lines if line.startswith("tree "))
+    parents = tuple(line[7:] for line in lines if line.startswith("parent "))
+    return _CommitInfo(tree, parents, message.decode(errors="replace"))
+
+
+def _commit_infos(repo: Repo, commits: Iterable[str]) -> dict[str, _CommitInfo]:
+    return {oid: _commit_info(raw) for oid, raw in repo.read_objects(commits).items()}
+
+
 def _commit_parents(repo: Repo, commits: Iterable[str]) -> dict[str, list[str]]:
-    """Parent ids from each commit's own header, which a shallow graft does not rewrite."""
-    parents: dict[str, list[str]] = {}
-    for oid, raw in repo.read_objects(commits).items():
-        header = raw.split(b"\n\n", 1)[0].decode(errors="replace")
-        parents[oid] = [line[7:] for line in header.splitlines() if line.startswith("parent ")]
-    return parents
+    """Parent ids from each commit's own header."""
+    return {oid: list(info.parents) for oid, info in _commit_infos(repo, commits).items()}
+
+
+#: Gerrit's other ChangeKind values; REWORK (imported from `examples`) is the one `refine`
+#: acts on. Kept as plain strings, matching what REST itself sends on `revisions.*.kind`.
+NO_CHANGE_KIND = "NO_CHANGE"
+NO_CODE_CHANGE_KIND = "NO_CODE_CHANGE"
+TRIVIAL_REBASE_KIND = "TRIVIAL_REBASE"
+TRIVIAL_REBASE_MESSAGE_KIND = "TRIVIAL_REBASE_WITH_MESSAGE_UPDATE"
+
+
+def _replay_tree(repo: Repo, *, base: str, onto: str, commit: str) -> str | None:
+    """The tree `git merge-tree` writes for replaying `commit` onto `onto`, base `base`.
+
+    None when the merge could not be verified: a real conflict (exit 1, and a conflicted tree
+    would not equal the successor's anyway) or a merge git could not attempt at all because
+    this repository lacks the blob content a content-level merge needs (a non-zero exit with
+    no usable tree). Either way the step is not confirmed trivial, so the caller treats it as
+    REWORK -- the same conservative call the spec makes for an actual conflict.
+    """
+    done = repo._run(  # noqa: SLF001 - a local plumbing command, not a network operation
+        ["merge-tree", "--write-tree", f"--merge-base={base}", onto, commit], check=False
+    )
+    if done.returncode != 0:
+        return None
+    return done.stdout.decode().split()[0]
+
+
+def _successor_kind(
+    repo: Repo, a_commit: str, b_commit: str, a: _CommitInfo, b: _CommitInfo
+) -> str:
+    """Gerrit's ChangeKind of a successor revision `b`, relative to its predecessor `a`.
+
+    NO_CHANGE: same tree, same parents, same message. NO_CODE_CHANGE: same tree and parents,
+    a different message. TRIVIAL_REBASE(_WITH_MESSAGE_UPDATE): a single, different parent on
+    each side, and replaying `a` onto `b`'s parent (three-way, base `a`'s parent) reproduces
+    `b`'s tree exactly (`_replay_tree`). MERGE_FIRST_PARENT_UPDATE is not attempted: a merge
+    commit on either side is told apart from REWORK only by whether the trees already match
+    (documented simplification -- Gerrit's own same-tree-after-replay check on the first
+    parent is not run), so a merge pair only reaches NO_CHANGE/NO_CODE_CHANGE or REWORK.
+    """
+    same_message = a.message == b.message
+    if a.parents == b.parents:
+        if a.tree != b.tree:
+            return REWORK
+        return NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND
+    if len(a.parents) == 1 and len(b.parents) == 1:
+        merged_tree = _replay_tree(repo, base=a.parents[0], onto=b.parents[0], commit=a_commit)
+        if merged_tree is None or merged_tree != b.tree:
+            return REWORK
+        return TRIVIAL_REBASE_KIND if same_message else TRIVIAL_REBASE_MESSAGE_KIND
+    if len(a.parents) > 1 and len(b.parents) > 1:
+        if a.tree != b.tree:
+            return REWORK
+        return NO_CHANGE_KIND if same_message else NO_CODE_CHANGE_KIND
+    # A root commit on one side, or one side a merge and the other not: not attempted.
+    return REWORK
 
 
 def tree_entries(repo: Repo, commit: str, paths: Sequence[str]) -> dict[str, str]:
@@ -874,17 +1246,21 @@ def _row(
     project: str,
     merged: MergedCommit | None,
     parents: Mapping[str, list[str]],
+    kinds: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """A change in the REST `ChangeInfo` shape, unscrubbed.
 
     Each revision also carries `parents`, its commit's parent ids, which REST returns only
     with the CURRENT_COMMIT option the REST route did not request: two patch sets on
-    different parents were separated by a rebase.
+    different parents were separated by a rebase. `kinds` is each revision's ChangeKind
+    (`_successor_kind`), computed from git objects rather than read from a server cache, so a
+    revision it does not cover carries `kind_source: "git"` but no `kind`.
     """
     full_branch = record.branch or ""
     branch = full_branch.removeprefix("refs/heads/")
     encoded = quote(project, safe="")
     current = max(record.patch_sets) if record.patch_sets else None
+    kinds = kinds or {}
     revisions = {
         ps_data["commit"]: {
             "_number": ps,
@@ -893,6 +1269,8 @@ def _row(
             "ref": change_ref(record.number, ps),
             "uploader": {"_account_id": ps_data["uploader"]},
             "parents": parents.get(ps_data["commit"], []),
+            "kind_source": "git",
+            **({"kind": kinds[ps_data["commit"]]} if ps_data["commit"] in kinds else {}),
         }
         for ps, ps_data in sorted(record.patch_sets.items())
     }
@@ -926,6 +1304,39 @@ def _row(
     return row
 
 
+#: Deep enough for any meta chain (one commit per patch set, comment batch or status change);
+#: git stops at the real root regardless, so this only has to exceed the largest chain seen.
+_META_FULL_DEPTH = "1000000"
+
+
+def _commit_committer_time(raw: bytes) -> int:
+    """The `committer` line's epoch seconds, from a commit object's own header."""
+    header = raw.split(b"\n\n", 1)[0].decode(errors="replace")
+    line = next(line for line in header.splitlines() if line.startswith("committer "))
+    return int(line.rsplit(" ", 2)[1])
+
+
+def _meta_tips(repo: Repo, numbers: Sequence[int]) -> tuple[dict[int, int], list[int]]:
+    """Each candidate's meta-ref tip commit time, fetched at depth 1 without blobs.
+
+    Read before any fuller fetch, so a change whose last NoteDb update reaches the sealed
+    test window is dropped before its meta chain or notes cost anything. Returns (committer
+    time by number, numbers whose ref the server lacks).
+    """
+    refs = {change_ref(n, "meta"): n for n in numbers}
+    missing_refs = set(repo.fetch_refs("meta_tip", list(refs), "--depth=1", "--filter=blob:none"))
+    tips: dict[str, str] = {}
+    if set(refs) - missing_refs:
+        raw = repo.git("for-each-ref", "--format=%(refname)%09%(objectname)", "refs/changes/")
+        for line in raw.decode().splitlines():
+            ref, _, oid = line.partition("\t")
+            if ref in refs and ref not in missing_refs:
+                tips[ref] = oid
+    objects = repo.read_objects(tips.values())
+    times = {refs[ref]: _commit_committer_time(objects[oid]) for ref, oid in tips.items()}
+    return times, [refs[r] for r in missing_refs]
+
+
 def collect(
     repo: Repo,
     numbers: Sequence[int],
@@ -936,24 +1347,44 @@ def collect(
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Fetch and read `numbers` from one project: unscrubbed rows with their comments and diffs.
 
-    A fixed number of batched fetches, whatever the number of changes: the meta refs and
-    their note blobs; the patch-set commits the comments need, by id and without blobs or
-    history; the trees of the merged commits and their parents; then exactly the blobs those
-    diffs and the `files` counts read. A change NoteDb does not record as submitted
-    inside `submitted_between` is counted and dropped after the first, before it costs
-    anything more.
+    A fixed number of batched fetches, whatever the number of changes. First, the tip of each
+    candidate's meta ref alone (depth 1, no blobs): a change last updated at or after the
+    sealed test window's start is dropped there, before its meta chain or notes are fetched at
+    all, and counted `touches_test_window`. For the rest: the full meta refs and their note
+    blobs; the patch-set commits the comments need, by id and without blobs or history; the
+    trees of the merged commits and their parents; then exactly the blobs those diffs and the
+    `files` counts read. A change NoteDb does not record as submitted inside
+    `submitted_between` costs one meta-chain-and-notes fetch to learn that (its submission
+    time is not known any sooner), then is dropped before anything else -- patch sets, diffs
+    or blobs.
     """
     merged = merged or {}
     counts: Counter[str] = Counter()
-    missing = repo.fetch_refs("meta", [change_ref(n, "meta") for n in numbers])
-    counts["meta_missing"] = len(missing)
-    held = [n for n in numbers if change_ref(n, "meta") not in missing]
+    tip_times, tip_missing = _meta_tips(repo, numbers)
+    sealed = {n for n, when in tip_times.items() if gerrit_timestamp(when) >= TEST_WINDOW_START}
+    counts["touches_test_window"] = len(sealed)
+    skip = sealed | set(tip_missing)
+    candidates = [n for n in numbers if n not in skip]
+    missing = set(
+        repo.fetch_refs(
+            "meta",
+            [change_ref(n, "meta") for n in candidates],
+            f"--depth={_META_FULL_DEPTH}",
+            force=True,
+        )
+    )
+    counts["meta_missing"] = len(tip_missing) + sum(
+        change_ref(n, "meta") in missing for n in candidates
+    )
+    held = [n for n in candidates if change_ref(n, "meta") not in missing]
     repo.fetch_objects(
         "notes", [oid for n in held for oid in _note_blobs(repo, change_ref(n, "meta"))]
     )
     records = {}
     for number in held:
         record = read_change(repo, number)
+        counts["note_parse_errors"] += record.note_parse_errors
+        counts["comment_timestamp_errors"] += record.comment_timestamp_errors
         if submitted_between is not None:
             placed = _placement(record.submitted, *submitted_between)
             if placed != "inside":
@@ -972,7 +1403,8 @@ def collect(
     # parents themselves arrive: a rebase step's diff reads the file in both of them.
     every = {ps["commit"] for record in records.values() for ps in record.patch_sets.values()}
     repo.fetch_objects("patch_sets", every, "--depth=2", "--filter=tree:0")
-    parents = _commit_parents(repo, every)
+    infos = _commit_infos(repo, every)
+    parents = {oid: list(info.parents) for oid, info in infos.items()}
     rebased: dict[tuple[int, int], tuple[str, str]] = {}
     for number, wanted in pairs.items():
         for ps in {ps for ps, _ in wanted}:
@@ -994,8 +1426,26 @@ def collect(
     }
     absent = set(repo.missing(m.parents[0] for m in single.values()))
     counted = {n: m for n, m in single.items() if m.parents[0] not in absent}
+
+    # Which consecutive patch-set pairs need a trivial-rebase replay to tell REWORK apart from
+    # TRIVIAL_REBASE: single, differing parents on each side. `a`, and both sides' parents, need
+    # their full tree (not just the commit header `every` already carries) for `git merge-tree`.
+    kind_roots: set[str] = set()
+    for record in records.values():
+        ordered = sorted(record.patch_sets)
+        for prev_ps, ps in zip(ordered, ordered[1:], strict=False):
+            a_commit = record.patch_sets[prev_ps]["commit"]
+            b_commit = record.patch_sets[ps]["commit"]
+            a_info, b_info = infos.get(a_commit), infos.get(b_commit)
+            if a_info is None or b_info is None or a_info.parents == b_info.parents:
+                continue
+            if len(a_info.parents) == 1 and len(b_info.parents) == 1:
+                kind_roots.update((a_commit, a_info.parents[0], b_info.parents[0]))
     roots = sorted(
-        commits | upstream | {oid for m in counted.values() for oid in (m.commit, m.parents[0])}
+        commits
+        | upstream
+        | kind_roots
+        | {oid for m in counted.values() for oid in (m.commit, m.parents[0])}
     )
     if roots:
         # Read from the commit objects: `rev-parse <commit>^{tree}` loads the tree itself.
@@ -1004,6 +1454,20 @@ def collect(
         )
         root_trees = listed.decode().split()
         repo.fetch_objects("trees", root_trees, "--filter=blob:none")
+
+    kind_by_commit: dict[str, str] = {}
+    for record in records.values():
+        ordered = sorted(record.patch_sets)
+        if ordered:
+            kind_by_commit[record.patch_sets[ordered[0]]["commit"]] = REWORK
+        for prev_ps, ps in zip(ordered, ordered[1:], strict=False):
+            a_commit = record.patch_sets[prev_ps]["commit"]
+            b_commit = record.patch_sets[ps]["commit"]
+            a_info, b_info = infos.get(a_commit), infos.get(b_commit)
+            if a_info is None or b_info is None:
+                continue
+            kind_by_commit[b_commit] = _successor_kind(repo, a_commit, b_commit, a_info, b_info)
+    counts["kind_computed"] = len(kind_by_commit)
 
     blobs_needed: set[str] = set()
     trees: dict[tuple[int, int], dict[str, str]] = {}
@@ -1041,7 +1505,7 @@ def collect(
 
     rows = []
     for number, record in records.items():
-        row = _row(record, project, merged.get(number), parents)
+        row = _row(record, project, merged.get(number), parents, kind_by_commit)
         diffs: dict[str, Any] = {}
         for ps, path in sorted(pairs[number]):
             before_oid = trees[(number, ps)].get(path)
@@ -1097,18 +1561,20 @@ def fetch_month(
     salt: str,
     *,
     pacer: Pacer,
-    branch: str = BRANCH_DEFAULT,
+    branches: Sequence[str] = (),
     workdir: Path | None = None,
     by_patch_set_ref: bool | None = None,
     base_url: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Every change NoteDb records as submitted during `month` whose commit reached `branch`.
+    """Every change NoteDb records as submitted during `month`, on any branch it can merge to.
 
-    Changes merged only into other branches are not enumerated; `branch` names the one whose
-    history is read. Window membership is decided later, by each change's NoteDb creation
-    time, exactly as for the REST route. `by_patch_set_ref` adds the ref-listing fallback
-    for hosts whose merged commits carry no `Reviewed-on:` trailer (AOSP); it lists every
-    ref in the project, so it is for repositories of moderate size only.
+    Mirrors REST's `status:merged` query, which carries no branch filter: every `refs/heads/*`
+    ref is read by default (plus an org's other namespaces, `branch_namespaces`), and a change
+    is counted once even when its commit reaches more than one. `branches` restricts this to
+    named branches; empty means every branch. Window membership is decided later, by each
+    change's NoteDb creation time, exactly as for the REST route. `by_patch_set_ref` adds the
+    ref-listing fallback for hosts whose merged commits carry no `Reviewed-on:` trailer (AOSP);
+    it lists every ref in the project, so it is for repositories of moderate size only.
     """
     base = base_url or GIT_HOSTS[org]
     if by_patch_set_ref is None:
@@ -1122,7 +1588,8 @@ def fetch_month(
     with tempfile.TemporaryDirectory(prefix="sphragis-notedb-", dir=workdir) as scratch:
         for index, project in enumerate(projects):
             repo = Repo.open(Path(scratch) / f"{index}.git", f"{base}/{project}", pacer)
-            fetch_history(repo, branch, since)
+            refs = branch_refs(repo, org, branches)
+            fetch_history(repo, refs, since)
             by_commit = (
                 patch_set_commits(repo, repo.list_remote("patch_set_refs", "refs/changes/*"))
                 if by_patch_set_ref
@@ -1130,7 +1597,7 @@ def fetch_month(
             )
             merged, enumeration = merged_commits(
                 repo,
-                branch,
+                refs,
                 since,
                 end,
                 review_host=REVIEW_HOSTS.get(org, ""),
@@ -1148,6 +1615,7 @@ def fetch_month(
             status = Counter(str(row["status"]) for row in found)
             rows.extend(pseudonymise(row, salt) for row in found if row["status"] == "MERGED")
             per_project[project] = {
+                "branches_read": refs,
                 "enumeration": enumeration,
                 "collect": counts,
                 "status": dict(status),
@@ -1157,7 +1625,7 @@ def fetch_month(
     record = {
         "route": "notedb",
         "base_url": base,
-        "branch": branch,
+        "branches": sorted(branches) if branches else "all",
         "month": month,
         "submitted_between": [start, end],
         "candidates_committed_since": since,
@@ -1166,6 +1634,7 @@ def fetch_month(
         "http_requests": requests,
         "diff": DIFF_METHOD,
         "gaps": GAPS,
+        "fetch_rules": FETCH_RULES,
         "count": len(rows),
         "started_at": started,
         "finished_at": datetime.now(UTC).isoformat(),

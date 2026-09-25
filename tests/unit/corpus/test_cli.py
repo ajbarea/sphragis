@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -1219,7 +1220,7 @@ def _fetch_git(
 
     months: list[str] = []
 
-    def fake_fetch_month(org, projects, month, salt, *, pacer, branch):
+    def fake_fetch_month(org, projects, month, salt, *, pacer, branches):
         months.append(month)
         return [], {"http_requests": 0, "git_operations": 0}
 
@@ -1294,3 +1295,69 @@ def test_build_answers_a_notedb_row_from_its_own_data_without_the_network(
     assert cli.main(["build", "--org", "chromium", "--root", str(tmp_path)]) == 0
     built = (tmp_path / "chromium" / "examples" / "2024-10.jsonl").read_text().splitlines()
     assert [json.loads(line)["comments"] for line in built] == [["fix"]]
+
+
+# ---------------------------------------------------------------------------
+# Route mixing (item 10)
+# ---------------------------------------------------------------------------
+
+
+def test_refuse_mixed_routes_blocks_the_other_route(tmp_path: Path) -> None:
+    from sphragis.corpus import cli
+
+    raw = tmp_path / "org" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-10.record.json").write_text(json.dumps({"route": "rest"}))
+    with pytest.raises(SystemExit, match="already fetched via"):
+        cli.refuse_mixed_routes(tmp_path, "org", "notedb", allow=False)
+    cli.refuse_mixed_routes(tmp_path, "org", "notedb", allow=True)  # explicit override
+    cli.refuse_mixed_routes(tmp_path, "org", "rest", allow=False)  # same route, never refused
+
+
+def test_the_git_route_refuses_to_mix_with_an_existing_rest_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw = tmp_path / "aosp" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-09.record.json").write_text(json.dumps({"route": "rest"}))
+    with pytest.raises(SystemExit, match="already fetched via"):
+        _fetch_git(tmp_path, monkeypatch, "2024-10", "--project", "p")
+
+
+def test_the_rest_route_refuses_to_mix_with_an_existing_git_route_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    raw = tmp_path / "openstack" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-09.record.json").write_text(json.dumps({"route": "notedb"}))
+    with pytest.raises(SystemExit, match="already fetched via"):
+        cli.main(["fetch", "--org", "openstack", "--month", "2024-10", "--root", str(tmp_path)])
+
+
+def test_allow_mixed_routes_lets_the_git_route_write_beside_a_rest_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw = tmp_path / "aosp" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "2024-09.record.json").write_text(json.dumps({"route": "rest"}))
+    months = _fetch_git(tmp_path, monkeypatch, "2024-10", "--project", "p", "--allow-mixed-routes")
+    assert months == ["2024-10"]
+
+
+def test_fetch_chromium_script_refuses_before_any_request() -> None:
+    """chromium.googlesource.com is not yet in GIT_PERMITTED; the script must read that from
+    Python and refuse before ever fetching, without a fixed-up duplicate of the permission."""
+    script = Path(__file__).resolve().parents[3] / "scripts" / "fetch_chromium.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        env={**os.environ, "PROJECTS": "v8/v8"},
+    )
+    assert result.returncode == 1
+    assert "not permitted" in result.stdout
+    assert "GIT_PERMITTED" in result.stdout

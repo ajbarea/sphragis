@@ -7,12 +7,14 @@ import hashlib
 import http.client
 import json
 import os
+import signal
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -28,11 +30,12 @@ from sphragis.corpus.load import (
 )
 from sphragis.corpus.manifest import verify
 from sphragis.corpus.notedb import (
-    BRANCH_DEFAULT,
     GIT_HOSTS,
+    GIT_PERMITTED,
     NOTEDB_KEY,
     embedded_fetchers,
     fetch_month,
+    valid_project_name,
 )
 from sphragis.corpus.pacing import Pacer
 from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split, window_body
@@ -41,6 +44,7 @@ from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import is_test_window_unlocked
 from sphragis.corpus.storage import read_snapshot, write_snapshot
+from sphragis.corpus.windows import TEST_WINDOW_START
 
 STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "verify")
 
@@ -122,14 +126,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--branch",
-        default=BRANCH_DEFAULT,
-        help="with --via git: the branch whose merged commits are enumerated",
+        action="append",
+        default=[],
+        help="with --via git: restrict enumeration to this branch (repeatable); default is "
+        "every branch Gerrit accepts changes on",
     )
     parser.add_argument(
         "--request-interval",
         type=float,
         default=1.0,
         help="minimum seconds between requests to one Gerrit host (fetch, build)",
+    )
+    parser.add_argument(
+        "--allow-mixed-routes",
+        action="store_true",
+        help="fetch: allow this month's route (rest/git) to differ from the org's other months",
     )
     return parser
 
@@ -235,6 +246,35 @@ def refuse_if_sealed(root: Path, org: str, month: str) -> None:
         )
 
 
+def _fetched_routes(root: Path, org: str) -> set[str]:
+    """Every route named on this org's snapshot records, unrecorded ones ignored."""
+    raw = Path(root) / org / "raw"
+    routes = set()
+    for record_path in sorted(raw.glob("*.record.json")):
+        record = _read_record(record_path)
+        if record and record.get("route"):
+            routes.add(record["route"])
+    return routes
+
+
+def refuse_mixed_routes(root: Path, org: str, route: str, *, allow: bool) -> None:
+    """Refuse a fetch whose route differs from an org's other months, unless `allow` is set.
+
+    A REST and a git-route month of the same org-month would carry different fields for the
+    same reality (`kind` computed rather than server-cached, no `insertions`/`deletions`, and
+    so on), so mixing them silently would make later stages compare examples that were never
+    fetched the same way. `allow` records the decision, on the month that made it.
+    """
+    if allow:
+        return
+    other = _fetched_routes(root, org) - {route}
+    if other:
+        raise SystemExit(
+            f"refusing {org}: already fetched via {sorted(other)}, this run is {route!r}; "
+            "pass --allow-mixed-routes to mix, or fetch the rest of the org the same way"
+        )
+
+
 def _stage_fetch(args: argparse.Namespace) -> int:
     """One organization-month into an immutable snapshot, scrubbed on the way in."""
     salt = require_salt()
@@ -243,6 +283,7 @@ def _stage_fetch(args: argparse.Namespace) -> int:
         return _stage_fetch_git(args, salt)
     if args.org not in GERRIT:
         raise SystemExit(f"{args.org} has no REST host here; fetch it with --via git")
+    refuse_mixed_routes(Path(args.root), args.org, "rest", allow=args.allow_mixed_routes)
     year, month = args.month.split("-")
     following = (
         f"{int(year) + (month == '12')}-{'01' if month == '12' else f'{int(month) + 1:02d}'}"
@@ -258,6 +299,11 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     )
     kept = created_on_or_after(changes, args.cutoff)
     scrubbed = [scrub(change, salt) for change in kept]
+    record = {
+        **record,
+        "route": "rest",
+        "mixed_routes_allowed": bool(args.allow_mixed_routes),
+    }
     path = write_snapshot(
         args.root, args.org, args.month, scrubbed, record=record, overwrite=args.overwrite
     )
@@ -273,6 +319,39 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     return 0
 
 
+@contextmanager
+def _raise_on_sigterm() -> Iterator[None]:
+    """Turn a SIGTERM into an exception for the duration, then restore the previous handler.
+
+    The git fetch path holds its scratch repository in a `TemporaryDirectory`, whose cleanup
+    runs on any exception unwound through it, SIGTERM included -- but only if SIGTERM raises
+    rather than the default terminate-the-process action, which skips every `finally` on the
+    stack and leaves the scratch repository, and the raw identities in it, on disk.
+    """
+
+    def handler(signum: int, frame: Any) -> None:
+        raise KeyboardInterrupt("SIGTERM")
+
+    previous = signal.signal(signal.SIGTERM, handler)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
+def _git_pacer(min_interval: float) -> Pacer:
+    """A pacer for the git route: a host's floor from `GIT_PERMITTED` never goes away.
+
+    `min_interval` is the run's own `--request-interval`, which can slow a host down further
+    but, per `Pacer.interval`, can never go below what the host's entry records -- 0 or a
+    negative value included.
+    """
+    return Pacer(
+        min_interval,
+        host_intervals={host: p.min_interval for host, p in GIT_PERMITTED.items() if p.permitted},
+    )
+
+
 def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
     """One organization-month from NoteDb over git into the same snapshot shape.
 
@@ -284,16 +363,26 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
         raise SystemExit(f"{args.org} has no git host with NoteDb refs; use --via rest")
     if not args.project:
         raise SystemExit("--via git reads one repository per project: pass --project")
-    rows, record = fetch_month(
-        args.org,
-        args.project,
-        args.month,
-        salt,
-        pacer=Pacer(args.request_interval),
-        branch=args.branch,
-    )
+    bad = [p for p in args.project if not valid_project_name(p)]
+    if bad:
+        raise SystemExit(f"refusing --project {bad}: not a plain project path")
+    refuse_mixed_routes(Path(args.root), args.org, "notedb", allow=args.allow_mixed_routes)
+    with _raise_on_sigterm():
+        rows, record = fetch_month(
+            args.org,
+            args.project,
+            args.month,
+            salt,
+            pacer=_git_pacer(args.request_interval),
+            branches=args.branch,
+        )
     kept = created_on_or_after(rows, args.cutoff)
-    record = {**record, "cutoff": args.cutoff, "created_before_cutoff": len(rows) - len(kept)}
+    record = {
+        **record,
+        "cutoff": args.cutoff,
+        "created_before_cutoff": len(rows) - len(kept),
+        "mixed_routes_allowed": bool(args.allow_mixed_routes),
+    }
     path = write_snapshot(
         args.root, args.org, args.month, kept, record=record, overwrite=args.overwrite
     )
@@ -318,8 +407,8 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
 WINDOWS = {
     "pilot": ("2024-10-01", "2024-11-01"),
     "train": ("2024-11-01", "2025-09-01"),
-    "dev": ("2025-09-01", "2025-11-01"),
-    "test": ("2025-11-01", "2026-11-01"),
+    "dev": ("2025-09-01", TEST_WINDOW_START),
+    "test": (TEST_WINDOW_START, "2026-11-01"),
 }
 
 # The test window is fetched no earlier than this many months after its final month, so that
