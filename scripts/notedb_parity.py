@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import subprocess
 from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
@@ -40,6 +41,7 @@ from sphragis.corpus.notedb import (
     REVIEW_HOSTS,
     MergedCommit,
     Repo,
+    branch_refs,
     candidates_since,
     collect,
     diff_key,
@@ -154,7 +156,14 @@ def rest_timing(root: Path) -> dict[str, Any]:
 
 
 def ledger_totals(ledger: Path) -> dict[str, Any]:
-    """Network operations and HTTP requests over the whole comparison, by purpose."""
+    """Network operations and HTTP requests over the whole comparison, by purpose.
+
+    Every figure here is read back from what `Repo._network` actually measured (the curl
+    trace's request count) and wrote to the ledger; nothing here is a hand-entered or assumed
+    value. An earlier version reported `http_requests_estimated` by reading an `estimated` key
+    no code ever wrote to a ledger entry, so it was always 0 -- removed rather than kept as a
+    figure with no source.
+    """
     entries = [json.loads(line) for line in ledger.read_text().splitlines() if line]
     by_purpose: dict[str, dict[str, int]] = defaultdict(lambda: {"operations": 0, "http": 0})
     for entry in entries:
@@ -164,7 +173,6 @@ def ledger_totals(ledger: Path) -> dict[str, Any]:
         "host": sorted({e["host"] for e in entries}),
         "operations": len(entries),
         "http_requests": sum(e["http_requests"] for e in entries),
-        "http_requests_estimated": sum(e["http_requests"] for e in entries if e.get("estimated")),
         "first": entries[0]["at"] if entries else None,
         "last": entries[-1]["at"] if entries else None,
         "by_purpose": dict(by_purpose),
@@ -233,8 +241,28 @@ def classify_enumeration(
     }
 
 
+def _lines_unavailable_reason(repo: Repo, git: Mapping[str, Any]) -> str:
+    """Why `files` (and so `lines.insertions_deletions`) is unavailable for this change.
+
+    Mirrors the three causes `collect` itself counts (`files_unavailable_*`): the merged
+    commit has more than one parent, its single parent lies outside the fetched history, or it
+    never landed on the branch read at all.
+    """
+    merged_commit = git.get("merged_commit")
+    if not merged_commit:
+        return "not_on_branch"
+    parents = repo.git("log", "--no-walk", "--format=%P", merged_commit).decode().split()
+    if len(parents) > 1:
+        return "merge_commit"
+    if parents and repo.missing(parents):
+        return "parent_outside_history"
+    return "unclassified"
+
+
 def compare_fields(
-    pairs: Sequence[tuple[dict[str, Any], dict[str, Any]]], meta_ancestry: Mapping[int, set[str]]
+    repo: Repo,
+    pairs: Sequence[tuple[dict[str, Any], dict[str, Any]]],
+    meta_ancestry: Mapping[int, set[str]],
 ) -> dict[str, Any]:
     """Field-by-field agreement on changes both routes hold."""
     agree: Counter[str] = Counter()
@@ -266,8 +294,10 @@ def compare_fields(
                 else:
                     differ[key].append(number)
         files = git.get("files")
-        if files is None or "insertions" not in rest:
-            differ["lines.unavailable"].append(number)
+        if files is None:
+            differ[f"lines.{_lines_unavailable_reason(repo, git)}"].append(number)
+        elif "insertions" not in rest:
+            differ["lines.rest_missing_insertions"].append(number)
         else:
             inserted = sum(f["lines_inserted"] or 0 for f in files.values())
             deleted = sum(f["lines_deleted"] or 0 for f in files.values())
@@ -504,6 +534,20 @@ def measure_rebases(
     }
 
 
+def _relative_to_repo(path: Path) -> str:
+    """`path` relative to the repository root, or its resolved form outside the repository."""
+    resolved = path.resolve()
+    top = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False
+    )
+    if top.returncode == 0:
+        try:
+            return str(resolved.relative_to(top.stdout.strip()))
+        except ValueError:
+            pass
+    return str(resolved)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rest-root", type=Path, default=Path("datasets/gerrit/aosp"))
@@ -511,40 +555,47 @@ def main() -> None:
         "--work", type=Path, required=True, help="scratch directory for git objects"
     )
     parser.add_argument("--out", type=Path, default=RESULTS)
+    parser.add_argument(
+        "--branch",
+        action="append",
+        default=[],
+        help="restrict enumeration to this branch (repeatable); default matches the existing "
+        f"comparison, {BRANCH_DEFAULT} only, not every branch (item 6's 'all')",
+    )
     args = parser.parse_args()
     salt = require_salt()
     args.work.mkdir(parents=True, exist_ok=True)
     ledger = args.work / "ledger.jsonl"
+    branches = args.branch or [BRANCH_DEFAULT]
 
     url = f"{GIT_HOSTS[ORG]}/{PROJECT}"
     repo = Repo.open(args.work / "hardware-interfaces.git", url, Pacer(1.0), ledger=ledger)
     bounds = {month: month_bounds(month) for month in MONTHS}
     earliest = min(_since(start) for start, _ in bounds.values())
+    branch_ref_names = branch_refs(repo, ORG, branches)
     # The history is fetched once per start date; an earlier start deepens it.
     marker = args.work / "history-since.txt"
     held = marker.read_text().strip() if marker.is_file() else None
     if held is None or earliest < held:
-        fetch_history(repo, BRANCH_DEFAULT, earliest)
+        fetch_history(repo, branch_ref_names, earliest)
         marker.write_text(earliest + "\n")
     listing = args.work / "refs-changes.tsv"
     if not listing.is_file():
         pairs = repo.list_remote("patch_set_refs", "refs/changes/*")
         listing.write_text("".join(f"{oid}\t{ref}\n" for oid, ref in pairs))
-    refs = [tuple(line.split("\t")) for line in listing.read_text().splitlines() if line]
-    by_commit = patch_set_commits(repo, refs)
+    change_refs = [tuple(line.split("\t")) for line in listing.read_text().splitlines() if line]
+    by_commit = patch_set_commits(repo, change_refs)
 
     on_branch = {
         line.split()[0]: int(line.split()[1])
-        for line in repo.git("log", "--format=%H %ct", f"refs/heads/{BRANCH_DEFAULT}")
-        .decode()
-        .splitlines()
+        for line in repo.git("log", "--format=%H %ct", *branch_ref_names).decode().splitlines()
     }
     candidates: dict[int, MergedCommit] = {}
     enumeration_counts = {}
     for month, (start, end) in bounds.items():
         found, counts = merged_commits(
             repo,
-            BRANCH_DEFAULT,
+            branch_ref_names,
             _since(start),
             end,
             review_host=REVIEW_HOSTS[ORG],
@@ -584,13 +635,13 @@ def main() -> None:
         **provenance_header(),
         "org": ORG,
         "project": PROJECT,
-        "branch": BRANCH_DEFAULT,
+        "branches": branches,
         "months": list(MONTHS),
-        "rest_root": str(args.rest_root.name),
+        "rest_root": _relative_to_repo(args.rest_root),
         "requests": ledger_totals(ledger),
         "collect": collect_counts,
         "enumeration": enumeration,
-        "fields": compare_fields(pairs, meta_ancestry),
+        "fields": compare_fields(repo, pairs, meta_ancestry),
         "rest_timing": rest_timing(args.rest_root),
         "rebase": measure_rebases(repo, pairs),
         "examples": compare_examples(
