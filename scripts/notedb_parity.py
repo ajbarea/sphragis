@@ -72,6 +72,7 @@ from sphragis.corpus.notedb import (
     tree_entries,
 )
 from sphragis.corpus.pacing import Pacer
+from sphragis.corpus.refine import ChangeIndex, index_changes, refine
 from sphragis.provenance import provenance_header
 
 RESULTS = Path("datasets/results/notedb-parity-aosp.json")
@@ -119,10 +120,13 @@ def rest_rows(root: Path) -> dict[str, list[dict[str, Any]]]:
     return by_month
 
 
-def rest_examples(root: Path) -> dict[tuple[str, str], list[dict[str, Any]]]:
-    """Every REST-built example for the project, by (change id, created)."""
+def rest_examples(
+    root: Path, stage: str = "examples"
+) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    """Every REST example for the project at `stage` (`examples` as built, or `refined`), by
+    (change id, created)."""
     by_change: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
-    for path in sorted((root / "examples").glob("*.jsonl")):
+    for path in sorted((root / stage).glob("*.jsonl")):
         for line in path.read_text().splitlines():
             if line:
                 example = json.loads(line)
@@ -312,7 +316,7 @@ def compare_fields(
         else:
             agree["revisions.set"] += 1
         for sha in set(g_rev) & set(r_rev):
-            for name in ("_number", "created", "uploader", "ref", "branch"):
+            for name in ("_number", "created", "uploader", "ref", "branch", "kind"):
                 key = f"revisions.{name}"
                 if g_rev[sha].get(name) == r_rev[sha].get(name):
                     agree[key] += 1
@@ -344,8 +348,15 @@ def compare_examples(
     pairs: Sequence[tuple[dict[str, Any], dict[str, Any]]],
     rest_by_change: Mapping[tuple[str, str], list[dict[str, Any]]],
     details: Path,
+    refine_index: ChangeIndex | None = None,
 ) -> dict[str, Any]:
-    """Examples built from each route's data for the same changes, compared id by id."""
+    """Examples built from each route's data for the same changes, compared id by id.
+
+    With `refine_index`, the git route's examples go through `refine` first, for comparison with
+    the REST corpus as refined: the corpus that trains. The REST examples as built were stamped
+    once under the current build rules, so they keep what the build now drops and `refine`
+    removes (Gerrit's one-click "Acknowledged").
+    """
     counts: Counter[str] = Counter()
     ids: dict[str, list[str]] = defaultdict(list)
     drops: Counter[str] = Counter()
@@ -353,6 +364,8 @@ def compare_examples(
         for git, rest in pairs:
             built, dropped = build_from_change(ORG, git, *embedded_fetchers(git))
             drops.update(dropped)
+            if refine_index is not None:
+                built, _ = refine(built, refine_index)
             mine = {e["id"]: e for e in built}
             theirs = {
                 e["id"]: e for e in rest_by_change.get((rest["change_id"], rest["created"]), [])
@@ -901,6 +914,12 @@ def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:
         "rebase": measure_rebases(repo, pairs),
         "examples": compare_examples(
             pairs, rest_examples(args.rest_root), scratch / "example-diffs.jsonl"
+        ),
+        "examples_refined": compare_examples(
+            pairs,
+            rest_examples(args.rest_root, "refined"),
+            scratch / "example-diffs-refined.jsonl",
+            refine_index=index_changes(git for git, _ in pairs),
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

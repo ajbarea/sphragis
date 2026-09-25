@@ -603,3 +603,39 @@ def test_a_rest_root_without_raw_snapshots_is_refused_before_any_fetch(
     with pytest.raises(SystemExit, match="no raw/ REST snapshots"):
         parity.main()
     assert not ran
+
+
+def test_rest_examples_reads_the_stage_it_is_asked_for(
+    parity: types.ModuleType, tmp_path: Path
+) -> None:
+    for stage, comment in (("examples", "built"), ("refined", "refined")):
+        (tmp_path / stage).mkdir()
+        row = {"project": parity.PROJECT, "change_id": "I1", "created": "t", "id": comment}
+        (tmp_path / stage / "2024-11.jsonl").write_text(json.dumps(row) + "\n")
+    assert [e["id"] for e in parity.rest_examples(tmp_path)[("I1", "t")]] == ["built"]
+    assert [e["id"] for e in parity.rest_examples(tmp_path, "refined")[("I1", "t")]] == ["refined"]
+
+
+def test_compare_examples_refines_the_git_side_when_given_an_index(
+    parity: types.ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The build keeps a one-click "Acknowledged" the refined REST corpus no longer holds; only
+    with `refine_index` does the git side go through the same rules before it is compared."""
+    example = {
+        "id": "e1",
+        "change_id": "I1",
+        "created": "t",
+        "comments": ["Acknowledged", "rename this"],
+        **{f: "" for f in parity.EXAMPLE_FIELDS if f not in ("id", "change_id", "created")},
+    }
+    refined = {**example, "comments": ["rename this"]}
+    monkeypatch.setattr(parity, "build_from_change", lambda *a: ([dict(example)], {}))
+    monkeypatch.setattr(parity, "embedded_fetchers", lambda git: (None, None))
+    pair = ({"change_id": "I1", "created": "t"}, {"change_id": "I1", "created": "t"})
+    rest = {("I1", "t"): [refined]}
+    plain = parity.compare_examples([pair], rest, tmp_path / "a.jsonl")
+    both = parity.compare_examples(
+        [pair], rest, tmp_path / "b.jsonl", refine_index=parity.index_changes([])
+    )
+    assert plain["counts"].get("identical", 0) == 0
+    assert both["counts"]["identical"] == 1
