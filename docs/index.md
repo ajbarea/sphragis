@@ -70,7 +70,7 @@ hide:
         <span class="step-label">Gate</span>
       </div>
     </div>
-    <p class="pipeline-caption">Review threads Public review threads &rarr; pseudonymised examples &rarr; frozen windows &rarr; a sealed test window &rarr; adapters &rarr; a pass rule written in coderarr; pseudonymised examples Public review threads &rarr; pseudonymised examples &rarr; frozen windows &rarr; a sealed test window &rarr; adapters &rarr; a pass rule written in coderarr; frozen windows Public review threads &rarr; pseudonymised examples &rarr; frozen windows &rarr; a sealed test window &rarr; adapters &rarr; a pass rule written in coderarr; a sealed test Public review threads &rarr; pseudonymised examples &rarr; frozen windows &rarr; a sealed test window &rarr; adapters &rarr; a pass rule written in coderarr; adapters Public review threads &rarr; pseudonymised examples &rarr; frozen windows &rarr; a sealed test window &rarr; adapters &rarr; a pass rule written in coderarr; a coded pass rule</p>
+    <p class="pipeline-caption">Review threads &rarr; pseudonymised examples &rarr; frozen windows &rarr; a sealed test &rarr; adapters &rarr; a coded pass rule</p>
   </div>
 </section>
 

@@ -14,6 +14,8 @@
   --sph-ink: #1a1d27;
   --sph-mist: rgba(244, 168, 150, 0.08);
   --hero-bg-image: url('../assets/seal-hero.svg');
+  /* The artwork is one object, not a scene: sized to the hero's height and held to the right. */
+  --hero-bg-place: right -7vw center / auto 88%;
 }
 
 [data-md-color-scheme="slate"] {
@@ -84,7 +86,7 @@ body.hero-page .md-content__inner {
       transparent 30%,
       transparent 70%,
       var(--sph-obsidian) 100%),
-    var(--hero-bg-image) right center / cover no-repeat,
+    var(--hero-bg-image) var(--hero-bg-place) no-repeat,
     var(--sph-obsidian);
 }
 
@@ -127,7 +129,7 @@ body.hero-page .md-content__inner {
         transparent 35%,
         transparent 70%,
         var(--sph-obsidian) 100%),
-      var(--hero-bg-image) right center / cover no-repeat,
+      var(--hero-bg-image) var(--hero-bg-place) no-repeat,
       var(--sph-obsidian);
   }
 }
@@ -144,7 +146,7 @@ body.hero-page .md-content__inner {
         transparent 42%,
         color-mix(in srgb, var(--sph-obsidian) 55%, transparent) 52%,
         var(--sph-obsidian) 65%),
-      var(--hero-bg-image) 70% top / auto 58% no-repeat,
+      var(--hero-bg-image) 64% top / auto 58% no-repeat,
       var(--sph-obsidian);
   }
 
@@ -169,7 +171,7 @@ body.hero-page .md-content__inner {
         transparent 40%,
         color-mix(in srgb, var(--sph-obsidian) 60%, transparent) 50%,
         var(--sph-obsidian) 62%),
-      var(--hero-bg-image) 70% top / auto 52% no-repeat,
+      var(--hero-bg-image) 64% top / auto 52% no-repeat,
       var(--sph-obsidian);
   }
 }
@@ -183,7 +185,7 @@ body.hero-page .md-content__inner {
         transparent 38%,
         color-mix(in srgb, var(--sph-obsidian) 65%, transparent) 48%,
         var(--sph-obsidian) 60%),
-      var(--hero-bg-image) 70% top / auto 46% no-repeat,
+      var(--hero-bg-image) 64% top / auto 46% no-repeat,
       var(--sph-obsidian);
   }
 }
@@ -213,7 +215,7 @@ body.hero-page .md-content__inner {
         transparent 30%,
         transparent 70%,
         var(--sph-obsidian) 100%),
-      var(--hero-bg-image) right center / cover no-repeat,
+      var(--hero-bg-image) var(--hero-bg-place) no-repeat,
       var(--sph-obsidian);
   }
 }
@@ -447,7 +449,7 @@ body.hero-page .md-content__inner {
 .landing-section {
   width: 100vw;
   margin-left: calc(-50vw + 50%);
-  padding: 5rem 2rem;
+  padding: 3.5rem 2rem;
   text-align: center;
 }
 
@@ -571,7 +573,7 @@ body.hero-page .md-content__inner {
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 1.2rem;
   margin-top: 2.5rem;
   text-align: left;
@@ -731,4 +733,123 @@ body.hero-page .md-content__inner {
 /* The permalink mark belongs on reference headings, not on the hero title. */
 .md-typeset .hero h1 .headerlink {
   display: none;
+}
+
+/* ==========================================================================
+   Light mode
+
+   The landing page was drawn dark, as the sisters' are. In the light scheme the
+   same rules read on parchment: the surface variables are redefined, and every
+   colour written for light-on-dark text is redefined for dark-on-light.
+   ========================================================================== */
+[data-md-color-scheme="default"] {
+  --hero-bg-image: url('../assets/seal-hero-light.svg');
+  --sph-obsidian: #faf5ef;
+  --sph-graphite: #f3eae1;
+  --sph-ink: #ffffff;
+  --sph-mist: rgba(140, 29, 24, 0.12);
+  --sph-text: #2a0e0b;
+  --sph-text-soft: rgba(42, 14, 11, 0.78);
+  --sph-text-muted: rgba(42, 14, 11, 0.6);
+}
+
+/* The page behind the hero, so the hero's bleed margins show parchment, not white. */
+body.hero-page[data-md-color-scheme="default"] {
+  --md-default-bg-color: var(--sph-obsidian);
+  background-color: var(--sph-obsidian);
+}
+
+/* On wide screens the dark hero vignettes the seal; on parchment that washes it
+   out, so light mode keeps only the fade behind the text and the bottom edge. */
+@media (min-width: 961px) {
+  [data-md-color-scheme="default"] .md-typeset .hero {
+    background:
+      linear-gradient(to right,
+        var(--sph-obsidian) 0%,
+        color-mix(in srgb, var(--sph-obsidian) 88%, transparent) 30%,
+        color-mix(in srgb, var(--sph-obsidian) 30%, transparent) 55%,
+        transparent 75%),
+      linear-gradient(to bottom,
+        transparent 0%,
+        transparent 75%,
+        var(--sph-obsidian) 100%),
+      var(--hero-bg-image) var(--hero-bg-place) no-repeat,
+      var(--sph-obsidian);
+  }
+}
+
+[data-md-color-scheme="default"] .md-typeset .hero h1 {
+  background: linear-gradient(135deg, #5e120f 0%, #8c1d18 45%, var(--sph-wax) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  filter: drop-shadow(0 2px 14px rgba(179, 38, 30, 0.18));
+}
+
+[data-md-color-scheme="default"] .md-typeset .hero .hero-subtitle {
+  color: var(--sph-text);
+  opacity: 0.9;
+  text-shadow: none;
+}
+
+[data-md-color-scheme="default"] .hero-modes {
+  color: var(--sph-wax-deep);
+  opacity: 0.8;
+}
+
+[data-md-color-scheme="default"] .hero-buttons .md-button:not(.md-button--primary) {
+  border-color: rgba(140, 29, 24, 0.35) !important;
+  color: var(--sph-wax-deep) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-md-color-scheme="default"] .hero-buttons .md-button:not(.md-button--primary):hover {
+  color: #fff !important;
+  background: var(--sph-wax) !important;
+}
+
+[data-md-color-scheme="default"] .section-title,
+[data-md-color-scheme="default"] .feature-name {
+  color: var(--sph-text);
+}
+
+[data-md-color-scheme="default"] .section-lead,
+[data-md-color-scheme="default"] .feature-card p {
+  color: var(--sph-text-soft);
+}
+
+[data-md-color-scheme="default"] .section-lead strong,
+[data-md-color-scheme="default"] .pipeline-caption {
+  color: var(--sph-wax-deep);
+}
+
+[data-md-color-scheme="default"] .pipeline-step {
+  background: #ffffff;
+  border-color: rgba(140, 29, 24, 0.18);
+  color: var(--sph-text);
+}
+
+[data-md-color-scheme="default"] .step-icon {
+  color: var(--sph-wax);
+}
+
+[data-md-color-scheme="default"] .feature-card {
+  box-shadow: 0 1px 3px rgba(42, 14, 11, 0.06);
+}
+
+[data-md-color-scheme="default"] .feature-card:hover {
+  box-shadow: 0 10px 28px rgba(42, 14, 11, 0.12), 0 0 0 1px color-mix(in srgb, var(--card-accent, var(--sph-wax)) 30%, transparent);
+}
+
+[data-md-color-scheme="default"] .landing-footer {
+  color: var(--sph-text-muted);
+}
+
+[data-md-color-scheme="default"] .landing-footer a {
+  color: var(--sph-wax-deep);
+}
+
+/* Sections are separated by their own padding; a heading's default top margin
+   doubled the gap between them. */
+.md-typeset .landing-section .section-title {
+  margin-top: 0;
 }
