@@ -7,15 +7,21 @@ repo_url = "https://github.com/ajbarea/sphragis"
 repo_name = "ajbarea/sphragis"
 copyright = "AJ Barea"
 
+# The nav is the list of what deploys. `scripts/prune_site.py` removes every built page it does
+# not name, so a file can live in docs/ (the research log, the design record) without being
+# published. The research log is linked on GitHub instead: thousands of dated lines read better
+# there than as one site page.
 nav = [
   { "Home" = "index.md" },
+  { "Protocol" = "protocol.md" },
   { "Registered decisions" = "registered-decisions.md" },
   { "Outcome-neutral tests" = "outcome-neutral.md" },
   { "Artifact index" = "artifacts.md" },
-  { "Research log" = "research-log.md" },
+  { "Research log" = "https://github.com/ajbarea/sphragis/blob/main/docs/research-log.md" },
 ]
 
-extra_css = ["stylesheets/extra.css"]
+extra_css = ["stylesheets/landing.css", "stylesheets/extra.css"]
+extra_javascript = ["javascripts/reveal.js"]
 
 # ---------------------------------------------------------------------------
 # Theme

@@ -134,4 +134,4 @@ one process, at no measurable cost in wall time.
 | the evidence behind every row above | [Artifact index](artifacts.md) |
 
 The dated record of how each of these was arrived at, including the readings that were
-withdrawn, is the [research log](research-log.md).
+withdrawn, is the [research log](https://github.com/ajbarea/sphragis/blob/main/docs/research-log.md).
