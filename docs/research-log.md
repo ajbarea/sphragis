@@ -5727,3 +5727,28 @@ a 152-item subsample checked after each reveal. It does not support substituting
 for a human's item by item, on the finer labels or on outside names. The checker reported finding
 the reviewer's request and the code change harder to follow than rater A did; which reader is
 right on a disputed item is not measured here.
+
+### Wikimedia collected under its robot policy, as a candidate for Qt's place (2026-09-26)
+
+Collected now, whatever Qt and Chromium answer, so the dev-window pilot can run on it before
+2026-11-20. If both grant permission, the study has four organizations.
+
+The REST transport enforces the host's terms rather than leaving them to the operator:
+
+- paths matching gerrit.wikimedia.org's robots.txt `Disallow` lines are refused before a
+  connection opens (`robots_disallows`, RFC 9309 prefix and `*` matching);
+- any 5xx, or a connection failure reported as one, holds the host 15 minutes;
+- one process at a time may hold a transport to the host (`claim_host`, an exclusive lock), so two
+  stages in two terminals cannot together exceed a concurrency of 1;
+- requests are paced 2 s apart, above the 1 s the policy and robots.txt ask for, and every request
+  to every host carries an identifying User-Agent.
+
+None of this is build code, so `BUILD_RULES` is unchanged and the corpus v2 months stay valid.
+
+The first month's listing: 8,109 merged changes for 2024-10, 7,479 kept after the creation cutoff,
+across 643 repositories; 1,498 carry inline comments. The query stayed under the host's
+10,000-result cap, and the truncation probe passed. The largest repositories are
+operations/puppet and mediawiki/core, and MediaWiki extensions hold most changes, which is what
+the split criteria (three projects a half, none above 50%) need. The build fetches comments for
+every change, so a full 13-month build is on the order of 100,000 requests, about three days at
+this pace. It runs unattended; the bot audit that found Qt's lint bot follows once it is built.
