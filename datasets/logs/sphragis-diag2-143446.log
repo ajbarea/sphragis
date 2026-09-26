@@ -1,0 +1,5 @@
+pad_token_id=151643 eos=151645
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:01, 271.30it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:00, 285.21it/s]Loading weights:  27%|██▋       | 93/339 [00:00<00:00, 276.24it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:00, 283.53it/s]Loading weights:  45%|████▌     | 153/339 [00:00<00:00, 265.73it/s]Loading weights:  54%|█████▍    | 184/339 [00:00<00:00, 277.93it/s]Loading weights:  63%|██████▎   | 212/339 [00:00<00:00, 261.40it/s]Loading weights:  71%|███████   | 241/339 [00:00<00:00, 269.68it/s]Loading weights:  79%|███████▉  | 269/339 [00:01<00:00, 255.51it/s]Loading weights:  87%|████████▋ | 295/339 [00:01<00:00, 255.80it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 269.20it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 271.22it/s]
+[batch2-noautocast] non-finite events in 12 steps: 0
+[batch2-autocast] non-finite events in 12 steps: 0
+DIAG2_OK

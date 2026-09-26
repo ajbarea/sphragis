@@ -1,0 +1,15 @@
+examples 201  train 160  eval 41
+trainable items 160
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:00, 328.74it/s]Loading weights:  22%|██▏       | 73/339 [00:00<00:00, 318.75it/s]Loading weights:  31%|███       | 105/339 [00:00<00:00, 284.95it/s]Loading weights:  40%|███▉      | 135/339 [00:00<00:00, 269.68it/s]Loading weights:  48%|████▊     | 163/339 [00:00<00:00, 270.81it/s]Loading weights:  58%|█████▊    | 196/339 [00:00<00:00, 282.51it/s]Loading weights:  66%|██████▋   | 225/339 [00:00<00:00, 271.99it/s]Loading weights:  76%|███████▌  | 256/339 [00:00<00:00, 278.65it/s]Loading weights:  84%|████████▍ | 284/339 [00:01<00:00, 268.12it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 278.66it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 281.82it/s]
+loaded base
+[BASE] EM=0.000 normEM=0.000 sim=0.164 pred_chars_med=294 ref_chars_med=60  (152s)
+/home/ajb6289/ajsoftworks/sphragis/sphragis/experiment/model.py:225: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  total += float(loss) * grad_accum
+trainable params: 80,740,352 || all params: 7,696,356,864 || trainable%: 1.0491
+losses: ['1.212', '1.208', '0.905', '0.527', '0.949', '0.614', '0.444', '0.582', '0.320', '0.315', '0.443', '0.321', '0.342', '0.213', '0.534', '0.402', '0.313', '0.427', '0.082', '0.201']
+training done
+[ADAPTED] EM=0.512 normEM=0.512 sim=0.861 pred_chars_med=50 ref_chars_med=60  (72s)
+
+FLOOR CHECK: base EM 0.000 -> adapted EM 0.512
+PILOT_OK

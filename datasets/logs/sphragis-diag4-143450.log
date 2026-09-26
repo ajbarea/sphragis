@@ -1,0 +1,5 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:01, 293.86it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:00, 308.98it/s]Loading weights:  28%|██▊       | 95/339 [00:00<00:00, 285.54it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:00, 282.23it/s]Loading weights:  45%|████▌     | 153/339 [00:00<00:00, 269.74it/s]Loading weights:  54%|█████▍    | 184/339 [00:00<00:00, 275.84it/s]Loading weights:  63%|██████▎   | 212/339 [00:00<00:00, 264.81it/s]Loading weights:  72%|███████▏  | 244/339 [00:00<00:00, 275.18it/s]Loading weights:  80%|████████  | 272/339 [00:01<00:00, 249.63it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 264.52it/s]Loading weights:  98%|█████████▊| 331/339 [00:01<00:00, 244.10it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 268.76it/s]
+
+items swept: 201   non-finite: 0
+no single item is non-finite on a fresh adapter; the instability accumulates
+DIAG4_OK
