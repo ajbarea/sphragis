@@ -486,6 +486,7 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-26** — Confirmatory design rests only on hosts permitting automated access: OpenStack, and Wikimedia as a candidate for Qt's place; Qt and Chromium admitted only with permission before Stage 1 (research log).
 - **2026-09-23** — `verify --reproduce`: dedup and split rerun from the refined examples and compared byte for byte with every frozen window; both corpus v2 manifests reproduce (#42).
 - **2026-09-23** — Label audit agreement read with Gwet's AC1 and specific agreement beside kappa: the kappa of 0.557 is the prevalence paradox, AC1 0.853 (#41).
 - **2026-09-23** — Chromium scoped as an organization; fetch refuses a truncated query and a listing that moves while it is paged (#35).
