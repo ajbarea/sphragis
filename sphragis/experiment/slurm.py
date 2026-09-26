@@ -7,7 +7,8 @@ unschedulable. SPORC (2026-09-17): x86_64 A100 40 GB nodes plus one node of H100
 the `sporc` partition, on driver 610 (CUDA 13.3) despite a stale `cuda11` node feature tag.
 Both clusters mount the same `$HOME`, and the TIGRIS login node submits to SPORC with
 `--clusters=sporc`, so one checkout and one ssh session serve both. Compute-node `/tmp` is
-node-local, so the model cache lives in `$HOME`, which carries a 1 TB quota.
+node-local, so the model cache lives under `$SPHRAGIS_DATA` (`$HOME/ajsoftworks/sphragis-data`
+by default), which carries a 1 TB quota.
 
 The job scripts under `scripts/` carry the TIGRIS target in their `#SBATCH` lines. Retargeting
 passes `sbatch_flags` on the command line, which Slurm ranks above both `SBATCH_*` variables and

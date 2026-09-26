@@ -72,3 +72,22 @@ Waiting on that route:
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before.
+
+## Cluster data root
+
+TIGRIS/SPORC jobs now read and write under `$SPHRAGIS_DATA` (default
+`$HOME/ajsoftworks/sphragis-data`, overridable), set by `sphragis/experiment/cluster-env.sh`:
+`results/` (every `claim_result` output), `adapters/` (what was `$HOME/scratch`), `corpus/` and
+`corpus-windows*` (what was `$HOME/corpus*`), and `hf-cache/hub` (`HF_HUB_CACHE`). `$HOME` itself
+now holds only system files and `~/ajsoftworks`. Pinned worktrees move too:
+`$HOME/sphragis-pinned` -> `$HOME/ajsoftworks/sphragis-pinned`, a sibling checkout, not data.
+
+One-time migration on each cluster, not yet run:
+
+    mkdir -p ~/ajsoftworks/sphragis-data/{results,adapters,corpus}
+    mv ~/*.json ~/*.json.claim ~/*.npz ~/ajsoftworks/sphragis-data/results/
+    mv ~/pilot-examples.jsonl ~/ajsoftworks/sphragis-data/corpus/
+    mv ~/scratch/* ~/ajsoftworks/sphragis-data/adapters/
+    mv ~/corpus/* ~/ajsoftworks/sphragis-data/corpus/
+    mv ~/corpus-windows* ~/ajsoftworks/sphragis-data/
+    mv ~/hf-cache ~/ajsoftworks/sphragis-data/

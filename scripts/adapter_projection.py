@@ -23,9 +23,10 @@ against 0.2749).
 The sketch is linear, so Gaussian noise added to an update is Gaussian noise added to its sketch,
 which is what makes a defence curve possible at all.
 
-    uv run --no-sync python scripts/adapter_projection.py --root ~/scratch \
+    uv run --no-sync python scripts/adapter_projection.py \
+        --root ~/ajsoftworks/sphragis-data/adapters \
         --pattern "sphragis-adapters-clients/*-c*/adapter_model.safetensors" \
-        --sketch 16 --out ~/client-vectors.npz
+        --sketch 16 --out ~/ajsoftworks/sphragis-data/results/client-vectors.npz
 """
 
 from __future__ import annotations

@@ -7,7 +7,7 @@
 # project-level permutation, where `clients-cpp-early.txt` gave 84. The floor a p-value can reach
 # falls from 0.012 to 0.0006.
 #
-# Corpora live in $CLIENTS = $HOME/corpus/clients3, built by scripts/project_corpora.py --org aosp
+# Corpora live in $CLIENTS = $SPHRAGIS_DATA/corpus/clients3, built by scripts/project_corpora.py --org aosp
 # --window all. The earlier runs' corpora stay in clients2, so their results stay reproducible.
 # Paths are relative to $CLIENTS (see scripts/client_updates.sbatch).
 aosp:cpp/art=platform_art.jsonl

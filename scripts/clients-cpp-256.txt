@@ -13,7 +13,7 @@
 # are near 200. The Python cell is therefore absent at this length rather than half present,
 # since a content control with one organization in it controls nothing.
 #
-# Corpora live in $CLIENTS = $HOME/corpus/clients3. Paths are relative to $CLIENTS.
+# Corpora live in $CLIENTS = $SPHRAGIS_DATA/corpus/clients3. Paths are relative to $CLIENTS.
 aosp:cpp/art=platform_art.jsonl
 aosp:cpp/perfetto=platform_external_perfetto.jsonl
 aosp:cpp/frameworks-av=platform_frameworks_av.jsonl

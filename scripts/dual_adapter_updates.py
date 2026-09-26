@@ -21,9 +21,11 @@ local adapter is saved beside it under `-local` so a later reading can ask what 
 which is the comparison the papers never make.
 
 Run: uv run --no-sync python scripts/dual_adapter_updates.py \
-       --sources-file scripts/clients-cpp-rebuilt.txt --corpus-root ~/corpus/clients3 \
+       --sources-file scripts/clients-cpp-rebuilt.txt \
+       --corpus-root ~/ajsoftworks/sphragis-data/corpus/clients3 \
        --client-size 128 --schedule feddpa-t --rounds 2 \
-       --adapters ~/scratch/sphragis-adapters-dual --out ~/client-updates-dual.json
+       --adapters ~/ajsoftworks/sphragis-data/adapters/sphragis-adapters-dual \
+       --out ~/ajsoftworks/sphragis-data/results/client-updates-dual.json
 """
 
 from __future__ import annotations
