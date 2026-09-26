@@ -13,8 +13,14 @@ the units a contrast compares is the noise the design cannot cancel.
 
 A human answer the checker reports, after the reveal, as a slip (the check page's `slips` field,
 or `--slip ITEM:FIELD`) stays as it was locked: a correction made after seeing rater A's answer
-is no longer blind. Every human pair the slip touches is reported again without that item,
-beside the locked reading.
+is no longer blind. Every human pair the slip touches, with each rater and on each half, is
+reported again without that item, beside the locked reading.
+
+The human is paired with every rater: the checked one, whose labels were revealed, and the others,
+whose labels never were. Each reveal can calibrate the checker toward the checked rater, so that
+pair is also read on the first and second half of the check apart, in the page's order. The model
+pairs are read again on the checked items alone, so a human-to-model figure has a comparator on the
+same items.
 
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
@@ -179,16 +185,6 @@ def main() -> None:
         checked = sorted(set(human) - set(args.exclude))
         for i in checked:
             report["labels"][key[i]]["human"] = {"label": human[i], "outside_names": human_flags[i]}
-        against = args.checked_against
-        pair = f"human~{against}"
-        report["pairs"][pair] = _pair(human, raters[against], checked, list(LABELS))
-        report["pairs"][f"{pair} valid_vs_rest"] = _pair(
-            _is_valid(human), _is_valid(raters[against]), checked, [True, False]
-        )
-        report["pairs"][f"{pair} outside_names"] = _pair(
-            human_flags, flags[against], checked, [True, False]
-        )
-        report["valid_rates"]["human"] = _valid_rates({i: human[i] for i in checked}, cell_of)
         recorded = [
             f"{i}:{f}"
             for i, v in json.loads(args.human.read_text()).items()
@@ -196,19 +192,39 @@ def main() -> None:
         ]
         slips = _slips(args.slip + [r for r in recorded if r.split(":", 1)[0] in checked], checked)
         report["human_slips"] = {f: sorted(items) for f, items in slips.items() if items}
-        if slips["label"]:
-            kept = [i for i in checked if i not in slips["label"]]
-            report["pairs"][f"{pair} without slips"] = _pair(
-                human, raters[against], kept, list(LABELS)
+
+        def human_pairs(pair: str, name: str, subset: list[str]) -> None:
+            """Every question for one human pair, and again without each item a slip touches."""
+            questions = (
+                ("", human, raters[name], list(LABELS), slips["label"]),
+                (
+                    " valid_vs_rest",
+                    _is_valid(human),
+                    _is_valid(raters[name]),
+                    [True, False],
+                    slips["label"],
+                ),
+                (" outside_names", human_flags, flags[name], [True, False], slips["outside_names"]),
             )
-            report["pairs"][f"{pair} valid_vs_rest without slips"] = _pair(
-                _is_valid(human), _is_valid(raters[against]), kept, [True, False]
-            )
-        if slips["outside_names"]:
-            kept = [i for i in checked if i not in slips["outside_names"]]
-            report["pairs"][f"{pair} outside_names without slips"] = _pair(
-                human_flags, flags[against], kept, [True, False]
-            )
+            for question, first, second, categories, slipped in questions:
+                key = pair + question
+                report["pairs"][key] = _pair(first, second, subset, categories)
+                if slipped & set(subset):
+                    kept = [i for i in subset if i not in slipped]
+                    report["pairs"][f"{key} without slips"] = _pair(first, second, kept, categories)
+
+        for name in names:
+            human_pairs(f"human~{name}", name, checked)
+        for x, first in enumerate(names):
+            for second in names[x + 1 :]:
+                report["pairs"][f"{first}~{second} on checked items"] = _pair(
+                    raters[first], raters[second], checked, list(LABELS)
+                )
+        against = args.checked_against
+        half = len(checked) // 2
+        for part, subset in (("first half", checked[:half]), ("second half", checked[half:])):
+            human_pairs(f"human~{against} {part}", against, subset)
+        report["valid_rates"]["human"] = _valid_rates({i: human[i] for i in checked}, cell_of)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     for pair, stats in report["pairs"].items():
