@@ -16,6 +16,10 @@ or `--slip ITEM:FIELD`) stays as it was locked: a correction made after seeing r
 is no longer blind. Every human pair the slip touches is reported again without that item,
 beside the locked reading.
 
+The human is paired with every rater: the checked one, whose labels were revealed, and the others,
+whose labels never were. Each reveal can calibrate the checker toward the checked rater, so that
+pair is also read on the first and second half of the check apart, in the page's order.
+
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
 
@@ -179,15 +183,22 @@ def main() -> None:
         checked = sorted(set(human) - set(args.exclude))
         for i in checked:
             report["labels"][key[i]]["human"] = {"label": human[i], "outside_names": human_flags[i]}
+        for name in names:
+            report["pairs"][f"human~{name}"] = _pair(human, raters[name], checked, list(LABELS))
+            report["pairs"][f"human~{name} valid_vs_rest"] = _pair(
+                _is_valid(human), _is_valid(raters[name]), checked, [True, False]
+            )
+            report["pairs"][f"human~{name} outside_names"] = _pair(
+                human_flags, flags[name], checked, [True, False]
+            )
         against = args.checked_against
         pair = f"human~{against}"
-        report["pairs"][pair] = _pair(human, raters[against], checked, list(LABELS))
-        report["pairs"][f"{pair} valid_vs_rest"] = _pair(
-            _is_valid(human), _is_valid(raters[against]), checked, [True, False]
-        )
-        report["pairs"][f"{pair} outside_names"] = _pair(
-            human_flags, flags[against], checked, [True, False]
-        )
+        half = len(checked) // 2
+        for part, subset in (("first half", checked[:half]), ("second half", checked[half:])):
+            report["pairs"][f"{pair} {part}"] = _pair(human, raters[against], subset, list(LABELS))
+            report["pairs"][f"{pair} valid_vs_rest {part}"] = _pair(
+                _is_valid(human), _is_valid(raters[against]), subset, [True, False]
+            )
         report["valid_rates"]["human"] = _valid_rates({i: human[i] for i in checked}, cell_of)
         recorded = [
             f"{i}:{f}"

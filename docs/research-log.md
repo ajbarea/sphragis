@@ -5649,3 +5649,32 @@ zero update. This finding rests on that choice, and the report says so.
   the first and the round-0 average lost a client.
 - `fdlora_schedule.sbatch` tags results with the packing seed, so two draws no longer collide, and
   only `ALLOW_FINAL_SYNC=1` enables the override.
+
+### Registered before the human's figures: the check stops at 152 items, and its halves are read apart (2026-09-26)
+
+The human checked `item-002` to `item-153` between 2026-09-24 and 2026-09-26, 152 items past the
+rubric's worked example. The check stops there, fixed before any human-to-model figure is
+computed. The page shows items in the batches' seeded order, so the 152 are a random sample of
+the 383, and a stop chosen after seeing agreement would be optional stopping.
+
+Why 152 and not 383:
+
+- The question the corpus depends on is valid or not, and 152 items estimate it. Per-label
+  specific agreement on the rare labels, and human valid rates per organization and half (about
+  19 items a cell), are underpowered at this size and are reported as descriptive only.
+- Each lock reveals rater A's label, so the checker is calibrated toward rater A as the check
+  goes on. Later items are less independent of the rater they are compared with, and more of
+  them would raise the agreement for that reason alone.
+
+Two readings added now, before the figures:
+
+- Human-to-rater-A agreement is also reported on the first 76 items and the last 76 apart. A
+  rise from the first half to the second is read as calibration toward rater A, not as
+  agreement.
+- Human-to-rater-B agreement is reported on the same 152 items. The human never saw rater B's
+  labels, so this pair carries no reveal.
+
+The checker is the first author, a first-year PhD student who is not a maintainer of either
+organization's projects. During the check he reported that rater A often read the reviewer's
+request and the code change more fully than he did. A human-to-model disagreement is therefore
+not taken to be the model's error by default.
