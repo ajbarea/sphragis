@@ -1,0 +1,90 @@
+{
+  "seeds": 5,
+  "target_marginal_power": 0.928,
+  "sesoi": 0.01,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 100,
+  "resamples": 1000,
+  "cells": {
+    "openstack": {
+      "pilot_changes_per_half": [
+        103,
+        126
+      ],
+      "planned_changes_per_half": [
+        814,
+        995
+      ],
+      "sigma_b": 0.0106,
+      "null_false_positive": {
+        "0.975": 0.01,
+        "0.95": 0.02
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "by_level": {
+        "0.975": {
+          "lift": 0.03984375,
+          "minimum_detectable_effect": 0.02733281004019244,
+          "null_reads_bounded": 0.97
+        },
+        "0.95": {
+          "lift": 0.0375,
+          "minimum_detectable_effect": 0.025709304064096817,
+          "null_reads_bounded": 0.97
+        }
+      }
+    },
+    "qt": {
+      "pilot_changes_per_half": [
+        248,
+        208
+      ],
+      "planned_changes_per_half": [
+        1784,
+        1497
+      ],
+      "sigma_b": 0.0148,
+      "null_false_positive": {
+        "0.975": 0.0,
+        "0.95": 0.02
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "by_level": {
+        "0.975": {
+          "lift": 0.0421875,
+          "minimum_detectable_effect": 0.02828448856702649,
+          "null_reads_bounded": 0.97
+        },
+        "0.95": {
+          "lift": 0.03515625,
+          "minimum_detectable_effect": 0.023528869455687135,
+          "null_reads_bounded": 0.94
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-24T15:03:38.672051+00:00",
+    "git": {
+      "commit": "67de8b86fe7c513be8d1d171fc267dba07a3a028",
+      "branch": "docs/granularity-redesign",
+      "uncommitted_code": [
+        "scripts/decomposition_sensitivity.py",
+        "sphragis/experiment/decomposition.py"
+      ],
+      "uncommitted_code_sha256": "cfe61dfc6ac6e885180e305d6c3c0ce2cfb2566982f685d0feac48488d75354c"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

@@ -4995,6 +4995,195 @@ Chromium is added to `GERRIT` and `scripts/fetch_chromium.sh` is the resumable d
 project set explicitly and refuses to resume a month fetched under a different set. No collection
 has started: there is no qualifying project set, and chromium/src cannot be fetched by month. All 1,050 scoping requests were answered, from a workstation.
 
+### RQ1 re-registered around granularity, and Chromium added as a third organization (2026-09-22)
+
+**Decided by AJ.** Of the two framings the hardening results left open, keep the organization and
+report three controls against it, or ask at what boundary adaptation transfers, AJ chose the
+second, and added Chromium. This entry records the decision and the design; it adds no figure.
+
+**Why the second framing uses every measurement.** The placebo, rank 256 and the language
+histogram are each an embarrassment to an organization-level hypothesis and each a datum for a
+granularity one. A single-level test cannot tell a project effect from an organization effect,
+because an organization's projects are where its adapter's training data comes from. So the
+contrast is decomposed: each organization is split in half by the placebo's own rule, and on a
+refinement from one half three adapters are scored on the identical example, its own half's, its
+sibling half's, and a foreign organization's halves. Own minus sibling is H1; sibling minus
+foreign is H2. Neither adapter in H2 has seen the evaluated projects.
+
+**Why Chromium.** H2 is only an organizational test when the two organizations write the same
+language, and OpenStack and Qt do not. Qt and Chromium do, so H2 is confirmatory on that pair
+alone, with a supplementary estimand on C++ hunks because "both C++" is measured, not assumed. Human-subjects
+review is not specific to Chromium: it was deferred for every host on 2026-09-14 and is still due
+before submission. **A terms-of-use question found the same day is host-specific and stops
+collection.** robots.txt reads `Disallow: /` for all agents on chromium-review, android-review and
+codereview.qt-project.org (fetched 2026-09-23); review.opendev.org allows access with
+`Crawl-delay: 2`. Google's Terms of Service (effective 2026-07-30) prohibit "using automated means
+to access content from any of our services in violation of the machine-readable instructions on
+our web pages (for example, robots.txt files that disallow crawling, training, or other
+activities)", which reaches the AOSP corpus already collected as well as a Chromium one. No host is
+fetched again until AJ decides; nothing collected is deleted. The pipeline's pacing, one request a
+second to every host, is also faster than the two and three seconds OpenDev and Qt ask for.
+
+**An independent adversarial review of the first draft returned eleven findings, four blocking,
+and all were taken.** The ones that changed the design:
+
+- The pilot predicts the decomposition is underpowered at half-organization size, and a
+  non-significant cell cannot carry "an organization adds nothing". So a smallest effect of
+  interest is registered (0.01 exact match, the seed-effect bound, fixed before any contrast), and
+  a cell is supported, absent (inside the band, two one-sided tests) or inconclusive. Only absence
+  supports a negative reading.
+- Half-organization adapters train near the 1,800-example setting where the seed effect measured
+  0.013, above the 0.01 at which three seeds stop holding nominal, so the registered seed rule
+  itself calls for five seeds unless the effect at the half size is bounded below 0.01.
+- The pooled estimand would let a difference in how well each half's data teaches survive the
+  symmetric design; the halves are now weighted equally and resampled within themselves.
+- Chromium could collapse the split: if `chromium/src` holds most of its examples, one half is one
+  project. The split now has to qualify (three projects a half, no project over half its half,
+  each half at least OpenStack's smaller half), by 2026-10-23, or H2 has no confirmatory cell and
+  is reported as exploratory.
+- Bonferroni was replaced by Holm, which dominates it, and the family-wise level stated in the
+  draft was wrong: two tests at one-sided 0.0125 hold 0.025, not 0.05.
+- The two hypotheses share the sibling adapter with opposite signs, so they are bootstrapped on
+  the same draws and the share of draws in each reading is reported.
+
+**The rank branch is amended in the same change.** It fired only when neither organization
+excluded zero, so a per-arm capacity artefact was never checked, and "if rank 256 also produces no
+gain" left open a second look that could turn a fail into a pass. Rank 256 now runs on the whole
+grid, is a supplementary analysis in ICH E9(R1)'s sense (a different estimand, "given lower
+priority"), never changes a verdict, and a negative reading needs absence at both ranks.
+
+**Recorded rather than taken:** `crossed_bootstrap` draws one seed index for every adapter in a
+contrast although the adapters are independent training runs. That was already true of the
+registered gate; it is to be measured against the coverage simulation before Stage 1.
+
+Design of record: `docs/superpowers/specs/2026-09-22-granularity-redesign.md`. The gate as code:
+`sphragis/experiment/decomposition.py`, beside the unchanged `walk.gate`.
+
+### The seed effect at the half size is above 0.01, so the decomposition runs at five seeds (2026-09-23)
+
+The registered seed rule says three seeds up to a seed main effect of 0.01 and five above it. It
+was measured at 0.000 on the full organizations and 0.013 at about 1,800 examples; the
+re-registration trains on halves, so the rule has to be read at the half size. The three-seed
+placebo runs already are that measurement: OpenStack's halves trained on 2,157 and 2,159 examples,
+at the size every half-adapter will train on, and Qt's on 4,205 and 4,206. Read with
+`scripts/seed_effect.py` over each placebo's three single-seed runs.
+
+| placebo | sigma_b | one-sided 95% upper bound | artifact |
+|---|---|---|---|
+| OpenStack halves | 0.0106 | 0.086 | `seed-effect-placebo-openstack.json` |
+| Qt halves | 0.0148 | 0.084 | `seed-effect-placebo-qt.json` |
+
+Both point estimates are above 0.01, so **five seeds**, by the rule fixed before either run. The
+upper bounds are wide because two contrasts of three seeds each give two degrees of freedom, which
+is itself the reason not to rest a three-seed decision on them. This is the case the spec named:
+three seeds only if the effect at the half size is bounded below 0.01, and it is not.
+
+### Sibling-half leakage is below the registered threshold on the dev window (2026-09-23)
+
+H2 would credit the organization with shared boilerplate if a sibling half's training data
+already held near-copies of the evaluated half's refinements. `scripts/sibling_leakage.py`
+assigns halves exactly as the placebo does and measures, for each half's dev window, the share of
+examples whose closest training example reaches a Jaccard threshold: from its own half's train
+window, its sibling's, and the foreign organization's. Generated from
+`datasets/results/sibling-leakage.json`.
+
+| evaluated half | dev examples | own J>=0.7 | sibling J>=0.7 | foreign J>=0.7 | own J>=0.5 | sibling J>=0.5 | foreign J>=0.5 |
+|---|---|---|---|---|---|---|---|
+| openstack-a | 300 | 0.0033 | 0.0000 | 0.0033 | 0.0133 | 0.0000 | 0.0033 |
+| openstack-b | 251 | 0.0159 | 0.0080 | 0.0000 | 0.0239 | 0.0159 | 0.0000 |
+| qt-a | 568 | 0.0018 | 0.0018 | 0.0000 | 0.0070 | 0.0035 | 0.0000 |
+| qt-b | 372 | 0.0081 | 0.0000 | 0.0000 | 0.0296 | 0.0054 | 0.0000 |
+
+Every sibling rate is at or below the same half's own rate, and all are below the registered 2%
+at Jaccard 0.7, so shared boilerplate is not what a sibling adapter would be credited with on the
+dev window. The check is registered for the test window and runs again there.
+
+### The gate's stratified interval holds nominal at both Holm levels, in H2's regime (2026-09-23)
+
+`scripts/crossed_coverage.py --strata 2` simulates the interval the decomposition gate reads: two
+equally weighted strata, changes resampled within each, five seeds, 4,000 trials a cell (Monte
+Carlo error about 0.002 at the 0.0125 level). One-sided false-positive rate, the lower bound above
+zero under a true null, beside the unstratified crossed interval on the same runs. Generated from
+`stratified-coverage-0.975.json` and `stratified-coverage-0.95.json`.
+
+| level | nominal | sigma_b | stratified | crossed |
+|---|---|---|---|---|
+| 0.975 | 0.0125 | 0.0 | 0.0105 | 0.0100 |
+| 0.975 | 0.0125 | 0.005 | 0.0112 | 0.0110 |
+| 0.975 | 0.0125 | 0.01 | 0.0145 | 0.0150 |
+| 0.975 | 0.0125 | 0.02 | 0.0132 | 0.0130 |
+| 0.95 | 0.025 | 0.0 | 0.0222 | 0.0208 |
+| 0.95 | 0.025 | 0.005 | 0.0230 | 0.0222 |
+| 0.95 | 0.025 | 0.01 | 0.0238 | 0.0230 |
+| 0.95 | 0.025 | 0.02 | 0.0260 | 0.0257 |
+
+Within Monte Carlo error of nominal at both levels up to a seed effect of 0.02. **These runs are
+H2's regime** (equal halves, the same treatment arm in both), as the re-review pointed out. H1's
+second half swaps treatment and control, so an adapter-level seed shift enters the two halves
+with opposite signs; that regime (`--flip-second`) is measured next, before the report states a
+coverage for H1.
+
+### At the test window's size each H1 cell detects about three exact-match points, and absence is out of reach (2026-09-23)
+
+`scripts/decomposition_sensitivity.py` simulates one H1 cell as the gate reads it: the placebo's
+own-against-sibling contrast on each half as the variance model, the test window's projected
+changes split between the halves in their dev-window proportion, five seeds at each
+organization's half-size seed effect, and the stratified crossed interval. Marginal power
+0.928 per cell, so three independent cells pass together about four
+times in five. Generated from `decomposition-sensitivity.json` (100 trials a step,
+1000 resamples).
+
+| cell | planned changes (halves) | sigma_b | level | detectable effect | null reads absent |
+|---|---|---|---|---|---|
+| openstack | 814 + 995 | 0.0106 | 0.975 | +0.0273 | 0.000 |
+| openstack | 814 + 995 | 0.0106 | 0.95 | +0.0257 | 0.000 |
+| qt | 1784 + 1497 | 0.0148 | 0.975 | +0.0283 | 0.000 |
+| qt | 1784 + 1497 | 0.0148 | 0.95 | +0.0235 | 0.000 |
+
+**The detectable effect is two to three times the smallest effect of interest, and no null study
+in the simulation read absent**: the interval at the test window's size is wider than the
+(-0.01, +0.01) band, so a cell can pass or be inconclusive and cannot be absent. The spec named
+this case and committed to stating it before the test rather than discovering it after. Every
+pre-committed negative reading ("an organization adds nothing", "no transferable style") rests on
+absence, so as registered those readings could never be reached. What replaces them is the next
+entry. One caveat on the variance model: Qt's placebo halves trained on about 4,200 examples each,
+twice the half size every adapter will train at, so Qt's row describes a better-trained adapter's
+variance than the design will have.
+
+**H1's own regime holds nominal.** The coverage runs with the second half's arms swapped
+(`--flip-second`), as H1 swaps them, so a seed shift enters the halves with opposite signs.
+Generated from `stratified-coverage-h1-0.975.json` and `stratified-coverage-h1-0.95.json`.
+
+| level | nominal | sigma_b | stratified |
+|---|---|---|---|
+| 0.975 | 0.0125 | 0.0 | 0.0155 |
+| 0.975 | 0.0125 | 0.005 | 0.0100 |
+| 0.975 | 0.0125 | 0.01 | 0.0120 |
+| 0.975 | 0.0125 | 0.02 | 0.0107 |
+| 0.95 | 0.025 | 0.0 | 0.0257 |
+| 0.95 | 0.025 | 0.005 | 0.0245 |
+| 0.95 | 0.025 | 0.01 | 0.0205 |
+| 0.95 | 0.025 | 0.02 | 0.0213 |
+
+Within Monte Carlo error of nominal at both levels, in both regimes now measured.
+
+### Pooling does not make absence reachable either (2026-09-23)
+
+The registered pooled estimate is sharper than any one cell, so it was the natural home for the
+negative readings. Simulated the same way, H1 pooled over openstack, qt with
+every half one equally weighted stratum (planned changes [814, 995, 1784, 1497]): a true
+null reads absent 0.040 of the time at 97.5% and
+0.145 at 95% (`decomposition-sensitivity-pooled.json`). Chromium
+would add a third organization and narrow the interval by roughly a further fifth, which does not
+change the picture. At this test window, 0.01 is not a resolvable equivalence bound.
+
+**Proposed, not yet registered:** anchor the negative readings to the design's own resolution.
+A cell is *bounded* when its interval's upper bound lies below the effect the sensitivity
+analysis says that cell detects, a number fixed now, before any test data (Lakens, Scheel and
+Isager 2018 list "the effect the study was designed to detect" among the justifications for an
+equivalence bound). The substantive SESOI stays reported beside it. A null then reads "no effect as
+large as this design was built to detect", which is what the design can actually support.
+
 ### A data audit: nearly half of Qt's organizational effect was its lint bot (2026-09-23)
 
 Stage 1's labels were audited before anything else is built on them, in three parts.
@@ -5588,6 +5777,29 @@ reported slip touches is also reported without that item (`human_slips` and the 
 pairs). Slips are marked on the page beside the locked answer and saved with the check;
 `label_audit_agreement.py` reads them from there, and `--slip ITEM:FIELD` adds one by hand.
 
+### Registered: negative readings are bounded by each cell's detectable effect, and rebase edits get a sensitivity analysis (2026-09-24)
+
+**Negative readings.** The proposal of 2026-09-23 is adopted. A cell reads *bounded* when its
+interval's upper bound lies below the effect the sensitivity analysis says that cell detects at
+the Holm level it is read at; the gate reads the bounds from `decomposition-sensitivity.json`
+(`detectable_effects`) and refuses a confirmatory cell without one at every level. The SESOI band
+is reported beside every cell and decides nothing. Justification: Lakens, Scheel and Isager (2018)
+list the effect a study was designed to detect among the bases for an equivalence bound, and
+Lakens (2022) asks a design to say which effects it is informative about when it cannot resolve
+the SESOI. The bound is reachable where absence was not: the regenerated sensitivity artifact
+records `null_reads_bounded` per cell and level beside `null_reads_absent`: a true null reads
+bounded 0.97 of the time in three of the four H1 cells and 0.94 in Qt's at 95%, against 0.000
+absent in all four; every other figure in the artifact reproduced exactly. The bounds are
+recomputed at `N` on corpus v2 before the seal opens. A reversed effect now reads bounded, since
+H1 is directional.
+
+**Rebase edits.** Kept in the primary label on every organization. The stored REST snapshots
+hold neither Gerrit's `due_to_rebase` flag (the build fetches each diff and keeps its hunks) nor
+patch-set parents, so a drop could reach no held REST corpus without refetching, which robots.txt
+forbids on Qt. The test window is collected fresh, so its collection records the flag per hunk
+beside the build output, and H1 and H2 are re-read with flagged hunks removed as a registered
+sensitivity analysis. Paixão and Maia (SCAM 2019) find rebasing in 75% of Gerrit reviews and ask
+review-mining studies to handle it rather than filter reviews out.
 ### Registered before the next job: under our reading, FDLoRA's personalized module is always something the server has received (2026-09-24)
 
 A second review of PR #36 ran the script against a fake model stack and found that the saved

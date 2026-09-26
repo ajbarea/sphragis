@@ -397,16 +397,27 @@ as the unit; the evidence says the codebase is.
 - [x] **Size is not the explanation** (148408): qt-creator vs qtbase at 788 per side keeps
   qt-creator's advantage (+0.044 [+0.013, +0.077]) where qt-creator vs qtdeclarative at 788 has
   none, so the pattern is the pair's. The effect halves with half the data.
-- [ ] Register the probe and the project contrast as Stage 1 secondary analyses, with the
-  within-organization baseline as the reading rule rather than raw accuracy.
+- [x] ~~Register the probe and the project contrast as Stage 1 secondary analyses~~: superseded by
+  the re-registration below, which makes the project boundary a hypothesis rather than a secondary.
 - [x] **The two organizations differ in kind, not in noise** (exploratory, dev window): every Qt
   project above fifty examples is at or above zero, while OpenStack's projects disagree in sign and
   average to nothing. An organization is a useful boundary when its projects share conventions; a
   Gerrit host federating independent projects is not one. This is what the conjunctive gate exists
   to expose, and it agrees with RQ2's codebase-family result from the generative side.
-- [ ] Say what that costs the direction in the Stage 1 text: a privacy perimeter drawn around an
-  organization is not drawn where the signal lives, and RQ1's claim holds for a house rather than a
-  federation.
+- [x] Say what that costs the direction in the Stage 1 text: the introduction now states the
+  premise as a boundary a deployment can draw, and the readings table names the perimeter drawn in
+  the wrong place as one pre-committed outcome.
+- [x] **RQ1 re-registered around granularity** (AJ, 2026-09-22; research log). The decomposition
+  into a half-split contrast (H1) and the organization beyond the evaluated projects (H2) replaces
+  the organization-only hypothesis. Spec `docs/superpowers/specs/2026-09-22-granularity-redesign.md`,
+  gate `sphragis/experiment/decomposition.py`. The rank branch is amended in the same change.
+- [ ] Chromium's split qualifies by 2026-10-23, or H2 is exploratory.
+- [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.
+- [ ] The crossed interval's coverage at 97.5%, and the sensitivity analysis at the half size
+  against the smallest effect of interest.
+- [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
+- [ ] The C++-restricted estimand beside H2.
+- [ ] The decomposition's pilot on the dev window.
 
 ## Plan C — the experiment
 
@@ -493,6 +504,8 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 - **2026-09-23** — Stage 1 data audit: lint-bot comments (in Qt only) and one-click "Acknowledged" removed by a `refine` stage that alone applies label rules; the rebase-only-successor finding retracted; build and label rules recorded per month and checked by the loader; corpus v2 refrozen and every result it feeds regenerated at one commit (research log).
 - **2026-09-23** — AOSP audited the same way: no bot comments, every successor a rework.
 - **2026-09-23** — Label audit v2: 384 examples, two blind model raters under a two-question rubric, and a page for a human's blind check of one (`scripts/label_audit_*`).
+- **2026-09-22** — RQ1 re-registered around granularity, Chromium added, the rank branch amended (spec and gate as code).
+
 - **2026-09-19** — The interval's own false-positive rate measured into an artifact (`scripts/interval_calibration.py`): 5.7% at 19 changes, 4.7% at 91, against a nominal 5%, at the accuracy the gate operates at.
 - **2026-09-19** — Second packing at 128 examples a client: the detector's rise with training length replicates, nearest-class attribution does not.
 - **2026-09-19** — AOSP rebuilt over ten projects, 5,130 examples, 2024-01 to 2025-08.
@@ -515,7 +528,10 @@ declared as one.
 | decision | registered | why |
 |---|---|---|
 | **Estimand** | pooled (`paired_difference`) | Cluster size is non-informative here: correlation with the outcome is -0.052 and -0.019, with the per-change effect -0.025 and +0.004, so the two estimands do not answer materially different questions (Kahan et al., IJE 2023, make this the deciding test). RQ1 is a claim about refinements, so the participant-average is the matching unit. And change-averaged runs at roughly twice nominal alpha at 48-91 changes where pooled sits at nominal, which disqualifies it from binding a confirmatory gate. Both are computed and reported. **Tested on 2026-09-18**: under fp32 at three seeds, pooled returns mixed and change-averaged returns a pass on both organizations, so the choice decides the headline. It was fixed before that run existed. |
-| **Pass rule** | conjunctive: both organizations' 95% intervals strictly above zero | RQ1 claims organizations have a learnable house style, which is a generality claim; a rule passing on one organization does not support it. Weakening it to raise power would change the question to fit the answer. |
+| **Rebase edits** | kept in the primary label on every organization; the test window records Gerrit's `due_to_rebase` per hunk, and H1 and H2 are re-read with those hunks removed as a registered sensitivity analysis (2026-09-24) | One rule for every organization: the stored REST snapshots hold neither the flag nor patch-set parents, so a drop could not reach the held training corpora without refetching from hosts that disallow it. The git route attributed none of 60 rebased AOSP examples' hunks to the rebase. Rebasing is handled rather than filtered, as Paixão and Maia (SCAM 2019) ask of review-mining studies. The record sits beside the build output, since a build-code change unseals every stamped month. |
+| **Hypotheses** | H1, the half-split contrast, on OpenStack, Qt and Chromium; H2, the organization beyond the evaluated projects, on Qt and Chromium against each other (2026-09-22, superseding the organization-only H1) | A single-level test cannot tell a project effect from an organization effect. H2 is confirmatory only on the language-matched pair. Spec `2026-09-22-granularity-redesign.md`. |
+| **Pass rule** | each hypothesis an intersection-union test over its cells, strictly above zero; Holm across the two at one-sided 0.025 (97.5%, then 95%); a cell is bounded when its upper bound lies below its registered detectable effect, and the 0.01 SESOI is reported beside it (2026-09-22; bound amended 2026-09-24) | Supersedes "conjunctive: both organizations' 95% intervals strictly above zero". The generality argument for requiring every cell stands; Holm dominates Bonferroni. No cell can read inside ±0.01 at the test window's size, so a negative reading is claimed against the effect the design detects (Lakens, Scheel and Isager 2018), at which a true null reads bounded about as often as that effect reads supported. |
+| **Rank 256** | the whole grid, supplementary, never changes a verdict; a negative reading needs bounded at both ranks (2026-09-22) | The branch fired only when neither arm excluded zero, so a per-arm capacity artefact went unchecked, and it left open a second look that could turn a fail into a pass. |
 | **Boundary** | strictly above zero (`>`) | Not a formality: on the unequalized pilot Qt's pooled lower bound is exactly `0.0` in 19 of 20 bootstrap seeds, so `>=` would have read that run as supporting the hypothesis. It decided a second verdict on 2026-09-18, when OpenStack's fp32 lower bound came out at exactly 0.0. |
 | **Reported power** | conjunctive, not marginal | The gate passes only when both arms do, so its power is the joint probability, which for near-independent arms is the product: two arms at 80% give a gate at 64%. Section 5 had been stating two marginal figures. The figure itself is now a sensitivity analysis: the 0.833 computed at the windowed run's own effects is withdrawn, since power from a pilot's estimate is biased upward. |
 | **Test window** | 2025-11 to 2026-10, twelve months | Twelve months buys more changes for 0.4 points of additional differential censoring (0.36 to 0.75), still a twelfth of what the dev window carries. The figures that chose it, 0.757 against 0.833, are superseded as absolute power (see **Reported power**); the comparison between ten months and twelve is what the choice rested on. Set before any test data exists: 2026-10 closes before the 2026-11-20 submission. |

@@ -1,0 +1,52 @@
+{
+  "seeds": 5,
+  "target_marginal_power": 0.928,
+  "sesoi": 0.01,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 200,
+  "resamples": 1000,
+  "cells": {},
+  "pooled": {
+    "organizations": [
+      "openstack",
+      "qt"
+    ],
+    "planned_changes_per_half": [
+      814,
+      995,
+      1784,
+      1497
+    ],
+    "sigma_b": 0.0148,
+    "null_false_positive": {
+      "0.975": 0.005,
+      "0.95": 0.025
+    },
+    "null_reads_absent": {
+      "0.975": 0.04,
+      "0.95": 0.145
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-23T11:28:40.262102+00:00",
+    "git": {
+      "commit": "0bc29f0d13aa45ac3735b0f0cb4e03ee9ffedf14",
+      "branch": "docs/granularity-redesign",
+      "uncommitted_code": [
+        "scripts/decomposition_sensitivity.py",
+        "scripts/label_audit_sample.py"
+      ],
+      "uncommitted_code_sha256": "ee4338a230975f8d152e89cd26b9f92e213f53fd8f90029bf0e24596be53f8fe"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

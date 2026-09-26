@@ -36,6 +36,12 @@ research log records what is and is not known about those requests.
   artifact; the human's are added once the check is in.
 - **Retraining on v2** waits on Qt's answer about access; TIGRIS gets the refined corpora, and
   RQ2's client corpora are recut with records, before any GPU job.
+- **RQ1 re-registered around granularity** (AJ, 2026-09-22). Spec
+  `docs/superpowers/specs/2026-09-22-granularity-redesign.md`, gate as code in
+  `sphragis/experiment/decomposition.py`, Stage 1 text in `papers` on branch
+  `p4/granularity-registration`. Crossed-interval coverage is being re-measured at 97.5%.
+- **Chromium, the third organization.** Host added and project set being scoped; the split has to
+  qualify by 2026-10-23 or H2 has no confirmatory cell.
 - **FDLoRA's schedule** (`sphragis/experiment/fdlora.py`, `scripts/fdlora_schedule.py`) follows
   the registered reading of Algorithm 1 except the outer aggregation step (lines 17 and 18), a
   recorded confound (`docs/research-log.md`, 2026-09-21 and 2026-09-23). Under that reading
@@ -63,12 +69,18 @@ Waiting on that route:
 
 ## Next
 
-1. The granularity re-registration (PR #37) rebases onto this corpus once it merges; it carries
-   the choice of unit, Chromium as a third organization and the rank-branch amendment.
-2. **FDLoRA's measurement**, the last unmeasured adapter cut, once a job may read the corpora.
+1. ✅ The seed effect at the half size is above 0.01 on both placebos, so five seeds (research log,
+   2026-09-23).
+2. The sensitivity analysis recomputed at the half size, at five seeds, at 97.5% and 95%, for the
+   three-cell intersection, against the smallest effect of interest.
+3. ✅ Sibling-half leakage on the dev window is below the registered threshold (research log,
+   2026-09-23). 📋 The C++-restricted estimand beside H2.
+4. The decomposition's pilot on the dev window before 2026-11-20.
+5. **FDLoRA's measurement**, the last unmeasured adapter cut, once a job may read the corpora.
 
 ## Standing
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
-2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
+2026-11-13. Human-subjects review, deferred for every host on 2026-09-14, is due before
+submission. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before.
