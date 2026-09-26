@@ -5736,19 +5736,32 @@ Collected now, whatever Qt and Chromium answer, so the dev-window pilot can run 
 The REST transport enforces the host's terms rather than leaving them to the operator:
 
 - paths matching gerrit.wikimedia.org's robots.txt `Disallow` lines are refused before a
-  connection opens (`robots_disallows`, RFC 9309 prefix and `*` matching);
-- any 5xx, or a connection failure reported as one, holds the host 15 minutes;
-- one process at a time may hold a transport to the host (`claim_host`, an exclusive lock), so two
-  stages in two terminals cannot together exceed a concurrency of 1;
-- requests are paced 2 s apart, above the 1 s the policy and robots.txt ask for, and every request
-  to every host carries an identifying User-Agent.
+  connection opens (`robots_disallows`, RFC 9309 prefix, `*` and `$` matching);
+- any 5xx, or a connection failure reported as one, holds the host 15 minutes, and the deadline is
+  written to the host's lock file, so the next process waits it out too;
+- one process at a time may fetch from the host (`claim_host`, an exclusive lock at a fixed path
+  under the home directory), so two stages in two terminals cannot together exceed a concurrency
+  of 1; transports in one process share the claim;
+- the next request starts at least 2 s after the previous one started and at least 1 s after its
+  response ended, so a slow response cannot shorten the silence the policy asks for;
+- every REST request carries an identifying User-Agent (the git route is not used for this host).
 
-None of this is build code, so `BUILD_RULES` is unchanged and the corpus v2 months stay valid.
+None of this is build code, so `BUILD_RULES`, `RULES_VERSION` and `FETCH_RULES` are unchanged and
+the corpus v2 months stay valid.
 
-The first month's listing: 8,109 merged changes for 2024-10, 7,479 kept after the creation cutoff,
-across 643 repositories; 1,498 carry inline comments. The query stayed under the host's
-10,000-result cap, and the truncation probe passed. The largest repositories are
-operations/puppet and mediawiki/core, and MediaWiki extensions hold most changes, which is what
-the split criteria (three projects a half, none above 50%) need. The build fetches comments for
-every change, so a full 13-month build is on the order of 100,000 requests, about three days at
-this pace. It runs unattended; the bot audit that found Qt's lint bot follows once it is built.
+**Found in review, and fixed before the collection resumed.** The first version kept the 15-minute
+hold in memory, so a loop that starts a fresh process per month would have lost it, and paced
+start to start only, which leaves under a second of silence after a response slower than one
+second. Listings for 2024-10 to 2025-02 were fetched under that version: every snapshot records 0
+retries, so no 5xx occurred and no hold was lost; listing pages averaged about 2 s a request, so
+some gaps after slow pages were likely under 1 s. The collection was stopped, fixed, and resumed
+from 2025-03.
+
+The listings: 2024-10 has 8,109 merged changes, 7,479 kept after the creation cutoff, across 643
+repositories, 1,498 of them with a nonzero `total_comment_count`. 2024-11 returned 12,997 in one
+query and passed the truncation probe, so this host does not stop at 10,000 as chromium-review
+does. The largest repositories are operations/puppet and mediawiki/core, and MediaWiki extensions
+hold most changes, which is what the split criteria (three projects a half, none above 50%) need.
+The build fetches comments for every kept change, about 9,300 a month over the first three, so a
+13-month build is at least 120,000 comment requests plus the diffs, several days at this pace. It
+runs unattended; the bot audit that found Qt's lint bot follows once it is built.
