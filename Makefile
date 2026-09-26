@@ -157,10 +157,12 @@ cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aa
 	    grep -q CLUSTER_ENV_OK \$$log 2>/dev/null || { echo 'the build job did not finish: no CLUSTER_ENV_OK'; exit 1; }; fi"
 
 docs:                      ## Build the documentation site into site/, keeping only the pages the nav names
+	uv run --no-sync --no-active python scripts/log_to_blog.py
 	uv run --no-sync --no-active zensical build --clean
 	uv run --no-sync --no-active python scripts/prune_site.py
 
 docs-serve:                ## Serve the documentation site with live reload
+	uv run --no-sync --no-active python scripts/log_to_blog.py
 	uv run --no-sync --no-active zensical serve
 
 docs-index:                ## Regenerate docs/artifacts.md from what the scripts declare they write

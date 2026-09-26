@@ -58,6 +58,9 @@ jobs:
       - name: Harvest the site's figures against their artifacts
         run: uv run --no-sync --no-active python harvest.py --check
 
+      - name: Publish the research log as a journal
+        run: uv run --no-sync --no-active python scripts/log_to_blog.py
+
       - name: Build documentation
         run: uv run --no-sync zensical build --clean
 

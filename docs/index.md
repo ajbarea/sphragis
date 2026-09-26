@@ -98,10 +98,10 @@ hide:
         <div class="feature-name">Artifact index</div>
         <p>Every committed measurement, and the script that wrote it.</p>
       </a>
-      <a href="https://github.com/ajbarea/sphragis/blob/main/docs/research-log.md" class="feature-card" style="--card-accent: #f0917a">
+      <a href="log/" class="feature-card" style="--card-accent: #f0917a">
         <span class="feature-icon material-symbols-outlined">history_edu</span>
         <div class="feature-name">Research log</div>
-        <p>The dated record, on GitHub, including every withdrawn reading.</p>
+        <p>The dated journal, including every withdrawn reading.</p>
       </a>
     </div>
   </div>

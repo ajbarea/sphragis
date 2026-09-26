@@ -7,17 +7,16 @@ repo_url = "https://github.com/ajbarea/sphragis"
 repo_name = "ajbarea/sphragis"
 copyright = "AJ Barea"
 
-# The nav is the list of what deploys. `scripts/prune_site.py` removes every built page it does
-# not name, so a file can live in docs/ (the research log, the design record) without being
-# published. The research log is linked on GitHub instead: thousands of dated lines read better
-# there than as one site page.
+# The nav is the list of what deploys: `scripts/prune_site.py` removes every built page it does
+# not name, and a section publishes its folder. The research log is published as a dated journal
+# under log/, generated from docs/research-log.md by `scripts/log_to_blog.py` before the build.
 nav = [
   { "Home" = "index.md" },
   { "Protocol" = "protocol.md" },
   { "Registered decisions" = "registered-decisions.md" },
   { "Outcome-neutral tests" = "outcome-neutral.md" },
   { "Artifact index" = "artifacts.md" },
-  { "Research log" = "https://github.com/ajbarea/sphragis/blob/main/docs/research-log.md" },
+  { "Research log" = ["log/index.md"] },
 ]
 
 extra_css = ["stylesheets/landing.css", "stylesheets/extra.css"]
@@ -102,3 +101,16 @@ generator = false
 icon = "fontawesome/brands/github"
 link = "https://github.com/ajbarea/sphragis"
 name = "Sphragis on GitHub"
+
+# ---------------------------------------------------------------------------
+# The research log as a journal: one post per dated entry, newest first.
+# ---------------------------------------------------------------------------
+[project.plugins.blog]
+blog_dir = "log"
+post_date_format = "long"
+post_url_format = "{date}/{slug}"
+archive_date_format = "MMMM yyyy"
+archive_url_format = "archive/{date}"
+categories_url_format = "category/{slug}"
+pagination_per_page = 15
+post_readtime = true

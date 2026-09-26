@@ -140,7 +140,7 @@ sit near the edge of what it can resolve.
 - [Outcome-neutral tests](outcome-neutral.md): what has to hold for the study to be
   interpretable at all, and the pilot evidence that each one can fire.
 - [Artifact index](artifacts.md): every committed measurement, and the script that wrote it.
-- [Research log](https://github.com/ajbarea/sphragis/blob/main/docs/research-log.md): the dated record, kept in the repository rather than on this site, including the readings that were
+- [Research log](log/index.md): the dated record, including the readings that were
   withdrawn and why.
 
 Every figure on this site is asserted against the artifact that produced it. `make

@@ -79,3 +79,13 @@ def test_the_real_nav_keeps_the_research_log_and_design_record_off_the_site() ->
         not d.startswith(("protocol", "registered", "outcome", "artifacts")) for d in removed
     )
     assert "" not in removed, "the landing page deploys"
+
+
+def test_a_nav_section_publishes_its_folder(tmp_path: Path) -> None:
+    docs = _docs(tmp_path)
+    (docs / "log" / "posts").mkdir(parents=True)
+    (docs / "log" / "index.md").write_text("# log\n")
+    (docs / "log" / "posts" / "a.md").write_text("# a\n")
+    nav = [*NAV, {"Journal": ["log/index.md"]}]
+    removed = prune_site.unlisted(nav, docs)
+    assert not any(d.startswith("log") for d in removed)

@@ -45,11 +45,32 @@ def built_dir(page: str) -> str:
     return stem
 
 
+def section_trees(entries: object) -> set[str]:
+    """Folders a nav section publishes whole: a section's pages bring their directory.
+
+    The research log is a section holding only its index, and the blog plugin writes its posts,
+    archives and category pages under that directory, none of which the nav lists.
+    """
+    trees: set[str] = set()
+    if isinstance(entries, list):
+        for entry in entries:
+            trees |= section_trees(entry)
+    elif isinstance(entries, dict):
+        for value in entries.values():
+            if isinstance(value, list):
+                trees |= {built_dir(p) for p in nav_pages(value) if built_dir(p)}
+            trees |= section_trees(value)
+    return trees
+
+
 def unlisted(nav: object, docs: Path = DOCS) -> list[str]:
     """Built directories for the source pages the nav leaves out, deepest first."""
     listed = {built_dir(page) for page in nav_pages(nav)}
+    trees = section_trees(nav)
     sources = [str(path.relative_to(docs)) for path in docs.rglob("*.md")]
-    return sorted({built_dir(s) for s in sources} - listed, key=lambda d: -d.count("/"))
+    candidates = {built_dir(s) for s in sources} - listed
+    kept = {d for d in candidates if any(d == t or d.startswith(t + "/") for t in trees)}
+    return sorted(candidates - kept, key=lambda d: -d.count("/"))
 
 
 def prune(site: Path, removed: list[str]) -> list[str]:

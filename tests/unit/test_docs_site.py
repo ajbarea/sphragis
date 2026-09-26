@@ -21,8 +21,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
-# Where a page kept off the site is linked instead, as its GitHub view.
-REPO_BLOB = "https://github.com/ajbarea/sphragis/blob/main/docs/"
+# The research log is published as a journal generated at build time (scripts/log_to_blog.py).
+LOG_SOURCE = "research-log.md"
+LOG_INDEX = "log/index.md"
 
 sys.path.insert(0, str(ROOT))
 
@@ -80,21 +81,21 @@ def test_every_committed_result_is_in_the_index() -> None:
 
 def test_nav_pages_exist(config: dict) -> None:
     for target in _nav_targets(config["nav"]):
-        path = target.removeprefix(REPO_BLOB)
-        if path.startswith("http"):
-            continue
-        assert (DOCS / path).exists(), f"nav points at docs/{path}, which does not exist"
+        if target == LOG_INDEX:
+            continue  # generated before the build
+        assert (DOCS / target).exists(), f"nav points at docs/{target}, which does not exist"
 
 
 def test_every_page_is_in_the_nav(config: dict) -> None:
     """Every top-level page is in the nav, as a site page or as a link to its GitHub view.
 
-    The design record under superpowers/ is linked from prose rather than listed. A page
-    linked on GitHub (the research log) stays in docs/ and is pruned from the site.
+    The design record under superpowers/ is linked from prose rather than listed. The research
+    log is listed as the journal generated from it under log/.
     """
     targets = _nav_targets(config["nav"])
     listed = {t for t in targets if not t.startswith("http")}
-    listed |= {t.removeprefix(REPO_BLOB) for t in targets if t.startswith(REPO_BLOB)}
+    if LOG_INDEX in listed:
+        listed = (listed - {LOG_INDEX}) | {LOG_SOURCE}
     pages = {str(path.relative_to(DOCS)) for path in DOCS.glob("*.md")}
     assert pages == listed, f"not in nav: {sorted(pages - listed)}"
 
@@ -119,6 +120,8 @@ def test_internal_links_resolve() -> None:
             r"\]\((?!https?://|#|mailto:)([^)#\s]+)(#[^)\s]*)?\)", page.read_text()
         ):
             target = match.group(1)
+            if target == LOG_INDEX:
+                continue  # the generated journal; its index is written before every build
             if not (page.parent / target).exists():
                 broken.append(f"{page.name} -> {target}")
     assert not broken, "\n".join(broken)
