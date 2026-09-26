@@ -1,0 +1,15 @@
+examples 201  train 160  eval 41
+trainable items 160
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:02, 119.07it/s]Loading weights:   9%|▊         | 29/339 [00:00<00:03, 78.74it/s] Loading weights:  12%|█▏        | 39/339 [00:00<00:04, 64.20it/s]Loading weights:  15%|█▌        | 52/339 [00:00<00:03, 72.86it/s]Loading weights:  18%|█▊        | 60/339 [00:00<00:04, 66.64it/s]Loading weights:  20%|█▉        | 67/339 [00:01<00:04, 56.85it/s]Loading weights:  23%|██▎       | 77/339 [00:01<00:04, 61.24it/s]Loading weights:  26%|██▌       | 88/339 [00:01<00:03, 65.89it/s]Loading weights:  28%|██▊       | 95/339 [00:01<00:04, 60.67it/s]Loading weights:  30%|███       | 102/339 [00:01<00:04, 53.94it/s]Loading weights:  33%|███▎      | 113/339 [00:01<00:03, 61.58it/s]Loading weights:  37%|███▋      | 124/339 [00:01<00:03, 61.44it/s]Loading weights:  40%|████      | 136/339 [00:02<00:02, 72.50it/s]Loading weights:  42%|████▏     | 144/339 [00:02<00:02, 72.83it/s]Loading weights:  45%|████▍     | 152/339 [00:02<00:02, 70.25it/s]Loading weights:  48%|████▊     | 162/339 [00:02<00:02, 70.89it/s]Loading weights:  51%|█████▏    | 174/339 [00:02<00:02, 75.60it/s]Loading weights:  55%|█████▍    | 185/339 [00:02<00:01, 78.74it/s]Loading weights:  58%|█████▊    | 196/339 [00:02<00:01, 85.65it/s]Loading weights:  61%|██████▏   | 208/339 [00:02<00:01, 89.42it/s]Loading weights:  65%|██████▍   | 220/339 [00:03<00:01, 93.00it/s]Loading weights:  68%|██████▊   | 232/339 [00:03<00:01, 94.74it/s]Loading weights:  72%|███████▏  | 244/339 [00:03<00:00, 96.46it/s]Loading weights:  76%|███████▌  | 256/339 [00:03<00:00, 98.69it/s]Loading weights:  79%|███████▉  | 268/339 [00:03<00:00, 89.86it/s]Loading weights:  82%|████████▏ | 279/339 [00:03<00:00, 90.09it/s]Loading weights:  86%|████████▋ | 293/339 [00:03<00:00, 97.35it/s]Loading weights:  90%|████████▉ | 305/339 [00:03<00:00, 96.05it/s]Loading weights:  94%|█████████▎| 317/339 [00:04<00:00, 95.97it/s]Loading weights:  97%|█████████▋| 329/339 [00:04<00:00, 93.86it/s]Loading weights: 100%|██████████| 339/339 [00:04<00:00, 80.15it/s]
+loaded base
+[BASE] EM=0.000 normEM=0.000 sim=0.159 pred_chars_med=329 ref_chars_med=60  (167s)
+/home/ajb6289/ajsoftworks/sphragis/sphragis/experiment/model.py:216: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  total += float(loss) * grad_accum
+trainable params: 80,740,352 || all params: 7,696,356,864 || trainable%: 1.0491
+Traceback (most recent call last):
+  File "/home/ajb6289/pilot.py", line 104, in <module>
+    losses = train_adapter(model, train_ds, pad_token_id=tok.pad_token_id, seed=1)
+  File "/home/ajb6289/ajsoftworks/sphragis/sphragis/experiment/model.py", line 219, in train_adapter
+    raise RuntimeError("non-finite gradient norm; refusing to step")
+RuntimeError: non-finite gradient norm; refusing to step

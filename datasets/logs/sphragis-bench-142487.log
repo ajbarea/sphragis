@@ -1,0 +1,6 @@
+Uninstalled 1 package in 67ms
+Installed 1 package in 94ms
+Traceback (most recent call last):
+  File "/home/ajb6289/bench.py", line 3, in <module>
+    from sphragis.experiment.model import HFGenerator, MODEL_ID
+ModuleNotFoundError: No module named 'sphragis.experiment.model'
