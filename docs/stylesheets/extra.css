@@ -1,9 +1,8 @@
 /* ==========================================================================
    Sphragis
 
-   Deliberately small. The sisters carry landing-page stylesheets because they
-   have landing pages; this site is four reference pages and a log, and every
-   rule below earns its place by being used on one of them.
+   Rules for the reference pages. The landing page's styles are in landing.css,
+   ported from the sister sites.
    ========================================================================== */
 
 /* The one-line question under the title on the home page. */

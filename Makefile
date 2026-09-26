@@ -156,8 +156,9 @@ cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aa
 	    log=logs/sphragis-cluster-env-$(CLUSTER)-\$${job%%;*}.log; [ -n \"\$${job%%;*}\" ] && cat \$$log; \
 	    grep -q CLUSTER_ENV_OK \$$log 2>/dev/null || { echo 'the build job did not finish: no CLUSTER_ENV_OK'; exit 1; }; fi"
 
-docs:                      ## Build the documentation site into site/
+docs:                      ## Build the documentation site into site/, keeping only the pages the nav names
 	uv run --no-sync --no-active zensical build --clean
+	uv run --no-sync --no-active python scripts/prune_site.py
 
 docs-serve:                ## Serve the documentation site with live reload
 	uv run --no-sync --no-active zensical serve

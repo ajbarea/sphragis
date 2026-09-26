@@ -61,14 +61,13 @@ jobs:
       - name: Build documentation
         run: uv run --no-sync zensical build --clean
 
-      # The publish half of the job, and it runs on a manual dispatch only. The repository
-      # is private and the confirmatory test window is sealed, so whether this site is
-      # reachable is a decision rather than a consequence of a merge. Pages is not enabled
-      # on the repository either, and a configure-pages step that runs on every push to
-      # main is a step that fails on every push to main.
-      #
-      # To publish: enable Pages with GitHub Actions as the source, then run this workflow
-      # from the Actions tab on main. Nothing else has to change.
+      # Zensical builds every page under docs/; the nav is the list of what deploys.
+      - name: Keep only the pages the nav names
+        run: uv run --no-sync --no-active python scripts/prune_site.py
+
+      # The publish half of the job, and it runs on a manual dispatch only, so publishing
+      # is a decision rather than a consequence of a merge. To publish, run this workflow
+      # from the Actions tab on main.
       - name: Configure Pages
         if: github.event_name == 'workflow_dispatch'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
