@@ -37,9 +37,9 @@ case "$MATRICES:${SUBTRACT_INIT:-}" in
 esac
 export RESULT_SUFFIX
 
-claim_result OUT "$HOME/client-geometry$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/client-geometry$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/adapter_geometry.py \
-  --root "$HOME/scratch" \
+  --root "$SPHRAGIS_ADAPTERS" \
   --pattern "$PATTERN" \
   --matrices "$MATRICES" \
   ${SUBTRACT_INIT:+--subtract-init} \

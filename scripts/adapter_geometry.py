@@ -17,7 +17,8 @@ adapter. The Frobenius inner product is a trace over r x r matrices,
 and the scaling cancels in a cosine. Tensors are read one module at a time through memory
 maps of the safetensors files, so memory holds one module across every adapter.
 
-    uv run --no-sync python scripts/adapter_geometry.py --root ~/scratch --out geometry.json
+    uv run --no-sync python scripts/adapter_geometry.py \
+        --root ~/ajsoftworks/sphragis-data/adapters --out geometry.json
 """
 
 from __future__ import annotations

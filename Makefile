@@ -103,7 +103,7 @@ submit-pinned:             ## Submit scripts/JOB.sbatch from a worktree pinned a
 	@# For running new code while jobs hold the main checkout. A deploy would change what they
 	@# run and mislabel their results; a worktree at this commit changes neither, and its
 	@# results record this commit. The venv is shared by symlink, and cluster-env.sh puts the
-	@# worktree first on the import path. Worktrees accumulate under ~/sphragis-pinned.
+	@# worktree first on the import path. Worktrees accumulate under ~/ajsoftworks/sphragis-pinned.
 	@test -n "$(JOB)" || { echo "usage: make submit-pinned JOB=rq1 [CLUSTER=...] [TIME=...] [SBATCH_ARGS=...]"; exit 1; }
 	@test -f scripts/$(JOB).sbatch || { echo "no scripts/$(JOB).sbatch"; exit 1; }
 	@git update-index -q --refresh
@@ -113,7 +113,7 @@ submit-pinned:             ## Submit scripts/JOB.sbatch from a worktree pinned a
 	head=$$(git rev-parse HEAD); short=$$(git rev-parse --short HEAD); \
 	git push -q $(REMOTE) HEAD && \
 	ssh $(SSH_OPTS) $(TIGRIS_HOST) "cd $(TIGRIS_DIR) && git fetch -q origin \
-	  && W=\$$HOME/sphragis-pinned/$$short \
+	  && W=\$$HOME/ajsoftworks/sphragis-pinned/$$short \
 	  && { [ -d \$$W ] || git worktree add -q --detach \$$W $$head; } \
 	  && { [ \"\$$(git -C \$$W rev-parse HEAD)\" = $$head ] || { echo \"\$$W is not at $$head\"; exit 1; }; } \
 	  && ln -sfn \$$HOME/$(TIGRIS_DIR)/.venv-$$machine \$$W/.venv-$$machine \
@@ -131,7 +131,7 @@ pull-logs:                 ## Copy the cluster's job logs into datasets/logs, th
 	@# flattened with --strip-components and extracted nothing, and the pipeline still exited
 	@# 0, which is the shape of failure this repository treats as worse than a crash.
 	@before=$$(ls datasets/logs/*.log 2>/dev/null | wc -l); \
-	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'find $$HOME/sphragis-pinned -name "sphragis-*.log" -print0 2>/dev/null | tar -czf - --null -T -' \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'find $$HOME/ajsoftworks/sphragis-pinned -name "sphragis-*.log" -print0 2>/dev/null | tar -czf - --null -T -' \
 	  | tar -xzf - -C datasets/logs --transform 's#.*/##' 2>/dev/null; \
 	after=$$(ls datasets/logs/*.log 2>/dev/null | wc -l); \
 	if [ "$$after" -eq 0 ]; then \

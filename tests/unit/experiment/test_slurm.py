@@ -65,9 +65,10 @@ def test_output_path_has_no_shell_variable() -> None:
 
 
 def test_render_points_the_model_cache_at_home_not_tmp() -> None:
-    # Compute-node /tmp is node-local and wiped; the cache has to live in $HOME.
+    # Compute-node /tmp is node-local and wiped; the cache has to live under $SPHRAGIS_DATA,
+    # which defaults under $HOME.
     script = render(JOB)
-    assert "HF_HUB_CACHE=$HOME/hf-cache/hub" in script
+    assert 'HF_HUB_CACHE="$SPHRAGIS_DATA/hf-cache/hub"' in script
     assert "/tmp" not in script
 
 
