@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import http.client
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -14,7 +16,7 @@ import urllib.request
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import IO, Any, NamedTuple
 
 from sphragis.corpus.build import CommentFetcher, DiffFetcher, build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
@@ -61,6 +63,9 @@ GERRIT = {
     "chromium": "https://chromium-review.googlesource.com",
     "openstack": "https://review.opendev.org",
     "qt": "https://codereview.qt-project.org",
+    # Wikimedia serves Gerrit under /r. Checked live 2026-09-26; a candidate for Qt's place in H1
+    # (research log, 2026-09-26), collected under the Wikitech Robot policy recorded below.
+    "wikimedia": "https://gerrit.wikimedia.org/r",
 }
 
 
@@ -71,13 +76,131 @@ GERRIT = {
 class RestPermission(NamedTuple):
     reason: str
     crawl_delay: float  # seconds between requests the host asks for; pacing never goes below it
+    # robots.txt Disallow patterns for the host, matched as robots.txt does (prefix, `*`, `$`)
+    disallow: tuple[str, ...] = ()
+    # seconds the host asks a client to stay quiet after any 5xx
+    error_pause: float = 0.0
+    # the host asks for concurrency 1, so one process at a time may hold a transport to it
+    single_client: bool = False
+    # seconds of silence the host asks for between one response and the next request
+    idle_gap: float = 0.0
 
 
 REST_PERMITTED = {
     "review.opendev.org": RestPermission(
         "robots.txt disallows no path and asks Crawl-delay 2 (checked 2026-09-23)", 2.0
     ),
+    "gerrit.wikimedia.org": RestPermission(
+        "robots.txt disallows the UI, gitiles, /r/a/, /r/q/ and patch and archive downloads, not"
+        " the changes REST endpoints, and asks Crawl-delay 1 (checked 2026-09-26); the Wikitech"
+        " Robot policy (modified 2026-03-16) asks concurrency 1, 1 s between requests, a"
+        " 15-minute pause on any 5xx and an identifying User-Agent",
+        2.0,
+        disallow=(
+            "/g",
+            "/r/a/",
+            "/r/plugins/gitiles",
+            "/r/login/",
+            "/r/q/",
+            "/r/changes/*/revisions/*/patch?*",
+            "/r/changes/*/revisions/*/archive?format=*",
+        ),
+        error_pause=900.0,
+        single_client=True,
+        idle_gap=1.0,
+    ),
 }
+
+
+LOCK_DIR = Path.home() / ".cache" / "sphragis" / "hosts"
+
+
+class HostClaim:
+    """One process's exclusive claim on a host, and the host's quiet deadline, kept on disk.
+
+    A host that asks for concurrency 1 counts every client machine-wide, and two stages run in
+    two terminals would each pace themselves correctly and together break the limit. The lock
+    file also carries the wall-clock time before which the host must not be asked again, so a
+    pause a 5xx started outlives the process that saw it: `collect`-style loops start a fresh
+    process per month.
+    """
+
+    def __init__(self, host: str, handle: IO[str]) -> None:
+        self.host, self._handle = host, handle
+
+    def quiet_until(self) -> float:
+        self._handle.seek(0)
+        text = self._handle.read().strip()
+        return float(text) if text else 0.0
+
+    def hold_until(self, deadline: float) -> None:
+        if deadline <= self.quiet_until():
+            return
+        self._handle.seek(0)
+        self._handle.truncate()
+        self._handle.write(f"{deadline}\n")
+        self._handle.flush()
+        os.fsync(self._handle.fileno())
+
+    def release(self) -> None:
+        self._handle.close()
+
+
+_CLAIMS: dict[tuple[Path, str], HostClaim] = {}
+
+
+def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
+    """This process's claim on `host`, taken once and shared by every transport it builds.
+
+    Exits if another process holds it. The lock lives at a fixed path under the user's home, so
+    processes started from different environments contend for the same file.
+    """
+    directory = lock_dir or LOCK_DIR
+    key = (directory, host)
+    if key in _CLAIMS:
+        return _CLAIMS[key]
+    directory.mkdir(parents=True, exist_ok=True)
+    handle = (directory / f"{host}.lock").open("a+")
+    try:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        handle.close()
+        raise SystemExit(
+            f"refusing {host}: another process is already fetching from it, and the host asks "
+            "for a concurrency of 1"
+        ) from None
+    _CLAIMS[key] = HostClaim(host, handle)
+    return _CLAIMS[key]
+
+
+def release_host(host: str, lock_dir: Path | None = None) -> None:
+    """Give up this process's claim on `host`, keeping its quiet deadline on disk."""
+    claim = _CLAIMS.pop((lock_dir or LOCK_DIR, host), None)
+    if claim is not None:
+        claim.release()
+
+
+# Sent on every request. Wikimedia's User-Agent policy asks for a client name, version and
+# contact; the other hosts get the same identification.
+USER_AGENT = "sphragis/0.1 (https://ajbarea.github.io; code-review research) python-http.client"
+
+
+def robots_disallows(target: str, patterns: tuple[str, ...]) -> bool:
+    """Whether a request path (with its query) matches a robots.txt Disallow pattern.
+
+    As in RFC 9309: a pattern matches a prefix of the path, `*` matches any run of characters
+    and a trailing `$` anchors the end.
+    """
+    for pattern in patterns:
+        if not pattern:  # an empty Disallow allows everything
+            continue
+        anchored = pattern.endswith("$")
+        body = pattern[:-1] if anchored else pattern
+        regex = ".*".join(re.escape(part) for part in body.split("*"))
+        if re.match(regex + (r"\Z" if anchored else ""), target):
+            return True
+    return False
+
 
 SALT_ENV = "SPHRAGIS_CORPUS_SALT"
 
@@ -151,6 +274,8 @@ def http_transport(
     host_intervals: Mapping[str, float] | None = None,
     clock: Callable[[], float] = time.monotonic,
     sleep: Callable[[float], None] = time.sleep,
+    lock_dir: Path | None = None,
+    wall: Callable[[], float] = time.time,
 ) -> Transport:
     """A real HTTP transport over one persistent connection per host.
 
@@ -192,11 +317,26 @@ def http_transport(
         if host not in REST_PERMITTED:
             raise SystemExit(
                 f"refusing {host}: no REST permission recorded, and robots.txt "
-                "disallows automated clients on the review hosts other than review.opendev.org. "
+                "disallows automated clients on the review hosts not recorded there. "
                 "Fetch over git (--via git) where a git host serves NoteDb, or record the host's "
                 "permission in REST_PERMITTED"
             )
         target = parts.path + (f"?{parts.query}" if parts.query else "")
+        permission = REST_PERMITTED[host]
+        if robots_disallows(target, permission.disallow):
+            raise SystemExit(f"refusing {host}{target}: the host's robots.txt disallows the path")
+        claim = claim_host(host, lock_dir) if permission.single_client else None
+
+        def quiet(seconds: float) -> None:
+            """Hold the host for `seconds`, here and, for a claimed host, for the next process."""
+            pacer.hold(host, seconds)
+            if claim is not None and seconds > 0:
+                claim.hold_until(wall() + seconds)
+
+        if claim is not None:
+            remaining = claim.quiet_until() - wall()
+            if remaining > 0:
+                sleep(remaining)
         # One silent retry only for a keep-alive the server closed while idle, which is
         # routine and not a failure; anything else is reported and left to the retry budget.
         # Paced by host name, as permission is, so a port or letter case cannot open a second
@@ -205,17 +345,26 @@ def http_transport(
             pacer.wait(host)
             connection = connect(parts.scheme, parts.netloc)
             try:
-                connection.request("GET", target, headers={"Accept": "application/json"})
+                connection.request(
+                    "GET", target, headers={"Accept": "application/json", "User-Agent": USER_AGENT}
+                )
                 response = connection.getresponse()
                 body = response.read().decode()
+                pacer.hold(host, permission.idle_gap)
+                if response.status >= 500:
+                    quiet(permission.error_pause)
                 return response.status, dict(response.getheaders()), body
             except (http.client.RemoteDisconnected, BrokenPipeError, ConnectionResetError):
                 drop(parts.netloc)
+                pacer.hold(host, permission.idle_gap)
                 if attempt == 0:
                     continue
+                quiet(permission.error_pause)
                 return 503, {}, ""
             except (OSError, http.client.HTTPException):
                 drop(parts.netloc)
+                pacer.hold(host, permission.idle_gap)
+                quiet(permission.error_pause)
                 return 503, {}, ""
         return 503, {}, ""
 

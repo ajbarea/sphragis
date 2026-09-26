@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +35,7 @@ def test_every_organization_has_its_gerrit_instance() -> None:
         "chromium": "https://chromium-review.googlesource.com",
         "openstack": "https://review.opendev.org",
         "qt": "https://codereview.qt-project.org",
+        "wikimedia": "https://gerrit.wikimedia.org/r",
     }
 
 
@@ -1158,7 +1161,7 @@ def test_a_rest_fetch_of_chromium_opens_no_connection(
 def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
-    assert set(cli.REST_PERMITTED) == {"review.opendev.org"}
+    assert set(cli.REST_PERMITTED) == {"review.opendev.org", "gerrit.wikimedia.org"}
     for permission in cli.REST_PERMITTED.values():
         assert "robots.txt" in permission.reason and "checked 20" in permission.reason
         assert permission.crawl_delay > 0
@@ -1390,3 +1393,256 @@ def test_fetch_chromium_script_sorts_projects_with_the_c_locale() -> None:
     assert "LC_ALL=C sort" in sort_line, (
         f"the projects sort must pin LC_ALL=C to match Python's ordinal sorted(): {sort_line!r}"
     )
+
+
+WIKIMEDIA = "https://gerrit.wikimedia.org/r"
+WIKIMEDIA_ROBOTS = (
+    "/g",
+    "/r/a/",
+    "/r/plugins/gitiles",
+    "/r/login/",
+    "/r/q/",
+    "/r/changes/*/revisions/*/patch?*",
+    "/r/changes/*/revisions/*/archive?format=*",
+)
+
+
+@pytest.fixture(autouse=True)
+def _release_host_claims() -> Iterator[None]:
+    """A claim is process-wide, so each test gives back what it took."""
+    yield
+    from sphragis.corpus import cli
+
+    for directory, host in list(cli._CLAIMS):
+        cli.release_host(host, directory)
+
+
+class _Clocks:
+    """A monotonic clock and a wall clock that a fake sleep advances together."""
+
+    def __init__(self) -> None:
+        self.now, self.slept = 0.0, []
+
+    def clock(self) -> float:
+        return self.now
+
+    def wall(self) -> float:
+        return 1_000_000.0 + self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.slept.append(round(seconds, 6))
+        self.now += seconds
+
+
+def _wikimedia(clocks: _Clocks, lock_dir: Path) -> Any:
+    from sphragis.corpus import cli
+
+    return cli.http_transport(
+        clock=clocks.clock, sleep=clocks.sleep, wall=clocks.wall, lock_dir=lock_dir
+    )
+
+
+def test_wikimedia_permission_pins_the_policy() -> None:
+    """robots.txt and the Wikitech Robot policy, as read 2026-09-26."""
+    from sphragis.corpus import cli
+
+    permission = cli.REST_PERMITTED["gerrit.wikimedia.org"]
+    assert permission.disallow == WIKIMEDIA_ROBOTS
+    assert permission.crawl_delay >= 1.0 and permission.idle_gap >= 1.0
+    assert permission.error_pause >= 900.0 and permission.single_client
+
+
+@pytest.mark.parametrize(
+    ("path", "disallowed"),
+    [
+        ("/r/changes/?q=status:merged&n=100", False),
+        ("/r/changes/12/revisions/3/files/a.py/diff?base=1", False),
+        ("/r/changes/12/comments", False),
+        ("/r/changes/12/revisions/3/patch?zip", True),
+        ("/r/changes/12/revisions/3/archive?format=tgz", True),
+        ("/r/q/status:merged", True),
+        ("/r/a/changes/", True),
+        ("/r/login/x", True),
+        ("/r/plugins/gitiles/mediawiki/core", True),
+        ("/g/mediawiki/core", True),
+    ],
+)
+def test_wikimedia_robots_paths_are_refused_before_a_connection(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, path: str, disallowed: bool
+) -> None:
+    opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
+    transport = _wikimedia(_Clocks(), tmp_path)
+    url = f"https://gerrit.wikimedia.org{path}"
+    if disallowed:
+        with pytest.raises(SystemExit, match="robots.txt disallows the path"):
+            transport(url)
+        assert opened == []
+    else:
+        assert transport(url)[0] == 200
+
+
+def test_robots_patterns_match_as_rfc_9309_does() -> None:
+    from sphragis.corpus.cli import robots_disallows
+
+    assert robots_disallows("/private/x", ("/private",))
+    assert not robots_disallows("/public/private", ("/private",))
+    assert robots_disallows("/a/b/c.pdf", ("/*.pdf$",))
+    assert not robots_disallows("/a/b/c.pdf?x", ("/*.pdf$",))
+    assert not robots_disallows("/a/b/c.pdf\n", ("/*.pdf$",))
+    assert not robots_disallows("/anything", ("",)), "an empty Disallow allows everything"
+
+
+@pytest.mark.parametrize("status", [500, 501, 502, 503, 505])
+def test_any_5xx_holds_wikimedia_for_fifteen_minutes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, status: int
+) -> None:
+    """Wikitech's Robot policy: pause at least 15 minutes after any 5xx."""
+    _scripted_connections(monkeypatch, [_FakeResponse(status), _FakeResponse(200)])
+    clocks = _Clocks()
+    transport = _wikimedia(clocks, tmp_path)
+    assert transport(f"{WIKIMEDIA}/changes/1/comments")[0] == status
+    clocks.now += 100.0
+    assert transport(f"{WIKIMEDIA}/changes/1/comments")[0] == 200
+    assert sum(clocks.slept) == pytest.approx(800.0), "the pause runs from the 5xx, not the retry"
+
+
+def test_a_connection_failure_holds_wikimedia(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _scripted_connections(monkeypatch, [OSError("reset"), _FakeResponse(200)])
+    clocks = _Clocks()
+    transport = _wikimedia(clocks, tmp_path)
+    assert transport(f"{WIKIMEDIA}/changes/1/comments")[0] == 503
+    transport(f"{WIKIMEDIA}/changes/1/comments")
+    assert sum(clocks.slept) == pytest.approx(900.0)
+
+
+def test_a_keep_alive_dropped_twice_holds_wikimedia(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import http.client
+
+    drop = http.client.RemoteDisconnected
+    _scripted_connections(monkeypatch, [drop("closed"), drop("closed"), _FakeResponse(200)])
+    clocks = _Clocks()
+    transport = _wikimedia(clocks, tmp_path)
+    assert transport(f"{WIKIMEDIA}/changes/1/comments")[0] == 503
+    before = sum(clocks.slept)
+    transport(f"{WIKIMEDIA}/changes/1/comments")
+    assert sum(clocks.slept) - before == pytest.approx(900.0)
+
+
+def test_a_pause_outlives_the_process_that_saw_the_5xx(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A loop starts a fresh process per month; the next one still waits the pause out."""
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [_FakeResponse(502), _FakeResponse(200)])
+    clocks = _Clocks()
+    assert _wikimedia(clocks, tmp_path)(f"{WIKIMEDIA}/changes/1/comments")[0] == 502
+    cli.release_host("gerrit.wikimedia.org", tmp_path)
+    later = _Clocks()
+    later.now = clocks.now + 60.0  # the next process starts a minute later, with a fresh pacer
+    assert _wikimedia(later, tmp_path)(f"{WIKIMEDIA}/changes/1/comments")[0] == 200
+    assert later.slept == [pytest.approx(840.0)]
+
+
+def test_wikimedia_gets_a_second_of_silence_after_a_slow_response(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Start-to-start pacing alone would leave 0.2 s after a 1.8 s response."""
+    clocks = _Clocks()
+
+    class Slow(_FakeResponse):
+        def read(self) -> bytes:
+            clocks.now += 1.8
+            return super().read()
+
+    _scripted_connections(monkeypatch, [Slow(200), Slow(200)])
+    transport = _wikimedia(clocks, tmp_path)
+    transport(f"{WIKIMEDIA}/changes/1/comments")
+    ended = clocks.now
+    transport(f"{WIKIMEDIA}/changes/2/comments")
+    started = ended + sum(clocks.slept)
+    assert started - ended >= 1.0 - 1e-9
+
+
+def test_a_5xx_does_not_hold_a_host_that_asks_for_no_pause(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [_FakeResponse(503), _FakeResponse(200)])
+    slept: list[float] = []
+    transport = cli.http_transport(clock=lambda: 0.0, sleep=slept.append)
+    transport("https://g/x")
+    transport("https://g/x")
+    assert slept == []
+
+
+def test_every_rest_request_identifies_the_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Wikimedia's User-Agent policy asks for a name, a version and a contact."""
+    import http.client
+
+    from sphragis.corpus import cli
+
+    _scripted_connections(monkeypatch, [])
+    sent: list[dict[str, str]] = []
+
+    class Recording:
+        def __init__(self, host: str, timeout: float | None = None) -> None:
+            pass
+
+        def request(self, method: str, path: str, headers: dict[str, str] | None = None) -> None:
+            sent.append(dict(headers or {}))
+
+        def getresponse(self) -> object:
+            return _FakeResponse(200)
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(http.client, "HTTPSConnection", Recording)
+    cli.http_transport()("https://g/x")
+    agent = sent[0]["User-Agent"]
+    assert re.match(r"sphragis/\d+\.\d+ \(https://[^;]+; [^)]+\)", agent)
+
+
+def test_a_claim_held_by_another_process_refuses_before_connecting(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Concurrency 1 is machine-wide; the lock is taken in a real second process."""
+    from sphragis.corpus import cli
+
+    holder = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import fcntl, sys, time; h = open(sys.argv[1], 'a+'); "
+            "fcntl.flock(h, fcntl.LOCK_EX); print('held', flush=True); time.sleep(30)",
+            str(tmp_path / "gerrit.wikimedia.org.lock"),
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert holder.stdout is not None and holder.stdout.readline().strip() == "held"
+        opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
+        with pytest.raises(SystemExit, match="concurrency of 1"):
+            _wikimedia(_Clocks(), tmp_path)(f"{WIKIMEDIA}/changes/?q=x")
+        assert opened == []
+    finally:
+        holder.kill()
+        holder.wait()
+    assert _wikimedia(_Clocks(), tmp_path)(f"{WIKIMEDIA}/changes/?q=x")[0] == 200
+    assert "gerrit.wikimedia.org" in {h for _, h in cli._CLAIMS}
+
+
+def test_two_transports_in_one_process_share_the_claim(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _scripted_connections(monkeypatch, [_FakeResponse(200), _FakeResponse(200)])
+    first, second = _wikimedia(_Clocks(), tmp_path), _wikimedia(_Clocks(), tmp_path)
+    assert first(f"{WIKIMEDIA}/changes/1/comments")[0] == 200
+    assert second(f"{WIKIMEDIA}/changes/2/comments")[0] == 200
