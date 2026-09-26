@@ -5649,3 +5649,40 @@ zero update. This finding rests on that choice, and the report says so.
   the first and the round-0 average lost a client.
 - `fdlora_schedule.sbatch` tags results with the packing seed, so two draws no longer collide, and
   only `ALLOW_FINAL_SYNC=1` enables the override.
+
+### Registered before Stage 1: the confirmatory design rests only on hosts that permit automated access (2026-09-26)
+
+The test window is collected fresh after in-principle acceptance, on every organization. On
+2026-09-26 neither permission request had an answer: Qt's ticket QTQAINFRA-8064 is open with no
+comment, and nothing has come back from Chromium's infra-dev list. codereview.qt-project.org and
+code.qt.io both serve `Disallow: /`, so the fallback registered on 2026-09-22 (H1 on OpenStack and
+Qt) still depends on a permission that may not come: Qt's test window cannot be collected without
+it. The Chromium deadline covered H2 and left that dependency unstated.
+
+A registered report whose data depends on an unanswered request is a feasibility risk the Stage 1
+review is entitled to weigh, so the design of record is now built on hosts that grant automated
+access in writing:
+
+- **OpenStack** (review.opendev.org): robots.txt allows `/changes/`, `Crawl-delay: 2`.
+- **Wikimedia** (gerrit.wikimedia.org), a candidate for Qt's place in H1: robots.txt disallows
+  the query UI (`/r/q/`), the authenticated prefix (`/r/a/`) and patch and archive downloads, not
+  the changes REST endpoints; Wikimedia's Robot policy (Wikitech, last modified 2026-03-16)
+  governs Gerrit under "other resources": concurrency at most 1, at least 1 second between
+  requests, a 15-minute pause on any 5xx, and an accurate User-Agent. It qualifies only under the
+  split criteria Chromium was held to (at least three projects a half, no project above 50% of its
+  half's training examples, each half at least OpenStack's smaller half), checked on feasibility
+  before any contrast is computed.
+
+Qt and Chromium stay in the design as organizations admitted if permission arrives before the
+Stage 1 report is submitted (2026-11-20): Qt then keeps its H1 place and Chromium its H2 pair. Without
+permission, the report registers them as not collected and says why. Held Qt, AOSP and Chromium
+data are kept and not used in any confirmatory cell.
+
+Ruled out: collecting from a disallowed host under a human's name or through a browser. The
+robots.txt on these hosts addresses every automated client (`User-agent: *`), not AI crawlers,
+and a script is automated whoever starts it. Google's terms prohibit exactly this for
+googlesource and chromium-review.
+
+Next: Wikimedia added to `REST_PERMITTED` with its policy recorded, paced at its limits; train
+and dev windows collected under the pinned build rules and refined; the split criteria checked;
+the dev-window pilot rerun on OpenStack and Wikimedia before 2026-11-20.
