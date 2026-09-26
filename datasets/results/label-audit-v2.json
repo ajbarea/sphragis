@@ -1,17 +1,17 @@
 {
   "provenance": {
-    "generated_at": "2026-09-24T00:35:47.507812+00:00",
+    "generated_at": "2026-09-26T13:48:22.702257+00:00",
     "git": {
-      "commit": "cc2fff6156cb852b640f9d958972d1b7f7d4ad07",
-      "branch": "measure/label-ac1"
+      "commit": "8f7b6fb4701c3c268eaa37391f43d923e0b82f66",
+      "branch": "docs/human-check-stop",
+      "uncommitted_code": [
+        "scripts/label_audit_agreement.py"
+      ],
+      "uncommitted_code_sha256": "8d4af4be634f6228334da2aaeaed48bf659e26e122eeda85fa5dbfe9ea8b7cc8"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {
-      "torch": "2.14.0+cu130",
-      "transformers": "5.17.0",
-      "peft": "0.20.0"
-    }
+    "packages": {}
   },
   "rubric": [
     "valid",
@@ -37,6 +37,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Iddcaa8723b364fe4e8619f8fc2b03c93b685db86:doc/source/contributor/contributing.rst:1:111": {
@@ -45,6 +49,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -57,6 +65,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I7bdc7bba2283cfc50fff6096560fdff88ceb3698:doc/source/storage/kubernetes/performance-configurations-rook-ceph-9e719a652b02.rst:2:188": {
@@ -65,6 +77,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -77,6 +93,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I5f289f09830e309ea76988c4ff44acf7d7ddf998:qsr/2.2.0.xml:2:3": {
@@ -85,6 +105,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -97,6 +121,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I90650c5550c812955fa57baae3044c89e427a34d:build-tools/create-prepatched-iso:1:340": {
@@ -105,6 +133,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -117,6 +149,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I259511f84cf8a71f46fc3df698cb9a8a462dc559:tests/auto/qml/qmlformat/tst_qmlformat.cpp:1:216": {
@@ -127,6 +163,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Ia4e93e3df58180a9b525bda5dac48b5fea7b5779:keywords/cloud_platform/dcmanager/dcmanager_subcloud_prestage.py:2:31": {
@@ -137,6 +177,10 @@
       "B": {
         "label": "partial",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": true
       }
     },
     "openstack:I3ea3d0cf42dc8e89a23a763defe84389da56366b:openstack_dashboard/test/integration_tests/config.py:6:229": {
@@ -145,6 +189,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -157,6 +205,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": true
       }
     },
     "qt:Ibe1633eef905053488b443bd0c9f62d11f24abc1:src/corelib/kernel/qmetaobjectbuilder.cpp:1:45": {
@@ -165,6 +217,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -177,6 +233,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I406fba710d005cd455588185b971567bbe1b8f57:src/plugins/languageclient/callandtypehierarchy.cpp:1:343": {
@@ -186,6 +246,10 @@
       },
       "B": {
         "label": "context_dependent",
+        "outside_names": false
+      },
+      "human": {
+        "label": "valid",
         "outside_names": false
       }
     },
@@ -197,6 +261,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "openstack:I5d02e065ca383e776da540f82afe9a9afd1781b5:releasenotes/notes/transient_queues_ttl-d93c0e84d9ebc86a.yaml:3:5": {
@@ -205,6 +273,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -217,6 +289,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I1a6608a4c355a10a825f2614d7b708a165debf80:deliverables/flamingo/ironic-inspector.yaml:2:11": {
@@ -225,6 +301,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -237,6 +317,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I2bb4b6ea4314a219df083b9ef46b19b3eadcbf62:src/plugins/projectexplorer/projectwelcomepage.cpp:1:536": {
@@ -247,6 +331,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "partial",
+        "outside_names": true
       }
     },
     "openstack:I9fed464b84ae857bcc565145245ac287e8b22347:doc/source/updates/kubernetes/manual-rollback-host-software-deployment-9295ce1e6e29.rst:1:10": {
@@ -255,6 +343,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -267,6 +359,10 @@
       "B": {
         "label": "context_dependent",
         "outside_names": true
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": true
       }
     },
     "qt:I9c4cccf1b60c55320a149f97c86edea92a47bbb5:examples/demos/calqlatr/content/BackspaceButton.qml:1:60": {
@@ -275,6 +371,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -287,6 +387,10 @@
       "B": {
         "label": "partial",
         "outside_names": true
+      },
+      "human": {
+        "label": "partial",
+        "outside_names": false
       }
     },
     "openstack:I64dddbaba37f3f92b999845575223f8df7b9b945:doc/source/user/troubleshooting.rst:7:178": {
@@ -297,6 +401,10 @@
       "B": {
         "label": "context_dependent",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": true
       }
     },
     "openstack:Id0e1ebe6af156a742b3c099104854cc9abaec14f:playbookconfig/src/playbooks/roles/common/usm-deploy-releases/tasks/main.yml:5:54": {
@@ -307,6 +415,10 @@
       "B": {
         "label": "context_dependent",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Ib8a93336e41f7fa326d3a4be53f757fee3923643:tests/check-logs.sh:13:204": {
@@ -315,6 +427,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -327,6 +443,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "qt:Iae154b34109496f65277b481068d47b8c1043d11:share/qtcreator/qmldesigner/aiAssistantQmlSources/PromptTextBox.qml:1:97": {
@@ -335,6 +455,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -347,6 +471,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I509d9e8c94fd968639f2c4eeb2bbbbd359331695:src/oauth/doc/src/qtnetworkauth-oauth2-overview.qdoc:6:91": {
@@ -355,6 +483,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -367,6 +499,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
       }
     },
     "qt:I7a10ff06a08ed3c23c6596612c512fd76fe429ba:src/libs/qlicenseservice/httprequestmanager.cpp:6:68": {
@@ -375,6 +511,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -387,6 +527,10 @@
       "B": {
         "label": "context_dependent",
         "outside_names": true
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "openstack:I223b035220788111502f4187dcb75f1d456c72f1:manila/share/manager.py:1:528": {
@@ -395,6 +539,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -407,6 +555,10 @@
       "B": {
         "label": "non_actionable",
         "outside_names": true
+      },
+      "human": {
+        "label": "partial",
+        "outside_names": false
       }
     },
     "qt:Ia7d90951fd527433c6106fe5ef68b4ef1332f10c:src/libs/qmljs/qmljscheck.h:1:133": {
@@ -417,6 +569,10 @@
       "B": {
         "label": "non_actionable",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Id40aad02198747112e10d9457b350cee6f6d643e:.zuul.yaml:10:67": {
@@ -425,6 +581,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -437,6 +597,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I0091e403f208f8fcfb1dab72c121aebb9161a05f:src/plugins/qmldesigner/components/componentcore/utils3d.cpp:3:249": {
@@ -447,6 +611,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "openstack:Ia0fc953602b4495b1bb004f990814907084e761c:l3-routing-modules-config/debian/deb_folder/copyright:4:6": {
@@ -455,6 +623,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -467,6 +639,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I837b5d1571dce38801d6a0433e960734f573fedc:roles/build-diskimage/defaults/main.yaml:1:2": {
@@ -475,6 +651,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "human": {
         "label": "partial",
         "outside_names": false
       }
@@ -487,6 +667,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I9b586a86aacd776e2ed7261a37c441be9fff38b0:doc/qtcreator/src/debugger/creator-debug-views.qdoc:1:259": {
@@ -495,6 +679,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
+      },
+      "human": {
         "label": "unrelated_rewrite",
         "outside_names": false
       }
@@ -507,6 +695,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:Ie2ee9e62f9bc10753bd527a2b1a7edc5de46ca60:coin/platform_configs/cmake_platforms_static_release.yaml:2:18": {
@@ -515,6 +707,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -527,6 +723,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I545ff38b990e642696dbce997a4ca77c6842b99c:src/plugins/qmakeprojectmanager/qmakebuildconfiguration.cpp:5:187": {
@@ -535,6 +735,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -547,6 +751,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I1b71990af38a8fd6c6258a49d2b94e16496fb274:releasenotes/notes/fixes-regression-network-connectivity-no-ip-a37a2d97379a93e7.yaml:2:5": {
@@ -555,6 +763,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -567,6 +779,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Ie62c898f7d029caff797fd9eba4c5ddb36a90b78:lib/puppet/type/cinder_qos.rb:9:36": {
@@ -575,6 +791,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -587,6 +807,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:Ifa41d72ba8e5d5591e6a4850a5ada9d2a664f88b:src/multimedia/audio/qaudioformat.cpp:2:284": {
@@ -595,6 +819,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -607,6 +835,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I72701359de27561fa5082fab63386072828e981a:playbookconfig/src/playbooks/restore_subcloud_backup.yml:2:48": {
@@ -615,6 +847,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -627,6 +863,10 @@
       "B": {
         "label": "context_dependent",
         "outside_names": true
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "openstack:Idaab3c0d1fdca4b15505a949182ceb1d987d3a7f:magnum/api/controllers/v1/credential.py:2:61": {
@@ -637,6 +877,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
       }
     },
     "qt:If6725257ed540f8bf5c47116800d884d93b4ea32:src/plugins/android/androiddevice.cpp:5:212": {
@@ -645,6 +889,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -657,6 +905,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": true
       }
     },
     "qt:I6b727deedf0c9ed10e2426d6bdc969b1acabd517:cmake/QtFeature.cmake:4:1141": {
@@ -665,6 +917,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -677,6 +933,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Iaad9eb034348d559809108d254601d51719ff3e0:functions-common:6:441": {
@@ -685,6 +945,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -697,6 +961,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I19d5674fa9a4e3fa7df21e3e4e6c8c2b23259a4c:testcases/cloud_platform/regression/storage/test_ceph_robustness.py:1:30": {
@@ -705,6 +973,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -717,6 +989,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:Ib21a5a2670a67c8be2ba2606372bcdcc1c427676:cmake/QtHeadersClean.cmake:1:119": {
@@ -725,6 +1001,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -737,6 +1017,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I1d84d56c9b984ff99683ef6f3cc3c5f3359b90a0:src/graphs2d/barchart/qbarseries.cpp:1:119": {
@@ -745,6 +1029,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -757,6 +1045,10 @@
       "B": {
         "label": "partial",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I02678169887048678e5e694b3b34246cb720aac5:src/xr/quick3dxr/qquick3dxrview.cpp:3:143": {
@@ -767,6 +1059,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Ia4b0ec7ec62d9de86f78a5dc398f1cf3bf95a1f9:software/software/software_controller.py:7:1994": {
@@ -775,6 +1071,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -787,6 +1087,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "partial",
+        "outside_names": false
       }
     },
     "openstack:I303619b415bcfbde359c8ec1f87d1d4a681c1d16:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/host.py:4:2610": {
@@ -797,6 +1101,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I451f73098ee8af9b562fe19fae8a92cfb2d8a5d0:releasenotes/notes/add-tenant_id-for-physnet-and-router.yaml:3:4": {
@@ -807,6 +1115,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I1e90cbb08d5268e54132e4c3dba510d211e11007:ironic/command/status.py:2:187": {
@@ -815,6 +1127,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -827,6 +1143,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": true
       }
     },
     "qt:Ia892eddfa0d0ae51b8db4719c9b932b707885509:src/common-lib/systemd.cpp:4:436": {
@@ -835,6 +1155,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -847,6 +1171,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I71f0880b973c2526cab3c83d80164b894d3698b5:src/svg/css/qsvgcssproperties.cpp:1:9": {
@@ -855,6 +1183,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -867,6 +1199,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I77acc2bcf207da2acd64af360f566b205d501cac:src/positioningquick/positioningplugin.cpp:1:54": {
@@ -875,6 +1211,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -887,6 +1227,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I7816edb6ebd8c95412a6833ea20b32193c2d1415:docker/mariadb/mariadb-base/Dockerfile.j2:10:39": {
@@ -895,6 +1239,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -907,6 +1255,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I813cab3c89554d1e319b2b3e5c3affd8ec5d887e:lib/nova:5:1091": {
@@ -917,6 +1269,10 @@
       "B": {
         "label": "unrelated_rewrite",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I8f59ef9186431cdc377cf9060d179f2beb253944:releasenotes/notes/rabbit_transient_queues_ttl-046d931781e0a101.yaml:2:5": {
@@ -925,6 +1281,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -937,6 +1297,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "qt:I3883268b30a9065757dcfffd6da4705a4aa44d7a:src/corelib/text/qstring.cpp:1:9355": {
@@ -945,6 +1309,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -957,6 +1325,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "openstack:Ie43bd590ba78977aaa5d8c395951780f81e7f140:cinder/volume/drivers/netapp/dataontap/block_base.py:1:261": {
@@ -965,6 +1337,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -977,6 +1353,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I585e8a916d947c3da8d7c0e8a85cf0a8ab85f7f0:swift/obj/ssync_receiver.py:3:134": {
@@ -987,6 +1367,10 @@
       "B": {
         "label": "unrelated_rewrite",
         "outside_names": true
+      },
+      "human": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
       }
     },
     "openstack:Iddfdfd848b0c1ecf7619066d05bd2f06ff7ce92a:puppet-manifests/src/modules/platform/manifests/params.pp:2:116": {
@@ -995,6 +1379,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1007,6 +1395,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "qt:I2fd3152d75b043a396f7c9b6269e623700077b98:cmake/QtFrameworkHelpers.cmake:1:58": {
@@ -1017,6 +1409,10 @@
       "B": {
         "label": "context_dependent",
         "outside_names": false
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": true
       }
     },
     "openstack:I1ec8c790afc554e11431c5062187c4c2c6ce7178:src/lib/charm/openstack/gnocchi.py:2:110": {
@@ -1025,6 +1421,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1037,6 +1437,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
       }
     },
     "qt:Id8852c35e9f3c415822ae96653560d6912681501:src/plugins/multimedia/ffmpeg/qandroidcameraframe.cpp:5:135": {
@@ -1045,6 +1449,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "partial",
+        "outside_names": false
+      },
+      "human": {
         "label": "partial",
         "outside_names": false
       }
@@ -1057,6 +1465,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I5baaccd0d4da7eb3451c64db67728c71d21c4e59:share/qtcreator/translations/qtcreator_de.ts:1:20926": {
@@ -1065,6 +1477,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1077,6 +1493,10 @@
       "B": {
         "label": "context_dependent",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I665ed178e4a2e01d7f94cac6b9d3b482c3ed17a8:neutron/conf/policies/router.py:5:219": {
@@ -1085,6 +1505,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1097,6 +1521,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": false
       }
     },
     "openstack:Ie3bfb5544c2e2743e5ca7cb8f8cd1adfd8fb80ed:playbookconfig/src/playbooks/roles/rehome-enroll-common/update-ca-cert/tasks/main.yml:3:38": {
@@ -1107,6 +1535,10 @@
       "B": {
         "label": "partial",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I3f4ba272f44f2fd3132741ccc30b4442064dabdd:neutron_tempest_plugin/scenario/test_vlan_transparency.py:3:125": {
@@ -1115,6 +1547,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1127,6 +1563,10 @@
       "B": {
         "label": "non_actionable",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:Ib202c9a65b7f8c37efa365ab8901e22709ed60ba:src/libs/utils/devicefileaccess.cpp:1:808": {
@@ -1135,6 +1575,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1147,6 +1591,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:Icaeef15adebedc547cbe6a4150fa0584bcb4f4bc:tests/auto/corelib/kernel/qvariant/tst_qvariant.cpp:1:5749": {
@@ -1157,6 +1605,10 @@
       "B": {
         "label": "partial",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I5925fc6404d82a328c106cab784bd2176e4167b9:src/graphs2d/customchart/qcustomseries.h:1:55": {
@@ -1165,6 +1617,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1177,6 +1633,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Ic37e67665205c3b735c97a3671b9480d244e6340:tox.ini:3:46": {
@@ -1185,6 +1645,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1197,6 +1661,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I4fd93eab4bc0d6f28e193fc9db40954d9d0ec0fb:zuul.d/2025_1_jobs.yaml:6:147": {
@@ -1207,6 +1675,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "partial",
+        "outside_names": false
       }
     },
     "qt:I95cde0545782400bdbb0e53d5a559f28a1184f06:src/core5/tools/qlinkedlist.h:1:3": {
@@ -1215,6 +1687,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1227,6 +1703,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I23af0d36448e9b659f6383d602d9dfa0e2798e60:nova/pci/devspec.py:2:418": {
@@ -1235,6 +1715,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1247,6 +1731,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:Iae02366e180eb9c4f304b68a3eea06119b017c58:share/qbs/modules/bundle/bundle.js:14:370": {
@@ -1255,6 +1743,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1267,6 +1759,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I54ec9f11f92009fae70d0f97b70e8f2ba01c02ea:src/plugins/projectexplorer/devicesupport/idevice.h:3:57": {
@@ -1277,6 +1773,10 @@
       "B": {
         "label": "partial",
         "outside_names": true
+      },
+      "human": {
+        "label": "partial",
+        "outside_names": false
       }
     },
     "qt:I14fbe416567d552e7729ad8579fd9a763a3f6749:src/libraries/qmfmessageserver/qmailcredentials.h:1:71": {
@@ -1287,6 +1787,10 @@
       "B": {
         "label": "partial",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:Id00afe23000fc9e1ac3bfffd3ba9a8c7a531d8f6:src/corelib/text/qtextboundaryfinder.h:2:11": {
@@ -1297,6 +1801,10 @@
       "B": {
         "label": "partial",
         "outside_names": false
+      },
+      "human": {
+        "label": "unrelated_rewrite",
+        "outside_names": false
       }
     },
     "openstack:I8d964c575ee0a4638c5f43cfa89745c783e036ae:releasenotes/notes/bug-2125572-fix-b0de27626125e6f1.yaml:4:5": {
@@ -1305,6 +1813,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1317,6 +1829,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I6862beb8d61b1cf8a747bdc3ad02226691e6c3eb:src/quick/items/qquickrepeater.cpp:11:347": {
@@ -1327,6 +1843,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I1418c8c144747b25d4cc39cad887560931ea7a1d:tests/manual/iconbrowser/main.cpp:1:393": {
@@ -1335,6 +1855,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1347,6 +1871,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I1f6308e9c73da684cc564cfaddcd52e9dae824fb:src/multimedia/doc/src/includes/building-FFmpeg-configure.qdocinc:2:302": {
@@ -1355,6 +1883,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1367,6 +1899,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I3a4279178a39a4ad9f834832f3616acaff092212:etc/kayobe/monitoring.yml:1:5": {
@@ -1375,6 +1911,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1387,6 +1927,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I21e084d1dda95b0d08ea7c517a5651caf01697f9:src/multimedia/doc/src/includes/building-FFmpeg-prerequisites.qdocinc:2:179": {
@@ -1396,6 +1940,10 @@
       },
       "B": {
         "label": "partial",
+        "outside_names": false
+      },
+      "human": {
+        "label": "valid",
         "outside_names": false
       }
     },
@@ -1407,6 +1955,10 @@
       "B": {
         "label": "non_actionable",
         "outside_names": true
+      },
+      "human": {
+        "label": "context_dependent",
+        "outside_names": true
       }
     },
     "openstack:Iba84bbe5da541700d20a445818a4a0d584f1eca8:ironic/common/image_service.py:5:542": {
@@ -1415,6 +1967,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1427,6 +1983,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I4cc522856bf9a7fefeea2ea498de5f67d503b86a:src/libs/utils/macroexpander.cpp:2:656": {
@@ -1437,6 +1997,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I01b314678ffe376faa4de36fe8a8b599269a1933:src/plugins/qmldesigner/components/componentcore/modelnodeoperations.cpp:5:938": {
@@ -1447,6 +2011,10 @@
       "B": {
         "label": "valid",
         "outside_names": true
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:I5193b17b50a245c80136e770a9ee962ea184e466:pyproject.toml:5:7": {
@@ -1455,6 +2023,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1467,6 +2039,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "qt:I62fcde6ca244419e7772f591e77b6131d064f432:scripts/qmlbenchrunner/build_and_test.sh:1:80": {
@@ -1476,6 +2052,10 @@
       },
       "B": {
         "label": "context_dependent",
+        "outside_names": false
+      },
+      "human": {
+        "label": "valid",
         "outside_names": false
       }
     },
@@ -1487,6 +2067,10 @@
       "B": {
         "label": "non_actionable",
         "outside_names": true
+      },
+      "human": {
+        "label": "partial",
+        "outside_names": true
       }
     },
     "openstack:I662721d3e1e81af0324fe4fc83ca352425f497e4:tools/nocloud-factory-install/seed-config/run-cloud-init-from-seed.sh:2:150": {
@@ -1495,6 +2079,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1507,6 +2095,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Ia591a4868856f1f90a49c2dc13119f4ba307ca79:distributedcloud/dcmanager/cmd/orchestrator.py:8:1": {
@@ -1515,6 +2107,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1527,6 +2123,10 @@
       "B": {
         "label": "valid",
         "outside_names": false
+      },
+      "human": {
+        "label": "valid",
+        "outside_names": false
       }
     },
     "openstack:Iadbbeba73d0411f6c13b1aae49438684e00d2362:doc/source/backup/openstack/back-up-openstack.rst:1:21": {
@@ -1535,6 +2135,10 @@
         "outside_names": false
       },
       "B": {
+        "label": "valid",
+        "outside_names": false
+      },
+      "human": {
         "label": "valid",
         "outside_names": false
       }
@@ -1546,6 +2150,10 @@
       },
       "B": {
         "label": "valid",
+        "outside_names": false
+      },
+      "human": {
+        "label": "partial",
         "outside_names": false
       }
     },
@@ -3978,6 +4586,578 @@
           "False": 303
         }
       }
+    },
+    "human~A": {
+      "items": 152,
+      "raw_agreement": 0.7697368421052632,
+      "kappa": 0.3002762067604893,
+      "kappa_95": [
+        0.15446313065976697,
+        0.4403534609720177
+      ],
+      "ac1": 0.7492207340714508,
+      "ac1_95": [
+        0.6694441489676038,
+        0.8230768335409077
+      ],
+      "specific_agreement": {
+        "valid": 0.8906882591093117,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.18181818181818182,
+        "partial": 0.2857142857142857,
+        "context_dependent": 0.25
+      },
+      "confusion": {
+        "valid": {
+          "valid": 110,
+          "non_actionable": 1,
+          "unrelated_rewrite": 1,
+          "partial": 10,
+          "context_dependent": 1
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 3,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 2,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 3,
+          "non_actionable": 1,
+          "unrelated_rewrite": 2,
+          "partial": 4,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 8,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 2,
+          "context_dependent": 2
+        }
+      }
+    },
+    "human~A valid_vs_rest": {
+      "items": 152,
+      "raw_agreement": 0.8223684210526315,
+      "kappa": 0.41704545454545433,
+      "kappa_95": [
+        0.22584400465657734,
+        0.5902964959568734
+      ],
+      "ac1": 0.7445298639858071,
+      "ac1_95": [
+        0.6371352785145888,
+        0.8369513055751588
+      ],
+      "specific_agreement": {
+        "True": 0.8906882591093117,
+        "False": 0.5263157894736842
+      },
+      "confusion": {
+        "True": {
+          "True": 110,
+          "False": 13
+        },
+        "False": {
+          "True": 14,
+          "False": 15
+        }
+      }
+    },
+    "human~A outside_names": {
+      "items": 152,
+      "raw_agreement": 0.8157894736842105,
+      "kappa": 0.0921501706484641,
+      "kappa_95": [
+        -0.07171635777598713,
+        0.280159521435693
+      ],
+      "ac1": 0.770119909257859,
+      "ac1_95": [
+        0.6695007387171411,
+        0.8546735438419927
+      ],
+      "specific_agreement": {
+        "True": 0.17647058823529413,
+        "False": 0.8962962962962963
+      },
+      "confusion": {
+        "True": {
+          "True": 3,
+          "False": 7
+        },
+        "False": {
+          "True": 21,
+          "False": 121
+        }
+      }
+    },
+    "human~B": {
+      "items": 152,
+      "raw_agreement": 0.7828947368421053,
+      "kappa": 0.3406073353490209,
+      "kappa_95": [
+        0.17190216761330707,
+        0.4988129781060405
+      ],
+      "ac1": 0.7634575935488436,
+      "ac1_95": [
+        0.6865735162773412,
+        0.8349551803702414
+      ],
+      "specific_agreement": {
+        "valid": 0.8825910931174089,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.4444444444444444,
+        "partial": 0.38095238095238093,
+        "context_dependent": 0.36363636363636365
+      },
+      "confusion": {
+        "valid": {
+          "valid": 109,
+          "non_actionable": 2,
+          "unrelated_rewrite": 1,
+          "partial": 6,
+          "context_dependent": 5
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 3,
+          "non_actionable": 0,
+          "unrelated_rewrite": 2,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 4,
+          "non_actionable": 2,
+          "unrelated_rewrite": 0,
+          "partial": 4,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 8,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 4
+        }
+      }
+    },
+    "human~B valid_vs_rest": {
+      "items": 152,
+      "raw_agreement": 0.8092105263157895,
+      "kappa": 0.3738636363636364,
+      "kappa_95": [
+        0.1798561151079137,
+        0.5501627700503109
+      ],
+      "ac1": 0.7256061502069782,
+      "ac1_95": [
+        0.6125787896531533,
+        0.8207547169811321
+      ],
+      "specific_agreement": {
+        "True": 0.8825910931174089,
+        "False": 0.49122807017543857
+      },
+      "confusion": {
+        "True": {
+          "True": 109,
+          "False": 14
+        },
+        "False": {
+          "True": 15,
+          "False": 14
+        }
+      }
+    },
+    "human~B outside_names": {
+      "items": 152,
+      "raw_agreement": 0.7894736842105263,
+      "kappa": 0.11240875912408779,
+      "kappa_95": [
+        -0.04761904761904777,
+        0.28301886792452813
+      ],
+      "ac1": 0.7271095152603232,
+      "ac1_95": [
+        0.6143064282261963,
+        0.819463451160629
+      ],
+      "specific_agreement": {
+        "True": 0.2,
+        "False": 0.8787878787878788
+      },
+      "confusion": {
+        "True": {
+          "True": 4,
+          "False": 6
+        },
+        "False": {
+          "True": 26,
+          "False": 116
+        }
+      }
+    },
+    "A~B on checked items": {
+      "items": 152,
+      "raw_agreement": 0.8881578947368421,
+      "kappa": 0.6544530623161274,
+      "kappa_95": [
+        0.5122249388753055,
+        0.7822349570200575
+      ],
+      "ac1": 0.87834632926291,
+      "ac1_95": [
+        0.8183426153882927,
+        0.9297182952062791
+      ],
+      "specific_agreement": {
+        "valid": 0.9596774193548387,
+        "non_actionable": 0.5714285714285714,
+        "unrelated_rewrite": 0.25,
+        "partial": 0.6896551724137931,
+        "context_dependent": 0.5
+      },
+      "confusion": {
+        "valid": {
+          "valid": 119,
+          "non_actionable": 2,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 2
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 2,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 1,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 2
+        },
+        "partial": {
+          "valid": 4,
+          "non_actionable": 0,
+          "unrelated_rewrite": 2,
+          "partial": 10,
+          "context_dependent": 2
+        },
+        "context_dependent": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 3
+        }
+      }
+    },
+    "human~A first half": {
+      "items": 76,
+      "raw_agreement": 0.7631578947368421,
+      "kappa": 0.2696209289909239,
+      "kappa_95": [
+        0.06938775510204077,
+        0.4714881780250349
+      ],
+      "ac1": 0.742385010121934,
+      "ac1_95": [
+        0.6319077832130576,
+        0.8461715389746303
+      ],
+      "specific_agreement": {
+        "valid": 0.8870967741935484,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.0,
+        "partial": 0.3076923076923077,
+        "context_dependent": 0.2222222222222222
+      },
+      "confusion": {
+        "valid": {
+          "valid": 55,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 4,
+          "context_dependent": 1
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 2,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 2,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 4,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 1,
+          "context_dependent": 1
+        }
+      }
+    },
+    "human~A valid_vs_rest first half": {
+      "items": 76,
+      "raw_agreement": 0.8157894736842105,
+      "kappa": 0.38780207134637507,
+      "kappa_95": [
+        0.11240875912408779,
+        0.6424731182795701
+      ],
+      "ac1": 0.7366336633663366,
+      "ac1_95": [
+        0.5789473684210525,
+        0.8669584245076587
+      ],
+      "specific_agreement": {
+        "True": 0.8870967741935484,
+        "False": 0.5
+      },
+      "confusion": {
+        "True": {
+          "True": 55,
+          "False": 6
+        },
+        "False": {
+          "True": 8,
+          "False": 7
+        }
+      }
+    },
+    "human~A second half": {
+      "items": 76,
+      "raw_agreement": 0.7763157894736842,
+      "kappa": 0.3302229134266458,
+      "kappa_95": [
+        0.11713455953533403,
+        0.5333018422295702
+      ],
+      "ac1": 0.7560883518973004,
+      "ac1_95": [
+        0.645532721177671,
+        0.8600915847849598
+      ],
+      "specific_agreement": {
+        "valid": 0.8943089430894309,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.3333333333333333,
+        "partial": 0.26666666666666666,
+        "context_dependent": 0.2857142857142857
+      },
+      "confusion": {
+        "valid": {
+          "valid": 55,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 6,
+          "context_dependent": 0
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 2,
+          "partial": 2,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 4,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 1
+        }
+      }
+    },
+    "human~A valid_vs_rest second half": {
+      "items": 76,
+      "raw_agreement": 0.8289473684210527,
+      "kappa": 0.44618834080717507,
+      "kappa_95": [
+        0.16788321167883172,
+        0.684834123222749
+      ],
+      "ac1": 0.7525360050093927,
+      "ac1_95": [
+        0.5968169761273209,
+        0.879104647199182
+      ],
+      "specific_agreement": {
+        "True": 0.8943089430894309,
+        "False": 0.5517241379310345
+      },
+      "confusion": {
+        "True": {
+          "True": 55,
+          "False": 7
+        },
+        "False": {
+          "True": 6,
+          "False": 8
+        }
+      }
+    },
+    "human~A without slips": {
+      "items": 143,
+      "raw_agreement": 0.8181818181818182,
+      "kappa": 0.36790207412444775,
+      "kappa_95": [
+        0.19379844961240325,
+        0.5296789350039154
+      ],
+      "ac1": 0.8041495743097761,
+      "ac1_95": [
+        0.7306678146693214,
+        0.8735311522529378
+      ],
+      "specific_agreement": {
+        "valid": 0.9166666666666666,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.2,
+        "partial": 0.34782608695652173,
+        "context_dependent": 0.36363636363636365
+      },
+      "confusion": {
+        "valid": {
+          "valid": 110,
+          "non_actionable": 1,
+          "unrelated_rewrite": 1,
+          "partial": 7,
+          "context_dependent": 0
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 3,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 2,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 2,
+          "non_actionable": 1,
+          "unrelated_rewrite": 2,
+          "partial": 4,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 6,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 2
+        }
+      }
+    },
+    "human~A valid_vs_rest without slips": {
+      "items": 143,
+      "raw_agreement": 0.8601398601398601,
+      "kappa": 0.48207171314741026,
+      "kappa_95": [
+        0.2738659444820583,
+        0.669275929549902
+      ],
+      "ac1": 0.8084265523477796,
+      "ac1_95": [
+        0.715820851580613,
+        0.8894970699980681
+      ],
+      "specific_agreement": {
+        "True": 0.9166666666666666,
+        "False": 0.5652173913043478
+      },
+      "confusion": {
+        "True": {
+          "True": 110,
+          "False": 9
+        },
+        "False": {
+          "True": 11,
+          "False": 13
+        }
+      }
+    },
+    "human~A outside_names without slips": {
+      "items": 139,
+      "raw_agreement": 0.8920863309352518,
+      "kappa": 0.22863485016648194,
+      "kappa_95": [
+        -0.05203405865657433,
+        0.492082825822168
+      ],
+      "ac1": 0.8745676041510002,
+      "ac1_95": [
+        0.8021474765603244,
+        0.9354426705370102
+      ],
+      "specific_agreement": {
+        "True": 0.2857142857142857,
+        "False": 0.9416342412451362
+      },
+      "confusion": {
+        "True": {
+          "True": 3,
+          "False": 6
+        },
+        "False": {
+          "True": 9,
+          "False": 121
+        }
+      }
     }
   },
   "valid_rates": {
@@ -4176,6 +5356,125 @@
           "unrelated_rewrite": 3
         }
       }
+    },
+    "human": {
+      "openstack": {
+        "n": 77,
+        "valid": 66,
+        "share": 0.8571428571428571,
+        "share_95": [
+          0.7620272983402657,
+          0.9183166836008526
+        ],
+        "counts": {
+          "valid": 66,
+          "context_dependent": 5,
+          "partial": 4,
+          "unrelated_rewrite": 2
+        }
+      },
+      "openstack-a": {
+        "n": 37,
+        "valid": 29,
+        "share": 0.7837837837837838,
+        "share_95": [
+          0.6280485160803084,
+          0.8861348800661442
+        ],
+        "counts": {
+          "valid": 29,
+          "context_dependent": 5,
+          "unrelated_rewrite": 1,
+          "partial": 2
+        }
+      },
+      "openstack-b": {
+        "n": 40,
+        "valid": 37,
+        "share": 0.925,
+        "share_95": [
+          0.8013576647568946,
+          0.9741639742254119
+        ],
+        "counts": {
+          "valid": 37,
+          "partial": 2,
+          "unrelated_rewrite": 1
+        }
+      },
+      "qt": {
+        "n": 75,
+        "valid": 57,
+        "share": 0.76,
+        "share_95": [
+          0.6522123385089702,
+          0.8424512633999708
+        ],
+        "counts": {
+          "valid": 57,
+          "partial": 6,
+          "context_dependent": 8,
+          "unrelated_rewrite": 4
+        }
+      },
+      "qt-a": {
+        "n": 35,
+        "valid": 25,
+        "share": 0.7142857142857143,
+        "share_95": [
+          0.5494506513681738,
+          0.836734637635653
+        ],
+        "counts": {
+          "valid": 25,
+          "partial": 3,
+          "context_dependent": 5,
+          "unrelated_rewrite": 2
+        }
+      },
+      "qt-b": {
+        "n": 40,
+        "valid": 32,
+        "share": 0.8,
+        "share_95": [
+          0.652426936536005,
+          0.895000102745623
+        ],
+        "counts": {
+          "valid": 32,
+          "partial": 3,
+          "context_dependent": 3,
+          "unrelated_rewrite": 2
+        }
+      }
     }
+  },
+  "human_slips": {
+    "label": [
+      "item-028",
+      "item-037",
+      "item-043",
+      "item-047",
+      "item-108",
+      "item-114",
+      "item-119",
+      "item-139",
+      "item-146"
+    ],
+    "outside_names": [
+      "item-008",
+      "item-011",
+      "item-022",
+      "item-028",
+      "item-029",
+      "item-037",
+      "item-043",
+      "item-078",
+      "item-079",
+      "item-126",
+      "item-142",
+      "item-143",
+      "item-153"
+    ]
   }
 }

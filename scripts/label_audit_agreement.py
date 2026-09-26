@@ -18,7 +18,9 @@ beside the locked reading.
 
 The human is paired with every rater: the checked one, whose labels were revealed, and the others,
 whose labels never were. Each reveal can calibrate the checker toward the checked rater, so that
-pair is also read on the first and second half of the check apart, in the page's order.
+pair is also read on the first and second half of the check apart, in the page's order. The model
+pairs are read again on the checked items alone, so a human-to-model figure has a comparator on the
+same items.
 
 Only labels keyed by example id are written: the raters' reasons can quote the code, and the
 sheet is corpus text, so neither is committed.
@@ -191,6 +193,11 @@ def main() -> None:
             report["pairs"][f"human~{name} outside_names"] = _pair(
                 human_flags, flags[name], checked, [True, False]
             )
+        for x, first in enumerate(names):
+            for second in names[x + 1 :]:
+                report["pairs"][f"{first}~{second} on checked items"] = _pair(
+                    raters[first], raters[second], checked, list(LABELS)
+                )
         against = args.checked_against
         pair = f"human~{against}"
         half = len(checked) // 2

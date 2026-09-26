@@ -5678,3 +5678,43 @@ The checker is the first author, a first-year PhD student who is not a maintaine
 organization's projects. During the check he reported that rater A often read the reviewer's
 request and the code change more fully than he did. A human-to-model disagreement is therefore
 not taken to be the model's error by default.
+
+### The human check: 77% raw agreement with rater A, no sign of drift toward it, and outside names is where the human and the raters part (2026-09-26)
+
+Read under the rule registered above, on the answers as locked (`label-audit-v2.json`,
+regenerated; the model raters' labels and all-item pairs reproduce unchanged). The model pair is
+also read on the 152 checked items, the comparator for every human row:
+
+| pair | items | raw | kappa | AC1 |
+|---|---|---|---|---|
+| A~B, label, all items | 383 | 0.864 | 0.557 [0.454, 0.652] | 0.853 [0.813, 0.890] |
+| A~B, label, checked items | 152 | 0.888 | 0.654 [0.512, 0.782] | 0.878 [0.818, 0.930] |
+| human~A, label | 152 | 0.770 | 0.300 [0.154, 0.440] | 0.749 [0.669, 0.823] |
+| human~B, label | 152 | 0.783 | 0.341 [0.172, 0.499] | 0.763 [0.687, 0.835] |
+| human~A, valid or not | 152 | 0.822 | 0.417 [0.226, 0.590] | 0.745 [0.637, 0.837] |
+| human~B, valid or not | 152 | 0.809 | 0.374 [0.180, 0.550] | 0.726 [0.613, 0.821] |
+| human~A, outside names | 152 | 0.816 | 0.092 [-0.072, 0.280] | 0.770 [0.670, 0.855] |
+| human~B, outside names | 152 | 0.789 | 0.112 [-0.048, 0.283] | 0.727 [0.614, 0.819] |
+| human~A, label, first half | 76 | 0.763 | 0.270 [0.069, 0.471] | 0.742 [0.632, 0.846] |
+| human~A, label, second half | 76 | 0.776 | 0.330 [0.117, 0.533] | 0.756 [0.646, 0.860] |
+| human~A, label, without slips | 143 | 0.818 | 0.368 [0.194, 0.530] | 0.804 [0.731, 0.874] |
+| human~A, valid or not, without slips | 143 | 0.860 | 0.482 [0.274, 0.669] | 0.808 [0.716, 0.889] |
+| human~A, outside names, without slips | 139 | 0.892 | 0.229 [-0.052, 0.492] | 0.875 [0.802, 0.935] |
+
+- **Below the model pair.** On the same items the two models reach AC1 0.878; the human reaches
+  0.749 with rater A and 0.763 with rater B, and the intervals barely overlap. Kappa is
+  lower throughout for the prevalence reason above.
+- **No sign of calibration toward rater A.** The human agrees with rater B, whose labels were never
+  shown, as often as with rater A, and the second half does not rise above the first beyond noise.
+- **The validity rate agrees where the items do not.** On the 152 items the human calls
+  123 valid, rater A 124 and rater B 124. The disagreements run both ways: 10 items the human
+  called valid and rater A partial, 8 the human called context-dependent and rater A valid.
+- **Outside names is the weak question.** The human flags 10 items, rater A 24 and rater B
+  30, and kappa on this question does not exclude zero. It carries 13 of the checker's
+  reported slips against 9 on the label.
+
+What this supports: the valid share the corpus reports is not a model artifact, since a human
+reading reaches the same rate. What it does not support is item-level substitution of the model
+labels for a human's, on the finer labels or on outside names. The checker reported finding the
+reviewer's request and the code change harder to follow than rater A did, so the gap is read as
+disagreement between readers of different depth, not as model error.
