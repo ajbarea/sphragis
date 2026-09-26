@@ -110,14 +110,44 @@ def test_an_exported_sphragis_data_overrides_the_default(tmp_path: Path) -> None
     _fake_venv(tmp_path)
     override = tmp_path / "elsewhere"
     result = subprocess.run(
-        ["bash", "-c", f'set -euo pipefail; source "{_ENV}"; echo "$SPHRAGIS_DATA"'],
+        [
+            "bash",
+            "-c",
+            f'set -euo pipefail; source "{_ENV}"; '
+            'printf "%s\\n" "$SPHRAGIS_DATA" "$SPHRAGIS_RESULTS" '
+            '"$SPHRAGIS_ADAPTERS" "$HF_HUB_CACHE"',
+        ],
         capture_output=True,
         text=True,
         cwd=tmp_path,
         env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", "SPHRAGIS_DATA": str(override)},
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == str(override)
+    # Every derived location follows the override, and the default root is never created.
+    assert result.stdout.split() == [
+        str(override),
+        str(override / "results"),
+        str(override / "adapters"),
+        str(override / "hf-cache" / "hub"),
+    ]
+    assert (override / "results").is_dir() and (override / "adapters").is_dir()
+    assert not (tmp_path / "ajsoftworks" / "sphragis-data").exists()
+
+
+def test_a_relative_sphragis_data_is_refused(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = subprocess.run(
+        ["bash", "-c", f'set -euo pipefail; source "{_ENV}"; echo reached'],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", "SPHRAGIS_DATA": "rel/data"},
+    )
+    assert result.returncode != 0
+    assert "reached" not in result.stdout
+    assert "absolute" in result.stderr
+    assert not (tmp_path / "rel").exists()
 
 
 def test_the_results_and_adapters_directories_exist_after_sourcing(tmp_path: Path) -> None:

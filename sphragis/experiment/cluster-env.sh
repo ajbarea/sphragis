@@ -18,6 +18,12 @@ export UV_PYTHON=3.13.15
 # selectors below write into; mkdir -p here so the exclusive create in claim_result cannot fail
 # on a missing directory.
 export SPHRAGIS_DATA="${SPHRAGIS_DATA:-$HOME/ajsoftworks/sphragis-data}"
+# A relative root resolves against each checkout, so a pinned worktree would read and write a
+# data root of its own.
+case "$SPHRAGIS_DATA" in
+  /*) ;;
+  *) echo "SPHRAGIS_DATA must be an absolute path, not $SPHRAGIS_DATA" >&2; exit 1 ;;
+esac
 export SPHRAGIS_RESULTS="$SPHRAGIS_DATA/results"
 export SPHRAGIS_ADAPTERS="$SPHRAGIS_DATA/adapters"
 mkdir -p "$SPHRAGIS_RESULTS" "$SPHRAGIS_ADAPTERS"
