@@ -6014,3 +6014,27 @@ hold most changes, which is what the split criteria (three projects a half, none
 The build fetches comments for every kept change, about 9,300 a month over the first three, so a
 13-month build is at least 120,000 comment requests plus the diffs, several days at this pace. It
 runs unattended; the bot audit that found Qt's lint bot follows once it is built.
+
+### Registered before Stage 1: the confirmatory cells are a rule over the admitted organizations (2026-09-27)
+
+The granularity design had two fixed cell sets, with and without Chromium, and both put Qt in H1.
+Since 2026-09-26 an organization enters a confirmatory cell only from a host permitting automated
+access in writing, so Qt, Chromium and Wikimedia are each admitted or not independently, and two
+fixed sets no longer cover the cases. The cells are now built by one rule from the admitted set
+(`design()` in `sphragis/experiment/decomposition.py`), fixed here before any Wikimedia contrast
+exists:
+
+- OpenStack is always admitted; Wikimedia if its split meets the criteria Chromium was held to,
+  frozen by 2026-10-23; Qt if permission arrives before 2026-11-20; Chromium if permission arrives
+  and its corpus is frozen by 2026-10-23 and meets the criteria.
+- H1's confirmatory cells are every admitted organization. H2's are Qt against Chromium and back,
+  only when both are admitted, since that remains the only pair writing one language.
+- An organization without a confirmatory H2 cell is read against the first other admitted
+  organization in the order OpenStack, Wikimedia, Qt, Chromium, as exploratory.
+- The gate takes the admitted set, never a list of cells, and refuses an organization outside the
+  four or a set without OpenStack. A confirmatory cell still needs its registered detectable effect,
+  so Wikimedia's cells cannot be read until the sensitivity analysis is rerun on its corpus.
+
+As of today neither permission request has an answer (QTQAINFRA-8064 has no comment; the
+infra-dev thread has only an automatic reply), and Wikimedia's build has completed two of its
+thirteen months.

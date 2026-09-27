@@ -501,6 +501,7 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-27** — The confirmatory cells are a rule over the organizations admitted by host permission (`design()`): H1 on every admitted organization, H2 on Qt and Chromium only when both are; the gate takes the admitted set (research log).
 - **2026-09-26** — Wikimedia added as an organization, fetched under its robot policy: the transport refuses robots.txt paths, pauses 15 minutes after a 5xx and admits one process at a time; train and dev collection running (research log).
 - **2026-09-26** — Confirmatory design rests only on hosts permitting automated access: OpenStack, and Wikimedia as a candidate for Qt's place; Qt and Chromium admitted only with permission before Stage 1 (research log).
 - **2026-09-26** — The human check of rater A stops at 152 items, registered before its figures, with first-half/second-half and human-to-rater-B readings added; read after: below the model pair item by item, a consistent valid share, no detectable rise toward rater A (research log).
