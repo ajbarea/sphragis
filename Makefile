@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify corpus-reproduce clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs redact redact-check
+.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify corpus-reproduce clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs backup-datasets redact redact-check
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -103,7 +103,7 @@ submit-pinned:             ## Submit scripts/JOB.sbatch from a worktree pinned a
 	@# For running new code while jobs hold the main checkout. A deploy would change what they
 	@# run and mislabel their results; a worktree at this commit changes neither, and its
 	@# results record this commit. The venv is shared by symlink, and cluster-env.sh puts the
-	@# worktree first on the import path. Worktrees accumulate under ~/sphragis-pinned.
+	@# worktree first on the import path. Worktrees accumulate under ~/ajsoftworks/sphragis-pinned.
 	@test -n "$(JOB)" || { echo "usage: make submit-pinned JOB=rq1 [CLUSTER=...] [TIME=...] [SBATCH_ARGS=...]"; exit 1; }
 	@test -f scripts/$(JOB).sbatch || { echo "no scripts/$(JOB).sbatch"; exit 1; }
 	@git update-index -q --refresh
@@ -113,7 +113,7 @@ submit-pinned:             ## Submit scripts/JOB.sbatch from a worktree pinned a
 	head=$$(git rev-parse HEAD); short=$$(git rev-parse --short HEAD); \
 	git push -q $(REMOTE) HEAD && \
 	ssh $(SSH_OPTS) $(TIGRIS_HOST) "cd $(TIGRIS_DIR) && git fetch -q origin \
-	  && W=\$$HOME/sphragis-pinned/$$short \
+	  && W=\$$HOME/ajsoftworks/sphragis-pinned/$$short \
 	  && { [ -d \$$W ] || git worktree add -q --detach \$$W $$head; } \
 	  && { [ \"\$$(git -C \$$W rev-parse HEAD)\" = $$head ] || { echo \"\$$W is not at $$head\"; exit 1; }; } \
 	  && ln -sfn \$$HOME/$(TIGRIS_DIR)/.venv-$$machine \$$W/.venv-$$machine \
@@ -131,7 +131,7 @@ pull-logs:                 ## Copy the cluster's job logs into datasets/logs, th
 	@# flattened with --strip-components and extracted nothing, and the pipeline still exited
 	@# 0, which is the shape of failure this repository treats as worse than a crash.
 	@before=$$(ls datasets/logs/*.log 2>/dev/null | wc -l); \
-	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'find $$HOME/sphragis-pinned -name "sphragis-*.log" -print0 2>/dev/null | tar -czf - --null -T -' \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'find $$HOME/ajsoftworks/sphragis-pinned -name "sphragis-*.log" -print0 2>/dev/null | tar -czf - --null -T -' \
 	  | tar -xzf - -C datasets/logs --transform 's#.*/##' 2>/dev/null; \
 	after=$$(ls datasets/logs/*.log 2>/dev/null | wc -l); \
 	if [ "$$after" -eq 0 ]; then \
@@ -139,6 +139,21 @@ pull-logs:                 ## Copy the cluster's job logs into datasets/logs, th
 	  exit 1; \
 	fi; \
 	echo "datasets/logs holds $$after job log(s), $$((after - before)) new"
+
+backup-datasets:           ## Copy datasets/gerrit* to the cluster's data root, then verify every file
+	@# The raw REST snapshots cannot be refetched (collection stopped) and are untracked, so
+	@# without this the only copy is this machine. The cluster is a second machine, not a
+	@# backup service: RC keeps no backups either, but the two copies do not fail together.
+	@# The checksum comparison is the check, not rsync's exit code.
+	rsync -a --checksum datasets/gerrit datasets/gerrit-control $(TIGRIS_HOST):ajsoftworks/sphragis-data/datasets-backup/
+	@l=$$(mktemp) && r=$$(mktemp) && trap 'rm -f "$$l" "$$r"' EXIT; \
+	(cd datasets && find gerrit gerrit-control -type f -print0 | xargs -0 sha256sum) | LC_ALL=C sort -k2 >"$$l"; \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'cd ajsoftworks/sphragis-data/datasets-backup && find gerrit gerrit-control -type f -print0 | xargs -0 sha256sum' | LC_ALL=C sort -k2 >"$$r"; \
+	n=$$(wc -l <"$$l"); missing=$$(LC_ALL=C comm -23 "$$l" "$$r" | wc -l); \
+	if [ "$$n" -eq 0 ] || [ "$$missing" -ne 0 ]; then \
+	  echo "backup-datasets: $$missing of $$n file(s) differ or are missing on $(TIGRIS_HOST)" >&2; exit 1; \
+	fi; \
+	echo "backup-datasets: all $$n files identical on $(TIGRIS_HOST)"
 
 cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aarch64 TIGRIS, x86_64 SPORC)
 	@# The login node is aarch64 and builds its own venv in place. An x86_64 venv can only be
@@ -156,10 +171,13 @@ cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aa
 	    log=logs/sphragis-cluster-env-$(CLUSTER)-\$${job%%;*}.log; [ -n \"\$${job%%;*}\" ] && cat \$$log; \
 	    grep -q CLUSTER_ENV_OK \$$log 2>/dev/null || { echo 'the build job did not finish: no CLUSTER_ENV_OK'; exit 1; }; fi"
 
-docs:                      ## Build the documentation site into site/
+docs:                      ## Build the documentation site into site/, keeping only the pages the nav names
+	uv run --no-sync --no-active python scripts/log_to_blog.py
 	uv run --no-sync --no-active zensical build --clean
+	uv run --no-sync --no-active python scripts/prune_site.py
 
 docs-serve:                ## Serve the documentation site with live reload
+	uv run --no-sync --no-active python scripts/log_to_blog.py
 	uv run --no-sync --no-active zensical serve
 
 docs-index:                ## Regenerate docs/artifacts.md from what the scripts declare they write

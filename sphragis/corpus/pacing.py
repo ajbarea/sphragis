@@ -62,6 +62,11 @@ class Pacer:
                 self._sleep(wait)
         self._next[host] = self._clock() + interval
 
+    def hold(self, host: str, seconds: float) -> None:
+        """Keep `host` quiet for at least `seconds` from now, whatever is already booked."""
+        if seconds > 0:
+            self._next[host] = max(self._next.get(host, 0.0), self._clock() + seconds)
+
     def charge(self, host: str, extra_requests: int) -> None:
         """Book `extra_requests` more against `host`, beyond the one `wait` booked."""
         if extra_requests > 0 and host in self._next:

@@ -1,0 +1,4 @@
+openstack: 172 after dedup {'exact': 21, 'near_duplicate': 4, 'boilerplate': 0}, 145 train / 27 held out over 18 changes, 0 refused
+qt: 555 after dedup {'exact': 12, 'near_duplicate': 15, 'boilerplate': 0}, 422 train / 133 held out over 48 changes, 0 refused
+
+PREFLIGHT OK - safe to sbatch

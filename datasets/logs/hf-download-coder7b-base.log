@@ -1,0 +1,4 @@
+[90mHint: The `hf-cli` skill is not installed. Run `hf skills add -g --claude` to teach your AI agents how to use the `hf` CLI.[0m
+Fetching 14 files:   0%|          | 0/14 [00:00<?, ?it/s]Fetching 14 files:   7%|▋         | 1/14 [00:00<00:05,  2.54it/s]Fetching 14 files:  43%|████▎     | 6/14 [00:00<00:00, 12.57it/s]Fetching 14 files:  57%|█████▋    | 8/14 [00:00<00:00, 12.18it/s]Fetching 14 files:  71%|███████▏  | 10/14 [00:01<00:00,  9.93it/s]Fetching 14 files:  79%|███████▊  | 11/14 [00:20<00:00,  9.93it/s]Fetching 14 files:  86%|████████▌ | 12/14 [00:21<00:06,  3.31s/it]Fetching 14 files:  93%|█████████▎| 13/14 [00:21<00:02,  2.77s/it]Fetching 14 files: 100%|██████████| 14/14 [00:23<00:00,  2.60s/it]Fetching 14 files: 100%|██████████| 14/14 [00:23<00:00,  1.71s/it]
+[32m✓ Downloaded[0m
+  path: /home/ajb6289/hf-cache/hub/models--Qwen--Qwen2.5-Coder-7B/snapshots/0396a76181e127dfc13e5c5ec48a8cee09938b02

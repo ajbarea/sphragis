@@ -16,8 +16,8 @@ set -euo pipefail
 # only way code reaches this machine.
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
-claim_result OUT "$HOME/pilot-outcomes$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/pilot-outcomes$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/pilot.py \
-  "$HOME/pilot-examples.jsonl" \
+  "$SPHRAGIS_DATA/corpus/pilot-examples.jsonl" \
   $(legacy_corpus_flag) \
   --out "$OUT"

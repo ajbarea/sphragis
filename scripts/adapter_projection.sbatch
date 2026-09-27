@@ -24,9 +24,9 @@ name_result_after_adapters "$PATTERN"
 [ "${SKETCH:-16}" = 16 ] || RESULT_SUFFIX="$RESULT_SUFFIX-w$SKETCH"
 export RESULT_SUFFIX
 
-claim_result OUT "$HOME/client-vectors$RESULT_SUFFIX.npz"
+claim_result OUT "$SPHRAGIS_RESULTS/client-vectors$RESULT_SUFFIX.npz"
 uv run --no-sync python scripts/adapter_projection.py \
-  --root "$HOME/scratch" \
+  --root "$SPHRAGIS_ADAPTERS" \
   --pattern "$PATTERN" \
   --sketch "${SKETCH:-16}" \
   --out "$OUT"

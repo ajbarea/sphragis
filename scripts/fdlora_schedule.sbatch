@@ -57,12 +57,12 @@ export RESULT_SUFFIX
 # value, 0 included, leaves the check on, the same convention as LEGACY_CORPUS.
 allow_final_sync_flag() { if [ "${ALLOW_FINAL_SYNC:-0}" = 1 ]; then echo --allow-final-sync; fi; }
 
-C="${CLIENTS:-$HOME/corpus/clients3}"
+C="${CLIENTS:-$SPHRAGIS_DATA/corpus/clients3}"
 SOURCES="${SOURCES:-scripts/clients-cpp-rebuilt.txt}"
 
 # Corpus files must be cut from refined examples (scripts/project_corpora.py writes each one a
 # record); LEGACY_CORPUS=1 reads an older file anyway, to reproduce an earlier result.
-claim_result OUT "$HOME/client-updates-fdlora$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/client-updates-fdlora$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/fdlora_schedule.py \
   --clients "${CLIENTS_PER_SOURCE:-6}" \
   --client-size "${CLIENT_SIZE:-64}" \
@@ -74,5 +74,5 @@ uv run --no-sync python scripts/fdlora_schedule.py \
   --sources-file "$SOURCES" \
   --corpus-root "$C" \
   $(legacy_corpus_flag) \
-  --adapters "$HOME/scratch/sphragis-adapters-fdlora$RESULT_SUFFIX" \
+  --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-fdlora$RESULT_SUFFIX" \
   --out "$OUT"

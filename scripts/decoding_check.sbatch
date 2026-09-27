@@ -22,11 +22,11 @@ source sphragis/experiment/cluster-env.sh
 CONDITION="${CONDITION:-marker-0.25}"
 TEMPERATURE="${TEMPERATURE:-1.0}"
 
-claim_result OUT "$HOME/decoding-$CONDITION-t$TEMPERATURE$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/decoding-$CONDITION-t$TEMPERATURE$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/decoding_check.py \
   --condition "$CONDITION" \
-  --results "$HOME/calibration-$CONDITION.json" \
-  --corpus-dir "$HOME/corpus/planted" \
-  --adapter "$HOME/scratch/sphragis-adapters-$CONDITION/b-s1" \
+  --results "$SPHRAGIS_RESULTS/calibration-$CONDITION.json" \
+  --corpus-dir "$SPHRAGIS_DATA/corpus/planted" \
+  --adapter "$SPHRAGIS_ADAPTERS/sphragis-adapters-$CONDITION/b-s1" \
   --temperature "$TEMPERATURE" \
   --out "$OUT"

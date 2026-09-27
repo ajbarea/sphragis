@@ -24,19 +24,19 @@ source sphragis/experiment/cluster-env.sh
 tag_result_suffix SEEDS
 
 ORG="${ORG:?set ORG to the organization to split against itself}"
-ROOT="${PLACEBO_ROOT:-$HOME/corpus-windows-placebo-$ORG}"
+ROOT="${PLACEBO_ROOT:-$SPHRAGIS_DATA/corpus-windows-placebo-$ORG}"
 
 # Claimed before the corpus is built, not after: a second job for the same organization must
 # stop at the claim rather than after spending the build, and the build overwrites the root.
-claim_result OUT "$HOME/rq1-placebo-$ORG$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/rq1-placebo-$ORG$RESULT_SUFFIX.json"
 
 # Built inside the job rather than beforehand, so the split that ran is the split this job
 # records and a stale root from an earlier build cannot be read as this one's.
 uv run --no-sync python scripts/placebo_corpus.py \
-  --root "${CORPUS_WINDOWS:-$HOME/corpus-windows}" --org "$ORG" --out-root "$ROOT"
+  --root "${CORPUS_WINDOWS:-$SPHRAGIS_DATA/corpus-windows}" --org "$ORG" --out-root "$ROOT"
 uv run --no-sync python scripts/rq1_pilot.py \
   --root "$ROOT" --org "$ORG-a" --org "$ORG-b" \
   --seeds "${SEEDS:-1}" \
   --equalize-train \
-  --adapters "$HOME/scratch/sphragis-adapters-placebo-$ORG$RESULT_SUFFIX" \
+  --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-placebo-$ORG$RESULT_SUFFIX" \
   --out "$OUT"

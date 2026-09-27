@@ -1,0 +1,21 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   8%|▊         | 28/339 [00:00<00:01, 268.37it/s]Loading weights:  16%|█▌        | 55/339 [00:00<00:01, 248.62it/s]Loading weights:  26%|██▌       | 87/339 [00:00<00:00, 273.21it/s]Loading weights:  34%|███▍      | 115/339 [00:00<00:00, 262.74it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 278.68it/s]Loading weights:  52%|█████▏    | 176/339 [00:00<00:00, 264.29it/s]Loading weights:  60%|█████▉    | 203/339 [00:00<00:00, 255.91it/s]Loading weights:  68%|██████▊   | 232/339 [00:00<00:00, 255.68it/s]Loading weights:  76%|███████▌  | 258/339 [00:01<00:00, 241.35it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 263.89it/s]Loading weights:  94%|█████████▍| 319/339 [00:01<00:00, 256.61it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 265.07it/s]
+/home/ajb6289/diag7.py:35: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:820.)
+  return f"{label}: loss={'nan' if not finite_loss else f'{float(loss):.4f}'} grad_norm={gn:.4e} {'NaN' if gn != gn else 'ok'}"
+--- the suspect pair, 5 identical repeats
+  rep0: loss=1.3737 grad_norm=nan NaN
+  rep1: loss=1.3737 grad_norm=nan NaN
+  rep2: loss=1.3737 grad_norm=nan NaN
+  rep3: loss=1.3737 grad_norm=nan NaN
+  rep4: loss=1.3737 grad_norm=nan NaN
+--- each item alone
+  item160: loss=1.5313 grad_norm=5.0634e+00 ok
+  item161: loss=1.2237 grad_norm=4.0261e+00 ok
+--- reversed order
+  reversed: loss=1.3737 grad_norm=nan NaN
+--- 160 paired with an unrelated item
+  160+0: loss=1.2813 grad_norm=3.6023e+00 ok
+  161+0: loss=1.1587 grad_norm=3.3588e+00 ok
+--- a control pair known good
+  0+1: loss=0.9804 grad_norm=2.0512e+00 ok
+DIAG7_OK

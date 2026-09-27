@@ -97,6 +97,79 @@ def test_a_missing_venv_stops_the_job_before_the_model_loads(tmp_path: Path) -> 
     assert "make cluster-env" in result.stderr
 
 
+def test_sphragis_data_defaults_under_home(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, 'echo "$SPHRAGIS_DATA"')
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == str(tmp_path / "ajsoftworks" / "sphragis-data")
+
+
+def test_an_exported_sphragis_data_overrides_the_default(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    override = tmp_path / "elsewhere"
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            f'set -euo pipefail; source "{_ENV}"; '
+            'printf "%s\\n" "$SPHRAGIS_DATA" "$SPHRAGIS_RESULTS" '
+            '"$SPHRAGIS_ADAPTERS" "$HF_HUB_CACHE"',
+        ],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", "SPHRAGIS_DATA": str(override)},
+    )
+    assert result.returncode == 0, result.stderr
+    # Every derived location follows the override, and the default root is never created.
+    assert result.stdout.split() == [
+        str(override),
+        str(override / "results"),
+        str(override / "adapters"),
+        str(override / "hf-cache" / "hub"),
+    ]
+    assert (override / "results").is_dir() and (override / "adapters").is_dir()
+    assert not (tmp_path / "ajsoftworks" / "sphragis-data").exists()
+
+
+def test_a_relative_sphragis_data_is_refused(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = subprocess.run(
+        ["bash", "-c", f'set -euo pipefail; source "{_ENV}"; echo reached'],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin", "SPHRAGIS_DATA": "rel/data"},
+    )
+    assert result.returncode != 0
+    assert "reached" not in result.stdout
+    assert "absolute" in result.stderr
+    assert not (tmp_path / "rel").exists()
+
+
+def test_the_results_and_adapters_directories_exist_after_sourcing(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, 'echo "$SPHRAGIS_RESULTS"; echo "$SPHRAGIS_ADAPTERS"')
+    assert result.returncode == 0, result.stderr
+    results, adapters = result.stdout.splitlines()
+    assert Path(results).is_dir()
+    assert Path(adapters).is_dir()
+
+
+def test_hf_hub_cache_lives_under_sphragis_data(tmp_path: Path) -> None:
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    result = _source(tmp_path, tmp_path, 'echo "$HF_HUB_CACHE"')
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == str(
+        tmp_path / "ajsoftworks" / "sphragis-data" / "hf-cache" / "hub"
+    )
+
+
 def test_rendered_jobs_carry_the_same_environment_as_the_scripts() -> None:
     script = render(SlurmJob(name="x", command="true", output="x.log"))
     assert _ENV.read_text().strip() in script
@@ -145,7 +218,9 @@ def _name_after(home: Path, pattern: str) -> subprocess.CompletedProcess[str]:
 
 def _adapters(home: Path, directory: str, *clients: str) -> None:
     for client in clients:
-        (home / "scratch" / directory / client).mkdir(parents=True, exist_ok=True)
+        (home / "ajsoftworks" / "sphragis-data" / "adapters" / directory / client).mkdir(
+            parents=True, exist_ok=True
+        )
 
 
 def test_the_result_is_named_after_the_adapters_it_reads(tmp_path: Path) -> None:
@@ -480,7 +555,7 @@ def test_results_on_tigris_keep_their_existing_names(tmp_path: Path) -> None:
 
 
 def test_results_on_another_cluster_are_named_for_it_unless_tagged(tmp_path: Path) -> None:
-    # Forgetting a tag on SPORC must not overwrite a GH200 result or its scratch-only adapters.
+    # Forgetting a tag on SPORC must not overwrite a GH200 result or its own adapters.
     assert _suffix(tmp_path, SLURM_CLUSTER_NAME="sporc") == "[-sporc]"
 
 
@@ -691,7 +766,7 @@ def _prepare(root: Path) -> tuple[Path, Path]:
     as the environment's check that uv runs, passes straight through.
     """
     home, checkout = root / "home", root / "checkout"
-    for directory in (home, checkout, home / "scratch"):
+    for directory in (home, checkout, home / "ajsoftworks" / "sphragis-data" / "adapters"):
         directory.mkdir(parents=True, exist_ok=True)
     for shared in ("scripts", "sphragis"):
         link = checkout / shared
@@ -752,7 +827,8 @@ def test_geometry_is_named_for_the_adapters_it_reads_not_for_the_run_tag(
     """
     result = _run_job(script_name, tmp_path, **({"PATTERN": pattern} if pattern else {}))
     assert result.returncode == 0, result.stderr
-    assert str(tmp_path / "home" / output.format(suffix)) in result.stdout
+    results = tmp_path / "home" / "ajsoftworks" / "sphragis-data" / "results"
+    assert str(results / output.format(suffix)) in result.stdout
     assert "some-other-run" not in result.stdout
 
 
@@ -760,8 +836,7 @@ def test_geometry_is_named_for_the_adapters_it_reads_not_for_the_run_tag(
 def test_a_recorded_measurement_is_not_replaced_without_saying_so(
     script_name: str, output: str, tmp_path: Path
 ) -> None:
-    (tmp_path / "home").mkdir(exist_ok=True)
-    existing = tmp_path / "home" / output.format("")
+    existing = _result_path(tmp_path / "home", output.format(""))
     existing.write_text("a measurement the study cites")
     result = _run_job(script_name, tmp_path)
     assert result.returncode != 0
@@ -870,9 +945,17 @@ def test_fdlora_legacy_corpus_only_enables_on_the_value_one(
 
 
 def _results(root: Path) -> dict[str, str]:
-    home = root / "home"
-    found = sorted(home.glob("*.json")) + sorted(home.glob("*.npz"))
+    results = root / "home" / "ajsoftworks" / "sphragis-data" / "results"
+    found = sorted(results.glob("*.json")) + sorted(results.glob("*.npz"))
     return {path.name: path.read_text() for path in found}
+
+
+def _result_path(home: Path, name: str) -> Path:
+    """The path a job's own `$SPHRAGIS_RESULTS/<name>` resolves to, for a fixture placed ahead
+    of the job to simulate a result already claimed."""
+    path = home / "ajsoftworks" / "sphragis-data" / "results" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
@@ -1087,9 +1170,10 @@ def _kill_mid_job(root: Path, signal_number: int, **env: str) -> Path:
     # The result is created a line before its owner record; a job with an id is killed only
     # once both exist, or the kill can land between them and leave a claim with no owner.
     recorded = "SLURM_JOB_ID" in env
+    results = home / "ajsoftworks" / "sphragis-data" / "results"
 
     def reached() -> bool:
-        claims = sorted(home.glob("*.json"))
+        claims = sorted(results.glob("*.json"))
         return bool(claims) and (
             not recorded or all(c.with_suffix(".json.claim").exists() for c in claims)
         )
@@ -1097,7 +1181,7 @@ def _kill_mid_job(root: Path, signal_number: int, **env: str) -> Path:
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline and not reached():
         time.sleep(0.05)
-    claims = sorted(home.glob("*.json"))
+    claims = sorted(results.glob("*.json"))
     os.killpg(os.getpgid(job.pid), signal_number)
     job.communicate(timeout=30)
     assert len(claims) == 1, f"the job did not reach its claim: {claims}"
@@ -1186,7 +1270,7 @@ def test_one_job_claiming_a_path_twice_is_still_refused(tmp_path: Path) -> None:
 def test_an_empty_claim_with_no_owner_recorded_is_left_alone(tmp_path: Path) -> None:
     """Claims made before the record existed, and by runs outside Slurm, name nobody."""
     home, _ = _prepare(tmp_path)
-    (home / "pilot-outcomes-some-other-run.json").touch()
+    _result_path(home, "pilot-outcomes-some-other-run.json").touch()
     job = _run_job(
         "pilot.sbatch", tmp_path, FAKE_ID="job", SLURM_JOB_ID="1001", SLURM_CLUSTER_NAME="tigris"
     )
@@ -1283,7 +1367,7 @@ def test_a_same_numbered_job_on_the_other_cluster_does_not_take_a_live_claim(
 def test_a_claim_naming_no_cluster_is_left_alone(tmp_path: Path) -> None:
     """Records written before the cluster was part of them identify nobody."""
     home, _ = _prepare(tmp_path)
-    result = home / "pilot-outcomes-some-other-run.json"
+    result = _result_path(home, "pilot-outcomes-some-other-run.json")
     result.touch()
     result.with_suffix(".json.claim").write_text("1001\n")
     job = _run_job(
@@ -1316,7 +1400,7 @@ def test_sourcing_the_environment_twice_keeps_the_claims_already_made(tmp_path: 
 def test_a_result_written_before_the_kill_is_not_reclaimed(tmp_path: Path) -> None:
     """A job can be killed after writing its result; what it left is a measurement, not a claim."""
     home, _ = _prepare(tmp_path)
-    result = home / "pilot-outcomes-some-other-run.json"
+    result = _result_path(home, "pilot-outcomes-some-other-run.json")
     result.write_text("written by killed\n")
     result.with_suffix(".json.claim").write_text("tigris:1001\n")
     requeued = _run_job(
@@ -1387,4 +1471,5 @@ def test_a_finished_job_leaves_no_claim_record_beside_its_result(tmp_path: Path)
         ).returncode
         == 0
     )
-    assert sorted(home.glob("*.claim")) == []
+    results = home / "ajsoftworks" / "sphragis-data" / "results"
+    assert sorted(results.glob("*.claim")) == []

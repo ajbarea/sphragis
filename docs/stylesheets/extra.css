@@ -1,9 +1,8 @@
 /* ==========================================================================
    Sphragis
 
-   Deliberately small. The sisters carry landing-page stylesheets because they
-   have landing pages; this site is four reference pages and a log, and every
-   rule below earns its place by being used on one of them.
+   Rules for the reference pages. The landing page's styles are in landing.css,
+   ported from the sister sites.
    ========================================================================== */
 
 /* The one-line question under the title on the home page. */
@@ -27,4 +26,39 @@
    should read as a list rather than as a table of measurements. */
 .md-typeset table:not([class]) th:empty {
   padding: 0;
+}
+
+/* The research log's index: each entry a card, in the seal's colours. */
+.md-post--excerpt {
+  padding: 1rem 1.25rem 0.9rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 3px solid #b3261e;
+  border-radius: 10px;
+  background: var(--md-default-bg-color);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.md-post--excerpt:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(42, 14, 11, 0.12);
+}
+
+[data-md-color-scheme="slate"] .md-post--excerpt {
+  background: #0f1118;
+  border-color: rgba(244, 168, 150, 0.14);
+  border-left-color: #e0533f;
+}
+
+[data-md-color-scheme="slate"] .md-post--excerpt:hover {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.md-post--excerpt .md-post__content > h2 {
+  margin-top: 0.4rem;
+  font-size: 1.15rem;
+}
+
+.md-post--excerpt .md-post__action {
+  margin-bottom: 0;
 }

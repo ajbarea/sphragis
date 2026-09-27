@@ -13,9 +13,23 @@ export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
 # One interpreter on every machine, the one the GH200 results so far ran on. Unpinned, each
 # machine used whatever uv found or downloaded first.
 export UV_PYTHON=3.13.15
+# Everything a job reads or writes lives under one root, so $HOME holds only system files and
+# the checkout. SPHRAGIS_RESULTS and SPHRAGIS_ADAPTERS are what claim_result and the adapters
+# selectors below write into; mkdir -p here so the exclusive create in claim_result cannot fail
+# on a missing directory.
+export SPHRAGIS_DATA="${SPHRAGIS_DATA:-$HOME/ajsoftworks/sphragis-data}"
+# A relative root resolves against each checkout, so a pinned worktree would read and write a
+# data root of its own.
+case "$SPHRAGIS_DATA" in
+  /*) ;;
+  *) echo "SPHRAGIS_DATA must be an absolute path, not $SPHRAGIS_DATA" >&2; exit 1 ;;
+esac
+export SPHRAGIS_RESULTS="$SPHRAGIS_DATA/results"
+export SPHRAGIS_ADAPTERS="$SPHRAGIS_DATA/adapters"
+mkdir -p "$SPHRAGIS_RESULTS" "$SPHRAGIS_ADAPTERS"
 # HF_HUB_CACHE, not HF_HOME: relocating HF_HOME also relocates the auto-refreshing OAuth token
 # `hf auth login` writes, and the job would then authenticate with a stale copy.
-export HF_HUB_CACHE=$HOME/hf-cache/hub
+export HF_HUB_CACHE="$SPHRAGIS_DATA/hf-cache/hub"
 export TOKENIZERS_PARALLELISM=false
 # The commit this job starts on, which sphragis.provenance records in place of whatever the
 # checkout holds when the result is written. Empty outside a checkout.
@@ -156,7 +170,7 @@ name_result_after_adapters() {
   # abort the caller under `set -e`; the printed command is what matters, not its exit status.
   restore="$(shopt -p nullglob)" || true
   shopt -s nullglob
-  for name in "$HOME/scratch/$first"/$selector; do
+  for name in "$SPHRAGIS_ADAPTERS/$first"/$selector; do
     name="$(basename "$name")"
     case "$name" in
       *-local) class=local ;;
