@@ -809,16 +809,18 @@ def main() -> None:
         )
     _refuse_unsafe_work(args.work, args.rest_root, args.out)
     with _raise_on_sigterm():
-        scratch = _find_marked_scratch(args.work) or _make_scratch(args.work)
+        scratch: Path | None = None
         try:
+            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                scratch = _find_marked_scratch(args.work) or _make_scratch(args.work)
             _run(args, salt, scratch)
         finally:
-            if not args.keep_work:
+            if scratch is not None and not args.keep_work:
                 with _uninterruptible(signal.SIGTERM, signal.SIGINT):
                     preserved = _preserve_ledger(scratch, args.work)
+                    _rmtree_marked(scratch)
                     if preserved is not None:
                         print(f"wrote {preserved}")
-                    _rmtree_marked(scratch)
 
 
 def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:

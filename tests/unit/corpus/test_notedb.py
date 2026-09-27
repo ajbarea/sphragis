@@ -1278,13 +1278,34 @@ notedb.fetch_month(
 
 
 def test_a_sigterm_held_during_cleanup_raises_once_the_cleanup_ends() -> None:
+    finished = False
     with pytest.raises(KeyboardInterrupt), notedb._raise_on_sigterm():
         with notedb._uninterruptible(signal.SIGTERM, signal.SIGINT):
             os.kill(os.getpid(), signal.SIGTERM)
             time.sleep(0.05)
             finished = True
-        assert finished
         pytest.fail("the held SIGTERM must be delivered when the window exits")
+    assert finished, "the held SIGTERM must not interrupt the window's own work"
+
+
+def test_a_sigterm_during_scratch_creation_leaves_no_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A signal landing right after `mkdir`, before any cleanup is armed, is held and then
+    raised inside `_scratch`, which deletes the directory it just made."""
+    real_mkdtemp = tempfile.mkdtemp
+
+    def signalled_mkdtemp(*args: Any, **kwargs: Any) -> str:
+        name = real_mkdtemp(*args, **kwargs)
+        os.kill(os.getpid(), signal.SIGTERM)
+        return name
+
+    monkeypatch.setattr(tempfile, "mkdtemp", signalled_mkdtemp)
+    entered = False
+    with pytest.raises(KeyboardInterrupt, match="SIGTERM"), notedb._scratch("probe-", dir=tmp_path):
+        entered = True
+    assert not entered, "the held signal must raise before the block runs"
+    assert list(tmp_path.iterdir()) == [], "the directory made before the signal must be gone"
 
 
 def test_cli_stage_fetch_git_still_gets_sigterm_protection(server: Server, tmp_path: Path) -> None:
@@ -1391,22 +1412,27 @@ def test_uninterruptible_holds_signals_until_the_cleanup_ends() -> None:
 def test_uninterruptible_cleanup_survives_a_second_signal_mid_rmtree(
     server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A slowed `TemporaryDirectory.cleanup`, self-signalled mid-way, still finishes: the
-    scratch repository is gone, and only then does the held SIGTERM stop the run."""
-    import tempfile as tempfile_module
+    """The scratch repository's deletion, self-signalled mid-way, still finishes: the scratch
+    repository is gone, and only then does the held SIGTERM stop the run.
 
-    real_cleanup = tempfile_module.TemporaryDirectory.cleanup
+    Signalled from `shutil.rmtree`, after `cleanup` has detached the `TemporaryDirectory`
+    finalizer, so a removed guard leaves the directory behind rather than the finalizer
+    deleting it anyway."""
+    import shutil
 
-    def slow_cleanup(self: Any) -> None:
-        os.kill(os.getpid(), signal.SIGTERM)
-        os.kill(os.getpid(), signal.SIGINT)
-        time.sleep(0.05)
-        real_cleanup(self)
+    real_rmtree = shutil.rmtree
+
+    def slow_rmtree(path: Any, *, onexc: Any = None) -> None:
+        if Path(path).name.startswith("sphragis-notedb-"):
+            os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGINT)
+            time.sleep(0.05)
+        real_rmtree(path, onexc=onexc)
 
     # Warm the (`@cache`d) lazy-fetch probe first: it opens and closes its own, unrelated
     # `TemporaryDirectory` inside `Repo.open`, which the patch below must not catch instead.
     notedb._require_lazy_fetch_disabled()
-    monkeypatch.setattr(tempfile_module.TemporaryDirectory, "cleanup", slow_cleanup)
+    monkeypatch.setattr(shutil, "rmtree", slow_rmtree)
     scratch = tmp_path / "scratch"
     scratch.mkdir()
     with pytest.raises(KeyboardInterrupt, match="SIGTERM"):
@@ -2217,13 +2243,12 @@ def test_fetch_month_calls_cleanup_explicitly_not_relying_on_the_finalizer(
 def test_fetch_month_cleanup_survives_a_second_signal_via_subprocess(
     server: Server, tmp_path: Path
 ) -> None:
-    """M21: a mutant that dropped the `_uninterruptible` wrap around `fetch_month`'s cleanup.
-    Sending the process a second real signal from inside a slowed `TemporaryDirectory.cleanup`
-    (the in-process version of this check self-signals the live pytest process, which a removed
-    guard kills outright -- SIGTERM's default disposition -- losing the test's own result along
-    with it) is done in a child process here instead, so an unprotected mutant only kills the
-    child: the parent still gets a clean, unambiguous failure from the leftover directory. The
-    held signals are delivered once the cleanup ends, so the run stops there."""
+    """M21: a mutant that dropped the `_uninterruptible` wrap around the scratch repository's
+    cleanup. A real SIGTERM and SIGINT are sent from inside `shutil.rmtree`, after the
+    `TemporaryDirectory` finalizer is detached, in a child process so the parent's own signal
+    handling is never in play. Unguarded, the signal aborts the deletion partway and the
+    directory is left behind; guarded, the deletion finishes and the held SIGTERM then stops
+    the run."""
     workdir = tmp_path / "work"
     workdir.mkdir()
     root = str(Path(notedb.__file__).resolve().parents[2])
@@ -2240,15 +2265,17 @@ from sphragis.corpus.notedb import fetch_month, _require_lazy_fetch_disabled
 from sphragis.corpus.pacing import Pacer
 
 _require_lazy_fetch_disabled()
-real_cleanup = tempfile_module.TemporaryDirectory.cleanup
+import shutil
+real_rmtree = shutil.rmtree
 
-def slow_cleanup(self):
-    os.kill(os.getpid(), signal.SIGTERM)
-    os.kill(os.getpid(), signal.SIGINT)
-    time.sleep(0.2)
-    real_cleanup(self)
+def slow_rmtree(path, *args, **kwargs):
+    if Path(path).name.startswith("sphragis-notedb-"):
+        os.kill(os.getpid(), signal.SIGTERM)
+        os.kill(os.getpid(), signal.SIGINT)
+        time.sleep(0.2)
+    real_rmtree(path, *args, **kwargs)
 
-tempfile_module.TemporaryDirectory.cleanup = slow_cleanup
+shutil.rmtree = slow_rmtree
 rows, _record = fetch_month(
     "aosp", [{PROJECT!r}], "2024-11", "salt",
     pacer=Pacer(0), base_url={server.url!r}, workdir=Path({str(workdir)!r}),
