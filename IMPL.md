@@ -40,8 +40,10 @@ research log records what is and is not known about those requests.
   `docs/superpowers/specs/2026-09-22-granularity-redesign.md`, gate as code in
   `sphragis/experiment/decomposition.py`, Stage 1 text in `papers` on branch
   `p4/granularity-registration`. Crossed-interval coverage is being re-measured at 97.5%.
-- **Chromium, the third organization.** Host added and project set being scoped; the split has to
-  qualify by 2026-10-23 or H2 has no confirmatory cell.
+- **Admitted organizations** (amended 2026-09-27). The cells are a rule over the organizations
+  admitted by host permission (`design()`): H1 on each, H2 on Qt and Chromium only when both are.
+  OpenStack is admitted; Wikimedia's corpus is building and its split is checked once it is frozen;
+  Qt and Chromium wait on their permission requests (Chromium's corpus frozen by 2026-10-23).
 - **FDLoRA's schedule** (`sphragis/experiment/fdlora.py`, `scripts/fdlora_schedule.py`) follows
   the registered reading of Algorithm 1 except the outer aggregation step (lines 17 and 18), a
   recorded confound (`docs/research-log.md`, 2026-09-21 and 2026-09-23). Under that reading

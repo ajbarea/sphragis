@@ -7,6 +7,9 @@ specifies is unchanged.
 
 **Decided by:** AJ, 2026-09-22, choosing "at what granularity adaptation transfers" over "keep the
 organization and report three controls", and adding Chromium as a third organization.
+Amended 2026-09-27 so that an organization enters a confirmatory cell only from a host permitting
+automated access in writing (registered in the research log, 2026-09-26, a decision AJ
+delegated): the cells are now a rule over the admitted organizations, not two fixed designs.
 
 ## Why the hypothesis changes before Stage 1
 
@@ -73,8 +76,12 @@ project's share of its half's training data, as exploratory.
 
 | hypothesis | confirmatory cells | why |
 |---|---|---|
-| H1 | OpenStack, Qt, Chromium | both halves of one organization share its language mix |
-| H2 | Qt against Chromium, Chromium against Qt | the only language-matched pair; OpenStack's `d_org` against Qt is exploratory |
+| H1 | every admitted organization | both halves of one organization share its language mix |
+| H2 | Qt against Chromium and Chromium against Qt, only when both are admitted | the only language-matched pair |
+
+An organization without a confirmatory H2 cell has its `d_org` read against the first other
+admitted organization in the order OpenStack, Wikimedia, Qt, Chromium, as exploratory. With all four
+admitted that is OpenStack against Wikimedia and back; with OpenStack alone there is no H2 cell.
 
 "Both C++" is a claim to measure, not to assume: Qt's training window is about half C++, and
 Chromium's mix is measured when its corpus is built. So H2 carries a **supplementary** estimand
@@ -125,9 +132,10 @@ A cell whose interval lies above zero and inside the SESOI band is **supported**
 boundary deciding, and is flagged "below SESOI"; a hypothesis passing on such a cell is reported
 with that qualifier.
 
-Under the fallback design (no Chromium) H1 is the only confirmatory hypothesis and is read at
-one-sided 0.025, a 95% interval. The confirmatory cells of both designs are constants in
-`sphragis/experiment/decomposition.py` and the gate refuses any other set.
+When no H2 cell is confirmatory, H1 is the only confirmatory hypothesis and is read at one-sided
+0.025, a 95% interval. The rule that builds the cells from the admitted organizations is
+`design()` in `sphragis/experiment/decomposition.py`; the gate takes the admitted set, never a list
+of cells, and refuses an organization outside the four or a set without OpenStack.
 
 ## Pre-committed readings
 
@@ -169,12 +177,31 @@ organization. The leakage battery is extended to sibling-half training against t
 at Jaccard >= 0.5, and the rate is reported for every organization. The registered threshold (2% at
 Jaccard >= 0.7) applies to it as an outcome-neutral test.
 
-## Chromium: criteria, deadline, fallback
+## Admitted organizations
 
-The Chromium corpus qualifies only if its split yields two halves where each has at least three
-projects, no project holds more than 50% of its half's training examples, and each half has at least
-as many training examples as OpenStack's smaller half. The project set is selected on feasibility
-(merged human changes, anchored comments, language) before any contrast is computed.
+An organization enters a confirmatory cell only if its review host permits automated access in
+writing, because the test window is collected fresh after in-principle acceptance on every
+organization (research log, 2026-09-26). Collecting from a disallowed host under a human's name or
+through a browser is ruled out.
+
+- **OpenStack** (review.opendev.org, robots.txt allows `/changes/`) is always admitted, and its
+  smaller half fixes `N`.
+- **Wikimedia** (gerrit.wikimedia.org, governed by Wikimedia's published Robot policy) is admitted
+  if its split meets the criteria below, frozen by 2026-10-23. A project is a Gerrit repository, as
+  in OpenStack.
+- **Qt** is admitted if the Qt Project grants permission before the Stage 1 report is submitted
+  (2026-11-20). Its train and dev windows are frozen and already meet the criteria; its test window
+  cannot be collected without that permission.
+- **Chromium** is admitted if Chromium's infra-dev list grants permission and its corpus, collected
+  through the NoteDb route, is frozen by 2026-10-23 and meets the criteria.
+
+Held Qt, AOSP and Chromium data that are not admitted are kept and used in no confirmatory cell.
+The report names each organization that was not admitted and why.
+
+**Split criteria**, for Wikimedia and Chromium: the split yields two halves where each has at least
+three projects, no project holds more than 50% of its half's training examples, and each half has
+at least as many training examples as OpenStack's smaller half. The project set is selected on
+feasibility (merged human changes, anchored comments, language) before any contrast is computed.
 
 **What counts as a Chromium project** (registered 2026-09-23, before any Chromium contrast
 exists). Every repository on chromium-review other than `chromium/src` (v8, angle, crashpad,
@@ -188,17 +215,16 @@ are excluded and counted. This is chosen over a directory depth because a depth 
 boundary and a component is the organization's; it is fixed before the split is computed so the
 split cannot be tuned against the criteria below.
 
-**Deadline: frozen by 2026-10-23.** If Chromium misses the deadline or the criteria, H2 has **no
-confirmatory cell**, since AOSP's public review stopped on 2025-03-27 and OpenStack and Qt share no
-language. H2 is then registered as exploratory and H1 runs on OpenStack and Qt at their own `N`. The
-report states this plainly.
+Without both Qt and Chromium, H2 has **no confirmatory cell**: AOSP's public review stopped on
+2025-03-27, and no other admitted pair writes one language. H2 is then reported as exploratory and
+H1 runs on the admitted organizations alone. The report states this plainly.
 
 ## Power and what it binds
 
 Training at `N`, at most OpenStack's smaller half, costs power. On the dev window the project
 contrast halved with half the data (research log, 2026-09-18; one pair, one seed, one direction).
 Before the report states a resolution, the sensitivity analysis is recomputed at `N`, at five seeds,
-at 97.5% and 95%, and for the three-cell intersection. The report registers the minimum detectable
+at 97.5% and 95%, and for the intersection over the admitted H1 cells. The report registers the minimum detectable
 effect per cell and the SESOI side by side. The design cannot reach absence at SESOI (research log,
 2026-09-23), so that is stated in advance, and the registered detectable effects are the bounds the
 negative readings are judged against. They are recomputed at `N` on corpus v2 before the seal
@@ -206,9 +232,10 @@ opens, and the gate refuses a confirmatory cell without one (`detectable_effects
 
 ## Compute
 
-Six half-adapters, five seeds and two ranks give sixty training runs. Each half's window is scored
-by four adapters (own, sibling, both foreign halves), five seeds and two ranks: 240 evaluations on
-half-size windows. This is Stage 2 work on the test window after 2027-02-04, and the pilot runs the
+Each admitted organization contributes two half-adapters, trained at five seeds and two ranks:
+twenty training runs an organization, eighty with all four. Each half's window is scored by four
+adapters (own, sibling, both halves of the foreign organization its H2 cell names), five seeds and
+two ranks: eighty evaluations an organization on half-size windows. This is Stage 2 work on the test window after 2027-02-04, and the pilot runs the
 same grid on the dev window before 2026-11-20.
 
 ## Open, recorded rather than taken

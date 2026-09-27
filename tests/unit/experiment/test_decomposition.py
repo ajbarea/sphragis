@@ -4,19 +4,22 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from itertools import combinations
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from sphragis.experiment.decomposition import (
-    DESIGNS,
+    H2_PAIR,
     MIN_RESAMPLES,
+    ORGANIZATIONS,
     SUMMED_CONFIDENCE,
     below_sesoi,
     cell_verdict,
     cpp_supplement,
     decomposition_gate,
+    design,
     detectable_effects,
     halves,
     holm_levels,
@@ -78,7 +81,7 @@ def _by_relation(own: float, sibling: float, foreign: float) -> Score:
     return score
 
 
-# A registered bound for every cell either design reads, at both Holm levels.
+# A registered bound for every cell the full admission reads, at both Holm levels.
 BOUND = 0.05
 DETECTABLE = {
     name: {org: {0.975: BOUND, 0.95: BOUND} for org in ("openstack", "qt", "chromium")}
@@ -86,10 +89,15 @@ DETECTABLE = {
 }
 
 
-def _gate(score: Score, **kwargs: Any) -> dict[str, Any]:
+def _gate(score: Score, admitted: tuple[str, ...] = ORGS, **kwargs: Any) -> dict[str, Any]:
     kwargs.setdefault("detectable", DETECTABLE)
     return decomposition_gate(
-        _results(score), seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES, **kwargs
+        _results(score, orgs=admitted),
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+        admitted=admitted,
+        **kwargs,
     )
 
 
@@ -157,7 +165,7 @@ def test_a_missing_cell_names_the_adapter_and_window() -> None:
 # The registered cells
 
 
-def test_the_registered_design_tests_every_registered_cell_and_nothing_else() -> None:
+def test_admitting_all_three_tests_every_confirmatory_cell_and_nothing_else() -> None:
     outcome = _gate(_by_relation(0.75, 0.25, 0.25))
     h1 = outcome["per_org"]["H1"]
     h2 = outcome["per_org"]["H2"]
@@ -181,11 +189,12 @@ def test_an_exploratory_cell_never_decides_a_verdict() -> None:
     assert outcome["verdicts"]["H2"] == "pass"
 
 
-def test_the_fallback_design_tests_h1_alone_at_the_whole_family_level() -> None:
-    results = _results(_by_relation(0.75, 0.25, 0.25), orgs=("openstack", "qt"))
+def test_admitting_openstack_and_qt_tests_h1_alone_at_the_whole_family_level() -> None:
+    admitted = ("openstack", "qt")
+    results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
     outcome = decomposition_gate(
         results,
-        design="without_chromium",
+        admitted=admitted,
         seeds=SEEDS,
         bootstrap_seed=0,
         resamples=1_000,
@@ -197,21 +206,11 @@ def test_the_fallback_design_tests_h1_alone_at_the_whole_family_level() -> None:
     assert all(c["role"] == "exploratory" for c in outcome["per_org"]["H2"].values())
 
 
-def test_an_unregistered_design_is_refused() -> None:
-    with pytest.raises(ValueError, match="unknown design"):
-        _gate(_by_relation(0.75, 0.25, 0.25), design="qt-only")
-
-
-def test_the_registered_designs_are_what_the_spec_says() -> None:
-    assert DESIGNS["registered"]["H1"] == ("openstack", "qt", "chromium")
-    assert set(DESIGNS["registered"]["H2"]) == {("qt", "chromium"), ("chromium", "qt")}
-    assert DESIGNS["without_chromium"]["H2"] == ()
-
-
 def test_the_gate_refuses_an_unregistered_seed_count() -> None:
     with pytest.raises(ValueError, match="odd number"):
         decomposition_gate(
             _results(_by_relation(0.75, 0.25, 0.25)),
+            admitted=ORGS,
             seeds=(1, 2),
             bootstrap_seed=0,
             resamples=MIN_RESAMPLES,
@@ -223,10 +222,128 @@ def test_the_gate_refuses_too_few_resamples() -> None:
     with pytest.raises(ValueError, match="resamples"):
         decomposition_gate(
             _results(_by_relation(0.75, 0.25, 0.25)),
+            admitted=ORGS,
             seeds=SEEDS,
             bootstrap_seed=0,
             resamples=40,
             detectable=DETECTABLE,
+        )
+
+
+# The registered rule over admitted organizations
+
+
+def test_the_registration_order_and_h2_pair_are_what_the_spec_says() -> None:
+    assert ORGANIZATIONS == ("openstack", "wikimedia", "qt", "chromium")
+    assert H2_PAIR == ("qt", "chromium")
+
+
+_OPTIONAL = ("wikimedia", "qt", "chromium")
+
+# Every admitted subset containing openstack, keyed by which of the other three are admitted.
+_TRUTH_TABLE: dict[frozenset[str], dict[str, tuple[Any, ...]]] = {
+    frozenset(): {
+        "H1": ("openstack",),
+        "H2": (),
+        "exploratory_h2": (),
+    },
+    frozenset({"wikimedia"}): {
+        "H1": ("openstack", "wikimedia"),
+        "H2": (),
+        "exploratory_h2": (("openstack", "wikimedia"), ("wikimedia", "openstack")),
+    },
+    frozenset({"qt"}): {
+        "H1": ("openstack", "qt"),
+        "H2": (),
+        "exploratory_h2": (("openstack", "qt"), ("qt", "openstack")),
+    },
+    frozenset({"chromium"}): {
+        "H1": ("openstack", "chromium"),
+        "H2": (),
+        "exploratory_h2": (("openstack", "chromium"), ("chromium", "openstack")),
+    },
+    frozenset({"wikimedia", "qt"}): {
+        "H1": ("openstack", "wikimedia", "qt"),
+        "H2": (),
+        "exploratory_h2": (
+            ("openstack", "wikimedia"),
+            ("wikimedia", "openstack"),
+            ("qt", "openstack"),
+        ),
+    },
+    frozenset({"wikimedia", "chromium"}): {
+        "H1": ("openstack", "wikimedia", "chromium"),
+        "H2": (),
+        "exploratory_h2": (
+            ("openstack", "wikimedia"),
+            ("wikimedia", "openstack"),
+            ("chromium", "openstack"),
+        ),
+    },
+    frozenset({"qt", "chromium"}): {
+        "H1": ("openstack", "qt", "chromium"),
+        "H2": (("qt", "chromium"), ("chromium", "qt")),
+        "exploratory_h2": (("openstack", "qt"),),
+    },
+    frozenset({"wikimedia", "qt", "chromium"}): {
+        "H1": ("openstack", "wikimedia", "qt", "chromium"),
+        "H2": (("qt", "chromium"), ("chromium", "qt")),
+        "exploratory_h2": (("openstack", "wikimedia"), ("wikimedia", "openstack")),
+    },
+}
+
+
+@pytest.mark.parametrize(
+    "optional",
+    [frozenset(c) for n in range(len(_OPTIONAL) + 1) for c in combinations(_OPTIONAL, n)],
+    ids=lambda s: "+".join(sorted(s)) or "openstack-only",
+)
+def test_design_matches_the_registered_rule_for_every_admitted_subset(
+    optional: frozenset[str],
+) -> None:
+    expected = _TRUTH_TABLE[optional]
+    outcome = design({"openstack", *optional})
+    assert outcome["H1"] == expected["H1"]
+    assert outcome["H2"] == expected["H2"]
+    assert outcome["exploratory_h2"] == expected["exploratory_h2"]
+    assert outcome["admitted"] == expected["H1"]
+
+
+def test_design_refuses_an_unknown_organization() -> None:
+    with pytest.raises(ValueError, match="unknown organization"):
+        design(["openstack", "gitlab"])
+
+
+def test_design_refuses_a_duplicate() -> None:
+    with pytest.raises(ValueError, match="duplicate"):
+        design(["openstack", "qt", "qt"])
+
+
+def test_design_refuses_an_admitted_set_without_openstack() -> None:
+    with pytest.raises(ValueError, match="openstack"):
+        design(["qt", "chromium"])
+
+
+def test_design_orders_by_registration_order_never_input_order() -> None:
+    expected = ("openstack", "qt", "chromium")
+    assert design(["chromium", "qt", "openstack"])["H1"] == expected
+    assert design(("qt", "openstack", "chromium"))["H1"] == expected
+    assert design({"chromium", "qt", "openstack"})["H1"] == expected
+    assert design(frozenset({"chromium", "openstack"}))["H1"] == ("openstack", "chromium")
+
+
+def test_the_gate_refuses_a_confirmatory_wikimedia_cell_with_no_registered_bound() -> None:
+    admitted = ("openstack", "wikimedia")
+    results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
+    partial = {"H1": {"openstack": DETECTABLE["H1"]["openstack"]}}
+    with pytest.raises(ValueError, match="H1:wikimedia"):
+        decomposition_gate(
+            results,
+            admitted=admitted,
+            seeds=SEEDS,
+            bootstrap_seed=0,
+            resamples=MIN_RESAMPLES,
+            detectable=partial,
         )
 
 
@@ -277,12 +394,13 @@ def test_a_bound_missing_at_the_laxer_holm_level_is_refused() -> None:
         _gate(_by_relation(0.75, 0.25, 0.25), detectable=lax_missing)
 
 
-def test_the_fallback_design_reads_the_bound_registered_at_its_one_level() -> None:
-    results = _results(_by_relation(0.25, 0.75, 0.75), orgs=("openstack", "qt"))
-    only_lax = {"H1": {o: {0.95: BOUND} for o in ("openstack", "qt")}}
+def test_a_design_with_no_confirmatory_h2_reads_the_bound_registered_at_its_one_level() -> None:
+    admitted = ("openstack", "qt")
+    results = _results(_by_relation(0.25, 0.75, 0.75), orgs=admitted)
+    only_lax = {"H1": {o: {0.95: BOUND} for o in admitted}}
     outcome = decomposition_gate(
         results,
-        design="without_chromium",
+        admitted=admitted,
         seeds=SEEDS,
         bootstrap_seed=0,
         resamples=1_000,
@@ -432,6 +550,7 @@ def test_a_broken_exploratory_cell_does_not_withhold_the_verdicts() -> None:
     del results[run_id(EvalRun("adapter:qt-b", "openstack-a", 1))]
     outcome = decomposition_gate(
         results,
+        admitted=ORGS,
         seeds=SEEDS,
         bootstrap_seed=0,
         resamples=MIN_RESAMPLES,
@@ -447,6 +566,7 @@ def test_a_broken_confirmatory_cell_is_still_refused() -> None:
     with pytest.raises(ValueError, match="not scored"):
         decomposition_gate(
             results,
+            admitted=ORGS,
             seeds=SEEDS,
             bootstrap_seed=0,
             resamples=MIN_RESAMPLES,
@@ -560,7 +680,7 @@ def test_the_cpp_supplement_reads_only_cpp_examples() -> None:
         return 1.0 if _org(trained) == _org(window) else 0.0
 
     outcome = cpp_supplement(
-        _with_paths(score), seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+        _with_paths(score), admitted=ORGS, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
     )
     assert outcome["role"] == "supplementary"
     qt = outcome["cells"]["qt"]
@@ -574,7 +694,9 @@ def test_a_half_with_too_few_cpp_changes_is_reported_not_raised() -> None:
     for rows in results.values():
         for row in rows:
             row["path"] = "src/f.py"
-    outcome = cpp_supplement(results, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES)
+    outcome = cpp_supplement(
+        results, admitted=ORGS, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+    )
     assert "error" in outcome["cells"]["qt"]
 
 
@@ -593,10 +715,11 @@ def test_the_registered_design_refuses_h2_cells_without_bounds() -> None:
 
 
 def test_an_exploratory_cell_never_reads_bounded() -> None:
-    results = _results(_by_relation(0.75, 0.25, 0.25), orgs=("openstack", "qt"))
+    admitted = ("openstack", "qt")
+    results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
     outcome = decomposition_gate(
         results,
-        design="without_chromium",
+        admitted=admitted,
         seeds=SEEDS,
         bootstrap_seed=0,
         resamples=1_000,

@@ -15,7 +15,7 @@ cells are confirmatory is registered here, not passed in. Design of record:
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from statistics import fmean
 from typing import Any
 
@@ -44,26 +44,50 @@ SUMMED_CONFIDENCE = 0.95
 # Below this the percentile ranks of neighbouring Holm levels can coincide.
 MIN_RESAMPLES = 1_000
 
-# The confirmatory cells, by design. H1 cells are organizations; H2 cells are (evaluated,
-# foreign) pairs, confirmatory only where both write the same language. `without_chromium` is
-# the registered fallback if Chromium's split does not qualify by 2026-10-23.
-DESIGNS: Mapping[str, Mapping[str, tuple[Any, ...]]] = {
-    "registered": {
-        "H1": ("openstack", "qt", "chromium"),
-        "H2": (("qt", "chromium"), ("chromium", "qt")),
-    },
-    "without_chromium": {
-        "H1": ("openstack", "qt"),
-        "H2": (),
-    },
-}
+# Registration order. OpenStack is always admitted; Wikimedia when its split qualifies; Qt and
+# Chromium only with written permission for automated access, Chromium's split qualifying too.
+ORGANIZATIONS = ("openstack", "wikimedia", "qt", "chromium")
 
-# Computed and reported, never part of a verdict: OpenStack writes Python and every foreign
-# organization available to it writes C++.
-EXPLORATORY_H2: Mapping[str, tuple[tuple[str, str], ...]] = {
-    "registered": (("openstack", "qt"),),
-    "without_chromium": (("openstack", "qt"), ("qt", "openstack")),
-}
+# The only language-matched pair, so the only confirmatory H2 cells.
+H2_PAIR = ("qt", "chromium")
+
+
+def design(admitted: Iterable[str]) -> dict[str, Any]:
+    """The registered cells for whichever organizations are admitted.
+
+    `admitted` must hold only names from `ORGANIZATIONS`, no duplicate, and always "openstack";
+    input order does not matter, every result is ordered by `ORGANIZATIONS`. H1 is every admitted
+    organization. H2 is confirmatory only for `H2_PAIR`, when both are admitted. Every other
+    admitted organization gets one exploratory H2 cell instead, paired with the first other
+    admitted organization in registration order: computed and reported, never part of a verdict.
+    """
+    admitted_list = list(admitted)
+    unknown = sorted(set(admitted_list) - set(ORGANIZATIONS))
+    if unknown:
+        raise ValueError(f"unknown organization(s) {unknown}; registered are {ORGANIZATIONS}")
+    duplicates = sorted({o for o in admitted_list if admitted_list.count(o) > 1})
+    if duplicates:
+        raise ValueError(f"duplicate organization(s) {duplicates} in admitted")
+    admitted_set = set(admitted_list)
+    if "openstack" not in admitted_set:
+        raise ValueError("openstack must always be admitted")
+    ordered = tuple(o for o in ORGANIZATIONS if o in admitted_set)
+    h2 = (H2_PAIR, H2_PAIR[::-1]) if set(H2_PAIR) <= admitted_set else ()
+    paired = {org for pair in h2 for org in pair}
+    exploratory = []
+    for org in ordered:
+        if org in paired:
+            continue
+        others = [o for o in ordered if o != org]
+        if others:
+            exploratory.append((org, others[0]))
+    return {
+        "admitted": ordered,
+        "H1": ordered,
+        "H2": h2,
+        "exploratory_h2": tuple(exploratory),
+    }
+
 
 # C++ source and header suffixes. Qt writes .cpp and Chromium .cc, so a suffix match that
 # compared file types directly would find the two organizations sharing only headers.
@@ -87,7 +111,7 @@ def halves(org: str) -> tuple[str, str]:
 def reading(h1: str, h2: str | None) -> str:
     """The pre-committed reading of one combination of hypothesis verdicts.
 
-    `h2` is None under the fallback design, where only H1 is confirmatory.
+    `h2` is None under a design with no confirmatory H2 cell, where only H1 is confirmatory.
     """
     if h2 is None:
         return {"pass": "within-half", "bounded": "no within-half transfer"}.get(h1, "unresolved")
@@ -298,7 +322,7 @@ def below_sesoi(
 def decomposition_gate(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
-    design: str = "registered",
+    admitted: Iterable[str],
     seeds: Sequence[int],
     metric: str = "exact_match",
     bootstrap_seed: int,
@@ -313,13 +337,11 @@ def decomposition_gate(
     holds each cell's registered bound by Holm level (`detectable_effects`); a confirmatory cell
     without one at every level the design reads is refused, so no bound is chosen after the data.
     """
-    if design not in DESIGNS:
-        raise ValueError(f"unknown design {design!r}; registered designs are {sorted(DESIGNS)}")
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
-    cells = DESIGNS[design]
-    confirmatory = {name: tuple(c) for name, c in cells.items() if c}
+    cells = design(admitted)
+    confirmatory = {name: cells[name] for name in ("H1", "H2") if cells[name]}
     levels = holm_levels(len(confirmatory))
     bounds = {
         name: {
@@ -336,7 +358,7 @@ def decomposition_gate(
 
     h1_orgs = set(cells["H1"])
     h2_pairs = {org: (foreign, "confirmatory") for org, foreign in cells["H2"]}
-    for org, foreign in EXPLORATORY_H2[design]:
+    for org, foreign in cells["exploratory_h2"]:
         h2_pairs.setdefault(org, (foreign, "exploratory"))
 
     per_org: dict[str, dict[str, Any]] = {"H1": {}, "H2": {}}
@@ -424,7 +446,7 @@ def decomposition_gate(
     }
     verdicts, passed_at = holm_steps(tested)
     return {
-        "design": design,
+        "design": cells,
         "verdicts": verdicts,
         "passed_at": passed_at,
         "reading": reading(verdicts["H1"], verdicts.get("H2")),
@@ -465,7 +487,7 @@ def is_cpp(row: Mapping[str, Any]) -> bool:
 def cpp_supplement(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
-    design: str = "registered",
+    admitted: Iterable[str],
     seeds: Sequence[int],
     metric: str = "exact_match",
     bootstrap_seed: int,
@@ -479,14 +501,13 @@ def cpp_supplement(
     different quantity, so this carries no verdict; a half left with too few C++ changes is
     reported with its error.
     """
-    if design not in DESIGNS:
-        raise ValueError(f"unknown design {design!r}; registered designs are {sorted(DESIGNS)}")
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
+    spec = design(admitted)
     restricted = {key: [row for row in rows if is_cpp(row)] for key, rows in results.items()}
     cells: dict[str, Any] = {}
-    for org, foreign in DESIGNS[design]["H2"]:
+    for org, foreign in spec["H2"]:
         try:
             strata = _strata(
                 [
@@ -514,7 +535,7 @@ def cpp_supplement(
                 window: _share(results[_key(org, window, seeds[0])]) for window in halves(org)
             },
         }
-    return {"design": design, "role": "supplementary", "cells": cells}
+    return {"design": spec, "role": "supplementary", "cells": cells}
 
 
 def _key(org: str, window: str, seed: int) -> str:
