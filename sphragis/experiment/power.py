@@ -19,7 +19,7 @@ Two things the design of record asks for that the first version did not deliver:
 from __future__ import annotations
 
 import random
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from statistics import fmean, median
 
@@ -28,6 +28,8 @@ from sphragis.measure.stats import (
     cluster_bootstrap,
     crossed_bootstrap,
     paired_difference,
+    percentile_interval,
+    stratified_crossed_draws,
     supports_direction,
 )
 
@@ -256,4 +258,53 @@ def seed_trial(
         crossed=supports_direction(crossed),
         median_seed=supports_direction(binding),
         between_seed_variance=sum((e - centre) ** 2 for e in estimates) / (len(estimates) - 1),
+    )
+
+
+@dataclass(frozen=True)
+class StratifiedTrial:
+    """One simulated decomposition cell: its interval at each level, read two ways."""
+
+    supported: Mapping[float, bool]
+    absent: Mapping[float, bool]
+    high: Mapping[float, float]
+
+
+def stratified_seed_trial(
+    halves: Sequence[Sequence[Cluster]],
+    *,
+    lift: float,
+    n_changes: Sequence[int],
+    seeds: int,
+    sigma_b: float,
+    redraw: float,
+    resamples: int,
+    seed: int,
+    confidences: Sequence[float],
+    sesoi: float,
+) -> StratifiedTrial:
+    """One simulated cell of the decomposition gate: equally weighted halves, crossed seeds.
+
+    Each half is drawn from its own pilot clusters under the sign-flip null, lifted, and scored
+    at `seeds` seeds with its own seed shifts, then read off `stratified_crossed_draws`, the
+    interval the gate reads. A cell is supported when the lower bound is above zero and absent
+    when the whole interval sits inside the SESOI band. Seed shifts are drawn independently per
+    half, where in H1 one adapter's shift enters the two halves with opposite signs; the
+    coverage simulation's `--flip-second` regime is what measures that structure.
+    """
+    if len(halves) != len(n_changes):
+        raise ValueError("one planned size per half")
+    rng = random.Random(seed)
+    strata = []
+    for clusters, n in zip(halves, n_changes, strict=True):
+        truth = [
+            _shift(_null(clusters[rng.randrange(len(clusters))], rng), lift, rng) for _ in range(n)
+        ]
+        strata.append(seed_runs(truth, seeds=seeds, sigma_b=sigma_b, redraw=redraw, rng=rng))
+    _, draws = stratified_crossed_draws({"cell": strata}, seed=seed, resamples=resamples)
+    intervals = {c: percentile_interval(draws["cell"], c) for c in confidences}
+    return StratifiedTrial(
+        supported={c: low > 0.0 for c, (low, _) in intervals.items()},
+        absent={c: -sesoi < low and high < sesoi for c, (low, high) in intervals.items()},
+        high={c: high for c, (_, high) in intervals.items()},
     )

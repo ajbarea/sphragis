@@ -1,0 +1,112 @@
+{
+  "runs": [
+    "datasets/results/rq1-placebo-qt.json",
+    "datasets/results/rq1-placebo-qt-s2.json",
+    "datasets/results/rq1-placebo-qt-s3.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "organizations": {
+    "qt-a": {
+      "contrast_by_seed": {
+        "1": 0.029876977152899824,
+        "2": 0.026362038664323375,
+        "3": 0.0351493848857645
+      },
+      "pairs": [
+        {
+          "seeds": [
+            1,
+            2
+          ],
+          "shift": -0.0035149384885764497,
+          "noise_sd": 0.014704695327664451,
+          "z": -0.23903511159212354
+        },
+        {
+          "seeds": [
+            1,
+            3
+          ],
+          "shift": 0.005272407732864675,
+          "noise_sd": 0.01743638727696312,
+          "z": 0.3023795955616653
+        },
+        {
+          "seeds": [
+            2,
+            3
+          ],
+          "shift": 0.008787346221441126,
+          "noise_sd": 0.015070829053371702,
+          "z": 0.5830698623361524
+        }
+      ]
+    },
+    "qt-b": {
+      "contrast_by_seed": {
+        "1": -0.005361930294906166,
+        "2": 0.03485254691689008,
+        "3": -0.0160857908847185
+      },
+      "pairs": [
+        {
+          "seeds": [
+            1,
+            2
+          ],
+          "shift": 0.040214477211796246,
+          "noise_sd": 0.0197662848708482,
+          "z": 2.034498514746468
+        },
+        {
+          "seeds": [
+            1,
+            3
+          ],
+          "shift": -0.010723860589812333,
+          "noise_sd": 0.018281503087276725,
+          "z": -0.5865962190644902
+        },
+        {
+          "seeds": [
+            2,
+            3
+          ],
+          "shift": -0.05093833780160858,
+          "noise_sd": 0.018639398264727918,
+          "z": -2.7328316653870335
+        }
+      ]
+    }
+  },
+  "between_seed_variance": 0.00037035751257117656,
+  "pair_noise_variance": 0.00030328868245073397,
+  "sigma_b_squared": 0.00021871317134580958,
+  "sigma_b": 0.014788954369589812,
+  "sigma_b_upper_95": 0.0840743960218546,
+  "degrees_of_freedom": 2,
+  "provenance": {
+    "generated_at": "2026-09-23T06:35:19.439313+00:00",
+    "git": {
+      "commit": "a7ebafb2c77eae779bdea61f898c1f4f98469ec6",
+      "branch": "docs/granularity-redesign",
+      "uncommitted_code": [
+        "scripts/crossed_coverage.py",
+        "sphragis/experiment/decomposition.py",
+        "sphragis/measure/stats.py"
+      ],
+      "uncommitted_code_sha256": "cef6b27ee544e035f4094a038f78bd9441438bf2f6c4a75c0135e22ec5ff0693"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

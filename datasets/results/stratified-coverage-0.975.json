@@ -1,0 +1,101 @@
+{
+  "source": "datasets/results/calibration-sym-0.json",
+  "arm": "adapter:a|a|s1",
+  "q": 0.35,
+  "f": 0.055,
+  "trials": 4000,
+  "resamples": 2000,
+  "confidence": 0.975,
+  "strata": 2,
+  "nominal_one_sided": 0.0125,
+  "cells": [
+    {
+      "seeds": 5,
+      "sigma_b": 0.0,
+      "tau": 0.0,
+      "between_seed_variance": 5.015196979419067e-05,
+      "churn": 0.04200264174725296,
+      "stratified_above": 0.0105,
+      "stratified_below": 0.01225,
+      "stratified_width": 0.05689047124631738,
+      "crossed_above": 0.01,
+      "crossed_below": 0.012,
+      "crossed_width": 0.05760547904167209,
+      "measured_sigma_b": 0.0,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 5,
+      "sigma_b": 0.005,
+      "tau": 0.08628938731226299,
+      "between_seed_variance": 7.774756947951326e-05,
+      "churn": 0.045963630560190934,
+      "stratified_above": 0.01125,
+      "stratified_below": 0.01275,
+      "stratified_width": 0.05782523485722572,
+      "crossed_above": 0.011,
+      "crossed_below": 0.01075,
+      "crossed_width": 0.05845921805349763,
+      "measured_sigma_b": 0.005253151405139832,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 5,
+      "sigma_b": 0.01,
+      "tau": 0.1779215853171081,
+      "between_seed_variance": 0.0001552878814827658,
+      "churn": 0.050345036248128916,
+      "stratified_above": 0.0145,
+      "stratified_below": 0.011,
+      "stratified_width": 0.060249745779018204,
+      "crossed_above": 0.015,
+      "crossed_below": 0.01075,
+      "crossed_width": 0.060798188002284266,
+      "measured_sigma_b": 0.010253580432637915,
+      "churn_in_measured_band": true
+    },
+    {
+      "seeds": 5,
+      "sigma_b": 0.02,
+      "tau": 0.4107786659037629,
+      "between_seed_variance": 0.00047641575959429095,
+      "churn": 0.06288399383464716,
+      "stratified_above": 0.01325,
+      "stratified_below": 0.0165,
+      "stratified_width": 0.06873934788345444,
+      "crossed_above": 0.013,
+      "crossed_below": 0.0155,
+      "crossed_width": 0.06920971150112944,
+      "measured_sigma_b": 0.020646156780381678,
+      "churn_in_measured_band": false
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-09-23T07:35:02.226803+00:00",
+    "git": {
+      "commit": "c83dd217e0fb7b3c2a9124dad0ef1512b393a8fb",
+      "branch": "docs/granularity-redesign"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": null,
+      "job_id": null,
+      "account": null,
+      "partition": null,
+      "node": null
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 3060 Ti",
+      "total_gb": 8.59,
+      "peak_allocated_gb": 0.0,
+      "peak_reserved_gb": 0.0,
+      "cuda": "13.0"
+    }
+  }
+}

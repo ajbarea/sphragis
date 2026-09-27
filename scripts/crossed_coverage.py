@@ -38,6 +38,8 @@ from sphragis.measure.stats import (
     cluster_bootstrap,
     crossed_bootstrap,
     paired_difference,
+    percentile_interval,
+    stratified_crossed_draws,
     supports_direction,
 )
 
@@ -53,6 +55,26 @@ parser.add_argument("--sigma-b", type=float, nargs="+", default=[0.0, 0.005, 0.0
 parser.add_argument("--trials", type=int, default=1000)
 parser.add_argument("--resamples", type=int, default=2000)
 parser.add_argument("--workers", type=int, default=6)
+parser.add_argument(
+    "--confidence", type=float, default=0.95, help="two-sided level of both intervals"
+)
+parser.add_argument(
+    "--strata",
+    type=int,
+    default=1,
+    help="split each run's changes into this many equally weighted strata, as the "
+    "decomposition gate reads its two halves; above 1 the median-seed rule is skipped",
+)
+parser.add_argument(
+    "--flip-second",
+    action="store_true",
+    help="swap treatment and control in the second stratum, as H1 does: own-half against "
+    "sibling on one half is sibling against own on the other, so an adapter-level seed shift "
+    "enters the two strata with opposite signs",
+)
+parser.add_argument(
+    "--split", type=float, default=0.5, help="the first stratum's share of the changes"
+)
 parser.add_argument("--calibrate", action="store_true")
 parser.add_argument("--out", type=Path)
 
@@ -157,19 +179,49 @@ def simulate(
     return runs
 
 
-def median_seed(runs: list[list[Cluster]], *, bootstrap_seed: int, resamples: int) -> dict:
+def median_seed(
+    runs: list[list[Cluster]], *, bootstrap_seed: int, resamples: int, confidence: float = 0.95
+) -> dict:
     """The registered rule: the change bootstrap of the seed whose estimate is the median."""
-    intervals = [cluster_bootstrap(r, seed=bootstrap_seed, resamples=resamples) for r in runs]
+    intervals = [
+        cluster_bootstrap(r, seed=bootstrap_seed, resamples=resamples, confidence=confidence)
+        for r in runs
+    ]
     middle = median(i["estimate"] for i in intervals)
     return min(intervals, key=lambda i: abs(i["estimate"] - middle))
 
 
-def trial(job: tuple[int, int, float, float, float, float, int, Population]) -> dict[str, float]:
-    index, seeds, sigma_b, tau, q, f, resamples, pop = job
+def trial(
+    job: tuple[int, int, float, float, float, float, int, Population, float, int, bool, float],
+) -> dict[str, float]:
+    index, seeds, sigma_b, tau, q, f, resamples, pop, confidence, strata, flip, split = job
     rng = random.Random(f"{index}-{seeds}-{sigma_b}")
     runs = simulate(rng, pop, seeds=seeds, q=q, f=f, tau=tau)
-    single = median_seed(runs, bootstrap_seed=index, resamples=resamples)
-    crossed = crossed_bootstrap(runs, seed=index, resamples=resamples)
+    if strata > 1:
+        return stratified_trial(
+            runs,
+            index=index,
+            resamples=resamples,
+            confidence=confidence,
+            strata=strata,
+            flip_second=flip,
+            split=split,
+        )
+    single = median_seed(runs, bootstrap_seed=index, resamples=resamples, confidence=confidence)
+    crossed = crossed_bootstrap(runs, seed=index, resamples=resamples, confidence=confidence)
+    return {
+        **diagnostics(runs),
+        "median_seed_above": float(supports_direction(single)),
+        "median_seed_below": float(single["high"] < 0.0),
+        "median_seed_width": single["high"] - single["low"],
+        "crossed_above": float(supports_direction(crossed)),
+        "crossed_below": float(crossed["high"] < 0.0),
+        "crossed_width": crossed["high"] - crossed["low"],
+    }
+
+
+def diagnostics(runs: list[list[Cluster]]) -> dict[str, float]:
+    """Between-seed variance of the estimate, and the per-example churn between two seeds."""
     estimates = [paired_difference(run) for run in runs]
     first, second = runs[0], runs[1]
     changed = [
@@ -180,9 +232,41 @@ def trial(job: tuple[int, int, float, float, float, float, int, Population]) -> 
     return {
         "between_seed_variance": variance(estimates),
         "churn": fmean(1.0 if c else 0.0 for c in changed),
-        "median_seed_above": float(supports_direction(single)),
-        "median_seed_below": float(single["high"] < 0.0),
-        "median_seed_width": single["high"] - single["low"],
+    }
+
+
+def stratified_trial(
+    runs: list[list[Cluster]],
+    *,
+    index: int,
+    resamples: int,
+    confidence: float,
+    strata: int,
+    flip_second: bool = False,
+    split: float = 0.5,
+) -> dict[str, float]:
+    """The interval the decomposition gate reads: equally weighted strata, changes resampled
+    within each, beside the unstratified crossed interval on the same runs."""
+    if strata != 2 and (flip_second or split != 0.5):
+        raise ValueError("--flip-second and --split describe two strata")
+    n = len(runs[0])
+    if strata == 2:
+        bounds = [0, round(n * split), n]
+    else:
+        bounds = [round(n * h / strata) for h in range(strata + 1)]
+    layered = [[run[bounds[h] : bounds[h + 1]] for run in runs] for h in range(strata)]
+    if flip_second:
+        layered[1] = [
+            [Cluster(c.change_id, c.control, c.treatment) for c in run] for run in layered[1]
+        ]
+    _, draws = stratified_crossed_draws({"c": layered}, seed=index, resamples=resamples)
+    low, high = percentile_interval(draws["c"], confidence)
+    crossed = crossed_bootstrap(runs, seed=index, resamples=resamples, confidence=confidence)
+    return {
+        **diagnostics(runs),
+        "stratified_above": float(low > 0.0),
+        "stratified_below": float(high < 0.0),
+        "stratified_width": high - low,
         "crossed_above": float(supports_direction(crossed)),
         "crossed_below": float(crossed["high"] < 0.0),
         "crossed_width": crossed["high"] - crossed["low"],
@@ -227,7 +311,20 @@ def main() -> None:
             for sigma_b in args.sigma_b:
                 tau = taus[sigma_b]
                 jobs = [
-                    (i, seeds, sigma_b, tau, args.q, args.f, args.resamples, pop)
+                    (
+                        i,
+                        seeds,
+                        sigma_b,
+                        tau,
+                        args.q,
+                        args.f,
+                        args.resamples,
+                        pop,
+                        args.confidence,
+                        args.strata,
+                        args.flip_second,
+                        args.split,
+                    )
                     for i in range(args.trials)
                 ]
                 outcomes = list(pool.map(trial, jobs, chunksize=10))
@@ -238,11 +335,12 @@ def main() -> None:
                     **{k: fmean(o[k] for o in outcomes) for k in outcomes[0]},
                 }
                 cells.append(cell)
+                rule = "stratified" if args.strata > 1 else "median_seed"
                 print(
-                    f"S={seeds} sigma_b={sigma_b:<6} one-sided FPR: median-seed "
-                    f"{cell['median_seed_above']:.3f} crossed {cell['crossed_above']:.3f} | "
-                    f"below: {cell['median_seed_below']:.3f} {cell['crossed_below']:.3f} | "
-                    f"width {cell['median_seed_width']:.4f} {cell['crossed_width']:.4f}",
+                    f"S={seeds} sigma_b={sigma_b:<6} one-sided FPR: {rule} "
+                    f"{cell[f'{rule}_above']:.3f} crossed {cell['crossed_above']:.3f} | "
+                    f"below: {cell[f'{rule}_below']:.3f} {cell['crossed_below']:.3f} | "
+                    f"width {cell[f'{rule}_width']:.4f} {cell['crossed_width']:.4f}",
                     flush=True,
                 )
     # The seed effect the trials produced, not the target: between-seed variance of each trial's
@@ -268,7 +366,11 @@ def main() -> None:
                     "f": args.f,
                     "trials": args.trials,
                     "resamples": args.resamples,
-                    "nominal_one_sided": 0.025,
+                    "confidence": args.confidence,
+                    "strata": args.strata,
+                    "flip_second": args.flip_second,
+                    "split": args.split,
+                    "nominal_one_sided": round((1.0 - args.confidence) / 2.0, 6),
                     "cells": cells,
                     "provenance": run_provenance(),
                 },

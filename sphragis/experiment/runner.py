@@ -45,6 +45,7 @@ def evaluate(generator: Generator, examples: Sequence[Mapping[str, Any]]) -> lis
             {
                 "id": example["id"],
                 "change_id": example["change_id"],
+                "path": example.get("path"),
                 "prediction": prediction,
                 **score(prediction, str(example["after"])),
             }

@@ -232,3 +232,81 @@ def gate_verdict(per_org: Mapping[str, Mapping[str, float]]) -> str:
     if passing == 0:
         return "fail"
     return "mixed"
+
+
+Strata = Sequence[Sequence[Sequence[Cluster]]]
+
+
+def stratified_crossed_draws(
+    contrasts: Mapping[str, Strata],
+    *,
+    seed: int,
+    resamples: int = 10_000,
+    min_clusters: int = MIN_CLUSTERS,
+    estimator: Estimator = paired_difference,
+) -> tuple[dict[str, float], dict[str, list[float]]]:
+    """Estimates and bootstrap draws for contrasts over equally weighted strata, on shared draws.
+
+    Each contrast is indexed `[stratum][seed][cluster]`. A stratum is one half of an
+    organization. The statistic is the mean over strata of the seed-averaged estimator, so each
+    half counts once whatever its size, and changes are resampled within their own stratum so a
+    replicate never moves weight between halves.
+
+    Every contrast is evaluated on the SAME seed and change draws. Contrasts that share an arm,
+    as the half-split and organization contrasts share the sibling adapter with opposite signs,
+    are negatively coupled, and only shared draws give their joint distribution.
+    """
+    if not contrasts:
+        raise ValueError("no contrasts to bootstrap")
+    names = list(contrasts)
+    reference = contrasts[names[0]]
+    for name in names:
+        strata = contrasts[name]
+        if len(strata) != len(reference):
+            raise ValueError(
+                f"contrast {name!r} has {len(strata)} strata, expected {len(reference)}"
+            )
+        for position, runs in enumerate(strata):
+            require_crossed(runs)
+            if len(runs) != len(reference[0]):
+                raise ValueError(
+                    f"contrast {name!r} has a different seed count in stratum {position}; every "
+                    "stratum is resampled with one draw of seeds"
+                )
+            shape = [(c.change_id, len(c.treatment)) for c in runs[0]]
+            if shape != [(c.change_id, len(c.treatment)) for c in reference[position][0]]:
+                raise ValueError(
+                    f"contrast {name!r} scores different changes in stratum {position}; shared "
+                    "draws need every contrast over the identical examples"
+                )
+            if len(runs[0]) < min_clusters:
+                raise ValueError(
+                    f"stratum {position} has {len(runs[0])} clusters, below the floor of "
+                    f"{min_clusters}"
+                )
+    rng = random.Random(seed)
+    s = len(reference[0])
+    sizes = [len(runs[0]) for runs in reference]
+    draws: dict[str, list[float]] = {name: [] for name in names}
+    for _ in range(resamples):
+        seeds = [rng.randrange(s) for _ in range(s)]
+        changes = [[rng.randrange(n) for _ in range(n)] for n in sizes]
+        for name in names:
+            draws[name].append(
+                fmean(
+                    fmean(estimator([runs[k][i] for i in changes[h]]) for k in seeds)
+                    for h, runs in enumerate(contrasts[name])
+                )
+            )
+    estimates = {
+        name: fmean(fmean(estimator(run) for run in runs) for runs in contrasts[name])
+        for name in names
+    }
+    return estimates, draws
+
+
+def percentile_interval(draws: Sequence[float], confidence: float) -> tuple[float, float]:
+    """The percentile interval of a set of bootstrap draws."""
+    ordered = sorted(draws)
+    low_rank, high_rank = percentile_ranks(len(ordered), confidence)
+    return ordered[low_rank], ordered[high_rank]
