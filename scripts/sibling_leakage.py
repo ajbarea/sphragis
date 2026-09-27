@@ -18,16 +18,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sphragis.corpus.cli import WINDOWS  # noqa: E402
-from sphragis.corpus.halves import assign, project_counts  # noqa: E402
-from sphragis.corpus.load import refined_examples  # noqa: E402
-from sphragis.corpus.pipeline import run_dedup, run_split  # noqa: E402
-from sphragis.experiment.neutral import closest_training_match  # noqa: E402
-from sphragis.provenance import provenance_header  # noqa: E402
+from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.halves import assign, project_counts
+from sphragis.corpus.load import refined_examples
+from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.experiment.neutral import closest_training_match
+from sphragis.provenance import provenance_header
 
 THRESHOLDS = (0.8, 0.7, 0.6, 0.5)
 

@@ -6052,7 +6052,7 @@ thirteen months.
   collected after acceptance is reported as not collected and as a deviation, and each hypothesis
   is read over its remaining cells at the registered Holm levels.
 
-### The language-mix ceiling, fixed on OpenStack before Wikimedia is measured: its own halves split docs from code (2026-09-28)
+### The language-mix ceiling, fixed on OpenStack before Wikimedia is measured: its own halves split docs from code (2026-09-27)
 
 `scripts/split_criteria.py` checks an organization's registered split against OpenStack's, each
 half deduplicated and split on its own as the runner reads a placebo half (it reproduces the

@@ -16,9 +16,8 @@ import json
 from pathlib import Path
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.halves import assign, halves, project_counts, split_criteria
+from sphragis.corpus.halves import excluded_projects, halves, runner_train, split_criteria
 from sphragis.corpus.load import refined_examples
-from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -29,34 +28,28 @@ parser.add_argument("--reference-root", type=Path, default=None, help="default: 
 parser.add_argument("--out", type=Path, default=None)
 
 
-def org_halves(root: Path, org: str) -> list[dict]:
-    """Each half deduplicated and split on its own, as the runner reads a placebo half."""
+def org_halves(root: Path, org: str) -> tuple[list[dict], list[str]]:
     rows = refined_examples(root, org)
     if not rows:
         raise SystemExit(f"{org}: no refined examples under {root / org}")
-    side_of = assign(dict(project_counts(rows, WINDOWS["train"])))
-    train = []
-    for side in (0, 1):
-        kept, _ = run_dedup([row for row in rows if side_of.get(row["project"]) == side])
-        windows, _, _ = run_split(kept, WINDOWS)
-        train.extend(windows["train"])
-    return halves(rows, train, WINDOWS["train"])
+    window = WINDOWS["train"]
+    return halves(rows, runner_train(rows, WINDOWS), window), excluded_projects(rows, window)
 
 
 def main() -> None:
     args = parser.parse_args()
-    result = split_criteria(
-        org_halves(args.root, args.org),
-        org_halves(args.reference_root or args.root, args.reference),
-    )
+    own, excluded = org_halves(args.root, args.org)
+    ref, _ = org_halves(args.reference_root or args.root, args.reference)
+    result = {"excluded_projects": excluded, **split_criteria(own, ref)}
     for name, half in zip(("a", "b"), result["halves"], strict=True):
         print(
             f"{args.org}-{name}: {half['projects']} projects, {half['train_examples']} train, "
             f"largest {half['largest']} at {half['largest_share']:.3f}"
         )
     print(
-        f"suffix TV {result['suffix_total_variation']:.4f} "
+        f"suffix TV {result['suffix_total_variation']} "
         f"(ceiling {result['suffix_total_variation_ceiling']:.4f}), "
+        f"{len(excluded)} projects excluded before the split, "
         f"size floor {result['size_floor']}"
     )
     print(json.dumps(result["checks"]), "qualifies" if result["qualifies"] else "does not qualify")

@@ -51,9 +51,8 @@ MIN_PROJECTED_EXAMPLES = 256  # the RQ2 client length in clients-cpp-256.txt
 # Examples per reviewer-anchored comment: Qt's 0.5 comments a change (research log,
 # 2026-09-21) against 0.219 examples a fetched change over its train and dev months.
 EXAMPLES_PER_COMMENT = 0.42
-# The registered split criteria: at least three projects a half, none over half of its half's
-# train examples, each half at least OpenStack's smaller placebo half (2,163 train examples
-# from its frozen train split under scripts/placebo_corpus.py's rule).
+# The floor Chromium was scoped against on 2026-09-22, from corpus v1. A frozen corpus is checked
+# by scripts/split_criteria.py, which reads the floor from OpenStack's halves.
 MIN_HALF_TRAIN = 2163
 
 

@@ -1,8 +1,29 @@
 {
   "org": "openstack",
   "reference": "openstack",
+  "excluded_projects": [
+    "openstack/charm-neutron-api-plugin-ovn",
+    "openstack/charm-nova-cloud-controller",
+    "openstack/charm-nova-compute-nvidia-vgpu",
+    "openstack/cinder-tempest-plugin",
+    "openstack/debtcollector",
+    "openstack/designate-tempest-plugin",
+    "openstack/grenade",
+    "openstack/kayobe-config-dev",
+    "openstack/keystone",
+    "openstack/mistral",
+    "openstack/openstack-ansible-os_octavia",
+    "openstack/oslo.policy",
+    "openstack/puppet-mistral",
+    "openstack/zaqar",
+    "starlingx/app-kubevirt",
+    "starlingx/election",
+    "starlingx/portieris-armada-app",
+    "x/packstack"
+  ],
   "halves": [
     {
+      "assigned_projects": 122,
       "projects": 119,
       "train_examples": 2158,
       "largest": "starlingx/docs",
@@ -73,6 +94,7 @@
       }
     },
     {
+      "assigned_projects": 124,
       "projects": 123,
       "train_examples": 2182,
       "largest": "starlingx/test",
@@ -141,6 +163,7 @@
   ],
   "reference_halves": [
     {
+      "assigned_projects": 122,
       "projects": 119,
       "train_examples": 2158,
       "largest": "starlingx/docs",
@@ -211,6 +234,7 @@
       }
     },
     {
+      "assigned_projects": 124,
       "projects": 123,
       "train_examples": 2182,
       "largest": "starlingx/test",
@@ -288,19 +312,18 @@
   },
   "qualifies": true,
   "provenance": {
-    "generated_at": "2026-09-27T15:25:42.761973+00:00",
+    "generated_at": "2026-09-27T19:19:00.343118+00:00",
     "git": {
-      "commit": "b4980906ef2d6bee0126833f43c6754886459f95",
+      "commit": "a60dd95789b6bd3c46186723a61c776172e96c2b",
       "branch": "feat/split-criteria",
       "uncommitted_code": [
         "scripts/host_scoping.py",
         "scripts/label_audit_sample.py",
-        "scripts/placebo_corpus.py",
         "scripts/sibling_leakage.py",
         "scripts/split_criteria.py",
         "sphragis/corpus/halves.py"
       ],
-      "uncommitted_code_sha256": "9bfae53c832355ad277371f2e84dda6094dd3e819013e2a6220a973300d5f575"
+      "uncommitted_code_sha256": "029516db95fe2b645c4d1ff295b2d7a3be1f8387a879c86b7504425335e7b0ea"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

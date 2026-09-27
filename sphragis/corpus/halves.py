@@ -70,6 +70,7 @@ def halves(
         largest, top = per_project.most_common(1)[0] if per_project else (None, 0)
         out.append(
             {
+                "assigned_projects": sum(1 for s in side_of.values() if s == side),
                 "projects": len(per_project),
                 "train_examples": len(members),
                 "largest": largest,
@@ -80,20 +81,44 @@ def halves(
     return out
 
 
+def excluded_projects(built: Iterable[Mapping[str, Any]], window: tuple[str, str]) -> list[str]:
+    """Projects with refined rows but none in the training window, excluded before the split."""
+    rows = list(built)
+    return sorted({row["project"] for row in rows} - set(project_counts(rows, window)))
+
+
+def runner_train(
+    built: list[dict[str, Any]], windows: Mapping[str, tuple[str, str]]
+) -> list[dict[str, Any]]:
+    """The training rows each half trains on: every half deduplicated and split on its own, as
+    the runner reads a placebo half, so a duplicate across halves survives in both."""
+    from sphragis.corpus.pipeline import run_dedup, run_split
+
+    side_of = assign(dict(project_counts(built, windows["train"])))
+    train: list[dict[str, Any]] = []
+    for side in (0, 1):
+        kept, _ = run_dedup([row for row in built if side_of.get(row["project"]) == side])
+        split, _, _ = run_split(kept, dict(windows))
+        train.extend(split["train"])
+    return train
+
+
 def split_criteria(own: list[dict[str, Any]], ref: list[dict[str, Any]]) -> dict[str, Any]:
     """Whether an organization's `halves` qualify, each criterion read against the reference's.
 
     The reference is OpenStack's halves: its smaller half is the size floor and its suffix mix
-    the language-mix ceiling.
+    the language-mix ceiling. Projects are counted after dedup, as what a half trains on; a half
+    left with no training rows does not qualify.
     """
     floor = min(h["train_examples"] for h in ref)
-    tv = total_variation(own[0]["suffixes"], own[1]["suffixes"])
+    empty = any(not h["suffixes"] for h in own)
+    tv = None if empty else total_variation(own[0]["suffixes"], own[1]["suffixes"])
     ceiling = total_variation(ref[0]["suffixes"], ref[1]["suffixes"])
     checks = {
         "projects": all(h["projects"] >= MIN_PROJECTS_A_HALF for h in own),
         "largest_share": all(h["largest_share"] <= MAX_SHARE_OF_HALF for h in own),
         "size": all(h["train_examples"] >= floor for h in own),
-        "language_mix": tv <= ceiling,
+        "language_mix": tv is not None and tv <= ceiling,
     }
     return {
         "halves": own,
