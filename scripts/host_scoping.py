@@ -25,7 +25,6 @@ beside the summary under datasets/results/host-scoping-chromium/.
 from __future__ import annotations
 
 import collections
-import importlib.util
 import itertools
 import json
 import random
@@ -38,6 +37,7 @@ from sphragis.corpus.build import is_acknowledgement
 from sphragis.corpus.cli import GERRIT, http_transport, refuse_if_sealed
 from sphragis.corpus.examples import is_code_file
 from sphragis.corpus.gerrit import _get, parse_response
+from sphragis.corpus.halves import MAX_SHARE_OF_HALF, MIN_PROJECTS_A_HALF, assign
 from sphragis.provenance import provenance_header
 
 BASE = GERRIT["chromium"]
@@ -54,8 +54,6 @@ EXAMPLES_PER_COMMENT = 0.42
 # The registered split criteria: at least three projects a half, none over half of its half's
 # train examples, each half at least OpenStack's smaller placebo half (2,163 train examples
 # from its frozen train split under scripts/placebo_corpus.py's rule).
-MIN_PROJECTS_A_HALF = 3
-MAX_SHARE_OF_HALF = 0.5
 MIN_HALF_TRAIN = 2163
 
 
@@ -191,14 +189,8 @@ def measure_yield(project: str, month: str, k: int) -> None:
 
 
 def _greedy_halves(train: dict[str, float]) -> list[dict]:
-    spec = importlib.util.spec_from_file_location(
-        "placebo_corpus", Path(__file__).with_name("placebo_corpus.py")
-    )
-    assert spec and spec.loader
-    placebo = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(placebo)
     counts = {p: round(n) for p, n in train.items()}
-    side = placebo.assign(counts)
+    side = assign(counts)
     halves = []
     for s in (0, 1):
         members = {p: n for p, n in counts.items() if side[p] == s}
