@@ -31,9 +31,9 @@ import argparse
 import json
 import re
 from collections import Counter, defaultdict
-from collections.abc import Iterable
 from pathlib import Path
 
+from sphragis.corpus.halves import assign, project_counts
 from sphragis.corpus.load import built_dir, mark_derived, refined_dir, refined_month_files
 from sphragis.provenance import provenance_header
 
@@ -54,27 +54,6 @@ parser.add_argument(
     default="train",
     help="the window whose counts the split balances; the others follow the same assignment",
 )
-
-
-def assign(counts: dict[str, int]) -> dict[str, int]:
-    """Each project to a side, largest first, always to the smaller side.
-
-    Deterministic and unseeded on purpose. Ties in count break by name, so the assignment is
-    a function of the corpus alone and re-running it cannot produce a different control.
-    """
-    sides = [0, 0]
-    out: dict[str, int] = {}
-    for project in sorted(counts, key=lambda p: (-counts[p], p)):
-        side = 0 if sides[0] <= sides[1] else 1
-        out[project] = side
-        sides[side] += counts[project]
-    return out
-
-
-def project_counts(rows: Iterable[dict], window: tuple[str, str]) -> Counter[str]:
-    """Examples per project created inside one window: what `assign` balances."""
-    start, end = window
-    return Counter(row["project"] for row in rows if start <= row["created"][:10] < end)
 
 
 def main() -> None:

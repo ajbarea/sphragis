@@ -31,11 +31,12 @@ research log records what is and is not known about those requests.
 
 ## In flight
 
-- **Label audit v2.** 384 examples under a two-question rubric; two blind model raters, and a
-  human's blind check of rater A on a published page. Kappa, AC1 and specific agreement are in the
-  artifact; the human's are added once the check is in.
-- **Retraining on v2** waits on Qt's answer about access; TIGRIS gets the refined corpora, and
-  RQ2's client corpora are recut with records, before any GPU job.
+- **OpenStack on corpus v2, on TIGRIS** (`corpus-v2/openstack`, checksums matched): the placebo
+  at the half size, five seeds under `RUN_TAG=v2`, gives the v2 seed effect and variance model the
+  sensitivity analysis is recomputed from, and is OpenStack's H1 dev-window pilot. Job 206166 is
+  seed 1.
+- **Split criteria as code** (`scripts/split_criteria.py`): run on Wikimedia once its train window
+  is frozen, against the OpenStack ceiling in `split-criteria-openstack.json`.
 - **RQ1 re-registered around granularity** (AJ, 2026-09-22). Spec
   `docs/superpowers/specs/2026-09-22-granularity-redesign.md`, gate as code in
   `sphragis/experiment/decomposition.py`, Stage 1 text in `papers` on branch

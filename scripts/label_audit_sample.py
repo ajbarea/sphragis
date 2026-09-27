@@ -20,15 +20,12 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from placebo_corpus import assign, project_counts  # noqa: E402
-
-from sphragis.corpus.cli import WINDOWS  # noqa: E402
-from sphragis.corpus.load import refined_examples  # noqa: E402
-from sphragis.corpus.pipeline import run_dedup, run_split  # noqa: E402
+from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.halves import assign, project_counts
+from sphragis.corpus.load import refined_examples
+from sphragis.corpus.pipeline import run_dedup, run_split
 
 LABELS = ("valid", "non_actionable", "unrelated_rewrite", "partial", "context_dependent")
 
