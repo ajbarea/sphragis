@@ -26,15 +26,12 @@ import argparse
 import itertools
 import json
 import random
-import sys
 from collections import defaultdict
 from pathlib import Path
 from statistics import fmean, variance
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from crossed_reread import merge  # noqa: E402
-
-from sphragis.experiment.grid import EvalRun, run_id  # noqa: E402
+from sphragis.experiment.grid import EvalRun, run_id
+from sphragis.experiment.runs import merge
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser()
@@ -42,6 +39,11 @@ parser.add_argument("runs", type=Path, nargs="+")
 parser.add_argument("--resamples", type=int, default=10_000)
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--out", type=Path, required=True)
+parser.add_argument(
+    "--corpus-digest",
+    help="the checked digest of byte-identical corpus roots the runs were built into; merges runs "
+    "whose corpus sources differ only in root, and is recorded in the output",
+)
 
 # Lower 5% points of chi-square, by degrees of freedom, for a one-sided upper bound on a
 # variance: sigma^2 <= df * s^2 / chi2_0.05(df). Three seeds give two degrees of freedom, where
@@ -90,12 +92,14 @@ def pair_noise_variance(
 
 def main() -> None:
     args = parser.parse_args()
-    results, seeds = merge(args.runs)
+    results, seeds = merge(args.runs, roots_verified=bool(args.corpus_digest))
     if len(seeds) < 2:
         raise SystemExit("a seed effect needs at least two seeds")
     orgs = sorted({arm.split("|")[1] for arm in results if arm.startswith("base|")})
     rng = random.Random(args.seed)
     report: dict = {"runs": [str(p) for p in args.runs], "seeds": seeds, "organizations": {}}
+    if args.corpus_digest:
+        report["corpus_roots_digest"] = args.corpus_digest
     between, noise = [], []
     for org in orgs:
         other = next(o for o in orgs if o != org)

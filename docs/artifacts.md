@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 150 artifacts under
-37 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 158 artifacts under
+38 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -152,13 +152,22 @@ Is greedy decoding what amplifies a planted convention?
 |---|---|
 | `decoding-marker-0.25-t1.0.json` |  |
 
+## `scripts/decomposition_pilot.py`
+
+The registered decomposition gate, read on development-window runs as a pilot.
+
+| artifact | |
+|---|---|
+| `decomposition-pilot-openstack-v2.json` |  |
+
 ## `scripts/decomposition_sensitivity.py`
 
 The smallest half-split effect the decomposition gate detects, and how often a null is bounded.
 
 | artifact | |
 |---|---|
-| `decomposition-sensitivity-pooled.json` | `decomposition-sensitivity.json` |
+| `decomposition-sensitivity-pooled.json` | `decomposition-sensitivity-v2.json` |
+| `decomposition-sensitivity.json` |  |
 
 ## `scripts/defence_curve.py`
 
@@ -248,9 +257,12 @@ Two pseudo-organizations built from one organization's own projects.
 | artifact | |
 |---|---|
 | `rq1-placebo-openstack-s2.json` | `rq1-placebo-openstack-s3.json` |
-| `rq1-placebo-openstack-seeds.json` | `rq1-placebo-openstack.json` |
-| `rq1-placebo-qt-s2.json` | `rq1-placebo-qt-s3.json` |
-| `rq1-placebo-qt-seeds.json` | `rq1-placebo-qt.json` |
+| `rq1-placebo-openstack-seeds.json` | `rq1-placebo-openstack-v2-s2.json` |
+| `rq1-placebo-openstack-v2-s3.json` | `rq1-placebo-openstack-v2-s4.json` |
+| `rq1-placebo-openstack-v2-s5.json` | `rq1-placebo-openstack-v2.json` |
+| `rq1-placebo-openstack.json` | `rq1-placebo-qt-s2.json` |
+| `rq1-placebo-qt-s3.json` | `rq1-placebo-qt-seeds.json` |
+| `rq1-placebo-qt.json` |  |
 
 ## `scripts/power_rq1.py`
 
@@ -303,9 +315,9 @@ How large is the seed main effect: the shift a retrained seed gives every change
 
 | artifact | |
 |---|---|
-| `seed-effect-placebo-openstack.json` | `seed-effect-placebo-qt.json` |
-| `seed-effect-qtfull.json` | `seed-effect-rq1-qtfull.json` |
-| `seed-effect-sym-0.json` |  |
+| `seed-effect-placebo-openstack-v2.json` | `seed-effect-placebo-openstack.json` |
+| `seed-effect-placebo-qt.json` | `seed-effect-qtfull.json` |
+| `seed-effect-rq1-qtfull.json` | `seed-effect-sym-0.json` |
 
 ## `scripts/sensitivity.py`
 
