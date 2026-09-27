@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify corpus-reproduce clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs redact redact-check
+.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify corpus-reproduce clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs backup-datasets redact redact-check
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -139,6 +139,21 @@ pull-logs:                 ## Copy the cluster's job logs into datasets/logs, th
 	  exit 1; \
 	fi; \
 	echo "datasets/logs holds $$after job log(s), $$((after - before)) new"
+
+backup-datasets:           ## Copy datasets/gerrit* to the cluster's data root, then verify every file
+	@# The raw REST snapshots cannot be refetched (collection stopped) and are untracked, so
+	@# without this the only copy is this machine. The cluster is a second machine, not a
+	@# backup service: RC keeps no backups either, but the two copies do not fail together.
+	@# The checksum comparison is the check, not rsync's exit code.
+	rsync -a --checksum datasets/gerrit datasets/gerrit-control $(TIGRIS_HOST):ajsoftworks/sphragis-data/datasets-backup/
+	@l=$$(mktemp) && r=$$(mktemp) && trap 'rm -f "$$l" "$$r"' EXIT; \
+	(cd datasets && find gerrit gerrit-control -type f -print0 | xargs -0 sha256sum) | LC_ALL=C sort -k2 >"$$l"; \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'cd ajsoftworks/sphragis-data/datasets-backup && find gerrit gerrit-control -type f -print0 | xargs -0 sha256sum' | LC_ALL=C sort -k2 >"$$r"; \
+	n=$$(wc -l <"$$l"); missing=$$(LC_ALL=C comm -23 "$$l" "$$r" | wc -l); \
+	if [ "$$n" -eq 0 ] || [ "$$missing" -ne 0 ]; then \
+	  echo "backup-datasets: $$missing of $$n file(s) differ or are missing on $(TIGRIS_HOST)" >&2; exit 1; \
+	fi; \
+	echo "backup-datasets: all $$n files identical on $(TIGRIS_HOST)"
 
 cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aarch64 TIGRIS, x86_64 SPORC)
 	@# The login node is aarch64 and builds its own venv in place. An x86_64 venv can only be
