@@ -89,10 +89,12 @@ restricted to C++ source and header hunks. Under ICH E9(R1) a restricted populat
 estimand, so it is reported beside H2 and does not bind it.
 
 H1 carries a supplementary estimand of the same kind (registered 2026-09-27): the half-split
-contrast restricted to each admitted organization's most frequent file suffix over its training
-window, read from its split-criteria artifact (`dominant_suffix`; `.py` for OpenStack), because
+contrast restricted to one file suffix per admitted organization, the one both halves hold most
+of (the largest smaller count across the halves' training rows, ties by name), derived in code
+from the organization's split-criteria artifact (`matched_suffix`; `.py` for OpenStack), because
 two halves can differ in file-type mix and within one suffix they cannot. It is reported beside
-H1 with each half's share of that suffix and decides nothing (`file_type_supplement`).
+H1 with each half's test-window share of that suffix and decides nothing
+(`file_type_supplement`).
 
 ## Verdicts, the pass rule and multiplicity
 

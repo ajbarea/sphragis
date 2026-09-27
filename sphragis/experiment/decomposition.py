@@ -481,9 +481,7 @@ def row_path(row: Mapping[str, Any]) -> str:
 
 def is_cpp(row: Mapping[str, Any]) -> bool:
     """Whether an example comes from a C++ source or header file."""
-    path = row_path(row)
-    dot = path.rfind(".")
-    return dot > path.rfind("/") and path[dot:].lower() in CPP_SUFFIXES
+    return suffix(row_path(row)) in CPP_SUFFIXES
 
 
 def cpp_supplement(
@@ -520,8 +518,7 @@ def cpp_supplement(
         cells[org] = {
             "foreign": foreign,
             **_supplement_cell(
-                "H2",
-                [
+                lambda org=org, foreign=foreign: [
                     organization_clusters(
                         restricted, org=org, foreign=foreign, seed=s, metric=metric
                     )
@@ -551,25 +548,24 @@ def _share(rows: Sequence[Mapping[str, Any]], keep: Callable[[Mapping[str, Any]]
 
 
 def _supplement_cell(
-    name: str,
-    per_seed: list[list[list[Cluster]]],
+    per_seed: Callable[[], list[list[list[Cluster]]]],
     *,
     bootstrap_seed: int,
     resamples: int,
     estimator: Estimator,
 ) -> dict[str, Any]:
     """One supplementary contrast on a restricted population: estimate and 95% interval, or the
-    error a half left with too few changes raises."""
+    error building or bootstrapping its clusters raised, since a supplement withholds nothing."""
     try:
-        strata = _strata(per_seed)
+        strata = _strata(per_seed())
         estimates, draws = stratified_crossed_draws(
-            {name: strata}, seed=bootstrap_seed, resamples=resamples, estimator=estimator
+            {"cell": strata}, seed=bootstrap_seed, resamples=resamples, estimator=estimator
         )
     except ValueError as error:
         return {"error": str(error)}
-    low, high = percentile_interval(draws[name], SUMMED_CONFIDENCE)
+    low, high = percentile_interval(draws["cell"], SUMMED_CONFIDENCE)
     return {
-        "estimate": estimates[name],
+        "estimate": estimates["cell"],
         "low": low,
         "high": high,
         "confidence": SUMMED_CONFIDENCE,
@@ -577,21 +573,22 @@ def _supplement_cell(
     }
 
 
-def dominant_suffix(split_criteria_artifact: Mapping[str, Any]) -> str:
-    """An organization's most frequent file suffix over both halves' training rows, read from
-    its `scripts/split_criteria.py` artifact; ties break by suffix."""
-    pooled: dict[str, int] = {}
-    for half in split_criteria_artifact["halves"]:
-        for kind, n in half["suffixes"].items():
-            pooled[kind] = pooled.get(kind, 0) + n
-    return min(pooled, key=lambda k: (-pooled[k], k))
+def matched_suffix(split_criteria_artifact: Mapping[str, Any]) -> str:
+    """The file suffix both halves of an organization hold most of: the one whose smaller count
+    across the two halves' training rows is largest, read from its `scripts/split_criteria.py`
+    artifact; ties break by suffix."""
+    first, second = (h["suffixes"] for h in split_criteria_artifact["halves"])
+    both = set(first) & set(second)
+    if not both:
+        raise ValueError("the halves share no file suffix")
+    return min(both, key=lambda k: (-min(first[k], second[k]), k))
 
 
 def file_type_supplement(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
     admitted: Iterable[str],
-    suffixes: Mapping[str, str],
+    split_criteria: Mapping[str, Mapping[str, Any]],
     seeds: Sequence[int],
     metric: str = "exact_match",
     bootstrap_seed: int,
@@ -601,16 +598,18 @@ def file_type_supplement(
     """H1 restricted to one file type per organization: a supplementary estimand, never tested.
 
     Halves can differ in file-type mix (OpenStack's split 40% reStructuredText against 62%
-    Python), so the half-split contrast is recomputed on each organization's most frequent
-    training suffix alone (`dominant_suffix`), where the two halves cannot differ in it.
+    Python), so the half-split contrast is recomputed on one file type per organization, where
+    the halves cannot differ in it. The type is derived here from each organization's
+    split-criteria artifact (`matched_suffix`), never passed in.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
     spec = design(admitted)
-    missing = [org for org in spec["H1"] if org not in suffixes]
+    missing = [org for org in spec["H1"] if org not in split_criteria]
     if missing:
-        raise ValueError(f"no registered file type for {missing}")
+        raise ValueError(f"no split-criteria artifact for {missing}")
+    suffixes = {org: matched_suffix(split_criteria[org]) for org in spec["H1"]}
     cells: dict[str, Any] = {}
     for org in spec["H1"]:
 
@@ -621,8 +620,9 @@ def file_type_supplement(
         cells[org] = {
             "suffix": suffixes[org],
             **_supplement_cell(
-                "H1",
-                [project_clusters(restricted, org=org, seed=s, metric=metric) for s in seeds],
+                lambda org=org, restricted=restricted: [
+                    project_clusters(restricted, org=org, seed=s, metric=metric) for s in seeds
+                ],
                 bootstrap_seed=bootstrap_seed,
                 resamples=resamples,
                 estimator=estimator,

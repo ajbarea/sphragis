@@ -416,8 +416,8 @@ as the unit; the evidence says the codebase is.
 - [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
-- [x] H1 carries a supplementary estimand on each organization's most frequent training suffix
-  (`file_type_supplement`; `.py` for OpenStack), reported beside H1 (2026-09-27).
+- [x] H1 carries a supplementary estimand on the suffix both halves hold most of
+  (`file_type_supplement`, `matched_suffix`; `.py` for OpenStack), reported beside H1 (2026-09-27).
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.

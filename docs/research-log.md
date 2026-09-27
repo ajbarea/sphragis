@@ -6125,9 +6125,15 @@ the model venv and the merge guards are tested.
 Decided on the open question the language-mix ceiling raised: OpenStack's halves split 40%
 reStructuredText against 62% Python, so part of a half-split contrast could be a document-type
 difference. H1 now carries a supplementary estimand, as H2 carries one restricted to C++: the same
-contrast on each admitted organization's most frequent training suffix alone (`dominant_suffix`
-over the split-criteria artifact's pooled halves, ties by name; `.py` for OpenStack), with each
-half's share of that suffix reported. Under ICH E9(R1) a restricted population is a different
-estimand, so it is reported beside H1 and decides nothing. It costs no training: the adapters'
-existing scores are read on the subset. `cpp_supplement` and `file_type_supplement` share one
-helper for the restricted bootstrap.
+contrast on one file suffix per admitted organization, the one both halves hold most of, meaning
+the largest smaller count across the two halves' training rows, ties by name (`matched_suffix`).
+Pooling the halves was rejected in review: a large docs-heavy half could make a suffix the small
+half barely has the pooled winner, and that cell would fail for want of changes. For OpenStack
+the rule gives `.py` (692 and 1,362 training rows; `.rst` has 871 and 313). The suffix is derived in
+code from the organization's split-criteria artifact, never passed in, and each half's
+test-window share of it is reported. Under ICH E9(R1) a restricted population is a different
+estimand, so it is reported beside H1 and decides nothing. The rule was registered after
+OpenStack's development-window pilot had been read, and reads only training-window suffix counts.
+It costs no training: the adapters' existing scores are read on the subset. `cpp_supplement` and
+`file_type_supplement` share one restricted-bootstrap helper, which builds each cell's clusters
+inside its error handling, as `cpp_supplement` did.
