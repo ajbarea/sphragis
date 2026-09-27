@@ -81,11 +81,10 @@ def _by_relation(own: float, sibling: float, foreign: float) -> Score:
     return score
 
 
-# A registered bound for every cell the full admission reads, at both Holm levels.
+# A registered bound for every cell of every organization, at both Holm levels.
 BOUND = 0.05
 DETECTABLE = {
-    name: {org: {0.975: BOUND, 0.95: BOUND} for org in ("openstack", "qt", "chromium")}
-    for name in ("H1", "H2")
+    name: {org: {0.975: BOUND, 0.95: BOUND} for org in ORGANIZATIONS} for name in ("H1", "H2")
 }
 
 
@@ -689,6 +688,49 @@ def test_the_cpp_supplement_reads_only_cpp_examples() -> None:
     assert qt["cpp_share"] == {"qt-a": 0.5, "qt-b": 0.5}
 
 
+def test_the_gate_reports_the_design_it_read_and_refuses_a_set_without_openstack() -> None:
+    admitted = ("openstack", "wikimedia", "qt", "chromium")
+    outcome = _gate(_by_relation(0.75, 0.25, 0.25), admitted=admitted)
+    assert outcome["design"] == design(admitted)
+    assert set(outcome["per_org"]["H1"]) == set(admitted)
+    assert {o: c["role"] for o, c in outcome["per_org"]["H2"].items()} == {
+        "openstack": "exploratory",
+        "wikimedia": "exploratory",
+        "qt": "confirmatory",
+        "chromium": "confirmatory",
+    }
+    assert outcome["joint"]["openstack"]["h2"] == {"foreign": "wikimedia", "role": "exploratory"}
+    assert outcome["joint"]["qt"]["h2"] == {"foreign": "chromium", "role": "confirmatory"}
+    with pytest.raises(ValueError, match="openstack must always be admitted"):
+        _gate(_by_relation(0.75, 0.25, 0.25), admitted=("qt", "chromium"))
+
+
+@pytest.mark.parametrize(
+    ("admitted", "cells"),
+    [
+        (("openstack", "wikimedia", "qt"), set()),
+        (("openstack", "chromium"), set()),
+        (("openstack", "wikimedia", "qt", "chromium"), {"qt", "chromium"}),
+    ],
+)
+def test_the_cpp_supplement_reads_only_confirmatory_h2_cells(
+    admitted: tuple[str, ...], cells: set[str]
+) -> None:
+    def score(trained: str, window: str, seed: int, change: int) -> float:
+        return 1.0 if _org(trained) == _org(window) else 0.0
+
+    results = _results(score, orgs=admitted, n_changes=2 * N_CHANGES)
+    for rows in results.values():
+        for row in rows:
+            row["path"] = "src/f.cc"
+    outcome = cpp_supplement(
+        results, admitted=admitted, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+    )
+    assert outcome["design"] == design(admitted)
+    assert set(outcome["cells"]) == cells
+    assert ("note" in outcome) is (not cells)
+
+
 def test_a_half_with_too_few_cpp_changes_is_reported_not_raised() -> None:
     results = _results(_by_relation(0.5, 0.5, 0.25))
     for rows in results.values():
@@ -709,7 +751,7 @@ def test_detectable_effects_are_read_from_the_sensitivity_artifact() -> None:
             assert bounds["H1"][org][float(level)] == entry["minimum_detectable_effect"]
 
 
-def test_the_registered_design_refuses_h2_cells_without_bounds() -> None:
+def test_a_confirmatory_h2_cell_without_a_bound_is_refused() -> None:
     with pytest.raises(ValueError, match="H2:"):
         _gate(_by_relation(0.75, 0.25, 0.25), detectable={"H1": DETECTABLE["H1"]})
 

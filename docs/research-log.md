@@ -6038,3 +6038,16 @@ exists:
 As of today neither permission request has an answer (QTQAINFRA-8064 has no comment; the
 infra-dev thread has only an automatic reply), and Wikimedia's build has completed two of its
 thirteen months.
+
+**Added after an independent review, still before any Wikimedia contrast.**
+
+- H1's "why" had been measured for OpenStack and Qt and only assumed for a new organization. The
+  split rule puts the two largest projects in opposite halves, and Wikimedia's two largest
+  (operations/puppet and mediawiki/core) write different languages. So the split criteria gain
+  one: the two halves' file-type mix over training hunks may differ by no more than OpenStack's
+  halves do, by total variation distance over file suffixes.
+- Marginal power stays 0.928 per cell, so the joint power of the intersection over admitted H1
+  cells is about 0.93, 0.86, 0.80 and 0.74 for one to four cells, stated for the count admitted.
+- Admission is fixed at Stage 1 submission. An admitted organization whose test window cannot be
+  collected after acceptance is reported as not collected and as a deviation, and each hypothesis
+  is read over its remaining cells at the registered Holm levels.

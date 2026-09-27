@@ -74,7 +74,7 @@ Waiting on that route:
 1. ✅ The seed effect at the half size is above 0.01 on both placebos, so five seeds (research log,
    2026-09-23).
 2. The sensitivity analysis recomputed at the half size, at five seeds, at 97.5% and 95%, for the
-   three-cell intersection, against the smallest effect of interest.
+   intersection over the admitted H1 cells, against the smallest effect of interest.
 3. ✅ Sibling-half leakage on the dev window is below the registered threshold (research log,
    2026-09-23). 📋 The C++-restricted estimand beside H2.
 4. The decomposition's pilot on the dev window before 2026-11-20.

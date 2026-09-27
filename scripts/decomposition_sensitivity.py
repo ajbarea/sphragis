@@ -9,7 +9,7 @@ projected size split between the halves in their dev-window proportion.
 Two numbers per cell and level:
 
 - the realised exact-match difference detected with marginal power `--target` (0.928 per cell
-  gives about 0.80 across three independent cells, the intersection-union test's joint power);
+  gives joint power 0.928**k across k independent cells: about 0.80 at three, 0.74 at four);
 - the share of null studies whose upper bound falls below that effect (`null_reads_bounded`), the
   registered negative reading, and the share whose interval sits inside the SESOI band
   (`null_reads_absent`), which says absence at the SESOI is out of reach at this design's size.

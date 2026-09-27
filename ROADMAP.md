@@ -414,8 +414,8 @@ as the unit; the evidence says the codebase is.
 - [x] Cells as a rule over the organizations admitted by host permission, not two fixed designs
   (2026-09-27): H1 on every admitted organization, H2 on Qt and Chromium only when both are.
 - [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
-- [ ] Qt and Chromium admitted if permission arrives before 2026-11-20 (Chromium frozen by
-  2026-10-23), or registered as not collected.
+- [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
+  corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.
 - [ ] The crossed interval's coverage at 97.5%, and the sensitivity analysis at the half size
   against the smallest effect of interest.

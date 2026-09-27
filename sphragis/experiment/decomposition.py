@@ -424,6 +424,7 @@ def decomposition_gate(
             summed = [a + b for a, b in pairs]
             low, high = percentile_interval(summed, SUMMED_CONFIDENCE)
             joint[org] = {
+                "h2": {"foreign": h2_pairs[org][0], "role": roles["H2"]},
                 "shares": {
                     f"H1{'>' if a else '<='}0,H2{'>' if b else '<='}0": sum(
                         1 for x, y in pairs if (x > 0) == a and (y > 0) == b
@@ -505,6 +506,13 @@ def cpp_supplement(
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
     spec = design(admitted)
+    if not spec["H2"]:
+        return {
+            "design": spec,
+            "role": "supplementary",
+            "cells": {},
+            "note": "no confirmatory H2 cell among the admitted organizations",
+        }
     restricted = {key: [row for row in rows if is_cpp(row)] for key, rows in results.items()}
     cells: dict[str, Any] = {}
     for org, foreign in spec["H2"]:
