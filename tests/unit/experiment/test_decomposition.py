@@ -21,6 +21,8 @@ from sphragis.experiment.decomposition import (
     decomposition_gate,
     design,
     detectable_effects,
+    dominant_suffix,
+    file_type_supplement,
     halves,
     holm_levels,
     holm_steps,
@@ -770,3 +772,64 @@ def test_an_exploratory_cell_never_reads_bounded() -> None:
     for cell in outcome["per_org"]["H2"].values():
         assert cell["role"] == "exploratory"
         assert "bounded" not in cell["verdicts"].values()
+
+
+def test_dominant_suffix_pools_both_halves_and_breaks_ties_by_name() -> None:
+    artifact = {"halves": [{"suffixes": {".rst": 5, ".py": 2}}, {"suffixes": {".py": 4}}]}
+    assert dominant_suffix(artifact) == ".py"
+    assert dominant_suffix({"halves": [{"suffixes": {".b": 3, ".a": 3}}]}) == ".a"
+
+
+def _typed(score: Score, orgs: tuple[str, ...]) -> dict[str, list[dict[str, Any]]]:
+    """Even changes are Python, odd changes reStructuredText."""
+    results = _results(score, orgs=orgs, n_changes=2 * N_CHANGES)
+    for rows in results.values():
+        for row in rows:
+            change = int(row["change_id"].rsplit("I", 1)[1])
+            row["path"] = f"src/f{change}.{'py' if change % 2 == 0 else 'rst'}"
+    return results
+
+
+def test_the_file_type_supplement_reads_h1_on_the_registered_suffix_alone() -> None:
+    def score(trained: str, window: str, seed: int, change: int) -> float:
+        if change % 2 == 1:  # the docs carry the whole half-split effect
+            return 1.0 if trained == window else 0.0
+        return 0.5 * (change % 4 == 0)
+
+    admitted = ("openstack",)
+    outcome = file_type_supplement(
+        _typed(score, admitted),
+        admitted=admitted,
+        suffixes={"openstack": ".py"},
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+    )
+    cell = outcome["cells"]["openstack"]
+    assert outcome["role"] == "supplementary"
+    assert cell["suffix"] == ".py"
+    assert cell["estimate"] == pytest.approx(0.0)
+    assert cell["clusters_per_half"] == [N_CHANGES, N_CHANGES]
+    assert cell["share"] == {"openstack-a": 0.5, "openstack-b": 0.5}
+
+    docs = file_type_supplement(
+        _typed(score, admitted),
+        admitted=admitted,
+        suffixes={"openstack": ".rst"},
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+    )
+    assert docs["cells"]["openstack"]["estimate"] == pytest.approx(1.0)
+
+
+def test_the_file_type_supplement_refuses_an_admitted_organization_without_a_file_type() -> None:
+    with pytest.raises(ValueError, match="no registered file type"):
+        file_type_supplement(
+            _typed(_by_relation(0.75, 0.25, 0.25), ("openstack", "wikimedia")),
+            admitted=("openstack", "wikimedia"),
+            suffixes={"openstack": ".py"},
+            seeds=SEEDS,
+            bootstrap_seed=0,
+            resamples=MIN_RESAMPLES,
+        )

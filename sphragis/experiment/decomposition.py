@@ -15,10 +15,11 @@ cells are confirmatory is registered here, not passed in. Design of record:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from statistics import fmean
 from typing import Any
 
+from sphragis.corpus.halves import suffix
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import require_unique_ids, to_clusters
 from sphragis.experiment.walk import _require_registered_seeds
@@ -516,33 +517,26 @@ def cpp_supplement(
     restricted = {key: [row for row in rows if is_cpp(row)] for key, rows in results.items()}
     cells: dict[str, Any] = {}
     for org, foreign in spec["H2"]:
-        try:
-            strata = _strata(
+        cells[org] = {
+            "foreign": foreign,
+            **_supplement_cell(
+                "H2",
                 [
                     organization_clusters(
                         restricted, org=org, foreign=foreign, seed=s, metric=metric
                     )
                     for s in seeds
-                ]
-            )
-            estimates, draws = stratified_crossed_draws(
-                {"H2": strata}, seed=bootstrap_seed, resamples=resamples, estimator=estimator
-            )
-        except ValueError as error:
-            cells[org] = {"foreign": foreign, "error": str(error)}
-            continue
-        low, high = percentile_interval(draws["H2"], SUMMED_CONFIDENCE)
-        cells[org] = {
-            "foreign": foreign,
-            "estimate": estimates["H2"],
-            "low": low,
-            "high": high,
-            "confidence": SUMMED_CONFIDENCE,
-            "clusters_per_half": [len(runs[0]) for runs in strata],
-            "cpp_share": {
-                window: _share(results[_key(org, window, seeds[0])]) for window in halves(org)
-            },
+                ],
+                bootstrap_seed=bootstrap_seed,
+                resamples=resamples,
+                estimator=estimator,
+            ),
         }
+        if "error" not in cells[org]:
+            cells[org]["cpp_share"] = {
+                window: _share(results[_key(org, window, seeds[0])], is_cpp)
+                for window in halves(org)
+            }
     return {"design": spec, "role": "supplementary", "cells": cells}
 
 
@@ -552,5 +546,90 @@ def _key(org: str, window: str, seed: int) -> str:
     return run_id(EvalRun(f"adapter:{sibling}", window, seed))
 
 
-def _share(rows: Sequence[Mapping[str, Any]]) -> float:
-    return sum(is_cpp(r) for r in rows) / len(rows) if rows else 0.0
+def _share(rows: Sequence[Mapping[str, Any]], keep: Callable[[Mapping[str, Any]], bool]) -> float:
+    return sum(keep(r) for r in rows) / len(rows) if rows else 0.0
+
+
+def _supplement_cell(
+    name: str,
+    per_seed: list[list[list[Cluster]]],
+    *,
+    bootstrap_seed: int,
+    resamples: int,
+    estimator: Estimator,
+) -> dict[str, Any]:
+    """One supplementary contrast on a restricted population: estimate and 95% interval, or the
+    error a half left with too few changes raises."""
+    try:
+        strata = _strata(per_seed)
+        estimates, draws = stratified_crossed_draws(
+            {name: strata}, seed=bootstrap_seed, resamples=resamples, estimator=estimator
+        )
+    except ValueError as error:
+        return {"error": str(error)}
+    low, high = percentile_interval(draws[name], SUMMED_CONFIDENCE)
+    return {
+        "estimate": estimates[name],
+        "low": low,
+        "high": high,
+        "confidence": SUMMED_CONFIDENCE,
+        "clusters_per_half": [len(runs[0]) for runs in strata],
+    }
+
+
+def dominant_suffix(split_criteria_artifact: Mapping[str, Any]) -> str:
+    """An organization's most frequent file suffix over both halves' training rows, read from
+    its `scripts/split_criteria.py` artifact; ties break by suffix."""
+    pooled: dict[str, int] = {}
+    for half in split_criteria_artifact["halves"]:
+        for kind, n in half["suffixes"].items():
+            pooled[kind] = pooled.get(kind, 0) + n
+    return min(pooled, key=lambda k: (-pooled[k], k))
+
+
+def file_type_supplement(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    admitted: Iterable[str],
+    suffixes: Mapping[str, str],
+    seeds: Sequence[int],
+    metric: str = "exact_match",
+    bootstrap_seed: int,
+    resamples: int = 10_000,
+    estimator: Estimator = paired_difference,
+) -> dict[str, Any]:
+    """H1 restricted to one file type per organization: a supplementary estimand, never tested.
+
+    Halves can differ in file-type mix (OpenStack's split 40% reStructuredText against 62%
+    Python), so the half-split contrast is recomputed on each organization's most frequent
+    training suffix alone (`dominant_suffix`), where the two halves cannot differ in it.
+    """
+    if resamples < MIN_RESAMPLES:
+        raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
+    _require_registered_seeds(seeds)
+    spec = design(admitted)
+    missing = [org for org in spec["H1"] if org not in suffixes]
+    if missing:
+        raise ValueError(f"no registered file type for {missing}")
+    cells: dict[str, Any] = {}
+    for org in spec["H1"]:
+
+        def keep(row: Mapping[str, Any], wanted: str = suffixes[org]) -> bool:
+            return suffix(row_path(row)) == wanted
+
+        restricted = {key: [r for r in rows if keep(r)] for key, rows in results.items()}
+        cells[org] = {
+            "suffix": suffixes[org],
+            **_supplement_cell(
+                "H1",
+                [project_clusters(restricted, org=org, seed=s, metric=metric) for s in seeds],
+                bootstrap_seed=bootstrap_seed,
+                resamples=resamples,
+                estimator=estimator,
+            ),
+        }
+        if "error" not in cells[org]:
+            cells[org]["share"] = {
+                window: _share(results[_key(org, window, seeds[0])], keep) for window in halves(org)
+            }
+    return {"design": spec, "role": "supplementary", "cells": cells}

@@ -6076,3 +6076,15 @@ type separates as well as an organization). The criterion only keeps a new organ
 being worse on this than OpenStack. Whether H1 should carry a supplementary estimand restricted to
 a matched file type, as H2 carries one restricted to C++, is recorded as open and decided before
 Stage 1.
+
+### Registered before Stage 1: H1 carries a file-type-matched supplementary estimand (2026-09-27)
+
+Decided on the open question the language-mix ceiling raised: OpenStack's halves split 40%
+reStructuredText against 62% Python, so part of a half-split contrast could be a document-type
+difference. H1 now carries a supplementary estimand, as H2 carries one restricted to C++: the same
+contrast on each admitted organization's most frequent training suffix alone (`dominant_suffix`
+over the split-criteria artifact's pooled halves, ties by name; `.py` for OpenStack), with each
+half's share of that suffix reported. Under ICH E9(R1) a restricted population is a different
+estimand, so it is reported beside H1 and decides nothing. It costs no training: the adapters'
+existing scores are read on the subset. `cpp_supplement` and `file_type_supplement` share one
+helper for the restricted bootstrap.
