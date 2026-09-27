@@ -21,11 +21,13 @@ from sphragis.experiment.decomposition import (
     decomposition_gate,
     design,
     detectable_effects,
+    file_type_supplement,
     halves,
     holm_levels,
     holm_steps,
     holm_verdicts,
     is_cpp,
+    matched_suffix,
     organization_clusters,
     project_clusters,
     reading,
@@ -770,3 +772,122 @@ def test_an_exploratory_cell_never_reads_bounded() -> None:
     for cell in outcome["per_org"]["H2"].values():
         assert cell["role"] == "exploratory"
         assert "bounded" not in cell["verdicts"].values()
+
+
+def _artifact(a: dict[str, int], b: dict[str, int]) -> dict[str, Any]:
+    return {"halves": [{"suffixes": a}, {"suffixes": b}]}
+
+
+def test_matched_suffix_is_the_one_the_smaller_half_holds_most_of() -> None:
+    # Pooled, .rst (100 + 1) would win; the smaller half holds .py far more.
+    assert matched_suffix(_artifact({".rst": 100, ".py": 20}, {".rst": 1, ".py": 30})) == ".py"
+    assert matched_suffix(_artifact({".b": 3, ".a": 3}, {".a": 3, ".b": 3})) == ".a"
+    with pytest.raises(ValueError, match="share no file suffix"):
+        matched_suffix(_artifact({".py": 1}, {".rst": 1}))
+
+
+OPENSTACK_PY = _artifact({".py": 10, ".rst": 30}, {".py": 20, ".rst": 5})
+WIKIMEDIA_RST = _artifact({".py": 1, ".rst": 30}, {".py": 2, ".rst": 30})
+
+
+def _typed(score: Score, orgs: tuple[str, ...], py_changes: dict[str, int]) -> dict[str, Any]:
+    """Changes below `py_changes[window]` are Python in that window, the rest reStructuredText."""
+    results = _results(score, orgs=orgs, n_changes=2 * N_CHANGES)
+    for key, rows in results.items():
+        window = key.split("|")[1]
+        for row in rows:
+            change = int(row["change_id"].rsplit("I", 1)[1])
+            row["path"] = f"src/f{change}.{'py' if change < py_changes[window] else 'rst'}"
+    return results
+
+
+def _supplement(results: dict[str, Any], admitted: tuple[str, ...], **artifacts: Any) -> dict:
+    return file_type_supplement(
+        results,
+        admitted=admitted,
+        split_criteria=artifacts,
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+    )
+
+
+def test_the_file_type_supplement_reads_each_organization_on_its_own_matched_suffix() -> None:
+    admitted = ("openstack", "wikimedia")
+    # Asymmetric shares: openstack-a holds four more Python changes than openstack-b.
+    py = {
+        "openstack-a": N_CHANGES + 4,
+        "openstack-b": N_CHANGES,
+        "wikimedia-a": 5,
+        "wikimedia-b": 5,
+    }
+
+    def score(trained: str, window: str, seed: int, change: int) -> float:
+        rst = change >= py[window]
+        # OpenStack's effect lives in its docs, Wikimedia's in its Python.
+        if (_org(window) == "openstack") == rst:
+            return 1.0 if trained == window else 0.0
+        return 0.5 * (change % 4 == 0)
+
+    outcome = _supplement(
+        _typed(score, admitted, py), admitted, openstack=OPENSTACK_PY, wikimedia=WIKIMEDIA_RST
+    )
+    cells = outcome["cells"]
+    assert cells["openstack"]["suffix"] == ".py"
+    assert cells["wikimedia"]["suffix"] == ".rst"
+    assert cells["openstack"]["share"] == {
+        "openstack-a": (N_CHANGES + 4) / (2 * N_CHANGES),
+        "openstack-b": 0.5,
+    }
+    assert cells["wikimedia"]["estimate"] == pytest.approx(0.0)
+    assert cells["openstack"]["estimate"] == pytest.approx(0.0)
+
+
+def test_a_half_without_the_matched_suffix_is_an_error_cell_with_no_share() -> None:
+    admitted = ("openstack",)
+    py = {"openstack-a": N_CHANGES, "openstack-b": 0}
+    outcome = _supplement(
+        _typed(_by_relation(0.75, 0.25, 0.25), admitted, py), admitted, openstack=OPENSTACK_PY
+    )
+    cell = outcome["cells"]["openstack"]
+    assert "error" in cell and "share" not in cell and cell["suffix"] == ".py"
+
+
+def test_the_file_type_supplement_refuses_a_missing_artifact_few_resamples_and_seeds() -> None:
+    admitted = ("openstack", "wikimedia")
+    results = _typed(
+        _by_relation(0.75, 0.25, 0.25),
+        admitted,
+        dict.fromkeys(("openstack-a", "openstack-b", "wikimedia-a", "wikimedia-b"), N_CHANGES),
+    )
+    with pytest.raises(ValueError, match="no split-criteria artifact"):
+        _supplement(results, admitted, openstack=OPENSTACK_PY)
+    with pytest.raises(ValueError, match="resamples"):
+        file_type_supplement(
+            results,
+            admitted=("openstack",),
+            split_criteria={"openstack": OPENSTACK_PY},
+            seeds=SEEDS,
+            bootstrap_seed=0,
+            resamples=MIN_RESAMPLES - 1,
+        )
+    with pytest.raises(ValueError):
+        file_type_supplement(
+            results,
+            admitted=("openstack",),
+            split_criteria={"openstack": OPENSTACK_PY},
+            seeds=SEEDS[:2],
+            bootstrap_seed=0,
+            resamples=MIN_RESAMPLES,
+        )
+
+
+def test_a_missing_results_cell_is_an_error_cell_in_the_cpp_supplement() -> None:
+    admitted = ("openstack", "qt", "chromium")
+    results = _with_paths(_by_relation(0.75, 0.25, 0.25))
+    del results["adapter:chromium-b|qt-a|s1"]
+    outcome = cpp_supplement(
+        results, admitted=admitted, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+    )
+    assert "no results" in outcome["cells"]["qt"]["error"]
+    assert "cpp_share" not in outcome["cells"]["qt"]

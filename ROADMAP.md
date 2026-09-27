@@ -416,8 +416,8 @@ as the unit; the evidence says the codebase is.
 - [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
-- [ ] Decide whether H1 carries a supplementary estimand on a matched file type: OpenStack's halves
-  split 40% reStructuredText against 62% Python.
+- [x] H1 carries a supplementary estimand on the suffix both halves hold most of
+  (`file_type_supplement`, `matched_suffix`; `.py` for OpenStack), reported beside H1 (2026-09-27).
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.
@@ -509,6 +509,7 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-27** — H1's file-type-matched supplementary estimand registered and implemented (`file_type_supplement`), sharing its bootstrap with the C++ supplement (research log).
 - **2026-09-27** — The split criteria as code (`sphragis/corpus/halves.py`, `scripts/split_criteria.py`), shared with the placebo builder; the language-mix ceiling fixed on OpenStack at total variation 0.357, whose halves split docs from code (research log).
 - **2026-09-27** — OpenStack's placebo on corpus v2 at the half size, five seeds on TIGRIS: seed effect 0.0116, detectable effects +0.0266 and +0.0250, and the registered gate's H1 dev-window pilot +0.0134 [-0.0091, +0.0350], inconclusive (research log).
 - **2026-09-27** — The confirmatory cells are a rule over the organizations admitted by host permission (`design()`): H1 on every admitted organization, H2 on Qt and Chromium only when both are; the gate takes the admitted set (research log).

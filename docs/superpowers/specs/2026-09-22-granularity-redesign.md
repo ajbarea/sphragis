@@ -88,6 +88,14 @@ Chromium's mix is measured when its corpus is built. So H2 carries a **supplemen
 restricted to C++ source and header hunks. Under ICH E9(R1) a restricted population is a different
 estimand, so it is reported beside H2 and does not bind it.
 
+H1 carries a supplementary estimand of the same kind (registered 2026-09-27): the half-split
+contrast restricted to one file suffix per admitted organization, the one both halves hold most
+of (the largest smaller count across the halves' training rows, ties by name), derived in code
+from the organization's split-criteria artifact (`matched_suffix`; `.py` for OpenStack), because
+two halves can differ in file-type mix and within one suffix they cannot. It is reported beside
+H1 with each half's test-window share of that suffix and decides nothing
+(`file_type_supplement`).
+
 ## Verdicts, the pass rule and multiplicity
 
 **Smallest effect of interest (SESOI): 0.01 exact match.** That's about 4% of the adaptation gain the
