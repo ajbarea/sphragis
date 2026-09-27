@@ -370,6 +370,38 @@ def test_ledger_is_copied_out_before_a_failed_runs_scratch_directory_is_deleted(
     assert str(ledgers[0]) in capsys.readouterr().out, "the preserved path must be printed"
 
 
+def test_a_broken_stdout_at_cleanup_still_deletes_the_scratch_directory(
+    parity: types.ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The "wrote <ledger>" line comes after the deletion, so stdout failing there (a closed
+    pipe, a dropped SSH session) cannot leave the scratch directory behind."""
+    work = tmp_path / "work"
+
+    def run(args: Any, salt: str, scratch: Path) -> None:
+        (scratch / "ledger.jsonl").write_text("{}\n")
+        (scratch / "raw-identities").write_text("x")
+
+    class BrokenStdout:
+        def write(self, text: str) -> int:
+            raise BrokenPipeError
+
+        def flush(self) -> None:
+            raise BrokenPipeError
+
+    monkeypatch.setattr(parity, "_run", run)
+    monkeypatch.setattr(parity, "require_salt", lambda: "salt")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["notedb_parity.py", "--work", str(work), "--rest-root", str(_rest_root(tmp_path))],
+    )
+    monkeypatch.setattr(sys, "stdout", BrokenStdout())
+    with pytest.raises(BrokenPipeError):
+        parity.main()
+    assert [p.name for p in work.iterdir() if p.is_dir()] == [], "no scratch directory may remain"
+    assert len(list(work.glob("ledger-*.jsonl"))) == 1
+
+
 def test_no_ledger_file_is_written_when_the_run_made_no_ledger(
     parity: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -536,10 +568,10 @@ def test_rmtree_marked_does_not_follow_a_symlink_to_the_checkout(
 def test_cleanup_survives_a_second_signal_via_subprocess(tmp_path: Path) -> None:
     """M25: a mutant that dropped the `_uninterruptible` wrap around `main()`'s own cleanup call.
     Run in a child process (as `test_fetch_month_cleanup_survives_a_second_signal_via_subprocess`
-    in `test_notedb.py` does for the route's own cleanup): an unprotected mutant kills the child
-    outright on the first self-signal, before it ever reaches the real `shutil.rmtree`, leaving
-    the marked scratch directory behind -- the parent sees that leftover as a clean failure
-    rather than losing its own process to a stray SIGTERM."""
+    in `test_notedb.py` does for the route's own cleanup): unguarded, the first self-signal
+    raises before the real `shutil.rmtree` runs, and the marked scratch directory, which has no
+    finalizer, is left behind. Guarded, the deletion finishes and the held SIGTERM then stops
+    the run."""
     work = tmp_path / "work"
     work.mkdir()
     rest_root = _rest_root(tmp_path)
@@ -576,8 +608,9 @@ print("DONE")
     proc = subprocess.run(
         [sys.executable, "-c", script], capture_output=True, text=True, timeout=30
     )
-    assert proc.returncode == 0, proc.stderr
-    assert "DONE" in proc.stdout
+    assert proc.returncode != 0, proc.stderr
+    assert "KeyboardInterrupt: SIGTERM" in proc.stderr, "the held SIGTERM must stop the run"
+    assert "DONE" not in proc.stdout
     assert list(work.iterdir()) == [], "cleanup must survive a second signal mid-rmtree"
 
 

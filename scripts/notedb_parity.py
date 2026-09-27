@@ -808,17 +808,19 @@ def main() -> None:
             f"--rest-root {args.rest_root} holds no raw/ REST snapshots; nothing to compare"
         )
     _refuse_unsafe_work(args.work, args.rest_root, args.out)
-    scratch = _find_marked_scratch(args.work) or _make_scratch(args.work)
-    try:
-        with _raise_on_sigterm():
-            _run(args, salt, scratch)
-    finally:
-        if not args.keep_work:
+    with _raise_on_sigterm():
+        scratch: Path | None = None
+        try:
             with _uninterruptible(signal.SIGTERM, signal.SIGINT):
-                preserved = _preserve_ledger(scratch, args.work)
-                _rmtree_marked(scratch)
-            if preserved is not None:
-                print(f"wrote {preserved}")
+                scratch = _find_marked_scratch(args.work) or _make_scratch(args.work)
+            _run(args, salt, scratch)
+        finally:
+            if scratch is not None and not args.keep_work:
+                with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                    preserved = _preserve_ledger(scratch, args.work)
+                    _rmtree_marked(scratch)
+                    if preserved is not None:
+                        print(f"wrote {preserved}")
 
 
 def _run(args: argparse.Namespace, salt: str, scratch: Path) -> None:

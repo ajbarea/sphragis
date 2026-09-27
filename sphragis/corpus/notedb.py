@@ -238,87 +238,80 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
     does not honor it fetches the blob anyway, `cat-file` succeeds, and that is refused.
     """
     env = dict(env_items)
-    scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-lazy-probe-")
-    try:
-        with _raise_on_sigterm():
-            root = Path(scratch_dir.name)
-            server = root / "server.git"
-            subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
-            blob = (
-                subprocess.run(
-                    ["git", "--git-dir", str(server), "hash-object", "-w", "--stdin"],
-                    input=b"probe\n",
-                    capture_output=True,
-                    check=True,
-                )
-                .stdout.decode()
-                .strip()
-            )
-            tree = (
-                subprocess.run(
-                    ["git", "--git-dir", str(server), "mktree"],
-                    input=f"100644 blob {blob}\tf\n".encode(),
-                    capture_output=True,
-                    check=True,
-                )
-                .stdout.decode()
-                .strip()
-            )
-            ident = {
-                "GIT_AUTHOR_NAME": "probe",
-                "GIT_AUTHOR_EMAIL": "probe@example.invalid",
-                "GIT_COMMITTER_NAME": "probe",
-                "GIT_COMMITTER_EMAIL": "probe@example.invalid",
-            }
-            commit = (
-                subprocess.run(
-                    ["git", "--git-dir", str(server), "commit-tree", tree, "-m", "probe"],
-                    capture_output=True,
-                    check=True,
-                    env={**os.environ, **ident},
-                )
-                .stdout.decode()
-                .strip()
-            )
+    with _scratch("sphragis-lazy-probe-") as name:
+        root = Path(name)
+        server = root / "server.git"
+        subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
+        blob = (
             subprocess.run(
-                ["git", "--git-dir", str(server), "update-ref", "refs/heads/main", commit],
-                check=True,
-            )
-            for key, value in (("uploadpack.allowFilter", "true"),):
-                subprocess.run(["git", "--git-dir", str(server), "config", key, value], check=True)
-            clone = root / "clone.git"
-            subprocess.run(
-                [
-                    "git",
-                    "clone",
-                    "--quiet",
-                    "--bare",
-                    "--filter=blob:none",
-                    f"file://{server}",
-                    str(clone),
-                ],
-                check=True,
-                env=_isolated_env(),
-            )
-            probed = subprocess.run(
-                ["git", "--git-dir", str(clone), "cat-file", "-p", blob],
+                ["git", "--git-dir", str(server), "hash-object", "-w", "--stdin"],
+                input=b"probe\n",
                 capture_output=True,
-                env=env,
+                check=True,
             )
-            if probed.returncode == 0:
-                raise GitError(
-                    f"{_git_version()} fetched a filtered-out object lazily instead of failing "
-                    "under GIT_NO_LAZY_FETCH=1: this git is too old to run the git route "
-                    "safely. GIT_NO_LAZY_FETCH landed in git 2.44 (also backported to some "
-                    "security point releases of earlier branches), but this probe tests the "
-                    "actual behaviour rather than trusting a version number: install a git "
-                    "that honors GIT_NO_LAZY_FETCH"
-                )
-    finally:
-        # Mirrors `fetch_month`'s own cleanup: a signal arriving mid-`rmtree` must not
-        # abort it partway and leave this scratch repository behind in the system temp dir.
-        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
-            scratch_dir.cleanup()
+            .stdout.decode()
+            .strip()
+        )
+        tree = (
+            subprocess.run(
+                ["git", "--git-dir", str(server), "mktree"],
+                input=f"100644 blob {blob}\tf\n".encode(),
+                capture_output=True,
+                check=True,
+            )
+            .stdout.decode()
+            .strip()
+        )
+        ident = {
+            "GIT_AUTHOR_NAME": "probe",
+            "GIT_AUTHOR_EMAIL": "probe@example.invalid",
+            "GIT_COMMITTER_NAME": "probe",
+            "GIT_COMMITTER_EMAIL": "probe@example.invalid",
+        }
+        commit = (
+            subprocess.run(
+                ["git", "--git-dir", str(server), "commit-tree", tree, "-m", "probe"],
+                capture_output=True,
+                check=True,
+                env={**os.environ, **ident},
+            )
+            .stdout.decode()
+            .strip()
+        )
+        subprocess.run(
+            ["git", "--git-dir", str(server), "update-ref", "refs/heads/main", commit],
+            check=True,
+        )
+        for key, value in (("uploadpack.allowFilter", "true"),):
+            subprocess.run(["git", "--git-dir", str(server), "config", key, value], check=True)
+        clone = root / "clone.git"
+        subprocess.run(
+            [
+                "git",
+                "clone",
+                "--quiet",
+                "--bare",
+                "--filter=blob:none",
+                f"file://{server}",
+                str(clone),
+            ],
+            check=True,
+            env=_isolated_env(),
+        )
+        probed = subprocess.run(
+            ["git", "--git-dir", str(clone), "cat-file", "-p", blob],
+            capture_output=True,
+            env=env,
+        )
+        if probed.returncode == 0:
+            raise GitError(
+                f"{_git_version()} fetched a filtered-out object lazily instead of failing "
+                "under GIT_NO_LAZY_FETCH=1: this git is too old to run the git route "
+                "safely. GIT_NO_LAZY_FETCH landed in git 2.44 (also backported to some "
+                "security point releases of earlier branches), but this probe tests the "
+                "actual behaviour rather than trusting a version number: install a git "
+                "that honors GIT_NO_LAZY_FETCH"
+            )
 
 
 def _require_lazy_fetch_disabled(env: Mapping[str, str] | None = None) -> None:
@@ -1879,23 +1872,55 @@ def _raise_on_sigterm() -> Iterator[None]:
 
 @contextmanager
 def _uninterruptible(*signals: int) -> Iterator[None]:
-    """Ignore `signals` for the duration, so a second one cannot abort work partway through.
+    """Hold `signals` for the duration and deliver them once it ends, so a signal cannot abort
+    work partway through and still takes effect afterwards.
 
     Used around the scratch repository's cleanup: `_raise_on_sigterm` turns one SIGTERM into a
     clean unwind, but the unwind itself -- `shutil.rmtree` of a directory holding raw identities
     -- is exactly the work a second, impatient signal must not be allowed to interrupt, leaving
-    a partially deleted scratch repository behind. A no-op outside the main thread, for the same
-    reason `_raise_on_sigterm` is.
+    a partially deleted scratch repository behind. Held signals are delivered on exit, once each, to
+    the handlers restored there; CPython runs pending handlers in signal-number order, and the
+    first that raises ends the delivery. So one sent during a cleanup partway through a run
+    still stops it.
+    A no-op outside the main thread, for the same reason `_raise_on_sigterm` is.
     """
     if threading.current_thread() is not threading.main_thread():
         yield
         return
-    previous = {sig: signal.signal(sig, signal.SIG_IGN) for sig in signals}
+    held: list[int] = []
+
+    def hold(signum: int, frame: Any) -> None:
+        if signum not in held:
+            held.append(signum)
+
+    previous = {sig: signal.signal(sig, hold) for sig in signals}
     try:
         yield
     finally:
         for sig, handler in previous.items():
             signal.signal(sig, handler)
+        for sig in held:
+            signal.raise_signal(sig)
+
+
+@contextmanager
+def _scratch(prefix: str, dir: Path | None = None) -> Iterator[str]:
+    """A temporary directory, deleted on every exit from the block, SIGTERM included.
+
+    It is created and deleted with signals held (`_uninterruptible`), so a signal can land
+    neither between `mkdir` and the point cleanup is guaranteed nor partway through the
+    deletion; a signal held during creation raises inside the block, which deletes it.
+    """
+    with _raise_on_sigterm():
+        scratch: tempfile.TemporaryDirectory[str] | None = None
+        try:
+            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                scratch = tempfile.TemporaryDirectory(prefix=prefix, dir=dir)
+            yield scratch.name
+        finally:
+            if scratch is not None:
+                with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                    scratch.cleanup()
 
 
 def fetch_month(
@@ -1933,53 +1958,44 @@ def fetch_month(
     rows: list[dict[str, Any]] = []
     per_project: dict[str, Any] = {}
     operations = requests = 0
-    scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-notedb-", dir=workdir)
-    try:
-        with _raise_on_sigterm():
-            scratch = scratch_dir.name
-            for index, project in enumerate(projects):
-                repo = Repo.open(Path(scratch) / f"{index}.git", f"{base}/{project}", pacer)
-                refs = branch_refs(repo, org, branches)
-                walked, dormant = fetch_history(repo, refs, since)
-                by_commit = (
-                    patch_set_commits(repo, repo.list_remote("patch_set_refs", "refs/changes/*"))
-                    if by_patch_set_ref
-                    else None
-                )
-                merged, enumeration = merged_commits(
-                    repo,
-                    walked,
-                    since,
-                    end,
-                    review_host=REVIEW_HOSTS.get(org, ""),
-                    project=project,
-                    by_commit=by_commit,
-                )
-                by_number = {m.number: m for m in merged if m.number is not None}
-                found, counts = collect(
-                    repo,
-                    sorted(by_number),
-                    project=project,
-                    merged=by_number,
-                    submitted_between=(start, end),
-                )
-                status = Counter(str(row["status"]) for row in found)
-                rows.extend(pseudonymise(row, salt) for row in found if row["status"] == "MERGED")
-                per_project[project] = {
-                    "branches_read": walked,
-                    "branches_dormant": dormant,
-                    "enumeration": enumeration,
-                    "collect": counts,
-                    "status": dict(status),
-                }
-                operations += repo.operations
-                requests += repo.http_requests
-    finally:
-        # SIGTERM raises above, but the cleanup this unwind lands on -- deleting a directory
-        # holding raw identities -- must itself run to completion: a second SIGTERM (or
-        # SIGINT) arriving mid-`rmtree` is ignored here rather than aborting it partway.
-        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
-            scratch_dir.cleanup()
+    with _scratch("sphragis-notedb-", dir=workdir) as scratch:
+        for index, project in enumerate(projects):
+            repo = Repo.open(Path(scratch) / f"{index}.git", f"{base}/{project}", pacer)
+            refs = branch_refs(repo, org, branches)
+            walked, dormant = fetch_history(repo, refs, since)
+            by_commit = (
+                patch_set_commits(repo, repo.list_remote("patch_set_refs", "refs/changes/*"))
+                if by_patch_set_ref
+                else None
+            )
+            merged, enumeration = merged_commits(
+                repo,
+                walked,
+                since,
+                end,
+                review_host=REVIEW_HOSTS.get(org, ""),
+                project=project,
+                by_commit=by_commit,
+            )
+            by_number = {m.number: m for m in merged if m.number is not None}
+            found, counts = collect(
+                repo,
+                sorted(by_number),
+                project=project,
+                merged=by_number,
+                submitted_between=(start, end),
+            )
+            status = Counter(str(row["status"]) for row in found)
+            rows.extend(pseudonymise(row, salt) for row in found if row["status"] == "MERGED")
+            per_project[project] = {
+                "branches_read": walked,
+                "branches_dormant": dormant,
+                "enumeration": enumeration,
+                "collect": counts,
+                "status": dict(status),
+            }
+            operations += repo.operations
+            requests += repo.http_requests
     record = {
         "route": "notedb",
         "base_url": base,
