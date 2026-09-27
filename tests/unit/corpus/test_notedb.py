@@ -1221,6 +1221,72 @@ fetch_month(
     assert list(workdir.iterdir()) == [], "the scratch repository must be gone after SIGTERM"
 
 
+def test_sigterm_during_an_intermediate_cleanup_still_stops_the_fetch(
+    server: Server, tmp_path: Path
+) -> None:
+    """A SIGTERM landing inside the first `_uninterruptible` window of a run (the lazy-fetch
+    probe's cleanup, before any review data is read) must stop the fetch once that cleanup
+    ends, not be dropped while the run carries on at its crawl delay.
+
+    Synchronised on a line the child prints from inside the window, as the CLI test below is."""
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    script = f"""
+import sys
+sys.path.insert(0, {str(Path(notedb.__file__).resolve().parents[2])!r})
+import time
+from contextlib import contextmanager
+from pathlib import Path
+from sphragis.corpus import notedb
+from sphragis.corpus.pacing import Pacer
+
+real_uninterruptible = notedb._uninterruptible
+entered = []
+
+@contextmanager
+def _synced_uninterruptible(*signals):
+    with real_uninterruptible(*signals):
+        if not entered:
+            entered.append(True)
+            print("IN_CLEANUP", flush=True)
+            time.sleep(2)
+        yield
+
+notedb._uninterruptible = _synced_uninterruptible
+notedb.fetch_month(
+    "aosp", [{PROJECT!r}], "2024-11", "salt",
+    pacer=Pacer(5.0),
+    base_url={server.url!r},
+    workdir=Path({str(workdir)!r}),
+)
+"""
+    proc = subprocess.Popen([sys.executable, "-c", script], stdout=subprocess.PIPE, text=True)
+    assert proc.stdout is not None
+    try:
+        ready, _, _ = select.select([proc.stdout], [], [], 30)
+        assert ready, "the child never reached a cleanup window"
+        line = proc.stdout.readline()
+        assert line.strip() == "IN_CLEANUP", f"unexpected child output: {line!r}"
+        proc.send_signal(signal.SIGTERM)
+        assert proc.wait(timeout=10) != 0
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait()
+        proc.stdout.close()
+    assert list(workdir.iterdir()) == [], "the scratch repository must be gone after SIGTERM"
+
+
+def test_a_sigterm_held_during_cleanup_raises_once_the_cleanup_ends() -> None:
+    with pytest.raises(KeyboardInterrupt), notedb._raise_on_sigterm():
+        with notedb._uninterruptible(signal.SIGTERM, signal.SIGINT):
+            os.kill(os.getpid(), signal.SIGTERM)
+            time.sleep(0.05)
+            finished = True
+        assert finished
+        pytest.fail("the held SIGTERM must be delivered when the window exits")
+
+
 def test_cli_stage_fetch_git_still_gets_sigterm_protection(server: Server, tmp_path: Path) -> None:
     """The CLI path (`_stage_fetch_git`) no longer wraps `fetch_month` itself, so this proves
     the protection it used to add explicitly still reaches it through `fetch_month` alone --
@@ -1299,9 +1365,9 @@ def test_raise_on_sigterm_installs_no_handler_outside_the_main_thread() -> None:
     assert errors == []
 
 
-def test_uninterruptible_ignores_a_second_signal_during_cleanup() -> None:
-    """A signal delivered while ignored is dropped, not deferred: it must not fire later either,
-    and the previous handler must be back in place and live once the block exits."""
+def test_uninterruptible_holds_signals_until_the_cleanup_ends() -> None:
+    """A signal sent inside the window fires nothing there, and fires the restored handler once
+    on exit however many times it was sent; the handler stays live afterwards."""
     fired: list[int] = []
 
     def handler(signum: int, frame: Any) -> None:
@@ -1311,11 +1377,13 @@ def test_uninterruptible_ignores_a_second_signal_during_cleanup() -> None:
     try:
         with notedb._uninterruptible(signal.SIGTERM):
             os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGTERM)
             time.sleep(0.05)
-        assert fired == [], "a signal sent during the ignore window must not fire the handler"
+            assert fired == [], "a signal sent inside the window must not fire the handler there"
+        assert fired == [signal.SIGTERM], "a held signal must be delivered once on exit"
         os.kill(os.getpid(), signal.SIGTERM)
         time.sleep(0.05)
-        assert fired == [signal.SIGTERM], "the previous handler must be restored and live"
+        assert fired == [signal.SIGTERM] * 2, "the previous handler must be restored and live"
     finally:
         signal.signal(signal.SIGTERM, previous)
 
@@ -1324,7 +1392,7 @@ def test_uninterruptible_cleanup_survives_a_second_signal_mid_rmtree(
     server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A slowed `TemporaryDirectory.cleanup`, self-signalled mid-way, still finishes: the
-    scratch repository is gone and `fetch_month` still returns normally."""
+    scratch repository is gone, and only then does the held SIGTERM stop the run."""
     import tempfile as tempfile_module
 
     real_cleanup = tempfile_module.TemporaryDirectory.cleanup
@@ -1341,10 +1409,16 @@ def test_uninterruptible_cleanup_survives_a_second_signal_mid_rmtree(
     monkeypatch.setattr(tempfile_module.TemporaryDirectory, "cleanup", slow_cleanup)
     scratch = tmp_path / "scratch"
     scratch.mkdir()
-    rows, _record = notedb.fetch_month(
-        "aosp", [PROJECT], "2024-11", "salt", pacer=Pacer(0), base_url=server.url, workdir=scratch
-    )
-    assert [row["_number"] for row in rows] == [1234]
+    with pytest.raises(KeyboardInterrupt, match="SIGTERM"):
+        notedb.fetch_month(
+            "aosp",
+            [PROJECT],
+            "2024-11",
+            "salt",
+            pacer=Pacer(0),
+            base_url=server.url,
+            workdir=scratch,
+        )
     assert list(scratch.iterdir()) == [], "cleanup must have finished despite the mid-way signals"
 
 
@@ -2148,7 +2222,8 @@ def test_fetch_month_cleanup_survives_a_second_signal_via_subprocess(
     (the in-process version of this check self-signals the live pytest process, which a removed
     guard kills outright -- SIGTERM's default disposition -- losing the test's own result along
     with it) is done in a child process here instead, so an unprotected mutant only kills the
-    child: the parent still gets a clean, unambiguous failure from the leftover directory."""
+    child: the parent still gets a clean, unambiguous failure from the leftover directory. The
+    held signals are delivered once the cleanup ends, so the run stops there."""
     workdir = tmp_path / "work"
     workdir.mkdir()
     root = str(Path(notedb.__file__).resolve().parents[2])
@@ -2183,8 +2258,9 @@ print(f"ROWS {{len(rows)}}")
     proc = subprocess.run(
         [sys.executable, "-c", script], capture_output=True, text=True, timeout=30
     )
-    assert proc.returncode == 0, proc.stderr
-    assert "ROWS 1" in proc.stdout
+    assert proc.returncode != 0, proc.stderr
+    assert "KeyboardInterrupt: SIGTERM" in proc.stderr, "the held SIGTERM must stop the run"
+    assert "ROWS" not in proc.stdout
     assert list(workdir.iterdir()) == [], "cleanup must survive a second signal mid-rmtree"
 
 

@@ -238,9 +238,9 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
     does not honor it fetches the blob anyway, `cat-file` succeeds, and that is refused.
     """
     env = dict(env_items)
-    scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-lazy-probe-")
-    try:
-        with _raise_on_sigterm():
+    with _raise_on_sigterm():
+        scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-lazy-probe-")
+        try:
             root = Path(scratch_dir.name)
             server = root / "server.git"
             subprocess.run(["git", "init", "--quiet", "--bare", str(server)], check=True)
@@ -314,11 +314,11 @@ def _lazy_fetch_probe(env_items: frozenset[tuple[str, str]]) -> None:
                     "actual behaviour rather than trusting a version number: install a git "
                     "that honors GIT_NO_LAZY_FETCH"
                 )
-    finally:
-        # Mirrors `fetch_month`'s own cleanup: a signal arriving mid-`rmtree` must not
-        # abort it partway and leave this scratch repository behind in the system temp dir.
-        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
-            scratch_dir.cleanup()
+        finally:
+            # Mirrors `fetch_month`'s own cleanup: a signal arriving mid-`rmtree` must not
+            # abort it partway and leave this scratch repository behind in the system temp dir.
+            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                scratch_dir.cleanup()
 
 
 def _require_lazy_fetch_disabled(env: Mapping[str, str] | None = None) -> None:
@@ -1879,23 +1879,34 @@ def _raise_on_sigterm() -> Iterator[None]:
 
 @contextmanager
 def _uninterruptible(*signals: int) -> Iterator[None]:
-    """Ignore `signals` for the duration, so a second one cannot abort work partway through.
+    """Hold `signals` for the duration and deliver them once it ends, so a signal can neither
+    abort work partway through nor be lost.
 
     Used around the scratch repository's cleanup: `_raise_on_sigterm` turns one SIGTERM into a
     clean unwind, but the unwind itself -- `shutil.rmtree` of a directory holding raw identities
     -- is exactly the work a second, impatient signal must not be allowed to interrupt, leaving
-    a partially deleted scratch repository behind. A no-op outside the main thread, for the same
-    reason `_raise_on_sigterm` is.
+    a partially deleted scratch repository behind. Held signals are delivered on exit, once each in
+    the order they arrived, to the handlers restored there (a handler that raises ends the
+    delivery), so one sent during a cleanup partway through a run still stops it.
+    A no-op outside the main thread, for the same reason `_raise_on_sigterm` is.
     """
     if threading.current_thread() is not threading.main_thread():
         yield
         return
-    previous = {sig: signal.signal(sig, signal.SIG_IGN) for sig in signals}
+    held: list[int] = []
+
+    def hold(signum: int, frame: Any) -> None:
+        if signum not in held:
+            held.append(signum)
+
+    previous = {sig: signal.signal(sig, hold) for sig in signals}
     try:
         yield
     finally:
         for sig, handler in previous.items():
             signal.signal(sig, handler)
+        for sig in held:
+            signal.raise_signal(sig)
 
 
 def fetch_month(
@@ -1933,9 +1944,9 @@ def fetch_month(
     rows: list[dict[str, Any]] = []
     per_project: dict[str, Any] = {}
     operations = requests = 0
-    scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-notedb-", dir=workdir)
-    try:
-        with _raise_on_sigterm():
+    with _raise_on_sigterm():
+        scratch_dir = tempfile.TemporaryDirectory(prefix="sphragis-notedb-", dir=workdir)
+        try:
             scratch = scratch_dir.name
             for index, project in enumerate(projects):
                 repo = Repo.open(Path(scratch) / f"{index}.git", f"{base}/{project}", pacer)
@@ -1974,12 +1985,12 @@ def fetch_month(
                 }
                 operations += repo.operations
                 requests += repo.http_requests
-    finally:
-        # SIGTERM raises above, but the cleanup this unwind lands on -- deleting a directory
-        # holding raw identities -- must itself run to completion: a second SIGTERM (or
-        # SIGINT) arriving mid-`rmtree` is ignored here rather than aborting it partway.
-        with _uninterruptible(signal.SIGTERM, signal.SIGINT):
-            scratch_dir.cleanup()
+        finally:
+            # SIGTERM raises above, but the cleanup this unwind lands on -- deleting a directory
+            # holding raw identities -- must itself run to completion: a second SIGTERM (or
+            # SIGINT) arriving mid-`rmtree` is held until it ends rather than aborting it.
+            with _uninterruptible(signal.SIGTERM, signal.SIGINT):
+                scratch_dir.cleanup()
     record = {
         "route": "notedb",
         "base_url": base,

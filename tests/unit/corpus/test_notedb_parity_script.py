@@ -539,7 +539,8 @@ def test_cleanup_survives_a_second_signal_via_subprocess(tmp_path: Path) -> None
     in `test_notedb.py` does for the route's own cleanup): an unprotected mutant kills the child
     outright on the first self-signal, before it ever reaches the real `shutil.rmtree`, leaving
     the marked scratch directory behind -- the parent sees that leftover as a clean failure
-    rather than losing its own process to a stray SIGTERM."""
+    rather than losing its own process to a stray SIGTERM. The held signals are delivered once
+    the cleanup ends, so the run stops there."""
     work = tmp_path / "work"
     work.mkdir()
     rest_root = _rest_root(tmp_path)
@@ -576,8 +577,9 @@ print("DONE")
     proc = subprocess.run(
         [sys.executable, "-c", script], capture_output=True, text=True, timeout=30
     )
-    assert proc.returncode == 0, proc.stderr
-    assert "DONE" in proc.stdout
+    assert proc.returncode != 0, proc.stderr
+    assert "KeyboardInterrupt: SIGTERM" in proc.stderr, "the held SIGTERM must stop the run"
+    assert "DONE" not in proc.stdout
     assert list(work.iterdir()) == [], "cleanup must survive a second signal mid-rmtree"
 
 
