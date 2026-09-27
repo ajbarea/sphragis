@@ -12,7 +12,7 @@ import tempfile
 import threading
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -1419,20 +1419,23 @@ def test_uninterruptible_cleanup_survives_a_second_signal_mid_rmtree(
     finalizer, so a removed guard leaves the directory behind rather than the finalizer
     deleting it anyway."""
     import shutil
+    from collections.abc import Callable
 
-    real_rmtree = shutil.rmtree
+    real_rmtree = cast("Callable[..., None]", shutil.rmtree)
 
-    def slow_rmtree(path: Any, *, onexc: Any = None) -> None:
+    def slow_rmtree(path: Any, *args: Any, **kwargs: Any) -> None:
         if Path(path).name.startswith("sphragis-notedb-"):
             os.kill(os.getpid(), signal.SIGTERM)
             os.kill(os.getpid(), signal.SIGINT)
             time.sleep(0.05)
-        real_rmtree(path, onexc=onexc)
+        real_rmtree(path, *args, **kwargs)
 
     # Warm the (`@cache`d) lazy-fetch probe first: it opens and closes its own, unrelated
     # `TemporaryDirectory` inside `Repo.open`, which the patch below must not catch instead.
     notedb._require_lazy_fetch_disabled()
     monkeypatch.setattr(shutil, "rmtree", slow_rmtree)
+    # Debian's and Ubuntu's tempfile binds shutil.rmtree at import, as tempfile._rmtree.
+    monkeypatch.setattr(tempfile, "_rmtree", slow_rmtree, raising=False)
     scratch = tmp_path / "scratch"
     scratch.mkdir()
     with pytest.raises(KeyboardInterrupt, match="SIGTERM"):
@@ -2276,6 +2279,8 @@ def slow_rmtree(path, *args, **kwargs):
     real_rmtree(path, *args, **kwargs)
 
 shutil.rmtree = slow_rmtree
+if hasattr(tempfile_module, "_rmtree"):  # Debian's tempfile binds shutil.rmtree at import
+    tempfile_module._rmtree = slow_rmtree
 rows, _record = fetch_month(
     "aosp", [{PROJECT!r}], "2024-11", "salt",
     pacer=Pacer(0), base_url={server.url!r}, workdir=Path({str(workdir)!r}),
