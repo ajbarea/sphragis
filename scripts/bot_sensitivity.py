@@ -22,15 +22,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from crossed_reread import merge  # noqa: E402
-
-from sphragis.corpus.automated import matched_bot, registry_digest  # noqa: E402
-from sphragis.experiment.walk import crossed_gate  # noqa: E402
-from sphragis.provenance import provenance_header  # noqa: E402
+from sphragis.corpus.automated import matched_bot, registry_digest
+from sphragis.experiment.runs import merge
+from sphragis.experiment.walk import crossed_gate
+from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("runs", type=Path, nargs="+")

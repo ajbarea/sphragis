@@ -6076,3 +6076,46 @@ type separates as well as an organization). The criterion only keeps a new organ
 being worse on this than OpenStack. Whether H1 should carry a supplementary estimand restricted to
 a matched file type, as H2 carries one restricted to C++, is recorded as open and decided before
 Stage 1.
+
+### OpenStack on corpus v2 at the half size: the seed effect holds five seeds, and the dev-window H1 pilot is inconclusive at +0.013 (2026-09-27)
+
+The first GPU runs on corpus v2. The v2 OpenStack corpus was copied to TIGRIS
+(`corpus-v2/openstack`, every file's sha256 matched) and the placebo run at the half size under
+`RUN_TAG=v2`, five single-seed jobs (206166, 206171 to 206174), each building its halves into its
+own root so concurrent builds could not overwrite one another. The five roots are byte-identical,
+checked on the cluster with `find . -type f ! -name '*.source.json' ! -name placebo.json -print0 |
+sort -z | xargs -0 sha256sum | sha256sum` in each root: every one gives `f49b745cfbde62c0`.
+`--corpus-digest` records that value when the runs are merged; it is the caller's assertion and
+the merge does not recompute it. `merge` otherwise refuses runs whose corpus sources differ, and
+with the digest compares them with only the root removed, mode, windows and every count still
+compared. The halves equalize at 2,158 examples, of which 2,155 trained (three refused by the
+trainer), and are scored on 116 and 113 development changes.
+
+**Seed effect** (`seed-effect-placebo-openstack-v2.json`): 0.0116 at five seeds, one-sided 95%
+upper bound 0.0426 on 4 degrees of freedom. On corpus v1 it was 0.0106 at three seeds with an
+upper bound of 0.0865. Still above 0.01, so the registered five seeds stand.
+
+**Sensitivity at the half size on v2** (`decomposition-sensitivity-v2.json`, 100 trials a step,
+1,000 resamples). Built as the v1 artifact was: seed 1's placebo run as the variance model and
+the five-seed point estimate of the seed effect. The planned test total, 1,809 changes, is the
+v1 projection carried over rather than recomputed (the v2 development window holds the same 229
+changes as v1); v2's development proportions split it 916 and 893:
+
+| level | detectable effect at power 0.928 | null reads bounded | null false positive |
+|---|---|---|---|
+| 0.975 | +0.0266 | 0.950 | 0.01 |
+| 0.95 | +0.0250 | 0.970 | 0.01 |
+
+The v1 figures were +0.0273 and +0.0257: one bisection step apart, which at 100 trials a step is
+indistinguishable at this simulation's resolution. Qt is not rerun: it is not admitted.
+
+**The decomposition gate on the development window, as a pilot**
+(`decomposition-pilot-openstack-v2.json`, `scripts/decomposition_pilot.py`, OpenStack admitted
+alone, so H1 is read at one level): the half-split contrast is **+0.0134 [-0.0091, +0.0350] at
+95%, inconclusive**. The estimate is above the smallest effect of interest and below both
+detectable effects, and the interval does not exclude zero. This is a censored development
+window at 116 and 113 changes, not an estimate of the test-window effect.
+
+`merge` and `configuration` moved from `scripts/crossed_reread.py` into
+`sphragis/experiment/runs.py`, which imports no GPU stack, so `seed_effect.py` no longer needs
+the model venv and the merge guards are tested.

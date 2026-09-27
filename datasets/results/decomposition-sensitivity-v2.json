@@ -1,0 +1,64 @@
+{
+  "seeds": 5,
+  "target_marginal_power": 0.928,
+  "sesoi": 0.01,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 100,
+  "resamples": 1000,
+  "cells": {
+    "openstack": {
+      "pilot_changes_per_half": [
+        116,
+        113
+      ],
+      "planned_changes_per_half": [
+        916,
+        893
+      ],
+      "sigma_b": 0.0116,
+      "null_false_positive": {
+        "0.975": 0.01,
+        "0.95": 0.01
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "by_level": {
+        "0.975": {
+          "lift": 0.0375,
+          "minimum_detectable_effect": 0.026627035537561843,
+          "null_reads_bounded": 0.95
+        },
+        "0.95": {
+          "lift": 0.03515625,
+          "minimum_detectable_effect": 0.02497406657669815,
+          "null_reads_bounded": 0.97
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-27T19:31:32.188618+00:00",
+    "git": {
+      "commit": "b4980906ef2d6bee0126833f43c6754886459f95",
+      "branch": "chore/v2-openstack-pilot",
+      "uncommitted_code": [
+        "scripts/crossed_reread.py",
+        "scripts/decomposition_pilot.py",
+        "scripts/seed_effect.py"
+      ],
+      "uncommitted_code_sha256": "700039079aca79ff17123797f58ee457742dc21ca45292461d2c147539d0d917"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

@@ -31,10 +31,9 @@ research log records what is and is not known about those requests.
 
 ## In flight
 
-- **OpenStack on corpus v2, on TIGRIS** (`corpus-v2/openstack`, checksums matched): the placebo
-  at the half size, five seeds under `RUN_TAG=v2`, gives the v2 seed effect and variance model the
-  sensitivity analysis is recomputed from, and is OpenStack's H1 dev-window pilot. Job 206166 is
-  seed 1.
+- **OpenStack on corpus v2 is measured** (research log, 2026-09-27): seed effect 0.0116,
+  detectable effects +0.0266 and +0.0250, H1 dev pilot inconclusive. The Stage 1 report's
+  OpenStack figures move to these once this is on main.
 - **Split criteria as code** (`scripts/split_criteria.py`): run on Wikimedia once its train window
   is frozen, against the OpenStack ceiling in `split-criteria-openstack.json`.
 - **RQ1 re-registered around granularity** (AJ, 2026-09-22). Spec
