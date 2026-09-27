@@ -414,11 +414,16 @@ as the unit; the evidence says the codebase is.
 - [x] Cells as a rule over the organizations admitted by host permission, not two fixed designs
   (2026-09-27): H1 on every admitted organization, H2 on Qt and Chromium only when both are.
 - [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
+- [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
+  variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
+- [ ] Decide whether H1 carries a supplementary estimand on a matched file type: OpenStack's halves
+  split 40% reStructuredText against 62% Python.
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.
-- [ ] The crossed interval's coverage at 97.5%, and the sensitivity analysis at the half size
-  against the smallest effect of interest.
+- [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
+  analysis at the half size on corpus v2 for OpenStack (2026-09-27).
+- [ ] The sensitivity analysis for every other admitted organization, once its corpus is frozen.
 - [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
 - [ ] The C++-restricted estimand beside H2.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
@@ -504,6 +509,7 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-27** — The split criteria as code (`sphragis/corpus/halves.py`, `scripts/split_criteria.py`), shared with the placebo builder; the language-mix ceiling fixed on OpenStack at total variation 0.357, whose halves split docs from code (research log).
 - **2026-09-27** — OpenStack's placebo on corpus v2 at the half size, five seeds on TIGRIS: seed effect 0.0116, detectable effects +0.0266 and +0.0250, and the registered gate's H1 dev-window pilot +0.0134 [-0.0091, +0.0350], inconclusive (research log).
 - **2026-09-27** — The confirmatory cells are a rule over the organizations admitted by host permission (`design()`): H1 on every admitted organization, H2 on Qt and Chromium only when both are; the gate takes the admitted set (research log).
 - **2026-09-26** — Wikimedia added as an organization, fetched under its robot policy: the transport refuses robots.txt paths, pauses 15 minutes after a 5xx and admits one process at a time; train and dev collection running (research log).

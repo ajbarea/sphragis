@@ -6052,6 +6052,31 @@ thirteen months.
   collected after acceptance is reported as not collected and as a deviation, and each hypothesis
   is read over its remaining cells at the registered Holm levels.
 
+### The language-mix ceiling, fixed on OpenStack before Wikimedia is measured: its own halves split docs from code (2026-09-27)
+
+`scripts/split_criteria.py` checks an organization's registered split against OpenStack's, each
+half deduplicated and split on its own as the runner reads a placebo half (it reproduces the
+runner's 2,158 and 2,182 training examples on corpus v2). Generated from
+`split-criteria-openstack.json`, OpenStack against itself:
+
+| half | projects | train examples | largest project | its share | top suffixes |
+|---|---|---|---|---|---|
+| openstack-a | 119 | 2,158 | starlingx/docs | 0.208 | .rst 871, .py 692, .yaml 237 |
+| openstack-b | 123 | 2,182 | starlingx/test | 0.148 | .py 1,362, .rst 313, .yaml 231 |
+
+The halves' suffix mix differs by a total variation of 0.357, which is now the ceiling a
+Wikimedia or Chromium split must not exceed, and 2,158 the size floor. The ceiling is fixed here,
+before any Wikimedia split is computed.
+
+**What this says about H1 itself.** H1's rationale, that both halves of one organization share
+its language mix, does not hold closely for OpenStack: one half is 40% reStructuredText, the
+other 62% Python. OpenStack's half-split contrast therefore carries a document-type difference
+alongside the project boundary, the confound the separability probe already named (a document
+type separates as well as an organization). The criterion only keeps a new organization from
+being worse on this than OpenStack. Whether H1 should carry a supplementary estimand restricted to
+a matched file type, as H2 carries one restricted to C++, is recorded as open and decided before
+Stage 1.
+
 ### OpenStack on corpus v2 at the half size: the seed effect holds five seeds, and the dev-window H1 pilot is inconclusive at +0.013 (2026-09-27)
 
 The first GPU runs on corpus v2. The v2 OpenStack corpus was copied to TIGRIS

@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 158 artifacts under
-38 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 159 artifacts under
+39 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -351,6 +351,14 @@ How much of an evaluated half's dev window a sibling half's training data alread
 | artifact | |
 |---|---|
 | `sibling-leakage.json` |  |
+
+## `scripts/split_criteria.py`
+
+Whether an organization's registered split qualifies for a confirmatory H1 cell.
+
+| artifact | |
+|---|---|
+| `split-criteria-openstack.json` |  |
 
 ## `scripts/subspace_split.py`
 
