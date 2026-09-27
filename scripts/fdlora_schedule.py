@@ -38,9 +38,11 @@ seed, so a difference in measured leakage against FedDPA may reflect this length
 the schedule, and the comparison is not compute-matched until the real outer step is implemented.
 
 Run: uv run --no-sync python scripts/fdlora_schedule.py \
-       --sources-file scripts/clients-cpp-rebuilt.txt --corpus-root ~/corpus/clients3 \
+       --sources-file scripts/clients-cpp-rebuilt.txt \
+       --corpus-root ~/ajsoftworks/sphragis-data/corpus/clients3 \
        --client-size 128 --rounds 6 --inner-steps 3 --sync-period 5 \
-       --adapters ~/scratch/sphragis-adapters-fdlora --out ~/client-updates-fdlora.json
+       --adapters ~/ajsoftworks/sphragis-data/adapters/sphragis-adapters-fdlora \
+       --out ~/ajsoftworks/sphragis-data/results/client-updates-fdlora.json
 """
 
 from __future__ import annotations

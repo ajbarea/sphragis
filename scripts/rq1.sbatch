@@ -35,22 +35,22 @@ source sphragis/experiment/cluster-env.sh
 tag_result_suffix SEEDS LORA_RANK
 
 if [ "$MODE" = "windows" ]; then
-  SOURCE=(--root "$HOME/corpus-windows" --org openstack --org qt)
+  SOURCE=(--root "$SPHRAGIS_DATA/corpus-windows" --org openstack --org qt)
 else
   SOURCE=(
-    --corpus "openstack=$HOME/corpus/openstack-2024-10.jsonl"
-    --corpus "qt=$HOME/corpus/qt-2024-10.jsonl"
+    --corpus "openstack=$SPHRAGIS_DATA/corpus/openstack-2024-10.jsonl"
+    --corpus "qt=$SPHRAGIS_DATA/corpus/qt-2024-10.jsonl"
   )
 fi
 
 # Corpus files must be cut from refined examples (scripts/project_corpora.py writes each one a
 # record); LEGACY_CORPUS=1 reads an older file anyway, to reproduce an earlier result.
-claim_result OUT "$HOME/rq1-$MODE$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/rq1-$MODE$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/rq1_pilot.py \
   "${SOURCE[@]}" \
   $(legacy_corpus_flag) \
   --seeds "${SEEDS:-1}" \
   --lora-rank "${LORA_RANK:-32}" \
   --equalize-train \
-  --adapters "$HOME/scratch/sphragis-adapters-rq1-$MODE$RESULT_SUFFIX" \
+  --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-rq1-$MODE$RESULT_SUFFIX" \
   --out "$OUT"

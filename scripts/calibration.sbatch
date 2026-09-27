@@ -32,24 +32,24 @@ cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 tag_result_suffix SEEDS
 
-PLANTED="${PLANTED:-$HOME/corpus/planted}"
+PLANTED="${PLANTED:-$SPHRAGIS_DATA/corpus/planted}"
 CONDITIONS="${CONDITIONS:-marker-1 marker-0}"
 
 # Every condition's result is claimed before any trains, so a clash on the last condition stops
 # the job at the start rather than after hours spent on the others.
 for tag in $CONDITIONS; do
-  claim_result OUT "$HOME/calibration-$tag$RESULT_SUFFIX.json"
+  claim_result OUT "$SPHRAGIS_RESULTS/calibration-$tag$RESULT_SUFFIX.json"
 done
 for tag in $CONDITIONS; do
   echo "=== condition $tag ==="
-  OUT="$HOME/calibration-$tag$RESULT_SUFFIX.json"
+  OUT="$SPHRAGIS_RESULTS/calibration-$tag$RESULT_SUFFIX.json"
   uv run --no-sync python scripts/rq1_pilot.py \
     --corpus "a=$PLANTED/$tag-a.jsonl" \
     --corpus "b=$PLANTED/$tag-b.jsonl" \
     $(legacy_corpus_flag) \
     --seeds "${SEEDS:-1}" \
     --equalize-train \
-    --adapters "$HOME/scratch/sphragis-adapters-$tag$RESULT_SUFFIX" \
+    --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-$tag$RESULT_SUFFIX" \
     --out "$OUT"
 done
 echo "CALIBRATION_OK"

@@ -3,8 +3,11 @@
 CPU only, no GPU allocation, no queue. Exercises the real import path and the real data
 pipeline on every corpus the job will read, and confirms the checkout is the pushed commit.
 
-    preflight_pilot.py --script scripts/pilot.py ~/pilot-examples.jsonl
-    preflight_pilot.py --script scripts/rq1_pilot.py openstack=~/corpus/a.jsonl qt=~/corpus/b.jsonl
+    preflight_pilot.py --script scripts/pilot.py \
+        ~/ajsoftworks/sphragis-data/corpus/pilot-examples.jsonl
+    preflight_pilot.py --script scripts/rq1_pilot.py \
+        openstack=~/ajsoftworks/sphragis-data/corpus/a.jsonl \
+        qt=~/ajsoftworks/sphragis-data/corpus/b.jsonl
 
 Every check here has to be able to fail. An earlier version compared the checkout's SHA to
 itself, required a hand-copied script the deploy discipline forbids, and validated

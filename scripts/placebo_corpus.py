@@ -21,7 +21,8 @@ least-loaded rule, no seed, no search, and the resulting counts are recorded bes
 corpus rather than chosen.
 
     uv run --no-sync python scripts/placebo_corpus.py \
-        --root ~/corpus-windows --org qt --out-root ~/corpus-windows-placebo-qt
+        --root ~/ajsoftworks/sphragis-data/corpus-windows --org qt \
+        --out-root ~/ajsoftworks/sphragis-data/corpus-windows-placebo-qt
 """
 
 from __future__ import annotations

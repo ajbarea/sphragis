@@ -11,7 +11,8 @@ once. LoRA's B starts at zero, so a saved adapter's B A is the client's update i
 
     uv run --no-sync python scripts/client_updates.py \
         --source openstack:python=nova.jsonl --source qt:docs=qtdoc.jsonl ... \
-        --adapters ~/scratch/sphragis-adapters-clients --out ~/client-updates.json
+        --adapters ~/ajsoftworks/sphragis-data/adapters/sphragis-adapters-clients \
+        --out ~/ajsoftworks/sphragis-data/results/client-updates.json
 
 A source is named `<organization>:<content>` so the attribution can be read at either altitude.
 

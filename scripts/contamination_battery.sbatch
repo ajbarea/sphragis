@@ -25,12 +25,12 @@ SCORED_TEXT="${SCORED_TEXT:-with_context}"
 # Six months each side, built by one pipeline under one cutoff and deduplicated the same
 # way, so the sides differ in date and in nothing else. The single-month control they
 # replace left 116 scored examples, too few to separate the windows from anything.
-POST="${POST:-$HOME/corpus/openstack-post.jsonl}"
-PRE="${PRE:-$HOME/corpus/openstack-pre.jsonl}"
+POST="${POST:-$SPHRAGIS_DATA/corpus/openstack-post.jsonl}"
+PRE="${PRE:-$SPHRAGIS_DATA/corpus/openstack-pre.jsonl}"
 TAG="${TAG:-6mo}"
 # Inputs must come from scripts/contamination_windows.py, which records each; LEGACY_CORPUS=1
 # reads an older file anyway, to reproduce an earlier result.
-claim_result OUT "$HOME/contamination-openstack-$TAG-$SCORED_TEXT$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/contamination-openstack-$TAG-$SCORED_TEXT$RESULT_SUFFIX.json"
 # The script also writes the membership half early, beside the result, so a run that hits its wall
 # during guided completion keeps the primary instrument. That file is a result too.
 claim_result PARTIAL "${OUT%.json}.partial.json"

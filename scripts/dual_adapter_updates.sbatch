@@ -31,12 +31,12 @@ case "$SCHEDULE" in
 esac
 export RESULT_SUFFIX
 
-C="${CLIENTS:-$HOME/corpus/clients3}"
+C="${CLIENTS:-$SPHRAGIS_DATA/corpus/clients3}"
 SOURCES="${SOURCES:-scripts/clients-cpp-rebuilt.txt}"
 
 # Corpus files must be cut from refined examples (scripts/project_corpora.py writes each one a
 # record); LEGACY_CORPUS=1 reads an older file anyway, to reproduce an earlier result.
-claim_result OUT "$HOME/client-updates-dual$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/client-updates-dual$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/dual_adapter_updates.py \
   --clients "${CLIENTS_PER_SOURCE:-6}" \
   --client-size "${CLIENT_SIZE:-64}" \
@@ -46,5 +46,5 @@ uv run --no-sync python scripts/dual_adapter_updates.py \
   --sources-file "$SOURCES" \
   --corpus-root "$C" \
   $(legacy_corpus_flag) \
-  --adapters "$HOME/scratch/sphragis-adapters-dual$RESULT_SUFFIX" \
+  --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-dual$RESULT_SUFFIX" \
   --out "$OUT"

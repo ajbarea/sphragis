@@ -74,6 +74,8 @@ torch = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# Scripts archived verbatim beside the job logs they produced; a record, not code.
+extend-exclude = ["datasets/logs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

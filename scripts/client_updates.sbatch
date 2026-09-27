@@ -29,7 +29,7 @@ fi
 [ -z "${PACKING_SEED:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-p$PACKING_SEED"
 export RESULT_SUFFIX
 
-C="${CLIENTS:-$HOME/corpus/clients}"
+C="${CLIENTS:-$SPHRAGIS_DATA/corpus/clients}"
 
 SOURCES="${SOURCES:-scripts/clients-cpp.txt}"
 
@@ -38,7 +38,7 @@ SOURCES="${SOURCES:-scripts/clients-cpp.txt}"
 # read at more than one length.
 # Corpus files must be cut from refined examples (scripts/project_corpora.py writes each one a
 # record); LEGACY_CORPUS=1 reads an older file anyway, to reproduce an earlier result.
-claim_result OUT "$HOME/client-updates$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/client-updates$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/client_updates.py \
   --clients "${CLIENTS_PER_SOURCE:-6}" \
   --client-size "${CLIENT_SIZE:-64}" \
@@ -46,5 +46,5 @@ uv run --no-sync python scripts/client_updates.py \
   --sources-file "$SOURCES" \
   --corpus-root "$C" \
   $(legacy_corpus_flag) \
-  --adapters "$HOME/scratch/sphragis-adapters-clients$RESULT_SUFFIX" \
+  --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-clients$RESULT_SUFFIX" \
   --out "$OUT"
