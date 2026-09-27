@@ -37,3 +37,6 @@ site/
 
 # Claude Code session worktrees
 .claude/worktrees/
+
+# Generated from docs/research-log.md by scripts/log_to_blog.py
+docs/log/
