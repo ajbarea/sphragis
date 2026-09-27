@@ -1,0 +1,97 @@
+{
+  "runs": [
+    "datasets/results/rq1-placebo-openstack-v2.json",
+    "datasets/results/rq1-placebo-openstack-v2-s2.json",
+    "datasets/results/rq1-placebo-openstack-v2-s3.json",
+    "datasets/results/rq1-placebo-openstack-v2-s4.json",
+    "datasets/results/rq1-placebo-openstack-v2-s5.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "sensitivity": "datasets/results/decomposition-sensitivity-v2.json",
+  "pilot": "development window",
+  "design": {
+    "admitted": [
+      "openstack"
+    ],
+    "H1": [
+      "openstack"
+    ],
+    "H2": [],
+    "exploratory_h2": []
+  },
+  "verdicts": {
+    "H1": "inconclusive"
+  },
+  "passed_at": {
+    "H1": null
+  },
+  "reading": "unresolved",
+  "below_sesoi": [],
+  "per_org": {
+    "H1": {
+      "openstack": {
+        "role": "confirmatory",
+        "foreign": null,
+        "estimate": 0.0133549257759784,
+        "intervals": {
+          "0.95": {
+            "low": -0.009071318463522809,
+            "high": 0.034980083551928505
+          }
+        },
+        "verdicts": {
+          "0.95": "inconclusive"
+        },
+        "within_sesoi": {
+          "0.95": false
+        },
+        "clusters_per_half": [
+          116,
+          113
+        ],
+        "seeds": 5
+      }
+    },
+    "H2": {}
+  },
+  "joint": {},
+  "sesoi": 0.01,
+  "detectable": {
+    "H1": {
+      "openstack": {
+        "0.975": 0.026627035537561843,
+        "0.95": 0.02497406657669815
+      }
+    }
+  },
+  "holm_levels": [
+    0.95
+  ],
+  "provenance": {
+    "generated_at": "2026-09-27T19:31:45.616904+00:00",
+    "git": {
+      "commit": "b4980906ef2d6bee0126833f43c6754886459f95",
+      "branch": "chore/v2-openstack-pilot",
+      "uncommitted_code": [
+        "scripts/crossed_reread.py",
+        "scripts/decomposition_pilot.py",
+        "scripts/seed_effect.py"
+      ],
+      "uncommitted_code_sha256": "700039079aca79ff17123797f58ee457742dc21ca45292461d2c147539d0d917"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  },
+  "corpus_roots_digest": "f49b745cfbde62c0"
+}

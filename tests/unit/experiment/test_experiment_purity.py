@@ -22,6 +22,7 @@ _ORCHESTRATION = (
     "power.py",
     "preflight.py",
     "runner.py",
+    "runs.py",
     "slurm.py",
     "training.py",
     "walk.py",
