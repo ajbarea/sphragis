@@ -5,7 +5,7 @@ or below 0.01, five if above, because that is where the crossed interval at thre
 holding nominal (`datasets/results/crossed-coverage.json`).
 
 Input is single-seed runs of one study at different seeds, merged exactly as
-`scripts/crossed_reread.py` merges them. Per organization, the contrast at each seed is
+`sphragis/experiment/runs.merge` merges them. Per organization, the contrast at each seed is
 matched minus mismatched, pooled. Two seeds' contrasts differ by the seed effect and by
 seed-by-change noise; the second is measured directly, as the change-clustered bootstrap
 variance of the per-example difference between the two seeds. The moment estimate is
@@ -26,6 +26,7 @@ import argparse
 import itertools
 import json
 import random
+import re
 from collections import defaultdict
 from pathlib import Path
 from statistics import fmean, variance
@@ -41,8 +42,9 @@ parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--out", type=Path, required=True)
 parser.add_argument(
     "--corpus-digest",
-    help="the checked digest of byte-identical corpus roots the runs were built into; merges runs "
-    "whose corpus sources differ only in root, and is recorded in the output",
+    help="a 16-hex digest the caller computed over the corpus roots the runs were built into, "
+    "asserting they are byte-identical; merges runs whose corpus sources differ only in root. "
+    "It is recorded, not verified",
 )
 
 # Lower 5% points of chi-square, by degrees of freedom, for a one-sided upper bound on a
@@ -90,9 +92,17 @@ def pair_noise_variance(
     return shift, variance(draws)
 
 
+def _digest(value: str | None) -> bool:
+    if value is None:
+        return False
+    if not re.fullmatch(r"[0-9a-f]{16}", value):
+        raise SystemExit(f"--corpus-digest takes 16 hex digits, got {value!r}")
+    return True
+
+
 def main() -> None:
     args = parser.parse_args()
-    results, seeds = merge(args.runs, roots_verified=bool(args.corpus_digest))
+    results, seeds = merge(args.runs, roots_verified=_digest(args.corpus_digest))
     if len(seeds) < 2:
         raise SystemExit("a seed effect needs at least two seeds")
     orgs = sorted({arm.split("|")[1] for arm in results if arm.startswith("base|")})

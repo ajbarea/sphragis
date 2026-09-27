@@ -37,6 +37,8 @@ def configuration(run: dict[str, Any], *, roots_verified: bool = False) -> dict[
                 _below_root(c["source"], org) if roots_verified else c["source"],
                 c.get("train_examples_equalized"),
                 c["held_out_examples"],
+                c.get("examples"),
+                c.get("dedup_removed"),
             )
             for org, c in run["corpora"].items()
         },
@@ -47,11 +49,14 @@ def configuration(run: dict[str, Any], *, roots_verified: bool = False) -> dict[
 
 
 def _below_root(source: str, org: str) -> str:
-    """A corpus source with its root removed: `.../<root>/<org>/refined` becomes `<org>/refined`."""
+    """A corpus source with only its root removed: `train -> dev windows under /r/<org>/refined`
+    becomes `train -> dev windows under <org>/refined`, keeping the mode and windows."""
     marker = f"/{org}/"
     if marker not in source:
         raise SystemExit(f"cannot find {org}'s directory in corpus source {source!r}")
-    return source[source.rindex(marker) + 1 :]
+    at = source.rindex(marker)
+    path_start = source.rfind(" ", 0, at) + 1
+    return source[:path_start] + source[at + 1 :]
 
 
 def merge(

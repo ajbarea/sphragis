@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 from sphragis.experiment.decomposition import decomposition_gate, detectable_effects
@@ -32,9 +33,17 @@ parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--out", type=Path, required=True)
 
 
+def _digest(value: str | None) -> bool:
+    if value is None:
+        return False
+    if not re.fullmatch(r"[0-9a-f]{16}", value):
+        raise SystemExit(f"--corpus-digest takes 16 hex digits, got {value!r}")
+    return True
+
+
 def main() -> None:
     args = parser.parse_args()
-    results, seeds = merge(args.runs, roots_verified=bool(args.corpus_digest))
+    results, seeds = merge(args.runs, roots_verified=_digest(args.corpus_digest))
     detectable = detectable_effects(json.loads(args.sensitivity.read_text()))
     outcome = decomposition_gate(
         results,
