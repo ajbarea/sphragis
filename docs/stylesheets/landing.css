@@ -134,19 +134,25 @@ body.hero-page .md-content__inner {
   }
 }
 
+/* Tablet and phone: the seal stands whole above the title. In the 16:9 artwork the seal
+   spans 24% of the width, centred at 73.7% across, about as tall as it is wide (measured), so the
+   image is sized from one width and shifted to put the seal's centre on the page's. */
 @media (max-width: 960px) {
   .md-typeset .hero {
+    --seal-w: min(190vw, 1000px);
+    --seal-top: 1.25rem;
+    min-height: 0;
     align-items: center;
     text-align: center;
-    justify-content: flex-end;
-    padding: 2.5rem 1.5rem 3.5rem;
+    justify-content: flex-start;
+    padding: calc(var(--seal-top) + 0.38 * var(--seal-w)) 1.5rem 3.5rem;
     background:
       linear-gradient(to bottom,
-        transparent 0%,
-        transparent 42%,
-        color-mix(in srgb, var(--sph-obsidian) 55%, transparent) 52%,
-        var(--sph-obsidian) 65%),
-      var(--hero-bg-image) 64% top / auto 58% no-repeat,
+        transparent 0,
+        transparent calc(var(--seal-top) + 0.36 * var(--seal-w)),
+        var(--sph-obsidian) calc(var(--seal-top) + 0.46 * var(--seal-w))),
+      var(--hero-bg-image) calc(50vw - 0.737 * var(--seal-w))
+        calc(var(--seal-top) - 0.1 * var(--seal-w)) / var(--seal-w) auto no-repeat,
       var(--sph-obsidian);
   }
 
@@ -162,31 +168,13 @@ body.hero-page .md-content__inner {
 
 @media (max-width: 768px) {
   .md-typeset .hero {
-    min-height: 95vh;
-    min-height: 95dvh;
-    padding: 2rem 1.2rem 2.8rem;
-    background:
-      linear-gradient(to bottom,
-        transparent 0%,
-        transparent 40%,
-        color-mix(in srgb, var(--sph-obsidian) 60%, transparent) 50%,
-        var(--sph-obsidian) 62%),
-      var(--hero-bg-image) 64% top / auto 52% no-repeat,
-      var(--sph-obsidian);
+    padding: calc(var(--seal-top) + 0.38 * var(--seal-w)) 1.2rem 3.2rem;
   }
 }
 
 @media (max-width: 480px) {
   .md-typeset .hero {
-    padding: 1.8rem 1rem 2.5rem;
-    background:
-      linear-gradient(to bottom,
-        transparent 0%,
-        transparent 38%,
-        color-mix(in srgb, var(--sph-obsidian) 65%, transparent) 48%,
-        var(--sph-obsidian) 60%),
-      var(--hero-bg-image) 64% top / auto 46% no-repeat,
-      var(--sph-obsidian);
+    padding: calc(var(--seal-top) + 0.38 * var(--seal-w)) 1rem 3rem;
   }
 }
 
@@ -321,13 +309,26 @@ body.hero-page .md-content__inner {
 }
 
 .hero-modes {
-  font-size: clamp(0.72rem, 1.1vw, 0.85rem);
-  font-weight: 500;
-  letter-spacing: 0.18em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: clamp(0.68rem, 1vw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.65;
   color: var(--sph-wax-pale);
   margin: 0;
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.35em 0.85em;
+  border: 1px solid color-mix(in srgb, var(--sph-wax-pale) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sph-wax-deep) 22%, transparent);
+  white-space: nowrap;
 }
 
 .hero-modes a {
@@ -379,8 +380,19 @@ body.hero-page .md-content__inner {
   }
 
   .hero-modes {
-    font-size: 0.7rem;
-    letter-spacing: 0.14em;
+    justify-content: center;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+  }
+
+  .hero-buttons .md-button {
+    white-space: nowrap;
+  }
+
+  /* Centring is for one-liners; a paragraph reads left-aligned on a phone. */
+  .section-lead,
+  .pipeline-caption {
+    text-align: left;
   }
 }
 
@@ -397,14 +409,15 @@ body.hero-page .md-content__inner {
 
   .hero-buttons .md-button {
     width: 90%;
-    max-width: 240px;
+    max-width: 300px;
     font-size: 0.74rem !important;
+    letter-spacing: 0.04em !important;
     padding: 0.6rem 1.1rem !important;
   }
 
   .hero-modes {
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
   }
 }
 
@@ -414,6 +427,13 @@ body.hero-page .md-content__inner {
   padding-bottom: 1.5rem;
   position: relative;
   z-index: 2;
+}
+
+/* Below 961px the hero is no longer a full screen, so there is nothing to scroll past. */
+@media (max-width: 960px) {
+  .scroll-hint {
+    display: none;
+  }
 }
 
 .scroll-chevron {
@@ -694,7 +714,7 @@ body.hero-page .md-content__inner {
   align-items: center;
   gap: 1.5rem;
   font-size: 0.85rem;
-  color: rgba(255, 245, 242, 0.4);
+  color: rgba(255, 245, 242, 0.62);
   background: var(--sph-obsidian);
   border-top: 1px solid var(--sph-mist);
 }
@@ -793,7 +813,11 @@ body.hero-page[data-md-color-scheme="default"] {
 
 [data-md-color-scheme="default"] .hero-modes {
   color: var(--sph-wax-deep);
-  opacity: 0.8;
+}
+
+[data-md-color-scheme="default"] .hero-chip {
+  border-color: rgba(140, 29, 24, 0.22);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 [data-md-color-scheme="default"] .hero-buttons .md-button:not(.md-button--primary) {
