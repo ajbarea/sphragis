@@ -23,8 +23,7 @@ hide:
 
 <div class="hero-tagline" markdown>
 
-:octicons-lock-24: Sealed test window | :octicons-git-pull-request-24: Public code review | :octicons-mortar-board-24: MSR 2027 Registered Report
-{ .hero-modes }
+<p class="hero-modes" markdown><span class="hero-chip">:octicons-lock-24: Sealed test window</span> <span class="hero-chip">:octicons-git-pull-request-24: Public code review</span> <span class="hero-chip">:octicons-mortar-board-24: MSR 2027 Registered Report</span></p>
 
 </div>
 
