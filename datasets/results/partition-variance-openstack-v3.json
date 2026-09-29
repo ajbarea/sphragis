@@ -1,0 +1,129 @@
+{
+  "runs": {
+    "registered": [
+      {
+        "run": "rq1-placebo-openstack-v3.json",
+        "seed": 1,
+        "h1": 0.0165071142875877,
+        "halves": {
+          "openstack-a": 0.0033112582781456954,
+          "openstack-b": 0.0297029702970297
+        }
+      },
+      {
+        "run": "rq1-placebo-openstack-v3-s2.json",
+        "seed": 2,
+        "h1": 0.01322864074486919,
+        "halves": {
+          "openstack-a": 0.016556291390728478,
+          "openstack-b": 0.009900990099009901
+        }
+      }
+    ],
+    "p2": [
+      {
+        "run": "rq1-placebo-openstack-v3-p2.json",
+        "seed": 1,
+        "h1": -0.01015198087431694,
+        "halves": {
+          "openstack-a": -0.009375,
+          "openstack-b": -0.01092896174863388
+        }
+      },
+      {
+        "run": "rq1-placebo-openstack-v3-p2-s2.json",
+        "seed": 2,
+        "h1": -0.03396516393442623,
+        "halves": {
+          "openstack-a": -0.01875,
+          "openstack-b": -0.04918032786885246
+        }
+      }
+    ],
+    "p8": [
+      {
+        "run": "rq1-placebo-openstack-v3-p8.json",
+        "seed": 1,
+        "h1": 0.014782910513694307,
+        "halves": {
+          "openstack-a": 0.025179856115107913,
+          "openstack-b": 0.0043859649122807015
+        }
+      },
+      {
+        "run": "rq1-placebo-openstack-v3-p8-s2.json",
+        "seed": 2,
+        "h1": 0.0007888426101224279,
+        "halves": {
+          "openstack-a": -0.007194244604316547,
+          "openstack-b": 0.008771929824561403
+        }
+      }
+    ],
+    "p13": [
+      {
+        "run": "rq1-placebo-openstack-v3-p13.json",
+        "seed": 1,
+        "h1": 0.0179168657429527,
+        "halves": {
+          "openstack-a": 0.024844720496894408,
+          "openstack-b": 0.01098901098901099
+        }
+      },
+      {
+        "run": "rq1-placebo-openstack-v3-p13-s2.json",
+        "seed": 2,
+        "h1": 0.007883420926899188,
+        "halves": {
+          "openstack-a": -0.006211180124223602,
+          "openstack-b": 0.02197802197802198
+        }
+      }
+    ],
+    "p29": [
+      {
+        "run": "rq1-placebo-openstack-v3-p29.json",
+        "seed": 1,
+        "h1": -0.002174531221250188,
+        "halves": {
+          "openstack-a": 0.005235602094240838,
+          "openstack-b": -0.009584664536741214
+        }
+      },
+      {
+        "run": "rq1-placebo-openstack-v3-p29-s2.json",
+        "seed": 2,
+        "h1": 0.016283893414515832,
+        "halves": {
+          "openstack-a": 0.02617801047120419,
+          "openstack-b": 0.006389776357827476
+        }
+      }
+    ]
+  },
+  "partitions": 5,
+  "seeds_per_partition": 2,
+  "variance_of_partition_means": 0.00022499398636120023,
+  "within_partition_variance": 0.00012150334676254071,
+  "sigma_partition_squared": 0.0001642423129799299,
+  "sigma_partition": 0.012815705715251497,
+  "within_partition_sd": 0.011022855653710644,
+  "range_of_partition_means": [
+    -0.022058572404371583,
+    0.014867877516228445
+  ],
+  "seed_effect": {
+    "sigma_b": 0.0076549920705300594,
+    "source": "seed-effect-placebo-openstack-v3.json"
+  },
+  "provenance": {
+    "generated_at": "2026-09-29T04:50:22.578049+00:00",
+    "git": {
+      "commit": "db1ff390c536d7762a05b1966e0f67b3c6a223f2",
+      "branch": "measure/partition-variance"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
