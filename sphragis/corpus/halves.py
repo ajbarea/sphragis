@@ -45,6 +45,27 @@ def suffix(path: str) -> str:
     return pure.suffix.lower() or pure.name
 
 
+# Below this a target matches a comment by chance ("private", "!== null").
+TYPED_TARGET_MIN_CHARS = 20
+
+
+def _lines(text: str) -> str:
+    return "\n".join(line.strip() for line in text.strip().splitlines())
+
+
+def target_in_comment(row: Mapping[str, Any]) -> bool:
+    """Whether a reviewer typed the rewrite into a comment: reported per half, never filtered.
+
+    The target, whitespace-normalized per line, appears verbatim in a comment. Gerrit's
+    suggested edits are removed by `refine`; this is the same leak written by hand, which is
+    ordinary reviewing and so is described rather than removed (research log, 2026-09-28).
+    """
+    after = _lines(str(row.get("after") or ""))
+    if len(after) < TYPED_TARGET_MIN_CHARS or after == _lines(str(row.get("before") or "")):
+        return False
+    return any(after in _lines(str(c)) for c in row.get("comments") or [])
+
+
 def total_variation(p: Mapping[str, int], q: Mapping[str, int]) -> float:
     """Half the L1 distance between two count vectors, each normalised to a distribution."""
     np_, nq = sum(p.values()), sum(q.values())
@@ -76,6 +97,7 @@ def halves(
                 "largest": largest,
                 "largest_share": top / len(members) if members else 1.0,
                 "suffixes": dict(Counter(suffix(row["path"]) for row in members).most_common()),
+                "target_in_comment": sum(target_in_comment(row) for row in members),
             }
         )
     return out

@@ -10,6 +10,7 @@ from sphragis.corpus.halves import (
     runner_train,
     split_criteria,
     suffix,
+    target_in_comment,
     total_variation,
 )
 
@@ -185,3 +186,34 @@ def test_runner_train_dedups_each_half_on_its_own(monkeypatch: pytest.MonkeyPatc
     train = runner_train(built, {"train": WINDOW})
     assert seen == [{"p0", "p2", "p4"}, {"p1", "p3", "p5"}]
     assert len(train) == len(built)
+
+
+TARGET = "return self.cache.get(key, default)"
+
+
+def _example(comments: list[str], after: str = TARGET, before: str = "return None") -> dict:
+    return {"before": before, "after": after, "comments": comments}
+
+
+def test_a_target_typed_into_a_comment_is_found_across_indentation() -> None:
+    assert target_in_comment(_example([f"Should this be\n```\n    {TARGET}\n```"]))
+
+
+def test_a_comment_that_only_describes_the_fix_is_not_a_typed_target() -> None:
+    assert not target_in_comment(_example(["use the cache's default instead of None"]))
+
+
+def test_short_unchanged_and_missing_targets_are_never_typed_targets() -> None:
+    assert not target_in_comment(_example(["private"], after="private"))
+    assert not target_in_comment(_example([TARGET], before=TARGET))
+    assert not target_in_comment({"path": "a.py"})
+    assert not target_in_comment(_example([TARGET], after=""))
+
+
+def test_each_half_reports_its_typed_targets() -> None:
+    built = _balanced()
+    train = [
+        {**row, **_example([TARGET] if row["project"] == "p0" else ["rename"])} for row in built
+    ]
+    out = halves(built, train, WINDOW)
+    assert [h["target_in_comment"] for h in out] == [10, 0]
