@@ -3,15 +3,17 @@
 A run is one partition of an organization's projects (`assign(..., order_seed=s)`, admitted by
 `split_criteria`) at its own training seed, scored own half against sibling half on every held-out
 change. The estimand is the mean over partitions and seeds of the equally weighted half-split
-contrast; the interval crosses runs and changes (`partitioned_crossed_draws`), and the number of
-runs is set by Ritzwoller and Romano's reproducible-aggregation rule. Design of record:
+contrast; the interval crosses runs and changes (`partitioned_crossed_draws`). The number of runs K
+is fixed before the test window is read, from the organization's development-window pilot, by
+Ritzwoller and Romano's sizing formula for reproducible aggregation. Design of record:
 `docs/superpowers/specs/2026-09-29-repeated-partitions-design.md`.
 """
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
-from statistics import NormalDist, variance
+from statistics import NormalDist, stdev, variance
 from typing import Any
 
 from sphragis.experiment.decomposition import (
@@ -23,11 +25,15 @@ from sphragis.experiment.decomposition import (
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
-# Romano, arXiv:2311.14204, Algorithm 1). XI is the SESOI: a disagreement smaller than the
-# smallest effect of interest changes no reading.
+# Romano, arXiv:2311.14204). XI is the SESOI: a disagreement smaller than the smallest effect of
+# interest changes no reading.
 XI = SESOI
 BETA = 0.05
-K_INIT = 8
+# K is sized on an upper confidence bound of the pilot's per-run spread, so a pilot that happens
+# to understate it does not undersize the study. K_MIN is their recommended least burn-in; K_MAX
+# is the admissible list's length.
+SIZING_CONFIDENCE = 0.90
+K_MIN = 10
 K_MAX = 40
 # Every run scores the organization's deduplicated held-out examples. Only the per-half
 # boilerplate stage can still remove one in one partition and not another; above this share of
@@ -37,40 +43,87 @@ MAX_DROPPED_SHARE = 0.01
 Results = Mapping[str, Sequence[Mapping[str, Any]]]
 
 
-def stopping_rule(estimates: Sequence[float], *, xi: float = XI, beta: float = BETA) -> dict:
-    """Whether the mean of these per-run estimates is (xi, beta)-reproducible yet.
+def reproducibility(estimates: Sequence[float], *, xi: float = XI, beta: float = BETA) -> dict:
+    """Whether the mean of these per-run estimates is (xi, beta)-reproducible.
 
-    Algorithm 1: stop once the plug-in variance of the mean, s^2 / K, is at most
-    0.5 * (xi / z_{1 - beta/2})^2, and never before K_INIT runs.
+    Ritzwoller and Romano's criterion: the plug-in variance of the mean, s^2 / K, at most
+    0.5 * (xi / z_{1 - beta/2})^2. Reported beside a reading; it never decides K, since stopping
+    when the runs happen to agree narrows the interval with them.
     """
     k = len(estimates)
     if k < 2:
-        raise ValueError(f"the stopping rule needs at least two runs, got {k}")
+        raise ValueError(f"reproducibility needs at least two runs, got {k}")
     v_hat = variance(estimates) / k
     cv = 0.5 * (xi / NormalDist().inv_cdf(1 - beta / 2)) ** 2
-    return {
-        "runs": k,
-        "variance_of_mean": v_hat,
-        "critical_value": cv,
-        "stop": k >= K_INIT and v_hat <= cv,
-        "at_cap": k >= K_MAX,
-    }
+    return {"runs": k, "variance_of_mean": v_hat, "critical_value": cv, "holds": v_hat <= cv}
 
 
-def first_stop(estimates: Sequence[float]) -> tuple[int | None, list[dict]]:
-    """The first K, from K_INIT up, at which the stopping rule holds over the first K runs.
+def _lower_gamma_regularized(a: float, x: float) -> float:
+    """P(a, x), the regularized lower incomplete gamma function: series, else continued fraction."""
+    if x <= 0:
+        return 0.0
+    log_front = a * math.log(x) - x - math.lgamma(a)
+    if x < a + 1:
+        term = total = 1.0 / a
+        n = a
+        while abs(term) > abs(total) * 1e-15:
+            n += 1
+            term *= x / n
+            total += term
+        return total * math.exp(log_front)
+    b, c, d = x + 1 - a, 1e300, 1 / (x + 1 - a)
+    h = d
+    for i in range(1, 10_000):
+        an = -i * (i - a)
+        b += 2
+        d = 1 / (an * d + b if abs(an * d + b) > 1e-300 else 1e-300)
+        c = an / c + b if abs(an / c + b) > 1e-300 else 1e-300
+        h *= d * c
+        if abs(d * c - 1) < 1e-15:
+            break
+    return 1 - math.exp(log_front) * h
 
-    Runs may have been computed in batches past it; the reading uses the first K alone, which
-    depends only on the fixed order of the runs. None when no prefix stops (more runs needed,
-    unless the cap was reached, in which case the cap is K).
+
+def chi2_quantile(p: float, df: int) -> float:
+    """The p quantile of the chi-squared distribution with df degrees of freedom."""
+    low, high = 0.0, max(1.0, df * 10.0)
+    for _ in range(200):
+        mid = (low + high) / 2
+        if _lower_gamma_regularized(df / 2, mid / 2) < p:
+            low = mid
+        else:
+            high = mid
+    return (low + high) / 2
+
+
+def runs_needed(
+    pilot: Sequence[float],
+    *,
+    xi: float = XI,
+    beta: float = BETA,
+    confidence: float = SIZING_CONFIDENCE,
+) -> dict:
+    """K for an organization, from its development-window pilot's per-run estimates.
+
+    Ritzwoller and Romano's sizing formula (their eq. 5.3), K = 2 v (z_{1 - beta/2} / xi)^2, with
+    v the per-run variance taken at the upper `confidence` bound of the pilot's standard
+    deviation (chi-squared, n - 1 degrees of freedom), clamped to [K_MIN, K_MAX].
     """
-    trace = []
-    for k in range(K_INIT, len(estimates) + 1):
-        rule = stopping_rule(estimates[:k])
-        trace.append(rule)
-        if rule["stop"] or rule["at_cap"]:
-            return k, trace
-    return None, trace
+    n = len(pilot)
+    if n < 2:
+        raise ValueError(f"sizing needs at least two pilot runs, got {n}")
+    s = stdev(pilot)
+    upper = s * math.sqrt((n - 1) / chi2_quantile(1 - confidence, n - 1))
+    z = NormalDist().inv_cdf(1 - beta / 2)
+    raw = 2 * upper**2 * (z / xi) ** 2
+    return {
+        "pilot_runs": n,
+        "sd": s,
+        "sd_upper": upper,
+        "confidence": confidence,
+        "formula": raw,
+        "runs": min(K_MAX, max(K_MIN, math.ceil(raw))),
+    }
 
 
 def _eval_ids(results: Results) -> set[str]:
@@ -111,26 +164,30 @@ def h1_over_partitions(
     runs: Sequence[tuple[Results, int]],
     *,
     org: str,
+    runs_fixed: int,
     levels: Sequence[float],
     bounds: Mapping[float, float] | None,
     bootstrap_seed: int,
     resamples: int = 10_000,
     metric: str = "exact_match",
 ) -> dict[str, Any]:
-    """One organization's H1 cell over its partition runs: estimate, intervals, verdicts."""
+    """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order.
+
+    Runs computed past K are reported and never enter the cell.
+    """
+    if len(runs) < runs_fixed:
+        raise ValueError(f"{len(runs)} runs computed, fewer than the {runs_fixed} fixed")
     clusters, examples = common_runs(runs, org=org, metric=metric)
     computed = [equal_halves(run) for run in clusters]
-    stop, trace = first_stop(computed)
-    k = stop if stop is not None else len(clusters)
+    k = runs_fixed
     clusters, per_run = clusters[:k], computed[:k]
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
     intervals = {c: percentile_interval(draws, c) for c in levels}
     return {
         "estimate": estimate,
         "per_run": per_run,
-        "stopping": stopping_rule(per_run),
-        "stopped_at": stop,
-        "stopping_trace": trace,
+        "runs": k,
+        "reproducibility": reproducibility(per_run),
         "runs_computed": len(computed),
         "runs_left_out": computed[k:],
         "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},

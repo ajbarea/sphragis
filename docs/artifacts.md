@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 202 artifacts under
-42 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 204 artifacts under
+43 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -253,11 +253,19 @@ The NoteDb git route against the REST-built AOSP corpus: enumeration, fields and
 
 ## `scripts/partition_pilot.py`
 
-H1 over repeated partitions on real runs: the cell, the stopping rule, and the runs' order.
+H1 over repeated partitions on real runs: the cell, the number of runs, and the runs' order.
 
 | artifact | |
 |---|---|
-| `partition-pilot-openstack.json` |  |
+| `partition-pilot-openstack-stopping.json` | `partition-pilot-openstack.json` |
+
+## `scripts/partition_sensitivity.py`
+
+Operating characteristics of H1 over repeated partitions, by simulation.
+
+| artifact | |
+|---|---|
+| `partition-sensitivity-openstack-stopping.json` |  |
 
 ## `scripts/partition_variance.py`
 

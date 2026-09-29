@@ -1,10 +1,11 @@
-"""H1 over repeated partitions on real runs: the cell, the stopping rule, and the runs' order.
+"""H1 over repeated partitions on real runs: the cell, the number of runs, and the runs' order.
 
 Takes one single-seed `partition_run` result per admissible partition, in the admissible list's
 order, and checks each is the partition and seed that order assigns. Reads H1 with
-`h1_over_partitions` at the registered Holm levels; with `--sensitivity`, each level's bound is the
-detectable effect that simulation found at `--sigma-run`. A pilot reading on the development
-window: the stopping rule says whether the runs so far would stop, and how many more it wants.
+`h1_over_partitions` over the first `--fixed-k` of them (all, when omitted) at the registered Holm
+levels; with `--sensitivity`, each level's bound is the detectable effect that simulation found at
+`--sigma-run`. On the development window it is the pilot, and `runs_needed` sizes the
+organization's K from every run computed.
 
     uv run --no-sync --no-active python scripts/partition_pilot.py \\
         --admissible datasets/results/admissible-partitions-openstack.json \\
@@ -19,7 +20,7 @@ import json
 from pathlib import Path
 
 from sphragis.experiment.decomposition import holm_levels
-from sphragis.experiment.partitions import h1_over_partitions
+from sphragis.experiment.partitions import h1_over_partitions, runs_needed
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -27,6 +28,7 @@ parser.add_argument("runs", type=Path, nargs="+", help="partition runs, in admis
 parser.add_argument("--admissible", type=Path, required=True)
 parser.add_argument("--org", default="openstack")
 parser.add_argument("--train-size", type=int, default=1850, help="the design's fixed N")
+parser.add_argument("--fixed-k", type=int, help="the organization's fixed K; all runs when omitted")
 parser.add_argument("--hypotheses", type=int, default=2, help="the Holm family size")
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
 parser.add_argument("--sigma-run", help="which of its sigma_run entries sets the bounds")
@@ -61,6 +63,7 @@ def main() -> None:
     cell = h1_over_partitions(
         runs,
         org=args.org,
+        runs_fixed=args.fixed_k or len(runs),
         levels=levels,
         bounds=bounds,
         bootstrap_seed=args.bootstrap_seed,
@@ -72,10 +75,12 @@ def main() -> None:
             f"H1 {args.org} over {len(cell['per_run'])} partitions at {c}: {cell['estimate']:+.4f} "
             f"[{interval['low']:+.4f}, {interval['high']:+.4f}] {cell['verdicts'][c]}"
         )
+    sizing = runs_needed(cell["per_run"] + cell["runs_left_out"])
     print(
-        f"stopped at K={cell['stopped_at']} of {cell['runs_computed']} computed "
-        f"({len(cell['runs_left_out'])} left out); examples {cell['examples']}, "
-        f"dropped {cell['dropped']}"
+        f"read over K={cell['runs']} of {cell['runs_computed']} computed; examples "
+        f"{cell['examples']}, dropped {cell['dropped']}; reproducible "
+        f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
+        f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
     )
     report = {
         "runs": [str(p) for p in args.runs],
@@ -83,6 +88,7 @@ def main() -> None:
         "levels": levels,
         "bounds": bounds,
         **cell,
+        "sizing": sizing,
         "provenance": provenance_header(),
     }
     args.out.write_text(json.dumps(report, indent=2) + "\n")

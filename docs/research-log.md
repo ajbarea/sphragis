@@ -6396,9 +6396,43 @@ readings were in view** (16 runs +0.0072, 22 runs +0.0051, both inconclusive); i
 Ritzwoller and Romano's sequential rule defines, and the verdict is the same either way. Per-run H1
 estimates over the 16 runs range from -0.0174 to +0.0339.
 
-**The cell** (`partition-pilot-openstack.json`, 16 runs): H1 **+0.0072 [-0.0061, +0.0210]** at 95%
+**The cell** (`partition-pilot-openstack-stopping.json`, 16 runs): H1 **+0.0072 [-0.0061, +0.0210]** at 95%
 and [-0.0080, +0.0229] at 97.5%, inconclusive. At all 22 runs: +0.0051 [-0.0073, +0.0175]. Read
 beside the single-partition pilots (v2 +0.0134, v3 +0.0284, both inconclusive or passing on one
 draw of the partition), the half-split effect in OpenStack's development window is small, and the
 single-partition v3 pass is not reproduced once the partition is averaged over. A censored pilot,
 not a test-window estimate; the registered bound for the bounded reading comes from the simulation.
+
+### The stopping rule is liberal at the K it stops at, so K is fixed from the pilot: 24 for OpenStack (2026-09-29)
+
+**The simulation of the registered rule** (`partition-sensitivity-openstack-stopping.json`, commit
+2cd4184): 1,000 null studies and 300 per power step at each run spread, the test window's 1,635
+planned changes drawn from the v3 pilot, runs on admissible partitions built as the jobs build them,
+Algorithm 1 from K = 8 to 40. One-sided false positives against nominal 0.0125 (97.5%) and 0.025
+(95%), mean runs, share at the cap, and the rate at which a second, independent aggregation differs
+by more than xi = 0.01:
+
+| run spread | FP at 97.5% | FP at 95% | runs | at cap | reproducibility failure |
+|---|---|---|---|---|---|
+| 0.011 | 0.020 | 0.026 | 10.4 | 0.00 | 0.046 |
+| 0.015 | 0.017 | 0.035 | 16.4 | 0.00 | 0.073 |
+| 0.025 | 0.014 | 0.034 | 37.5 | 0.76 | 0.090 |
+| 0.035 | 0.012 | 0.027 | 39.9 | 0.99 | 0.187 |
+
+The excess is largest where the rule stops earliest and gone where nearly every study reaches the
+cap, which is a fixed K: the rule stops when the runs happen to agree, and the interval narrows with
+them. Reproducibility fails above beta from spread 0.015 up. Ritzwoller and Romano's guarantee is
+asymptotic in the number of splits; they recommend a burn-in of at least 10 and a tolerance at
+which the rule runs more than 500 splits (their section 5). A run here is a GPU job, and the rule
+stops near 16.
+
+**Amended before any test-window run:** K is fixed per organization from its development-window
+pilot by their sizing formula (eq. 5.3), `K = 2 v (z / xi)^2`, with v at the 90% upper confidence
+bound of the pilot's per-run standard deviation, clamped to [10, 40] (`partitions.runs_needed`). The
+reading takes the first K runs in admissible order; the criterion is reported beside it and decides
+nothing. OpenStack's 22 pilot runs, all computed before this rule was written
+(`partition-pilot-openstack.json`): standard deviation **0.0140**, upper bound **0.0177**, **K =
+24**. Over the 22, H1 reads +0.0051 [-0.0089, +0.0192] at 97.5%, inconclusive. Runs 23 and 24
+(partition seeds 28 and 30, training seeds 23 and 24) are jobs 208898 and 208899, pinned at 205ba2f
+as the first 22, so the pilot is read once at the registered K. The fixed-K simulation at K = 24
+runs next; its coverage decides whether this rule is registered.

@@ -2,24 +2,25 @@
 
 Each simulated study draws the test window's changes from a pilot run's own-against-sibling
 clusters (sign-flip null, then a lift, as `decomposition_sensitivity.py` does), each change keeping
-its project. Runs are then added one at a time, each on the next of a random order over a pool of
-admissible partitions built as the runs build them (`partition_pool`: the organization
+its project. A fixed number of runs `--runs` then each take the next of a random order over a pool
+of admissible partitions built as the runs build them (`partition_pool`: the organization
 deduplicated, projects assigned in a seeded order on training-window counts, `split_criteria` at
 the fixed size), and scores the changes once with its own run shift N(0, sigma_run) and
-seed-by-change churn (`seed_runs`, one seed). Runs stop by `stopping_rule` between K_INIT and
-K_MAX, and the cell is read off `partitioned_crossed_draws`, the interval the gate reads. A second
-sequence over disjoint partitions on the same changes measures reproducibility: how often two
-aggregations differ by more than XI.
+seed-by-change churn (`seed_runs`, one seed). The cell is read off `partitioned_crossed_draws`,
+the interval the gate reads. A second set of runs over disjoint partitions on the same changes
+measures reproducibility: how often two aggregations differ by more than XI.
 
 Reported per sigma_run: the null's one-sided false-positive rate at each Holm level, the detectable
-effect at `--target` power by bisection on the lift, how often a null reads bounded below it, the
-stopping K, and the reproducibility failure rate.
+effect at `--target` power by bisection on the lift, how often a null reads bounded below it, and
+the reproducibility failure rate. `partition-sensitivity-openstack-stopping.json` is the
+data-dependent stopping rule this design replaced, as its provenance's commit ran it.
 
     uv run --no-sync --no-active python scripts/partition_sensitivity.py \\
         --placebo datasets/results/rq1-placebo-openstack-v3.json \\
         --corpus datasets/gerrit --org openstack --size 1635 \\
         --reference datasets/results/split-criteria-openstack.json --size-floor 1850 \\
-        --sigma-run 0.011 0.015 0.025 --out datasets/results/partition-sensitivity-openstack.json
+        --runs 24 --sigma-run 0.011 0.015 0.025 0.035 \\
+        --out datasets/results/partition-sensitivity-openstack.json
 """
 
 from __future__ import annotations
@@ -38,7 +39,7 @@ from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.experiment.decomposition import SESOI, halves, holm_levels
-from sphragis.experiment.partitions import K_INIT, K_MAX, XI, stopping_rule
+from sphragis.experiment.partitions import K_MAX, K_MIN, XI
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import (
@@ -55,6 +56,7 @@ parser.add_argument("--corpus", type=Path, required=True, help="the corpus root,
 parser.add_argument("--org", required=True)
 parser.add_argument("--size", type=int, required=True, help="the test window's planned changes")
 parser.add_argument("--sigma-run", type=float, nargs="+", required=True)
+parser.add_argument("--runs", type=int, required=True, help="the fixed K")
 parser.add_argument("--redraw", type=float, default=0.055)
 parser.add_argument("--target", type=float, default=0.928)
 parser.add_argument("--trials", type=int, default=300, help="per bisection step")
@@ -134,21 +136,16 @@ def _run(
 
 
 def _sequence(
-    truth: Pool, order: list[int], *, sigma_run: float, redraw: float, rng: random.Random
+    truth: Pool, order: list[int], k: int, *, sigma_run: float, redraw: float, rng: random.Random
 ) -> list:
-    """Runs added in `order` of the pooled partitions until the stopping rule fires, or K_MAX."""
-    runs = []
-    for position in order:
-        runs.append(_run(truth, _PARTITIONS[position], sigma_run=sigma_run, redraw=redraw, rng=rng))
-        if len(runs) >= K_INIT:
-            rule = stopping_rule([equal_halves(r) for r in runs])
-            if rule["stop"] or rule["at_cap"]:
-                return runs
-    raise ValueError(f"only {len(order)} partitions for a sequence that may need {K_MAX}")
+    """K runs, on the first K partitions of `order`."""
+    return [
+        _run(truth, _PARTITIONS[p], sigma_run=sigma_run, redraw=redraw, rng=rng) for p in order[:k]
+    ]
 
 
 def trial(job: tuple) -> dict:
-    pool, size, lift, sigma_run, redraw, resamples, seed, levels, reproducibility = job
+    pool, size, lift, sigma_run, redraw, resamples, seed, levels, k, check = job
     rng = random.Random(seed)
     truth: Pool = []
     for _ in range(size):
@@ -159,7 +156,7 @@ def trial(job: tuple) -> dict:
     # Two disjoint sequences of partitions: the second is the independent aggregation the
     # reproducibility check compares against.
     order = rng.sample(range(len(_PARTITIONS)), 2 * K_MAX)
-    runs = _sequence(truth, order[:K_MAX], sigma_run=sigma_run, redraw=redraw, rng=rng)
+    runs = _sequence(truth, order[:K_MAX], k, sigma_run=sigma_run, redraw=redraw, rng=rng)
     # Its own stream, so the bootstrap never replays the draws that built the truth.
     estimate, draws = partitioned_crossed_draws(
         runs, seed=random.Random(f"bootstrap-{seed}").randrange(2**31), resamples=resamples
@@ -167,20 +164,17 @@ def trial(job: tuple) -> dict:
     intervals = {c: percentile_interval(draws, c) for c in levels}
     out = {
         "estimate": estimate,
-        "runs": len(runs),
         "supported": {c: lo > 0.0 for c, (lo, _) in intervals.items()},
         "high": {c: hi for c, (_, hi) in intervals.items()},
         "absent": {c: lo > -SESOI and hi < SESOI for c, (lo, hi) in intervals.items()},
     }
-    if reproducibility:
-        again = _sequence(truth, order[K_MAX:], sigma_run=sigma_run, redraw=redraw, rng=rng)
+    if check:
+        again = _sequence(truth, order[K_MAX:], k, sigma_run=sigma_run, redraw=redraw, rng=rng)
         out["disagree"] = abs(fmean(equal_halves(r) for r in again) - estimate) > XI
     return out
 
 
-def _trials(
-    executor, pool, args, lift, sigma_run, levels, reproducibility=False, count=None
-) -> list[dict]:
+def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=None) -> list[dict]:
     jobs = [
         (
             pool,
@@ -191,7 +185,8 @@ def _trials(
             args.resamples,
             args.seed + t,
             levels,
-            reproducibility,
+            args.runs,
+            check,
         )
         for t in range(count or args.trials)
     ]
@@ -200,6 +195,8 @@ def _trials(
 
 def main() -> None:
     args = parser.parse_args()
+    if not K_MIN <= args.runs <= K_MAX:
+        parser.error(f"--runs must lie in [{K_MIN}, {K_MAX}]")
     pool = pilot_pool(args.placebo, args.corpus, args.org)
     partitions, tried = partition_pool(
         args.corpus, args.org, args.reference, args.size_floor, args.partitions
@@ -217,8 +214,7 @@ def main() -> None:
         "target_marginal_power": args.target,
         "sesoi": SESOI,
         "xi": XI,
-        "k_init": K_INIT,
-        "k_max": K_MAX,
+        "runs": args.runs,
         "levels": levels,
         "trials": args.trials,
         "null_trials": args.null_trials,
@@ -241,11 +237,6 @@ def main() -> None:
             entry: dict = {
                 "null_false_positive": {c: fmean(t["supported"][c] for t in null) for c in levels},
                 "null_reads_absent": {c: fmean(t["absent"][c] for t in null) for c in levels},
-                "runs": {
-                    "mean": fmean(t["runs"] for t in null),
-                    "max": max(t["runs"] for t in null),
-                    "at_cap": fmean(t["runs"] >= K_MAX for t in null),
-                },
                 "reproducibility_failure": fmean(t["disagree"] for t in null),
                 "by_level": {},
             }
@@ -273,8 +264,7 @@ def main() -> None:
                 print(
                     f"sigma_run {sigma_run} at {level}: detects {effect:+.4f}; null FP "
                     f"{entry['null_false_positive'][level]:.3f}, bounded "
-                    f"{entry['by_level'][level]['null_reads_bounded']:.3f}; runs "
-                    f"{entry['runs']['mean']:.1f} (cap {entry['runs']['at_cap']:.2f}); "
+                    f"{entry['by_level'][level]['null_reads_bounded']:.3f}; "
                     f"reproducibility failure {entry['reproducibility_failure']:.3f}",
                     flush=True,
                 )

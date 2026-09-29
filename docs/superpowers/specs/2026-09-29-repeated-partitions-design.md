@@ -45,22 +45,29 @@ and a second seed within a partition buys less than a second partition.
   alone (smallest 1,791, median 1,988). Across admitted organizations N is the least of that
   figure. Every adapter trains at N.
 
-## Number of runs: reproducible aggregation
+## Number of runs: fixed from the pilot
 
-K is chosen by Ritzwoller and Romano's Anscombe-Chow-Robbins rule (arXiv:2311.14204, Algorithm 1):
-runs are added until the variance of the mean over runs, estimated as `s^2 / K` from the per-run
-H1 estimates, is at most `cv = 0.5 * (xi / z_{1 - beta/2})^2`, with a burn-in `K_init` and a cap
-`K_max`. Two researchers drawing partitions independently then report H1 estimates within `xi` of
-each other with probability at least about `1 - beta`. Registered: `xi = 0.01` (the SESOI), `beta =
-0.05`, `K_init = 8`, `K_max = 40`; the values are checked by simulation below before they are fixed.
-The rule reads only per-run point estimates of the test window's contrast, which the interval
-already reads, and is applied the same way in every admitted organization.
+*Amended 2026-09-29, after the simulation of the data-dependent rule below.* K is fixed for each
+organization before its test window is read, from its development-window pilot, by Ritzwoller and
+Romano's sizing formula (arXiv:2311.14204, eq. 5.3): `K = 2 v (z_{1 - beta/2} / xi)^2`, with `v` the
+per-run variance at the 90% upper confidence bound of the pilot's standard deviation (chi-squared,
+pilot runs less one degrees of freedom), clamped to `[K_MIN, K_MAX] = [10, 40]`
+(`partitions.runs_needed`). Registered: `xi = 0.01` (the SESOI), `beta = 0.05`. At that K two
+researchers drawing partitions independently report H1 estimates within `xi` of each other with
+probability about `1 - beta`, if the test window's per-run spread is no larger than the bound. The
+reading uses the first K runs of the admissible list; runs computed past K are reported and never
+enter the cell. Ritzwoller and Romano's criterion (`s^2 / K` at most `0.5 (xi / z)^2`) is reported
+beside the reading and decides nothing.
 
-*Amended 2026-09-29, after runs 1 to 22 of the development-window pilot had been read at both 16
-and 22 runs (both inconclusive):* runs may be computed in batches ahead of the rule. The rule is then applied in the admissible
-list's order, K from `K_INIT` up, and the reading uses the first K at which it holds; runs past
-that K are reported and never enter the cell. The stopping K depends only on the fixed order and
-the runs' estimates, never on which runs happened to be computed.
+*The rule this replaces.* The design first registered their Algorithm 1: add runs until the
+criterion holds, from a burn-in of 8, capped at 40. Its simulation
+(`partition-sensitivity-openstack-stopping.json`) showed one-sided false positives above nominal
+where it stops early (0.020 against 0.0125 at run spread 0.011, stopping near 10 runs) and at
+nominal only where nearly every study reaches the cap, which is a fixed K: stopping when the runs
+happen to agree also narrows the interval. Its reproducibility failure exceeded `beta` from spread
+0.015 up (0.073, 0.090, 0.187). Their guarantee is asymptotic in the number of splits, and they
+recommend a tolerance at which the rule runs more than 500 splits and a burn-in of at least 10; a
+run here is a GPU job, and the rule stopped near 16.
 
 ## Interval
 
@@ -78,19 +85,17 @@ registered detectable effect, and the SESOI band are unchanged.
 ## What has to be shown by simulation before registration
 
 1. **Coverage.** Under the null, the one-sided false-positive rate at each Holm level is at or below
-   nominal across the run variance the measurement allows (sigma_run from 0.005 to 0.035), at the
-   K the rule stops at.
+   nominal across the run variance the measurement allows (sigma_run from 0.011 to 0.035), at the
+   fixed K.
 2. **Sensitivity.** The detectable effect at power 0.928 per cell, at the projected test size,
    at the measured run variance and at its upper bound, replacing the single-partition figures.
-3. **Stopping.** The distribution of the stopping K, and the share of studies hitting `K_max`.
-4. **Reproducibility.** Two independent aggregations on the same simulated data agree within `xi`
+3. **Reproducibility.** Two independent aggregations on the same simulated data agree within `xi`
    at rate at least `1 - beta`.
 
 ## Cost
 
-Each run is one placebo job, about 1.5 GPU-hours on a GH200. At the measured run variance the rule
-stops near 20 runs, about 30 GPU-hours an organization, against 7.5 for five seeds on one
-partition.
+Each run is one placebo job, about 1.5 GPU-hours on a GH200. OpenStack's pilot sizes K at 24, about
+36 GPU-hours an organization on the test window, against 7.5 for five seeds on one partition.
 
 ## Out of scope here
 
