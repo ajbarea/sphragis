@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 
 from sphragis.corpus.halves import (
+    assign,
     excluded_projects,
     halves,
     runner_train,
@@ -217,3 +218,44 @@ def test_each_half_reports_its_typed_targets() -> None:
     ]
     out = halves(built, train, WINDOW)
     assert [h["target_in_comment"] for h in out] == [10, 0]
+
+
+COUNTS = {f"p{i}": 100 - 7 * i for i in range(12)}
+
+
+def test_the_registered_split_is_unchanged_without_an_order_seed() -> None:
+    assert assign(COUNTS) == assign(COUNTS, order_seed=None)
+    assert assign(COUNTS)["p0"] == 0 and assign(COUNTS)["p1"] == 1
+
+
+def test_an_order_seed_gives_a_different_partition_reproducibly() -> None:
+    first, again, other = (assign(COUNTS, order_seed=s) for s in (1, 1, 2))
+    assert first == again
+    assert first != assign(COUNTS) and first != other
+
+
+def test_a_seeded_partition_still_balances_within_the_largest_project() -> None:
+    for seed in range(1, 20):
+        side_of = assign(COUNTS, order_seed=seed)
+        sizes = [sum(c for p, c in COUNTS.items() if side_of[p] == side) for side in (0, 1)]
+        assert abs(sizes[0] - sizes[1]) <= max(COUNTS.values())
+
+
+def test_halves_and_runner_train_follow_the_order_seed(monkeypatch: pytest.MonkeyPatch) -> None:
+    import sphragis.corpus.pipeline as pipeline
+
+    built = _balanced()
+    default = halves(built, built, WINDOW)
+    assert any(halves(built, built, WINDOW, order_seed=s) != default for s in range(1, 6))
+
+    seen: list[set[str]] = []
+
+    def dedup(rows: list[dict]) -> tuple[list[dict], dict]:
+        seen.append({r["project"] for r in rows})
+        return rows, {}
+
+    monkeypatch.setattr(pipeline, "run_dedup", dedup)
+    monkeypatch.setattr(pipeline, "run_split", lambda rows, windows: ({"train": rows}, {}, {}))
+    side_of = assign({f"p{i}": 10 for i in range(6)}, order_seed=3)
+    runner_train(built, {"train": WINDOW}, order_seed=3)
+    assert seen == [{p for p, s in side_of.items() if s == side} for side in (0, 1)]

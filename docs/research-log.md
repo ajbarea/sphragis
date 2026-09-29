@@ -6270,3 +6270,79 @@ at 95%, against v2's +0.0134 [-0.0091, +0.0350]. Three things qualify it, in ord
 3. **The rule was adopted after v2's pilot was read**, though for a reason unrelated to it (found in
    Wikimedia's bot audit) and fixed before any v3 contrast existed. The development window is a
    censored pilot either way.
+
+### Planned before any run: how much of H1 is the partition (2026-09-28)
+
+The registered split is sensitive to small corpus changes (117 of 238 projects moved between v2 and
+v3), so H1
+reads one partition of many that meet the same criteria, and nothing measured so far says how much
+the reading depends on which. Fixed here, before any job:
+
+- **Partitions.** `assign(..., order_seed=s)` shuffles the project names with seed `s` and gives
+  each to the smaller half, as the registered rule does largest-first. Seeds are taken in order from
+  1, skipping any whose halves fail `split_criteria` against OpenStack's registered halves (size
+  floor 2,004, ceiling 0.3187, the project and share rules), until four qualify. The registered
+  split is the fifth.
+- **Runs.** Each alternative partition at training seeds 1 and 2, on `corpus-v3/openstack`, the
+  placebo gate unchanged; the registered partition's seeds 1 and 2 are the v3 runs already made.
+- **Reading.** Per run, H1's point estimate (the two halves' own-minus-sibling contrasts, equally
+  weighted). A two-way layout, five partitions by two seeds: the between-partition variance of the
+  partition means, less the within-partition (seed) variance over two, is the partition component,
+  set beside the seed effect. Reported with the partitions' spread, not tested.
+- **What it decides.** If the partition component is comparable to the seed effect or larger, H1 as
+  registered is conditional on an arbitrary partition, and the Stage 1 design moves to repeated
+  splitting (several partitions, the median estimate and median bounds at an adjusted level, after
+  Chernozhukov, Demirer, Duflo and Fernández-Val, Econometrica 2025); if it is small, one partition
+  stands and the variance is stated.
+
+Selection, applied as stated: seeds 1 to 30 were checked; **2, 8, 13 and 29 qualify**. Of the other
+26, 22 fail only the size floor (a shuffled order balances less tightly than largest-first, and
+the floor is the registered split's smaller half), 3 fail both the floor and the language-mix
+ceiling (seeds 3, 7, 21), and 1 fails the ceiling alone (seed 22). Jobs 207730 to 207735, 207739 and 207740, pinned at a41af73.
+
+### Partition-to-partition variation is comparable to the seed effect, so the decision rule fires (2026-09-29)
+
+The eight jobs planned above ran at a41af73 (rebased as 8b96668; the two differ only by the
+analysis script, committed before the jobs landed); every outcome-neutral check passed and the
+apparatus held in each. `partition-variance-openstack-v3.json`, H1 point estimate per run:
+
+| partition | seed 1 | seed 2 | mean |
+|---|---|---|---|
+| registered | +0.0165 | +0.0132 | +0.0149 |
+| p2 | -0.0102 | -0.0340 | -0.0221 |
+| p8 | +0.0148 | +0.0008 | +0.0078 |
+| p13 | +0.0179 | +0.0079 | +0.0129 |
+| p29 | -0.0022 | +0.0163 | +0.0071 |
+
+The moment estimate is **sigma_partition = 0.0128** (variance of the partition means 0.000225, less
+half the within-partition variance, 0.000122). What it holds and how sure it is, from an
+independent check of this entry:
+
+- **It is not net of change sampling.** Seeds 1 and 2 of one partition share an evaluation set, so
+  subtracting the within-partition variance does not remove the change-level noise they share. A
+  change-clustered bootstrap per half puts that noise near 0.000081, about half of the component; if
+  partitions' noise were independent the boundary alone would be about 0.0092, and since the same
+  changes are reassigned across partitions the truth lies between 0.0092 and 0.0128. The registered
+  interval already carries change sampling.
+- **It is uncertain.** On 4 degrees of freedom its 90% interval is about [0.0058, 0.035].
+- **The seed effect on the same scale.** `seed_effect.py`'s 0.0077 is per half and net of change
+  noise; on H1's two-half average it is between 0.0054 and 0.0077. At seeds 1 and 2 the
+  within-partition variance is almost exactly the seed-by-change noise, a seed main effect near zero.
+
+So the two are **comparable**, and neither ordering is resolved. The rule fixed before the runs read
+"comparable to the seed effect or larger" against point estimates, with no threshold stated; it
+fires.
+
+**What it says about the dev pilot.** The spread across partitions is heterogeneity in what H1
+measures, not a null distribution, so it does not discount the registered partition's reading as
+such. At matched seeds the registered partition reads +0.0149 (seeds 1 and 2 are its two lowest of
+five), and the five partitions average +0.0041, a naive t interval on 4 degrees of freedom of about
+[-0.015, +0.023]. The registered partition's order among the five carries no information (it leads
+the next by 0.002 against a standard error near 0.012 a mean). What does follow is that the five-seed
++0.0284 on the registered partition is a reading of that partition, and a different admissible
+partition could read near zero or below.
+
+**Consequence.** H1 as registered is conditional on one partition among many that meet the same
+criteria, with partition-to-partition variation of the order of the seed effect. The Stage 1 design
+moves to reading H1 over several partitions (repeated splitting), which changes the registered
+estimand and is decided with AJ before the manuscript registers it.

@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 169 artifacts under
-39 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 178 artifacts under
+40 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -243,6 +243,14 @@ The NoteDb git route against the REST-built AOSP corpus: enumeration, fields and
 |---|---|
 | `notedb-parity-aosp.json` |  |
 
+## `scripts/partition_variance.py`
+
+How much of H1's reading is the partition: alternative balanced splits against the seed effect.
+
+| artifact | |
+|---|---|
+| `partition-variance-openstack-v3.json` |  |
+
 ## `scripts/pilot.py`
 
 Pilot: does an ADAPTED 7B clear the exact-match floor on this corpus?
@@ -261,6 +269,10 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-placebo-openstack-seeds.json` | `rq1-placebo-openstack-v2-s2.json` |
 | `rq1-placebo-openstack-v2-s3.json` | `rq1-placebo-openstack-v2-s4.json` |
 | `rq1-placebo-openstack-v2-s5.json` | `rq1-placebo-openstack-v2.json` |
+| `rq1-placebo-openstack-v3-p13-s2.json` | `rq1-placebo-openstack-v3-p13.json` |
+| `rq1-placebo-openstack-v3-p2-s2.json` | `rq1-placebo-openstack-v3-p2.json` |
+| `rq1-placebo-openstack-v3-p29-s2.json` | `rq1-placebo-openstack-v3-p29.json` |
+| `rq1-placebo-openstack-v3-p8-s2.json` | `rq1-placebo-openstack-v3-p8.json` |
 | `rq1-placebo-openstack-v3-s2.json` | `rq1-placebo-openstack-v3-s3.json` |
 | `rq1-placebo-openstack-v3-s4.json` | `rq1-placebo-openstack-v3-s5.json` |
 | `rq1-placebo-openstack-v3.json` | `rq1-placebo-openstack.json` |

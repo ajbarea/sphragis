@@ -9,6 +9,7 @@ OpenStack's own halves (spec `docs/superpowers/specs/2026-09-22-granularity-rede
 
 from __future__ import annotations
 
+import random
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from pathlib import PurePosixPath
@@ -18,15 +19,24 @@ MIN_PROJECTS_A_HALF = 3
 MAX_SHARE_OF_HALF = 0.5
 
 
-def assign(counts: dict[str, int]) -> dict[str, int]:
+def assign(counts: dict[str, int], order_seed: int | None = None) -> dict[str, int]:
     """Each project to a side, largest first, always to the smaller side.
 
-    Deterministic and unseeded on purpose. Ties in count break by name, so the assignment is
-    a function of the corpus alone and re-running it cannot produce a different control.
+    The registered split (no `order_seed`) is deterministic and unseeded on purpose. Ties in
+    count break by name, so it is a function of the corpus alone and re-running it cannot
+    produce a different control.
+
+    `order_seed` replaces largest-first with a seeded shuffle of the names, still each to the
+    smaller side: an alternative balanced partition for measuring partition variance, never the
+    registered split.
     """
+    order = sorted(counts, key=lambda p: (-counts[p], p))
+    if order_seed is not None:
+        order = sorted(counts)
+        random.Random(order_seed).shuffle(order)
     sides = [0, 0]
     out: dict[str, int] = {}
-    for project in sorted(counts, key=lambda p: (-counts[p], p)):
+    for project in order:
         side = 0 if sides[0] <= sides[1] else 1
         out[project] = side
         sides[side] += counts[project]
@@ -75,14 +85,17 @@ def total_variation(p: Mapping[str, int], q: Mapping[str, int]) -> float:
 
 
 def halves(
-    built: Iterable[Mapping[str, Any]], train: Iterable[Mapping[str, Any]], window: tuple[str, str]
+    built: Iterable[Mapping[str, Any]],
+    train: Iterable[Mapping[str, Any]],
+    window: tuple[str, str],
+    order_seed: int | None = None,
 ) -> list[dict[str, Any]]:
     """Both halves of one organization's training window: projects, examples and suffix mix.
 
     Sides are assigned on the refined rows before dedup, as the placebo corpus assigns them;
     what each half holds is read from `train`, the deduplicated training window it trains on.
     """
-    side_of = assign(dict(project_counts(built, window)))
+    side_of = assign(dict(project_counts(built, window)), order_seed)
     train = [row for row in train if row["project"] in side_of]
     out = []
     for side in (0, 1):
@@ -110,13 +123,15 @@ def excluded_projects(built: Iterable[Mapping[str, Any]], window: tuple[str, str
 
 
 def runner_train(
-    built: list[dict[str, Any]], windows: Mapping[str, tuple[str, str]]
+    built: list[dict[str, Any]],
+    windows: Mapping[str, tuple[str, str]],
+    order_seed: int | None = None,
 ) -> list[dict[str, Any]]:
     """The training rows each half trains on: every half deduplicated and split on its own, as
     the runner reads a placebo half, so a duplicate across halves survives in both."""
     from sphragis.corpus.pipeline import run_dedup, run_split
 
-    side_of = assign(dict(project_counts(built, windows["train"])))
+    side_of = assign(dict(project_counts(built, windows["train"])), order_seed)
     train: list[dict[str, Any]] = []
     for side in (0, 1):
         kept, _ = run_dedup([row for row in built if side_of.get(row["project"]) == side])

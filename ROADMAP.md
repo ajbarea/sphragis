@@ -420,9 +420,10 @@ as the unit; the evidence says the codebase is.
 - [x] OpenStack on corpus v3 at the half size: seed effect 0.0077 (five seeds stand), detectable
   effects +0.0246 and +0.0210, H1 dev pilot +0.0284 [+0.0028, +0.0532] on a partition that moved
   117 of 238 projects from v2's; five seeds kept as a stated deviation (research log, 2026-09-28).
-- [ ] **Partition variance.** The registered split is sensitive to small corpus changes, so H1 is conditional on
-  one partition; measure the spread across alternative balanced partitions against the seed spread,
-  then decide whether H1 is read over several partitions (repeated splitting: Chernozhukov, Demirer,
+- [x] **Partition variance measured** (2026-09-29): sigma_partition 0.0128, 90% about [0.0058, 0.035]
+  and partly change-sampling noise, comparable to the seed effect; five partitions average +0.0041
+  [-0.015, +0.023] at two seeds.
+- [ ] **AJ's call: read H1 over several partitions** (repeated splitting: Chernozhukov, Demirer,
   Duflo and Fernández-Val, Econometrica 93(4):1121-1164, 2025) before Stage 1.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).

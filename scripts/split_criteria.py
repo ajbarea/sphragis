@@ -26,19 +26,26 @@ parser.add_argument("--org", required=True)
 parser.add_argument("--reference", default="openstack")
 parser.add_argument("--reference-root", type=Path, default=None, help="default: --root")
 parser.add_argument("--out", type=Path, default=None)
+parser.add_argument(
+    "--order-seed",
+    type=int,
+    default=None,
+    help="check an alternative balanced partition of --org; the reference stays registered",
+)
 
 
-def org_halves(root: Path, org: str) -> tuple[list[dict], list[str]]:
+def org_halves(root: Path, org: str, order_seed: int | None = None) -> tuple[list[dict], list[str]]:
     rows = refined_examples(root, org)
     if not rows:
         raise SystemExit(f"{org}: no refined examples under {root / org}")
     window = WINDOWS["train"]
-    return halves(rows, runner_train(rows, WINDOWS), window), excluded_projects(rows, window)
+    train = runner_train(rows, WINDOWS, order_seed)
+    return halves(rows, train, window, order_seed), excluded_projects(rows, window)
 
 
 def main() -> None:
     args = parser.parse_args()
-    own, excluded = org_halves(args.root, args.org)
+    own, excluded = org_halves(args.root, args.org, args.order_seed)
     ref, _ = org_halves(args.reference_root or args.root, args.reference)
     result = {"excluded_projects": excluded, **split_criteria(own, ref)}
     for name, half in zip(("a", "b"), result["halves"], strict=True):
