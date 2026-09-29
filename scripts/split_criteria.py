@@ -44,7 +44,8 @@ def main() -> None:
     for name, half in zip(("a", "b"), result["halves"], strict=True):
         print(
             f"{args.org}-{name}: {half['projects']} projects, {half['train_examples']} train, "
-            f"largest {half['largest']} at {half['largest_share']:.3f}"
+            f"largest {half['largest']} at {half['largest_share']:.3f}, "
+            f"{half['target_in_comment']} with the target typed into a comment"
         )
     print(
         f"suffix TV {result['suffix_total_variation']} "

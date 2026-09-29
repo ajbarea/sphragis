@@ -414,13 +414,24 @@ as the unit; the evidence says the codebase is.
 - [x] Cells as a rule over the organizations admitted by host permission, not two fixed designs
   (2026-09-27): H1 on every admitted organization, H2 on Qt and Chromium only when both are.
 - [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
+- [x] Corpus v3: examples whose target the reviewer wrote (Gerrit suggested edits, applied fixes)
+  removed by `refine`; OpenStack's ceiling and floor refixed on v3, 0.3187 and 2,004 (research
+  log, 2026-09-28).
+- [x] OpenStack on corpus v3 at the half size: seed effect 0.0077 (five seeds stand), detectable
+  effects +0.0246 and +0.0210, H1 dev pilot +0.0284 [+0.0028, +0.0532] on a partition that moved
+  117 of 238 projects from v2's; five seeds kept as a stated deviation (research log, 2026-09-28).
+- [ ] **Partition variance.** The registered split is sensitive to small corpus changes, so H1 is conditional on
+  one partition; measure the spread across alternative balanced partitions against the seed spread,
+  then decide whether H1 is read over several partitions (repeated splitting: Chernozhukov, Demirer,
+  Duflo and Fernández-Val, Econometrica 93(4):1121-1164, 2025) before Stage 1.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
 - [x] H1 carries a supplementary estimand on the suffix both halves hold most of
   (`file_type_supplement`, `matched_suffix`; `.py` for OpenStack), reported beside H1 (2026-09-27).
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
-- [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.
+- [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
+  0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
   analysis at the half size on corpus v2 for OpenStack (2026-09-27).
 - [ ] The sensitivity analysis for every other admitted organization, once its corpus is frozen.
@@ -509,6 +520,8 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-09-28** — Corpus v3: `refine` removes examples carrying a Gerrit suggested edit or "Fix applied." reply, whose target is already in the prompt; OpenStack and Qt refrozen, OpenStack's split criteria refixed on v3 (ceiling 0.3187, floor 2,004), and examples whose target a reviewer typed into a comment reported per half (research log).
+- **2026-09-28** — The model stack frozen against Dependabot version updates for the study; security updates still open (#62).
 - **2026-09-27** — H1's file-type-matched supplementary estimand registered and implemented (`file_type_supplement`), sharing its bootstrap with the C++ supplement (research log).
 - **2026-09-27** — The split criteria as code (`sphragis/corpus/halves.py`, `scripts/split_criteria.py`), shared with the placebo builder; the language-mix ceiling fixed on OpenStack at total variation 0.357, whose halves split docs from code (research log).
 - **2026-09-27** — OpenStack's placebo on corpus v2 at the half size, five seeds on TIGRIS: seed effect 0.0116, detectable effects +0.0266 and +0.0250, and the registered gate's H1 dev-window pilot +0.0134 [-0.0091, +0.0350], inconclusive (research log).

@@ -105,18 +105,21 @@ nested, so they are resampled independently (Owen's pigeonhole bootstrap). At th
 a seed effect of 0.02 the crossed interval covers at 0.073 two-sided where the median-seed
 rule reaches 0.122, and it costs no width where there is no seed effect.
 
-### Seed count: three
+### Seed count: five
 
-Decided by the seed main effect measured in RQ1's own setting, by a rule fixed before the runs
-landed. The effect there is 0.000 with a one-sided 95% upper bound of 0.0098, at or below the
-0.01 where three seeds stop holding nominal. A null trained on a quarter of the data gives
-0.013, which is not the registered setting.
+Decided by the seed main effect at the half size, where the granularity design trains. The rule
+fixed before the runs: three seeds if the effect is at or below 0.01, where three stop holding
+nominal, five above. On corpus v2 the effect was 0.0116, so five. On corpus v3 it is 0.0077 with a
+one-sided 95% upper bound of 0.0376: the rule as worded gives three, and **five are kept as a
+stated deviation**, because the rule's one earlier application took three only with its upper
+bound below 0.01 too, and five hold nominal at every seed effect measured.
 
 ### Stated power: sensitivity, not power at an observed effect
 
-The design detects +0.0160 exact-match points for OpenStack at the seed effect's point
-estimate and +0.0235 at its upper bound, for a conjunctive gate near 0.80. Power from a
-pilot's own estimate is biased upward, so an earlier absolute figure is withdrawn.
+Each $H_1$ cell detects, with power 0.928 at OpenStack's projected test size, a half-split contrast
+of +0.0246 and +0.0210 exact-match points at the two Holm levels at the seed effect's point
+estimate, and +0.0488 and +0.0450 at its upper bound. Power from a pilot's own estimate is biased
+upward, so no power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 

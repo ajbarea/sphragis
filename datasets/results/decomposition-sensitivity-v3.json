@@ -1,0 +1,54 @@
+{
+  "seeds": 5,
+  "target_marginal_power": 0.928,
+  "sesoi": 0.01,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 100,
+  "resamples": 1000,
+  "cells": {
+    "openstack": {
+      "pilot_changes_per_half": [
+        98,
+        109
+      ],
+      "planned_changes_per_half": [
+        774,
+        861
+      ],
+      "sigma_b": 0.0077,
+      "null_false_positive": {
+        "0.975": 0.02,
+        "0.95": 0.05
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "by_level": {
+        "0.975": {
+          "lift": 0.032812499999999994,
+          "minimum_detectable_effect": 0.02456500120210695,
+          "null_reads_bounded": 0.91
+        },
+        "0.95": {
+          "lift": 0.028124999999999997,
+          "minimum_detectable_effect": 0.020956057526282438,
+          "null_reads_bounded": 0.89
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-29T02:49:04.019830+00:00",
+    "git": {
+      "commit": "0457743cec3754084ed998fa4379ec704f7d061f",
+      "branch": "corpus/suggested-edits"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

@@ -1,28 +1,27 @@
 {
-  "generated_at": "2026-09-29T00:23:51.419434+00:00",
+  "generated_at": "2026-09-23T21:19:12.138002+00:00",
   "git": {
-    "commit": "e700e6f60b575fb46db89fbde9f292fb9febcad6",
-    "branch": "corpus/suggested-edits",
-    "uncommitted_code": [
-      "sphragis/corpus/automated/__init__.py",
-      "sphragis/corpus/refine.py"
-    ],
-    "uncommitted_code_sha256": "60036ee93fb3ad6e17c3f935eda564814e578de12d88fb091ff6108c30b6ae82"
+    "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
+    "branch": "corpus/v2"
   },
   "python": "3.14.4",
   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-  "packages": {},
+  "packages": {
+    "torch": "2.14.0+cu130",
+    "transformers": "5.17.0",
+    "peft": "0.20.0"
+  },
   "org": "openstack",
   "counts": {
-    "pilot": 532,
-    "train": 4006,
-    "dev": 515,
+    "pilot": 600,
+    "train": 4322,
+    "dev": 565,
     "test": 0
   },
   "hashes": {
-    "pilot": "764bbbf2e9d35dd67d62437a5d7580dd9186fa7295d4f533cd2735e6c84d11bc",
-    "train": "82e16d2458af577012a1fd5469cb45f46e9ecc6f4b2406910846c0c38369a2f6",
-    "dev": "c168f45051d2f394f2b1dd4757e023a684f9cb238a160bd72df319416ba1520b",
+    "pilot": "9aa633e05d1f22e0df0bee96d8199a614e8e39a71e5b5e5f3abec78efbebacd2",
+    "train": "e6c6ad6d22c40418eb0894ebb425388dd21a1580365efed74a0e6656de54bd3e",
+    "dev": "77d0217c3e5fce63725aaee808541046a1587a7c6f2cc4854252912565aed4b5",
     "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "stats": {
@@ -42,23 +41,21 @@
     },
     "refine_counts": {
       "automated_comment": 0,
-      "acknowledgement_comment": 127,
+      "acknowledgement_comment": 154,
       "automated_only": 0,
       "acknowledgement_only": 13,
       "not_rework_successor": 0,
-      "suggested_edit": 465,
-      "applied_fix": 0,
       "successor_kind_unknown": 0,
       "address_residue": 0
     },
     "deduped": {
-      "exact": 249,
-      "near_duplicate": 179,
+      "exact": 263,
+      "near_duplicate": 196,
       "boilerplate": 0,
       "shared_change_id": 0
     },
     "unassigned_changes": 0,
     "build_rules": "3d29d529390c1eea",
-    "rules": "c2ddb5b5f6e99182"
+    "rules": "0292fd614738792f"
   }
 }

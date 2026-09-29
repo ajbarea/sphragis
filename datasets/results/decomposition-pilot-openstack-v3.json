@@ -1,0 +1,87 @@
+{
+  "runs": [
+    "datasets/results/rq1-placebo-openstack-v3.json",
+    "datasets/results/rq1-placebo-openstack-v3-s2.json",
+    "datasets/results/rq1-placebo-openstack-v3-s3.json",
+    "datasets/results/rq1-placebo-openstack-v3-s4.json",
+    "datasets/results/rq1-placebo-openstack-v3-s5.json"
+  ],
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "sensitivity": "datasets/results/decomposition-sensitivity-v3.json",
+  "pilot": "development window",
+  "design": {
+    "admitted": [
+      "openstack"
+    ],
+    "H1": [
+      "openstack"
+    ],
+    "H2": [],
+    "exploratory_h2": []
+  },
+  "verdicts": {
+    "H1": "pass"
+  },
+  "passed_at": {
+    "H1": 0.95
+  },
+  "reading": "within-half",
+  "below_sesoi": [],
+  "per_org": {
+    "H1": {
+      "openstack": {
+        "role": "confirmatory",
+        "foreign": null,
+        "estimate": 0.028417808668284045,
+        "intervals": {
+          "0.95": {
+            "low": 0.0027866177070583475,
+            "high": 0.05317307692307694
+          }
+        },
+        "verdicts": {
+          "0.95": "supported"
+        },
+        "within_sesoi": {
+          "0.95": false
+        },
+        "clusters_per_half": [
+          98,
+          109
+        ],
+        "seeds": 5
+      }
+    },
+    "H2": {}
+  },
+  "joint": {},
+  "sesoi": 0.01,
+  "detectable": {
+    "H1": {
+      "openstack": {
+        "0.975": 0.02456500120210695,
+        "0.95": 0.020956057526282438
+      }
+    }
+  },
+  "holm_levels": [
+    0.95
+  ],
+  "provenance": {
+    "generated_at": "2026-09-29T02:49:20.578450+00:00",
+    "git": {
+      "commit": "0457743cec3754084ed998fa4379ec704f7d061f",
+      "branch": "corpus/suggested-edits"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  },
+  "corpus_roots_digest": "0ee3f74ab4a1b6e9"
+}

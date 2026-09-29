@@ -6137,3 +6137,136 @@ OpenStack's development-window pilot had been read, and reads only training-wind
 It costs no training: the adapters' existing scores are read on the subset. `cpp_supplement` and
 `file_type_supplement` share one restricted-bootstrap helper, which builds each cell's clusters
 inside its error handling, as `cpp_supplement` did.
+
+### Corpus v3: examples whose target the reviewer wrote are removed, since their share differs by organization and mostly grows between windows (2026-09-28)
+
+Found while auditing Wikimedia's first eight built months for bot comments (none were found, and the
+build's service-account filter has removed nothing on any of the four hosts). What turned up instead is Gerrit's "Suggest edit": the reviewer's rewrite of the commented
+lines, fenced as a ```` ```suggestion ```` block in the comment (`USER_SUGGESTION_START_PATTERN` in
+Gerrit's `polygerrit-ui/app/elements/shared/gr-comment/gr-comment.ts`, read at c52ea5b). The
+prompt carries every comment, so on those examples the target is text the prompt already holds.
+Counted on the built examples (before refine):
+
+| organization | built | with a suggested edit | body equals the target | target inside the body |
+|---|---|---|---|---|
+| Wikimedia (8 of 13 months) | 4,146 | 763 | 553 | 36 |
+| OpenStack | 5,959 | 465 | 315 | 22 |
+| Qt | 11,448 | 172 | 112 | 9 |
+| AOSP | 5,133 | 209 | 111 | 7 |
+
+An adapter scores these by copying, not by any convention. Both arms of a contrast see the same
+prompt, so the expectation was that they dilute a contrast rather than fake one; rescoring v2's runs
+without them did not bear that out (next entry). Two properties make them a validity
+issue rather than noise. Their share differs by organization, 18% of Wikimedia's built examples
+against 1.5% of Qt's. And it mostly grows over time, as hosts adopt the feature: on corpus v2's
+refined rows before dedup, per registered half,
+
+| organization | window | half a | half b |
+|---|---|---|---|
+| OpenStack | train | 188 / 2,343 = 0.080 | 154 / 2,343 = 0.066 |
+| OpenStack | dev | 26 / 366 = 0.071 | 26 / 236 = 0.110 |
+| Qt | train | 14 / 4,002 = 0.003 | 58 / 4,002 = 0.014 |
+| Qt | dev | 60 / 527 = 0.114 | 40 / 425 = 0.094 |
+
+Qt's development window carries 6.5 to 33 times its training window's share, OpenStack's half b
+1.7 times, and OpenStack's half a slightly less. The sealed test
+window is later still, so a copy task would weigh most in the one window the confirmatory reading
+uses, unevenly across halves and organizations. The field's code refinement benchmarks do not
+filter this class (the 2026 survey of review benchmarks, arXiv:2602.13377, names no such filter;
+arXiv:2502.08172 treats "explicit code suggestion" as its own intention category).
+
+**Rule (`refine`, so a re-refine from disk and nothing refetched):** an example is removed whole
+when any of its comments opens a ```` ```suggestion ```` fence on a line of its own, or is Gerrit's
+one-click "Fix applied." reply, which follows a fix taken as given. The whole example goes, not
+just the comment, because its target is the reviewer's edit. Counted as `suggested_edit` and
+`applied_fix`, a rebase successor counted first. Refined: OpenStack 465 and 0 removed, Qt 172 and
+0, AOSP 209 and 1. Gerrit itself detects a suggestion by substring (`comment-util.ts`, the same
+commit); the rule anchors the fence to its own line, and on all 26,686 built examples a looser
+case-insensitive fence pattern selects exactly the same ones.
+
+Six examples entered v3 that v2 did not hold. Dedup keeps the earliest of a duplicate pair, and
+where that was a removed example its twin now survives: five in OpenStack's train window, one in
+Qt's dev window. Two are sibling hunks commented "same as above" and "Here as well", whose target is
+the neighbouring hunk's suggested edit given by reference and not in their own prompt, so the rule
+keeps them. Every kept example is otherwise unchanged, and the counts reconcile (4,322 - 321 + 5 =
+4,006; 897 - 93 + 1 = 805).
+
+**Not filtered, and reported:** a reviewer who types the fix in prose ("Should this be `X`?").
+`sphragis.corpus.halves.target_in_comment` finds the target, whitespace-normalized per line and 20
+characters or more, verbatim in a comment; on built examples without a suggested edit: Wikimedia
+56, OpenStack 160, Qt 258, AOSP 54. `split_criteria.py` reports it per half (OpenStack v3: 62 of
+2,004 and 58 of 2,017). This is ordinary reviewing, not a host
+feature: substring matching on short targets is noisy, and any threshold would be chosen after
+seeing the data.
+
+The frozen v2 corpora and every result computed on them stand as the record of v2; corpus v3 is
+what the Stage 1 figures are recomputed on.
+
+**OpenStack on v3** (`split-criteria-openstack.json`; v2's renamed `split-criteria-openstack-v2.json`):
+frozen at pilot 532, train 4,006, dev 515, and `verify --reproduce` clean. The registered halves
+hold 2,004 and 2,017 training examples, so the size floor becomes 2,004, and their suffix mix
+differs by a total variation of 0.3187, which becomes the language-mix ceiling (v2: 2,158 and
+0.357). Both are refixed here, before any Wikimedia split has been computed on either corpus
+version. The matched suffix stays `.py` (715 and 1,248 rows; `.rst` 729 and 320).
+
+**The label audit could not have caught this, and its rates stand.** 25 of the audit's 383 scored
+items carry a suggested edit; raters A and B called 20 and 23 of them valid, and the human 11 of
+13 checked, since a suggested edit states its rewrite exactly, which is what the rubric's "valid"
+asks. On the 358 items v3 keeps the valid shares barely move: A 0.812 to 0.813, B 0.843 to 0.838,
+the human 0.809 (152) to 0.806 (139).
+
+### OpenStack on corpus v3: seed effect 0.0077, detectable +0.0246 and +0.0210, and a dev pilot that passes on a different partition (2026-09-28)
+
+Five single-seed placebo jobs at the half size (207303 to 207307, pinned at 8334d79) on
+`corpus-v3/openstack`, copied to TIGRIS with all 109 files' sha256 matched. The five roots are
+byte-identical under the same digest command as v2: `0ee3f74ab4a1b6e9`. Every outcome-neutral
+check passed in every job. The halves equalize at 2,004 and are scored on 98 and 109 development
+changes (v2: 116 and 113).
+
+**Seed effect** (`seed-effect-placebo-openstack-v3.json`): 0.0077 at five seeds, one-sided 95%
+upper bound 0.0376 on 4 degrees of freedom (v2: 0.0116, 0.0426). The point estimate falls below the
+0.01 above which five seeds were registered, so the rule as worded gives three. **Five are kept,
+a deviation from the rule's wording**: its one application, in RQ1's setting, took three only with
+both the estimate (0.000) and its upper bound (0.0098) at or below 0.01, and here the bound is
+0.0376. The rule exists to keep the crossed interval nominal, three seeds hold nominal only up to
+0.01, and five hold at every seed effect measured, so the deviation is the conservative one.
+Entered on Registered decisions.
+
+**Sensitivity at the half size on v3** (`decomposition-sensitivity-v3.json`, built as v2's was: seed 1
+as the variance model, the five-seed point estimate). The planned test total is re-projected rather
+than carried over: v3 keeps 207 of v2's 229 development changes, so 1,809 x 207/229 = 1,635, split
+774 and 861 in v3's development proportions. The test window's own share of suggested edits is
+likely higher still, so this projection errs large.
+
+| level | detectable effect at power 0.928 | null reads bounded | null false positive |
+|---|---|---|---|
+| 0.975 | +0.0246 | 0.910 | 0.02 |
+| 0.95 | +0.0210 | 0.890 | 0.05 |
+
+Smaller than v2's +0.0266 and +0.0250 despite fewer changes, because the seed effect fell: the
+per-change sampling error of H1 at each version's planned size is the same, 0.0051 (half a's
+per-change variance fell, half b's rose). The drop is two and three of the finest bisection steps
+(0.0023), near the simulation's resolution. As the seed-count precedent was bracketed, the same
+simulation at the seed effect's upper bound, 0.0376, gives the pessimistic end
+(`decomposition-sensitivity-v3-b0.0376.json`). The null false-positive rate at 0.95 is 5 of 100 trials against a
+nominal one-sided 0.025, which is about an 11% event at nominal; v2's was 1 of 100. Recorded, not
+acted on at 100 trials.
+
+**The dev pilot passes** (`decomposition-pilot-openstack-v3.json`): H1 **+0.0284 [+0.0028, +0.0532]**
+at 95%, against v2's +0.0134 [-0.0091, +0.0350]. Three things qualify it, in order of weight.
+
+1. **It is a different partition.** The registered split is a function of the corpus and sensitive
+   to small changes in it: removing a few percent of examples reorders the project counts it
+   balances, and v3 also loses 8 of v2's 246 training-window projects entirely: 117 of the 238 projects both
+   versions share changed halves. v2 and v3 read H1 on two different partitions of OpenStack, so
+   the move measures partition-to-partition variation as much as anything the rule did. The seed
+   effect does not capture that variation; it is measured next.
+2. **It is not the removed examples diluting the contrast.** v2's own runs scored only on the
+   examples v3 keeps (1,509 of 1,659 scored rows a run) read +0.0090 [-0.0151, +0.0322], slightly
+   below v2's full reading. On those runs the 50 removed development examples carried a contrast of
+   about +0.06 pooled over seeds (24 and 26 a half, no interval at that size), not zero, so the
+   expectation stated in the v3 entry above did not hold on v2's runs. The rescoring holds v2's
+   adapters fixed, so it rules out dilution at scoring time, not the change to what they trained on.
+3. **The rule was adopted after v2's pilot was read**, though for a reason unrelated to it (found in
+   Wikimedia's bot audit) and fixed before any v3 contrast existed. The development window is a
+   censored pilot either way.

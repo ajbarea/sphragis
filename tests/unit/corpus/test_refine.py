@@ -165,3 +165,41 @@ def test_a_hex_run_inside_a_longer_token_is_not_taken_for_a_pseudonym() -> None:
     kept, counts = refine([_row(["see x0123456789ab@example.com"])], index_changes([_change(10)]))
     assert kept[0]["comments"] == ["see x0123456789ab@example.com"]
     assert counts[ADDRESS_RESIDUE] == 0
+
+
+def test_a_suggested_edit_drops_the_whole_example() -> None:
+    # Gerrit's "Suggest edit" fences the reviewer's rewrite of the commented lines; the target is
+    # then the reviewer's own text, sitting in the prompt.
+    comments = ["tighter:", "```suggestion\n\tint x = 0;\n```", "rename this too"]
+    kept, counts = refine([_row(comments)], index_changes([_change(10)]))
+    assert kept == []
+    assert counts["suggested_edit"] == 1
+
+
+def test_an_applied_fix_drops_the_whole_example() -> None:
+    kept, counts = refine([_row(["rename this", "Fix applied."])], index_changes([_change(10)]))
+    assert kept == []
+    assert counts["applied_fix"] == 1
+
+
+def test_a_fence_that_is_not_a_suggestion_is_a_reviewer_comment() -> None:
+    comments = ["Should this be\n```\nint x = 0;\n```", "a suggestion: rename", "```suggestions"]
+    kept, counts = refine([_row(comments)], index_changes([_change(10)]))
+    assert kept[0]["comments"] == comments
+    assert counts["suggested_edit"] == 0
+
+
+def test_a_suggestion_fence_is_found_after_any_line_break() -> None:
+    for text in ("why\r\n```suggestion\r\nx\r\n```", "why\u2028```suggestion\nx\n```"):
+        kept, counts = refine([_row([text])], index_changes([_change(10)]))
+        assert kept == []
+        assert counts["suggested_edit"] == 1
+
+
+def test_a_rebase_successor_is_counted_before_a_suggested_edit() -> None:
+    kept, counts = refine(
+        [_row(["```suggestion\nx\n```"])], index_changes([_change(10, "TRIVIAL_REBASE")])
+    )
+    assert kept == []
+    assert counts["not_rework_successor"] == 1
+    assert counts["suggested_edit"] == 0
