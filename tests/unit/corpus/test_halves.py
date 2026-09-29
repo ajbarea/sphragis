@@ -259,3 +259,11 @@ def test_halves_and_runner_train_follow_the_order_seed(monkeypatch: pytest.Monke
     side_of = assign({f"p{i}": 10 for i in range(6)}, order_seed=3)
     runner_train(built, {"train": WINDOW}, order_seed=3)
     assert seen == [{p for p, s in side_of.items() if s == side} for side in (0, 1)]
+
+
+def test_a_fixed_size_floor_replaces_the_reference_s_smaller_half() -> None:
+    own = halves(_balanced(), _balanced(), WINDOW)
+    big = halves(_balanced(n=20), _balanced(n=20), WINDOW)
+    assert not split_criteria(own, big)["checks"]["size"]
+    fixed = split_criteria(own, big, size_floor=30)
+    assert fixed["checks"]["size"] and fixed["size_floor"] == 30

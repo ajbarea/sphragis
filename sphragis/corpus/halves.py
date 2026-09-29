@@ -140,14 +140,17 @@ def runner_train(
     return train
 
 
-def split_criteria(own: list[dict[str, Any]], ref: list[dict[str, Any]]) -> dict[str, Any]:
+def split_criteria(
+    own: list[dict[str, Any]], ref: list[dict[str, Any]], size_floor: int | None = None
+) -> dict[str, Any]:
     """Whether an organization's `halves` qualify, each criterion read against the reference's.
 
     The reference is OpenStack's halves: its smaller half is the size floor and its suffix mix
     the language-mix ceiling. Projects are counted after dedup, as what a half trains on; a half
-    left with no training rows does not qualify.
+    left with no training rows does not qualify. `size_floor` replaces the reference's smaller
+    half with the repeated-partition design's fixed training size N.
     """
-    floor = min(h["train_examples"] for h in ref)
+    floor = size_floor if size_floor is not None else min(h["train_examples"] for h in ref)
     empty = any(not h["suffixes"] for h in own)
     tv = None if empty else total_variation(own[0]["suffixes"], own[1]["suffixes"])
     ceiling = total_variation(ref[0]["suffixes"], ref[1]["suffixes"])
