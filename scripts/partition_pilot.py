@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("runs", type=Path, nargs="+", help="partition runs, in admissible order")
 parser.add_argument("--admissible", type=Path, required=True)
 parser.add_argument("--org", default="openstack")
+parser.add_argument("--train-size", type=int, default=1850, help="the design's fixed N")
 parser.add_argument("--hypotheses", type=int, default=2, help="the Holm family size")
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
 parser.add_argument("--sigma-run", help="which of its sigma_run entries sets the bounds")
@@ -42,6 +43,8 @@ def main() -> None:
         run = json.loads(path.read_text())
         seeds = run["seeds"]
         partition = next(iter(run["corpora"].values()))["source"]
+        if run.get("train_size") != args.train_size:
+            raise SystemExit(f"{path}: trained at {run.get('train_size')}, not {args.train_size}")
         if seeds != [k]:
             raise SystemExit(f"{path}: run {k} must use training seed {k}, has {seeds}")
         if f"-p{admissible[k - 1]}-" not in partition:
@@ -66,10 +69,14 @@ def main() -> None:
     for c in levels:
         interval = cell["intervals"][c]
         print(
-            f"H1 {args.org} over {len(runs)} partitions at {c}: {cell['estimate']:+.4f} "
+            f"H1 {args.org} over {len(cell['per_run'])} partitions at {c}: {cell['estimate']:+.4f} "
             f"[{interval['low']:+.4f}, {interval['high']:+.4f}] {cell['verdicts'][c]}"
         )
-    print(f"stopping: {cell['stopping']}; examples {cell['examples']}, dropped {cell['dropped']}")
+    print(
+        f"stopped at K={cell['stopped_at']} of {cell['runs_computed']} computed "
+        f"({len(cell['runs_left_out'])} left out); examples {cell['examples']}, "
+        f"dropped {cell['dropped']}"
+    )
     report = {
         "runs": [str(p) for p in args.runs],
         "admissible": str(args.admissible),

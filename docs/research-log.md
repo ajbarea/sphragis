@@ -6378,3 +6378,27 @@ AJ decided the question the partition measurement opened: H1 is read over repeat
 
 **Exploratory, on the ten dev runs already made** (per-half dedup, two seeds a partition, the 502
 common examples): H1 over partitions reads **+0.0046 [-0.0139, +0.0214]** at 95%, inconclusive.
+
+### The repeated-partition design on the development window: it stops at 16 runs, and H1 is inconclusive at +0.007 (2026-09-29)
+
+Twenty-two `partition_run` jobs on `corpus-v3/openstack`, the first 22 admissible partitions at
+training seeds 1 to 22 and N = 1,850 (jobs 208523 to 208530 pinned at 8ec4e12, 208535 to 208548 at
+205ba2f; the two differ only by `scripts/partition_pilot.py`, which no job runs). Every
+outcome-neutral check passed and the apparatus held in all 22, and every run scored the same 501
+examples: dedup-first left nothing to drop.
+
+**Stopping.** The rule, applied in order from K = 8, first holds at **K = 16** (variance of the
+mean 1.18e-5 against the critical value 1.30e-5; 1.34e-5 at K = 15). Runs 17 to 22 were computed in
+the same batch and stay out of the cell. The cut is made in code (`partitions.first_stop`, which
+the cell applies to every run it is given and records with its trace). That runs computed in a
+batch past the first stop are left out was written into the spec as an **amendment after both
+readings were in view** (16 runs +0.0072, 22 runs +0.0051, both inconclusive); it is the reading
+Ritzwoller and Romano's sequential rule defines, and the verdict is the same either way. Per-run H1
+estimates over the 16 runs range from -0.0174 to +0.0339.
+
+**The cell** (`partition-pilot-openstack.json`, 16 runs): H1 **+0.0072 [-0.0061, +0.0210]** at 95%
+and [-0.0080, +0.0229] at 97.5%, inconclusive. At all 22 runs: +0.0051 [-0.0073, +0.0175]. Read
+beside the single-partition pilots (v2 +0.0134, v3 +0.0284, both inconclusive or passing on one
+draw of the partition), the half-split effect in OpenStack's development window is small, and the
+single-partition v3 pass is not reproduced once the partition is averaged over. A censored pilot,
+not a test-window estimate; the registered bound for the bounded reading comes from the simulation.

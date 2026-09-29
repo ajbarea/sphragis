@@ -27,6 +27,13 @@ parser.add_argument("--reference", default="openstack")
 parser.add_argument("--reference-root", type=Path, default=None, help="default: --root")
 parser.add_argument("--out", type=Path, default=None)
 parser.add_argument(
+    "--size-floor",
+    type=int,
+    default=None,
+    help="the repeated-partition design's fixed training size N, in place of the reference's "
+    "smaller half",
+)
+parser.add_argument(
     "--dedup-org",
     action="store_true",
     help="build --org's halves as the repeated-partition design does, deduplicating the "
@@ -61,7 +68,7 @@ def main() -> None:
     args = parser.parse_args()
     own, excluded = org_halves(args.root, args.org, args.order_seed, args.dedup_org)
     ref, _ = org_halves(args.reference_root or args.root, args.reference)
-    result = {"excluded_projects": excluded, **split_criteria(own, ref)}
+    result = {"excluded_projects": excluded, **split_criteria(own, ref, size_floor=args.size_floor)}
     for name, half in zip(("a", "b"), result["halves"], strict=True):
         print(
             f"{args.org}-{name}: {half['projects']} projects, {half['train_examples']} train, "

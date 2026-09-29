@@ -5,7 +5,8 @@ Partition seeds are tried in order from `--start`. A seed is admissible when its
 once, projects assigned in the seeded order on training-window counts, each half then deduplicated
 and split on its own), meet `split_criteria` with the fixed training size `--size-floor` and the
 reference's language-mix ceiling. The first `--count` admissible seeds are written in order; run
-k of the study uses the k-th. Reads training-window rows only, never an outcome.
+k of the study uses the k-th. Reads the corpus's rows and no outcome: the organization's dedup
+sees every window, the assignment and the criteria the training window alone.
 
     uv run --no-sync --no-active python scripts/admissible_partitions.py \\
         --root datasets/gerrit --org openstack --size-floor 1850 \\
@@ -35,6 +36,7 @@ parser.add_argument("--size-floor", type=int, required=True, help="the fixed tra
 parser.add_argument("--start", type=int, default=1)
 parser.add_argument("--count", type=int, default=K_MAX)
 parser.add_argument("--batch", type=int, default=24, help="seeds checked per parallel round")
+parser.add_argument("--max-seed", type=int, default=2_000, help="stop searching past this seed")
 parser.add_argument("--workers", type=int, default=6)
 parser.add_argument("--out", type=Path, required=True)
 
@@ -72,6 +74,10 @@ def main() -> None:
         args.workers, initializer=_init, initargs=(rows, reference["halves"], args.size_floor)
     ) as pool:
         while sum(c["qualifies"] for c in checked) < args.count:
+            if seed > args.max_seed:
+                raise SystemExit(
+                    f"fewer than {args.count} admissible partitions by seed {seed - 1}"
+                )
             batch = list(range(seed, seed + args.batch))
             checked += list(pool.map(check, batch))
             seed += args.batch
@@ -90,7 +96,7 @@ def main() -> None:
         "start": args.start,
         "admissible": admissible,
         # Seeds past the last admissible one were checked only because a batch ran in parallel;
-        # they are reported, and never used.
+        # they are dropped here, as never part of the list.
         "checked": [c for c in checked if c["seed"] <= last],
         "dedup_org": removed,
         "excluded_projects": excluded_projects(rows, WINDOWS["train"]),

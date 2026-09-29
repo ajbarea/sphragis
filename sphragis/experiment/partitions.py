@@ -57,6 +57,22 @@ def stopping_rule(estimates: Sequence[float], *, xi: float = XI, beta: float = B
     }
 
 
+def first_stop(estimates: Sequence[float]) -> tuple[int | None, list[dict]]:
+    """The first K, from K_INIT up, at which the stopping rule holds over the first K runs.
+
+    Runs may have been computed in batches past it; the reading uses the first K alone, which
+    depends only on the fixed order of the runs. None when no prefix stops (more runs needed,
+    unless the cap was reached, in which case the cap is K).
+    """
+    trace = []
+    for k in range(K_INIT, len(estimates) + 1):
+        rule = stopping_rule(estimates[:k])
+        trace.append(rule)
+        if rule["stop"] or rule["at_cap"]:
+            return k, trace
+    return None, trace
+
+
 def _eval_ids(results: Results) -> set[str]:
     """Every example a run's adapters scored: its two halves' windows together."""
     ids = {row["id"] for arm, rows in results.items() if arm.startswith("adapter:") for row in rows}
@@ -103,13 +119,20 @@ def h1_over_partitions(
 ) -> dict[str, Any]:
     """One organization's H1 cell over its partition runs: estimate, intervals, verdicts."""
     clusters, examples = common_runs(runs, org=org, metric=metric)
+    computed = [equal_halves(run) for run in clusters]
+    stop, trace = first_stop(computed)
+    k = stop if stop is not None else len(clusters)
+    clusters, per_run = clusters[:k], computed[:k]
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
-    per_run = [equal_halves(run) for run in clusters]
     intervals = {c: percentile_interval(draws, c) for c in levels}
     return {
         "estimate": estimate,
         "per_run": per_run,
         "stopping": stopping_rule(per_run),
+        "stopped_at": stop,
+        "stopping_trace": trace,
+        "runs_computed": len(computed),
+        "runs_left_out": computed[k:],
         "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
         "verdicts": {
             c: cell_verdict(lo, hi, bound=bounds.get(c) if bounds else None)

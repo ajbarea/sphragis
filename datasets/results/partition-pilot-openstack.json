@@ -1,0 +1,173 @@
+{
+  "runs": [
+    "datasets/results/rq1-partition-openstack-p2-n1850.json",
+    "datasets/results/rq1-partition-openstack-p3-s2-n1850.json",
+    "datasets/results/rq1-partition-openstack-p4-s3-n1850.json",
+    "datasets/results/rq1-partition-openstack-p5-s4-n1850.json",
+    "datasets/results/rq1-partition-openstack-p7-s5-n1850.json",
+    "datasets/results/rq1-partition-openstack-p8-s6-n1850.json",
+    "datasets/results/rq1-partition-openstack-p9-s7-n1850.json",
+    "datasets/results/rq1-partition-openstack-p10-s8-n1850.json",
+    "datasets/results/rq1-partition-openstack-p11-s9-n1850.json",
+    "datasets/results/rq1-partition-openstack-p12-s10-n1850.json",
+    "datasets/results/rq1-partition-openstack-p14-s11-n1850.json",
+    "datasets/results/rq1-partition-openstack-p15-s12-n1850.json",
+    "datasets/results/rq1-partition-openstack-p17-s13-n1850.json",
+    "datasets/results/rq1-partition-openstack-p18-s14-n1850.json",
+    "datasets/results/rq1-partition-openstack-p19-s15-n1850.json",
+    "datasets/results/rq1-partition-openstack-p21-s16-n1850.json",
+    "datasets/results/rq1-partition-openstack-p22-s17-n1850.json",
+    "datasets/results/rq1-partition-openstack-p23-s18-n1850.json",
+    "datasets/results/rq1-partition-openstack-p24-s19-n1850.json",
+    "datasets/results/rq1-partition-openstack-p25-s20-n1850.json",
+    "datasets/results/rq1-partition-openstack-p26-s21-n1850.json",
+    "datasets/results/rq1-partition-openstack-p27-s22-n1850.json"
+  ],
+  "admissible": "datasets/results/admissible-partitions-openstack.json",
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "bounds": null,
+  "estimate": 0.0072437194913284545,
+  "per_run": [
+    0.02032520325203252,
+    0.020870464104940492,
+    -0.017397190726011175,
+    0.004198089492207124,
+    -0.005461692873870855,
+    0.03394530502964238,
+    0.005617977528089874,
+    0.02260126906806817,
+    -0.004830917874396129,
+    0.0017605067687063852,
+    0.006300748708214676,
+    -0.007042253521126751,
+    0.021631842071529295,
+    -0.0029886833003123087,
+    0.013063196293009977,
+    0.003305647840531556
+  ],
+  "stopping": {
+    "runs": 16,
+    "variance_of_mean": 1.1783745037793672e-05,
+    "critical_value": 1.3015888581350293e-05,
+    "stop": true,
+    "at_cap": false
+  },
+  "stopped_at": 16,
+  "stopping_trace": [
+    {
+      "runs": 8,
+      "variance_of_mean": 3.565571688499229e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 9,
+      "variance_of_mean": 3.066710563740945e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 10,
+      "variance_of_mean": 2.5039742000292374e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 11,
+      "variance_of_mean": 2.051571959165776e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 12,
+      "variance_of_mean": 1.86664144881103e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 13,
+      "variance_of_mean": 1.710677867125635e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 14,
+      "variance_of_mean": 1.5266325581489516e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 15,
+      "variance_of_mean": 1.3388364318358175e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": false,
+      "at_cap": false
+    },
+    {
+      "runs": 16,
+      "variance_of_mean": 1.1783745037793672e-05,
+      "critical_value": 1.3015888581350293e-05,
+      "stop": true,
+      "at_cap": false
+    }
+  ],
+  "runs_computed": 22,
+  "runs_left_out": [
+    0.005817014974493995,
+    0.013449585635359126,
+    0.011088903102014713,
+    -0.024371980676328495,
+    -0.009629064159061729,
+    -0.0007529388905081202
+  ],
+  "intervals": {
+    "0.975": {
+      "low": -0.008045817880144428,
+      "high": 0.02289394457199174
+    },
+    "0.95": {
+      "low": -0.006115927783179532,
+      "high": 0.021031249917300928
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "examples": 501,
+  "dropped": 0,
+  "provenance": {
+    "generated_at": "2026-09-29T14:13:53.392046+00:00",
+    "git": {
+      "commit": "205ba2f0e2df7545624cfe9082fcd066f5deecb3",
+      "branch": "measure/repeated-partitions",
+      "uncommitted_code": [
+        "scripts/admissible_partitions.py",
+        "scripts/partition_pilot.py",
+        "scripts/partition_sensitivity.py",
+        "scripts/split_criteria.py",
+        "sphragis/corpus/halves.py",
+        "sphragis/experiment/partitions.py",
+        "sphragis/measure/stats.py"
+      ],
+      "uncommitted_code_sha256": "7854170439173bc1aec473468f5a7614708a3f264d9b0942c40c852ac10da6ef"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

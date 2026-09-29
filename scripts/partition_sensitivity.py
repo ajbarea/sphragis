@@ -2,13 +2,14 @@
 
 Each simulated study draws the test window's changes from a pilot run's own-against-sibling
 clusters (sign-flip null, then a lift, as `decomposition_sensitivity.py` does), each change keeping
-its project. Runs are then added one at a time: each run assigns the projects to two halves in a
-fresh seeded order, each to the smaller half (`assign(..., order_seed=...)`'s rule), and scores the
-changes once with its own run shift N(0, sigma_run) and seed-by-change churn (`seed_runs`, one
-seed).
-Runs stop by `stopping_rule` between K_INIT and K_MAX, and the cell is read off
-`partitioned_crossed_draws`, the interval the gate reads. A second run sequence on the same changes
-measures reproducibility: how often two aggregations differ by more than XI.
+its project. Runs are then added one at a time, each on the next of a random order over a pool of
+admissible partitions built as the runs build them (`partition_pool`: the organization
+deduplicated, projects assigned in a seeded order on training-window counts, `split_criteria` at
+the fixed size), and scores the changes once with its own run shift N(0, sigma_run) and
+seed-by-change churn (`seed_runs`, one seed). Runs stop by `stopping_rule` between K_INIT and
+K_MAX, and the cell is read off `partitioned_crossed_draws`, the interval the gate reads. A second
+sequence over disjoint partitions on the same changes measures reproducibility: how often two
+aggregations differ by more than XI.
 
 Reported per sigma_run: the null's one-sided false-positive rate at each Holm level, the detectable
 effect at `--target` power by bisection on the lift, how often a null reads bounded below it, the
@@ -17,6 +18,7 @@ stopping K, and the reproducibility failure rate.
     uv run --no-sync --no-active python scripts/partition_sensitivity.py \\
         --placebo datasets/results/rq1-placebo-openstack-v3.json \\
         --corpus datasets/gerrit --org openstack --size 1635 \\
+        --reference datasets/results/split-criteria-openstack.json --size-floor 1850 \\
         --sigma-run 0.011 0.015 0.025 --out datasets/results/partition-sensitivity-openstack.json
 """
 
@@ -30,8 +32,11 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from statistics import fmean
 
-from sphragis.corpus.halves import assign
+from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.halves import assign, project_counts, split_criteria
+from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
+from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.experiment.decomposition import SESOI, halves, holm_levels
 from sphragis.experiment.partitions import K_INIT, K_MAX, XI, stopping_rule
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
@@ -58,6 +63,9 @@ parser.add_argument("--resamples", type=int, default=1000)
 parser.add_argument("--steps", type=int, default=7)
 parser.add_argument("--seed", type=int, default=43)
 parser.add_argument("--workers", type=int, default=6)
+parser.add_argument("--reference", type=Path, required=True, help="a split-criteria artifact")
+parser.add_argument("--size-floor", type=int, required=True, help="the fixed training size N")
+parser.add_argument("--partitions", type=int, default=400, help="admissible partitions pooled")
 parser.add_argument("--out", type=Path, required=True)
 
 Pool = list[tuple[Cluster, str]]
@@ -83,12 +91,41 @@ def pilot_pool(placebo: Path, corpus: Path, org: str) -> Pool:
     return pool
 
 
-def _run(truth: Pool, *, sigma_run: float, redraw: float, rng: random.Random) -> list[list]:
-    """One run: a fresh balanced partition of the projects, scored once with its own shift."""
-    counts: dict[str, int] = defaultdict(int)
-    for _, project in truth:
-        counts[project] += 1
-    side_of = assign(dict(counts), order_seed=rng.randrange(2**31))
+def partition_pool(
+    corpus: Path, org: str, reference: Path, size_floor: int, count: int
+) -> tuple[list[dict[str, int]], int]:
+    """The first `count` admissible partitions, built as the runs build them, and seeds tried.
+
+    The organization deduplicated once, projects assigned in each seed's order on training-window
+    counts, and `split_criteria` read at the fixed size against the reference's ceiling. Each
+    half's own dedup is skipped: after the organization's it removed nothing in any real run.
+    """
+    rows = run_dedup(refined_examples(corpus, org))[0]
+    train = run_split(rows, dict(WINDOWS))[0]["train"]
+    ref = json.loads(reference.read_text())["halves"]
+    counts = dict(project_counts(rows, WINDOWS["train"]))
+    pool: list[dict[str, int]] = []
+    seed = 0
+    while len(pool) < count:
+        seed += 1
+        own = build_halves(rows, train, WINDOWS["train"], seed)
+        if split_criteria(own, ref, size_floor=size_floor)["qualifies"]:
+            pool.append(assign(counts, order_seed=seed))
+    return pool, seed
+
+
+_PARTITIONS: list[dict[str, int]] = []
+
+
+def _init(partitions: list[dict[str, int]]) -> None:
+    global _PARTITIONS
+    _PARTITIONS = partitions
+
+
+def _run(
+    truth: Pool, side_of: dict[str, int], *, sigma_run: float, redraw: float, rng: random.Random
+) -> list[list]:
+    """One run: an admissible partition of the projects, scored once with its own shift."""
     (scored,) = seed_runs([c for c, _ in truth], seeds=1, sigma_b=sigma_run, redraw=redraw, rng=rng)
     run: list[list] = [[], []]
     for cluster, (_, project) in zip(scored, truth, strict=True):
@@ -96,14 +133,18 @@ def _run(truth: Pool, *, sigma_run: float, redraw: float, rng: random.Random) ->
     return run
 
 
-def _sequence(truth: Pool, *, sigma_run: float, redraw: float, rng: random.Random) -> list:
-    """Runs added until the stopping rule fires, or K_MAX."""
-    runs = [_run(truth, sigma_run=sigma_run, redraw=redraw, rng=rng) for _ in range(K_INIT)]
-    while True:
-        rule = stopping_rule([equal_halves(r) for r in runs])
-        if rule["stop"] or rule["at_cap"]:
-            return runs
-        runs.append(_run(truth, sigma_run=sigma_run, redraw=redraw, rng=rng))
+def _sequence(
+    truth: Pool, order: list[int], *, sigma_run: float, redraw: float, rng: random.Random
+) -> list:
+    """Runs added in `order` of the pooled partitions until the stopping rule fires, or K_MAX."""
+    runs = []
+    for position in order:
+        runs.append(_run(truth, _PARTITIONS[position], sigma_run=sigma_run, redraw=redraw, rng=rng))
+        if len(runs) >= K_INIT:
+            rule = stopping_rule([equal_halves(r) for r in runs])
+            if rule["stop"] or rule["at_cap"]:
+                return runs
+    raise ValueError(f"only {len(order)} partitions for a sequence that may need {K_MAX}")
 
 
 def trial(job: tuple) -> dict:
@@ -115,8 +156,14 @@ def trial(job: tuple) -> dict:
         # Positional ids: a change drawn twice is two clusters, as the bootstrap assumes.
         drawn = _shift(_null(cluster, rng), lift, rng)
         truth.append((Cluster(f"c{len(truth)}", drawn.treatment, drawn.control), project))
-    runs = _sequence(truth, sigma_run=sigma_run, redraw=redraw, rng=rng)
-    estimate, draws = partitioned_crossed_draws(runs, seed=seed, resamples=resamples)
+    # Two disjoint sequences of partitions: the second is the independent aggregation the
+    # reproducibility check compares against.
+    order = rng.sample(range(len(_PARTITIONS)), 2 * K_MAX)
+    runs = _sequence(truth, order[:K_MAX], sigma_run=sigma_run, redraw=redraw, rng=rng)
+    # Its own stream, so the bootstrap never replays the draws that built the truth.
+    estimate, draws = partitioned_crossed_draws(
+        runs, seed=random.Random(f"bootstrap-{seed}").randrange(2**31), resamples=resamples
+    )
     intervals = {c: percentile_interval(draws, c) for c in levels}
     out = {
         "estimate": estimate,
@@ -126,7 +173,7 @@ def trial(job: tuple) -> dict:
         "absent": {c: lo > -SESOI and hi < SESOI for c, (lo, hi) in intervals.items()},
     }
     if reproducibility:
-        again = _sequence(truth, sigma_run=sigma_run, redraw=redraw, rng=rng)
+        again = _sequence(truth, order[K_MAX:], sigma_run=sigma_run, redraw=redraw, rng=rng)
         out["disagree"] = abs(fmean(equal_halves(r) for r in again) - estimate) > XI
     return out
 
@@ -154,6 +201,12 @@ def _trials(
 def main() -> None:
     args = parser.parse_args()
     pool = pilot_pool(args.placebo, args.corpus, args.org)
+    partitions, tried = partition_pool(
+        args.corpus, args.org, args.reference, args.size_floor, args.partitions
+    )
+    missing = {p for _, p in pool} - set(partitions[0])
+    if missing:
+        raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
     levels = holm_levels(2)
     report: dict = {
         "placebo": str(args.placebo),
@@ -171,10 +224,16 @@ def main() -> None:
         "null_trials": args.null_trials,
         "resamples": args.resamples,
         "redraw": args.redraw,
+        "size_floor": args.size_floor,
+        "partitions_pooled": len(partitions),
+        "partition_seeds_tried": tried,
         "by_sigma_run": {},
     }
-    clusters = [c for c, _ in pool]
-    with ProcessPoolExecutor(args.workers) as executor:
+    # The detectable effect as the registered sensitivity reads it: the realised difference per
+    # half, averaged, here over the first pooled partition's halves.
+    first = partitions[0]
+    pilot_halves = [[c for c, p in pool if first[p] == side] for side in (0, 1)]
+    with ProcessPoolExecutor(args.workers, initializer=_init, initargs=(partitions,)) as executor:
         for sigma_run in args.sigma_run:
             null = _trials(
                 executor, pool, args, 0.0, sigma_run, levels, True, count=args.null_trials
@@ -202,7 +261,10 @@ def main() -> None:
                         high = mid
                     else:
                         low = mid
-                effect = realised_difference(clusters, lift=high, seed=args.seed, draws=300)
+                effect = fmean(
+                    realised_difference(h, lift=high, seed=args.seed, draws=300)
+                    for h in pilot_halves
+                )
                 entry["by_level"][level] = {
                     "lift": high,
                     "minimum_detectable_effect": effect,

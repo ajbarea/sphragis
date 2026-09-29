@@ -92,8 +92,10 @@ def halves(
 ) -> list[dict[str, Any]]:
     """Both halves of one organization's training window: projects, examples and suffix mix.
 
-    Sides are assigned on the refined rows before dedup, as the placebo corpus assigns them;
-    what each half holds is read from `train`, the deduplicated training window it trains on.
+    Sides are assigned on `built`'s training-window counts, as the placebo corpus assigns them:
+    the refined rows before dedup for the registered split, the organization's deduplicated rows
+    under `--dedup-org`. What each half holds is read from `train`, the deduplicated training
+    window it trains on.
     """
     side_of = assign(dict(project_counts(built, window)), order_seed)
     train = [row for row in train if row["project"] in side_of]

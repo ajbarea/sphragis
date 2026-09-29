@@ -376,9 +376,11 @@ def partitioned_crossed_draws(
     the half's own adapter against its sibling on one held-out change. Every run scores every
     change, in one half or the other, so runs and changes are crossed: a replicate resamples
     runs and changes with replacement, applies the one change draw to every run, and averages
-    over runs each run's two halves, each pooled over its examples and weighted equally. With
-    one partition per stratum the half is fixed and `stratified_crossed_draws` is the same
-    interval; here a change moves between halves as the partition does. Pooled only, the
+    over runs each run's two halves, each pooled over its examples and weighted equally. Changes
+    are resampled over the organization rather than within each half, since a change moves
+    between halves as the partition does, so a half's size varies across replicates; on one
+    partition this agrees with `stratified_crossed_draws` to first order (the registered
+    partition's five seeds: [+0.0030, +0.0534] against [+0.0028, +0.0532]). Pooled only, the
     registered estimator.
     """
     changes, tables = _partition_table(runs, min_clusters=min_clusters)

@@ -56,6 +56,12 @@ each other with probability at least about `1 - beta`. Registered: `xi = 0.01` (
 The rule reads only per-run point estimates of the test window's contrast, which the interval
 already reads, and is applied the same way in every admitted organization.
 
+*Amended 2026-09-29, after runs 1 to 22 of the development-window pilot had been read at both 16
+and 22 runs (both inconclusive):* runs may be computed in batches ahead of the rule. The rule is then applied in the admissible
+list's order, K from `K_INIT` up, and the reading uses the first K at which it holds; runs past
+that K are reported and never enter the cell. The stopping K depends only on the fixed order and
+the runs' estimates, never on which runs happened to be computed.
+
 ## Interval
 
 Runs and changes are crossed: every run scores every held-out change of the organization, since
@@ -63,9 +69,10 @@ each change belongs to one half or the other in every partition. The interval is
 interval of a crossed bootstrap (Owen's pigeonhole, as the registered crossed seed-by-change
 interval): each replicate resamples K runs and the organization's changes with replacement, and
 computes each resampled run's equally weighted half-split contrast on the resampled changes of each
-of its halves, averaged over runs. It is `sphragis.measure.stats.stratified_crossed_draws` with the
-stratum made per run rather than per organization half, since a change moves between halves across
-partitions. Holm levels, the pass rule (lower bound above zero), the bounded reading against the
+of its halves, averaged over runs. Changes are resampled over the organization rather than within
+each half, since a change moves between halves across partitions, so on a single partition it
+agrees with `sphragis.measure.stats.stratified_crossed_draws` to first order, not exactly. Holm
+levels, the pass rule (lower bound above zero), the bounded reading against the
 registered detectable effect, and the SESOI band are unchanged.
 
 ## What has to be shown by simulation before registration
