@@ -180,6 +180,12 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 
 ## Plan F — RQ2 positioning
 
+- [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
+  research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
+  robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack, Wikimedia
+  and LineageOS, the Android platform family that stands in for AOSP's; AOSP enters again through
+  the NoteDb route once its host's terms allow, and Qt only with permission.
+
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
 
 - [x] **ProjRes (arXiv:2604.21197) read in full.** Exact-membership only, per-client gradients,
@@ -369,6 +375,14 @@ identifies its source; PFAdapter states the gap in its own words. This apparatus
   states source-hiding as a property, and it states it without measuring it. Text-to-image, so
   this apparatus cannot run it directly; it is the strongest citation for why the measurement is
   missing rather than a target.
+- [ ] **FedSAIL's action-subspace cut** (Du, He, Feng, arXiv:2609.32485, posted 2026-09-26): shares a
+  subspace of each client's update weighted by the second moments of its layer inputs, and keeps
+  client-specific coefficients local. What it transmits is built from input statistics, the most
+  direct trace of a client's data of any cut here. It also reports that the similarity of
+  LoRA factors across clients is largely an artefact of common initialization; RQ2's clients share
+  initialization as federated clients do, so FedSA-LoRA's A-factor result stands for that setting,
+  and the robustness item above (several initializations) is where independent initialization is
+  read.
 - [ ] **AS-LoRA's adaptive component selection** (arXiv:2605.05769): chooses A or B per layer and
   per round from a curvature score. Given that A alone identifies a source best here, a cut that
   moves between rounds is the case where the leak is not a fixed property of the design.

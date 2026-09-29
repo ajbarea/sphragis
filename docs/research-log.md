@@ -6387,3 +6387,22 @@ meets the split criteria is read on its training window before any run, as for e
 It is a candidate, not admitted: `decomposition.ORGANIZATIONS` gains it, in this order, when it is,
 and `design()` refuses it until then. It could hold at most an exploratory H2 cell, since the
 confirmatory H2 pair stays Qt and Chromium.
+
+### RQ2 is rebuilt on permitted hosts, and FedSAIL joins the defences (2026-09-29)
+
+Decided with AJ ("item 3"). Every RQ2 measurement so far reads AOSP and Qt corpora fetched over REST
+before the robots.txt stop (2026-09-23): the codebase-family attribution, the aggregate attack and
+all four adapter-split defences. They are kept as internal pilots and nothing built on them is
+published. RQ2's publishable corpora are the permitted hosts: OpenStack, Wikimedia, and LineageOS,
+whose Android platform code stands in for AOSP's C, C++ and Java family. AOSP returns through the
+NoteDb route once its host's terms allow bulk fetching; Qt returns only with permission.
+
+**A fifth defence.** FedSAIL (Du, He and Feng, arXiv:2609.32485, posted 2026-09-26, read from the
+arXiv abstract) transmits a shared "action" subspace estimated from each client's update weighted
+by the second moments of its layer inputs, and keeps client-specific coefficients local. Its
+transmitted part is built from input statistics, so it is the cut most directly tied to a client's
+data. It also reports that the similarity of trained LoRA factors across clients is largely
+induced by common initialization and falls toward chance under independent initialization. RQ2's
+clients share initialization, as federated clients receive one global model, so the FedSA-LoRA
+result (A alone identifies a source best) describes that setting; the robustness item on several
+initializations is where independent initialization gets read.
