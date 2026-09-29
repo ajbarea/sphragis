@@ -6372,7 +6372,7 @@ noted. Size is the number of changes merged in the training window, found by pag
 | gerrit.libreoffice.org, review.gerrithub.io, review.spdk.io, review.whamcloud.com | `Disallow: /` | not queried | excluded |
 
 At OpenStack's yield (about one training example per five merged changes) the Linux Foundation hosts
-give a few hundred examples, far short of two halves of 1,850. The Linux Foundation projects' terms
+give a few hundred examples, far short of two halves at the registered size floor of 2,004. The Linux Foundation projects' terms
 of use (lfprojects.org) set no terms on automated access, so size alone excludes them.
 
 **Two slips in this check.** TYPO3's robots.txt was fetched in the same command as its size query,
@@ -6384,3 +6384,6 @@ bypassed it, and later host checks go through its transport.
 **Order.** Wikimedia (collection under way), then LineageOS, then Qt and Chromium if permission
 arrives. LineageOS is Android platform code (Java, C, C++, device configuration), and whether it
 meets the split criteria is read on its training window before any run, as for every organization.
+It is a candidate, not admitted: `decomposition.ORGANIZATIONS` gains it, in this order, when it is,
+and `design()` refuses it until then. It could hold at most an exploratory H2 cell, since the
+confirmatory H2 pair stays Qt and Chromium.

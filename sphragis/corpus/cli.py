@@ -62,7 +62,7 @@ GERRIT = {
     "aosp": "https://android-review.googlesource.com",
     "chromium": "https://chromium-review.googlesource.com",
     # Checked live 2026-09-29: about 29,800 changes merged in the training window. A candidate
-    # organization for H1 and H2 (research log, 2026-09-29).
+    # organization for H1, and at most an exploratory H2 cell (research log, 2026-09-29).
     "lineageos": "https://review.lineageos.org",
     "openstack": "https://review.opendev.org",
     "qt": "https://codereview.qt-project.org",

@@ -522,6 +522,7 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 ## Completed
 
 - **2026-09-28** — Corpus v3: `refine` removes examples carrying a Gerrit suggested edit or "Fix applied." reply, whose target is already in the prompt; OpenStack and Qt refrozen, OpenStack's split criteria refixed on v3 (ceiling 0.3187, floor 2,004), and examples whose target a reviewer typed into a comment reported per half (research log).
+- **2026-09-29** — LineageOS added as a candidate organization, fetched under its robots.txt; the candidate order is Wikimedia, LineageOS, then Qt and Chromium on permission, and the Linux Foundation hosts are too small (research log).
 - **2026-09-28** — The model stack frozen against Dependabot version updates for the study; security updates still open (#62).
 - **2026-09-27** — H1's file-type-matched supplementary estimand registered and implemented (`file_type_supplement`), sharing its bootstrap with the C++ supplement (research log).
 - **2026-09-27** — The split criteria as code (`sphragis/corpus/halves.py`, `scripts/split_criteria.py`), shared with the placebo builder; the language-mix ceiling fixed on OpenStack at total variation 0.357, whose halves split docs from code (research log).
