@@ -50,6 +50,12 @@ parser.add_argument(
     help="the two pseudo-organization names; defaults to <org>-a and <org>-b",
 )
 parser.add_argument(
+    "--dedup-org",
+    action="store_true",
+    help="deduplicate the whole organization before assigning halves, so every partition "
+    "scores the identical held-out examples (the repeated-partition design)",
+)
+parser.add_argument(
     "--partition-seed",
     type=int,
     default=None,
@@ -72,6 +78,22 @@ def main() -> None:
         month.name: [json.loads(line) for line in month.read_text().splitlines() if line]
         for month in months
     }
+    dedup_removed: dict[str, int] | None = None
+    if args.dedup_org:
+        # Once over the organization, so no pair of duplicates can land in different halves and
+        # survive in both: each half's own dedup in the runner then removes nothing, and every
+        # partition is scored on the same examples.
+        from sphragis.corpus.pipeline import run_dedup
+
+        # Tagged by position, not by example id: dedup copies rows, and an id is not unique
+        # across cherry-picks until dedup itself has settled it.
+        flat = [(month, row) for month, rows in rows_by_month.items() for row in rows]
+        kept, dedup_removed = run_dedup([dict(row, _position=i) for i, (_, row) in enumerate(flat)])
+        survivors = {row["_position"] for row in kept}
+        rows_by_month = {month: [] for month in rows_by_month}
+        for i, (month, row) in enumerate(flat):
+            if i in survivors:
+                rows_by_month[month].append(row)
     # The split balances the window the adapters train on, because that is the budget a side
     # could be advantaged by. Every other window follows the same project assignment, so no
     # window is balanced twice and the evaluation sets are whatever the assignment gives.
@@ -133,6 +155,7 @@ def main() -> None:
         if args.partition_seed is None
         else "greedy least-loaded over training-window example counts, seeded order",
         "partition_seed": args.partition_seed,
+        "dedup_org": dedup_removed,
         "train_window": args.train_window,
         "names": names,
         "projects": {

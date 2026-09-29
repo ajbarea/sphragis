@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import sys
@@ -16,11 +17,14 @@ placebo = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(placebo)
 
 
-def _build(src: Path, out: Path, org: str = "qt", names: list[str] | None = None) -> None:
+def _build(
+    src: Path, out: Path, org: str = "qt", names: list[str] | None = None, extra: tuple = ()
+) -> None:
     """Run the builder the way the job does, through its own argument parser."""
     argv = sys.argv
     sys.argv = ["placebo_corpus.py", "--root", str(src), "--org", org, "--out-root", str(out)]
     sys.argv += ["--names", *names] if names else []
+    sys.argv += list(extra)
     try:
         placebo.main()
     finally:
@@ -150,3 +154,52 @@ def test_a_half_name_that_is_a_path_is_refused(tmp_path: Path) -> None:
     _corpus(tmp_path / "src", "qt", rows)
     with pytest.raises(SystemExit, match="plain corpus name"):
         _build(tmp_path / "src", tmp_path / "out", names=["../src/qt", "x"])
+
+
+def _written(out: Path) -> list[dict]:
+    rows = []
+    for name in json.loads((out / "placebo.json").read_text())["names"]:
+        text = (out / name / "refined" / "2024-11.jsonl").read_text()
+        rows += [json.loads(line) for line in text.splitlines() if line]
+    return rows
+
+
+def _duplicated(tmp_path: Path) -> list[dict]:
+    """Two projects of 20 rows in opposite halves, with one pair duplicated across them."""
+    rows = [
+        dict(
+            _row(p, "2024-11-05", f"{p}{i}"),
+            before=" ".join(hashlib.sha256(f"{p}{i}{w}".encode()).hexdigest() for w in range(8)),
+            after=" ".join(hashlib.sha256(f"{p}{i}{w}!".encode()).hexdigest() for w in range(8)),
+        )
+        for p in ("a", "b")
+        for i in range(20)
+    ]
+    rows[25] = dict(rows[25], before=rows[0]["before"], after=rows[0]["after"])
+    _corpus(tmp_path / "src", "qt", rows)
+    return rows
+
+
+def test_dedup_org_removes_a_duplicate_pair_that_would_survive_in_both_halves(
+    tmp_path: Path,
+) -> None:
+    rows = _duplicated(tmp_path)
+    _build(tmp_path / "src", tmp_path / "plain")
+    assert len(_written(tmp_path / "plain")) == len(rows)
+    _build(tmp_path / "src", tmp_path / "org", extra=("--dedup-org",))
+    written = _written(tmp_path / "org")
+    assert len(written) == len(rows) - 1
+    assert "_position" not in written[0]
+    manifest = json.loads((tmp_path / "org" / "placebo.json").read_text())
+    assert manifest["dedup_org"]["exact"] == 1
+
+
+def test_dedup_org_writes_the_same_examples_whatever_the_partition(tmp_path: Path) -> None:
+    _duplicated(tmp_path)
+    ids = []
+    for seed in (None, 1, 2):
+        out = tmp_path / f"p{seed}"
+        extra = ("--dedup-org",) + (("--partition-seed", str(seed)) if seed else ())
+        _build(tmp_path / "src", out, extra=extra)
+        ids.append(sorted(row["id"] for row in _written(out)))
+    assert ids[0] == ids[1] == ids[2]

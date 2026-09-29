@@ -305,6 +305,98 @@ def stratified_crossed_draws(
     return estimates, draws
 
 
+PartitionRun = Sequence[Sequence[Cluster]]
+
+
+def _partition_table(
+    runs: Sequence[PartitionRun], *, min_clusters: int
+) -> tuple[list[str], list[dict[str, tuple[int, float, int]]]]:
+    """Every run's (half, summed difference, examples) per change, over one shared change set."""
+    if len(runs) < 2:
+        raise ValueError(f"a crossed bootstrap needs at least two runs, got {len(runs)}")
+    tables: list[dict[str, tuple[int, float, int]]] = []
+    shape: dict[str, int] | None = None
+    for position, run in enumerate(runs):
+        if len(run) != 2:
+            raise ValueError(f"run {position} has {len(run)} halves, expected 2")
+        table: dict[str, tuple[int, float, int]] = {}
+        for half, clusters in enumerate(run):
+            if len(clusters) < min_clusters:
+                raise ValueError(
+                    f"run {position} half {half} has {len(clusters)} clusters, below the floor "
+                    f"of {min_clusters}"
+                )
+            for c in clusters:
+                if c.change_id in table:
+                    raise ValueError(
+                        f"change {c.change_id!r} appears in both halves of run {position}"
+                        if table[c.change_id][0] != half
+                        else f"change {c.change_id!r} appears twice in run {position}"
+                    )
+                if len(c.treatment) != len(c.control):
+                    raise ValueError(f"change {c.change_id!r} has unpaired examples")
+                table[c.change_id] = (half, sum(c.treatment) - sum(c.control), len(c.treatment))
+        sizes = {change: n for change, (_, _, n) in table.items()}
+        if shape is None:
+            shape = sizes
+        elif sizes != shape:
+            raise ValueError(
+                f"run {position} does not score the same changes and examples as run 0; runs "
+                "and changes are crossed only over the identical window"
+            )
+        tables.append(table)
+    return sorted(tables[0]), tables
+
+
+def _equal_halves(table: Mapping[str, tuple[int, float, int]], counts: Mapping[str, int]) -> float:
+    """A run's two halves' pooled differences on weighted changes, weighted equally."""
+    num, den = [0.0, 0.0], [0, 0]
+    for change, weight in counts.items():
+        half, difference, examples = table[change]
+        num[half] += weight * difference
+        den[half] += weight * examples
+    return fmean(n / d if d else 0.0 for n, d in zip(num, den, strict=True))
+
+
+def equal_halves(run: PartitionRun) -> float:
+    """A partition run's contrast: each half pooled over its examples, halves weighted equally."""
+    return fmean(paired_difference(half) for half in run)
+
+
+def partitioned_crossed_draws(
+    runs: Sequence[PartitionRun],
+    *,
+    seed: int,
+    resamples: int = 10_000,
+    min_clusters: int = MIN_CLUSTERS,
+) -> tuple[float, list[float]]:
+    """H1 over repeated partitions: the estimate and its crossed runs-by-changes draws.
+
+    Each run is one partition of an organization's projects, `[half][cluster]`, each cluster
+    the half's own adapter against its sibling on one held-out change. Every run scores every
+    change, in one half or the other, so runs and changes are crossed: a replicate resamples
+    runs and changes with replacement, applies the one change draw to every run, and averages
+    over runs each run's two halves, each pooled over its examples and weighted equally. With
+    one partition per stratum the half is fixed and `stratified_crossed_draws` is the same
+    interval; here a change moves between halves as the partition does. Pooled only, the
+    registered estimator.
+    """
+    changes, tables = _partition_table(runs, min_clusters=min_clusters)
+    every = dict.fromkeys(changes, 1)
+    estimate = fmean(_equal_halves(table, every) for table in tables)
+    rng = random.Random(seed)
+    k, n = len(tables), len(changes)
+    draws = []
+    for _ in range(resamples):
+        chosen = [tables[rng.randrange(k)] for _ in range(k)]
+        counts: dict[str, int] = {}
+        for _ in range(n):
+            change = changes[rng.randrange(n)]
+            counts[change] = counts.get(change, 0) + 1
+        draws.append(fmean(_equal_halves(table, counts) for table in chosen))
+    return estimate, draws
+
+
 def percentile_interval(draws: Sequence[float], confidence: float) -> tuple[float, float]:
     """The percentile interval of a set of bootstrap draws."""
     ordered = sorted(draws)
