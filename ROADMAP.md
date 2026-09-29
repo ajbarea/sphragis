@@ -419,18 +419,19 @@ as the unit; the evidence says the codebase is.
   log, 2026-09-28).
 - [x] OpenStack on corpus v3 at the half size: seed effect 0.0077 (five seeds stand), detectable
   effects +0.0246 and +0.0210, H1 dev pilot +0.0284 [+0.0028, +0.0532] on a partition that moved
-  117 of 238 projects from v2's (research log, 2026-09-28).
-- [ ] **Partition variance.** The registered split is chaotic in the corpus, so H1 is conditional on
+  117 of 238 projects from v2's; five seeds kept as a stated deviation (research log, 2026-09-28).
+- [ ] **Partition variance.** The registered split is sensitive to small corpus changes, so H1 is conditional on
   one partition; measure the spread across alternative balanced partitions against the seed spread,
-  then decide whether H1 is read over several partitions (repeated splitting, Chernozhukov et al.,
-  Econometrica 2025) before Stage 1.
+  then decide whether H1 is read over several partitions (repeated splitting: Chernozhukov, Demirer,
+  Duflo and Fernández-Val, Econometrica 93(4):1121-1164, 2025) before Stage 1.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
 - [x] H1 carries a supplementary estimand on the suffix both halves hold most of
   (`file_type_supplement`, `matched_suffix`; `.py` for OpenStack), reported beside H1 (2026-09-27).
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
-- [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds.
+- [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
+  0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
   analysis at the half size on corpus v2 for OpenStack (2026-09-27).
 - [ ] The sensitivity analysis for every other admitted organization, once its corpus is frozen.

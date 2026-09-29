@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 168 artifacts under
+repository. This page is generated from those scripts: 169 artifacts under
 39 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -167,7 +167,8 @@ The smallest half-split effect the decomposition gate detects, and how often a n
 | artifact | |
 |---|---|
 | `decomposition-sensitivity-pooled.json` | `decomposition-sensitivity-v2.json` |
-| `decomposition-sensitivity-v3.json` | `decomposition-sensitivity.json` |
+| `decomposition-sensitivity-v3-b0.0376.json` | `decomposition-sensitivity-v3.json` |
+| `decomposition-sensitivity.json` |  |
 
 ## `scripts/defence_curve.py`
 

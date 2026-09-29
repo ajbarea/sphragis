@@ -62,8 +62,10 @@ SENSITIVITY_UPPER = f"{RESULTS}/sensitivity-b0.0098.json"
 CALIBRATION = f"{RESULTS}/interval-calibration.json"
 INFORMATIVENESS = f"{RESULTS}/cluster-informativeness.json"
 COVERAGE = f"{RESULTS}/crossed-coverage.json"
-SEED_EFFECT = f"{RESULTS}/seed-effect-qtfull.json"
-SEED_EFFECT_1800 = f"{RESULTS}/seed-effect-sym-0.json"
+SEED_EFFECT_V2 = f"{RESULTS}/seed-effect-placebo-openstack-v2.json"
+SEED_EFFECT_V3 = f"{RESULTS}/seed-effect-placebo-openstack-v3.json"
+SENSITIVITY_V3 = f"{RESULTS}/decomposition-sensitivity-v3.json"
+SENSITIVITY_V3_UPPER = f"{RESULTS}/decomposition-sensitivity-v3-b0.0376.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
 
@@ -241,9 +243,9 @@ CLAIMS: list[tuple[Any, ...]] = [
         [*NEAR_DUPLICATE, "0.8", "rate"],
         {"scale": 100},
     ),
-    ("rd_seed_effect", "registered-decisions.md", "0.000", SEED_EFFECT, ["sigma_b"]),
-    ("rd_seed_bound", "registered-decisions.md", "0.0098", SEED_EFFECT, ["sigma_b_upper_95"]),
-    ("rd_seed_effect_1800", "registered-decisions.md", "0.013", SEED_EFFECT_1800, ["sigma_b"]),
+    ("rd_seed_effect_v2", "registered-decisions.md", "0.0116", SEED_EFFECT_V2, ["sigma_b"]),
+    ("rd_seed_effect", "registered-decisions.md", "0.0077", SEED_EFFECT_V3, ["sigma_b"]),
+    ("rd_seed_bound", "registered-decisions.md", "0.0376", SEED_EFFECT_V3, ["sigma_b_upper_95"]),
     (
         "rd_coverage_median",
         "registered-decisions.md",
@@ -260,19 +262,34 @@ CLAIMS: list[tuple[Any, ...]] = [
         ["cells", "#seeds=3,sigma_b=0.02"],
         {"reduce": "add:crossed_above+crossed_below"},
     ),
+    ("rd_power", "registered-decisions.md", "0.928", SENSITIVITY_V3, ["target_marginal_power"]),
     (
-        "rd_sensitivity_os",
+        "rd_sensitivity_os_975",
         "registered-decisions.md",
-        "+0.0160",
-        SENSITIVITY_POINT,
-        ["organizations", "openstack", "by_seeds", "3", "minimum_detectable_effect"],
+        "+0.0246",
+        SENSITIVITY_V3,
+        ["cells", "openstack", "by_level", "0.975", "minimum_detectable_effect"],
     ),
     (
-        "rd_sensitivity_os_upper",
+        "rd_sensitivity_os_95",
         "registered-decisions.md",
-        "+0.0235",
-        SENSITIVITY_UPPER,
-        ["organizations", "openstack", "by_seeds", "3", "minimum_detectable_effect"],
+        "+0.0210",
+        SENSITIVITY_V3,
+        ["cells", "openstack", "by_level", "0.95", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_sensitivity_os_975_upper",
+        "registered-decisions.md",
+        "+0.0488",
+        SENSITIVITY_V3_UPPER,
+        ["cells", "openstack", "by_level", "0.975", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_sensitivity_os_95_upper",
+        "registered-decisions.md",
+        "+0.0450",
+        SENSITIVITY_V3_UPPER,
+        ["cells", "openstack", "by_level", "0.95", "minimum_detectable_effect"],
     ),
     # ---- outcome-neutral.md ----
     (

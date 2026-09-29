@@ -6225,10 +6225,12 @@ changes (v2: 116 and 113).
 
 **Seed effect** (`seed-effect-placebo-openstack-v3.json`): 0.0077 at five seeds, one-sided 95%
 upper bound 0.0376 on 4 degrees of freedom (v2: 0.0116, 0.0426). The point estimate falls below the
-0.01 above which five seeds were registered, but the rule was set to keep the crossed interval
-nominal, the upper bound is far above 0.01, and five seeds hold nominal at every seed effect
-measured. Five seeds stand; going to three on a point estimate this uncertain would be the
-unconservative direction.
+0.01 above which five seeds were registered, so the rule as worded gives three. **Five are kept,
+a deviation from the rule's wording**: its one application, in RQ1's setting, took three only with
+both the estimate (0.000) and its upper bound (0.0098) at or below 0.01, and here the bound is
+0.0376. The rule exists to keep the crossed interval nominal, three seeds hold nominal only up to
+0.01, and five hold at every seed effect measured, so the deviation is the conservative one.
+Entered on Registered decisions.
 
 **Sensitivity at the half size on v3** (`decomposition-sensitivity-v3.json`, built as v2's was: seed 1
 as the variance model, the five-seed point estimate). The planned test total is re-projected rather
@@ -6241,23 +6243,30 @@ likely higher still, so this projection errs large.
 | 0.975 | +0.0246 | 0.910 | 0.02 |
 | 0.95 | +0.0210 | 0.890 | 0.05 |
 
-Smaller than v2's +0.0266 and +0.0250 despite fewer changes, because the seed effect and the
-per-change variance both fell. The null false-positive rate at 0.95 is 5 of 100 trials against a
+Smaller than v2's +0.0266 and +0.0250 despite fewer changes, because the seed effect fell: the
+per-change sampling error of H1 at each version's planned size is the same, 0.0051 (half a's
+per-change variance fell, half b's rose). The drop is two and three of the finest bisection steps
+(0.0023), near the simulation's resolution. As the seed-count precedent was bracketed, the same
+simulation at the seed effect's upper bound, 0.0376, gives the pessimistic end
+(`decomposition-sensitivity-v3-b0.0376.json`). The null false-positive rate at 0.95 is 5 of 100 trials against a
 nominal one-sided 0.025, which is about an 11% event at nominal; v2's was 1 of 100. Recorded, not
 acted on at 100 trials.
 
 **The dev pilot passes** (`decomposition-pilot-openstack-v3.json`): H1 **+0.0284 [+0.0028, +0.0532]**
 at 95%, against v2's +0.0134 [-0.0091, +0.0350]. Three things qualify it, in order of weight.
 
-1. **It is a different partition.** The registered split is a function of the corpus, and removing
-   a few percent of examples reorders the project counts it balances: 117 of the 238 projects both
+1. **It is a different partition.** The registered split is a function of the corpus and sensitive
+   to small changes in it: removing a few percent of examples reorders the project counts it
+   balances, and v3 also loses 8 of v2's 246 training-window projects entirely: 117 of the 238 projects both
    versions share changed halves. v2 and v3 read H1 on two different partitions of OpenStack, so
    the move measures partition-to-partition variation as much as anything the rule did. The seed
    effect does not capture that variation; it is measured next.
 2. **It is not the removed examples diluting the contrast.** v2's own runs scored only on the
    examples v3 keeps (1,509 of 1,659 scored rows a run) read +0.0090 [-0.0151, +0.0322], slightly
-   below v2's full reading. Copy examples were not scoring alike and pulling the contrast toward
-   zero, which was the expectation stated in the v3 entry above; that expectation was wrong.
+   below v2's full reading. On those runs the 50 removed development examples carried a contrast of
+   about +0.06 pooled over seeds (24 and 26 a half, no interval at that size), not zero, so the
+   expectation stated in the v3 entry above did not hold on v2's runs. The rescoring holds v2's
+   adapters fixed, so it rules out dilution at scoring time, not the change to what they trained on.
 3. **The rule was adopted after v2's pilot was read**, though for a reason unrelated to it (found in
    Wikimedia's bot audit) and fixed before any v3 contrast existed. The development window is a
    censored pilot either way.
