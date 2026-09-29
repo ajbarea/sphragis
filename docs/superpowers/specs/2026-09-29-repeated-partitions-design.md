@@ -25,10 +25,25 @@ dropped as the reading and kept as one draw's worth of history.
 ## Runs
 
 A run is one (partition seed, training seed) pair: a partition, two adapters, both halves scored.
-Partition seeds are taken in order from a sealed start, skipping any partition failing the criteria,
-and each run's training seed is its position in that sequence, so no two runs share either. One
-training seed per partition: across runs the seed effect averages with the partition effect, and a
-second seed within a partition buys less than a second partition.
+One training seed per partition: across runs the seed effect averages with the partition effect,
+and a second seed within a partition buys less than a second partition.
+
+- **One evaluation set.** Each run's halves are built by `placebo_corpus.py --dedup-org`: the
+  organization is deduplicated once, then partitioned, so no duplicate pair can land in both
+  halves and survive in both, and every partition scores the same examples. The exact and
+  near-duplicate stages then remove nothing inside a half; only the boilerplate stage, whose
+  threshold is a share of the corpus, could, so the cell reads the examples every run scored and
+  refuses the runs if more than 1% are missing from any (`partitions.MAX_DROPPED_SHARE`).
+- **Admissible partitions, in order.** `scripts/admissible_partitions.py` tries partition seeds
+  from 1 through the same pipeline and lists the first `K_MAX` that meet `split_criteria`; run k
+  uses the k-th, with training seed k. The list is committed before any run, from training-window
+  rows only.
+- **A fixed training size.** Under dedup-first no OpenStack partition reaches the registered
+  split's 2,004 (per-half dedup keeps a cross-half duplicate in both halves, inflating them), so
+  the size floor is the design's own training size: **N = 1,850**, the 5th percentile of the
+  smaller half over 300 seeded partitions, rounded down to 50, taken over training-window counts
+  alone (smallest 1,791, median 1,988). Across admitted organizations N is the least of that
+  figure. Every adapter trains at N.
 
 ## Number of runs: reproducible aggregation
 

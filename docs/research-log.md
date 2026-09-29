@@ -6346,3 +6346,35 @@ partition could read near zero or below.
 criteria, with partition-to-partition variation of the order of the seed effect. The Stage 1 design
 moves to reading H1 over several partitions (repeated splitting), which changes the registered
 estimand and is decided with AJ before the manuscript registers it.
+
+### H1 over repeated partitions: the design, before its simulation is read (2026-09-29)
+
+AJ decided the question the partition measurement opened: H1 is read over repeated partitions
+(spec `docs/superpowers/specs/2026-09-29-repeated-partitions-design.md`). Choices, each grounded:
+
+- **Aggregate by the mean, not the median.** Ritzwoller and Romano (arXiv:2311.14204) aggregate
+  sample-split statistics by the mean and choose the number of splits sequentially (their Algorithm
+  1, after Anscombe and Chow-Robbins) so that two independent aggregations agree within a tolerance
+  xi with probability about 1 - beta; they recommend investigating rather than switching to a
+  median when the two differ. Chernozhukov, Demirer, Duflo and Fernández-Val's median rule
+  (Econometrica 93(4), 2025) pays for its robustness by doubling the error rate. Registered: xi
+  0.01 (the SESOI), beta 0.05, burn-in 8, cap 40 (`sphragis/experiment/partitions.py`).
+- **The interval is the registered crossed one, with the run as the crossed factor.** Every run
+  scores every held-out change, in one half or the other, so runs and changes are fully crossed
+  (`partitioned_crossed_draws`). On the registered partition's five seeds it reproduces the
+  registered gate's +0.0284 [+0.0028, +0.0532] as [+0.0030, +0.0534].
+- **One evaluation set, by construction.** The ten partition runs scored 207 to 209 changes (502
+  examples common to all): each half is deduplicated on its own, so a duplicate pair split across
+  halves survives in both under one partition and not another. The organization is now
+  deduplicated once before partitioning (`placebo_corpus.py --dedup-org`), which also stops a
+  sibling adapter training on a twin of an own-half test item. Only the per-half boilerplate stage
+  can still differ, and the cell refuses runs missing more than 1% of examples.
+- **A fixed training size, N = 1,850.** Under dedup-first no partition reaches the registered
+  split's 2,004 (largest 2,003), which per-half dedup had inflated. N is the 5th percentile of the
+  smaller half over 300 seeded partitions, rounded down to 50, from training-window counts alone.
+- **The partitions, listed before any run** (`admissible-partitions-openstack.json`): seeds tried
+  from 1 through the job's own pipeline; **40 admissible of 49 checked** (3 fail the size floor, 6
+  the language-mix ceiling); the smallest admissible half is 1,856.
+
+**Exploratory, on the ten dev runs already made** (per-half dedup, two seeds a partition, the 502
+common examples): H1 over partitions reads **+0.0046 [-0.0139, +0.0214]** at 95%, inconclusive.

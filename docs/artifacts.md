@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 178 artifacts under
-40 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 179 artifacts under
+41 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -35,6 +35,14 @@ Each client update as a short vector, so defences can be simulated honestly.
 | `client-vectors-cpp-256-c256.npz` | `client-vectors-cpp-early-c128-p2.npz` |
 | `client-vectors-cpp-early-c128.npz` | `client-vectors-cpp-early.npz` |
 | `client-vectors-cpp-rebuilt-c128.npz` | `client-vectors.npz` |
+
+## `scripts/admissible_partitions.py`
+
+The ordered list of admissible partitions H1's runs are drawn from, fixed before any run.
+
+| artifact | |
+|---|---|
+| `admissible-partitions-openstack.json` |  |
 
 ## `scripts/aggregate_attack.py`
 
