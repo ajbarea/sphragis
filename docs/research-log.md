@@ -6293,3 +6293,8 @@ the reading depends on which. Fixed here, before any job:
   splitting (several partitions, the median estimate and median bounds at an adjusted level, after
   Chernozhukov, Demirer, Duflo and Fernández-Val, Econometrica 2025); if it is small, one partition
   stands and the variance is stated.
+
+Selection, applied as stated: seeds 1 to 30 were checked; **2, 8, 13 and 29 qualify**. Of the other
+26, 22 fail only the size floor (a shuffled order balances less tightly than largest-first, and
+the floor is the registered split's smaller half), 3 fail both the floor and the language-mix
+ceiling (seeds 3, 7, 21), and 1 fails the ceiling alone (seed 22). Jobs 207730 to 207735, 207739 and 207740, pinned at a41af73.
