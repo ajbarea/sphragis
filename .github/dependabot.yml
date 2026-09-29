@@ -9,6 +9,17 @@ updates:
       default-days: 7
     commit-message:
       prefix: "chore(deps)"
+    # The model stack is frozen for the study: a bump mid-study changes what trained the adapters.
+    # All three update types listed, so security updates still open.
+    ignore:
+      - dependency-name: "torch"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "transformers"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "peft"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "accelerate"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: github-actions
     directory: /
