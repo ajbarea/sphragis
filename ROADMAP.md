@@ -417,7 +417,13 @@ as the unit; the evidence says the codebase is.
 - [x] Corpus v3: examples whose target the reviewer wrote (Gerrit suggested edits, applied fixes)
   removed by `refine`; OpenStack's ceiling and floor refixed on v3, 0.3187 and 2,004 (research
   log, 2026-09-28).
-- [ ] OpenStack's seed effect, sensitivity and dev pilot on corpus v3 (`RUN_TAG=v3`).
+- [x] OpenStack on corpus v3 at the half size: seed effect 0.0077 (five seeds stand), detectable
+  effects +0.0246 and +0.0210, H1 dev pilot +0.0284 [+0.0028, +0.0532] on a partition that moved
+  117 of 238 projects from v2's (research log, 2026-09-28).
+- [ ] **Partition variance.** The registered split is chaotic in the corpus, so H1 is conditional on
+  one partition; measure the spread across alternative balanced partitions against the seed spread,
+  then decide whether H1 is read over several partitions (repeated splitting, Chernozhukov et al.,
+  Econometrica 2025) before Stage 1.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
 - [x] H1 carries a supplementary estimand on the suffix both halves hold most of

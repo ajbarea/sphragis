@@ -6154,8 +6154,9 @@ Counted on the built examples (before refine):
 | Qt | 11,448 | 172 | 112 | 9 |
 | AOSP | 5,133 | 209 | 111 | 7 |
 
-An adapter scores these by copying, not by any convention, and both arms of a contrast see the
-same prompt, so they dilute a contrast rather than fake one. Two properties make them a validity
+An adapter scores these by copying, not by any convention. Both arms of a contrast see the same
+prompt, so the expectation was that they dilute a contrast rather than fake one; rescoring v2's runs
+without them did not bear that out (next entry). Two properties make them a validity
 issue rather than noise. Their share differs by organization, 18% of Wikimedia's built examples
 against 1.5% of Qt's. And it mostly grows over time, as hosts adopt the feature: on corpus v2's
 refined rows before dedup, per registered half,
@@ -6213,3 +6214,50 @@ items carry a suggested edit; raters A and B called 20 and 23 of them valid, and
 13 checked, since a suggested edit states its rewrite exactly, which is what the rubric's "valid"
 asks. On the 358 items v3 keeps the valid shares barely move: A 0.812 to 0.813, B 0.843 to 0.838,
 the human 0.809 (152) to 0.806 (139).
+
+### OpenStack on corpus v3: seed effect 0.0077, detectable +0.0246 and +0.0210, and a dev pilot that passes on a different partition (2026-09-28)
+
+Five single-seed placebo jobs at the half size (207303 to 207307, pinned at 8334d79) on
+`corpus-v3/openstack`, copied to TIGRIS with all 109 files' sha256 matched. The five roots are
+byte-identical under the same digest command as v2: `0ee3f74ab4a1b6e9`. Every outcome-neutral
+check passed in every job. The halves equalize at 2,004 and are scored on 98 and 109 development
+changes (v2: 116 and 113).
+
+**Seed effect** (`seed-effect-placebo-openstack-v3.json`): 0.0077 at five seeds, one-sided 95%
+upper bound 0.0376 on 4 degrees of freedom (v2: 0.0116, 0.0426). The point estimate falls below the
+0.01 above which five seeds were registered, but the rule was set to keep the crossed interval
+nominal, the upper bound is far above 0.01, and five seeds hold nominal at every seed effect
+measured. Five seeds stand; going to three on a point estimate this uncertain would be the
+unconservative direction.
+
+**Sensitivity at the half size on v3** (`decomposition-sensitivity-v3.json`, built as v2's was: seed 1
+as the variance model, the five-seed point estimate). The planned test total is re-projected rather
+than carried over: v3 keeps 207 of v2's 229 development changes, so 1,809 x 207/229 = 1,635, split
+774 and 861 in v3's development proportions. The test window's own share of suggested edits is
+likely higher still, so this projection errs large.
+
+| level | detectable effect at power 0.928 | null reads bounded | null false positive |
+|---|---|---|---|
+| 0.975 | +0.0246 | 0.910 | 0.02 |
+| 0.95 | +0.0210 | 0.890 | 0.05 |
+
+Smaller than v2's +0.0266 and +0.0250 despite fewer changes, because the seed effect and the
+per-change variance both fell. The null false-positive rate at 0.95 is 5 of 100 trials against a
+nominal one-sided 0.025, which is about an 11% event at nominal; v2's was 1 of 100. Recorded, not
+acted on at 100 trials.
+
+**The dev pilot passes** (`decomposition-pilot-openstack-v3.json`): H1 **+0.0284 [+0.0028, +0.0532]**
+at 95%, against v2's +0.0134 [-0.0091, +0.0350]. Three things qualify it, in order of weight.
+
+1. **It is a different partition.** The registered split is a function of the corpus, and removing
+   a few percent of examples reorders the project counts it balances: 117 of the 238 projects both
+   versions share changed halves. v2 and v3 read H1 on two different partitions of OpenStack, so
+   the move measures partition-to-partition variation as much as anything the rule did. The seed
+   effect does not capture that variation; it is measured next.
+2. **It is not the removed examples diluting the contrast.** v2's own runs scored only on the
+   examples v3 keeps (1,509 of 1,659 scored rows a run) read +0.0090 [-0.0151, +0.0322], slightly
+   below v2's full reading. Copy examples were not scoring alike and pulling the contrast toward
+   zero, which was the expectation stated in the v3 entry above; that expectation was wrong.
+3. **The rule was adopted after v2's pilot was read**, though for a reason unrelated to it (found in
+   Wikimedia's bot audit) and fixed before any v3 contrast existed. The development window is a
+   censored pilot either way.
