@@ -50,6 +50,12 @@ parser.add_argument(
     help="the two pseudo-organization names; defaults to <org>-a and <org>-b",
 )
 parser.add_argument(
+    "--partition-seed",
+    type=int,
+    default=None,
+    help="an alternative balanced partition (seeded order); omitted, the registered split",
+)
+parser.add_argument(
     "--train-window",
     default="train",
     help="the window whose counts the split balances; the others follow the same assignment",
@@ -77,7 +83,7 @@ def main() -> None:
     if len(train_counts) < 2:
         raise SystemExit(f"{args.org} has {len(train_counts)} projects in {args.train_window}")
 
-    side_of = assign(dict(train_counts))
+    side_of = assign(dict(train_counts), args.partition_seed)
     names = args.names or [f"{args.org}-a", f"{args.org}-b"]
     if len(set(names)) != 2:
         raise SystemExit(f"two distinct half names are needed, got {names}")
@@ -123,7 +129,10 @@ def main() -> None:
         "provenance": provenance_header(),
         "source_root": str(args.root),
         "source_org": args.org,
-        "rule": "greedy least-loaded over training-window example counts, largest first",
+        "rule": "greedy least-loaded over training-window example counts, largest first"
+        if args.partition_seed is None
+        else "greedy least-loaded over training-window example counts, seeded order",
+        "partition_seed": args.partition_seed,
         "train_window": args.train_window,
         "names": names,
         "projects": {

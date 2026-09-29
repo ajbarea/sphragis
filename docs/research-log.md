@@ -6270,3 +6270,26 @@ at 95%, against v2's +0.0134 [-0.0091, +0.0350]. Three things qualify it, in ord
 3. **The rule was adopted after v2's pilot was read**, though for a reason unrelated to it (found in
    Wikimedia's bot audit) and fixed before any v3 contrast existed. The development window is a
    censored pilot either way.
+
+### Planned before any run: how much of H1 is the partition (2026-09-28)
+
+The registered split is chaotic in the corpus (117 of 238 projects moved between v2 and v3), so H1
+reads one partition of many that meet the same criteria, and nothing measured so far says how much
+the reading depends on which. Fixed here, before any job:
+
+- **Partitions.** `assign(..., order_seed=s)` shuffles the project names with seed `s` and gives
+  each to the smaller half, as the registered rule does largest-first. Seeds are taken in order from
+  1, skipping any whose halves fail `split_criteria` against OpenStack's registered halves (size
+  floor 2,004, ceiling 0.3187, the project and share rules), until four qualify. The registered
+  split is the fifth.
+- **Runs.** Each alternative partition at training seeds 1 and 2, on `corpus-v3/openstack`, the
+  placebo gate unchanged; the registered partition's seeds 1 and 2 are the v3 runs already made.
+- **Reading.** Per run, H1's point estimate (the two halves' own-minus-sibling contrasts, equally
+  weighted). A two-way layout, five partitions by two seeds: the between-partition variance of the
+  partition means, less the within-partition (seed) variance over two, is the partition component,
+  set beside the seed effect. Reported with the partitions' spread, not tested.
+- **What it decides.** If the partition component is comparable to the seed effect or larger, H1 as
+  registered is conditional on an arbitrary partition, and the Stage 1 design moves to repeated
+  splitting (several partitions, the median estimate and median bounds at an adjusted level, after
+  Chernozhukov, Demirer, Duflo and Fernández-Val, Econometrica 2025); if it is small, one partition
+  stands and the variance is stated.

@@ -33,7 +33,8 @@ claim_result OUT "$SPHRAGIS_RESULTS/rq1-placebo-$ORG$RESULT_SUFFIX.json"
 # Built inside the job rather than beforehand, so the split that ran is the split this job
 # records and a stale root from an earlier build cannot be read as this one's.
 uv run --no-sync python scripts/placebo_corpus.py \
-  --root "${CORPUS_WINDOWS:-$SPHRAGIS_DATA/corpus-windows}" --org "$ORG" --out-root "$ROOT"
+  --root "${CORPUS_WINDOWS:-$SPHRAGIS_DATA/corpus-windows}" --org "$ORG" --out-root "$ROOT" \
+  ${PARTITION_SEED:+--partition-seed "$PARTITION_SEED"}
 uv run --no-sync python scripts/rq1_pilot.py \
   --root "$ROOT" --org "$ORG-a" --org "$ORG-b" \
   --seeds "${SEEDS:-1}" \
