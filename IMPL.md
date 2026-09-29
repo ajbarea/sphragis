@@ -32,7 +32,7 @@ research log records what is and is not known about those requests.
 ## In flight
 
 - **Corpus v3** (research log, 2026-09-28): `refine` removes examples whose target the reviewer
-  wrote, a Gerrit suggested edit or an applied fix, since their share grows from train to dev and
+  wrote, a Gerrit suggested edit or an applied fix, since their share mostly grows from train to dev and
   differs by organization. OpenStack and Qt refrozen; OpenStack's split criteria refixed on v3
   (`split-criteria-openstack.json`; v2's kept as `-v2`) before any Wikimedia split is computed.
   OpenStack's five placebo seeds rerun on TIGRIS under `RUN_TAG=v3` from `corpus-v3`, then the

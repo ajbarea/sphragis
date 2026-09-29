@@ -190,7 +190,7 @@ def test_a_fence_that_is_not_a_suggestion_is_a_reviewer_comment() -> None:
 
 
 def test_a_suggestion_fence_is_found_after_any_line_break() -> None:
-    for text in ("why\r\n```suggestion\r\nx\r\n```", "why ```suggestion\nx\n```"):
+    for text in ("why\r\n```suggestion\r\nx\r\n```", "why\u2028```suggestion\nx\n```"):
         kept, counts = refine([_row([text])], index_changes([_change(10)]))
         assert kept == []
         assert counts["suggested_edit"] == 1

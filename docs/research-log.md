@@ -6138,7 +6138,7 @@ It costs no training: the adapters' existing scores are read on the subset. `cpp
 `file_type_supplement` share one restricted-bootstrap helper, which builds each cell's clusters
 inside its error handling, as `cpp_supplement` did.
 
-### Corpus v3: examples whose target the reviewer wrote are removed, since their share grows between windows (2026-09-28)
+### Corpus v3: examples whose target the reviewer wrote are removed, since their share differs by organization and mostly grows between windows (2026-09-28)
 
 Found while auditing Wikimedia's first eight built months for bot comments (none were found, and the
 build's service-account filter has removed nothing on any of the four hosts). What turned up instead is Gerrit's "Suggest edit": the reviewer's rewrite of the commented
@@ -6157,8 +6157,8 @@ Counted on the built examples (before refine):
 An adapter scores these by copying, not by any convention, and both arms of a contrast see the
 same prompt, so they dilute a contrast rather than fake one. Two properties make them a validity
 issue rather than noise. Their share differs by organization, 18% of Wikimedia's built examples
-against 1.5% of Qt's. And it grows over time, as hosts adopt the feature: on corpus v2, per
-registered half,
+against 1.5% of Qt's. And it mostly grows over time, as hosts adopt the feature: on corpus v2's
+refined rows before dedup, per registered half,
 
 | organization | window | half a | half b |
 |---|---|---|---|
@@ -6167,7 +6167,8 @@ registered half,
 | Qt | train | 14 / 4,002 = 0.003 | 58 / 4,002 = 0.014 |
 | Qt | dev | 60 / 527 = 0.114 | 40 / 425 = 0.094 |
 
-Qt's development window carries seven to thirty times its training window's share. The sealed test
+Qt's development window carries 6.5 to 33 times its training window's share, OpenStack's half b
+1.7 times, and OpenStack's half a slightly less. The sealed test
 window is later still, so a copy task would weigh most in the one window the confirmatory reading
 uses, unevenly across halves and organizations. The field's code refinement benchmarks do not
 filter this class (the 2026 survey of review benchmarks, arXiv:2602.13377, names no such filter;
@@ -6178,11 +6179,22 @@ when any of its comments opens a ```` ```suggestion ```` fence on a line of its 
 one-click "Fix applied." reply, which follows a fix taken as given. The whole example goes, not
 just the comment, because its target is the reviewer's edit. Counted as `suggested_edit` and
 `applied_fix`, a rebase successor counted first. Refined: OpenStack 465 and 0 removed, Qt 172 and
-0, AOSP 209 and 1.
+0, AOSP 209 and 1. Gerrit itself detects a suggestion by substring (`comment-util.ts`, the same
+commit); the rule anchors the fence to its own line, and on all 26,686 built examples a looser
+case-insensitive fence pattern selects exactly the same ones.
+
+Six examples entered v3 that v2 did not hold. Dedup keeps the earliest of a duplicate pair, and
+where that was a removed example its twin now survives: five in OpenStack's train window, one in
+Qt's dev window. Two are sibling hunks commented "same as above" and "Here as well", whose target is
+the neighbouring hunk's suggested edit given by reference and not in their own prompt, so the rule
+keeps them. Every kept example is otherwise unchanged, and the counts reconcile (4,322 - 321 + 5 =
+4,006; 897 - 93 + 1 = 805).
 
 **Not filtered, and reported:** a reviewer who types the fix in prose ("Should this be `X`?").
-Target found verbatim in a comment, at 20 characters or more, on examples without a suggested
-edit: Wikimedia 56, OpenStack 160, Qt 258, AOSP 54. This is ordinary reviewing, not a host
+`sphragis.corpus.halves.target_in_comment` finds the target, whitespace-normalized per line and 20
+characters or more, verbatim in a comment; on built examples without a suggested edit: Wikimedia
+56, OpenStack 160, Qt 258, AOSP 54. `split_criteria.py` reports it per half (OpenStack v3: 62 of
+2,004 and 58 of 2,017). This is ordinary reviewing, not a host
 feature: substring matching on short targets is noisy, and any threshold would be chosen after
 seeing the data.
 

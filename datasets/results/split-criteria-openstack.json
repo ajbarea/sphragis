@@ -93,7 +93,8 @@
         "apache2-oidc-params": 1,
         ".debian": 1,
         ".centos": 1
-      }
+      },
+      "target_in_comment": 62
     },
     {
       "assigned_projects": 120,
@@ -157,7 +158,8 @@
         ".po": 1,
         ".js": 1,
         "barbican": 1
-      }
+      },
+      "target_in_comment": 58
     }
   ],
   "reference_halves": [
@@ -230,7 +232,8 @@
         "apache2-oidc-params": 1,
         ".debian": 1,
         ".centos": 1
-      }
+      },
+      "target_in_comment": 62
     },
     {
       "assigned_projects": 120,
@@ -294,7 +297,8 @@
         ".po": 1,
         ".js": 1,
         "barbican": 1
-      }
+      },
+      "target_in_comment": 58
     }
   ],
   "size_floor": 2004,
@@ -308,15 +312,10 @@
   },
   "qualifies": true,
   "provenance": {
-    "generated_at": "2026-09-29T00:30:16.330651+00:00",
+    "generated_at": "2026-09-29T00:56:11.009897+00:00",
     "git": {
-      "commit": "e700e6f60b575fb46db89fbde9f292fb9febcad6",
-      "branch": "corpus/suggested-edits",
-      "uncommitted_code": [
-        "sphragis/corpus/automated/__init__.py",
-        "sphragis/corpus/refine.py"
-      ],
-      "uncommitted_code_sha256": "60036ee93fb3ad6e17c3f935eda564814e578de12d88fb091ff6108c30b6ae82"
+      "commit": "a69f6cfac5d8b41f0e41d3c13ad92c08f3842db3",
+      "branch": "corpus/typed-target-report"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
