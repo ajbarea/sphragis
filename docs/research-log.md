@@ -6273,7 +6273,8 @@ at 95%, against v2's +0.0134 [-0.0091, +0.0350]. Three things qualify it, in ord
 
 ### Planned before any run: how much of H1 is the partition (2026-09-28)
 
-The registered split is chaotic in the corpus (117 of 238 projects moved between v2 and v3), so H1
+The registered split is sensitive to small corpus changes (117 of 238 projects moved between v2 and
+v3), so H1
 reads one partition of many that meet the same criteria, and nothing measured so far says how much
 the reading depends on which. Fixed here, before any job:
 
