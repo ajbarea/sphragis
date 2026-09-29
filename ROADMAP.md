@@ -414,6 +414,10 @@ as the unit; the evidence says the codebase is.
 - [x] Cells as a rule over the organizations admitted by host permission, not two fixed designs
   (2026-09-27): H1 on every admitted organization, H2 on Qt and Chromium only when both are.
 - [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
+- [x] Corpus v3: examples whose target the reviewer wrote (Gerrit suggested edits, applied fixes)
+  removed by `refine`; OpenStack's ceiling and floor refixed on v3, 0.3187 and 2,004 (research
+  log, 2026-09-28).
+- [ ] OpenStack's seed effect, sensitivity and dev pilot on corpus v3 (`RUN_TAG=v3`).
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
 - [x] H1 carries a supplementary estimand on the suffix both halves hold most of

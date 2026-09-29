@@ -6137,3 +6137,67 @@ OpenStack's development-window pilot had been read, and reads only training-wind
 It costs no training: the adapters' existing scores are read on the subset. `cpp_supplement` and
 `file_type_supplement` share one restricted-bootstrap helper, which builds each cell's clusters
 inside its error handling, as `cpp_supplement` did.
+
+### Corpus v3: examples whose target the reviewer wrote are removed, since their share grows between windows (2026-09-28)
+
+Found while auditing Wikimedia's first eight built months for bot comments (none were found, and the
+build's service-account filter has removed nothing on any of the four hosts). What turned up instead is Gerrit's "Suggest edit": the reviewer's rewrite of the commented
+lines, fenced as a ```` ```suggestion ```` block in the comment (`USER_SUGGESTION_START_PATTERN` in
+Gerrit's `polygerrit-ui/app/elements/shared/gr-comment/gr-comment.ts`, read at c52ea5b). The
+prompt carries every comment, so on those examples the target is text the prompt already holds.
+Counted on the built examples (before refine):
+
+| organization | built | with a suggested edit | body equals the target | target inside the body |
+|---|---|---|---|---|
+| Wikimedia (8 of 13 months) | 4,146 | 763 | 553 | 36 |
+| OpenStack | 5,959 | 465 | 315 | 22 |
+| Qt | 11,448 | 172 | 112 | 9 |
+| AOSP | 5,133 | 209 | 111 | 7 |
+
+An adapter scores these by copying, not by any convention, and both arms of a contrast see the
+same prompt, so they dilute a contrast rather than fake one. Two properties make them a validity
+issue rather than noise. Their share differs by organization, 18% of Wikimedia's built examples
+against 1.5% of Qt's. And it grows over time, as hosts adopt the feature: on corpus v2, per
+registered half,
+
+| organization | window | half a | half b |
+|---|---|---|---|
+| OpenStack | train | 188 / 2,343 = 0.080 | 154 / 2,343 = 0.066 |
+| OpenStack | dev | 26 / 366 = 0.071 | 26 / 236 = 0.110 |
+| Qt | train | 14 / 4,002 = 0.003 | 58 / 4,002 = 0.014 |
+| Qt | dev | 60 / 527 = 0.114 | 40 / 425 = 0.094 |
+
+Qt's development window carries seven to thirty times its training window's share. The sealed test
+window is later still, so a copy task would weigh most in the one window the confirmatory reading
+uses, unevenly across halves and organizations. The field's code refinement benchmarks do not
+filter this class (the 2026 survey of review benchmarks, arXiv:2602.13377, names no such filter;
+arXiv:2502.08172 treats "explicit code suggestion" as its own intention category).
+
+**Rule (`refine`, so a re-refine from disk and nothing refetched):** an example is removed whole
+when any of its comments opens a ```` ```suggestion ```` fence on a line of its own, or is Gerrit's
+one-click "Fix applied." reply, which follows a fix taken as given. The whole example goes, not
+just the comment, because its target is the reviewer's edit. Counted as `suggested_edit` and
+`applied_fix`, a rebase successor counted first. Refined: OpenStack 465 and 0 removed, Qt 172 and
+0, AOSP 209 and 1.
+
+**Not filtered, and reported:** a reviewer who types the fix in prose ("Should this be `X`?").
+Target found verbatim in a comment, at 20 characters or more, on examples without a suggested
+edit: Wikimedia 56, OpenStack 160, Qt 258, AOSP 54. This is ordinary reviewing, not a host
+feature: substring matching on short targets is noisy, and any threshold would be chosen after
+seeing the data.
+
+The frozen v2 corpora and every result computed on them stand as the record of v2; corpus v3 is
+what the Stage 1 figures are recomputed on.
+
+**OpenStack on v3** (`split-criteria-openstack.json`; v2's renamed `split-criteria-openstack-v2.json`):
+frozen at pilot 532, train 4,006, dev 515, and `verify --reproduce` clean. The registered halves
+hold 2,004 and 2,017 training examples, so the size floor becomes 2,004, and their suffix mix
+differs by a total variation of 0.3187, which becomes the language-mix ceiling (v2: 2,158 and
+0.357). Both are refixed here, before any Wikimedia split has been computed on either corpus
+version. The matched suffix stays `.py` (715 and 1,248 rows; `.rst` 729 and 320).
+
+**The label audit could not have caught this, and its rates stand.** 25 of the audit's 383 scored
+items carry a suggested edit; raters A and B called 20 and 23 of them valid, and the human 11 of
+13 checked, since a suggested edit states its rewrite exactly, which is what the rubric's "valid"
+asks. On the 358 items v3 keeps the valid shares barely move: A 0.812 to 0.813, B 0.843 to 0.838,
+the human 0.809 (152) to 0.806 (139).

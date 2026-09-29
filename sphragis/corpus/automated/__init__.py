@@ -92,6 +92,11 @@ def _line_bot(paragraph: str) -> str | None:
     return None
 
 
+def normalize_line_breaks(text: str) -> str:
+    """Every line break a line-anchored pattern would otherwise read through, as a newline."""
+    return _LINE_BREAKS.sub("\n", text)
+
+
 def matched_bot(text: str) -> str | None:
     """The registered bot that wrote this whole comment, or None.
 
@@ -100,7 +105,7 @@ def matched_bot(text: str) -> str | None:
     # Every line break a template's "[^\n]" would otherwise read through becomes a newline, so a
     # reviewer's sentence after a bot line on a carriage return or a Unicode separator is not
     # swallowed into the bot's template.
-    text = _LINE_BREAKS.sub("\n", text)
+    text = normalize_line_breaks(text)
     paragraphs = [p.strip() for p in _PARAGRAPH.split(text.strip()) if p.strip()]
     if not paragraphs:
         return None

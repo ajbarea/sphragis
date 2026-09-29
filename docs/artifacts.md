@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 159 artifacts under
+repository. This page is generated from those scripts: 160 artifacts under
 39 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -358,7 +358,7 @@ Whether an organization's registered split qualifies for a confirmatory H1 cell.
 
 | artifact | |
 |---|---|
-| `split-criteria-openstack.json` |  |
+| `split-criteria-openstack-v2.json` | `split-criteria-openstack.json` |
 
 ## `scripts/subspace_split.py`
 
@@ -383,6 +383,7 @@ These are committed artifacts that no `claim_result`, no `--out` example and no
 script name accounts for. Each is a measurement whose producer has to be read out
 of the research log rather than out of the code.
 
+- `manifest-openstack-v2.json`
 - `rq1-qtfull-fp32-seeds.json`
 - `rq1-r256-seeds.json`
 - `stratified-coverage-0.95.json`

@@ -48,6 +48,8 @@ INDEX_PAGE = DOCS / "artifacts.md"
 # window report that also carries them is a pre-refreeze artifact.
 MANIFEST_OS = "datasets/gerrit/openstack/manifest.json"
 MANIFEST_QT = "datasets/gerrit/qt/manifest.json"
+# Corpus v2 as frozen on 2026-09-23, for pages that describe a measurement taken on it.
+MANIFEST_OS_V2 = "datasets/results/manifest-openstack-v2.json"
 
 DEV = f"{RESULTS}/rq1-qtfull-fp32-seeds.json"
 PILOT = f"{RESULTS}/pilot-outcomes.json"
@@ -79,14 +81,14 @@ NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
 #: or `occurrences` (the literal is quoted more than once).
 CLAIMS: list[tuple[Any, ...]] = [
     # ---- protocol.md: the corpus, and where the dev-window reading stands ----
-    ("corpus_os", "protocol.md", "5,487", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
-    ("corpus_qt", "protocol.md", "9,606", MANIFEST_QT, ["counts"], {"reduce": "sum"}),
-    ("seal_os", "protocol.md", "600", MANIFEST_OS, ["counts", "pilot"]),
-    ("train_os", "protocol.md", "4,322", MANIFEST_OS, ["counts", "train"]),
-    ("dev_os_n", "protocol.md", "565", MANIFEST_OS, ["counts", "dev"]),
+    ("corpus_os", "protocol.md", "5,053", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
+    ("corpus_qt", "protocol.md", "9,445", MANIFEST_QT, ["counts"], {"reduce": "sum"}),
+    ("seal_os", "protocol.md", "532", MANIFEST_OS, ["counts", "pilot"]),
+    ("train_os", "protocol.md", "4,006", MANIFEST_OS, ["counts", "train"]),
+    ("dev_os_n", "protocol.md", "515", MANIFEST_OS, ["counts", "dev"]),
     ("seal_qt", "protocol.md", "1,146", MANIFEST_QT, ["counts", "pilot"]),
-    ("train_qt", "protocol.md", "7,563", MANIFEST_QT, ["counts", "train"]),
-    ("dev_qt_n", "protocol.md", "897", MANIFEST_QT, ["counts", "dev"]),
+    ("train_qt", "protocol.md", "7,494", MANIFEST_QT, ["counts", "train"]),
+    ("dev_qt_n", "protocol.md", "805", MANIFEST_QT, ["counts", "dev"]),
     # The seal itself: the test window's content hash over no content. Quoted rather than
     # its count, because a page saying the window holds "0" examples is a page whose claim
     # any stray zero satisfies.
@@ -333,7 +335,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         [*NEAR_DUPLICATE, "0.5", "rate"],
         {"scale": 100},
     ),
-    ("on_corpus", "outcome-neutral.md", "5,487", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
+    ("on_corpus", "outcome-neutral.md", "5,487", MANIFEST_OS_V2, ["counts"], {"reduce": "sum"}),
     (
         "on_marker_a",
         "outcome-neutral.md",

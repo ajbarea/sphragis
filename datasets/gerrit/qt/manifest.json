@@ -1,27 +1,28 @@
 {
-  "generated_at": "2026-09-23T21:25:08.324583+00:00",
+  "generated_at": "2026-09-29T00:31:20.870959+00:00",
   "git": {
-    "commit": "dba60dc868aa932f0f7cd47b654c2b66d555ffbf",
-    "branch": "corpus/v2"
+    "commit": "e700e6f60b575fb46db89fbde9f292fb9febcad6",
+    "branch": "corpus/suggested-edits",
+    "uncommitted_code": [
+      "sphragis/corpus/automated/__init__.py",
+      "sphragis/corpus/refine.py"
+    ],
+    "uncommitted_code_sha256": "60036ee93fb3ad6e17c3f935eda564814e578de12d88fb091ff6108c30b6ae82"
   },
   "python": "3.14.4",
   "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-  "packages": {
-    "torch": "2.14.0+cu130",
-    "transformers": "5.17.0",
-    "peft": "0.20.0"
-  },
+  "packages": {},
   "org": "qt",
   "counts": {
     "pilot": 1146,
-    "train": 7563,
-    "dev": 897,
+    "train": 7494,
+    "dev": 805,
     "test": 0
   },
   "hashes": {
     "pilot": "7c643d1d156aa628af541d0ee32cbef094e05d06a02f539f5c2d2935bfde1f81",
-    "train": "039983934af1fd7272351b35c3e760a36324493c0bcac73fd75a751c14290dcc",
-    "dev": "a68f99846153cee907c0443dae4044cdaa56b2585682d2f14f3260c192b22191",
+    "train": "0e2206a02f7b4d11d0eb1f43d1747fb24b031a4fde0848a0940757756c6f4c52",
+    "dev": "bce5dc1d23ab42bbb7825055c306f2cea490e54087c058e1091329d457b061dc",
     "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "stats": {
@@ -41,21 +42,23 @@
     },
     "refine_counts": {
       "automated_comment": 1747,
-      "acknowledgement_comment": 117,
+      "acknowledgement_comment": 116,
       "automated_only": 1304,
       "acknowledgement_only": 6,
       "not_rework_successor": 0,
+      "suggested_edit": 172,
+      "applied_fix": 0,
       "successor_kind_unknown": 4,
       "address_residue": 0
     },
     "deduped": {
-      "exact": 320,
-      "near_duplicate": 212,
+      "exact": 311,
+      "near_duplicate": 210,
       "boilerplate": 0,
       "shared_change_id": 0
     },
     "unassigned_changes": 0,
     "build_rules": "3d29d529390c1eea",
-    "rules": "0292fd614738792f"
+    "rules": "c2ddb5b5f6e99182"
   }
 }
