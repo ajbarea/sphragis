@@ -33,6 +33,7 @@ def test_every_organization_has_its_gerrit_instance() -> None:
     assert GERRIT == {
         "aosp": "https://android-review.googlesource.com",
         "chromium": "https://chromium-review.googlesource.com",
+        "lineageos": "https://review.lineageos.org",
         "openstack": "https://review.opendev.org",
         "qt": "https://codereview.qt-project.org",
         "wikimedia": "https://gerrit.wikimedia.org/r",
@@ -1161,7 +1162,11 @@ def test_a_rest_fetch_of_chromium_opens_no_connection(
 def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
-    assert set(cli.REST_PERMITTED) == {"review.opendev.org", "gerrit.wikimedia.org"}
+    assert set(cli.REST_PERMITTED) == {
+        "review.lineageos.org",
+        "review.opendev.org",
+        "gerrit.wikimedia.org",
+    }
     for permission in cli.REST_PERMITTED.values():
         assert "robots.txt" in permission.reason and "checked 20" in permission.reason
         assert permission.crawl_delay > 0
@@ -1450,6 +1455,16 @@ def test_wikimedia_permission_pins_the_policy() -> None:
     assert permission.disallow == WIKIMEDIA_ROBOTS
     assert permission.crawl_delay >= 1.0 and permission.idle_gap >= 1.0
     assert permission.error_pause >= 900.0 and permission.single_client
+
+
+def test_lineageos_permission_pins_the_policy() -> None:
+    """robots.txt as read 2026-09-29 names only other crawlers, so nothing is disallowed."""
+    from sphragis.corpus import cli
+
+    permission = cli.REST_PERMITTED["review.lineageos.org"]
+    assert permission.disallow == ()
+    assert permission.crawl_delay >= 2.0
+    assert permission.error_pause >= 300.0 and permission.single_client
 
 
 @pytest.mark.parametrize(
