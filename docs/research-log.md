@@ -6300,10 +6300,10 @@ Selection, applied as stated: seeds 1 to 30 were checked; **2, 8, 13 and 29 qual
 the floor is the registered split's smaller half), 3 fail both the floor and the language-mix
 ceiling (seeds 3, 7, 21), and 1 fails the ceiling alone (seed 22). Jobs 207730 to 207735, 207739 and 207740, pinned at a41af73.
 
-### The partition is as large a source of variation as the seed, and the registered one reads highest (2026-09-29)
+### Partition-to-partition variation is comparable to the seed effect, so the decision rule fires (2026-09-29)
 
-The eight jobs planned above ran at a41af73 (the same code as this branch but for the analysis
-script, which was committed before they landed); every outcome-neutral check passed and the
+The eight jobs planned above ran at a41af73 (rebased as 8b96668; the two differ only by the
+analysis script, committed before the jobs landed); every outcome-neutral check passed and the
 apparatus held in each. `partition-variance-openstack-v3.json`, H1 point estimate per run:
 
 | partition | seed 1 | seed 2 | mean |
@@ -6314,16 +6314,35 @@ apparatus held in each. `partition-variance-openstack-v3.json`, H1 point estimat
 | p13 | +0.0179 | +0.0079 | +0.0129 |
 | p29 | -0.0022 | +0.0163 | +0.0071 |
 
-The partition component is **sigma_partition = 0.0128** (variance of the partition means 0.000225,
-within-partition variance 0.000122 over two seeds), against the seed effect of 0.0077 and a
-within-partition SD of 0.0110. Averaged over the five partitions at these two seeds H1 reads
-+0.0041; the registered partition is the highest of the five, and one partition is negative at
-both seeds. The component carries evaluation-set sampling as well as the boundary, since each
-partition scores its halves on different changes; that is what a different partition would change.
+The moment estimate is **sigma_partition = 0.0128** (variance of the partition means 0.000225, less
+half the within-partition variance, 0.000122). What it holds and how sure it is, from an
+independent check of this entry:
 
-**Read against the rule fixed before the runs:** the partition component is larger than the seed
-effect, so H1 as registered is conditional on an arbitrary partition. The registered partition's
-dev pilot (+0.0284 at five seeds, 2026-09-28) is therefore not evidence of a half-split effect in
-OpenStack beyond what partition choice alone produces; averaged over partitions the development
-window shows little. The Stage 1 design moves to repeated splitting, which changes the registered
+- **It is not net of change sampling.** Seeds 1 and 2 of one partition share an evaluation set, so
+  subtracting the within-partition variance does not remove the change-level noise they share. A
+  change-clustered bootstrap per half puts that noise near 0.000081, about half of the component; if
+  partitions' noise were independent the boundary alone would be about 0.0092, and since the same
+  changes are reassigned across partitions the truth lies between 0.0092 and 0.0128. The registered
+  interval already carries change sampling.
+- **It is uncertain.** On 4 degrees of freedom its 90% interval is about [0.0058, 0.035].
+- **The seed effect on the same scale.** `seed_effect.py`'s 0.0077 is per half and net of change
+  noise; on H1's two-half average it is between 0.0054 and 0.0077. At seeds 1 and 2 the
+  within-partition variance is almost exactly the seed-by-change noise, a seed main effect near zero.
+
+So the two are **comparable**, and neither ordering is resolved. The rule fixed before the runs read
+"comparable to the seed effect or larger" against point estimates, with no threshold stated; it
+fires.
+
+**What it says about the dev pilot.** The spread across partitions is heterogeneity in what H1
+measures, not a null distribution, so it does not discount the registered partition's reading as
+such. At matched seeds the registered partition reads +0.0149 (seeds 1 and 2 are its two lowest of
+five), and the five partitions average +0.0041, a naive t interval on 4 degrees of freedom of about
+[-0.015, +0.023]. The registered partition's order among the five carries no information (it leads
+the next by 0.002 against a standard error near 0.012 a mean). What does follow is that the five-seed
++0.0284 on the registered partition is a reading of that partition, and a different admissible
+partition could read near zero or below.
+
+**Consequence.** H1 as registered is conditional on one partition among many that meet the same
+criteria, with partition-to-partition variation of the order of the seed effect. The Stage 1 design
+moves to reading H1 over several partitions (repeated splitting), which changes the registered
 estimand and is decided with AJ before the manuscript registers it.

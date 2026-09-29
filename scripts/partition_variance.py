@@ -2,11 +2,13 @@
 
 Each run is one single-seed placebo run on one partition. Its H1 point estimate is the two halves'
 own-minus-sibling contrasts, pooled over examples as `seed_effect.py` pools them, weighted
-equally. With every partition at the same training seeds (a balanced layout), the partition
-component is the variance of the partition means less the within-partition (seed) variance over
-the number of seeds. Partitions differ in which changes each half is scored on, so the component
-carries evaluation-set sampling as well as the boundary itself: both are what a different
-partition would have changed. Descriptive; nothing is tested.
+equally. With every partition at the same training seeds (balanced, seeds crossed with
+partitions), the partition component is the variance of the partition means less the
+within-partition (seed) variance over the number of seeds, the one-way estimator; a crossed
+two-way fit differs only by the seed main effect. Seeds of one partition share its evaluation
+set, so the component still carries that shared change-sampling noise, and partitions differ in
+which changes each half is scored on: it is not the boundary alone. Descriptive; nothing is
+tested.
 
     cd datasets/results && uv run --no-sync python ../../scripts/partition_variance.py \\
         --partition registered=rq1-placebo-openstack-v3.json,rq1-placebo-openstack-v3-s2.json \\
@@ -54,7 +56,7 @@ def run_h1(path: Path) -> tuple[int, float, dict[str, float]]:
 
 
 def components(by_partition: dict[str, dict[int, float]]) -> dict[str, float]:
-    """Balanced two-way moment estimates: partition and seed components of H1's variance."""
+    """Balanced one-way moment estimates: partition and within-partition components of H1."""
     seed_sets = {tuple(sorted(runs)) for runs in by_partition.values()}
     if len(seed_sets) != 1 or len(next(iter(seed_sets))) < 2:
         raise SystemExit(f"every partition needs the same two or more seeds, got {seed_sets}")

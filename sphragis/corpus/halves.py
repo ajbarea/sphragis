@@ -22,8 +22,9 @@ MAX_SHARE_OF_HALF = 0.5
 def assign(counts: dict[str, int], order_seed: int | None = None) -> dict[str, int]:
     """Each project to a side, largest first, always to the smaller side.
 
-    Deterministic and unseeded on purpose. Ties in count break by name, so the assignment is
-    a function of the corpus alone and re-running it cannot produce a different control.
+    The registered split (no `order_seed`) is deterministic and unseeded on purpose. Ties in
+    count break by name, so it is a function of the corpus alone and re-running it cannot
+    produce a different control.
 
     `order_seed` replaces largest-first with a seeded shuffle of the names, still each to the
     smaller side: an alternative balanced partition for measuring partition variance, never the
