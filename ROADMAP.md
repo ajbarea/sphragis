@@ -180,6 +180,20 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 
 ## Plan F — RQ2 positioning
 
+- [ ] **Source inference is RQ2's attack family** (literature sweep 2026-09-30). Hu et al., "Source
+  Inference Attacks: Beyond Membership Inference Attacks in Federated Learning" (IEEE TDSC
+  21(4):3012-3029, 2024, doi 10.1109/TDSC.2023.3321565) infer which client a training record came
+  from; RQ2 asks it of an organization and of the part of an update a defence transmits. Read in
+  full before any sentence states what it shows, then position RQ2 against it.
+- [ ] **Two 2026 LoRA methods to place, neither a new cut.** FedAS-LoRA (arXiv:2608.09742) picks
+  share-A or share-B per deployment by a rank-aware residual, so it transmits one of the two cuts
+  already measured, chosen by rule; LA-LoRA (ICLR 2026, arXiv:2602.19926) is a differentially private
+  method, a different defence class from the adapter splits.
+- [ ] **A second model family, exploratory.** Every neighbouring federated SE study runs several
+  models (the federated program-repair study six, arXiv:2412.01072); P4 runs Qwen2.5-Coder-7B.
+  An H1 dev-window replication on one current family (Qwen3-8B), outside the registered cells, so
+  the frozen model stack does not change.
+
 - [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
   robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack, Wikimedia

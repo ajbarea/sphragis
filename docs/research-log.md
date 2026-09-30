@@ -6796,3 +6796,23 @@ treats as worth reporting, and a larger value would make K smaller (K scales wit
 draws of partitions agree within it with probability about 0.95. Beside each cell it is reported
 and decides no verdict. The earlier comment that it "decides nothing" was wrong and is corrected
 in `decomposition.py`; the manuscript states that it sizes K.
+
+### Positioning against the 2025-2026 literature (2026-09-30)
+
+A sweep of federated fine-tuning for software engineering, organization-scale adaptation and
+federated LoRA privacy, each record checked on arXiv. What it changes:
+
+- **The nearest federated SE studies use synthetic organizations.** Federated program repair
+  (TOSEM, arXiv:2412.01072) partitions one dataset by Dirichlet draws over code features, runs six
+  models, and reports no inferential test and no privacy attack; multi-task federated code review
+  (arXiv:2412.15676) and federated code summarization (JSS 2026) likewise split public datasets.
+  P4's organizations are real review cultures on permitted hosts, read over repeated partitions
+  with a registered interval and power; RQ2 evaluates attacks and defences.
+- **Organization-scale adaptation is measured without an ablation.** Gemini for Google
+  (arXiv:2605.16517) raised hunk acceptance 4.49% in a blind A/B test with 29,000 developers; its
+  full text reports no analysis separating internal conventions from general ability, only a
+  qualitative note on build rules and imports. That separation is what RQ1's decomposition does;
+  cited in the Stage 1 background.
+- **RQ2's attack family was uncited**: source inference (Hu et al., TDSC 2024). FedAS-LoRA and
+  LA-LoRA are placed without new cuts. A second model family is added as an exploratory item.
+  All three are in ROADMAP Plan F.
