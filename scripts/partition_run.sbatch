@@ -26,14 +26,17 @@ PARTITION_SEED="${PARTITION_SEED:?set PARTITION_SEED from the admissible list}"
 # trained at any other size.
 TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE to the admissible list's size_floor}"
 SEEDS="${SEEDS:?set SEEDS to the run's position in the admissible list}"
-tag_result_suffix SEEDS TRAIN_SIZE
+# Optional: outcome-neutral check 5, each half's own marker planted in this fraction of its
+# refinements (placebo_corpus.py --plant). Results are tagged -plant<fraction>.
+PLANT="${PLANT:-}"
+tag_result_suffix SEEDS TRAIN_SIZE PLANT
 ROOT="$SPHRAGIS_DATA/corpus-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX"
 
 claim_result OUT "$SPHRAGIS_RESULTS/rq1-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX.json"
 
 uv run --no-sync python scripts/placebo_corpus.py \
   --root "${CORPUS_WINDOWS:-$SPHRAGIS_DATA/corpus-windows}" --org "$ORG" --out-root "$ROOT" \
-  --dedup-org --partition-seed "$PARTITION_SEED"
+  --dedup-org --partition-seed "$PARTITION_SEED" ${PLANT:+--plant "$PLANT"}
 uv run --no-sync python scripts/rq1_pilot.py \
   --root "$ROOT" --org "$ORG-a" --org "$ORG-b" \
   --seeds "$SEEDS" \

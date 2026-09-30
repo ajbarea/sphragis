@@ -244,6 +244,7 @@ tag_result_suffix() {
       TRAIN_SIZE) [ -z "${TRAIN_SIZE:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-n$TRAIN_SIZE" ;;
       CLIENT_SIZE) [ "${CLIENT_SIZE:-64}" = 64 ] || RESULT_SUFFIX="$RESULT_SUFFIX-c$CLIENT_SIZE" ;;
       LORA_RANK) [ "${LORA_RANK:-32}" = 32 ] || RESULT_SUFFIX="$RESULT_SUFFIX-r$LORA_RANK" ;;
+      PLANT) [ -z "${PLANT:-}" ] || RESULT_SUFFIX="$RESULT_SUFFIX-plant$PLANT" ;;
       *) echo "tag_result_suffix: no tag for $name" >&2; return 1 ;;
     esac
   done

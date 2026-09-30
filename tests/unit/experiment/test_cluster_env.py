@@ -572,13 +572,15 @@ def test_a_run_tag_names_the_results(tmp_path: Path) -> None:
         ({"TRAIN_SIZE": "788"}, "[-n788]"),
         ({"RUN_TAG": "qtfull", "SEEDS": "3", "TRAIN_SIZE": "788"}, "[-qtfull-s3-n788]"),
         ({"RUN_TAG": "", "SEEDS": "2"}, "[-s2]"),
+        ({"SEEDS": "3", "TRAIN_SIZE": "1850", "PLANT": "0.25"}, "[-s3-n1850-plant0.25]"),
+        ({"PLANT": ""}, "[]"),
     ],
 )
 def test_another_seed_or_training_size_never_takes_the_default_name(
     tmp_path: Path, env: dict[str, str], expected: str
 ) -> None:
     """Untagged, SEEDS=2 wrote over the seed-1 result and adapters on TIGRIS."""
-    tagged = _suffix(tmp_path, tags="SEEDS TRAIN_SIZE", SLURM_CLUSTER_NAME="tigris", **env)
+    tagged = _suffix(tmp_path, tags="SEEDS TRAIN_SIZE PLANT", SLURM_CLUSTER_NAME="tigris", **env)
     assert tagged == expected
 
 

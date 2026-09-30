@@ -203,3 +203,56 @@ def test_dedup_org_writes_the_same_examples_whatever_the_partition(tmp_path: Pat
         _build(tmp_path / "src", out, extra=extra)
         ids.append(sorted(row["id"] for row in _written(out)))
     assert ids[0] == ids[1] == ids[2]
+
+
+def _rows_with_targets(n: int) -> list[dict]:
+    return [
+        dict(_row(f"p{i % 4}", "2024-11-05", f"x{i}"), change_id=f"c{i}", after=f"line {i}\n")
+        for i in range(n)
+    ]
+
+
+def _half(out: Path, name: str) -> list[dict]:
+    text = (out / name / "refined" / "2024-11.jsonl").read_text()
+    return [json.loads(line) for line in text.splitlines() if line]
+
+
+def test_plant_gives_each_half_its_own_marker_at_the_same_rate(tmp_path: Path) -> None:
+    from sphragis.experiment.planted import MARKER, MARKER_OTHER
+
+    _corpus(tmp_path / "src", "qt", _rows_with_targets(400))
+    _build(tmp_path / "src", tmp_path / "out", extra=("--plant", "0.25"))
+    manifest = json.loads((tmp_path / "out" / "placebo.json").read_text())
+    a, b = _half(tmp_path / "out", "qt-a"), _half(tmp_path / "out", "qt-b")
+    assert not any(r["after"].endswith(MARKER) for r in a)
+    assert not any(r["after"].endswith(MARKER_OTHER) for r in b)
+    marked = {
+        "qt-a": sum(r["after"].endswith(MARKER_OTHER) for r in a),
+        "qt-b": sum(r["after"].endswith(MARKER) for r in b),
+    }
+    for name, rows in (("qt-a", a), ("qt-b", b)):
+        report = manifest["plant"]["halves"][name]
+        assert report["changed"] == marked[name] > 0
+        assert abs(marked[name] / len(rows) - 0.25) < 0.1
+    assert manifest["plant"]["fraction"] == 0.25
+
+
+def test_plant_changes_only_the_target_and_leaves_the_split_alone(tmp_path: Path) -> None:
+    rows = _rows_with_targets(80)
+    _corpus(tmp_path / "src", "qt", rows)
+    _build(tmp_path / "src", tmp_path / "plain")
+    _build(tmp_path / "src", tmp_path / "planted", extra=("--plant", "0.5"))
+    for name in ("qt-a", "qt-b"):
+        plain, planted = _half(tmp_path / "plain", name), _half(tmp_path / "planted", name)
+        assert [r["id"] for r in plain] == [r["id"] for r in planted]
+        for before, after in zip(plain, planted, strict=True):
+            assert {k: v for k, v in before.items() if k != "after"} == {
+                k: v for k, v in after.items() if k != "after"
+            }
+            assert after["after"].startswith(before["after"].rstrip("\n"))
+
+
+def test_without_plant_nothing_is_marked(tmp_path: Path) -> None:
+    _corpus(tmp_path / "src", "qt", _rows_with_targets(40))
+    _build(tmp_path / "src", tmp_path / "out")
+    assert json.loads((tmp_path / "out" / "placebo.json").read_text())["plant"] is None

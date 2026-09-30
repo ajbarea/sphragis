@@ -6776,3 +6776,24 @@ classes it misses are the two the audit exists to find. Its confidence does rank
 agreement (a one-off read on the checked items, not committed, so not quoted), which would fit
 triage (sending its least confident items to a stronger rater) rather than labelling; that is not
 pursued now.
+
+### Planned before any run: the planted-convention check's pass rate on v3 at N = 1,850 (2026-09-30)
+
+Audit item 5. The Stage 1 draft registers outcome-neutral check 5: on the development window, one
+run with each half's own comment marker planted in a quarter of its refinements must pass on
+both halves. Its one pilot (v1, bf16, random halves of 183 changes each, one seed) passed on the
+weaker half at a lower bound of +0.005, and on a partition the halves hold 125 and 81 development
+changes. A positive control that halts a working apparatus is not "sufficient" in the sense the
+registered-report guidelines use, so its pass rate is measured before it is registered.
+
+**Runs.** `partition_run.sbatch` with `PLANT=0.25` (`placebo_corpus.py --plant`, the symmetric
+calibration's markers and seed, planted over every window of each half), on the first ten
+admissible partitions (seeds 2, 3, 4, 5, 7, 8, 9, 10, 11, 12) at training seeds 1 to 10 and
+N = 1,850, corpus v3. A run passes when its `verdict` is `pass`: both halves' 95% lower bounds
+above zero.
+
+**Rule, fixed now.** Check 5 is registered as it stands only if all ten runs pass and the pass
+probability projected from the ten runs' per-half estimates and interval half-widths (normal,
+per half, product over halves) is at least 0.95. Otherwise it is redesigned before
+registration: the plant raised to a half and the same ten runs repeated, and failing that the
+check read over several runs. The rates are logged whichever way they fall.
