@@ -77,7 +77,7 @@ run here is a GPU job, and the rule stopped near 16.
 | beta | 0.05 | Ritzwoller and Romano's recommended default, their section 5 |
 | sizing confidence | 90%, one-sided | a choice: a pilot that understates the spread undersizes K with probability 0.10 |
 | K_MIN | 10 | their least recommended burn-in, section 5 |
-| K_MAX | 40 | a cost cap: about 60 GH200-hours an organization; the admissible list's length |
+| K_MAX | 40 | a cost cap: about 58 GH200-hours an organization at the measured 1.44 a run; the admissible list's length |
 | N | 1,850 | `training_size.py`: 5th percentile (nearest rank) of the smaller half over 300 seeded splits, rounded down to 50 (`training-size-openstack.json`) |
 | K (OpenStack) | 24 | `runs_needed` on the 22 pilot runs (`partition-pilot-openstack.json`, `sizing`) |
 | planned test changes | 1,635 | 1,809 x 207/229, v3's re-projection (`decomposition-sensitivity-v3.json`, `planned_changes_per_half`, research log 2026-09-28) |
@@ -102,17 +102,21 @@ registered detectable effect, and the SESOI band are unchanged.
 ## What has to be shown by simulation before registration
 
 1. **Coverage.** Under the null, the one-sided false-positive rate at each Holm level is at or below
-   nominal across the run variance the measurement allows (sigma_run from 0.011 to 0.035), at the
-   fixed K.
+   nominal at the fixed K, at each of four points on the pilot's per-run spread (its 90% lower
+   bound, estimate, 90% upper bound and 99% upper bound; `spread_targets`), with sigma_run
+   calibrated so K null runs on the pilot's number of changes spread that much. The calibration
+   draws its changes from the v3 single-partition placebo's clusters, the same pool the study's
+   changes are drawn from, not from the partition pilot's own.
 2. **Sensitivity.** The detectable effect at power 0.928 per cell, at the projected test size,
-   at the measured run variance and at its upper bound, replacing the single-partition figures.
+   at each of those points, replacing the single-partition figures.
 3. **Reproducibility.** Two independent aggregations on the same simulated data agree within `xi`
    at rate at least `1 - beta`.
 
 ## Cost
 
-Each run is one placebo job, about 1.5 GPU-hours on a GH200. OpenStack's pilot sizes K at 24, about
-36 GPU-hours an organization on the test window, against 7.5 for five seeds on one partition.
+Each run is one placebo job: 1.44 GH200-hours on average over the 24 OpenStack pilot jobs (1.30 to
+1.56, `sacct`). OpenStack's pilot sizes K at 24, about 35 GPU-hours an organization on the test
+window, against about 7 for five seeds on one partition.
 
 ## Out of scope here
 

@@ -20,6 +20,7 @@ from sphragis.experiment.partitions import (
     reproducibility,
     runs_needed,
     sd_bound,
+    sensitivity_bounds,
 )
 
 
@@ -36,7 +37,16 @@ def test_reproducibility_is_ritzwoller_and_romanos_criterion() -> None:
 @pytest.mark.parametrize(
     ("p", "df", "expected"),
     # Standard table values.
-    [(0.10, 21, 13.240), (0.05, 10, 3.940), (0.5, 1, 0.4549), (0.975, 3, 9.348), (0.9, 40, 51.805)],
+    [
+        (0.10, 21, 13.240),
+        (0.05, 10, 3.940),
+        (0.5, 1, 0.4549),
+        (0.975, 3, 9.348),
+        (0.9, 40, 51.805),
+        # Past the first bracket of 10 x df: the search must widen, not stop at its edge.
+        (0.999, 1, 10.828),
+        (1 - 1e-6, 3, 30.664),
+    ],
 )
 def test_chi2_quantile_matches_the_table(p: float, df: int, expected: float) -> None:
     assert chi2_quantile(p, df) == pytest.approx(expected, abs=1e-3)
@@ -140,3 +150,72 @@ def test_a_cell_refuses_fewer_runs_than_k() -> None:
             bounds=None,
             bootstrap_seed=0,
         )
+
+
+@pytest.mark.parametrize(("p", "df"), [(0.0, 3), (1.0, 3), (0.5, 0)])
+def test_chi2_quantile_refuses_a_probability_or_df_outside_its_domain(p: float, df: int) -> None:
+    with pytest.raises(ValueError, match="needs 0 < p < 1"):
+        chi2_quantile(p, df)
+
+
+def test_a_run_past_k_never_changes_the_cell() -> None:
+    same = {"org-a": set(range(0, 24, 2)), "org-b": set(range(24, 48, 2))}
+    runs = [(_results(s, same), s) for s in range(1, K_MIN + 1)]
+    alone = h1_over_partitions(
+        runs,
+        org="org",
+        runs_fixed=K_MIN,
+        levels=[0.95],
+        bounds=None,
+        bootstrap_seed=0,
+        resamples=50,
+    )
+    # A run past K missing examples, far beyond the refusal share, must neither refuse the cell
+    # nor shrink the examples it reads.
+    extra = (_results(K_MIN + 1, same, missing=3), K_MIN + 1)
+    extra[0].update({k: rows[:10] for k, rows in extra[0].items()})
+    with_extra = h1_over_partitions(
+        [*runs, extra],
+        org="org",
+        runs_fixed=K_MIN,
+        levels=[0.95],
+        bounds=None,
+        bootstrap_seed=0,
+        resamples=50,
+    )
+    assert with_extra["examples"] == alone["examples"] == 48
+    assert with_extra["estimate"] == alone["estimate"]
+    assert with_extra["intervals"] == alone["intervals"]
+    assert len(with_extra["runs_left_out"]) == 1
+
+
+def test_a_cell_refuses_fewer_than_two_runs() -> None:
+    same = {"org-a": set(), "org-b": set()}
+    with pytest.raises(ValueError, match="at least two runs"):
+        h1_over_partitions(
+            [(_results(1, same), 1)],
+            org="org",
+            runs_fixed=1,
+            levels=[0.95],
+            bounds=None,
+            bootstrap_seed=0,
+        )
+
+
+def test_sensitivity_bounds_read_the_named_spread_target() -> None:
+    artifact = {
+        "by_target": {
+            "pilot_estimate": {
+                "by_level": {
+                    "0.975": {"minimum_detectable_effect": 0.024},
+                    "0.95": {"minimum_detectable_effect": 0.022},
+                }
+            }
+        }
+    }
+    assert sensitivity_bounds(artifact, "pilot_estimate", [0.975, 0.95]) == {
+        0.975: 0.024,
+        0.95: 0.022,
+    }
+    with pytest.raises(ValueError, match="no spread target"):
+        sensitivity_bounds(artifact, "sizing_bound_90", [0.975])

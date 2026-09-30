@@ -36,7 +36,8 @@ SIZING_CONFIDENCE = 0.90
 # Ritzwoller and Romano's least recommended burn-in (their section 5): below 10 runs the variance
 # estimate is too noisy to size on.
 K_MIN = 10
-# A cost cap: at about 1.5 GH200-hours a run, 40 runs is 60 GPU-hours an organization. The
+# A cost cap: a run took 1.44 GH200-hours on average over the 24 OpenStack pilot jobs (1.30 to
+# 1.56, sacct; research log 2026-09-29), so 40 runs is about 58 GPU-hours an organization. The
 # admissible list is this long.
 K_MAX = 40
 # Every run scores the organization's deduplicated held-out examples. Only the per-half
@@ -90,8 +91,12 @@ def _lower_gamma_regularized(a: float, x: float) -> float:
 
 
 def chi2_quantile(p: float, df: int) -> float:
-    """The p quantile of the chi-squared distribution with df degrees of freedom."""
+    """The p quantile of the chi-squared distribution with df degrees of freedom, 0 < p < 1."""
+    if not 0.0 < p < 1.0 or df < 1:
+        raise ValueError(f"chi2_quantile needs 0 < p < 1 and df >= 1, got p={p}, df={df}")
     low, high = 0.0, max(1.0, df * 10.0)
+    while _lower_gamma_regularized(df / 2, high / 2) < p:
+        low, high = high, high * 2
     for _ in range(200):
         mid = (low + high) / 2
         if _lower_gamma_regularized(df / 2, mid / 2) < p:
@@ -144,6 +149,20 @@ def runs_needed(
     }
 
 
+def sensitivity_bounds(
+    sensitivity: Mapping[str, Any], target: str, levels: Sequence[float]
+) -> dict[float, float]:
+    """Each Holm level's registered bound: the detectable effect the simulation found at `target`.
+
+    `target` names a point on the pilot's run spread (`partition_sensitivity.py`'s
+    `spread_targets`), so the bound says which spread it assumes.
+    """
+    cells = sensitivity["by_target"]
+    if target not in cells:
+        raise ValueError(f"no spread target {target!r}; the artifact has {sorted(cells)}")
+    return {c: cells[target]["by_level"][str(c)]["minimum_detectable_effect"] for c in levels}
+
+
 def _eval_ids(results: Results) -> set[str]:
     """Every example a run's adapters scored: its two halves' windows together."""
     ids = {row["id"] for arm, rows in results.items() if arm.startswith("adapter:") for row in rows}
@@ -191,14 +210,17 @@ def h1_over_partitions(
 ) -> dict[str, Any]:
     """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order.
 
-    Runs computed past K are reported and never enter the cell.
+    Runs computed past K are reported, each on its own examples, and never enter the cell: not
+    its estimate, not its interval, not the set of examples it is read on.
     """
+    if runs_fixed < 2:
+        raise ValueError(f"a cell needs at least two runs, got runs_fixed={runs_fixed}")
     if len(runs) < runs_fixed:
         raise ValueError(f"{len(runs)} runs computed, fewer than the {runs_fixed} fixed")
-    clusters, examples = common_runs(runs, org=org, metric=metric)
-    computed = [equal_halves(run) for run in clusters]
     k = runs_fixed
-    clusters, per_run = clusters[:k], computed[:k]
+    clusters, examples = common_runs(runs[:k], org=org, metric=metric)
+    per_run = [equal_halves(run) for run in clusters]
+    left_out = [equal_halves(common_runs([run], org=org, metric=metric)[0][0]) for run in runs[k:]]
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
     intervals = {c: percentile_interval(draws, c) for c in levels}
     return {
@@ -207,8 +229,8 @@ def h1_over_partitions(
         "runs": k,
         "changes": sum(len(half) for half in clusters[0]),
         "reproducibility": reproducibility(per_run),
-        "runs_computed": len(computed),
-        "runs_left_out": computed[k:],
+        "runs_computed": len(runs),
+        "runs_left_out": left_out,
         "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
         "verdicts": {
             c: cell_verdict(lo, hi, bound=bounds.get(c) if bounds else None)

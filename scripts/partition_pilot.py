@@ -4,7 +4,7 @@ Takes one single-seed `partition_run` result per admissible partition, in the ad
 order, and checks each is the partition and seed that order assigns. Reads H1 with
 `h1_over_partitions` over the first `--fixed-k` of them (all, when omitted) at the registered Holm
 levels; with `--sensitivity`, each level's bound is the detectable effect that simulation found at
-`--sigma-run`. On the development window it is the pilot, and `runs_needed` sizes the
+`--spread-target`. On the development window it is the pilot, and `runs_needed` sizes the
 organization's K from every run computed.
 
     uv run --no-sync --no-active python scripts/partition_pilot.py \\
@@ -20,7 +20,7 @@ import json
 from pathlib import Path
 
 from sphragis.experiment.decomposition import holm_levels
-from sphragis.experiment.partitions import h1_over_partitions, runs_needed
+from sphragis.experiment.partitions import h1_over_partitions, runs_needed, sensitivity_bounds
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -31,7 +31,11 @@ parser.add_argument("--fixed-k", type=int, help="the organization's fixed K; all
 # H1 and H2: the registered Holm family.
 parser.add_argument("--hypotheses", type=int, default=2, help="the Holm family size")
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
-parser.add_argument("--sigma-run", help="which of its sigma_run entries sets the bounds")
+parser.add_argument(
+    "--spread-target",
+    choices=("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99"),
+    help="which point on the pilot's run spread the bounds assume",
+)
 # Any fixed value: fixed so the reading reproduces.
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 # The gate's registered resample count, as every confirmatory interval here uses.
@@ -43,6 +47,8 @@ def main() -> None:
     args = parser.parse_args()
     listing = json.loads(args.admissible.read_text())
     admissible, train_size = listing["admissible"], listing["size_floor"]
+    if len(args.runs) > len(admissible):
+        raise SystemExit(f"{len(args.runs)} runs, more than the {len(admissible)} admissible")
     runs = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
@@ -63,12 +69,14 @@ def main() -> None:
     levels = holm_levels(args.hypotheses)
     bounds = None
     if args.sensitivity:
-        cells = json.loads(args.sensitivity.read_text())["by_sigma_run"][args.sigma_run]
-        bounds = {c: cells["by_level"][str(c)]["minimum_detectable_effect"] for c in levels}
+        if not args.spread_target:
+            raise SystemExit("--sensitivity needs --spread-target")
+        sensitivity = json.loads(args.sensitivity.read_text())
+        bounds = sensitivity_bounds(sensitivity, args.spread_target, levels)
     cell = h1_over_partitions(
         runs,
         org=args.org,
-        runs_fixed=args.fixed_k or len(runs),
+        runs_fixed=len(runs) if args.fixed_k is None else args.fixed_k,
         levels=levels,
         bounds=bounds,
         bootstrap_seed=args.bootstrap_seed,

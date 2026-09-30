@@ -31,6 +31,7 @@ parser.add_argument("--root", type=Path, required=True)
 parser.add_argument("--org", required=True)
 # 300 splits put the 5th percentile's nearest rank at the 15th smallest, stable to a few examples.
 parser.add_argument("--splits", type=int, default=300)
+# A choice: the size criterion then rejects about one random split in twenty.
 parser.add_argument("--percentile", type=float, default=0.05)
 # A round figure to register; rounding down keeps N at or below the percentile.
 parser.add_argument("--round-to", type=int, default=50)
@@ -50,6 +51,7 @@ def main() -> None:
     size = at_percentile // args.round_to * args.round_to
     report = {
         "org": args.org,
+        "root": str(args.root.resolve()),
         "splits": args.splits,
         "percentile": args.percentile,
         "round_to": args.round_to,
