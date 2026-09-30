@@ -150,17 +150,27 @@ def runs_needed(
 
 
 def sensitivity_bounds(
-    sensitivity: Mapping[str, Any], target: str, levels: Sequence[float]
+    sensitivity: Mapping[str, Any], target: str, levels: Sequence[float], *, cells: int
 ) -> dict[float, float]:
-    """Each Holm level's registered bound: the detectable effect the simulation found at `target`.
+    """Each Holm level's registered bound: the detectable effect the simulation found at `target`
+    for an H1 intersecting `cells` organizations' cells.
 
     `target` names a point on the pilot's run spread (`partition_sensitivity.py`'s
-    `spread_targets`), so the bound says which spread it assumes.
+    `spread_targets`), so the bound says which spread it assumes; `cells` sets the per-cell power
+    that gives H1 its registered power.
     """
-    cells = sensitivity["by_target"]
-    if target not in cells:
-        raise ValueError(f"no spread target {target!r}; the artifact has {sorted(cells)}")
-    return {c: cells[target]["by_level"][str(c)]["minimum_detectable_effect"] for c in levels}
+    by_target = sensitivity["by_target"]
+    if target not in by_target:
+        raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")
+    bounds = {}
+    for c in levels:
+        by_cells = by_target[target]["by_level"][str(c)]["by_cells"]
+        if str(cells) not in by_cells:
+            raise ValueError(
+                f"no bound for {cells} H1 cell(s); the artifact has {sorted(by_cells)}"
+            )
+        bounds[c] = by_cells[str(cells)]["minimum_detectable_effect"]
+    return bounds
 
 
 def _eval_ids(results: Results) -> set[str]:

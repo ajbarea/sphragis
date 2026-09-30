@@ -78,13 +78,15 @@ across the boundary between two windows rather than within one, and the caller p
 threshold rather than inheriting a default, so the threshold that ran is always the one
 written down.
 
-Measured on the complete OpenStack corpus v2 of 5,487 deduplicated examples, train into dev:
+The registered check is 2% at Jaccard 0.7, read train into test and sibling half into evaluated
+half. Measured on OpenStack corpus v3, train into dev, over the dev window's 515 examples
+(`window-report-openstack-v3.json`):
 
 | Jaccard | rate |
 |---|---|
-| 0.7 | 1.06% |
-| 0.6 | 1.42% |
-| 0.5 | 1.77% |
+| 0.7 | 0.97% (5) |
+| 0.6 | 1.36% (7) |
+| 0.5 | 1.75% (9) |
 
 At 0.8 the rate is zero by construction, since dedup removes pairs at that threshold across
 windows as well as within them, so a threshold registered there would be a test that cannot

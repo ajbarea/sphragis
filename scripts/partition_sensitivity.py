@@ -18,7 +18,8 @@ on, its 99% upper bound), the shift at which K null runs on the pilot's number o
 that much. The artifact records each input's source.
 
 Reported per point: the calibration, the null's one-sided false-positive rate at each Holm level,
-the detectable effect at `--target` power by bisection on the lift, how often a null reads bounded
+the detectable effect by bisection on the lift at the per-cell power that gives H1
+`--hypothesis-power` over each count of cells in `--cells`, how often a null reads bounded
 below it, and the reproducibility failure rate. `partition-sensitivity-openstack-stopping.json` is
 the data-dependent stopping rule this design replaced, as its provenance's commit ran it.
 
@@ -46,7 +47,7 @@ from sphragis.corpus.halves import assign, project_counts, split_criteria
 from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
-from sphragis.experiment.decomposition import SESOI, halves
+from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves
 from sphragis.experiment.partitions import K_MAX, K_MIN, XI, sd_bound
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
 from sphragis.experiment.runner import to_clusters
@@ -75,10 +76,13 @@ parser.add_argument(
 # identical nulls marker-0 and sym-0 (`crossed_coverage.py --calibrate`, research log 2026-09-23).
 parser.add_argument("--redraw", type=float, default=0.055)
 # Power per hypothesis test: Nature's registered-report guidelines ask 0.95 or higher for every
-# proposed test.
-parser.add_argument("--target", type=float, default=0.95)
-# Monte Carlo error of a power estimate near 0.95 at 1,000 trials: about 0.007. Trials share seeds
-# across bisection steps, so power is compared on common random numbers.
+# proposed test. H1 passes only when every admitted organization's cell does (intersection-union),
+# so over k independent cells each cell needs hypothesis_power ** (1 / k).
+parser.add_argument("--hypothesis-power", type=float, default=0.95)
+# The admitted set is fixed at Stage 1 submission: one bound per possible count of H1 cells.
+parser.add_argument("--cells", type=int, nargs="+", default=[1, 2, 3], help="H1 cells intersected")
+# Monte Carlo error of a power estimate at 1,000 trials: about 0.007 near 0.95, 0.004 near 0.983.
+# Trials share seeds across bisection steps, so power is compared on common random numbers.
 parser.add_argument("--trials", type=int, default=1000, help="per bisection step")
 # Monte Carlo error of a false-positive rate near 0.0125 at 4,000 trials: about 0.0018, a
 # quarter of the nominal rate's distance to the next Holm level's.
@@ -293,6 +297,9 @@ def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=No
 
 def main() -> None:
     args = parser.parse_args()
+    if min(args.cells) < 1:
+        raise SystemExit("--cells counts H1 cells, at least one")
+    cell_power = {str(k): args.hypothesis_power ** (1 / k) for k in sorted(set(args.cells))}
     pilot = json.loads(args.pilot.read_text())
     admissible = json.loads(args.admissible.read_text())
     projection = json.loads(args.projection.read_text())
@@ -347,7 +354,9 @@ def main() -> None:
         "planned_changes": args.size,
         "pilot_changes": len(pool),
         "projects": len({p for _, p in pool}),
-        "target_marginal_power": args.target,
+        "family_alpha": FAMILY_ALPHA,
+        "hypothesis_power": args.hypothesis_power,
+        "cell_power": cell_power,
         "sesoi": SESOI,
         "xi": XI,
         "runs": args.runs,
@@ -389,36 +398,40 @@ def main() -> None:
                 "by_level": {},
             }
             for level in levels:
-                low, high = 0.0, LIFT_CEILING
-                for _ in range(args.steps):
-                    mid = (low + high) / 2
-                    power = fmean(
-                        t["supported"][level]
-                        for t in _trials(executor, pool, args, mid, sigma_run, [level])
+                entry["by_level"][level] = {"by_cells": {}}
+                for cells, target_power in cell_power.items():
+                    low, high = 0.0, LIFT_CEILING
+                    for _ in range(args.steps):
+                        mid = (low + high) / 2
+                        power = fmean(
+                            t["supported"][level]
+                            for t in _trials(executor, pool, args, mid, sigma_run, [level])
+                        )
+                        if power >= target_power:
+                            high = mid
+                        else:
+                            low = mid
+                    if high == LIFT_CEILING:
+                        raise SystemExit(f"{label} at {level}: power {target_power} not reached")
+                    effect = fmean(
+                        realised_difference(h, lift=high, seed=args.seed, draws=EFFECT_DRAWS)
+                        for h in pilot_halves
                     )
-                    if power >= args.target:
-                        high = mid
-                    else:
-                        low = mid
-                if high == LIFT_CEILING:
-                    raise SystemExit(f"{label} at {level}: power {args.target} not reached")
-                effect = fmean(
-                    realised_difference(h, lift=high, seed=args.seed, draws=EFFECT_DRAWS)
-                    for h in pilot_halves
-                )
-                entry["by_level"][level] = {
-                    "lift": high,
-                    "minimum_detectable_effect": effect,
-                    "null_reads_bounded": fmean(t["high"][level] < effect for t in null),
-                }
-                print(
-                    f"{label} (sigma_run {sigma_run:.4f}) at {level}: detects {effect:+.4f}; "
-                    f"null FP "
-                    f"{entry['null_false_positive'][level]:.3f}, bounded "
-                    f"{entry['by_level'][level]['null_reads_bounded']:.3f}; "
-                    f"reproducibility failure {entry['reproducibility_failure']:.3f}",
-                    flush=True,
-                )
+                    at = {
+                        "cell_power": target_power,
+                        "lift": high,
+                        "minimum_detectable_effect": effect,
+                        "null_reads_bounded": fmean(t["high"][level] < effect for t in null),
+                    }
+                    entry["by_level"][level]["by_cells"][cells] = at
+                    print(
+                        f"{label} (sigma_run {sigma_run:.4f}) at {level}, {cells} cell(s), power "
+                        f"{target_power:.4f}: detects {effect:+.4f}; null FP "
+                        f"{entry['null_false_positive'][level]:.3f}, bounded "
+                        f"{at['null_reads_bounded']:.3f}; reproducibility failure "
+                        f"{entry['reproducibility_failure']:.3f}",
+                        flush=True,
+                    )
             report["by_target"][label] = entry
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")

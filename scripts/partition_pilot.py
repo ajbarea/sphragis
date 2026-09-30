@@ -5,8 +5,8 @@ order, and checks each is the partition and seed that order assigns. Reads H1 wi
 `h1_over_partitions` over the first K of them at the registered Holm levels, K read from the
 pilot artifact's `sizing.runs` given as `--sizing` (all runs, when omitted: the pilot itself);
 with `--sensitivity`, each level's bound is the detectable effect that simulation found at
-`--spread-target`. On the development window it is the pilot, and `runs_needed` sizes the
-organization's K from every run computed.
+`--spread-target` for an H1 over `--h1-cells` organizations. On the development window it is
+the pilot, and `runs_needed` sizes the organization's K from every run computed.
 
     uv run --no-sync --no-active python scripts/partition_pilot.py \\
         --admissible datasets/results/admissible-partitions-openstack.json \\
@@ -39,6 +39,7 @@ parser.add_argument(
     choices=("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99"),
     help="which point on the pilot's run spread the bounds assume",
 )
+parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 intersects")
 # Any fixed value: fixed so the reading reproduces.
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 # The gate's registered resample count, as every confirmatory interval here uses.
@@ -80,8 +81,10 @@ def main() -> None:
     if args.sensitivity:
         if not args.spread_target:
             raise SystemExit("--sensitivity needs --spread-target")
+        if not args.h1_cells:
+            raise SystemExit("--sensitivity needs --h1-cells")
         sensitivity = json.loads(args.sensitivity.read_text())
-        bounds = sensitivity_bounds(sensitivity, args.spread_target, levels)
+        bounds = sensitivity_bounds(sensitivity, args.spread_target, levels, cells=args.h1_cells)
     cell = h1_over_partitions(
         runs,
         org=args.org,

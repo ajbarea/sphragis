@@ -202,20 +202,29 @@ def test_a_cell_refuses_fewer_than_two_runs() -> None:
         )
 
 
-def test_sensitivity_bounds_read_the_named_spread_target() -> None:
-    artifact = {
-        "by_target": {
-            "pilot_estimate": {
-                "by_level": {
-                    "0.975": {"minimum_detectable_effect": 0.024},
-                    "0.95": {"minimum_detectable_effect": 0.022},
-                }
+def test_sensitivity_bounds_read_the_named_spread_target_and_cell_count() -> None:
+    def at(one: float, two: float) -> dict:
+        return {
+            "by_cells": {
+                "1": {"minimum_detectable_effect": one},
+                "2": {"minimum_detectable_effect": two},
             }
         }
+
+    artifact = {
+        "by_target": {
+            "pilot_estimate": {"by_level": {"0.975": at(0.024, 0.026), "0.95": at(0.022, 0.024)}}
+        }
     }
-    assert sensitivity_bounds(artifact, "pilot_estimate", [0.975, 0.95]) == {
+    assert sensitivity_bounds(artifact, "pilot_estimate", [0.975, 0.95], cells=1) == {
         0.975: 0.024,
         0.95: 0.022,
     }
+    assert sensitivity_bounds(artifact, "pilot_estimate", [0.975, 0.95], cells=2) == {
+        0.975: 0.026,
+        0.95: 0.024,
+    }
     with pytest.raises(ValueError, match="no spread target"):
-        sensitivity_bounds(artifact, "sizing_bound_90", [0.975])
+        sensitivity_bounds(artifact, "sizing_bound_90", [0.975], cells=1)
+    with pytest.raises(ValueError, match="no bound for 3"):
+        sensitivity_bounds(artifact, "pilot_estimate", [0.975], cells=3)

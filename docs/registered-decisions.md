@@ -21,20 +21,26 @@ written down before that measurement existed.
 Cluster size is non-informative here. The median correlation between a change's size and its
 contrast is -0.026 for OpenStack and -0.006 for Qt, so the two estimands do not answer
 materially different questions, which is the deciding test in Kahan et al. (IJE 2023). RQ1 is
-a claim about refinements, so the participant-average is the matching unit. Change-averaged
-also runs at roughly twice nominal alpha at the cluster counts the gate operates at, where
-pooled sits at nominal, which disqualifies it from binding a confirmatory gate.
+a claim about refinements, so the participant-average is the matching unit. Pooled is also the
+better-calibrated interval: under a true null its two-sided false-positive rate is 0.0575 at 45
+changes and 0.0480 at 91, against the change-averaged interval's 0.0638 and 0.0555 (nominal
+0.05), and change-averaged runs above pooled at every size measured.
 
-Both are computed and reported. **The choice decided the headline.** Under the registered
-numerics at three seeds, pooled returns mixed while change-averaged returns `pass` on both
-organizations, at +0.0380 for OpenStack and +0.0334 for Qt. It was fixed before that run
-existed.
+Both are computed and reported. Fixed before any reading it could decide.
 
-### Pass rule: conjunctive, both organizations' 95% intervals strictly above zero
+### Pass rule: every admitted organization's cell supported, Holm across H1 and H2
 
-RQ1 claims that organizations have a learnable house style, which is a generality claim. A
-rule passing on one organization does not support it, and weakening the rule to raise power
-would change the question to fit the answer.
+H1 (own half against sibling half) is read on every admitted organization, and passes only when
+every one of its cells is supported, so a pass generalizes across the organizations rather than
+resting on one. Requiring every cell makes it an intersection-union test, which holds its level
+without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
+evaluated projects) is confirmatory only for Qt and Chromium, when both are admitted. The two
+hypotheses share one family-wise level under Holm: the first is read on a two-sided 97.5%
+interval, the second, if the first passes, on a 95% one.
+
+A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
+below the cell's registered detectable effect, and **inconclusive** otherwise. A hypothesis is
+bounded only when every cell is.
 
 ### Boundary: strictly above zero
 
@@ -43,12 +49,14 @@ of exactly +0.000, so an inclusive boundary would have read that run as supporti
 hypothesis. It decided a second verdict on the dev window, where OpenStack's lower bound under
 the registered numerics came out at exactly +0.0000.
 
-### Reported power: conjunctive, not marginal
+### Power: 0.95 for each hypothesis test
 
-The gate passes only when both arms do, so its power is the joint probability, which for
-near-independent arms is the product: two arms at 80% give a gate at 64%. The figure itself is
-a sensitivity analysis rather than a power calculation, because power computed from a pilot's
-own estimate is biased upward (Albers and Lakens 2018).
+Registered-report guidelines ask for "0.95 or higher for all proposed hypothesis tests"
+(Nature Registered Reports author guidelines). H1 passes only when all of its cells do, and the
+organizations are independent, so its power is the product of its cells' powers: with k
+admitted organizations each cell is sized at 0.95^(1/k). The figure is a sensitivity analysis
+rather than a power calculation, because power computed from a pilot's own estimate is biased
+upward (Albers and Lakens 2018).
 
 ### Test window: 2025-11 to 2026-10, twelve months
 
@@ -82,13 +90,11 @@ Bare hunks put only about a fifth of a deduplicated month over the 32-token mini
 to read. With context the scored share rises past four fifths, and the same text is what the
 model-less baseline was run on, so the two are directly comparable.
 
-### Secondary estimate: pooled across organizations, reported beside the gate, never binding it
+### Secondary estimate: H1 and H2 summed per organization, reported beside the verdicts
 
-The gate asks whether *each* organization shows the effect, which is what generality needs and
-what limits the resolution. The pooled estimate answers the weaker question, whether
-organizations show the effect on average, and is sharper for it. It cannot bind the gate,
-since one organization could carry it and two organizations cannot support a heterogeneity
-model.
+Within an organization both contrasts are bootstrapped on the same draws, so their sum, how much
+an adapter from the evaluated half beats a foreign organization's, is reported with a 95%
+interval. It answers a weaker question than either hypothesis and binds no verdict.
 
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 
@@ -133,7 +139,9 @@ one process, at no measurable cost in wall time.
 
 | decision | enforced by |
 |---|---|
-| pass rule, boundary, estimand | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
+| cells, pass rule, Holm, verdicts | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
+| K, the reading over partitions | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
+| estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
 | outcome-neutral checks and the halt rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |
 | the seal, and refusing to fetch past it | [`sphragis/corpus/`](https://github.com/ajbarea/sphragis/tree/main/sphragis/corpus) |
 | the evidence behind every row above | [Artifact index](artifacts.md) |

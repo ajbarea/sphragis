@@ -66,13 +66,14 @@ protects once a house style can be learned.
 ## The gate
 
 The pass rule is fixed in advance, in code, in
-[`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py).
+[`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py).
 
-**Conjunctive: both organizations' 95% intervals strictly above zero.** RQ1 claims that
+**H1 passes only when every admitted organization's cell is supported.** RQ1 claims that
 organizations have a learnable house style, which is a generality claim, and a rule passing on
-one organization does not support it. The boundary is strict rather than inclusive, the
-interval is the crossed run by change bootstrap over K admissible partitions, and the estimand is
-pooled.
+one organization does not support it. H1 and H2 share one family-wise level under Holm, read on
+97.5% and 95% intervals. A cell is supported when its lower bound is strictly above zero, bounded when its
+upper bound is below the effect the design detects, and inconclusive otherwise. The interval is
+the crossed run-by-change bootstrap over K admissible partitions, and the estimand is pooled.
 Each of those was chosen before the run that would have been decided by it, and each is
 recorded with the evidence that chose it on [Registered decisions](registered-decisions.md).
 
@@ -125,18 +126,16 @@ The confirmatory contrast has not been run. What exists is a dev-window reading,
 window is the most censored window in the corpus, so it is a pre-registration estimate rather
 than an unbiased preview.
 
-At three seeds under the registered numerics, the registered interval and the registered
-estimand:
+OpenStack's H1 cell over K = 24 admissible partitions, one training seed each, on the
+development window's 206 changes:
 
-| organization | contrast | 95% interval |
-|---|---|---|
-| OpenStack | +0.0230 | [+0.0000, +0.0457] |
-| Qt | +0.0316 | [+0.0089, +0.0567] |
+| Holm level | H1 estimate | interval | verdict |
+|---|---|---|---|
+| 97.5% | +0.0049 | [-0.0088, +0.0185] | inconclusive |
+| 95% | +0.0049 | [-0.0073, +0.0166] | inconclusive |
 
-Verdict: `mixed`. Qt clears the boundary and OpenStack's lower bound is exactly zero, which
-a strict boundary reads as not clearing it. The design detects between 0.0129 and 0.0235
-exact-match points depending on how large the seed main effect really is, so both readings
-sit near the edge of what it can resolve.
+The development window holds about a tenth of the test window's projected changes, so an inconclusive
+reading here says the design needs the test window, not that the effect is absent.
 
 ## What is on this site
 

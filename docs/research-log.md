@@ -6708,8 +6708,12 @@ Audit item 8. 0.928 was 0.80 joint over three independent cells, a target of our
 longer describes the admitted set. Replaced by the registered-report standard: "For frequentist
 analysis plans, the a priori power must be 0.95 or higher for all proposed hypothesis tests"
 (Nature Communications / Nature Human Behaviour Registered Reports author guidelines, read from
-the guidelines PDF). Each H1 and H2 cell is a proposed hypothesis test, so each is sized at 0.95
-on its own, with no joint target.
+the guidelines PDF). The hypothesis tests are H1 and H2, not their cells. H1 passes only when
+every admitted organization's cell is supported (intersection-union), and the organizations are
+independent, so H1's power is the product of its cells' powers: with k cells each needs
+0.95^(1/k), 0.9747 at two and 0.9830 at three. The admitted set is fixed at Stage 1 submission,
+so the simulation finds the bound for each of one to three cells, and the design reads the one
+matching the set it registers.
 
 The same guidelines ask for outcome-neutral tests, positive controls among them, that are
 "sufficient for ensuring that the results obtained are able to test the stated hypotheses". They
@@ -6717,8 +6721,10 @@ do not state a power figure for a positive control; a control that would fail a 
 apparatus about half the time (audit item 5) is not sufficient under that wording, which is why
 the planted-convention check's pass rate is measured before it is registered.
 
-`partition_sensitivity.py` defaults move with it: `--target 0.95`, `--trials 1000` per bisection
-step (Monte Carlo error near 0.95 about 0.007, against 0.015 at 300), `--steps 10` (lift resolved
+`partition_sensitivity.py` moves with it: `--hypothesis-power 0.95` and `--cells 1 2 3`, each
+cell's power derived as above, a bound per level and cell count (`by_cells`, which
+`sensitivity_bounds` and `partition_pilot.py --h1-cells` read); `--trials 1000` per bisection
+step (Monte Carlo error about 0.007 near 0.95 and 0.004 near 0.983, against 0.015 at 300), `--steps 10` (lift resolved
 to 0.0003; at seven steps, 0.0023, several points of the previous run read identical bounds). It
 reruns once on TIGRIS on the twelve-month projection (2,018 changes). The registered bounds, the
 Stage 1 sample-size paragraph and `registered-decisions.md` take their figures from that artifact.
