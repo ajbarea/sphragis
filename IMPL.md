@@ -25,7 +25,8 @@ are read from each bot's own source.
   Every successor is a rework. AOSP audited the same way: no bot comments.
 
 **The collection stop, in code.** REST requests go only to hosts in `REST_PERMITTED`
-(review.opendev.org, paced at its 2 s crawl delay), and the test suite refuses remote
+(review.opendev.org, gerrit.wikimedia.org and review.lineageos.org, each paced and limited as its
+robots.txt and policy ask), and the test suite refuses remote
 connections, datagrams and lookups made in-process (subprocesses excepted). A rebased test had reached chromium-review; the
 research log records what is and is not known about those requests.
 
@@ -47,6 +48,7 @@ research log records what is and is not known about those requests.
   admitted by host permission (`design()`): H1 on each, H2 on Qt and Chromium only when both are.
   OpenStack is admitted; Wikimedia's corpus is building and its split is checked once it is frozen;
   Qt and Chromium wait on their permission requests (Chromium's corpus frozen by 2026-10-23).
+  LineageOS is the next candidate after Wikimedia (research log, 2026-09-29).
 - **FDLoRA's schedule** (`sphragis/experiment/fdlora.py`, `scripts/fdlora_schedule.py`) follows
   the registered reading of Algorithm 1 except the outer aggregation step (lines 17 and 18), a
   recorded confound (`docs/research-log.md`, 2026-09-21 and 2026-09-23). Under that reading

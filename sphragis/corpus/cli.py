@@ -61,6 +61,9 @@ STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "veri
 GERRIT = {
     "aosp": "https://android-review.googlesource.com",
     "chromium": "https://chromium-review.googlesource.com",
+    # Checked live 2026-09-29: about 29,800 changes merged in the training window. A candidate
+    # organization for H1, and at most an exploratory H2 cell (research log, 2026-09-29).
+    "lineageos": "https://review.lineageos.org",
     "openstack": "https://review.opendev.org",
     "qt": "https://codereview.qt-project.org",
     # Wikimedia serves Gerrit under /r. Checked live 2026-09-26; a candidate for Qt's place in H1
@@ -87,6 +90,14 @@ class RestPermission(NamedTuple):
 
 
 REST_PERMITTED = {
+    "review.lineageos.org": RestPermission(
+        "robots.txt disallows everything only to HTTrack, puf, MSIECrawler and Nutch and asks no"
+        " Crawl-delay (checked 2026-09-29); the project's legal page sets no terms on automated"
+        " access; paced as OpenStack asks, one client at a time, quiet five minutes after a 5xx",
+        2.0,
+        error_pause=300.0,
+        single_client=True,
+    ),
     "review.opendev.org": RestPermission(
         "robots.txt disallows no path and asks Crawl-delay 2 (checked 2026-09-23)", 2.0
     ),

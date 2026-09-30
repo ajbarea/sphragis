@@ -6371,6 +6371,66 @@ criteria, with partition-to-partition variation of the order of the seed effect.
 moves to reading H1 over several partitions (repeated splitting), which changes the registered
 estimand and is decided with AJ before the manuscript registers it.
 
+### Candidate organizations beyond Qt and Chromium: Wikimedia, then LineageOS; the Linux Foundation hosts are too small (2026-09-29)
+
+Qt and Chromium have not answered the requests for permission, and H2 runs only if both are
+admitted. Decided with AJ: the Stage 1 design names an ordered list of candidate organizations and
+the criteria that admit one (a host whose robots.txt and terms permit automated access, or written
+permission; the split criteria at the design's training size), so a host that never answers moves
+the study to the next candidate rather than stopping it. Registered-report guidance asks for
+inclusion criteria and the conditions under which units are replaced to be fixed in Stage 1.
+
+Hosts checked on 2026-09-29, robots.txt read before any request to a change endpoint except where
+noted. Size is the number of changes merged in the training window, found by paging a
+`status:merged` query with `n=1` (a binary search over the offset, about fifteen requests a host):
+
+| Host | robots.txt for a generic client | Merged, training window | Outcome |
+|---|---|---|---|
+| review.opendev.org (OpenStack) | nothing disallowed, Crawl-delay 2 | about 19,800 | admitted; yields 4,006 training examples |
+| review.lineageos.org | nothing disallowed (only four named crawlers are) | about 29,800 | candidate; legal page sets no terms on automated access |
+| gerrit.onap.org | none served | about 2,200 | too small |
+| git.opendaylight.org | none served | about 2,900 | too small |
+| gerrit.fd.io | none served | about 1,200 | too small |
+| review.typo3.org | `/changes/` disallowed | about 2,900 | excluded |
+| review.coreboot.org | `/changes/` disallowed | not queried | excluded |
+| gerrit.libreoffice.org, review.gerrithub.io, review.spdk.io, review.whamcloud.com | `Disallow: /` | not queried | excluded |
+
+At OpenStack's yield (about one training example per five merged changes) the Linux Foundation hosts
+give a few hundred examples, far short of two halves at the registered training size, N = 1,850 (the size floor of 2,004 when this was written). The Linux Foundation projects' terms
+of use (lfprojects.org) set no terms on automated access, so size alone excludes them.
+
+**Two slips in this check.** TYPO3's robots.txt was fetched in the same command as its size query,
+so about fifteen `n=1` requests reached `/changes/`, which it disallows, before the rule was read;
+nothing from them is kept. The size queries to review.opendev.org waited 1.5 s between requests
+against the 2 s it asks. The collector itself enforces each host's rules; these ad hoc queries
+bypassed it, and later host checks go through its transport.
+
+**Order.** Wikimedia (collection under way), then LineageOS, then Qt and Chromium if permission
+arrives. LineageOS is Android platform code (Java, C, C++, device configuration), and whether it
+meets the split criteria is read on its training window before any run, as for every organization.
+It is a candidate, not admitted: `decomposition.ORGANIZATIONS` gains it, in this order, when it is,
+and `design()` refuses it until then. It could hold at most an exploratory H2 cell, since the
+confirmatory H2 pair stays Qt and Chromium.
+
+### RQ2 is rebuilt on permitted hosts, and FedSAIL joins the defences (2026-09-29)
+
+Decided with AJ ("item 3"). Every RQ2 measurement so far reads AOSP and Qt corpora fetched over REST
+before the robots.txt stop (2026-09-23): the codebase-family attribution, the aggregate attack and
+all four adapter-split defences. They are kept as internal pilots and nothing built on them is
+published. RQ2's publishable corpora are the permitted hosts: OpenStack, Wikimedia, and LineageOS,
+whose Android platform code stands in for AOSP's C, C++ and Java family. AOSP returns through the
+NoteDb route once its host's terms allow bulk fetching; Qt returns only with permission.
+
+**A fifth defence.** FedSAIL (Du, He and Feng, arXiv:2609.32485, posted 2026-09-26, read from the
+arXiv abstract) transmits a shared "action" subspace estimated from each client's update weighted
+by the second moments of its layer inputs, and keeps client-specific coefficients local. Its
+transmitted part is built from input statistics, so it is the cut most directly tied to a client's
+data. It also reports that the similarity of trained LoRA factors across clients is largely
+induced by common initialization and falls toward chance under independent initialization. RQ2's
+clients share initialization, as federated clients receive one global model, so the FedSA-LoRA
+result (A alone identifies a source best) describes that setting; the robustness item on several
+initializations is where independent initialization gets read.
+
 ### H1 over repeated partitions: the design, before its simulation is read (2026-09-29)
 
 AJ decided the question the partition measurement opened: H1 is read over repeated partitions
