@@ -6406,3 +6406,51 @@ induced by common initialization and falls toward chance under independent initi
 clients share initialization, as federated clients receive one global model, so the FedSA-LoRA
 result (A alone identifies a source best) describes that setting; the robustness item on several
 initializations is where independent initialization gets read.
+
+### Planned before any run: a local decision model as a third blind label-audit rater (2026-09-30)
+
+Exploratory, outside the registered pipeline. Ollama 0.35 serves decision models over a System
+One API (`/v1/systemone`): a choice question returns a probability per option and a yes/no
+question the probability of yes, in one pass, with no generated text. Nimble (Bespoke Labs, 9B,
+Qwen3.5-9B base, Apache 2.0) runs locally, so no corpus text leaves the machine; TypeSafe's hosted
+Jev, the API it follows, is not used, since its data terms are unpublished. The only published
+evaluation outside its vendors found a System One model's calibration model-specific, to be
+audited per model (Rafe and Das, arXiv:2609.24052).
+
+`scripts/label_audit_decision.py` asks each of the v2 audit's 384 blind items the rubric's two
+questions in the rubric's own words: the label as a choice over the five labels, each described
+by its rubric line, and `outside_names` as a yes/no question, read as the more probable answer.
+It sees the same fields and rubric raters A and B saw, never the key, their labels or the human's.
+`label_audit_agreement.py` then reads it as rater C beside A and B, with the same exclusion
+(item-001, the rubric's worked example); that command without C reproduces `label-audit-v2.json`
+exactly.
+
+**The comparator is human~B**, not human~A: the human saw A's label after each blind answer, so
+human~A can be calibrated toward A, while B's and C's labels were never revealed. **Nothing is
+decided from this reading.** It is reported beside A and B; whether a decision model is worth a
+place as a cheap second labeller on the rest of the corpus is a separate decision, taken on this
+reading together with its confusion table.
+
+### The decision model as a third rater: well short of either model rater on the label (2026-09-30)
+
+`label-audit-v2-decision.json` (Nimble, Ollama 0.35.0, digest 24e550a16a70; `raters/C` beside the
+sheet). The same command that reproduces `label-audit-v2.json` with rater C added. Nimble's
+answers are deterministic: six items re-asked returned the same choice and confidence.
+
+| pair, label, 152 checked items | kappa | AC1 |
+|---|---|---|
+| human~B (the comparator) | 0.341 [0.172, 0.499] | 0.763 [0.687, 0.835] |
+| human~C | 0.076 [-0.024, 0.179] | 0.631 [0.542, 0.717] |
+
+Against the human, Nimble never returns partial or context_dependent where the human did (0 of
+10 and 0 of 13 in the confusion table) and calls 13 of the human's 123 valid items
+unrelated_rewrite. On `outside_names` its AC1 is higher than either model rater's but its kappa
+is near zero: it answers "no" almost everywhere, and so does the human. Its agreement with A and
+B over all 383 items is also low (label kappa 0.197 and 0.205).
+
+**Not adopted as a second labeller.** The planned question was whether a local decision model
+agrees with the human about as well as the model raters do; on the label it does not, and the
+classes it misses are the two the audit exists to find. Its confidence does rank its own
+agreement (a one-off read on the checked items, not committed, so not quoted), which would fit
+triage (sending its least confident items to a stronger rater) rather than labelling; that is not
+pursued now.
