@@ -276,7 +276,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "registered-decisions.md",
         "0.0125",
         PARTITION_SENSITIVITY,
-        ["levels", 0],
+        ["levels", "0"],
         {"reduce": "one_sided"},
     ),
     ("rd_partition_sd", "registered-decisions.md", "0.0140", PARTITION_PILOT, ["sizing", "sd"]),
@@ -467,6 +467,8 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
             return None, f"{'.'.join(path)} in {artifact} cannot add {fields} ({error})"
     elif reduce == "one_sided":
         # A two-sided confidence level quoted as its one-sided nominal rate, (1 - level) / 2.
+        if isinstance(data, bool) or not isinstance(data, (int, float)) or not 0 < data < 1:
+            return None, f"{'.'.join(path)} in {artifact} is {data!r}, not a confidence level"
         data = (1 - data) / 2
     # bool is an int in Python, and a serialization regression writing true where a bound
     # belongs would otherwise verify as 0.0 against a "+0.0000" literal.

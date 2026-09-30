@@ -12,6 +12,7 @@ filesystem, that internal links resolve, and that the retired term stays retired
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 import tomllib
@@ -55,6 +56,23 @@ def test_every_figure_resolves_to_its_artifact() -> None:
     assert not drifted, "\n".join(drifted)
     assert not unbacked, "\n".join(unbacked)
     assert verified, "the claim table is empty, so this test asserts nothing"
+
+
+@pytest.mark.parametrize(
+    ("level", "expected"),
+    [(0.975, 0.0125), (0.95, 0.025), (True, None), ("0.95", None), (1.0, None)],
+)
+def test_one_sided_reads_a_confidence_level_or_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, level: object, expected: float | None
+) -> None:
+    """A level becomes its one-sided rate; anything that is not a level in (0, 1) is refused."""
+    (tmp_path / "a.json").write_text(json.dumps({"levels": [level]}))
+    monkeypatch.setattr(harvest, "ROOT", tmp_path)
+    value, error = harvest.resolve("a.json", ["levels", "0"], {"reduce": "one_sided"})
+    if expected is None:
+        assert value is None and error
+    else:
+        assert error is None and value == pytest.approx(expected)
 
 
 def test_no_figure_goes_unasserted() -> None:

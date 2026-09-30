@@ -2,8 +2,9 @@
 
 Takes one single-seed `partition_run` result per admissible partition, in the admissible list's
 order, and checks each is the partition and seed that order assigns. Reads H1 with
-`h1_over_partitions` over the first `--fixed-k` of them (all, when omitted) at the registered Holm
-levels; with `--sensitivity`, each level's bound is the detectable effect that simulation found at
+`h1_over_partitions` over the first K of them at the registered Holm levels, K read from the
+pilot artifact's `sizing.runs` given as `--sizing` (all runs, when omitted: the pilot itself);
+with `--sensitivity`, each level's bound is the detectable effect that simulation found at
 `--spread-target`. On the development window it is the pilot, and `runs_needed` sizes the
 organization's K from every run computed.
 
@@ -27,7 +28,9 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("runs", type=Path, nargs="+", help="partition runs, in admissible order")
 parser.add_argument("--admissible", type=Path, required=True)
 parser.add_argument("--org", default="openstack")
-parser.add_argument("--fixed-k", type=int, help="the organization's fixed K; all runs when omitted")
+parser.add_argument(
+    "--sizing", type=Path, help="the organization's pilot artifact: K is its sizing.runs"
+)
 # H1 and H2: the registered Holm family.
 parser.add_argument("--hypotheses", type=int, default=2, help="the Holm family size")
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
@@ -66,6 +69,12 @@ def main() -> None:
                 f"built from {partition}"
             )
         runs.append((run["results"], k))
+    runs_fixed, k_source = len(runs), "all runs"
+    if args.sizing:
+        runs_fixed = json.loads(args.sizing.read_text()).get("sizing", {}).get("runs")
+        if not isinstance(runs_fixed, int):
+            raise SystemExit(f"{args.sizing}: no sizing.runs to read K from")
+        k_source = f"{args.sizing}: sizing.runs"
     levels = holm_levels(args.hypotheses)
     bounds = None
     if args.sensitivity:
@@ -76,7 +85,7 @@ def main() -> None:
     cell = h1_over_partitions(
         runs,
         org=args.org,
-        runs_fixed=len(runs) if args.fixed_k is None else args.fixed_k,
+        runs_fixed=runs_fixed,
         levels=levels,
         bounds=bounds,
         bootstrap_seed=args.bootstrap_seed,
@@ -95,12 +104,13 @@ def main() -> None:
         f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
         f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
     )
-    head = {"run_files", "admissible", "levels", "bounds", "sizing", "provenance"}
+    head = {"run_files", "admissible", "k_source", "levels", "bounds", "sizing", "provenance"}
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
     report = {
         "run_files": [str(p) for p in args.runs],
         "admissible": str(args.admissible),
+        "k_source": k_source,
         "levels": levels,
         "bounds": bounds,
         **cell,

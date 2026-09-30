@@ -46,7 +46,7 @@ from sphragis.corpus.halves import assign, project_counts, split_criteria
 from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
-from sphragis.experiment.decomposition import SESOI, halves, holm_levels
+from sphragis.experiment.decomposition import SESOI, halves
 from sphragis.experiment.partitions import K_MAX, K_MIN, XI, sd_bound
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
 from sphragis.experiment.runner import to_clusters
@@ -78,10 +78,13 @@ parser.add_argument("--redraw", type=float, default=0.055)
 parser.add_argument("--target", type=float, default=0.928)
 # Monte Carlo error of a power estimate near 0.928 at 300 trials: about 0.015.
 parser.add_argument("--trials", type=int, default=300, help="per bisection step")
-# Monte Carlo error of a false-positive rate near 0.0125 at 1,000 trials: about 0.0035.
-parser.add_argument("--null-trials", type=int, default=1000, help="for the null's error rates")
-parser.add_argument("--resamples", type=int, default=1000, help="bootstrap draws per trial")
-# Bisection on the lift over [0, 0.3]: seven halvings resolve it to 0.3 / 128, about 0.0023.
+# Monte Carlo error of a false-positive rate near 0.0125 at 4,000 trials: about 0.0018, a
+# quarter of the nominal rate's distance to the next Holm level's.
+parser.add_argument("--null-trials", type=int, default=4000, help="for the null's error rates")
+# The gate's registered resample count, so the simulated interval is the one the reading uses.
+parser.add_argument("--resamples", type=int, default=10_000, help="bootstrap draws per trial")
+# Bisection on the lift over [0, LIFT_CEILING]: seven halvings resolve it to 0.3 / 128, about
+# 0.0023, within the 0.015 Monte Carlo error of the power estimate at 300 trials.
 parser.add_argument("--steps", type=int, default=7)
 # Studies per point of the sigma_run calibration: one study's spread over K = 24 runs has a
 # standard error of about s / sqrt(2 (K - 1)), 0.0026 at 0.0177, so the mean of 100 is good to
@@ -218,6 +221,12 @@ def spread(job: tuple) -> float:
 CALIBRATION_CEILING = 0.06
 # Calibration studies take seeds past every trial's (args.seed + t, t below the trial count).
 CALIBRATION_SEED_OFFSET = 10_000
+# The lift bracket's top, as `decomposition_sensitivity.py` uses: ten times the detectable lifts
+# found so far (about 0.03); a target it cannot reach is refused rather than reported at the top.
+LIFT_CEILING = 0.3
+# Draws per realised difference, as `decomposition_sensitivity.py`, whose detectable effects
+# these replace.
+EFFECT_DRAWS = 300
 
 
 def calibrate(executor, pool, args, target: float, size: int) -> dict:
@@ -285,6 +294,10 @@ def main() -> None:
     planned = json.loads(args.planned.read_text())["cells"][args.org]["planned_changes_per_half"]
     args.runs, args.size = pilot["sizing"]["runs"], sum(planned)
     estimates = pilot["per_run"] + pilot["runs_left_out"]
+    if max(args.trials, args.null_trials) > CALIBRATION_SEED_OFFSET:
+        raise SystemExit(f"trial seeds would reach the calibration's at {CALIBRATION_SEED_OFFSET}")
+    if args.partitions < 2 * K_MAX:
+        raise SystemExit(f"--partitions {args.partitions}: two disjoint sets of {K_MAX} are drawn")
     if not K_MIN <= args.runs <= K_MAX:
         raise SystemExit(f"the pilot's K {args.runs} lies outside [{K_MIN}, {K_MAX}]")
     # The per-run spread the simulation is calibrated to, each point named for what it is.
@@ -305,12 +318,14 @@ def main() -> None:
     missing = {p for _, p in pool} - set(partitions[0])
     if missing:
         raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
-    levels = holm_levels(2)
+    # The pilot's own Holm levels, so the simulation reads the family the reading does.
+    levels = pilot["levels"]
     report: dict = {
         "placebo": str(args.placebo),
         "org": args.org,
         "inputs": {
             "runs": f"{args.pilot}: sizing.runs",
+            "levels": f"{args.pilot}: levels",
             "spread_targets": f"{args.pilot}: per_run and runs_left_out, chi-squared bounds",
             "calibration_changes": f"{args.pilot}: changes",
             "planned_changes": f"{args.planned}: cells.{args.org}.planned_changes_per_half, summed",
@@ -362,7 +377,7 @@ def main() -> None:
                 "by_level": {},
             }
             for level in levels:
-                low, high = 0.0, 0.3
+                low, high = 0.0, LIFT_CEILING
                 for _ in range(args.steps):
                     mid = (low + high) / 2
                     power = fmean(
@@ -373,8 +388,10 @@ def main() -> None:
                         high = mid
                     else:
                         low = mid
+                if high == LIFT_CEILING:
+                    raise SystemExit(f"{label} at {level}: power {args.target} not reached")
                 effect = fmean(
-                    realised_difference(h, lift=high, seed=args.seed, draws=300)
+                    realised_difference(h, lift=high, seed=args.seed, draws=EFFECT_DRAWS)
                     for h in pilot_halves
                 )
                 entry["by_level"][level] = {

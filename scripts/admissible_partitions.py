@@ -39,7 +39,10 @@ parser.add_argument(
 )
 parser.add_argument("--start", type=int, default=1)
 parser.add_argument("--count", type=int, default=K_MAX)
+# Execution only: the list is the first --count admissible seeds in order whatever the batch.
 parser.add_argument("--batch", type=int, default=24, help="seeds checked per parallel round")
+# A search bound, refused rather than reached: fifty times K_MAX, where OpenStack admits about
+# four seeds in five.
 parser.add_argument("--max-seed", type=int, default=2_000, help="stop searching past this seed")
 parser.add_argument("--workers", type=int, default=6)
 parser.add_argument("--out", type=Path, required=True)

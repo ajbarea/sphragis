@@ -26,6 +26,7 @@
     "datasets/results/rq1-partition-openstack-p30-s24-n1850.json"
   ],
   "admissible": "datasets/results/admissible-partitions-openstack.json",
+  "k_source": "datasets/results/partition-pilot-openstack.json: sizing.runs",
   "levels": [
     0.975,
     0.95
@@ -97,19 +98,15 @@
     "runs": 22
   },
   "provenance": {
-    "generated_at": "2026-09-30T03:21:00.028963+00:00",
+    "generated_at": "2026-09-30T09:25:30.443771+00:00",
     "git": {
-      "commit": "e2622c70c4f24f14f9a3fdb9e0e0aecd6988c4a7",
+      "commit": "4b1da9e317af4bdbce9023e5340aa8276b37623d",
       "branch": "measure/repeated-partitions",
       "uncommitted_code": [
-        "scripts/admissible_partitions.py",
         "scripts/partition_pilot.py",
-        "scripts/partition_run.sbatch",
-        "scripts/partition_sensitivity.py",
-        "scripts/training_size.py",
-        "sphragis/experiment/partitions.py"
+        "scripts/partition_sensitivity.py"
       ],
-      "uncommitted_code_sha256": "63a1f6e65de2863fa241546fd59485f0eba53e493cd4f18c03a1285c5f76c168"
+      "uncommitted_code_sha256": "f65490a5aca177e5de536e33f0726520e4bb579fcaa280bd5d0d64fae6249210"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

@@ -71,7 +71,8 @@ The pass rule is fixed in advance, in code, in
 **Conjunctive: both organizations' 95% intervals strictly above zero.** RQ1 claims that
 organizations have a learnable house style, which is a generality claim, and a rule passing on
 one organization does not support it. The boundary is strict rather than inclusive, the
-interval is the crossed seed by change bootstrap at three seeds, and the estimand is pooled.
+interval is the crossed run by change bootstrap over K admissible partitions, and the estimand is
+pooled.
 Each of those was chosen before the run that would have been decided by it, and each is
 recorded with the evidence that chose it on [Registered decisions](registered-decisions.md).
 
