@@ -755,7 +755,6 @@ _JOB_DEFAULTS = {
     "PLACEBO": "/unused/placebo.json",
     "CORPUS_WINDOWS": "/unused/corpus",
     "SIZE": "100",
-    "PLANNED": "/unused/planned.json",
     "PARTITION_SEED": "2",
     "TRAIN_SIZE": "1850",
     "SEEDS": "1",

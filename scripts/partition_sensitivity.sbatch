@@ -12,7 +12,7 @@
 # H1 over repeated partitions at the registered K, simulated: coverage, detectable effect and
 # reproducibility. CPU only, pure Python in a process pool: one worker per allocated core. Every
 # input is read from the committed artifact that fixed it (K and the run spread from the pilot,
-# the planned test size from the decomposition sensitivity, N and the reference from the
+# the planned test size from the test-window projection, N and the reference from the
 # admissible list).
 set -euo pipefail
 
@@ -25,7 +25,7 @@ uv run --no-sync python scripts/partition_sensitivity.py \
   --placebo "${PLACEBO:?set PLACEBO to a single-seed placebo run}" \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" --org "$ORG" \
   --pilot "datasets/results/partition-pilot-$ORG.json" \
-  --planned "${PLANNED:?set PLANNED to the decomposition-sensitivity artifact}" \
+  --projection "datasets/results/project-windows-$ORG-v3.json" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --workers "$(nproc)" \
   --out "$OUT"

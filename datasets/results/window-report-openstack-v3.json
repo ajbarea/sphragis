@@ -1,0 +1,178 @@
+{
+  "openstack": {
+    "months_built": 13,
+    "examples": 5481,
+    "after_dedup": 5053,
+    "dedup_removed": {
+      "exact": 249,
+      "near_duplicate": 179,
+      "boilerplate": 0,
+      "shared_change_id": 0
+    },
+    "windows": {
+      "pilot": {
+        "examples": 532,
+        "changes": 192,
+        "content": {
+          ".py": 296,
+          ".rst": 142,
+          ".yaml": 37,
+          ".yml": 14,
+          ".sh": 9,
+          "(none)": 4,
+          ".j2": 4,
+          ".pp": 4,
+          ".md": 3,
+          ".txt": 3,
+          ".json": 2,
+          ".cfg": 2,
+          ".patch": 2,
+          ".init": 2,
+          ".inc": 1,
+          ".ini": 1,
+          ".conf": 1,
+          ".com": 1,
+          ".noble": 1,
+          ".pmon": 1,
+          ".kubernetes": 1,
+          ".js": 1
+        }
+      },
+      "train": {
+        "examples": 4006,
+        "changes": 1645,
+        "content": {
+          ".py": 1962,
+          ".rst": 1048,
+          ".yaml": 414,
+          ".yml": 129,
+          "(none)": 124,
+          ".sh": 63,
+          ".j2": 41,
+          ".pp": 28,
+          ".txt": 25,
+          ".ini": 20,
+          ".patch": 20,
+          ".cfg": 15,
+          ".go": 11,
+          ".md": 10,
+          ".conf": 7,
+          ".html": 7,
+          ".cpp": 7,
+          ".po": 7,
+          ".lst": 5,
+          ".rest": 5,
+          ".tpl": 5,
+          ".c": 5,
+          ".js": 5,
+          ".toml": 4,
+          ".erb": 4,
+          ".inc": 3,
+          ".config": 3,
+          ".json": 3,
+          ".jsx": 3,
+          ".sql": 3,
+          ".rb": 3,
+          ".json5": 3,
+          ".service": 2,
+          ".stable_docker_image": 2,
+          ".init": 1,
+          ".rabbitmq-server": 1,
+          ".dockerfile": 1,
+          ".controller": 1,
+          ".jinja": 1,
+          ".pem": 1,
+          ".h": 1,
+          ".tmpl": 1,
+          ".debian": 1,
+          ".centos": 1
+        }
+      },
+      "dev": {
+        "examples": 515,
+        "changes": 214,
+        "content": {
+          ".py": 228,
+          ".rst": 125,
+          ".rest": 45,
+          ".yaml": 43,
+          ".yml": 34,
+          "(none)": 8,
+          ".patch": 5,
+          ".j2": 4,
+          ".sh": 4,
+          ".pp": 3,
+          ".txt": 3,
+          ".toml": 2,
+          ".ini": 2,
+          ".conf": 2,
+          ".c": 2,
+          ".cpp": 2,
+          ".inc": 1,
+          ".json5": 1,
+          ".rb": 1
+        }
+      }
+    },
+    "straddling_changes": 0,
+    "unassigned_changes": 0,
+    "near_duplicate_rate": {
+      "pilot->train": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.0027458811782326512,
+          "near_duplicates": 11
+        },
+        "0.6": {
+          "rate": 0.005991013479780329,
+          "near_duplicates": 24
+        },
+        "0.5": {
+          "rate": 0.007738392411382925,
+          "near_duplicates": 31
+        },
+        "max_similarity": 0.7931034482758621
+      },
+      "train->dev": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.009708737864077669,
+          "near_duplicates": 5
+        },
+        "0.6": {
+          "rate": 0.013592233009708738,
+          "near_duplicates": 7
+        },
+        "0.5": {
+          "rate": 0.017475728155339806,
+          "near_duplicates": 9
+        },
+        "max_similarity": 0.765625
+      }
+    },
+    "dedup_note": "dedup runs before the split at Jaccard 0.8, so the 0.8 rate is partly zero by construction; read the looser thresholds"
+  },
+  "provenance": {
+    "generated_at": "2026-09-30T10:16:17.816894+00:00",
+    "git": {
+      "commit": "6e384d8892f09c9469c547b85a48b42c5cf9d759",
+      "branch": "measure/repeated-partitions",
+      "uncommitted_code": [
+        "scripts/censoring.py",
+        "scripts/partition_sensitivity.py",
+        "scripts/partition_sensitivity.sbatch",
+        "scripts/project_windows.py"
+      ],
+      "uncommitted_code_sha256": "b50ea8691602d7170e048f46cbee3288ab258ba8ffc23c439a2fced7bfbbe775"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

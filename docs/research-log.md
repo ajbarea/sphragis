@@ -1726,6 +1726,10 @@ likely higher than a tenth, not lower.
 
 ### RQ1's central finding has not been measured before (2026-09-18)
 
+> **Superseded on 2026-09-23.** The share was measured on corpus v1 with Qt's lint bot in the data;
+> the bot audit found nearly half of Qt's organizational effect was the bot. The share on the
+> cleaned corpus is not re-measured in this entry.
+
 A novelty check on the result the windowed run produced: that adaptation to code-review
 refinement is large and almost entirely task-general, with the organization-specific share about a
 thirteenth of it (0.048 to 0.306 exact match, of which 2 points separate matched from mismatched).
@@ -2258,6 +2262,9 @@ organizations alike.
 
 ### The seed main effect, measured: about 0.013, and it is what limits power (2026-09-18, jobs 148199, 148405, 148407)
 
+> **Narrowed later on 2026-09-18.** "What limits power" held for the null at this size only; see
+> "RQ1 at three seeds, and the seed effect in the setting that counts" below.
+
 `datasets/results/seed-effect-sym-0.json`, `scripts/seed_effect.py`. The null `sym-0` at seeds 1, 2
 and 3, same corpora, split and held-out examples. Per organization half, the contrast at each seed,
 and per pair of seeds the shift against the change-clustered noise of the per-example difference
@@ -2484,6 +2491,10 @@ above. A test now pins the split.
 
 ### What the design can detect: a sensitivity analysis, replacing power at an observed effect (2026-09-18)
 
+> **Superseded.** These sizes and bounds belong to the retired organization-against-organization
+> gate on corpus v1; the current bounds are the fixed-K simulation's (2026-09-30), and its test
+> size is re-projected over twelve months (audit, 2026-09-30).
+
 `datasets/results/sensitivity-b0.0098.json`, `scripts/sensitivity.py`. The test window's size is
 fixed by what exists, so the Stage 1 question is not "what is the power" but "what is the smallest
 effect this design detects". Power computed from a pilot's own estimate is biased upward, the more
@@ -2545,6 +2556,9 @@ estimand does not help either: its Qt interval is wider relative to its effect (
 
 ### A secondary estimate pooled across organizations (2026-09-18)
 
+> **Superseded on 2026-09-23.** The pooled figure rested partly on Qt's lint bot (bot audit), and the
+> secondary estimate is not part of the current design.
+
 The conjunctive gate asks whether *each* organization shows the effect, which is what a generality
 claim needs and what costs the design its resolution. A pooled estimate answers the weaker question,
 whether organizations leave a fingerprint on average, and is the sharpest reading the same data
@@ -2563,6 +2577,9 @@ between-organization heterogeneity rather than assume it away. Registered as a s
 reported beside the gate, and fixed now while the test window is sealed.
 
 ### Why one organization shows the effect and the other does not (2026-09-18, exploratory)
+
+> **Superseded on 2026-09-23.** A post hoc subgroup reading on corpus v1; Qt's side of it rested
+> largely on its lint bot (bot audit). Not a finding.
 
 The dev-window contrast broken down by the project each held-out change belongs to, pooled over the
 three seeds. Exploratory, on the dev window, with small per-project samples and no multiplicity
@@ -2785,6 +2802,9 @@ are not rerun: this is the one the Stage 1 report's limitation rests on.
 
 ### How much of adaptation is organizational: 7% and 10% (2026-09-18, three seeds)
 
+> **Superseded on 2026-09-23.** Qt's 10% includes its lint bot (bot audit); both shares are corpus
+> v1, organization against organization, and are not re-measured on the current design.
+
 The decomposition the study exists to make, averaged over the three seeds of the windowed run:
 
 | | base model | adapter trained elsewhere | adapter trained at home |
@@ -2908,6 +2928,10 @@ means barely at all. For RQ2's framing this is sharper than the original claim, 
 governance boundary drawn around an organization does not match the boundary the leak respects.
 
 ### RQ1 under the registered numerics, and two registrations that earned their keep (2026-09-18, jobs 149258 to 149260)
+
+> **Superseded on 2026-09-23.** With Qt's automated-only examples removed the pooled reading fails
+> (bot audit), and the change-averaged pass rested on the same examples, so "the estimand decided
+> the headline" does not survive the cleaning (audit of this log, 2026-09-30).
 
 `datasets/results/rq1-qtfull-fp32-seeds.json`. The windowed run repeated at three seeds under fp32
 inference, the precision registered this morning. Same corpora, split and held-out examples as the
@@ -6581,3 +6605,19 @@ censoring rule, fp32 inference, the contamination reading and the corpus rules a
 
 Items 7 and 8, and whether item 5 is registered at all, are design decisions and wait for AJ.
 Items 1 to 4 and 6 and the stale docs are corrections and are made next.
+
+### The test window re-projected over its twelve months on v3: 2,018 OpenStack changes (2026-09-30)
+
+`project-windows-openstack-v3.json`, from `window-report-openstack-v3.json` (both new; the
+projection now writes an artifact and reads the corpus it is given). v3's train window holds 1,645
+changes over ten months, captured at 0.952, so 172.9 true changes a month; that rate predicts the
+dev window at 211 against an actual 214 (-1.3%, inside the 15% tolerance). Over the registered
+twelve months, fetched at the earliest month the horizon permits (2027-01, captured 0.973), the
+test window projects to **2,018 changes**, replacing the ten-month 1,809 scaled to v3 (1,635).
+The simulation now reads its test size from this artifact (`--projection`), not a typed `--size`.
+
+The 15% tolerance is recorded as what it is: set on 2026-09-16 after the repaired capture model's
+first check read +11.6%, a post hoc choice. On v3 the miss is well inside any tolerance near it.
+
+v3 leakage, train into dev, at the registered Jaccard 0.7: 0.97% (5 of 515), under the 2%
+ceiling; the halt check that now runs at 0.7 would pass on the dev window.

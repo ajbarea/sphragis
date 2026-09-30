@@ -5,6 +5,11 @@ review (eleven findings, four blocking, all taken). Supersedes the organization-
 `2026-09-13-gerrit-review-corpus-harness-design.md` for the Stage 1 report; the corpus harness it
 specifies is unchanged.
 
+**Partly superseded, 2026-09-29.** How H1 is read is now `2026-09-29-repeated-partitions-design.md`:
+K admissible partitions at one training seed each, in place of five seeds on one largest-first
+split, and a fixed training size N from `training_size.py` in place of the smaller registered half.
+Where this spec says five seeds, one split or a 2,004 size floor, that one governs.
+
 **Decided by:** AJ, 2026-09-22, choosing "at what granularity adaptation transfers" over "keep the
 organization and report three controls", and adding Chromium as a third organization.
 Amended 2026-09-27 so that an organization enters a confirmatory cell only from a host permitting

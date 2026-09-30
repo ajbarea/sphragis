@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 209 artifacts under
-44 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 211 artifacts under
+45 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -324,6 +324,14 @@ Minimum detectable matched-minus-mismatched exact-match difference, from an RQ1 
 |---|---|
 | `power-rq1-report-grade.txt` | `power-rq1-windows.txt` |
 
+## `scripts/project_windows.py`
+
+How large will the sealed test window be, and does the capture model predict the dev one?
+
+| artifact | |
+|---|---|
+| `project-windows-openstack-v3.json` |  |
+
 ## `scripts/prompt_format_probe.py`
 
 How much of the pilot's base-model floor is the prompt format?
@@ -436,7 +444,8 @@ What the collected windows contain, and how much leaks across their boundaries.
 
 | artifact | |
 |---|---|
-| `window-report-openstack.json` | `window-report-qt.json` |
+| `window-report-openstack-v3.json` | `window-report-openstack.json` |
+| `window-report-qt.json` |  |
 
 ## Written by no script this page can find
 

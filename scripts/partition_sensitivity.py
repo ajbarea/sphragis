@@ -26,7 +26,7 @@ the data-dependent stopping rule this design replaced, as its provenance's commi
         --placebo datasets/results/rq1-placebo-openstack-v3.json \\
         --corpus datasets/gerrit --org openstack \\
         --pilot datasets/results/partition-pilot-openstack.json \\
-        --planned datasets/results/decomposition-sensitivity-v3.json \\
+        --projection datasets/results/project-windows-openstack-v3.json \\
         --admissible datasets/results/admissible-partitions-openstack.json \\
         --out datasets/results/partition-sensitivity-openstack.json
 """
@@ -66,7 +66,7 @@ parser.add_argument(
     "--pilot", type=Path, required=True, help="partition_pilot's artifact: K and the run spread"
 )
 parser.add_argument(
-    "--planned", type=Path, required=True, help="a decomposition-sensitivity artifact: test size"
+    "--projection", type=Path, required=True, help="project_windows.py's artifact: test size"
 )
 parser.add_argument(
     "--admissible", type=Path, required=True, help="the admissible list: N and the reference"
@@ -293,8 +293,11 @@ def main() -> None:
     args = parser.parse_args()
     pilot = json.loads(args.pilot.read_text())
     admissible = json.loads(args.admissible.read_text())
-    planned = json.loads(args.planned.read_text())["cells"][args.org]["planned_changes_per_half"]
-    args.runs, args.size = pilot["sizing"]["runs"], sum(planned)
+    projection = json.loads(args.projection.read_text())
+    if projection["org"] != args.org or projection["test"] is None:
+        raise SystemExit(f"{args.projection}: no test-window projection for {args.org}")
+    # Whole changes, rounded down: a projection is not an observed count.
+    args.runs, args.size = pilot["sizing"]["runs"], int(projection["test"]["projected_changes"])
     estimates = pilot["per_run"] + pilot["runs_left_out"]
     if max(args.trials, args.null_trials) > CALIBRATION_SEED_OFFSET:
         raise SystemExit(f"trial seeds would reach the calibration's at {CALIBRATION_SEED_OFFSET}")
@@ -335,7 +338,7 @@ def main() -> None:
             "levels": f"{args.pilot}: levels",
             "spread_targets": f"{args.pilot}: per_run and runs_left_out, chi-squared bounds",
             "calibration_changes": f"{args.pilot}: changes",
-            "planned_changes": f"{args.planned}: cells.{args.org}.planned_changes_per_half, summed",
+            "planned_changes": f"{args.projection}: test.projected_changes, rounded down",
             "size_floor": f"{args.admissible}: size_floor",
             "reference": f"{args.admissible}: reference",
         },
