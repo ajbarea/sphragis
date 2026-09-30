@@ -24,7 +24,12 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.halves import excluded_projects, halves, runner_train, split_criteria
+from sphragis.corpus.halves import (
+    excluded_projects,
+    halves,
+    organization_train,
+    split_criteria,
+)
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.partitions import K_MAX
@@ -48,18 +53,18 @@ parser.add_argument("--workers", type=int, default=6)
 parser.add_argument("--out", type=Path, required=True)
 
 _ROWS: list[dict] = []
+_TRAIN: list[dict] = []
 _REF: list[dict] = []
 _FLOOR = 0
 
 
-def _init(rows: list[dict], ref: list[dict], floor: int) -> None:
-    global _ROWS, _REF, _FLOOR
-    _ROWS, _REF, _FLOOR = rows, ref, floor
+def _init(rows: list[dict], train: list[dict], ref: list[dict], floor: int) -> None:
+    global _ROWS, _TRAIN, _REF, _FLOOR
+    _ROWS, _TRAIN, _REF, _FLOOR = rows, train, ref, floor
 
 
 def check(seed: int) -> dict:
-    train = runner_train(_ROWS, WINDOWS, seed)
-    own = halves(_ROWS, train, WINDOWS["train"], seed)
+    own = halves(_ROWS, _TRAIN, WINDOWS["train"], seed)
     result = split_criteria(own, _REF, size_floor=_FLOOR)
     return {
         "seed": seed,
@@ -79,7 +84,9 @@ def main() -> None:
     checked: list[dict] = []
     seed = args.start
     with ProcessPoolExecutor(
-        args.workers, initializer=_init, initargs=(rows, reference["halves"], size_floor)
+        args.workers,
+        initializer=_init,
+        initargs=(rows, organization_train(rows, WINDOWS), reference["halves"], size_floor),
     ) as pool:
         while sum(c["qualifies"] for c in checked) < args.count:
             if seed > args.max_seed:

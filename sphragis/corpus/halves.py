@@ -142,6 +142,22 @@ def runner_train(
     return train
 
 
+def organization_train(
+    deduplicated: list[dict[str, Any]], windows: Mapping[str, tuple[str, str]]
+) -> list[dict[str, Any]]:
+    """The training rows of an organization deduplicated as a whole (`--dedup-org`), for any
+    partition of it: what `runner_train` returns for every order seed on such rows.
+
+    Each dedup stage removes a row on a condition a subset of the rows can only weaken (an exact
+    copy, a near-duplicate pair, a repeat count), so once the organization is deduplicated a
+    half's own dedup removes nothing; and windows are assigned by date, not by half. One split
+    therefore serves every seed.
+    """
+    from sphragis.corpus.pipeline import run_split
+
+    return run_split(deduplicated, dict(windows))[0]["train"]
+
+
 def split_criteria(
     own: list[dict[str, Any]], ref: list[dict[str, Any]], size_floor: int | None = None
 ) -> dict[str, Any]:

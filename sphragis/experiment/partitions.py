@@ -139,14 +139,35 @@ def runs_needed(
     upper = sd_bound(pilot, confidence, upper=True)
     z = NormalDist().inv_cdf(1 - beta / 2)
     raw = 2 * upper**2 * (z / xi) ** 2
+    runs = min(K_MAX, max(K_MIN, math.ceil(raw)))
+    # At a clamped K the (xi, beta) agreement the formula sizes for is not what K gives: above
+    # K_MAX two draws agree less often, below K_MIN more.
+    clamped = "max" if math.ceil(raw) > K_MAX else "min" if math.ceil(raw) < K_MIN else None
     return {
         "pilot_runs": n,
         "sd": s,
         "sd_upper": upper,
         "confidence": confidence,
         "formula": raw,
-        "runs": min(K_MAX, max(K_MIN, math.ceil(raw))),
+        "runs": runs,
+        "clamped": clamped,
     }
+
+
+def pilot_sizing(artifact: Mapping[str, Any], name: str) -> int:
+    """The K an organization's pilot sized: `sizing.runs` of a reading over all its runs.
+
+    Every reading re-derives `sizing` from the runs it read, so a reading at a K taken from
+    elsewhere (its `k_source` names that file) carries a `sizing` that is not the organization's
+    K, and a test-window reading's would be sized on confirmatory data; both are refused.
+    """
+    source = artifact.get("k_source", "all runs")
+    if source != "all runs":
+        raise ValueError(f"{name} read its K from {source!r}; K comes from the pilot itself")
+    runs = artifact.get("sizing", {}).get("runs")
+    if not isinstance(runs, int):
+        raise ValueError(f"{name}: no sizing.runs to read K from")
+    return runs
 
 
 def sensitivity_bounds(
@@ -164,7 +185,10 @@ def sensitivity_bounds(
         raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")
     bounds = {}
     for c in levels:
-        by_cells = by_target[target]["by_level"][str(c)]["by_cells"]
+        by_level = by_target[target]["by_level"]
+        if str(c) not in by_level:
+            raise ValueError(f"no bound at level {c}; the artifact has {sorted(by_level)}")
+        by_cells = by_level[str(c)]["by_cells"]
         if str(cells) not in by_cells:
             raise ValueError(
                 f"no bound for {cells} H1 cell(s); the artifact has {sorted(by_cells)}"

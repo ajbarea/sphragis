@@ -48,13 +48,10 @@ INDEX_PAGE = DOCS / "artifacts.md"
 # window report that also carries them is a pre-refreeze artifact.
 MANIFEST_OS = "datasets/gerrit/openstack/manifest.json"
 MANIFEST_QT = "datasets/gerrit/qt/manifest.json"
-# Corpus v2 as frozen on 2026-09-23, for pages that describe a measurement taken on it.
-
 DEV = f"{RESULTS}/rq1-qtfull-fp32-seeds.json"
 PILOT = f"{RESULTS}/pilot-outcomes.json"
 FP32_PILOT = f"{RESULTS}/rq1-pilot-fp32-pilot.json"
 UNEQUAL = f"{RESULTS}/rq1-pilot.json"
-WINDOW = f"{RESULTS}/window-report-openstack.json"
 WINDOW_V3 = f"{RESULTS}/window-report-openstack-v3.json"
 CONTAMINATION = f"{RESULTS}/contamination-openstack-6mo-with_context-gapk.json"
 CALIBRATION = f"{RESULTS}/interval-calibration.json"
@@ -206,8 +203,8 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_leak_07",
         "registered-decisions.md",
-        "1.06",
-        WINDOW,
+        "0.97",
+        WINDOW_V3,
         [*NEAR_DUPLICATE, "0.7", "rate"],
         {"scale": 100},
     ),
@@ -215,7 +212,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "rd_leak_08",
         "registered-decisions.md",
         "0.00",
-        WINDOW,
+        WINDOW_V3,
         [*NEAR_DUPLICATE, "0.8", "rate"],
         {"scale": 100},
     ),
