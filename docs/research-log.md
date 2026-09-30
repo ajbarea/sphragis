@@ -6701,3 +6701,24 @@ Against a nominal 0.05 (Monte Carlo error 0.003 to 0.004, each row's `standard_e
 pooled at every size and near double nominal only at ten changes; across the quoted 48 to 91 (ladder points 45 and
 91) it is 1.1 to 1.3 times nominal, not twice.** The estimand decision does not rest on this: pooled is registered and
 re-derives on the current H1 (audit). The sentence is corrected wherever it is quoted.
+
+### Target power is 0.95 for every hypothesis test, and the simulation reruns at it (2026-09-30)
+
+Audit item 8. 0.928 was 0.80 joint over three independent cells, a target of our own making that no
+longer describes the admitted set. Replaced by the registered-report standard: "For frequentist
+analysis plans, the a priori power must be 0.95 or higher for all proposed hypothesis tests"
+(Nature Communications / Nature Human Behaviour Registered Reports author guidelines, read from
+the guidelines PDF). Each H1 and H2 cell is a proposed hypothesis test, so each is sized at 0.95
+on its own, with no joint target.
+
+The same guidelines ask for outcome-neutral tests, positive controls among them, that are
+"sufficient for ensuring that the results obtained are able to test the stated hypotheses". They
+do not state a power figure for a positive control; a control that would fail a working
+apparatus about half the time (audit item 5) is not sufficient under that wording, which is why
+the planted-convention check's pass rate is measured before it is registered.
+
+`partition_sensitivity.py` defaults move with it: `--target 0.95`, `--trials 1000` per bisection
+step (Monte Carlo error near 0.95 about 0.007, against 0.015 at 300), `--steps 10` (lift resolved
+to 0.0003; at seven steps, 0.0023, several points of the previous run read identical bounds). It
+reruns once on TIGRIS on the twelve-month projection (2,018 changes). The registered bounds, the
+Stage 1 sample-size paragraph and `registered-decisions.md` take their figures from that artifact.

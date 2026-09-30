@@ -74,18 +74,20 @@ parser.add_argument(
 # Seed-by-change churn: the share of an arm's outcomes a run redraws, calibrated against the two
 # identical nulls marker-0 and sym-0 (`crossed_coverage.py --calibrate`, research log 2026-09-23).
 parser.add_argument("--redraw", type=float, default=0.055)
-# Marginal power per cell: 0.928 ** 3 = 0.80 joint across three independent cells.
-parser.add_argument("--target", type=float, default=0.928)
-# Monte Carlo error of a power estimate near 0.928 at 300 trials: about 0.015.
-parser.add_argument("--trials", type=int, default=300, help="per bisection step")
+# Power per hypothesis test: Nature's registered-report guidelines ask 0.95 or higher for every
+# proposed test.
+parser.add_argument("--target", type=float, default=0.95)
+# Monte Carlo error of a power estimate near 0.95 at 1,000 trials: about 0.007. Trials share seeds
+# across bisection steps, so power is compared on common random numbers.
+parser.add_argument("--trials", type=int, default=1000, help="per bisection step")
 # Monte Carlo error of a false-positive rate near 0.0125 at 4,000 trials: about 0.0018, a
 # quarter of the nominal rate's distance to the next Holm level's.
 parser.add_argument("--null-trials", type=int, default=4000, help="for the null's error rates")
 # The gate's registered resample count, so the simulated interval is the one the reading uses.
 parser.add_argument("--resamples", type=int, default=10_000, help="bootstrap draws per trial")
-# Bisection on the lift over [0, LIFT_CEILING]: seven halvings resolve it to 0.3 / 128, about
-# 0.0023, within the 0.015 Monte Carlo error of the power estimate at 300 trials.
-parser.add_argument("--steps", type=int, default=7)
+# Bisection on the lift over [0, LIFT_CEILING]: ten halvings resolve it to 0.3 / 1,024, about
+# 0.0003, below the lift change that moves power by the 0.007 Monte Carlo error.
+parser.add_argument("--steps", type=int, default=10)
 # Studies per point of the sigma_run calibration: one study's spread over K = 24 runs has a
 # standard error of about s / sqrt(2 (K - 1)), 0.0026 at 0.0177, so the mean of 100 is good to
 # about 0.0003. Ten bisection steps over [0, CALIBRATION_CEILING] resolve sigma_run to 0.00006.
