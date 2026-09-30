@@ -9,8 +9,11 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
-# H1 over repeated partitions, simulated: coverage, detectable effect, stopping and
-# reproducibility. CPU only, pure Python in a process pool: one worker per allocated core.
+# H1 over repeated partitions at the registered K, simulated: coverage, detectable effect and
+# reproducibility. CPU only, pure Python in a process pool: one worker per allocated core. Every
+# input is read from the committed artifact that fixed it (K and the run spread from the pilot,
+# the planned test size from the decomposition sensitivity, N and the reference from the
+# admissible list).
 set -euo pipefail
 
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
@@ -21,8 +24,8 @@ claim_result OUT "$SPHRAGIS_RESULTS/partition-sensitivity-$ORG$RESULT_SUFFIX.jso
 uv run --no-sync python scripts/partition_sensitivity.py \
   --placebo "${PLACEBO:?set PLACEBO to a single-seed placebo run}" \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" --org "$ORG" \
-  --size "${SIZE:?set SIZE to the planned test changes}" \
-  --sigma-run ${SIGMA_RUN:-0.011 0.015 0.025 0.035} \
-  --null-trials "${NULL_TRIALS:-1000}" --trials "${TRIALS:-300}" \
+  --pilot "datasets/results/partition-pilot-$ORG.json" \
+  --planned "${PLANNED:?set PLANNED to the decomposition-sensitivity artifact}" \
+  --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --workers "$(nproc)" \
   --out "$OUT"

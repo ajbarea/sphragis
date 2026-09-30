@@ -6469,3 +6469,36 @@ AJ: no number without a recorded origin, in code or in reporting. What that chan
 first 24 admissible runs, H1 reads **+0.0049 [-0.0088, +0.0185]** at 97.5% and [-0.0073, +0.0166]
 at 95%, inconclusive. Sizing on all 24 would give K = 22; K stays 24, fixed from the 22 runs before
 these two were computed.
+
+### Review of the repeated-partition branch: three defects fixed, none changing a committed number (2026-09-29)
+
+An independent review of `measure/repeated-partitions` at 59f48bf reproduced both pilot artifacts,
+the sizing (sd 0.014020, bound 0.017657, formula 23.95, K = 24), the admissible list and the
+chi-squared bounds against scipy, and found:
+
+- **Runs past K could change the cell.** `h1_over_partitions` intersected examples over every run
+  it was given before keeping the first K, so a run past K that dropped examples shrank the cell's
+  example set or refused it. It now reads the first K alone and scores each later run on its own;
+  a test drops examples only past K.
+- **The bounded reading could not run.** `partition_pilot.py --sensitivity` read `by_sigma_run`,
+  which the simulation no longer writes. Bounds now come from `partitions.sensitivity_bounds` by a
+  named point on the pilot's spread (`--spread-target`).
+- **The simulation's cluster job passed flags its script no longer had.** Fixed, and a new test
+  checks every flag each `.sbatch` passes against its script's parser; it found only this job.
+- Smaller: `chi2_quantile` now refuses p outside (0, 1) and widens its search past 10 x df (it
+  returned 10.0 for df 1 at 0.999, against 10.83; the registered df 21 to 23 at 0.01 to 0.99 were
+  exact to 1e-9); the calibration refuses a spread it cannot reach below its ceiling rather than
+  capping silently; the pilot script refuses more run files than admissible partitions and treats
+  `--fixed-k 0` as zero, not as "all"; the training-size and admissible artifacts will record the
+  corpus root they were built from (both rerun once the machine is free; the committed ones were
+  built from `wm-bots/datasets/gerrit`, corpus v3).
+
+**Numbers the review found without a recorded origin, now sourced:** the cost of a run is measured,
+1.44 GH200-hours on average over the 24 OpenStack pilot jobs (1.30 to 1.56, `sacct`), so K_MAX = 40
+is about 58 GPU-hours and K = 24 about 35; the calibration's trial count, step count, ceiling and
+seed offset carry their reasons at their definitions; the 5th percentile in `training_size.py` is
+stated as a choice. The simulation's sigma_run calibration draws changes from the v3
+single-partition placebo's clusters, the same pool its studies draw from; the spec says so.
+
+The fixes are on `measure/repeated-partitions-fixes`, kept off the simulation's worktree until its
+artifact is written, so the artifact's provenance names the code that produced it (59f48bf).

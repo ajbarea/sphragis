@@ -95,6 +95,7 @@ def main() -> None:
     last = admissible[-1]
     report = {
         "org": args.org,
+        "root": str(args.root.resolve()),
         "size_floor": size_floor,
         "size_floor_source": f"{args.training_size}: training_size",
         "language_mix_ceiling": reference["suffix_total_variation"],

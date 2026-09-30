@@ -83,9 +83,12 @@ parser.add_argument("--null-trials", type=int, default=1000, help="for the null'
 parser.add_argument("--resamples", type=int, default=1000, help="bootstrap draws per trial")
 # Bisection on the lift over [0, 0.3]: seven halvings resolve it to 0.3 / 128, about 0.0023.
 parser.add_argument("--steps", type=int, default=7)
-# Trials per point of the sigma_run calibration, and its bisection steps over [0, 0.06].
+# Studies per point of the sigma_run calibration: one study's spread over K = 24 runs has a
+# standard error of about s / sqrt(2 (K - 1)), 0.0026 at 0.0177, so the mean of 100 is good to
+# about 0.0003. Ten bisection steps over [0, CALIBRATION_CEILING] resolve sigma_run to 0.00006.
 parser.add_argument("--calibration-trials", type=int, default=100)
 parser.add_argument("--calibration-steps", type=int, default=10)
+# Any fixed value, fixed so the simulation reproduces.
 parser.add_argument("--seed", type=int, default=43)
 parser.add_argument("--workers", type=int, default=6)
 # Enough admissible partitions that two disjoint sets of K_MAX are drawn from many combinations.
@@ -210,6 +213,13 @@ def spread(job: tuple) -> float:
     return stdev(equal_halves(r) for r in runs)
 
 
+# Three times the largest shift the four targets have needed (about 0.02); a target it cannot
+# reach is refused rather than silently capped.
+CALIBRATION_CEILING = 0.06
+# Calibration studies take seeds past every trial's (args.seed + t, t below the trial count).
+CALIBRATION_SEED_OFFSET = 10_000
+
+
 def calibrate(executor, pool, args, target: float, size: int) -> dict:
     """The run shift sigma_run at which K null runs on `size` changes spread by `target`.
 
@@ -220,7 +230,7 @@ def calibrate(executor, pool, args, target: float, size: int) -> dict:
 
     def mean_spread(sigma_run: float) -> float:
         jobs = [
-            (pool, size, sigma_run, args.redraw, args.runs, args.seed + 10_000 + t)
+            (pool, size, sigma_run, args.redraw, args.runs, args.seed + CALIBRATION_SEED_OFFSET + t)
             for t in range(args.calibration_trials)
         ]
         return fmean(executor.map(spread, jobs, chunksize=1))
@@ -228,7 +238,11 @@ def calibrate(executor, pool, args, target: float, size: int) -> dict:
     at_zero = mean_spread(0.0)
     if at_zero >= target:
         return {"target": target, "sigma_run": 0.0, "spread": at_zero, "floor": True}
-    low, high = 0.0, 0.06
+    if mean_spread(CALIBRATION_CEILING) < target:
+        raise SystemExit(
+            f"a run spread of {target:.4f} is out of reach below sigma_run {CALIBRATION_CEILING}"
+        )
+    low, high = 0.0, CALIBRATION_CEILING
     for _ in range(args.calibration_steps):
         mid = (low + high) / 2
         if mean_spread(mid) < target:
@@ -324,7 +338,8 @@ def main() -> None:
         "by_target": {},
     }
     # The detectable effect as the registered sensitivity reads it: the realised difference per
-    # half, averaged, here over the first pooled partition's halves.
+    # half, averaged (`decomposition_sensitivity.py`), here over the halves of the first pooled
+    # partition, which is the first admissible one.
     first = partitions[0]
     pilot_halves = [[c for c, p in pool if first[p] == side] for side in (0, 1)]
     with ProcessPoolExecutor(args.workers, initializer=_init, initargs=(partitions,)) as executor:
