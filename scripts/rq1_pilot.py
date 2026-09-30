@@ -34,6 +34,8 @@ from sphragis.experiment.model import (
     train_adapter,
 )
 from sphragis.experiment.neutral import (
+    LEAKAGE_MAX_RATE,
+    LEAKAGE_THRESHOLD,
     apparatus_holds,
     leakage_check,
     manipulation_check,
@@ -74,8 +76,14 @@ parser.add_argument("--out", type=Path, default=Path("rq1-pilot.json"))
 parser.add_argument(
     "--leakage-max-rate",
     type=float,
-    default=0.01,
-    help="outcome-neutral test 4 threshold; PROVISIONAL until fixed in the Stage 1 report",
+    default=LEAKAGE_MAX_RATE,
+    help="outcome-neutral test 4: the registered ceiling on the near-duplicate share",
+)
+parser.add_argument(
+    "--leakage-threshold",
+    type=float,
+    default=LEAKAGE_THRESHOLD,
+    help="outcome-neutral test 4: the registered Jaccard at which a pair is a near-duplicate",
 )
 parser.add_argument(
     "--equalize-train",
@@ -274,9 +282,18 @@ for org in orgs:
                 label=f"{org}|s{seed}",
             )
         )
-    checks.append(
-        leakage_check(train_rows[org], held_out[org], max_rate=args.leakage_max_rate, label=org)
-    )
+    # Test 4 on the corpus's own training rows and, since a contrast credits whatever a
+    # sibling's adapter gains, on every other corpus's training rows into this held-out set.
+    for source in orgs:
+        checks.append(
+            leakage_check(
+                train_rows[source],
+                held_out[org],
+                threshold=args.leakage_threshold,
+                max_rate=args.leakage_max_rate,
+                label=org if source == org else f"{source}->{org}",
+            )
+        )
 checks.append(non_degeneracy(results))
 for check in checks:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
@@ -304,7 +321,8 @@ args.out.write_text(
             "verdict": verdict,
             "outcome_neutral": {
                 "apparatus_holds": holds,
-                "leakage_max_rate_provisional": args.leakage_max_rate,
+                "leakage_max_rate": args.leakage_max_rate,
+                "leakage_threshold": args.leakage_threshold,
                 "checks": [
                     {"name": c.name, "passed": c.passed, "evidence": c.evidence} for c in checks
                 ],

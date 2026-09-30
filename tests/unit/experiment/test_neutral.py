@@ -7,6 +7,8 @@ from typing import Any
 import pytest
 
 from sphragis.experiment.neutral import (
+    LEAKAGE_MAX_RATE,
+    LEAKAGE_THRESHOLD,
     Check,
     apparatus_holds,
     closest_training_match,
@@ -80,9 +82,32 @@ def test_leakage_check_compares_against_the_threshold_it_was_given() -> None:
         _pair(f"h{i}", f"unrelated {i} before text", f"unrelated {i} after text")
         for i in range(2, 11)
     ]
-    assert not leakage_check(train, held_out, max_rate=0.05, label="alpha").passed
-    passing = leakage_check(train, held_out, max_rate=0.2, label="alpha")
+    assert not leakage_check(train, held_out, threshold=0.8, max_rate=0.05, label="alpha").passed
+    passing = leakage_check(train, held_out, threshold=0.8, max_rate=0.2, label="alpha")
     assert passing.passed and passing.evidence["rate"] == pytest.approx(0.1)
+    at_ceiling = leakage_check(train, held_out, threshold=0.8, max_rate=0.1, label="alpha")
+    assert at_ceiling.passed, "the registered ceiling is 'at most', so a rate at it passes"
+
+
+def test_leakage_check_counts_at_the_threshold_it_was_given_not_dedups() -> None:
+    """At dedup's 0.8 the check cannot fail after dedup; the registered 0.7 has to be what runs."""
+    train = [_pair("t1", "a b c d e f g h i j", "a b c d e f g h i j k")]
+    held_out = [_pair("h1", "a b c d e f g h i j", "a b c d e f g h i j x y z w")]
+    similarity = closest_training_match(train, held_out)[0][1]
+    assert LEAKAGE_THRESHOLD <= similarity < 0.8
+    assert leakage_check(
+        train, held_out, threshold=0.8, max_rate=LEAKAGE_MAX_RATE, label="alpha"
+    ).passed
+    check = leakage_check(
+        train, held_out, threshold=LEAKAGE_THRESHOLD, max_rate=LEAKAGE_MAX_RATE, label="alpha"
+    )
+    assert not check.passed and check.evidence["threshold"] == LEAKAGE_THRESHOLD
+
+
+def test_leakage_check_has_no_default_threshold() -> None:
+    without_threshold: dict[str, Any] = {"max_rate": LEAKAGE_MAX_RATE, "label": "alpha"}
+    with pytest.raises(TypeError):
+        leakage_check([], [], **without_threshold)
 
 
 def test_non_degeneracy_fails_on_a_condition_stuck_at_zero_or_one() -> None:

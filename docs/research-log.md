@@ -6529,3 +6529,55 @@ at the sizing bound, +0.0239 and +0.0223** (`sensitivity_bounds(..., "sizing_bou
 The same spread sets K, and it is the more conservative of the two central points: a larger bound
 makes a null harder to read as bounded. These replace the single-partition v3 bounds (+0.0246,
 +0.0210). At them a null reads bounded in 96.8% of studies at the stricter level.
+
+### An audit of this log against its artifacts: nine conclusions in force are wrong or unsupported (2026-09-30)
+
+A reader with no part in writing these entries went through the log oldest to newest, re-deriving
+figures from the committed artifacts, and checked the current docs and the Stage 1 draft against
+it. Two findings were re-checked by hand before anything was acted on (the leakage halt and the
+test size, below). What stands, by consequence:
+
+**Wrong or unsupported, in force.**
+
+1. *The leakage halt check cannot fail.* `leakage_check` calls `near_duplicate_rate` at its
+   default Jaccard 0.8, dedup's own threshold, against a provisional 1% ceiling; after dedup-first
+   the rate is 0 by construction, the tautology rejected on 2026-09-15. The registered check (2%
+   at Jaccard 0.7, and sibling half into evaluated half) is not in the halt rule. Every "every
+   outcome-neutral check passed" above is empty for leakage. To be wired before any test-window
+   run.
+2. *The registered bounds use a ten-month test window.* 1,809 planned OpenStack changes is the
+   2026-09-16 projection over ten months; the window has been twelve since 96695eb, and the
+   twelve-month figure (2,171, 2026-09-18) was dropped when `decomposition_sensitivity.py` took
+   `--size openstack=1809`. Everything derived from it (1,635 on v3, +0.0239 / +0.0223, the
+   bounded and reproducibility rates of the fixed-K simulation) is conditional on the wrong size.
+   The fixed-K simulation's rerun (job 209953) was cancelled before it started; it reruns on a
+   twelve-month v3 projection.
+3. *"Change-averaged runs at about twice nominal alpha" has no artifact* (registered decisions,
+   manuscript). To be measured or removed.
+4. *"The estimand decided the headline" holds only with Qt's lint bot in the data.* With it
+   removed neither estimand passes (pooled fails, change-averaged is mixed). The entry of
+   2026-09-20 on it is superseded by the bot audit of 2026-09-23.
+5. *The planted-convention halt test* in the Stage 1 draft has no log entry, is not in
+   `apparatus_holds`, and its one pilot (bf16, v1, one seed) projects a pass on the weaker half in
+   about 40% to 63% of draws at dev-window size: registered as it stands, it would likely halt a
+   working apparatus. Its pass rate is to be measured on v3 before it is registered.
+6. *The manuscript's H1 rationale* cites one project pair that the log found was a property of
+   the pair (2 of 6 directional contrasts exclude zero), and its equal-size evidence quotes a sign
+   flip inside the run-to-run swing the same entry measured.
+7. *The SESOI (0.01) sets K,* through xi, so "decides nothing" is untrue; its seed-bound origin is
+   an SD bound from a run this log called a one-in-a-thousand lockstep.
+8. *Target power 0.928* was chosen for three cells, which no longer describes the admitted set,
+   and it defines the registered bounds.
+
+**Stale in current docs.** `protocol.md` and `registered-decisions.md` still describe the retired
+organization-against-organization gate (pass rule, secondary estimate, power, "where it stands");
+`outcome-neutral.md` quotes v2 leakage and single-run interval rates; the granularity spec has no
+pointer to its successor; the manuscript names a one-month control window where six were used.
+Entries overturned by the bot audit (2026-09-23) carry no marker.
+
+**Held up.** K = 24 and the 24-run dev reading re-derive; the gate holds its level at K = 24; the
+pooled estimand re-derives on the current H1; dropping AOSP, permitted-host admission, the
+censoring rule, fp32 inference, the contamination reading and the corpus rules all hold.
+
+Items 7 and 8, and whether item 5 is registered at all, are design decisions and wait for AJ.
+Items 1 to 4 and 6 and the stale docs are corrections and are made next.
