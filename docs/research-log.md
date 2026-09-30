@@ -6621,3 +6621,23 @@ first check read +11.6%, a post hoc choice. On v3 the miss is well inside any to
 
 v3 leakage, train into dev, at the registered Jaccard 0.7: 0.97% (5 of 515), under the 2%
 ceiling; the halt check that now runs at 0.7 would pass on the dev window.
+
+### "Change-averaged runs at about twice nominal alpha" is not what it does: measured (2026-09-30)
+
+`interval-calibration-change-averaged.json`, `interval_calibration.py --estimator change_averaged`,
+the same null, window, arm, trials and resamples as the pooled `interval-calibration.json`. The
+claim came from the audit of this log (item 3), which found no artifact behind it.
+
+| changes | pooled, two-sided | change-averaged, two-sided |
+|---|---|---|
+| 10 | 0.0697 | 0.0993 |
+| 19 | 0.0600 | 0.0788 |
+| 30 | 0.0583 | 0.0650 |
+| 45 | 0.0575 | 0.0638 |
+| 91 | 0.0480 | 0.0555 |
+| 200 | 0.0475 | 0.0512 |
+
+Against a nominal 0.05 (Monte Carlo error 0.003 to 0.004, each row's `standard_error`). **Change-averaged runs somewhat above
+pooled at every size and near double nominal only at ten changes; across the quoted 48 to 91 (ladder points 45 and
+91) it is 1.1 to 1.3 times nominal, not twice.** The estimand decision does not rest on this: pooled is registered and
+re-derives on the current H1 (audit). The sentence is corrected wherever it is quoted.
