@@ -28,7 +28,7 @@ import random
 from collections import Counter
 from pathlib import Path
 
-from sphragis.measure.stats import Cluster, cluster_bootstrap
+from sphragis.measure.stats import ESTIMATORS, Cluster, cluster_bootstrap
 from sphragis.provenance import provenance_header
 
 RESULTS = Path("datasets/results/interval-calibration.json")
@@ -54,6 +54,9 @@ parser.add_argument("--resamples", type=int, default=RESAMPLES)
 parser.add_argument("--window", type=Path, default=WINDOW)
 parser.add_argument("--arm", default=ARM)
 parser.add_argument(
+    "--estimator", choices=sorted(ESTIMATORS), default="pooled", help="the estimand calibrated"
+)
+parser.add_argument(
     "--out", type=Path, default=RESULTS, help="for smoke runs; the default is the artifact"
 )
 
@@ -76,7 +79,13 @@ def null_shape(window: Path, arm: str) -> tuple[list[int], float]:
 
 
 def excludes_zero(
-    sizes: list[int], rate: float, *, count: int, trials: int, resamples: int
+    sizes: list[int],
+    rate: float,
+    *,
+    count: int,
+    trials: int,
+    resamples: int,
+    estimator: str = "pooled",
 ) -> dict[str, float]:
     """Share of trials whose 95% interval excludes zero although the truth is zero.
 
@@ -99,7 +108,9 @@ def excludes_zero(
                     control=tuple(float(rng.random() < rate) for _ in range(size)),
                 )
             )
-        interval = cluster_bootstrap(clusters, seed=SEED + trial, resamples=resamples)
+        interval = cluster_bootstrap(
+            clusters, seed=SEED + trial, resamples=resamples, estimator=ESTIMATORS[estimator]
+        )
         if interval["low"] > 0.0 or interval["high"] < 0.0:
             excluded += 1
         if interval["low"] > 0.0:
@@ -134,6 +145,7 @@ def main() -> None:
         "nominal_two_sided": 0.05,
         "trials": args.trials,
         "resamples": args.resamples,
+        "estimator": args.estimator,
     }
     # One cluster count per process is a supported way to run this, so rows merge into what is
     # already there. A row measured under a different null, window, arm, rate or budget is not
@@ -142,8 +154,8 @@ def main() -> None:
     # The rate sweep varies `exact_match_rate` on purpose, so comparability there is the window,
     # the arm and the budget; the ladder must match the null's rate too.
     comparable = {
-        "ladder": ("window", "arm", "exact_match_rate", "trials", "resamples"),
-        "rate_sensitivity": ("window", "arm", "trials", "resamples"),
+        "ladder": ("window", "arm", "exact_match_rate", "trials", "resamples", "estimator"),
+        "rate_sensitivity": ("window", "arm", "trials", "resamples", "estimator"),
     }
     for name, fields in comparable.items():
         rows = report.get(name)
@@ -158,7 +170,15 @@ def main() -> None:
     sweep = report.setdefault("rate_sensitivity", {})
 
     def measure(into: dict, key: str, count: int, at: float) -> None:
-        row = excludes_zero(sizes, at, count=count, trials=args.trials, resamples=args.resamples)
+        row = excludes_zero(
+            sizes,
+            at,
+            count=count,
+            trials=args.trials,
+            resamples=args.resamples,
+            estimator=args.estimator,
+        )
+        row["estimator"] = args.estimator
         row["exact_match_rate"] = at
         into[key] = row
         print(
