@@ -6776,3 +6776,23 @@ classes it misses are the two the audit exists to find. Its confidence does rank
 agreement (a one-off read on the checked items, not committed, so not quoted), which would fit
 triage (sending its least confident items to a stronger rater) rather than labelling; that is not
 pursued now.
+
+### The SESOI stays at 0.01, justified by cost-benefit, and stated as what sizes K (2026-09-30)
+
+Audit item 7. Current guidance on justifying a smallest effect of interest (Anvari and Lakens, JESP
+2021; Lakens, Collabra 2022) prefers a practical or cost-benefit argument, anchor or consensus
+methods, and advises against taking the value from effects earlier studies reported. The
+seed-noise origin recorded on 2026-09-22 is withdrawn as a justification.
+
+**Justification.** An organization that adopts the result trains and governs an adapter on its own
+review history. The smallest gain taken to repay that is one more exactly correct refinement per
+hundred review comments: 0.01 in exact match. For context only, not as the anchor: the gains the
+code-refinement literature reports as contributions are larger (CodeReviewer over CodeT5, +5.9
+points on its benchmark, Li et al. FSE 2022), so 0.01 is the conservative end of what the field
+treats as worth reporting, and a larger value would make K smaller (K scales with 1/xi^2, and at
+0.02 OpenStack's K falls to the floor of 10).
+
+**What it decides.** Through `XI = SESOI`, it sets K, the number of runs at which two independent
+draws of partitions agree within it with probability about 0.95. Beside each cell it is reported
+and decides no verdict. The earlier comment that it "decides nothing" was wrong and is corrected
+in `decomposition.py`; the manuscript states that it sizes K.

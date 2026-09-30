@@ -31,9 +31,11 @@ from sphragis.measure.stats import (
     stratified_crossed_draws,
 )
 
-# Smallest effect of interest, in exact match. About 4% of the pilot's adaptation gain and the
-# size of the seed-effect upper bound. Fixed in advance; never derived from a contrast. Reported
-# beside every cell; at the test window's size no interval fits inside it, so it decides nothing.
+# Smallest effect of interest, in exact match: one more exact refinement per hundred review
+# comments, the least gain taken to repay an organization training and governing an adapter of
+# its own (cost-benefit, research log 2026-09-30). Fixed in advance; never derived from a
+# contrast. It sets K through `partitions.XI`; beside each cell it is reported and decides no
+# verdict.
 SESOI = 0.01
 
 # One-sided family-wise level across the confirmatory hypotheses, held by Holm's step-down.
