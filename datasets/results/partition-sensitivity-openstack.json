@@ -1,0 +1,170 @@
+{
+  "placebo": "datasets/results/rq1-placebo-openstack-v3.json",
+  "org": "openstack",
+  "inputs": {
+    "runs": "datasets/results/partition-pilot-openstack.json: sizing.runs",
+    "spread_targets": "datasets/results/partition-pilot-openstack.json: per_run and runs_left_out, chi-squared bounds",
+    "calibration_changes": "datasets/results/partition-pilot-openstack.json: changes",
+    "planned_changes": "datasets/results/decomposition-sensitivity-v3.json: cells.openstack.planned_changes_per_half, summed",
+    "size_floor": "datasets/results/admissible-partitions-openstack.json: size_floor",
+    "reference": "datasets/results/admissible-partitions-openstack.json: reference"
+  },
+  "planned_changes": 1635,
+  "pilot_changes": 207,
+  "projects": 60,
+  "target_marginal_power": 0.928,
+  "sesoi": 0.01,
+  "xi": 0.01,
+  "runs": 24,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 300,
+  "null_trials": 1000,
+  "resamples": 1000,
+  "redraw": 0.055,
+  "size_floor": 1850,
+  "partitions_pooled": 400,
+  "partition_seeds_tried": 536,
+  "spread_targets": {
+    "pilot_lower_90": 0.011805573890199294,
+    "pilot_estimate": 0.014019546991598937,
+    "sizing_bound_90": 0.01765656547039203,
+    "pilot_upper_99": 0.021538576727672374
+  },
+  "calibration_changes": 206,
+  "calibration_trials": 100,
+  "by_target": {
+    "pilot_lower_90": {
+      "calibration": {
+        "target": 0.011805573890199294,
+        "sigma_run": 0.008408203125,
+        "spread": 0.011804460992739203,
+        "floor": false,
+        "spread_at_zero": 0.007502632034876254
+      },
+      "null_false_positive": {
+        "0.975": 0.01,
+        "0.95": 0.022
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.012
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "lift": 0.030468749999999996,
+          "minimum_detectable_effect": 0.022301537298387106,
+          "null_reads_bounded": 0.978
+        },
+        "0.95": {
+          "lift": 0.028124999999999997,
+          "minimum_detectable_effect": 0.020520623319892482,
+          "null_reads_bounded": 0.973
+        }
+      }
+    },
+    "pilot_estimate": {
+      "calibration": {
+        "target": 0.014019546991598937,
+        "sigma_run": 0.011162109375,
+        "spread": 0.014003843735358077,
+        "floor": false,
+        "spread_at_zero": 0.007502632034876254
+      },
+      "null_false_positive": {
+        "0.975": 0.009,
+        "0.95": 0.025
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.008
+      },
+      "reproducibility_failure": 0.003,
+      "by_level": {
+        "0.975": {
+          "lift": 0.030468749999999996,
+          "minimum_detectable_effect": 0.022301537298387106,
+          "null_reads_bounded": 0.966
+        },
+        "0.95": {
+          "lift": 0.028124999999999997,
+          "minimum_detectable_effect": 0.020520623319892482,
+          "null_reads_bounded": 0.965
+        }
+      }
+    },
+    "sizing_bound_90": {
+      "calibration": {
+        "target": 0.01765656547039203,
+        "sigma_run": 0.015205078125,
+        "spread": 0.017673249081642053,
+        "floor": false,
+        "spread_at_zero": 0.007502632034876254
+      },
+      "null_false_positive": {
+        "0.975": 0.01,
+        "0.95": 0.025
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.001
+      },
+      "reproducibility_failure": 0.031,
+      "by_level": {
+        "0.975": {
+          "lift": 0.032812499999999994,
+          "minimum_detectable_effect": 0.023895959341397863,
+          "null_reads_bounded": 0.968
+        },
+        "0.95": {
+          "lift": 0.030468749999999996,
+          "minimum_detectable_effect": 0.022301537298387106,
+          "null_reads_bounded": 0.968
+        }
+      }
+    },
+    "pilot_upper_99": {
+      "calibration": {
+        "target": 0.021538576727672374,
+        "sigma_run": 0.019423828125,
+        "spread": 0.021561814652773764,
+        "floor": false,
+        "spread_at_zero": 0.007502632034876254
+      },
+      "null_false_positive": {
+        "0.975": 0.012,
+        "0.95": 0.026
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "reproducibility_failure": 0.069,
+      "by_level": {
+        "0.975": {
+          "lift": 0.032812499999999994,
+          "minimum_detectable_effect": 0.023895959341397863,
+          "null_reads_bounded": 0.942
+        },
+        "0.95": {
+          "lift": 0.032812499999999994,
+          "minimum_detectable_effect": 0.023895959341397863,
+          "null_reads_bounded": 0.966
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-30T08:07:53.627790+00:00",
+    "git": {
+      "commit": "59f48bf925e86332d7c4ab60eb9339a969d95b15",
+      "branch": "measure/repeated-partitions"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
