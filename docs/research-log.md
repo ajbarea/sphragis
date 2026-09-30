@@ -6502,3 +6502,30 @@ single-partition placebo's clusters, the same pool its studies draw from; the sp
 
 The fixes are on `measure/repeated-partitions-fixes`, kept off the simulation's worktree until its
 artifact is written, so the artifact's provenance names the code that produced it (59f48bf).
+
+### At K = 24 the gate holds its level and two draws of splits agree: the fixed-K simulation (2026-09-30)
+
+`partition-sensitivity-openstack.json` (commit 59f48bf; every input read from its artifact and
+recorded under `inputs`). 1,000 null studies and 300 per power step at each point, the 1,635
+planned changes, K = 24, N = 1,850. At each point on the pilot's per-run spread, sigma_run is the
+shift at which 24 null runs on the pilot's 206 changes spread that much (100 studies a step):
+
+| spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95% | null bounded (97.5%) | reproducibility failure |
+|---|---|---|---|---|---|---|---|
+| pilot 90% lower | 0.0118 | 0.0084 | 0.010 | 0.022 | +0.0223 / +0.0205 | 0.978 | 0.000 |
+| pilot estimate | 0.0140 | 0.0112 | 0.009 | 0.025 | +0.0223 / +0.0205 | 0.966 | 0.003 |
+| sizing bound (90% upper) | 0.0177 | 0.0152 | 0.010 | 0.025 | +0.0239 / +0.0223 | 0.968 | 0.031 |
+| pilot 99% upper | 0.0215 | 0.0194 | 0.012 | 0.026 | +0.0239 / +0.0239 | 0.942 | 0.069 |
+
+**Coverage is at nominal at every point** (0.0125 and 0.025; Monte Carlo error about 0.0035 and
+0.005), where the stopping rule ran above it: the excess was the stop, not the interval.
+**Reproducibility holds up to the spread K was sized on** (0.031 against beta = 0.05) and fails
+past it (0.069 at the 99% bound), as sizing at a 90% bound intends. The detectable effects are
+quantized by the bisection's resolution on the lift (0.3 / 128) and change little across the
+spread.
+
+**Registered before any test-window run: the bounded reading's bounds are the detectable effects
+at the sizing bound, +0.0239 and +0.0223** (`sensitivity_bounds(..., "sizing_bound_90", ...)`).
+The same spread sets K, and it is the more conservative of the two central points: a larger bound
+makes a null harder to read as bounded. These replace the single-partition v3 bounds (+0.0246,
++0.0210). At them a null reads bounded in 96.8% of studies at the stricter level.

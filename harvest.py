@@ -62,10 +62,8 @@ SENSITIVITY_UPPER = f"{RESULTS}/sensitivity-b0.0098.json"
 CALIBRATION = f"{RESULTS}/interval-calibration.json"
 INFORMATIVENESS = f"{RESULTS}/cluster-informativeness.json"
 COVERAGE = f"{RESULTS}/crossed-coverage.json"
-SEED_EFFECT_V2 = f"{RESULTS}/seed-effect-placebo-openstack-v2.json"
-SEED_EFFECT_V3 = f"{RESULTS}/seed-effect-placebo-openstack-v3.json"
-SENSITIVITY_V3 = f"{RESULTS}/decomposition-sensitivity-v3.json"
-SENSITIVITY_V3_UPPER = f"{RESULTS}/decomposition-sensitivity-v3-b0.0376.json"
+PARTITION_PILOT = f"{RESULTS}/partition-pilot-openstack.json"
+PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
 
@@ -243,9 +241,6 @@ CLAIMS: list[tuple[Any, ...]] = [
         [*NEAR_DUPLICATE, "0.8", "rate"],
         {"scale": 100},
     ),
-    ("rd_seed_effect_v2", "registered-decisions.md", "0.0116", SEED_EFFECT_V2, ["sigma_b"]),
-    ("rd_seed_effect", "registered-decisions.md", "0.0077", SEED_EFFECT_V3, ["sigma_b"]),
-    ("rd_seed_bound", "registered-decisions.md", "0.0376", SEED_EFFECT_V3, ["sigma_b_upper_95"]),
     (
         "rd_coverage_median",
         "registered-decisions.md",
@@ -262,34 +257,57 @@ CLAIMS: list[tuple[Any, ...]] = [
         ["cells", "#seeds=3,sigma_b=0.02"],
         {"reduce": "add:crossed_above+crossed_below"},
     ),
-    ("rd_power", "registered-decisions.md", "0.928", SENSITIVITY_V3, ["target_marginal_power"]),
     (
-        "rd_sensitivity_os_975",
+        "rd_partition_fp_low",
         "registered-decisions.md",
-        "+0.0246",
-        SENSITIVITY_V3,
-        ["cells", "openstack", "by_level", "0.975", "minimum_detectable_effect"],
+        "0.009",
+        PARTITION_SENSITIVITY,
+        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
     ),
     (
-        "rd_sensitivity_os_95",
+        "rd_partition_fp_high",
         "registered-decisions.md",
-        "+0.0210",
-        SENSITIVITY_V3,
-        ["cells", "openstack", "by_level", "0.95", "minimum_detectable_effect"],
+        "0.012",
+        PARTITION_SENSITIVITY,
+        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
     ),
     (
-        "rd_sensitivity_os_975_upper",
+        "rd_partition_fp_nominal",
         "registered-decisions.md",
-        "+0.0488",
-        SENSITIVITY_V3_UPPER,
-        ["cells", "openstack", "by_level", "0.975", "minimum_detectable_effect"],
+        "0.0125",
+        PARTITION_SENSITIVITY,
+        ["levels", 0],
+        {"reduce": "one_sided"},
+    ),
+    ("rd_partition_sd", "registered-decisions.md", "0.0140", PARTITION_PILOT, ["sizing", "sd"]),
+    (
+        "rd_partition_k",
+        "registered-decisions.md",
+        "24",
+        PARTITION_PILOT,
+        ["sizing", "runs"],
+        {"occurrences": 2},
     ),
     (
-        "rd_sensitivity_os_95_upper",
+        "rd_power",
         "registered-decisions.md",
-        "+0.0450",
-        SENSITIVITY_V3_UPPER,
-        ["cells", "openstack", "by_level", "0.95", "minimum_detectable_effect"],
+        "0.928",
+        PARTITION_SENSITIVITY,
+        ["target_marginal_power"],
+    ),
+    (
+        "rd_partition_mde_975",
+        "registered-decisions.md",
+        "+0.0239",
+        PARTITION_SENSITIVITY,
+        ["by_target", "sizing_bound_90", "by_level", "0.975", "minimum_detectable_effect"],
+    ),
+    (
+        "rd_partition_mde_95",
+        "registered-decisions.md",
+        "+0.0223",
+        PARTITION_SENSITIVITY,
+        ["by_target", "sizing_bound_90", "by_level", "0.95", "minimum_detectable_effect"],
     ),
     # ---- outcome-neutral.md ----
     (
@@ -447,6 +465,9 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
             data = sum(data[field] for field in fields)
         except (KeyError, TypeError) as error:
             return None, f"{'.'.join(path)} in {artifact} cannot add {fields} ({error})"
+    elif reduce == "one_sided":
+        # A two-sided confidence level quoted as its one-sided nominal rate, (1 - level) / 2.
+        data = (1 - data) / 2
     # bool is an int in Python, and a serialization regression writing true where a bound
     # belongs would otherwise verify as 0.0 against a "+0.0000" literal.
     if isinstance(data, bool) or not isinstance(data, (int, float)):

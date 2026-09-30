@@ -98,28 +98,30 @@ across windows as well as within them, so registering there would be a test that
 
 ## Decided by the measurements their rules named in advance
 
-### Interval the gate reads: the crossed seed by change bootstrap
+### Interval the gate reads: the crossed run-by-change bootstrap
 
-Decided by the coverage study and the seed runs. Seeds and changes are crossed rather than
-nested, so they are resampled independently (Owen's pigeonhole bootstrap). At three seeds and
-a seed effect of 0.02 the crossed interval covers at 0.073 two-sided where the median-seed
-rule reaches 0.122, and it costs no width where there is no seed effect.
+Decided by the coverage study and the fixed-K simulation. A run is one admissible partition at its
+own training seed; runs and changes are crossed rather than nested, so they are resampled
+independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
+0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
+the registered runs its one-sided false-positive rate at the stricter level is 0.009 to 0.012
+against a nominal 0.0125.
 
-### Seed count: five
+### Number of runs: fixed from the pilot, K = 24 for OpenStack
 
-Decided by the seed main effect at the half size, where the granularity design trains. The rule
-fixed before the runs: three seeds if the effect is at or below 0.01, where three stop holding
-nominal, five above. On corpus v2 the effect was 0.0116, so five. On corpus v3 it is 0.0077 with a
-one-sided 95% upper bound of 0.0376: the rule as worded gives three, and **five are kept as a
-stated deviation**, because the rule's one earlier application took three only with its upper
-bound below 0.01 too, and five hold nominal at every seed effect measured.
+Decided by the partition study and two simulations. H1 is the mean over K admissible partitions,
+replacing five seeds on one registered partition, whose reading moved with the partition as much as
+with the seed. K = 2v(z / xi)^2, Ritzwoller and Romano's sizing rule, with v at the 90% upper bound
+of the development-window pilot's per-run variance and K kept within 10 to 40. OpenStack's pilot runs
+give a per-run standard deviation of 0.0140, so **K = 24**. A sequential rule, adding runs until
+they agree, was simulated first and rejected: it ran above nominal where it stopped early.
 
 ### Stated power: sensitivity, not power at an observed effect
 
-Each $H_1$ cell detects, with power 0.928 at OpenStack's projected test size, a half-split contrast
-of +0.0246 and +0.0210 exact-match points at the two Holm levels at the seed effect's point
-estimate, and +0.0488 and +0.0450 at its upper bound. Power from a pilot's own estimate is biased
-upward, so no power at an observed effect is stated.
+OpenStack's $H_1$ cell detects, with power 0.928 at its projected test size and K runs, a
+half-split contrast of +0.0239 and +0.0223 exact-match points at the two Holm levels, at the per-run
+spread K was sized on; these are the bounds a bounded reading is judged against. Power from a
+pilot's own estimate is biased upward, so no power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 
