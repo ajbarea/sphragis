@@ -27,26 +27,31 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("runs", type=Path, nargs="+", help="partition runs, in admissible order")
 parser.add_argument("--admissible", type=Path, required=True)
 parser.add_argument("--org", default="openstack")
-parser.add_argument("--train-size", type=int, default=1850, help="the design's fixed N")
 parser.add_argument("--fixed-k", type=int, help="the organization's fixed K; all runs when omitted")
+# H1 and H2: the registered Holm family.
 parser.add_argument("--hypotheses", type=int, default=2, help="the Holm family size")
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
 parser.add_argument("--sigma-run", help="which of its sigma_run entries sets the bounds")
+# Any fixed value: fixed so the reading reproduces.
 parser.add_argument("--bootstrap-seed", type=int, default=7)
+# The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=10_000)
 parser.add_argument("--out", type=Path, required=True)
 
 
 def main() -> None:
     args = parser.parse_args()
-    admissible = json.loads(args.admissible.read_text())["admissible"]
+    listing = json.loads(args.admissible.read_text())
+    admissible, train_size = listing["admissible"], listing["size_floor"]
     runs = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
         seeds = run["seeds"]
         partition = next(iter(run["corpora"].values()))["source"]
-        if run.get("train_size") != args.train_size:
-            raise SystemExit(f"{path}: trained at {run.get('train_size')}, not {args.train_size}")
+        if run.get("train_size") != train_size:
+            raise SystemExit(
+                f"{path}: trained at {run.get('train_size')}, not the list's {train_size}"
+            )
         if seeds != [k]:
             raise SystemExit(f"{path}: run {k} must use training seed {k}, has {seeds}")
         if f"-p{admissible[k - 1]}-" not in partition:
@@ -82,8 +87,11 @@ def main() -> None:
         f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
         f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
     )
+    head = {"run_files", "admissible", "levels", "bounds", "sizing", "provenance"}
+    if head & set(cell):
+        raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
     report = {
-        "runs": [str(p) for p in args.runs],
+        "run_files": [str(p) for p in args.runs],
         "admissible": str(args.admissible),
         "levels": levels,
         "bounds": bounds,

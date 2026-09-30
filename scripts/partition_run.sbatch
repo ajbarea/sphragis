@@ -22,7 +22,9 @@ source sphragis/experiment/cluster-env.sh
 
 ORG="${ORG:?set ORG to the organization to partition}"
 PARTITION_SEED="${PARTITION_SEED:?set PARTITION_SEED from the admissible list}"
-TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE to the design's fixed training size}"
+# The admissible list's size_floor (training_size.py's N); partition_pilot.py refuses a run
+# trained at any other size.
+TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE to the admissible list's size_floor}"
 SEEDS="${SEEDS:?set SEEDS to the run's position in the admissible list}"
 tag_result_suffix SEEDS TRAIN_SIZE
 ROOT="$SPHRAGIS_DATA/corpus-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX"

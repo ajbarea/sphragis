@@ -1,6 +1,7 @@
 {
   "org": "openstack",
   "size_floor": 1850,
+  "size_floor_source": "datasets/results/training-size-openstack.json: training_size",
   "language_mix_ceiling": 0.3187417925675669,
   "reference": "datasets/results/split-criteria-openstack.json",
   "start": 1,
@@ -1009,14 +1010,19 @@
     "x/packstack"
   ],
   "provenance": {
-    "generated_at": "2026-09-29T10:28:10.922988+00:00",
+    "generated_at": "2026-09-30T03:03:47.706203+00:00",
     "git": {
-      "commit": "6e7bbed458a5ff0dc3d836982db49f383065537d",
+      "commit": "e2622c70c4f24f14f9a3fdb9e0e0aecd6988c4a7",
       "branch": "measure/repeated-partitions",
       "uncommitted_code": [
-        "scripts/partition_run.sbatch"
+        "scripts/admissible_partitions.py",
+        "scripts/partition_pilot.py",
+        "scripts/partition_run.sbatch",
+        "scripts/partition_sensitivity.py",
+        "scripts/training_size.py",
+        "sphragis/experiment/partitions.py"
       ],
-      "uncommitted_code_sha256": "992b0cd8c5d216698ff04eb30b9a4630f0101ee2bf678b4912ea321d63818d46"
+      "uncommitted_code_sha256": "44b2ca0204218f8a02b2a010a73de9ba97e8cd39e1892e89765fdb9c8872d1dc"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

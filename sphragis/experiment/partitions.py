@@ -26,18 +26,23 @@ from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, perc
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
 # Romano, arXiv:2311.14204). XI is the SESOI: a disagreement smaller than the smallest effect of
-# interest changes no reading.
+# interest changes no reading. BETA is their recommended default ("suitable for most
+# applications", section 5).
 XI = SESOI
 BETA = 0.05
-# K is sized on an upper confidence bound of the pilot's per-run spread, so a pilot that happens
-# to understate it does not undersize the study. K_MIN is their recommended least burn-in; K_MAX
-# is the admissible list's length.
+# K is sized on the one-sided 90% upper bound of the pilot's per-run spread: a pilot that
+# understates the spread undersizes K with probability 0.10. A choice, registered with the rule.
 SIZING_CONFIDENCE = 0.90
+# Ritzwoller and Romano's least recommended burn-in (their section 5): below 10 runs the variance
+# estimate is too noisy to size on.
 K_MIN = 10
+# A cost cap: at about 1.5 GH200-hours a run, 40 runs is 60 GPU-hours an organization. The
+# admissible list is this long.
 K_MAX = 40
 # Every run scores the organization's deduplicated held-out examples. Only the per-half
 # boilerplate stage can still remove one in one partition and not another; above this share of
-# examples missing from any run, the runs are refused rather than read on a shrunken set.
+# examples missing from any run, the runs are refused rather than read on a shrunken set. A
+# choice: 1% is five of the pilot's 501 examples, and no real run has dropped one.
 MAX_DROPPED_SHARE = 0.01
 
 Results = Mapping[str, Sequence[Mapping[str, Any]]]
@@ -96,6 +101,19 @@ def chi2_quantile(p: float, df: int) -> float:
     return (low + high) / 2
 
 
+def sd_bound(pilot: Sequence[float], confidence: float, *, upper: bool) -> float:
+    """A one-sided `confidence` bound on the standard deviation of the pilot's per-run estimates.
+
+    Chi-squared with n - 1 degrees of freedom: the upper bound divides by the 1 - confidence
+    quantile, the lower by the confidence quantile.
+    """
+    n = len(pilot)
+    if n < 2:
+        raise ValueError(f"a bound needs at least two pilot runs, got {n}")
+    q = chi2_quantile(1 - confidence if upper else confidence, n - 1)
+    return stdev(pilot) * math.sqrt((n - 1) / q)
+
+
 def runs_needed(
     pilot: Sequence[float],
     *,
@@ -113,7 +131,7 @@ def runs_needed(
     if n < 2:
         raise ValueError(f"sizing needs at least two pilot runs, got {n}")
     s = stdev(pilot)
-    upper = s * math.sqrt((n - 1) / chi2_quantile(1 - confidence, n - 1))
+    upper = sd_bound(pilot, confidence, upper=True)
     z = NormalDist().inv_cdf(1 - beta / 2)
     raw = 2 * upper**2 * (z / xi) ** 2
     return {
@@ -187,6 +205,7 @@ def h1_over_partitions(
         "estimate": estimate,
         "per_run": per_run,
         "runs": k,
+        "changes": sum(len(half) for half in clusters[0]),
         "reproducibility": reproducibility(per_run),
         "runs_computed": len(computed),
         "runs_left_out": computed[k:],

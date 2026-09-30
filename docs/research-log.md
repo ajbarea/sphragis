@@ -6436,3 +6436,36 @@ nothing. OpenStack's 22 pilot runs, all computed before this rule was written
 (partition seeds 28 and 30, training seeds 23 and 24) are jobs 208898 and 208899, pinned at 205ba2f
 as the first 22, so the pilot is read once at the registered K. The fixed-K simulation at K = 24
 runs next; its coverage decides whether this rule is registered.
+
+### Every input of the design traced to its source, and the pilot read at K = 24 (2026-09-29)
+
+AJ: no number without a recorded origin, in code or in reporting. What that changed here:
+
+- **N = 1,850 is now an artifact.** `scripts/training_size.py` rebuilds the rule logged above (5th
+  percentile, nearest rank, of the smaller half over 300 seeded splits, rounded down to 50):
+  smallest 1,791, 5th percentile 1,856, median 1,988, **N = 1,850** (`training-size-openstack.json`),
+  as logged. `admissible_partitions.py` reads N from it rather than from a typed flag; rerun, the
+  admissible list is identical and records the source (`size_floor_source`). `partition_pilot.py`
+  reads the training size from the admissible list.
+- **The simulation reads every input from the artifact that fixed it:** K from the pilot's
+  sizing, the planned 1,635 changes from `decomposition-sensitivity-v3.json`, N and the split
+  reference from the admissible list, each source recorded in its output (`inputs`).
+- **The run spread is calibrated, not chosen.** The earlier grid (0.011, 0.015, 0.025, 0.035) had
+  no recorded origin, and it was the run shift sigma_run, not the per-run spread its log table
+  called it: a simulated run already varies with its partition and churn. sigma_run is now found
+  by bisection so that K null runs on the pilot's 206 changes spread as much as four named points
+  on the pilot's per-run spread: its 90% lower bound, its estimate (0.0140), the 90% upper bound K
+  was sized on (0.0177), and its 99% upper bound. The stopping-rule table above is therefore
+  indexed by sigma_run, not by spread.
+- **Each chosen constant states its reason where it is defined** (beta, K_MIN, K_MAX, the sizing
+  confidence, the refusal share, the simulation's trial counts and churn), and the design spec
+  carries a table of every number and its source.
+- **A bug the tracing found.** The regenerated `partition-pilot-openstack.json` had lost its list
+  of run files: the report's `runs` key was overwritten by the cell's run count. Renamed
+  `run_files`; the script now refuses any cell key that would overwrite a report key.
+
+**The pilot at the registered K** (`partition-pilot-openstack-k24.json`). Runs 23 and 24 (jobs
+208898, 208899, pinned at 205ba2f with the first 22) passed every outcome-neutral check. Over the
+first 24 admissible runs, H1 reads **+0.0049 [-0.0088, +0.0185]** at 97.5% and [-0.0073, +0.0166]
+at 95%, inconclusive. Sizing on all 24 would give K = 22; K stays 24, fixed from the 22 runs before
+these two were computed.

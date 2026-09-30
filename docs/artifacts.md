@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 204 artifacts under
-43 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 208 artifacts under
+44 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -257,11 +257,12 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 
 | artifact | |
 |---|---|
-| `partition-pilot-openstack-stopping.json` | `partition-pilot-openstack.json` |
+| `partition-pilot-openstack-k24.json` | `partition-pilot-openstack-stopping.json` |
+| `partition-pilot-openstack.json` |  |
 
 ## `scripts/partition_sensitivity.py`
 
-Operating characteristics of H1 over repeated partitions, by simulation.
+Operating characteristics of H1 over repeated partitions at the registered K, by simulation.
 
 | artifact | |
 |---|---|
@@ -297,7 +298,8 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-partition-openstack-p22-s17-n1850.json` | `rq1-partition-openstack-p23-s18-n1850.json` |
 | `rq1-partition-openstack-p24-s19-n1850.json` | `rq1-partition-openstack-p25-s20-n1850.json` |
 | `rq1-partition-openstack-p26-s21-n1850.json` | `rq1-partition-openstack-p27-s22-n1850.json` |
-| `rq1-partition-openstack-p3-s2-n1850.json` | `rq1-partition-openstack-p4-s3-n1850.json` |
+| `rq1-partition-openstack-p28-s23-n1850.json` | `rq1-partition-openstack-p3-s2-n1850.json` |
+| `rq1-partition-openstack-p30-s24-n1850.json` | `rq1-partition-openstack-p4-s3-n1850.json` |
 | `rq1-partition-openstack-p5-s4-n1850.json` | `rq1-partition-openstack-p7-s5-n1850.json` |
 | `rq1-partition-openstack-p8-s6-n1850.json` | `rq1-partition-openstack-p9-s7-n1850.json` |
 | `rq1-placebo-openstack-s2.json` | `rq1-placebo-openstack-s3.json` |
@@ -419,6 +421,14 @@ Would keeping the client-specific subspace local take the house style with it?
 |---|---|
 | `subspace-split-cpp-256-c256.json` | `subspace-split-cpp-rebuilt-c128.json` |
 | `subspace-split.json` |  |
+
+## `scripts/training_size.py`
+
+The fixed training size N every adapter trains at, derived from the organization's own splits.
+
+| artifact | |
+|---|---|
+| `training-size-openstack.json` |  |
 
 ## `scripts/window_report.py`
 

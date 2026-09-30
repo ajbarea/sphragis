@@ -69,6 +69,23 @@ happen to agree also narrows the interval. Its reproducibility failure exceeded 
 recommend a tolerance at which the rule runs more than 500 splits and a burn-in of at least 10; a
 run here is a GPU job, and the rule stopped near 16.
 
+## Where each number comes from
+
+| number | value | source |
+|---|---|---|
+| xi | 0.01 | the SESOI: a disagreement below it changes no reading (`partitions.XI`) |
+| beta | 0.05 | Ritzwoller and Romano's recommended default, their section 5 |
+| sizing confidence | 90%, one-sided | a choice: a pilot that understates the spread undersizes K with probability 0.10 |
+| K_MIN | 10 | their least recommended burn-in, section 5 |
+| K_MAX | 40 | a cost cap: about 60 GH200-hours an organization; the admissible list's length |
+| N | 1,850 | `training_size.py`: 5th percentile (nearest rank) of the smaller half over 300 seeded splits, rounded down to 50 (`training-size-openstack.json`) |
+| K (OpenStack) | 24 | `runs_needed` on the 22 pilot runs (`partition-pilot-openstack.json`, `sizing`) |
+| planned test changes | 1,635 | 1,809 x 207/229, v3's re-projection (`decomposition-sensitivity-v3.json`, `planned_changes_per_half`, research log 2026-09-28) |
+| simulated run spread | four points | the pilot's per-run spread: 90% lower bound, estimate, 90% upper (the sizing bound), 99% upper; sigma_run calibrated to each (`partition-sensitivity-openstack.json`, `spread_targets`, `calibration`) |
+| churn (redraw) | 0.055 | calibrated to the identical nulls marker-0 and sym-0 (`crossed_coverage.py --calibrate`, research log 2026-09-23) |
+| target power | 0.928 | 0.928^3 = 0.80 joint over three independent cells |
+| dropped-example refusal | 1% | a choice: five of the pilot's 501 examples; none has dropped |
+
 ## Interval
 
 Runs and changes are crossed: every run scores every held-out change of the organization, since

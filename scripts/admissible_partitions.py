@@ -3,13 +3,15 @@
 Partition seeds are tried in order from `--start`. A seed is admissible when its halves, built as
 `placebo_corpus.py --dedup-org --partition-seed` builds them (the organization deduplicated
 once, projects assigned in the seeded order on training-window counts, each half then deduplicated
-and split on its own), meet `split_criteria` with the fixed training size `--size-floor` and the
-reference's language-mix ceiling. The first `--count` admissible seeds are written in order; run
-k of the study uses the k-th. Reads the corpus's rows and no outcome: the organization's dedup
-sees every window, the assignment and the criteria the training window alone.
+and split on its own), meet `split_criteria` with the fixed training size N, read from
+`--training-size` (`training_size.py`), and the reference's language-mix ceiling. The first
+`--count` admissible seeds are written in order; run k of the study uses the k-th. Reads the
+corpus's rows and no outcome: the organization's dedup sees every window, the assignment and the
+criteria the training window alone.
 
     uv run --no-sync --no-active python scripts/admissible_partitions.py \\
-        --root datasets/gerrit --org openstack --size-floor 1850 \\
+        --root datasets/gerrit --org openstack \\
+        --training-size datasets/results/training-size-openstack.json \\
         --reference datasets/results/split-criteria-openstack.json \\
         --out datasets/results/admissible-partitions-openstack.json
 """
@@ -32,7 +34,9 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--root", type=Path, required=True)
 parser.add_argument("--org", required=True)
 parser.add_argument("--reference", type=Path, required=True, help="a split-criteria artifact")
-parser.add_argument("--size-floor", type=int, required=True, help="the fixed training size N")
+parser.add_argument(
+    "--training-size", type=Path, required=True, help="training_size.py's artifact: N"
+)
 parser.add_argument("--start", type=int, default=1)
 parser.add_argument("--count", type=int, default=K_MAX)
 parser.add_argument("--batch", type=int, default=24, help="seeds checked per parallel round")
@@ -67,11 +71,12 @@ def check(seed: int) -> dict:
 def main() -> None:
     args = parser.parse_args()
     reference = json.loads(args.reference.read_text())
+    size_floor = json.loads(args.training_size.read_text())["training_size"]
     rows, removed = run_dedup(refined_examples(args.root, args.org))
     checked: list[dict] = []
     seed = args.start
     with ProcessPoolExecutor(
-        args.workers, initializer=_init, initargs=(rows, reference["halves"], args.size_floor)
+        args.workers, initializer=_init, initargs=(rows, reference["halves"], size_floor)
     ) as pool:
         while sum(c["qualifies"] for c in checked) < args.count:
             if seed > args.max_seed:
@@ -90,7 +95,8 @@ def main() -> None:
     last = admissible[-1]
     report = {
         "org": args.org,
-        "size_floor": args.size_floor,
+        "size_floor": size_floor,
+        "size_floor_source": f"{args.training_size}: training_size",
         "language_mix_ceiling": reference["suffix_total_variation"],
         "reference": str(args.reference),
         "start": args.start,

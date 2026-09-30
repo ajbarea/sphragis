@@ -21,7 +21,9 @@
     "datasets/results/rq1-partition-openstack-p24-s19-n1850.json",
     "datasets/results/rq1-partition-openstack-p25-s20-n1850.json",
     "datasets/results/rq1-partition-openstack-p26-s21-n1850.json",
-    "datasets/results/rq1-partition-openstack-p27-s22-n1850.json"
+    "datasets/results/rq1-partition-openstack-p27-s22-n1850.json",
+    "datasets/results/rq1-partition-openstack-p28-s23-n1850.json",
+    "datasets/results/rq1-partition-openstack-p30-s24-n1850.json"
   ],
   "admissible": "datasets/results/admissible-partitions-openstack.json",
   "levels": [
@@ -29,7 +31,7 @@
     0.95
   ],
   "bounds": null,
-  "estimate": 0.005068228720328398,
+  "estimate": 0.0048709345793271665,
   "per_run": [
     0.02032520325203252,
     0.020870464104940492,
@@ -52,26 +54,28 @@
     0.011088903102014713,
     -0.024371980676328495,
     -0.009629064159061729,
-    -0.0007529388905081202
+    -0.0007529388905081202,
+    -0.0037528307990941367,
+    0.009154228855721397
   ],
-  "runs": 22,
+  "runs": 24,
   "changes": 206,
   "reproducibility": {
-    "runs": 22,
-    "variance_of_mean": 8.933986265893218e-06,
+    "runs": 24,
+    "variance_of_mean": 7.64687308608792e-06,
     "critical_value": 1.3015888581350293e-05,
     "holds": true
   },
-  "runs_computed": 22,
+  "runs_computed": 24,
   "runs_left_out": [],
   "intervals": {
     "0.975": {
-      "low": -0.008948835521272198,
-      "high": 0.019223519307985434
+      "low": -0.008841886165612623,
+      "high": 0.018499264391204716
     },
     "0.95": {
-      "low": -0.0072709146587154015,
-      "high": 0.017458223298525612
+      "low": -0.00727224279719241,
+      "high": 0.016621479187014843
     }
   },
   "verdicts": {
@@ -85,25 +89,27 @@
   "examples": 501,
   "dropped": 0,
   "sizing": {
-    "pilot_runs": 22,
-    "sd": 0.014019546991598937,
-    "sd_upper": 0.01765656547039203,
+    "pilot_runs": 24,
+    "sd": 0.013547138224219537,
+    "sd_upper": 0.016860798840105832,
     "confidence": 0.9,
-    "formula": 23.951826435955716,
-    "runs": 24
+    "formula": 21.841500543716368,
+    "runs": 22
   },
   "provenance": {
-    "generated_at": "2026-09-29T22:53:06.780863+00:00",
+    "generated_at": "2026-09-30T03:21:00.028963+00:00",
     "git": {
       "commit": "e2622c70c4f24f14f9a3fdb9e0e0aecd6988c4a7",
       "branch": "measure/repeated-partitions",
       "uncommitted_code": [
+        "scripts/admissible_partitions.py",
         "scripts/partition_pilot.py",
+        "scripts/partition_run.sbatch",
         "scripts/partition_sensitivity.py",
         "scripts/training_size.py",
         "sphragis/experiment/partitions.py"
       ],
-      "uncommitted_code_sha256": "206ae144fd6cb2a32b90aa25aeedd1908cc4b25a15b48b9791567776cc935289"
+      "uncommitted_code_sha256": "63a1f6e65de2863fa241546fd59485f0eba53e493cd4f18c03a1285c5f76c168"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

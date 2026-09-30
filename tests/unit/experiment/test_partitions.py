@@ -19,6 +19,7 @@ from sphragis.experiment.partitions import (
     h1_over_partitions,
     reproducibility,
     runs_needed,
+    sd_bound,
 )
 
 
@@ -49,6 +50,15 @@ def test_runs_needed_is_the_sizing_formula_at_the_upper_bound() -> None:
     assert out["sd_upper"] == pytest.approx(upper)
     assert out["formula"] == pytest.approx(2 * upper**2 * (z / XI) ** 2)
     assert out["runs"] == min(K_MAX, max(K_MIN, math.ceil(out["formula"])))
+
+
+def test_sd_bounds_bracket_the_estimate_and_widen_with_confidence() -> None:
+    pilot = [0.02, -0.01, 0.005, 0.03, -0.02, 0.0, 0.01, 0.015, -0.005, 0.025]
+    s = stdev(pilot)
+    lower, upper = sd_bound(pilot, 0.90, upper=False), sd_bound(pilot, 0.90, upper=True)
+    assert lower < s < upper < sd_bound(pilot, 0.99, upper=True)
+    assert upper == pytest.approx(s * math.sqrt(9 / chi2_quantile(0.10, 9)))
+    assert lower == pytest.approx(s * math.sqrt(9 / chi2_quantile(0.90, 9)))
 
 
 def test_runs_needed_clamps_to_the_burn_in_and_the_list() -> None:

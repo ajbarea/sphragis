@@ -1,0 +1,32 @@
+{
+  "org": "openstack",
+  "splits": 300,
+  "percentile": 0.05,
+  "round_to": 50,
+  "smaller_half": {
+    "min": 1791,
+    "at_percentile": 1856,
+    "median": 1988,
+    "max": 2003
+  },
+  "training_size": 1850,
+  "provenance": {
+    "generated_at": "2026-09-30T02:49:20.579477+00:00",
+    "git": {
+      "commit": "e2622c70c4f24f14f9a3fdb9e0e0aecd6988c4a7",
+      "branch": "measure/repeated-partitions",
+      "uncommitted_code": [
+        "scripts/admissible_partitions.py",
+        "scripts/partition_pilot.py",
+        "scripts/partition_run.sbatch",
+        "scripts/partition_sensitivity.py",
+        "scripts/training_size.py",
+        "sphragis/experiment/partitions.py"
+      ],
+      "uncommitted_code_sha256": "44b2ca0204218f8a02b2a010a73de9ba97e8cd39e1892e89765fdb9c8872d1dc"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
