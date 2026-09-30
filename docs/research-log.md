@@ -6797,3 +6797,13 @@ probability projected from the ten runs' per-half estimates and interval half-wi
 per half, product over halves) is at least 0.95. Otherwise it is redesigned before
 registration: the plant raised to a half and the same ten runs repeated, and failing that the
 check read over several runs. The rates are logged whichever way they fall.
+
+### The planted check at a quarter passes 2 of 10 runs: redesigned before registration (2026-09-30)
+
+The ten runs planned above (jobs 210077 to 210086, pinned at b05a2d8), `rq1-partition-openstack-*-n1850-plant0.25.json`.
+Two pass (partitions 2 and 12), seven read `mixed`, one `fail`. The planted effect is there in
+every run but one half (partition 5, half b, -0.013), from about +0.003 to +0.106, and the
+development window's 81 to 125 changes a half resolve the smaller ones no better than the pilot's
+183 did. Registered as drafted, check 5 would halt a working apparatus in about four studies of
+five. By the rule fixed before these runs, it is not registered at a quarter: the plant is raised
+to a half and the same ten partitions and seeds are repeated.
