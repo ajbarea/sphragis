@@ -6406,3 +6406,27 @@ induced by common initialization and falls toward chance under independent initi
 clients share initialization, as federated clients receive one global model, so the FedSA-LoRA
 result (A alone identifies a source best) describes that setting; the robustness item on several
 initializations is where independent initialization gets read.
+
+### Planned before any run: a local decision model as a third blind label-audit rater (2026-09-30)
+
+Exploratory, outside the registered pipeline. Ollama 0.35 serves decision models over a System
+One API (`/v1/systemone`): a choice question returns a probability per option and a yes/no
+question the probability of yes, in one pass, with no generated text. Nimble (Bespoke Labs, 9B,
+Qwen3.5-9B base, Apache 2.0) runs locally, so no corpus text leaves the machine; TypeSafe's hosted
+Jev, the API it follows, is not used, since its data terms are unpublished. The only published
+evaluation outside its vendors found a System One model's calibration model-specific, to be
+audited per model (Rafe and Das, arXiv:2609.24052).
+
+`scripts/label_audit_decision.py` asks each of the v2 audit's 384 blind items the rubric's two
+questions in the rubric's own words: the label as a choice over the five labels, each described
+by its rubric line, and `outside_names` as a yes/no question, read as the more probable answer.
+It sees the same fields and rubric raters A and B saw, never the key, their labels or the human's.
+`label_audit_agreement.py` then reads it as rater C beside A and B, with the same exclusion
+(item-001, the rubric's worked example); that command without C reproduces `label-audit-v2.json`
+exactly.
+
+**The comparator is human~B**, not human~A: the human saw A's label after each blind answer, so
+human~A can be calibrated toward A, while B's and C's labels were never revealed. **Nothing is
+decided from this reading.** It is reported beside A and B; whether a decision model is worth a
+place as a cheap second labeller on the rest of the corpus is a separate decision, taken on this
+reading together with its confusion table.
