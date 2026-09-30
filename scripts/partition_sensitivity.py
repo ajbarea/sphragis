@@ -123,8 +123,8 @@ def pilot_pool(placebo: Path, corpus: Path, org: str) -> Pool:
 
 def partition_pool(
     corpus: Path, org: str, reference: Path, size_floor: int, count: int
-) -> tuple[list[dict[str, int]], int]:
-    """The first `count` admissible partitions, built as the runs build them, and seeds tried.
+) -> tuple[list[dict[str, int]], list[int]]:
+    """The first `count` admissible partitions, built as the runs build them, and their seeds.
 
     The organization deduplicated once, projects assigned in each seed's order on training-window
     counts, and `split_criteria` read at the fixed size against the reference's ceiling. Each
@@ -135,13 +135,15 @@ def partition_pool(
     ref = json.loads(reference.read_text())["halves"]
     counts = dict(project_counts(rows, WINDOWS["train"]))
     pool: list[dict[str, int]] = []
+    seeds: list[int] = []
     seed = 0
     while len(pool) < count:
         seed += 1
         own = build_halves(rows, train, WINDOWS["train"], seed)
         if split_criteria(own, ref, size_floor=size_floor)["qualifies"]:
             pool.append(assign(counts, order_seed=seed))
-    return pool, seed
+            seeds.append(seed)
+    return pool, seeds
 
 
 _PARTITIONS: list[dict[str, int]] = []
@@ -308,13 +310,18 @@ def main() -> None:
         "pilot_upper_99": sd_bound(estimates, 0.99, upper=True),
     }
     pool = pilot_pool(args.placebo, args.corpus, args.org)
-    partitions, tried = partition_pool(
+    partitions, pool_seeds = partition_pool(
         args.corpus,
         args.org,
         Path(admissible["reference"]),
         admissible["size_floor"],
         args.partitions,
     )
+    # The pool is rebuilt from --corpus, so it must reproduce the committed list it extends.
+    listed = admissible["admissible"]
+    if pool_seeds[: len(listed)] != listed:
+        raise SystemExit(f"{args.corpus} does not reproduce the admissible list {args.admissible}")
+    tried = pool_seeds[-1]
     missing = {p for _, p in pool} - set(partitions[0])
     if missing:
         raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
