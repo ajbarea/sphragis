@@ -6816,3 +6816,25 @@ federated LoRA privacy, each record checked on arXiv. What it changes:
 - **RQ2's attack family was uncited**: source inference (Hu et al., TDSC 2024). FedAS-LoRA and
   LA-LoRA are placed without new cuts. A second model family is added as an exploratory item.
   All three are in ROADMAP Plan F.
+
+### Wikimedia meets the split criteria and is admissible at N = 1,850; LineageOS is too small for an H1 cell (2026-09-30)
+
+Wikimedia was refined under the v3 rules: 5,699 examples kept over 13 months, 1,472 removed as
+examples whose target the reviewer wrote (`suggested_edit`).
+
+- **Registered split** (`split-criteria-wikimedia.json`): halves of 2,094 and 2,095 training
+  examples over 130 and 133 projects, suffix total variation 0.266 against OpenStack's ceiling of
+  0.3187, 29 projects excluded before the split. It meets all four criteria.
+- **Training size** (`training-size-wikimedia.json`): 1,900. The design trains every adapter at
+  the least N across admitted organizations, so N stays at OpenStack's 1,850 and every OpenStack
+  run already made stays on the design.
+- **Admissible partitions** (`admissible-partitions-wikimedia.json`, read at N = 1,850 against
+  OpenStack's reference): the first 40 admissible among seeds 1 to 52. The 12 refused fail the
+  language-mix ceiling (10) or the size floor (2).
+
+Wikimedia is admitted on these criteria. It still needs its development-window pilot to fix its
+K, and its bounds from its own simulation.
+
+**LineageOS.** Its training window (2024-11 to 2025-08) holds 353 built examples before refine,
+counted from `datasets/gerrit/lineageos/examples/*.jsonl`. Two halves at N = 1,850 need 3,700,
+so LineageOS cannot hold an H1 cell. Its development months are still collected, for RQ2.

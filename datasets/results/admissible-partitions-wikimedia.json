@@ -1,0 +1,1088 @@
+{
+  "org": "wikimedia",
+  "root": "/home/ajbar/ajsoftworks/sphragis/.claude/worktrees/wm-bots/datasets/gerrit",
+  "size_floor": 1850,
+  "size_floor_source": "datasets/results/training-size-openstack.json: training_size",
+  "language_mix_ceiling": 0.3187417925675669,
+  "reference": "datasets/results/split-criteria-openstack.json",
+  "start": 1,
+  "admissible": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    25,
+    27,
+    29,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    47,
+    48,
+    49,
+    50,
+    52
+  ],
+  "checked": [
+    {
+      "seed": 1,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2114,
+        2070
+      ],
+      "projects": [
+        107,
+        154
+      ],
+      "suffix_total_variation": 0.2269064301025142
+    },
+    {
+      "seed": 2,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2069,
+        2115
+      ],
+      "projects": [
+        147,
+        114
+      ],
+      "suffix_total_variation": 0.28051810641611447
+    },
+    {
+      "seed": 3,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2105,
+        2079
+      ],
+      "projects": [
+        146,
+        115
+      ],
+      "suffix_total_variation": 0.2805423308986254
+    },
+    {
+      "seed": 4,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2135,
+        2049
+      ],
+      "projects": [
+        92,
+        169
+      ],
+      "suffix_total_variation": 0.32209988764725583
+    },
+    {
+      "seed": 5,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2049,
+        2135
+      ],
+      "projects": [
+        134,
+        127
+      ],
+      "suffix_total_variation": 0.231513173159238
+    },
+    {
+      "seed": 6,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2294,
+        1890
+      ],
+      "projects": [
+        138,
+        123
+      ],
+      "suffix_total_variation": 0.22602279699053893
+    },
+    {
+      "seed": 7,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2018,
+        2166
+      ],
+      "projects": [
+        123,
+        138
+      ],
+      "suffix_total_variation": 0.2996297404614243
+    },
+    {
+      "seed": 8,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2094,
+        2090
+      ],
+      "projects": [
+        80,
+        181
+      ],
+      "suffix_total_variation": 0.27226022858657456
+    },
+    {
+      "seed": 9,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2094,
+        2090
+      ],
+      "projects": [
+        114,
+        147
+      ],
+      "suffix_total_variation": 0.2261946870301568
+    },
+    {
+      "seed": 10,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2094,
+        2090
+      ],
+      "projects": [
+        157,
+        104
+      ],
+      "suffix_total_variation": 0.20731138865658547
+    },
+    {
+      "seed": 11,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2149,
+        2035
+      ],
+      "projects": [
+        154,
+        107
+      ],
+      "suffix_total_variation": 0.2509904040848666
+    },
+    {
+      "seed": 12,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2089,
+        2095
+      ],
+      "projects": [
+        172,
+        89
+      ],
+      "suffix_total_variation": 0.28665003981533
+    },
+    {
+      "seed": 13,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1953,
+        2231
+      ],
+      "projects": [
+        119,
+        142
+      ],
+      "suffix_total_variation": 0.2017165835502759
+    },
+    {
+      "seed": 14,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2180,
+        2004
+      ],
+      "projects": [
+        143,
+        118
+      ],
+      "suffix_total_variation": 0.38254774853961804
+    },
+    {
+      "seed": 15,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": false,
+        "language_mix": true
+      },
+      "train_examples": [
+        2363,
+        1821
+      ],
+      "projects": [
+        124,
+        137
+      ],
+      "suffix_total_variation": 0.16409394046929332
+    },
+    {
+      "seed": 16,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2090,
+        2094
+      ],
+      "projects": [
+        149,
+        112
+      ],
+      "suffix_total_variation": 0.26865320373086926
+    },
+    {
+      "seed": 17,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2133,
+        2051
+      ],
+      "projects": [
+        83,
+        178
+      ],
+      "suffix_total_variation": 0.21245328053985765
+    },
+    {
+      "seed": 18,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2091,
+        2093
+      ],
+      "projects": [
+        135,
+        126
+      ],
+      "suffix_total_variation": 0.25126066414819453
+    },
+    {
+      "seed": 19,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1926,
+        2258
+      ],
+      "projects": [
+        178,
+        83
+      ],
+      "suffix_total_variation": 0.18579054788006552
+    },
+    {
+      "seed": 20,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2064,
+        2120
+      ],
+      "projects": [
+        132,
+        129
+      ],
+      "suffix_total_variation": 0.31358783091999415
+    },
+    {
+      "seed": 21,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2115,
+        2069
+      ],
+      "projects": [
+        141,
+        120
+      ],
+      "suffix_total_variation": 0.30778930674244476
+    },
+    {
+      "seed": 22,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2237,
+        1947
+      ],
+      "projects": [
+        150,
+        111
+      ],
+      "suffix_total_variation": 0.2775642133892818
+    },
+    {
+      "seed": 23,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2122,
+        2062
+      ],
+      "projects": [
+        154,
+        107
+      ],
+      "suffix_total_variation": 0.40190704558315227
+    },
+    {
+      "seed": 24,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2113,
+        2071
+      ],
+      "projects": [
+        123,
+        138
+      ],
+      "suffix_total_variation": 0.3292640372319798
+    },
+    {
+      "seed": 25,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2179,
+        2005
+      ],
+      "projects": [
+        97,
+        164
+      ],
+      "suffix_total_variation": 0.298080407059451
+    },
+    {
+      "seed": 26,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2053,
+        2131
+      ],
+      "projects": [
+        110,
+        151
+      ],
+      "suffix_total_variation": 0.3232668402765476
+    },
+    {
+      "seed": 27,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1911,
+        2273
+      ],
+      "projects": [
+        149,
+        112
+      ],
+      "suffix_total_variation": 0.20896778624137055
+    },
+    {
+      "seed": 28,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2097,
+        2087
+      ],
+      "projects": [
+        111,
+        150
+      ],
+      "suffix_total_variation": 0.3367205620825516
+    },
+    {
+      "seed": 29,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2088,
+        2096
+      ],
+      "projects": [
+        162,
+        99
+      ],
+      "suffix_total_variation": 0.23265991050276388
+    },
+    {
+      "seed": 30,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2307,
+        1877
+      ],
+      "projects": [
+        109,
+        152
+      ],
+      "suffix_total_variation": 0.33084063027467997
+    },
+    {
+      "seed": 31,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2099,
+        2085
+      ],
+      "projects": [
+        134,
+        127
+      ],
+      "suffix_total_variation": 0.2888553759184172
+    },
+    {
+      "seed": 32,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2055,
+        2129
+      ],
+      "projects": [
+        132,
+        129
+      ],
+      "suffix_total_variation": 0.27237534270684405
+    },
+    {
+      "seed": 33,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2333,
+        1851
+      ],
+      "projects": [
+        151,
+        110
+      ],
+      "suffix_total_variation": 0.18931136955661412
+    },
+    {
+      "seed": 34,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2069,
+        2115
+      ],
+      "projects": [
+        130,
+        131
+      ],
+      "suffix_total_variation": 0.30816316969973273
+    },
+    {
+      "seed": 35,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2177,
+        2007
+      ],
+      "projects": [
+        123,
+        138
+      ],
+      "suffix_total_variation": 0.19056888396354602
+    },
+    {
+      "seed": 36,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2172,
+        2012
+      ],
+      "projects": [
+        129,
+        132
+      ],
+      "suffix_total_variation": 0.2890419911470404
+    },
+    {
+      "seed": 37,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": false,
+        "language_mix": false
+      },
+      "train_examples": [
+        2358,
+        1826
+      ],
+      "projects": [
+        129,
+        132
+      ],
+      "suffix_total_variation": 0.3492986519290207
+    },
+    {
+      "seed": 38,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2046,
+        2138
+      ],
+      "projects": [
+        154,
+        107
+      ],
+      "suffix_total_variation": 0.2878746729798361
+    },
+    {
+      "seed": 39,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1903,
+        2281
+      ],
+      "projects": [
+        149,
+        112
+      ],
+      "suffix_total_variation": 0.28372538986989093
+    },
+    {
+      "seed": 40,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2076,
+        2108
+      ],
+      "projects": [
+        146,
+        115
+      ],
+      "suffix_total_variation": 0.21513237030780985
+    },
+    {
+      "seed": 41,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2092,
+        2092
+      ],
+      "projects": [
+        116,
+        145
+      ],
+      "suffix_total_variation": 0.22657743785850862
+    },
+    {
+      "seed": 42,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2242,
+        1942
+      ],
+      "projects": [
+        79,
+        182
+      ],
+      "suffix_total_variation": 0.23651550632940466
+    },
+    {
+      "seed": 43,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2063,
+        2121
+      ],
+      "projects": [
+        143,
+        118
+      ],
+      "suffix_total_variation": 0.311981402419724
+    },
+    {
+      "seed": 44,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1929,
+        2255
+      ],
+      "projects": [
+        142,
+        119
+      ],
+      "suffix_total_variation": 0.2929955780541829
+    },
+    {
+      "seed": 45,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        1888,
+        2296
+      ],
+      "projects": [
+        130,
+        131
+      ],
+      "suffix_total_variation": 0.36554545857201914
+    },
+    {
+      "seed": 46,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2094,
+        2090
+      ],
+      "projects": [
+        144,
+        117
+      ],
+      "suffix_total_variation": 0.38297436741110397
+    },
+    {
+      "seed": 47,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2044,
+        2140
+      ],
+      "projects": [
+        149,
+        112
+      ],
+      "suffix_total_variation": 0.2879986100188379
+    },
+    {
+      "seed": 48,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2133,
+        2051
+      ],
+      "projects": [
+        88,
+        173
+      ],
+      "suffix_total_variation": 0.2036571871107664
+    },
+    {
+      "seed": 49,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2012,
+        2172
+      ],
+      "projects": [
+        152,
+        109
+      ],
+      "suffix_total_variation": 0.24030769343423805
+    },
+    {
+      "seed": 50,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2073,
+        2111
+      ],
+      "projects": [
+        85,
+        176
+      ],
+      "suffix_total_variation": 0.25688769208585815
+    },
+    {
+      "seed": 51,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2063,
+        2121
+      ],
+      "projects": [
+        154,
+        107
+      ],
+      "suffix_total_variation": 0.3397550474526713
+    },
+    {
+      "seed": 52,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2085,
+        2099
+      ],
+      "projects": [
+        72,
+        189
+      ],
+      "suffix_total_variation": 0.24072945550182054
+    }
+  ],
+  "dedup_org": {
+    "exact": 117,
+    "near_duplicate": 69,
+    "boilerplate": 0,
+    "shared_change_id": 0
+  },
+  "excluded_projects": [
+    "fresh",
+    "generated-data-platform/aqs/edit-analytics",
+    "generated-data-platform/aqs/page-analytics",
+    "labs/private",
+    "mediawiki/extensions/Auth_remoteuser",
+    "mediawiki/extensions/BlueSpiceRating",
+    "mediawiki/extensions/BlueSpiceSocialProfile",
+    "mediawiki/extensions/BlueSpiceWikiExplorer",
+    "mediawiki/extensions/Cargo",
+    "mediawiki/extensions/CollabPads",
+    "mediawiki/extensions/ContactPage",
+    "mediawiki/extensions/DrawioEditor",
+    "mediawiki/extensions/MathSearch",
+    "mediawiki/extensions/NotifyMe",
+    "mediawiki/extensions/PollNY",
+    "mediawiki/extensions/SyntaxHighlight_GeSHi",
+    "mediawiki/extensions/UrlShortener",
+    "mediawiki/extensions/WP25EasterEggs",
+    "mediawiki/extensions/Wanda",
+    "mediawiki/extensions/Workflows",
+    "mediawiki/gadgets/WADP",
+    "mediawiki/libs/ScopedCallback",
+    "mediawiki/libs/php-cssjanus",
+    "mediawiki/services/wikifeeds",
+    "mediawiki/services/zotero",
+    "mediawiki/skins/TuleapSkin",
+    "mediawiki/tools/api-testing",
+    "operations/debs/amd-k8s-device-plugin",
+    "search/extra-analysis"
+  ],
+  "provenance": {
+    "generated_at": "2026-09-30T21:30:14.637826+00:00",
+    "git": {
+      "commit": "89753ef96c0395112379ab32323151ff1b6a2982",
+      "branch": "corpus/wikimedia-admission"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

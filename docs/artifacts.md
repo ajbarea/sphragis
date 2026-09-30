@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 213 artifacts under
+repository. This page is generated from those scripts: 216 artifacts under
 45 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -42,7 +42,7 @@ The ordered list of admissible partitions H1's runs are drawn from, fixed before
 
 | artifact | |
 |---|---|
-| `admissible-partitions-openstack.json` |  |
+| `admissible-partitions-openstack.json` | `admissible-partitions-wikimedia.json` |
 
 ## `scripts/aggregate_attack.py`
 
@@ -420,6 +420,7 @@ Whether an organization's registered split qualifies for a confirmatory H1 cell.
 | artifact | |
 |---|---|
 | `split-criteria-openstack-v2.json` | `split-criteria-openstack.json` |
+| `split-criteria-wikimedia.json` |  |
 
 ## `scripts/subspace_split.py`
 
@@ -436,7 +437,7 @@ The fixed training size N every adapter trains at, derived from the organization
 
 | artifact | |
 |---|---|
-| `training-size-openstack.json` |  |
+| `training-size-openstack.json` | `training-size-wikimedia.json` |
 
 ## `scripts/window_report.py`
 
