@@ -7170,3 +7170,27 @@ table is re-derived as each lands. Written while the OpenJDK month was still bei
 before any of its examples or counts were read, and amended before reading after an independent
 review: failed and gone PRs left out of both sides, the refusals above, and the route now asks
 again on resume for a PR whose failure was checkpointed, where it had replayed the failure.
+
+### The exploratory second model family is Llama-3.1-8B, not Qwen3-8B (2026-10-01)
+
+The registered model's contamination argument is that the corpus (from 2024-10) postdates the
+checkpoint's publication. The exploratory second family, an H1 dev-window replication outside the
+registered cells (ROADMAP Plan F), was listed as Qwen3-8B; Alibaba states no cutoff for it, the
+model reports early 2025, which falls inside the training window, and it was published in 2025.
+A sweep of current open-weight families (October 2026) against two requirements, open weights (RQ1
+trains adapters, RQ2 reads their updates) and a checkpoint published before the corpus:
+
+- Hosted models are out on the first: Claude Haiku 4.5 cannot be fine-tuned, Claude 3 Haiku's
+  Bedrock fine-tuning ended with the model (2026-09-10), and hosted tuning elsewhere returns an
+  endpoint, not weights.
+- Gemma 4 (April 2026; 2B, 4B, 26B MoE, 31B), gpt-oss-20b (August 2025, MoE in MXFP4) and the
+  Granite 4 hybrids (mostly Mamba-2 layers) postdate the corpus or do not share the dense
+  attention and MLP projections the registered LoRA configuration adapts.
+- Llama-3.1-8B (Meta model card: pretraining data to December 2023, released 2024-07-23, Llama 3.1
+  Community License) meets both, at the registered size, with the same LoRA targets.
+- Olmo 3 7B (Ai2, Apache 2.0, data to December 2024) overlaps the first two training months, but
+  its training data is public, so exposure could be looked up rather than estimated; kept as the
+  alternative if a reviewer presses on contamination.
+
+Llama-3.1-8B-Instruct replaces Qwen3-8B in the plan; the membership probe reads its base
+checkpoint, as Min-K%++ reads Qwen2.5-Coder-7B's. Not yet run.

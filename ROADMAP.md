@@ -214,8 +214,11 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   method, a different defence class from the adapter splits.
 - [ ] **A second model family, exploratory.** Every neighbouring federated SE study runs several
   models (the federated program-repair study six, arXiv:2412.01072); P4 runs Qwen2.5-Coder-7B.
-  An H1 dev-window replication on one current family (Qwen3-8B), outside the registered cells, so
-  the frozen model stack does not change.
+  An H1 dev-window replication on Llama-3.1-8B-Instruct (Meta; data to December 2023, released
+  2024-07-23), outside the registered cells, so the frozen model stack does not change; it meets
+  the registered model's rule that the corpus postdates the checkpoint, which Qwen3-8B (no stated
+  cutoff, self-reported early 2025) does not (research log, 2026-10-01). Needs the gated
+  checkpoint's licence accepted on the Hugging Face account.
 
 - [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
