@@ -107,8 +107,9 @@ style of that size. Its strength was measured before it was registered, on OpenS
 partitions under a rule fixed before the runs: planted in a quarter of the refinements it would
 have halted a working apparatus most of the time, and planted in half it passed every run
 (research log, 2026-10-01). The check reads the strength from the run's
-corpus path rather than trusting it, and refuses a run planted at any other strength or read on
-any other window.
+corpus path rather than trusting it, and refuses a run planted at any other strength, in only
+one half, read on any other window, or from another organization or training size. A read of the
+sealed window without it is refused.
 
 ## 6. Non-degeneracy
 

@@ -6951,3 +6951,10 @@ compared with the projection, and a realised window below `planned_changes` is r
 the verdict with the simulation's power at the realised size. The projection artifact records
 `dev_check.reading` (`holds`, `lower_bound` or `refuse`) in place of the earlier `holds` flag,
 so the tolerance is tested once.
+
+**Review of check 5 and the projection (2026-10-01).** An independent reviewer reproduced every
+figure in the planted and projection entries and found nothing blocking, plus three guard gaps
+in check 5, all fixed and tested: a planted run from another organization passed the check (it
+now must be the read organization's two halves at the admissible list's training size), a run
+planted in one half only passed (every half must carry the plant), and the check was optional
+(`partition_pilot.py` now refuses a test-window read without `--planted`).
