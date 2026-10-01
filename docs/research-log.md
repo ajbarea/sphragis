@@ -6838,3 +6838,27 @@ K, and its bounds from its own simulation.
 **LineageOS.** Its training window (2024-11 to 2025-08) holds 353 built examples before refine,
 counted from `datasets/gerrit/lineageos/examples/*.jsonl`. Two halves at N = 1,850 need 3,700,
 so LineageOS cannot hold an H1 cell. Its development months are still collected, for RQ2.
+
+### Wikimedia's development-window pilot: K = 16, and H1 inconclusive at +0.0009 (2026-10-01)
+
+Twenty-two `partition_run` jobs on `corpus-v3/wikimedia`, the first 22 admissible partitions at
+training seeds 1 to 22 and N = 1,850 (jobs 210577 to 210600, pinned at ec8cc05). Every
+outcome-neutral check passed and the apparatus held in all 22; the largest leakage rate, own or
+sibling, is 0.40% against the registered 2%. Every run scored the same 711 examples (429 changes);
+none was dropped.
+
+**K** (`partition-pilot-wikimedia.json`, Ritzwoller and Romano's sizing on all 22 runs, as for
+OpenStack): per-run standard deviation **0.0112**, 90% upper bound **0.0141**, formula 15.27,
+**K = 16**. Per-run H1 estimates range from -0.0195 to +0.0188. Over all 22, H1 reads +0.0008
+[-0.0126, +0.0153] at 97.5%.
+
+**The pilot at its K** (`partition-pilot-wikimedia-k16.json`, the first 16 runs): H1 **+0.0009
+[-0.0137, +0.0171]** at 97.5% and [-0.0120, +0.0148] at 95%, inconclusive. Wikimedia needs fewer
+runs than OpenStack's 24 because its runs agree more closely.
+
+**Planned before either runs: the inputs of Wikimedia's own simulation.** Its bounds come from
+`partition_sensitivity.py` as OpenStack's do, which needs two artifacts Wikimedia lacks: the
+test-window projection (`window_report.py` then `project_windows.py`, on the v3 corpus) and a
+single-seed placebo run on its registered split (`placebo_gate.sbatch`, `SEEDS=1`, corpus v3),
+the counterpart of `rq1-placebo-openstack-v3.json`. The simulation then runs once, with the same
+arguments as OpenStack's rerun (job 210563).

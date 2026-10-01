@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 216 artifacts under
+repository. This page is generated from those scripts: 240 artifacts under
 45 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -258,7 +258,8 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | artifact | |
 |---|---|
 | `partition-pilot-openstack-k24.json` | `partition-pilot-openstack-stopping.json` |
-| `partition-pilot-openstack.json` |  |
+| `partition-pilot-openstack.json` | `partition-pilot-wikimedia-k16.json` |
+| `partition-pilot-wikimedia.json` |  |
 
 ## `scripts/partition_sensitivity.py`
 
@@ -302,6 +303,17 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-partition-openstack-p30-s24-n1850.json` | `rq1-partition-openstack-p4-s3-n1850.json` |
 | `rq1-partition-openstack-p5-s4-n1850.json` | `rq1-partition-openstack-p7-s5-n1850.json` |
 | `rq1-partition-openstack-p8-s6-n1850.json` | `rq1-partition-openstack-p9-s7-n1850.json` |
+| `rq1-partition-wikimedia-p1-n1850.json` | `rq1-partition-wikimedia-p10-s9-n1850.json` |
+| `rq1-partition-wikimedia-p11-s10-n1850.json` | `rq1-partition-wikimedia-p12-s11-n1850.json` |
+| `rq1-partition-wikimedia-p13-s12-n1850.json` | `rq1-partition-wikimedia-p16-s13-n1850.json` |
+| `rq1-partition-wikimedia-p17-s14-n1850.json` | `rq1-partition-wikimedia-p18-s15-n1850.json` |
+| `rq1-partition-wikimedia-p19-s16-n1850.json` | `rq1-partition-wikimedia-p2-s2-n1850.json` |
+| `rq1-partition-wikimedia-p20-s17-n1850.json` | `rq1-partition-wikimedia-p21-s18-n1850.json` |
+| `rq1-partition-wikimedia-p22-s19-n1850.json` | `rq1-partition-wikimedia-p25-s20-n1850.json` |
+| `rq1-partition-wikimedia-p27-s21-n1850.json` | `rq1-partition-wikimedia-p29-s22-n1850.json` |
+| `rq1-partition-wikimedia-p3-s3-n1850.json` | `rq1-partition-wikimedia-p5-s4-n1850.json` |
+| `rq1-partition-wikimedia-p6-s5-n1850.json` | `rq1-partition-wikimedia-p7-s6-n1850.json` |
+| `rq1-partition-wikimedia-p8-s7-n1850.json` | `rq1-partition-wikimedia-p9-s8-n1850.json` |
 | `rq1-placebo-openstack-s2.json` | `rq1-placebo-openstack-s3.json` |
 | `rq1-placebo-openstack-seeds.json` | `rq1-placebo-openstack-v2-s2.json` |
 | `rq1-placebo-openstack-v2-s3.json` | `rq1-placebo-openstack-v2-s4.json` |
