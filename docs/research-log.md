@@ -6505,3 +6505,40 @@ meets the split criteria, as for every organization. LLVM is one monorepo, so it
 the split need a definition (its top-level directories) registered before its split is read.
 A PR's comments and commits are read from their first page (100 items), so a PR with more
 review comments than that is undercounted, which errs toward too few. The pass was started before this entry was written (13:57); no organization's result had been read.
+
+### The confirmation pass: Apache and LLVM qualify for an H1 cell, .NET and Grafana for RQ2, OpenJDK and HashiCorp are borderline (2026-10-01)
+
+`github-sizing-report.json`, from the 200 draws an organization planned above
+(`github-sizing-draws-<org>.jsonl`). **The design checks out:** the same estimator applied to the
+number of PRs recovers the counts the search API reports to within 1% to 7% (Apache 108,600
+against 107,888; HashiCorp 24,531 against 22,870, the widest). No draw hit the search frame cap.
+The thread-to-example conversion read from the built corpora is 0.217 (Wikimedia) to 0.282
+(OpenStack); the example range below is the interval's low end at the low rate to its high end at
+the high rate.
+
+| org | reviewer threads (95%) | projected examples | H1 cell | RQ2 | bot/AI-authored PRs |
+|---|---|---|---|---|---|
+| Apache | 87,609 [51,535, 129,328] | 11,176 to 36,518 | yes | yes | 19.6% |
+| LLVM | 51,914 [35,618, 70,468] | 7,724 to 19,898 | yes | yes | 0.3% |
+| .NET | 36,763 [11,294, 70,216] | 2,449 to 19,827 | borderline | yes | 43.2% |
+| Grafana | 25,108 [9,310, 46,325] | 2,019 to 13,081 | borderline | yes | 26.5% |
+| OpenJDK | 11,803 [6,525, 18,106] | 1,415 to 5,113 | borderline | borderline | 0.0% |
+| HashiCorp | 6,356 [912, 15,101] | 198 to 4,264 | borderline | borderline | 20.2% |
+
+Suggestion-block threads, excluded above, are 13% to 23% of reviewer threads. The 50-PR first
+pass had OpenJDK at about 26,600 threads; the weighted pass puts it at 11,803, and its first figure
+came from a few heavily reviewed PRs.
+
+**What it gives the study.** With OpenStack and Wikimedia, six organizations reach RQ2's bar in
+six languages' worth of codebases (Python, PHP, Java and others, C++, C#, Go and TypeScript):
+OpenStack, Wikimedia, Apache, LLVM, .NET, Grafana. Four have the size for an H1 cell (OpenStack,
+Wikimedia, Apache, LLVM), with .NET and Grafana possible. LLVM's top-level directories behave as
+projects (llvm, clang, mlir, lldb, bolt, flang and others), though `llvm` itself carries about 40% of
+the sampled threads, so whether its halves meet the split criteria is read before it is admitted.
+
+**Not yet settled, each a ROADMAP item:** a GitHub collection route (review threads to hunk,
+comment and next revision, suggestion blocks and bot or AI authors removed, identities
+pseudonymised at ingestion); open access for every resulting publication, which GitHub's terms
+require (MSR's ACM proceedings are open access; the registered report's Stage 2 appears in EMSE,
+so its open-access option and an arXiv copy); and what more cells do to H1, which passes only if
+every admitted organization's cell does, each cell then needing power 0.95^(1/k).

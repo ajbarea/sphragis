@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 179 artifacts under
-40 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 186 artifacts under
+42 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -194,6 +194,24 @@ The adapter-instance cut: two adapters per client, and only one of them leaves.
 | artifact | |
 |---|---|
 | `client-updates-dual-cpp-rebuilt-c128-t2.json` |  |
+
+## `scripts/github_sizing.py`
+
+Confirmation sizing of GitHub organizations: a two-stage sample of PRs, one row per draw.
+
+| artifact | |
+|---|---|
+| `github-sizing-draws-apache.jsonl` | `github-sizing-draws-dotnet.jsonl` |
+| `github-sizing-draws-grafana.jsonl` | `github-sizing-draws-hashicorp.jsonl` |
+| `github-sizing-draws-llvm.jsonl` | `github-sizing-draws-openjdk.jsonl` |
+
+## `scripts/github_sizing_report.py`
+
+GitHub candidate organizations sized from `github_sizing.py` draws: weighted totals and yield.
+
+| artifact | |
+|---|---|
+| `github-sizing-report.json` |  |
 
 ## `scripts/host_scoping.py`
 
