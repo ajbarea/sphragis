@@ -1,0 +1,108 @@
+{
+  "run_files": [
+    "datasets/results/rq1-partition-wikimedia-p1-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p2-s2-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p3-s3-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p5-s4-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p6-s5-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p7-s6-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p8-s7-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p9-s8-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p10-s9-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p11-s10-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p12-s11-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p13-s12-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p16-s13-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p17-s14-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p18-s15-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p19-s16-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p20-s17-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p21-s18-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p22-s19-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p25-s20-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p27-s21-n1850.json",
+    "datasets/results/rq1-partition-wikimedia-p29-s22-n1850.json"
+  ],
+  "admissible": "datasets/results/admissible-partitions-wikimedia.json",
+  "k_source": "datasets/results/partition-pilot-wikimedia.json: sizing.runs",
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "bounds": null,
+  "estimate": 0.0008683264343829168,
+  "per_run": [
+    0.003961575103207354,
+    -0.0012234515060970674,
+    0.008789719868132623,
+    -0.01720509267278711,
+    0.007596453390845914,
+    0.018847455431597007,
+    0.013078356697188265,
+    -0.019494154139823444,
+    0.009070213275820777,
+    -0.0015153433459414306,
+    0.0047505938242280304,
+    -0.006199929782005037,
+    0.0016594516594516523,
+    -0.01903608272232829,
+    0.0111070201276387,
+    -0.0002935622590012482
+  ],
+  "runs": 16,
+  "changes": 429,
+  "reproducibility": {
+    "runs": 16,
+    "variance_of_mean": 8.235625802988418e-06,
+    "critical_value": 1.3015888581350293e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [
+    -0.015502065886748267,
+    -0.0035301668806161646,
+    0.007622930565851255,
+    0.009237875288683611,
+    -0.008443645691484314,
+    0.013699075353039658
+  ],
+  "intervals": {
+    "0.975": {
+      "low": -0.013733432766538906,
+      "high": 0.0171306319067076
+    },
+    "0.95": {
+      "low": -0.011969843083343241,
+      "high": 0.014820371253022237
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "examples": 711,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.011192463893627639,
+    "sd_upper": 0.014096066843761587,
+    "confidence": 0.9,
+    "formula": 15.265888242812641,
+    "runs": 16,
+    "clamped": null
+  },
+  "provenance": {
+    "generated_at": "2026-10-01T10:22:42.686631+00:00",
+    "git": {
+      "commit": "ec8cc051644eb6e723b974dc170b7a530a84928e",
+      "branch": "corpus/wikimedia-admission"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

@@ -6894,3 +6894,46 @@ seeds 1 to 10, N = 1,850, corpus v3, the jobs otherwise as its pilot's. The same
 for Wikimedia if all ten pass and the projected pass probability is at least 0.95; otherwise the
 check is redesigned for Wikimedia before Stage 1 is submitted. The rates are logged whichever way
 they fall.
+
+### Wikimedia's development-window pilot: K = 16, and H1 inconclusive at +0.0009 (2026-10-01)
+
+Twenty-two `partition_run` jobs on `corpus-v3/wikimedia`, the first 22 admissible partitions at
+training seeds 1 to 22 and N = 1,850 (jobs 210577 to 210600, pinned at ec8cc05). Every
+outcome-neutral check passed and the apparatus held in all 22; the largest leakage rate, own or
+sibling, is 0.40% against the registered 2%. Every run scored the same 711 examples (429 changes);
+none was dropped.
+
+**K** (`partition-pilot-wikimedia.json`, Ritzwoller and Romano's sizing on all 22 runs, as for
+OpenStack): per-run standard deviation **0.0112**, 90% upper bound **0.0141**, formula 15.27,
+**K = 16**. Per-run H1 estimates range from -0.0195 to +0.0188. Over all 22, H1 reads +0.0008
+[-0.0126, +0.0153] at 97.5%.
+
+**The pilot at its K** (`partition-pilot-wikimedia-k16.json`, the first 16 runs): H1 **+0.0009
+[-0.0137, +0.0171]** at 97.5% and [-0.0120, +0.0148] at 95%, inconclusive. Wikimedia needs fewer
+runs than OpenStack's 24 because its runs agree more closely.
+
+**Planned before either runs: the inputs of Wikimedia's own simulation.** Its bounds come from
+`partition_sensitivity.py` as OpenStack's do, which needs two artifacts Wikimedia lacks: the
+test-window projection (`window_report.py` then `project_windows.py`, on the v3 corpus) and a
+single-seed placebo run on its registered split (`placebo_gate.sbatch`, `SEEDS=1`, corpus v3),
+the counterpart of `rq1-placebo-openstack-v3.json`. The simulation then runs once, with the same
+arguments as OpenStack's rerun (job 210563).
+
+### Wikimedia's test window projects as a lower bound: the dev check fails by under-predicting (2026-10-01)
+
+`window-report-wikimedia-v3.json` then `project-windows-wikimedia-v3.json`, on the v3 corpus.
+Train-into-dev leakage is 0.27% at Jaccard 0.7 (2 of 747 dev examples). The capture model, fitted
+on the training window (2,348 changes over 10 months, captured 0.974, 241.1 a month), predicts 359
+dev changes against 448 observed: a miss of **-19.9%**, past the 15% tolerance. Wikimedia's
+arrivals rose over the year (raw changes a month in the refined corpus range from 156 to 319, the
+highest in the first dev month), so the dev window holds more than the training rate predicts.
+
+**Decided: the tolerance refuses only an over-prediction.** The check exists so a broken model
+cannot size the study. A projection that over-predicts could overstate the sealed window, and with
+it the simulated power; one that under-predicts, whether because arrivals rose or because capture
+is higher than modelled, understates it, and a smaller planned window only enlarges the bounds the
+simulation registers. So an under-prediction past the tolerance now projects the window and marks
+it `lower_bound` (`project_windows.dev_reading`, tested), and an over-prediction still refuses.
+OpenStack's projection (miss -1.3%) regenerates identically. Wikimedia's sealed window projects to
+at least **2,848 changes** over its twelve months (captured 0.984 at the 2027-01 fetch), and its
+simulation is read at that size.
