@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
@@ -124,14 +125,22 @@ def test_mentions_in_prose_are_pseudonymised_and_decorators_in_code_are_not() ->
         "```suggestion\n# owner: @octocat\n```",
         "forked at https://github.com/octocat/repo/commit/abc",
         "[@x](https://github.com/octocat)",
-        "thanks octocat!",
+        "raw file https://raw.githubusercontent.com/octocat/r/main/f",
+        "docs at octocat.github.io/site",
     ],
-    ids=["code span", "suggestion block", "profile link", "link target", "bare login"],
+    ids=["code span", "suggestion block", "profile link", "link target", "raw link", "pages"],
 )
-def test_a_participants_login_is_replaced_wherever_it_appears(text: str) -> None:
-    """Review finding: these forms reached disk; a known participant's login never does."""
+def test_a_participants_account_reference_is_replaced_wherever_it_appears(text: str) -> None:
     out = scrub_mentions(text, "salt", logins=["OctoCat"], keep_owners=["apache"])
     assert "octocat" not in out.lower()
+
+
+def test_a_login_that_is_an_ordinary_word_does_not_corrupt_the_comment() -> None:
+    """Review finding: a participant named `fix` turned "Please fix this" into a pseudonym."""
+    assert scrub_mentions("Please fix this, @fix", "s", logins=["fix"]).startswith(
+        "Please fix this"
+    )
+    assert "@fix" not in scrub_mentions("Please fix this, @fix", "s", logins=["fix"])
 
 
 def test_the_organizations_own_links_are_kept() -> None:
@@ -143,19 +152,20 @@ def _pr(**overrides: Any) -> dict[str, Any]:
     pr = {
         "number": 42,
         "created_at": "2025-01-15T10:20:30Z",
-        "base_ref": "main",
+        "base_tip": "tip",
         "user": {"id": 1, "login": "author", "type": "User"},
     }
     return pr | overrides
 
 
 HEADS = [
-    {"sha": "c1", "committed_at": "2025-01-15T10:00:00Z"},
-    {"sha": "c2", "committed_at": "2025-01-16T10:00:00Z"},
-    {"sha": "c3", "committed_at": "2025-01-17T10:00:00Z"},
+    {"sha": "c1", "committed_at": "2025-01-15T10:00:00Z", "parents": ["base0"]},
+    {"sha": "c2", "committed_at": "2025-01-16T10:00:00Z", "parents": ["c1"]},
+    {"sha": "c3", "committed_at": "2025-01-17T10:00:00Z", "parents": ["c2"]},
 ]
 BEFORE = "a = 1\nb = 2\nc = 3\nd = compute(a, b)\ne = 5\n"
 AFTER = "a = 1\nb = 2\nc = 3\nd = compute(a, b, c)\ne = 5\n"
+UPSTREAM = "a = 1\nb = 2\nc = 3\nd = compute(a, b)\ne = 6\n"
 
 
 def _comment(**overrides: Any) -> dict[str, Any]:
@@ -173,41 +183,50 @@ def _comment(**overrides: Any) -> dict[str, Any]:
 
 
 class Files:
-    """File versions by commit, fork points by commit, and upstream changes between forks."""
+    """File versions by commit (content-addressed, as git blob ids are), and fork points.
+
+    `forks` maps (base tip, commit) to the commit's merge base with that tip, so a caller that
+    asks against the wrong tip gets no answer and the test fails.
+    """
 
     def __init__(
         self,
-        versions: dict[str, str | None],
-        forks: dict[str, str] | None = None,
-        upstream: set[str] | None = None,
+        versions: Mapping[str, str | None],
+        forks: dict[tuple[str, str], str] | None = None,
     ) -> None:
-        self.versions, self.forks, self.upstream = versions, forks or {}, upstream or set()
-        self.blobs: list[str] = []
+        self.versions: dict[str, str | None] = dict(versions)
+        self.forks = (
+            forks
+            if forks is not None
+            else {("tip", sha): "base0" for sha in ("c1", "c2", "c3", "x1")}
+        )
+        self.versions.setdefault("base0", BEFORE)
 
     def file_oids(self, repo: str, path: str, shas: list[str]) -> dict[str, str | None]:
-        """Content-addressed, as git's blob ids are: equal text, equal id."""
         return {sha: self.versions.get(sha) and f"oid:{self.versions[sha]}" for sha in shas}
 
     def blob_text(self, repo: str, oid: str) -> str | None:
-        self.blobs.append(oid)
         return oid.removeprefix("oid:")
 
-    def fork_point(self, repo: str, base_ref: str, sha: str) -> str:
-        return self.forks.get(sha, "base0")
-
-    def changed_paths(self, repo: str, older: str, newer: str) -> set[str]:
-        return self.upstream
+    def fork_point(self, repo: str, base_tip: str, sha: str) -> str:
+        return self.forks[(base_tip, sha)]
 
 
-def _row(versions: dict[str, str | None], comments: list[dict[str, Any]] | None = None, **kw: Any):
+def _row(
+    versions: Mapping[str, str | None],
+    comments: list[dict[str, Any]] | None = None,
+    heads: list[dict[str, Any]] | None = None,
+    api: Files | None = None,
+    **kw: Any,
+):
     return row_from_pr(
         "org/repo",
-        _pr(),
-        HEADS,
+        _pr(base_tip="tip"),
+        heads or HEADS,
         comments or [_comment()],
         project="org/repo",
         salt="s",
-        api=Files(versions, **kw),
+        api=api or Files(versions, **kw),
     )
 
 
@@ -255,11 +274,11 @@ def test_the_successor_is_the_first_commit_after_the_comment_that_changes_the_fi
     assert hunk.after == ("d = compute(a, b, c)",)
 
 
-def test_a_commit_made_before_the_comment_is_not_its_response() -> None:
+def test_a_file_changed_between_the_commit_and_the_comment_is_an_outdated_view() -> None:
+    """Review finding: those edits predate the comment, so they are no response to it."""
     late = _comment(created_at="2025-01-16T12:00:00Z")
-    row = _row({"c1": BEFORE, "c2": "edited before the review\n", "c3": AFTER}, [late])
-    (hunk,) = hunks_from_diff(row[GITHUB_KEY]["diffs"]["1:src/app.py"], context=3)
-    assert hunk.after == ("d = compute(a, b, c)",), "c2 predates the comment"
+    row = _row({"c1": BEFORE, "c2": "a = 100\n" + BEFORE, "c3": "a = 100\n" + AFTER}, [late])
+    assert row[GITHUB_KEY]["outdated_view"] == 1 and row[GITHUB_KEY]["diffs"] == {}
 
 
 def test_a_file_no_later_commit_changes_is_an_empty_diff() -> None:
@@ -267,37 +286,40 @@ def test_a_file_no_later_commit_changes_is_an_empty_diff() -> None:
     assert row[GITHUB_KEY]["diffs"]["1:src/app.py"] == {"content": []}
 
 
-def test_the_diff_is_between_the_two_file_versions_whatever_their_ancestry() -> None:
-    """Review finding: compare's merge base made a force-pushed successor's diff start at main."""
-    row = _row(
-        {"c1": BEFORE, "c2": AFTER, "c3": AFTER},
-        forks={"c1": "base0", "c2": "base0"},
-    )
-    (hunk,) = hunks_from_diff(row[GITHUB_KEY]["diffs"]["1:src/app.py"], context=3)
-    assert hunk.before == ("d = compute(a, b)",), "the file at the commented commit, not main"
+def test_fork_points_are_taken_against_the_branch_before_the_pr_merged() -> None:
+    """Review finding: after a merge commit every PR commit is reachable from the branch, so a
+    merge base against its current head is the commit itself and every comment read upstream."""
+    on_main_now = {("main", "c1"): "c1", ("main", "c2"): "c2"}
+    before_merge = {("tip", "c1"): "base0", ("tip", "c2"): "base0"}
+    row = _row({"c1": BEFORE, "c2": AFTER, "c3": AFTER}, forks=on_main_now | before_merge)
+    assert row[GITHUB_KEY]["upstream_change"] == 0 and "1:src/app.py" in row[GITHUB_KEY]["diffs"]
 
 
-def test_upstream_edits_to_the_file_between_fork_points_drop_the_comment() -> None:
-    """Review finding: the rebase guard. A merge or rebase that changed the file upstream."""
-    row = _row(
-        {"c1": BEFORE, "c2": AFTER, "c3": AFTER},
-        forks={"c1": "base0", "c2": "base1"},
-        upstream={"src/app.py"},
-    )
+@pytest.mark.parametrize(
+    ("older", "newer"), [("base0", "base1"), ("base1", "base0")], ids=["forward", "backward"]
+)
+def test_the_base_branchs_own_edit_to_the_file_drops_the_comment(older: str, newer: str) -> None:
+    """Review findings: the rebase guard, in both directions, with no 300-file list to miss."""
+    versions = {"c1": BEFORE, "c2": AFTER, "c3": AFTER, "base0": BEFORE, "base1": UPSTREAM}
+    forks = {("tip", "c1"): older, ("tip", "c2"): newer, ("tip", "c3"): newer}
+    row = _row(versions, forks=forks)
     assert row[GITHUB_KEY]["upstream_change"] == 1 and row[GITHUB_KEY]["comments"] == {}
 
 
 def test_a_rebase_that_left_the_file_alone_upstream_keeps_the_comment() -> None:
-    row = _row(
-        {"c1": BEFORE, "c2": AFTER, "c3": AFTER},
-        forks={"c1": "base0", "c2": "base1"},
-        upstream={"other/file.py"},
-    )
+    versions = {"c1": BEFORE, "c2": AFTER, "c3": AFTER, "base0": BEFORE, "base1": BEFORE}
+    forks = {("tip", "c1"): "base0", ("tip", "c2"): "base1", ("tip", "c3"): "base1"}
+    row = _row(versions, forks=forks)
     assert row[GITHUB_KEY]["upstream_change"] == 0 and "1:src/app.py" in row[GITHUB_KEY]["diffs"]
 
 
+def test_a_merge_commit_before_the_successor_drops_the_comment() -> None:
+    merged = [HEADS[0], HEADS[1] | {"parents": ["c1", "main9"]}, HEADS[2]]
+    row = _row({"c1": BEFORE, "c2": AFTER, "c3": AFTER}, heads=merged)
+    assert row[GITHUB_KEY]["upstream_change"] == 1
+
+
 def test_a_renamed_or_deleted_file_is_gone_not_unchanged() -> None:
-    """Review finding: compare listed the new name, so a rename read as no change."""
     row = _row({"c1": BEFORE, "c2": None, "c3": None})
     assert row[GITHUB_KEY]["file_gone"] == 1 and row[GITHUB_KEY]["comments"] == {}
 
@@ -307,28 +329,31 @@ def test_a_binary_or_truncated_file_is_counted_unavailable() -> None:
         def blob_text(self, repo: str, oid: str) -> str | None:
             return None
 
-    row = row_from_pr(
-        "org/repo",
-        _pr(),
-        HEADS,
-        [_comment()],
-        project="org/repo",
-        salt="s",
-        api=Opaque({"c1": BEFORE, "c2": AFTER, "c3": AFTER}),
-    )
+    row = _row({}, api=Opaque({"c1": BEFORE, "c2": AFTER, "c3": AFTER}))
     assert row[GITHUB_KEY]["text_unavailable"] == 1
 
 
+def test_an_object_github_no_longer_holds_costs_its_comments_not_the_pr() -> None:
+    """Review finding: one missing blob marked the whole PR withdrawn."""
+
+    class Collected(Files):
+        def blob_text(self, repo: str, oid: str) -> str | None:
+            raise Gone("garbage collected")
+
+    row = _row({}, api=Collected({"c1": BEFORE, "c2": AFTER, "c3": AFTER}))
+    assert row[GITHUB_KEY]["object_gone"] == 1 and row["change_id"] == "org/repo#42"
+
+
 def test_a_row_reaches_disk_with_no_login_or_raw_id() -> None:
-    comment = _comment(body="@reviewer thinks `author` should see github.com/author/fork")
+    comment = _comment(body="@reviewer thinks `@author` should see github.com/author/fork")
     row = _row({"c1": BEFORE, "c2": AFTER, "c3": AFTER}, [comment])
     text = json.dumps(row)
-    assert '"reviewer"' not in text and "author/fork" not in text and "@reviewer" not in text
+    assert "@reviewer" not in text and "@author" not in text and "author/fork" not in text
     assert row["owner"]["_account_id"] != 1
 
 
 class FakeAPI(Files):
-    """A GitHub API with an LLVM PR, an agent PR and a withdrawn PR on 2025-01-02."""
+    """A GitHub API with an LLVM PR, an agent PR, a withdrawn PR and a failing PR on 2025-01-02."""
 
     def __init__(self) -> None:
         super().__init__({"c1": BEFORE, "c2": AFTER, "c3": AFTER})
@@ -341,24 +366,27 @@ class FakeAPI(Files):
         base = {
             "repo": "llvm/llvm-project",
             "created_at": "2025-01-01T00:00:00Z",
-            "base_ref": "main",
+            "base_tip": "tip",
         }
         return [
             base | {"number": 42, "user": person},
             base | {"number": 43, "user": agent},
             base | {"number": 7, "user": person},
+            base | {"number": 9, "user": person},
         ]
 
     def pr_comments(self, repo: str, number: int) -> list[dict[str, Any]]:
         if number == 7:
             raise Gone("404")
+        if number == 9:
+            raise RuntimeError("GitHub kept refusing after 8 attempts")
         return [_comment(path="clang/lib/Sema.cpp")]
 
     def pr_heads(self, repo: str, number: int) -> list[dict[str, Any]]:
         return HEADS
 
-    def commit_times(self, repo: str, shas: list[str]) -> dict[str, str]:
-        return {}
+    def commit_times(self, repo: str, shas: list[str]) -> list[dict[str, Any]]:
+        return []
 
     def pr_files(self, repo: str, number: int) -> list[dict[str, Any]]:
         return [
@@ -372,7 +400,8 @@ def test_a_month_skips_agent_prs_counts_withdrawn_ones_and_assigns_llvm_projects
     (row,) = rows
     assert row["project"] == "llvm/llvm-project:clang"
     assert row[GITHUB_KEY]["repo"] == "llvm/llvm-project"
-    assert record["listed"] == 3 and record["agent_authored"] == 1 and record["withdrawn"] == 1
+    assert record["listed"] == 4 and record["agent_authored"] == 1 and record["withdrawn"] == 1
+    assert record["failed"] == 1 and "llvm/llvm-project#9" in record["failures"][0]
     assert record["route"] == "github" and record["github_rules"] == GITHUB_RULES
 
 
@@ -386,8 +415,9 @@ def test_a_commit_only_a_comment_names_is_added_in_commit_time_order() -> None:
     """A non-head commit of an earlier push: the timeline omits it, the comment names it."""
 
     class Held(FakeAPI):
-        def commit_times(self, repo: str, shas: list[str]) -> dict[str, str]:
-            return {"x1": "2025-01-15T11:00:00Z"} if "x1" in shas else {}
+        def commit_times(self, repo: str, shas: list[str]) -> list[dict[str, Any]]:
+            x1 = {"sha": "x1", "committed_at": "2025-01-15T11:00:00Z", "parents": ["c1"]}
+            return [x1] if "x1" in shas else []
 
     comments = [_comment(original_commit_id="x1"), _comment(original_commit_id="lost")]
     heads = with_commented_commits("org/repo", HEADS, comments, Held())

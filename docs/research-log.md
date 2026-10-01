@@ -7024,3 +7024,24 @@ drops the comment (`upstream_change`); patch sets are ordered by commit time and
 commit a comment names. On the same eight PRs: 22 examples (11 before either fix), 0 unplaced
 comments (90 of the first 121 before), 9 comments dropped for upstream edits that the first design
 would have built as the author's work.
+
+**A second review, of the redesign.** A second reviewer found the upstream guard itself wrong in
+three ways and two earlier fixes partial. After a merge commit every PR commit is reachable from
+the base branch, so a merge base against its current head is the commit itself and every comment
+on such a PR read as upstream; the 300-file cap of the compare API (which pages commits, not
+files) could hide the commented file; and a three-dot check misses a fork point that moved
+backwards. Also: edits made after the commented commit but before the comment entered the diff;
+a rebased series shares one committer second; one missing object marked a whole PR withdrawn;
+and a participant whose login is a word ("fix") had it replaced in prose. Fixed and tested:
+fork points are now taken against the base branch as it stood before the PR merged (the merge
+commit's first parent); the guard compares the base branch's own version of the file at the two
+fork points (no file list, either direction) and drops a comment with a merge commit between it
+and its successor; a file changed between the commented commit and the comment drops the comment
+(`outdated_view`); a same-second series is ordered parent first; a missing object costs only its
+comments (`object_gone`) and a persistently failing PR only itself (`failed`, with its reason);
+account references are replaced in every structured form (`@login`, `github.com`,
+`raw.githubusercontent.com`, `*.github.io`) and bare words are left, as on the Gerrit routes. On
+the same eight PRs: 18 examples; 17 comments dropped for upstream edits, 6 as outdated views;
+the four comments the merge-commit fault had dropped on one PR are kept. The 10 drops on one
+heavily rebased PR were checked: it holds 4 merges from main, and the commented file has three
+different versions on the base branch across its three fork points.

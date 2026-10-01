@@ -32,6 +32,7 @@ _SEARCH = """query($q: String!, $after: String) {
     pageInfo { hasNextPage endCursor }
     nodes { ... on PullRequest {
       number createdAt baseRefName repository { nameWithOwner }
+      mergeCommit { parents(first: 1) { nodes { oid } } }
       author { login __typename ... on User { databaseId } ... on Bot { databaseId } }
     } }
   }
@@ -44,13 +45,13 @@ _TIMELINE = """query($owner: String!, $name: String!, $number: Int!, $after: Str
                   first: 100, after: $after) {
       pageInfo { hasNextPage endCursor }
       nodes { __typename
-        ... on PullRequestCommit { commit { oid committedDate } }
-        ... on HeadRefForcePushedEvent {
-          beforeCommit { oid committedDate } afterCommit { oid committedDate } }
+        ... on PullRequestCommit { commit { ...C } }
+        ... on HeadRefForcePushedEvent { beforeCommit { ...C } afterCommit { ...C } }
       }
     }
   } }
-}"""
+}
+fragment C on Commit { oid committedDate parents(first: 2) { nodes { oid } } }"""
 
 
 class Gone(LookupError):
@@ -151,16 +152,16 @@ class GitHubAPI:
         return list(self._pages(f"/repos/{repo}/pulls/{number}/comments"))
 
     def pr_heads(self, repo: str, number: int) -> list[dict[str, Any]]:
-        """Every commit ever on the PR, as `{"sha", "committed_at"}`, oldest commit first.
+        """Every commit ever on the PR, as `{"sha", "committed_at", "parents"}`, oldest first.
 
         The commit list holds only the final history; a force push (amend, rebase, squash) leaves
         the commits reviewers commented on out of it. The timeline keeps each force push's before
         and after commits, so they are recovered the way Gerrit keeps patch sets. They are ordered
-        by commit time, not timeline position: an amended commit can sit in the timeline before
-        the force push that replaced the one it amends.
+        by commit time (`order_commits`), not timeline position: an amended commit can sit in the
+        timeline before the force push that replaced the commit it amends.
         """
         owner, name = repo.split("/", 1)
-        seen: dict[str, str] = {}
+        seen: dict[str, dict[str, Any]] = {}
         after: str | None = None
         while True:
             data = self.graphql(
@@ -179,11 +180,28 @@ class GitHubAPI:
                 for key in keys:
                     commit = node.get(key) or {}
                     if commit.get("oid"):
-                        seen.setdefault(commit["oid"], str(commit.get("committedDate") or ""))
+                        seen.setdefault(commit["oid"], _commit_entry(commit))
             if not items["pageInfo"]["hasNextPage"]:
-                ordered = sorted(seen.items(), key=lambda item: (item[1], item[0]))
-                return [{"sha": sha, "committed_at": at} for sha, at in ordered]
+                return order_commits(list(seen.values()))
             after = items["pageInfo"]["endCursor"]
+
+    def commit_times(self, repo: str, shas: list[str]) -> list[dict[str, Any]]:
+        """Each commit GitHub still holds, as `pr_heads` gives them; one it lacks is left out."""
+        owner, name = repo.split("/", 1)
+        out: list[dict[str, Any]] = []
+        for start in range(0, len(shas), 50):
+            chunk = shas[start : start + 50]
+            fields = " ".join(
+                f"c{i}: object(oid: {json.dumps(sha)}) {{ ...on Commit {{ ...C }} }}"
+                for i, sha in enumerate(chunk)
+            )
+            query = (
+                "query($o: String!, $n: String!) { repository(owner: $o, name: $n) { %s } }"
+                " fragment C on Commit { oid committedDate parents(first: 2) { nodes { oid } } }"
+            )
+            found = self.graphql(query % fields, {"o": owner, "n": name}).get("repository") or {}
+            out += [_commit_entry(found[f"c{i}"]) for i in range(len(chunk)) if found.get(f"c{i}")]
+        return out
 
     def file_oids(self, repo: str, path: str, shas: list[str]) -> dict[str, str | None]:
         """The blob id of `path` at each commit, or None where the file does not exist there."""
@@ -203,24 +221,6 @@ class GitHubAPI:
                 out[sha] = (found.get(f"c{i}") or {}).get("oid")
         return out
 
-    def commit_times(self, repo: str, shas: list[str]) -> dict[str, str]:
-        """The commit time of each commit GitHub still holds; a commit it lacks is left out."""
-        owner, name = repo.split("/", 1)
-        out: dict[str, str] = {}
-        for start in range(0, len(shas), 50):
-            chunk = shas[start : start + 50]
-            fields = " ".join(
-                f"c{i}: object(oid: {json.dumps(sha)}) {{ ...on Commit {{ committedDate }} }}"
-                for i, sha in enumerate(chunk)
-            )
-            query = "query($o: String!, $n: String!) { repository(owner: $o, name: $n) { %s } }"
-            found = self.graphql(query % fields, {"o": owner, "n": name}).get("repository") or {}
-            for i, sha in enumerate(chunk):
-                at = (found.get(f"c{i}") or {}).get("committedDate")
-                if at:
-                    out[sha] = str(at)
-        return out
-
     def blob_text(self, repo: str, oid: str) -> str | None:
         """A blob's text, or None when GitHub reports it binary or truncated."""
         owner, name = repo.split("/", 1)
@@ -234,29 +234,17 @@ class GitHubAPI:
             return None
         return str(blob["text"])
 
-    def fork_point(self, repo: str, base_ref: str, sha: str) -> str:
-        """The commit on `base_ref` that `sha` descends from (their merge base)."""
+    def fork_point(self, repo: str, base_tip: str, sha: str) -> str:
+        """The merge base of `sha` with `base_tip`: the base branch as it was before the PR merged.
+
+        `base_tip` is the merge (or squash) commit's first parent where there is one: after a
+        merge commit every PR commit is reachable from the branch itself, so a merge base taken
+        against the branch's current head would be the commit itself.
+        """
         _, payload = self._request(
-            "GET", f"{API}/repos/{repo}/compare/{base_ref}...{sha}?per_page=1"
+            "GET", f"{API}/repos/{repo}/compare/{base_tip}...{sha}?per_page=1"
         )
         return str(payload["merge_base_commit"]["sha"])
-
-    def changed_paths(self, repo: str, older: str, newer: str) -> set[str]:
-        """Every path changed from `older` to its descendant `newer`, old names of renames too."""
-        paths: set[str] = set()
-        page = 1
-        while True:
-            _, payload = self._request(
-                "GET", f"{API}/repos/{repo}/compare/{older}...{newer}?per_page=100&page={page}"
-            )
-            files = payload.get("files") or []
-            for f in files:
-                paths.add(str(f["filename"]))
-                if f.get("previous_filename"):
-                    paths.add(str(f["previous_filename"]))
-            if len(files) < 100:
-                return paths
-            page += 1
 
     def pr_files(self, repo: str, number: int) -> list[dict[str, Any]]:
         """A PR's changed files with their changed-line counts (GitHub lists at most 3,000)."""
@@ -298,6 +286,15 @@ class GitHubAPI:
                 "number": n["number"],
                 "created_at": n["createdAt"],
                 "base_ref": n.get("baseRefName"),
+                "base_tip": next(
+                    (
+                        p["oid"]
+                        for p in ((n.get("mergeCommit") or {}).get("parents") or {}).get(
+                            "nodes", []
+                        )
+                    ),
+                    None,
+                ),
                 "user": {
                     "id": (n.get("author") or {}).get("databaseId"),
                     "login": (n.get("author") or {}).get("login"),
@@ -306,6 +303,40 @@ class GitHubAPI:
             }
             for n in nodes
         ]
+
+
+def _commit_entry(commit: Mapping[str, Any]) -> dict[str, Any]:
+    parents = ((commit.get("parents") or {}).get("nodes")) or []
+    return {
+        "sha": str(commit["oid"]),
+        "committed_at": str(commit.get("committedDate") or ""),
+        "parents": [str(p["oid"]) for p in parents if p and p.get("oid")],
+    }
+
+
+def order_commits(commits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Commits by commit time, each parent before its children when they share a second.
+
+    A rebase rewrites a series in one second, so time alone would leave their order to the sha.
+    Within a second the commits are sorted topologically, ties by sha.
+    """
+    by_time: dict[str, list[dict[str, Any]]] = {}
+    for commit in commits:
+        by_time.setdefault(commit["committed_at"], []).append(commit)
+    ordered: list[dict[str, Any]] = []
+    for second in sorted(by_time):
+        group = {c["sha"]: c for c in by_time[second]}
+        waiting = {sha: {p for p in c.get("parents", []) if p in group} for sha, c in group.items()}
+        while waiting:
+            ready = sorted(sha for sha, parents in waiting.items() if not parents)
+            if not ready:  # a cycle cannot occur in git; fall back to sha order if data is odd
+                ready = sorted(waiting)
+            for sha in ready:
+                ordered.append(group[sha])
+                del waiting[sha]
+            for parents in waiting.values():
+                parents.difference_update(ready)
+    return ordered
 
 
 def _next_link(link: str) -> str | None:

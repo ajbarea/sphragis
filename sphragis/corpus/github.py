@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from sphragis.corpus.github_api import Gone
+from sphragis.corpus.github_api import Gone, order_commits
 from sphragis.corpus.rules import GITHUB_RULES
 from sphragis.corpus.scrub import pseudonym, scrub
 
@@ -52,7 +52,10 @@ GITHUB_KEY = "github"
 _HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 # A GitHub login (alphanumerics and single hyphens, at most 39) or a team, `@org/team`.
 _MENTION = re.compile(r"(?<![\w`@])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:/[A-Za-z0-9_.-]+)?)")
-_PROFILE = re.compile(r"(github\.com/)([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))", re.I)
+_LOGIN = r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})"
+# Links that name an account: a profile or repository, raw files, and GitHub Pages.
+_PROFILE = re.compile(r"((?:raw\.githubusercontent|github)\.com/)(" + _LOGIN + ")", re.I)
+_PAGES = re.compile(r"(?<![\w.-])(" + _LOGIN + r")(\.github\.io)", re.I)
 _CODE = re.compile(r"```.*?(?:```|\Z)|`[^`\n]*`", re.S)
 
 
@@ -81,31 +84,37 @@ def account(user: Mapping[str, Any] | None) -> dict[str, Any] | None:
 def scrub_mentions(
     text: str, salt: str, *, logins: Iterable[str] = (), keep_owners: Iterable[str] = ()
 ) -> str:
-    """Logins in comment text replaced by their pseudonyms.
+    """Account references in comment text replaced by their pseudonyms.
 
-    Every known participant's login (the PR author's, each commenter's) is replaced wherever it
-    appears, code spans and suggestion blocks included, with or without `@`. In prose, any other
-    `@login` or `@org/team` is replaced too; in code it is left, since `@property` there is a
-    decorator. A `github.com/<owner>` link names a person unless the owner is the organization
-    itself (`keep_owners`), so it is replaced too.
+    Replaced wherever they appear, code spans and suggestion blocks included: a known
+    participant's `@login` (the PR author's, each commenter's), and links that name an account
+    (`github.com/<owner>`, `raw.githubusercontent.com/<owner>`, `<owner>.github.io`) unless the
+    owner is the organization itself (`keep_owners`). In prose, any other `@login` or `@org/team`
+    is replaced too; in code it is left, since `@property` there is a decorator. A login written
+    as a bare word is left, as names in prose are on the Gerrit routes, since a login can be an
+    ordinary word ("fix") and replacing it would corrupt the comment.
     """
     keep = {owner.lower() for owner in keep_owners}
+
+    def alias(name: str) -> str:
+        return pseudonym(name.lower(), salt)
+
     known = sorted({login for login in logins if login}, key=len, reverse=True)
     if known:
         names = "|".join(re.escape(login) for login in known)
-        participant = re.compile(r"(?<![\w-])(@?)(" + names + r")(?![\w-])", re.I)
-        text = participant.sub(lambda m: m.group(1) + pseudonym(m.group(2).lower(), salt), text)
-
-    def profile(m: re.Match[str]) -> str:
-        owner = m.group(2)
-        if owner.lower() in keep:
-            return m.group(0)
-        return m.group(1) + pseudonym(owner.lower(), salt)
-
-    text = _PROFILE.sub(profile, text)
+        participant = re.compile(r"(?<![\w@-])@(" + names + r")(?![\w-])", re.I)
+        text = participant.sub(lambda m: "@" + alias(m.group(1)), text)
+    text = _PROFILE.sub(
+        lambda m: m.group(0) if m.group(2).lower() in keep else m.group(1) + alias(m.group(2)),
+        text,
+    )
+    text = _PAGES.sub(
+        lambda m: m.group(0) if m.group(1).lower() in keep else alias(m.group(1)) + m.group(2),
+        text,
+    )
 
     def prose(segment: str) -> str:
-        return _MENTION.sub(lambda m: "@" + pseudonym(m.group(1).lower(), salt), segment)
+        return _MENTION.sub(lambda m: "@" + alias(m.group(1)), segment)
 
     out, last = [], 0
     for code in _CODE.finditer(text):
@@ -238,17 +247,23 @@ def change_from_pr(
 class FileSource(Protocol):
     def file_oids(self, repo: str, path: str, shas: list[str]) -> dict[str, str | None]: ...
     def blob_text(self, repo: str, oid: str) -> str | None: ...
-    def fork_point(self, repo: str, base_ref: str, sha: str) -> str: ...
-    def changed_paths(self, repo: str, older: str, newer: str) -> set[str]: ...
+    def fork_point(self, repo: str, base_tip: str, sha: str) -> str: ...
 
 
 # What can stop a commented file having a diff the build can read, counted per comment.
-DIFF_DROPS = ("file_absent", "file_gone", "upstream_change", "text_unavailable")
+DIFF_DROPS = (
+    "file_absent",
+    "outdated_view",
+    "file_gone",
+    "upstream_change",
+    "text_unavailable",
+    "object_gone",
+)
 
 
 def successor_diffs(
     repo: str,
-    base_ref: str,
+    base_tip: str,
     heads: Sequence[Mapping[str, Any]],
     by_file: dict[str, list[dict[str, Any]]],
     api: FileSource,
@@ -260,21 +275,27 @@ def successor_diffs(
     it whose version of the file differs from k's. Both versions are fetched by commit and path and
     diffed with git, so the diff is between exactly those two files whatever the commits' ancestry.
     When no later commit changes the file, the diff is empty, as Gerrit's is for an untouched file
-    (`no_anchored_hunk` in the build). Comments that cannot have a clean diff are removed from
-    `by_file` and counted: the file absent at k (`file_absent`), gone at the successor, as by a
-    rename (`file_gone`), changed on the base branch between the two commits' fork points, so the
-    successor carries upstream edits as well as the author's (`upstream_change`, the rebase guard
-    the Gerrit routes apply through a revision's kind), or binary or too large (`text_unavailable`).
+    (`no_anchored_hunk` in the build).
+
+    Comments that cannot have a clean diff are removed from `by_file` and counted:
+    `file_absent` (no file at k); `outdated_view` (the file changed after k but before the
+    comment, so the reviewer read a superseded version and the diff would carry edits made before
+    the comment); `file_gone` (absent at the successor, as by a rename); `upstream_change` (a merge
+    commit between k and the successor, or the base branch's own version of the file differs
+    between the two commits' fork points, so the successor carries upstream edits: the rebase
+    guard the Gerrit routes apply through a revision's kind); `text_unavailable` (binary or too
+    large); `object_gone` (GitHub no longer holds a commit or blob it needs).
     """
     shas = [str(head["sha"]) for head in heads]
     times = [str(head.get("committed_at") or "") for head in heads]
+    merges = [len(head.get("parents") or []) > 1 for head in heads]
     diffs: dict[str, Any] = {}
     dropped = dict.fromkeys(DIFF_DROPS, 0)
     forks: dict[str, str] = {}
 
     def fork(sha: str) -> str:
         if sha not in forks:
-            forks[sha] = api.fork_point(repo, base_ref, sha)
+            forks[sha] = api.fork_point(repo, base_tip, sha)
         return forks[sha]
 
     for path, file_comments in list(by_file.items()):
@@ -282,16 +303,20 @@ def successor_diffs(
         for comment in file_comments:
             groups.setdefault(int(comment["patch_set"]), []).append(comment)
         kept: list[dict[str, Any]] = []
+        oids: dict[str, str | None] | None = None
         for k, group in sorted(groups.items()):
             if all(comment["line"] is None for comment in group) or k >= len(shas):
                 kept += group  # no anchor, or no later commit: the build counts these
                 continue
-            since = min(str(comment.get("created") or "") for comment in group)
-            later = [shas[i] for i in range(k, len(shas)) if times[i] > since]
-            oids = api.file_oids(repo, path, [shas[k - 1], *later])
-            reason, diff = _successor_diff(
-                repo, base_ref, shas[k - 1], later, oids, api, fork, path
-            )
+            try:
+                if oids is None:
+                    oids = api.file_oids(repo, path, shas)
+                since = min(str(comment.get("created") or "") for comment in group)
+                reason, diff = _successor_diff(
+                    repo, k, shas, times, merges, since, oids, api, fork, path
+                )
+            except Gone:
+                reason, diff = "object_gone", None
             if reason:
                 dropped[reason] += len(group)
                 continue
@@ -306,27 +331,37 @@ def successor_diffs(
 
 def _successor_diff(
     repo: str,
-    base_ref: str,
-    commented: str,
-    later: list[str],
+    k: int,
+    shas: list[str],
+    times: list[str],
+    merges: list[bool],
+    since: str,
     oids: Mapping[str, str | None],
     api: FileSource,
     fork: Callable[[str], str],
     path: str,
 ) -> tuple[str | None, dict[str, Any] | None]:
-    """A drop reason, or the diff of `path` from `commented` to its first later change."""
+    """A drop reason, or the diff of `path` from patch set k to its first later change."""
+    commented = shas[k - 1]
     before_oid = oids.get(commented)
     if before_oid is None:
         return "file_absent", None
-    successor = next((sha for sha in later if oids.get(sha) != before_oid), None)
-    if successor is None:
+    later = range(k, len(shas))
+    if any(times[i] <= since and oids.get(shas[i]) != before_oid for i in later):
+        return "outdated_view", None
+    j = next((i for i in later if times[i] > since and oids.get(shas[i]) != before_oid), None)
+    if j is None:
         return None, {"content": []}
-    after_oid = oids.get(successor)
+    after_oid = oids.get(shas[j])
     if after_oid is None:
         return "file_gone", None
-    older, newer = fork(commented), fork(successor)
-    if older != newer and path in api.changed_paths(repo, older, newer):
+    if any(merges[i] for i in range(k, j + 1)):
         return "upstream_change", None
+    older, newer = fork(commented), fork(shas[j])
+    if older != newer:
+        upstream = api.file_oids(repo, path, [older, newer])
+        if upstream.get(older) != upstream.get(newer):
+            return "upstream_change", None
     before, after = api.blob_text(repo, before_oid), api.blob_text(repo, after_oid)
     if before is None or after is None:
         return "text_unavailable", None
@@ -346,7 +381,8 @@ def row_from_pr(
 ) -> dict[str, Any]:
     """One snapshot row, scrubbed before it reaches disk: the change, its comments and diffs."""
     change, by_file, dropped = change_from_pr(repo, pr, heads, comments, project=project)
-    diffs, diff_dropped = successor_diffs(repo, str(pr.get("base_ref") or ""), heads, by_file, api)
+    base_tip = str(pr.get("base_tip") or pr.get("base_ref") or "")
+    diffs, diff_dropped = successor_diffs(repo, base_tip, heads, by_file, api)
     logins = [str((pr.get("user") or {}).get("login") or "")] + [
         str((c.get("user") or {}).get("login") or "") for c in comments
     ]
@@ -411,7 +447,7 @@ GITHUB_ORGS = {
 
 class PullRequestSource(FileSource, Protocol):
     def merged_prs(self, owner: str, day: str, *, qualifier: str) -> list[dict[str, Any]]: ...
-    def commit_times(self, repo: str, shas: list[str]) -> dict[str, str]: ...
+    def commit_times(self, repo: str, shas: list[str]) -> list[dict[str, Any]]: ...
     def pr_comments(self, repo: str, number: int) -> list[dict[str, Any]]: ...
     def pr_heads(self, repo: str, number: int) -> list[dict[str, Any]]: ...
     def pr_files(self, repo: str, number: int) -> list[dict[str, Any]]: ...
@@ -444,11 +480,8 @@ def with_commented_commits(
     """
     known = {str(head["sha"]) for head in heads}
     missing = sorted({str(c.get("original_commit_id")) for c in comments} - known - {"None"})
-    found = api.commit_times(repo, missing) if missing else {}
-    merged = [dict(head) for head in heads] + [
-        {"sha": sha, "committed_at": at} for sha, at in found.items()
-    ]
-    return sorted(merged, key=lambda head: (str(head.get("committed_at") or ""), str(head["sha"])))
+    found = api.commit_times(repo, missing) if missing else []
+    return order_commits([dict(head) for head in heads] + found)
 
 
 def collect_month(
@@ -457,7 +490,8 @@ def collect_month(
     """Every PR one registered organization merged in `month`, as scrubbed snapshot rows.
 
     PRs opened by a bot or AI agent are not collected; PRs GitHub answers 404 for are withdrawn
-    since they were listed. Both are counted in the month's record, as is every comment left out
+    since they were listed; a PR whose requests still fail after the client's retries is
+    `failed`, with its reason. All are counted in the month's record, as is every comment left out
     by `change_from_pr` or `successor_diffs`, by reason.
     """
     if name not in GITHUB_ORGS:
@@ -465,7 +499,8 @@ def collect_month(
     org = GITHUB_ORGS[name]
     year, number = map(int, month.split("-"))
     rows: list[dict[str, Any]] = []
-    counts = {"listed": 0, "agent_authored": 0, "withdrawn": 0}
+    counts = {"listed": 0, "agent_authored": 0, "withdrawn": 0, "failed": 0}
+    failures: list[str] = []
     comment_drops = dict.fromkeys(("rewritten_history", *DIFF_DROPS), 0)
     for day in range(1, calendar.monthrange(year, number)[1] + 1):
         for pr in api.merged_prs(org.owner, f"{month}-{day:02d}", qualifier=org.qualifier):
@@ -493,6 +528,12 @@ def collect_month(
             except Gone:
                 counts["withdrawn"] += 1
                 continue
+            except RuntimeError as error:
+                # The client has already retried; one PR's persistent error costs that PR, not the
+                # month. Counted, with its reason, so a failed month is visible in its record.
+                counts["failed"] += 1
+                failures.append(f"{repo}#{pr['number']}: {str(error)[:160]}")
+                continue
             for reason in comment_drops:
                 comment_drops[reason] += row[GITHUB_KEY][reason]
             rows.append(row)
@@ -504,6 +545,7 @@ def collect_month(
         "month": month,
         **counts,
         **comment_drops,
+        "failures": failures[:50],
         "github_rules": GITHUB_RULES,
     }
     return rows, record

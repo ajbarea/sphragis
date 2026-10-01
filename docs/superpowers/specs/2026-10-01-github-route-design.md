@@ -50,10 +50,13 @@ NoteDb route's `embedded_fetchers` already does.
    PRs (research log, "The confirmation pass").
 6. **Force pushes and upstream edits.** Patch sets include every commit a force push rewrote away
    and every commit a comment names, so a comment is unplaced (`rewritten_history`) only when
-   GitHub no longer holds its commit. When the commented file changed on the base branch between
-   the two commits' fork points (a merge from main, or a rebase onto it), the successor carries
-   upstream edits as well as the author's, so the comment is dropped (`upstream_change`): the
-   rebase guard the Gerrit routes apply through a revision's kind.
+   GitHub no longer holds its commit. Fork points are taken against the base branch as it stood
+   before the PR merged (the merge commit's first parent). When the base branch's own version of
+   the commented file differs between the two commits' fork points, or a merge commit lies
+   between them, the successor carries upstream edits as well as the author's, so the comment is
+   dropped (`upstream_change`): the rebase guard the Gerrit routes apply through a revision's
+   kind. A file changed after the commented commit but before the comment is an outdated view
+   (`outdated_view`), since those edits are no response to it.
 7. **Withdrawn content.** A PR or comment the API now answers 404 for is not built, and the
    release-time check proposed for Gerrit (ROADMAP Plan A) covers GitHub too.
 8. **Politeness.** Authenticated requests only, GraphQL where it saves calls, conditional requests

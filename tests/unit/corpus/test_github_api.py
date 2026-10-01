@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from sphragis.corpus.github_api import GitHubAPI, Gone
+from sphragis.corpus.github_api import GitHubAPI, Gone, order_commits
 
 
 class Fake:
@@ -177,17 +177,17 @@ def test_file_oids_batches_commits_and_reports_absent_files() -> None:
     assert oids["s0"] == "b0" and oids["s50"] == "b50" and oids["s51"] is None
 
 
-def test_changed_paths_pages_and_includes_a_renames_old_name() -> None:
-    page1 = {
-        "files": [{"filename": f"f{i}"} for i in range(99)]
-        + [{"filename": "new.py", "previous_filename": "old.py"}]
-    }
-    page2 = {"files": [{"filename": "last.py"}]}
-    fake = Fake([("page=1", 200, {}, page1), ("page=2", 200, {}, page2)])
-    paths = _api(fake).changed_paths("o/r", "base0", "base1")
-    assert {"old.py", "new.py", "last.py", "f0"} <= paths and len(paths) == 102
-
-
 def test_fork_point_is_the_merge_base_with_the_base_branch() -> None:
     fake = Fake([("compare/main...c1", 200, {}, {"merge_base_commit": {"sha": "base0"}})])
     assert _api(fake).fork_point("o/r", "main", "c1") == "base0"
+
+
+def test_a_rebased_series_in_one_second_is_ordered_parent_first() -> None:
+    """Review finding: a rebase gives a series one committer second, leaving order to the sha."""
+    second = "2025-01-01T00:00:00Z"
+    series = [
+        {"sha": "a", "committed_at": second, "parents": ["c"]},
+        {"sha": "b", "committed_at": second, "parents": ["base"]},
+        {"sha": "c", "committed_at": second, "parents": ["b"]},
+    ]
+    assert [c["sha"] for c in order_commits(series)] == ["b", "c", "a"]
