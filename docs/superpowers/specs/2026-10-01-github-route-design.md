@@ -18,9 +18,9 @@ NoteDb route's `embedded_fetchers` already does.
 |---|---|---|
 | change | merged pull request (OpenJDK: integrated, closed by its bot) | window month by PR creation, as Gerrit's by change creation |
 | project | repository; for LLVM, the top-level directory of `llvm/llvm-project` | LLVM's definition registered before its split is read |
-| patch set k | the PR head after its k-th commit, in the PR's final commit list | |
+| patch set k | the k-th commit that was ever on the PR (`pr_heads`: its commits and every force push's before and after commit, from the timeline) | the final commit list alone loses commits amended or rebased away |
 | inline comment on patch set k, line n | review comment whose `original_commit_id` is commit k, `original_line` n on the `RIGHT` side, `path` | every comment, replies included, as Gerrit lists them; the build groups by hunk |
-| successor patch set k+1 | commit k+1 | a comment on the last commit has none, dropped `no_successor` |
+| successor patch set k+1 | the first later commit whose compare against k changes the commented file | GitHub commits are increments; a file untouched later is an empty diff (`no_anchored_hunk`), as on Gerrit |
 | Gerrit diff of a file, k to k+1 | compare API patch of that file between commits k and k+1, converted to `content` blocks | see "Diff conversion" |
 | owner, comment author | PR author, review comment author, as `{_account_id: <numeric id>}`, pseudonymised at ingestion with the corpus salt | same `scrub`; `@login` and `@org/team` mentions in prose pseudonymised too (`scrub_mentions`), code spans left alone |
 | `SERVICE_USER` tag | `type == "Bot"`, or a login on the registered AI-agent and bot list | mapped onto the tag, so `is_service_user` drops it unchanged |
@@ -46,8 +46,10 @@ NoteDb route's `embedded_fetchers` already does.
    counted; AI reviewers map onto `SERVICE_USER`. The list of agent logins is registered and
    versioned with the route, because this population changes month to month and is a large share of some organizations'
    PRs (research log, "The confirmation pass").
-6. **Force pushes.** A comment whose `original_commit_id` is not in the final commit list has no
-   recoverable successor and is dropped, counted apart (`rewritten_history`) so the loss is visible.
+6. **Force pushes.** Patch sets come from the PR's timeline, so commits a force push rewrote away
+   stay addressable. A comment whose commit the timeline still lacks (a non-head commit of an
+   earlier push) is counted apart (`rewritten_history`). Recovering those by the comment's time
+   is a later refinement.
 7. **Withdrawn content.** A PR or comment the API now answers 404 for is not built, and the
    release-time check proposed for Gerrit (ROADMAP Plan A) covers GitHub too.
 8. **Politeness.** Authenticated requests only, GraphQL where it saves calls, conditional requests

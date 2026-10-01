@@ -20,7 +20,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.rules import BUILD_RULES, FETCH_RULES, RULES_VERSION
+from sphragis.corpus.rules import BUILD_RULES, FETCH_RULES, GITHUB_RULES, RULES_VERSION
 from sphragis.corpus.storage import snapshot_record_path
 
 DERIVED = "derived.json"
@@ -179,7 +179,7 @@ def _stale_build(built: Path) -> str | None:
 
 
 def _stale_fetch(snapshot: Path) -> str | None:
-    """Whether a git-route snapshot was read under fetch rules other than the code's own.
+    """Whether a git-route or GitHub snapshot was read under rules other than the code's own.
 
     Nothing to check for a REST snapshot, or one from before this was recorded: only a git
     route names `fetch_rules`, the same way only a build names `build_rules`.
@@ -187,6 +187,11 @@ def _stale_fetch(snapshot: Path) -> str | None:
     if not snapshot.is_file():
         return None
     record = _read_json(snapshot_record_path(snapshot))
+    if record is not None and record.get("route") == "github":
+        # No GitHub month predates the digest, so a record without one fails closed.
+        if record.get("github_rules") != GITHUB_RULES:
+            return "fetched under other GitHub route rules (github.py changed); refetch it"
+        return None
     if record is None or record.get("route") != "notedb":
         return None
     if "fetch_rules" not in record:

@@ -1661,3 +1661,84 @@ def test_two_transports_in_one_process_share_the_claim(
     first, second = _wikimedia(_Clocks(), tmp_path), _wikimedia(_Clocks(), tmp_path)
     assert first(f"{WIKIMEDIA}/changes/1/comments")[0] == 200
     assert second(f"{WIKIMEDIA}/changes/2/comments")[0] == 200
+
+
+class _GitHubStub:
+    """A GitHub API with one human PR and one agent PR on the 2nd of the month."""
+
+    def __init__(self) -> None:
+        self.requests = 0
+
+    def merged_prs(self, owner, day, *, qualifier):
+        self.requests += 1
+        if not day.endswith("-02"):
+            return []
+        return [
+            {
+                "repo": "apache/x",
+                "number": 1,
+                "created_at": "2024-10-02T00:00:00Z",
+                "user": {"id": 1, "login": "dev", "type": "User"},
+            },
+            {
+                "repo": "apache/x",
+                "number": 2,
+                "created_at": "2024-10-02T00:00:00Z",
+                "user": {"id": 5, "login": "dependabot[bot]", "type": "Bot"},
+            },
+        ]
+
+    def pr_comments(self, repo, number):
+        return [
+            {
+                "user": {"id": 2, "login": "reviewer", "type": "User"},
+                "body": "Rename it.",
+                "path": "src/a.py",
+                "original_commit_id": "c1",
+                "original_line": 1,
+                "side": "RIGHT",
+            }
+        ]
+
+    def pr_heads(self, repo, number):
+        return [{"sha": "c1"}, {"sha": "c2"}]
+
+    def pr_files(self, repo, number):
+        return []
+
+    def compare_files(self, repo, base, head):
+        return {"src/a.py": "@@ -1,1 +1,1 @@\n-old_name = 1\n+new_name = 1"}
+
+
+def _github(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stub: _GitHubStub, *argv: str) -> int:
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "_github_api", lambda args: stub)
+    return cli.main([*argv, "--org", "apache", "--root", str(tmp_path)])
+
+
+def test_a_github_month_is_fetched_and_built_through_the_gerrit_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    stub = _GitHubStub()
+    assert (
+        _github(tmp_path, monkeypatch, stub, "fetch", "--via", "github", "--month", "2024-10") == 0
+    )
+    record = json.loads((tmp_path / "apache" / "raw" / "2024-10.record.json").read_text())
+    assert record["route"] == "github" and record["agent_authored"] == 1
+    assert _github(tmp_path, monkeypatch, stub, "build") == 0
+    rows = (tmp_path / "apache" / "examples" / "2024-10.jsonl").read_text().splitlines()
+    (example,) = [json.loads(row) for row in rows]
+    assert (example["before"], example["after"]) == ("old_name = 1", "new_name = 1")
+
+
+@pytest.mark.parametrize("month", ["2025-11", "2026-09"])
+def test_the_github_route_refuses_a_sealed_month_before_any_request(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, month: str
+) -> None:
+    """Mirrors the git route's guard: the seal holds whichever transport is asked."""
+    stub = _GitHubStub()
+    with pytest.raises(SystemExit, match="sealed test window"):
+        _github(tmp_path, monkeypatch, stub, "fetch", "--via", "github", "--month", month)
+    assert stub.requests == 0

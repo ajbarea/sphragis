@@ -6979,3 +6979,31 @@ that H1 reads keep the full battery.
 
 The Wikimedia placebo (job 211287, `rq1-placebo-wikimedia.json`) completed; its simulation, job
 211288, is queued behind it.
+
+### A GitHub collection route, and what live pull requests taught it (2026-10-01)
+
+`sphragis/corpus/github.py` and `github_api.py` (spec `docs/superpowers/specs/2026-10-01-github-route-design.md`):
+pull requests shaped as Gerrit changes, so `build`, `refine` and `dedup` run on them unchanged and
+no frozen Gerrit month goes stale; the route's own digest (`GITHUB_RULES`) stales only GitHub
+months, failing closed when a GitHub snapshot lacks it. `fetch --via github` collects a registered
+organization-month; the sealed test window is refused before any request, as on the other routes.
+
+A live run on eight sampled Apache PRs changed the design twice before any corpus was built:
+
+- **Force pushes.** GitHub authors amend and rebase, so the commit a reviewer commented on is often
+  missing from the PR's final commit list: on the first four PRs, 90 of 121 comments had no
+  recoverable commit. Patch sets now come from the PR's timeline (its commits plus every force
+  push's before and after commit). On the eight PRs, 65 of 167 comments are still unplaced, all on
+  one PR whose earlier non-head commits the timeline does not list.
+- **Incremental commits.** A Gerrit patch set is the author's whole next revision; a GitHub commit
+  is one increment, so diffing the commented commit against the very next one missed fixes made
+  commits later (15 `diff_error` on the eight PRs). The successor is now the first later commit
+  that changes the commented file, and a file no later commit changes is an empty diff
+  (`no_anchored_hunk`), as an untouched file is on Gerrit: `diff_error` went to 0 and examples from
+  11 to 14.
+
+**The sizing's example projections are provisional.** They apply the Gerrit thread-to-example
+conversion (0.217 to 0.282) to GitHub threads; on the eight live PRs, 14 examples came from 167
+comments, where the denominator counts every comment (author replies included), not the sizing's
+reviewer-started threads, so the two rates are not comparable. GitHub's own conversion is read from
+a built pilot month per organization before any of them is admitted.
