@@ -6881,3 +6881,17 @@ it `lower_bound` (`project_windows.dev_reading`, tested), and an over-prediction
 OpenStack's projection (miss -1.3%) regenerates identically. Wikimedia's sealed window projects to
 at least **2,848 changes** over its twelve months (captured 0.984 at the 2027-01 fetch), and its
 simulation is read at that size.
+
+**The assumption the lower bound rests on, stated.** An independent review of this change confirmed
+that a smaller planned window moves every registered quantity of `partition_sensitivity.py` in
+the conservative direction (the detectable effects grow, a null reads bounded less often,
+reproducibility fails more often; `sigma_run` is calibrated on the pilot's changes, independent
+of the planned size). What the projection cannot show is the other half: an under-prediction
+caused by capture is bounded by the test window's capture (0.984, at most about 1.6%), but one
+caused by arrivals is a lower bound only if the test window's arrivals stay at or above the
+training rate. Monthly arrivals rise into the dev window without establishing that they stay
+there. **Registered check at fetch:** when the sealed window is fetched, its change count is
+compared with the projection, and a realised window below `planned_changes` is reported beside
+the verdict with the simulation's power at the realised size. The projection artifact records
+`dev_check.reading` (`holds`, `lower_bound` or `refuse`) in place of the earlier `holds` flag,
+so the tolerance is tested once.
