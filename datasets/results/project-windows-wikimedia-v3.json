@@ -1,0 +1,40 @@
+{
+  "org": "wikimedia",
+  "root": "/home/ajbar/ajsoftworks/sphragis/.claude/worktrees/fa-auto/datasets/gerrit",
+  "window_report": "datasets/results/window-report-wikimedia-v3.json",
+  "collected_through": "2025-10",
+  "train": {
+    "months": 10,
+    "changes": 2348,
+    "captured": 0.973941998966545,
+    "true_changes_per_month": 241.08211808213173
+  },
+  "dev_check": {
+    "predicted": 358.7827227646652,
+    "actual": 448,
+    "miss": -0.1991457081145866,
+    "tolerance": 0.15,
+    "holds": false
+  },
+  "test": {
+    "months": 12,
+    "fetch": "2027-01",
+    "captured": 0.9844593252508133,
+    "projected_changes": 2848.0264715660674,
+    "lower_bound": true
+  },
+  "provenance": {
+    "generated_at": "2026-10-01T10:27:58.786678+00:00",
+    "git": {
+      "commit": "499d5a002475156431fe259195ca1e4bea669cb2",
+      "branch": "corpus/wikimedia-admission",
+      "uncommitted_code": [
+        "scripts/project_windows.py"
+      ],
+      "uncommitted_code_sha256": "54cabbe97840e2016484e0f11c25470dc9da6ef5a3d05d2bc4a501a0a985fde2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

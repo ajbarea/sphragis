@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 240 artifacts under
+repository. This page is generated from those scripts: 242 artifacts under
 45 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -342,7 +342,7 @@ How large will the sealed test window be, and does the capture model predict the
 
 | artifact | |
 |---|---|
-| `project-windows-openstack-v3.json` |  |
+| `project-windows-openstack-v3.json` | `project-windows-wikimedia-v3.json` |
 
 ## `scripts/prompt_format_probe.py`
 
@@ -458,7 +458,7 @@ What the collected windows contain, and how much leaks across their boundaries.
 | artifact | |
 |---|---|
 | `window-report-openstack-v3.json` | `window-report-openstack.json` |
-| `window-report-qt.json` |  |
+| `window-report-qt.json` | `window-report-wikimedia-v3.json` |
 
 ## Written by no script this page can find
 
