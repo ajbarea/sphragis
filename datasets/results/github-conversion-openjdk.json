@@ -1,0 +1,7690 @@
+{
+  "org": "openjdk",
+  "month": "2024-11",
+  "prs": 850,
+  "prs_counted": 850,
+  "prs_failed": 0,
+  "prs_gone": 0,
+  "bot_or_ai_authored_prs": 0,
+  "prs_with_comments_over_page": 9,
+  "reviewer_threads": 1404,
+  "suggestion_threads": 388,
+  "built": 525,
+  "refined": 329,
+  "refined_from_zero_thread_prs": 1,
+  "rate": 0.23433048433048434,
+  "rate_95": [
+    0.18265440210249673,
+    0.29259259259259257
+  ],
+  "draws_recounted": 19,
+  "draws_agreeing": 19,
+  "snapshot_record": {
+    "listed": 850,
+    "rows": 307,
+    "failed": 0,
+    "github_rules": "49e015e6a43942c2"
+  },
+  "per_pr": [
+    {
+      "pr": "openjdk/valhalla#1295",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21832",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1293",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21819",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1619",
+      "bot_or_ai_author": false,
+      "threads": 14,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/valhalla#1290",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21805",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21804",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21803",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3017",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1112",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21796",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21793",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21756",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21753",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1101",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21733",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21732",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21578",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#2971",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21285",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21280",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21821",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21817",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21816",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21726",
+      "bot_or_ai_author": false,
+      "threads": 8,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21132",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21827",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21882",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#604",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21868",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21865",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21861",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21858",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21848",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21835",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#602",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21830",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3023",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3022",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/riscv-port-jdk11u#44",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21818",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1621",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1117",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21814",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3021",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1116",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21813",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3020",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1115",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3019",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1114",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21812",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3018",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3016",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1110",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1108",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21784",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3015",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#596",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21777",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21773",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21772",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21766",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21764",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#21761",
+      "bot_or_ai_author": false,
+      "threads": 6,
+      "suggestion_threads": 4,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21757",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21747",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1615",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jfx#1613",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3006",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21687",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 5,
+      "refined": 4
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1088",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#2981",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21559",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21520",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21502",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21043",
+      "bot_or_ai_author": false,
+      "threads": 44,
+      "suggestion_threads": 0,
+      "comments_over_page": true,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20179",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 4,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2795",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#562",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#605",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1125",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3027",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1124",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1623",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21881",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21880",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21875",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21874",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21873",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21871",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3026",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1121",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3025",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1120",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3024",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1119",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21860",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21859",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21856",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21854",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21847",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21839",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#601",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jmc#600",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#271",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1113",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21792",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21780",
+      "bot_or_ai_author": false,
+      "threads": 14,
+      "suggestion_threads": 14,
+      "comments_over_page": false,
+      "built": 11,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21778",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21774",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1611",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21675",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk23u#198",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#593",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21456",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1030",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21286",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20973",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk8u-dev#564",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20301",
+      "bot_or_ai_author": false,
+      "threads": 68,
+      "suggestion_threads": 0,
+      "comments_over_page": true,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#19970",
+      "bot_or_ai_author": false,
+      "threads": 23,
+      "suggestion_threads": 46,
+      "comments_over_page": true,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#19626",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#19397",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah-jdk21u#135",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#533",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3030",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx23u#28",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#606",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1625",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3028",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21900",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21863",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21837",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/shenandoah#531",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21829",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jfx#1620",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21809",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah-jdk21u#134",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21790",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21770",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk23u#209",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21714",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21665",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21660",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21581",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21539",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk23u#146",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20328",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#19989",
+      "bot_or_ai_author": false,
+      "threads": 25,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#19519",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1297",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21961",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21958",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21940",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21938",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21937",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21935",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1296",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 3,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21927",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1130",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21921",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3029",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21918",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21917",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21909",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21901",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21893",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21890",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21886",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21884",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21870",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21869",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21810",
+      "bot_or_ai_author": false,
+      "threads": 6,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jmc#597",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21716",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 20,
+      "comments_over_page": false,
+      "built": 20,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21667",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 5,
+      "comments_over_page": false,
+      "built": 8,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#21663",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk8u-dev#596",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21595",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21988",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21987",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21970",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1298",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21965",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1630",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21963",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21956",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21950",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21948",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21947",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21942",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 6,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jfx#1627",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1626",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1624",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 4
+    },
+    {
+      "pr": "openjdk/jdk#21876",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21864",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21826",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21794",
+      "bot_or_ai_author": false,
+      "threads": 9,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#21789",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#258",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21542",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2951",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1026",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2950",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20677",
+      "bot_or_ai_author": false,
+      "threads": 40,
+      "suggestion_threads": 8,
+      "comments_over_page": true,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21990",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21976",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21972",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21548",
+      "bot_or_ai_author": false,
+      "threads": 21,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 9,
+      "refined": 9
+    },
+    {
+      "pr": "openjdk/jdk#21872",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22012",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22007",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22006",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22001",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21993",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#534",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21977",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21975",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21973",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3037",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21971",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#607",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21967",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1141",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3036",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1140",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3035",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1139",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1138",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3034",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1137",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21946",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1136",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3033",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1135",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1134",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3032",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1133",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21944",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21936",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21925",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21907",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21902",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21898",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21885",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21838",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21806",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21786",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 3,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21686",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3000",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21593",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2946",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21261",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2924",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2921",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2918",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#14787",
+      "bot_or_ai_author": false,
+      "threads": 23,
+      "suggestion_threads": 12,
+      "comments_over_page": true,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22047",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/guide#137",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22034",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#608",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22021",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22018",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22008",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21999",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1299",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21969",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21966",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah-jdk21u#136",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1628",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3031",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21916",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21897",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21888",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jtreg#234",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21802",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21783",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21765",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21746",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21565",
+      "bot_or_ai_author": false,
+      "threads": 43,
+      "suggestion_threads": 7,
+      "comments_over_page": true,
+      "built": 48,
+      "refined": 31
+    },
+    {
+      "pr": "openjdk/jdk#21498",
+      "bot_or_ai_author": false,
+      "threads": 10,
+      "suggestion_threads": 1,
+      "comments_over_page": true,
+      "built": 2,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21429",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2922",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20039",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#2605",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22073",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22072",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22071",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22068",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22060",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22054",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22049",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22046",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22042",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22035",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22033",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22029",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22027",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22025",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22024",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22005",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21992",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21952",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21914",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21913",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21903",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21866",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21857",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1118",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21834",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21822",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21795",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk23u#211",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21744",
+      "bot_or_ai_author": false,
+      "threads": 30,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21574",
+      "bot_or_ai_author": false,
+      "threads": 15,
+      "suggestion_threads": 16,
+      "comments_over_page": false,
+      "built": 7,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1593",
+      "bot_or_ai_author": false,
+      "threads": 20,
+      "suggestion_threads": 5,
+      "comments_over_page": false,
+      "built": 10,
+      "refined": 9
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2838",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22120",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1301",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx23u#30",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22093",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx23u#29",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1636",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22090",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22089",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22087",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22085",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22082",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22077",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/valhalla#1300",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22065",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22063",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22053",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22052",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22050",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1635",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22040",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22031",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22017",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21995",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jfx#1631",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21991",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21989",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21984",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21983",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21981",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21968",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#273",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21954",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21949",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21912",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21905",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21841",
+      "bot_or_ai_author": false,
+      "threads": 18,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 9,
+      "refined": 9
+    },
+    {
+      "pr": "openjdk/jdk#21820",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21787",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21693",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21691",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21614",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21431",
+      "bot_or_ai_author": false,
+      "threads": 9,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22156",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22150",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#209",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22139",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22138",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22135",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22128",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22127",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22122",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22119",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22118",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22115",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22114",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22113",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22112",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1155",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22107",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22105",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22101",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22099",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 4
+    },
+    {
+      "pr": "openjdk/jdk#22097",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22094",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#537",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#536",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22080",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22078",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 3,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1148",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3040",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1147",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22048",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22020",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1144",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22003",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21923",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1128",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21906",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1126",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21642",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21410",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21325",
+      "bot_or_ai_author": false,
+      "threads": 32,
+      "suggestion_threads": 10,
+      "comments_over_page": false,
+      "built": 19,
+      "refined": 14
+    },
+    {
+      "pr": "openjdk/jdk#19826",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22151",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22145",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22141",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22137",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21985",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jmc#609",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22057",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21996",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/nashorn#19",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/valhalla#1302",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22210",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22208",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#275",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22205",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22201",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3048",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1159",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22196",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22194",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22190",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22189",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1158",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1157",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22182",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22180",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22178",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1156",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22170",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/shenandoah#542",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22164",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22162",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22159",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22153",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3046",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3045",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3044",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3043",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22146",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3042",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22132",
+      "bot_or_ai_author": false,
+      "threads": 27,
+      "suggestion_threads": 4,
+      "comments_over_page": false,
+      "built": 14,
+      "refined": 11
+    },
+    {
+      "pr": "openjdk/jdk#22130",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#539",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#538",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22124",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1638",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 4
+    },
+    {
+      "pr": "openjdk/jdk#22109",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22108",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3041",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah-jdk21u#137",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22106",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1153",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1152",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22084",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22081",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1151",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22076",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 14,
+      "comments_over_page": false,
+      "built": 9,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1150",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1149",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22067",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22064",
+      "bot_or_ai_author": false,
+      "threads": 10,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3039",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22041",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1146",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1145",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21845",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1109",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21729",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21712",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#830",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#18162",
+      "bot_or_ai_author": false,
+      "threads": 23,
+      "suggestion_threads": 22,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/skara#1697",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#544",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22241",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22234",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22225",
+      "bot_or_ai_author": false,
+      "threads": 6,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/skara#1696",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22220",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22219",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22216",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22209",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22207",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22206",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22203",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22202",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22195",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22193",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22188",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22185",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22177",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22172",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22166",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22161",
+      "bot_or_ai_author": false,
+      "threads": 9,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22158",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22147",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22140",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22129",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22117",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22083",
+      "bot_or_ai_author": false,
+      "threads": 19,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 5,
+      "refined": 5
+    },
+    {
+      "pr": "openjdk/jdk#22074",
+      "bot_or_ai_author": false,
+      "threads": 8,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 4
+    },
+    {
+      "pr": "openjdk/jdk#22059",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22051",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22002",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21979",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21924",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21853",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21823",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21734",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 3,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3007",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1099",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21688",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#21585",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21524",
+      "bot_or_ai_author": false,
+      "threads": 30,
+      "suggestion_threads": 23,
+      "comments_over_page": true,
+      "built": 23,
+      "refined": 9
+    },
+    {
+      "pr": "openjdk/jdk#21495",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21302",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#973",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk8u-dev#576",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#546",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1305",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22273",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1165",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#545",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1162",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22260",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22259",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22258",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22254",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22253",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3063",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22251",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#543",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22237",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1303",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22233",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22232",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22227",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22226",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22218",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 3,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jfx#1643",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1161",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3054",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3053",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3052",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3051",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3050",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1160",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3047",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22197",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22191",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22186",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22181",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22176",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22157",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#541",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22149",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22133",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/shenandoah#540",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jfx#1637",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22092",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21974",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21850",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21632",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21606",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21521",
+      "bot_or_ai_author": false,
+      "threads": 8,
+      "suggestion_threads": 17,
+      "comments_over_page": false,
+      "built": 12,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#19702",
+      "bot_or_ai_author": false,
+      "threads": 23,
+      "suggestion_threads": 6,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#85",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#220",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#219",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#84",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#218",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#83",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22306",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#82",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#217",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#81",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#216",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1307",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22298",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah-jdk21u#138",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#80",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#215",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#277",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#79",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#214",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#78",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#213",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#77",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#212",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#76",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#211",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx17u#210",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx21u#75",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22290",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22289",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#548",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22286",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1306",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22285",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22284",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22283",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22282",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22281",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/shenandoah#547",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1169",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3067",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1168",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/skara#1698",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1167",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22274",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22268",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3064",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22267",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22264",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22257",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22256",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3062",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22242",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3060",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22229",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22224",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22221",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22212",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3049",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22200",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22183",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22163",
+      "bot_or_ai_author": false,
+      "threads": 17,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22154",
+      "bot_or_ai_author": false,
+      "threads": 8,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 5,
+      "refined": 4
+    },
+    {
+      "pr": "openjdk/jdk#22116",
+      "bot_or_ai_author": false,
+      "threads": 6,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22086",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/panama-vector#221",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1143",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21920",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21815",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jfx21u#74",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21719",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21507",
+      "bot_or_ai_author": false,
+      "threads": 19,
+      "suggestion_threads": 9,
+      "comments_over_page": false,
+      "built": 15,
+      "refined": 7
+    },
+    {
+      "pr": "openjdk/jdk#21244",
+      "bot_or_ai_author": false,
+      "threads": 11,
+      "suggestion_threads": 5,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21129",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1308",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22332",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#279",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22325",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#552",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22317",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22314",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22312",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22311",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22310",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#278",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#550",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22308",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#549",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/skara#1699",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22299",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22297",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22294",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3069",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1172",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22279",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22278",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3066",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3065",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22271",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1164",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22266",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22261",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22230",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3059",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22213",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22204",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22171",
+      "bot_or_ai_author": false,
+      "threads": 12,
+      "suggestion_threads": 10,
+      "comments_over_page": false,
+      "built": 9,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22123",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21840",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1100",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jtreg#233",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21478",
+      "bot_or_ai_author": false,
+      "threads": 43,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21364",
+      "bot_or_ai_author": false,
+      "threads": 31,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 7,
+      "refined": 5
+    },
+    {
+      "pr": "openjdk/jdk#20845",
+      "bot_or_ai_author": false,
+      "threads": 14,
+      "suggestion_threads": 4,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22335",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3068",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22235",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22179",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1640",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/leyden#21",
+      "bot_or_ai_author": false,
+      "threads": 12,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#19334",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#280",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22348",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22346",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22330",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/shenandoah#553",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx23u#34",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx23u#33",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx23u#32",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22357",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1180",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22356",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22353",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22350",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1179",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22342",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1178",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22336",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22328",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22321",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3074",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3073",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22316",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3072",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3071",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1174",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22303",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22301",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22255",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22199",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22155",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22152",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22142",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22136",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 6,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1639",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22131",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22102",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22069",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#21867",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21771",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#21331",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21041",
+      "bot_or_ai_author": false,
+      "threads": 17,
+      "suggestion_threads": 9,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20846",
+      "bot_or_ai_author": false,
+      "threads": 16,
+      "suggestion_threads": 6,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20027",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1310",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1309",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22397",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22394",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22393",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22392",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22390",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#281",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22383",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22381",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22375",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22374",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22373",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22372",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22371",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22370",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22368",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22363",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22362",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22352",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22347",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22338",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22337",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22334",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22331",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22326",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22324",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22323",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22318",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22293",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1304",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22262",
+      "bot_or_ai_author": false,
+      "threads": 6,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 4,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22252",
+      "bot_or_ai_author": false,
+      "threads": 11,
+      "suggestion_threads": 7,
+      "comments_over_page": false,
+      "built": 7,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22214",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22111",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22038",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21994",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk23u#218",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21945",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21762",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1283",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22419",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#283",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22407",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1311",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22400",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22398",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1649",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2971",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22388",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22387",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22379",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22378",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22377",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22376",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22365",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22364",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22359",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22344",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1647",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22339",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22313",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22302",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22300",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22239",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22148",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22126",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk#22070",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2964",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21759",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21742",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#254",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21209",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20808",
+      "bot_or_ai_author": false,
+      "threads": 6,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#285",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#284",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22436",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1187",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22428",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22421",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1651",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22415",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22413",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/valhalla#1312",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1184",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22406",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22403",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22399",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1183",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk17u-dev#3076",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22386",
+      "bot_or_ai_author": false,
+      "threads": 4,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22382",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 3,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22380",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 1
+    },
+    {
+      "pr": "openjdk/jdk#22351",
+      "bot_or_ai_author": false,
+      "threads": 7,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 3,
+      "refined": 3
+    },
+    {
+      "pr": "openjdk/jdk#22345",
+      "bot_or_ai_author": false,
+      "threads": 3,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 2,
+      "refined": 2
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1176",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22315",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22270",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 2,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jfx#1641",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22062",
+      "bot_or_ai_author": false,
+      "threads": 2,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk21u-dev#1132",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21374",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#20994",
+      "bot_or_ai_author": false,
+      "threads": 15,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#16687",
+      "bot_or_ai_author": false,
+      "threads": 5,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/babylon#286",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22453",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22450",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22447",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22440",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22434",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk11u-dev#2972",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22430",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 1,
+      "comments_over_page": false,
+      "built": 1,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22417",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22410",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22402",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22396",
+      "bot_or_ai_author": false,
+      "threads": 1,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22295",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22247",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#22143",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21273",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": true,
+      "built": 0,
+      "refined": 0
+    },
+    {
+      "pr": "openjdk/jdk#21061",
+      "bot_or_ai_author": false,
+      "threads": 0,
+      "suggestion_threads": 0,
+      "comments_over_page": false,
+      "built": 0,
+      "refined": 0
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-10-01T23:47:34.564374+00:00",
+    "git": {
+      "commit": "e1f70999c52a450bee42ab83fcbbe4b2c33ec0ad",
+      "branch": "corpus/github-route"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

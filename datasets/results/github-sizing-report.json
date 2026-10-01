@@ -1,5 +1,18 @@
 {
   "conversion": {
+    "openjdk": {
+      "month": "2024-11",
+      "prs": 850,
+      "reviewer_threads": 1404,
+      "refined": 329,
+      "rate": 0.23433048433048434,
+      "rate_95": [
+        0.18265440210249673,
+        0.29259259259259257
+      ]
+    }
+  },
+  "gerrit_conversion": {
     "openstack": {
       "built": 4755,
       "refined": 4366,
@@ -26,9 +39,10 @@
       ],
       "suggestion_threads": 20389,
       "bot_review_threads": 2091,
+      "conversion": "borrowed",
       "examples_range": [
-        11176,
-        36518
+        9413,
+        37840
       ],
       "rq1": "yes",
       "rq2": "yes",
@@ -108,9 +122,10 @@
       ],
       "suggestion_threads": 6912,
       "bot_review_threads": 3256,
+      "conversion": "borrowed",
       "examples_range": [
-        2449,
-        19827
+        2063,
+        20545
       ],
       "rq1": "borderline",
       "rq2": "yes",
@@ -170,12 +185,13 @@
       ],
       "suggestion_threads": 6446,
       "bot_review_threads": 3275,
+      "conversion": "borrowed",
       "examples_range": [
-        2019,
-        13081
+        1701,
+        13554
       ],
       "rq1": "borderline",
-      "rq2": "yes",
+      "rq2": "borderline",
       "repos_sampled": 68,
       "frame_capped_draws": 0,
       "top_dirs": [
@@ -240,9 +256,10 @@
       ],
       "suggestion_threads": 1437,
       "bot_review_threads": 12,
+      "conversion": "borrowed",
       "examples_range": [
-        198,
-        4264
+        166,
+        4419
       ],
       "rq1": "borderline",
       "rq2": "borderline",
@@ -302,9 +319,10 @@
       ],
       "suggestion_threads": 9192,
       "bot_review_threads": 992,
+      "conversion": "borrowed",
       "examples_range": [
-        7724,
-        19898
+        6506,
+        20618
       ],
       "rq1": "yes",
       "rq2": "yes",
@@ -384,9 +402,10 @@
       ],
       "suggestion_threads": 1798,
       "bot_review_threads": 0,
+      "conversion": "own pilot",
       "examples_range": [
-        1415,
-        5113
+        1192,
+        5298
       ],
       "rq1": "borderline",
       "rq2": "borderline",
@@ -421,10 +440,10 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-01T19:20:09.066414+00:00",
+    "generated_at": "2026-10-01T23:47:51.977854+00:00",
     "git": {
-      "commit": "251748317ee21ded8efbd7a309a387aaf090a65b",
-      "branch": "corpus/github-candidates"
+      "commit": "e1f70999c52a450bee42ab83fcbbe4b2c33ec0ad",
+      "branch": "corpus/github-route"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

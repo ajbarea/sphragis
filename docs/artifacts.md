@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 280 artifacts under
-47 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 281 artifacts under
+48 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -202,6 +202,14 @@ The adapter-instance cut: two adapters per client, and only one of them leaves.
 | artifact | |
 |---|---|
 | `client-updates-dual-cpp-rebuilt-c128-t2.json` |  |
+
+## `scripts/github_conversion.py`
+
+GitHub's thread-to-example conversion, read from a built pilot month of a GitHub organization.
+
+| artifact | |
+|---|---|
+| `github-conversion-openjdk.json` |  |
 
 ## `scripts/github_sizing.py`
 

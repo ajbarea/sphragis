@@ -7194,3 +7194,22 @@ trains adapters, RQ2 reads their updates) and a checkpoint published before the 
 
 Llama-3.1-8B-Instruct replaces Qwen3-8B in the plan; the membership probe reads its base
 checkpoint, as Min-K%++ reads Qwen2.5-Coder-7B's. Not yet run.
+
+### GitHub's own conversion on OpenJDK 2024-11: 0.234 [0.183, 0.293], and Grafana drops to borderline for RQ2 (2026-10-01)
+
+Read as planned above (`github-conversion-openjdk.json`). The route listed 850 integrated PRs, all
+counted (none failed, none gone): 307 carried a reviewer's inline comment, 525 examples were built
+and 329 survived `refine`, which removed 196 as suggested edits, the reviewer having written the
+target (a larger share than on the Gerrit corpora). Against 1,404 reviewer threads under the
+sizing's rule, the conversion is **0.234, 95% interval [0.183, 0.293]**, inside the Gerrit range
+it replaces (0.217 to 0.282) at the centre and wider at both ends. All 19 of the sizing's draws in
+the month recount to the same thread counts, so the rule and the data agree. Nine PRs have more
+than one page of comments and are undercounted, as in the sizing, which errs toward too few
+threads and so a higher rate. `refine` leaves every GitHub example's successor kind unchecked, by
+design: GitHub has no Gerrit revision kind, and the route's own upstream guard does that job.
+
+**The table, re-derived** (`github-sizing-report.json`; OpenJDK on its own pilot, the rest on its
+span, marked borrowed until their pilots are read): Apache and LLVM still reach an H1 cell and RQ2;
+.NET reaches RQ2 and is borderline for H1; **Grafana is now borderline for RQ2** (low end 1,701
+against 1,850); OpenJDK and HashiCorp stay borderline for both. The 2024-11 pilot months of the
+other five are being collected.
