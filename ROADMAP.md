@@ -152,6 +152,81 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
 
+## Plan H — hardening against October 2026 practice
+
+Decided 2026-10-01 (AJ: "you decide", highest quality) from a five-part literature sweep, every
+source opened and recorded in the research log entry of that date. Ordered by what must land
+before the test window is fetched; items that change a registered decision say so.
+
+Before Stage 1 (2026-11-20), each registered before the seal:
+
+- [ ] **Contamination: provenance primary, Min-K%++ descriptive** (changes a registered decision).
+  Membership inference barely beats chance on LLMs (Duan et al., COLM 2024, arXiv:2402.07841)
+  and the battery's model-less baseline beats Min-K%++ here; protection rests on provenance.
+  Score only target tokens given context; Min-K%++ is read as exposure only above the blind
+  baseline.
+- [ ] **Pre-cutoff code through cherry-picks and backports**: look each target's added lines up
+  in every branch as it stood at the checkpoint's weight upload, report the rate and a
+  sensitivity estimate without them (infini-gram mini, arXiv:2506.12229, as exact-lookup practice).
+- [ ] **Pin the checkpoint revisions** (no `revision=` today; the Qwen repos changed config and
+  tokenizer files on 2024-11-18) to the revision the pilots ran on, and cite the weight-upload
+  commit as the checkpoint date; adopt a contamination disclosure table (arXiv:2608.29463).
+- [ ] **AI-assisted targets**: flag an example whose successor commit carries `Assisted-by`,
+  `Generated-by` or an agent `Co-authored-by` trailer (OpenInfra's AI policy requires them) or an
+  agent committer; report the share per organization, window and half, and an estimate without
+  them (a lower bound, trailers being voluntary). Measured first on the GitHub pilot months.
+- [ ] **Reviewers, not the organization**: a secondary analysis splitting dev and test examples
+  by whether their reviewer also reviewed the sibling half's training data (salted pseudonyms).
+- [ ] **A retrieval comparator**: the base model with BM25 top-3 examples from the own-half,
+  sibling-half and foreign pools, mirroring H1 without training (Pornprasit and
+  Tantithamthavorn, IST 2024; retrieval beat fine-tuning in arXiv:2505.15179, lost in
+  arXiv:2606.06492). Exploratory.
+- [ ] **A likelihood outcome**: teacher-forced bits-per-byte of the target, own vs sibling, as a
+  registered secondary with its own SESOI and sensitivity simulation (arXiv:2508.13144).
+- [ ] **Readings beside the pass rule**: "meaningful" when a cell's lower bound clears the SESOI
+  (three-sided testing, Isager and Fitzgerald, AMPPS 2026); the largest r with "at least r of k
+  organizations" rejected (partial conjunction, Benjamini and Heller 2008), so a failed
+  every-organization test still says how many show the effect. The intersection-union rule stays
+  the pass rule; this answers AJ's open question on reading H1 over four to six organizations.
+- [ ] **Controls**: a helper-substitution plant (a call rewritten into the house helper) piloted
+  like the marker plant; a report-only plant near the bound (+0.02 to +0.03) read against the
+  simulated power; the placebo rerun once on the repeated-partition pipeline.
+- [ ] **Tacit, measured**: H1 on the refinements each organization's own linters would not make
+  (flake8/hacking, mediawiki-codesniffer, eslint-config-wikimedia), and exact match after
+  identifier anonymisation, both supplementary estimands like `file_type_supplement`.
+- [ ] **The rank-256 arm** (changes a registered arm): alpha held at 64, or rsLoRA, so the arm
+  changes capacity and not step size too (LoRA Without Regret, Thinking Machines 2025); a one-seed
+  learning-rate check at 1e-4 to 1e-3, chosen by pooled held-out loss, logged even if 2e-4 stands.
+- [ ] **Writing**: open-source communities stand in for companies and their public conventions
+  make the measured effect a lower bound; familiarity with old repository code raises base
+  scores and cancels in the contrasts; literature comparisons use normalized exact match (as
+  CodeReviewer's evaluation code does); a descriptive specification curve (Cassee and Feldt,
+  arXiv:2512.08910); ADEMP for the simulations; the 2026 LLM-in-SE guidelines checklist
+  (arXiv:2508.15503); background on industrial comment resolution and retrieval vs fine-tuning.
+- [ ] **An open-weight label-audit rater** at pinned weights beside the two API raters.
+
+RQ2, after Stage 1:
+
+- [ ] **A harm model for known participants**: in cross-silo federation members are named, so
+  the headline is what leaks about a known member's content and properties; the min-loss
+  record-to-organization attack (Hu et al.) becomes a result, property inference is cited and
+  scored in n_leaked (Suri and Evans, PETS 2022).
+- [ ] **A canary audit**: canary clients and source canaries (the planted-convention machinery)
+  for an empirical epsilon per split at the record and organization units (Andrew et al., ICLR
+  2024, arXiv:2302.03098; Steinke et al., NeurIPS 2023).
+- [ ] **A DP arm** with accounting on the shared half, at both units (FedASK, arXiv:2507.09990;
+  user-level DP, arXiv:2406.14322).
+- [ ] **A curious peer and the final model**: extraction and attribution from the global model
+  alone (arXiv:2506.06060), and a record-level LoRA-Leak baseline on each half.
+- [ ] **The provenance-tag split tested adversarially** against the learned splits, and FedRoRA
+  (arXiv:2609.00632) and FedLAFP (arXiv:2609.37033) placed; the harness released as the first
+  source-leakage benchmark for federated LLM fine-tuning.
+
+Considered and not adopted: CodeBLEU and embedding metrics (surface-biased, arXiv:2509.15397),
+LoRA variants (within 1-2% once the learning rate is tuned, arXiv:2602.04998), e-values (K is
+fixed), FSD and dataset inference (no IID non-members). A human audit of exact-match misses and a
+second human label rater wait on rater time.
+
 ## Plan G — variance the gate does not see
 
 Added 2026-09-18. A pure null crossed zero: `sym-0` and `marker-0` are byte-identical experiments

@@ -7213,3 +7213,47 @@ span, marked borrowed until their pilots are read): Apache and LLVM still reach 
 .NET reaches RQ2 and is borderline for H1; **Grafana is now borderline for RQ2** (low end 1,701
 against 1,850); OpenJDK and HashiCorp stay borderline for both. The 2024-11 pilot months of the
 other five are being collected.
+
+### Hardening against October 2026 practice: what the study already leads on, and Plan H (2026-10-01)
+
+Five literature sweeps (inference and design; evaluation and data; contamination; federated LoRA
+privacy; conventions and fine-tuning), each paper opened on arXiv, DOI or the venue page; most
+were read at abstract level, the full text where a claim below rests on it. Decided as ROADMAP
+Plan H. Claims about this repository were checked against the code before being written here.
+
+**Already at or beyond current practice.** The own-half, sibling-half and foreign contrast has no
+counterpart: industrial studies (MetaMateCR, arXiv:2507.13499) compare a fine-tuned model with a
+zero-shot one and never separate internal APIs from convention. Averaging estimates over
+partitions with one crossed interval beats the median-over-splits rule (Chernozhukov et al.,
+Econometrica 2025) and p-value merging (Gasparin, Wang and Ramdas, PNAS 2025); the SESOI,
+bounded reading, outcome-neutral checks and seal go beyond the SE registered-report template
+(arXiv:2602.09292). Deterministic, source-read bot rules beat LLM filtering of review data (Too
+Noisy To Learn, MSR 2025, arXiv:2502.02757). The model-less baseline in the contamination battery
+is what the MIA literature asks for (arXiv:2406.16201, arXiv:2406.17975) and few SE studies run.
+The LoRA recipe (all attention and MLP projections, loss on the answer only, batch 16) matches
+LoRA Without Regret (Thinking Machines, 2025). No prior work attributes an organization through
+secure aggregation from LoRA updates, or ranks split designs by what their transmitted half leaks.
+
+**Checked here and confirmed.**
+- Min-K%++ is the registered primary exposure measure (registered decisions, "Contamination"),
+  and the battery's model-less bag-of-words baseline (balanced accuracy 0.589) beats it (AUC
+  0.540): the registration names an instrument this study's own data does not support.
+- No checkpoint is pinned by revision in `sphragis/experiment/model.py`.
+- `lora_config` ties alpha to 2r, so the scale is 2 at every rank and the rank-256 arm also takes
+  larger steps; its readings do not isolate capacity.
+- CodeReviewer's exact match compares whitespace-collapsed strings (`run_test_ref.py`), so the
+  pilot entry of 2026-09-14 compared its 30.32% with this study's strict 0.200; the like-for-like
+  figure is the normalized 0.222. The conclusion there (exact match discriminates) stands.
+- `registered-decisions.md` described Holm as a fixed order; `holm_steps` implements the
+  step-down. The wording now matches the code.
+- The registered test window (2025-11 to 2026-10) is the period in which AI-assisted commits
+  rose fastest (agent-to-agent review grew more than 100-fold over 2025, arXiv:2608.21311), and
+  nothing in the pipeline reads AI trailers on successor commits.
+
+**Sources, beyond those named above and in Plan H:** Maini et al., NeurIPS 2024 (dataset
+inference); Hayes et al., NeurIPS 2025, arXiv:2505.18773; Cheng et al., Dated Data, COLM 2024,
+arXiv:2403.12958; Heineman et al., arXiv:2508.13144; Miller, arXiv:2411.00640; Bowyer et al.,
+ICML 2025, arXiv:2503.01747; Liu, Hu, Wu and Smith, NeurIPS 2022, arXiv:2206.07902; Melis et
+al., S&P 2019, arXiv:1805.04049; Mitchell et al., arXiv:2606.10481; Athanasiou, Jung and
+Palamidessi, ICLR 2026, arXiv:2603.02017; Vijayvergiya et al., AutoCommenter, arXiv:2405.13565;
+Hora, Robbes and Zacchiroli, arXiv:2609.07542.

@@ -35,8 +35,8 @@ every one of its cells is supported, so a pass generalizes across the organizati
 resting on one. Requiring every cell makes it an intersection-union test, which holds its level
 without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
 evaluated projects) is confirmatory only for Qt and Chromium, when both are admitted. The two
-hypotheses share one family-wise level under Holm: the first is read on a two-sided 97.5%
-interval, the second, if the first passes, on a 95% one.
+hypotheses share one family-wise level under Holm's step-down: both are read on a two-sided
+97.5% interval, and if one passes, the other is read again on a 95% one.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the cell's registered detectable effect, and **inconclusive** otherwise. A hypothesis is
