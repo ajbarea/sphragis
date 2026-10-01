@@ -468,4 +468,22 @@ def test_a_month_resumes_from_its_checkpoint(tmp_path: Any) -> None:
         "llvm", "2025-01", again, salt="s", checkpoint=checkpoint
     )
     assert rows_again == rows and record_again == record
-    assert again.fetched == [], "every PR came back from the checkpoint"
+    assert again.fetched == [9], "every PR came back from the checkpoint but the failed one"
+
+
+def test_a_resumed_month_asks_again_for_a_pr_that_failed(tmp_path: Any) -> None:
+    """A failure checkpointed on one run is retried on the next, and its new outcome kept."""
+
+    class Recovered(FakeAPI):
+        def pr_comments(self, repo: str, number: int) -> list[dict[str, Any]]:
+            if number == 9:
+                return [_comment(path="clang/lib/Sema.cpp")]
+            return super().pr_comments(repo, number)
+
+    checkpoint = tmp_path / "2025-01.partial.jsonl"
+    _, failed = collect_month("llvm", "2025-01", FakeAPI(), salt="s", checkpoint=checkpoint)
+    rows, record = collect_month("llvm", "2025-01", Recovered(), salt="s", checkpoint=checkpoint)
+    assert failed["failed"] == 1 and record["failed"] == 0
+    assert "llvm/llvm-project#9" in {row["change_id"] for row in rows}
+    _, replayed = collect_month("llvm", "2025-01", FakeAPI(), salt="s", checkpoint=checkpoint)
+    assert replayed == record, "the recovered outcome, written after the failure, is the one read"

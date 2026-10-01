@@ -7149,12 +7149,16 @@ The sizing's example projections borrow the Gerrit conversion, and the two denom
 (above), so GitHub's conversion is measured on a built pilot month before any GitHub organization
 is admitted. **Method** (`scripts/github_conversion.py`): every PR the route lists for the month,
 each counted with the sizing's own per-PR rule (`pr_threads`, moved out of `github_sizing.py` so
-both read one definition; eight committed OpenJDK draws recounted through it match exactly); the
-numerator is the refined examples the route built from those PRs. A PR the sizing scores zero (bot
-or AI author) keeps its examples in the numerator, so the rate times the sizing's thread total
-projects the examples the route would build. The listing must equal the snapshot's own count, and
-every example must come from a listed PR, or the script refuses. The interval is a 95% percentile
-bootstrap over PRs of the ratio.
+both read one definition); the numerator is the refined examples the route built from those PRs.
+A PR the sizing scores zero (bot or AI author) keeps its examples in the numerator, so the rate
+times the sizing's thread total projects the examples the route would build. A PR the route failed
+to collect, or that GitHub no longer answers for at the census, counts on neither side, since its
+examples are unknown; one withdrawn at collection keeps its threads, as the sizing counted them.
+The script refuses when the listing differs from the snapshot's own count, when an example comes
+from an unlisted PR, when failed PRs go unnamed, or when the month has no reviewer threads. The
+interval is a 95% percentile bootstrap over PRs of the ratio. The sizing's own draws that fall in
+the month are counted again by the census and their agreement reported, a check on the rule and
+on the data since the draws were taken.
 
 **Rule, fixed now.** `github_sizing_report.py` applies GitHub's conversion, not Gerrit's (kept in
 the report for comparison only): an organization with a built pilot month uses its own interval,
@@ -7162,5 +7166,7 @@ the others borrow the span of every measured interval and are marked `borrowed`.
 thresholds stay as registered (low end of projected examples at 3,700 for an H1 cell, 1,850 for
 RQ2; borderline on the high end alone). OpenJDK 2024-11 is the first pilot month; Apache, LLVM,
 .NET, Grafana and HashiCorp each get a 2024-11 pilot month in turn, read the same way, and the
-table is re-derived as each lands. Written while the OpenJDK month was still being collected
-(258 of 850 PRs), before any of its examples or counts were read.
+table is re-derived as each lands. Written while the OpenJDK month was still being collected,
+before any of its examples or counts were read, and amended before reading after an independent
+review: failed and gone PRs left out of both sides, the refusals above, and the route now asks
+again on resume for a PR whose failure was checkpointed, where it had replayed the failure.

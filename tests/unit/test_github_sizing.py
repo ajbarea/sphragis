@@ -6,6 +6,7 @@ import importlib.util
 import json
 import random
 import sys
+from collections import Counter
 from pathlib import Path
 from types import ModuleType
 
@@ -131,3 +132,85 @@ def test_an_organization_without_its_own_pilot_borrows_the_measured_span(
     assert orgs["beta"]["conversion"] == "borrowed"
     assert orgs["alpha"]["examples_range"] == [round(total * 0.1), round(total * 0.3)]
     assert orgs["beta"]["examples_range"] == [round(total * 0.1), round(total * 0.5)]
+
+
+class _Census:
+    """A route listing of three PRs: one reviewed, one by a bot, one gone since collection."""
+
+    def merged_prs(self, owner: str, day: str, *, qualifier: str) -> list[dict]:
+        if not day.endswith("-01"):
+            return []
+        people = {"id": 1, "login": "dev", "type": "User"}
+        bot = {"id": 2, "login": "deps[bot]", "type": "Bot"}
+        return [
+            {"repo": "o/r", "number": 1, "user": people},
+            {"repo": "o/r", "number": 2, "user": bot},
+            {"repo": "o/r", "number": 3, "user": people},
+        ]
+
+    def pr_comments(self, repo: str, number: int) -> list[dict]:
+        if number == 3:
+            raise conversion.Gone("404")
+        return [_comment("rev"), _comment("rev", body="```suggestion\nx\n```")]
+
+    def graphql(self, query: str, variables: dict) -> dict:
+        nodes = [{"commit": {"committedDate": "2025-01-02T00:00:00Z"}}]
+        return {"repository": {"pullRequest": {"commits": {"nodes": nodes}}}}
+
+
+def _record(**extra: object) -> dict:
+    return {"listed": 3, "rows": 1, "failed": 0, "failures": [], "github_rules": "x", **extra}
+
+
+def test_the_census_counts_listed_prs_with_the_sizing_rule() -> None:
+    per_pr = conversion.census(_Census(), "llvm", "2025-01")
+    assert [(r["pr"], r.get("threads"), r.get("gone", False)) for r in per_pr] == [
+        ("o/r#1", 1, False),
+        ("o/r#2", 0, False),
+        ("o/r#3", None, True),
+    ]
+
+
+def test_the_conversion_pools_counted_prs_and_recounts_the_month_draws() -> None:
+    per_pr = conversion.census(_Census(), "llvm", "2025-01")
+    draws = [{"repo": "o/r", "number": 1, "threads": 1, "suggestion_threads": 1}]
+    report = conversion.summarize(
+        per_pr, _record(), Counter({"o/r#1": 3}), Counter({"o/r#1": 2, "o/r#2": 1}), draws
+    )
+    assert (report["refined"], report["reviewer_threads"], report["rate"]) == (3, 1, 3.0)
+    assert report["refined_from_zero_thread_prs"] == 1 and report["prs_gone"] == 1
+    assert (report["draws_recounted"], report["draws_agreeing"]) == (1, 1)
+
+
+def test_a_failed_pr_counts_on_neither_side() -> None:
+    per_pr = conversion.census(_Census(), "llvm", "2025-01")
+    record = _record(failed=1, failures=["o/r#2: GitHub kept refusing"])
+    report = conversion.summarize(per_pr, record, Counter(), Counter({"o/r#1": 2}), [])
+    assert report["prs_counted"] == 1 and report["prs_failed"] == 1 and report["refined"] == 2
+
+
+@pytest.mark.parametrize(
+    ("record", "refined", "match"),
+    [
+        (_record(listed=4), Counter(), "not the same month"),
+        (_record(), Counter({"o/r#9": 1}), "listing lacks"),
+        (_record(failed=60, failures=["o/r#2: x"]), Counter(), "rerun the fetch"),
+    ],
+)
+def test_the_conversion_refuses_a_month_it_cannot_read(
+    record: dict, refined: Counter, match: str
+) -> None:
+    per_pr = conversion.census(_Census(), "llvm", "2025-01")
+    with pytest.raises(SystemExit, match=match):
+        conversion.summarize(per_pr, record, Counter(), refined, [])
+
+
+def test_a_month_with_no_reviewer_threads_has_no_conversion() -> None:
+    per_pr = [{"pr": "o/r#1", "bot_or_ai_author": True, "threads": 0}]
+    with pytest.raises(SystemExit, match="no reviewer threads"):
+        conversion.summarize(per_pr, _record(listed=1), Counter(), Counter(), [])
+
+
+def test_a_resample_without_threads_is_drawn_again() -> None:
+    low, high = conversion.ratio_interval([(0, 1), (2, 1)], random.Random(0))
+    assert 0.5 <= low <= high <= 1.0, "every replicate holds the reviewed PR at least once"

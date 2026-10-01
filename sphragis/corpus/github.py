@@ -514,8 +514,9 @@ def collect_month(
 
     With a `checkpoint`, each PR's outcome (and its row, already scrubbed) is appended as it
     finishes, and a rerun replays it rather than asking GitHub again, so a long month that fails
-    partway keeps its work. Rows come back in change-id order, so a resumed month matches an
-    uninterrupted one.
+    partway keeps its work; a `failed` PR is asked again, since its failure may have been
+    transient, and the later outcome is the one kept. Rows come back in change-id order, so a
+    resumed month matches an uninterrupted one.
     """
     if name not in GITHUB_ORGS:
         raise SystemExit(f"{name} is not a registered GitHub organization ({sorted(GITHUB_ORGS)})")
@@ -535,10 +536,12 @@ def collect_month(
             for pr in api.merged_prs(org.owner, f"{month}-{day:02d}", qualifier=org.qualifier):
                 listed += 1
                 key = f"{pr['repo']}#{pr['number']}"
-                entry = done.get(key) or _collect_pr(org, pr, api, salt)
-                if key not in done and log is not None:
-                    log.write(json.dumps({"key": key, **entry}) + "\n")
-                    log.flush()
+                entry = done.get(key)
+                if entry is None or entry["outcome"] == "failed":
+                    entry = _collect_pr(org, pr, api, salt)
+                    if log is not None:
+                        log.write(json.dumps({"key": key, **entry}) + "\n")
+                        log.flush()
                 outcomes.append(entry)
     finally:
         if log is not None:
