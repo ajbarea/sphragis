@@ -7,12 +7,15 @@ stratified bootstrap over draws within each month. Review activity is heavy-tail
 nonparametric bootstrap understates the width of such intervals at small samples, so it is read
 as a lower bound on the uncertainty.
 
-Projected training examples apply the thread-to-example conversion measured on the Gerrit
-corpora the study already built (refined training-window examples over reviewer line comments
-that reached a later patch set), read from those corpora here rather than typed.
+Projected training examples apply GitHub's thread-to-example conversion, measured on a built
+pilot month (`github_conversion.py`): an organization with its own pilot uses its own interval,
+and one without borrows the span of every measured interval until its pilot is built. The Gerrit
+corpora's conversion (refined training-window examples over reviewer line comments that reached
+a later patch set) is recorded beside it for comparison, not applied.
 
     uv run --no-sync --no-active python scripts/github_sizing_report.py \\
         --draws datasets/results/github-sizing-draws-*.jsonl \\
+        --github datasets/results/github-conversion-*.json \\
         --gerrit openstack=../wm-bots/datasets/gerrit \\
         --gerrit wikimedia=../fa-auto/datasets/gerrit \\
         --out datasets/results/github-sizing-report.json
@@ -40,7 +43,10 @@ SEED = 7
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--draws", type=Path, nargs="+", required=True)
-parser.add_argument("--gerrit", action="append", required=True, help="org=root of a built corpus")
+parser.add_argument(
+    "--github", type=Path, nargs="+", required=True, help="github_conversion.py output"
+)
+parser.add_argument("--gerrit", action="append", default=[], help="org=root of a built corpus")
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -89,12 +95,22 @@ def main() -> None:
     for spec in args.gerrit:
         org, root = spec.split("=", 1)
         rates[org] = conversion(org, Path(root))
-    low_rate, high_rate = (
-        min(r["rate"] for r in rates.values()),
-        max(r["rate"] for r in rates.values()),
+    measured = {}
+    for path in args.github:
+        c = json.loads(path.read_text())
+        measured[c["org"]] = {k: c[k] for k in ("month", "prs", "reviewer_threads", "refined")}
+        measured[c["org"]].update(rate=c["rate"], rate_95=c["rate_95"])
+    borrowed = (
+        min(m["rate_95"][0] for m in measured.values()),
+        max(m["rate_95"][1] for m in measured.values()),
     )
     rng = random.Random(SEED)
-    report: dict = {"conversion": rates, "design_n": DESIGN_N, "orgs": {}}
+    report: dict = {
+        "conversion": measured,
+        "gerrit_conversion": rates,
+        "design_n": DESIGN_N,
+        "orgs": {},
+    }
     for path in args.draws:
         rows = [json.loads(line) for line in path.read_text().splitlines()]
         org = rows[0]["org"]
@@ -109,6 +125,7 @@ def main() -> None:
             for m in TRAIN_MONTHS
         }
         dirs = Counter(x for d in draws if not d.get("ai_author") for x in d.get("top_dirs", []))
+        low_rate, high_rate = measured[org]["rate_95"] if org in measured else borrowed
         examples = (lo * low_rate, hi * high_rate)
         report["orgs"][org] = {
             "draws": len(draws),
@@ -118,6 +135,7 @@ def main() -> None:
             "threads_95": [round(lo), round(hi)],
             "suggestion_threads": round(total(estimate(draws, "suggestion_threads"))),
             "bot_review_threads": round(total(estimate(draws, "bot_threads"))),
+            "conversion": "own pilot" if org in measured else "borrowed",
             "examples_range": [round(examples[0]), round(examples[1])],
             "rq1": "yes"
             if examples[0] >= RQ1_NEED
@@ -135,7 +153,8 @@ def main() -> None:
         }
         o = report["orgs"][org]
         print(
-            f"{org}: threads {o['threads']} {o['threads_95']}, examples {o['examples_range']}, "
+            f"{org}: threads {o['threads']} {o['threads_95']}, examples {o['examples_range']} "
+            f"({o['conversion']}), "
             f"RQ1 {o['rq1']}, RQ2 {o['rq2']}, bot/AI-authored {o['bot_or_ai_authored_share']:.1%}"
         )
     report["provenance"] = provenance_header()

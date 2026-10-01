@@ -3,18 +3,28 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import random
+import sys
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-_spec = importlib.util.spec_from_file_location(
-    "github_sizing_report", ROOT / "scripts" / "github_sizing_report.py"
-)
-assert _spec is not None and _spec.loader is not None
-report = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(report)
+
+
+def _script(name: str) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+report = _script("github_sizing_report")
+sizing = _script("github_sizing")
+conversion = _script("github_conversion")
 
 
 def _draw(month: str, n_day: int, threads: int, *, days: int = 2, ai: bool = False) -> dict:
@@ -47,3 +57,77 @@ def test_the_total_sums_month_means_and_the_interval_brackets_it() -> None:
     assert report.total(by_month) == pytest.approx(2 * 5 * 1.5 + 2 * 5 * 2)
     low, high = report.interval(by_month, random.Random(0))
     assert low <= report.total(by_month) <= high
+
+
+def _comment(login: str, *, at: str = "2025-01-01T00:00:00Z", **extra: object) -> dict:
+    return {
+        "user": {"login": login, "type": "User"},
+        "line": 3,
+        "created_at": at,
+        "path": "src/a.py",
+        "body": "rename this",
+        **extra,
+    }
+
+
+def test_a_thread_is_a_reviewer_opening_on_a_line_before_the_last_commit() -> None:
+    author = {"login": "dev", "type": "User"}
+    comments = [
+        _comment("rev"),
+        _comment("rev", in_reply_to_id=1),
+        _comment("rev", line=None),
+        _comment("dev"),
+        _comment("rev", at="2025-02-01T00:00:00Z"),
+        _comment("rev", body="```suggestion\nx = 1\n```"),
+        _comment("helper[bot]"),
+    ]
+    counted = sizing.pr_threads(comments, ["2025-01-02T00:00:00Z"], author)
+    assert counted == {
+        "threads": 1,
+        "suggestion_threads": 1,
+        "bot_threads": 1,
+        "top_dirs": ["src"],
+    }
+
+
+def test_only_the_first_page_of_comments_is_counted_as_the_sizing_read_it() -> None:
+    comments = [_comment("rev")] * (sizing.PAGE + 5)
+    counted = sizing.pr_threads(comments, ["2025-01-02T00:00:00Z"], {"login": "dev"})
+    assert counted["threads"] == sizing.PAGE
+
+
+def test_the_conversion_interval_brackets_the_pooled_ratio() -> None:
+    prs = [(4, 1), (0, 1), (10, 2), (2, 0), (6, 2)]
+    low, high = conversion.ratio_interval(prs, random.Random(0))
+    assert low <= sum(e for _, e in prs) / sum(t for t, _ in prs) <= high
+    assert (low, high) == conversion.ratio_interval(prs, random.Random(0))
+
+
+def test_an_organization_without_its_own_pilot_borrows_the_measured_span(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    draws = []
+    for org in ("alpha", "beta"):
+        path = tmp_path / f"draws-{org}.jsonl"
+        rows = [
+            {"org": org, "draw": 0, "month": m, "days": 1, "n_day": 1, "threads": 1000}
+            for m in report.TRAIN_MONTHS
+        ]
+        path.write_text("\n".join(json.dumps(r) for r in [*rows, {"org": org, "done": True}]))
+        draws.append(str(path))
+    measured = []
+    for org, span in (("alpha", [0.1, 0.3]), ("gamma", [0.2, 0.5])):
+        path = tmp_path / f"conversion-{org}.json"
+        fields = {"month": "2024-11", "prs": 9, "reviewer_threads": 50, "refined": 10}
+        path.write_text(json.dumps({"org": org, **fields, "rate": 0.2, "rate_95": span}))
+        measured.append(str(path))
+    out = tmp_path / "report.json"
+    argv = ["x", "--draws", *draws, "--github", *measured, "--out", str(out)]
+    monkeypatch.setattr(sys, "argv", argv)
+    report.main()
+    orgs = json.loads(out.read_text())["orgs"]
+    total = 1000 * len(report.TRAIN_MONTHS)
+    assert orgs["alpha"]["conversion"] == "own pilot"
+    assert orgs["beta"]["conversion"] == "borrowed"
+    assert orgs["alpha"]["examples_range"] == [round(total * 0.1), round(total * 0.3)]
+    assert orgs["beta"]["examples_range"] == [round(total * 0.1), round(total * 0.5)]

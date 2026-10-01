@@ -7142,3 +7142,25 @@ is halved and retried down to single lookups; a PR whose requests still fail cos
 Two costs the failure made visible are also addressed: a PR with no reviewer's inline comment is
 counted after one request (`no_inline_review`) rather than walked, since it can yield no example,
 and each finished PR's scrubbed row is checkpointed, so a month that fails partway resumes.
+
+### Planned before the pilot month is read: GitHub's own thread-to-example conversion (2026-10-01)
+
+The sizing's example projections borrow the Gerrit conversion, and the two denominators differ
+(above), so GitHub's conversion is measured on a built pilot month before any GitHub organization
+is admitted. **Method** (`scripts/github_conversion.py`): every PR the route lists for the month,
+each counted with the sizing's own per-PR rule (`pr_threads`, moved out of `github_sizing.py` so
+both read one definition; eight committed OpenJDK draws recounted through it match exactly); the
+numerator is the refined examples the route built from those PRs. A PR the sizing scores zero (bot
+or AI author) keeps its examples in the numerator, so the rate times the sizing's thread total
+projects the examples the route would build. The listing must equal the snapshot's own count, and
+every example must come from a listed PR, or the script refuses. The interval is a 95% percentile
+bootstrap over PRs of the ratio.
+
+**Rule, fixed now.** `github_sizing_report.py` applies GitHub's conversion, not Gerrit's (kept in
+the report for comparison only): an organization with a built pilot month uses its own interval,
+the others borrow the span of every measured interval and are marked `borrowed`. The candidate
+thresholds stay as registered (low end of projected examples at 3,700 for an H1 cell, 1,850 for
+RQ2; borderline on the high end alone). OpenJDK 2024-11 is the first pilot month; Apache, LLVM,
+.NET, Grafana and HashiCorp each get a 2024-11 pilot month in turn, read the same way, and the
+table is re-derived as each lands. Written while the OpenJDK month was still being collected
+(258 of 850 PRs), before any of its examples or counts were read.

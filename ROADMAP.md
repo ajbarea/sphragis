@@ -97,7 +97,9 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [ ] **GitHub organizations as candidates** (sized 2026-10-01, `github-sizing-report.json`): Apache and
   LLVM reach an H1 cell, .NET and Grafana reach RQ2; OpenJDK and HashiCorp borderline. Needs: a GitHub
   collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
-  removed; pseudonymised at ingestion); LLVM's projects defined as its top-level directories before
+  removed; pseudonymised at ingestion); GitHub's own thread-to-example conversion from a built pilot
+  month per organization (`scripts/github_conversion.py`; OpenJDK 2024-11 first, the rest borrow
+  its span until theirs is built); LLVM's projects defined as its top-level directories before
   its split is read; open access for every resulting publication (GitHub's terms: EMSE's open-access
   option for Stage 2, plus arXiv); the candidate list in Stage 1 extended behind Qt and Chromium; and
   a decision on H1 over more cells (intersection-union needs power 0.95^(1/k) a cell).
