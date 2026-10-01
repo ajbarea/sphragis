@@ -11,7 +11,8 @@ the other:
 - `FETCH_RULES`, what the git route reads a change as (`notedb.py`) and how it computes a diff
   (`gerrit_diff.py`). Every git-route month and snapshot records it, the same way a built month
   records `BUILD_RULES`; a REST month carries none, since REST fetches nothing this code shapes.
-- `GITHUB_RULES`, what the GitHub route shapes a pull request into (`github.py`), recorded on
+- `GITHUB_RULES`, what the GitHub route collects and shapes a pull request into (`github.py`,
+  `github_api.py`, whose heads define the patch sets and whose blobs define the diffs), recorded on
   GitHub months the same way.
 
 Hashing the rule code itself means a changed rule is a changed version without anyone
@@ -39,7 +40,7 @@ REFINE_SOURCES = ("refine.py", "automated/__init__.py", "build.py", "examples.py
 FETCH_SOURCES = ("gerrit_diff.py", "notedb.py")
 # What the GitHub route reads a pull request as: recorded on GitHub months only, so a change to the
 # adapter stales those and leaves every Gerrit month's digests as they are.
-GITHUB_SOURCES = ("github.py",)
+GITHUB_SOURCES = ("github.py", "github_api.py")
 
 
 def rules_version(sources: Mapping[str, str], registry: str) -> str:

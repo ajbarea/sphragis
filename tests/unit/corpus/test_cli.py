@@ -1666,6 +1666,8 @@ def test_two_transports_in_one_process_share_the_claim(
 class _GitHubStub:
     """A GitHub API with one human PR and one agent PR on the 2nd of the month."""
 
+    versions = {"c1": "old_name = 1\n", "c2": "new_name = 1\n"}
+
     def __init__(self) -> None:
         self.requests = 0
 
@@ -1673,19 +1675,10 @@ class _GitHubStub:
         self.requests += 1
         if not day.endswith("-02"):
             return []
+        pr = {"repo": "apache/x", "created_at": "2024-10-02T00:00:00Z", "base_ref": "main"}
         return [
-            {
-                "repo": "apache/x",
-                "number": 1,
-                "created_at": "2024-10-02T00:00:00Z",
-                "user": {"id": 1, "login": "dev", "type": "User"},
-            },
-            {
-                "repo": "apache/x",
-                "number": 2,
-                "created_at": "2024-10-02T00:00:00Z",
-                "user": {"id": 5, "login": "dependabot[bot]", "type": "Bot"},
-            },
+            pr | {"number": 1, "user": {"id": 1, "login": "dev", "type": "User"}},
+            pr | {"number": 2, "user": {"id": 5, "login": "dependabot[bot]", "type": "Bot"}},
         ]
 
     def pr_comments(self, repo, number):
@@ -1697,17 +1690,33 @@ class _GitHubStub:
                 "original_commit_id": "c1",
                 "original_line": 1,
                 "side": "RIGHT",
+                "created_at": "2024-10-02T01:00:00Z",
             }
         ]
 
     def pr_heads(self, repo, number):
-        return [{"sha": "c1"}, {"sha": "c2"}]
+        return [
+            {"sha": "c1", "committed_at": "2024-10-02T00:30:00Z"},
+            {"sha": "c2", "committed_at": "2024-10-02T02:00:00Z"},
+        ]
 
     def pr_files(self, repo, number):
         return []
 
-    def compare_files(self, repo, base, head):
-        return {"src/a.py": "@@ -1,1 +1,1 @@\n-old_name = 1\n+new_name = 1"}
+    def commit_times(self, repo, shas):
+        return {}
+
+    def file_oids(self, repo, path, shas):
+        return {sha: f"oid:{self.versions[sha]}" for sha in shas}
+
+    def blob_text(self, repo, oid):
+        return oid.removeprefix("oid:")
+
+    def fork_point(self, repo, base_ref, sha):
+        return "base0"
+
+    def changed_paths(self, repo, older, newer):
+        return set()
 
 
 def _github(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stub: _GitHubStub, *argv: str) -> int:
@@ -1742,3 +1751,17 @@ def test_the_github_route_refuses_a_sealed_month_before_any_request(
     with pytest.raises(SystemExit, match="sealed test window"):
         _github(tmp_path, monkeypatch, stub, "fetch", "--via", "github", "--month", month)
     assert stub.requests == 0
+
+
+def test_the_github_route_refuses_to_mix_with_another_route(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Mirrors the REST and git routes' guard: one organization is fetched one way."""
+    stub = _GitHubStub()
+    assert (
+        _github(tmp_path, monkeypatch, stub, "fetch", "--via", "github", "--month", "2024-10") == 0
+    )
+    record = tmp_path / "apache" / "raw" / "2024-10.record.json"
+    record.write_text(json.dumps({**json.loads(record.read_text()), "route": "rest"}))
+    with pytest.raises(SystemExit, match="already fetched via"):
+        _github(tmp_path, monkeypatch, stub, "fetch", "--via", "github", "--month", "2024-11")

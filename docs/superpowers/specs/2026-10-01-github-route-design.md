@@ -18,10 +18,10 @@ NoteDb route's `embedded_fetchers` already does.
 |---|---|---|
 | change | merged pull request (OpenJDK: integrated, closed by its bot) | window month by PR creation, as Gerrit's by change creation |
 | project | repository; for LLVM, the top-level directory of `llvm/llvm-project` | LLVM's definition registered before its split is read |
-| patch set k | the k-th commit that was ever on the PR (`pr_heads`: its commits and every force push's before and after commit, from the timeline) | the final commit list alone loses commits amended or rebased away |
+| patch set k | the k-th commit ever on the PR in commit-time order: its timeline commits, every force push's before and after commit, and every commit a review comment names | the final commit list alone loses commits amended or rebased away |
 | inline comment on patch set k, line n | review comment whose `original_commit_id` is commit k, `original_line` n on the `RIGHT` side, `path` | every comment, replies included, as Gerrit lists them; the build groups by hunk |
-| successor patch set k+1 | the first later commit whose compare against k changes the commented file | GitHub commits are increments; a file untouched later is an empty diff (`no_anchored_hunk`), as on Gerrit |
-| Gerrit diff of a file, k to k+1 | compare API patch of that file between commits k and k+1, converted to `content` blocks | see "Diff conversion" |
+| successor patch set k+1 | the first commit made after the earliest comment on (k, file) whose version of the file differs from k's | GitHub commits are increments; a file untouched later is an empty diff (`no_anchored_hunk`), as on Gerrit |
+| Gerrit diff of a file, k to k+1 | git's diff of the two file versions, fetched by commit and path at collection and carried in the row | see "Diff conversion"; the build runs offline, as on the NoteDb route |
 | owner, comment author | PR author, review comment author, as `{_account_id: <numeric id>}`, pseudonymised at ingestion with the corpus salt | same `scrub`; `@login` and `@org/team` mentions in prose pseudonymised too (`scrub_mentions`), code spans left alone |
 | `SERVICE_USER` tag | `type == "Bot"`, or a login on the registered AI-agent and bot list | mapped onto the tag, so `is_service_user` drops it unchanged |
 
@@ -33,12 +33,14 @@ NoteDb route's `embedded_fetchers` already does.
 2. **Its own rules digest.** The route's shaping is rule code too, so `github.py` gets a
    `GITHUB_RULES` digest recorded on every GitHub month and snapshot, the way `FETCH_RULES` is
    recorded on git-route months. A changed adapter then stales only GitHub months.
-3. **Diff conversion.** The compare API gives unified hunks with three lines of context, the
-   build's `CONTEXT_LINES`. Each hunk becomes its real context as an `ab` block either side of its
+3. **Diff conversion.** Both file versions are fetched by commit and path and diffed with git
+   (`unified_patch`), never through the compare API, which diffs from the merge base and so
+   misplaces a force-pushed successor. git's hunks carry three lines of context, the build's
+   `CONTEXT_LINES`. Each hunk becomes its real context as an `ab` block either side of its
    `a`/`b` blocks, and the unchanged lines between hunks become an `ab` block of the right length
    for line accounting. `_context` reads only the block next to a change, so that padding is never
-   read as text (test: a converted diff yields the same hunks and context as a Gerrit diff of the
-   same files). A file whose patch GitHub omits (too large) raises, counted `diff_error`.
+   read as text. A binary or truncated file is counted `text_unavailable`; a file absent at the
+   successor (a rename or deletion) `file_gone`.
 4. **Suggestion blocks** are reviewer-written targets. `refine.reviewer_wrote_target` already
    matches the fence Gerrit and GitHub share, so they are removed there, as `suggested_edit`, with
    a test on a GitHub-shaped comment rather than a second rule.
@@ -46,10 +48,12 @@ NoteDb route's `embedded_fetchers` already does.
    counted; AI reviewers map onto `SERVICE_USER`. The list of agent logins is registered and
    versioned with the route, because this population changes month to month and is a large share of some organizations'
    PRs (research log, "The confirmation pass").
-6. **Force pushes.** Patch sets come from the PR's timeline, so commits a force push rewrote away
-   stay addressable. A comment whose commit the timeline still lacks (a non-head commit of an
-   earlier push) is counted apart (`rewritten_history`). Recovering those by the comment's time
-   is a later refinement.
+6. **Force pushes and upstream edits.** Patch sets include every commit a force push rewrote away
+   and every commit a comment names, so a comment is unplaced (`rewritten_history`) only when
+   GitHub no longer holds its commit. When the commented file changed on the base branch between
+   the two commits' fork points (a merge from main, or a rebase onto it), the successor carries
+   upstream edits as well as the author's, so the comment is dropped (`upstream_change`): the
+   rebase guard the Gerrit routes apply through a revision's kind.
 7. **Withdrawn content.** A PR or comment the API now answers 404 for is not built, and the
    release-time check proposed for Gerrit (ROADMAP Plan A) covers GitHub too.
 8. **Politeness.** Authenticated requests only, GraphQL where it saves calls, conditional requests

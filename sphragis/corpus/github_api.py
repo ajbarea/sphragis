@@ -31,7 +31,7 @@ _SEARCH = """query($q: String!, $after: String) {
     issueCount
     pageInfo { hasNextPage endCursor }
     nodes { ... on PullRequest {
-      number createdAt repository { nameWithOwner }
+      number createdAt baseRefName repository { nameWithOwner }
       author { login __typename ... on User { databaseId } ... on Bot { databaseId } }
     } }
   }
@@ -44,8 +44,9 @@ _TIMELINE = """query($owner: String!, $name: String!, $number: Int!, $after: Str
                   first: 100, after: $after) {
       pageInfo { hasNextPage endCursor }
       nodes { __typename
-        ... on PullRequestCommit { commit { oid } }
-        ... on HeadRefForcePushedEvent { beforeCommit { oid } afterCommit { oid } }
+        ... on PullRequestCommit { commit { oid committedDate } }
+        ... on HeadRefForcePushedEvent {
+          beforeCommit { oid committedDate } afterCommit { oid committedDate } }
       }
     }
   } }
@@ -115,6 +116,29 @@ class GitHubAPI:
                 raise RuntimeError(f"GitHub answered {status} for {url}: {text[:200]}")
         raise RuntimeError(f"GitHub kept refusing {url} after {_MAX_ATTEMPTS} attempts")
 
+    def graphql(self, query: str, variables: Mapping[str, Any]) -> dict[str, Any]:
+        """A GraphQL query's `data`, rate limits waited out, NOT_FOUND raised as `Gone`.
+
+        GitHub reports an exhausted GraphQL budget with HTTP 200 and an `errors` entry of type
+        RATE_LIMIT or RATE_LIMITED, so the status alone cannot be trusted.
+        """
+        for _ in range(_MAX_ATTEMPTS):
+            headers, payload = self._request(
+                "POST", f"{API}/graphql", {"query": query, "variables": dict(variables)}
+            )
+            errors = payload.get("errors") or []
+            kinds = {str(e.get("type")) for e in errors}
+            if kinds & {"RATE_LIMIT", "RATE_LIMITED"}:
+                reset = float(headers.get("x-ratelimit-reset", self._clock() + 60))
+                self._sleep(max(reset - self._clock(), 0) + 1)
+                continue
+            if "NOT_FOUND" in kinds:
+                raise Gone(f"GraphQL NOT_FOUND: {errors[0].get('message', '')}")
+            if errors:
+                raise RuntimeError(f"GraphQL errors: {errors[:2]}")
+            return payload["data"]
+        raise RuntimeError(f"GraphQL rate limited after {_MAX_ATTEMPTS} attempts")
+
     def _pages(self, path: str, **params: Any) -> Iterator[Any]:
         url: str | None = f"{API}{path}?{urlencode({'per_page': 100, **params})}"
         while url:
@@ -126,60 +150,123 @@ class GitHubAPI:
         """Every inline review comment on a PR, replies included."""
         return list(self._pages(f"/repos/{repo}/pulls/{number}/comments"))
 
-    def pr_commits(self, repo: str, number: int) -> list[dict[str, Any]]:
-        """A PR's commits, oldest first (GitHub lists at most 250)."""
-        return list(self._pages(f"/repos/{repo}/pulls/{number}/commits"))
-
     def pr_heads(self, repo: str, number: int) -> list[dict[str, Any]]:
-        """Every commit that was ever the PR's head or on it, in timeline order, as `{"sha": ...}`.
+        """Every commit ever on the PR, as `{"sha", "committed_at"}`, oldest commit first.
 
         The commit list holds only the final history; a force push (amend, rebase, squash) leaves
         the commits reviewers commented on out of it. The timeline keeps each force push's before
-        and after commits, so the PR's revisions are recovered the way Gerrit keeps patch sets.
+        and after commits, so they are recovered the way Gerrit keeps patch sets. They are ordered
+        by commit time, not timeline position: an amended commit can sit in the timeline before
+        the force push that replaced the one it amends.
         """
         owner, name = repo.split("/", 1)
-        shas: list[str] = []
+        seen: dict[str, str] = {}
         after: str | None = None
         while True:
-            variables = {"owner": owner, "name": name, "number": number, "after": after}
-            _, payload = self._request(
-                "POST", f"{API}/graphql", {"query": _TIMELINE, "variables": variables}
+            data = self.graphql(
+                _TIMELINE, {"owner": owner, "name": name, "number": number, "after": after}
             )
-            pull = (payload.get("data") or {}).get("repository", {}).get("pullRequest")
+            pull = (data.get("repository") or {}).get("pullRequest")
             if pull is None:
                 raise Gone(f"no pull request {repo}#{number}")
             items = pull["timelineItems"]
             for node in items["nodes"]:
-                if node.get("__typename") == "PullRequestCommit":
-                    oids = [(node.get("commit") or {}).get("oid")]
-                else:
-                    oids = [(node.get(k) or {}).get("oid") for k in ("beforeCommit", "afterCommit")]
-                for oid in oids:
-                    if oid and oid not in shas:
-                        shas.append(oid)
+                keys = (
+                    ("commit",)
+                    if node.get("__typename") == "PullRequestCommit"
+                    else ("beforeCommit", "afterCommit")
+                )
+                for key in keys:
+                    commit = node.get(key) or {}
+                    if commit.get("oid"):
+                        seen.setdefault(commit["oid"], str(commit.get("committedDate") or ""))
             if not items["pageInfo"]["hasNextPage"]:
-                return [{"sha": sha} for sha in shas]
+                ordered = sorted(seen.items(), key=lambda item: (item[1], item[0]))
+                return [{"sha": sha, "committed_at": at} for sha, at in ordered]
             after = items["pageInfo"]["endCursor"]
+
+    def file_oids(self, repo: str, path: str, shas: list[str]) -> dict[str, str | None]:
+        """The blob id of `path` at each commit, or None where the file does not exist there."""
+        owner, name = repo.split("/", 1)
+        out: dict[str, str | None] = {}
+        for start in range(0, len(shas), 50):
+            chunk = shas[start : start + 50]
+            blob = "{ ...on Blob { oid } }"
+            fields = " ".join(
+                f"c{i}: object(expression: {json.dumps(f'{sha}:{path}')}) {blob}"
+                for i, sha in enumerate(chunk)
+            )
+            query = "query($o: String!, $n: String!) { repository(owner: $o, name: $n) { %s } }"
+            data = self.graphql(query % fields, {"o": owner, "n": name})
+            found = data.get("repository") or {}
+            for i, sha in enumerate(chunk):
+                out[sha] = (found.get(f"c{i}") or {}).get("oid")
+        return out
+
+    def commit_times(self, repo: str, shas: list[str]) -> dict[str, str]:
+        """The commit time of each commit GitHub still holds; a commit it lacks is left out."""
+        owner, name = repo.split("/", 1)
+        out: dict[str, str] = {}
+        for start in range(0, len(shas), 50):
+            chunk = shas[start : start + 50]
+            fields = " ".join(
+                f"c{i}: object(oid: {json.dumps(sha)}) {{ ...on Commit {{ committedDate }} }}"
+                for i, sha in enumerate(chunk)
+            )
+            query = "query($o: String!, $n: String!) { repository(owner: $o, name: $n) { %s } }"
+            found = self.graphql(query % fields, {"o": owner, "n": name}).get("repository") or {}
+            for i, sha in enumerate(chunk):
+                at = (found.get(f"c{i}") or {}).get("committedDate")
+                if at:
+                    out[sha] = str(at)
+        return out
+
+    def blob_text(self, repo: str, oid: str) -> str | None:
+        """A blob's text, or None when GitHub reports it binary or truncated."""
+        owner, name = repo.split("/", 1)
+        query = """query($o: String!, $n: String!, $id: GitObjectID!) {
+          repository(owner: $o, name: $n) { object(oid: $id) {
+            ... on Blob { text isBinary isTruncated } } } }"""
+        blob = (
+            self.graphql(query, {"o": owner, "n": name, "id": oid}).get("repository") or {}
+        ).get("object") or {}
+        if blob.get("isBinary") or blob.get("isTruncated") or blob.get("text") is None:
+            return None
+        return str(blob["text"])
+
+    def fork_point(self, repo: str, base_ref: str, sha: str) -> str:
+        """The commit on `base_ref` that `sha` descends from (their merge base)."""
+        _, payload = self._request(
+            "GET", f"{API}/repos/{repo}/compare/{base_ref}...{sha}?per_page=1"
+        )
+        return str(payload["merge_base_commit"]["sha"])
+
+    def changed_paths(self, repo: str, older: str, newer: str) -> set[str]:
+        """Every path changed from `older` to its descendant `newer`, old names of renames too."""
+        paths: set[str] = set()
+        page = 1
+        while True:
+            _, payload = self._request(
+                "GET", f"{API}/repos/{repo}/compare/{older}...{newer}?per_page=100&page={page}"
+            )
+            files = payload.get("files") or []
+            for f in files:
+                paths.add(str(f["filename"]))
+                if f.get("previous_filename"):
+                    paths.add(str(f["previous_filename"]))
+            if len(files) < 100:
+                return paths
+            page += 1
 
     def pr_files(self, repo: str, number: int) -> list[dict[str, Any]]:
         """A PR's changed files with their changed-line counts (GitHub lists at most 3,000)."""
         return list(self._pages(f"/repos/{repo}/pulls/{number}/files"))
 
-    def compare_files(self, repo: str, base: str, head: str) -> dict[str, str | None]:
-        """Each changed file's patch between two commits; None where GitHub omits it."""
-        _, payload = self._request("GET", f"{API}/repos/{repo}/compare/{base}...{head}")
-        return {f["filename"]: f.get("patch") for f in payload.get("files", [])}
-
     def _search(self, query: str) -> tuple[int, list[dict[str, Any]]]:
         nodes: list[dict[str, Any]] = []
         after: str | None = None
         while True:
-            _, payload = self._request(
-                "POST",
-                f"{API}/graphql",
-                {"query": _SEARCH, "variables": {"q": query, "after": after}},
-            )
-            page = payload["data"]["search"]
+            page = self.graphql(_SEARCH, {"q": query, "after": after})["search"]
             nodes += [n for n in page["nodes"] if n]
             if page["issueCount"] > SEARCH_CAP or not page["pageInfo"]["hasNextPage"]:
                 return page["issueCount"], nodes
@@ -210,6 +297,7 @@ class GitHubAPI:
                 "repo": n["repository"]["nameWithOwner"],
                 "number": n["number"],
                 "created_at": n["createdAt"],
+                "base_ref": n.get("baseRefName"),
                 "user": {
                     "id": (n.get("author") or {}).get("databaseId"),
                     "login": (n.get("author") or {}).get("login"),

@@ -1,19 +1,25 @@
 """GitHub pull requests shaped as Gerrit changes, so the Gerrit build runs on them unchanged.
 
 Design of record: `docs/superpowers/specs/2026-10-01-github-route-design.md`. A pull request is a
-change, its k-th commit is patch set k, a review comment is an inline comment on the patch set of
-its `original_commit_id`, and the diff between two patch sets is the compare API's patch for one
-file converted into Gerrit's `content` blocks. `build.py`, `examples.py` and `refine.py` are not
-touched, so the Gerrit corpora's rule digests stay as they are; this module's own digest
-(`rules.GITHUB_RULES`) is recorded on GitHub months.
+change; every commit ever on it (force-pushed ones recovered from its timeline), in commit-time
+order, is a patch set; a review comment is an inline comment on the patch set of its
+`original_commit_id`. Each diff the build will ask for is computed once, at collection, between
+the exact file versions (the file at the commented commit, and at the first commit made after the
+comment that changes it), with git's own diff, and carried in the row, as a NoteDb row carries its
+own. The build then runs offline. `build.py`, `examples.py` and `refine.py` are not touched, so the
+Gerrit corpora's digests stay as they are; this route's own digest (`rules.GITHUB_RULES`) covers
+this module and the client it collects with.
 """
 
 from __future__ import annotations
 
 import calendar
 import re
-from collections.abc import Callable, Mapping, Sequence
+import subprocess
+import tempfile
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Protocol
 
 from sphragis.corpus.github_api import Gone
@@ -39,13 +45,14 @@ AGENT_LOGINS = frozenset(
     }
 )
 SERVICE_USER = "SERVICE_USER"
-# A snapshot row's GitHub payload: the repository, the PR's commit shas in order, and its inline
-# comments by file, carried in the row as a NoteDb row carries its own.
+# A snapshot row's GitHub payload: the repository, its inline comments by file, and the diff
+# for each commented (patch set, file), keyed as `diff_key` does.
 GITHUB_KEY = "github"
 
 _HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 # A GitHub login (alphanumerics and single hyphens, at most 39) or a team, `@org/team`.
 _MENTION = re.compile(r"(?<![\w`@])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:/[A-Za-z0-9_.-]+)?)")
+_PROFILE = re.compile(r"(github\.com/)([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))", re.I)
 _CODE = re.compile(r"```.*?(?:```|\Z)|`[^`\n]*`", re.S)
 
 
@@ -71,8 +78,31 @@ def account(user: Mapping[str, Any] | None) -> dict[str, Any] | None:
     return shaped
 
 
-def scrub_mentions(text: str, salt: str) -> str:
-    """`@login` and `@org/team` in prose replaced by their pseudonyms; code spans left alone."""
+def scrub_mentions(
+    text: str, salt: str, *, logins: Iterable[str] = (), keep_owners: Iterable[str] = ()
+) -> str:
+    """Logins in comment text replaced by their pseudonyms.
+
+    Every known participant's login (the PR author's, each commenter's) is replaced wherever it
+    appears, code spans and suggestion blocks included, with or without `@`. In prose, any other
+    `@login` or `@org/team` is replaced too; in code it is left, since `@property` there is a
+    decorator. A `github.com/<owner>` link names a person unless the owner is the organization
+    itself (`keep_owners`), so it is replaced too.
+    """
+    keep = {owner.lower() for owner in keep_owners}
+    known = sorted({login for login in logins if login}, key=len, reverse=True)
+    if known:
+        names = "|".join(re.escape(login) for login in known)
+        participant = re.compile(r"(?<![\w-])(@?)(" + names + r")(?![\w-])", re.I)
+        text = participant.sub(lambda m: m.group(1) + pseudonym(m.group(2).lower(), salt), text)
+
+    def profile(m: re.Match[str]) -> str:
+        owner = m.group(2)
+        if owner.lower() in keep:
+            return m.group(0)
+        return m.group(1) + pseudonym(owner.lower(), salt)
+
+    text = _PROFILE.sub(profile, text)
 
     def prose(segment: str) -> str:
         return _MENTION.sub(lambda m: "@" + pseudonym(m.group(1).lower(), salt), segment)
@@ -91,7 +121,8 @@ def diff_from_patch(patch: str) -> dict[str, list[dict[str, list[str]]]]:
     Each hunk keeps its own context lines as `ab` blocks beside its changes. The unchanged lines
     between hunks (and before the first) become an `ab` block of the right length so line numbers
     accumulate as on Gerrit; `examples._context` reads only the block next to a change, which is
-    always a hunk's real context, so that padding is never read as text.
+    always a hunk's real context, so that padding is never read as text. Lines split on `\\n` only:
+    a form feed or line separator inside a source line is part of that line, as git counts it.
     """
     content: list[dict[str, list[str]]] = []
     next_old = 1
@@ -109,24 +140,49 @@ def diff_from_patch(patch: str) -> dict[str, list[dict[str, list[str]]]]:
             content.append({"a": [], "b": []})
         return content[-1]
 
-    for raw in patch.splitlines():
-        header = _HUNK_HEADER.match(raw)
+    for raw in patch.split("\n"):
+        line = raw.removesuffix("\r")
+        header = _HUNK_HEADER.match(line)
         if header:
             old_start = int(header.group(1))
             if old_start > next_old:
                 content.append({"ab": [""] * (old_start - next_old), "_padding": []})
             next_old = old_start
-        elif raw.startswith(" "):
-            block("ab")["ab"].append(raw[1:])
+        elif line.startswith(" "):
+            block("ab")["ab"].append(line[1:])
             next_old += 1
-        elif raw.startswith("-"):
-            block("a")["a"].append(raw[1:])
+        elif line.startswith("-"):
+            block("a")["a"].append(line[1:])
             next_old += 1
-        elif raw.startswith("+"):
-            block("b")["b"].append(raw[1:])
+        elif line.startswith("+"):
+            block("b")["b"].append(line[1:])
     for entry in content:
         entry.pop("_padding", None)
     return {"content": content}
+
+
+def unified_patch(before: str, after: str) -> str:
+    """git's own diff of two file versions, three lines of context, from its first hunk on."""
+    with tempfile.TemporaryDirectory() as scratch:
+        old, new = Path(scratch) / "a", Path(scratch) / "b"
+        old.write_text(before, encoding="utf-8", newline="")
+        new.write_text(after, encoding="utf-8", newline="")
+        result = subprocess.run(
+            ["git", "diff", "--no-index", "--no-color", "--no-ext-diff", "-U3", str(old), str(new)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+    if result.returncode not in (0, 1):
+        raise RuntimeError(f"git diff failed: {result.stderr[:200]}")
+    start = result.stdout.find("\n@@")
+    return "" if start < 0 else result.stdout[start + 1 :]
+
+
+def diff_key(base: int, path: str) -> str:
+    """Where a row keeps the diff of `path` from patch set `base` to its successor."""
+    return f"{base}:{path}"
 
 
 def _gerrit_time(iso: str) -> str:
@@ -137,19 +193,20 @@ def _gerrit_time(iso: str) -> str:
 def change_from_pr(
     repo: str,
     pr: Mapping[str, Any],
-    commits: Sequence[Mapping[str, Any]],
+    heads: Sequence[Mapping[str, Any]],
     comments: Sequence[Mapping[str, Any]],
     *,
     project: str,
 ) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]]], dict[str, int]]:
     """A merged pull request as a Gerrit change, its inline comments by file, and what was dropped.
 
-    Every review comment is kept, replies included, as Gerrit lists them; the build groups them by
-    hunk. A comment on the base side of the diff (`side == "LEFT"`) has no line on its patch set.
-    A comment whose commit is no longer in the PR's history (a force push) cannot be paired with a
-    successor, so it is counted `rewritten_history` and left out.
+    `heads` is every commit ever on the PR in commit-time order (`GitHubAPI.pr_heads`); patch set
+    k is the k-th. Every review comment is kept, replies included, as Gerrit lists them; the build
+    groups them by hunk. A comment on the base side of the diff (`side == "LEFT"`) has no line on
+    its patch set. A comment on a commit the timeline lacks cannot be placed, so it is counted
+    `rewritten_history` and left out.
     """
-    patch_set = {commit["sha"]: index for index, commit in enumerate(commits, start=1)}
+    patch_set = {str(head["sha"]): index for index, head in enumerate(heads, start=1)}
     change = {
         "_number": int(pr["number"]),
         "change_id": f"{repo}#{pr['number']}",
@@ -172,74 +229,158 @@ def change_from_pr(
                 "message": str(comment.get("body") or ""),
                 "patch_set": number,
                 "line": line,
+                "created": str(comment.get("created_at") or ""),
             }
         )
     return change, by_file, dropped
 
 
+class FileSource(Protocol):
+    def file_oids(self, repo: str, path: str, shas: list[str]) -> dict[str, str | None]: ...
+    def blob_text(self, repo: str, oid: str) -> str | None: ...
+    def fork_point(self, repo: str, base_ref: str, sha: str) -> str: ...
+    def changed_paths(self, repo: str, older: str, newer: str) -> set[str]: ...
+
+
+# What can stop a commented file having a diff the build can read, counted per comment.
+DIFF_DROPS = ("file_absent", "file_gone", "upstream_change", "text_unavailable")
+
+
+def successor_diffs(
+    repo: str,
+    base_ref: str,
+    heads: Sequence[Mapping[str, Any]],
+    by_file: dict[str, list[dict[str, Any]]],
+    api: FileSource,
+) -> tuple[dict[str, Any], dict[str, int]]:
+    """Each commented (patch set, file)'s diff to the author's first later change of that file.
+
+    A Gerrit patch set is the author's whole next revision; a GitHub commit is one increment, so
+    the successor of patch set k for a file is the first commit made after the earliest comment on
+    it whose version of the file differs from k's. Both versions are fetched by commit and path and
+    diffed with git, so the diff is between exactly those two files whatever the commits' ancestry.
+    When no later commit changes the file, the diff is empty, as Gerrit's is for an untouched file
+    (`no_anchored_hunk` in the build). Comments that cannot have a clean diff are removed from
+    `by_file` and counted: the file absent at k (`file_absent`), gone at the successor, as by a
+    rename (`file_gone`), changed on the base branch between the two commits' fork points, so the
+    successor carries upstream edits as well as the author's (`upstream_change`, the rebase guard
+    the Gerrit routes apply through a revision's kind), or binary or too large (`text_unavailable`).
+    """
+    shas = [str(head["sha"]) for head in heads]
+    times = [str(head.get("committed_at") or "") for head in heads]
+    diffs: dict[str, Any] = {}
+    dropped = dict.fromkeys(DIFF_DROPS, 0)
+    forks: dict[str, str] = {}
+
+    def fork(sha: str) -> str:
+        if sha not in forks:
+            forks[sha] = api.fork_point(repo, base_ref, sha)
+        return forks[sha]
+
+    for path, file_comments in list(by_file.items()):
+        groups: dict[int, list[dict[str, Any]]] = {}
+        for comment in file_comments:
+            groups.setdefault(int(comment["patch_set"]), []).append(comment)
+        kept: list[dict[str, Any]] = []
+        for k, group in sorted(groups.items()):
+            if all(comment["line"] is None for comment in group) or k >= len(shas):
+                kept += group  # no anchor, or no later commit: the build counts these
+                continue
+            since = min(str(comment.get("created") or "") for comment in group)
+            later = [shas[i] for i in range(k, len(shas)) if times[i] > since]
+            oids = api.file_oids(repo, path, [shas[k - 1], *later])
+            reason, diff = _successor_diff(
+                repo, base_ref, shas[k - 1], later, oids, api, fork, path
+            )
+            if reason:
+                dropped[reason] += len(group)
+                continue
+            diffs[diff_key(k, path)] = diff
+            kept += group
+        if kept:
+            by_file[path] = kept
+        else:
+            del by_file[path]
+    return diffs, dropped
+
+
+def _successor_diff(
+    repo: str,
+    base_ref: str,
+    commented: str,
+    later: list[str],
+    oids: Mapping[str, str | None],
+    api: FileSource,
+    fork: Callable[[str], str],
+    path: str,
+) -> tuple[str | None, dict[str, Any] | None]:
+    """A drop reason, or the diff of `path` from `commented` to its first later change."""
+    before_oid = oids.get(commented)
+    if before_oid is None:
+        return "file_absent", None
+    successor = next((sha for sha in later if oids.get(sha) != before_oid), None)
+    if successor is None:
+        return None, {"content": []}
+    after_oid = oids.get(successor)
+    if after_oid is None:
+        return "file_gone", None
+    older, newer = fork(commented), fork(successor)
+    if older != newer and path in api.changed_paths(repo, older, newer):
+        return "upstream_change", None
+    before, after = api.blob_text(repo, before_oid), api.blob_text(repo, after_oid)
+    if before is None or after is None:
+        return "text_unavailable", None
+    return None, diff_from_patch(unified_patch(before, after))
+
+
 def row_from_pr(
     repo: str,
     pr: Mapping[str, Any],
-    commits: Sequence[Mapping[str, Any]],
+    heads: Sequence[Mapping[str, Any]],
     comments: Sequence[Mapping[str, Any]],
     *,
     project: str,
     salt: str,
+    api: FileSource,
+    keep_owners: Iterable[str] = (),
 ) -> dict[str, Any]:
-    """One snapshot row, scrubbed before it reaches disk: the change, and its comments carried."""
-    change, by_file, dropped = change_from_pr(repo, pr, commits, comments, project=project)
+    """One snapshot row, scrubbed before it reaches disk: the change, its comments and diffs."""
+    change, by_file, dropped = change_from_pr(repo, pr, heads, comments, project=project)
+    diffs, diff_dropped = successor_diffs(repo, str(pr.get("base_ref") or ""), heads, by_file, api)
+    logins = [str((pr.get("user") or {}).get("login") or "")] + [
+        str((c.get("user") or {}).get("login") or "") for c in comments
+    ]
     row = scrub(change, salt)
     carried = scrub(by_file, salt)
     for file_comments in carried.values():
         for comment in file_comments:
-            comment["message"] = scrub_mentions(comment["message"], salt)
-    row[GITHUB_KEY] = {
-        "repo": repo,
-        "shas": [str(commit["sha"]) for commit in commits],
-        "comments": carried,
-        **dropped,
-    }
+            comment["message"] = scrub_mentions(
+                comment["message"], salt, logins=logins, keep_owners=keep_owners
+            )
+    row[GITHUB_KEY] = {"repo": repo, "comments": carried, "diffs": diffs, **dropped, **diff_dropped}
     return row
 
 
 def github_fetchers(
     row: Mapping[str, Any],
-    compare_files: Callable[[str, str, str], Mapping[str, str | None]],
 ) -> tuple[
     Callable[[int], Mapping[str, Sequence[Mapping[str, Any]]]],
     Callable[[int, int, str, int], Mapping[str, Any]],
 ]:
-    """`build`'s two fetchers for a GitHub row: comments from the row, diffs from the compare API.
+    """`build`'s two fetchers, answered offline from what a GitHub row carries.
 
-    A Gerrit patch set is the author's whole next revision; a GitHub commit is one increment, and
-    the fix to a commented file can come commits later. So the diff for a comment on patch set k
-    runs from k to the first later patch set whose compare against k changes that file: the
-    author's first response to it. When no later one does, the file was not changed, which on
-    Gerrit is a diff with no hunk, so an empty diff is returned and the build counts
-    `no_anchored_hunk`. A patch GitHub omits (a file too large) raises, counted `diff_error`.
-    `compare_files(repo, base_sha, head_sha)` is called once a commit pair.
+    A diff the row lacks raises, which `build_from_change` counts as `diff_error`.
     """
     carried = row[GITHUB_KEY]
-    shas: list[str] = carried["shas"]
-    pairs: dict[tuple[str, str], Mapping[str, str | None]] = {}
-
-    def files(base: str, head: str) -> Mapping[str, str | None]:
-        if (base, head) not in pairs:
-            pairs[base, head] = compare_files(carried["repo"], base, head)
-        return pairs[base, head]
 
     def comments(number: int) -> Mapping[str, Sequence[Mapping[str, Any]]]:
         return carried["comments"]
 
     def diff(number: int, revision: int, path: str, base: int) -> Mapping[str, Any]:
-        for head in shas[revision - 1 :]:
-            changed = files(shas[base - 1], head)
-            if path in changed:
-                patch = changed[path]
-                if patch is None:
-                    raise LookupError(f"GitHub omits the patch of {path} from {base}")
-                return diff_from_patch(patch)
-        return {"content": []}
+        entry = carried["diffs"].get(diff_key(base, path)) if revision == base + 1 else None
+        if entry is None:
+            raise KeyError(f"no diff of {path} from patch set {base}")
+        return entry
 
     return comments, diff
 
@@ -268,8 +409,9 @@ GITHUB_ORGS = {
 }
 
 
-class PullRequestSource(Protocol):
+class PullRequestSource(FileSource, Protocol):
     def merged_prs(self, owner: str, day: str, *, qualifier: str) -> list[dict[str, Any]]: ...
+    def commit_times(self, repo: str, shas: list[str]) -> dict[str, str]: ...
     def pr_comments(self, repo: str, number: int) -> list[dict[str, Any]]: ...
     def pr_heads(self, repo: str, number: int) -> list[dict[str, Any]]: ...
     def pr_files(self, repo: str, number: int) -> list[dict[str, Any]]: ...
@@ -286,15 +428,37 @@ def project_of(org: GitHubOrg, repo: str, files: Sequence[Mapping[str, Any]]) ->
     return f"{repo}:{max(sorted(lines), key=lines.__getitem__)}" if lines else repo
 
 
+def with_commented_commits(
+    repo: str,
+    heads: Sequence[Mapping[str, Any]],
+    comments: Sequence[Mapping[str, Any]],
+    api: PullRequestSource,
+) -> list[dict[str, Any]]:
+    """The PR's commits with every commit a comment names, in commit-time order.
+
+    The timeline lists the commits that were ever the PR's head and each force push's before and
+    after commits, but not the other commits of an earlier push. A review comment names its own
+    commit (`original_commit_id`), which GitHub still holds after a force push, so those commits
+    are added by their commit time. A commit GitHub no longer holds stays out, and its comments
+    are counted `rewritten_history`.
+    """
+    known = {str(head["sha"]) for head in heads}
+    missing = sorted({str(c.get("original_commit_id")) for c in comments} - known - {"None"})
+    found = api.commit_times(repo, missing) if missing else {}
+    merged = [dict(head) for head in heads] + [
+        {"sha": sha, "committed_at": at} for sha, at in found.items()
+    ]
+    return sorted(merged, key=lambda head: (str(head.get("committed_at") or ""), str(head["sha"])))
+
+
 def collect_month(
     name: str, month: str, api: PullRequestSource, *, salt: str
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Every PR one registered organization merged in `month`, as scrubbed snapshot rows.
 
-    A PR's patch sets are every commit that was ever its head (`pr_heads`), force-pushed ones
-    included, so a comment on an amended commit keeps its successor. PRs opened by a bot or AI
-    agent are not collected; PRs GitHub answers 404 for are withdrawn since they were listed. Both
-    are counted in the month's record, as is every comment whose commit the timeline lacks.
+    PRs opened by a bot or AI agent are not collected; PRs GitHub answers 404 for are withdrawn
+    since they were listed. Both are counted in the month's record, as is every comment left out
+    by `change_from_pr` or `successor_diffs`, by reason.
     """
     if name not in GITHUB_ORGS:
         raise SystemExit(f"{name} is not a registered GitHub organization ({sorted(GITHUB_ORGS)})")
@@ -302,7 +466,7 @@ def collect_month(
     year, number = map(int, month.split("-"))
     rows: list[dict[str, Any]] = []
     counts = {"listed": 0, "agent_authored": 0, "withdrawn": 0}
-    rewritten = 0
+    comment_drops = dict.fromkeys(("rewritten_history", *DIFF_DROPS), 0)
     for day in range(1, calendar.monthrange(year, number)[1] + 1):
         for pr in api.merged_prs(org.owner, f"{month}-{day:02d}", qualifier=org.qualifier):
             counts["listed"] += 1
@@ -312,15 +476,25 @@ def collect_month(
             repo = str(pr["repo"])
             try:
                 comments = api.pr_comments(repo, int(pr["number"]))
-                heads = api.pr_heads(repo, int(pr["number"]))
+                heads = with_commented_commits(
+                    repo, api.pr_heads(repo, int(pr["number"])), comments, api
+                )
                 files = api.pr_files(repo, int(pr["number"])) if repo in org.monorepos else []
+                row = row_from_pr(
+                    repo,
+                    pr,
+                    heads,
+                    comments,
+                    project=project_of(org, repo, files),
+                    salt=salt,
+                    api=api,
+                    keep_owners=(org.owner,),
+                )
             except Gone:
                 counts["withdrawn"] += 1
                 continue
-            row = row_from_pr(
-                repo, pr, heads, comments, project=project_of(org, repo, files), salt=salt
-            )
-            rewritten += row[GITHUB_KEY]["rewritten_history"]
+            for reason in comment_drops:
+                comment_drops[reason] += row[GITHUB_KEY][reason]
             rows.append(row)
     record = {
         "route": "github",
@@ -329,7 +503,7 @@ def collect_month(
         "qualifier": org.qualifier,
         "month": month,
         **counts,
-        "rewritten_history": rewritten,
+        **comment_drops,
         "github_rules": GITHUB_RULES,
     }
     return rows, record

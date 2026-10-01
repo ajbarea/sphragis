@@ -7007,3 +7007,20 @@ conversion (0.217 to 0.282) to GitHub threads; on the eight live PRs, 14 example
 comments, where the denominator counts every comment (author replies included), not the sizing's
 reviewer-started threads, so the two rates are not comparable. GitHub's own conversion is read from
 a built pilot month per organization before any of them is admitted.
+
+**Independent review, and the redesign it led to.** A reviewer with no part in writing the route
+found nine problems, two of them in exactly the cases the route exists for: GitHub's compare API
+diffs from the merge base, so a force-pushed successor's diff started from the base branch, not
+the commented file; and merges from the base branch passed upstream edits off as the author's
+response, with no counterpart of the Gerrit routes' rebase guard. Also: timeline order put
+amended commits backwards, GraphQL rate limits (HTTP 200 with errors) were read as withdrawn PRs,
+logins survived in code spans and `github.com/<login>` links, `github_api.py` was outside the
+route's digest, `splitlines` broke lines on form feeds and line separators, and a rename read as
+an unchanged file. All are fixed and tested, most by one change: each diff is now computed at
+collection between the two exact file versions with git, carried in the row as NoteDb rows carry
+theirs, and the build runs offline. The successor is the first commit made after the comment that
+changes the file; a commented file changed on the base branch between the two commits' fork points
+drops the comment (`upstream_change`); patch sets are ordered by commit time and include every
+commit a comment names. On the same eight PRs: 22 examples (11 before either fix), 0 unplaced
+comments (90 of the first 121 before), 9 comments dropped for upstream edits that the first design
+would have built as the author's work.

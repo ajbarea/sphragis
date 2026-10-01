@@ -813,16 +813,14 @@ def _stage_build(args: argparse.Namespace) -> int:
         print(f"no snapshots under {raw}; run fetch first")
         return 1
     rest: tuple[CommentFetcher, DiffFetcher] | None = None
-    github: GitHubAPI | None = None
 
     def fetchers_for(change: dict[str, Any]) -> tuple[CommentFetcher, DiffFetcher]:
-        """A NoteDb or GitHub row answers comments from what it carries; a REST row fetches."""
-        nonlocal rest, github
+        """A NoteDb or GitHub row answers from what it carries; a REST row fetches."""
+        nonlocal rest
         if NOTEDB_KEY in change:
             return embedded_fetchers(change)
         if GITHUB_KEY in change:
-            github = github or _github_api(args)
-            return github_fetchers(change, github.compare_files)
+            return github_fetchers(change)
         if rest is None:
             if args.org not in GERRIT:
                 raise SystemExit(f"{args.org} has no REST host, and a row carries no NoteDb data")

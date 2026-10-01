@@ -45,21 +45,21 @@ def test_rest_pages_follow_the_link_header() -> None:
 
 def test_an_exhausted_rate_limit_waits_until_its_reset() -> None:
     limited = {"x-ratelimit-remaining": "0", "x-ratelimit-reset": "1060"}
-    fake = Fake([("commits", 403, limited, {"message": "rate limit"}), ("commits", 200, {}, [])])
+    fake = Fake([("comments", 403, limited, {"message": "rate limit"}), ("comments", 200, {}, [])])
     slept: list[float] = []
-    assert _api(fake, slept).pr_commits("o/r", 1) == []
+    assert _api(fake, slept).pr_comments("o/r", 1) == []
     assert slept and slept[0] >= 60
 
 
 def test_retry_after_is_honoured_for_a_secondary_limit() -> None:
     fake = Fake(
         [
-            ("commits", 403, {"retry-after": "30"}, {"message": "secondary"}),
-            ("commits", 200, {}, []),
+            ("comments", 403, {"retry-after": "30"}, {"message": "secondary"}),
+            ("comments", 200, {}, []),
         ]
     )
     slept: list[float] = []
-    _api(fake, slept).pr_commits("o/r", 1)
+    _api(fake, slept).pr_comments("o/r", 1)
     assert slept[0] == 30.0, "the wait GitHub asked for, before the pacing floor"
 
 
@@ -103,15 +103,6 @@ def test_a_day_over_the_search_cap_is_split_until_each_part_fits() -> None:
     assert sorted(p["number"] for p in prs) == [1, 2, 3]
 
 
-def test_compare_returns_each_files_patch_and_none_where_github_omits_it() -> None:
-    files = {"files": [{"filename": "a.py", "patch": "@@ -1 +1 @@\n-x\n+y"}, {"filename": "b.bin"}]}
-    fake = Fake([("compare/c1...c2", 200, {}, files)])
-    assert _api(fake).compare_files("o/r", "c1", "c2") == {
-        "a.py": "@@ -1 +1 @@\n-x\n+y",
-        "b.bin": None,
-    }
-
-
 def _timeline(nodes: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "data": {
@@ -127,30 +118,76 @@ def _timeline(nodes: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def test_heads_recover_commits_a_force_push_rewrote_away() -> None:
-    """Every commit that was ever the PR's head, in order, like Gerrit's patch sets."""
-    nodes = [
-        {"__typename": "PullRequestCommit", "commit": {"oid": "a1"}},
-        {"__typename": "PullRequestCommit", "commit": {"oid": "a2"}},
-        {
-            "__typename": "HeadRefForcePushedEvent",
-            "beforeCommit": {"oid": "a2"},
-            "afterCommit": {"oid": "b1"},
-        },
-        {"__typename": "PullRequestCommit", "commit": {"oid": "b1"}},
-        {"__typename": "PullRequestCommit", "commit": {"oid": "b2"}},
-    ]
-    fake = Fake([("timelineItems", 200, {}, _timeline(nodes))])
-    assert [h["sha"] for h in _api(fake).pr_heads("o/r", 1)] == ["a1", "a2", "b1", "b2"]
+def _commit(oid: str, at: str) -> dict[str, str]:
+    return {"oid": oid, "committedDate": at}
 
 
-def test_a_force_push_whose_old_head_was_never_listed_still_has_it() -> None:
+def test_heads_recover_force_pushed_commits_in_commit_time_order() -> None:
+    """Review finding: an amended commit can sit in the timeline before the force push that
+    replaced the commit it amends; ordering by timeline position put them backwards."""
     nodes = [
+        {"__typename": "PullRequestCommit", "commit": _commit("a1", "2025-01-01T00:00:00Z")},
+        {"__typename": "PullRequestCommit", "commit": _commit("b1", "2025-01-03T00:00:00Z")},
         {
             "__typename": "HeadRefForcePushedEvent",
-            "beforeCommit": {"oid": "old"},
-            "afterCommit": {"oid": "new"},
+            "beforeCommit": _commit("a2", "2025-01-02T00:00:00Z"),
+            "afterCommit": _commit("b1", "2025-01-03T00:00:00Z"),
         },
     ]
     fake = Fake([("timelineItems", 200, {}, _timeline(nodes))])
-    assert [h["sha"] for h in _api(fake).pr_heads("o/r", 1)] == ["old", "new"]
+    heads = _api(fake).pr_heads("o/r", 1)
+    assert [h["sha"] for h in heads] == ["a1", "a2", "b1"]
+    assert heads[1]["committed_at"] == "2025-01-02T00:00:00Z"
+
+
+def test_a_graphql_rate_limit_inside_a_200_waits_rather_than_counting_prs_withdrawn() -> None:
+    """Review finding: GitHub reports an exhausted GraphQL budget as HTTP 200 with errors."""
+    limited = {"errors": [{"type": "RATE_LIMITED", "message": "API rate limit exceeded"}]}
+    fake = Fake(
+        [
+            ("timelineItems", 200, {"x-ratelimit-reset": "1100"}, limited),
+            ("timelineItems", 200, {}, _timeline([])),
+        ]
+    )
+    slept: list[float] = []
+    assert _api(fake, slept).pr_heads("o/r", 1) == []
+    assert slept and slept[0] >= 100
+
+
+def test_graphql_not_found_and_a_null_repository_are_gone() -> None:
+    missing = {"errors": [{"type": "NOT_FOUND", "message": "Could not resolve"}], "data": None}
+    with pytest.raises(Gone):
+        _api(Fake([("timelineItems", 200, {}, missing)])).pr_heads("o/r", 1)
+    with pytest.raises(Gone):
+        _api(Fake([("timelineItems", 200, {}, {"data": {"repository": None}})])).pr_heads("o/r", 1)
+
+
+def test_other_graphql_errors_raise() -> None:
+    broken = {"errors": [{"type": "INTERNAL", "message": "boom"}]}
+    with pytest.raises(RuntimeError, match="GraphQL errors"):
+        _api(Fake([("search(", 200, {}, broken)])).merged_prs("o", "2025-01-02", qualifier="x")
+
+
+def test_file_oids_batches_commits_and_reports_absent_files() -> None:
+    shas = [f"s{i}" for i in range(55)]
+    first = {"data": {"repository": {f"c{i}": {"oid": f"b{i}"} for i in range(50)}}}
+    second = {"data": {"repository": {"c0": {"oid": "b50"}, "c1": None}}}
+    fake = Fake([("s0:f.py", 200, {}, first), ("s50:f.py", 200, {}, second)])
+    oids = _api(fake).file_oids("o/r", "f.py", shas)
+    assert oids["s0"] == "b0" and oids["s50"] == "b50" and oids["s51"] is None
+
+
+def test_changed_paths_pages_and_includes_a_renames_old_name() -> None:
+    page1 = {
+        "files": [{"filename": f"f{i}"} for i in range(99)]
+        + [{"filename": "new.py", "previous_filename": "old.py"}]
+    }
+    page2 = {"files": [{"filename": "last.py"}]}
+    fake = Fake([("page=1", 200, {}, page1), ("page=2", 200, {}, page2)])
+    paths = _api(fake).changed_paths("o/r", "base0", "base1")
+    assert {"old.py", "new.py", "last.py", "f0"} <= paths and len(paths) == 102
+
+
+def test_fork_point_is_the_merge_base_with_the_base_branch() -> None:
+    fake = Fake([("compare/main...c1", 200, {}, {"merge_base_commit": {"sha": "base0"}})])
+    assert _api(fake).fork_point("o/r", "main", "c1") == "base0"
