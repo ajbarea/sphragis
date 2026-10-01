@@ -90,7 +90,7 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   (deleted or made private after the snapshot listed them) are counted `change_gone` and never
   built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
   release, or keep raw internal for reproducibility and exclude it from every release. Ground the
-  choice in MSR ethics guidance (e.g. Gold and Krinke, EMSE 2021) before deciding.
+  choice in MSR ethics guidance (Gold and Krinke, "Ethics in the mining of software repositories", EMSE 27, 2022, doi:10.1007/s10664-021-10057-7) before deciding.
 - [ ] **With the next build-rules change: count a 404 as `change_gone`** (`gerrit.NotFound`, caught
   apart from `comment_error` in `build_from_change`; written and tested 2026-10-01, held back because
   any `build.py` edit stales every frozen corpus month).
