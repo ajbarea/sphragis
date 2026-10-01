@@ -16,6 +16,7 @@ from sphragis.experiment.neutral import (
     manipulation_check,
     near_duplicate_rate,
     non_degeneracy,
+    planted_convention,
     positive_control,
 )
 
@@ -165,3 +166,32 @@ def test_chunking_the_training_side_changes_no_similarity(chunk: int) -> None:
     reference = closest_training_match(train, held_out, chunk=1000)
     assert closest_training_match(train, held_out, chunk=chunk) == reference
     assert dict(reference)["h1"] == pytest.approx(1.0)
+
+
+def _planted_run(verdict: str, *, tag: str = "-plant0.5", window: str = "dev") -> dict[str, Any]:
+    root = f"/data/corpus-partition-openstack-p2-n1850{tag}"
+    return {
+        "corpora": {
+            half: {"source": f"train -> {window} windows under {root}/{half}/refined"}
+            for half in ("openstack-a", "openstack-b")
+        },
+        "verdict": {"verdict": verdict, "binding": {}},
+    }
+
+
+def test_planted_convention_passes_only_on_a_pass_at_the_registered_fraction() -> None:
+    assert planted_convention(_planted_run("pass")).passed
+    assert not planted_convention(_planted_run("mixed")).passed
+    assert not planted_convention(_planted_run("fail")).passed
+
+
+@pytest.mark.parametrize(
+    ("tag", "window"),
+    [("-plant0.25", "dev"), ("", "dev"), ("-plant0.5", "test")],
+    ids=["weaker plant", "unplanted", "test window"],
+)
+def test_planted_convention_refuses_a_run_that_is_not_the_registered_check(
+    tag: str, window: str
+) -> None:
+    check = planted_convention(_planted_run("pass", tag=tag, window=window))
+    assert not check.passed and "reason" in check.evidence

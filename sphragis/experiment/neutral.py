@@ -12,6 +12,7 @@ pre-committed in the report rather than computed.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from statistics import fmean
@@ -27,6 +28,10 @@ from sphragis.measure.stats import cluster_bootstrap, supports_direction
 # rate at 0.7 (`window-report-openstack-v3.json`).
 LEAKAGE_THRESHOLD = 0.7
 LEAKAGE_MAX_RATE = 0.02
+# The planted-convention check as registered (research log, 2026-10-01): each half's own marker
+# in half its refinements. At a quarter it passed 2 of 10 OpenStack dev runs, at a half 10 of 10
+# with a projected pass probability above 0.999 (`rq1-partition-openstack-*-plant0.5.json`).
+PLANT_FRACTION = 0.5
 
 
 @dataclass(frozen=True)
@@ -160,13 +165,40 @@ def leakage_check(
 
 
 def non_degeneracy(results: Mapping[str, Sequence[Mapping[str, Any]]]) -> Check:
-    """Test 5: exact match is neither 0 nor 1 for every condition on every held-out set."""
+    """Test 6: exact match is neither 0 nor 1 for every condition on every held-out set."""
     rates = {
         run: fmean(float(r["exact_match"]) for r in rows) if rows else float("nan")
         for run, rows in results.items()
     }
     degenerate = sorted(run for run, rate in rates.items() if not 0.0 < rate < 1.0)
     return Check("non_degeneracy", not degenerate, {"exact_match": rates, "degenerate": degenerate})
+
+
+def planted_convention(run: Mapping[str, Any], *, fraction: float = PLANT_FRACTION) -> Check:
+    """Test 5: a run with each half's own marker planted reads `pass` on both halves.
+
+    The run is a `partition_run` result built with `PLANT=<fraction>` on the development window;
+    its corpus path carries the fraction, which is read rather than trusted. Only the planted run
+    is read: the unplanted runs are H1's own data, so a condition on them would not be outcome
+    neutral.
+    """
+    sources = [corpus["source"] for corpus in run["corpora"].values()]
+    planted = {m.group(1) for s in sources if (m := re.search(r"-plant([0-9.]+)/", s))}
+    windows = {s.split(" windows")[0] for s in sources}
+    evidence: dict[str, Any] = {
+        "verdict": run["verdict"]["verdict"],
+        "binding": run["verdict"]["binding"],
+        "fraction": fraction,
+        "planted": sorted(planted),
+        "windows": sorted(windows),
+    }
+    if planted != {str(fraction)}:
+        evidence["reason"] = f"planted at {sorted(planted) or 'nothing'}, not {fraction}"
+        return Check("planted_convention", False, evidence)
+    if windows != {"train -> dev"}:
+        evidence["reason"] = "not read on the development window"
+        return Check("planted_convention", False, evidence)
+    return Check("planted_convention", run["verdict"]["verdict"] == "pass", evidence)
 
 
 def apparatus_holds(checks: Sequence[Check]) -> bool:

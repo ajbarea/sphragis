@@ -6869,3 +6869,28 @@ K, and its bounds from its own simulation.
 **LineageOS.** Its training window (2024-11 to 2025-08) holds 353 built examples before refine,
 counted from `datasets/gerrit/lineageos/examples/*.jsonl`. Two halves at N = 1,850 need 3,700,
 so LineageOS cannot hold an H1 cell. Its development months are still collected, for RQ2.
+
+### The planted check at a half passes 10 of 10 runs: registered at a half, read on the planted run only (2026-10-01)
+
+The ten runs planned above, repeated at `PLANT=0.5` (jobs 210234 to 210243, pinned at b05a2d8),
+`rq1-partition-openstack-*-n1850-plant0.5.json`. **All ten pass.** Every half's lower bound is
+above zero (least +0.017); per-half estimates run from +0.053 to +0.142. The pass probability
+projected by the logged rule (normal per half, interval half-width over 1.96 as the standard
+error, product over halves) is at least 0.9989 for every run and 0.9999 on average. Both conditions
+of the rule hold, so check 5 is registered with the plant at a half: `neutral.planted_convention`,
+which reads the plant's strength and window from the run's corpus path and refuses any other, and
+`partition_pilot.py --planted`, which halts the cell when it fails.
+
+**The draft's second clause is dropped.** The Stage 1 draft also required that "unplanted must
+not" pass. Under the repeated-partition design the unplanted dev runs are H1's own data: a pass
+there is H1 holding on the development window, so a halt on it would turn on the outcome, which an
+outcome-neutral test may not. For the record, none of the 24 unplanted OpenStack pilot runs passes
+(23 `fail`, 1 `mixed`). The check reads the planted run only.
+
+**Planned before any run: the same measurement on Wikimedia.** Check 5 runs on every admitted
+organization, and its pass rate was measured on OpenStack only. Ten runs at `PLANT=0.5` on
+Wikimedia's first ten admissible partitions (seeds 1, 2, 3, 5, 6, 7, 8, 9, 10, 11) at training
+seeds 1 to 10, N = 1,850, corpus v3, the jobs otherwise as its pilot's. The same rule: registered
+for Wikimedia if all ten pass and the projected pass probability is at least 0.95; otherwise the
+check is redesigned for Wikimedia before Stage 1 is submitted. The rates are logged whichever way
+they fall.

@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 226 artifacts under
+repository. This page is generated from those scripts: 236 artifacts under
 45 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -290,23 +290,28 @@ Two pseudo-organizations built from one organization's own projects.
 
 | artifact | |
 |---|---|
-| `rq1-partition-openstack-p10-s8-n1850-plant0.25.json` | `rq1-partition-openstack-p10-s8-n1850.json` |
-| `rq1-partition-openstack-p11-s9-n1850-plant0.25.json` | `rq1-partition-openstack-p11-s9-n1850.json` |
-| `rq1-partition-openstack-p12-s10-n1850-plant0.25.json` | `rq1-partition-openstack-p12-s10-n1850.json` |
-| `rq1-partition-openstack-p14-s11-n1850.json` | `rq1-partition-openstack-p15-s12-n1850.json` |
-| `rq1-partition-openstack-p17-s13-n1850.json` | `rq1-partition-openstack-p18-s14-n1850.json` |
-| `rq1-partition-openstack-p19-s15-n1850.json` | `rq1-partition-openstack-p2-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p10-s8-n1850-plant0.25.json` | `rq1-partition-openstack-p10-s8-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p10-s8-n1850.json` | `rq1-partition-openstack-p11-s9-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p11-s9-n1850-plant0.5.json` | `rq1-partition-openstack-p11-s9-n1850.json` |
+| `rq1-partition-openstack-p12-s10-n1850-plant0.25.json` | `rq1-partition-openstack-p12-s10-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p12-s10-n1850.json` | `rq1-partition-openstack-p14-s11-n1850.json` |
+| `rq1-partition-openstack-p15-s12-n1850.json` | `rq1-partition-openstack-p17-s13-n1850.json` |
+| `rq1-partition-openstack-p18-s14-n1850.json` | `rq1-partition-openstack-p19-s15-n1850.json` |
+| `rq1-partition-openstack-p2-n1850-plant0.25.json` | `rq1-partition-openstack-p2-n1850-plant0.5.json` |
 | `rq1-partition-openstack-p2-n1850.json` | `rq1-partition-openstack-p21-s16-n1850.json` |
 | `rq1-partition-openstack-p22-s17-n1850.json` | `rq1-partition-openstack-p23-s18-n1850.json` |
 | `rq1-partition-openstack-p24-s19-n1850.json` | `rq1-partition-openstack-p25-s20-n1850.json` |
 | `rq1-partition-openstack-p26-s21-n1850.json` | `rq1-partition-openstack-p27-s22-n1850.json` |
 | `rq1-partition-openstack-p28-s23-n1850.json` | `rq1-partition-openstack-p3-s2-n1850-plant0.25.json` |
-| `rq1-partition-openstack-p3-s2-n1850.json` | `rq1-partition-openstack-p30-s24-n1850.json` |
-| `rq1-partition-openstack-p4-s3-n1850-plant0.25.json` | `rq1-partition-openstack-p4-s3-n1850.json` |
-| `rq1-partition-openstack-p5-s4-n1850-plant0.25.json` | `rq1-partition-openstack-p5-s4-n1850.json` |
-| `rq1-partition-openstack-p7-s5-n1850-plant0.25.json` | `rq1-partition-openstack-p7-s5-n1850.json` |
-| `rq1-partition-openstack-p8-s6-n1850-plant0.25.json` | `rq1-partition-openstack-p8-s6-n1850.json` |
-| `rq1-partition-openstack-p9-s7-n1850-plant0.25.json` | `rq1-partition-openstack-p9-s7-n1850.json` |
+| `rq1-partition-openstack-p3-s2-n1850-plant0.5.json` | `rq1-partition-openstack-p3-s2-n1850.json` |
+| `rq1-partition-openstack-p30-s24-n1850.json` | `rq1-partition-openstack-p4-s3-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p4-s3-n1850-plant0.5.json` | `rq1-partition-openstack-p4-s3-n1850.json` |
+| `rq1-partition-openstack-p5-s4-n1850-plant0.25.json` | `rq1-partition-openstack-p5-s4-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p5-s4-n1850.json` | `rq1-partition-openstack-p7-s5-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p7-s5-n1850-plant0.5.json` | `rq1-partition-openstack-p7-s5-n1850.json` |
+| `rq1-partition-openstack-p8-s6-n1850-plant0.25.json` | `rq1-partition-openstack-p8-s6-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p8-s6-n1850.json` | `rq1-partition-openstack-p9-s7-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p9-s7-n1850-plant0.5.json` | `rq1-partition-openstack-p9-s7-n1850.json` |
 | `rq1-placebo-openstack-s2.json` | `rq1-placebo-openstack-s3.json` |
 | `rq1-placebo-openstack-seeds.json` | `rq1-placebo-openstack-v2-s2.json` |
 | `rq1-placebo-openstack-v2-s3.json` | `rq1-placebo-openstack-v2-s4.json` |

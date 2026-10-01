@@ -5,7 +5,9 @@ order, and checks each is the partition and seed that order assigns. Reads H1 wi
 `h1_over_partitions` over the first K of them at the registered Holm levels, K read from the
 pilot artifact's `sizing.runs` given as `--sizing` (all runs, when omitted: the pilot itself);
 with `--sensitivity`, each level's bound is the detectable effect that simulation found at
-`--spread-target` for an H1 over `--h1-cells` organizations. On the development window it is
+`--spread-target` for an H1 over `--h1-cells` organizations. With `--planted`, the organization's
+planted dev run must pass outcome-neutral check 5 (`neutral.planted_convention`) or the cell is
+not read. On the development window it is
 the pilot, and `runs_needed` sizes the organization's K from every run computed.
 
     uv run --no-sync --no-active python scripts/partition_pilot.py \\
@@ -22,6 +24,7 @@ import re
 from pathlib import Path
 
 from sphragis.experiment.decomposition import holm_levels
+from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
     h1_over_partitions,
     pilot_sizing,
@@ -47,6 +50,9 @@ parser.add_argument(
 )
 parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 intersects")
 # Any fixed value: fixed so the reading reproduces.
+parser.add_argument(
+    "--planted", type=Path, help="the organization's planted dev run (outcome-neutral check 5)"
+)
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=10_000)
@@ -81,6 +87,12 @@ def main() -> None:
                 f"built from {source}"
             )
         runs.append((run["results"], k))
+    planted = None
+    if args.planted:
+        check = planted_convention(json.loads(args.planted.read_text()))
+        planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
+        if not apparatus_holds([check]):
+            raise SystemExit(f"{args.planted}: check 5 failed ({check.evidence}); H1 is not read")
     runs_fixed, k_source = len(runs), "all runs"
     if args.sizing:
         try:
@@ -119,7 +131,16 @@ def main() -> None:
         f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
         f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
     )
-    head = {"run_files", "admissible", "k_source", "levels", "bounds", "sizing", "provenance"}
+    head = {
+        "run_files",
+        "admissible",
+        "k_source",
+        "levels",
+        "bounds",
+        "planted_convention",
+        "sizing",
+        "provenance",
+    }
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
     report = {
@@ -128,6 +149,7 @@ def main() -> None:
         "k_source": k_source,
         "levels": levels,
         "bounds": bounds,
+        "planted_convention": planted,
         **cell,
         "sizing": sizing,
         "provenance": provenance_header(),
