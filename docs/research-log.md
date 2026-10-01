@@ -6978,4 +6978,4 @@ stated in its docstring. Every OpenStack and Wikimedia planted run passes it. Th
 that H1 reads keep the full battery.
 
 The Wikimedia placebo (job 211287, `rq1-placebo-wikimedia.json`) completed; its simulation, job
-211288, now runs.
+211288, is queued behind it.
