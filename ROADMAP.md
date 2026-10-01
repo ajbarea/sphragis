@@ -464,7 +464,8 @@ as the unit; the evidence says the codebase is.
   gate `sphragis/experiment/decomposition.py`. The rank branch is amended in the same change.
 - [x] Cells as a rule over the organizations admitted by host permission, not two fixed designs
   (2026-09-27): H1 on every admitted organization, H2 on Qt and Chromium only when both are.
-- [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
+- [x] Wikimedia's split meets the criteria on its frozen v3 corpus and it is admitted at N = 1,850
+  (research log, 2026-09-30).
 - [x] Corpus v3: examples whose target the reviewer wrote (Gerrit suggested edits, applied fixes)
   removed by `refine`; OpenStack's ceiling and floor refixed on v3, 0.3187 and 2,004 (research
   log, 2026-09-28).
@@ -474,8 +475,9 @@ as the unit; the evidence says the codebase is.
 - [x] **Partition variance measured** (2026-09-29): sigma_partition 0.0128, 90% about [0.0058, 0.035]
   and partly change-sampling noise, comparable to the seed effect; five partitions average +0.0041
   [-0.015, +0.023] at two seeds.
-- [ ] **AJ's call: read H1 over several partitions** (repeated splitting: Chernozhukov, Demirer,
-  Duflo and Fernández-Val, Econometrica 93(4):1121-1164, 2025) before Stage 1.
+- [x] **H1 read over several partitions** (repeated splitting: Chernozhukov, Demirer, Duflo and
+  Fernández-Val, Econometrica 93(4):1121-1164, 2025), AJ's decision (research log, 2026-09-29);
+  #67.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
 - [x] H1 carries a supplementary estimand on the suffix both halves hold most of
@@ -486,13 +488,14 @@ as the unit; the evidence says the codebase is.
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
   analysis at the half size on corpus v2 for OpenStack (2026-09-27).
-- [ ] The sensitivity analysis for every other admitted organization, once its corpus is frozen.
+- [ ] The sensitivity analysis for every other admitted organization: Wikimedia's is queued on
+  TIGRIS.
 - [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
 - [ ] The C++-restricted estimand beside H2.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research
   log, 2026-09-27).
-- [ ] The decomposition's pilot on the dev window with Wikimedia, once its corpus is frozen.
+- [x] The decomposition's pilot on the dev window with Wikimedia: K = 16 (research log, 2026-10-01).
 
 ## Plan C — the experiment
 
