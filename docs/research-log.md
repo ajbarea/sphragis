@@ -6473,3 +6473,35 @@ for a change that alters no example, only the name of 57 LineageOS drops. It lan
 change that rebuilds the corpora anyway (ROADMAP Plan A). Until then, read LineageOS 2025-10's
 `comment_error` as changes withdrawn after collection; nothing of them was built. Whether they are
 also purged from the raw snapshots is AJ's call (same item).
+
+### Planned before the confirmation pass is read: GitHub organizations as candidates beyond Qt and Chromium (2026-10-01)
+
+AJ asked for six or more organizations, so that RQ2 has a federation of several clients and RQ1
+more than two cells. The permitted Gerrit hosts give OpenStack and Wikimedia; LineageOS yields
+458 examples from about 29,800 merged changes (its reviewers rarely comment inline). GitHub's
+Acceptable Use Policies allow research use of public information when the resulting publications
+are open access; identities are pseudonymised at ingestion as on Gerrit.
+
+A first pass (50 PRs an organization, unweighted) ranked twelve organizations; six went forward:
+OpenJDK, LLVM, Apache, HashiCorp, Grafana and .NET. It counted OpenJDK at zero until its PRs were
+read as integrated rather than merged, since its bot closes them.
+
+**The confirmation pass** (`scripts/github_sizing.py`, draws in `github-sizing-draws-<org>.jsonl`,
+summary by `scripts/github_sizing_report.py`): per month of the training window, 20 draws of a
+uniformly random day, then a uniformly random merged (OpenJDK: integrated) PR from that day; the
+Hansen-Hurwitz month total, summed over months; a stratified bootstrap interval, read as a lower
+bound on uncertainty since review activity is heavy-tailed. A PR's count is its reviewer-started
+inline threads (not the author, not a bot or AI reviewer, anchored to a line, before the PR's last
+commit), excluding threads that open with a suggestion block (reviewer-written code, which v3
+removes on Gerrit too). PRs authored by a bot or AI agent count zero and their share is reported.
+Projected training examples apply the thread-to-example conversion measured on the built
+OpenStack and Wikimedia corpora (the report reads it from them).
+
+**Rule, fixed now.** An organization is a candidate for an H1 cell when the low end of its
+projected examples reaches two halves at N = 1,850 (3,700), and for RQ2 when it reaches one
+adapter (1,850); "borderline" when only the high end does. Candidates are appended to the
+registered ordered list behind Qt and Chromium; none is admitted before its corpus is built and
+meets the split criteria, as for every organization. LLVM is one monorepo, so its projects for
+the split need a definition (its top-level directories) registered before its split is read.
+A PR's comments and commits are read from their first page (100 items), so a PR with more
+review comments than that is undercounted, which errs toward too few. The pass was started before this entry was written (13:57); no organization's result had been read.
