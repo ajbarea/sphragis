@@ -54,11 +54,19 @@ _TIMELINE = """query($owner: String!, $name: String!, $number: Int!, $after: Str
 fragment C on Commit { oid committedDate parents(first: 2) { nodes { oid } } }"""
 
 
+class NetworkError(RuntimeError):
+    """A request that timed out or lost its connection on every attempt it was given."""
+
+
+# What a dropped connection or a timeout raises below the HTTP layer; retried like a 5xx.
+_NETWORK = (urllib.error.URLError, TimeoutError, ConnectionError, OSError)
+
+
 class Gone(LookupError):
     """GitHub answered 404."""
 
 
-def urllib_transport(timeout: float = 30.0) -> Transport:
+def urllib_transport(timeout: float = 60.0) -> Transport:
     def send(
         method: str, url: str, headers: dict[str, str], body: bytes | None
     ) -> tuple[int, dict[str, str], str]:
@@ -93,15 +101,34 @@ class GitHubAPI:
         self._last = -float("inf")
 
     def _request(
-        self, method: str, url: str, body: Mapping[str, Any] | None = None
+        self,
+        method: str,
+        url: str,
+        body: Mapping[str, Any] | None = None,
+        *,
+        network_attempts: int = _MAX_ATTEMPTS,
     ) -> tuple[dict[str, str], Any]:
+        """One request, retried through rate limits, server errors and network failures.
+
+        A timeout or dropped connection is retried with backoff like a 5xx, up to
+        `network_attempts` times, then raised as `NetworkError`; a caller that can split its
+        request (`file_oids`) asks for one attempt and splits on the error instead of waiting.
+        """
         data = json.dumps(body).encode() if body is not None else None
+        network_failures = 0
         for attempt in range(_MAX_ATTEMPTS):
             wait = self._last + self._min_interval - self._clock()
             if wait > 0:
                 self._sleep(wait)
             self._last = self._clock()
-            status, raw_headers, text = self._send(method, url, dict(self._headers), data)
+            try:
+                status, raw_headers, text = self._send(method, url, dict(self._headers), data)
+            except _NETWORK as error:
+                network_failures += 1
+                if network_failures >= network_attempts:
+                    raise NetworkError(f"{url}: {error}") from error
+                self._sleep(2.0**attempt)
+                continue
             headers = {k.lower(): v for k, v in raw_headers.items()}
             if status == 200:
                 return headers, json.loads(text)
@@ -117,7 +144,9 @@ class GitHubAPI:
                 raise RuntimeError(f"GitHub answered {status} for {url}: {text[:200]}")
         raise RuntimeError(f"GitHub kept refusing {url} after {_MAX_ATTEMPTS} attempts")
 
-    def graphql(self, query: str, variables: Mapping[str, Any]) -> dict[str, Any]:
+    def graphql(
+        self, query: str, variables: Mapping[str, Any], *, network_attempts: int = _MAX_ATTEMPTS
+    ) -> dict[str, Any]:
         """A GraphQL query's `data`, rate limits waited out, NOT_FOUND raised as `Gone`.
 
         GitHub reports an exhausted GraphQL budget with HTTP 200 and an `errors` entry of type
@@ -125,7 +154,10 @@ class GitHubAPI:
         """
         for _ in range(_MAX_ATTEMPTS):
             headers, payload = self._request(
-                "POST", f"{API}/graphql", {"query": query, "variables": dict(variables)}
+                "POST",
+                f"{API}/graphql",
+                {"query": query, "variables": dict(variables)},
+                network_attempts=network_attempts,
             )
             errors = payload.get("errors") or []
             kinds = {str(e.get("type")) for e in errors}
@@ -204,22 +236,39 @@ class GitHubAPI:
         return out
 
     def file_oids(self, repo: str, path: str, shas: list[str]) -> dict[str, str | None]:
-        """The blob id of `path` at each commit, or None where the file does not exist there."""
-        owner, name = repo.split("/", 1)
+        """The blob id of `path` at each commit, or None where the file does not exist there.
+
+        Looked up in batches of up to 50; a batch that times out (a very large repository can)
+        is halved and retried, down to single lookups, which get the full retry budget.
+        """
         out: dict[str, str | None] = {}
-        for start in range(0, len(shas), 50):
-            chunk = shas[start : start + 50]
-            blob = "{ ...on Blob { oid } }"
-            fields = " ".join(
-                f"c{i}: object(expression: {json.dumps(f'{sha}:{path}')}) {blob}"
-                for i, sha in enumerate(chunk)
-            )
-            query = "query($o: String!, $n: String!) { repository(owner: $o, name: $n) { %s } }"
-            data = self.graphql(query % fields, {"o": owner, "n": name})
-            found = data.get("repository") or {}
-            for i, sha in enumerate(chunk):
-                out[sha] = (found.get(f"c{i}") or {}).get("oid")
+        pending = [shas[i : i + 50] for i in range(0, len(shas), 50)]
+        while pending:
+            chunk = pending.pop(0)
+            try:
+                out |= self._oid_batch(repo, path, chunk, single=len(chunk) == 1)
+            except NetworkError:
+                if len(chunk) == 1:
+                    raise
+                middle = len(chunk) // 2
+                pending[:0] = [chunk[:middle], chunk[middle:]]
         return out
+
+    def _oid_batch(
+        self, repo: str, path: str, chunk: list[str], *, single: bool
+    ) -> dict[str, str | None]:
+        owner, name = repo.split("/", 1)
+        blob = "{ ...on Blob { oid } }"
+        fields = " ".join(
+            f"c{i}: object(expression: {json.dumps(f'{sha}:{path}')}) {blob}"
+            for i, sha in enumerate(chunk)
+        )
+        query = "query($o: String!, $n: String!) { repository(owner: $o, name: $n) { %s } }"
+        data = self.graphql(
+            query % fields, {"o": owner, "n": name}, network_attempts=_MAX_ATTEMPTS if single else 1
+        )
+        found = data.get("repository") or {}
+        return {sha: (found.get(f"c{i}") or {}).get("oid") for i, sha in enumerate(chunk)}
 
     def blob_text(self, repo: str, oid: str) -> str | None:
         """A blob's text, or None when GitHub reports it binary or truncated."""

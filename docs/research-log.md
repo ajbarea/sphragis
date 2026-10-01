@@ -7045,3 +7045,12 @@ the same eight PRs: 18 examples; 17 comments dropped for upstream edits, 6 as ou
 the four comments the merge-commit fault had dropped on one PR are kept. The 10 drops on one
 heavily rebased PR were checked: it holds 4 merges from main, and the commented file has three
 different versions on the base branch across its three fork points.
+
+**The first pilot month failed, and what it changed.** OpenJDK 2024-11 through `fetch --via github`
+stopped after ten minutes: one GraphQL lookup of 50 file versions in `openjdk/jdk` timed out, and a
+timeout below the HTTP layer was not retried, so the month's work was lost. Now a timeout or
+dropped connection is retried with backoff like a server error; a version lookup that times out
+is halved and retried down to single lookups; a PR whose requests still fail costs only itself.
+Two costs the failure made visible are also addressed: a PR with no reviewer's inline comment is
+counted after one request (`no_inline_review`) rather than walked, since it can yield no example,
+and each finished PR's scrubbed row is checkpointed, so a month that fails partway resumes.

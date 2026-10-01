@@ -1765,3 +1765,15 @@ def test_the_github_route_refuses_to_mix_with_another_route(
     record.write_text(json.dumps({**json.loads(record.read_text()), "route": "rest"}))
     with pytest.raises(SystemExit, match="already fetched via"):
         _github(tmp_path, monkeypatch, stub, "fetch", "--via", "github", "--month", "2024-11")
+
+
+def test_a_finished_github_month_leaves_no_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert (
+        _github(
+            tmp_path, monkeypatch, _GitHubStub(), "fetch", "--via", "github", "--month", "2024-10"
+        )
+        == 0
+    )
+    assert not (tmp_path / "apache" / "raw" / "2024-10.partial.jsonl").exists()

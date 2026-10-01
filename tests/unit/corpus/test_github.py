@@ -424,3 +424,48 @@ def test_a_commit_only_a_comment_names_is_added_in_commit_time_order() -> None:
     assert [h["sha"] for h in heads] == ["c1", "x1", "c2", "c3"]
     _, _, dropped = change_from_pr("org/repo", _pr(), heads, comments, project="org/repo")
     assert dropped == {"rewritten_history": 1}, "only the commit GitHub no longer holds"
+
+
+def test_a_pr_with_no_reviewer_inline_comment_costs_one_request() -> None:
+    """Most PRs carry no inline review; they are counted, not walked."""
+
+    class Quiet(FakeAPI):
+        def __init__(self) -> None:
+            super().__init__()
+            self.walked: list[int] = []
+
+        def pr_comments(self, repo: str, number: int) -> list[dict[str, Any]]:
+            if number == 42:
+                return [_comment(user={"id": 1, "login": "author", "type": "User"})]
+            return super().pr_comments(repo, number)
+
+        def pr_heads(self, repo: str, number: int) -> list[dict[str, Any]]:
+            self.walked.append(number)
+            return HEADS
+
+    api = Quiet()
+    rows, record = collect_month("llvm", "2025-01", api, salt="s")
+    assert rows == [] and record["no_inline_review"] == 1 and api.walked == []
+
+
+def test_a_month_resumes_from_its_checkpoint(tmp_path: Any) -> None:
+    """A long month that fails partway keeps every finished PR."""
+
+    class Counting(FakeAPI):
+        def __init__(self) -> None:
+            super().__init__()
+            self.fetched: list[int] = []
+
+        def pr_comments(self, repo: str, number: int) -> list[dict[str, Any]]:
+            self.fetched.append(number)
+            return super().pr_comments(repo, number)
+
+    checkpoint = tmp_path / "2025-01.partial.jsonl"
+    first = Counting()
+    rows, record = collect_month("llvm", "2025-01", first, salt="s", checkpoint=checkpoint)
+    again = Counting()
+    rows_again, record_again = collect_month(
+        "llvm", "2025-01", again, salt="s", checkpoint=checkpoint
+    )
+    assert rows_again == rows and record_again == record
+    assert again.fetched == [], "every PR came back from the checkpoint"

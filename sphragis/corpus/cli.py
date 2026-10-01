@@ -509,7 +509,12 @@ def _stage_fetch_github(args: argparse.Namespace, salt: str) -> int:
     in it, each keeping its creation time, so window assignment is by creation as on Gerrit.
     """
     refuse_mixed_routes(Path(args.root), args.org, "github", allow=args.allow_mixed_routes)
-    rows, record = collect_month(args.org, args.month, _github_api(args), salt=salt)
+    # Rows land here as each PR finishes (scrubbed), so a failed month resumes where it stopped.
+    checkpoint = Path(args.root) / args.org / "raw" / f"{args.month}.partial.jsonl"
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    rows, record = collect_month(
+        args.org, args.month, _github_api(args), salt=salt, checkpoint=checkpoint
+    )
     kept = created_on_or_after(rows, args.cutoff)
     record = {
         **record,
@@ -520,6 +525,7 @@ def _stage_fetch_github(args: argparse.Namespace, salt: str) -> int:
     path = write_snapshot(
         args.root, args.org, args.month, kept, record=record, overwrite=args.overwrite
     )
+    checkpoint.unlink(missing_ok=True)
     print(
         f"{args.org} {args.month}: listed {record['listed']}, kept {len(kept)}, "
         f"agent-authored {record['agent_authored']}, withdrawn {record['withdrawn']}"

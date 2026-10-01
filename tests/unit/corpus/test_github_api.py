@@ -191,3 +191,40 @@ def test_a_rebased_series_in_one_second_is_ordered_parent_first() -> None:
         {"sha": "c", "committed_at": second, "parents": ["b"]},
     ]
     assert [c["sha"] for c in order_commits(series)] == ["b", "c", "a"]
+
+
+def test_a_network_timeout_is_retried_not_fatal() -> None:
+    """Pilot finding: one timed-out request ended a month's fetch."""
+    import urllib.error
+
+    calls = []
+
+    def flaky(method: str, url: str, headers: dict[str, str], body: bytes | None):
+        calls.append(url)
+        if len(calls) == 1:
+            raise urllib.error.URLError("timed out")
+        return 200, {}, "[]"
+
+    slept: list[float] = []
+    api = GitHubAPI("t", transport=flaky, sleep=slept.append, clock=lambda: 1000.0)
+    assert api.pr_comments("o/r", 1) == [] and len(calls) == 2
+
+
+def test_file_oids_halves_a_batch_that_times_out() -> None:
+    """A large repository can time a 50-lookup query out; smaller batches still answer."""
+
+    sizes: list[int] = []
+
+    def slow_when_big(method: str, url: str, headers: dict[str, str], body: bytes | None):
+        query = json.loads(body or b"{}")["query"]
+        lookups = query.count("object(expression")
+        sizes.append(lookups)
+        if lookups > 10:
+            raise TimeoutError("read timed out")
+        found = {f"c{i}": {"oid": "b"} for i in range(lookups)}
+        return 200, {}, json.dumps({"data": {"repository": found}})
+
+    api = GitHubAPI("t", transport=slow_when_big, sleep=lambda s: None, clock=lambda: 1000.0)
+    oids = api.file_oids("o/r", "f.py", [f"s{i}" for i in range(40)])
+    assert len(oids) == 40 and all(v == "b" for v in oids.values())
+    assert max(s for s in sizes if s <= 10) <= 10

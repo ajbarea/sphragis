@@ -14,6 +14,7 @@ this module and the client it collects with.
 from __future__ import annotations
 
 import calendar
+import json
 import re
 import subprocess
 import tempfile
@@ -484,68 +485,117 @@ def with_commented_commits(
     return order_commits([dict(head) for head in heads] + found)
 
 
+def has_inline_review(pr: Mapping[str, Any], comments: Sequence[Mapping[str, Any]]) -> bool:
+    """Whether anyone but the PR's author and service accounts left a comment on a code line."""
+    author = (pr.get("user") or {}).get("login")
+    return any(
+        (c.get("original_line") is not None or c.get("line") is not None)
+        and not is_service_account(c.get("user"))
+        and (c.get("user") or {}).get("login") != author
+        for c in comments
+    )
+
+
 def collect_month(
-    name: str, month: str, api: PullRequestSource, *, salt: str
+    name: str,
+    month: str,
+    api: PullRequestSource,
+    *,
+    salt: str,
+    checkpoint: Path | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Every PR one registered organization merged in `month`, as scrubbed snapshot rows.
 
-    PRs opened by a bot or AI agent are not collected; PRs GitHub answers 404 for are withdrawn
-    since they were listed; a PR whose requests still fail after the client's retries is
-    `failed`, with its reason. All are counted in the month's record, as is every comment left out
-    by `change_from_pr` or `successor_diffs`, by reason.
+    PRs opened by a bot or AI agent are not collected; a PR with no reviewer's inline comment
+    costs one request and is counted (`no_inline_review`), since it can yield no example; PRs
+    GitHub answers 404 for are withdrawn since they were listed; a PR whose requests still fail
+    after the client's retries is `failed`, with its reason. All are counted in the month's
+    record, as is every comment left out by `change_from_pr` or `successor_diffs`, by reason.
+
+    With a `checkpoint`, each PR's outcome (and its row, already scrubbed) is appended as it
+    finishes, and a rerun replays it rather than asking GitHub again, so a long month that fails
+    partway keeps its work. Rows come back in change-id order, so a resumed month matches an
+    uninterrupted one.
     """
     if name not in GITHUB_ORGS:
         raise SystemExit(f"{name} is not a registered GitHub organization ({sorted(GITHUB_ORGS)})")
     org = GITHUB_ORGS[name]
     year, number = map(int, month.split("-"))
-    rows: list[dict[str, Any]] = []
-    counts = {"listed": 0, "agent_authored": 0, "withdrawn": 0, "failed": 0}
-    failures: list[str] = []
-    comment_drops = dict.fromkeys(("rewritten_history", *DIFF_DROPS), 0)
-    for day in range(1, calendar.monthrange(year, number)[1] + 1):
-        for pr in api.merged_prs(org.owner, f"{month}-{day:02d}", qualifier=org.qualifier):
-            counts["listed"] += 1
-            if is_service_account(pr.get("user")):
-                counts["agent_authored"] += 1
-                continue
-            repo = str(pr["repo"])
-            try:
-                comments = api.pr_comments(repo, int(pr["number"]))
-                heads = with_commented_commits(
-                    repo, api.pr_heads(repo, int(pr["number"])), comments, api
-                )
-                files = api.pr_files(repo, int(pr["number"])) if repo in org.monorepos else []
-                row = row_from_pr(
-                    repo,
-                    pr,
-                    heads,
-                    comments,
-                    project=project_of(org, repo, files),
-                    salt=salt,
-                    api=api,
-                    keep_owners=(org.owner,),
-                )
-            except Gone:
-                counts["withdrawn"] += 1
-                continue
-            except RuntimeError as error:
-                # The client has already retried; one PR's persistent error costs that PR, not the
-                # month. Counted, with its reason, so a failed month is visible in its record.
-                counts["failed"] += 1
-                failures.append(f"{repo}#{pr['number']}: {str(error)[:160]}")
-                continue
-            for reason in comment_drops:
-                comment_drops[reason] += row[GITHUB_KEY][reason]
-            rows.append(row)
+    done: dict[str, dict[str, Any]] = {}
+    if checkpoint is not None and checkpoint.is_file():
+        for line in checkpoint.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                entry = json.loads(line)
+                done[entry["key"]] = entry
+    log = checkpoint.open("a", encoding="utf-8") if checkpoint is not None else None
+    outcomes: list[dict[str, Any]] = []
+    listed = 0
+    try:
+        for day in range(1, calendar.monthrange(year, number)[1] + 1):
+            for pr in api.merged_prs(org.owner, f"{month}-{day:02d}", qualifier=org.qualifier):
+                listed += 1
+                key = f"{pr['repo']}#{pr['number']}"
+                entry = done.get(key) or _collect_pr(org, pr, api, salt)
+                if key not in done and log is not None:
+                    log.write(json.dumps({"key": key, **entry}) + "\n")
+                    log.flush()
+                outcomes.append(entry)
+    finally:
+        if log is not None:
+            log.close()
+    rows = sorted(
+        (e["row"] for e in outcomes if e["outcome"] == "row"), key=lambda r: r["change_id"]
+    )
+    counts = {
+        outcome: sum(e["outcome"] == outcome for e in outcomes)
+        for outcome in ("agent_authored", "no_inline_review", "withdrawn", "failed")
+    }
+    comment_drops = {
+        reason: sum(row[GITHUB_KEY][reason] for row in rows)
+        for reason in ("rewritten_history", *DIFF_DROPS)
+    }
     record = {
         "route": "github",
         "org": name,
         "owner": org.owner,
         "qualifier": org.qualifier,
         "month": month,
+        "listed": listed,
         **counts,
         **comment_drops,
-        "failures": failures[:50],
+        "failures": [e["failure"] for e in outcomes if e["outcome"] == "failed"][:50],
         "github_rules": GITHUB_RULES,
     }
     return rows, record
+
+
+def _collect_pr(
+    org: GitHubOrg, pr: Mapping[str, Any], api: PullRequestSource, salt: str
+) -> dict[str, Any]:
+    """One listed PR's outcome: its scrubbed row, or why it has none."""
+    if is_service_account(pr.get("user")):
+        return {"outcome": "agent_authored"}
+    repo = str(pr["repo"])
+    try:
+        comments = api.pr_comments(repo, int(pr["number"]))
+        if not has_inline_review(pr, comments):
+            return {"outcome": "no_inline_review"}
+        heads = with_commented_commits(repo, api.pr_heads(repo, int(pr["number"])), comments, api)
+        files = api.pr_files(repo, int(pr["number"])) if repo in org.monorepos else []
+        row = row_from_pr(
+            repo,
+            pr,
+            heads,
+            comments,
+            project=project_of(org, repo, files),
+            salt=salt,
+            api=api,
+            keep_owners=(org.owner,),
+        )
+    except Gone:
+        return {"outcome": "withdrawn"}
+    except RuntimeError as error:
+        # The client has already retried; one PR's persistent error costs that PR, not the
+        # month. Counted, with its reason, so a failed month is visible in its record.
+        return {"outcome": "failed", "failure": f"{repo}#{pr['number']}: {str(error)[:160]}"}
+    return {"outcome": "row", "row": row}
