@@ -72,6 +72,12 @@ This makes the confirmatory contrast's low censoring a protocol guarantee rather
 accident of when acceptance landed. The horizon binds only if acceptance comes early, in which
 case the answer is to accept more censoring rather than to fetch sooner.
 
+The sealed window's size is projected from the training months' arrival rate. Where the dev window
+holds more changes than that rate predicts (Wikimedia), the projection is a lower bound, which only
+enlarges the simulated bounds, provided arrivals do not fall below the training rate. So at fetch
+the realised change count is compared with the projection, and a window below it is reported
+beside the verdict with the simulation's power at the realised size.
+
 ### Contamination: Min-K%++ on the base checkpoint is primary, the time partition corroborative only
 
 Temporal decay is not dependable contamination evidence (Zhang et al., ACL 2026): item
@@ -119,7 +125,7 @@ Decided by the partition study and two simulations. H1 is the mean over K admiss
 replacing five seeds on one registered partition, whose reading moved with the partition as much as
 with the seed. K = 2v(z / xi)^2, Ritzwoller and Romano's sizing rule, with v at the 90% upper bound
 of the development-window pilot's per-run variance and K kept within 10 to 40. OpenStack's pilot runs
-give a per-run standard deviation of 0.0140, so **K = 24**. A sequential rule, adding runs until
+give a per-run standard deviation of 0.0140, so **K = 24**; Wikimedia's give 0.0112, so **K = 16**. A sequential rule, adding runs until
 they agree, was simulated first and rejected: it ran above nominal where it stopped early.
 
 ### Stated power: sensitivity, not power at an observed effect

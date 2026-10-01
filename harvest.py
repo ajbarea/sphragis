@@ -60,6 +60,7 @@ INFORMATIVENESS = f"{RESULTS}/cluster-informativeness.json"
 COVERAGE = f"{RESULTS}/crossed-coverage.json"
 PARTITION_PILOT = f"{RESULTS}/partition-pilot-openstack.json"
 PARTITION_PILOT_K24 = f"{RESULTS}/partition-pilot-openstack-k24.json"
+PARTITION_PILOT_WM = f"{RESULTS}/partition-pilot-wikimedia.json"
 K24_975 = ["intervals", "0.975"]
 K24_95 = ["intervals", "0.95"]
 PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack.json"
@@ -255,6 +256,13 @@ CLAIMS: list[tuple[Any, ...]] = [
         {"reduce": "one_sided"},
     ),
     ("rd_partition_sd", "registered-decisions.md", "0.0140", PARTITION_PILOT, ["sizing", "sd"]),
+    (
+        "rd_partition_sd_wm",
+        "registered-decisions.md",
+        "0.0112",
+        PARTITION_PILOT_WM,
+        ["sizing", "sd"],
+    ),
     (
         "rd_partition_k",
         "registered-decisions.md",
