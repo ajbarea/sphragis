@@ -6980,6 +6980,94 @@ that H1 reads keep the full battery.
 The Wikimedia placebo (job 211287, `rq1-placebo-wikimedia.json`) completed; its simulation, job
 211288, is queued behind it.
 
+### LineageOS's 57 dropped changes were withdrawn from the host, not failed requests (2026-10-01)
+
+LineageOS 2025-10 dropped 57 changes as `comment_error`, and a rebuild of that month dropped exactly
+57 again with every other count identical, so the drop was not transient. A one-request-per-change
+probe of the month (stopped at 1,562 of 4,161 changes, to spare a host then returning 502s) found
+timeouts and 502s, which the client retries five times and which rarely survive that, and 404s,
+which it does not retry. Two of the 404s were checked by hand: the change itself now answers 404.
+They were public when the snapshot listed them (fetched 2026-09-29) and were deleted or made
+private since.
+
+**Diagnosed now, fixed with the next build-rules change.** The right fix (a 404 raising its own
+error, counted `change_gone` apart from `comment_error`) was written and tested, then held back:
+`build.py` feeds both `BUILD_RULES` and `RULES_VERSION`, so any edit to it marks every built and
+refined month of every organization stale, the frozen OpenStack and Wikimedia v3 corpora included,
+for a change that alters no example, only the name of 57 LineageOS drops. It lands with the next
+change that rebuilds the corpora anyway (ROADMAP Plan A). Until then, read LineageOS 2025-10's
+`comment_error` as changes withdrawn after collection; nothing of them was built. Whether they are
+also purged from the raw snapshots is AJ's call (same item).
+
+### Planned before the confirmation pass is read: GitHub organizations as candidates beyond Qt and Chromium (2026-10-01)
+
+AJ asked for six or more organizations, so that RQ2 has a federation of several clients and RQ1
+more than two cells. The permitted Gerrit hosts give OpenStack and Wikimedia; LineageOS yields
+458 examples from about 29,800 merged changes (its reviewers rarely comment inline). GitHub's
+Acceptable Use Policies allow research use of public information when the resulting publications
+are open access; identities are pseudonymised at ingestion as on Gerrit.
+
+A first pass (50 PRs an organization, unweighted) ranked twelve organizations; six went forward:
+OpenJDK, LLVM, Apache, HashiCorp, Grafana and .NET. It counted OpenJDK at zero until its PRs were
+read as integrated rather than merged, since its bot closes them.
+
+**The confirmation pass** (`scripts/github_sizing.py`, draws in `github-sizing-draws-<org>.jsonl`,
+summary by `scripts/github_sizing_report.py`): per month of the training window, 20 draws of a
+uniformly random day, then a uniformly random merged (OpenJDK: integrated) PR from that day; the
+Hansen-Hurwitz month total, summed over months; a stratified bootstrap interval, read as a lower
+bound on uncertainty since review activity is heavy-tailed. A PR's count is its reviewer-started
+inline threads (not the author, not a bot or AI reviewer, anchored to a line, before the PR's last
+commit), excluding threads that open with a suggestion block (reviewer-written code, which v3
+removes on Gerrit too). PRs authored by a bot or AI agent count zero and their share is reported.
+Projected training examples apply the thread-to-example conversion measured on the built
+OpenStack and Wikimedia corpora (the report reads it from them).
+
+**Rule, fixed now.** An organization is a candidate for an H1 cell when the low end of its
+projected examples reaches two halves at N = 1,850 (3,700), and for RQ2 when it reaches one
+adapter (1,850); "borderline" when only the high end does. Candidates are appended to the
+registered ordered list behind Qt and Chromium; none is admitted before its corpus is built and
+meets the split criteria, as for every organization. LLVM is one monorepo, so its projects for
+the split need a definition (its top-level directories) registered before its split is read.
+A PR's comments and commits are read from their first page (100 items), so a PR with more
+review comments than that is undercounted, which errs toward too few. The pass was started before this entry was written (13:57); no organization's result had been read.
+
+### The confirmation pass: Apache and LLVM qualify for an H1 cell, .NET and Grafana for RQ2, OpenJDK and HashiCorp are borderline (2026-10-01)
+
+`github-sizing-report.json`, from the 200 draws an organization planned above
+(`github-sizing-draws-<org>.jsonl`). **The design checks out:** the same estimator applied to the
+number of PRs recovers the counts the search API reports to within 1% to 7% (Apache 108,600
+against 107,888; HashiCorp 24,531 against 22,870, the widest). No draw hit the search frame cap.
+The thread-to-example conversion read from the built corpora is 0.217 (Wikimedia) to 0.282
+(OpenStack); the example range below is the interval's low end at the low rate to its high end at
+the high rate.
+
+| org | reviewer threads (95%) | projected examples | H1 cell | RQ2 | bot/AI-authored PRs |
+|---|---|---|---|---|---|
+| Apache | 87,609 [51,535, 129,328] | 11,176 to 36,518 | yes | yes | 19.6% |
+| LLVM | 51,914 [35,618, 70,468] | 7,724 to 19,898 | yes | yes | 0.3% |
+| .NET | 36,763 [11,294, 70,216] | 2,449 to 19,827 | borderline | yes | 43.2% |
+| Grafana | 25,108 [9,310, 46,325] | 2,019 to 13,081 | borderline | yes | 26.5% |
+| OpenJDK | 11,803 [6,525, 18,106] | 1,415 to 5,113 | borderline | borderline | 0.0% |
+| HashiCorp | 6,356 [912, 15,101] | 198 to 4,264 | borderline | borderline | 20.2% |
+
+Suggestion-block threads, excluded above, are 13% to 23% of reviewer threads. The 50-PR first
+pass had OpenJDK at about 26,600 threads; the weighted pass puts it at 11,803, and its first figure
+came from a few heavily reviewed PRs.
+
+**What it gives the study.** With OpenStack and Wikimedia, six organizations reach RQ2's bar in
+six languages' worth of codebases (Python, PHP, Java and others, C++, C#, Go and TypeScript):
+OpenStack, Wikimedia, Apache, LLVM, .NET, Grafana. Four have the size for an H1 cell (OpenStack,
+Wikimedia, Apache, LLVM), with .NET and Grafana possible. LLVM's top-level directories behave as
+projects (llvm, clang, mlir, lldb, bolt, flang and others), though `llvm` itself carries about 40% of
+the sampled threads, so whether its halves meet the split criteria is read before it is admitted.
+
+**Not yet settled, each a ROADMAP item:** a GitHub collection route (review threads to hunk,
+comment and next revision, suggestion blocks and bot or AI authors removed, identities
+pseudonymised at ingestion); open access for every resulting publication, which GitHub's terms
+require (MSR's ACM proceedings are open access; the registered report's Stage 2 appears in EMSE,
+so its open-access option and an arXiv copy); and what more cells do to H1, which passes only if
+every admitted organization's cell does, each cell then needing power 0.95^(1/k).
+
 ### A GitHub collection route, and what live pull requests taught it (2026-10-01)
 
 `sphragis/corpus/github.py` and `github_api.py` (spec `docs/superpowers/specs/2026-10-01-github-route-design.md`):
