@@ -32,6 +32,8 @@ from sphragis.measure.stats import ESTIMATORS, Cluster, cluster_bootstrap
 from sphragis.provenance import provenance_header
 
 RESULTS = Path("datasets/results/interval-calibration.json")
+# A row missing one of these fields was measured under this value.
+LEGACY = {"estimator": "pooled"}
 WINDOW = Path("datasets/results/rq1-windows-qtfull-fp32.json")
 ARM = "adapter:openstack|openstack|s1"
 LADDER = (10, 19, 30, 45, 91, 200)
@@ -57,7 +59,7 @@ parser.add_argument(
     "--estimator", choices=sorted(ESTIMATORS), default="pooled", help="the estimand calibrated"
 )
 parser.add_argument(
-    "--out", type=Path, default=RESULTS, help="for smoke runs; the default is the artifact"
+    "--out", type=Path, default=None, help="for smoke runs; the default is the estimator's artifact"
 )
 
 
@@ -133,6 +135,13 @@ def main() -> None:
     args = parser.parse_args()
     sizes, rate = null_shape(args.window, args.arm)
     counts = args.clusters or list(LADDER)
+    if args.out is None:
+        # One artifact per estimator, so a run can never merge rows of two into one file.
+        args.out = (
+            RESULTS
+            if args.estimator == "pooled"
+            else RESULTS.with_name(f"interval-calibration-{args.estimator.replace('_', '-')}.json")
+        )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     report = json.loads(args.out.read_text()) if args.out.exists() else {}
@@ -160,7 +169,9 @@ def main() -> None:
     for name, fields in comparable.items():
         rows = report.get(name)
         for key, row in list((rows or {}).items()):
-            stale = {k: row[k] for k in fields if k in row and row[k] != null[k]}
+            # Rows written before the estimator was recorded were pooled, the only one then.
+            recorded = {k: row.get(k, LEGACY.get(k)) for k in fields}
+            stale = {k: v for k, v in recorded.items() if k in row or k in LEGACY if v != null[k]}
             if stale:
                 print(f"dropping {name}.{key}: measured at {stale}, which this null does not match")
                 del rows[key]

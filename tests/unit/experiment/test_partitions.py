@@ -17,6 +17,7 @@ from sphragis.experiment.partitions import (
     chi2_quantile,
     common_runs,
     h1_over_partitions,
+    pilot_sizing,
     reproducibility,
     runs_needed,
     sd_bound,
@@ -72,8 +73,9 @@ def test_sd_bounds_bracket_the_estimate_and_widen_with_confidence() -> None:
 
 
 def test_runs_needed_clamps_to_the_burn_in_and_the_list() -> None:
-    assert runs_needed([0.001, 0.0011, 0.0009])["runs"] == K_MIN
-    assert runs_needed([0.2, -0.2, 0.1, -0.1])["runs"] == K_MAX
+    low, high = runs_needed([0.001, 0.0011, 0.0009]), runs_needed([0.2, -0.2, 0.1, -0.1])
+    assert (low["runs"], low["clamped"]) == (K_MIN, "min")
+    assert (high["runs"], high["clamped"]) == (K_MAX, "max")
     with pytest.raises(ValueError, match="at least two"):
         runs_needed([0.01])
 
@@ -228,3 +230,19 @@ def test_sensitivity_bounds_read_the_named_spread_target_and_cell_count() -> Non
         sensitivity_bounds(artifact, "sizing_bound_90", [0.975], cells=1)
     with pytest.raises(ValueError, match="no bound for 3"):
         sensitivity_bounds(artifact, "pilot_estimate", [0.975], cells=3)
+
+
+def test_pilot_sizing_reads_the_pilot_and_refuses_a_reading_at_another_k() -> None:
+    assert pilot_sizing({"sizing": {"runs": 24}}, "pilot") == 24
+    assert pilot_sizing({"k_source": "all runs", "sizing": {"runs": 24}}, "pilot") == 24
+    reading = {"k_source": "pilot.json: sizing.runs", "sizing": {"runs": 22}}
+    with pytest.raises(ValueError, match="read its K from"):
+        pilot_sizing(reading, "k24")
+    with pytest.raises(ValueError, match="no sizing.runs"):
+        pilot_sizing({"sizing": {}}, "empty")
+
+
+def test_sensitivity_bounds_name_a_missing_level() -> None:
+    artifact = {"by_target": {"t": {"by_level": {"0.95": {"by_cells": {"1": {}}}}}}}
+    with pytest.raises(ValueError, match="no bound at level 0.975"):
+        sensitivity_bounds(artifact, "t", [0.975], cells=1)

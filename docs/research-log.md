@@ -6807,3 +6807,65 @@ development window's 81 to 125 changes a half resolve the smaller ones no better
 183 did. Registered as drafted, check 5 would halt a working apparatus in about four studies of
 five. By the rule fixed before these runs, it is not registered at a quarter: the plant is raised
 to a half and the same ten partitions and seeds are repeated.
+
+### The SESOI stays at 0.01, justified by cost-benefit, and stated as what sizes K (2026-09-30)
+
+Audit item 7. Current guidance on justifying a smallest effect of interest (Anvari and Lakens, JESP
+2021; Lakens, Collabra 2022) prefers a practical or cost-benefit argument, anchor or consensus
+methods, and advises against taking the value from effects earlier studies reported. The
+seed-noise origin recorded on 2026-09-22 is withdrawn as a justification.
+
+**Justification.** An organization that adopts the result trains and governs an adapter on its own
+review history. The smallest gain taken to repay that is one more exactly correct refinement per
+hundred review comments: 0.01 in exact match. For context only, not as the anchor: the gains the
+code-refinement literature reports as contributions are larger (CodeReviewer over CodeT5, +5.9
+points on its benchmark, Li et al. FSE 2022), so 0.01 is the conservative end of what the field
+treats as worth reporting, and a larger value would make K smaller (K scales with 1/xi^2, and at
+0.02 OpenStack's K falls to the floor of 10).
+
+**What it decides.** Through `XI = SESOI`, it sets K, the number of runs at which two independent
+draws of partitions agree within it with probability about 0.95. Beside each cell it is reported
+and decides no verdict. The earlier comment that it "decides nothing" was wrong and is corrected
+in `decomposition.py`; the manuscript states that it sizes K.
+
+### Positioning against the 2025-2026 literature (2026-09-30)
+
+A sweep of federated fine-tuning for software engineering, organization-scale adaptation and
+federated LoRA privacy, each record checked on arXiv. What it changes:
+
+- **The nearest federated SE studies use synthetic organizations.** Federated program repair
+  (TOSEM, arXiv:2412.01072) partitions one dataset by Dirichlet draws over code features, runs six
+  models, and reports no inferential test and no privacy attack; multi-task federated code review
+  (arXiv:2412.15676) and federated code summarization (JSS 2026) likewise split public datasets.
+  P4's organizations are real review cultures on permitted hosts, read over repeated partitions
+  with a registered interval and power; RQ2 evaluates attacks and defences.
+- **Organization-scale adaptation is measured without an ablation.** Gemini for Google
+  (arXiv:2605.16517) raised hunk acceptance 4.49% in a blind A/B test with 29,000 developers; its
+  full text reports no analysis separating internal conventions from general ability, only a
+  qualitative note on build rules and imports. That separation is what RQ1's decomposition does;
+  cited in the Stage 1 background.
+- **RQ2's attack family was uncited**: source inference (Hu et al., TDSC 2024). FedAS-LoRA and
+  LA-LoRA are placed without new cuts. A second model family is added as an exploratory item.
+  All three are in ROADMAP Plan F.
+
+### Wikimedia meets the split criteria and is admissible at N = 1,850; LineageOS is too small for an H1 cell (2026-09-30)
+
+Wikimedia was refined under the v3 rules: 5,699 examples kept over 13 months, 1,472 removed as
+examples whose target the reviewer wrote (`suggested_edit`).
+
+- **Registered split** (`split-criteria-wikimedia.json`): halves of 2,094 and 2,095 training
+  examples over 130 and 133 projects, suffix total variation 0.266 against OpenStack's ceiling of
+  0.3187, 29 projects excluded before the split. It meets all four criteria.
+- **Training size** (`training-size-wikimedia.json`): 1,900. The design trains every adapter at
+  the least N across admitted organizations, so N stays at OpenStack's 1,850 and every OpenStack
+  run already made stays on the design.
+- **Admissible partitions** (`admissible-partitions-wikimedia.json`, read at N = 1,850 against
+  OpenStack's reference): the first 40 admissible among seeds 1 to 52. The 12 refused fail the
+  language-mix ceiling (10) or the size floor (2).
+
+Wikimedia is admitted on these criteria. It still needs its development-window pilot to fix its
+K, and its bounds from its own simulation.
+
+**LineageOS.** Its training window (2024-11 to 2025-08) holds 353 built examples before refine,
+counted from `datasets/gerrit/lineageos/examples/*.jsonl`. Two halves at N = 1,850 need 3,700,
+so LineageOS cannot hold an H1 cell. Its development months are still collected, for RQ2.

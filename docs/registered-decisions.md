@@ -98,7 +98,7 @@ interval. It answers a weaker question than either hypothesis and binds no verdi
 
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 
-The threshold has to clear the measured train-into-dev rate, which is 1.06% for OpenStack. At
+The threshold has to clear the measured train-into-dev rate, which is 0.97% for OpenStack on corpus v3. At
 Jaccard 0.8 that rate is 0.00% by construction, because dedup removes pairs at that threshold
 across windows as well as within them, so registering there would be a test that cannot fail.
 

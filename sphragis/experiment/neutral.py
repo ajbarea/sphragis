@@ -24,7 +24,7 @@ from sphragis.measure.stats import cluster_bootstrap, supports_direction
 # Test 4 as registered (registered decisions, "Leakage threshold"): at most 2% of held-out examples
 # near-duplicate a training example at Jaccard 0.7 or above. Not dedup's 0.8: dedup removes every
 # pair at 0.8 across windows, so a check there cannot fail. 2% clears the measured train-into-dev
-# rate at 0.7 (1.06% for OpenStack, v2).
+# rate at 0.7 (`window-report-openstack-v3.json`).
 LEAKAGE_THRESHOLD = 0.7
 LEAKAGE_MAX_RATE = 0.02
 

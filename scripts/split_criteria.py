@@ -16,7 +16,13 @@ import json
 from pathlib import Path
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.halves import excluded_projects, halves, runner_train, split_criteria
+from sphragis.corpus.halves import (
+    excluded_projects,
+    halves,
+    organization_train,
+    runner_train,
+    split_criteria,
+)
 from sphragis.corpus.load import refined_examples
 from sphragis.provenance import provenance_header
 
@@ -60,7 +66,9 @@ def org_halves(
 
         rows = run_dedup(rows)[0]
     window = WINDOWS["train"]
-    train = runner_train(rows, WINDOWS, order_seed)
+    train = (
+        organization_train(rows, WINDOWS) if dedup_org else runner_train(rows, WINDOWS, order_seed)
+    )
     return halves(rows, train, window, order_seed), excluded_projects(rows, window)
 
 

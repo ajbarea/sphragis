@@ -43,12 +43,12 @@ from pathlib import Path
 from statistics import fmean, stdev
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.halves import assign, project_counts, split_criteria
+from sphragis.corpus.halves import assign, organization_train, project_counts, split_criteria
 from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
-from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves
-from sphragis.experiment.partitions import K_MAX, K_MIN, XI, sd_bound
+from sphragis.experiment.partitions import K_MAX, K_MIN, XI, pilot_sizing, sd_bound
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import (
@@ -102,6 +102,9 @@ parser.add_argument("--seed", type=int, default=43)
 parser.add_argument("--workers", type=int, default=6)
 # Enough admissible partitions that two disjoint sets of K_MAX are drawn from many combinations.
 parser.add_argument("--partitions", type=int, default=400, help="admissible partitions pooled")
+# As `admissible_partitions.py` bounds its search: an organization that rarely qualifies is
+# refused rather than searched until the allocation ends.
+parser.add_argument("--max-seed", type=int, default=2_000, help="stop searching past this seed")
 parser.add_argument("--out", type=Path, required=True)
 
 Pool = list[tuple[Cluster, str]]
@@ -128,16 +131,16 @@ def pilot_pool(placebo: Path, corpus: Path, org: str) -> Pool:
 
 
 def partition_pool(
-    corpus: Path, org: str, reference: Path, size_floor: int, count: int
+    corpus: Path, org: str, reference: Path, size_floor: int, count: int, max_seed: int
 ) -> tuple[list[dict[str, int]], list[int]]:
     """The first `count` admissible partitions, built as the runs build them, and their seeds.
 
     The organization deduplicated once, projects assigned in each seed's order on training-window
-    counts, and `split_criteria` read at the fixed size against the reference's ceiling. Each
-    half's own dedup is skipped: after the organization's it removed nothing in any real run.
+    counts, and `split_criteria` read at the fixed size against the reference's ceiling
+    (`organization_train`: after the organization's dedup a half's own removes nothing).
     """
     rows = run_dedup(refined_examples(corpus, org))[0]
-    train = run_split(rows, dict(WINDOWS))[0]["train"]
+    train = organization_train(rows, WINDOWS)
     ref = json.loads(reference.read_text())["halves"]
     counts = dict(project_counts(rows, WINDOWS["train"]))
     pool: list[dict[str, int]] = []
@@ -145,6 +148,8 @@ def partition_pool(
     seed = 0
     while len(pool) < count:
         seed += 1
+        if seed > max_seed:
+            raise SystemExit(f"{org}: {len(pool)} admissible partitions by seed {max_seed}")
         own = build_halves(rows, train, WINDOWS["train"], seed)
         if split_criteria(own, ref, size_floor=size_floor)["qualifies"]:
             pool.append(assign(counts, order_seed=seed))
@@ -172,11 +177,22 @@ def _run(
 
 
 def _sequence(
-    truth: Pool, order: list[int], k: int, *, sigma_run: float, redraw: float, rng: random.Random
+    truth: Pool, order: list[int], k: int, *, sigma_run: float, redraw: float, stream: str
 ) -> list:
-    """K runs, on the first K partitions of `order`."""
+    """K runs, on the first K partitions of `order`, each scored on a stream of its own.
+
+    A run's own stream keeps every run's shift and churn common across lifts; only within a run
+    can the churn's draws diverge, where a lifted outcome changes how many are redrawn.
+    """
     return [
-        _run(truth, _PARTITIONS[p], sigma_run=sigma_run, redraw=redraw, rng=rng) for p in order[:k]
+        _run(
+            truth,
+            _PARTITIONS[p],
+            sigma_run=sigma_run,
+            redraw=redraw,
+            rng=random.Random(f"{stream}-{i}"),
+        )
+        for i, p in enumerate(order[:k])
     ]
 
 
@@ -192,7 +208,9 @@ def trial(job: tuple) -> dict:
     # Two disjoint sequences of partitions: the second is the independent aggregation the
     # reproducibility check compares against.
     order = rng.sample(range(len(_PARTITIONS)), 2 * K_MAX)
-    runs = _sequence(truth, order[:K_MAX], k, sigma_run=sigma_run, redraw=redraw, rng=rng)
+    runs = _sequence(
+        truth, order[:K_MAX], k, sigma_run=sigma_run, redraw=redraw, stream=f"run-{seed}"
+    )
     # Its own stream, so the bootstrap never replays the draws that built the truth.
     estimate, draws = partitioned_crossed_draws(
         runs, seed=random.Random(f"bootstrap-{seed}").randrange(2**31), resamples=resamples
@@ -205,7 +223,9 @@ def trial(job: tuple) -> dict:
         "absent": {c: lo > -SESOI and hi < SESOI for c, (lo, hi) in intervals.items()},
     }
     if check:
-        again = _sequence(truth, order[K_MAX:], k, sigma_run=sigma_run, redraw=redraw, rng=rng)
+        again = _sequence(
+            truth, order[K_MAX:], k, sigma_run=sigma_run, redraw=redraw, stream=f"again-{seed}"
+        )
         out["disagree"] = abs(fmean(equal_halves(r) for r in again) - estimate) > XI
     return out
 
@@ -220,7 +240,7 @@ def spread(job: tuple) -> float:
         drawn = _null(cluster, rng)
         truth.append((Cluster(f"c{len(truth)}", drawn.treatment, drawn.control), project))
     order = rng.sample(range(len(_PARTITIONS)), k)
-    runs = _sequence(truth, order, k, sigma_run=sigma_run, redraw=redraw, rng=rng)
+    runs = _sequence(truth, order, k, sigma_run=sigma_run, redraw=redraw, stream=f"spread-{seed}")
     return stdev(equal_halves(r) for r in runs)
 
 
@@ -295,6 +315,15 @@ def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=No
     return list(executor.map(trial, jobs, chunksize=1))
 
 
+def _cached_trials(
+    at_lift: dict[float, list[dict]], executor, pool, args, lift, sigma_run, levels
+) -> list[dict]:
+    """The trials at `lift`, every level read, simulated once per calibration point."""
+    if lift not in at_lift:
+        at_lift[lift] = _trials(executor, pool, args, lift, sigma_run, levels)
+    return at_lift[lift]
+
+
 def main() -> None:
     args = parser.parse_args()
     if min(args.cells) < 1:
@@ -306,7 +335,11 @@ def main() -> None:
     if projection["org"] != args.org or projection["test"] is None:
         raise SystemExit(f"{args.projection}: no test-window projection for {args.org}")
     # Whole changes, rounded down: a projection is not an observed count.
-    args.runs, args.size = pilot["sizing"]["runs"], int(projection["test"]["projected_changes"])
+    try:
+        args.runs = pilot_sizing(pilot, str(args.pilot))
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    args.size = int(projection["test"]["projected_changes"])
     estimates = pilot["per_run"] + pilot["runs_left_out"]
     if max(args.trials, args.null_trials) > CALIBRATION_SEED_OFFSET:
         raise SystemExit(f"trial seeds would reach the calibration's at {CALIBRATION_SEED_OFFSET}")
@@ -328,6 +361,7 @@ def main() -> None:
         Path(admissible["reference"]),
         admissible["size_floor"],
         args.partitions,
+        args.max_seed,
     )
     # The pool is rebuilt from --corpus, so it must reproduce the committed list it extends.
     listed = admissible["admissible"]
@@ -397,17 +431,19 @@ def main() -> None:
                 "reproducibility_failure": fmean(t["disagree"] for t in null),
                 "by_level": {},
             }
+            # One set of trials per lift reads every level, and the bisections for every level
+            # and cell count share it: their midpoints coincide until their paths part.
+            at_lift: dict[float, list[dict]] = {}
             for level in levels:
                 entry["by_level"][level] = {"by_cells": {}}
                 for cells, target_power in cell_power.items():
                     low, high = 0.0, LIFT_CEILING
                     for _ in range(args.steps):
                         mid = (low + high) / 2
-                        power = fmean(
-                            t["supported"][level]
-                            for t in _trials(executor, pool, args, mid, sigma_run, [level])
+                        trials = _cached_trials(
+                            at_lift, executor, pool, args, mid, sigma_run, levels
                         )
-                        if power >= target_power:
+                        if fmean(t["supported"][level] for t in trials) >= target_power:
                             high = mid
                         else:
                             low = mid
@@ -432,6 +468,7 @@ def main() -> None:
                         f"{entry['reproducibility_failure']:.3f}",
                         flush=True,
                     )
+            entry["lifts_simulated"] = len(at_lift)
             report["by_target"][label] = entry
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")

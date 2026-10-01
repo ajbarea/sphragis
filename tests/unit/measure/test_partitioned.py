@@ -100,3 +100,30 @@ def test_the_estimate_is_the_mean_of_each_run_s_equal_halves() -> None:
     runs = [_run(30, lambda i, k=k: (i * k) % 2, lambda i, k=k: i % 3 == k % 3) for k in (1, 3)]
     estimate, _ = partitioned_crossed_draws(runs, seed=0, resamples=1)
     assert estimate == pytest.approx(fmean(equal_halves(r) for r in runs))
+
+
+def test_a_replicate_that_empties_a_half_is_drawn_again_not_read_as_zero() -> None:
+    # Half 0 is one change that the adapter always gets right; half 1 never differs. Every
+    # replicate with both halves reads (1 + 0) / 2; one that misses the lone change must not
+    # enter as (0 + 0) / 2.
+    lone = Cluster("a", (1.0,), (0.0,))
+    rest = [Cluster(f"b{i}", (0.0,), (0.0,)) for i in range(9)]
+    runs = [[[lone], rest], [[lone], rest]]
+    estimate, draws = partitioned_crossed_draws(runs, seed=3, resamples=500, min_clusters=1)
+    assert estimate == 0.5
+    assert set(draws) == {0.5}
+
+
+def test_halves_too_small_for_any_replicate_are_refused() -> None:
+    # Each run's half 0 is a different lone change, so a replicate keeps both halves of a run
+    # only when it draws that run's change; with many runs nearly every replicate fails.
+    changes = [f"c{i}" for i in range(12)]
+    runs = [
+        [
+            [Cluster(c, (1.0,), (0.0,)) for c in changes if c == lone],
+            [Cluster(c, (0.0,), (0.0,)) for c in changes if c != lone],
+        ]
+        for lone in changes
+    ]
+    with pytest.raises(ValueError, match="too small"):
+        partitioned_crossed_draws(runs, seed=1, resamples=200, min_clusters=1)

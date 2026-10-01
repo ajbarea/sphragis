@@ -18,10 +18,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 from sphragis.experiment.decomposition import holm_levels
-from sphragis.experiment.partitions import h1_over_partitions, runs_needed, sensitivity_bounds
+from sphragis.experiment.partitions import (
+    h1_over_partitions,
+    pilot_sizing,
+    runs_needed,
+    sensitivity_bounds,
+)
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -56,25 +62,31 @@ def main() -> None:
     runs = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
+        if "halted" in run:
+            raise SystemExit(f"{path}: halted at {run['halted']}; the apparatus failed, not read")
         seeds = run["seeds"]
-        partition = next(iter(run["corpora"].values()))["source"]
+        source = next(iter(run["corpora"].values()))["source"]
+        # The partition's corpus root, `corpus-partition-<org>-p<seed>[-<tags>]`, and its seed.
+        root = re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?/", source)
+        partition = int(root.group(1)) if root else None
         if run.get("train_size") != train_size:
             raise SystemExit(
                 f"{path}: trained at {run.get('train_size')}, not the list's {train_size}"
             )
         if seeds != [k]:
             raise SystemExit(f"{path}: run {k} must use training seed {k}, has {seeds}")
-        if f"-p{admissible[k - 1]}-" not in partition:
+        if partition != admissible[k - 1]:
             raise SystemExit(
                 f"{path}: run {k} must use admissible partition {admissible[k - 1]}, "
-                f"built from {partition}"
+                f"built from {source}"
             )
         runs.append((run["results"], k))
     runs_fixed, k_source = len(runs), "all runs"
     if args.sizing:
-        runs_fixed = json.loads(args.sizing.read_text()).get("sizing", {}).get("runs")
-        if not isinstance(runs_fixed, int):
-            raise SystemExit(f"{args.sizing}: no sizing.runs to read K from")
+        try:
+            runs_fixed = pilot_sizing(json.loads(args.sizing.read_text()), str(args.sizing))
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
         k_source = f"{args.sizing}: sizing.runs"
     levels = holm_levels(args.hypotheses)
     bounds = None

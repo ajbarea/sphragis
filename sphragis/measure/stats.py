@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from math import sumprod
 from statistics import fmean
 
 Estimator = Callable[[Sequence["Cluster"]], float]
@@ -386,16 +387,42 @@ def partitioned_crossed_draws(
     changes, tables = _partition_table(runs, min_clusters=min_clusters)
     every = dict.fromkeys(changes, 1)
     estimate = fmean(_equal_halves(table, every) for table in tables)
-    rng = random.Random(seed)
+    # Each run's halves as vectors over `changes`, so a replicate is two dot products a half.
+    # Differences and example counts are whole numbers, so every sum is exact and a draw equals
+    # `_equal_halves` on the same counts to the bit.
+    vectors = [
+        [
+            (
+                [float(table[c][1]) if table[c][0] == half else 0.0 for c in changes],
+                [float(table[c][2]) if table[c][0] == half else 0.0 for c in changes],
+            )
+            for half in (0, 1)
+        ]
+        for table in tables
+    ]
+    randrange = random.Random(seed).randrange
     k, n = len(tables), len(changes)
-    draws = []
-    for _ in range(resamples):
-        chosen = [tables[rng.randrange(k)] for _ in range(k)]
-        counts: dict[str, int] = {}
+    draws: list[float] = []
+    redrawn = 0
+    while len(draws) < resamples:
+        chosen = [randrange(k) for _ in range(k)]
+        weights = [0.0] * n
         for _ in range(n):
-            change = changes[rng.randrange(n)]
-            counts[change] = counts.get(change, 0) + 1
-        draws.append(fmean(_equal_halves(table, counts) for table in chosen))
+            weights[randrange(n)] += 1.0
+        contrasts = {}
+        for run in set(chosen):
+            halves = [(sumprod(weights, num), sumprod(weights, den)) for num, den in vectors[run]]
+            if any(den == 0.0 for _, den in halves):
+                break
+            contrasts[run] = fmean(num / den for num, den in halves)
+        else:
+            draws.append(fmean(contrasts[run] for run in chosen))
+            continue
+        # A replicate that leaves a half with no examples has no contrast for it; it is drawn
+        # again, so every draw is conditional on both halves being present.
+        redrawn += 1
+        if redrawn > resamples:
+            raise ValueError("most replicates leave a half empty; the halves are too small")
     return estimate, draws
 
 

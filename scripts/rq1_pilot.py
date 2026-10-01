@@ -172,9 +172,48 @@ if args.equalize_train:
 for org in orgs:
     require_unique_ids(held_out[org], label=f"{org} evaluation set")
 
+# Test 4 needs only the data, so it runs before any model loads: on the corpus's own training
+# rows and, since a contrast credits whatever a sibling's adapter gains, on every other corpus's
+# training rows into this held-out set. A failure halts here, recorded, before any GPU time.
+leakage = [
+    leakage_check(
+        train_rows[source],
+        held_out[org],
+        threshold=args.leakage_threshold,
+        max_rate=args.leakage_max_rate,
+        label=org if source == org else f"{source}->{org}",
+    )
+    for org in orgs
+    for source in orgs
+]
+for check in leakage:
+    print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
+if not all(check.passed for check in leakage):
+    args.out.write_text(
+        json.dumps(
+            {
+                "provenance": run_provenance(),
+                "corpora": summary,
+                "halted": "leakage",
+                "outcome_neutral": {
+                    "apparatus_holds": False,
+                    "leakage_max_rate": args.leakage_max_rate,
+                    "leakage_threshold": args.leakage_threshold,
+                    "checks": [
+                        {"name": c.name, "passed": c.passed, "evidence": c.evidence}
+                        for c in leakage
+                    ],
+                },
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    raise SystemExit("APPARATUS FAILS at test 4, before training: H1 would not be read")
+
 if args.dry_run:
-    # Everything above is CPU: loading, dedup, the split and the leakage assertion. Stopping
-    # here is what lets a login node check the data the job will train on, before the queue.
+    # Everything above is CPU: loading, dedup, the split and the leakage check. Stopping here
+    # is what lets a login node check the data the job will train on, before the queue.
     print("DRY RUN: split only, no model loaded", flush=True)
     raise SystemExit(0)
 
@@ -282,18 +321,7 @@ for org in orgs:
                 label=f"{org}|s{seed}",
             )
         )
-    # Test 4 on the corpus's own training rows and, since a contrast credits whatever a
-    # sibling's adapter gains, on every other corpus's training rows into this held-out set.
-    for source in orgs:
-        checks.append(
-            leakage_check(
-                train_rows[source],
-                held_out[org],
-                threshold=args.leakage_threshold,
-                max_rate=args.leakage_max_rate,
-                label=org if source == org else f"{source}->{org}",
-            )
-        )
+checks += leakage
 checks.append(non_degeneracy(results))
 for check in checks:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)

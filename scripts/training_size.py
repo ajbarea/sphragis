@@ -21,7 +21,7 @@ import math
 from pathlib import Path
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.halves import halves, runner_train
+from sphragis.corpus.halves import halves, organization_train
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.provenance import provenance_header
@@ -41,9 +41,9 @@ parser.add_argument("--out", type=Path, required=True)
 def main() -> None:
     args = parser.parse_args()
     rows, _ = run_dedup(refined_examples(args.root, args.org))
+    train = organization_train(rows, WINDOWS)
     smaller = []
     for seed in range(1, args.splits + 1):
-        train = runner_train(rows, WINDOWS, seed)
         own = halves(rows, train, WINDOWS["train"], seed)
         smaller.append(min(h["train_examples"] for h in own))
     ordered = sorted(smaller)
