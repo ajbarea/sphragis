@@ -168,21 +168,28 @@ def test_chunking_the_training_side_changes_no_similarity(chunk: int) -> None:
     assert dict(reference)["h1"] == pytest.approx(1.0)
 
 
-def _planted_run(verdict: str, *, tag: str = "-plant0.5", window: str = "dev") -> dict[str, Any]:
-    root = f"/data/corpus-partition-openstack-p2-n1850{tag}"
+def _planted_run(
+    verdict: str, *, tag: str = "-plant0.5", window: str = "dev", org: str = "openstack"
+) -> dict[str, Any]:
+    root = f"/data/corpus-partition-{org}-p2-n1850{tag}"
     return {
         "corpora": {
             half: {"source": f"train -> {window} windows under {root}/{half}/refined"}
-            for half in ("openstack-a", "openstack-b")
+            for half in (f"{org}-a", f"{org}-b")
         },
+        "train_size": 1850,
         "verdict": {"verdict": verdict, "binding": {}},
     }
 
 
+def _check(run: dict[str, Any], org: str = "openstack"):
+    return planted_convention(run, org=org, train_size=1850)
+
+
 def test_planted_convention_passes_only_on_a_pass_at_the_registered_fraction() -> None:
-    assert planted_convention(_planted_run("pass")).passed
-    assert not planted_convention(_planted_run("mixed")).passed
-    assert not planted_convention(_planted_run("fail")).passed
+    assert _check(_planted_run("pass")).passed
+    assert not _check(_planted_run("mixed")).passed
+    assert not _check(_planted_run("fail")).passed
 
 
 @pytest.mark.parametrize(
@@ -193,5 +200,24 @@ def test_planted_convention_passes_only_on_a_pass_at_the_registered_fraction() -
 def test_planted_convention_refuses_a_run_that_is_not_the_registered_check(
     tag: str, window: str
 ) -> None:
-    check = planted_convention(_planted_run("pass", tag=tag, window=window))
+    check = _check(_planted_run("pass", tag=tag, window=window))
     assert not check.passed and "reason" in check.evidence
+
+
+def test_planted_convention_refuses_another_organizations_run() -> None:
+    check = _check(_planted_run("pass", org="openstack"), org="wikimedia")
+    assert not check.passed and "halves" in check.evidence["reason"]
+
+
+def test_planted_convention_refuses_a_run_at_another_training_size() -> None:
+    run = {**_planted_run("pass"), "train_size": 1900}
+    assert not _check(run).passed
+
+
+def test_planted_convention_needs_every_half_planted() -> None:
+    run = _planted_run("pass")
+    half = run["corpora"]["openstack-b"]
+    half["source"] = half["source"].replace("-plant0.5", "")
+    assert not _check(run).passed
+    one_half = {**run, "corpora": {"openstack-a": run["corpora"]["openstack-a"]}}
+    assert not _check(one_half).passed

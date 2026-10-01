@@ -66,12 +66,14 @@ def main() -> None:
     if len(args.runs) > len(admissible):
         raise SystemExit(f"{len(args.runs)} runs, more than the {len(admissible)} admissible")
     runs = []
+    sources: list[str] = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
         if "halted" in run:
             raise SystemExit(f"{path}: halted at {run['halted']}; the apparatus failed, not read")
         seeds = run["seeds"]
         source = next(iter(run["corpora"].values()))["source"]
+        sources.append(source)
         # The partition's corpus root, `corpus-partition-<org>-p<seed>[-<tags>]`, and its seed.
         root = re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?/", source)
         partition = int(root.group(1)) if root else None
@@ -87,9 +89,14 @@ def main() -> None:
                 f"built from {source}"
             )
         runs.append((run["results"], k))
+    # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
+    if not args.planted and any("-> test windows" in source for source in sources):
+        raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
     planted = None
     if args.planted:
-        check = planted_convention(json.loads(args.planted.read_text()))
+        check = planted_convention(
+            json.loads(args.planted.read_text()), org=args.org, train_size=train_size
+        )
         planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
         if not apparatus_holds([check]):
             raise SystemExit(f"{args.planted}: check 5 failed ({check.evidence}); H1 is not read")

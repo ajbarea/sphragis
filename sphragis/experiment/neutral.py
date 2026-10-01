@@ -174,29 +174,39 @@ def non_degeneracy(results: Mapping[str, Sequence[Mapping[str, Any]]]) -> Check:
     return Check("non_degeneracy", not degenerate, {"exact_match": rates, "degenerate": degenerate})
 
 
-def planted_convention(run: Mapping[str, Any], *, fraction: float = PLANT_FRACTION) -> Check:
+def planted_convention(
+    run: Mapping[str, Any], *, org: str, train_size: int, fraction: float = PLANT_FRACTION
+) -> Check:
     """Test 5: a run with each half's own marker planted reads `pass` on both halves.
 
-    The run is a `partition_run` result built with `PLANT=<fraction>` on the development window;
-    its corpus path carries the fraction, which is read rather than trusted. Only the planted run
-    is read: the unplanted runs are H1's own data, so a condition on them would not be outcome
-    neutral.
+    The run is `org`'s `partition_run` result built with `PLANT=<fraction>` on the development
+    window at `train_size`; its two halves, their corpus paths (which carry the fraction and the
+    organization) and its training size are read rather than trusted, and every half must match.
+    Only the planted run is read: the unplanted runs are H1's own data, so a condition on them
+    would not be outcome neutral.
     """
-    sources = [corpus["source"] for corpus in run["corpora"].values()]
-    planted = {m.group(1) for s in sources if (m := re.search(r"-plant([0-9.]+)/", s))}
+    corpora = run["corpora"]
+    sources = [corpus["source"] for corpus in corpora.values()]
+    planted = [m.group(1) if (m := re.search(r"-plant([0-9.]+)/", s)) else None for s in sources]
     windows = {s.split(" windows")[0] for s in sources}
     evidence: dict[str, Any] = {
         "verdict": run["verdict"]["verdict"],
         "binding": run["verdict"]["binding"],
         "fraction": fraction,
-        "planted": sorted(planted),
+        "planted": planted,
         "windows": sorted(windows),
     }
-    if planted != {str(fraction)}:
-        evidence["reason"] = f"planted at {sorted(planted) or 'nothing'}, not {fraction}"
-        return Check("planted_convention", False, evidence)
-    if windows != {"train -> dev"}:
+    halves = {f"{org}-a", f"{org}-b"}
+    own_root = all(f"/corpus-partition-{org}-p" in s for s in sources)
+    if set(corpora) != halves or not own_root:
+        evidence["reason"] = f"halves {sorted(corpora)} are not {org}'s two halves"
+    elif run.get("train_size") != train_size:
+        evidence["reason"] = f"trained at {run.get('train_size')}, not {train_size}"
+    elif planted != [str(fraction)] * len(sources):
+        evidence["reason"] = f"planted at {planted}, not {fraction} in every half"
+    elif windows != {"train -> dev"}:
         evidence["reason"] = "not read on the development window"
+    if "reason" in evidence:
         return Check("planted_convention", False, evidence)
     return Check("planted_convention", run["verdict"]["verdict"] == "pass", evidence)
 
