@@ -109,7 +109,8 @@ have halted a working apparatus most of the time, and planted in half it passed 
 (research log, 2026-10-01). The check reads the strength from the run's
 corpus path rather than trusting it, and refuses a run planted at any other strength, in only
 one half, read on any other window, or from another organization or training size. A read of the
-sealed window without it is refused.
+sealed window without it is refused. The planted run's adapter arms must not be degenerate; its base arms are left
+out, because the plant rewrites the references they are scored on.
 
 ## 6. Non-degeneracy
 

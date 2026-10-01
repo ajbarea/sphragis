@@ -6958,3 +6958,24 @@ in check 5, all fixed and tested: a planted run from another organization passed
 now must be the read organization's two halves at the admissible list's training size), a run
 planted in one half only passed (every half must carry the plant), and the check was optional
 (`partition_pilot.py` now refuses a test-window read without `--planted`).
+
+### The planted check passes 10 of 10 on Wikimedia; the planted run's base arm is left out of it (2026-10-01)
+
+The ten runs planned above (jobs 211277 to 211286, pinned at a43f7af),
+`rq1-partition-wikimedia-*-n1850-plant0.5.json`. **All ten pass**, every half's lower bound above
+zero (least +0.036), per-half estimates from +0.087 to +0.143, projected pass probability at least
+0.9994 per run (0.9999 on average). By the rule fixed before the runs, check 5 is registered for
+Wikimedia as for OpenStack, at a half.
+
+**Three planted runs fail non-degeneracy, on the base arm only** (partitions 3, 8 and 11: the base
+model scores exactly 0 on one half). The plant rewrites half the references that arm is scored on,
+and the base model never emits the marker; Wikimedia's base rate is about 1% (unplanted runs on the
+same partitions: 0.8% to 2.2% on every half, every adapter arm above 23%), so on its 160 to 200
+changes a half zero is reached by chance. No OpenStack planted run did this. Check 5 never read the
+planted run's own battery; it now requires the arms its contrast compares, the four adapter arms,
+to be non-degenerate (`planted_convention`, tested), and leaves the base arms out, with the reason
+stated in its docstring. Every OpenStack and Wikimedia planted run passes it. The unplanted runs
+that H1 reads keep the full battery.
+
+The Wikimedia placebo (job 211287, `rq1-placebo-wikimedia.json`) completed; its simulation, job
+211288, now runs.

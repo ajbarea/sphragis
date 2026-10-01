@@ -179,6 +179,12 @@ def _planted_run(
         },
         "train_size": 1850,
         "verdict": {"verdict": verdict, "binding": {}},
+        "results": {
+            f"adapter:{org}-{own}|{org}-{half}|s1": _rows(3, 1.0) + _rows(1, 0.0)
+            for own in "ab"
+            for half in "ab"
+        }
+        | {f"base|{org}-a": _rows(4, 0.0)},
     }
 
 
@@ -221,3 +227,12 @@ def test_planted_convention_needs_every_half_planted() -> None:
     assert not _check(run).passed
     one_half = {**run, "corpora": {"openstack-a": run["corpora"]["openstack-a"]}}
     assert not _check(one_half).passed
+
+
+def test_planted_convention_reads_adapter_arms_not_base_arms() -> None:
+    """A base arm at zero is expected under the plant; a degenerate adapter arm is not."""
+    run = _planted_run("pass")
+    assert _check(run).passed, "base|openstack-a at zero must not fail the check"
+    run["results"]["adapter:openstack-a|openstack-a|s1"] = _rows(4, 0.0)
+    check = _check(run)
+    assert not check.passed and "degenerate" in check.evidence["reason"]

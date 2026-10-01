@@ -183,7 +183,10 @@ def planted_convention(
     window at `train_size`; its two halves, their corpus paths (which carry the fraction and the
     organization) and its training size are read rather than trusted, and every half must match.
     Only the planted run is read: the unplanted runs are H1's own data, so a condition on them
-    would not be outcome neutral.
+    would not be outcome neutral. Its adapter arms, which the contrast compares, must not be
+    degenerate (test 6 on those arms). Its base arms are left out: the plant rewrites the
+    references they are scored on and the base model never emits the marker, so on an
+    organization with a low base rate they can score zero with the apparatus working.
     """
     corpora = run["corpora"]
     sources = [corpus["source"] for corpus in corpora.values()]
@@ -206,6 +209,12 @@ def planted_convention(
         evidence["reason"] = f"planted at {planted}, not {fraction} in every half"
     elif windows != {"train -> dev"}:
         evidence["reason"] = "not read on the development window"
+    else:
+        adapters = {arm: rows for arm, rows in run["results"].items() if arm.startswith("adapter:")}
+        arms = non_degeneracy(adapters)
+        evidence["adapter_exact_match"] = arms.evidence["exact_match"]
+        if not adapters or not arms.passed:
+            evidence["reason"] = f"degenerate adapter arms {arms.evidence['degenerate'] or 'none'}"
     if "reason" in evidence:
         return Check("planted_convention", False, evidence)
     return Check("planted_convention", run["verdict"]["verdict"] == "pass", evidence)
