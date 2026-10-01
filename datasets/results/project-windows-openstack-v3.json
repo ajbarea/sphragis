@@ -14,7 +14,7 @@
     "actual": 214,
     "miss": -0.0125537331131709,
     "tolerance": 0.15,
-    "holds": true
+    "reading": "holds"
   },
   "test": {
     "months": 12,
@@ -23,17 +23,10 @@
     "projected_changes": 2017.6283533050214
   },
   "provenance": {
-    "generated_at": "2026-09-30T10:19:00.384643+00:00",
+    "generated_at": "2026-10-01T10:44:03.756307+00:00",
     "git": {
-      "commit": "6e384d8892f09c9469c547b85a48b42c5cf9d759",
-      "branch": "measure/repeated-partitions",
-      "uncommitted_code": [
-        "scripts/censoring.py",
-        "scripts/partition_sensitivity.py",
-        "scripts/partition_sensitivity.sbatch",
-        "scripts/project_windows.py"
-      ],
-      "uncommitted_code_sha256": "b50ea8691602d7170e048f46cbee3288ab258ba8ffc23c439a2fced7bfbbe775"
+      "commit": "86721c49af5f37a83a3fcf8e2c67443d0e4195e1",
+      "branch": "corpus/wikimedia-admission"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

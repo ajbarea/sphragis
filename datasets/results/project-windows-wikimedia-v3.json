@@ -14,7 +14,7 @@
     "actual": 448,
     "miss": -0.1991457081145866,
     "tolerance": 0.15,
-    "holds": false
+    "reading": "lower_bound"
   },
   "test": {
     "months": 12,
@@ -24,14 +24,10 @@
     "lower_bound": true
   },
   "provenance": {
-    "generated_at": "2026-10-01T10:27:58.786678+00:00",
+    "generated_at": "2026-10-01T10:44:05.846501+00:00",
     "git": {
-      "commit": "499d5a002475156431fe259195ca1e4bea669cb2",
-      "branch": "corpus/wikimedia-admission",
-      "uncommitted_code": [
-        "scripts/project_windows.py"
-      ],
-      "uncommitted_code_sha256": "54cabbe97840e2016484e0f11c25470dc9da6ef5a3d05d2bc4a501a0a985fde2"
+      "commit": "86721c49af5f37a83a3fcf8e2c67443d0e4195e1",
+      "branch": "corpus/wikimedia-admission"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

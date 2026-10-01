@@ -110,7 +110,7 @@ def main() -> None:
             "actual": actual,
             "miss": miss,
             "tolerance": DEV_TOLERANCE,
-            "holds": abs(miss) <= DEV_TOLERANCE,
+            "reading": dev_reading(miss),
         },
         "test": None,
         "provenance": provenance_header(),
@@ -120,7 +120,7 @@ def main() -> None:
         f"{train['mean_captured']:.3f} -> {true_rate:.1f} a month; dev predicted {predicted:.0f}, "
         f"actual {actual} ({100 * miss:+.1f}%)"
     )
-    reading = dev_reading(miss)
+    reading = out["dev_check"]["reading"]
     if reading == "refuse":
         args.out.write_text(json.dumps(out, indent=2) + "\n")
         raise SystemExit(
