@@ -6454,3 +6454,22 @@ classes it misses are the two the audit exists to find. Its confidence does rank
 agreement (a one-off read on the checked items, not committed, so not quoted), which would fit
 triage (sending its least confident items to a stronger rater) rather than labelling; that is not
 pursued now.
+
+### LineageOS's 57 dropped changes were withdrawn from the host, not failed requests (2026-10-01)
+
+LineageOS 2025-10 dropped 57 changes as `comment_error`, and a rebuild of that month dropped exactly
+57 again with every other count identical, so the drop was not transient. A one-request-per-change
+probe of the month (stopped at 1,562 of 4,161 changes, to spare a host then returning 502s) found
+timeouts and 502s, which the client retries five times and which rarely survive that, and 404s,
+which it does not retry. Two of the 404s were checked by hand: the change itself now answers 404.
+They were public when the snapshot listed them (fetched 2026-09-29) and were deleted or made
+private since.
+
+**Diagnosed now, fixed with the next build-rules change.** The right fix (a 404 raising its own
+error, counted `change_gone` apart from `comment_error`) was written and tested, then held back:
+`build.py` feeds both `BUILD_RULES` and `RULES_VERSION`, so any edit to it marks every built and
+refined month of every organization stale, the frozen OpenStack and Wikimedia v3 corpora included,
+for a change that alters no example, only the name of 57 LineageOS drops. It lands with the next
+change that rebuilds the corpora anyway (ROADMAP Plan A). Until then, read LineageOS 2025-10's
+`comment_error` as changes withdrawn after collection; nothing of them was built. Whether they are
+also purged from the raw snapshots is AJ's call (same item).

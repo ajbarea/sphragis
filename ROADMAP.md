@@ -86,6 +86,14 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
   the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
   older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).
+- [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
+  (deleted or made private after the snapshot listed them) are counted `change_gone` and never
+  built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
+  release, or keep raw internal for reproducibility and exclude it from every release. Ground the
+  choice in MSR ethics guidance (e.g. Gold and Krinke, EMSE 2021) before deciding.
+- [ ] **With the next build-rules change: count a 404 as `change_gone`** (`gerrit.NotFound`, caught
+  apart from `comment_error` in `build_from_change`; written and tested 2026-10-01, held back because
+  any `build.py` edit stales every frozen corpus month).
 - [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
   request, with its projects scoped by the component mapping stage.
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to
