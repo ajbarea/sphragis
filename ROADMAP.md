@@ -94,6 +94,13 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [ ] **With the next build-rules change: count a 404 as `change_gone`** (`gerrit.NotFound`, caught
   apart from `comment_error` in `build_from_change`; written and tested 2026-10-01, held back because
   any `build.py` edit stales every frozen corpus month).
+- [ ] **GitHub organizations as candidates** (sized 2026-10-01, `github-sizing-report.json`): Apache and
+  LLVM reach an H1 cell, .NET and Grafana reach RQ2; OpenJDK and HashiCorp borderline. Needs: a GitHub
+  collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
+  removed; pseudonymised at ingestion); LLVM's projects defined as its top-level directories before
+  its split is read; open access for every resulting publication (GitHub's terms: EMSE's open-access
+  option for Stage 2, plus arXiv); the candidate list in Stage 1 extended behind Qt and Chromium; and
+  a decision on H1 over more cells (intersection-union needs power 0.95^(1/k) a cell).
 - [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
   request, with its projects scoped by the component mapping stage.
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to

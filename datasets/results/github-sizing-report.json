@@ -1,0 +1,433 @@
+{
+  "conversion": {
+    "openstack": {
+      "built": 4755,
+      "refined": 4366,
+      "reviewer_line_comments": 15462,
+      "rate": 0.2823696805070495
+    },
+    "wikimedia": {
+      "built": 5402,
+      "refined": 4280,
+      "reviewer_line_comments": 19736,
+      "rate": 0.2168625861370085
+    }
+  },
+  "design_n": 1850,
+  "orgs": {
+    "apache": {
+      "draws": 200,
+      "prs": 108600,
+      "bot_or_ai_authored_share": 0.19648746242502846,
+      "threads": 87609,
+      "threads_95": [
+        51535,
+        129328
+      ],
+      "suggestion_threads": 20389,
+      "bot_review_threads": 2091,
+      "examples_range": [
+        11176,
+        36518
+      ],
+      "rq1": "yes",
+      "rq2": "yes",
+      "repos_sampled": 109,
+      "frame_capped_draws": 0,
+      "top_dirs": [
+        [
+          "format",
+          18
+        ],
+        [
+          "src",
+          14
+        ],
+        [
+          "modules",
+          12
+        ],
+        [
+          "server",
+          11
+        ],
+        [
+          "flink-runtime",
+          9
+        ],
+        [
+          "cpp",
+          9
+        ],
+        [
+          "hadoop-hdds",
+          9
+        ],
+        [
+          "aws",
+          8
+        ],
+        [
+          "core",
+          7
+        ],
+        [
+          ".github",
+          6
+        ],
+        [
+          "be",
+          6
+        ],
+        [
+          "common",
+          6
+        ],
+        [
+          "spark",
+          5
+        ],
+        [
+          "hadoop-ozone",
+          4
+        ],
+        [
+          "flink-core",
+          4
+        ]
+      ]
+    },
+    "dotnet": {
+      "draws": 200,
+      "prs": 43660,
+      "bot_or_ai_authored_share": 0.4323377198959685,
+      "threads": 36763,
+      "threads_95": [
+        11294,
+        70216
+      ],
+      "suggestion_threads": 6912,
+      "bot_review_threads": 3256,
+      "examples_range": [
+        2449,
+        19827
+      ],
+      "rq1": "borderline",
+      "rq2": "yes",
+      "repos_sampled": 59,
+      "frame_capped_draws": 0,
+      "top_dirs": [
+        [
+          "src",
+          95
+        ],
+        [
+          "tests",
+          22
+        ],
+        [
+          "eng",
+          7
+        ],
+        [
+          "test",
+          6
+        ],
+        [
+          "includes",
+          1
+        ],
+        [
+          "aspnetcore",
+          1
+        ],
+        [
+          "scripts",
+          1
+        ],
+        [
+          ".claudiaideconfig",
+          1
+        ],
+        [
+          ".gitignore",
+          1
+        ],
+        [
+          "proposals",
+          1
+        ]
+      ]
+    },
+    "grafana": {
+      "draws": 200,
+      "prs": 36075,
+      "bot_or_ai_authored_share": 0.2648179435542552,
+      "threads": 25108,
+      "threads_95": [
+        9310,
+        46325
+      ],
+      "suggestion_threads": 6446,
+      "bot_review_threads": 3275,
+      "examples_range": [
+        2019,
+        13081
+      ],
+      "rq1": "borderline",
+      "rq2": "yes",
+      "repos_sampled": 68,
+      "frame_capped_draws": 0,
+      "top_dirs": [
+        [
+          "pkg",
+          29
+        ],
+        [
+          "internal",
+          26
+        ],
+        [
+          "packages",
+          12
+        ],
+        [
+          "production",
+          12
+        ],
+        [
+          "docs",
+          8
+        ],
+        [
+          "public",
+          7
+        ],
+        [
+          "src",
+          6
+        ],
+        [
+          "examples",
+          3
+        ],
+        [
+          "kindsv2",
+          1
+        ],
+        [
+          ".github",
+          1
+        ],
+        [
+          "charts",
+          1
+        ],
+        [
+          "devenv",
+          1
+        ]
+      ]
+    },
+    "hashicorp": {
+      "draws": 200,
+      "prs": 24531,
+      "bot_or_ai_authored_share": 0.20189799112966345,
+      "threads": 6356,
+      "threads_95": [
+        912,
+        15101
+      ],
+      "suggestion_threads": 1437,
+      "bot_review_threads": 12,
+      "examples_range": [
+        198,
+        4264
+      ],
+      "rq1": "borderline",
+      "rq2": "borderline",
+      "repos_sampled": 62,
+      "frame_capped_draws": 0,
+      "top_dirs": [
+        [
+          "ui",
+          22
+        ],
+        [
+          "internal",
+          12
+        ],
+        [
+          "website",
+          8
+        ],
+        [
+          "README.md",
+          4
+        ],
+        [
+          "packages",
+          3
+        ],
+        [
+          ".github",
+          1
+        ],
+        [
+          "vault",
+          1
+        ],
+        [
+          "command",
+          1
+        ],
+        [
+          "drivers",
+          1
+        ],
+        [
+          "CI.md",
+          1
+        ]
+      ]
+    },
+    "llvm": {
+      "draws": 200,
+      "prs": 29677,
+      "bot_or_ai_authored_share": 0.0028742603749679885,
+      "threads": 51914,
+      "threads_95": [
+        35618,
+        70468
+      ],
+      "suggestion_threads": 9192,
+      "bot_review_threads": 992,
+      "examples_range": [
+        7724,
+        19898
+      ],
+      "rq1": "yes",
+      "rq2": "yes",
+      "repos_sampled": 7,
+      "frame_capped_draws": 0,
+      "top_dirs": [
+        [
+          "llvm",
+          130
+        ],
+        [
+          "clang",
+          51
+        ],
+        [
+          "mlir",
+          41
+        ],
+        [
+          "lldb",
+          34
+        ],
+        [
+          "lib",
+          27
+        ],
+        [
+          "bolt",
+          18
+        ],
+        [
+          "flang",
+          10
+        ],
+        [
+          "libc",
+          5
+        ],
+        [
+          "libcxx",
+          4
+        ],
+        [
+          "libclc",
+          3
+        ],
+        [
+          "lld",
+          2
+        ],
+        [
+          "clang-tools-extra",
+          1
+        ],
+        [
+          "compiler-rt",
+          1
+        ],
+        [
+          "content",
+          1
+        ],
+        [
+          "include",
+          1
+        ]
+      ]
+    },
+    "openjdk": {
+      "draws": 200,
+      "prs": 7871,
+      "bot_or_ai_authored_share": 0.0,
+      "threads": 11803,
+      "threads_95": [
+        6525,
+        18106
+      ],
+      "suggestion_threads": 1798,
+      "bot_review_threads": 0,
+      "examples_range": [
+        1415,
+        5113
+      ],
+      "rq1": "borderline",
+      "rq2": "borderline",
+      "repos_sampled": 21,
+      "frame_capped_draws": 0,
+      "top_dirs": [
+        [
+          "src",
+          172
+        ],
+        [
+          "test",
+          85
+        ],
+        [
+          "modules",
+          20
+        ],
+        [
+          "make",
+          8
+        ],
+        [
+          "plugins",
+          3
+        ],
+        [
+          "build.gradle",
+          1
+        ]
+      ]
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-01T19:20:09.066414+00:00",
+    "git": {
+      "commit": "251748317ee21ded8efbd7a309a387aaf090a65b",
+      "branch": "corpus/github-candidates"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
