@@ -53,7 +53,7 @@ RQ2 under secure aggregation: does a round's aggregate betray whose clients were
 
 ## `scripts/ai_trailers.py`
 
-How many of an organization's refined examples come from a change whose commit names an AI tool.
+How many of an organization's examples come from a change whose commit names an AI tool.
 
 | artifact | |
 |---|---|

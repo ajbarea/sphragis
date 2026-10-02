@@ -6543,26 +6543,32 @@ require (MSR's ACM proceedings are open access; the registered report's Stage 2 
 so its open-access option and an arXiv copy); and what more cells do to H1, which passes only if
 every admitted organization's cell does, each cell then needing power 0.95^(1/k).
 
-### AI-assisted targets: 8.2% of OpenStack's dev-window examples carry an AI trailer, from 11 changes; Wikimedia none (2026-10-01)
+### AI-assisted targets: 11 of OpenStack's 214 dev-window changes carry an AI trailer; Wikimedia none (2026-10-01)
 
 `ai-trailers.json` (`scripts/ai_trailers.py`). OpenInfra's AI policy (approved 2025-07-08) asks
 for `Assisted-By:` or `Generated-By:` trailers on AI-assisted commits, and the raw snapshots carry
 no commit messages, so each trailer is a Gerrit `message:` search bounded by `mergedbefore:` the
-test window's start (no sealed change is requested), and each hit's current commit message is
-read. A refined example is flagged when its change carries a trailer line whose value names an AI
-tool or model. Two corrections made before reading any share: Gerrit's `message:` matches words
-anywhere, so a hit counts only as a trailer line; and most OpenStack `Generated-By:` lines name
-the community's own scripts (`openstack/project-config:roles/...`, `openstack/releases:tools/...`),
-so those are counted apart as tool-generated, not AI.
+test window's start (no sealed change is requested), and each hit's merged commit message is read.
+A change is flagged when a trailer line's value names an AI tool or model; the windows are the
+corpus's own, refined examples deduplicated and split as the study loads them. Corrected before
+this entry was written: Gerrit's `message:` matches words anywhere, so only trailer lines count;
+most OpenStack `Generated-By:` lines name the community's scripts (1,132 changes, e.g.
+`openstack/releases:tools/...`), counted apart as tool-generated; and a tool name that is also a
+personal name (Devin, Junie, Cline) counts only where the value names a tool, never as a
+co-author. An independent review found the first denominators were the refined rows before dedup,
+and that the trend was read off examples clustered within changes; both are fixed here.
 
-| | train | dev |
+| OpenStack | changes flagged | examples flagged |
 |---|---|---|
-| OpenStack, examples flagged | 63 of 4,344 (1.45%), from 20 changes | 46 of 564 (8.16%), from 11 changes |
-| Wikimedia, examples flagged | 0 of 4,330 | 0 of 768 |
+| train | 20 of 1,646 (1.22%) | 62 of 4,006 (1.55%) |
+| dev | 11 of 214 (5.14%) | 45 of 515 (8.74%) |
 
-The AI share in OpenStack's examples rose about fivefold from training to dev, and the dev share
-rests on 11 heavily reviewed changes. Trailers are voluntary and a change merged after the test
-window opened is not searched, so both are lower bounds. The trailers name Claude Code, Cursor
-and JetBrains Junie most often. What this changes is ROADMAP Plan H's AI-assisted item: the flag
-is now measured, the test window will hold a larger share than dev, and the estimate without
-flagged examples is to be registered as a secondary before the seal is fetched.
+Wikimedia: none of 4,184 train or 747 dev examples. The tools named are Claude (76 trailers),
+Cursor (30), JetBrains Junie (12), Gemini (7), OpenAI models (9) and Copilot (2). Counted by change, OpenStack's
+flagged share rises about fourfold from train to dev, on 11 changes; disclosure became OpenStack
+policy on 2025-07-08, inside the training window, so the rise mixes more AI use with more
+disclosure. The flag is per change, from the merged commit message: it misses undisclosed use and
+flags every patch set of a change whose trailer arrived late, so it is neither a bound nor an
+estimate of AI-written targets. Four OpenStack Change-Ids recur across branches of one project
+(pilot and train only), which the (project, Change-Id) match cannot tell apart. For Plan H: the
+flag is in place for the registered estimate without flagged examples, registered before the seal.
