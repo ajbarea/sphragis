@@ -7257,3 +7257,19 @@ ICML 2025, arXiv:2503.01747; Liu, Hu, Wu and Smith, NeurIPS 2022, arXiv:2206.079
 al., S&P 2019, arXiv:1805.04049; Mitchell et al., arXiv:2606.10481; Athanasiou, Jung and
 Palamidessi, ICLR 2026, arXiv:2603.02017; Vijayvergiya et al., AutoCommenter, arXiv:2405.13565;
 Hora, Robbes and Zacchiroli, arXiv:2609.07542.
+
+### LLVM's own conversion: 0.255 [0.231, 0.280]; LLVM reaches H1 and RQ2 on its own pilot (2026-10-02)
+
+`github-conversion-llvm.json`, read as planned (2026-10-01). LLVM's 2024-11 lists 2,710 PRs, all
+counted (none failed or gone): 1,069 carried a reviewer's inline comment, 1,330 examples were built
+and 989 survived `refine` (340 removed as suggested edits). Against 3,872 reviewer threads under
+the sizing's rule the conversion is **0.255, 95% interval [0.231, 0.280]**, tighter than OpenJDK's
+on three times the threads, and all 19 of the sizing's draws in the month recount the same.
+LLVM's month was collected after the retry-on-resume fix, so its `github_rules` digest differs
+from OpenJDK's; no PR in either month failed, so the fix changed nothing in either.
+
+**The table, re-derived** (`github-sizing-report.json`): LLVM on its own pilot projects 8,239 to
+19,706 examples and reaches an H1 cell and RQ2; OpenJDK stays borderline for both on its own;
+the others borrow the measured span, unchanged by LLVM's interval since it lies inside OpenJDK's,
+so their classes stand (Apache H1 and RQ2, .NET RQ2 with H1 borderline, Grafana and HashiCorp
+borderline). Apache's and .NET's pilot months are being collected.
