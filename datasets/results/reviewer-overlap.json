@@ -1,0 +1,56 @@
+{
+  "orgs": {
+    "openstack": {
+      "dev_examples_in_halves": 501,
+      "dev_examples_without_a_half": 14,
+      "dev_examples_with_reviewers": 497,
+      "dev_examples_sharing_a_sibling_reviewer": 482,
+      "share_sharing": 0.9698189134808853,
+      "dev_examples_sharing_two_sibling_reviewers": 365,
+      "share_sharing_two": 0.7344064386317908,
+      "exposure_quantiles": {
+        "0.1": 0.0004975124378109452,
+        "0.25": 0.005511022044088177,
+        "0.5": 0.028056112224448898,
+        "0.75": 0.07064676616915423,
+        "0.9": 0.11472945891783567
+      },
+      "reviewers_per_half": [
+        365,
+        376
+      ],
+      "reviewers_in_both_halves": 236
+    },
+    "wikimedia": {
+      "dev_examples_in_halves": 711,
+      "dev_examples_without_a_half": 36,
+      "dev_examples_with_reviewers": 700,
+      "dev_examples_sharing_a_sibling_reviewer": 649,
+      "share_sharing": 0.9271428571428572,
+      "dev_examples_sharing_two_sibling_reviewers": 430,
+      "share_sharing_two": 0.6142857142857143,
+      "exposure_quantiles": {
+        "0.1": 0.0009560229445506692,
+        "0.25": 0.004780114722753346,
+        "0.5": 0.016252390057361378,
+        "0.75": 0.05927342256214149,
+        "0.9": 0.09082217973231357
+      },
+      "reviewers_per_half": [
+        260,
+        236
+      ],
+      "reviewers_in_both_halves": 176
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-02T01:00:23.967434+00:00",
+    "git": {
+      "commit": "582e457425099cb51357b82e450ecd986e101414",
+      "branch": "measure/reviewer-overlap"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
