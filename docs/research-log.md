@@ -7299,3 +7299,16 @@ RQ2 candidate again (it had dropped to borderline on the span borrowed from Open
 borderline. The four measured conversions so far (0.231 to 0.255) are close to one another and
 to the Gerrit range they replaced (`github-sizing-report.json`). Apache's census is running and
 HashiCorp's pilot month is being collected.
+
+### HashiCorp's own conversion: 0.222 [0.169, 0.279]; HashiCorp stays borderline for both (2026-10-02)
+
+`github-conversion-hashicorp.json`. HashiCorp's 2024-11 lists 2,194 PRs, all counted: 431 opened by
+a bot or agent were not collected, 282 carried a reviewer's inline comment, 444 examples were built
+and 131 survived `refine`. It is the only pilot where reviewers open more threads with a
+suggestion block (669) than without one (590), so most of its review edits are written by the
+reviewer, and `refine` removes them. Against the 590 the conversion is **0.222, 95% interval
+[0.169, 0.279]**, the widest of the five for having the fewest threads; all 17 of the sizing's
+draws in the month recount the same. On its own pilot HashiCorp projects 154 to 4,220 examples
+and stays borderline for an H1 cell and for RQ2. Its interval widens the span Apache borrows
+(Apache's census is running), which lowers Apache's low end to 8,720, still past an H1 cell
+(`github-sizing-report.json`). Five pilots in, the measured conversions run from 0.222 to 0.255.

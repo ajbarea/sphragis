@@ -22,6 +22,17 @@
         0.2612794612794613
       ]
     },
+    "hashicorp": {
+      "month": "2024-11",
+      "prs": 2194,
+      "reviewer_threads": 590,
+      "refined": 131,
+      "rate": 0.22203389830508474,
+      "rate_95": [
+        0.16920731707317074,
+        0.27946127946127947
+      ]
+    },
     "llvm": {
       "month": "2024-11",
       "prs": 2710,
@@ -74,7 +85,7 @@
       "bot_review_threads": 2091,
       "conversion": "borrowed",
       "examples_range": [
-        9413,
+        8720,
         37840
       ],
       "rq1": "yes",
@@ -289,10 +300,10 @@
       ],
       "suggestion_threads": 1437,
       "bot_review_threads": 12,
-      "conversion": "borrowed",
+      "conversion": "own pilot",
       "examples_range": [
-        166,
-        4419
+        154,
+        4220
       ],
       "rq1": "borderline",
       "rq2": "borderline",
@@ -473,9 +484,9 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-02T10:10:57.897835+00:00",
+    "generated_at": "2026-10-02T13:03:45.217866+00:00",
     "git": {
-      "commit": "f4b4f8f92fbb255ce40b27868011f67e1f7fa878",
+      "commit": "ea741a26253710cfda895bbe7199ce65ca4d107f",
       "branch": "corpus/github-route"
     },
     "python": "3.14.4",
