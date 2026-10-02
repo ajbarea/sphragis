@@ -7312,3 +7312,32 @@ draws in the month recount the same. On its own pilot HashiCorp projects 154 to 
 and stays borderline for an H1 cell and for RQ2. Its interval widens the span Apache borrows
 (Apache's census is running), which lowers Apache's low end to 8,720, still past an H1 cell
 (`github-sizing-report.json`). Five pilots in, the measured conversions run from 0.222 to 0.255.
+
+### Apache's own conversion, 0.281 [0.259, 0.304]; all six GitHub candidates now sized on their own pilots (2026-10-02)
+
+`github-conversion-apache.json`. Apache's 2024-11 lists 11,083 PRs, all counted: 2,051 opened by a
+bot or agent were not collected, 2,241 carried a reviewer's inline comment, 3,370 examples were
+built and 2,453 survived `refine`. Against 8,736 reviewer threads the conversion is **0.281, 95%
+interval [0.259, 0.304]**, the highest and the tightest of the six; all 15 of the sizing's draws
+in the month recount the same. Its suggestion threads (1,851) are a small share beside .NET's,
+Grafana's and HashiCorp's, and that share tracks the conversion across the six: a reviewer who
+writes the fix leaves an example `refine` removes.
+
+**The table, every organization on its own pilot month** (`github-sizing-report.json`; the
+borrowed span is no longer used):
+
+| org | conversion (95%) | projected examples | H1 cell | RQ2 |
+|---|---|---|---|---|
+| Apache | 0.281 [0.259, 0.304] | 13,373 to 39,320 | yes | yes |
+| LLVM | 0.255 [0.231, 0.280] | 8,239 to 19,706 | yes | yes |
+| .NET | 0.241 [0.212, 0.272] | 2,398 to 19,122 | borderline | yes |
+| Grafana | 0.231 [0.202, 0.261] | 1,880 to 12,104 | borderline | yes |
+| OpenJDK | 0.234 [0.183, 0.293] | 1,192 to 5,298 | borderline | borderline |
+| HashiCorp | 0.222 [0.169, 0.279] | 154 to 4,220 | borderline | borderline |
+
+With OpenStack and Wikimedia, that is four organizations of H1-cell size (OpenStack, Wikimedia,
+Apache, LLVM) and six of RQ2 size (adding .NET and Grafana), the same classes the borrowed Gerrit
+conversion gave except that Grafana's RQ2 margin is now 30 examples. Each is a candidate, not
+admitted: admission still needs its corpus built and the split criteria met, and how the H1
+pass rule reads over four to six cells, and whether these enter Stage 1 as candidates or
+members, are AJ's decisions (ROADMAP).
