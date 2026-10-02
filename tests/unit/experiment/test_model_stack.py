@@ -260,8 +260,31 @@ def test_the_rank_asked_for_is_the_rank_built(monkeypatch) -> None:
 
     monkeypatch.setattr(model_module, "get_peft_model", _peft)
 
-    model_module.attach_adapter("stub", seed=1, device="cpu", rank=256)
+    model_module.attach_adapter(model_module.MODEL_ID, seed=1, device="cpu", rank=256)
     assert seen == {"rank": 256, "alpha": 512}
 
-    model_module.attach_adapter("stub", seed=1, device="cpu")
+    model_module.attach_adapter(model_module.MODEL_ID, seed=1, device="cpu")
     assert seen == {"rank": model_module.REGISTERED_RANK, "alpha": 2 * model_module.REGISTERED_RANK}
+
+
+def test_every_registered_checkpoint_loads_at_a_pinned_revision() -> None:
+    for model_id in (
+        model_module.MODEL_ID,
+        model_module.MEMBERSHIP_MODEL_ID,
+        model_module.DEV_MODEL_ID,
+    ):
+        assert len(model_module.revision(model_id)) == 40
+    with pytest.raises(KeyError, match="no pinned revision"):
+        model_module.revision("someone/unpinned-model")
+
+
+def test_the_tokenizer_is_asked_for_the_pinned_revision(monkeypatch: pytest.MonkeyPatch) -> None:
+    asked: dict = {}
+
+    def fake(model_id: str, **kwargs: object) -> object:
+        asked.update(model_id=model_id, **kwargs)
+        return object()
+
+    monkeypatch.setattr(model_module.AutoTokenizer, "from_pretrained", fake)
+    model_module._require_tokenizer(model_module.MODEL_ID)
+    assert asked["revision"] == model_module.MODEL_REVISIONS[model_module.MODEL_ID]

@@ -23,7 +23,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from sphragis.corpus.load import derived_file_rows
-from sphragis.experiment.model import MODEL_ID, run_provenance
+from sphragis.experiment.model import MODEL_ID, revision, run_provenance
 from sphragis.experiment.runner import build_prompt, evaluate, to_clusters
 from sphragis.measure.stats import cluster_bootstrap
 
@@ -50,8 +50,10 @@ eval_ids = set(changes[int(0.8 * len(changes)) :])
 eval_rows = [r for r in rows if r["change_id"] in eval_ids]
 print(f"eval {len(eval_rows)} examples over {len(eval_ids)} changes", flush=True)
 
-tok = AutoTokenizer.from_pretrained(MODEL_ID)
-model = AutoModelForCausalLM.from_pretrained(MODEL_ID, dtype=torch.bfloat16, device_map="cuda:0")
+tok = AutoTokenizer.from_pretrained(MODEL_ID, revision=revision(MODEL_ID))
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_ID, revision=revision(MODEL_ID), dtype=torch.bfloat16, device_map="cuda:0"
+)
 model.eval()
 print("loaded base", flush=True)
 

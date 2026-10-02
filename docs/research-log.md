@@ -6587,3 +6587,13 @@ for the next build-rules change, since `scrub.py` is in `BUILD_SOURCES` and an e
 frozen month; cleaning the snapshots already on disk is a rewrite of raw data, the same decision
 as purging withdrawn changes, and is AJ's (ROADMAP Plan A). Until then the claim is that
 identities are pseudonymised in everything derived from the raw snapshots, not in the snapshots.
+
+### Checkpoints pinned to the revisions every run used (2026-10-01)
+
+Nothing passed a revision when loading a checkpoint, so every load read the Hub's `main`, and
+both 7B repositories changed their config and tokenizer files on 2024-11-18, after publication.
+The cluster's cache held one revision of each for every run to date: Qwen2.5-Coder-7B-Instruct
+`c03e6d3` (README-only changes after 2024-11-18) and Qwen2.5-Coder-7B `0396a76`; the 1.5B dev
+model is pinned at its current `2e1fd39`. `MODEL_REVISIONS` in `sphragis/experiment/model.py`
+now passes them to every load, and a checkpoint without one refuses to load. Past runs are
+unaffected: they read these revisions.
