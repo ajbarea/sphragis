@@ -11,6 +11,17 @@
         0.27233115468409586
       ]
     },
+    "grafana": {
+      "month": "2024-11",
+      "prs": 3227,
+      "reviewer_threads": 1325,
+      "refined": 306,
+      "rate": 0.2309433962264151,
+      "rate_95": [
+        0.20188133140376266,
+        0.2612794612794613
+      ]
+    },
     "llvm": {
       "month": "2024-11",
       "prs": 2710,
@@ -207,13 +218,13 @@
       ],
       "suggestion_threads": 6446,
       "bot_review_threads": 3275,
-      "conversion": "borrowed",
+      "conversion": "own pilot",
       "examples_range": [
-        1701,
-        13554
+        1880,
+        12104
       ],
       "rq1": "borderline",
-      "rq2": "borderline",
+      "rq2": "yes",
       "repos_sampled": 68,
       "frame_capped_draws": 0,
       "top_dirs": [
@@ -462,9 +473,9 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-02T08:37:11.931886+00:00",
+    "generated_at": "2026-10-02T10:10:57.897835+00:00",
     "git": {
-      "commit": "a454a58a11c46ec2e972fc429e5bd0808a5f313e",
+      "commit": "f4b4f8f92fbb255ce40b27868011f67e1f7fa878",
       "branch": "corpus/github-route"
     },
     "python": "3.14.4",

@@ -7286,3 +7286,16 @@ conversion is **0.241, 95% interval [0.212, 0.272]**; all 15 of the sizing's dra
 recount the same. On its own pilot .NET projects 2,398 to 19,122 examples, so it reaches RQ2 and
 stays borderline for an H1 cell; the three measured intervals all lie inside OpenJDK's, so the
 borrowed span and the other classes are unchanged (`github-sizing-report.json`).
+
+### Grafana's own conversion: 0.231 [0.202, 0.261]; Grafana reaches RQ2 again, narrowly (2026-10-02)
+
+`github-conversion-grafana.json`. Grafana's 2024-11 lists 3,227 PRs, all counted: 973 opened by a
+bot or agent were not collected, 579 carried a reviewer's inline comment, 663 examples were built
+and 306 survived `refine`. Suggestion threads are 761 beside 1,325 other reviewer threads, as
+high a share as .NET's. Against those 1,325 threads the conversion is **0.231, 95% interval
+[0.202, 0.261]**; all 15 of the sizing's draws in the month recount the same. On its own pilot
+Grafana projects 1,880 to 12,104 examples, so its low end clears RQ2's 1,850 by 30 and it is an
+RQ2 candidate again (it had dropped to borderline on the span borrowed from OpenJDK); H1 stays
+borderline. The four measured conversions so far (0.231 to 0.255) are close to one another and
+to the Gerrit range they replaced (`github-sizing-report.json`). Apache's census is running and
+HashiCorp's pilot month is being collected.
