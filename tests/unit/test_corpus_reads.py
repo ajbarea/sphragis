@@ -21,9 +21,11 @@ _SCRIPTS = sorted(
 )
 
 # Scripts that legitimately call json.loads on something that is not a training corpus (a prior
-# result, a config file). Named here, narrowly, rather than weakening the rule for everyone; empty
-# because no script currently needs it.
-_JSON_LOADS_ALLOWED: dict[str, str] = {}
+# result, a config file). Named here, narrowly, rather than weakening the rule for everyone.
+_JSON_LOADS_ALLOWED: dict[str, str] = {
+    "retrieval_baseline.py": "reads back its own per-arm score rows to resume; the corpus goes "
+    "through refined_examples",
+}
 
 
 def _module_aliases(tree: ast.AST, module: str) -> set[str]:
