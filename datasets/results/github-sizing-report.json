@@ -1,5 +1,16 @@
 {
   "conversion": {
+    "dotnet": {
+      "month": "2024-11",
+      "prs": 4114,
+      "reviewer_threads": 2026,
+      "refined": 489,
+      "rate": 0.24136229022704836,
+      "rate_95": [
+        0.2122877122877123,
+        0.27233115468409586
+      ]
+    },
     "llvm": {
       "month": "2024-11",
       "prs": 2710,
@@ -133,10 +144,10 @@
       ],
       "suggestion_threads": 6912,
       "bot_review_threads": 3256,
-      "conversion": "borrowed",
+      "conversion": "own pilot",
       "examples_range": [
-        2063,
-        20545
+        2398,
+        19122
       ],
       "rq1": "borderline",
       "rq2": "yes",
@@ -451,9 +462,9 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-02T06:44:20.296750+00:00",
+    "generated_at": "2026-10-02T08:37:11.931886+00:00",
     "git": {
-      "commit": "7eb7ac4fc0c42ab413ff379ee8535ae437e73d7b",
+      "commit": "a454a58a11c46ec2e972fc429e5bd0808a5f313e",
       "branch": "corpus/github-route"
     },
     "python": "3.14.4",

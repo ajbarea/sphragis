@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 282 artifacts under
+repository. This page is generated from those scripts: 283 artifacts under
 48 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -209,7 +209,8 @@ GitHub's thread-to-example conversion, read from a built pilot month of a GitHub
 
 | artifact | |
 |---|---|
-| `github-conversion-llvm.json` | `github-conversion-openjdk.json` |
+| `github-conversion-dotnet.json` | `github-conversion-llvm.json` |
+| `github-conversion-openjdk.json` |  |
 
 ## `scripts/github_sizing.py`
 

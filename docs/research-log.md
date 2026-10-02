@@ -7273,3 +7273,16 @@ from OpenJDK's; no PR in either month failed, so the fix changed nothing in eith
 the others borrow the measured span, unchanged by LLVM's interval since it lies inside OpenJDK's,
 so their classes stand (Apache H1 and RQ2, .NET RQ2 with H1 borderline, Grafana and HashiCorp
 borderline). Apache's and .NET's pilot months are being collected.
+
+### .NET's own conversion: 0.241 [0.212, 0.272]; .NET stays RQ2-size and borderline for H1 (2026-10-02)
+
+`github-conversion-dotnet.json`. .NET's 2024-11 lists 4,114 PRs, all counted: 1,633 were opened
+by a bot or agent the route recognises and not collected (1,739 under the sizing's wider name
+rule, which counts them zero), 737 carried a reviewer's inline comment, 1,098 examples were built
+and 489 survived `refine`, which removed 609 as suggested edits. Suggestion threads are 1,078
+beside 2,026 other reviewer threads, the largest share of the three pilots, so .NET reviewers
+write the fix themselves more often than OpenJDK's or LLVM's. Against those 2,026 threads the
+conversion is **0.241, 95% interval [0.212, 0.272]**; all 15 of the sizing's draws in the month
+recount the same. On its own pilot .NET projects 2,398 to 19,122 examples, so it reaches RQ2 and
+stays borderline for an H1 cell; the three measured intervals all lie inside OpenJDK's, so the
+borrowed span and the other classes are unchanged (`github-sizing-report.json`).
