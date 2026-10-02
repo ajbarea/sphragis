@@ -6655,3 +6655,42 @@ organization's examples share a Change-Id with a change on another branch, which
 change-level grouping keeps on one side of every window boundary. An independent review widened
 the branch names (the first pattern missed `deploy/wmf/`, `fundraising/REL`, `bugfix/` and
 `r/stx`) and corrected an earlier wording of the first column as an upper bound.
+
+### Planned before any run: an open-weight rater at pinned weights on the label audit (2026-10-02)
+
+The October 2026 hardening plan (ROADMAP Plan H, on the GitHub-route branch): raters A and B ran through an API, so the audit cannot be rerun on them once they
+are retired. `scripts/label_audit_open_rater.py` adds a rater anyone can rerun: Qwen3-14B (Apache
+2.0, revision `40c0698`), greedy, thinking off, labelling the same 383 audited examples under the
+committed v2 rubric and shown only the fields A, B and the human saw. Its agreement with each of
+them (raw agreement, kappa, AC1 and specific agreement, on the five labels, collapsed to valid
+or not, and on outside_names) is read with the audit's own statistics, each pair on the items
+both raters answered (the human's 152 checked items for the human pair). **Reading, fixed now:**
+it is adopted as the audit's reproducible rater if every item parses and its label kappa with
+the human reaches the lower end of the locked `human~A` label interval in `label-audit-v2.json`
+(the script reads it from there and records the decision); otherwise it is reported as tried and
+not adopted, as the decision model was (2026-09-30). That bar is lenient, since rater A agrees
+with the human less than with rater B, which is the reason to report all three pairs beside it.
+The items are the refined examples the audit sampled, read through `refined_examples`; an
+audited example a later refinement removed (the audit drew from corpus v2) is left out rather than
+rebuilt, listed by id, and every pair is read on the items that remain. The committed rubric differs from the raters' copy only
+in its worked example (invented here, a corpus item there).
+
+### The open-weight rater is adopted by its rule, and it shows the two model raters agree with each other more than with anyone else (2026-10-02)
+
+`label-audit-v2-open-rater.json` (labels `label-audit-v2-open-rater-labels.json`, SPORC job
+21795722, six minutes on one A100). Qwen3-14B at pinned weights labelled all 358 items still in
+the refined corpus, none unparsed (the 25 audited examples a later refinement removed are left out,
+13 of them human-checked, so the human pairs read on 139 items). **By the rule fixed beforehand it
+is adopted:** its label kappa with the human, 0.254 [0.102, 0.404], reaches the lower end of the
+locked `human~A` interval, 0.154. That bar was lenient by design, so the comparators on the same 139
+items carry the reading: the human agrees with rater A at 0.289 and with rater B at 0.343, so the
+open rater sits just below A, its interval overlapping both. Collapsed to valid or not, its kappa
+with the human is 0.367.
+
+**What it shows about the audit.** On the same 139 items raters A and B agree with each other at
+0.655, about twice what either reaches with the human or with the open rater (0.207 with A and
+0.224 with B over all 358). Two raters from one model family agreeing is weaker evidence than it
+looked: some of that agreement is a shared way of judging, not shared correctness. The audit's
+conclusion rests on the human's agreement with the raters, which this leaves where it was; what
+changes is that A~B is no longer read as an independent replication. The audit now has a rater
+anyone can rerun at fixed weights.
