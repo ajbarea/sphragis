@@ -6655,3 +6655,16 @@ organization's examples share a Change-Id with a change on another branch, which
 change-level grouping keeps on one side of every window boundary. An independent review widened
 the branch names (the first pattern missed `deploy/wmf/`, `fundraising/REL`, `bugfix/` and
 `r/stx`) and corrected an earlier wording of the first column as an upper bound.
+
+### Planned before any run: an open-weight rater at pinned weights on the label audit (2026-10-02)
+
+ROADMAP Plan H: raters A and B ran through an API, so the audit cannot be rerun on them once they
+are retired. `scripts/label_audit_open_rater.py` adds a rater anyone can rerun: Qwen3-14B (Apache
+2.0, revision `40c0698`), greedy, thinking off, labelling the same 383 audited examples under the
+committed v2 rubric and shown only the fields A, B and the human saw. Its agreement with each of
+them (raw agreement, kappa, AC1 and specific agreement, on the five labels and collapsed to valid
+or not) is read with the audit's own statistics. **Reading, fixed now:** it is adopted as the
+audit's reproducible rater if its kappa with the human on the label is at least the lower end of
+the A-human interval in `label-audit-v2.json`; otherwise it is reported as tried and not adopted,
+as the decision model was (2026-09-30). The committed rubric differs from the raters' copy only
+in its worked example (invented here, a corpus item there).
