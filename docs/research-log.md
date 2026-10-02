@@ -6572,3 +6572,18 @@ flags every patch set of a change whose trailer arrived late, so it is neither a
 estimate of AI-written targets. Four OpenStack Change-Ids recur across branches of one project
 (pilot and train only), which the (project, Change-Id) match cannot tell apart. For Plan H: the
 flag is in place for the registered estimate without flagged examples, registered before the seal.
+
+### The raw snapshots keep Gerrit account numbers outside `_account_id`; the examples do not (2026-10-01)
+
+Found while checking whether reviewer overlap can be read from raw snapshots. `scrub` replaces
+every `_account_id` value and every address with a salted pseudonym, but two other places carry
+the raw Gerrit account number: `attention_set` and `removed_from_attention_set` are dictionaries
+keyed by it, and their `reason` text names it as `<GERRIT_ACCOUNT_n>` (lines with one: OpenStack
+12,450, Wikimedia 19,134, AOSP 5,215, Qt 9,910 across the raw months on disk). Account numbers are
+public on each host and resolve to a person, so the raw snapshots are not pseudonymous in full.
+No refined or built example holds one (all four corpora checked), so nothing derived, committed or
+released is affected; the GitHub route's rows have no attention sets. The fix to `scrub` waits
+for the next build-rules change, since `scrub.py` is in `BUILD_SOURCES` and an edit stales every
+frozen month; cleaning the snapshots already on disk is a rewrite of raw data, the same decision
+as purging withdrawn changes, and is AJ's (ROADMAP Plan A). Until then the claim is that
+identities are pseudonymised in everything derived from the raw snapshots, not in the snapshots.
