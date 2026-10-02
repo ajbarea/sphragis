@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 188 artifacts under
-44 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 189 artifacts under
+45 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -58,6 +58,14 @@ How many of an organization's examples come from a change whose commit names an 
 | artifact | |
 |---|---|
 | `ai-trailers.json` |  |
+
+## `scripts/backport_share.py`
+
+How many examples could carry code older than the checkpoint by way of a backport.
+
+| artifact | |
+|---|---|
+| `backport-share.json` |  |
 
 ## `scripts/bot_sensitivity.py`
 
