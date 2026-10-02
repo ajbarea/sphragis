@@ -25,11 +25,25 @@ def test_an_example_is_only_backport_when_every_change_with_its_id_is() -> None:
         {"project": "p", "change_id": "missing"}
     ]
     out = script.bounds({"dev": rows}, branches)["dev"]
-    assert out == {"examples": 5, "only_backport": 2, "possibly_backport": 3}
+    assert out == {"examples": 5, "only_backport": 2, "possibly_backport": 3, "no_raw_change": 1}
 
 
 def test_development_branches_are_not_backports() -> None:
-    for name in ("master", "main", "production", "feature/x"):
-        assert not script.BACKPORT.match(name)
-    for name in ("stable/2025.1", "unmaintained/2023.1", "REL1_43", "wmf/1.45.0-wmf.21"):
-        assert script.BACKPORT.match(name)
+    for name in ("master", "main", "production", "feature/mpu", "f/caracal", "stablekit"):
+        assert not script.BACKPORT.match(name), name
+    for name in (
+        "stable/2025.1",
+        "stable/release-3",
+        "stable",
+        "unmaintained/2023.1",
+        "bugfix/12",
+        "release_9",
+        "r/stx.10.0",
+        "REL1_43",
+        "fundraising/REL1_43",
+        "wmf/1.45.0-wmf.21",
+        "deploy/wmf/stable-3.10",
+        "wmf_deploy",
+        "deployment",
+    ):
+        assert script.BACKPORT.match(name), name

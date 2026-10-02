@@ -3,10 +3,11 @@
 A change's window is its creation month, so a backport created inside the corpus can carry code
 first written before the checkpoint was published. A backport shares its Change-Id with the
 change it was picked from, and the examples keep no branch, so an example is bounded: it is
-only on a backport branch when every change with its (project, Change-Id) is (the lower bound,
-and the case where the original is not in the corpus, so may predate it), and possibly from
-one when any is (the upper bound, where the original is in the corpus and postdates the
-checkpoint like the backport). Windows are the corpus's own; the test window is never read.
+only on a backport branch when every change with its (project, Change-Id) is (its original is
+not in the corpus, so may predate it), and possibly from one when any is (its original is in the
+corpus and postdates the checkpoint like the backport). Both count only backports that keep their
+Change-Id: a revert, a re-proposal or a hand copy carries old code under a new one, unseen here.
+Windows are the corpus's own; the test window is never read.
 
     uv run --no-sync --no-active python scripts/backport_share.py \\
         --root openstack=../wm-bots/datasets/gerrit \\
@@ -28,9 +29,14 @@ from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.provenance import provenance_header
 
-# Release and deployment branches: OpenStack's stable/ and unmaintained/, MediaWiki's REL1_xx
-# releases and wmf/ deployment branches.
-BACKPORT = re.compile(r"^(?:stable/|unmaintained/|REL\d|wmf/)")
+# Release, maintenance and deployment branches, as named on the two hosts (read from the raw
+# snapshots): OpenStack `stable/`, `unmaintained/`, `bugfix/`, `release_N` and StarlingX `r/stx`;
+# MediaWiki `REL1_xx` (also under `fundraising/`), `wmf/` and `deploy/wmf/`, `wmf_deploy`,
+# `deployment` and a bare `stable`. Feature branches (`feature/`, `f/`) are development.
+BACKPORT = re.compile(
+    r"^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\d|r/stx|(?:fundraising/)?REL\d"
+    r"|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
+)
 READ_WINDOWS = ("pilot", "train", "dev")
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -45,12 +51,18 @@ def bounds(
     out = {}
     for window in READ_WINDOWS:
         rows = list(windows.get(window, []))
-        lower = upper = 0
+        lower = upper = unmatched = 0
         for row in rows:
             names = branches.get((row["project"], row["change_id"]), set())
+            unmatched += not names
             upper += any(BACKPORT.match(b) for b in names)
             lower += bool(names) and all(BACKPORT.match(b) for b in names)
-        out[window] = {"examples": len(rows), "only_backport": lower, "possibly_backport": upper}
+        out[window] = {
+            "examples": len(rows),
+            "only_backport": lower,
+            "possibly_backport": upper,
+            "no_raw_change": unmatched,
+        }
     return out
 
 
