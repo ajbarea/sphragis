@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from sphragis.experiment.retrieval import BM25, few_shot_prompt, tokens
 from sphragis.experiment.runner import build_prompt
 
@@ -45,3 +47,15 @@ def test_shots_come_solved_before_the_target_in_the_registered_template() -> Non
     assert build_prompt(shot) in prompt and "Revised code:\nbb = 1" in prompt
     assert prompt.endswith(build_prompt(target))
     assert prompt.index(build_prompt(shot)) < prompt.index("### Now this one")
+
+
+def test_the_closest_shot_is_written_next_to_the_target() -> None:
+    target = _row(1, "fix it", "a = 1")
+    closest, farther = _row(2, "near", "b = 1"), _row(3, "far", "c = 1")
+    prompt = few_shot_prompt(target, [closest, farther])
+    assert prompt.index(build_prompt(farther)) < prompt.index(build_prompt(closest))
+
+
+def test_an_empty_pool_is_refused() -> None:
+    with pytest.raises(ValueError, match="empty pool"):
+        BM25([])

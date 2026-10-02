@@ -171,20 +171,35 @@ def main() -> None:
         from sphragis.experiment.model import run_provenance
 
         assert generator is not None
-        for org, (targets, prompts) in plan.items():
-            scored = {
-                arm: [
-                    {
-                        "id": t["id"],
-                        "change_id": t["change_id"],
-                        **score(generator.generate(p), str(t["after"])),
-                    }
-                    for t, p in zip(targets, prompts[arm], strict=True)
-                ]
-                for arm in ARMS
-            }
-            report["orgs"][org] = summarize(targets, scored, args.bootstrap_seed)
-            print(org, report["orgs"][org]["exact_match"], flush=True)
+        # Each arm's scores are appended as it finishes (ids and scores, no example text), and a
+        # rerun skips what is there, so neither a wall nor a refusal in the summary loses them.
+        rows_path = args.out.with_suffix(".rows.jsonl")
+        done: dict[tuple[str, str], list[dict]] = {}
+        if rows_path.is_file():
+            for line in rows_path.read_text().splitlines():
+                row = json.loads(line)
+                done.setdefault((row["org"], row["arm"]), []).append(row)
+        with rows_path.open("a") as rows_out:
+            for org, (targets, prompts) in plan.items():
+                scored: dict[str, list[dict]] = {}
+                for arm in ARMS:
+                    if len(done.get((org, arm), [])) == len(targets):
+                        scored[arm] = done[(org, arm)]
+                        continue
+                    scored[arm] = []
+                    for t, p in zip(targets, prompts[arm], strict=True):
+                        row = {
+                            "org": org,
+                            "arm": arm,
+                            "id": t["id"],
+                            "change_id": t["change_id"],
+                            **score(generator.generate(p), str(t["after"])),
+                        }
+                        scored[arm].append(row)
+                    rows_out.writelines(json.dumps(r) + "\n" for r in scored[arm])
+                    rows_out.flush()
+                report["orgs"][org] = summarize(targets, scored, args.bootstrap_seed)
+                print(org, report["orgs"][org]["exact_match"], flush=True)
         report["provenance"] = run_provenance()
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {args.out}")

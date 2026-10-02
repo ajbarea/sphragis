@@ -38,6 +38,8 @@ class BM25:
     """Okapi BM25 over a fixed pool of examples, pure Python."""
 
     def __init__(self, pool: Sequence[Mapping[str, Any]]) -> None:
+        if not pool:
+            raise ValueError("an empty pool would turn every few-shot prompt into the base prompt")
         self.pool = list(pool)
         self.docs = [Counter(tokens(query_text(row))) for row in self.pool]
         self.lengths = [sum(doc.values()) for doc in self.docs]
@@ -64,14 +66,18 @@ class BM25:
 
 
 def few_shot_prompt(example: Mapping[str, Any], shots: Sequence[Mapping[str, Any]]) -> str:
-    """Solved examples in the registered template, then the target in it, as one prompt."""
+    """Solved examples in the registered template, then the target in it, as one prompt.
+
+    `shots` come most similar first, as `BM25.top` returns them, and are written in reverse, so
+    the closest example sits next to the target.
+    """
     if not shots:
         return build_prompt(example)
     parts = [
         "Here are past review comments from code review and the revised code that answered "
         "each one.\n"
     ]
-    for number, shot in enumerate(shots, 1):
+    for number, shot in enumerate(reversed(shots), 1):
         parts.append(
             f"### Example {number}\n{build_prompt(shot)}\nRevised code:\n{shot['after']}\n"
         )

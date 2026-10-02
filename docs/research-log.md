@@ -6678,3 +6678,18 @@ inference time and the adapters' result is read as learning what retrieval also 
 retrieval's contrast is near zero while the adapters' is not, the adapters carry something
 retrieval does not. A CPU dry run built every prompt for both organizations (501 and 711 targets;
 pools of about 2,000 examples a half after the budget filter), and no generation has run.
+
+**Amended before any run, after an independent review.** As first written the comparison was not
+the adapters' comparison in three ways, each of which would have biased a contrast: its pools were
+whole halves of unequal size and a foreign pool twice their size, where each adapter trains on one
+half cut to the registered N (more candidates give closer neighbours, pulling sibling minus
+foreign toward zero); it deduplicated each organization once, where the registered runner
+deduplicates each half as its own corpus, so its targets were not the adapters' evaluation set;
+and it pooled the halves in one bootstrap, where the registered contrasts weight them equally and
+resample within each. The run therefore waits for the repeated-partition stack to merge and is
+rebuilt on its runner: per-half deduplication and split, each pool the rows an adapter trains on
+(equalized to N at the registered seed), the foreign arm as the other organization's two half
+pools averaged per example, and the registered stratified estimator. The reading rule is then
+fixed against the study's SESOI and the adapters' registered dev-window contrast, before the run.
+Fixed now: every arm's scores are written as it finishes, the closest example sits next to the
+target, and an empty pool is refused.
