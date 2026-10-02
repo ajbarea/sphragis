@@ -7320,8 +7320,10 @@ bot or agent were not collected, 2,241 carried a reviewer's inline comment, 3,37
 built and 2,453 survived `refine`. Against 8,736 reviewer threads the conversion is **0.281, 95%
 interval [0.259, 0.304]**, the highest and the tightest of the six; all 15 of the sizing's draws
 in the month recount the same. Its suggestion threads (1,851) are a small share beside .NET's,
-Grafana's and HashiCorp's, and that share tracks the conversion across the six: a reviewer who
-writes the fix leaves an example `refine` removes.
+Grafana's and HashiCorp's. Across the six, a larger share of suggestion threads goes with a lower
+conversion, roughly (HashiCorp's is the largest share and the lowest rate, Apache's and LLVM's the
+smallest shares and the highest rates; .NET and OpenJDK break the order), as expected when a
+reviewer who writes the fix leaves an example `refine` removes.
 
 **The table, every organization on its own pilot month** (`github-sizing-report.json`; the
 borrowed span is no longer used):
