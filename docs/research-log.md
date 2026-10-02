@@ -6614,3 +6614,13 @@ the place a reviewer effect could hide. Exposure varies over two orders of magni
 analysis to register is a moderation of the sibling-over-foreign contrast by exposure (does the
 sibling's advantage grow with how much of its training its own reviewers wrote), as a secondary
 before the seal, change-clustered as the primary contrast is.
+
+### Checkpoints pinned to the revisions every run used (2026-10-01)
+
+Nothing passed a revision when loading a checkpoint, so every load read the Hub's `main`, and
+both 7B repositories changed their config and tokenizer files on 2024-11-18, after publication.
+The cluster's cache held one revision of each for every run to date: Qwen2.5-Coder-7B-Instruct
+`c03e6d3` (README-only changes after 2024-11-18) and Qwen2.5-Coder-7B `0396a76`; the 1.5B dev
+model is pinned at its current `2e1fd39`. `MODEL_REVISIONS` in `sphragis/experiment/model.py`
+now passes them to every load, and a checkpoint without one refuses to load. Past runs are
+unaffected: they read these revisions.
