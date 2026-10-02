@@ -1,0 +1,101 @@
+{
+  "searches": [
+    "\"Assisted-By\"",
+    "\"Generated-By\"",
+    "\"Co-Authored-By\""
+  ],
+  "ai_names": "claude|anthropic|copilot|cursor|gemini|codex|chatgpt|openai|gpt-?\\d|devin|aider|windsurf|codeium|tabnine|openhands|junie|sonnet|opus|qwen|llama|deepseek|kiro|cline|amazon q",
+  "since": "2024-10-01",
+  "merged_before": "2025-11-01",
+  "orgs": {
+    "openstack": {
+      "changes_by_search": {
+        "\"Assisted-By\"": {
+          "nominated": 78,
+          "verified": 78
+        },
+        "\"Generated-By\"": {
+          "nominated": 1226,
+          "verified": 1181
+        },
+        "\"Co-Authored-By\"": {
+          "nominated": 488,
+          "verified": 6
+        }
+      },
+      "changes_ai": 101,
+      "changes_tool_generated": 1132,
+      "examples": {
+        "pilot": 573,
+        "train": 4344,
+        "dev": 564
+      },
+      "examples_flagged": {
+        "train": 63,
+        "dev": 46
+      },
+      "changes_behind_flagged_examples": {
+        "train": 20,
+        "dev": 11
+      },
+      "share_flagged": {
+        "pilot": 0.0,
+        "train": 0.014502762430939226,
+        "dev": 0.08156028368794327
+      },
+      "examples_flagged_by_trailer": {
+        "Generated-By": 42,
+        "Assisted-By": 67
+      },
+      "examples_tool_generated": {
+        "train": 4
+      }
+    },
+    "wikimedia": {
+      "changes_by_search": {
+        "\"Assisted-By\"": {
+          "nominated": 0,
+          "verified": 0
+        },
+        "\"Generated-By\"": {
+          "nominated": 53,
+          "verified": 0
+        },
+        "\"Co-Authored-By\"": {
+          "nominated": 113,
+          "verified": 0
+        }
+      },
+      "changes_ai": 0,
+      "changes_tool_generated": 0,
+      "examples": {
+        "pilot": 601,
+        "train": 4330,
+        "dev": 768
+      },
+      "examples_flagged": {},
+      "changes_behind_flagged_examples": {},
+      "share_flagged": {
+        "pilot": 0.0,
+        "train": 0.0,
+        "dev": 0.0
+      },
+      "examples_flagged_by_trailer": {},
+      "examples_tool_generated": {}
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-02T00:05:54.244306+00:00",
+    "git": {
+      "commit": "2967a7bdfc56f57f24fc5be93ceb7568845c4855",
+      "branch": "measure/ai-trailers",
+      "uncommitted_code": [
+        "scripts/ai_trailers.py"
+      ],
+      "uncommitted_code_sha256": "2f456531ed89a0e099dfff89c92b0f75b01ff8644c2aa58a2ec1820f84ecc368"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

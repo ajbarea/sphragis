@@ -6542,3 +6542,27 @@ pseudonymised at ingestion); open access for every resulting publication, which 
 require (MSR's ACM proceedings are open access; the registered report's Stage 2 appears in EMSE,
 so its open-access option and an arXiv copy); and what more cells do to H1, which passes only if
 every admitted organization's cell does, each cell then needing power 0.95^(1/k).
+
+### AI-assisted targets: 8.2% of OpenStack's dev-window examples carry an AI trailer, from 11 changes; Wikimedia none (2026-10-01)
+
+`ai-trailers.json` (`scripts/ai_trailers.py`). OpenInfra's AI policy (approved 2025-07-08) asks
+for `Assisted-By:` or `Generated-By:` trailers on AI-assisted commits, and the raw snapshots carry
+no commit messages, so each trailer is a Gerrit `message:` search bounded by `mergedbefore:` the
+test window's start (no sealed change is requested), and each hit's current commit message is
+read. A refined example is flagged when its change carries a trailer line whose value names an AI
+tool or model. Two corrections made before reading any share: Gerrit's `message:` matches words
+anywhere, so a hit counts only as a trailer line; and most OpenStack `Generated-By:` lines name
+the community's own scripts (`openstack/project-config:roles/...`, `openstack/releases:tools/...`),
+so those are counted apart as tool-generated, not AI.
+
+| | train | dev |
+|---|---|---|
+| OpenStack, examples flagged | 63 of 4,344 (1.45%), from 20 changes | 46 of 564 (8.16%), from 11 changes |
+| Wikimedia, examples flagged | 0 of 4,330 | 0 of 768 |
+
+The AI share in OpenStack's examples rose about fivefold from training to dev, and the dev share
+rests on 11 heavily reviewed changes. Trailers are voluntary and a change merged after the test
+window opened is not searched, so both are lower bounds. The trailers name Claude Code, Cursor
+and JetBrains Junie most often. What this changes is ROADMAP Plan H's AI-assisted item: the flag
+is now measured, the test window will hold a larger share than dev, and the estimate without
+flagged examples is to be registered as a secondary before the seal is fetched.
