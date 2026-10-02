@@ -560,6 +560,12 @@ as the unit; the evidence says the codebase is.
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
 - [x] H1 carries a supplementary estimand on the suffix both halves hold most of
   (`file_type_supplement`, `matched_suffix`; `.py` for OpenStack), reported beside H1 (2026-09-27).
+- [ ] **Zenodo, before Stage 1 goes out (AJ asked to be reminded).** The Zenodo GitHub integration is on for
+  this repo (webhook verified 2026-10-02, AJ's ORCID linked): publish GitHub release `v0.1.0` from the
+  commit the Stage 1 report describes, read the minted DOI off Zenodo, and cite it in the report's
+  data and code availability statement. A Zenodo record is permanent, so the release is cut once,
+  from the final commit. The dataset gets its own record later, after the licence per host, the
+  withdrawn-changes decision and a takedown contact are settled; the test months never before Stage 2.
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
