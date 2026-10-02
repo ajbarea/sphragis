@@ -11,7 +11,7 @@
 #SBATCH --mail-user=ajb6289@rit.edu
 
 # The label audit's open-weight rater: 383 short generations (64 new tokens each) with Qwen3-14B
-# in bf16; four hours is ample. ITEMS is the prepared items file, staged to the cluster by hand
+# in bf16 (28 GB, so a 40 GB A100 also fits); four hours is ample. ITEMS is the prepared items file, staged to the cluster by hand
 # (default $SPHRAGIS_DATA/open-rater/items.jsonl) because it is corpus text and never committed.
 set -euo pipefail
 

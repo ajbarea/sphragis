@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from label_audit_blind import SHOWN  # noqa: E402
 from label_audit_sample import LABELS  # noqa: E402
 
+from sphragis.corpus.load import refined_examples  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
 
 AUDIT = Path("datasets/results/label-audit-v2.json")
@@ -47,7 +48,7 @@ _ANSWER = re.compile(r"\{.*?\}", re.S)
 parser = argparse.ArgumentParser(description=__doc__)
 sub = parser.add_subparsers(dest="step", required=True)
 prep = sub.add_parser("prepare")
-prep.add_argument("--root", type=Path, required=True, help="gerrit root with <org>/examples")
+prep.add_argument("--root", type=Path, required=True, help="gerrit root with <org>/refined")
 prep.add_argument("--audit", type=Path, default=AUDIT)
 prep.add_argument("--items", type=Path, required=True)
 rate = sub.add_parser("rate")
@@ -84,18 +85,21 @@ def parse(text: str) -> dict[str, Any] | None:
 def do_prepare(args: argparse.Namespace) -> None:
     wanted = set(json.loads(args.audit.read_text())["labels"])
     found: dict[str, dict] = {}
-    for path in sorted(args.root.glob("*/examples/*.jsonl")):
-        for line in path.open():
-            row = json.loads(line)
+    # The refined examples, as the audit sampled them (`label_audit_sample.py`): refine rewrites
+    # comments (bots, acknowledgements), so a built row could show another comment set.
+    for org in sorted({i.split(":", 1)[0] for i in wanted}):
+        for row in refined_examples(args.root, org):
             if row["id"] in wanted:
+                if row["id"] in found:
+                    raise SystemExit(f"{row['id']} appears twice in the refined corpus")
                 found[row["id"]] = {"id": row["id"], **{f: row.get(f, "") for f in SHOWN}}
-    if missing := wanted - set(found):
-        raise SystemExit(
-            f"{len(missing)} audited examples not in the corpora: {sorted(missing)[:3]}"
-        )
+    # The audit drew from corpus v2; an example a later refinement removed has no current row,
+    # and is left out rather than rebuilt, so every item is shown exactly as its raters saw it.
+    missing = sorted(wanted - set(found))
     args.items.parent.mkdir(parents=True, exist_ok=True)
     args.items.write_text("".join(json.dumps(found[i]) + "\n" for i in sorted(found)))
-    print(f"wrote {len(found)} items to {args.items}")
+    args.items.with_suffix(".missing.json").write_text(json.dumps(missing, indent=1) + "\n")
+    print(f"wrote {len(found)} items to {args.items}; {len(missing)} no longer refined")
 
 
 def do_rate(args: argparse.Namespace) -> None:
@@ -157,6 +161,7 @@ def do_agree(args: argparse.Namespace) -> None:
         "unparsed": rated["unparsed"],
         "pairs": {},
     }
+    # An unparsed item is left out of every pair, so each pair records its own item count.
     for other in ("A", "B", "human"):
         common = sorted(i for i, v in audit["labels"].items() if other in v and i in open_labels)
         mine = {i: open_labels[i]["label"] for i in common}
@@ -169,7 +174,22 @@ def do_agree(args: argparse.Namespace) -> None:
                 common,
                 [True, False],
             ),
+            "outside_names": _pair(
+                {i: open_labels[i]["outside_names"] for i in common},
+                {i: bool(audit["labels"][i][other]["outside_names"]) for i in common},
+                common,
+                [True, False],
+            ),
         }
+    # Adopted when its label kappa with the human reaches the lower end of the locked human-A
+    # interval (research log, 2026-10-02), and only with every item parsed.
+    bar = audit["pairs"]["human~A"]["kappa_95"][0]
+    report["adoption"] = {
+        "bar": bar,
+        "bar_source": "label-audit-v2.json pairs['human~A'].kappa_95[0], locked, label",
+        "adopted": rated["unparsed"] == 0
+        and report["pairs"]["open-human"]["label"]["kappa"] >= bar,
+    }
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     for name, pair in report["pairs"].items():
