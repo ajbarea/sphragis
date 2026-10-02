@@ -102,6 +102,38 @@ Within an organization both contrasts are bootstrapped on the same draws, so the
 an adapter from the evaluated half beats a foreign organization's, is reported with a 95%
 interval. It answers a weaker question than either hypothesis and binds no verdict.
 
+### Readings beside the pass rule, each binding no verdict (registered 2026-10-02)
+
+From the October 2026 practice sweep (research log, 2026-10-01), each reported for every cell and
+hypothesis the gate reads, on the same draws, at the same levels:
+
+- **Meaningful.** A supported cell is also *meaningful* when its lower bound clears the SESOI
+  (`SESOI` = 0.01), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
+  AMPPS 2026). "Supported" says the effect is above zero; "meaningful" says it is above the
+  smallest effect worth having.
+- **At least r of k.** Beside the every-organization rule, the largest r for which "at least r of
+  the k admitted organizations show the effect" is rejected, by the partial conjunction test in
+  its Bonferroni form (Benjamini and Heller, Biometrics 2008): with each cell's one-sided
+  bootstrap p-value (the share of draws at or below zero), reject for r when the r-th smallest
+  times k - r + 1 is below the hypothesis's level. The organizations are disjoint corpora, so the
+  cells are independent. A failed every-organization rule then still says how many show it.
+- **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
+  merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read
+  at fetch time for the test window). Trailers are voluntary, so this bounds nothing; it shows
+  whether the flagged share moves the estimate.
+- **Without backports of older code.** Recomputed without examples whose (project, Change-Id) sits
+  only on release, maintenance or deployment branches (`scripts/backport_share.py`'s rule), the
+  traceable route by which code older than the checkpoint enters.
+- **Reviewer exposure.** For the organization contrast, the per-example sibling-minus-foreign
+  difference regressed on its exposure (the share of the sibling half's training examples from
+  changes its reviewers reviewed, `scripts/reviewer_overlap.py`), the slope with a change-clustered
+  95% interval. A positive slope excluding zero says part of the organization effect travels
+  with shared reviewers rather than the organization as a whole. Reviewers are read from
+  attention sets, per change, not per comment.
+
+Each is implemented before the seal opens (ROADMAP Plan H); none changes the pass rule, the
+estimand or the levels.
+
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 
 The threshold has to clear the measured train-into-dev rate, which is 0.97% for OpenStack on corpus v3. At

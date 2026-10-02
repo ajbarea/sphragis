@@ -183,7 +183,9 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   arXiv:2606.06492). Exploratory.
 - [ ] **A likelihood outcome**: teacher-forced bits-per-byte of the target, own vs sibling, as a
   registered secondary with its own SESOI and sensitivity simulation (arXiv:2508.13144).
-- [ ] **Readings beside the pass rule**: "meaningful" when a cell's lower bound clears the SESOI
+- [ ] **Readings beside the pass rule** (registered in `docs/registered-decisions.md` 2026-10-02,
+  with the AI-trailer, backport and reviewer-exposure sensitivities; to implement in
+  `decomposition.py` before the seal): "meaningful" when a cell's lower bound clears the SESOI
   (three-sided testing, Isager and Fitzgerald, AMPPS 2026); the largest r with "at least r of k
   organizations" rejected (partial conjunction, Benjamini and Heller 2008), so a failed
   every-organization test still says how many show the effect. The intersection-union rule stays
