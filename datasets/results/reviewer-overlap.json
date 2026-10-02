@@ -1,0 +1,54 @@
+{
+  "orgs": {
+    "openstack": {
+      "dev_examples_in_halves": 501,
+      "dev_examples_with_reviewers": 497,
+      "dev_examples_sharing_a_sibling_reviewer": 482,
+      "share_sharing": 0.9698189134808853,
+      "exposure_quantiles": {
+        "0.1": 0.0004975124378109452,
+        "0.25": 0.005511022044088177,
+        "0.5": 0.028056112224448898,
+        "0.75": 0.07064676616915423,
+        "0.9": 0.11472945891783567
+      },
+      "reviewers_per_half": [
+        365,
+        376
+      ],
+      "reviewers_in_both_halves": 236
+    },
+    "wikimedia": {
+      "dev_examples_in_halves": 711,
+      "dev_examples_with_reviewers": 700,
+      "dev_examples_sharing_a_sibling_reviewer": 649,
+      "share_sharing": 0.9271428571428572,
+      "exposure_quantiles": {
+        "0.1": 0.0009560229445506692,
+        "0.25": 0.004780114722753346,
+        "0.5": 0.016252390057361378,
+        "0.75": 0.05927342256214149,
+        "0.9": 0.09082217973231357
+      },
+      "reviewers_per_half": [
+        260,
+        236
+      ],
+      "reviewers_in_both_halves": 176
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-02T00:41:28.257445+00:00",
+    "git": {
+      "commit": "a2e5cea7c4ef50f7202fd64546d31c52ad564dcf",
+      "branch": "measure/reviewer-overlap",
+      "uncommitted_code": [
+        "scripts/reviewer_overlap.py"
+      ],
+      "uncommitted_code_sha256": "4bae951a0246135ce6e8db87f7a011f2b5ff5915a6b11fdb8cc9cef3b421520e"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
