@@ -6625,26 +6625,33 @@ model is pinned at its current `2e1fd39`. `MODEL_REVISIONS` in `sphragis/experim
 now passes them to every load, and a checkpoint without one refuses to load. Past runs are
 unaffected: they read these revisions.
 
-### Backports of code older than the corpus: at most 16 of 4,006 OpenStack training examples (2026-10-02)
+### Backports of code older than the corpus: 19 of 4,006 OpenStack training examples are backports with no original in the corpus (2026-10-02)
 
 `backport-share.json` (`scripts/backport_share.py`), metadata only. ROADMAP Plan H asked whether
 pre-cutoff code enters through cherry-picks: a change's window is its creation month, so a
 backport created inside the corpus can carry code first written before the checkpoint. A backport
-shares its Change-Id with its original and the examples keep no branch, so each example is
-bounded. When every change with its (project, Change-Id) sits on a release or deployment branch
-(OpenStack `stable/` and `unmaintained/`, MediaWiki `REL1_xx` and `wmf/`), its original is not in
-the corpus and may predate it; when any does, it may be a backport whose original is in the
-corpus and so postdates the checkpoint like the backport.
+that keeps its original's Change-Id can be traced, and the examples keep no branch, so each one is
+read two ways. When every change with its (project, Change-Id) sits on a release, maintenance or
+deployment branch (as the hosts name them, from OpenStack's `stable/` and StarlingX's `r/stx` to
+MediaWiki's `REL1_xx`, `fundraising/REL1_xx` and `deploy/wmf/`), its original is not in the corpus
+and may predate it. When any does, it may be such a backport, whose original is in the corpus and
+postdates the checkpoint with it.
 
-| | only on a backport branch | possibly from one |
+| | backport, no original in the corpus | possibly a backport |
 |---|---|---|
-| OpenStack train | 16 of 4,006 (0.4%) | 264 (6.6%) |
-| OpenStack dev | 0 of 515 | 25 (4.9%) |
-| Wikimedia train | 6 of 4,184 (0.1%) | 256 (6.1%) |
+| OpenStack pilot | 5 of 532 (0.9%) | 41 (7.7%) |
+| OpenStack train | 19 of 4,006 (0.5%) | 483 (12.1%) |
+| OpenStack dev | 0 of 515 | 43 (8.3%) |
+| Wikimedia pilot | 6 of 582 (1.0%) | 60 (10.3%) |
+| Wikimedia train | 7 of 4,184 (0.2%) | 258 (6.2%) |
 | Wikimedia dev | 2 of 747 (0.3%) | 56 (7.5%) |
 
-Only the first column can carry code older than the corpus, and it is under half a percent in
-every window; the item is answered by excluding those examples in a sensitivity analysis rather
-than by a line-level lookup against every branch. The second column also reads as a
-deduplication fact: up to 7.5% of examples share a Change-Id with a change on another branch,
-which the study's change-level grouping already keeps on one side of every boundary.
+Every example matched a raw change. The first column is the traceable route for code older than
+the corpus, about one percent or less in every window; it is excluded in a sensitivity analysis
+rather than looked up line by line against every branch. It is not a ceiling: a revert, a
+re-proposal under a new Change-Id or a hand copy carries old code untraced, which only a
+line-level lookup would find. The second column is also a deduplication fact: up to 12% of an
+organization's examples share a Change-Id with a change on another branch, which the study's
+change-level grouping keeps on one side of every window boundary. An independent review widened
+the branch names (the first pattern missed `deploy/wmf/`, `fundraising/REL`, `bugfix/` and
+`r/stx`) and corrected an earlier wording of the first column as an upper bound.
