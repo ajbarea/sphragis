@@ -14,10 +14,16 @@ sys.argv = ["reviewer_overlap"]
 _spec.loader.exec_module(script)
 
 
-def test_a_change_s_reviewers_are_its_attention_set_minus_its_owner() -> None:
+def _row(project: str, change: str) -> dict:
+    return {"project": project, "change_id": change}
+
+
+def test_reviewers_are_pseudonyms_never_raw_keys_or_reason_text() -> None:
     change = {
         "owner": {"_account_id": "own"},
-        "attention_set": {"1": {"account": {"_account_id": "r1"}}},
+        "attention_set": {
+            "12345": {"account": {"_account_id": "r1"}, "reason": "<GERRIT_ACCOUNT_9>"}
+        },
         "removed_from_attention_set": {
             "2": {"account": {"_account_id": "own"}},
             "3": {"account": {"_account_id": "r2"}},
@@ -26,15 +32,33 @@ def test_a_change_s_reviewers_are_its_attention_set_minus_its_owner() -> None:
     assert script.change_reviewers(change) == {"r1", "r2"}
 
 
-def test_exposure_is_the_share_of_sibling_training_examples_a_reviewer_reviewed() -> None:
-    def row(project: str, change: str) -> dict:
-        return {"project": project, "change_id": change}
-
+def test_exposure_shared_reviewers_and_skips_in_both_directions() -> None:
     side = {"a": 0, "b": 1}
-    reviewers = {("b", "T1"): {"r1"}, ("b", "T2"): {"r9"}, ("a", "D1"): {"r1"}, ("a", "D2"): set()}
-    train = [row("b", "T1"), row("b", "T2"), row("b", "T2"), row("a", "T3")]
-    dev = [row("a", "D1"), row("a", "D2"), row("z", "D3")]
+    reviewers = {
+        ("b", "T1"): {"r1", "r2"},
+        ("b", "T2"): {"r9"},
+        ("a", "T3"): {"r5"},
+        ("a", "D1"): {"r1", "r2"},
+        ("a", "D2"): set(),
+        ("b", "D4"): {"r5", "r7"},
+    }
+    train = [_row("b", "T1"), _row("b", "T2"), _row("b", "T2"), _row("a", "T3")]
+    dev = [_row("a", "D1"), _row("a", "D2"), _row("z", "D3"), _row("b", "D4")]
     out = script.overlap(train, dev, side, reviewers)
-    assert out["dev_examples_in_halves"] == 2 and out["dev_examples_with_reviewers"] == 1
-    assert out["dev_examples_sharing_a_sibling_reviewer"] == 1
-    assert out["exposure_quantiles"]["0.5"] == 1 / 3
+    assert out["dev_examples_in_halves"] == 3 and out["dev_examples_without_a_half"] == 1
+    assert out["dev_examples_with_reviewers"] == 2
+    assert out["dev_examples_sharing_a_sibling_reviewer"] == 2
+    assert out["dev_examples_sharing_two_sibling_reviewers"] == 1, "D4 shares only r5"
+    assert out["exposure_quantiles"]["0.1"] == 1 / 3 and out["exposure_quantiles"]["0.9"] == 1.0
+    assert out["reviewers_per_half"] == [1, 3] and out["reviewers_in_both_halves"] == 0
+
+
+def test_an_empty_sibling_half_has_no_exposure() -> None:
+    out = script.overlap([], [_row("a", "D1")], {"a": 0}, {("a", "D1"): {"r1"}})
+    assert out["dev_examples_sharing_a_sibling_reviewer"] == 0
+    assert out["exposure_quantiles"] == {str(q): 0.0 for q in script.QUANTILES}
+
+
+def test_quantiles_are_nearest_rank() -> None:
+    assert script.quantiles([4.0, 1.0, 3.0, 2.0])["0.5"] == 3.0
+    assert script.quantiles([]) == {}

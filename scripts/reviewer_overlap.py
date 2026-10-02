@@ -52,6 +52,7 @@ def change_reviewers(change: Mapping) -> set[str]:
 
 
 def quantiles(values: list[float]) -> dict[str, float]:
+    """Nearest-rank quantiles, the order statistic at floor(q * n), no interpolation."""
     ordered = sorted(values)
     return (
         {str(q): ordered[min(int(q * len(ordered)), len(ordered) - 1)] for q in QUANTILES}
@@ -73,10 +74,12 @@ def overlap(
             by_half[side[row["project"]]].append(
                 reviewers.get((row["project"], row["change_id"]), set())
             )
-    counted = known = shared = 0
+    sibling_people = {h: set().union(*seen) if seen else set() for h, seen in by_half.items()}
+    counted = skipped = known = shared = shared_two = 0
     exposures: list[float] = []
     for row in dev:
         if row["project"] not in side:
+            skipped += 1
             continue
         counted += 1
         people = reviewers.get((row["project"], row["change_id"]), set())
@@ -86,16 +89,21 @@ def overlap(
         sibling = by_half[1 - side[row["project"]]]
         hit = sum(bool(people & seen) for seen in sibling)
         shared += hit > 0
+        # Two distinct accounts: an account on most changes (CI, a bot without a service tag,
+        # which the raw snapshots never carry) cannot make an example count by itself.
+        shared_two += len(people & sibling_people[1 - side[row["project"]]]) >= 2
         exposures.append(hit / len(sibling) if sibling else 0.0)
-    reviewers_by_half = [set().union(*h) if h else set() for h in (by_half[0], by_half[1])]
     return {
         "dev_examples_in_halves": counted,
+        "dev_examples_without_a_half": skipped,
         "dev_examples_with_reviewers": known,
         "dev_examples_sharing_a_sibling_reviewer": shared,
         "share_sharing": shared / known if known else None,
+        "dev_examples_sharing_two_sibling_reviewers": shared_two,
+        "share_sharing_two": shared_two / known if known else None,
         "exposure_quantiles": quantiles(exposures),
-        "reviewers_per_half": [len(r) for r in reviewers_by_half],
-        "reviewers_in_both_halves": len(reviewers_by_half[0] & reviewers_by_half[1]),
+        "reviewers_per_half": [len(sibling_people[0]), len(sibling_people[1])],
+        "reviewers_in_both_halves": len(sibling_people[0] & sibling_people[1]),
     }
 
 
