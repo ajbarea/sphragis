@@ -6588,6 +6588,33 @@ frozen month; cleaning the snapshots already on disk is a rewrite of raw data, t
 as purging withdrawn changes, and is AJ's (ROADMAP Plan A). Until then the claim is that
 identities are pseudonymised in everything derived from the raw snapshots, not in the snapshots.
 
+### Reviewers are shared across halves; the reviewer analysis reads exposure, not a shared-reviewer split (2026-10-01)
+
+`reviewer-overlap.json` (`scripts/reviewer_overlap.py`), metadata only, no outcome read. A
+change's reviewers are the pseudonymous accounts in its attention-set history other than its
+owner, change-level rather than the author of the example's own comment (the built examples do
+not keep it). Halves are the registered largest-first assignment; windows the corpus's own.
+
+| | OpenStack | Wikimedia |
+|---|---|---|
+| dev examples sharing a reviewer with the sibling half's training data | 482 of 497 (97%) | 649 of 700 (93%) |
+| ... sharing two distinct reviewers with it | 365 of 497 (73%) | 430 of 700 (61%) |
+| reviewers in both halves' training data | 236 (365 and 376 per half) | 176 (260 and 236) |
+| exposure, median [10th, 90th percentile] | 0.028 [0.0005, 0.115] | 0.016 [0.0010, 0.091] |
+
+Exposure is the share of the sibling half's training examples that come from changes one of the
+dev example's reviewers reviewed (nearest-rank quantiles); 14 OpenStack and 36 Wikimedia dev
+examples sit in projects with no half and are left out, as the placebo corpus leaves them out.
+Attention sets can hold CI or bot accounts, and no raw account carries a service tag, so they
+cannot be filtered; one Wikimedia account attends 1,978 changes and owns two. The two-reviewer
+row is the check against that, since no single account can make an example count there. Almost every dev example shares some reviewer with its sibling
+half, so the shared-reviewer split ROADMAP Plan H planned would leave one side nearly empty, and a
+foreign organization shares none: the sibling-over-foreign gain the house-style claim rests on is
+the place a reviewer effect could hide. Exposure varies over two orders of magnitude, so the
+analysis to register is a moderation of the sibling-over-foreign contrast by exposure (does the
+sibling's advantage grow with how much of its training its own reviewers wrote), as a secondary
+before the seal, change-clustered as the primary contrast is.
+
 ### Checkpoints pinned to the revisions every run used (2026-10-01)
 
 Nothing passed a revision when loading a checkpoint, so every load read the Hub's `main`, and
