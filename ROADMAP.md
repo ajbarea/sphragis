@@ -205,6 +205,19 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   (arXiv:2508.15503); background on industrial comment resolution and retrieval vs fine-tuning.
 - [ ] **An open-weight label-audit rater** at pinned weights beside the two API raters.
 
+From the lab meeting of 2026-10-02 (Dr. Reznik's questions), carried as directions, not Stage 1 work:
+
+- [ ] **A checking agent ("agent control").** The label audit's grades (a revision answers the
+  comment, partly, not at all, or needs context) are the judgment an agent checking a coding
+  agent's change would make before a human sees it. The audited sample is the seed of a
+  training and test set for such a checker; it would be scored against human labels, as the
+  audit scores its model raters. Its place is the Federated Agents line after P4, where a
+  checker can also sit at the shared/private boundary.
+- [ ] **Beyond code review.** Collection, pseudonymisation and the sealed time split are host
+  routes and apply to any review system; pairing and the cleaning rules are code-review specific.
+  Stated in the deck's backup and here, not built.
+- [ ] **Talks at 10 to 15 minutes**, built from the one deck (`papers/federated-agents-deck`).
+
 RQ2, after Stage 1:
 
 - [ ] **A harm model for known participants**: in cross-silo federation members are named, so
