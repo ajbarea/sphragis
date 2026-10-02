@@ -181,6 +181,18 @@ def do_agree(args: argparse.Namespace) -> None:
                 [True, False],
             ),
         }
+    # The audit's own pairs on the items the open rater and the human share, so every human
+    # figure has a comparator on the same items.
+    shared = sorted(i for i, v in audit["labels"].items() if "human" in v and i in open_labels)
+    report["comparators_on_shared_human_items"] = {
+        f"{x}-{y}": _pair(
+            {i: audit["labels"][i][x]["label"] for i in shared},
+            {i: audit["labels"][i][y]["label"] for i in shared},
+            shared,
+            list(LABELS),
+        )
+        for x, y in (("A", "human"), ("B", "human"), ("A", "B"))
+    }
     # Adopted when its label kappa with the human reaches the lower end of the locked human-A
     # interval (research log, 2026-10-02), and only with every item parsed.
     bar = audit["pairs"]["human~A"]["kappa_95"][0]
