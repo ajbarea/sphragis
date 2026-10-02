@@ -6655,3 +6655,26 @@ organization's examples share a Change-Id with a change on another branch, which
 change-level grouping keeps on one side of every window boundary. An independent review widened
 the branch names (the first pattern missed `deploy/wmf/`, `fundraising/REL`, `bugfix/` and
 `r/stx`) and corrected an earlier wording of the first column as an upper bound.
+
+### Planned before any run: few-shot retrieval as the adapters' comparator (2026-10-02)
+
+ROADMAP Plan H, from the October 2026 sweep: whether retrieval over an organization's own past
+reviews recovers what the adapters learn is the competing explanation reviewers now expect
+(retrieval beat fine-tuning for in-house review in arXiv:2505.15179 and lost in arXiv:2606.06492;
+the standard setup for code refinement is the top 3 by BM25, Pornprasit and Tantithamthavorn, IST
+2024). **Method** (`scripts/retrieval_baseline.py`, `sphragis/experiment/retrieval.py`): for each
+development-window example of an evaluated half under the registered largest-first assignment,
+the base model (Qwen2.5-Coder-7B-Instruct, pinned, greedy, as every generator) is prompted alone
+(the registered base arm) and with the 3 training-window examples closest by BM25 over comments
+and old code, solved in the registered template, drawn from its own half, its sibling half or
+the other organization. A pool holds only examples `build_supervised` would accept under the
+2,048-token training budget, the examples an adapter could have learned from. **Readings**: exact
+match per arm; own minus sibling (the retrieval counterpart of H1's contrast), sibling minus
+foreign (of the organization contrast) and own minus none, each with a change-clustered 95%
+bootstrap interval. **Exploratory**: outside the registered cells, binding nothing, one partition
+rather than repeated ones. The question it answers is set before it runs: if own minus sibling
+under retrieval is of the size the adapters show, the convention is recoverable from the data at
+inference time and the adapters' result is read as learning what retrieval also finds; if
+retrieval's contrast is near zero while the adapters' is not, the adapters carry something
+retrieval does not. A CPU dry run built every prompt for both organizations (501 and 711 targets;
+pools of about 2,000 examples a half after the budget filter), and no generation has run.
