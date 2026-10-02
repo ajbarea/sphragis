@@ -6542,3 +6542,18 @@ pseudonymised at ingestion); open access for every resulting publication, which 
 require (MSR's ACM proceedings are open access; the registered report's Stage 2 appears in EMSE,
 so its open-access option and an arXiv copy); and what more cells do to H1, which passes only if
 every admitted organization's cell does, each cell then needing power 0.95^(1/k).
+
+### The raw snapshots keep Gerrit account numbers outside `_account_id`; the examples do not (2026-10-01)
+
+Found while checking whether reviewer overlap can be read from raw snapshots. `scrub` replaces
+every `_account_id` value and every address with a salted pseudonym, but two other places carry
+the raw Gerrit account number: `attention_set` and `removed_from_attention_set` are dictionaries
+keyed by it, and their `reason` text names it as `<GERRIT_ACCOUNT_n>` (lines with one: OpenStack
+12,450, Wikimedia 19,134, AOSP 5,215, Qt 9,910 across the raw months on disk). Account numbers are
+public on each host and resolve to a person, so the raw snapshots are not pseudonymous in full.
+No refined or built example holds one (all four corpora checked), so nothing derived, committed or
+released is affected; the GitHub route's rows have no attention sets. The fix to `scrub` waits
+for the next build-rules change, since `scrub.py` is in `BUILD_SOURCES` and an edit stales every
+frozen month; cleaning the snapshots already on disk is a rewrite of raw data, the same decision
+as purging withdrawn changes, and is AJ's (ROADMAP Plan A). Until then the claim is that
+identities are pseudonymised in everything derived from the raw snapshots, not in the snapshots.
