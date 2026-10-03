@@ -1512,6 +1512,7 @@ the RC documentation grants every project without a pending review a TIGRIS Slur
 memory, and the GH200's unified memory would not have surfaced an overflow. The first SPORC
 run records it, along with seconds per step, since every `--time` in `scripts/` was sized on a
 GH200.
+*Measured 2026-10-03: see "The registered 7B on a 40 GB A100" below.*
 
 **Constraint this places on results.** A result set that mixes GH200 and A100 runs confounds
 the contrast with hardware. Each job's output now records its cluster, job, GPU and peak memory,
@@ -6694,3 +6695,59 @@ looked: some of that agreement is a shared way of judging, not shared correctnes
 conclusion rests on the human's agreement with the raters, which this leaves where it was; what
 changes is that A~B is no longer read as an independent replication. The audit now has a rater
 anyone can rerun at fixed weights.
+
+### The registered 7B on a 40 GB A100: the registered rank fits only at the margin, and the rank-256 and dual-adapter runs do not (2026-10-03)
+
+`memory-probe-sporc.json`, SPORC job 21796973 (A100-PCIE-40GB, 42.43 GB as the device reports
+it, pinned at 592b11e). `scripts/memory_probe.py` trains the registered 7B with `train_adapter`
+for two optimiser steps a cell on synthetic items of fixed length, at the registered rank and at
+256, then runs the registered fp32 generator over a prompt one token under the training bound.
+Training runs one item per micro-batch, so the longest item sets the peak, and no item over
+2,048 tokens can be trained on. The CUDA context and libraries hold 0.55 GB outside PyTorch's
+allocator.
+
+| rank | item tokens | peak allocated GB | peak reserved GB | seconds a step |
+|---|---|---|---|---|
+| 32 | 512 | 22.77 | 23.28 | 3.02 |
+| 32 | 1024 | 28.86 | 29.63 | 6.52 |
+| 32 | 2048 | 41.06 | 41.78 | 10.81 |
+| 256 | 512 | 32.01 | 32.70 | 4.84 |
+| 256 | 1024 | 38.10 | 39.31 | 9.12 |
+| 256 | 2048 | overflow (reached 40.85) | | |
+
+| adapter | prompt + new tokens | peak allocated GB | peak reserved GB | seconds |
+|---|---|---|---|---|
+| none | 2047 + 256 | 31.62 | 33.00 | 10.34 |
+| rank 256 | 2047 + 256 | 34.22 | 38.13 | 12.02 |
+
+**The registered rank fits at every admissible length in a clean cell, with almost no room at the
+bound**: at 2,048 tokens the reserved peak plus the memory outside the allocator leaves 0.10 GB.
+Real runs reach that bound. The rank-32 client-update runs on GH200s peaked at 41.07 to 41.10 GB
+allocated (`client-updates-cpp-early.json`, `client-updates-cpp-256-c256.json`,
+`client-updates-cpp-rebuilt-c128.json`), which matches this probe's 2,048-token cell and leaves
+0.78 GB on an A100 before fragmentation; their reserved peaks, 43.72 to 45.08 GB, are above the
+A100's 42.43. Wikimedia's partition runs on the stack branch peak lower, at 39.91 GB allocated
+and up to 45.39 GB reserved. PyTorch's allocator behaves the same on both GPUs: on a failed
+allocation it releases unused cached segments and retries, but fragmented blocks stay held, so a
+run whose reserved peak exceeds the device is not shown to fit by its allocated peak.
+
+**Two kinds of run cannot fit an A100.** The rank-256 branch overflows at 2,048 tokens here, and
+the committed GH200 rank-256 runs (`rq1-windows-r256.json` and its seeds) peaked at 47.4 GB
+allocated. The dual-adapter client updates peaked at 44.65 GB
+(`client-updates-dual-cpp-rebuilt-c128-t2.json`).
+
+**Inference fits**, with 3.75 GB to spare even with a rank-256 adapter attached. Evaluation
+prompts are not capped at the training bound, but in fp32 the cache grows by about 115 KB a token,
+so a longer prompt moves this little.
+
+**Decided: the 7B GPU work stays off the A100s.** It runs on TIGRIS GH200s, where every 7B result so
+far ran, or on SPORC's 80 GB H100 node. A confirmatory set runs on one GPU type anyway, since mixing
+GPU types confounds the contrast with hardware (2026-09-17 above), and an A100 would carry the
+registered rank with under a gigabyte of allocated headroom and less than its reserved peak. If an
+A100 run is ever needed, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` is the standard lever
+against fragmentation under varying sequence lengths (torchtune issue 1185); it changes allocation,
+not arithmetic, and would need its own trial at the bound first.
+
+Seconds per step are for the GPU alone at fixed lengths. A real step averages over the corpus's
+length distribution, so a job's `--time` is sized from its own logged steps, not from this table.
+
