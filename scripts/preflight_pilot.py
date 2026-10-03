@@ -57,7 +57,7 @@ try:
 
     from sphragis.corpus.pipeline import run_dedup
     from sphragis.experiment.holdout import holdout_by_change, verbatim_overlap
-    from sphragis.experiment.model import MODEL_ID, TRAINING
+    from sphragis.experiment.model import MODEL_ID, TRAINING, revision
     from sphragis.experiment.runner import build_prompt
     from sphragis.experiment.training import build_supervised, render_chat
     from sphragis.measure.stats import MIN_CLUSTERS
@@ -74,7 +74,7 @@ tok = None
 for org, path in corpora.items():
     try:
         if tok is None:
-            tok = AutoTokenizer.from_pretrained(MODEL_ID)
+            tok = AutoTokenizer.from_pretrained(MODEL_ID, revision=revision(MODEL_ID))
         rows = derived_file_rows(path, legacy=args.legacy_corpus)
         kept, removed = run_dedup(rows)
         train, held_out = holdout_by_change(kept, seed=args.split_seed)
