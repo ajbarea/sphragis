@@ -75,6 +75,34 @@ def test_one_sided_reads_a_confidence_level_or_refuses(
         assert error is None and value == pytest.approx(expected)
 
 
+@pytest.mark.parametrize(
+    ("reduce", "expected"),
+    [
+        ("min:fp/0.975", 0.011),
+        ("max:fp/0.975", 0.016),
+        ("min:fp/0.5", None),
+        ("max:fp", None),
+        ("mean:fp", None),
+    ],
+)
+def test_min_max_read_the_extreme_over_every_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reduce: str, expected: float | None
+) -> None:
+    """A quoted range is checked against its true extremes, not one fixed entry."""
+    points = {
+        "a": {"fp": {"0.975": 0.013}},
+        "b": {"fp": {"0.975": 0.011}},
+        "c": {"fp": {"0.975": 0.016}},
+    }
+    (tmp_path / "a.json").write_text(json.dumps({"by_target": points}))
+    monkeypatch.setattr(harvest, "ROOT", tmp_path)
+    value, error = harvest.resolve("a.json", ["by_target"], {"reduce": reduce})
+    if expected is None:
+        assert value is None and error
+    else:
+        assert error is None and value == pytest.approx(expected)
+
+
 def test_no_figure_goes_unasserted() -> None:
     """A figure added to a page without a claim behind it fails here, not silently."""
     assert not harvest.unclaimed(), "\n".join(harvest.unclaimed())
