@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -43,3 +45,24 @@ def test_cells_are_checked_before_a_model_loads() -> None:
 def test_the_defaults_pass_their_own_check() -> None:
     args = probe.parser.parse_args(["--out", "x.json"])
     assert probe.check_lengths(probe._ints(args.lengths), args.target_tokens, 2048) is None
+
+
+@pytest.mark.parametrize("oom", [False, True])
+def test_an_overflowed_cell_has_no_peak(monkeypatch: pytest.MonkeyPatch, oom: bool) -> None:
+    gb = 10**9
+    cuda = types.SimpleNamespace(
+        mem_get_info=lambda: (8 * gb, 40 * gb),
+        max_memory_allocated=lambda: 30 * gb,
+        max_memory_reserved=lambda: 31 * gb,
+        memory_reserved=lambda: 31 * gb,
+    )
+    monkeypatch.setitem(sys.modules, "torch", types.SimpleNamespace(cuda=cuda))
+    memory = probe._memory(oom)
+    assert memory["outside_torch_gb"] == 1.0
+    assert memory["total_gb"] == 40.0
+    if oom:
+        assert memory["peak_allocated_gb"] is None and memory["peak_reserved_gb"] is None
+        assert memory["allocated_at_oom_gb"] == 30.0
+    else:
+        assert (memory["peak_allocated_gb"], memory["peak_reserved_gb"]) == (30.0, 31.0)
+        assert memory["allocated_at_oom_gb"] is None
