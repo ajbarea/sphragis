@@ -29,6 +29,7 @@ from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
     MODEL_ID,
     TRAINING,
+    revision,
     run_provenance,
     train_adapter,
 )
@@ -77,7 +78,7 @@ print(
 )
 print(f"examples {len(rows)}  train {len(train_rows)}  eval {len(eval_rows)}", flush=True)
 
-tok = AutoTokenizer.from_pretrained(MODEL_ID)
+tok = AutoTokenizer.from_pretrained(MODEL_ID, revision=revision(MODEL_ID))
 if tok.pad_token_id is None:
     tok.pad_token = tok.eos_token
 
@@ -150,7 +151,9 @@ def arm(model, label: str) -> list[dict]:
     return results
 
 
-base = AutoModelForCausalLM.from_pretrained(MODEL_ID, dtype=torch.bfloat16, device_map="cuda:0")
+base = AutoModelForCausalLM.from_pretrained(
+    MODEL_ID, revision=revision(MODEL_ID), dtype=torch.bfloat16, device_map="cuda:0"
+)
 print("loaded base", flush=True)
 base_results = arm(base, "BASE")
 
