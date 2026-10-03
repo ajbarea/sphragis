@@ -117,7 +117,8 @@ own training seed; runs and changes are crossed rather than nested, so they are 
 independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
 the registered runs its one-sided false-positive rate at the stricter level is 0.011 to 0.0125
-against a nominal 0.0125.
+for OpenStack and 0.014 to 0.016 for Wikimedia, against a nominal 0.0125; Wikimedia's excess is
+at most about two Monte Carlo errors.
 
 ### Number of runs: fixed from the pilot, K = 24 for OpenStack
 
@@ -132,8 +133,9 @@ they agree, was simulated first and rejected: it ran above nominal where it stop
 
 With two cells each is sized at power 0.9747. At that power, its projected test size and K
 runs, OpenStack's $H_1$ cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
-points at the two Holm levels, at the per-run spread K was sized on; these are the bounds a
-bounded reading is judged against. Power from a pilot's own estimate is biased upward, so no
+points at the two Holm levels and Wikimedia's +0.0268 and +0.0246, at the per-run spread K was
+sized on; these are the bounds a bounded reading is judged against. Wikimedia's test size is a
+lower bound, so its bounds are conservative. Power from a pilot's own estimate is biased upward, so no
 power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
