@@ -100,7 +100,12 @@ def _memory(oom: bool) -> dict[str, float | None]:
 def _write(path: Path, report: dict[str, Any]) -> None:
     from sphragis.experiment.model import run_provenance
 
-    path.write_text(json.dumps({**report, "provenance": run_provenance()}, indent=2) + "\n")
+    provenance = run_provenance()
+    # The probe resets the peak between cells, so the process-wide peak that `gpu_record` reports
+    # would be the last cell's alone. The cells carry the peaks.
+    if provenance.get("gpu"):
+        provenance["gpu"] |= {"peak_allocated_gb": None, "peak_reserved_gb": None}
+    path.write_text(json.dumps({**report, "provenance": provenance}, indent=2) + "\n")
 
 
 def train_cells(

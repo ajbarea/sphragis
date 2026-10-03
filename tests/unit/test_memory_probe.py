@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import types
 from pathlib import Path
@@ -66,3 +67,16 @@ def test_an_overflowed_cell_has_no_peak(monkeypatch: pytest.MonkeyPatch, oom: bo
     else:
         assert (memory["peak_allocated_gb"], memory["peak_reserved_gb"]) == (30.0, 31.0)
         assert memory["allocated_at_oom_gb"] is None
+
+
+def test_the_provenance_carries_no_process_peak(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    model = types.SimpleNamespace(
+        run_provenance=lambda: {"gpu": {"name": "A100", "peak_allocated_gb": 3.0}}
+    )
+    monkeypatch.setitem(sys.modules, "sphragis.experiment.model", model)
+    out = tmp_path / "probe.json"
+    probe._write(out, {"training": []})
+    gpu = json.loads(out.read_text())["provenance"]["gpu"]
+    assert gpu == {"name": "A100", "peak_allocated_gb": None, "peak_reserved_gb": None}
