@@ -30,7 +30,7 @@ from typing import Any
 parser = argparse.ArgumentParser()
 parser.add_argument("--out", type=Path, required=True)
 parser.add_argument("--ranks", default="32,256", help="adapter ranks to train at")
-parser.add_argument("--lengths", default="256,1024,2048", help="item lengths in tokens")
+parser.add_argument("--lengths", default="512,1024,2048", help="item lengths in tokens")
 parser.add_argument("--steps", type=int, default=2, help="optimiser steps per cell")
 parser.add_argument(
     "--target-tokens", type=int, default=256, help="supervised tail of each synthetic item"
@@ -178,6 +178,15 @@ def inference_cells(
     return cells
 
 
+def check_lengths(lengths: list[int], target_tokens: int, max_length: int) -> str | None:
+    """Why these cells cannot run, or None. Checked before any model loads."""
+    if lengths[-1] > max_length:
+        return f"lengths above the registered bound {max_length} are inadmissible"
+    if lengths[0] <= target_tokens:
+        return f"every length must exceed --target-tokens {target_tokens}, got {lengths[0]}"
+    return None
+
+
 def _ints(text: str) -> list[int]:
     return sorted(int(part) for part in text.split(","))
 
@@ -188,8 +197,8 @@ def main() -> None:
 
     max_length = int(TRAINING["max_seq_length"])
     lengths = _ints(args.lengths)
-    if lengths[-1] > max_length:
-        parser.error(f"lengths above the registered bound {max_length} are inadmissible")
+    if problem := check_lengths(lengths, args.target_tokens, max_length):
+        parser.error(problem)
     with tempfile.TemporaryDirectory() as tmp:
         adapter_dir = Path(tmp) / "adapter"
         training = train_cells(args, _ints(args.ranks), lengths, adapter_dir)

@@ -32,3 +32,14 @@ def test_items_replay_by_seed() -> None:
 def test_target_must_leave_a_prompt(target: int) -> None:
     with pytest.raises(ValueError):
         probe.synthetic_items(1, 10, target, seed=0)
+
+
+def test_cells_are_checked_before_a_model_loads() -> None:
+    assert probe.check_lengths([512, 2048], 256, 2048) is None
+    assert "bound" in probe.check_lengths([512, 4096], 256, 2048)
+    assert "exceed" in probe.check_lengths([256, 2048], 256, 2048)
+
+
+def test_the_defaults_pass_their_own_check() -> None:
+    args = probe.parser.parse_args(["--out", "x.json"])
+    assert probe.check_lengths(probe._ints(args.lengths), args.target_tokens, 2048) is None
