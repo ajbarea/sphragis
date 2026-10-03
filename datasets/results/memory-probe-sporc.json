@@ -1,0 +1,141 @@
+{
+  "max_seq_length": 2048,
+  "target_tokens": 256,
+  "complete": true,
+  "training": [
+    {
+      "rank": 32,
+      "length": 512,
+      "steps": 2,
+      "seconds_per_step": 3.02,
+      "applied_steps": 2,
+      "oom": false,
+      "peak_allocated_gb": 22.77,
+      "peak_reserved_gb": 23.28,
+      "allocated_at_oom_gb": null,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    },
+    {
+      "rank": 32,
+      "length": 1024,
+      "steps": 2,
+      "seconds_per_step": 6.52,
+      "applied_steps": 2,
+      "oom": false,
+      "peak_allocated_gb": 28.86,
+      "peak_reserved_gb": 29.63,
+      "allocated_at_oom_gb": null,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    },
+    {
+      "rank": 32,
+      "length": 2048,
+      "steps": 2,
+      "seconds_per_step": 10.81,
+      "applied_steps": 2,
+      "oom": false,
+      "peak_allocated_gb": 41.06,
+      "peak_reserved_gb": 41.78,
+      "allocated_at_oom_gb": null,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    },
+    {
+      "rank": 256,
+      "length": 512,
+      "steps": 2,
+      "seconds_per_step": 4.84,
+      "applied_steps": 2,
+      "oom": false,
+      "peak_allocated_gb": 32.01,
+      "peak_reserved_gb": 32.7,
+      "allocated_at_oom_gb": null,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    },
+    {
+      "rank": 256,
+      "length": 1024,
+      "steps": 2,
+      "seconds_per_step": 9.12,
+      "applied_steps": 2,
+      "oom": false,
+      "peak_allocated_gb": 38.1,
+      "peak_reserved_gb": 39.31,
+      "allocated_at_oom_gb": null,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    },
+    {
+      "rank": 256,
+      "length": 2048,
+      "steps": 2,
+      "oom": true,
+      "peak_allocated_gb": null,
+      "peak_reserved_gb": null,
+      "allocated_at_oom_gb": 40.85,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    }
+  ],
+  "inference": [
+    {
+      "adapter_rank": null,
+      "prompt_tokens": 2047,
+      "new_tokens": 256,
+      "dtype": "float32",
+      "seconds": 10.34,
+      "generated": 256,
+      "oom": false,
+      "peak_allocated_gb": 31.62,
+      "peak_reserved_gb": 33.0,
+      "allocated_at_oom_gb": null,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    },
+    {
+      "adapter_rank": 256,
+      "prompt_tokens": 2047,
+      "new_tokens": 256,
+      "dtype": "float32",
+      "seconds": 12.02,
+      "generated": 256,
+      "oom": false,
+      "peak_allocated_gb": 34.22,
+      "peak_reserved_gb": 38.13,
+      "allocated_at_oom_gb": null,
+      "outside_torch_gb": 0.55,
+      "total_gb": 42.43
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-10-03T14:16:39.597934+00:00",
+    "git": {
+      "commit": "592b11ef18586ac66d2144180e15a82075af6896",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.x86_64-x86_64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": "sporc",
+      "job_id": "21796973",
+      "account": "fl-mlm",
+      "partition": "sporc",
+      "node": "skl-a-35"
+    },
+    "gpu": {
+      "name": "NVIDIA A100-PCIE-40GB",
+      "total_gb": 42.43,
+      "peak_allocated_gb": null,
+      "peak_reserved_gb": null,
+      "cuda": "13.0"
+    }
+  }
+}

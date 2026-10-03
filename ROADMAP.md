@@ -86,6 +86,28 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
   the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
   older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).
+- [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
+  (deleted or made private after the snapshot listed them) are counted `change_gone` and never
+  built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
+  release, or keep raw internal for reproducibility and exclude it from every release. Ground the
+  choice in MSR ethics guidance (Gold and Krinke, "Ethics in the mining of software repositories", EMSE 27, 2022, doi:10.1007/s10664-021-10057-7) before deciding.
+  The same rewrite would also re-scrub the raw snapshots' Gerrit account numbers (next item), so
+  the two are one decision about rewriting raw snapshots.
+- [ ] **With the next build-rules change: count a 404 as `change_gone`** (`gerrit.NotFound`, caught
+  apart from `comment_error` in `build_from_change`; written and tested 2026-10-01, held back because
+  any `build.py` edit stales every frozen corpus month).
+- [ ] **With the next build-rules change: scrub Gerrit account numbers that are not `_account_id`
+  values** (`scrub.py` is in `BUILD_SOURCES`). Attention-set entries are keyed by the raw account
+  number and their `reason` text carries `<GERRIT_ACCOUNT_n>`; `scrub` replaces `_account_id`
+  values and addresses only. Every refined and built example on disk holds none (checked
+  2026-10-01, all four Gerrit corpora); the raw snapshots, untracked and never released, do.
+- [ ] **GitHub organizations as candidates** (sized 2026-10-01, `github-sizing-report.json`): Apache and
+  LLVM reach an H1 cell, .NET and Grafana reach RQ2; OpenJDK and HashiCorp borderline. Needs: a GitHub
+  collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
+  removed; pseudonymised at ingestion); LLVM's projects defined as its top-level directories before
+  its split is read; open access for every resulting publication (GitHub's terms: EMSE's open-access
+  option for Stage 2, plus arXiv); the candidate list in Stage 1 extended behind Qt and Chromium; and
+  a decision on H1 over more cells (intersection-union needs power 0.95^(1/k) a cell).
 - [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
   request, with its projects scoped by the component mapping stage.
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to

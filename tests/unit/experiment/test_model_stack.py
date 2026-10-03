@@ -7,6 +7,8 @@ invariant the pre-registered design depends on.
 
 from __future__ import annotations
 
+import re
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -248,7 +250,7 @@ def test_the_rank_asked_for_is_the_rank_built(monkeypatch) -> None:
     monkeypatch.setattr(
         model_module.AutoModelForCausalLM,
         "from_pretrained",
-        classmethod(lambda cls, *a, **k: _Base()),
+        classmethod(lambda cls, *a, **k: seen.update(revision=k.get("revision")) or _Base()),
     )
     monkeypatch.setattr(model_module, "_require_tokenizer", lambda model_id: object())
     monkeypatch.setattr(model_module, "cast_trainable_to_fp32", lambda m: 0)
@@ -260,8 +262,75 @@ def test_the_rank_asked_for_is_the_rank_built(monkeypatch) -> None:
 
     monkeypatch.setattr(model_module, "get_peft_model", _peft)
 
-    model_module.attach_adapter("stub", seed=1, device="cpu", rank=256)
-    assert seen == {"rank": 256, "alpha": 512}
+    model_module.attach_adapter(model_module.MODEL_ID, seed=1, device="cpu", rank=256)
+    assert seen == {
+        "rank": 256,
+        "alpha": 512,
+        "revision": model_module.MODEL_REVISIONS[model_module.MODEL_ID],
+    }
 
-    model_module.attach_adapter("stub", seed=1, device="cpu")
-    assert seen == {"rank": model_module.REGISTERED_RANK, "alpha": 2 * model_module.REGISTERED_RANK}
+    model_module.attach_adapter(model_module.MODEL_ID, seed=1, device="cpu")
+    assert seen == {
+        "rank": model_module.REGISTERED_RANK,
+        "alpha": 2 * model_module.REGISTERED_RANK,
+        "revision": model_module.MODEL_REVISIONS[model_module.MODEL_ID],
+    }
+
+
+def test_the_generator_loads_its_model_at_the_pinned_revision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    asked: dict = {}
+    monkeypatch.setattr(model_module, "_require_tokenizer", lambda _: _FakeTokenizer())
+    monkeypatch.setattr(
+        model_module.AutoModelForCausalLM,
+        "from_pretrained",
+        lambda *a, **k: asked.update(k) or _FakeModel(),
+    )
+    HFGenerator(device="cpu")
+    assert asked["revision"] == model_module.MODEL_REVISIONS[model_module.MODEL_ID]
+
+
+def test_every_hub_load_in_the_code_passes_a_revision() -> None:
+    """A new `from_pretrained` without `revision=` would read the Hub's moving `main`."""
+    import ast
+
+    root = Path(__file__).resolve().parents[3]
+    unpinned = []
+    for path in [*(root / "sphragis").rglob("*.py"), *(root / "scripts").glob("*.py")]:
+        for node in ast.walk(ast.parse(path.read_text())):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "from_pretrained"
+                and not (
+                    isinstance(node.func.value, ast.Name) and node.func.value.id == "PeftModel"
+                )
+                and "revision" not in {k.arg for k in node.keywords}
+            ):
+                unpinned.append(f"{path.relative_to(root)}:{node.lineno}")
+    assert unpinned == []
+
+
+def test_every_registered_checkpoint_loads_at_a_pinned_revision() -> None:
+    for model_id in (
+        model_module.MODEL_ID,
+        model_module.MEMBERSHIP_MODEL_ID,
+        model_module.DEV_MODEL_ID,
+    ):
+        assert re.fullmatch(r"[0-9a-f]{40}", model_module.revision(model_id))
+    assert len(set(model_module.MODEL_REVISIONS.values())) == len(model_module.MODEL_REVISIONS)
+    with pytest.raises(KeyError, match="no pinned revision"):
+        model_module.revision("someone/unpinned-model")
+
+
+def test_the_tokenizer_is_asked_for_the_pinned_revision(monkeypatch: pytest.MonkeyPatch) -> None:
+    asked: dict = {}
+
+    def fake(model_id: str, **kwargs: object) -> object:
+        asked.update(model_id=model_id, **kwargs)
+        return object()
+
+    monkeypatch.setattr(model_module.AutoTokenizer, "from_pretrained", fake)
+    model_module._require_tokenizer(model_module.MODEL_ID)
+    assert asked["revision"] == model_module.MODEL_REVISIONS[model_module.MODEL_ID]

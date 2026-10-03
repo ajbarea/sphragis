@@ -1,0 +1,547 @@
+{
+  "model": "Qwen/Qwen3-14B",
+  "revision": "40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "items": 358,
+  "unparsed": 0,
+  "pairs": {
+    "open-A": {
+      "label": {
+        "items": 358,
+        "raw_agreement": 0.7374301675977654,
+        "kappa": 0.20695668567658,
+        "kappa_95": [
+          0.1132720225672546,
+          0.30139290761052406
+        ],
+        "ac1": 0.713802469529535,
+        "ac1_95": [
+          0.6612134331712742,
+          0.7653977668932258
+        ],
+        "specific_agreement": {
+          "valid": 0.8640275387263339,
+          "non_actionable": 0.5,
+          "unrelated_rewrite": 0.26666666666666666,
+          "partial": 0.09523809523809523,
+          "context_dependent": 0.15384615384615385
+        },
+        "confusion": {
+          "valid": {
+            "valid": 251,
+            "non_actionable": 2,
+            "unrelated_rewrite": 2,
+            "partial": 28,
+            "context_dependent": 7
+          },
+          "non_actionable": {
+            "valid": 5,
+            "non_actionable": 4,
+            "unrelated_rewrite": 0,
+            "partial": 0,
+            "context_dependent": 1
+          },
+          "unrelated_rewrite": {
+            "valid": 9,
+            "non_actionable": 0,
+            "unrelated_rewrite": 4,
+            "partial": 6,
+            "context_dependent": 3
+          },
+          "partial": {
+            "valid": 19,
+            "non_actionable": 0,
+            "unrelated_rewrite": 1,
+            "partial": 3,
+            "context_dependent": 1
+          },
+          "context_dependent": {
+            "valid": 7,
+            "non_actionable": 0,
+            "unrelated_rewrite": 1,
+            "partial": 2,
+            "context_dependent": 2
+          }
+        }
+      },
+      "valid": {
+        "items": 358,
+        "raw_agreement": 0.7793296089385475,
+        "kappa": 0.27885154775868226,
+        "kappa_95": [
+          0.1552176192973257,
+          0.39878124850055197
+        ],
+        "ac1": 0.6820335819846763,
+        "ac1_95": [
+          0.606424167104823,
+          0.7514061523505313
+        ],
+        "specific_agreement": {
+          "True": 0.8640275387263339,
+          "False": 0.4148148148148148
+        },
+        "confusion": {
+          "True": {
+            "True": 251,
+            "False": 39
+          },
+          "False": {
+            "True": 40,
+            "False": 28
+          }
+        }
+      },
+      "outside_names": {
+        "items": 358,
+        "raw_agreement": 0.8184357541899442,
+        "kappa": 0.11271257530694749,
+        "kappa_95": [
+          0.018281535648994433,
+          0.21916365824308048
+        ],
+        "ac1": 0.7753047676523838,
+        "ac1_95": [
+          0.7135828149688982,
+          0.8312358750860783
+        ],
+        "specific_agreement": {
+          "True": 0.15584415584415584,
+          "False": 0.8982785602503912
+        },
+        "confusion": {
+          "True": {
+            "True": 6,
+            "False": 4
+          },
+          "False": {
+            "True": 61,
+            "False": 287
+          }
+        }
+      }
+    },
+    "open-B": {
+      "label": {
+        "items": 358,
+        "raw_agreement": 0.7569832402234636,
+        "kappa": 0.22441356641266974,
+        "kappa_95": [
+          0.12320861320594594,
+          0.3215793513720977
+        ],
+        "ac1": 0.7363756304468118,
+        "ac1_95": [
+          0.6849984795974923,
+          0.7860345406314877
+        ],
+        "specific_agreement": {
+          "valid": 0.8711864406779661,
+          "non_actionable": 0.42105263157894735,
+          "unrelated_rewrite": 0.25,
+          "partial": 0.18604651162790697,
+          "context_dependent": 0.125
+        },
+        "confusion": {
+          "valid": {
+            "valid": 257,
+            "non_actionable": 3,
+            "unrelated_rewrite": 5,
+            "partial": 12,
+            "context_dependent": 13
+          },
+          "non_actionable": {
+            "valid": 6,
+            "non_actionable": 4,
+            "unrelated_rewrite": 0,
+            "partial": 0,
+            "context_dependent": 0
+          },
+          "unrelated_rewrite": {
+            "valid": 14,
+            "non_actionable": 2,
+            "unrelated_rewrite": 4,
+            "partial": 1,
+            "context_dependent": 1
+          },
+          "partial": {
+            "valid": 16,
+            "non_actionable": 0,
+            "unrelated_rewrite": 0,
+            "partial": 4,
+            "context_dependent": 4
+          },
+          "context_dependent": {
+            "valid": 7,
+            "non_actionable": 0,
+            "unrelated_rewrite": 1,
+            "partial": 2,
+            "context_dependent": 2
+          }
+        }
+      },
+      "valid": {
+        "items": 358,
+        "raw_agreement": 0.7877094972067039,
+        "kappa": 0.26899516389038153,
+        "kappa_95": [
+          0.14448912980124723,
+          0.38664257678649283
+        ],
+        "ac1": 0.7009912741499439,
+        "ac1_95": [
+          0.6273733575810027,
+          0.7671715688331305
+        ],
+        "specific_agreement": {
+          "True": 0.8711864406779661,
+          "False": 0.3968253968253968
+        },
+        "confusion": {
+          "True": {
+            "True": 257,
+            "False": 33
+          },
+          "False": {
+            "True": 43,
+            "False": 25
+          }
+        }
+      },
+      "outside_names": {
+        "items": 358,
+        "raw_agreement": 0.8044692737430168,
+        "kappa": 0.10230692076228699,
+        "kappa_95": [
+          0.014782198458877545,
+          0.20133072407045025
+        ],
+        "ac1": 0.7547225212880494,
+        "ac1_95": [
+          0.6887900535732334,
+          0.8131593662628146
+        ],
+        "specific_agreement": {
+          "True": 0.14634146341463414,
+          "False": 0.889589905362776
+        },
+        "confusion": {
+          "True": {
+            "True": 6,
+            "False": 4
+          },
+          "False": {
+            "True": 66,
+            "False": 282
+          }
+        }
+      }
+    },
+    "open-human": {
+      "label": {
+        "items": 139,
+        "raw_agreement": 0.762589928057554,
+        "kappa": 0.2540250447227192,
+        "kappa_95": [
+          0.10169169359437373,
+          0.4043537881384985
+        ],
+        "ac1": 0.7421494571900362,
+        "ac1_95": [
+          0.658457142857143,
+          0.8191367520788294
+        ],
+        "specific_agreement": {
+          "valid": 0.8859649122807017,
+          "non_actionable": 0.0,
+          "unrelated_rewrite": 0.4,
+          "partial": 0.10526315789473684,
+          "context_dependent": 0.2222222222222222
+        },
+        "confusion": {
+          "valid": {
+            "valid": 101,
+            "non_actionable": 0,
+            "unrelated_rewrite": 3,
+            "partial": 6,
+            "context_dependent": 6
+          },
+          "non_actionable": {
+            "valid": 2,
+            "non_actionable": 0,
+            "unrelated_rewrite": 0,
+            "partial": 0,
+            "context_dependent": 1
+          },
+          "unrelated_rewrite": {
+            "valid": 0,
+            "non_actionable": 0,
+            "unrelated_rewrite": 2,
+            "partial": 1,
+            "context_dependent": 2
+          },
+          "partial": {
+            "valid": 7,
+            "non_actionable": 0,
+            "unrelated_rewrite": 0,
+            "partial": 1,
+            "context_dependent": 2
+          },
+          "context_dependent": {
+            "valid": 2,
+            "non_actionable": 0,
+            "unrelated_rewrite": 0,
+            "partial": 1,
+            "context_dependent": 2
+          }
+        }
+      },
+      "valid": {
+        "items": 139,
+        "raw_agreement": 0.8129496402877698,
+        "kappa": 0.3668535388927823,
+        "kappa_95": [
+          0.15995165189363403,
+          0.5533419023136247
+        ],
+        "ac1": 0.7346743998238016,
+        "ac1_95": [
+          0.6211015794115289,
+          0.8328098897427331
+        ],
+        "specific_agreement": {
+          "True": 0.8859649122807017,
+          "False": 0.48
+        },
+        "confusion": {
+          "True": {
+            "True": 101,
+            "False": 15
+          },
+          "False": {
+            "True": 11,
+            "False": 12
+          }
+        }
+      },
+      "outside_names": {
+        "items": 139,
+        "raw_agreement": 0.920863309352518,
+        "kappa": 0.12478534630795737,
+        "kappa_95": [
+          -0.04380475594493141,
+          0.41399662731871845
+        ],
+        "ac1": 0.9131175952495952,
+        "ac1_95": [
+          0.852658854013309,
+          0.9621717240440877
+        ],
+        "specific_agreement": {
+          "True": 0.15384615384615385,
+          "False": 0.9584905660377359
+        },
+        "confusion": {
+          "True": {
+            "True": 1,
+            "False": 2
+          },
+          "False": {
+            "True": 9,
+            "False": 127
+          }
+        }
+      }
+    }
+  },
+  "comparators_on_shared_human_items": {
+    "A-human": {
+      "items": 139,
+      "raw_agreement": 0.762589928057554,
+      "kappa": 0.289167828916783,
+      "kappa_95": [
+        0.13664596273291924,
+        0.44332230541528816
+      ],
+      "ac1": 0.7411162140997694,
+      "ac1_95": [
+        0.6566052641028404,
+        0.8206652829977003
+      ],
+      "specific_agreement": {
+        "valid": 0.88,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.2222222222222222,
+        "partial": 0.3076923076923077,
+        "context_dependent": 0.25
+      },
+      "confusion": {
+        "valid": {
+          "valid": 99,
+          "non_actionable": 0,
+          "unrelated_rewrite": 3,
+          "partial": 3,
+          "context_dependent": 8
+        },
+        "non_actionable": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 1,
+          "context_dependent": 1
+        },
+        "partial": {
+          "valid": 10,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 4,
+          "context_dependent": 2
+        },
+        "context_dependent": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 2
+        }
+      }
+    },
+    "B-human": {
+      "items": 139,
+      "raw_agreement": 0.7769784172661871,
+      "kappa": 0.3426392067124334,
+      "kappa_95": [
+        0.16702519975414856,
+        0.508138711960368
+      ],
+      "ac1": 0.75634890904079,
+      "ac1_95": [
+        0.673671552908841,
+        0.8309212799778838
+      ],
+      "specific_agreement": {
+        "valid": 0.875,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.5,
+        "partial": 0.42105263157894735,
+        "context_dependent": 0.36363636363636365
+      },
+      "confusion": {
+        "valid": {
+          "valid": 98,
+          "non_actionable": 0,
+          "unrelated_rewrite": 3,
+          "partial": 3,
+          "context_dependent": 8
+        },
+        "non_actionable": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 2,
+          "context_dependent": 1
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 2,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 6,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 4,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 5,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 4
+        }
+      }
+    },
+    "A-B": {
+      "items": 139,
+      "raw_agreement": 0.8848920863309353,
+      "kappa": 0.6549798324542353,
+      "kappa_95": [
+        0.5092109303039608,
+        0.7910631320032797
+      ],
+      "ac1": 0.8744602184527674,
+      "ac1_95": [
+        0.8106078884993684,
+        0.9305997628409162
+      ],
+      "specific_agreement": {
+        "valid": 0.96,
+        "non_actionable": 0.5714285714285714,
+        "unrelated_rewrite": 0.2857142857142857,
+        "partial": 0.6666666666666666,
+        "context_dependent": 0.5
+      },
+      "confusion": {
+        "valid": {
+          "valid": 108,
+          "non_actionable": 2,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 2
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 2,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 0,
+          "non_actionable": 1,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 2
+        },
+        "partial": {
+          "valid": 4,
+          "non_actionable": 0,
+          "unrelated_rewrite": 2,
+          "partial": 9,
+          "context_dependent": 2
+        },
+        "context_dependent": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 3
+        }
+      }
+    }
+  },
+  "adoption": {
+    "bar": 0.15446313065976697,
+    "bar_source": "label-audit-v2.json pairs['human~A'].kappa_95[0], locked, label",
+    "adopted": true
+  },
+  "provenance": {
+    "generated_at": "2026-10-02T21:17:57.262709+00:00",
+    "git": {
+      "commit": "0142dfc4c81f41535a304021bbfa2b670f3a5d9f",
+      "branch": "measure/open-weight-rater"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

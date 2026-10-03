@@ -23,6 +23,7 @@ from sphragis.experiment.model import (
     MEMBERSHIP_MODEL_ID,
     MODEL_ID,
     HFGenerator,
+    revision,
     run_provenance,
     token_statistics,
 )
@@ -94,7 +95,7 @@ def load(path: Path) -> tuple[list[dict], dict]:
 post_rows, post_counts = load(args.post)
 pre_rows, pre_counts = load(args.pre)
 
-tok = AutoTokenizer.from_pretrained(MEMBERSHIP_MODEL_ID)
+tok = AutoTokenizer.from_pretrained(MEMBERSHIP_MODEL_ID, revision=revision(MEMBERSHIP_MODEL_ID))
 
 
 def eligible(rows: list[dict]) -> list[dict]:
@@ -117,7 +118,10 @@ print(f"post {post_counts}\npre  {pre_counts}", flush=True)
 
 # --- Min-K%++ on the base checkpoint ---------------------------------------------------
 model = AutoModelForCausalLM.from_pretrained(
-    MEMBERSHIP_MODEL_ID, dtype=torch.bfloat16, device_map="cuda:0"
+    MEMBERSHIP_MODEL_ID,
+    revision=revision(MEMBERSHIP_MODEL_ID),
+    dtype=torch.bfloat16,
+    device_map="cuda:0",
 )
 model.eval()
 post_tokens = [token_statistics(model, tok, scored_text(r)) for r in post_e]
