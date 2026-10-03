@@ -175,7 +175,7 @@ def inference_cells(
     from sphragis.experiment.model import MAX_NEW_TOKENS, MODEL_ID, HFGenerator
 
     cells = report["inference"]
-    for adapter in (None, adapter_dir):
+    for adapter in (None,) if adapter_dir is None else (None, adapter_dir):
         _free()
         cell: dict[str, Any] = {
             "adapter_rank": None if adapter is None else max(_ints(args.ranks)),
