@@ -1,18 +1,25 @@
 {
-  "placebo": "datasets/results/rq1-placebo-openstack-v3.json",
+  "placebo": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-placebo-openstack-v3.json",
   "org": "openstack",
   "inputs": {
     "runs": "datasets/results/partition-pilot-openstack.json: sizing.runs",
+    "levels": "datasets/results/partition-pilot-openstack.json: levels",
     "spread_targets": "datasets/results/partition-pilot-openstack.json: per_run and runs_left_out, chi-squared bounds",
     "calibration_changes": "datasets/results/partition-pilot-openstack.json: changes",
-    "planned_changes": "datasets/results/decomposition-sensitivity-v3.json: cells.openstack.planned_changes_per_half, summed",
+    "planned_changes": "datasets/results/project-windows-openstack-v3.json: test.projected_changes, rounded down",
     "size_floor": "datasets/results/admissible-partitions-openstack.json: size_floor",
     "reference": "datasets/results/admissible-partitions-openstack.json: reference"
   },
-  "planned_changes": 1635,
+  "planned_changes": 2017,
   "pilot_changes": 207,
   "projects": 60,
-  "target_marginal_power": 0.928,
+  "family_alpha": 0.025,
+  "hypothesis_power": 0.95,
+  "cell_power": {
+    "1": 0.95,
+    "2": 0.9746794344808963,
+    "3": 0.9830475724915585
+  },
   "sesoi": 0.01,
   "xi": 0.01,
   "runs": 24,
@@ -20,9 +27,9 @@
     0.975,
     0.95
   ],
-  "trials": 300,
-  "null_trials": 1000,
-  "resamples": 1000,
+  "trials": 1000,
+  "null_trials": 4000,
+  "resamples": 10000,
   "redraw": 0.055,
   "size_floor": 1850,
   "partitions_pooled": 400,
@@ -39,132 +46,276 @@
     "pilot_lower_90": {
       "calibration": {
         "target": 0.011805573890199294,
-        "sigma_run": 0.008408203125,
-        "spread": 0.011804460992739203,
+        "sigma_run": 0.008466796875000002,
+        "spread": 0.011791930589828819,
         "floor": false,
-        "spread_at_zero": 0.007502632034876254
+        "spread_at_zero": 0.007315292349498878
       },
       "null_false_positive": {
-        "0.975": 0.01,
-        "0.95": 0.022
+        "0.975": 0.0125,
+        "0.95": 0.02325
       },
       "null_reads_absent": {
-        "0.975": 0.0,
-        "0.95": 0.012
+        "0.975": 0.0005,
+        "0.95": 0.10925
       },
       "reproducibility_failure": 0.0,
       "by_level": {
         "0.975": {
-          "lift": 0.030468749999999996,
-          "minimum_detectable_effect": 0.022301537298387106,
-          "null_reads_bounded": 0.978
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.027832031249999997,
+              "minimum_detectable_effect": 0.0203616431451613,
+              "null_reads_bounded": 0.97825
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.029882812499999994,
+              "minimum_detectable_effect": 0.021957115255376358,
+              "null_reads_bounded": 0.9905
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.030761718749999993,
+              "minimum_detectable_effect": 0.022472908266129042,
+              "null_reads_bounded": 0.9925
+            }
+          }
         },
         "0.95": {
-          "lift": 0.028124999999999997,
-          "minimum_detectable_effect": 0.020520623319892482,
-          "null_reads_bounded": 0.973
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.02578125,
+              "minimum_detectable_effect": 0.018771211357526893,
+              "null_reads_bounded": 0.976
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.027539062499999996,
+              "minimum_detectable_effect": 0.0201827116935484,
+              "null_reads_bounded": 0.989
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.0287109375,
+              "minimum_detectable_effect": 0.020957241263440868,
+              "null_reads_bounded": 0.9925
+            }
+          }
         }
-      }
+      },
+      "lifts_simulated": 24
     },
     "pilot_estimate": {
       "calibration": {
         "target": 0.014019546991598937,
-        "sigma_run": 0.011162109375,
-        "spread": 0.014003843735358077,
+        "sigma_run": 0.011103515625,
+        "spread": 0.01404283058525162,
         "floor": false,
-        "spread_at_zero": 0.007502632034876254
+        "spread_at_zero": 0.007315292349498878
       },
       "null_false_positive": {
-        "0.975": 0.009,
-        "0.95": 0.025
+        "0.975": 0.0125,
+        "0.95": 0.0235
       },
       "null_reads_absent": {
-        "0.975": 0.0,
-        "0.95": 0.008
+        "0.975": 0.0005,
+        "0.95": 0.0545
       },
-      "reproducibility_failure": 0.003,
+      "reproducibility_failure": 0.00275,
       "by_level": {
         "0.975": {
-          "lift": 0.030468749999999996,
-          "minimum_detectable_effect": 0.022301537298387106,
-          "null_reads_bounded": 0.966
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.029003906249999996,
+              "minimum_detectable_effect": 0.021202536962365605,
+              "null_reads_bounded": 0.97875
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.03164062499999999,
+              "minimum_detectable_effect": 0.02317435315860216,
+              "null_reads_bounded": 0.99075
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.03251953125,
+              "minimum_detectable_effect": 0.02373697916666668,
+              "null_reads_bounded": 0.995
+            }
+          }
         },
         "0.95": {
-          "lift": 0.028124999999999997,
-          "minimum_detectable_effect": 0.020520623319892482,
-          "null_reads_bounded": 0.965
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.02724609375,
+              "minimum_detectable_effect": 0.01989814348118281,
+              "null_reads_bounded": 0.9795
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.0287109375,
+              "minimum_detectable_effect": 0.020957241263440868,
+              "null_reads_bounded": 0.98775
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.029589843749999997,
+              "minimum_detectable_effect": 0.021758652553763455,
+              "null_reads_bounded": 0.991
+            }
+          }
         }
-      }
+      },
+      "lifts_simulated": 23
     },
     "sizing_bound_90": {
       "calibration": {
         "target": 0.01765656547039203,
         "sigma_run": 0.015205078125,
-        "spread": 0.017673249081642053,
+        "spread": 0.0176630168789085,
         "floor": false,
-        "spread_at_zero": 0.007502632034876254
+        "spread_at_zero": 0.007315292349498878
       },
       "null_false_positive": {
-        "0.975": 0.01,
-        "0.95": 0.025
+        "0.975": 0.012,
+        "0.95": 0.0255
       },
       "null_reads_absent": {
         "0.975": 0.0,
-        "0.95": 0.001
+        "0.95": 0.007
       },
-      "reproducibility_failure": 0.031,
+      "reproducibility_failure": 0.02225,
       "by_level": {
         "0.975": {
-          "lift": 0.032812499999999994,
-          "minimum_detectable_effect": 0.023895959341397863,
-          "null_reads_bounded": 0.968
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.031347656249999994,
+              "minimum_detectable_effect": 0.022968750000000013,
+              "null_reads_bounded": 0.97925
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.033984375,
+              "minimum_detectable_effect": 0.024829259072580656,
+              "null_reads_bounded": 0.99075
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.03544921875,
+              "minimum_detectable_effect": 0.026086609543010765,
+              "null_reads_bounded": 0.99475
+            }
+          }
         },
         "0.95": {
-          "lift": 0.030468749999999996,
-          "minimum_detectable_effect": 0.022301537298387106,
-          "null_reads_bounded": 0.968
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.029003906249999996,
+              "minimum_detectable_effect": 0.021202536962365605,
+              "null_reads_bounded": 0.9765
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.03193359374999999,
+              "minimum_detectable_effect": 0.023359375000000016,
+              "null_reads_bounded": 0.99075
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.032812499999999994,
+              "minimum_detectable_effect": 0.023895959341397863,
+              "null_reads_bounded": 0.99275
+            }
+          }
         }
-      }
+      },
+      "lifts_simulated": 23
     },
     "pilot_upper_99": {
       "calibration": {
         "target": 0.021538576727672374,
-        "sigma_run": 0.019423828125,
-        "spread": 0.021561814652773764,
+        "sigma_run": 0.019541015624999998,
+        "spread": 0.021572373593957056,
         "floor": false,
-        "spread_at_zero": 0.007502632034876254
+        "spread_at_zero": 0.007315292349498878
       },
       "null_false_positive": {
-        "0.975": 0.012,
-        "0.95": 0.026
+        "0.975": 0.01075,
+        "0.95": 0.02575
       },
       "null_reads_absent": {
         "0.975": 0.0,
         "0.95": 0.0
       },
-      "reproducibility_failure": 0.069,
+      "reproducibility_failure": 0.077,
       "by_level": {
         "0.975": {
-          "lift": 0.032812499999999994,
-          "minimum_detectable_effect": 0.023895959341397863,
-          "null_reads_bounded": 0.942
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.0345703125,
+              "minimum_detectable_effect": 0.025352192540322595,
+              "null_reads_bounded": 0.98075
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.037207031249999994,
+              "minimum_detectable_effect": 0.027364751344086037,
+              "null_reads_bounded": 0.99125
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.038671874999999994,
+              "minimum_detectable_effect": 0.028318212365591407,
+              "null_reads_bounded": 0.994
+            }
+          }
         },
         "0.95": {
-          "lift": 0.032812499999999994,
-          "minimum_detectable_effect": 0.023895959341397863,
-          "null_reads_bounded": 0.966
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.03164062499999999,
+              "minimum_detectable_effect": 0.02317435315860216,
+              "null_reads_bounded": 0.9745
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.03486328125,
+              "minimum_detectable_effect": 0.025583417338709693,
+              "null_reads_bounded": 0.99075
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.03662109375,
+              "minimum_detectable_effect": 0.026847908266129032,
+              "null_reads_bounded": 0.994
+            }
+          }
         }
-      }
+      },
+      "lifts_simulated": 26
     }
   },
   "provenance": {
-    "generated_at": "2026-09-30T08:07:53.627790+00:00",
+    "generated_at": "2026-10-03T20:27:01.128719+00:00",
     "git": {
-      "commit": "59f48bf925e86332d7c4ab60eb9339a969d95b15",
-      "branch": "measure/repeated-partitions"
+      "commit": "89753ef96c0395112379ab32323151ff1b6a2982",
+      "branch": "HEAD"
     },
-    "python": "3.14.4",
-    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.x86_64-x86_64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
   }
 }

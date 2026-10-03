@@ -7302,3 +7302,32 @@ cell count of the admitted set): with OpenStack and Wikimedia admitted, Wikimedi
 are in the artifact (`by_cells`) for an admitted set of another size; whether H1 spans more cells
 is an open decision. Because the window is a lower bound, these bounds are conservative. The
 Stage 1 figures move once OpenStack's rerun (job 21794711) lands.
+
+### OpenStack's simulation on the twelve-month window: two-cell bounds +0.0248 and +0.0234 (2026-10-03)
+
+`partition-sensitivity-openstack.json`, SPORC job 21794711 (CPU only, pinned at 89753ef), in
+place of TIGRIS job 210563, which was cancelled when the TIGRIS queue slipped. It replaces the
+artifact of 2026-09-30, which ran on the ten-month 1,635-change window at 300 trials per step.
+Its placebo input is read from the cluster data root; that file, redacted, is byte-identical to the
+committed `rq1-placebo-openstack-v3.json`. 1,000 studies per power step and 4,000 null studies,
+K = 24, N = 1,850, and the twelve-month projection (2,017.6 changes, simulated at 2,017, rounded
+down), with `sigma_run` calibrated on the pilot's 206 changes:
+
+| spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95%, 2 cells | null bounded (97.5%, 2 cells) | reproducibility failure |
+|---|---|---|---|---|---|---|---|
+| pilot 90% lower | 0.0118 | 0.0085 | 0.013 | 0.023 | +0.0220 / +0.0202 | 0.991 | 0.000 |
+| pilot estimate | 0.0140 | 0.0111 | 0.013 | 0.024 | +0.0232 / +0.0210 | 0.991 | 0.003 |
+| sizing bound (90% upper) | 0.0177 | 0.0152 | 0.012 | 0.025 | +0.0248 / +0.0234 | 0.991 | 0.022 |
+| pilot 99% upper | 0.0215 | 0.0195 | 0.011 | 0.026 | +0.0274 / +0.0256 | 0.991 | 0.077 |
+
+**The false-positive rate sits at nominal at every point** (0.011 to 0.013 against 0.0125, 0.023
+to 0.026 against 0.025, Monte Carlo errors 0.0018 and 0.0025 over 4,000 null studies).
+**Reproducibility holds at the spread K was sized on** (0.022 against beta = 0.05) and fails past
+it (0.077 at the 99% bound), as in Wikimedia's run.
+
+**Read under the registered rule**, with OpenStack and Wikimedia admitted: OpenStack's bounds are
+**+0.0248 at 97.5% and +0.0234 at 95%**, each cell at power 0.9747. The one- and three-cell bounds
+are in the artifact (`by_cells`). Against the replaced artifact (+0.0239 and +0.0223 at a joint
+power of 0.928) the bounds rise by about 0.001: the higher per-cell power outweighs the larger
+window. Both admitted organizations now have bounds at the registered power, so the Stage 1
+sample-size paragraph and `registered-decisions.md` take their figures from these two artifacts.
