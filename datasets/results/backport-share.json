@@ -1,0 +1,55 @@
+{
+  "backport_branches": "^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)",
+  "orgs": {
+    "openstack": {
+      "pilot": {
+        "examples": 532,
+        "only_backport": 5,
+        "possibly_backport": 41,
+        "no_raw_change": 0
+      },
+      "train": {
+        "examples": 4006,
+        "only_backport": 19,
+        "possibly_backport": 483,
+        "no_raw_change": 0
+      },
+      "dev": {
+        "examples": 515,
+        "only_backport": 0,
+        "possibly_backport": 43,
+        "no_raw_change": 0
+      }
+    },
+    "wikimedia": {
+      "pilot": {
+        "examples": 582,
+        "only_backport": 6,
+        "possibly_backport": 60,
+        "no_raw_change": 0
+      },
+      "train": {
+        "examples": 4184,
+        "only_backport": 7,
+        "possibly_backport": 258,
+        "no_raw_change": 0
+      },
+      "dev": {
+        "examples": 747,
+        "only_backport": 2,
+        "possibly_backport": 56,
+        "no_raw_change": 0
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-02T05:19:26.718901+00:00",
+    "git": {
+      "commit": "c40395ccd0f1d9065a32f3a666736204ce88645a",
+      "branch": "measure/backport-share"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

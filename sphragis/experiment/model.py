@@ -43,6 +43,22 @@ DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
 # degraded by instruction fine-tuning (Samuel, Zhou and Zou, COLING 2025), so Min-K%++ reads
 # the base, whose likelihoods reflect pretraining exposure. A registered choice.
 MEMBERSHIP_MODEL_ID = "Qwen/Qwen2.5-Coder-7B"
+# Every checkpoint loads at a pinned Hub revision, never `main`: both 7B repositories changed
+# their config and tokenizer files on 2024-11-18, after the checkpoints were published. These are
+# the revisions the cluster's cache held for every run to date (weights unchanged since 2024-09).
+MODEL_REVISIONS = {
+    MODEL_ID: "c03e6d358207e414f1eca0bb1891e29f1db0e242",
+    MEMBERSHIP_MODEL_ID: "0396a76181e127dfc13e5c5ec48a8cee09938b02",
+    DEV_MODEL_ID: "2e1fd397ee46e1388853d2af2c993145b0f1098a",
+}
+
+
+def revision(model_id: str) -> str:
+    """The pinned Hub revision of a checkpoint; an unpinned one refuses to load."""
+    if model_id not in MODEL_REVISIONS:
+        raise KeyError(f"{model_id} has no pinned revision in MODEL_REVISIONS")
+    return MODEL_REVISIONS[model_id]
+
 
 # research(2026-09): alpha = 2r, because a fixed low alpha at high rank is unstable;
 # attention plus MLP beats attention alone, and coverage matters more than rank. Rank 32 is
@@ -116,7 +132,7 @@ class TrainingReport:
 
 def _require_tokenizer(model_id: str) -> PreTrainedTokenizerBase:
     """Load a tokenizer, failing loudly rather than returning None downstream."""
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(model_id, revision=revision(model_id))
     if tokenizer is None:
         raise RuntimeError(f"no tokenizer for {model_id}")
     return tokenizer
@@ -175,7 +191,10 @@ class HFGenerator:
         if self.temperature:
             torch.manual_seed(self.seed)
         model = AutoModelForCausalLM.from_pretrained(
-            self.model_id, dtype=torch.bfloat16, device_map=self.device
+            self.model_id,
+            revision=revision(self.model_id),
+            dtype=torch.bfloat16,
+            device_map=self.device,
         )
         if self.adapter_path:
             model = PeftModel.from_pretrained(model, self.adapter_path)
@@ -292,7 +311,9 @@ def attach_adapter(
     torch.manual_seed(seed)
     tokenizer = _require_tokenizer(model_id)
     dtype = torch.bfloat16 if device.startswith("cuda") else torch.float32
-    base = AutoModelForCausalLM.from_pretrained(model_id, dtype=dtype, device_map=device)
+    base = AutoModelForCausalLM.from_pretrained(
+        model_id, revision=revision(model_id), dtype=dtype, device_map=device
+    )
     adapted = get_peft_model(base, lora_config(rank))
     # Not dead code: PEFT returns fp32 adapter parameters on a bf16 base under its current
     # default, so this casts nothing and returns 0. Calling it keeps that invariant enforced

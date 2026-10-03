@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 286 artifacts under
-48 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 293 artifacts under
+53 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -58,6 +58,22 @@ RQ2 under secure aggregation: does a round's aggregate betray whose clients were
 | `aggregate-attack-cpp-rebuilt-c128.json` | `aggregate-attack-dual-cpp-rebuilt-c128-t2-local.json` |
 | `aggregate-attack-dual-cpp-rebuilt-c128-t2.json` | `aggregate-attack-project.json` |
 | `aggregate-attack.json` |  |
+
+## `scripts/ai_trailers.py`
+
+How many of an organization's examples come from a change whose commit names an AI tool.
+
+| artifact | |
+|---|---|
+| `ai-trailers.json` |  |
+
+## `scripts/backport_share.py`
+
+How many examples could carry code older than the checkpoint by way of a backport.
+
+| artifact | |
+|---|---|
+| `backport-share.json` |  |
 
 ## `scripts/bot_sensitivity.py`
 
@@ -255,6 +271,14 @@ Agreement on the label audit: two blind model raters, and a human's blind check 
 |---|---|
 | `label-audit-v2-decision.json` | `label-audit-v2.json` |
 
+## `scripts/label_audit_open_rater.py`
+
+An open-weight, pinned model as a further blind rater on the label audit.
+
+| artifact | |
+|---|---|
+| `label-audit-v2-open-rater-labels.json` | `label-audit-v2-open-rater.json` |
+
 ## `scripts/masking_mechanism.py`
 
 Why does masking an update with noise make the attacker *better*?
@@ -262,6 +286,14 @@ Why does masking an update with noise make the attacker *better*?
 | artifact | |
 |---|---|
 | `masking-mechanism.json` |  |
+
+## `scripts/memory_probe.py`
+
+Does the registered 7B fit one GPU, training and inference, at the longest admissible item?
+
+| artifact | |
+|---|---|
+| `memory-probe-sporc.json` |  |
 
 ## `scripts/module_split.py`
 
@@ -296,6 +328,7 @@ Operating characteristics of H1 over repeated partitions at the registered K, by
 | artifact | |
 |---|---|
 | `partition-sensitivity-openstack-stopping.json` | `partition-sensitivity-openstack.json` |
+| `partition-sensitivity-wikimedia.json` |  |
 
 ## `scripts/partition_variance.py`
 
@@ -403,6 +436,14 @@ Does the lag distribution hold still across creation cohorts?
 | artifact | |
 |---|---|
 | `quasi-independence.json` |  |
+
+## `scripts/reviewer_overlap.py`
+
+How far an evaluated half's dev reviewers also reviewed its sibling half's training data.
+
+| artifact | |
+|---|---|
+| `reviewer-overlap.json` |  |
 
 ## `scripts/rq1_pilot.py`
 

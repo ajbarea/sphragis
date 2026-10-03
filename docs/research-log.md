@@ -1512,6 +1512,7 @@ the RC documentation grants every project without a pending review a TIGRIS Slur
 memory, and the GH200's unified memory would not have surfaced an overflow. The first SPORC
 run records it, along with seconds per step, since every `--time` in `scripts/` was sized on a
 GH200.
+*Measured 2026-10-03: see "The registered 7B on a 40 GB A100" below.*
 
 **Constraint this places on results.** A result set that mixes GH200 and A100 runs confounds
 the contrast with hardware. Each job's output now records its cluster, job, GPU and peak memory,
@@ -2648,7 +2649,6 @@ which distribution they were drawn from, which is also the quantity a data-shari
 between organizations is written about. Their proposed next step, measuring an adapter's capacity
 before it is shared rather than after it is attacked, is the same instinct as RQ2's, one altitude
 up.
-
 
 ### The reference split was following the order clients arrive in (2026-09-18)
 
@@ -7258,6 +7258,88 @@ al., S&P 2019, arXiv:1805.04049; Mitchell et al., arXiv:2606.10481; Athanasiou, 
 Palamidessi, ICLR 2026, arXiv:2603.02017; Vijayvergiya et al., AutoCommenter, arXiv:2405.13565;
 Hora, Robbes and Zacchiroli, arXiv:2609.07542.
 
+### AI-assisted targets: 11 of OpenStack's 214 dev-window changes carry an AI trailer; Wikimedia none (2026-10-01)
+
+`ai-trailers.json` (`scripts/ai_trailers.py`). OpenInfra's AI policy (approved 2025-07-08) asks
+for `Assisted-By:` or `Generated-By:` trailers on AI-assisted commits, and the raw snapshots carry
+no commit messages, so each trailer is a Gerrit `message:` search bounded by `mergedbefore:` the
+test window's start (no sealed change is requested), and each hit's merged commit message is read.
+A change is flagged when a trailer line's value names an AI tool or model; the windows are the
+corpus's own, refined examples deduplicated and split as the study loads them. Corrected before
+this entry was written: Gerrit's `message:` matches words anywhere, so only trailer lines count;
+most OpenStack `Generated-By:` lines name the community's scripts (1,132 changes, e.g.
+`openstack/releases:tools/...`), counted apart as tool-generated; and a tool name that is also a
+personal name (Devin, Junie, Cline) counts only where the value names a tool, never as a
+co-author. An independent review found the first denominators were the refined rows before dedup,
+and that the trend was read off examples clustered within changes; both are fixed here.
+
+| OpenStack | changes flagged | examples flagged |
+|---|---|---|
+| train | 20 of 1,646 (1.22%) | 62 of 4,006 (1.55%) |
+| dev | 11 of 214 (5.14%) | 45 of 515 (8.74%) |
+
+Wikimedia: none of 4,184 train or 747 dev examples. The tools named are Claude (76 trailers),
+Cursor (30), JetBrains Junie (12), Gemini (7), OpenAI models (9) and Copilot (2). Counted by change, OpenStack's
+flagged share rises about fourfold from train to dev, on 11 changes; disclosure became OpenStack
+policy on 2025-07-08, inside the training window, so the rise mixes more AI use with more
+disclosure. The flag is per change, from the merged commit message: it misses undisclosed use and
+flags every patch set of a change whose trailer arrived late, so it is neither a bound nor an
+estimate of AI-written targets. Four OpenStack Change-Ids recur across branches of one project
+(pilot and train only), which the (project, Change-Id) match cannot tell apart. For Plan H: the
+flag is in place for the registered estimate without flagged examples, registered before the seal.
+
+### The raw snapshots keep Gerrit account numbers outside `_account_id`; the examples do not (2026-10-01)
+
+Found while checking whether reviewer overlap can be read from raw snapshots. `scrub` replaces
+every `_account_id` value and every address with a salted pseudonym, but two other places carry
+the raw Gerrit account number: `attention_set` and `removed_from_attention_set` are dictionaries
+keyed by it, and their `reason` text names it as `<GERRIT_ACCOUNT_n>` (lines with one: OpenStack
+12,450, Wikimedia 19,134, AOSP 5,215, Qt 9,910 across the raw months on disk). Account numbers are
+public on each host and resolve to a person, so the raw snapshots are not pseudonymous in full.
+No refined or built example holds one (all four corpora checked), so nothing derived, committed or
+released is affected; the GitHub route's rows have no attention sets. The fix to `scrub` waits
+for the next build-rules change, since `scrub.py` is in `BUILD_SOURCES` and an edit stales every
+frozen month; cleaning the snapshots already on disk is a rewrite of raw data, the same decision
+as purging withdrawn changes, and is AJ's (ROADMAP Plan A). Until then the claim is that
+identities are pseudonymised in everything derived from the raw snapshots, not in the snapshots.
+
+### Reviewers are shared across halves; the reviewer analysis reads exposure, not a shared-reviewer split (2026-10-01)
+
+`reviewer-overlap.json` (`scripts/reviewer_overlap.py`), metadata only, no outcome read. A
+change's reviewers are the pseudonymous accounts in its attention-set history other than its
+owner, change-level rather than the author of the example's own comment (the built examples do
+not keep it). Halves are the registered largest-first assignment; windows the corpus's own.
+
+| | OpenStack | Wikimedia |
+|---|---|---|
+| dev examples sharing a reviewer with the sibling half's training data | 482 of 497 (97%) | 649 of 700 (93%) |
+| ... sharing two distinct reviewers with it | 365 of 497 (73%) | 430 of 700 (61%) |
+| reviewers in both halves' training data | 236 (365 and 376 per half) | 176 (260 and 236) |
+| exposure, median [10th, 90th percentile] | 0.028 [0.0005, 0.115] | 0.016 [0.0010, 0.091] |
+
+Exposure is the share of the sibling half's training examples that come from changes one of the
+dev example's reviewers reviewed (nearest-rank quantiles); 14 OpenStack and 36 Wikimedia dev
+examples sit in projects with no half and are left out, as the placebo corpus leaves them out.
+Attention sets can hold CI or bot accounts, and no raw account carries a service tag, so they
+cannot be filtered; one Wikimedia account attends 1,978 changes and owns two. The two-reviewer
+row is the check against that, since no single account can make an example count there. Almost every dev example shares some reviewer with its sibling
+half, so the shared-reviewer split ROADMAP Plan H planned would leave one side nearly empty, and a
+foreign organization shares none: the sibling-over-foreign gain the house-style claim rests on is
+the place a reviewer effect could hide. Exposure varies over two orders of magnitude, so the
+analysis to register is a moderation of the sibling-over-foreign contrast by exposure (does the
+sibling's advantage grow with how much of its training its own reviewers wrote), as a secondary
+before the seal, change-clustered as the primary contrast is.
+
+### Checkpoints pinned to the revisions every run used (2026-10-01)
+
+Nothing passed a revision when loading a checkpoint, so every load read the Hub's `main`, and
+both 7B repositories changed their config and tokenizer files on 2024-11-18, after publication.
+The cluster's cache held one revision of each for every run to date: Qwen2.5-Coder-7B-Instruct
+`c03e6d3` (README-only changes after 2024-11-18) and Qwen2.5-Coder-7B `0396a76`; the 1.5B dev
+model is pinned at its current `2e1fd39`. `MODEL_REVISIONS` in `sphragis/experiment/model.py`
+now passes them to every load, and a checkpoint without one refuses to load. Past runs are
+unaffected: they read these revisions.
+
 ### LLVM's own conversion: 0.255 [0.231, 0.280]; LLVM reaches H1 and RQ2 on its own pilot (2026-10-02)
 
 `github-conversion-llvm.json`, read as planned (2026-10-01). LLVM's 2024-11 lists 2,710 PRs, all
@@ -7343,3 +7425,156 @@ conversion gave except that Grafana's RQ2 margin is now 30 examples. Each is a c
 admitted: admission still needs its corpus built and the split criteria met, and how the H1
 pass rule reads over four to six cells, and whether these enter Stage 1 as candidates or
 members, are AJ's decisions (ROADMAP).
+
+### Backports of code older than the corpus: 19 of 4,006 OpenStack training examples are backports with no original in the corpus (2026-10-02)
+
+`backport-share.json` (`scripts/backport_share.py`), metadata only. ROADMAP Plan H asked whether
+pre-cutoff code enters through cherry-picks: a change's window is its creation month, so a
+backport created inside the corpus can carry code first written before the checkpoint. A backport
+that keeps its original's Change-Id can be traced, and the examples keep no branch, so each one is
+read two ways. When every change with its (project, Change-Id) sits on a release, maintenance or
+deployment branch (as the hosts name them, from OpenStack's `stable/` and StarlingX's `r/stx` to
+MediaWiki's `REL1_xx`, `fundraising/REL1_xx` and `deploy/wmf/`), its original is not in the corpus
+and may predate it. When any does, it may be such a backport, whose original is in the corpus and
+postdates the checkpoint with it.
+
+| | backport, no original in the corpus | possibly a backport |
+|---|---|---|
+| OpenStack pilot | 5 of 532 (0.9%) | 41 (7.7%) |
+| OpenStack train | 19 of 4,006 (0.5%) | 483 (12.1%) |
+| OpenStack dev | 0 of 515 | 43 (8.3%) |
+| Wikimedia pilot | 6 of 582 (1.0%) | 60 (10.3%) |
+| Wikimedia train | 7 of 4,184 (0.2%) | 258 (6.2%) |
+| Wikimedia dev | 2 of 747 (0.3%) | 56 (7.5%) |
+
+Every example matched a raw change. The first column is the traceable route for code older than
+the corpus, about one percent or less in every window; it is excluded in a sensitivity analysis
+rather than looked up line by line against every branch. It is not a ceiling: a revert, a
+re-proposal under a new Change-Id or a hand copy carries old code untraced, which only a
+line-level lookup would find. The second column is also a deduplication fact: up to 12% of an
+organization's examples share a Change-Id with a change on another branch, which the study's
+change-level grouping keeps on one side of every window boundary. An independent review widened
+the branch names (the first pattern missed `deploy/wmf/`, `fundraising/REL`, `bugfix/` and
+`r/stx`) and corrected an earlier wording of the first column as an upper bound.
+
+### Planned before any run: an open-weight rater at pinned weights on the label audit (2026-10-02)
+
+The October 2026 hardening plan (ROADMAP Plan H, on the GitHub-route branch): raters A and B ran through an API, so the audit cannot be rerun on them once they
+are retired. `scripts/label_audit_open_rater.py` adds a rater anyone can rerun: Qwen3-14B (Apache
+2.0, revision `40c0698`), greedy, thinking off, labelling the same 383 audited examples under the
+committed v2 rubric and shown only the fields A, B and the human saw. Its agreement with each of
+them (raw agreement, kappa, AC1 and specific agreement, on the five labels, collapsed to valid
+or not, and on outside_names) is read with the audit's own statistics, each pair on the items
+both raters answered (the human's 152 checked items for the human pair). **Reading, fixed now:**
+it is adopted as the audit's reproducible rater if every item parses and its label kappa with
+the human reaches the lower end of the locked `human~A` label interval in `label-audit-v2.json`
+(the script reads it from there and records the decision); otherwise it is reported as tried and
+not adopted, as the decision model was (2026-09-30). That bar is lenient, since rater A agrees
+with the human less than with rater B, which is the reason to report all three pairs beside it.
+The items are the refined examples the audit sampled, read through `refined_examples`; an
+audited example a later refinement removed (the audit drew from corpus v2) is left out rather than
+rebuilt, listed by id, and every pair is read on the items that remain. The committed rubric differs from the raters' copy only
+in its worked example (invented here, a corpus item there).
+
+### The open-weight rater is adopted by its rule, and it shows the two model raters agree with each other more than with anyone else (2026-10-02)
+
+`label-audit-v2-open-rater.json` (labels `label-audit-v2-open-rater-labels.json`, SPORC job
+21795722, six minutes on one A100). Qwen3-14B at pinned weights labelled all 358 items still in
+the refined corpus, none unparsed (the 25 audited examples a later refinement removed are left out,
+13 of them human-checked, so the human pairs read on 139 items). **By the rule fixed beforehand it
+is adopted:** its label kappa with the human, 0.254 [0.102, 0.404], reaches the lower end of the
+locked `human~A` interval, 0.154. That bar was lenient by design, so the comparators on the same 139
+items carry the reading: the human agrees with rater A at 0.289 and with rater B at 0.343, so the
+open rater sits just below A, its interval overlapping both. Collapsed to valid or not, its kappa
+with the human is 0.367.
+
+**What it shows about the audit.** On the same 139 items raters A and B agree with each other at
+0.655, about twice what either reaches with the human or with the open rater (0.207 with A and
+0.224 with B over all 358). Two raters from one model family agreeing is weaker evidence than it
+looked: some of that agreement is a shared way of judging, not shared correctness. The audit's
+conclusion rests on the human's agreement with the raters, which this leaves where it was; what
+changes is that A~B is no longer read as an independent replication. The audit now has a rater
+anyone can rerun at fixed weights.
+
+### The registered 7B on a 40 GB A100: the registered rank fits only at the margin, and the rank-256 and dual-adapter runs do not (2026-10-03)
+
+`memory-probe-sporc.json`, SPORC job 21796973 (A100-PCIE-40GB, 42.43 GB as the device reports
+it, pinned at 592b11e). `scripts/memory_probe.py` trains the registered 7B with `train_adapter`
+for two optimiser steps a cell on synthetic items of fixed length, at the registered rank and at
+256, then runs the registered fp32 generator over a prompt one token under the training bound.
+Training runs one item per micro-batch, so the longest item sets the peak, and no item over
+2,048 tokens can be trained on. The CUDA context and libraries hold 0.55 GB outside PyTorch's
+allocator.
+
+| rank | item tokens | peak allocated GB | peak reserved GB | seconds a step |
+|---|---|---|---|---|
+| 32 | 512 | 22.77 | 23.28 | 3.02 |
+| 32 | 1024 | 28.86 | 29.63 | 6.52 |
+| 32 | 2048 | 41.06 | 41.78 | 10.81 |
+| 256 | 512 | 32.01 | 32.70 | 4.84 |
+| 256 | 1024 | 38.10 | 39.31 | 9.12 |
+| 256 | 2048 | overflow (reached 40.85) | | |
+
+| adapter | prompt + new tokens | peak allocated GB | peak reserved GB | seconds |
+|---|---|---|---|---|
+| none | 2047 + 256 | 31.62 | 33.00 | 10.34 |
+| rank 256 | 2047 + 256 | 34.22 | 38.13 | 12.02 |
+
+**The registered rank fits at every admissible length in a clean cell, with almost no room at the
+bound**: at 2,048 tokens the reserved peak plus the memory outside the allocator leaves 0.10 GB.
+Real runs reach that bound. The rank-32 client-update runs on GH200s peaked at 41.07 to 41.10 GB
+allocated (`client-updates-cpp-early.json`, `client-updates-cpp-256-c256.json`,
+`client-updates-cpp-rebuilt-c128.json`), which matches this probe's 2,048-token cell and leaves
+0.78 GB on an A100 before fragmentation; their reserved peaks, 43.72 to 45.08 GB, are above the
+A100's 42.43. Wikimedia's partition runs on the stack branch peak lower, at 39.91 GB allocated
+and up to 45.39 GB reserved. PyTorch's allocator behaves the same on both GPUs: on a failed
+allocation it releases unused cached segments and retries, but fragmented blocks stay held, so a
+run whose reserved peak exceeds the device is not shown to fit by its allocated peak.
+
+**Two kinds of run cannot fit an A100.** The rank-256 branch overflows at 2,048 tokens here, and
+the committed GH200 rank-256 runs (`rq1-windows-r256.json` and its seeds) peaked at 47.4 GB
+allocated. The dual-adapter client updates peaked at 44.65 GB
+(`client-updates-dual-cpp-rebuilt-c128-t2.json`).
+
+**Inference fits**, with 3.75 GB to spare even with a rank-256 adapter attached. Evaluation
+prompts are not capped at the training bound, but in fp32 the cache grows by about 115 KB a token,
+so a longer prompt moves this little.
+
+**Decided: the 7B GPU work stays off the A100s.** It runs on TIGRIS GH200s, where every 7B result so
+far ran, or on SPORC's 80 GB H100 node. A confirmatory set runs on one GPU type anyway, since mixing
+GPU types confounds the contrast with hardware (2026-09-17 above), and an A100 would carry the
+registered rank with under a gigabyte of allocated headroom and less than its reserved peak. If an
+A100 run is ever needed, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` is the standard lever
+against fragmentation under varying sequence lengths (torchtune issue 1185); it changes allocation,
+not arithmetic, and would need its own trial at the bound first.
+
+Seconds per step are for the GPU alone at fixed lengths. A real step averages over the corpus's
+length distribution, so a job's `--time` is sized from its own logged steps, not from this table.
+
+### Wikimedia's simulation at the lower-bound window: two-cell bounds +0.0268 and +0.0246 (2026-10-03)
+
+`partition-sensitivity-wikimedia.json`, SPORC job 21794712 (CPU only, pinned at 8c87f28 with the
+arguments of OpenStack's rerun), in place of TIGRIS job 211288, which was cancelled when the TIGRIS
+queue slipped. Its placebo input is read from the cluster data root; that file, redacted, is
+byte-identical to the committed `rq1-placebo-wikimedia.json`. 1,000 studies per power step and
+4,000 null studies, K = 16, N = 1,850, the 2,848-change lower-bound window, and `sigma_run`
+calibrated on the pilot's 429 changes:
+
+| spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95%, two cells | null bounded (97.5%, two cells) | reproducibility failure |
+|---|---|---|---|---|---|---|---|
+| pilot 90% lower | 0.0094 | 0.0080 | 0.015 | 0.025 | +0.0238 / +0.0223 | 0.987 | 0.000 |
+| pilot estimate | 0.0112 | 0.0100 | 0.014 | 0.027 | +0.0246 / +0.0230 | 0.988 | 0.004 |
+| sizing bound (90% upper) | 0.0141 | 0.0132 | 0.015 | 0.029 | +0.0268 / +0.0246 | 0.990 | 0.029 |
+| pilot 99% upper | 0.0172 | 0.0165 | 0.016 | 0.029 | +0.0289 / +0.0276 | 0.989 | 0.088 |
+
+**The false-positive rate sits slightly above nominal at every point**, by at most about two Monte
+Carlo errors (0.0018 at 0.0125, 0.0025 at 0.025, over 4,000 null studies). **Reproducibility holds
+at the spread K was sized on** (0.029 against beta = 0.05) and fails past it (0.088 at the 99%
+bound), as sizing at a 90% bound intends.
+
+**Read under the registered rule** (bounds are the detectable effects at the sizing bound, at the
+cell count of the admitted set): with OpenStack and Wikimedia admitted, Wikimedia's bounds are
+**+0.0268 at 97.5% and +0.0246 at 95%**, each cell at power 0.9747. The one- and three-cell bounds
+are in the artifact (`by_cells`) for an admitted set of another size; whether H1 spans more cells
+is an open decision. Because the window is a lower bound, these bounds are conservative. The
+Stage 1 figures move once OpenStack's rerun (job 21794711) lands.

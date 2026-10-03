@@ -91,9 +91,16 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
   release, or keep raw internal for reproducibility and exclude it from every release. Ground the
   choice in MSR ethics guidance (Gold and Krinke, "Ethics in the mining of software repositories", EMSE 27, 2022, doi:10.1007/s10664-021-10057-7) before deciding.
+  The same rewrite would also re-scrub the raw snapshots' Gerrit account numbers (next item), so
+  the two are one decision about rewriting raw snapshots.
 - [ ] **With the next build-rules change: count a 404 as `change_gone`** (`gerrit.NotFound`, caught
   apart from `comment_error` in `build_from_change`; written and tested 2026-10-01, held back because
   any `build.py` edit stales every frozen corpus month).
+- [ ] **With the next build-rules change: scrub Gerrit account numbers that are not `_account_id`
+  values** (`scrub.py` is in `BUILD_SOURCES`). Attention-set entries are keyed by the raw account
+  number and their `reason` text carries `<GERRIT_ACCOUNT_n>`; `scrub` replaces `_account_id`
+  values and addresses only. Every refined and built example on disk holds none (checked
+  2026-10-01, all four Gerrit corpora); the raw snapshots, untracked and never released, do.
 - [ ] **GitHub organizations as candidates** (sized 2026-10-01, `github-sizing-report.json`): Apache and
   LLVM reach an H1 cell, .NET and Grafana reach RQ2; OpenJDK and HashiCorp borderline. Needs: a GitHub
   collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
