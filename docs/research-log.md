@@ -1512,6 +1512,7 @@ the RC documentation grants every project without a pending review a TIGRIS Slur
 memory, and the GH200's unified memory would not have surfaced an overflow. The first SPORC
 run records it, along with seconds per step, since every `--time` in `scripts/` was sized on a
 GH200.
+*Measured 2026-10-03: see "The registered 7B on a 40 GB A100" below.*
 
 **Constraint this places on results.** A result set that mixes GH200 and A100 runs confounds
 the contrast with hardware. Each job's output now records its cluster, job, GPU and peak memory,
@@ -6694,3 +6695,60 @@ looked: some of that agreement is a shared way of judging, not shared correctnes
 conclusion rests on the human's agreement with the raters, which this leaves where it was; what
 changes is that A~B is no longer read as an independent replication. The audit now has a rater
 anyone can rerun at fixed weights.
+
+### The registered 7B on a 40 GB A100: rank 32 fits at every admissible length, rank 256 does not (2026-10-03)
+
+`memory-probe-sporc.json`, SPORC job 21796973 (A100-PCIE-40GB, 42.43 GB as the device reports
+it, pinned at 592b11e). `scripts/memory_probe.py` trains the registered 7B with `train_adapter`
+for two optimiser steps a cell on synthetic items of fixed length, at the registered rank and at
+256, then runs the registered fp32 generator over a prompt one token under the training bound.
+Training runs one item per micro-batch, so the longest item sets the peak, and no item over
+2,048 tokens can be trained on. The CUDA context and libraries hold 0.55 GB outside PyTorch's
+allocator.
+
+| rank | item tokens | peak allocated GB | peak reserved GB | seconds a step |
+|---|---|---|---|---|
+| 32 | 512 | 22.77 | 23.28 | 3.02 |
+| 32 | 1024 | 28.86 | 29.63 | 6.52 |
+| 32 | 2048 | 41.06 | 41.78 | 10.81 |
+| 256 | 512 | 32.01 | 32.70 | 4.84 |
+| 256 | 1024 | 38.10 | 39.31 | 9.12 |
+| 256 | 2048 | overflow (reached 40.85) | | |
+
+| adapter | prompt + new tokens | peak allocated GB | peak reserved GB | seconds |
+|---|---|---|---|---|
+| none | 2047 + 256 | 31.62 | 33.00 | 10.34 |
+| rank 256 | 2047 + 256 | 34.22 | 38.13 | 12.02 |
+
+**The registered rank fits at every admissible length, with almost no room at the bound**: at
+2,048 tokens the reserved peak plus the memory outside the allocator leaves 0.10 GB. Each cell
+starts from an emptied cache, where a real run mixes lengths over hundreds of steps and
+fragments more, so the bound itself is not a safe operating point. The real runs sit lower: the
+largest rank-32 peak among the committed GH200 results is 38.00 GB allocated
+(`rq1-placebo-openstack-v3-s5.json`), and Wikimedia's partition runs on the stack branch reach
+39.91 GB, about 2 GB under the device once the context is counted. Their reserved peaks (up to
+44.82 GB) exceed the A100, but a GH200's allocator caches freely where an A100's frees its cache
+and retries before it overflows.
+
+**The rank-256 branch cannot run on an A100.** It overflows at 2,048 tokens here, and the committed
+GH200 rank-256 runs (`rq1-windows-r256.json` and its seeds) peaked at 47.4 GB allocated. If the
+conditional branch fires, it runs on a GH200 or on SPORC's 80 GB H100 node.
+
+**Inference fits**, with 3.75 GB to spare even with a rank-256 adapter attached. Evaluation
+prompts are not capped at the training bound, but in fp32 the cache grows by about 115 KB a token,
+so a longer prompt moves this little.
+
+What this decides, and what it leaves open:
+- A confirmatory set is run on one GPU type, since mixing GH200 and A100 runs confounds the
+  contrast with hardware (2026-09-17 above). A100s can carry the registered rank; the margin is
+  about 2 GB on the longest real items seen so far.
+- If the set runs on A100s, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` is the standard
+  lever against fragmentation under varying sequence lengths (torchtune issue 1185). It changes
+  allocation, not arithmetic, and is not adopted until a run needs it.
+- Not measured: the longest item in each admitted corpus after tokenization. That census, run on
+  the cluster where the corpora live, decides whether the rank-256 branch would meet items
+  between 1,024 and 2,048 tokens on an A100.
+
+Seconds per step are for the GPU alone at fixed lengths. A real step averages over the corpus's
+length distribution, so a job's `--time` is sized from its own logged steps, not from this table.
+
