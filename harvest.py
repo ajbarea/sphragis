@@ -64,6 +64,7 @@ PARTITION_PILOT_WM = f"{RESULTS}/partition-pilot-wikimedia.json"
 K24_975 = ["intervals", "0.975"]
 K24_95 = ["intervals", "0.95"]
 PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack.json"
+PARTITION_SENSITIVITY_WM = f"{RESULTS}/partition-sensitivity-wikimedia.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
 
@@ -236,16 +237,17 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_fp_low",
         "registered-decisions.md",
-        "0.009",
+        "0.011",
         PARTITION_SENSITIVITY,
-        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
     ),
     (
         "rd_partition_fp_high",
         "registered-decisions.md",
-        "0.012",
+        "0.0125",
         PARTITION_SENSITIVITY,
-        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+        {"occurrences": 2},
     ),
     (
         "rd_partition_fp_nominal",
@@ -253,7 +255,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        {"reduce": "one_sided"},
+        {"reduce": "one_sided", "occurrences": 2},
     ),
     ("rd_partition_sd", "registered-decisions.md", "0.0140", PARTITION_PILOT, ["sizing", "sd"]),
     (
@@ -272,25 +274,85 @@ CLAIMS: list[tuple[Any, ...]] = [
         {"occurrences": 2},
     ),
     (
-        "rd_power",
+        "rd_cell_power",
         "registered-decisions.md",
-        "0.928",
+        "0.9747",
         PARTITION_SENSITIVITY,
-        ["target_marginal_power"],
+        ["cell_power", "2"],
     ),
     (
         "rd_partition_mde_975",
         "registered-decisions.md",
-        "+0.0239",
+        "+0.0248",
         PARTITION_SENSITIVITY,
-        ["by_target", "sizing_bound_90", "by_level", "0.975", "minimum_detectable_effect"],
+        [
+            "by_target",
+            "sizing_bound_90",
+            "by_level",
+            "0.975",
+            "by_cells",
+            "2",
+            "minimum_detectable_effect",
+        ],
     ),
     (
         "rd_partition_mde_95",
         "registered-decisions.md",
-        "+0.0223",
+        "+0.0234",
         PARTITION_SENSITIVITY,
-        ["by_target", "sizing_bound_90", "by_level", "0.95", "minimum_detectable_effect"],
+        [
+            "by_target",
+            "sizing_bound_90",
+            "by_level",
+            "0.95",
+            "by_cells",
+            "2",
+            "minimum_detectable_effect",
+        ],
+    ),
+    (
+        "rd_partition_fp_low_wm",
+        "registered-decisions.md",
+        "0.014",
+        PARTITION_SENSITIVITY_WM,
+        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+    ),
+    (
+        "rd_partition_fp_high_wm",
+        "registered-decisions.md",
+        "0.016",
+        PARTITION_SENSITIVITY_WM,
+        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+    ),
+    (
+        "rd_partition_mde_975_wm",
+        "registered-decisions.md",
+        "+0.0268",
+        PARTITION_SENSITIVITY_WM,
+        [
+            "by_target",
+            "sizing_bound_90",
+            "by_level",
+            "0.975",
+            "by_cells",
+            "2",
+            "minimum_detectable_effect",
+        ],
+    ),
+    (
+        "rd_partition_mde_95_wm",
+        "registered-decisions.md",
+        "+0.0246",
+        PARTITION_SENSITIVITY_WM,
+        [
+            "by_target",
+            "sizing_bound_90",
+            "by_level",
+            "0.95",
+            "by_cells",
+            "2",
+            "minimum_detectable_effect",
+        ],
     ),
     # ---- outcome-neutral.md ----
     (
@@ -376,20 +438,41 @@ CLAIMS: list[tuple[Any, ...]] = [
         {"text": True, "code": True},
     ),
     (
-        "on_fpr_19",
+        "on_partition_fp_low",
         "outcome-neutral.md",
-        "6.0",
-        CALIBRATION,
-        ["ladder", "19", "false_positive_rate"],
-        {"scale": 100},
+        "0.011",
+        PARTITION_SENSITIVITY,
+        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
     ),
     (
-        "on_fpr_91",
+        "on_partition_fp_high",
         "outcome-neutral.md",
-        "4.8",
-        CALIBRATION,
-        ["ladder", "91", "false_positive_rate"],
-        {"scale": 100},
+        "0.0125",
+        PARTITION_SENSITIVITY,
+        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+        {"occurrences": 2},
+    ),
+    (
+        "on_partition_fp_nominal",
+        "outcome-neutral.md",
+        "0.0125",
+        PARTITION_SENSITIVITY,
+        ["levels", "0"],
+        {"reduce": "one_sided", "occurrences": 2},
+    ),
+    (
+        "on_partition_fp_low_wm",
+        "outcome-neutral.md",
+        "0.014",
+        PARTITION_SENSITIVITY_WM,
+        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+    ),
+    (
+        "on_partition_fp_high_wm",
+        "outcome-neutral.md",
+        "0.016",
+        PARTITION_SENSITIVITY_WM,
+        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
     ),
 ]
 
