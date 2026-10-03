@@ -115,9 +115,10 @@ gate returns `pass`, so the contrast can see a house style of that size. For sca
 planted convention moves the contrast by about ten times what the two real organizations
 differ by.
 
-**The interval is calibrated.** The bootstrap's own false-positive rate, measured against the
-nominal 5% at the accuracy the gate operates at, is 6.0% at 19 changes and 4.8% at 91. The
-gate is conjunctive, so its own rate sits below either arm's.
+**The interval's error rate is measured.** Simulated over the registered K partitions at
+OpenStack's projected test size, the crossed interval the gate reads has a one-sided
+false-positive rate at the stricter Holm level of 0.011 to 0.0125 against a nominal 0.0125,
+at every run-to-run spread from the pilot's 90% lower bound to its 99% upper bound.
 
 ## Reading the evidence yourself
 

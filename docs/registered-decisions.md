@@ -110,7 +110,7 @@ Decided by the coverage study and the fixed-K simulation. A run is one admissibl
 own training seed; runs and changes are crossed rather than nested, so they are resampled
 independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
-the registered runs its one-sided false-positive rate at the stricter level is 0.009 to 0.012
+the registered runs its one-sided false-positive rate at the stricter level is 0.011 to 0.0125
 against a nominal 0.0125.
 
 ### Number of runs: fixed from the pilot, K = 24 for OpenStack
@@ -124,10 +124,11 @@ they agree, was simulated first and rejected: it ran above nominal where it stop
 
 ### Stated power: sensitivity, not power at an observed effect
 
-OpenStack's $H_1$ cell detects, with power 0.928 at its projected test size and K runs, a
-half-split contrast of +0.0239 and +0.0223 exact-match points at the two Holm levels, at the per-run
-spread K was sized on; these are the bounds a bounded reading is judged against. Power from a
-pilot's own estimate is biased upward, so no power at an observed effect is stated.
+With two cells each is sized at power 0.9747. At that power, its projected test size and K
+runs, OpenStack's $H_1$ cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
+points at the two Holm levels, at the per-run spread K was sized on; these are the bounds a
+bounded reading is judged against. Power from a pilot's own estimate is biased upward, so no
+power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 
