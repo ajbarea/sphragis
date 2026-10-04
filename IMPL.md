@@ -24,10 +24,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 1. Merge this route (#82, with the 2026-10-04 decisions); the stack below it is on `main`.
 2. Implement the readings beside the pass rule (meaningful, at least r of k, the random-effects
    summary across organizations) before the seal.
-3. Collect Apache, then LLVM, as the GitHub replication family (pilot, train and dev windows), then
-   each one's admissible list, development pilot and simulation before its test window.
-4. Rebuild the retrieval comparator (#77) on the registered runner.
-5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
+3. Collect Apache, then LLVM, .NET, Grafana, as the GitHub replication family (pilot, train and
+   dev windows) to freeze members by 2026-11-20; then each member's admissible list, development
+   pilot and simulation before its test window, and a replication gate beside `design()`, which
+   refuses organizations outside the registered four.
+4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
+5. Rebuild the retrieval comparator (#77) on the registered runner.
+6. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`.
 
 ## Standing

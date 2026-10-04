@@ -83,8 +83,12 @@ and is reported as an apparatus failure rather than as a result.
 
 ## The corpus, and the seal
 
-Two public Gerrit instances mined for hunk-level refinement pairs anchored to inline reviewer
-comments, deduplicated, pseudonymised at ingestion, and split into windows by change.
+Public Gerrit instances mined for hunk-level refinement pairs anchored to inline reviewer
+comments, deduplicated, pseudonymised at ingestion, and split into windows by change. H1's
+confirmatory cells are Gerrit organizations (OpenStack and Wikimedia admitted; Qt and Chromium on
+permission); GitHub organizations, collected through an adapter that shapes pull requests as
+Gerrit changes, are a registered replication family read beside them ([registered
+decisions](registered-decisions.md)). The table below is the original OpenStack and Qt pilot.
 
 The scrub replaces Gerrit account objects and sweeps addresses out of review comment text. It
 leaves the diff payload alone on purpose, because rewriting anything in the source that merely

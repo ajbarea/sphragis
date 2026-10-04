@@ -3,8 +3,8 @@
 How many organizations show H1 (the partial conjunction, Benjamini and Heller, Biometrics 2008)
 and how much the effect varies between them (a random-effects summary: REML for the
 between-organization variance, the modified Hartung-Knapp-Sidik-Jonkman interval of Röver, Knapp
-and Friede, BMC MRM 2015, a prediction interval from five organizations, platform as the one
-moderator). Registered in `docs/registered-decisions.md`, "Readings beside the pass rule".
+and Friede, BMC MRM 2015, a prediction interval from five organizations, each platform's
+subgroup beside it). Registered in `docs/registered-decisions.md`, "Readings beside the pass rule".
 Standard library only, like the rest of the measurement package.
 """
 
@@ -18,8 +18,7 @@ from typing import Any
 # prediction interval from about five; both thresholds are registered with the reading.
 MIN_FOR_INTERVAL = 3
 MIN_FOR_PREDICTION = 5
-# A moderator's coefficient needs at least two organizations on each side, or its residual
-# variance has no degrees of freedom on one platform.
+# A platform's subgroup summary needs two organizations, as the summary does.
 MIN_PER_PLATFORM = 2
 
 
@@ -174,8 +173,9 @@ def random_effects(
     freedom, given only from `MIN_FOR_INTERVAL` organizations; the prediction interval adds the
     between-organization variance on k - 2 degrees of freedom (Higgins, Thompson and Spiegelhalter
     2009), only from `MIN_FOR_PREDICTION`, and under-covers when that variance is small (Partlett
-    and Riley, Stat. Med. 2017). With `platforms`, the difference between the two platforms' means
-    is estimated the same way on k - 2 degrees of freedom.
+    and Riley, Stat. Med. 2017). With `platforms`, each platform with at least `MIN_PER_PLATFORM`
+    organizations gets the same summary over its own, descriptive: no moderator is tested, since
+    meta-regression needs about ten studies (Cochrane Handbook 6.5, chapter 10).
     """
     orgs = sorted(estimates)
     if sorted(standard_errors) != orgs:
@@ -207,7 +207,21 @@ def random_effects(
         half = t_quantile(tail, k - 2) * math.sqrt(summary["tau2"] + summary["se"][0] ** 2)
         result["prediction"] = (mean - half, mean + half)
     if platforms is not None:
-        result["moderator"] = _platform_moderator(y, v, orgs, platforms, tail=tail)
+        missing = sorted(set(orgs) - set(platforms))
+        if missing:
+            raise ValueError(f"no platform for {missing}")
+        result["subgroups"] = {}
+        for platform in sorted({platforms[o] for o in orgs}):
+            members = [o for o in orgs if platforms[o] == platform]
+            result["subgroups"][platform] = (
+                random_effects(
+                    {o: estimates[o] for o in members},
+                    {o: standard_errors[o] for o in members},
+                    confidence=confidence,
+                )
+                if len(members) >= MIN_PER_PLATFORM
+                else {"organizations": members, "k": len(members), "estimate": None}
+            )
     return result
 
 
@@ -229,34 +243,6 @@ def _summary(
         "interval": [
             (c - quantile * s, c + quantile * s) for c, s in zip(fit["coef"], se, strict=True)
         ],
-    }
-
-
-def _platform_moderator(
-    y: Sequence[float],
-    v: Sequence[float],
-    orgs: Sequence[str],
-    platforms: Mapping[str, str],
-    *,
-    tail: float,
-) -> dict[str, Any]:
-    missing = sorted(set(orgs) - set(platforms))
-    if missing:
-        raise ValueError(f"no platform for {missing}")
-    levels = sorted({platforms[o] for o in orgs})
-    counts = {level: sum(platforms[o] == level for o in orgs) for level in levels}
-    if len(levels) != 2 or min(counts.values()) < MIN_PER_PLATFORM:
-        return {"levels": counts, "difference": None, "reason": "needs two platforms of two each"}
-    reference, other = levels
-    x = [[1.0, 1.0 if platforms[o] == other else 0.0] for o in orgs]
-    fit = _summary(y, v, x, tail=tail)
-    return {
-        "levels": counts,
-        "difference": f"{other} - {reference}",
-        "estimate": fit["coef"][1],
-        "se": fit["se"][1],
-        "interval": fit["interval"][1],
-        "tau2": fit["tau2"],
     }
 
 

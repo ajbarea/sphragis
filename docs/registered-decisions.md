@@ -45,17 +45,22 @@ bounded only when every cell is.
 The admitted organizations are Gerrit hosts. H1 stays intersection-union however many are
 admitted, each cell sized at 0.95^(1/k); with two to four cells a between-organization variance is
 not estimable with useful precision, so heterogeneity is read beside the rule, not in it (below).
+With four cells (Qt and Chromium both admitted) every cell's simulation is rerun at four cells
+before the seal.
 
 ### GitHub organizations: a registered replication on a second platform (2026-10-04)
 
-GitHub review is optional and post-commit, so a GitHub cell inside H1 would let platform decide
-the hypothesis, and no GitHub cell can be powered by Stage 1. The GitHub organizations are
-therefore a family of their own, read after the confirmatory hypotheses: Apache, LLVM, .NET and
-Grafana in that order, each entering when its corpus is frozen and its split meets the criteria at
-the registered N. Each cell takes the Gerrit cells' windows, rules, estimand, pass rule and levels,
-its K from its own development pilot and its bound from its own simulation, both fixed before its
-test window is fetched. Each is reported per organization with the partial conjunction over the
-family, and binds no verdict on H1 or H2.
+On GitHub, review before merging depends on each project's settings and is often optional, where
+Gerrit's is enforced, so a GitHub cell inside H1 would let platform decide the hypothesis; and no
+GitHub cell can be powered by Stage 1. The GitHub organizations are therefore a family of their
+own, read after the confirmatory hypotheses. **Membership is fixed at Stage 1:** Apache, LLVM, .NET
+and Grafana, in that order, each a member only if its pilot, train and development windows are
+frozen and its split meets the criteria at the registered N by 2026-11-20; one not ready is
+reported as not collected, and none joins later. Each member is read on H1 only, with the Gerrit
+cells' windows, rules and estimand, on the two-sided 97.5% interval; its K comes from its own
+development pilot and its bound from its own simulation, both fixed before its test window is
+fetched. The family's reported outcome is the partial conjunction r over its members at
+one-sided 0.0125, with each cell's verdict; it binds no verdict on H1 or H2.
 
 ### Boundary: strictly above zero
 
@@ -147,11 +152,13 @@ hypothesis the gate reads, on the same draws, at the same levels:
   attention sets, per change, not per comment.
 
 - **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
+- **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
   and GitHub, each weighted by its bootstrap standard error: REML for the between-organization
   variance, the modified Hartung-Knapp-Sidik-Jonkman interval (scale held at one or above; Röver,
-  Knapp and Friede 2015) only above two organizations, a prediction interval from five, and
-  platform as its one moderator, read only with two organizations on each platform (Cochrane
-  Handbook 6.5, chapter 10).
+  Knapp and Friede 2015) from three organizations (two give the estimate and variance only), a
+  prediction interval from five, and each platform's subgroup summary beside it, descriptive, with
+  no moderator test, since meta-regression needs about ten studies (Cochrane Handbook 6.5,
+  chapter 10).
 
 Each is implemented before the seal opens (ROADMAP Plan H); none changes the pass rule, the
 estimand or the levels.

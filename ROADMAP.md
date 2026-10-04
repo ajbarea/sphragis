@@ -103,10 +103,11 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   2026-10-01, all four Gerrit corpora); the raw snapshots, untracked and never released, do.
 - [ ] **GitHub organizations as a registered replication** (decided 2026-10-04: not H1 candidates;
   read as their own family, binding no verdict; research log). Collect Apache, LLVM, .NET, Grafana
-  in that order (pilot, train, dev windows), then per organization: admissible list, development
-  pilot for K, sensitivity simulation, all before its test window is fetched. Stage 1 registers the
-  family's procedure. Sized 2026-10-01 (`github-sizing-report.json`): Apache and
-  LLVM reach an H1 cell, .NET and Grafana reach RQ2; OpenJDK and HashiCorp borderline. Needs: a GitHub
+  in that order (pilot, train, dev windows); members are those frozen and split-checked by
+  2026-11-20, named in Stage 1. Then per member: admissible list, development pilot for K,
+  sensitivity simulation, all before its test window is fetched; a replication gate (`design()`
+  refuses organizations outside the registered four today). Sized 2026-10-01
+  (`github-sizing-report.json`): Apache and LLVM are of H1-cell size, .NET and Grafana of RQ2 size; OpenJDK and HashiCorp borderline. Needs: a GitHub
   collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
   removed; pseudonymised at ingestion); GitHub's own thread-to-example conversion from a built pilot
   month per organization (`scripts/github_conversion.py`; OpenJDK 2024-11 first, the rest borrow
@@ -324,9 +325,10 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 
 - [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
-  robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack, Wikimedia
-  and LineageOS, the Android platform family that stands in for AOSP's; AOSP enters again through
-  the NoteDb route once its host's terms allow, and Qt only with permission.
+  robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack and Wikimedia
+  among the Gerrit hosts (LineageOS is too small for a cell, 2026-09-30) and the GitHub
+  organizations (2026-10-04); AOSP enters again through the NoteDb route once its host's terms
+  allow, and Qt only with permission.
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
 

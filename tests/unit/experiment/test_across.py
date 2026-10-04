@@ -2,7 +2,8 @@
 
 Reference values: `scipy.stats.t.ppf`; REML by bounded scalar minimisation of the restricted
 log-likelihood (checked on a 2e5-point grid), then the modified HKSJ interval and the
-Higgins-Thompson-Spiegelhalter prediction interval written out with numpy.
+Higgins-Thompson-Spiegelhalter prediction interval written out with numpy. Platform subgroups
+are checked against the summary itself on their members.
 """
 
 from __future__ import annotations
@@ -77,8 +78,8 @@ def test_modified_scale_never_narrows_the_interval_below_its_variance() -> None:
     assert out["prediction"] is None
 
 
-def test_platform_moderator_matches_meta_regression() -> None:
-    estimates, ses = _cells([0.012, 0.004, 0.021, -0.003, 0.009, 0.016])
+def test_each_platform_gets_the_same_summary_over_its_own_organizations() -> None:
+    estimates, ses = _cells([0.030, 0.004, 0.021, -0.010, 0.009, 0.016])
     platforms = {
         "a": "gerrit",
         "b": "gerrit",
@@ -87,19 +88,21 @@ def test_platform_moderator_matches_meta_regression() -> None:
         "e": "github",
         "f": "github",
     }
-    mod = random_effects(estimates, ses, platforms=platforms)["moderator"]
-    assert mod["difference"] == "github - gerrit"
-    assert mod["tau2"] == pytest.approx(2.1773778606921687e-05, rel=1e-5)
-    assert mod["estimate"] == pytest.approx(-0.002958949223785667, rel=1e-5)
-    assert mod["se"] == pytest.approx(0.006668406534542462, rel=1e-5)
-    assert mod["interval"] == pytest.approx((-0.021473413906085065, 0.015555515458513733), rel=1e-5)
+    out = random_effects(estimates, ses, platforms=platforms)
+    assert "moderator" not in out
+    for platform, members in (("gerrit", "abc"), ("github", "def")):
+        alone = random_effects({o: estimates[o] for o in members}, {o: ses[o] for o in members})
+        assert out["subgroups"][platform] == alone
 
 
-def test_moderator_needs_two_organizations_on_each_platform() -> None:
+def test_a_platform_with_one_organization_gets_no_summary() -> None:
     estimates, ses = _cells([0.012, 0.004, 0.021, -0.003])
     platforms = {"a": "gerrit", "b": "gerrit", "c": "gerrit", "d": "github"}
-    mod = random_effects(estimates, ses, platforms=platforms)["moderator"]
-    assert mod["difference"] is None and mod["levels"] == {"gerrit": 3, "github": 1}
+    subgroups = random_effects(estimates, ses, platforms=platforms)["subgroups"]
+    assert subgroups["github"] == {"organizations": ["d"], "k": 1, "estimate": None}
+    assert subgroups["gerrit"]["k"] == 3
+    with pytest.raises(ValueError, match="no platform"):
+        random_effects(estimates, ses, platforms={"a": "gerrit"})
 
 
 def test_intervals_are_withheld_below_their_registered_counts() -> None:
