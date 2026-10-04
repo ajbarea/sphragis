@@ -322,6 +322,14 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   the registered model's rule that the corpus postdates the checkpoint, which Qwen3-8B (no stated
   cutoff, self-reported early 2025) does not (research log, 2026-10-01). Needs the gated
   checkpoint's licence accepted on the Hugging Face account.
+- [ ] **RQ2 on QLoRA adapters, exploratory** (decided 2026-10-04). The deployment RQ2 tests
+  (Luo et al., arXiv:2412.01072) trains QLoRA: a 4-bit NF4 base with bf16 adapters (Dettmers et
+  al., NeurIPS 2023). RQ2's attribution and defence-curve measurements are rerun on adapters
+  trained that way, at the registered rank and steps, so the finding is shown on the setup it
+  critiques; whether a quantized base changes what an update reveals is unmeasured for adapters
+  (the nearest evidence is post-training quantization of image models, arXiv:2512.15335). Fits
+  SPORC's 40 GB A100s. Not for H1: its registered numerics, pilots and simulations are bf16, and
+  QLoRA's best reported case is parity, so it would add noise, not quality.
 
 - [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
