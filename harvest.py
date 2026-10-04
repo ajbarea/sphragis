@@ -317,14 +317,16 @@ CLAIMS: list[tuple[Any, ...]] = [
         "registered-decisions.md",
         "0.014",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
         "rd_partition_fp_high_wm",
         "registered-decisions.md",
         "0.016",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975"},
     ),
     (
         "rd_partition_mde_975_wm",
@@ -468,14 +470,16 @@ CLAIMS: list[tuple[Any, ...]] = [
         "outcome-neutral.md",
         "0.014",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
         "on_partition_fp_high_wm",
         "outcome-neutral.md",
         "0.016",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975"},
     ),
 ]
 

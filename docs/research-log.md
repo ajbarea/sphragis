@@ -7286,10 +7286,10 @@ calibrated on the pilot's 429 changes:
 
 | spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95%, two cells | null bounded (97.5%, two cells) | reproducibility failure |
 |---|---|---|---|---|---|---|---|
-| pilot 90% lower | 0.0094 | 0.0080 | 0.015 | 0.025 | +0.0238 / +0.0223 | 0.987 | 0.000 |
-| pilot estimate | 0.0112 | 0.0100 | 0.014 | 0.027 | +0.0246 / +0.0230 | 0.988 | 0.004 |
+| pilot 90% lower | 0.0094 | 0.0080 | 0.0145 | 0.0255 | +0.0238 / +0.0223 | 0.987 | 0.000 |
+| pilot estimate | 0.0112 | 0.0100 | 0.01425 | 0.027 | +0.0246 / +0.0230 | 0.988 | 0.004 |
 | sizing bound (90% upper) | 0.0141 | 0.0132 | 0.015 | 0.029 | +0.0268 / +0.0246 | 0.990 | 0.029 |
-| pilot 99% upper | 0.0172 | 0.0165 | 0.016 | 0.029 | +0.0289 / +0.0276 | 0.989 | 0.088 |
+| pilot 99% upper | 0.0172 | 0.0165 | 0.016 | 0.0285 | +0.0289 / +0.0276 | 0.989 | 0.088 |
 
 **The false-positive rate sits slightly above nominal at every point**, by at most about two Monte
 Carlo errors (0.0018 at 0.0125, 0.0025 at 0.025, over 4,000 null studies). **Reproducibility holds
