@@ -152,7 +152,6 @@ hypothesis the gate reads, on the same draws, at the same levels:
   attention sets, per change, not per comment.
 
 - **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
-- **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
   and GitHub, each weighted by its bootstrap standard error: REML for the between-organization
   variance, the modified Hartung-Knapp-Sidik-Jonkman interval (scale held at one or above; Röver,
   Knapp and Friede 2015) from three organizations (two give the estimate and variance only), a

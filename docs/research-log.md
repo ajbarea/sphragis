@@ -7676,8 +7676,12 @@ reading exists:
 - **The modified HKSJ interval**, the residual scale held at one or above (Röver, Knapp and Friede,
   BMC Medical Research Methodology 2015), recommended when few studies of unequal precision
   contribute, as here; the plain HKSJ interval can come out narrower than the fixed-effect one.
-- **REML by Fisher scoring** (Viechtbauer, Journal of Educational and Behavioral Statistics 2005),
-  truncated at zero, the Cochrane Handbook's default estimator.
+- **REML at its global maximum**, the Cochrane Handbook's default estimator: the restricted
+  likelihood read on zero and a log grid (50 points a decade over twelve decades below ten times
+  the larger of the estimates' squared range and their largest variance), the best point refined
+  by golden-section search. Fisher scoring from zero, the first implementation, failed on 9 of
+  1,500 realistic datasets in review (oscillating against the zero boundary) and stopped at a
+  lesser peak on others, since the restricted likelihood can have two.
 - **The prediction interval** on k - 2 degrees of freedom around the modified-HKSJ standard error
   (Higgins, Thompson and Spiegelhalter 2009), from five organizations only. It under-covers when
   the between-organization variance is small and study sizes vary (Partlett and Riley, Statistics
@@ -7685,8 +7689,15 @@ reading exists:
 - **Each platform's subgroup** gets the same summary over its own organizations, from two of them,
   reported descriptively; no moderator test (see the decision above).
 - **The partial conjunction** is made non-decreasing in r, so "at least r" is never rejected
-  without every smaller r; the Bonferroni form holds under any dependence between cells.
+  without every smaller r; the Bonferroni form holds under any dependence between cells. A cell's
+  p-value is below the level exactly when its percentile interval's lower bound is above zero only
+  when the resample count times the level is whole (10,000 draws at 0.0125 or 0.025), so the
+  reading refuses any other count, and the comparison is rounded so float noise in the level
+  cannot decide a tie.
 
-Checked against values computed independently with scipy (t quantiles; REML by bounded
-minimisation of the restricted likelihood, confirmed on a grid; the intervals written out with
-numpy), in `tests/unit/experiment/test_across.py`. Standard library only.
+Checked against values computed independently with scipy: t quantiles over 1 to 60 degrees of
+freedom; the intervals written out with numpy; and REML against a 30,001-point grid refined by
+bounded minimisation on 4,000 generated datasets (2 to 12 organizations, standard errors 1e-4 to
+1e-1, between-organization deviation 0 to 1), where the largest restricted-likelihood gap is
+4e-14. The six datasets the first implementation got wrong are regression tests in
+`tests/unit/experiment/test_across.py`. Standard library only.

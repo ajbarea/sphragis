@@ -126,37 +126,63 @@ def _weighted_fit(
     return {"w": w, "xtwx": xtwx, "coef": coef, "residual": residual}
 
 
-def _reml_tau2(y: Sequence[float], v: Sequence[float], x: Sequence[Sequence[float]]) -> float:
-    """REML between-organization variance by Fisher scoring, truncated at zero.
+def _restricted_nll(
+    y: Sequence[float], v: Sequence[float], x: Sequence[Sequence[float]], tau2: float
+) -> float:
+    """Negative restricted log-likelihood of the between-organization variance, up to a constant."""
+    fit = _weighted_fit(y, v, x, tau2)
+    xtwx = fit["xtwx"]
+    det = xtwx[0][0] if len(xtwx) == 1 else xtwx[0][0] * xtwx[1][1] - xtwx[0][1] * xtwx[1][0]
+    quadratic = sum(wi * ri * ri for wi, ri in zip(fit["w"], fit["residual"], strict=True))
+    return 0.5 * (sum(math.log(vi + tau2) for vi in v) + math.log(det) + quadratic)
 
-    With P = W - W X (X'W X)^-1 X'W, the update is tau2 += (y'P P y - tr P) / tr(P P)
-    (Viechtbauer, J. Educ. Behav. Stat. 2005).
+
+# Grid density for the REML search: points per decade over the twelve decades below the bound.
+_GRID_PER_DECADE = 50
+_GRID_DECADES = 12
+_GOLDEN = (math.sqrt(5.0) - 1.0) / 2.0
+
+
+def _reml_tau2(y: Sequence[float], v: Sequence[float], x: Sequence[Sequence[float]]) -> float:
+    """REML between-organization variance, its global maximum on [0, bound].
+
+    The restricted likelihood can have two peaks, and Fisher scoring from zero stops at the
+    nearer one or oscillates against the zero boundary. So the likelihood is read on zero and a
+    log grid below a bound ten times the larger of the estimates' squared range and their largest
+    variance, the bound doubled while the best point sits on it, and the best grid point is
+    refined by golden-section search between its neighbours.
     """
-    k = len(y)
-    tau2 = 0.0
-    for _ in range(1000):
-        fit = _weighted_fit(y, v, x, tau2)
-        w, inv = fit["w"], _inverse(fit["xtwx"])
-        hat = [
-            [
-                sum(x[i][a] * inv[a][b] * x[j][b] for a in range(len(inv)) for b in range(len(inv)))
-                for j in range(k)
-            ]
-            for i in range(k)
+    nll = lambda t: _restricted_nll(y, v, x, t)  # noqa: E731
+    spread = (max(y) - min(y)) ** 2
+    bound = 10.0 * max(spread, max(v))
+    for _ in range(60):
+        steps = _GRID_PER_DECADE * _GRID_DECADES
+        grid = [0.0] + [
+            bound * 10.0 ** (_GRID_DECADES * (i / steps - 1.0)) for i in range(steps + 1)
         ]
-        proj = [
-            [(w[i] if i == j else 0.0) - w[i] * hat[i][j] * w[j] for j in range(k)]
-            for i in range(k)
-        ]
-        py = [sum(proj[i][j] * y[j] for j in range(k)) for i in range(k)]
-        trace_p = sum(proj[i][i] for i in range(k))
-        trace_pp = sum(proj[i][j] * proj[j][i] for i in range(k) for j in range(k))
-        step = (sum(value * value for value in py) - trace_p) / trace_pp
-        new = max(0.0, tau2 + step)
-        if abs(new - tau2) < 1e-15:
-            return new
-        tau2 = new
-    raise ArithmeticError("REML did not converge")
+        values = [nll(t) for t in grid]
+        best = min(range(len(grid)), key=values.__getitem__)
+        if best < len(grid) - 1:
+            break
+        bound *= 2.0
+    else:
+        raise ArithmeticError("REML maximum lies beyond any bound tried")
+    if best == 0:
+        return 0.0
+    low, high = grid[best - 1], grid[best + 1]
+    a, b = high - _GOLDEN * (high - low), low + _GOLDEN * (high - low)
+    fa, fb = nll(a), nll(b)
+    while high - low > 1e-10 * high:
+        if fa < fb:
+            high, b, fb = b, a, fa
+            a = high - _GOLDEN * (high - low)
+            fa = nll(a)
+        else:
+            low, a, fa = a, b, fb
+            b = low + _GOLDEN * (high - low)
+            fb = nll(b)
+    candidate = 0.5 * (low + high)
+    return candidate if nll(candidate) < values[0] else 0.0
 
 
 def random_effects(
@@ -199,7 +225,7 @@ def random_effects(
         "confidence": confidence,
         "tau2": summary["tau2"],
         "estimate": mean,
-        "se": summary["se"][0],
+        "se": summary["se"][0] if k >= MIN_FOR_INTERVAL else None,
         "interval": summary["interval"][0] if k >= MIN_FOR_INTERVAL else None,
         "prediction": None,
     }
@@ -266,7 +292,10 @@ def partial_conjunction(p_values: Mapping[str, float], *, alpha: float) -> dict[
     for r, p in enumerate(ordered, start=1):
         running = max(running, min(1.0, (k - r + 1) * p))
         adjusted.append(running)
-    largest = max((r for r, p in enumerate(adjusted, start=1) if p < alpha), default=0)
+    # Rounded so float noise cannot decide a tie: (1 - 0.975) / 2 is 0.012500000000000011, which
+    # would count a p-value of exactly 0.0125 as below it.
+    level = round(alpha, 12)
+    largest = max((r for r, p in enumerate(adjusted, start=1) if round(p, 12) < level), default=0)
     return {"k": k, "alpha": alpha, "adjusted": adjusted, "at_least": largest}
 
 
@@ -286,9 +315,18 @@ def across_organizations(
     """Both readings over H1 cells from `h1_over_partitions`, at one Holm step's confidence.
 
     The partial conjunction is read at that step's one-sided level, the cells' own; the summary's
-    interval at the same confidence.
+    interval at the same confidence. A cell's p-value falls below the level exactly when its
+    percentile interval's lower bound lies above zero only when its resample count times the level
+    is a whole number (10,000 draws at 0.0125 or 0.025), so any other count is refused.
     """
     alpha = (1.0 - confidence) / 2.0
+    for org, cell in cells.items():
+        excluded = cell["resamples"] * alpha
+        if abs(excluded - round(excluded)) > 1e-9:
+            raise ValueError(
+                f"{org}: {cell['resamples']} resamples at one-sided {alpha:g} put the interval's "
+                "bound between draws, so its p-value and its verdict could disagree"
+            )
     return {
         "partial_conjunction": partial_conjunction(
             {org: cell["p_one_sided"] for org, cell in cells.items()}, alpha=alpha

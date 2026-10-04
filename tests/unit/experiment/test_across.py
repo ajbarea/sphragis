@@ -13,6 +13,8 @@ import math
 import pytest
 
 from sphragis.experiment.across import (
+    _reml_tau2,
+    _restricted_nll,
     across_organizations,
     one_sided_p,
     partial_conjunction,
@@ -159,7 +161,7 @@ def test_one_sided_p_counts_draws_at_or_below_zero() -> None:
 
 def test_across_organizations_reads_both_at_the_step_level() -> None:
     cells = {
-        org: {"estimate": e, "bootstrap_se": s, "p_one_sided": p}
+        org: {"estimate": e, "bootstrap_se": s, "p_one_sided": p, "resamples": 10_000}
         for org, e, s, p in [
             ("a", 0.02, 0.005, 0.0001),
             ("b", 0.01, 0.006, 0.04),
@@ -170,3 +172,114 @@ def test_across_organizations_reads_both_at_the_step_level() -> None:
     assert out["partial_conjunction"]["alpha"] == pytest.approx(0.0125)
     assert out["partial_conjunction"]["at_least"] == 2
     assert out["random_effects"]["k"] == 3 and out["random_effects"]["confidence"] == 0.975
+
+
+def test_across_organizations_refuses_a_count_whose_bound_falls_between_draws() -> None:
+    cells = {
+        o: {"estimate": 0.01, "bootstrap_se": 0.005, "p_one_sided": 0.001, "resamples": 500}
+        for o in "ab"
+    }
+    with pytest.raises(ValueError, match="between draws"):
+        across_organizations(cells, confidence=0.975)
+
+
+def test_a_p_value_at_the_level_is_not_below_it() -> None:
+    """125 of 10,000 draws at or below zero: not supported, and r = 1 is not rejected."""
+    assert partial_conjunction({"a": 125 / 10_000}, alpha=(1 - 0.975) / 2)["at_least"] == 0
+    assert partial_conjunction({"a": 124 / 10_000}, alpha=(1 - 0.975) / 2)["at_least"] == 1
+
+
+# Datasets on which Fisher scoring from zero oscillated against the boundary (16, 3536) or
+# stopped at a lesser peak (313, 1626, 3049, 3895); tau2 is the global REML maximum found by
+# scipy over a 30,001-point log grid refined by bounded minimisation.
+REML_REGRESSIONS = [
+    (
+        [
+            -2.459820841,
+            3.110042314,
+            -0.6921352944,
+            -0.7198350564,
+            0.8711275152,
+            -0.03003050522,
+            -1.769428628,
+            0.6400542193,
+        ],
+        [0.1, 0.0001, 0.1, 0.0001, 0.0001, 0.1, 0.0001, 0.1],
+        2.9821918280086575,
+    ),
+    (
+        [0.00517473471, -0.02138478769, 0.002440016166, 0.01026511749, 0.131960507, -0.02778395202],
+        [
+            0.006007948299,
+            0.0230242075,
+            0.005251613684,
+            0.0002743742794,
+            0.03100305196,
+            0.02712093371,
+        ],
+        0.0018644240449713961,
+    ),
+    (
+        [-0.003844257332, -0.008939034771, 0.108540686],
+        [0.0002077156373, 0.002352297665, 0.03172212774],
+        0.0033388828024754824,
+    ),
+    (
+        [
+            0.01406772567,
+            0.00995361196,
+            0.01172872194,
+            0.02888954555,
+            0.004006486814,
+            0.003987564971,
+            -0.01056570868,
+            0.009604453148,
+            0.0196071018,
+            -0.02687462706,
+        ],
+        [
+            0.005388456601,
+            0.0001342658523,
+            0.001043007069,
+            0.005531731541,
+            0.003451288346,
+            0.0925528134,
+            0.02856120512,
+            0.000204578857,
+            0.00727648568,
+            0.04479486502,
+        ],
+        2.5896138873539178e-05,
+    ),
+    ([1.54427271, -1.65011988], [0.0001, 0.1], 5.097071963585875),
+    (
+        [
+            0.01560908962,
+            0.009805996644,
+            0.007247896937,
+            -0.0482585815,
+            0.01255192206,
+            0.002756497628,
+            0.01169315683,
+        ],
+        [
+            0.007939042382,
+            0.0001860415171,
+            0.02045025057,
+            0.03615308889,
+            0.00591578929,
+            0.003165723437,
+            0.001909574224,
+        ],
+        5.01799233872326e-06,
+    ),
+]
+
+
+@pytest.mark.parametrize(("y", "se", "expected"), REML_REGRESSIONS)
+def test_reml_finds_the_global_maximum(y: list[float], se: list[float], expected: float) -> None:
+    v = [s * s for s in se]
+    x = [[1.0] for _ in y]
+    got = _reml_tau2(y, v, x)
+    assert got == pytest.approx(expected, rel=1e-4)
+    assert _restricted_nll(y, v, x, got) <= _restricted_nll(y, v, x, expected) + 1e-9

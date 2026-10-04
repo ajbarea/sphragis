@@ -250,6 +250,8 @@ def h1_over_partitions(
     """
     if runs_fixed < 2:
         raise ValueError(f"a cell needs at least two runs, got runs_fixed={runs_fixed}")
+    if resamples < 2:
+        raise ValueError(f"a cell needs at least two bootstrap draws, got resamples={resamples}")
     if len(runs) < runs_fixed:
         raise ValueError(f"{len(runs)} runs computed, fewer than the {runs_fixed} fixed")
     k = runs_fixed
@@ -277,5 +279,6 @@ def h1_over_partitions(
         "meaningful": {c: lo > SESOI for c, (lo, hi) in intervals.items()},
         "p_one_sided": one_sided_p(draws),
         "bootstrap_se": stdev(draws),
+        "resamples": resamples,
         **examples,
     }
