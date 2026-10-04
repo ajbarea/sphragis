@@ -21,20 +21,26 @@ written down before that measurement existed.
 Cluster size is non-informative here. The median correlation between a change's size and its
 contrast is -0.026 for OpenStack and -0.006 for Qt, so the two estimands do not answer
 materially different questions, which is the deciding test in Kahan et al. (IJE 2023). RQ1 is
-a claim about refinements, so the participant-average is the matching unit. Change-averaged
-also runs at roughly twice nominal alpha at the cluster counts the gate operates at, where
-pooled sits at nominal, which disqualifies it from binding a confirmatory gate.
+a claim about refinements, so the participant-average is the matching unit. Pooled is also the
+better-calibrated interval: under a true null its two-sided false-positive rate is 0.0575 at 45
+changes and 0.0480 at 91, against the change-averaged interval's 0.0638 and 0.0555 (nominal
+0.05), and change-averaged runs above pooled at every size measured.
 
-Both are computed and reported. **The choice decided the headline.** Under the registered
-numerics at three seeds, pooled returns mixed while change-averaged returns `pass` on both
-organizations, at +0.0380 for OpenStack and +0.0334 for Qt. It was fixed before that run
-existed.
+Both are computed and reported. Fixed before any reading it could decide.
 
-### Pass rule: conjunctive, both organizations' 95% intervals strictly above zero
+### Pass rule: every admitted organization's cell supported, Holm across H1 and H2
 
-RQ1 claims that organizations have a learnable house style, which is a generality claim. A
-rule passing on one organization does not support it, and weakening the rule to raise power
-would change the question to fit the answer.
+H1 (own half against sibling half) is read on every admitted organization, and passes only when
+every one of its cells is supported, so a pass generalizes across the organizations rather than
+resting on one. Requiring every cell makes it an intersection-union test, which holds its level
+without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
+evaluated projects) is confirmatory only for Qt and Chromium, when both are admitted. The two
+hypotheses share one family-wise level under Holm: the first is read on a two-sided 97.5%
+interval, the second, if the first passes, on a 95% one.
+
+A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
+below the cell's registered detectable effect, and **inconclusive** otherwise. A hypothesis is
+bounded only when every cell is.
 
 ### Boundary: strictly above zero
 
@@ -43,12 +49,14 @@ of exactly +0.000, so an inclusive boundary would have read that run as supporti
 hypothesis. It decided a second verdict on the dev window, where OpenStack's lower bound under
 the registered numerics came out at exactly +0.0000.
 
-### Reported power: conjunctive, not marginal
+### Power: 0.95 for each hypothesis test
 
-The gate passes only when both arms do, so its power is the joint probability, which for
-near-independent arms is the product: two arms at 80% give a gate at 64%. The figure itself is
-a sensitivity analysis rather than a power calculation, because power computed from a pilot's
-own estimate is biased upward (Albers and Lakens 2018).
+Registered-report guidelines ask for "0.95 or higher for all proposed hypothesis tests"
+(Nature Registered Reports author guidelines). H1 passes only when all of its cells do, and the
+organizations are independent, so its power is the product of its cells' powers: with k
+admitted organizations each cell is sized at 0.95^(1/k). The figure is a sensitivity analysis
+rather than a power calculation, because power computed from a pilot's own estimate is biased
+upward (Albers and Lakens 2018).
 
 ### Test window: 2025-11 to 2026-10, twelve months
 
@@ -82,44 +90,45 @@ Bare hunks put only about a fifth of a deduplicated month over the 32-token mini
 to read. With context the scored share rises past four fifths, and the same text is what the
 model-less baseline was run on, so the two are directly comparable.
 
-### Secondary estimate: pooled across organizations, reported beside the gate, never binding it
+### Secondary estimate: H1 and H2 summed per organization, reported beside the verdicts
 
-The gate asks whether *each* organization shows the effect, which is what generality needs and
-what limits the resolution. The pooled estimate answers the weaker question, whether
-organizations show the effect on average, and is sharper for it. It cannot bind the gate,
-since one organization could carry it and two organizations cannot support a heterogeneity
-model.
+Within an organization both contrasts are bootstrapped on the same draws, so their sum, how much
+an adapter from the evaluated half beats a foreign organization's, is reported with a 95%
+interval. It answers a weaker question than either hypothesis and binds no verdict.
 
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 
-The threshold has to clear the measured train-into-dev rate, which is 1.06% for OpenStack. At
+The threshold has to clear the measured train-into-dev rate, which is 0.97% for OpenStack on corpus v3. At
 Jaccard 0.8 that rate is 0.00% by construction, because dedup removes pairs at that threshold
 across windows as well as within them, so registering there would be a test that cannot fail.
 
 ## Decided by the measurements their rules named in advance
 
-### Interval the gate reads: the crossed seed by change bootstrap
+### Interval the gate reads: the crossed run-by-change bootstrap
 
-Decided by the coverage study and the seed runs. Seeds and changes are crossed rather than
-nested, so they are resampled independently (Owen's pigeonhole bootstrap). At three seeds and
-a seed effect of 0.02 the crossed interval covers at 0.073 two-sided where the median-seed
-rule reaches 0.122, and it costs no width where there is no seed effect.
+Decided by the coverage study and the fixed-K simulation. A run is one admissible partition at its
+own training seed; runs and changes are crossed rather than nested, so they are resampled
+independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
+0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
+the registered runs its one-sided false-positive rate at the stricter level is 0.011 to 0.0125
+against a nominal 0.0125.
 
-### Seed count: five
+### Number of runs: fixed from the pilot, K = 24 for OpenStack
 
-Decided by the seed main effect at the half size, where the granularity design trains. The rule
-fixed before the runs: three seeds if the effect is at or below 0.01, where three stop holding
-nominal, five above. On corpus v2 the effect was 0.0116, so five. On corpus v3 it is 0.0077 with a
-one-sided 95% upper bound of 0.0376: the rule as worded gives three, and **five are kept as a
-stated deviation**, because the rule's one earlier application took three only with its upper
-bound below 0.01 too, and five hold nominal at every seed effect measured.
+Decided by the partition study and two simulations. H1 is the mean over K admissible partitions,
+replacing five seeds on one registered partition, whose reading moved with the partition as much as
+with the seed. K = 2v(z / xi)^2, Ritzwoller and Romano's sizing rule, with v at the 90% upper bound
+of the development-window pilot's per-run variance and K kept within 10 to 40. OpenStack's pilot runs
+give a per-run standard deviation of 0.0140, so **K = 24**. A sequential rule, adding runs until
+they agree, was simulated first and rejected: it ran above nominal where it stopped early.
 
 ### Stated power: sensitivity, not power at an observed effect
 
-Each $H_1$ cell detects, with power 0.928 at OpenStack's projected test size, a half-split contrast
-of +0.0246 and +0.0210 exact-match points at the two Holm levels at the seed effect's point
-estimate, and +0.0488 and +0.0450 at its upper bound. Power from a pilot's own estimate is biased
-upward, so no power at an observed effect is stated.
+With two cells each is sized at power 0.9747. At that power, its projected test size and K
+runs, OpenStack's $H_1$ cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
+points at the two Holm levels, at the per-run spread K was sized on; these are the bounds a
+bounded reading is judged against. Power from a pilot's own estimate is biased upward, so no
+power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 
@@ -131,7 +140,9 @@ one process, at no measurable cost in wall time.
 
 | decision | enforced by |
 |---|---|
-| pass rule, boundary, estimand | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
+| cells, pass rule, Holm, verdicts | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
+| K, the reading over partitions | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
+| estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
 | outcome-neutral checks and the halt rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |
 | the seal, and refusing to fetch past it | [`sphragis/corpus/`](https://github.com/ajbarea/sphragis/tree/main/sphragis/corpus) |
 | the evidence behind every row above | [Artifact index](artifacts.md) |

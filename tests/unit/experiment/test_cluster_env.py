@@ -752,6 +752,12 @@ _JOB_DEFAULTS = {
     "POST": "/unused/post.jsonl",
     "PRE": "/unused/pre.jsonl",
     "ORG": "qt",
+    "PLACEBO": "/unused/placebo.json",
+    "CORPUS_WINDOWS": "/unused/corpus",
+    "SIZE": "100",
+    "PARTITION_SEED": "2",
+    "TRAIN_SIZE": "1850",
+    "SEEDS": "1",
 }
 
 

@@ -92,8 +92,10 @@ def halves(
 ) -> list[dict[str, Any]]:
     """Both halves of one organization's training window: projects, examples and suffix mix.
 
-    Sides are assigned on the refined rows before dedup, as the placebo corpus assigns them;
-    what each half holds is read from `train`, the deduplicated training window it trains on.
+    Sides are assigned on `built`'s training-window counts, as the placebo corpus assigns them:
+    the refined rows before dedup for the registered split, the organization's deduplicated rows
+    under `--dedup-org`. What each half holds is read from `train`, the deduplicated training
+    window it trains on.
     """
     side_of = assign(dict(project_counts(built, window)), order_seed)
     train = [row for row in train if row["project"] in side_of]
@@ -140,14 +142,33 @@ def runner_train(
     return train
 
 
-def split_criteria(own: list[dict[str, Any]], ref: list[dict[str, Any]]) -> dict[str, Any]:
+def organization_train(
+    deduplicated: list[dict[str, Any]], windows: Mapping[str, tuple[str, str]]
+) -> list[dict[str, Any]]:
+    """The training rows of an organization deduplicated as a whole (`--dedup-org`), for any
+    partition of it: what `runner_train` returns for every order seed on such rows.
+
+    Each dedup stage removes a row on a condition a subset of the rows can only weaken (an exact
+    copy, a near-duplicate pair, a repeat count), so once the organization is deduplicated a
+    half's own dedup removes nothing; and windows are assigned by date, not by half. One split
+    therefore serves every seed.
+    """
+    from sphragis.corpus.pipeline import run_split
+
+    return run_split(deduplicated, dict(windows))[0]["train"]
+
+
+def split_criteria(
+    own: list[dict[str, Any]], ref: list[dict[str, Any]], size_floor: int | None = None
+) -> dict[str, Any]:
     """Whether an organization's `halves` qualify, each criterion read against the reference's.
 
     The reference is OpenStack's halves: its smaller half is the size floor and its suffix mix
     the language-mix ceiling. Projects are counted after dedup, as what a half trains on; a half
-    left with no training rows does not qualify.
+    left with no training rows does not qualify. `size_floor` replaces the reference's smaller
+    half with the repeated-partition design's fixed training size N.
     """
-    floor = min(h["train_examples"] for h in ref)
+    floor = size_floor if size_floor is not None else min(h["train_examples"] for h in ref)
     empty = any(not h["suffixes"] for h in own)
     tv = None if empty else total_variation(own[0]["suffixes"], own[1]["suffixes"])
     ceiling = total_variation(ref[0]["suffixes"], ref[1]["suffixes"])

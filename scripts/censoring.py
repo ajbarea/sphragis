@@ -39,8 +39,9 @@ def _month_before(bound: str) -> str:
 
 
 RESULTS = Path("datasets/results/censoring.json")
-RAW = "datasets/gerrit/{org}/raw"
-EXAMPLES = "datasets/gerrit/{org}/examples"
+ROOT = Path("datasets/gerrit")
+RAW = "{org}/raw"
+EXAMPLES = "{org}/examples"
 ORGS = ("openstack", "qt")
 
 # Imported, not mirrored: these had been copied by hand, which is how a study parameter
@@ -52,10 +53,10 @@ WINDOWS = {name: (start[:7], _month_before(end)) for name, (start, end) in _CLI_
 # at 2025-09 because the ban blocked 2025-10, and a shared constant gave every Qt observation
 # a horizon one month too long, inflating every risk set with a cohort-month that could not
 # have produced an observation and understating Qt's loss.
-def last_collected(org: str) -> str:
-    months = sorted(p.stem for p in Path(EXAMPLES.format(org=org)).glob("*.jsonl"))
+def last_collected(org: str, root: Path = ROOT) -> str:
+    months = sorted(p.stem for p in (root / EXAMPLES.format(org=org)).glob("*.jsonl"))
     if not months:
-        raise SystemExit(f"no built months under {EXAMPLES.format(org=org)}")
+        raise SystemExit(f"no built months under {root / EXAMPLES.format(org=org)}")
     return months[-1]
 
 
@@ -80,10 +81,10 @@ def change_key(row: Mapping[str, Any]) -> tuple[str, str, str]:
     return (str(row["project"]), str(row["change_id"]), str(row["created"]))
 
 
-def example_bearing(org: str) -> set[tuple[str, str, str]]:
+def example_bearing(org: str, root: Path = ROOT) -> set[tuple[str, str, str]]:
     """Changes the corpus actually keeps: those with a comment anchored to a code hunk."""
     kept: set[tuple[str, str, str]] = set()
-    for path in refined_month_files(Path(EXAMPLES.format(org=org)).parent.parent, org):
+    for path in refined_month_files(root, org):
         with path.open() as handle:
             for line in handle:
                 kept.add(change_key(json.loads(line)))
@@ -91,7 +92,7 @@ def example_bearing(org: str) -> set[tuple[str, str, str]]:
 
 
 def observations(
-    org: str, last_collected: int, *, only: set[str] | None = None
+    org: str, last_collected: int, *, only: set[str] | None = None, root: Path = ROOT
 ) -> list[Observation]:
     """(lag, horizon) per change, optionally restricted to a set of change ids.
 
@@ -102,7 +103,7 @@ def observations(
     """
     seen: set[str] = set()
     out: list[Observation] = []
-    for path in sorted(Path(RAW.format(org=org)).glob("*.ndjson.gz")):
+    for path in sorted((root / RAW.format(org=org)).glob("*.ndjson.gz")):
         with gzip.open(path, "rt") as handle:
             for line in handle:
                 row = json.loads(line)

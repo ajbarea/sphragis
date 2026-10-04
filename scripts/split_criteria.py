@@ -16,7 +16,13 @@ import json
 from pathlib import Path
 
 from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.halves import excluded_projects, halves, runner_train, split_criteria
+from sphragis.corpus.halves import (
+    excluded_projects,
+    halves,
+    organization_train,
+    runner_train,
+    split_criteria,
+)
 from sphragis.corpus.load import refined_examples
 from sphragis.provenance import provenance_header
 
@@ -27,6 +33,19 @@ parser.add_argument("--reference", default="openstack")
 parser.add_argument("--reference-root", type=Path, default=None, help="default: --root")
 parser.add_argument("--out", type=Path, default=None)
 parser.add_argument(
+    "--size-floor",
+    type=int,
+    default=None,
+    help="the repeated-partition design's fixed training size N, in place of the reference's "
+    "smaller half",
+)
+parser.add_argument(
+    "--dedup-org",
+    action="store_true",
+    help="build --org's halves as the repeated-partition design does, deduplicating the "
+    "organization first; the reference stays registered",
+)
+parser.add_argument(
     "--order-seed",
     type=int,
     default=None,
@@ -34,20 +53,30 @@ parser.add_argument(
 )
 
 
-def org_halves(root: Path, org: str, order_seed: int | None = None) -> tuple[list[dict], list[str]]:
+def org_halves(
+    root: Path, org: str, order_seed: int | None = None, dedup_org: bool = False
+) -> tuple[list[dict], list[str]]:
     rows = refined_examples(root, org)
     if not rows:
         raise SystemExit(f"{org}: no refined examples under {root / org}")
+    if dedup_org:
+        # As `placebo_corpus.py --dedup-org` builds the halves: the organization deduplicated
+        # first, then assigned on its training-window counts, then each half its own dedup.
+        from sphragis.corpus.pipeline import run_dedup
+
+        rows = run_dedup(rows)[0]
     window = WINDOWS["train"]
-    train = runner_train(rows, WINDOWS, order_seed)
+    train = (
+        organization_train(rows, WINDOWS) if dedup_org else runner_train(rows, WINDOWS, order_seed)
+    )
     return halves(rows, train, window, order_seed), excluded_projects(rows, window)
 
 
 def main() -> None:
     args = parser.parse_args()
-    own, excluded = org_halves(args.root, args.org, args.order_seed)
+    own, excluded = org_halves(args.root, args.org, args.order_seed, args.dedup_org)
     ref, _ = org_halves(args.reference_root or args.root, args.reference)
-    result = {"excluded_projects": excluded, **split_criteria(own, ref)}
+    result = {"excluded_projects": excluded, **split_criteria(own, ref, size_floor=args.size_floor)}
     for name, half in zip(("a", "b"), result["halves"], strict=True):
         print(
             f"{args.org}-{name}: {half['projects']} projects, {half['train_examples']} train, "

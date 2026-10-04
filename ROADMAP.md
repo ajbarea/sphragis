@@ -202,6 +202,26 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 
 ## Plan F — RQ2 positioning
 
+- [x] **Source inference is RQ2's attack family**, read in full 2026-09-30. Hu et al., "Source
+  Inference Attacks: Beyond Membership Inference Attacks in Federated Learning" (IEEE TDSC
+  21(4):3012-3029, 2024, doi 10.1109/TDSC.2023.3321565): an honest-but-curious server attributes a
+  known training record to the client whose local model has the smallest prediction loss on it,
+  in FedSGD, FedAvg and FedMD, ten clients, differential privacy as the defence. Every client there
+  transmits a whole model, gradient or prediction. RQ2 asks the question of an organization rather
+  than a record, and of the part of an update a defence transmits, which their setting does not
+  cover.
+- [ ] **Their min-loss rule as RQ2's baseline attack**: attribute a held-out refinement to the
+  organization whose transmitted part, completed with the receiver's own local part, gives the
+  smallest loss. It needs no trained attacker, so the learned attack is reported against it.
+- [ ] **Two 2026 LoRA methods to place, neither a new cut.** FedAS-LoRA (arXiv:2608.09742) picks
+  share-A or share-B per deployment by a rank-aware residual, so it transmits one of the two cuts
+  already measured, chosen by rule; LA-LoRA (ICLR 2026, arXiv:2602.19926) is a differentially private
+  method, a different defence class from the adapter splits.
+- [ ] **A second model family, exploratory.** Every neighbouring federated SE study runs several
+  models (the federated program-repair study six, arXiv:2412.01072); P4 runs Qwen2.5-Coder-7B.
+  An H1 dev-window replication on one current family (Qwen3-8B), outside the registered cells, so
+  the frozen model stack does not change.
+
 - [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
   robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack, Wikimedia

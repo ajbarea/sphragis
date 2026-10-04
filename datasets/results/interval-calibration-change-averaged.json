@@ -1,0 +1,135 @@
+{
+  "ladder": {
+    "10": {
+      "clusters": 10,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.09933333333333333,
+      "gate_false_positive_rate": 0.051666666666666666,
+      "gate_standard_error": 0.002857657030454093,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.003861481197291661,
+      "trials": 6000
+    },
+    "19": {
+      "clusters": 19,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.07883333333333334,
+      "gate_false_positive_rate": 0.0405,
+      "gate_standard_error": 0.0025449214133249774,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.0034789519228470922,
+      "trials": 6000
+    },
+    "200": {
+      "clusters": 200,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.051166666666666666,
+      "gate_false_positive_rate": 0.026833333333333334,
+      "gate_standard_error": 0.0020861969208568476,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.0028445456253705643,
+      "trials": 6000
+    },
+    "30": {
+      "clusters": 30,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.065,
+      "gate_false_positive_rate": 0.0325,
+      "gate_standard_error": 0.0022892411406402777,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.0031826351764955197,
+      "trials": 6000
+    },
+    "45": {
+      "clusters": 45,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.06383333333333334,
+      "gate_false_positive_rate": 0.029666666666666668,
+      "gate_standard_error": 0.002190378793555868,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.003155910827027302,
+      "trials": 6000
+    },
+    "91": {
+      "clusters": 91,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.3185840707964602,
+      "false_positive_rate": 0.0555,
+      "gate_false_positive_rate": 0.026333333333333334,
+      "gate_standard_error": 0.002067199752035302,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.002955778239313633,
+      "trials": 6000
+    }
+  },
+  "null": {
+    "arm": "adapter:openstack|openstack|s1",
+    "changes_in_window": 235,
+    "estimator": "change_averaged",
+    "exact_match_rate": 0.3185840707964602,
+    "largest_change": 45,
+    "nominal_two_sided": 0.05,
+    "resamples": 2000,
+    "trials": 6000,
+    "window": "datasets/results/rq1-windows-qtfull-fp32.json"
+  },
+  "provenance": {
+    "generated_at": "2026-09-30T12:58:56.207787+00:00",
+    "git": {
+      "branch": "measure/repeated-partitions",
+      "commit": "52a4560dc8997a26bfb7fe3ac7da53c2ffb6a135"
+    },
+    "packages": {},
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "python": "3.14.4"
+  },
+  "rate_sensitivity": {
+    "0.05": {
+      "clusters": 19,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.05,
+      "false_positive_rate": 0.0485,
+      "gate_false_positive_rate": 0.02666666666666667,
+      "gate_standard_error": 0.0020798860367640163,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.0027733178084501362,
+      "trials": 6000
+    },
+    "0.15": {
+      "clusters": 19,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.15,
+      "false_positive_rate": 0.09233333333333334,
+      "gate_false_positive_rate": 0.04766666666666667,
+      "gate_standard_error": 0.0027505925287579875,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.003737376283100416,
+      "trials": 6000
+    },
+    "0.50": {
+      "clusters": 19,
+      "estimator": "change_averaged",
+      "exact_match_rate": 0.5,
+      "false_positive_rate": 0.0695,
+      "gate_false_positive_rate": 0.035666666666666666,
+      "gate_standard_error": 0.002394248509642624,
+      "nominal_one_sided": 0.025,
+      "resamples": 2000,
+      "standard_error": 0.0032830308659326777,
+      "trials": 6000
+    }
+  }
+}
