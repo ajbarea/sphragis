@@ -7614,43 +7614,53 @@ Stage 1 sample-size paragraph take OpenStack's figures from this artifact.
 
 AJ delegated the route spec's two open questions (highest-quality research, decided from current
 practice). Both are decided before any GitHub organization has a corpus beyond its pilot month and
-before any test window exists.
+before any test window is fetched. This replaces the 2026-10-01 rule that listed the GitHub
+organizations as candidates behind Qt and Chromium.
 
 **1. How H1 reads over more organizations: the intersection-union rule stays.** H1 asks whether
 learned style transfers within the evaluated projects *in every admitted organization*, which is
 the claim a perimeter drawn around an organization needs; an intersection-union test makes it at
-the registered level with no adjustment across cells (Berger 1982). Each added cell raises every
-cell's power target, 0.95^(1/k): 0.9747 at two cells, 0.9830 at three, 0.9873 at four, 0.9915 at
-six, and OpenStack's bound at 97.5% moves from +0.0230 at one cell to +0.0248 at two and +0.0261
+the registered level with no adjustment across cells (Berger, Technometrics 1982). Each added cell
+raises every cell's power target, 0.95^(1/k): 0.9747 at two cells, 0.9830 at three, 0.9873 at
+four, and OpenStack's bound at 97.5% moves from +0.0230 at one cell to +0.0248 at two and +0.0261
 at three (`partition-sensitivity-openstack.json`, `by_cells`). A per-organization reading with a
 heterogeneity estimate was the alternative. With two to four confirmatory cells the between-
 organization variance is not estimable with useful precision: the Cochrane Handbook (6.5,
 November 2024, chapter 10) uses the Hartung-Knapp-Sidik-Jonkman interval only above two studies,
-warns it is overly wide with very few, and recommends prediction intervals from about five.
-So the pass rule is unchanged, and two readings beside it answer the other question, neither
-binding a verdict: the partial conjunction "at least r of k" (registered 2026-10-02), and a
-random-effects summary over every organization read, Gerrit and GitHub, with REML for the
-between-organization variance, an HKSJ interval, a prediction interval from five organizations,
-and platform as its one registered moderator.
+warns it is overly wide with very few, recommends prediction intervals from about five, and
+advises against meta-regression below about ten studies. So the pass rule is unchanged, and two
+readings beside it answer the other question, neither binding a verdict: the partial conjunction
+"at least r of k" (registered 2026-10-02), and a random-effects summary over every organization
+read, Gerrit and GitHub (REML, the HKSJ interval from three organizations, a prediction interval
+from five), with each platform's subgroup summary reported descriptively and no moderator test.
+If Qt and Chromium are both admitted, H1 has four cells, and every cell's simulation is rerun
+with `--cells 4` before the seal; the artifacts hold one to three today.
 
 **2. The GitHub organizations: a registered replication, not H1 candidates.** Two reasons, either
-sufficient. *Platform.* GitHub review is optional and post-commit, with fewer comments per change
-and more of them on surface improvements than Gerrit's mandatory pre-commit review (Sun, Wu,
-Assunção and Stolee, arXiv:2603.15935, March 2026, on test-code review across both). Inside an
-intersection-union H1, a GitHub null would fail the hypothesis for a reason the design does not
-study. *Power.* Registered reports require a priori power of 0.95 for every proposed hypothesis test
-(the standard adopted 2026-09-30), so each confirmatory cell needs its simulated bound at Stage 1.
-Each GitHub organization has one built pilot month; a corpus, its admissible list, a development
-pilot to fix K and the 72-hour simulation cannot all land by 2026-11-20 (collection runs about two
-hours per organization-month at one client; the TIGRIS GPU queue was two weeks on 2026-10-02).
-Chromium's corpus deadline (2026-10-23) is the precedent for admitting only what is ready.
+sufficient. *Platform.* On GitHub, review before merging depends on each project's settings and is
+often optional, where Gerrit's is enforced before a change lands, and GitHub pull requests carry
+fewer review comments per file (Sun, Wu, Assunção and Stolee, arXiv:2603.15935, March 2026,
+comparing test-code review on both). Inside an intersection-union H1, a GitHub null would fail the
+hypothesis for a reason the design does not study. *Power.* This study adopted the Nature
+registered-report standard of a priori power 0.95 for every proposed hypothesis test (2026-09-30),
+so each confirmatory cell needs its simulated bound at Stage 1. Each GitHub organization has one
+built pilot month. A corpus, its admissible list, a development pilot (22 runs at OpenStack's
+measured 1.44 GH200-hours each, 2026-09-29) and a simulation (24 and 32 hours on 32 cores for
+Wikimedia and OpenStack, SPORC jobs 21794712 and 21794711) cannot be ready for every candidate by
+2026-11-20, and a cell without its bound at Stage 1 cannot be confirmatory. Chromium's corpus
+deadline (2026-10-23) is the precedent for admitting only what is ready. Adding the organizations
+by amendment after in-principle acceptance, as a secondary hypothesis, was the other option; it
+is a protocol change that needs the editors' approval, so the family is registered now instead.
 
-The replication is registered in Stage 1 as a family with its own procedure, read after the
-confirmatory one. Its organizations are collected in the order Apache, LLVM, .NET, Grafana
-(sizing table above), each entering when its corpus is frozen and its split meets the criteria at
-N = 1,850, with the windows, rules, pass rule, levels and estimand of the Gerrit cells. Each cell's
-K comes from its own development pilot and its bound from its own simulation, both fixed before
-its test window is fetched, so no bound is chosen after the data. Each cell is read and reported
-per organization, with the partial conjunction over the family; the family binds no verdict on H1
-or H2. .NET and Grafana are RQ2's federation members whether or not they reach an H1 cell.
-OpenJDK and HashiCorp stay borderline and are not collected unless RQ2's sizing needs them.
+**The family, as registered.** Membership is fixed at Stage 1: the organizations, in the order
+Apache, LLVM, .NET, Grafana (sizing table above), whose pilot, train and development windows are
+collected, frozen and split-checked at N = 1,850 by 2026-11-20. The Stage 1 report names them;
+one not ready by then is reported as not collected, and no organization joins afterwards, so the
+family and the summary across organizations cannot be chosen after any result. Each member is
+read on H1 only, with the Gerrit cells' windows, rules and estimand, on the two-sided 97.5%
+interval (one-sided 0.0125, the stricter Holm step); its K comes from its own development pilot
+and its bound from its own simulation, both fixed before its test window is fetched, so no bound
+is chosen after the data. The family's reported outcome is the partial conjunction r over its
+members at one-sided 0.0125, with every cell's verdict; it binds no verdict on H1 or H2. .NET and
+Grafana are RQ2's federation members whether or not they enter the family. OpenJDK and HashiCorp
+stay borderline and are not collected unless RQ2's sizing needs them.

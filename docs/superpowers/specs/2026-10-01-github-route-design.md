@@ -1,7 +1,7 @@
 # A GitHub collection route
 
-Status: design, 2026-10-01. Follows the confirmation sizing (research log, "The confirmation pass"):
-Apache and LLVM reach an H1 cell, .NET and Grafana RQ2. AJ asked for at least six organizations so
+Status: design, 2026-10-01; decided 2026-10-04. Follows the confirmation sizing (research log, "The
+confirmation pass"): Apache and LLVM are of H1-cell size, .NET and Grafana of RQ2 size. AJ asked for at least six organizations so
 that RQ2 is a real federation.
 
 ## Goal
@@ -78,10 +78,11 @@ The research log entry of this date gives the reasons and sources.
 
 - **H1 stays intersection-union over the admitted Gerrit organizations.** How many organizations
   show the effect is read beside it by the partial conjunction, and a random-effects summary over
-  every organization read (REML, Hartung-Knapp-Sidik-Jonkman interval, a prediction interval from
-  five organizations, platform as moderator) is reported, neither binding a verdict.
+  every organization read (REML, Hartung-Knapp-Sidik-Jonkman interval from three, a prediction
+  interval from five, per-platform subgroups descriptive) is reported, neither binding a verdict.
 - **The GitHub organizations are a registered replication on a second platform**, not H1
-  candidates: GitHub's optional, post-commit review would confound a GitHub null with platform,
-  and their cells cannot be powered by Stage 1. Collected in the order Apache, LLVM, .NET,
-  Grafana, each entering when frozen and split-checked at N; K and the bound are fixed per cell
-  before its test window is fetched; read per organization, binding no verdict.
+  candidates: GitHub review is often optional by project setting, which would confound a GitHub
+  null with platform, and their cells cannot be powered by Stage 1. Members are fixed at Stage 1:
+  Apache, LLVM, .NET, Grafana, each only if frozen and split-checked at N by 2026-11-20. Read on H1
+  at one-sided 0.0125, K and the bound fixed per cell before its test window is fetched; the
+  outcome is the partial conjunction r over the family, binding no verdict.
