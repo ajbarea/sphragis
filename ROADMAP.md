@@ -195,8 +195,9 @@ Before Stage 1 (2026-11-20), each registered before the seal:
 - [ ] **A likelihood outcome**: teacher-forced bits-per-byte of the target, own vs sibling, as a
   registered secondary with its own SESOI and sensitivity simulation (arXiv:2508.13144).
 - [ ] **Readings beside the pass rule** (registered in `docs/registered-decisions.md` 2026-10-02,
-  with the AI-trailer, backport and reviewer-exposure sensitivities; to implement in
-  `decomposition.py` before the seal): "meaningful" when a cell's lower bound clears the SESOI
+  with the AI-trailer, backport and reviewer-exposure sensitivities). Implemented 2026-10-04 in
+  `sphragis/experiment/across.py` and the H1 cell: meaningful, at least r of k, the random-effects
+  summary. Still to implement before the seal: the three sensitivities. "meaningful" when a cell's lower bound clears the SESOI
   (three-sided testing, Isager and Fitzgerald, AMPPS 2026); the largest r with "at least r of k
   organizations" rejected (partial conjunction, Benjamini and Heller 2008), so a failed
   every-organization test still says how many show the effect; and a random-effects summary over
@@ -594,6 +595,12 @@ as the unit; the evidence says the codebase is.
   data and code availability statement. A Zenodo record is permanent, so the release is cut once,
   from the final commit. The dataset gets its own record later, after the licence per host, the
   withdrawn-changes decision and a takedown contact are settled; the test months never before Stage 2.
+- [ ] **Every artifact's provenance commit reachable from a clone**, checked before the Zenodo
+  release: squash merges leave the commit a result was produced at only in GitHub's pull-request
+  refs, so a clone of `main` cannot check it out. A script lists each committed artifact's
+  `provenance.git.commit` and tags any not on `main` (`sim/openstack-sporc-21794711` and
+  `sim/wikimedia-sporc-21794712` were tagged by hand, 2026-10-04), with a test that fails on one
+  reachable from neither.
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3

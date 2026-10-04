@@ -16,6 +16,7 @@ from collections.abc import Mapping, Sequence
 from statistics import NormalDist, stdev, variance
 from typing import Any
 
+from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.decomposition import (
     SESOI,
     cell_verdict,
@@ -249,6 +250,8 @@ def h1_over_partitions(
     """
     if runs_fixed < 2:
         raise ValueError(f"a cell needs at least two runs, got runs_fixed={runs_fixed}")
+    if resamples < 2:
+        raise ValueError(f"a cell needs at least two bootstrap draws, got resamples={resamples}")
     if len(runs) < runs_fixed:
         raise ValueError(f"{len(runs)} runs computed, fewer than the {runs_fixed} fixed")
     k = runs_fixed
@@ -271,5 +274,11 @@ def h1_over_partitions(
             for c, (lo, hi) in intervals.items()
         },
         "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
+        # Readings beside the pass rule (registered-decisions.md): a supported cell whose lower
+        # bound also clears the SESOI, and the inputs of the readings across organizations.
+        "meaningful": {c: lo > SESOI for c, (lo, hi) in intervals.items()},
+        "p_one_sided": one_sided_p(draws),
+        "bootstrap_se": stdev(draws),
+        "resamples": resamples,
         **examples,
     }

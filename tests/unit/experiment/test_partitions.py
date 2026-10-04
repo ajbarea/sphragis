@@ -7,6 +7,7 @@ from statistics import NormalDist, stdev
 
 import pytest
 
+from sphragis.experiment.decomposition import SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
     BETA,
@@ -246,3 +247,24 @@ def test_sensitivity_bounds_name_a_missing_level() -> None:
     artifact = {"by_target": {"t": {"by_level": {"0.95": {"by_cells": {"1": {}}}}}}}
     with pytest.raises(ValueError, match="no bound at level 0.975"):
         sensitivity_bounds(artifact, "t", [0.975], cells=1)
+
+
+def test_a_cell_carries_the_inputs_of_the_readings_beside_the_pass_rule() -> None:
+    """p-value and standard error from the interval's own draws; meaningful clears the SESOI."""
+    everything = {"org-a": set(range(24)), "org-b": set(range(24, 48))}
+    some = {"org-a": set(range(0, 24, 2)), "org-b": set(range(24, 48, 2))}
+    runs = [(_results(1, everything), 1), (_results(2, some), 2)]
+    cell = h1_over_partitions(
+        runs,
+        org="org",
+        runs_fixed=2,
+        levels=[0.975, 0.95],
+        bounds=None,
+        bootstrap_seed=0,
+        resamples=500,
+    )
+    assert 0.0 <= cell["p_one_sided"] <= 1.0 and cell["bootstrap_se"] > 0
+    for level, interval in cell["intervals"].items():
+        assert cell["meaningful"][level] == (interval["low"] > SESOI)
+        if interval["low"] > 0:
+            assert cell["p_one_sided"] <= (1 - level) / 2

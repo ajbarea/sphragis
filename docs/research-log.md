@@ -7664,3 +7664,43 @@ is chosen after the data. The family's reported outcome is the partial conjuncti
 members at one-sided 0.0125, with every cell's verdict; it binds no verdict on H1 or H2. .NET and
 Grafana are RQ2's federation members whether or not they enter the family. OpenJDK and HashiCorp
 stay borderline and are not collected unless RQ2's sizing needs them.
+
+### The readings across organizations implemented, before any test window (2026-10-04)
+
+`sphragis/experiment/across.py`, and four fields on every H1 cell from `h1_over_partitions`:
+`meaningful` (lower bound above the SESOI, per level), `p_one_sided` (the share of the cell's own
+bootstrap draws at or below zero, the registered p-value), `bootstrap_se` (the draws' standard
+deviation, the cell's weight in the summary) and `resamples` (the draw count, which the reading
+checks against the level). Choices made in the implementation, each before any
+reading exists:
+
+- **The modified HKSJ interval**, the residual scale held at one or above (Röver, Knapp and Friede,
+  BMC Medical Research Methodology 2015), recommended when few studies of unequal precision
+  contribute, as here; the plain HKSJ interval can come out narrower than the fixed-effect one.
+- **REML at its global maximum**, the Cochrane Handbook's default estimator: the restricted
+  likelihood read on zero and a log grid (50 points a decade over twelve decades below ten times
+  the larger of the estimates' squared range and their largest variance), the best point refined
+  by golden-section search. Fisher scoring from zero, the first implementation, failed to converge
+  on 9 of 1,500 realistic datasets in the first review's probe (oscillating against the zero
+  boundary) and stopped at a lesser peak on others, since the restricted likelihood can have two.
+- **The prediction interval** on k - 2 degrees of freedom around the modified-HKSJ standard error
+  (Higgins, Thompson and Spiegelhalter 2009), from five organizations only. It under-covers when
+  the between-organization variance is small and study sizes vary (Partlett and Riley, Statistics
+  in Medicine 2017), so it is read as descriptive.
+- **Each platform's subgroup** gets the same summary over its own organizations, from two of them,
+  reported descriptively; no moderator test (see the decision above).
+- **The partial conjunction** is made non-decreasing in r, so "at least r" is never rejected
+  without every smaller r; the Bonferroni form holds under any dependence between cells. A cell's
+  p-value is below the level exactly when its percentile interval's lower bound is above zero only
+  when the resample count times the level is whole (10,000 draws at 0.0125 or 0.025), so the
+  reading refuses any other count, and the comparison is rounded so float noise in the level
+  cannot decide a tie.
+
+Checked against values computed independently with scipy: t quantiles over 1 to 60 degrees of
+freedom; the intervals written out with numpy; and REML against a 30,001-point grid refined by
+bounded minimisation on 4,000 generated datasets (2 to 12 organizations, standard errors 1e-4 to
+1e-1, between-organization deviation 0 to 1), where the largest restricted-likelihood gap is
+4e-14; a second review checked 10,000 more and 1,814 two-peaked likelihoods, worst gap 3.6e-14.
+Six datasets the first implementation got wrong on this generator (two non-convergent, four at a
+lesser peak) are regression tests in
+`tests/unit/experiment/test_across.py`. Standard library only.
