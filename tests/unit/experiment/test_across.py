@@ -283,3 +283,17 @@ def test_reml_finds_the_global_maximum(y: list[float], se: list[float], expected
     got = _reml_tau2(y, v, x)
     assert got == pytest.approx(expected, rel=1e-4)
     assert _restricted_nll(y, v, x, got) <= _restricted_nll(y, v, x, expected) + 1e-9
+
+
+@pytest.mark.parametrize("se", [1e-200, 1e160])
+def test_random_effects_refuses_a_variance_that_underflows_or_overflows(se: float) -> None:
+    with pytest.raises(ValueError):
+        random_effects({"a": 0.01, "b": 0.02}, {"a": 0.01, "b": se})
+
+
+def test_a_large_resample_count_at_a_whole_bound_is_accepted() -> None:
+    cells = {
+        o: {"estimate": e, "bootstrap_se": 0.005, "p_one_sided": 0.001, "resamples": 100_000_000}
+        for o, e in (("a", 0.01), ("b", 0.02))
+    }
+    assert across_organizations(cells, confidence=0.975)["random_effects"]["k"] == 2

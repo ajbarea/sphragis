@@ -132,6 +132,8 @@ def _restricted_nll(
     """Negative restricted log-likelihood of the between-organization variance, up to a constant."""
     fit = _weighted_fit(y, v, x, tau2)
     xtwx = fit["xtwx"]
+    if len(xtwx) > 2:
+        raise ValueError(f"designs of more than two columns are not supported, got {len(xtwx)}")
     det = xtwx[0][0] if len(xtwx) == 1 else xtwx[0][0] * xtwx[1][1] - xtwx[0][1] * xtwx[1][0]
     quadratic = sum(wi * ri * ri for wi, ri in zip(fit["w"], fit["residual"], strict=True))
     return 0.5 * (sum(math.log(vi + tau2) for vi in v) + math.log(det) + quadratic)
@@ -182,7 +184,7 @@ def _reml_tau2(y: Sequence[float], v: Sequence[float], x: Sequence[Sequence[floa
             b = low + _GOLDEN * (high - low)
             fb = nll(b)
     candidate = 0.5 * (low + high)
-    return candidate if nll(candidate) < values[0] else 0.0
+    return min((0.0, grid[best], candidate), key=nll)
 
 
 def random_effects(
@@ -210,7 +212,8 @@ def random_effects(
         raise ValueError(f"a summary across organizations needs at least two, got {len(orgs)}")
     for org in orgs:
         se = standard_errors[org]
-        if not (math.isfinite(se) and se > 0) or not math.isfinite(estimates[org]):
+        variance = se * se if math.isfinite(se) else math.inf
+        if not (0.0 < variance < math.inf) or not math.isfinite(estimates[org]):
             raise ValueError(f"{org}: estimate {estimates[org]!r}, standard error {se!r}")
     y = [estimates[o] for o in orgs]
     v = [standard_errors[o] ** 2 for o in orgs]
@@ -322,7 +325,7 @@ def across_organizations(
     alpha = (1.0 - confidence) / 2.0
     for org, cell in cells.items():
         excluded = cell["resamples"] * alpha
-        if abs(excluded - round(excluded)) > 1e-9:
+        if abs(excluded - round(excluded)) > 1e-9 * max(1.0, excluded):
             raise ValueError(
                 f"{org}: {cell['resamples']} resamples at one-sided {alpha:g} put the interval's "
                 "bound between draws, so its p-value and its verdict could disagree"

@@ -7667,10 +7667,11 @@ stay borderline and are not collected unless RQ2's sizing needs them.
 
 ### The readings across organizations implemented, before any test window (2026-10-04)
 
-`sphragis/experiment/across.py`, and three fields on every H1 cell from `h1_over_partitions`:
+`sphragis/experiment/across.py`, and four fields on every H1 cell from `h1_over_partitions`:
 `meaningful` (lower bound above the SESOI, per level), `p_one_sided` (the share of the cell's own
-bootstrap draws at or below zero, the registered p-value) and `bootstrap_se` (the draws' standard
-deviation, the cell's weight in the summary). Choices made in the implementation, each before any
+bootstrap draws at or below zero, the registered p-value), `bootstrap_se` (the draws' standard
+deviation, the cell's weight in the summary) and `resamples` (the draw count, which the reading
+checks against the level). Choices made in the implementation, each before any
 reading exists:
 
 - **The modified HKSJ interval**, the residual scale held at one or above (Röver, Knapp and Friede,
@@ -7679,9 +7680,9 @@ reading exists:
 - **REML at its global maximum**, the Cochrane Handbook's default estimator: the restricted
   likelihood read on zero and a log grid (50 points a decade over twelve decades below ten times
   the larger of the estimates' squared range and their largest variance), the best point refined
-  by golden-section search. Fisher scoring from zero, the first implementation, failed on 9 of
-  1,500 realistic datasets in review (oscillating against the zero boundary) and stopped at a
-  lesser peak on others, since the restricted likelihood can have two.
+  by golden-section search. Fisher scoring from zero, the first implementation, failed to converge
+  on 9 of 1,500 realistic datasets in the first review's probe (oscillating against the zero
+  boundary) and stopped at a lesser peak on others, since the restricted likelihood can have two.
 - **The prediction interval** on k - 2 degrees of freedom around the modified-HKSJ standard error
   (Higgins, Thompson and Spiegelhalter 2009), from five organizations only. It under-covers when
   the between-organization variance is small and study sizes vary (Partlett and Riley, Statistics
@@ -7699,5 +7700,7 @@ Checked against values computed independently with scipy: t quantiles over 1 to 
 freedom; the intervals written out with numpy; and REML against a 30,001-point grid refined by
 bounded minimisation on 4,000 generated datasets (2 to 12 organizations, standard errors 1e-4 to
 1e-1, between-organization deviation 0 to 1), where the largest restricted-likelihood gap is
-4e-14. The six datasets the first implementation got wrong are regression tests in
+4e-14; a second review checked 10,000 more and 1,814 two-peaked likelihoods, worst gap 3.6e-14.
+Six datasets the first implementation got wrong on this generator (two non-convergent, four at a
+lesser peak) are regression tests in
 `tests/unit/experiment/test_across.py`. Standard library only.
