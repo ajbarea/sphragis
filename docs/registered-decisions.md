@@ -162,6 +162,22 @@ hypothesis the gate reads, on the same draws, at the same levels:
 Each is implemented before the seal opens (ROADMAP Plan H); none changes the pass rule, the
 estimand or the levels.
 
+### Comparators and audits beside the confirmatory test (registered 2026-10-04)
+
+Exploratory, each on the same examples and exact match as H1, none binding a verdict:
+
+- **Retrieval**: the base model with the k most similar training-window refinements in its
+  prompt, from the own half, the sibling half and the foreign organization, at k = 1 and k = 3.
+- **A rules file**: the base model with a house-rules file in its prompt, own, sibling and
+  foreign: the organization's own written conventions, and a file distilled under a fixed prompt
+  from each half's training-window review comments. It asks whether a declared rules file, the
+  form coding agents take conventions in today, recovers what the adapters learn.
+- **Exact-match misses, read by people** (Stage 2): a blind audit of 100 non-matching
+  predictions per arm, judging whether each is a correct rewrite, so the contrast's reliance on
+  exact match is measured rather than assumed.
+- **Renamed identifiers**: the base model's exact match with identifiers renamed against the
+  original, post-cutoff against pre-cutoff, read descriptively as exposure through reused code.
+
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 
 The threshold has to clear the measured train-into-dev rate, which is 0.97% for OpenStack on corpus v3. At
