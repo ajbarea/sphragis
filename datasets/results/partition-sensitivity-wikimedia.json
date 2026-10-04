@@ -1,0 +1,321 @@
+{
+  "placebo": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-placebo-wikimedia.json",
+  "org": "wikimedia",
+  "inputs": {
+    "runs": "datasets/results/partition-pilot-wikimedia.json: sizing.runs",
+    "levels": "datasets/results/partition-pilot-wikimedia.json: levels",
+    "spread_targets": "datasets/results/partition-pilot-wikimedia.json: per_run and runs_left_out, chi-squared bounds",
+    "calibration_changes": "datasets/results/partition-pilot-wikimedia.json: changes",
+    "planned_changes": "datasets/results/project-windows-wikimedia-v3.json: test.projected_changes, rounded down",
+    "size_floor": "datasets/results/admissible-partitions-wikimedia.json: size_floor",
+    "reference": "datasets/results/admissible-partitions-wikimedia.json: reference"
+  },
+  "planned_changes": 2848,
+  "pilot_changes": 429,
+  "projects": 73,
+  "family_alpha": 0.025,
+  "hypothesis_power": 0.95,
+  "cell_power": {
+    "1": 0.95,
+    "2": 0.9746794344808963,
+    "3": 0.9830475724915585
+  },
+  "sesoi": 0.01,
+  "xi": 0.01,
+  "runs": 16,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 1000,
+  "null_trials": 4000,
+  "resamples": 10000,
+  "redraw": 0.055,
+  "size_floor": 1850,
+  "partitions_pooled": 400,
+  "partition_seeds_tried": 508,
+  "spread_targets": {
+    "pilot_lower_90": 0.009424945013472142,
+    "pilot_estimate": 0.011192463893627639,
+    "sizing_bound_90": 0.014096066843761587,
+    "pilot_upper_99": 0.01719525905430896
+  },
+  "calibration_changes": 429,
+  "calibration_trials": 100,
+  "by_target": {
+    "pilot_lower_90": {
+      "calibration": {
+        "target": 0.009424945013472142,
+        "sigma_run": 0.007998046875000001,
+        "spread": 0.009443299346417277,
+        "floor": false,
+        "spread_at_zero": 0.004641692526636378
+      },
+      "null_false_positive": {
+        "0.975": 0.0145,
+        "0.95": 0.0255
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.01025
+      },
+      "reproducibility_failure": 0.00025,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.030175781249999995,
+              "minimum_detectable_effect": 0.022277297025510692,
+              "null_reads_bounded": 0.97575
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.03222656249999999,
+              "minimum_detectable_effect": 0.02377918916058002,
+              "null_reads_bounded": 0.98725
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.033984375,
+              "minimum_detectable_effect": 0.025033317455276746,
+              "null_reads_bounded": 0.99425
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.027539062499999996,
+              "minimum_detectable_effect": 0.02039067958081925,
+              "null_reads_bounded": 0.972
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.030175781249999995,
+              "minimum_detectable_effect": 0.022277297025510692,
+              "null_reads_bounded": 0.987
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.03193359374999999,
+              "minimum_detectable_effect": 0.023587144066899483,
+              "null_reads_bounded": 0.9945
+            }
+          }
+        }
+      },
+      "lifts_simulated": 22
+    },
+    "pilot_estimate": {
+      "calibration": {
+        "target": 0.011192463893627639,
+        "sigma_run": 0.009990234374999999,
+        "spread": 0.011173756381226831,
+        "floor": false,
+        "spread_at_zero": 0.004641692526636378
+      },
+      "null_false_positive": {
+        "0.975": 0.01425,
+        "0.95": 0.027
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.00225
+      },
+      "reproducibility_failure": 0.0035,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.031347656249999994,
+              "minimum_detectable_effect": 0.023111239017677514,
+              "null_reads_bounded": 0.9765
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.033398437499999996,
+              "minimum_detectable_effect": 0.02459214565470514,
+              "null_reads_bounded": 0.9875
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.03515625,
+              "minimum_detectable_effect": 0.026009553297343013,
+              "null_reads_bounded": 0.99325
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.028417968749999998,
+              "minimum_detectable_effect": 0.021038186725944687,
+              "null_reads_bounded": 0.9715
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.031054687499999994,
+              "minimum_detectable_effect": 0.02295519741716942,
+              "null_reads_bounded": 0.9875
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.033398437499999996,
+              "minimum_detectable_effect": 0.02459214565470514,
+              "null_reads_bounded": 0.99375
+            }
+          }
+        }
+      },
+      "lifts_simulated": 20
+    },
+    "sizing_bound_90": {
+      "calibration": {
+        "target": 0.014096066843761587,
+        "sigma_run": 0.013212890625,
+        "spread": 0.014102884930159104,
+        "floor": false,
+        "spread_at_zero": 0.004641692526636378
+      },
+      "null_false_positive": {
+        "0.975": 0.015,
+        "0.95": 0.029
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.00025
+      },
+      "reproducibility_failure": 0.02875,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.033398437499999996,
+              "minimum_detectable_effect": 0.02459214565470514,
+              "null_reads_bounded": 0.97525
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.036035156250000006,
+              "minimum_detectable_effect": 0.02676497829998936,
+              "null_reads_bounded": 0.9895
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.037207031249999994,
+              "minimum_detectable_effect": 0.027623438657774904,
+              "null_reads_bounded": 0.99275
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.030468749999999996,
+              "minimum_detectable_effect": 0.022484809992590192,
+              "null_reads_bounded": 0.9705
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.033398437499999996,
+              "minimum_detectable_effect": 0.02459214565470514,
+              "null_reads_bounded": 0.9875
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.03515625,
+              "minimum_detectable_effect": 0.026009553297343013,
+              "null_reads_bounded": 0.99275
+            }
+          }
+        }
+      },
+      "lifts_simulated": 21
+    },
+    "pilot_upper_99": {
+      "calibration": {
+        "target": 0.01719525905430896,
+        "sigma_run": 0.016494140625,
+        "spread": 0.017218254077197834,
+        "floor": false,
+        "spread_at_zero": 0.004641692526636378
+      },
+      "null_false_positive": {
+        "0.975": 0.016,
+        "0.95": 0.0285
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "reproducibility_failure": 0.08775,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.036035156250000006,
+              "minimum_detectable_effect": 0.02676497829998936,
+              "null_reads_bounded": 0.977
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.03896484374999999,
+              "minimum_detectable_effect": 0.028864718958399434,
+              "null_reads_bounded": 0.9885
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.040136718749999994,
+              "minimum_detectable_effect": 0.02965949507780242,
+              "null_reads_bounded": 0.9915
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.032812499999999994,
+              "minimum_detectable_effect": 0.024160474224621517,
+              "null_reads_bounded": 0.96875
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.037207031249999994,
+              "minimum_detectable_effect": 0.027623438657774904,
+              "null_reads_bounded": 0.991
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.03779296875,
+              "minimum_detectable_effect": 0.02811318407960194,
+              "null_reads_bounded": 0.99275
+            }
+          }
+        }
+      },
+      "lifts_simulated": 28
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-03T12:32:24.259045+00:00",
+    "git": {
+      "commit": "8c87f289558a55cc6e20fdd8ed58c354995ea047",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.x86_64-x86_64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

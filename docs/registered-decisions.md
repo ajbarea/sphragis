@@ -72,6 +72,12 @@ This makes the confirmatory contrast's low censoring a protocol guarantee rather
 accident of when acceptance landed. The horizon binds only if acceptance comes early, in which
 case the answer is to accept more censoring rather than to fetch sooner.
 
+The sealed window's size is projected from the training months' arrival rate. Where the dev window
+holds more changes than that rate predicts (Wikimedia), the projection is a lower bound, which only
+enlarges the simulated bounds, provided arrivals do not fall below the training rate. So at fetch
+the realised change count is compared with the projection, and a window below it is reported
+beside the verdict with the simulation's power at the realised size.
+
 ### Contamination: Min-K%++ on the base checkpoint is primary, the time partition corroborative only
 
 Temporal decay is not dependable contamination evidence (Zhang et al., ACL 2026): item
@@ -111,7 +117,9 @@ own training seed; runs and changes are crossed rather than nested, so they are 
 independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
 the registered runs its one-sided false-positive rate at the stricter level is 0.011 to 0.0125
-against a nominal 0.0125.
+for OpenStack and 0.014 to 0.016 for Wikimedia, against a nominal 0.0125; Wikimedia's sits above
+nominal at every point, by up to two Monte Carlo errors, so $H_1$'s size at that level may reach
+0.016.
 
 ### Number of runs: fixed from the pilot, K = 24 for OpenStack
 
@@ -119,15 +127,17 @@ Decided by the partition study and two simulations. H1 is the mean over K admiss
 replacing five seeds on one registered partition, whose reading moved with the partition as much as
 with the seed. K = 2v(z / xi)^2, Ritzwoller and Romano's sizing rule, with v at the 90% upper bound
 of the development-window pilot's per-run variance and K kept within 10 to 40. OpenStack's pilot runs
-give a per-run standard deviation of 0.0140, so **K = 24**. A sequential rule, adding runs until
+give a per-run standard deviation of 0.0140, so **K = 24**; Wikimedia's give 0.0112, so **K = 16**. A sequential rule, adding runs until
 they agree, was simulated first and rejected: it ran above nominal where it stopped early.
 
 ### Stated power: sensitivity, not power at an observed effect
 
 With two cells each is sized at power 0.9747. At that power, its projected test size and K
 runs, OpenStack's $H_1$ cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
-points at the two Holm levels, at the per-run spread K was sized on; these are the bounds a
-bounded reading is judged against. Power from a pilot's own estimate is biased upward, so no
+points at the two Holm levels and Wikimedia's +0.0268 and +0.0246, at the per-run spread K was
+sized on; these are the bounds a bounded reading is judged against. Wikimedia's test size is a
+lower bound if test-window arrivals hold at the training rate (checked at fetch), and its bounds
+are then conservative. Power from a pilot's own estimate is biased upward, so no
 power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16

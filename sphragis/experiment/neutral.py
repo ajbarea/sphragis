@@ -12,6 +12,7 @@ pre-committed in the report rather than computed.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from statistics import fmean
@@ -27,6 +28,10 @@ from sphragis.measure.stats import cluster_bootstrap, supports_direction
 # rate at 0.7 (`window-report-openstack-v3.json`).
 LEAKAGE_THRESHOLD = 0.7
 LEAKAGE_MAX_RATE = 0.02
+# The planted-convention check as registered (research log, 2026-10-01): each half's own marker
+# in half its refinements. At a quarter it passed 2 of 10 OpenStack dev runs, at a half 10 of 10
+# with a projected pass probability above 0.999 (`rq1-partition-openstack-*-plant0.5.json`).
+PLANT_FRACTION = 0.5
 
 
 @dataclass(frozen=True)
@@ -160,13 +165,59 @@ def leakage_check(
 
 
 def non_degeneracy(results: Mapping[str, Sequence[Mapping[str, Any]]]) -> Check:
-    """Test 5: exact match is neither 0 nor 1 for every condition on every held-out set."""
+    """Test 6: exact match is neither 0 nor 1 for every condition on every held-out set."""
     rates = {
         run: fmean(float(r["exact_match"]) for r in rows) if rows else float("nan")
         for run, rows in results.items()
     }
     degenerate = sorted(run for run, rate in rates.items() if not 0.0 < rate < 1.0)
     return Check("non_degeneracy", not degenerate, {"exact_match": rates, "degenerate": degenerate})
+
+
+def planted_convention(
+    run: Mapping[str, Any], *, org: str, train_size: int, fraction: float = PLANT_FRACTION
+) -> Check:
+    """Test 5: a run with each half's own marker planted reads `pass` on both halves.
+
+    The run is `org`'s `partition_run` result built with `PLANT=<fraction>` on the development
+    window at `train_size`; its two halves, their corpus paths (which carry the fraction and the
+    organization) and its training size are read rather than trusted, and every half must match.
+    Only the planted run is read: the unplanted runs are H1's own data, so a condition on them
+    would not be outcome neutral. Its adapter arms, which the contrast compares, must not be
+    degenerate (test 6 on those arms). Its base arms are left out: the plant rewrites the
+    references they are scored on and the base model never emits the marker, so on an
+    organization with a low base rate they can score zero with the apparatus working.
+    """
+    corpora = run["corpora"]
+    sources = [corpus["source"] for corpus in corpora.values()]
+    planted = [m.group(1) if (m := re.search(r"-plant([0-9.]+)/", s)) else None for s in sources]
+    windows = {s.split(" windows")[0] for s in sources}
+    evidence: dict[str, Any] = {
+        "verdict": run["verdict"]["verdict"],
+        "binding": run["verdict"]["binding"],
+        "fraction": fraction,
+        "planted": planted,
+        "windows": sorted(windows),
+    }
+    halves = {f"{org}-a", f"{org}-b"}
+    own_root = all(f"/corpus-partition-{org}-p" in s for s in sources)
+    if set(corpora) != halves or not own_root:
+        evidence["reason"] = f"halves {sorted(corpora)} are not {org}'s two halves"
+    elif run.get("train_size") != train_size:
+        evidence["reason"] = f"trained at {run.get('train_size')}, not {train_size}"
+    elif planted != [str(fraction)] * len(sources):
+        evidence["reason"] = f"planted at {planted}, not {fraction} in every half"
+    elif windows != {"train -> dev"}:
+        evidence["reason"] = "not read on the development window"
+    else:
+        adapters = {arm: rows for arm, rows in run["results"].items() if arm.startswith("adapter:")}
+        arms = non_degeneracy(adapters)
+        evidence["adapter_exact_match"] = arms.evidence["exact_match"]
+        if not adapters or not arms.passed:
+            evidence["reason"] = f"degenerate adapter arms {arms.evidence['degenerate'] or 'none'}"
+    if "reason" in evidence:
+        return Check("planted_convention", False, evidence)
+    return Check("planted_convention", run["verdict"]["verdict"] == "pass", evidence)
 
 
 def apparatus_holds(checks: Sequence[Check]) -> bool:

@@ -5,7 +5,9 @@ order, and checks each is the partition and seed that order assigns. Reads H1 wi
 `h1_over_partitions` over the first K of them at the registered Holm levels, K read from the
 pilot artifact's `sizing.runs` given as `--sizing` (all runs, when omitted: the pilot itself);
 with `--sensitivity`, each level's bound is the detectable effect that simulation found at
-`--spread-target` for an H1 over `--h1-cells` organizations. On the development window it is
+`--spread-target` for an H1 over `--h1-cells` organizations. With `--planted`, the organization's
+planted dev run must pass outcome-neutral check 5 (`neutral.planted_convention`) or the cell is
+not read. On the development window it is
 the pilot, and `runs_needed` sizes the organization's K from every run computed.
 
     uv run --no-sync --no-active python scripts/partition_pilot.py \\
@@ -22,6 +24,7 @@ import re
 from pathlib import Path
 
 from sphragis.experiment.decomposition import holm_levels
+from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
     h1_over_partitions,
     pilot_sizing,
@@ -47,6 +50,9 @@ parser.add_argument(
 )
 parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 intersects")
 # Any fixed value: fixed so the reading reproduces.
+parser.add_argument(
+    "--planted", type=Path, help="the organization's planted dev run (outcome-neutral check 5)"
+)
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=10_000)
@@ -60,12 +66,14 @@ def main() -> None:
     if len(args.runs) > len(admissible):
         raise SystemExit(f"{len(args.runs)} runs, more than the {len(admissible)} admissible")
     runs = []
+    sources: list[str] = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
         if "halted" in run:
             raise SystemExit(f"{path}: halted at {run['halted']}; the apparatus failed, not read")
         seeds = run["seeds"]
         source = next(iter(run["corpora"].values()))["source"]
+        sources.append(source)
         # The partition's corpus root, `corpus-partition-<org>-p<seed>[-<tags>]`, and its seed.
         root = re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?/", source)
         partition = int(root.group(1)) if root else None
@@ -81,6 +89,17 @@ def main() -> None:
                 f"built from {source}"
             )
         runs.append((run["results"], k))
+    # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
+    if not args.planted and any("-> test windows" in source for source in sources):
+        raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
+    planted = None
+    if args.planted:
+        check = planted_convention(
+            json.loads(args.planted.read_text()), org=args.org, train_size=train_size
+        )
+        planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
+        if not apparatus_holds([check]):
+            raise SystemExit(f"{args.planted}: check 5 failed ({check.evidence}); H1 is not read")
     runs_fixed, k_source = len(runs), "all runs"
     if args.sizing:
         try:
@@ -119,7 +138,16 @@ def main() -> None:
         f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
         f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
     )
-    head = {"run_files", "admissible", "k_source", "levels", "bounds", "sizing", "provenance"}
+    head = {
+        "run_files",
+        "admissible",
+        "k_source",
+        "levels",
+        "bounds",
+        "planted_convention",
+        "sizing",
+        "provenance",
+    }
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
     report = {
@@ -128,6 +156,7 @@ def main() -> None:
         "k_source": k_source,
         "levels": levels,
         "bounds": bounds,
+        "planted_convention": planted,
         **cell,
         "sizing": sizing,
         "provenance": provenance_header(),

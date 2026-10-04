@@ -93,7 +93,26 @@ windows as well as within them, so a threshold registered there would be a test 
 fail. The registered threshold is therefore set at a looser similarity and bounded above the
 measured rate, so that it has something to detect.
 
-## 5. Non-degeneracy
+## 5. Planted convention
+
+Every null is otherwise ambiguous between "no organization-specific adaptation" and "an
+instrument that cannot see one". On each admitted organization's development window, one run
+with each half's own comment marker planted in half of its training refinements must read
+`pass` on both halves. Only the planted run is read: the unplanted runs are H1's own data, so a
+condition on them would depend on the outcome.
+
+Planted on every refinement of one half, a convention returns +0.310 and +0.316 over the two
+sides, about ten times what the two real organizations differ by, so the contrast can see a house
+style of that size. Its strength was measured before it was registered, on OpenStack's first ten admissible
+partitions under a rule fixed before the runs: planted in a quarter of the refinements it would
+have halted a working apparatus most of the time, and planted in half it passed every run
+(research log, 2026-10-01). The check reads the strength from the run's
+corpus path rather than trusting it, and refuses a run planted at any other strength, in only
+one half, read on any other window, or from another organization or training size. A read of the
+sealed window without it is refused. The planted run's adapter arms must not be degenerate; its base arms are left
+out, because the plant rewrites the references they are scored on.
+
+## 6. Non-degeneracy
 
 Exact match is neither 0 nor 1 across every condition on both held-out sets. A condition
 pinned at either end carries no information, and a contrast between two such conditions is
@@ -104,21 +123,15 @@ score exactly zero, because an adapter trained on annotated refinements can neve
 unannotated reference, so non-degeneracy failed and the halt rule went false. The ceiling
 condition is degenerate by construction, and the apparatus is what said so.
 
-## Beyond the registered five
+## Beyond the registered six
 
-Two further checks are not part of the halt rule and are reported beside it.
+One further check is not part of the halt rule and is reported beside it.
 
-**The contrast is not blind.** Every null is otherwise ambiguous between "no
-organization-specific adaptation" and "an instrument that cannot see one". A convention
-planted on every refinement of one half returns +0.310 and +0.316 over the two sides and the
-gate returns `pass`, so the contrast can see a house style of that size. For scale, the
-planted convention moves the contrast by about ten times what the two real organizations
-differ by.
-
-**The interval's error rate is measured.** Simulated over the registered K partitions at
-OpenStack's projected test size, the crossed interval the gate reads has a one-sided
-false-positive rate at the stricter Holm level of 0.011 to 0.0125 against a nominal 0.0125,
-at every run-to-run spread from the pilot's 90% lower bound to its 99% upper bound.
+**The interval's error rate is measured.** Simulated over each organization's registered K
+partitions at its projected test size, the crossed interval the gate reads has a one-sided
+false-positive rate at the stricter Holm level of 0.011 to 0.0125 for OpenStack and 0.014 to
+0.016 for Wikimedia against a nominal 0.0125, at every run-to-run spread from each pilot's 90%
+lower bound to its 99% upper bound.
 
 ## Reading the evidence yourself
 

@@ -16,6 +16,7 @@ from sphragis.experiment.neutral import (
     manipulation_check,
     near_duplicate_rate,
     non_degeneracy,
+    planted_convention,
     positive_control,
 )
 
@@ -165,3 +166,73 @@ def test_chunking_the_training_side_changes_no_similarity(chunk: int) -> None:
     reference = closest_training_match(train, held_out, chunk=1000)
     assert closest_training_match(train, held_out, chunk=chunk) == reference
     assert dict(reference)["h1"] == pytest.approx(1.0)
+
+
+def _planted_run(
+    verdict: str, *, tag: str = "-plant0.5", window: str = "dev", org: str = "openstack"
+) -> dict[str, Any]:
+    root = f"/data/corpus-partition-{org}-p2-n1850{tag}"
+    return {
+        "corpora": {
+            half: {"source": f"train -> {window} windows under {root}/{half}/refined"}
+            for half in (f"{org}-a", f"{org}-b")
+        },
+        "train_size": 1850,
+        "verdict": {"verdict": verdict, "binding": {}},
+        "results": {
+            f"adapter:{org}-{own}|{org}-{half}|s1": _rows(3, 1.0) + _rows(1, 0.0)
+            for own in "ab"
+            for half in "ab"
+        }
+        | {f"base|{org}-a": _rows(4, 0.0)},
+    }
+
+
+def _check(run: dict[str, Any], org: str = "openstack"):
+    return planted_convention(run, org=org, train_size=1850)
+
+
+def test_planted_convention_passes_only_on_a_pass_at_the_registered_fraction() -> None:
+    assert _check(_planted_run("pass")).passed
+    assert not _check(_planted_run("mixed")).passed
+    assert not _check(_planted_run("fail")).passed
+
+
+@pytest.mark.parametrize(
+    ("tag", "window"),
+    [("-plant0.25", "dev"), ("", "dev"), ("-plant0.5", "test")],
+    ids=["weaker plant", "unplanted", "test window"],
+)
+def test_planted_convention_refuses_a_run_that_is_not_the_registered_check(
+    tag: str, window: str
+) -> None:
+    check = _check(_planted_run("pass", tag=tag, window=window))
+    assert not check.passed and "reason" in check.evidence
+
+
+def test_planted_convention_refuses_another_organizations_run() -> None:
+    check = _check(_planted_run("pass", org="openstack"), org="wikimedia")
+    assert not check.passed and "halves" in check.evidence["reason"]
+
+
+def test_planted_convention_refuses_a_run_at_another_training_size() -> None:
+    run = {**_planted_run("pass"), "train_size": 1900}
+    assert not _check(run).passed
+
+
+def test_planted_convention_needs_every_half_planted() -> None:
+    run = _planted_run("pass")
+    half = run["corpora"]["openstack-b"]
+    half["source"] = half["source"].replace("-plant0.5", "")
+    assert not _check(run).passed
+    one_half = {**run, "corpora": {"openstack-a": run["corpora"]["openstack-a"]}}
+    assert not _check(one_half).passed
+
+
+def test_planted_convention_reads_adapter_arms_not_base_arms() -> None:
+    """A base arm at zero is expected under the plant; a degenerate adapter arm is not."""
+    run = _planted_run("pass")
+    assert _check(run).passed, "base|openstack-a at zero must not fail the check"
+    run["results"]["adapter:openstack-a|openstack-a|s1"] = _rows(4, 0.0)
+    check = _check(run)
+    assert not check.passed and "degenerate" in check.evidence["reason"]

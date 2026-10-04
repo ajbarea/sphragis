@@ -6777,6 +6777,37 @@ agreement (a one-off read on the checked items, not committed, so not quoted), w
 triage (sending its least confident items to a stronger rater) rather than labelling; that is not
 pursued now.
 
+### Planned before any run: the planted-convention check's pass rate on v3 at N = 1,850 (2026-09-30)
+
+Audit item 5. The Stage 1 draft registers outcome-neutral check 5: on the development window, one
+run with each half's own comment marker planted in a quarter of its refinements must pass on
+both halves. Its one pilot (v1, bf16, random halves of 183 changes each, one seed) passed on the
+weaker half at a lower bound of +0.005, and on a partition the halves hold 125 and 81 development
+changes. A positive control that halts a working apparatus is not "sufficient" in the sense the
+registered-report guidelines use, so its pass rate is measured before it is registered.
+
+**Runs.** `partition_run.sbatch` with `PLANT=0.25` (`placebo_corpus.py --plant`, the symmetric
+calibration's markers and seed, planted over every window of each half), on the first ten
+admissible partitions (seeds 2, 3, 4, 5, 7, 8, 9, 10, 11, 12) at training seeds 1 to 10 and
+N = 1,850, corpus v3. A run passes when its `verdict` is `pass`: both halves' 95% lower bounds
+above zero.
+
+**Rule, fixed now.** Check 5 is registered as it stands only if all ten runs pass and the pass
+probability projected from the ten runs' per-half estimates and interval half-widths (normal,
+per half, product over halves) is at least 0.95. Otherwise it is redesigned before
+registration: the plant raised to a half and the same ten runs repeated, and failing that the
+check read over several runs. The rates are logged whichever way they fall.
+
+### The planted check at a quarter passes 2 of 10 runs: redesigned before registration (2026-09-30)
+
+The ten runs planned above (jobs 210077 to 210086, pinned at b05a2d8), `rq1-partition-openstack-*-n1850-plant0.25.json`.
+Two pass (partitions 2 and 12), seven read `mixed`, one `fail`. The planted effect is there in
+every run but one half (partition 5, half b, -0.013), from about +0.003 to +0.106, and the
+development window's 81 to 125 changes a half resolve the smaller ones no better than the pilot's
+183 did. Registered as drafted, check 5 would halt a working apparatus in about four studies of
+five. By the rule fixed before these runs, it is not registered at a quarter: the plant is raised
+to a half and the same ten partitions and seeds are repeated.
+
 ### The SESOI stays at 0.01, justified by cost-benefit, and stated as what sizes K (2026-09-30)
 
 Audit item 7. Current guidance on justifying a smallest effect of interest (Anvari and Lakens, JESP
@@ -6839,6 +6870,31 @@ K, and its bounds from its own simulation.
 counted from `datasets/gerrit/lineageos/examples/*.jsonl`. Two halves at N = 1,850 need 3,700,
 so LineageOS cannot hold an H1 cell. Its development months are still collected, for RQ2.
 
+### The planted check at a half passes 10 of 10 runs: registered at a half, read on the planted run only (2026-10-01)
+
+The ten runs planned above, repeated at `PLANT=0.5` (jobs 210234 to 210243, pinned at b05a2d8),
+`rq1-partition-openstack-*-n1850-plant0.5.json`. **All ten pass.** Every half's lower bound is
+above zero (least +0.017); per-half estimates run from +0.053 to +0.142. The pass probability
+projected by the logged rule (normal per half, interval half-width over 1.96 as the standard
+error, product over halves) is at least 0.9989 for every run and 0.9999 on average. Both conditions
+of the rule hold, so check 5 is registered with the plant at a half: `neutral.planted_convention`,
+which reads the plant's strength and window from the run's corpus path and refuses any other, and
+`partition_pilot.py --planted`, which halts the cell when it fails.
+
+**The draft's second clause is dropped.** The Stage 1 draft also required that "unplanted must
+not" pass. Under the repeated-partition design the unplanted dev runs are H1's own data: a pass
+there is H1 holding on the development window, so a halt on it would turn on the outcome, which an
+outcome-neutral test may not. For the record, none of the 24 unplanted OpenStack pilot runs passes
+(23 `fail`, 1 `mixed`). The check reads the planted run only.
+
+**Planned before any run: the same measurement on Wikimedia.** Check 5 runs on every admitted
+organization, and its pass rate was measured on OpenStack only. Ten runs at `PLANT=0.5` on
+Wikimedia's first ten admissible partitions (seeds 1, 2, 3, 5, 6, 7, 8, 9, 10, 11) at training
+seeds 1 to 10, N = 1,850, corpus v3, the jobs otherwise as its pilot's. The same rule: registered
+for Wikimedia if all ten pass and the projected pass probability is at least 0.95; otherwise the
+check is redesigned for Wikimedia before Stage 1 is submitted. The rates are logged whichever way
+they fall.
+
 ### Wikimedia's development-window pilot: K = 16, and H1 inconclusive at +0.0009 (2026-10-01)
 
 Twenty-two `partition_run` jobs on `corpus-v3/wikimedia`, the first 22 admissible partitions at
@@ -6895,6 +6951,34 @@ compared with the projection, and a realised window below `planned_changes` is r
 the verdict with the simulation's power at the realised size. The projection artifact records
 `dev_check.reading` (`holds`, `lower_bound` or `refuse`) in place of the earlier `holds` flag,
 so the tolerance is tested once.
+
+**Review of check 5 and the projection (2026-10-01).** An independent reviewer reproduced every
+figure in the planted and projection entries and found nothing blocking, plus three guard gaps
+in check 5, all fixed and tested: a planted run from another organization passed the check (it
+now must be the read organization's two halves at the admissible list's training size), a run
+planted in one half only passed (every half must carry the plant), and the check was optional
+(`partition_pilot.py` now refuses a test-window read without `--planted`).
+
+### The planted check passes 10 of 10 on Wikimedia; the planted run's base arm is left out of it (2026-10-01)
+
+The ten runs planned above (jobs 211277 to 211286, pinned at a43f7af),
+`rq1-partition-wikimedia-*-n1850-plant0.5.json`. **All ten pass**, every half's lower bound above
+zero (least +0.036), per-half estimates from +0.087 to +0.143, projected pass probability at least
+0.9994 per run (0.9999 on average). By the rule fixed before the runs, check 5 is registered for
+Wikimedia as for OpenStack, at a half.
+
+**Three planted runs fail non-degeneracy, on the base arm only** (partitions 3, 8 and 11: the base
+model scores exactly 0 on one half). The plant rewrites half the references that arm is scored on,
+and the base model never emits the marker; Wikimedia's base rate is about 1% (unplanted runs on the
+same partitions: 0.8% to 2.2% on every half, every adapter arm above 23%), so on its 160 to 200
+changes a half zero is reached by chance. No OpenStack planted run did this. Check 5 never read the
+planted run's own battery; it now requires the arms its contrast compares, the four adapter arms,
+to be non-degenerate (`planted_convention`, tested), and leaves the base arms out, with the reason
+stated in its docstring. Every OpenStack and Wikimedia planted run passes it. The unplanted runs
+that H1 reads keep the full battery.
+
+The Wikimedia placebo (job 211287, `rq1-placebo-wikimedia.json`) completed; its simulation, job
+211288, is queued behind it.
 
 ### LineageOS's 57 dropped changes were withdrawn from the host, not failed requests (2026-10-01)
 
@@ -7191,6 +7275,33 @@ not arithmetic, and would need its own trial at the bound first.
 Seconds per step are for the GPU alone at fixed lengths. A real step averages over the corpus's
 length distribution, so a job's `--time` is sized from its own logged steps, not from this table.
 
+### Wikimedia's simulation at the lower-bound window: two-cell bounds +0.0268 and +0.0246 (2026-10-03)
+
+`partition-sensitivity-wikimedia.json`, SPORC job 21794712 (CPU only, pinned at 8c87f28 with the
+arguments of OpenStack's rerun), in place of TIGRIS job 211288, which was cancelled when the TIGRIS
+queue slipped. Its placebo input is read from the cluster data root; that file, redacted, is
+byte-identical to the committed `rq1-placebo-wikimedia.json`. 1,000 studies per power step and
+4,000 null studies, K = 16, N = 1,850, the 2,848-change lower-bound window, and `sigma_run`
+calibrated on the pilot's 429 changes:
+
+| spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95%, two cells | null bounded (97.5%, two cells) | reproducibility failure |
+|---|---|---|---|---|---|---|---|
+| pilot 90% lower | 0.0094 | 0.0080 | 0.0145 | 0.0255 | +0.0238 / +0.0223 | 0.987 | 0.000 |
+| pilot estimate | 0.0112 | 0.0100 | 0.01425 | 0.027 | +0.0246 / +0.0230 | 0.988 | 0.004 |
+| sizing bound (90% upper) | 0.0141 | 0.0132 | 0.015 | 0.029 | +0.0268 / +0.0246 | 0.990 | 0.029 |
+| pilot 99% upper | 0.0172 | 0.0165 | 0.016 | 0.0285 | +0.0289 / +0.0276 | 0.989 | 0.088 |
+
+**The false-positive rate sits slightly above nominal at every point**, by at most about two Monte
+Carlo errors (0.0018 at 0.0125, 0.0025 at 0.025, over 4,000 null studies). **Reproducibility holds
+at the spread K was sized on** (0.029 against beta = 0.05) and fails past it (0.088 at the 99%
+bound), as sizing at a 90% bound intends.
+
+**Read under the registered rule** (bounds are the detectable effects at the sizing bound, at the
+cell count of the admitted set): with OpenStack and Wikimedia admitted, Wikimedia's bounds are
+**+0.0268 at 97.5% and +0.0246 at 95%**, each cell at power 0.9747. The one- and three-cell bounds
+are in the artifact (`by_cells`) for an admitted set of another size; whether H1 spans more cells
+is an open decision. Because the window is a lower bound, these bounds are conservative. The
+Stage 1 figures move once OpenStack's rerun (job 21794711) lands.
 
 ### OpenStack's simulation on the twelve-month window: two-cell bounds +0.0248 and +0.0234 (2026-10-03)
 
