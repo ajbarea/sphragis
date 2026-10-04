@@ -1,0 +1,36 @@
+{
+  "org": "wikimedia",
+  "root": "/home/ajbar/ajsoftworks/sphragis/.claude/worktrees/fa-auto/datasets/gerrit",
+  "window_report": "datasets/results/window-report-wikimedia-v3.json",
+  "collected_through": "2025-10",
+  "train": {
+    "months": 10,
+    "changes": 2348,
+    "captured": 0.973941998966545,
+    "true_changes_per_month": 241.08211808213173
+  },
+  "dev_check": {
+    "predicted": 358.7827227646652,
+    "actual": 448,
+    "miss": -0.1991457081145866,
+    "tolerance": 0.15,
+    "reading": "lower_bound"
+  },
+  "test": {
+    "months": 12,
+    "fetch": "2027-01",
+    "captured": 0.9844593252508133,
+    "projected_changes": 2848.0264715660674,
+    "lower_bound": true
+  },
+  "provenance": {
+    "generated_at": "2026-10-01T10:44:05.846501+00:00",
+    "git": {
+      "commit": "86721c49af5f37a83a3fcf8e2c67443d0e4195e1",
+      "branch": "corpus/wikimedia-admission"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

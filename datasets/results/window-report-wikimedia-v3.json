@@ -1,0 +1,190 @@
+{
+  "wikimedia": {
+    "months_built": 13,
+    "examples": 5699,
+    "after_dedup": 5513,
+    "dedup_removed": {
+      "exact": 117,
+      "near_duplicate": 69,
+      "boilerplate": 0,
+      "shared_change_id": 0
+    },
+    "windows": {
+      "pilot": {
+        "examples": 582,
+        "changes": 283,
+        "content": {
+          ".php": 234,
+          ".js": 61,
+          ".py": 59,
+          ".json": 55,
+          ".pp": 36,
+          ".vue": 29,
+          ".yaml": 22,
+          ".md": 20,
+          "(none)": 12,
+          ".less": 8,
+          ".tpl": 8,
+          ".scala": 6,
+          ".java": 6,
+          ".sh": 6,
+          ".erb": 5,
+          ".ini": 3,
+          ".hql": 2,
+          ".43": 2,
+          ".xml": 1,
+          ".dat": 1,
+          ".cfg": 1,
+          ".lua": 1,
+          ".ts": 1,
+          ".template": 1,
+          ".conf": 1,
+          ".txt": 1
+        }
+      },
+      "train": {
+        "examples": 4184,
+        "changes": 2348,
+        "content": {
+          ".php": 1983,
+          ".js": 531,
+          ".json": 281,
+          ".vue": 219,
+          ".py": 213,
+          ".yaml": 207,
+          ".md": 169,
+          ".pp": 141,
+          ".less": 80,
+          ".erb": 67,
+          "(none)": 36,
+          ".sh": 26,
+          ".txt": 24,
+          ".scala": 21,
+          ".dat": 20,
+          ".ts": 16,
+          ".java": 15,
+          ".pegphp": 15,
+          ".tpl": 11,
+          ".44": 11,
+          ".conf": 9,
+          ".lua": 8,
+          ".mustache": 8,
+          ".hql": 7,
+          ".cfg": 7,
+          ".css": 7,
+          ".org": 4,
+          ".template": 4,
+          ".yml": 4,
+          ".owl": 3,
+          ".html": 3,
+          ".rb": 3,
+          ".45": 3,
+          ".sql": 3,
+          ".xml": 2,
+          ".properties": 2,
+          ".svg": 2,
+          ".mjs": 2,
+          ".ini": 2,
+          ".epp": 2,
+          ".csv": 2,
+          ".43": 1,
+          ".lock": 1,
+          ".rst": 1,
+          ".lintian-overrides": 1,
+          ".dumps": 1,
+          ".c": 1,
+          ".vtc": 1,
+          ".links": 1,
+          ".expected": 1,
+          ".mtail": 1,
+          ".nft": 1
+        }
+      },
+      "dev": {
+        "examples": 747,
+        "changes": 448,
+        "content": {
+          ".php": 321,
+          ".js": 91,
+          ".vue": 80,
+          ".py": 67,
+          ".json": 55,
+          ".yaml": 33,
+          ".pp": 20,
+          ".ts": 12,
+          ".erb": 11,
+          ".scala": 10,
+          ".lua": 7,
+          "(none)": 6,
+          ".go": 6,
+          ".md": 5,
+          ".45": 4,
+          ".hql": 4,
+          ".less": 4,
+          ".txt": 3,
+          ".conf": 1,
+          ".xml": 1,
+          ".rb": 1,
+          ".tpl": 1,
+          ".vtc": 1,
+          ".sql": 1,
+          ".confg": 1,
+          ".mustache": 1
+        }
+      }
+    },
+    "straddling_changes": 0,
+    "unassigned_changes": 0,
+    "near_duplicate_rate": {
+      "pilot->train": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.0004780114722753346,
+          "near_duplicates": 2
+        },
+        "0.6": {
+          "rate": 0.0014340344168260039,
+          "near_duplicates": 6
+        },
+        "0.5": {
+          "rate": 0.0035850860420650094,
+          "near_duplicates": 15
+        },
+        "max_similarity": 0.75
+      },
+      "train->dev": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.002677376171352075,
+          "near_duplicates": 2
+        },
+        "0.6": {
+          "rate": 0.00535475234270415,
+          "near_duplicates": 4
+        },
+        "0.5": {
+          "rate": 0.012048192771084338,
+          "near_duplicates": 9
+        },
+        "max_similarity": 0.7704918032786885
+      }
+    },
+    "dedup_note": "dedup runs before the split at Jaccard 0.8, so the 0.8 rate is partly zero by construction; read the looser thresholds"
+  },
+  "provenance": {
+    "generated_at": "2026-10-01T10:25:56.820641+00:00",
+    "git": {
+      "commit": "ec8cc051644eb6e723b974dc170b7a530a84928e",
+      "branch": "corpus/wikimedia-admission"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
