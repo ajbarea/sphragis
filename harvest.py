@@ -78,7 +78,8 @@ NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
 #: rate), `exact` (the literal must equal the value, not round to it), `text` (the value is
 #: a word rather than a number, and with `code` is counted only where the page sets it as
 #: inline code, because "pass" and "mixed" are also ordinary words on a page about a gate),
-#: or `occurrences` (the literal is quoted more than once).
+#: `occurrences` (the literal is quoted more than once), or `reduce`, which with `min:a/b` or
+#: `max:a/b` reads `a/b` under every entry at the path and takes the extreme.
 CLAIMS: list[tuple[Any, ...]] = [
     # ---- protocol.md: the corpus, and where the dev-window reading stands ----
     ("corpus_os", "protocol.md", "5,053", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
@@ -239,15 +240,16 @@ CLAIMS: list[tuple[Any, ...]] = [
         "registered-decisions.md",
         "0.011",
         PARTITION_SENSITIVITY,
-        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
         "rd_partition_fp_high",
         "registered-decisions.md",
         "0.0125",
         PARTITION_SENSITIVITY,
-        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
-        {"occurrences": 2},
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
     ),
     (
         "rd_partition_fp_nominal",
@@ -315,14 +317,16 @@ CLAIMS: list[tuple[Any, ...]] = [
         "registered-decisions.md",
         "0.014",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
         "rd_partition_fp_high_wm",
         "registered-decisions.md",
         "0.016",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975"},
     ),
     (
         "rd_partition_mde_975_wm",
@@ -442,15 +446,16 @@ CLAIMS: list[tuple[Any, ...]] = [
         "outcome-neutral.md",
         "0.011",
         PARTITION_SENSITIVITY,
-        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
         "on_partition_fp_high",
         "outcome-neutral.md",
         "0.0125",
         PARTITION_SENSITIVITY,
-        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
-        {"occurrences": 2},
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
     ),
     (
         "on_partition_fp_nominal",
@@ -465,14 +470,16 @@ CLAIMS: list[tuple[Any, ...]] = [
         "outcome-neutral.md",
         "0.014",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_estimate", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
         "on_partition_fp_high_wm",
         "outcome-neutral.md",
         "0.016",
         PARTITION_SENSITIVITY_WM,
-        ["by_target", "pilot_upper_99", "null_false_positive", "0.975"],
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975"},
     ),
 ]
 
@@ -520,7 +527,27 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
         return data, None
 
     reduce = options.get("reduce")
-    if reduce == "sum":
+    if reduce and reduce.split(":", 1)[0] in ("min", "max"):
+        # A range quoted over several entries (spread points, say), checked against its true
+        # extremes so that a regenerated artifact moving the extreme cannot pass unnoticed.
+        kind, _, sub = reduce.partition(":")
+        values = []
+        for entry in data.values() if isinstance(data, dict) else data:
+            try:
+                for part in sub.split("/"):
+                    entry = step(entry, part)
+            except (KeyError, IndexError, TypeError) as error:
+                return (
+                    None,
+                    f"{sub} does not resolve under {'.'.join(path)} in {artifact} ({error})",
+                )
+            if isinstance(entry, bool) or not isinstance(entry, (int, float)):
+                return None, f"{sub} under {'.'.join(path)} in {artifact} is not a number"
+            values.append(entry)
+        if not values:
+            return None, f"{'.'.join(path)} in {artifact} has no entries to reduce"
+        data = min(values) if kind == "min" else max(values)
+    elif reduce == "sum":
         # A window count table quoted as its total.
         data = sum(data.values())
     elif reduce and reduce.startswith("add:"):
