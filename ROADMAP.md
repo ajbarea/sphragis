@@ -188,10 +188,28 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   them (a lower bound, trailers being voluntary). Measured first on the GitHub pilot months.
 - [ ] **Reviewers, not the organization**: a secondary analysis splitting dev and test examples
   by whether their reviewer also reviewed the sibling half's training data (salted pseudonyms).
-- [ ] **A retrieval comparator**: the base model with BM25 top-3 examples from the own-half,
+- [ ] **A retrieval comparator**: the base model with BM25 top-k examples from the own-half,
   sibling-half and foreign pools, mirroring H1 without training (Pornprasit and
   Tantithamthavorn, IST 2024; retrieval beat fine-tuning in arXiv:2505.15179, lost in
-  arXiv:2606.06492). Exploratory.
+  arXiv:2606.06492). Exploratory. Reported at k = 1 and k = 3: a single most similar past review
+  works best for review generation and more retrieval hurts (RARe, arXiv:2511.05302).
+- [ ] **A rules-file comparator** (added 2026-10-04): the base model with a house-rules file in
+  context, mirrored own, sibling and foreign: (a) the organization's own written conventions
+  (OpenStack's HACKING guide, MediaWiki's coding conventions), (b) an AGENTS.md-style file an LLM
+  distils from each half's training-window review comments, under a fixed prompt. Same examples,
+  exact match and own-minus-sibling contrast as H1; exploratory. Industry moved from fine-tuned
+  custom models to declared rules files and memory (GitHub retired Copilot custom models in
+  2025), and rules files are measured only on task success, never on conventions (Gloaguen et
+  al., arXiv:2602.11988). If a rules file recovers the own-half advantage, adapters are not
+  needed for it; if not, that is the answer to "why train weights".
+- [ ] **Exact-match misses, read by people** (Stage 2, exploratory): a blind human audit of 100
+  non-matching predictions per arm (own, sibling, foreign), judging whether each is a correct
+  rewrite. Exact match misses 15.7% to 17.4% of correct refinements (Tufano et al., TSE 2024),
+  and if that share differs by arm the contrast is not conservative; the audit measures it.
+- [ ] **Renamed identifiers, descriptive**: the base model's exact match on held-out hunks with
+  identifiers renamed against the originals, post-cutoff against pre-cutoff, so code reused
+  from older repositories (which a time split cannot see; SrDetection, arXiv:2606.29815) shows
+  as a gap. Uses the identifier anonymisation of the tacit item below.
 - [ ] **A likelihood outcome**: teacher-forced bits-per-byte of the target, own vs sibling, as a
   registered secondary with its own SESOI and sensitivity simulation (arXiv:2508.13144).
 - [ ] **Readings beside the pass rule** (registered in `docs/registered-decisions.md` 2026-10-02,
@@ -201,8 +219,9 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   (three-sided testing, Isager and Fitzgerald, AMPPS 2026); the largest r with "at least r of k
   organizations" rejected (partial conjunction, Benjamini and Heller 2008), so a failed
   every-organization test still says how many show the effect; and a random-effects summary over
-  every organization read (REML, HKSJ interval, prediction interval from five, platform as
-  moderator). The intersection-union rule stays the pass rule (decided 2026-10-04).
+  every organization read (REML, HKSJ interval, prediction interval from five, platform
+  subgroups descriptive, no moderator test). The intersection-union rule stays the pass rule
+  (decided 2026-10-04).
 - [ ] **Controls**: a helper-substitution plant (a call rewritten into the house helper) piloted
   like the marker plant; a report-only plant near the bound (+0.02 to +0.03) read against the
   simulated power; the placebo rerun once on the repeated-partition pipeline.
@@ -308,6 +327,21 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   transmits a whole model, gradient or prediction. RQ2 asks the question of an organization rather
   than a record, and of the part of an update a defence transmits, which their setting does not
   cover.
+- [ ] **Test the claim that aggregation stops source inference** (added 2026-10-04).
+  Athanasiou, Jung and Palamidessi (ICLR 2026, arXiv:2603.02017) prove that once only the
+  per-round sum is released, source inference falls to random guessing; their own appendix
+  finds client subsampling restores it. Run Hu et al.'s min-loss attack through the paired
+  subset difference over rounds of varying membership, beside RQ2's aggregate results, and state
+  the assumption their theorem leaves implicit (the server does not learn who took part).
+- [ ] **User inference as the final-model baseline** (Kandpal et al., EMNLP 2024,
+  arXiv:2310.09266): their likelihood-ratio statistic at the project and organization unit on the
+  final model, so the paper says how much more the transmitted half reveals than the model does.
+- [ ] **Stronger attackers**: a learned GL-invariant attacker on LoRA weights (Putterman and Lim,
+  arXiv:2410.04207) and unsupervised spectral clustering of updates (Xu, Cohn and Ohrimenko,
+  ECAI 2023, arXiv:2310.05960), across initializations. FedRand (arXiv:2503.07216) does attack
+  its own shared half, at the record level: claims say no split design measures *source*, not
+  that none measures leakage. Cross-organization code clones (Chen and Jiang, ASE 2024,
+  arXiv:2409.12020) are checked as a confound.
 - [ ] **Their min-loss rule as RQ2's baseline attack**: attribute a held-out refinement to the
   organization whose transmitted part, completed with the receiver's own local part, gives the
   smallest loss. It needs no trained attacker, so the learned attack is reported against it.

@@ -7704,3 +7704,52 @@ bounded minimisation on 4,000 generated datasets (2 to 12 organizations, standar
 Six datasets the first implementation got wrong on this generator (two non-convergent, four at a
 lesser peak) are regression tests in
 `tests/unit/experiment/test_across.py`. Standard library only.
+
+### A related-work pass for October 2026: what is new, what is taken, and what the design adds (2026-10-04)
+
+Four independent searches (RQ1's neighbours, RQ2's attacks and defences, methodology, and the
+federated-agents framing), each reading what this log, the intake file and the bibliography
+already hold, verifying every identifier and reading the closest works in full.
+
+**RQ1.** Nothing found pre-empts the decomposition (own half against sibling half against a
+foreign organization, on review-driven refinement, over repeated partitions). One sentence of the
+Stage 1 background is false: Giagnorio, Martin-Lopez and Bavota (TOSEM 35(1), 2025,
+doi 10.1145/3725732, read in full) fine-tune per organization for code completion (Apache,
+Spring, 136 developers) and find organization data beats generic data at equal size (+7.84% and
++2.84% exact match on average), with developer data finer still. They hold no project out
+and test no foreign organization. Industrial comment resolution compares in-house models with
+general ones (Frömmgen et al., ICSE-SEIP 2024; MetaMateCR, arXiv:2507.13499: 67.96% against
+GPT-4o's 59.22% exact match on 206 examples) without separating conventions from ability.
+Rules files are measured on task success only (Gloaguen et al., arXiv:2602.11988: developer-written
+files +2.4%, generated ones slightly negative), never on conventions.
+
+**RQ2.** Nothing pre-empts the claim that a split design's transmitted half identifies its source.
+The nearest are user inference on the final model (Kandpal et al., EMNLP 2024; AUROC 0.88 with
+users as Enron senders, 0.66 as news domains), update re-linking by clustering (Xu et al., ECAI
+2023), and a theorem that source inference falls to chance once only sums are released
+(Athanasiou et al., ICLR 2026), which this log's aggregate results already contradict at the
+source level. FedRand attacks its own shared half at the record level, so the claim is narrowed to
+source.
+
+**Methodology.** The LLM-in-SE guidelines (Baltes et al., arXiv:2508.15503, accepted at EMSE)
+make the training budget, prompt, model versions and run dates required reporting; the Stage 1
+report gains them. Exact match misses 15.7% to 17.4% of correct refinements (Tufano et al., TSE
+2024), which could differ by arm, so "conservative for a difference" is withdrawn and a Stage 2
+audit is registered. The crossed interval is Owen's pigeonhole bootstrap (Annals of Applied
+Statistics 2007), and the three verdicts are conditional equivalence testing (Campbell and
+Gustafson, PLOS ONE 2018); both are now cited by name. The label audit's single human rater falls
+below the guidelines' two to three experts; reported as a limitation.
+
+**Framing.** A shared-and-private split of agent knowledge is no longer new: Federated Agent
+Optimization (Yang et al., arXiv:2610.01195, 2026-10-01) defines the field, and FedWorld
+(arXiv:2608.01561), ShareMem and FederatedSkill each split rules or memories into shared and
+private, by evidence after upload or by learning. What remains unclaimed, after reading the
+closest in full: the boundary declared by the data owner before training, by each example's
+provenance; tacit review conventions as what is learned, with a measured test of where learning
+stops transferring; and attributing the shared part to its source as the privacy audit.
+
+**Added to the design**, all exploratory and before the seal: a rules-file comparator and
+retrieval at k = 1 and 3 (registered decisions), the Stage 2 exact-match audit, a renamed-identifier
+exposure check, and for RQ2 a direct test of the aggregation theorem, user inference as the
+final-model baseline and stronger learned attackers (ROADMAP).
+
