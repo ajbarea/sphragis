@@ -22,7 +22,7 @@ from sphragis.corpus.load import (
     write_derived_file,
     write_source_record,
 )
-from sphragis.corpus.rules import FETCH_RULES
+from sphragis.corpus.rules import FETCH_RULES, GITHUB_RULES
 from sphragis.corpus.storage import snapshot_record_path
 
 
@@ -330,4 +330,24 @@ def test_a_rest_month_is_unaffected_by_fetch_rules(tmp_path: Path) -> None:
     _month(tmp_path)
     snapshot = tmp_path / "o" / "raw" / "2024-10.ndjson.gz"
     snapshot_record_path(snapshot).write_text(json.dumps({"route": "rest"}))
+    assert stale_refinements(tmp_path, "o") == []
+
+
+@pytest.mark.parametrize("recorded", ["not-the-current-one", None], ids=["other", "missing"])
+def test_a_github_month_fetched_under_other_route_rules_is_refused(
+    tmp_path: Path, recorded: str | None
+) -> None:
+    _month(tmp_path)
+    snapshot = tmp_path / "o" / "raw" / "2024-10.ndjson.gz"
+    record = {"route": "github"} | ({"github_rules": recorded} if recorded else {})
+    snapshot_record_path(snapshot).write_text(json.dumps(record))
+    assert any("GitHub route rules" in s for s in stale_refinements(tmp_path, "o"))
+
+
+def test_a_github_month_fetched_under_current_route_rules_is_not_refused(tmp_path: Path) -> None:
+    _month(tmp_path)
+    snapshot = tmp_path / "o" / "raw" / "2024-10.ndjson.gz"
+    snapshot_record_path(snapshot).write_text(
+        json.dumps({"route": "github", "github_rules": GITHUB_RULES})
+    )
     assert stale_refinements(tmp_path, "o") == []

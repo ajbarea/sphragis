@@ -21,6 +21,8 @@ from typing import IO, Any, NamedTuple
 from sphragis.corpus.build import CommentFetcher, DiffFetcher, build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
+from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, github_fetchers
+from sphragis.corpus.github_api import GitHubAPI
 from sphragis.corpus.load import (
     build_record,
     refined_dir,
@@ -235,7 +237,11 @@ def require_salt() -> str:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sphragis.corpus")
     parser.add_argument("stage", choices=STAGES)
-    parser.add_argument("--org", default="openstack", choices=sorted(set(GERRIT) | set(GIT_HOSTS)))
+    parser.add_argument(
+        "--org",
+        default="openstack",
+        choices=sorted(set(GERRIT) | set(GIT_HOSTS) | set(GITHUB_ORGS)),
+    )
     parser.add_argument("--month", default="2024-10", help="YYYY-MM, for fetch")
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
     parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
@@ -253,9 +259,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--via",
-        choices=("rest", "git"),
+        choices=("rest", "git", "github"),
         default="rest",
-        help="fetch through the REST API, or read NoteDb over git (fetch; see notedb.py)",
+        help="fetch through the REST API, read NoteDb over git (notedb.py), or collect a "
+        "registered GitHub organization (github.py; needs GITHUB_TOKEN)",
     )
     parser.add_argument(
         "--branch",
@@ -445,6 +452,8 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     refuse_if_sealed(Path(args.root), args.org, args.month)
     if args.via == "git":
         return _stage_fetch_git(args, salt)
+    if args.via == "github":
+        return _stage_fetch_github(args, salt)
     if args.org not in GERRIT:
         raise SystemExit(f"{args.org} has no REST host here; fetch it with --via git")
     refuse_mixed_routes(Path(args.root), args.org, "rest", allow=args.allow_mixed_routes)
@@ -480,6 +489,48 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     derived = _examples_dir(args) / f"{args.month}.jsonl"
     if derived.is_file():
         print(f"note: {derived} was built from the replaced snapshot; build will redo it")
+    return 0
+
+
+def _github_api(args: argparse.Namespace) -> GitHubAPI:
+    """The GitHub client, authenticated from GITHUB_TOKEN, which is never printed or recorded."""
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        raise SystemExit(
+            "set GITHUB_TOKEN to collect from GitHub (e.g. GITHUB_TOKEN=$(gh auth token))"
+        )
+    return GitHubAPI(token, min_interval=args.request_interval)
+
+
+def _stage_fetch_github(args: argparse.Namespace, salt: str) -> int:
+    """One registered GitHub organization-month into the same snapshot shape.
+
+    Reached after the salt and the seal are checked in `_stage_fetch`. A month is the PRs merged
+    in it, each keeping its creation time, so window assignment is by creation as on Gerrit.
+    """
+    refuse_mixed_routes(Path(args.root), args.org, "github", allow=args.allow_mixed_routes)
+    # Rows land here as each PR finishes (scrubbed), so a failed month resumes where it stopped.
+    checkpoint = Path(args.root) / args.org / "raw" / f"{args.month}.partial.jsonl"
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    rows, record = collect_month(
+        args.org, args.month, _github_api(args), salt=salt, checkpoint=checkpoint
+    )
+    kept = created_on_or_after(rows, args.cutoff)
+    record = {
+        **record,
+        "cutoff": args.cutoff,
+        "created_before_cutoff": len(rows) - len(kept),
+        "mixed_routes_allowed": bool(args.allow_mixed_routes),
+    }
+    path = write_snapshot(
+        args.root, args.org, args.month, kept, record=record, overwrite=args.overwrite
+    )
+    checkpoint.unlink(missing_ok=True)
+    print(
+        f"{args.org} {args.month}: listed {record['listed']}, kept {len(kept)}, "
+        f"agent-authored {record['agent_authored']}, withdrawn {record['withdrawn']}"
+    )
+    print(f"wrote {path}")
     return 0
 
 
@@ -770,10 +821,12 @@ def _stage_build(args: argparse.Namespace) -> int:
     rest: tuple[CommentFetcher, DiffFetcher] | None = None
 
     def fetchers_for(change: dict[str, Any]) -> tuple[CommentFetcher, DiffFetcher]:
-        """A NoteDb row answers from what it carries; a REST row fetches, as it always has."""
+        """A NoteDb or GitHub row answers from what it carries; a REST row fetches."""
         nonlocal rest
         if NOTEDB_KEY in change:
             return embedded_fetchers(change)
+        if GITHUB_KEY in change:
+            return github_fetchers(change)
         if rest is None:
             if args.org not in GERRIT:
                 raise SystemExit(f"{args.org} has no REST host, and a row carries no NoteDb data")

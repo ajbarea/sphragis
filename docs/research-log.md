@@ -7068,6 +7068,196 @@ require (MSR's ACM proceedings are open access; the registered report's Stage 2 
 so its open-access option and an arXiv copy); and what more cells do to H1, which passes only if
 every admitted organization's cell does, each cell then needing power 0.95^(1/k).
 
+### A GitHub collection route, and what live pull requests taught it (2026-10-01)
+
+`sphragis/corpus/github.py` and `github_api.py` (spec `docs/superpowers/specs/2026-10-01-github-route-design.md`):
+pull requests shaped as Gerrit changes, so `build`, `refine` and `dedup` run on them unchanged and
+no frozen Gerrit month goes stale; the route's own digest (`GITHUB_RULES`) stales only GitHub
+months, failing closed when a GitHub snapshot lacks it. `fetch --via github` collects a registered
+organization-month; the sealed test window is refused before any request, as on the other routes.
+
+A live run on eight sampled Apache PRs changed the design twice before any corpus was built:
+
+- **Force pushes.** GitHub authors amend and rebase, so the commit a reviewer commented on is often
+  missing from the PR's final commit list: on the first four PRs, 90 of 121 comments had no
+  recoverable commit. Patch sets now come from the PR's timeline (its commits plus every force
+  push's before and after commit). On the eight PRs, 65 of 167 comments are still unplaced, all on
+  one PR whose earlier non-head commits the timeline does not list.
+- **Incremental commits.** A Gerrit patch set is the author's whole next revision; a GitHub commit
+  is one increment, so diffing the commented commit against the very next one missed fixes made
+  commits later (15 `diff_error` on the eight PRs). The successor is now the first later commit
+  that changes the commented file, and a file no later commit changes is an empty diff
+  (`no_anchored_hunk`), as an untouched file is on Gerrit: `diff_error` went to 0 and examples from
+  11 to 14.
+
+**The sizing's example projections are provisional.** They apply the Gerrit thread-to-example
+conversion (0.217 to 0.282) to GitHub threads; on the eight live PRs, 14 examples came from 167
+comments, where the denominator counts every comment (author replies included), not the sizing's
+reviewer-started threads, so the two rates are not comparable. GitHub's own conversion is read from
+a built pilot month per organization before any of them is admitted.
+
+**Independent review, and the redesign it led to.** A reviewer with no part in writing the route
+found nine problems, two of them in exactly the cases the route exists for: GitHub's compare API
+diffs from the merge base, so a force-pushed successor's diff started from the base branch, not
+the commented file; and merges from the base branch passed upstream edits off as the author's
+response, with no counterpart of the Gerrit routes' rebase guard. Also: timeline order put
+amended commits backwards, GraphQL rate limits (HTTP 200 with errors) were read as withdrawn PRs,
+logins survived in code spans and `github.com/<login>` links, `github_api.py` was outside the
+route's digest, `splitlines` broke lines on form feeds and line separators, and a rename read as
+an unchanged file. All are fixed and tested, most by one change: each diff is now computed at
+collection between the two exact file versions with git, carried in the row as NoteDb rows carry
+theirs, and the build runs offline. The successor is the first commit made after the comment that
+changes the file; a commented file changed on the base branch between the two commits' fork points
+drops the comment (`upstream_change`); patch sets are ordered by commit time and include every
+commit a comment names. On the same eight PRs: 22 examples (11 before either fix), 0 unplaced
+comments (90 of the first 121 before), 9 comments dropped for upstream edits that the first design
+would have built as the author's work.
+
+**A second review, of the redesign.** A second reviewer found the upstream guard itself wrong in
+three ways and two earlier fixes partial. After a merge commit every PR commit is reachable from
+the base branch, so a merge base against its current head is the commit itself and every comment
+on such a PR read as upstream; the 300-file cap of the compare API (which pages commits, not
+files) could hide the commented file; and a three-dot check misses a fork point that moved
+backwards. Also: edits made after the commented commit but before the comment entered the diff;
+a rebased series shares one committer second; one missing object marked a whole PR withdrawn;
+and a participant whose login is a word ("fix") had it replaced in prose. Fixed and tested:
+fork points are now taken against the base branch as it stood before the PR merged (the merge
+commit's first parent); the guard compares the base branch's own version of the file at the two
+fork points (no file list, either direction) and drops a comment with a merge commit between it
+and its successor; a file changed between the commented commit and the comment drops the comment
+(`outdated_view`); a same-second series is ordered parent first; a missing object costs only its
+comments (`object_gone`) and a persistently failing PR only itself (`failed`, with its reason);
+account references are replaced in every structured form (`@login`, `github.com`,
+`raw.githubusercontent.com`, `*.github.io`) and bare words are left, as on the Gerrit routes. On
+the same eight PRs: 18 examples; 17 comments dropped for upstream edits, 6 as outdated views;
+the four comments the merge-commit fault had dropped on one PR are kept. The 10 drops on one
+heavily rebased PR were checked: it holds 4 merges from main, and the commented file has three
+different versions on the base branch across its three fork points.
+
+**The first pilot month failed, and what it changed.** OpenJDK 2024-11 through `fetch --via github`
+stopped after ten minutes: one GraphQL lookup of 50 file versions in `openjdk/jdk` timed out, and a
+timeout below the HTTP layer was not retried, so the month's work was lost. Now a timeout or
+dropped connection is retried with backoff like a server error; a version lookup that times out
+is halved and retried down to single lookups; a PR whose requests still fail costs only itself.
+Two costs the failure made visible are also addressed: a PR with no reviewer's inline comment is
+counted after one request (`no_inline_review`) rather than walked, since it can yield no example,
+and each finished PR's scrubbed row is checkpointed, so a month that fails partway resumes.
+
+### Planned before the pilot month is read: GitHub's own thread-to-example conversion (2026-10-01)
+
+The sizing's example projections borrow the Gerrit conversion, and the two denominators differ
+(above), so GitHub's conversion is measured on a built pilot month before any GitHub organization
+is admitted. **Method** (`scripts/github_conversion.py`): every PR the route lists for the month,
+each counted with the sizing's own per-PR rule (`pr_threads`, moved out of `github_sizing.py` so
+both read one definition); the numerator is the refined examples the route built from those PRs.
+A PR the sizing scores zero (bot or AI author) keeps its examples in the numerator, so the rate
+times the sizing's thread total projects the examples the route would build. A PR the route failed
+to collect, or that GitHub no longer answers for at the census, counts on neither side, since its
+examples are unknown; one withdrawn at collection keeps its threads, as the sizing counted them.
+The script refuses when the listing differs from the snapshot's own count, when an example comes
+from an unlisted PR, when failed PRs go unnamed, or when the month has no reviewer threads. The
+interval is a 95% percentile bootstrap over PRs of the ratio. The sizing's own draws that fall in
+the month are counted again by the census and their agreement reported, a check on the rule and
+on the data since the draws were taken.
+
+**Rule, fixed now.** `github_sizing_report.py` applies GitHub's conversion, not Gerrit's (kept in
+the report for comparison only): an organization with a built pilot month uses its own interval,
+the others borrow the span of every measured interval and are marked `borrowed`. The candidate
+thresholds stay as registered (low end of projected examples at 3,700 for an H1 cell, 1,850 for
+RQ2; borderline on the high end alone). OpenJDK 2024-11 is the first pilot month; Apache, LLVM,
+.NET, Grafana and HashiCorp each get a 2024-11 pilot month in turn, read the same way, and the
+table is re-derived as each lands. Written while the OpenJDK month was still being collected,
+before any of its examples or counts were read, and amended before reading after an independent
+review: failed and gone PRs left out of both sides, the refusals above, and the route now asks
+again on resume for a PR whose failure was checkpointed, where it had replayed the failure.
+
+### The exploratory second model family is Llama-3.1-8B, not Qwen3-8B (2026-10-01)
+
+The registered model's contamination argument is that the corpus (from 2024-10) postdates the
+checkpoint's publication. The exploratory second family, an H1 dev-window replication outside the
+registered cells (ROADMAP Plan F), was listed as Qwen3-8B; Alibaba states no cutoff for it, the
+model reports early 2025, which falls inside the training window, and it was published in 2025.
+A sweep of current open-weight families (October 2026) against two requirements, open weights (RQ1
+trains adapters, RQ2 reads their updates) and a checkpoint published before the corpus:
+
+- Hosted models are out on the first: Claude Haiku 4.5 cannot be fine-tuned, Claude 3 Haiku's
+  Bedrock fine-tuning ended with the model (2026-09-10), and hosted tuning elsewhere returns an
+  endpoint, not weights.
+- Gemma 4 (April 2026; 2B, 4B, 26B MoE, 31B), gpt-oss-20b (August 2025, MoE in MXFP4) and the
+  Granite 4 hybrids (mostly Mamba-2 layers) postdate the corpus or do not share the dense
+  attention and MLP projections the registered LoRA configuration adapts.
+- Llama-3.1-8B (Meta model card: pretraining data to December 2023, released 2024-07-23, Llama 3.1
+  Community License) meets both, at the registered size, with the same LoRA targets.
+- Olmo 3 7B (Ai2, Apache 2.0, data to December 2024) overlaps the first two training months, but
+  its training data is public, so exposure could be looked up rather than estimated; kept as the
+  alternative if a reviewer presses on contamination.
+
+Llama-3.1-8B-Instruct replaces Qwen3-8B in the plan; the membership probe reads its base
+checkpoint, as Min-K%++ reads Qwen2.5-Coder-7B's. Not yet run.
+
+### GitHub's own conversion on OpenJDK 2024-11: 0.234 [0.183, 0.293], and Grafana drops to borderline for RQ2 (2026-10-01)
+
+Read as planned above (`github-conversion-openjdk.json`). The route listed 850 integrated PRs, all
+counted (none failed, none gone): 307 carried a reviewer's inline comment, 525 examples were built
+and 329 survived `refine`, which removed 196 as suggested edits, the reviewer having written the
+target (a larger share than on the Gerrit corpora). Against 1,404 reviewer threads under the
+sizing's rule, the conversion is **0.234, 95% interval [0.183, 0.293]**, inside the Gerrit range
+it replaces (0.217 to 0.282) at the centre and wider at both ends. All 19 of the sizing's draws in
+the month recount to the same thread counts, so the rule and the data agree. Nine PRs have more
+than one page of comments and are undercounted, as in the sizing, which errs toward too few
+threads and so a higher rate. `refine` leaves every GitHub example's successor kind unchecked, by
+design: GitHub has no Gerrit revision kind, and the route's own upstream guard does that job.
+
+**The table, re-derived** (`github-sizing-report.json`; OpenJDK on its own pilot, the rest on its
+span, marked borrowed until their pilots are read): Apache and LLVM still reach an H1 cell and RQ2;
+.NET reaches RQ2 and is borderline for H1; **Grafana is now borderline for RQ2** (low end 1,701
+against 1,850); OpenJDK and HashiCorp stay borderline for both. The 2024-11 pilot months of the
+other five are being collected.
+
+### Hardening against October 2026 practice: what the study already leads on, and Plan H (2026-10-01)
+
+Five literature sweeps (inference and design; evaluation and data; contamination; federated LoRA
+privacy; conventions and fine-tuning), each paper opened on arXiv, DOI or the venue page; most
+were read at abstract level, the full text where a claim below rests on it. Decided as ROADMAP
+Plan H. Claims about this repository were checked against the code before being written here.
+
+**Already at or beyond current practice.** The own-half, sibling-half and foreign contrast has no
+counterpart: industrial studies (MetaMateCR, arXiv:2507.13499) compare a fine-tuned model with a
+zero-shot one and never separate internal APIs from convention. Averaging estimates over
+partitions with one crossed interval beats the median-over-splits rule (Chernozhukov et al.,
+Econometrica 2025) and p-value merging (Gasparin, Wang and Ramdas, PNAS 2025); the SESOI,
+bounded reading, outcome-neutral checks and seal go beyond the SE registered-report template
+(arXiv:2602.09292). Deterministic, source-read bot rules beat LLM filtering of review data (Too
+Noisy To Learn, MSR 2025, arXiv:2502.02757). The model-less baseline in the contamination battery
+is what the MIA literature asks for (arXiv:2406.16201, arXiv:2406.17975) and few SE studies run.
+The LoRA recipe (all attention and MLP projections, loss on the answer only, batch 16) matches
+LoRA Without Regret (Thinking Machines, 2025). No prior work attributes an organization through
+secure aggregation from LoRA updates, or ranks split designs by what their transmitted half leaks.
+
+**Checked here and confirmed.**
+- Min-K%++ is the registered primary exposure measure (registered decisions, "Contamination"),
+  and the battery's model-less bag-of-words baseline (balanced accuracy 0.589) beats it (AUC
+  0.540): the registration names an instrument this study's own data does not support.
+- No checkpoint is pinned by revision in `sphragis/experiment/model.py`.
+- `lora_config` ties alpha to 2r, so the scale is 2 at every rank and the rank-256 arm also takes
+  larger steps; its readings do not isolate capacity.
+- CodeReviewer's exact match compares whitespace-collapsed strings (`run_test_ref.py`), so the
+  pilot entry of 2026-09-14 compared its 30.32% with this study's strict 0.200; the like-for-like
+  figure is the normalized 0.222. The conclusion there (exact match discriminates) stands.
+- `registered-decisions.md` described Holm as a fixed order; `holm_steps` implements the
+  step-down. The wording now matches the code.
+- The registered test window (2025-11 to 2026-10) is the period in which AI-assisted commits
+  rose fastest (agent-to-agent review grew more than 100-fold over 2025, arXiv:2608.21311), and
+  nothing in the pipeline reads AI trailers on successor commits.
+
+**Sources, beyond those named above and in Plan H:** Maini et al., NeurIPS 2024 (dataset
+inference); Hayes et al., NeurIPS 2025, arXiv:2505.18773; Cheng et al., Dated Data, COLM 2024,
+arXiv:2403.12958; Heineman et al., arXiv:2508.13144; Miller, arXiv:2411.00640; Bowyer et al.,
+ICML 2025, arXiv:2503.01747; Liu, Hu, Wu and Smith, NeurIPS 2022, arXiv:2206.07902; Melis et
+al., S&P 2019, arXiv:1805.04049; Mitchell et al., arXiv:2606.10481; Athanasiou, Jung and
+Palamidessi, ICLR 2026, arXiv:2603.02017; Vijayvergiya et al., AutoCommenter, arXiv:2405.13565;
+Hora, Robbes and Zacchiroli, arXiv:2609.07542.
+
 ### AI-assisted targets: 11 of OpenStack's 214 dev-window changes carry an AI trailer; Wikimedia none (2026-10-01)
 
 `ai-trailers.json` (`scripts/ai_trailers.py`). OpenInfra's AI policy (approved 2025-07-08) asks
@@ -7149,6 +7339,92 @@ The cluster's cache held one revision of each for every run to date: Qwen2.5-Cod
 model is pinned at its current `2e1fd39`. `MODEL_REVISIONS` in `sphragis/experiment/model.py`
 now passes them to every load, and a checkpoint without one refuses to load. Past runs are
 unaffected: they read these revisions.
+
+### LLVM's own conversion: 0.255 [0.231, 0.280]; LLVM reaches H1 and RQ2 on its own pilot (2026-10-02)
+
+`github-conversion-llvm.json`, read as planned (2026-10-01). LLVM's 2024-11 lists 2,710 PRs, all
+counted (none failed or gone): 1,069 carried a reviewer's inline comment, 1,330 examples were built
+and 989 survived `refine` (340 removed as suggested edits). Against 3,872 reviewer threads under
+the sizing's rule the conversion is **0.255, 95% interval [0.231, 0.280]**, tighter than OpenJDK's
+on three times the threads, and all 19 of the sizing's draws in the month recount the same.
+LLVM's month was collected after the retry-on-resume fix, so its `github_rules` digest differs
+from OpenJDK's; no PR in either month failed, so the fix changed nothing in either.
+
+**The table, re-derived** (`github-sizing-report.json`): LLVM on its own pilot projects 8,239 to
+19,706 examples and reaches an H1 cell and RQ2; OpenJDK stays borderline for both on its own;
+the others borrow the measured span, unchanged by LLVM's interval since it lies inside OpenJDK's,
+so their classes stand (Apache H1 and RQ2, .NET RQ2 with H1 borderline, Grafana and HashiCorp
+borderline). Apache's and .NET's pilot months are being collected.
+
+### .NET's own conversion: 0.241 [0.212, 0.272]; .NET stays RQ2-size and borderline for H1 (2026-10-02)
+
+`github-conversion-dotnet.json`. .NET's 2024-11 lists 4,114 PRs, all counted: 1,633 were opened
+by a bot or agent the route recognises and not collected (1,739 under the sizing's wider name
+rule, which counts them zero), 737 carried a reviewer's inline comment, 1,098 examples were built
+and 489 survived `refine`, which removed 609 as suggested edits. Suggestion threads are 1,078
+beside 2,026 other reviewer threads, the largest share of the three pilots, so .NET reviewers
+write the fix themselves more often than OpenJDK's or LLVM's. Against those 2,026 threads the
+conversion is **0.241, 95% interval [0.212, 0.272]**; all 15 of the sizing's draws in the month
+recount the same. On its own pilot .NET projects 2,398 to 19,122 examples, so it reaches RQ2 and
+stays borderline for an H1 cell; the three measured intervals all lie inside OpenJDK's, so the
+borrowed span and the other classes are unchanged (`github-sizing-report.json`).
+
+### Grafana's own conversion: 0.231 [0.202, 0.261]; Grafana reaches RQ2 again, narrowly (2026-10-02)
+
+`github-conversion-grafana.json`. Grafana's 2024-11 lists 3,227 PRs, all counted: 973 opened by a
+bot or agent were not collected, 579 carried a reviewer's inline comment, 663 examples were built
+and 306 survived `refine`. Suggestion threads are 761 beside 1,325 other reviewer threads, as
+high a share as .NET's. Against those 1,325 threads the conversion is **0.231, 95% interval
+[0.202, 0.261]**; all 15 of the sizing's draws in the month recount the same. On its own pilot
+Grafana projects 1,880 to 12,104 examples, so its low end clears RQ2's 1,850 by 30 and it is an
+RQ2 candidate again (it had dropped to borderline on the span borrowed from OpenJDK); H1 stays
+borderline. The four measured conversions so far (0.231 to 0.255) are close to one another and
+to the Gerrit range they replaced (`github-sizing-report.json`). Apache's census is running and
+HashiCorp's pilot month is being collected.
+
+### HashiCorp's own conversion: 0.222 [0.169, 0.279]; HashiCorp stays borderline for both (2026-10-02)
+
+`github-conversion-hashicorp.json`. HashiCorp's 2024-11 lists 2,194 PRs, all counted: 431 opened by
+a bot or agent were not collected, 282 carried a reviewer's inline comment, 444 examples were built
+and 131 survived `refine`. It is the only pilot where reviewers open more threads with a
+suggestion block (669) than without one (590), so most of its review edits are written by the
+reviewer, and `refine` removes them. Against the 590 the conversion is **0.222, 95% interval
+[0.169, 0.279]**, the widest of the five for having the fewest threads; all 17 of the sizing's
+draws in the month recount the same. On its own pilot HashiCorp projects 154 to 4,220 examples
+and stays borderline for an H1 cell and for RQ2. Its interval widens the span Apache borrows
+(Apache's census is running), which lowers Apache's low end to 8,720, still past an H1 cell
+(`github-sizing-report.json`). Five pilots in, the measured conversions run from 0.222 to 0.255.
+
+### Apache's own conversion, 0.281 [0.259, 0.304]; all six GitHub candidates now sized on their own pilots (2026-10-02)
+
+`github-conversion-apache.json`. Apache's 2024-11 lists 11,083 PRs, all counted: 2,051 opened by a
+bot or agent were not collected, 2,241 carried a reviewer's inline comment, 3,370 examples were
+built and 2,453 survived `refine`. Against 8,736 reviewer threads the conversion is **0.281, 95%
+interval [0.259, 0.304]**, the highest and the tightest of the six; all 15 of the sizing's draws
+in the month recount the same. Its suggestion threads (1,851) are a small share beside .NET's,
+Grafana's and HashiCorp's. Across the six, a larger share of suggestion threads goes with a lower
+conversion, roughly (HashiCorp's is the largest share and the lowest rate, Apache's and LLVM's the
+smallest shares and the highest rates; .NET and OpenJDK break the order), as expected when a
+reviewer who writes the fix leaves an example `refine` removes.
+
+**The table, every organization on its own pilot month** (`github-sizing-report.json`; the
+borrowed span is no longer used):
+
+| org | conversion (95%) | projected examples | H1 cell | RQ2 |
+|---|---|---|---|---|
+| Apache | 0.281 [0.259, 0.304] | 13,373 to 39,320 | yes | yes |
+| LLVM | 0.255 [0.231, 0.280] | 8,239 to 19,706 | yes | yes |
+| .NET | 0.241 [0.212, 0.272] | 2,398 to 19,122 | borderline | yes |
+| Grafana | 0.231 [0.202, 0.261] | 1,880 to 12,104 | borderline | yes |
+| OpenJDK | 0.234 [0.183, 0.293] | 1,192 to 5,298 | borderline | borderline |
+| HashiCorp | 0.222 [0.169, 0.279] | 154 to 4,220 | borderline | borderline |
+
+With OpenStack and Wikimedia, that is four organizations of H1-cell size (OpenStack, Wikimedia,
+Apache, LLVM) and six of RQ2 size (adding .NET and Grafana), the same classes the borrowed Gerrit
+conversion gave except that Grafana's RQ2 margin is now 30 examples. Each is a candidate, not
+admitted: admission still needs its corpus built and the split criteria met, and how the H1
+pass rule reads over four to six cells, and whether these enter Stage 1 as candidates or
+members, are AJ's decisions (ROADMAP).
 
 ### Backports of code older than the corpus: 19 of 4,006 OpenStack training examples are backports with no original in the corpus (2026-10-02)
 
@@ -7333,3 +7609,58 @@ one- and three-cell bounds are in the artifact (`by_cells`). Against the replace
 differ in per-cell power, window size, trials and resamples, and the rise is within the replaced
 run's bisection resolution, so no one cause is read from it. `registered-decisions.md` and the
 Stage 1 sample-size paragraph take OpenStack's figures from this artifact.
+
+### Decided: H1 stays intersection-union over the admitted Gerrit organizations; the GitHub organizations are a registered replication on a second platform (2026-10-04)
+
+AJ delegated the route spec's two open questions (highest-quality research, decided from current
+practice). Both are decided before any GitHub organization has a corpus beyond its pilot month and
+before any test window is fetched. This replaces the 2026-10-01 rule that listed the GitHub
+organizations as candidates behind Qt and Chromium.
+
+**1. How H1 reads over more organizations: the intersection-union rule stays.** H1 asks whether
+learned style transfers within the evaluated projects *in every admitted organization*, which is
+the claim a perimeter drawn around an organization needs; an intersection-union test makes it at
+the registered level with no adjustment across cells (Berger, Technometrics 1982). Each added cell
+raises every cell's power target, 0.95^(1/k): 0.9747 at two cells, 0.9830 at three, 0.9873 at
+four, and OpenStack's bound at 97.5% moves from +0.0230 at one cell to +0.0248 at two and +0.0261
+at three (`partition-sensitivity-openstack.json`, `by_cells`). A per-organization reading with a
+heterogeneity estimate was the alternative. With two to four confirmatory cells the between-
+organization variance is not estimable with useful precision: the Cochrane Handbook (6.5,
+November 2024, chapter 10) uses the Hartung-Knapp-Sidik-Jonkman interval only above two studies,
+warns it is overly wide with very few, recommends prediction intervals from about five, and
+advises against meta-regression below about ten studies. So the pass rule is unchanged, and two
+readings beside it answer the other question, neither binding a verdict: the partial conjunction
+"at least r of k" (registered 2026-10-02), and a random-effects summary over every organization
+read, Gerrit and GitHub (REML, the HKSJ interval from three organizations, a prediction interval
+from five), with each platform's subgroup summary reported descriptively and no moderator test.
+If Qt and Chromium are both admitted, H1 has four cells, and every cell's simulation is rerun
+with `--cells 4` before the seal; the artifacts hold one to three today.
+
+**2. The GitHub organizations: a registered replication, not H1 candidates.** Two reasons, either
+sufficient. *Platform.* On GitHub, review before merging depends on each project's settings and is
+often optional, where Gerrit's is enforced before a change lands, and GitHub pull requests carry
+fewer review comments per file (Sun, Wu, Assunção and Stolee, arXiv:2603.15935, March 2026,
+comparing test-code review on both). Inside an intersection-union H1, a GitHub null would fail the
+hypothesis for a reason the design does not study. *Power.* This study adopted the Nature
+registered-report standard of a priori power 0.95 for every proposed hypothesis test (2026-09-30),
+so each confirmatory cell needs its simulated bound at Stage 1. Each GitHub organization has one
+built pilot month. A corpus, its admissible list, a development pilot (22 runs at OpenStack's
+measured 1.44 GH200-hours each, 2026-09-29) and a simulation (24 and 32 hours on 32 cores for
+Wikimedia and OpenStack, SPORC jobs 21794712 and 21794711) cannot be ready for every candidate by
+2026-11-20, and a cell without its bound at Stage 1 cannot be confirmatory. Chromium's corpus
+deadline (2026-10-23) is the precedent for admitting only what is ready. Adding the organizations
+by amendment after in-principle acceptance, as a secondary hypothesis, was the other option; it
+is a protocol change that needs the editors' approval, so the family is registered now instead.
+
+**The family, as registered.** Membership is fixed at Stage 1: the organizations, in the order
+Apache, LLVM, .NET, Grafana (sizing table above), whose pilot, train and development windows are
+collected, frozen and split-checked at N = 1,850 by 2026-11-20. The Stage 1 report names them;
+one not ready by then is reported as not collected, and no organization joins afterwards, so the
+family and the summary across organizations cannot be chosen after any result. Each member is
+read on H1 only, with the Gerrit cells' windows, rules and estimand, on the two-sided 97.5%
+interval (one-sided 0.0125, the stricter Holm step); its K comes from its own development pilot
+and its bound from its own simulation, both fixed before its test window is fetched, so no bound
+is chosen after the data. The family's reported outcome is the partial conjunction r over its
+members at one-sided 0.0125, with every cell's verdict; it binds no verdict on H1 or H2. .NET and
+Grafana are RQ2's federation members whether or not they enter the family. OpenJDK and HashiCorp
+stay borderline and are not collected unless RQ2's sizing needs them.

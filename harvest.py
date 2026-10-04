@@ -249,7 +249,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
+        {"reduce": "max:null_false_positive/0.975", "occurrences": 3},
     ),
     (
         "rd_partition_fp_nominal",
@@ -257,7 +257,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        {"reduce": "one_sided", "occurrences": 2},
+        {"reduce": "one_sided", "occurrences": 3},
     ),
     ("rd_partition_sd", "registered-decisions.md", "0.0140", PARTITION_PILOT, ["sizing", "sd"]),
     (

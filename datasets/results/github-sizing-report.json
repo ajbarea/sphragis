@@ -1,5 +1,73 @@
 {
   "conversion": {
+    "apache": {
+      "month": "2024-11",
+      "prs": 11083,
+      "reviewer_threads": 8736,
+      "refined": 2453,
+      "rate": 0.28079212454212454,
+      "rate_95": [
+        0.2594985218438629,
+        0.30403774412991
+      ]
+    },
+    "dotnet": {
+      "month": "2024-11",
+      "prs": 4114,
+      "reviewer_threads": 2026,
+      "refined": 489,
+      "rate": 0.24136229022704836,
+      "rate_95": [
+        0.2122877122877123,
+        0.27233115468409586
+      ]
+    },
+    "grafana": {
+      "month": "2024-11",
+      "prs": 3227,
+      "reviewer_threads": 1325,
+      "refined": 306,
+      "rate": 0.2309433962264151,
+      "rate_95": [
+        0.20188133140376266,
+        0.2612794612794613
+      ]
+    },
+    "hashicorp": {
+      "month": "2024-11",
+      "prs": 2194,
+      "reviewer_threads": 590,
+      "refined": 131,
+      "rate": 0.22203389830508474,
+      "rate_95": [
+        0.16920731707317074,
+        0.27946127946127947
+      ]
+    },
+    "llvm": {
+      "month": "2024-11",
+      "prs": 2710,
+      "reviewer_threads": 3872,
+      "refined": 989,
+      "rate": 0.25542355371900827,
+      "rate_95": [
+        0.23131392604248624,
+        0.2796478508544795
+      ]
+    },
+    "openjdk": {
+      "month": "2024-11",
+      "prs": 850,
+      "reviewer_threads": 1404,
+      "refined": 329,
+      "rate": 0.23433048433048434,
+      "rate_95": [
+        0.18265440210249673,
+        0.29259259259259257
+      ]
+    }
+  },
+  "gerrit_conversion": {
     "openstack": {
       "built": 4755,
       "refined": 4366,
@@ -26,9 +94,10 @@
       ],
       "suggestion_threads": 20389,
       "bot_review_threads": 2091,
+      "conversion": "own pilot",
       "examples_range": [
-        11176,
-        36518
+        13373,
+        39320
       ],
       "rq1": "yes",
       "rq2": "yes",
@@ -108,9 +177,10 @@
       ],
       "suggestion_threads": 6912,
       "bot_review_threads": 3256,
+      "conversion": "own pilot",
       "examples_range": [
-        2449,
-        19827
+        2398,
+        19122
       ],
       "rq1": "borderline",
       "rq2": "yes",
@@ -170,9 +240,10 @@
       ],
       "suggestion_threads": 6446,
       "bot_review_threads": 3275,
+      "conversion": "own pilot",
       "examples_range": [
-        2019,
-        13081
+        1880,
+        12104
       ],
       "rq1": "borderline",
       "rq2": "yes",
@@ -240,9 +311,10 @@
       ],
       "suggestion_threads": 1437,
       "bot_review_threads": 12,
+      "conversion": "own pilot",
       "examples_range": [
-        198,
-        4264
+        154,
+        4220
       ],
       "rq1": "borderline",
       "rq2": "borderline",
@@ -302,9 +374,10 @@
       ],
       "suggestion_threads": 9192,
       "bot_review_threads": 992,
+      "conversion": "own pilot",
       "examples_range": [
-        7724,
-        19898
+        8239,
+        19706
       ],
       "rq1": "yes",
       "rq2": "yes",
@@ -384,9 +457,10 @@
       ],
       "suggestion_threads": 1798,
       "bot_review_threads": 0,
+      "conversion": "own pilot",
       "examples_range": [
-        1415,
-        5113
+        1192,
+        5298
       ],
       "rq1": "borderline",
       "rq2": "borderline",
@@ -421,10 +495,10 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-01T19:20:09.066414+00:00",
+    "generated_at": "2026-10-02T18:42:37.995205+00:00",
     "git": {
-      "commit": "251748317ee21ded8efbd7a309a387aaf090a65b",
-      "branch": "corpus/github-candidates"
+      "commit": "9c3f0eef68b172313247126ce0069b0d03ff650d",
+      "branch": "corpus/github-route"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

@@ -101,13 +101,19 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   number and their `reason` text carries `<GERRIT_ACCOUNT_n>`; `scrub` replaces `_account_id`
   values and addresses only. Every refined and built example on disk holds none (checked
   2026-10-01, all four Gerrit corpora); the raw snapshots, untracked and never released, do.
-- [ ] **GitHub organizations as candidates** (sized 2026-10-01, `github-sizing-report.json`): Apache and
-  LLVM reach an H1 cell, .NET and Grafana reach RQ2; OpenJDK and HashiCorp borderline. Needs: a GitHub
+- [ ] **GitHub organizations as a registered replication** (decided 2026-10-04: not H1 candidates;
+  read as their own family, binding no verdict; research log). Collect Apache, LLVM, .NET, Grafana
+  in that order (pilot, train, dev windows); members are those frozen and split-checked by
+  2026-11-20, named in Stage 1. Then per member: admissible list, development pilot for K,
+  sensitivity simulation, all before its test window is fetched; a replication gate (`design()`
+  refuses organizations outside the registered four today). Sized 2026-10-01
+  (`github-sizing-report.json`): Apache and LLVM are of H1-cell size, .NET and Grafana of RQ2 size; OpenJDK and HashiCorp borderline. Needs: a GitHub
   collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
-  removed; pseudonymised at ingestion); LLVM's projects defined as its top-level directories before
+  removed; pseudonymised at ingestion); GitHub's own thread-to-example conversion from a built pilot
+  month per organization (`scripts/github_conversion.py`; OpenJDK 2024-11 first, the rest borrow
+  its span until theirs is built); LLVM's projects defined as its top-level directories before
   its split is read; open access for every resulting publication (GitHub's terms: EMSE's open-access
-  option for Stage 2, plus arXiv); the candidate list in Stage 1 extended behind Qt and Chromium; and
-  a decision on H1 over more cells (intersection-union needs power 0.95^(1/k) a cell).
+  option for Stage 2, plus arXiv); Stage 1's replication-family paragraph.
 - [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
   request, with its projects scoped by the component mapping stage.
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to
@@ -156,6 +162,97 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] Registered: guided completion is reported as a null instrument, at its floor under
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
+
+## Plan H — hardening against October 2026 practice
+
+Decided 2026-10-01 (AJ: "you decide", highest quality) from a five-part literature sweep, every
+source opened and recorded in the research log entry of that date. Ordered by what must land
+before the test window is fetched; items that change a registered decision say so.
+
+Before Stage 1 (2026-11-20), each registered before the seal:
+
+- [ ] **Contamination: provenance primary, Min-K%++ descriptive** (changes a registered decision).
+  Membership inference barely beats chance on LLMs (Duan et al., COLM 2024, arXiv:2402.07841)
+  and the battery's model-less baseline beats Min-K%++ here; protection rests on provenance.
+  Score only target tokens given context; Min-K%++ is read as exposure only above the blind
+  baseline.
+- [ ] **Pre-cutoff code through cherry-picks and backports**: look each target's added lines up
+  in every branch as it stood at the checkpoint's weight upload, report the rate and a
+  sensitivity estimate without them (infini-gram mini, arXiv:2506.12229, as exact-lookup practice).
+- [ ] **Pin the checkpoint revisions** (no `revision=` today; the Qwen repos changed config and
+  tokenizer files on 2024-11-18) to the revision the pilots ran on, and cite the weight-upload
+  commit as the checkpoint date; adopt a contamination disclosure table (arXiv:2608.29463).
+- [ ] **AI-assisted targets**: flag an example whose successor commit carries `Assisted-by`,
+  `Generated-by` or an agent `Co-authored-by` trailer (OpenInfra's AI policy requires them) or an
+  agent committer; report the share per organization, window and half, and an estimate without
+  them (a lower bound, trailers being voluntary). Measured first on the GitHub pilot months.
+- [ ] **Reviewers, not the organization**: a secondary analysis splitting dev and test examples
+  by whether their reviewer also reviewed the sibling half's training data (salted pseudonyms).
+- [ ] **A retrieval comparator**: the base model with BM25 top-3 examples from the own-half,
+  sibling-half and foreign pools, mirroring H1 without training (Pornprasit and
+  Tantithamthavorn, IST 2024; retrieval beat fine-tuning in arXiv:2505.15179, lost in
+  arXiv:2606.06492). Exploratory.
+- [ ] **A likelihood outcome**: teacher-forced bits-per-byte of the target, own vs sibling, as a
+  registered secondary with its own SESOI and sensitivity simulation (arXiv:2508.13144).
+- [ ] **Readings beside the pass rule** (registered in `docs/registered-decisions.md` 2026-10-02,
+  with the AI-trailer, backport and reviewer-exposure sensitivities; to implement in
+  `decomposition.py` before the seal): "meaningful" when a cell's lower bound clears the SESOI
+  (three-sided testing, Isager and Fitzgerald, AMPPS 2026); the largest r with "at least r of k
+  organizations" rejected (partial conjunction, Benjamini and Heller 2008), so a failed
+  every-organization test still says how many show the effect; and a random-effects summary over
+  every organization read (REML, HKSJ interval, prediction interval from five, platform as
+  moderator). The intersection-union rule stays the pass rule (decided 2026-10-04).
+- [ ] **Controls**: a helper-substitution plant (a call rewritten into the house helper) piloted
+  like the marker plant; a report-only plant near the bound (+0.02 to +0.03) read against the
+  simulated power; the placebo rerun once on the repeated-partition pipeline.
+- [ ] **Tacit, measured**: H1 on the refinements each organization's own linters would not make
+  (flake8/hacking, mediawiki-codesniffer, eslint-config-wikimedia), and exact match after
+  identifier anonymisation, both supplementary estimands like `file_type_supplement`.
+- [ ] **The rank-256 arm** (changes a registered arm): alpha held at 64, or rsLoRA, so the arm
+  changes capacity and not step size too (LoRA Without Regret, Thinking Machines 2025); a one-seed
+  learning-rate check at 1e-4 to 1e-3, chosen by pooled held-out loss, logged even if 2e-4 stands.
+- [ ] **Writing**: open-source communities stand in for companies and their public conventions
+  make the measured effect a lower bound; familiarity with old repository code raises base
+  scores and cancels in the contrasts; literature comparisons use normalized exact match (as
+  CodeReviewer's evaluation code does); a descriptive specification curve (Cassee and Feldt,
+  arXiv:2512.08910); ADEMP for the simulations; the 2026 LLM-in-SE guidelines checklist
+  (arXiv:2508.15503); background on industrial comment resolution and retrieval vs fine-tuning.
+- [ ] **An open-weight label-audit rater** at pinned weights beside the two API raters.
+
+From the lab meeting of 2026-10-02 (Dr. Reznik's questions), carried as directions, not Stage 1 work:
+
+- [ ] **A checking agent ("agent control").** The label audit's grades (a revision answers the
+  comment, partly, not at all, or needs context) are the judgment an agent checking a coding
+  agent's change would make before a human sees it. The audited sample is the seed of a
+  training and test set for such a checker; it would be scored against human labels, as the
+  audit scores its model raters. Its place is the Federated Agents line after P4, where a
+  checker can also sit at the shared/private boundary.
+- [ ] **Beyond code review.** Collection, pseudonymisation and the sealed time split are host
+  routes and apply to any review system; pairing and the cleaning rules are code-review specific.
+  Stated in the deck's backup and here, not built.
+- [ ] **Talks at 10 to 15 minutes**, built from the one deck (`papers/federated-agents-deck`).
+
+RQ2, after Stage 1:
+
+- [ ] **A harm model for known participants**: in cross-silo federation members are named, so
+  the headline is what leaks about a known member's content and properties; the min-loss
+  record-to-organization attack (Hu et al.) becomes a result, property inference is cited and
+  scored in n_leaked (Suri and Evans, PETS 2022).
+- [ ] **A canary audit**: canary clients and source canaries (the planted-convention machinery)
+  for an empirical epsilon per split at the record and organization units (Andrew et al., ICLR
+  2024, arXiv:2302.03098; Steinke et al., NeurIPS 2023).
+- [ ] **A DP arm** with accounting on the shared half, at both units (FedASK, arXiv:2507.09990;
+  user-level DP, arXiv:2406.14322).
+- [ ] **A curious peer and the final model**: extraction and attribution from the global model
+  alone (arXiv:2506.06060), and a record-level LoRA-Leak baseline on each half.
+- [ ] **The provenance-tag split tested adversarially** against the learned splits, and FedRoRA
+  (arXiv:2609.00632) and FedLAFP (arXiv:2609.37033) placed; the harness released as the first
+  source-leakage benchmark for federated LLM fine-tuning.
+
+Considered and not adopted: CodeBLEU and embedding metrics (surface-biased, arXiv:2509.15397),
+LoRA variants (within 1-2% once the learning rate is tuned, arXiv:2602.04998), e-values (K is
+fixed), FSD and dataset inference (no IID non-members). A human audit of exact-match misses and a
+second human label rater wait on rater time.
 
 ## Plan G — variance the gate does not see
 
@@ -219,14 +316,18 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   method, a different defence class from the adapter splits.
 - [ ] **A second model family, exploratory.** Every neighbouring federated SE study runs several
   models (the federated program-repair study six, arXiv:2412.01072); P4 runs Qwen2.5-Coder-7B.
-  An H1 dev-window replication on one current family (Qwen3-8B), outside the registered cells, so
-  the frozen model stack does not change.
+  An H1 dev-window replication on Llama-3.1-8B-Instruct (Meta; data to December 2023, released
+  2024-07-23), outside the registered cells, so the frozen model stack does not change; it meets
+  the registered model's rule that the corpus postdates the checkpoint, which Qwen3-8B (no stated
+  cutoff, self-reported early 2025) does not (research log, 2026-10-01). Needs the gated
+  checkpoint's licence accepted on the Hugging Face account.
 
 - [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
-  robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack, Wikimedia
-  and LineageOS, the Android platform family that stands in for AOSP's; AOSP enters again through
-  the NoteDb route once its host's terms allow, and Qt only with permission.
+  robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack and Wikimedia
+  among the Gerrit hosts (LineageOS is too small for a cell, 2026-09-30) and the GitHub
+  organizations (2026-10-04); AOSP enters again through the NoteDb route once its host's terms
+  allow, and Qt only with permission.
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
 
@@ -469,7 +570,8 @@ as the unit; the evidence says the codebase is.
   gate `sphragis/experiment/decomposition.py`. The rank branch is amended in the same change.
 - [x] Cells as a rule over the organizations admitted by host permission, not two fixed designs
   (2026-09-27): H1 on every admitted organization, H2 on Qt and Chromium only when both are.
-- [ ] Wikimedia's split meets the criteria, frozen by 2026-10-23.
+- [x] Wikimedia's split meets the criteria on its frozen v3 corpus and it is admitted at N = 1,850
+  (research log, 2026-09-30).
 - [x] Corpus v3: examples whose target the reviewer wrote (Gerrit suggested edits, applied fixes)
   removed by `refine`; OpenStack's ceiling and floor refixed on v3, 0.3187 and 2,004 (research
   log, 2026-09-28).
@@ -479,25 +581,33 @@ as the unit; the evidence says the codebase is.
 - [x] **Partition variance measured** (2026-09-29): sigma_partition 0.0128, 90% about [0.0058, 0.035]
   and partly change-sampling noise, comparable to the seed effect; five partitions average +0.0041
   [-0.015, +0.023] at two seeds.
-- [ ] **AJ's call: read H1 over several partitions** (repeated splitting: Chernozhukov, Demirer,
-  Duflo and Fernández-Val, Econometrica 93(4):1121-1164, 2025) before Stage 1.
+- [x] **H1 read over several partitions** (repeated splitting: Chernozhukov, Demirer, Duflo and
+  Fernández-Val, Econometrica 93(4):1121-1164, 2025), AJ's decision (research log, 2026-09-29);
+  #67.
 - [x] `scripts/split_criteria.py` and the language-mix ceiling fixed on OpenStack's halves: total
   variation 0.357 over file suffixes, size floor 2,158 (research log, 2026-09-27).
 - [x] H1 carries a supplementary estimand on the suffix both halves hold most of
   (`file_type_supplement`, `matched_suffix`; `.py` for OpenStack), reported beside H1 (2026-09-27).
+- [ ] **Zenodo, before Stage 1 goes out (AJ asked to be reminded).** The Zenodo GitHub integration is on for
+  this repo (webhook verified 2026-10-02, AJ's ORCID linked): publish GitHub release `v0.1.0` from the
+  commit the Stage 1 report describes, read the minted DOI off Zenodo, and cite it in the report's
+  data and code availability statement. A Zenodo record is permanent, so the release is cut once,
+  from the final commit. The dataset gets its own record later, after the licence per host, the
+  withdrawn-changes decision and a takedown contact are settled; the test months never before Stage 2.
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
   analysis at the half size on corpus v2 for OpenStack (2026-09-27).
-- [ ] The sensitivity analysis for every other admitted organization, once its corpus is frozen.
+- [ ] The sensitivity analysis for every other admitted organization: Wikimedia's is queued on
+  TIGRIS.
 - [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
 - [ ] The C++-restricted estimand beside H2.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research
   log, 2026-09-27).
-- [ ] The decomposition's pilot on the dev window with Wikimedia, once its corpus is frozen.
+- [x] The decomposition's pilot on the dev window with Wikimedia: K = 16 (research log, 2026-10-01).
 
 ## Plan C — the experiment
 

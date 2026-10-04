@@ -35,12 +35,32 @@ every one of its cells is supported, so a pass generalizes across the organizati
 resting on one. Requiring every cell makes it an intersection-union test, which holds its level
 without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
 evaluated projects) is confirmatory only for Qt and Chromium, when both are admitted. The two
-hypotheses share one family-wise level under Holm: the first is read on a two-sided 97.5%
-interval, the second, if the first passes, on a 95% one.
+hypotheses share one family-wise level under Holm's step-down: both are read on a two-sided
+97.5% interval, and if one passes, the other is read again on a 95% one.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the cell's registered detectable effect, and **inconclusive** otherwise. A hypothesis is
 bounded only when every cell is.
+
+The admitted organizations are Gerrit hosts. H1 stays intersection-union however many are
+admitted, each cell sized at 0.95^(1/k); with two to four cells a between-organization variance is
+not estimable with useful precision, so heterogeneity is read beside the rule, not in it (below).
+With four cells (Qt and Chromium both admitted) every cell's simulation is rerun at four cells
+before the seal.
+
+### GitHub organizations: a registered replication on a second platform (2026-10-04)
+
+On GitHub, review before merging depends on each project's settings and is often optional, where
+Gerrit's is enforced, so a GitHub cell inside H1 would let platform decide the hypothesis; and no
+GitHub cell can be powered by Stage 1. The GitHub organizations are therefore a family of their
+own, read after the confirmatory hypotheses. **Membership is fixed at Stage 1:** Apache, LLVM, .NET
+and Grafana, in that order, each a member only if its pilot, train and development windows are
+frozen and its split meets the criteria at the registered N by 2026-11-20; one not ready is
+reported as not collected, and none joins later. Each member is read on H1 only, with the Gerrit
+cells' windows, rules and estimand, on the two-sided 97.5% interval; its K comes from its own
+development pilot and its bound from its own simulation, both fixed before its test window is
+fetched. The family's reported outcome is the partial conjunction r over its members at
+one-sided 0.0125, with each cell's verdict; it binds no verdict on H1 or H2.
 
 ### Boundary: strictly above zero
 
@@ -101,6 +121,44 @@ model-less baseline was run on, so the two are directly comparable.
 Within an organization both contrasts are bootstrapped on the same draws, so their sum, how much
 an adapter from the evaluated half beats a foreign organization's, is reported with a 95%
 interval. It answers a weaker question than either hypothesis and binds no verdict.
+
+### Readings beside the pass rule, each binding no verdict (registered 2026-10-02)
+
+From the October 2026 practice sweep (research log, 2026-10-01), each reported for every cell and
+hypothesis the gate reads, on the same draws, at the same levels:
+
+- **Meaningful.** A supported cell is also *meaningful* when its lower bound clears the SESOI
+  (`SESOI` = 0.01), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
+  AMPPS 2026). "Supported" says the effect is above zero; "meaningful" says it is above the
+  smallest effect worth having.
+- **At least r of k.** Beside the every-organization rule, the largest r for which "at least r of
+  the k admitted organizations show the effect" is rejected, by the partial conjunction test in
+  its Bonferroni form (Benjamini and Heller, Biometrics 2008): with each cell's one-sided
+  bootstrap p-value (the share of draws at or below zero), reject for r when the r-th smallest
+  times k - r + 1 is below the hypothesis's level. The organizations are disjoint corpora, so the
+  cells are independent. A failed every-organization rule then still says how many show it.
+- **Without AI-assisted targets.** The primary estimate recomputed without examples whose change's
+  merged commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s rule, read
+  at fetch time for the test window). Trailers are voluntary, so this bounds nothing; it shows
+  whether the flagged share moves the estimate.
+- **Without backports of older code.** Recomputed without examples whose (project, Change-Id) sits
+  only on release, maintenance or deployment branches (`scripts/backport_share.py`'s rule), the
+  traceable route by which code older than the checkpoint enters.
+- **Reviewer exposure.** For the organization contrast, the per-example sibling-minus-foreign
+  difference regressed on its exposure (the share of the sibling half's training examples from
+  changes its reviewers reviewed, `scripts/reviewer_overlap.py`), the slope with a change-clustered
+  95% interval. A positive slope excluding zero says part of the organization effect travels
+  with shared reviewers rather than the organization as a whole. Reviewers are read from
+  attention sets, per change, not per comment.
+
+- **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
+  and GitHub: REML for the between-organization variance, a Hartung-Knapp-Sidik-Jonkman interval
+  from three organizations (two give the estimate and variance only), a prediction interval from
+  five, and each platform's subgroup summary beside it, descriptive, with no moderator test, since
+  meta-regression needs about ten studies (Cochrane Handbook 6.5, chapter 10).
+
+Each is implemented before the seal opens (ROADMAP Plan H); none changes the pass rule, the
+estimand or the levels.
 
 ### Leakage threshold: 2% at Jaccard 0.7 or above
 
