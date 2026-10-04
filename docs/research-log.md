@@ -7654,3 +7654,29 @@ its test window is fetched, so no bound is chosen after the data. Each cell is r
 per organization, with the partial conjunction over the family; the family binds no verdict on H1
 or H2. .NET and Grafana are RQ2's federation members whether or not they reach an H1 cell.
 OpenJDK and HashiCorp stay borderline and are not collected unless RQ2's sizing needs them.
+
+### The readings across organizations implemented, before any test window (2026-10-04)
+
+`sphragis/experiment/across.py`, and three fields on every H1 cell from `h1_over_partitions`:
+`meaningful` (lower bound above the SESOI, per level), `p_one_sided` (the share of the cell's own
+bootstrap draws at or below zero, the registered p-value) and `bootstrap_se` (the draws' standard
+deviation, the cell's weight in the summary). Choices made in the implementation, each before any
+reading exists:
+
+- **The modified HKSJ interval**, the residual scale held at one or above (Röver, Knapp and Friede,
+  BMC Medical Research Methodology 2015), recommended when few studies of unequal precision
+  contribute, as here; the plain HKSJ interval can come out narrower than the fixed-effect one.
+- **REML by Fisher scoring** (Viechtbauer, Journal of Educational and Behavioral Statistics 2005),
+  truncated at zero, the Cochrane Handbook's default estimator.
+- **The prediction interval** on k - 2 degrees of freedom around the modified-HKSJ standard error
+  (Higgins, Thompson and Spiegelhalter 2009), from five organizations only. It under-covers when
+  the between-organization variance is small and study sizes vary (Partlett and Riley, Statistics
+  in Medicine 2017), so it is read as descriptive.
+- **The platform moderator** is a two-coefficient meta-regression on the same estimator, read only
+  with at least two organizations on each platform; otherwise reported as not estimable.
+- **The partial conjunction** is made non-decreasing in r, so "at least r" is never rejected
+  without every smaller r; the Bonferroni form holds under any dependence between cells.
+
+Checked against values computed independently with scipy (t quantiles; REML by bounded
+minimisation of the restricted likelihood, confirmed on a grid; the intervals written out with
+numpy), in `tests/unit/experiment/test_across.py`. Standard library only.

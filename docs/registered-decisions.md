@@ -147,9 +147,11 @@ hypothesis the gate reads, on the same draws, at the same levels:
   attention sets, per change, not per comment.
 
 - **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
-  and GitHub: REML for the between-organization variance, a Hartung-Knapp-Sidik-Jonkman interval
-  (only above two organizations), a prediction interval from five, and platform as its one
-  moderator (Cochrane Handbook 6.5, chapter 10).
+  and GitHub, each weighted by its bootstrap standard error: REML for the between-organization
+  variance, the modified Hartung-Knapp-Sidik-Jonkman interval (scale held at one or above; Röver,
+  Knapp and Friede 2015) only above two organizations, a prediction interval from five, and
+  platform as its one moderator, read only with two organizations on each platform (Cochrane
+  Handbook 6.5, chapter 10).
 
 Each is implemented before the seal opens (ROADMAP Plan H); none changes the pass rule, the
 estimand or the levels.
@@ -204,6 +206,7 @@ one process, at no measurable cost in wall time.
 |---|---|
 | cells, pass rule, Holm, verdicts | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
 | K, the reading over partitions | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
+| readings beside the pass rule, across organizations | [`sphragis/experiment/across.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/across.py) |
 | estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
 | outcome-neutral checks and the halt rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |
 | the seal, and refusing to fetch past it | [`sphragis/corpus/`](https://github.com/ajbarea/sphragis/tree/main/sphragis/corpus) |
