@@ -7315,19 +7315,21 @@ down), with `sigma_run` calibrated on the pilot's 206 changes:
 
 | spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95%, 2 cells | null bounded (97.5%, 2 cells) | reproducibility failure |
 |---|---|---|---|---|---|---|---|
-| pilot 90% lower | 0.0118 | 0.0085 | 0.013 | 0.023 | +0.0220 / +0.0202 | 0.991 | 0.000 |
-| pilot estimate | 0.0140 | 0.0111 | 0.013 | 0.024 | +0.0232 / +0.0210 | 0.991 | 0.003 |
-| sizing bound (90% upper) | 0.0177 | 0.0152 | 0.012 | 0.025 | +0.0248 / +0.0234 | 0.991 | 0.022 |
-| pilot 99% upper | 0.0215 | 0.0195 | 0.011 | 0.026 | +0.0274 / +0.0256 | 0.991 | 0.077 |
+| pilot 90% lower | 0.0118 | 0.0085 | 0.0125 | 0.02325 | +0.0220 / +0.0202 | 0.991 | 0.000 |
+| pilot estimate | 0.0140 | 0.0111 | 0.0125 | 0.0235 | +0.0232 / +0.0210 | 0.991 | 0.003 |
+| sizing bound (90% upper) | 0.0177 | 0.0152 | 0.012 | 0.0255 | +0.0248 / +0.0234 | 0.991 | 0.022 |
+| pilot 99% upper | 0.0215 | 0.0195 | 0.01075 | 0.02575 | +0.0274 / +0.0256 | 0.991 | 0.077 |
 
-**The false-positive rate sits at nominal at every point** (0.011 to 0.013 against 0.0125, 0.023
-to 0.026 against 0.025, Monte Carlo errors 0.0018 and 0.0025 over 4,000 null studies).
-**Reproducibility holds at the spread K was sized on** (0.022 against beta = 0.05) and fails past
-it (0.077 at the 99% bound), as in Wikimedia's run.
+**The false-positive rate sits at or within Monte Carlo error of nominal at every point**
+(0.01075 to 0.0125 against 0.0125, 0.02325 to 0.02575 against 0.025, Monte Carlo errors 0.0018
+and 0.0025 over 4,000 null studies). **Reproducibility holds at the spread K was sized on**
+(0.022 against beta = 0.05) and fails past it (0.077 at the 99% bound), as sizing at a 90% bound
+intends.
 
-**Read under the registered rule**, with OpenStack and Wikimedia admitted: OpenStack's bounds are
-**+0.0248 at 97.5% and +0.0234 at 95%**, each cell at power 0.9747. The one- and three-cell bounds
-are in the artifact (`by_cells`). Against the replaced artifact (+0.0239 and +0.0223 at a joint
-power of 0.928) the bounds rise by about 0.001: the higher per-cell power outweighs the larger
-window. Both admitted organizations now have bounds at the registered power, so the Stage 1
-sample-size paragraph and `registered-decisions.md` take their figures from these two artifacts.
+**Read under the registered rule at two cells**, the count once Wikimedia's admission lands:
+OpenStack's bounds are **+0.0248 at 97.5% and +0.0234 at 95%**, each cell at power 0.9747. The
+one- and three-cell bounds are in the artifact (`by_cells`). Against the replaced artifact
+(+0.0239 and +0.0223 at a per-cell power of 0.928) the bounds rise by about 0.001; the two runs
+differ in per-cell power, window size, trials and resamples, and the rise is within the replaced
+run's bisection resolution, so no one cause is read from it. `registered-decisions.md` and the
+Stage 1 sample-size paragraph take OpenStack's figures from this artifact.
