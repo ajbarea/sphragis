@@ -12,6 +12,7 @@ filesystem, that internal links resolve, and that the retired term stays retired
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 import tomllib
@@ -55,6 +56,72 @@ def test_every_figure_resolves_to_its_artifact() -> None:
     assert not drifted, "\n".join(drifted)
     assert not unbacked, "\n".join(unbacked)
     assert verified, "the claim table is empty, so this test asserts nothing"
+
+
+@pytest.mark.parametrize(
+    ("level", "expected"),
+    [(0.975, 0.0125), (0.95, 0.025), (True, None), ("0.95", None), (1.0, None)],
+)
+def test_one_sided_reads_a_confidence_level_or_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, level: object, expected: float | None
+) -> None:
+    """A level becomes its one-sided rate; anything that is not a level in (0, 1) is refused."""
+    (tmp_path / "a.json").write_text(json.dumps({"levels": [level]}))
+    monkeypatch.setattr(harvest, "ROOT", tmp_path)
+    value, error = harvest.resolve("a.json", ["levels", "0"], {"reduce": "one_sided"})
+    if expected is None:
+        assert value is None and error
+    else:
+        assert error is None and value == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("reduce", "expected"),
+    [
+        ("min:fp/0.975", 0.011),
+        ("max:fp/0.975", 0.016),
+        ("min:fp/0.5", None),
+        ("max:fp", None),
+        ("mean:fp", None),
+    ],
+)
+def test_min_max_read_the_extreme_over_every_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reduce: str, expected: float | None
+) -> None:
+    """A quoted range is checked against its true extremes, not one fixed entry."""
+    points = {
+        "a": {"fp": {"0.975": 0.013}},
+        "b": {"fp": {"0.975": 0.011}},
+        "c": {"fp": {"0.975": 0.016}},
+    }
+    (tmp_path / "a.json").write_text(json.dumps({"by_target": points}))
+    monkeypatch.setattr(harvest, "ROOT", tmp_path)
+    value, error = harvest.resolve("a.json", ["by_target"], {"reduce": reduce})
+    if expected is None:
+        assert value is None and error
+    else:
+        assert error is None and value == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("data", "reduce"),
+    [
+        ({"a": {"fp": 0.011}, "b": {"fp": float("nan")}}, "min:fp"),
+        ({"a": {"fp": 0.011}, "b": {"fp": True}}, "max:fp"),
+        ({}, "min:fp"),
+        (0.011, "min:fp"),
+        ([{"fp": 0.011}], "min:x"),
+        ({"a": {"fp": 0.011}}, "mni:fp"),
+    ],
+)
+def test_min_max_refuse_what_is_not_a_set_of_numbers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, data: object, reduce: str
+) -> None:
+    """NaN, a bool, no entries, a scalar, a missing leaf or an unknown reduce: refused."""
+    (tmp_path / "a.json").write_text(json.dumps({"by_target": data}))
+    monkeypatch.setattr(harvest, "ROOT", tmp_path)
+    value, error = harvest.resolve("a.json", ["by_target"], {"reduce": reduce})
+    assert value is None and error
 
 
 def test_no_figure_goes_unasserted() -> None:

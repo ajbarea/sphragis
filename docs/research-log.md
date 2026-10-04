@@ -1727,6 +1727,10 @@ likely higher than a tenth, not lower.
 
 ### RQ1's central finding has not been measured before (2026-09-18)
 
+> **Superseded on 2026-09-23.** The share was measured on corpus v1 with Qt's lint bot in the data;
+> the bot audit found nearly half of Qt's organizational effect was the bot. The share on the
+> cleaned corpus is not re-measured in this entry.
+
 A novelty check on the result the windowed run produced: that adaptation to code-review
 refinement is large and almost entirely task-general, with the organization-specific share about a
 thirteenth of it (0.048 to 0.306 exact match, of which 2 points separate matched from mismatched).
@@ -2259,6 +2263,9 @@ organizations alike.
 
 ### The seed main effect, measured: about 0.013, and it is what limits power (2026-09-18, jobs 148199, 148405, 148407)
 
+> **Narrowed later on 2026-09-18.** "What limits power" held for the null at this size only; see
+> "RQ1 at three seeds, and the seed effect in the setting that counts" below.
+
 `datasets/results/seed-effect-sym-0.json`, `scripts/seed_effect.py`. The null `sym-0` at seeds 1, 2
 and 3, same corpora, split and held-out examples. Per organization half, the contrast at each seed,
 and per pair of seeds the shift against the change-clustered noise of the per-example difference
@@ -2485,6 +2492,10 @@ above. A test now pins the split.
 
 ### What the design can detect: a sensitivity analysis, replacing power at an observed effect (2026-09-18)
 
+> **Superseded.** These sizes and bounds belong to the retired organization-against-organization
+> gate on corpus v1; the current bounds are the fixed-K simulation's (2026-09-30), and its test
+> size is re-projected over twelve months (audit, 2026-09-30).
+
 `datasets/results/sensitivity-b0.0098.json`, `scripts/sensitivity.py`. The test window's size is
 fixed by what exists, so the Stage 1 question is not "what is the power" but "what is the smallest
 effect this design detects". Power computed from a pilot's own estimate is biased upward, the more
@@ -2546,6 +2557,9 @@ estimand does not help either: its Qt interval is wider relative to its effect (
 
 ### A secondary estimate pooled across organizations (2026-09-18)
 
+> **Superseded on 2026-09-23.** The pooled figure rested partly on Qt's lint bot (bot audit), and the
+> secondary estimate is not part of the current design.
+
 The conjunctive gate asks whether *each* organization shows the effect, which is what a generality
 claim needs and what costs the design its resolution. A pooled estimate answers the weaker question,
 whether organizations leave a fingerprint on average, and is the sharpest reading the same data
@@ -2564,6 +2578,9 @@ between-organization heterogeneity rather than assume it away. Registered as a s
 reported beside the gate, and fixed now while the test window is sealed.
 
 ### Why one organization shows the effect and the other does not (2026-09-18, exploratory)
+
+> **Superseded on 2026-09-23.** A post hoc subgroup reading on corpus v1; Qt's side of it rested
+> largely on its lint bot (bot audit). Not a finding.
 
 The dev-window contrast broken down by the project each held-out change belongs to, pooled over the
 three seeds. Exploratory, on the dev window, with small per-project samples and no multiplicity
@@ -2632,7 +2649,6 @@ which distribution they were drawn from, which is also the quantity a data-shari
 between organizations is written about. Their proposed next step, measuring an adapter's capacity
 before it is shared rather than after it is attacked, is the same instinct as RQ2's, one altitude
 up.
-
 
 ### The reference split was following the order clients arrive in (2026-09-18)
 
@@ -2786,6 +2802,9 @@ are not rerun: this is the one the Stage 1 report's limitation rests on.
 
 ### How much of adaptation is organizational: 7% and 10% (2026-09-18, three seeds)
 
+> **Superseded on 2026-09-23.** Qt's 10% includes its lint bot (bot audit); both shares are corpus
+> v1, organization against organization, and are not re-measured on the current design.
+
 The decomposition the study exists to make, averaged over the three seeds of the windowed run:
 
 | | base model | adapter trained elsewhere | adapter trained at home |
@@ -2909,6 +2928,10 @@ means barely at all. For RQ2's framing this is sharper than the original claim, 
 governance boundary drawn around an organization does not match the boundary the leak respects.
 
 ### RQ1 under the registered numerics, and two registrations that earned their keep (2026-09-18, jobs 149258 to 149260)
+
+> **Superseded on 2026-09-23.** With Qt's automated-only examples removed the pooled reading fails
+> (bot audit), and the change-averaged pass rested on the same examples, so "the estimand decided
+> the headline" does not survive the cleaning (audit of this log, 2026-09-30).
 
 `datasets/results/rq1-qtfull-fp32-seeds.json`. The windowed run repeated at three seeds under fp32
 inference, the precision registered this morning. Same corpora, split and held-out examples as the
@@ -6373,7 +6396,7 @@ noted. Size is the number of changes merged in the training window, found by pag
 | gerrit.libreoffice.org, review.gerrithub.io, review.spdk.io, review.whamcloud.com | `Disallow: /` | not queried | excluded |
 
 At OpenStack's yield (about one training example per five merged changes) the Linux Foundation hosts
-give a few hundred examples, far short of two halves at the registered size floor of 2,004. The Linux Foundation projects' terms
+give a few hundred examples, far short of two halves at the registered training size, N = 1,850 (the size floor of 2,004 when this was written). The Linux Foundation projects' terms
 of use (lfprojects.org) set no terms on automated access, so size alone excludes them.
 
 **Two slips in this check.** TYPO3's robots.txt was fetched in the same command as its size query,
@@ -6407,6 +6430,304 @@ induced by common initialization and falls toward chance under independent initi
 clients share initialization, as federated clients receive one global model, so the FedSA-LoRA
 result (A alone identifies a source best) describes that setting; the robustness item on several
 initializations is where independent initialization gets read.
+
+### H1 over repeated partitions: the design, before its simulation is read (2026-09-29)
+
+AJ decided the question the partition measurement opened: H1 is read over repeated partitions
+(spec `docs/superpowers/specs/2026-09-29-repeated-partitions-design.md`). Choices, each grounded:
+
+- **Aggregate by the mean, not the median.** Ritzwoller and Romano (arXiv:2311.14204) aggregate
+  sample-split statistics by the mean and choose the number of splits sequentially (their Algorithm
+  1, after Anscombe and Chow-Robbins) so that two independent aggregations agree within a tolerance
+  xi with probability about 1 - beta; they recommend investigating rather than switching to a
+  median when the two differ. Chernozhukov, Demirer, Duflo and Fernández-Val's median rule
+  (Econometrica 93(4), 2025) pays for its robustness by doubling the error rate. Registered: xi
+  0.01 (the SESOI), beta 0.05, burn-in 8, cap 40 (`sphragis/experiment/partitions.py`).
+- **The interval is the registered crossed one, with the run as the crossed factor.** Every run
+  scores every held-out change, in one half or the other, so runs and changes are fully crossed
+  (`partitioned_crossed_draws`). On the registered partition's five seeds it reproduces the
+  registered gate's +0.0284 [+0.0028, +0.0532] as [+0.0030, +0.0534].
+- **One evaluation set, by construction.** The ten partition runs scored 207 to 209 changes (502
+  examples common to all): each half is deduplicated on its own, so a duplicate pair split across
+  halves survives in both under one partition and not another. The organization is now
+  deduplicated once before partitioning (`placebo_corpus.py --dedup-org`), which also stops a
+  sibling adapter training on a twin of an own-half test item. Only the per-half boilerplate stage
+  can still differ, and the cell refuses runs missing more than 1% of examples.
+- **A fixed training size, N = 1,850.** Under dedup-first no partition reaches the registered
+  split's 2,004 (largest 2,003), which per-half dedup had inflated. N is the 5th percentile of the
+  smaller half over 300 seeded partitions, rounded down to 50, from training-window counts alone.
+- **The partitions, listed before any run** (`admissible-partitions-openstack.json`): seeds tried
+  from 1 through the job's own pipeline; **40 admissible of 49 checked** (3 fail the size floor, 6
+  the language-mix ceiling); the smallest admissible half is 1,856.
+
+**Exploratory, on the ten dev runs already made** (per-half dedup, two seeds a partition, the 502
+common examples): H1 over partitions reads **+0.0046 [-0.0139, +0.0214]** at 95%, inconclusive.
+
+### The repeated-partition design on the development window: it stops at 16 runs, and H1 is inconclusive at +0.007 (2026-09-29)
+
+Twenty-two `partition_run` jobs on `corpus-v3/openstack`, the first 22 admissible partitions at
+training seeds 1 to 22 and N = 1,850 (jobs 208523 to 208530 pinned at 8ec4e12, 208535 to 208548 at
+205ba2f; the two differ only by `scripts/partition_pilot.py`, which no job runs). Every
+outcome-neutral check passed and the apparatus held in all 22, and every run scored the same 501
+examples: dedup-first left nothing to drop.
+
+**Stopping.** The rule, applied in order from K = 8, first holds at **K = 16** (variance of the
+mean 1.18e-5 against the critical value 1.30e-5; 1.34e-5 at K = 15). Runs 17 to 22 were computed in
+the same batch and stay out of the cell. The cut is made in code (`partitions.first_stop`, which
+the cell applies to every run it is given and records with its trace). That runs computed in a
+batch past the first stop are left out was written into the spec as an **amendment after both
+readings were in view** (16 runs +0.0072, 22 runs +0.0051, both inconclusive); it is the reading
+Ritzwoller and Romano's sequential rule defines, and the verdict is the same either way. Per-run H1
+estimates over the 16 runs range from -0.0174 to +0.0339.
+
+**The cell** (`partition-pilot-openstack-stopping.json`, 16 runs): H1 **+0.0072 [-0.0061, +0.0210]** at 95%
+and [-0.0080, +0.0229] at 97.5%, inconclusive. At all 22 runs: +0.0051 [-0.0073, +0.0175]. Read
+beside the single-partition pilots (v2 +0.0134, v3 +0.0284, both inconclusive or passing on one
+draw of the partition), the half-split effect in OpenStack's development window is small, and the
+single-partition v3 pass is not reproduced once the partition is averaged over. A censored pilot,
+not a test-window estimate; the registered bound for the bounded reading comes from the simulation.
+
+### The stopping rule is liberal at the K it stops at, so K is fixed from the pilot: 24 for OpenStack (2026-09-29)
+
+**The simulation of the registered rule** (`partition-sensitivity-openstack-stopping.json`, commit
+2cd4184): 1,000 null studies and 300 per power step at each run spread, the test window's 1,635
+planned changes drawn from the v3 pilot, runs on admissible partitions built as the jobs build them,
+Algorithm 1 from K = 8 to 40. One-sided false positives against nominal 0.0125 (97.5%) and 0.025
+(95%), mean runs, share at the cap, and the rate at which a second, independent aggregation differs
+by more than xi = 0.01:
+
+| run spread | FP at 97.5% | FP at 95% | runs | at cap | reproducibility failure |
+|---|---|---|---|---|---|
+| 0.011 | 0.020 | 0.026 | 10.4 | 0.00 | 0.046 |
+| 0.015 | 0.017 | 0.035 | 16.4 | 0.00 | 0.073 |
+| 0.025 | 0.014 | 0.034 | 37.5 | 0.76 | 0.090 |
+| 0.035 | 0.012 | 0.027 | 39.9 | 0.99 | 0.187 |
+
+The excess is largest where the rule stops earliest and gone where nearly every study reaches the
+cap, which is a fixed K: the rule stops when the runs happen to agree, and the interval narrows with
+them. Reproducibility fails above beta from spread 0.015 up. Ritzwoller and Romano's guarantee is
+asymptotic in the number of splits; they recommend a burn-in of at least 10 and a tolerance at
+which the rule runs more than 500 splits (their section 5). A run here is a GPU job, and the rule
+stops near 16.
+
+**Amended before any test-window run:** K is fixed per organization from its development-window
+pilot by their sizing formula (eq. 5.3), `K = 2 v (z / xi)^2`, with v at the 90% upper confidence
+bound of the pilot's per-run standard deviation, clamped to [10, 40] (`partitions.runs_needed`). The
+reading takes the first K runs in admissible order; the criterion is reported beside it and decides
+nothing. OpenStack's 22 pilot runs, all computed before this rule was written
+(`partition-pilot-openstack.json`): standard deviation **0.0140**, upper bound **0.0177**, **K =
+24**. Over the 22, H1 reads +0.0051 [-0.0089, +0.0192] at 97.5%, inconclusive. Runs 23 and 24
+(partition seeds 28 and 30, training seeds 23 and 24) are jobs 208898 and 208899, pinned at 205ba2f
+as the first 22, so the pilot is read once at the registered K. The fixed-K simulation at K = 24
+runs next; its coverage decides whether this rule is registered.
+
+### Every input of the design traced to its source, and the pilot read at K = 24 (2026-09-29)
+
+AJ: no number without a recorded origin, in code or in reporting. What that changed here:
+
+- **N = 1,850 is now an artifact.** `scripts/training_size.py` rebuilds the rule logged above (5th
+  percentile, nearest rank, of the smaller half over 300 seeded splits, rounded down to 50):
+  smallest 1,791, 5th percentile 1,856, median 1,988, **N = 1,850** (`training-size-openstack.json`),
+  as logged. `admissible_partitions.py` reads N from it rather than from a typed flag; rerun, the
+  admissible list is identical and records the source (`size_floor_source`). `partition_pilot.py`
+  reads the training size from the admissible list.
+- **The simulation reads every input from the artifact that fixed it:** K from the pilot's
+  sizing, the planned 1,635 changes from `decomposition-sensitivity-v3.json`, N and the split
+  reference from the admissible list, each source recorded in its output (`inputs`).
+- **The run spread is calibrated, not chosen.** The earlier grid (0.011, 0.015, 0.025, 0.035) had
+  no recorded origin, and it was the run shift sigma_run, not the per-run spread its log table
+  called it: a simulated run already varies with its partition and churn. sigma_run is now found
+  by bisection so that K null runs on the pilot's 206 changes spread as much as four named points
+  on the pilot's per-run spread: its 90% lower bound, its estimate (0.0140), the 90% upper bound K
+  was sized on (0.0177), and its 99% upper bound. The stopping-rule table above is therefore
+  indexed by sigma_run, not by spread.
+- **Each chosen constant states its reason where it is defined** (beta, K_MIN, K_MAX, the sizing
+  confidence, the refusal share, the simulation's trial counts and churn), and the design spec
+  carries a table of every number and its source.
+- **A bug the tracing found.** The regenerated `partition-pilot-openstack.json` had lost its list
+  of run files: the report's `runs` key was overwritten by the cell's run count. Renamed
+  `run_files`; the script now refuses any cell key that would overwrite a report key.
+
+**The pilot at the registered K** (`partition-pilot-openstack-k24.json`). Runs 23 and 24 (jobs
+208898, 208899, pinned at 205ba2f with the first 22) passed every outcome-neutral check. Over the
+first 24 admissible runs, H1 reads **+0.0049 [-0.0088, +0.0185]** at 97.5% and [-0.0073, +0.0166]
+at 95%, inconclusive. Sizing on all 24 would give K = 22; K stays 24, fixed from the 22 runs before
+these two were computed.
+
+### Review of the repeated-partition branch: three defects fixed, none changing a committed number (2026-09-29)
+
+An independent review of `measure/repeated-partitions` at 59f48bf reproduced both pilot artifacts,
+the sizing (sd 0.014020, bound 0.017657, formula 23.95, K = 24), the admissible list and the
+chi-squared bounds against scipy, and found:
+
+- **Runs past K could change the cell.** `h1_over_partitions` intersected examples over every run
+  it was given before keeping the first K, so a run past K that dropped examples shrank the cell's
+  example set or refused it. It now reads the first K alone and scores each later run on its own;
+  a test drops examples only past K.
+- **The bounded reading could not run.** `partition_pilot.py --sensitivity` read `by_sigma_run`,
+  which the simulation no longer writes. Bounds now come from `partitions.sensitivity_bounds` by a
+  named point on the pilot's spread (`--spread-target`).
+- **The simulation's cluster job passed flags its script no longer had.** Fixed, and a new test
+  checks every flag each `.sbatch` passes against its script's parser; it found only this job.
+- Smaller: `chi2_quantile` now refuses p outside (0, 1) and widens its search past 10 x df (it
+  returned 10.0 for df 1 at 0.999, against 10.83; the registered df 21 to 23 at 0.01 to 0.99 were
+  exact to 1e-9); the calibration refuses a spread it cannot reach below its ceiling rather than
+  capping silently; the pilot script refuses more run files than admissible partitions and treats
+  `--fixed-k 0` as zero, not as "all"; the training-size and admissible artifacts will record the
+  corpus root they were built from (both rerun once the machine is free; the committed ones were
+  built from `wm-bots/datasets/gerrit`, corpus v3).
+
+**Numbers the review found without a recorded origin, now sourced:** the cost of a run is measured,
+1.44 GH200-hours on average over the 24 OpenStack pilot jobs (1.30 to 1.56, `sacct`), so K_MAX = 40
+is about 58 GPU-hours and K = 24 about 35; the calibration's trial count, step count, ceiling and
+seed offset carry their reasons at their definitions; the 5th percentile in `training_size.py` is
+stated as a choice. The simulation's sigma_run calibration draws changes from the v3
+single-partition placebo's clusters, the same pool its studies draw from; the spec says so.
+
+The fixes are on `measure/repeated-partitions-fixes`, kept off the simulation's worktree until its
+artifact is written, so the artifact's provenance names the code that produced it (59f48bf).
+
+### At K = 24 the gate holds its level and two draws of splits agree: the fixed-K simulation (2026-09-30)
+
+`partition-sensitivity-openstack.json` (commit 59f48bf; every input read from its artifact and
+recorded under `inputs`). 1,000 null studies and 300 per power step at each point, the 1,635
+planned changes, K = 24, N = 1,850. At each point on the pilot's per-run spread, sigma_run is the
+shift at which 24 null runs on the pilot's 206 changes spread that much (100 studies a step):
+
+| spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95% | null bounded (97.5%) | reproducibility failure |
+|---|---|---|---|---|---|---|---|
+| pilot 90% lower | 0.0118 | 0.0084 | 0.010 | 0.022 | +0.0223 / +0.0205 | 0.978 | 0.000 |
+| pilot estimate | 0.0140 | 0.0112 | 0.009 | 0.025 | +0.0223 / +0.0205 | 0.966 | 0.003 |
+| sizing bound (90% upper) | 0.0177 | 0.0152 | 0.010 | 0.025 | +0.0239 / +0.0223 | 0.968 | 0.031 |
+| pilot 99% upper | 0.0215 | 0.0194 | 0.012 | 0.026 | +0.0239 / +0.0239 | 0.942 | 0.069 |
+
+**Coverage is at nominal at every point** (0.0125 and 0.025; Monte Carlo error about 0.0035 and
+0.005), where the stopping rule ran above it: the excess was the stop, not the interval.
+**Reproducibility holds up to the spread K was sized on** (0.031 against beta = 0.05) and fails
+past it (0.069 at the 99% bound), as sizing at a 90% bound intends. The detectable effects are
+quantized by the bisection's resolution on the lift (0.3 / 128) and change little across the
+spread.
+
+**Registered before any test-window run: the bounded reading's bounds are the detectable effects
+at the sizing bound, +0.0239 and +0.0223** (`sensitivity_bounds(..., "sizing_bound_90", ...)`).
+The same spread sets K, and it is the more conservative of the two central points: a larger bound
+makes a null harder to read as bounded. These replace the single-partition v3 bounds (+0.0246,
++0.0210). At them a null reads bounded in 96.8% of studies at the stricter level.
+
+### An audit of this log against its artifacts: nine conclusions in force are wrong or unsupported (2026-09-30)
+
+A reader with no part in writing these entries went through the log oldest to newest, re-deriving
+figures from the committed artifacts, and checked the current docs and the Stage 1 draft against
+it. Two findings were re-checked by hand before anything was acted on (the leakage halt and the
+test size, below). What stands, by consequence:
+
+**Wrong or unsupported, in force.**
+
+1. *The leakage halt check cannot fail.* `leakage_check` calls `near_duplicate_rate` at its
+   default Jaccard 0.8, dedup's own threshold, against a provisional 1% ceiling; after dedup-first
+   the rate is 0 by construction, the tautology rejected on 2026-09-15. The registered check (2%
+   at Jaccard 0.7, and sibling half into evaluated half) is not in the halt rule. Every "every
+   outcome-neutral check passed" above is empty for leakage. To be wired before any test-window
+   run.
+2. *The registered bounds use a ten-month test window.* 1,809 planned OpenStack changes is the
+   2026-09-16 projection over ten months; the window has been twelve since 96695eb, and the
+   twelve-month figure (2,171, 2026-09-18) was dropped when `decomposition_sensitivity.py` took
+   `--size openstack=1809`. Everything derived from it (1,635 on v3, +0.0239 / +0.0223, the
+   bounded and reproducibility rates of the fixed-K simulation) is conditional on the wrong size.
+   The fixed-K simulation's rerun (job 209953) was cancelled before it started; it reruns on a
+   twelve-month v3 projection.
+3. *"Change-averaged runs at about twice nominal alpha" has no artifact* (registered decisions,
+   manuscript). To be measured or removed.
+4. *"The estimand decided the headline" holds only with Qt's lint bot in the data.* With it
+   removed neither estimand passes (pooled fails, change-averaged is mixed). The entry of
+   2026-09-20 on it is superseded by the bot audit of 2026-09-23.
+5. *The planted-convention halt test* in the Stage 1 draft has no log entry, is not in
+   `apparatus_holds`, and its one pilot (bf16, v1, one seed) projects a pass on the weaker half in
+   about 40% to 63% of draws at dev-window size: registered as it stands, it would likely halt a
+   working apparatus. Its pass rate is to be measured on v3 before it is registered.
+6. *The manuscript's H1 rationale* cites one project pair that the log found was a property of
+   the pair (2 of 6 directional contrasts exclude zero), and its equal-size evidence quotes a sign
+   flip inside the run-to-run swing the same entry measured.
+7. *The SESOI (0.01) sets K,* through xi, so "decides nothing" is untrue; its seed-bound origin is
+   an SD bound from a run this log called a one-in-a-thousand lockstep.
+8. *Target power 0.928* was chosen for three cells, which no longer describes the admitted set,
+   and it defines the registered bounds.
+
+**Stale in current docs.** `protocol.md` and `registered-decisions.md` still describe the retired
+organization-against-organization gate (pass rule, secondary estimate, power, "where it stands");
+`outcome-neutral.md` quotes v2 leakage and single-run interval rates; the granularity spec has no
+pointer to its successor; the manuscript names a one-month control window where six were used.
+Entries overturned by the bot audit (2026-09-23) carry no marker.
+
+**Held up.** K = 24 and the 24-run dev reading re-derive; the gate holds its level at K = 24; the
+pooled estimand re-derives on the current H1; dropping AOSP, permitted-host admission, the
+censoring rule, fp32 inference, the contamination reading and the corpus rules all hold.
+
+Items 7 and 8, and whether item 5 is registered at all, are design decisions and wait for AJ.
+Items 1 to 4 and 6 and the stale docs are corrections and are made next.
+
+### The test window re-projected over its twelve months on v3: 2,018 OpenStack changes (2026-09-30)
+
+`project-windows-openstack-v3.json`, from `window-report-openstack-v3.json` (both new; the
+projection now writes an artifact and reads the corpus it is given). v3's train window holds 1,645
+changes over ten months, captured at 0.952, so 172.9 true changes a month; that rate predicts the
+dev window at 211 against an actual 214 (-1.3%, inside the 15% tolerance). Over the registered
+twelve months, fetched at the earliest month the horizon permits (2027-01, captured 0.973), the
+test window projects to **2,018 changes**, replacing the ten-month 1,809 scaled to v3 (1,635).
+The simulation now reads its test size from this artifact (`--projection`), not a typed `--size`.
+
+The 15% tolerance is recorded as what it is: set on 2026-09-16 after the repaired capture model's
+first check read +11.6%, a post hoc choice. On v3 the miss is well inside any tolerance near it.
+
+v3 leakage, train into dev, at the registered Jaccard 0.7: 0.97% (5 of 515), under the 2%
+ceiling; the halt check that now runs at 0.7 would pass on the dev window.
+
+### "Change-averaged runs at about twice nominal alpha" is not what it does: measured (2026-09-30)
+
+`interval-calibration-change-averaged.json`, `interval_calibration.py --estimator change_averaged`,
+the same null, window, arm, trials and resamples as the pooled `interval-calibration.json`. The
+claim came from the audit of this log (item 3), which found no artifact behind it.
+
+| changes | pooled, two-sided | change-averaged, two-sided |
+|---|---|---|
+| 10 | 0.0697 | 0.0993 |
+| 19 | 0.0600 | 0.0788 |
+| 30 | 0.0583 | 0.0650 |
+| 45 | 0.0575 | 0.0638 |
+| 91 | 0.0480 | 0.0555 |
+| 200 | 0.0475 | 0.0512 |
+
+Against a nominal 0.05 (Monte Carlo error 0.003 to 0.004, each row's `standard_error`). **Change-averaged runs somewhat above
+pooled at every size and near double nominal only at ten changes; across the quoted 48 to 91 (ladder points 45 and
+91) it is 1.1 to 1.3 times nominal, not twice.** The estimand decision does not rest on this: pooled is registered and
+re-derives on the current H1 (audit). The sentence is corrected wherever it is quoted.
+
+### Target power is 0.95 for every hypothesis test, and the simulation reruns at it (2026-09-30)
+
+Audit item 8. 0.928 was 0.80 joint over three independent cells, a target of our own making that no
+longer describes the admitted set. Replaced by the registered-report standard: "For frequentist
+analysis plans, the a priori power must be 0.95 or higher for all proposed hypothesis tests"
+(Nature Communications / Nature Human Behaviour Registered Reports author guidelines, read from
+the guidelines PDF). The hypothesis tests are H1 and H2, not their cells. H1 passes only when
+every admitted organization's cell is supported (intersection-union), and the organizations are
+independent, so H1's power is the product of its cells' powers: with k cells each needs
+0.95^(1/k), 0.9747 at two and 0.9830 at three. The admitted set is fixed at Stage 1 submission,
+so the simulation finds the bound for each of one to three cells, and the design reads the one
+matching the set it registers.
+
+The same guidelines ask for outcome-neutral tests, positive controls among them, that are
+"sufficient for ensuring that the results obtained are able to test the stated hypotheses". They
+do not state a power figure for a positive control; a control that would fail a working
+apparatus about half the time (audit item 5) is not sufficient under that wording, which is why
+the planted-convention check's pass rate is measured before it is registered.
+
+`partition_sensitivity.py` moves with it: `--hypothesis-power 0.95` and `--cells 1 2 3`, each
+cell's power derived as above, a bound per level and cell count (`by_cells`, which
+`sensitivity_bounds` and `partition_pilot.py --h1-cells` read); `--trials 1000` per bisection
+step (Monte Carlo error about 0.007 near 0.95 and 0.004 near 0.983, against 0.015 at 300), `--steps 10` (lift resolved
+to 0.0003; at seven steps, 0.0023, several points of the previous run read identical bounds). It
+reruns once on TIGRIS on the twelve-month projection (2,018 changes). The registered bounds, the
+Stage 1 sample-size paragraph and `registered-decisions.md` take their figures from that artifact.
 
 ### Planned before any run: a local decision model as a third blind label-audit rater (2026-09-30)
 
@@ -6455,6 +6776,46 @@ classes it misses are the two the audit exists to find. Its confidence does rank
 agreement (a one-off read on the checked items, not committed, so not quoted), which would fit
 triage (sending its least confident items to a stronger rater) rather than labelling; that is not
 pursued now.
+
+### The SESOI stays at 0.01, justified by cost-benefit, and stated as what sizes K (2026-09-30)
+
+Audit item 7. Current guidance on justifying a smallest effect of interest (Anvari and Lakens, JESP
+2021; Lakens, Collabra 2022) prefers a practical or cost-benefit argument, anchor or consensus
+methods, and advises against taking the value from effects earlier studies reported. The
+seed-noise origin recorded on 2026-09-22 is withdrawn as a justification.
+
+**Justification.** An organization that adopts the result trains and governs an adapter on its own
+review history. The smallest gain taken to repay that is one more exactly correct refinement per
+hundred review comments: 0.01 in exact match. For context only, not as the anchor: the gains the
+code-refinement literature reports as contributions are larger (CodeReviewer over CodeT5, +5.9
+points on its benchmark, Li et al. FSE 2022), so 0.01 is the conservative end of what the field
+treats as worth reporting, and a larger value would make K smaller (K scales with 1/xi^2, and at
+0.02 OpenStack's K falls to the floor of 10).
+
+**What it decides.** Through `XI = SESOI`, it sets K, the number of runs at which two independent
+draws of partitions agree within it with probability about 0.95. Beside each cell it is reported
+and decides no verdict. The earlier comment that it "decides nothing" was wrong and is corrected
+in `decomposition.py`; the manuscript states that it sizes K.
+
+### Positioning against the 2025-2026 literature (2026-09-30)
+
+A sweep of federated fine-tuning for software engineering, organization-scale adaptation and
+federated LoRA privacy, each record checked on arXiv. What it changes:
+
+- **The nearest federated SE studies use synthetic organizations.** Federated program repair
+  (TOSEM, arXiv:2412.01072) partitions one dataset by Dirichlet draws over code features, runs six
+  models, and reports no inferential test and no privacy attack; multi-task federated code review
+  (arXiv:2412.15676) and federated code summarization (JSS 2026) likewise split public datasets.
+  P4's organizations are real review cultures on permitted hosts, read over repeated partitions
+  with a registered interval and power; RQ2 evaluates attacks and defences.
+- **Organization-scale adaptation is measured without an ablation.** Gemini for Google
+  (arXiv:2605.16517) raised hunk acceptance 4.49% in a blind A/B test with 29,000 developers; its
+  full text reports no analysis separating internal conventions from general ability, only a
+  qualitative note on build rules and imports. That separation is what RQ1's decomposition does;
+  cited in the Stage 1 background.
+- **RQ2's attack family was uncited**: source inference (Hu et al., TDSC 2024). FedAS-LoRA and
+  LA-LoRA are placed without new cuts. A second model family is added as an exploratory item.
+  All three are in ROADMAP Plan F.
 
 ### LineageOS's 57 dropped changes were withdrawn from the host, not failed requests (2026-10-01)
 
@@ -6751,3 +7112,34 @@ not arithmetic, and would need its own trial at the bound first.
 Seconds per step are for the GPU alone at fixed lengths. A real step averages over the corpus's
 length distribution, so a job's `--time` is sized from its own logged steps, not from this table.
 
+
+### OpenStack's simulation on the twelve-month window: two-cell bounds +0.0248 and +0.0234 (2026-10-03)
+
+`partition-sensitivity-openstack.json`, SPORC job 21794711 (CPU only, pinned at 89753ef), in
+place of TIGRIS job 210563, which was cancelled when the TIGRIS queue slipped. It replaces the
+artifact of 2026-09-30, which ran on the ten-month 1,635-change window at 300 trials per step.
+Its placebo input is read from the cluster data root; that file, redacted, is byte-identical to the
+committed `rq1-placebo-openstack-v3.json`. 1,000 studies per power step and 4,000 null studies,
+K = 24, N = 1,850, and the twelve-month projection (2,017.6 changes, simulated at 2,017, rounded
+down), with `sigma_run` calibrated on the pilot's 206 changes:
+
+| spread point | spread | sigma_run | FP 97.5% | FP 95% | detects 97.5% / 95%, 2 cells | null bounded (97.5%, 2 cells) | reproducibility failure |
+|---|---|---|---|---|---|---|---|
+| pilot 90% lower | 0.0118 | 0.0085 | 0.0125 | 0.02325 | +0.0220 / +0.0202 | 0.991 | 0.000 |
+| pilot estimate | 0.0140 | 0.0111 | 0.0125 | 0.0235 | +0.0232 / +0.0210 | 0.991 | 0.003 |
+| sizing bound (90% upper) | 0.0177 | 0.0152 | 0.012 | 0.0255 | +0.0248 / +0.0234 | 0.991 | 0.022 |
+| pilot 99% upper | 0.0215 | 0.0195 | 0.01075 | 0.02575 | +0.0274 / +0.0256 | 0.991 | 0.077 |
+
+**The false-positive rate sits at or within Monte Carlo error of nominal at every point**
+(0.01075 to 0.0125 against 0.0125, 0.02325 to 0.02575 against 0.025, Monte Carlo errors 0.0018
+and 0.0025 over 4,000 null studies). **Reproducibility holds at the spread K was sized on**
+(0.022 against beta = 0.05) and fails past it (0.077 at the 99% bound), as sizing at a 90% bound
+intends.
+
+**Read under the registered rule at two cells**, the count once Wikimedia's admission lands:
+OpenStack's bounds are **+0.0248 at 97.5% and +0.0234 at 95%**, each cell at power 0.9747. The
+one- and three-cell bounds are in the artifact (`by_cells`). Against the replaced artifact
+(+0.0239 and +0.0223 at a per-cell power of 0.928) the bounds rise by about 0.001; the two runs
+differ in per-cell power, window size, trials and resamples, and the rise is within the replaced
+run's bisection resolution, so no one cause is read from it. `registered-decisions.md` and the
+Stage 1 sample-size paragraph take OpenStack's figures from this artifact.

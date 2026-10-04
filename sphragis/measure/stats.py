@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from math import sumprod
 from statistics import fmean
 
 Estimator = Callable[[Sequence["Cluster"]], float]
@@ -303,6 +304,126 @@ def stratified_crossed_draws(
         for name in names
     }
     return estimates, draws
+
+
+PartitionRun = Sequence[Sequence[Cluster]]
+
+
+def _partition_table(
+    runs: Sequence[PartitionRun], *, min_clusters: int
+) -> tuple[list[str], list[dict[str, tuple[int, float, int]]]]:
+    """Every run's (half, summed difference, examples) per change, over one shared change set."""
+    if len(runs) < 2:
+        raise ValueError(f"a crossed bootstrap needs at least two runs, got {len(runs)}")
+    tables: list[dict[str, tuple[int, float, int]]] = []
+    shape: dict[str, int] | None = None
+    for position, run in enumerate(runs):
+        if len(run) != 2:
+            raise ValueError(f"run {position} has {len(run)} halves, expected 2")
+        table: dict[str, tuple[int, float, int]] = {}
+        for half, clusters in enumerate(run):
+            if len(clusters) < min_clusters:
+                raise ValueError(
+                    f"run {position} half {half} has {len(clusters)} clusters, below the floor "
+                    f"of {min_clusters}"
+                )
+            for c in clusters:
+                if c.change_id in table:
+                    raise ValueError(
+                        f"change {c.change_id!r} appears in both halves of run {position}"
+                        if table[c.change_id][0] != half
+                        else f"change {c.change_id!r} appears twice in run {position}"
+                    )
+                if len(c.treatment) != len(c.control):
+                    raise ValueError(f"change {c.change_id!r} has unpaired examples")
+                table[c.change_id] = (half, sum(c.treatment) - sum(c.control), len(c.treatment))
+        sizes = {change: n for change, (_, _, n) in table.items()}
+        if shape is None:
+            shape = sizes
+        elif sizes != shape:
+            raise ValueError(
+                f"run {position} does not score the same changes and examples as run 0; runs "
+                "and changes are crossed only over the identical window"
+            )
+        tables.append(table)
+    return sorted(tables[0]), tables
+
+
+def _equal_halves(table: Mapping[str, tuple[int, float, int]], counts: Mapping[str, int]) -> float:
+    """A run's two halves' pooled differences on weighted changes, weighted equally."""
+    num, den = [0.0, 0.0], [0, 0]
+    for change, weight in counts.items():
+        half, difference, examples = table[change]
+        num[half] += weight * difference
+        den[half] += weight * examples
+    return fmean(n / d if d else 0.0 for n, d in zip(num, den, strict=True))
+
+
+def equal_halves(run: PartitionRun) -> float:
+    """A partition run's contrast: each half pooled over its examples, halves weighted equally."""
+    return fmean(paired_difference(half) for half in run)
+
+
+def partitioned_crossed_draws(
+    runs: Sequence[PartitionRun],
+    *,
+    seed: int,
+    resamples: int = 10_000,
+    min_clusters: int = MIN_CLUSTERS,
+) -> tuple[float, list[float]]:
+    """H1 over repeated partitions: the estimate and its crossed runs-by-changes draws.
+
+    Each run is one partition of an organization's projects, `[half][cluster]`, each cluster
+    the half's own adapter against its sibling on one held-out change. Every run scores every
+    change, in one half or the other, so runs and changes are crossed: a replicate resamples
+    runs and changes with replacement, applies the one change draw to every run, and averages
+    over runs each run's two halves, each pooled over its examples and weighted equally. Changes
+    are resampled over the organization rather than within each half, since a change moves
+    between halves as the partition does, so a half's size varies across replicates; on one
+    partition this agrees with `stratified_crossed_draws` to first order (the registered
+    partition's five seeds: [+0.0030, +0.0534] against [+0.0028, +0.0532]). Pooled only, the
+    registered estimator.
+    """
+    changes, tables = _partition_table(runs, min_clusters=min_clusters)
+    every = dict.fromkeys(changes, 1)
+    estimate = fmean(_equal_halves(table, every) for table in tables)
+    # Each run's halves as vectors over `changes`, so a replicate is two dot products a half.
+    # Differences and example counts are whole numbers, so every sum is exact and a draw equals
+    # `_equal_halves` on the same counts to the bit.
+    vectors = [
+        [
+            (
+                [float(table[c][1]) if table[c][0] == half else 0.0 for c in changes],
+                [float(table[c][2]) if table[c][0] == half else 0.0 for c in changes],
+            )
+            for half in (0, 1)
+        ]
+        for table in tables
+    ]
+    randrange = random.Random(seed).randrange
+    k, n = len(tables), len(changes)
+    draws: list[float] = []
+    redrawn = 0
+    while len(draws) < resamples:
+        chosen = [randrange(k) for _ in range(k)]
+        weights = [0.0] * n
+        for _ in range(n):
+            weights[randrange(n)] += 1.0
+        contrasts = {}
+        for run in set(chosen):
+            halves = [(sumprod(weights, num), sumprod(weights, den)) for num, den in vectors[run]]
+            if any(den == 0.0 for _, den in halves):
+                break
+            contrasts[run] = fmean(num / den for num, den in halves)
+        else:
+            draws.append(fmean(contrasts[run] for run in chosen))
+            continue
+        # A replicate that leaves a half with no examples has no contrast for it; it is drawn
+        # again, so every draw is conditional on both halves being present.
+        redrawn += 1
+        if redrawn > resamples:
+            raise ValueError("most replicates leave a half empty; the halves are too small")
+    return estimate, draws
 
 
 def percentile_interval(draws: Sequence[float], confidence: float) -> tuple[float, float]:

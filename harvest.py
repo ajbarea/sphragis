@@ -48,29 +48,25 @@ INDEX_PAGE = DOCS / "artifacts.md"
 # window report that also carries them is a pre-refreeze artifact.
 MANIFEST_OS = "datasets/gerrit/openstack/manifest.json"
 MANIFEST_QT = "datasets/gerrit/qt/manifest.json"
-# Corpus v2 as frozen on 2026-09-23, for pages that describe a measurement taken on it.
-MANIFEST_OS_V2 = "datasets/results/manifest-openstack-v2.json"
-
 DEV = f"{RESULTS}/rq1-qtfull-fp32-seeds.json"
 PILOT = f"{RESULTS}/pilot-outcomes.json"
 FP32_PILOT = f"{RESULTS}/rq1-pilot-fp32-pilot.json"
 UNEQUAL = f"{RESULTS}/rq1-pilot.json"
-WINDOW = f"{RESULTS}/window-report-openstack.json"
+WINDOW_V3 = f"{RESULTS}/window-report-openstack-v3.json"
 CONTAMINATION = f"{RESULTS}/contamination-openstack-6mo-with_context-gapk.json"
-SENSITIVITY_POINT = f"{RESULTS}/sensitivity-b0.json"
-SENSITIVITY_UPPER = f"{RESULTS}/sensitivity-b0.0098.json"
 CALIBRATION = f"{RESULTS}/interval-calibration.json"
+CALIBRATION_AVERAGED = f"{RESULTS}/interval-calibration-change-averaged.json"
 INFORMATIVENESS = f"{RESULTS}/cluster-informativeness.json"
 COVERAGE = f"{RESULTS}/crossed-coverage.json"
-SEED_EFFECT_V2 = f"{RESULTS}/seed-effect-placebo-openstack-v2.json"
-SEED_EFFECT_V3 = f"{RESULTS}/seed-effect-placebo-openstack-v3.json"
-SENSITIVITY_V3 = f"{RESULTS}/decomposition-sensitivity-v3.json"
-SENSITIVITY_V3_UPPER = f"{RESULTS}/decomposition-sensitivity-v3-b0.0376.json"
+PARTITION_PILOT = f"{RESULTS}/partition-pilot-openstack.json"
+PARTITION_PILOT_K24 = f"{RESULTS}/partition-pilot-openstack-k24.json"
+K24_975 = ["intervals", "0.975"]
+K24_95 = ["intervals", "0.95"]
+PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
 
 DEV_CROSSED = ["readings", "pooled", "crossed", "per_org"]
-DEV_AVERAGED = ["readings", "change_averaged", "crossed", "per_org"]
 NON_DEGENERACY = ["outcome_neutral", "checks", "#name=non_degeneracy", "evidence", "exact_match"]
 QT_CONTROL = ["outcome_neutral", "checks", "#name=positive_control:qt|s1", "evidence", "interval"]
 NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
@@ -80,7 +76,8 @@ NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
 #: rate), `exact` (the literal must equal the value, not round to it), `text` (the value is
 #: a word rather than a number, and with `code` is counted only where the page sets it as
 #: inline code, because "pass" and "mixed" are also ordinary words on a page about a gate),
-#: or `occurrences` (the literal is quoted more than once).
+#: `occurrences` (the literal is quoted more than once), or `reduce`, which with `min:a/b` or
+#: `max:a/b` reads `a/b` under every entry at the path and takes the extreme.
 CLAIMS: list[tuple[Any, ...]] = [
     # ---- protocol.md: the corpus, and where the dev-window reading stands ----
     ("corpus_os", "protocol.md", "5,053", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
@@ -102,41 +99,12 @@ CLAIMS: list[tuple[Any, ...]] = [
         ["hashes", "test"],
         {"text": True, "occurrences": 2},
     ),
-    ("dev_os", "protocol.md", "+0.0230", DEV, [*DEV_CROSSED, "openstack", "estimate"]),
-    (
-        "dev_os_low",
-        "protocol.md",
-        "+0.0000",
-        DEV,
-        [*DEV_CROSSED, "openstack", "low"],
-        {"exact": True},
-    ),
-    ("dev_os_high", "protocol.md", "+0.0457", DEV, [*DEV_CROSSED, "openstack", "high"]),
-    ("dev_qt", "protocol.md", "+0.0316", DEV, [*DEV_CROSSED, "qt", "estimate"]),
-    ("dev_qt_low", "protocol.md", "+0.0089", DEV, [*DEV_CROSSED, "qt", "low"]),
-    ("dev_qt_high", "protocol.md", "+0.0567", DEV, [*DEV_CROSSED, "qt", "high"]),
-    (
-        "dev_verdict",
-        "protocol.md",
-        "mixed",
-        DEV,
-        [*DEV_CROSSED[:-1], "verdict"],
-        {"text": True, "code": True},
-    ),
-    (
-        "sensitivity_low",
-        "protocol.md",
-        "0.0129",
-        SENSITIVITY_POINT,
-        ["organizations", "qt", "by_seeds", "3", "minimum_detectable_effect"],
-    ),
-    (
-        "sensitivity_high",
-        "protocol.md",
-        "0.0235",
-        SENSITIVITY_UPPER,
-        ["organizations", "openstack", "by_seeds", "3", "minimum_detectable_effect"],
-    ),
+    ("dev_changes", "protocol.md", "206", PARTITION_PILOT_K24, ["changes"]),
+    ("dev_h1", "protocol.md", "+0.0049", PARTITION_PILOT_K24, ["estimate"], {"occurrences": 2}),
+    ("dev_h1_975_low", "protocol.md", "-0.0088", PARTITION_PILOT_K24, [*K24_975, "low"]),
+    ("dev_h1_975_high", "protocol.md", "+0.0185", PARTITION_PILOT_K24, [*K24_975, "high"]),
+    ("dev_h1_95_low", "protocol.md", "-0.0073", PARTITION_PILOT_K24, [*K24_95, "low"]),
+    ("dev_h1_95_high", "protocol.md", "+0.0166", PARTITION_PILOT_K24, [*K24_95, "high"]),
     # ---- registered-decisions.md ----
     (
         "rd_cluster_r_os",
@@ -153,26 +121,32 @@ CLAIMS: list[tuple[Any, ...]] = [
         ["summary", "qt", "correlation_median"],
     ),
     (
-        "rd_averaged_verdict",
+        "rd_pooled_fp_45",
         "registered-decisions.md",
-        "pass",
-        DEV,
-        [*DEV_AVERAGED[:-1], "verdict"],
-        {"text": True, "code": True},
+        "0.0575",
+        CALIBRATION,
+        ["ladder", "45", "false_positive_rate"],
     ),
     (
-        "rd_averaged_os",
+        "rd_pooled_fp_91",
         "registered-decisions.md",
-        "+0.0380",
-        DEV,
-        [*DEV_AVERAGED, "openstack", "estimate"],
+        "0.0480",
+        CALIBRATION,
+        ["ladder", "91", "false_positive_rate"],
     ),
     (
-        "rd_averaged_qt",
+        "rd_averaged_fp_45",
         "registered-decisions.md",
-        "+0.0334",
-        DEV,
-        [*DEV_AVERAGED, "qt", "estimate"],
+        "0.0638",
+        CALIBRATION_AVERAGED,
+        ["ladder", "45", "false_positive_rate"],
+    ),
+    (
+        "rd_averaged_fp_91",
+        "registered-decisions.md",
+        "0.0555",
+        CALIBRATION_AVERAGED,
+        ["ladder", "91", "false_positive_rate"],
     ),
     (
         "rd_boundary_qt",
@@ -230,8 +204,8 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_leak_07",
         "registered-decisions.md",
-        "1.06",
-        WINDOW,
+        "0.97",
+        WINDOW_V3,
         [*NEAR_DUPLICATE, "0.7", "rate"],
         {"scale": 100},
     ),
@@ -239,13 +213,10 @@ CLAIMS: list[tuple[Any, ...]] = [
         "rd_leak_08",
         "registered-decisions.md",
         "0.00",
-        WINDOW,
+        WINDOW_V3,
         [*NEAR_DUPLICATE, "0.8", "rate"],
         {"scale": 100},
     ),
-    ("rd_seed_effect_v2", "registered-decisions.md", "0.0116", SEED_EFFECT_V2, ["sigma_b"]),
-    ("rd_seed_effect", "registered-decisions.md", "0.0077", SEED_EFFECT_V3, ["sigma_b"]),
-    ("rd_seed_bound", "registered-decisions.md", "0.0376", SEED_EFFECT_V3, ["sigma_b_upper_95"]),
     (
         "rd_coverage_median",
         "registered-decisions.md",
@@ -262,34 +233,75 @@ CLAIMS: list[tuple[Any, ...]] = [
         ["cells", "#seeds=3,sigma_b=0.02"],
         {"reduce": "add:crossed_above+crossed_below"},
     ),
-    ("rd_power", "registered-decisions.md", "0.928", SENSITIVITY_V3, ["target_marginal_power"]),
     (
-        "rd_sensitivity_os_975",
+        "rd_partition_fp_low",
         "registered-decisions.md",
-        "+0.0246",
-        SENSITIVITY_V3,
-        ["cells", "openstack", "by_level", "0.975", "minimum_detectable_effect"],
+        "0.011",
+        PARTITION_SENSITIVITY,
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
-        "rd_sensitivity_os_95",
+        "rd_partition_fp_high",
         "registered-decisions.md",
-        "+0.0210",
-        SENSITIVITY_V3,
-        ["cells", "openstack", "by_level", "0.95", "minimum_detectable_effect"],
+        "0.0125",
+        PARTITION_SENSITIVITY,
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
     ),
     (
-        "rd_sensitivity_os_975_upper",
+        "rd_partition_fp_nominal",
         "registered-decisions.md",
-        "+0.0488",
-        SENSITIVITY_V3_UPPER,
-        ["cells", "openstack", "by_level", "0.975", "minimum_detectable_effect"],
+        "0.0125",
+        PARTITION_SENSITIVITY,
+        ["levels", "0"],
+        {"reduce": "one_sided", "occurrences": 2},
+    ),
+    ("rd_partition_sd", "registered-decisions.md", "0.0140", PARTITION_PILOT, ["sizing", "sd"]),
+    (
+        "rd_partition_k",
+        "registered-decisions.md",
+        "24",
+        PARTITION_PILOT,
+        ["sizing", "runs"],
+        {"occurrences": 2},
     ),
     (
-        "rd_sensitivity_os_95_upper",
+        "rd_cell_power",
         "registered-decisions.md",
-        "+0.0450",
-        SENSITIVITY_V3_UPPER,
-        ["cells", "openstack", "by_level", "0.95", "minimum_detectable_effect"],
+        "0.9747",
+        PARTITION_SENSITIVITY,
+        ["cell_power", "2"],
+    ),
+    (
+        "rd_partition_mde_975",
+        "registered-decisions.md",
+        "+0.0248",
+        PARTITION_SENSITIVITY,
+        [
+            "by_target",
+            "sizing_bound_90",
+            "by_level",
+            "0.975",
+            "by_cells",
+            "2",
+            "minimum_detectable_effect",
+        ],
+    ),
+    (
+        "rd_partition_mde_95",
+        "registered-decisions.md",
+        "+0.0234",
+        PARTITION_SENSITIVITY,
+        [
+            "by_target",
+            "sizing_bound_90",
+            "by_level",
+            "0.95",
+            "by_cells",
+            "2",
+            "minimum_detectable_effect",
+        ],
     ),
     # ---- outcome-neutral.md ----
     (
@@ -331,28 +343,27 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_leak_07",
         "outcome-neutral.md",
-        "1.06",
-        WINDOW,
+        "0.97",
+        WINDOW_V3,
         [*NEAR_DUPLICATE, "0.7", "rate"],
         {"scale": 100},
     ),
     (
         "on_leak_06",
         "outcome-neutral.md",
-        "1.42",
-        WINDOW,
+        "1.36",
+        WINDOW_V3,
         [*NEAR_DUPLICATE, "0.6", "rate"],
         {"scale": 100},
     ),
     (
         "on_leak_05",
         "outcome-neutral.md",
-        "1.77",
-        WINDOW,
+        "1.75",
+        WINDOW_V3,
         [*NEAR_DUPLICATE, "0.5", "rate"],
         {"scale": 100},
     ),
-    ("on_corpus", "outcome-neutral.md", "5,487", MANIFEST_OS_V2, ["counts"], {"reduce": "sum"}),
     (
         "on_marker_a",
         "outcome-neutral.md",
@@ -376,20 +387,28 @@ CLAIMS: list[tuple[Any, ...]] = [
         {"text": True, "code": True},
     ),
     (
-        "on_fpr_19",
+        "on_partition_fp_low",
         "outcome-neutral.md",
-        "6.0",
-        CALIBRATION,
-        ["ladder", "19", "false_positive_rate"],
-        {"scale": 100},
+        "0.011",
+        PARTITION_SENSITIVITY,
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.975"},
     ),
     (
-        "on_fpr_91",
+        "on_partition_fp_high",
         "outcome-neutral.md",
-        "4.8",
-        CALIBRATION,
-        ["ladder", "91", "false_positive_rate"],
-        {"scale": 100},
+        "0.0125",
+        PARTITION_SENSITIVITY,
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
+    ),
+    (
+        "on_partition_fp_nominal",
+        "outcome-neutral.md",
+        "0.0125",
+        PARTITION_SENSITIVITY,
+        ["levels", "0"],
+        {"reduce": "one_sided", "occurrences": 2},
     ),
 ]
 
@@ -437,7 +456,28 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
         return data, None
 
     reduce = options.get("reduce")
-    if reduce == "sum":
+    if reduce and reduce.split(":", 1)[0] in ("min", "max"):
+        # A range quoted over several entries (spread points, say), checked against its true
+        # extremes so that a regenerated artifact moving the extreme cannot pass unnoticed.
+        kind, _, sub = reduce.partition(":")
+        where = f"{'.'.join(path)} in {artifact}"
+        if not isinstance(data, (dict, list)):
+            return None, f"{where} is {type(data).__name__}, not entries to reduce"
+        values = []
+        for entry in data.values() if isinstance(data, dict) else data:
+            try:
+                for part in sub.split("/"):
+                    entry = step(entry, part)
+            except (KeyError, IndexError, TypeError, ValueError) as error:
+                return None, f"{sub} does not resolve under {where} ({error})"
+            # NaN would be skipped by min and max unless it came first.
+            if isinstance(entry, bool) or not isinstance(entry, (int, float)) or entry != entry:
+                return None, f"{sub} under {where} is {entry!r}, not a number"
+            values.append(entry)
+        if not values:
+            return None, f"{where} has no entries to reduce"
+        data = min(values) if kind == "min" else max(values)
+    elif reduce == "sum":
         # A window count table quoted as its total.
         data = sum(data.values())
     elif reduce and reduce.startswith("add:"):
@@ -447,6 +487,13 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
             data = sum(data[field] for field in fields)
         except (KeyError, TypeError) as error:
             return None, f"{'.'.join(path)} in {artifact} cannot add {fields} ({error})"
+    elif reduce == "one_sided":
+        # A two-sided confidence level quoted as its one-sided nominal rate, (1 - level) / 2.
+        if isinstance(data, bool) or not isinstance(data, (int, float)) or not 0 < data < 1:
+            return None, f"{'.'.join(path)} in {artifact} is {data!r}, not a confidence level"
+        data = (1 - data) / 2
+    elif reduce:
+        return None, f"unknown reduce {reduce!r} for {'.'.join(path)} in {artifact}"
     # bool is an int in Python, and a serialization regression writing true where a bound
     # belongs would otherwise verify as 0.0 against a "+0.0000" literal.
     if isinstance(data, bool) or not isinstance(data, (int, float)):

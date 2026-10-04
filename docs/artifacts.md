@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 192 artifacts under
-47 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 226 artifacts under
+52 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -35,6 +35,14 @@ Each client update as a short vector, so defences can be simulated honestly.
 | `client-vectors-cpp-256-c256.npz` | `client-vectors-cpp-early-c128-p2.npz` |
 | `client-vectors-cpp-early-c128.npz` | `client-vectors-cpp-early.npz` |
 | `client-vectors-cpp-rebuilt-c128.npz` | `client-vectors.npz` |
+
+## `scripts/admissible_partitions.py`
+
+The ordered list of admissible partitions H1's runs are drawn from, fixed before any run.
+
+| artifact | |
+|---|---|
+| `admissible-partitions-openstack.json` |  |
 
 ## `scripts/aggregate_attack.py`
 
@@ -243,7 +251,7 @@ False-positive rate of the registered pairs cluster bootstrap, under a true null
 
 | artifact | |
 |---|---|
-| `interval-calibration.json` |  |
+| `interval-calibration-change-averaged.json` | `interval-calibration.json` |
 
 ## `scripts/label_audit_agreement.py`
 
@@ -293,6 +301,23 @@ The NoteDb git route against the REST-built AOSP corpus: enumeration, fields and
 |---|---|
 | `notedb-parity-aosp.json` |  |
 
+## `scripts/partition_pilot.py`
+
+H1 over repeated partitions on real runs: the cell, the number of runs, and the runs' order.
+
+| artifact | |
+|---|---|
+| `partition-pilot-openstack-k24.json` | `partition-pilot-openstack-stopping.json` |
+| `partition-pilot-openstack.json` |  |
+
+## `scripts/partition_sensitivity.py`
+
+Operating characteristics of H1 over repeated partitions at the registered K, by simulation.
+
+| artifact | |
+|---|---|
+| `partition-sensitivity-openstack-stopping.json` | `partition-sensitivity-openstack.json` |
+
 ## `scripts/partition_variance.py`
 
 How much of H1's reading is the partition: alternative balanced splits against the seed effect.
@@ -315,6 +340,18 @@ Two pseudo-organizations built from one organization's own projects.
 
 | artifact | |
 |---|---|
+| `rq1-partition-openstack-p10-s8-n1850.json` | `rq1-partition-openstack-p11-s9-n1850.json` |
+| `rq1-partition-openstack-p12-s10-n1850.json` | `rq1-partition-openstack-p14-s11-n1850.json` |
+| `rq1-partition-openstack-p15-s12-n1850.json` | `rq1-partition-openstack-p17-s13-n1850.json` |
+| `rq1-partition-openstack-p18-s14-n1850.json` | `rq1-partition-openstack-p19-s15-n1850.json` |
+| `rq1-partition-openstack-p2-n1850.json` | `rq1-partition-openstack-p21-s16-n1850.json` |
+| `rq1-partition-openstack-p22-s17-n1850.json` | `rq1-partition-openstack-p23-s18-n1850.json` |
+| `rq1-partition-openstack-p24-s19-n1850.json` | `rq1-partition-openstack-p25-s20-n1850.json` |
+| `rq1-partition-openstack-p26-s21-n1850.json` | `rq1-partition-openstack-p27-s22-n1850.json` |
+| `rq1-partition-openstack-p28-s23-n1850.json` | `rq1-partition-openstack-p3-s2-n1850.json` |
+| `rq1-partition-openstack-p30-s24-n1850.json` | `rq1-partition-openstack-p4-s3-n1850.json` |
+| `rq1-partition-openstack-p5-s4-n1850.json` | `rq1-partition-openstack-p7-s5-n1850.json` |
+| `rq1-partition-openstack-p8-s6-n1850.json` | `rq1-partition-openstack-p9-s7-n1850.json` |
 | `rq1-placebo-openstack-s2.json` | `rq1-placebo-openstack-s3.json` |
 | `rq1-placebo-openstack-seeds.json` | `rq1-placebo-openstack-v2-s2.json` |
 | `rq1-placebo-openstack-v2-s3.json` | `rq1-placebo-openstack-v2-s4.json` |
@@ -336,6 +373,14 @@ Minimum detectable matched-minus-mismatched exact-match difference, from an RQ1 
 | artifact | |
 |---|---|
 | `power-rq1-report-grade.txt` | `power-rq1-windows.txt` |
+
+## `scripts/project_windows.py`
+
+How large will the sealed test window be, and does the capture model predict the dev one?
+
+| artifact | |
+|---|---|
+| `project-windows-openstack-v3.json` |  |
 
 ## `scripts/prompt_format_probe.py`
 
@@ -443,13 +488,22 @@ Would keeping the client-specific subspace local take the house style with it?
 | `subspace-split-cpp-256-c256.json` | `subspace-split-cpp-rebuilt-c128.json` |
 | `subspace-split.json` |  |
 
+## `scripts/training_size.py`
+
+The fixed training size N every adapter trains at, derived from the organization's own splits.
+
+| artifact | |
+|---|---|
+| `training-size-openstack.json` |  |
+
 ## `scripts/window_report.py`
 
 What the collected windows contain, and how much leaks across their boundaries.
 
 | artifact | |
 |---|---|
-| `window-report-openstack.json` | `window-report-qt.json` |
+| `window-report-openstack-v3.json` | `window-report-openstack.json` |
+| `window-report-qt.json` |  |
 
 ## Written by no script this page can find
 

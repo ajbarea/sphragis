@@ -21,6 +21,13 @@ from sphragis.corpus.dedup import jaccard, pair_text, shingles
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import cluster_bootstrap, supports_direction
 
+# Test 4 as registered (registered decisions, "Leakage threshold"): at most 2% of held-out examples
+# near-duplicate a training example at Jaccard 0.7 or above. Not dedup's 0.8: dedup removes every
+# pair at 0.8 across windows, so a check there cannot fail. 2% clears the measured train-into-dev
+# rate at 0.7 (`window-report-openstack-v3.json`).
+LEAKAGE_THRESHOLD = 0.7
+LEAKAGE_MAX_RATE = 0.02
+
 
 @dataclass(frozen=True)
 class Check:
@@ -129,19 +136,26 @@ def leakage_check(
     train: Sequence[Mapping[str, Any]],
     held_out: Sequence[Mapping[str, Any]],
     *,
+    threshold: float,
     max_rate: float,
     label: str,
 ) -> Check:
-    """Test 4: the near-duplicate rate across the train/test boundary is below `max_rate`.
+    """Test 4: the near-duplicate rate across the train/test boundary is at most `max_rate`.
 
-    `max_rate` is fixed in the Stage 1 report; callers pass it rather than inheriting a
-    default, so the threshold that ran is always the one written down.
+    Both are fixed in the Stage 1 report (`LEAKAGE_THRESHOLD`, `LEAKAGE_MAX_RATE`); callers pass
+    them rather than inheriting a default, so the check that ran is always the one written down.
     """
-    rate, hits = near_duplicate_rate(train, held_out)
+    rate, hits = near_duplicate_rate(train, held_out, threshold=threshold)
     return Check(
         f"leakage:{label}",
-        rate < max_rate,
-        {"rate": rate, "max_rate": max_rate, "near_duplicates": len(hits), "examples": hits[:10]},
+        rate <= max_rate,
+        {
+            "rate": rate,
+            "threshold": threshold,
+            "max_rate": max_rate,
+            "near_duplicates": len(hits),
+            "examples": hits[:10],
+        },
     )
 
 

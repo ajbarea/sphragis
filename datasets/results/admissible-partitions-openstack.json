@@ -1,0 +1,1023 @@
+{
+  "org": "openstack",
+  "root": "/home/ajbar/ajsoftworks/sphragis/.claude/worktrees/wm-bots/datasets/gerrit",
+  "size_floor": 1850,
+  "size_floor_source": "datasets/results/training-size-openstack.json: training_size",
+  "language_mix_ceiling": 0.3187417925675669,
+  "reference": "datasets/results/split-criteria-openstack.json",
+  "start": 1,
+  "admissible": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    15,
+    17,
+    18,
+    19,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    30,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    44,
+    45,
+    46,
+    47,
+    49
+  ],
+  "checked": [
+    {
+      "seed": 1,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": false,
+        "language_mix": true
+      },
+      "train_examples": [
+        1791,
+        2215
+      ],
+      "projects": [
+        150,
+        82
+      ],
+      "suffix_total_variation": 0.3047436833023911
+    },
+    {
+      "seed": 2,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2118,
+        1888
+      ],
+      "projects": [
+        133,
+        99
+      ],
+      "suffix_total_variation": 0.2841753893183528
+    },
+    {
+      "seed": 3,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2022,
+        1984
+      ],
+      "projects": [
+        141,
+        91
+      ],
+      "suffix_total_variation": 0.30087634807440733
+    },
+    {
+      "seed": 4,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1856,
+        2150
+      ],
+      "projects": [
+        115,
+        117
+      ],
+      "suffix_total_variation": 0.13708801122694467
+    },
+    {
+      "seed": 5,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2004,
+        2002
+      ],
+      "projects": [
+        102,
+        130
+      ],
+      "suffix_total_variation": 0.27151590924046015
+    },
+    {
+      "seed": 6,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": false,
+        "language_mix": true
+      },
+      "train_examples": [
+        2200,
+        1806
+      ],
+      "projects": [
+        135,
+        97
+      ],
+      "suffix_total_variation": 0.3064008859357697
+    },
+    {
+      "seed": 7,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1953,
+        2053
+      ],
+      "projects": [
+        117,
+        115
+      ],
+      "suffix_total_variation": 0.21040057523252848
+    },
+    {
+      "seed": 8,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2011,
+        1995
+      ],
+      "projects": [
+        159,
+        73
+      ],
+      "suffix_total_variation": 0.20922968784467386
+    },
+    {
+      "seed": 9,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1955,
+        2051
+      ],
+      "projects": [
+        153,
+        79
+      ],
+      "suffix_total_variation": 0.1967566192525385
+    },
+    {
+      "seed": 10,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2004,
+        2002
+      ],
+      "projects": [
+        109,
+        123
+      ],
+      "suffix_total_variation": 0.31821571641930924
+    },
+    {
+      "seed": 11,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2012,
+        1994
+      ],
+      "projects": [
+        103,
+        129
+      ],
+      "suffix_total_variation": 0.2451290252467143
+    },
+    {
+      "seed": 12,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2006,
+        2000
+      ],
+      "projects": [
+        118,
+        114
+      ],
+      "suffix_total_variation": 0.26689730807577267
+    },
+    {
+      "seed": 13,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        1963,
+        2043
+      ],
+      "projects": [
+        106,
+        126
+      ],
+      "suffix_total_variation": 0.34271242658791157
+    },
+    {
+      "seed": 14,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2039,
+        1967
+      ],
+      "projects": [
+        73,
+        159
+      ],
+      "suffix_total_variation": 0.21990105001280322
+    },
+    {
+      "seed": 15,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1989,
+        2017
+      ],
+      "projects": [
+        110,
+        122
+      ],
+      "suffix_total_variation": 0.23481777440773036
+    },
+    {
+      "seed": 16,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        1993,
+        2013
+      ],
+      "projects": [
+        103,
+        129
+      ],
+      "suffix_total_variation": 0.3258513590412943
+    },
+    {
+      "seed": 17,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1984,
+        2022
+      ],
+      "projects": [
+        107,
+        125
+      ],
+      "suffix_total_variation": 0.244233292651798
+    },
+    {
+      "seed": 18,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1882,
+        2124
+      ],
+      "projects": [
+        145,
+        87
+      ],
+      "suffix_total_variation": 0.20122640697579008
+    },
+    {
+      "seed": 19,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2008,
+        1998
+      ],
+      "projects": [
+        142,
+        90
+      ],
+      "suffix_total_variation": 0.2622757219370765
+    },
+    {
+      "seed": 20,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2056,
+        1950
+      ],
+      "projects": [
+        96,
+        136
+      ],
+      "suffix_total_variation": 0.3479562007383019
+    },
+    {
+      "seed": 21,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2000,
+        2006
+      ],
+      "projects": [
+        147,
+        85
+      ],
+      "suffix_total_variation": 0.19415702891326023
+    },
+    {
+      "seed": 22,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1996,
+        2010
+      ],
+      "projects": [
+        103,
+        129
+      ],
+      "suffix_total_variation": 0.23893109602289156
+    },
+    {
+      "seed": 23,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1966,
+        2040
+      ],
+      "projects": [
+        130,
+        102
+      ],
+      "suffix_total_variation": 0.3054280613567909
+    },
+    {
+      "seed": 24,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2000,
+        2006
+      ],
+      "projects": [
+        113,
+        119
+      ],
+      "suffix_total_variation": 0.2921216350947159
+    },
+    {
+      "seed": 25,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1991,
+        2015
+      ],
+      "projects": [
+        138,
+        94
+      ],
+      "suffix_total_variation": 0.23731980014282636
+    },
+    {
+      "seed": 26,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1900,
+        2106
+      ],
+      "projects": [
+        120,
+        112
+      ],
+      "suffix_total_variation": 0.21631478982356178
+    },
+    {
+      "seed": 27,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2084,
+        1922
+      ],
+      "projects": [
+        81,
+        151
+      ],
+      "suffix_total_variation": 0.18576748468585785
+    },
+    {
+      "seed": 28,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2120,
+        1886
+      ],
+      "projects": [
+        103,
+        129
+      ],
+      "suffix_total_variation": 0.2768067588387123
+    },
+    {
+      "seed": 29,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2025,
+        1981
+      ],
+      "projects": [
+        117,
+        115
+      ],
+      "suffix_total_variation": 0.37440300135235355
+    },
+    {
+      "seed": 30,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2009,
+        1997
+      ],
+      "projects": [
+        88,
+        144
+      ],
+      "suffix_total_variation": 0.2010569363253442
+    },
+    {
+      "seed": 31,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        1854,
+        2152
+      ],
+      "projects": [
+        105,
+        127
+      ],
+      "suffix_total_variation": 0.32055477356303863
+    },
+    {
+      "seed": 32,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2078,
+        1928
+      ],
+      "projects": [
+        94,
+        138
+      ],
+      "suffix_total_variation": 0.19275336562845702
+    },
+    {
+      "seed": 33,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2000,
+        2006
+      ],
+      "projects": [
+        134,
+        98
+      ],
+      "suffix_total_variation": 0.19163010967098704
+    },
+    {
+      "seed": 34,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2025,
+        1981
+      ],
+      "projects": [
+        65,
+        167
+      ],
+      "suffix_total_variation": 0.19474015492861194
+    },
+    {
+      "seed": 35,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1960,
+        2046
+      ],
+      "projects": [
+        98,
+        134
+      ],
+      "suffix_total_variation": 0.2693094539868733
+    },
+    {
+      "seed": 36,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1952,
+        2054
+      ],
+      "projects": [
+        141,
+        91
+      ],
+      "suffix_total_variation": 0.22870658211885647
+    },
+    {
+      "seed": 37,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1995,
+        2011
+      ],
+      "projects": [
+        110,
+        122
+      ],
+      "suffix_total_variation": 0.29788244853805323
+    },
+    {
+      "seed": 38,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1995,
+        2011
+      ],
+      "projects": [
+        72,
+        160
+      ],
+      "suffix_total_variation": 0.3065672635093452
+    },
+    {
+      "seed": 39,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1985,
+        2021
+      ],
+      "projects": [
+        101,
+        131
+      ],
+      "suffix_total_variation": 0.31548638539666
+    },
+    {
+      "seed": 40,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2127,
+        1879
+      ],
+      "projects": [
+        100,
+        132
+      ],
+      "suffix_total_variation": 0.1650249097177549
+    },
+    {
+      "seed": 41,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1873,
+        2133
+      ],
+      "projects": [
+        134,
+        98
+      ],
+      "suffix_total_variation": 0.27617969872661796
+    },
+    {
+      "seed": 42,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2011,
+        1995
+      ],
+      "projects": [
+        105,
+        127
+      ],
+      "suffix_total_variation": 0.2927540133277001
+    },
+    {
+      "seed": 43,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": false,
+        "language_mix": true
+      },
+      "train_examples": [
+        2200,
+        1806
+      ],
+      "projects": [
+        105,
+        127
+      ],
+      "suffix_total_variation": 0.2193179301318836
+    },
+    {
+      "seed": 44,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2001,
+        2005
+      ],
+      "projects": [
+        125,
+        107
+      ],
+      "suffix_total_variation": 0.2699455758405087
+    },
+    {
+      "seed": 45,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2055,
+        1951
+      ],
+      "projects": [
+        140,
+        92
+      ],
+      "suffix_total_variation": 0.1603851540354251
+    },
+    {
+      "seed": 46,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        1887,
+        2119
+      ],
+      "projects": [
+        136,
+        96
+      ],
+      "suffix_total_variation": 0.15243714413689155
+    },
+    {
+      "seed": 47,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2005,
+        2001
+      ],
+      "projects": [
+        114,
+        118
+      ],
+      "suffix_total_variation": 0.23425494235425923
+    },
+    {
+      "seed": 48,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        2154,
+        1852
+      ],
+      "projects": [
+        115,
+        117
+      ],
+      "suffix_total_variation": 0.3449321268783177
+    },
+    {
+      "seed": 49,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        2003,
+        2003
+      ],
+      "projects": [
+        106,
+        126
+      ],
+      "suffix_total_variation": 0.23914128806789817
+    }
+  ],
+  "dedup_org": {
+    "exact": 249,
+    "near_duplicate": 179,
+    "boilerplate": 0,
+    "shared_change_id": 0
+  },
+  "excluded_projects": [
+    "openstack/charm-neutron-api-plugin-ovn",
+    "openstack/charm-nova-cloud-controller",
+    "openstack/charm-nova-compute-nvidia-vgpu",
+    "openstack/cinder-tempest-plugin",
+    "openstack/debtcollector",
+    "openstack/designate-tempest-plugin",
+    "openstack/grenade",
+    "openstack/kayobe-config-dev",
+    "openstack/keystone",
+    "openstack/mistral",
+    "openstack/mistral-extra",
+    "openstack/neutron-fwaas",
+    "openstack/openstack-ansible-os_octavia",
+    "openstack/oslo.policy",
+    "openstack/puppet-mistral",
+    "openstack/taskflow",
+    "openstack/zaqar",
+    "starlingx/app-kubevirt",
+    "starlingx/election",
+    "starlingx/portieris-armada-app",
+    "x/packstack"
+  ],
+  "provenance": {
+    "generated_at": "2026-09-30T12:35:08.253500+00:00",
+    "git": {
+      "commit": "9602c3a7671aba47f5bf6b98ee239b1650b0b818",
+      "branch": "measure/repeated-partitions"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

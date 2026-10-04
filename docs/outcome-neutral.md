@@ -78,13 +78,15 @@ across the boundary between two windows rather than within one, and the caller p
 threshold rather than inheriting a default, so the threshold that ran is always the one
 written down.
 
-Measured on the complete OpenStack corpus v2 of 5,487 deduplicated examples, train into dev:
+The registered check is 2% at Jaccard 0.7, read train into test and sibling half into evaluated
+half. Measured on OpenStack corpus v3, train into dev, over the dev window's 515 examples
+(`window-report-openstack-v3.json`):
 
 | Jaccard | rate |
 |---|---|
-| 0.7 | 1.06% |
-| 0.6 | 1.42% |
-| 0.5 | 1.77% |
+| 0.7 | 0.97% (5) |
+| 0.6 | 1.36% (7) |
+| 0.5 | 1.75% (9) |
 
 At 0.8 the rate is zero by construction, since dedup removes pairs at that threshold across
 windows as well as within them, so a threshold registered there would be a test that cannot
@@ -113,9 +115,10 @@ gate returns `pass`, so the contrast can see a house style of that size. For sca
 planted convention moves the contrast by about ten times what the two real organizations
 differ by.
 
-**The interval is calibrated.** The bootstrap's own false-positive rate, measured against the
-nominal 5% at the accuracy the gate operates at, is 6.0% at 19 changes and 4.8% at 91. The
-gate is conjunctive, so its own rate sits below either arm's.
+**The interval's error rate is measured.** Simulated over the registered K partitions at
+OpenStack's projected test size, the crossed interval the gate reads has a one-sided
+false-positive rate at the stricter Holm level of 0.011 to 0.0125 against a nominal 0.0125,
+at every run-to-run spread from the pilot's 90% lower bound to its 99% upper bound.
 
 ## Reading the evidence yourself
 

@@ -1,0 +1,147 @@
+{
+  "placebo": "datasets/results/rq1-placebo-openstack-v3.json",
+  "org": "openstack",
+  "planned_changes": 1635,
+  "pilot_changes": 207,
+  "projects": 60,
+  "target_marginal_power": 0.928,
+  "sesoi": 0.01,
+  "xi": 0.01,
+  "k_init": 8,
+  "k_max": 40,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 300,
+  "null_trials": 1000,
+  "resamples": 1000,
+  "redraw": 0.055,
+  "size_floor": 1850,
+  "partitions_pooled": 400,
+  "partition_seeds_tried": 536,
+  "by_sigma_run": {
+    "0.011": {
+      "null_false_positive": {
+        "0.975": 0.02,
+        "0.95": 0.026
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.001
+      },
+      "runs": {
+        "mean": 10.393,
+        "max": 24,
+        "at_cap": 0.0
+      },
+      "reproducibility_failure": 0.046,
+      "by_level": {
+        "0.975": {
+          "lift": 0.032812499999999994,
+          "minimum_detectable_effect": 0.023895959341397863,
+          "null_reads_bounded": 0.963
+        },
+        "0.95": {
+          "lift": 0.030468749999999996,
+          "minimum_detectable_effect": 0.022301537298387106,
+          "null_reads_bounded": 0.964
+        }
+      }
+    },
+    "0.015": {
+      "null_false_positive": {
+        "0.975": 0.017,
+        "0.95": 0.035
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.001
+      },
+      "runs": {
+        "mean": 16.43,
+        "max": 35,
+        "at_cap": 0.0
+      },
+      "reproducibility_failure": 0.073,
+      "by_level": {
+        "0.975": {
+          "lift": 0.032812499999999994,
+          "minimum_detectable_effect": 0.023895959341397863,
+          "null_reads_bounded": 0.944
+        },
+        "0.95": {
+          "lift": 0.030468749999999996,
+          "minimum_detectable_effect": 0.022301537298387106,
+          "null_reads_bounded": 0.949
+        }
+      }
+    },
+    "0.025": {
+      "null_false_positive": {
+        "0.975": 0.014,
+        "0.95": 0.034
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "runs": {
+        "mean": 37.51,
+        "max": 40,
+        "at_cap": 0.764
+      },
+      "reproducibility_failure": 0.09,
+      "by_level": {
+        "0.975": {
+          "lift": 0.03515625,
+          "minimum_detectable_effect": 0.02582850302419356,
+          "null_reads_bounded": 0.964
+        },
+        "0.95": {
+          "lift": 0.032812499999999994,
+          "minimum_detectable_effect": 0.023895959341397863,
+          "null_reads_bounded": 0.964
+        }
+      }
+    },
+    "0.035": {
+      "null_false_positive": {
+        "0.975": 0.012,
+        "0.95": 0.027
+      },
+      "null_reads_absent": {
+        "0.975": 0.0,
+        "0.95": 0.0
+      },
+      "runs": {
+        "mean": 39.86,
+        "max": 40,
+        "at_cap": 0.994
+      },
+      "reproducibility_failure": 0.187,
+      "by_level": {
+        "0.975": {
+          "lift": 0.03984375,
+          "minimum_detectable_effect": 0.029092111895161296,
+          "null_reads_bounded": 0.956
+        },
+        "0.95": {
+          "lift": 0.03515625,
+          "minimum_detectable_effect": 0.02582850302419356,
+          "null_reads_bounded": 0.943
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-09-29T20:45:12.099206+00:00",
+    "git": {
+      "commit": "2cd4184a5530167a8571178acf54e983667e953c",
+      "branch": "measure/repeated-partitions"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
