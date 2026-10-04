@@ -72,11 +72,16 @@ diff conversion against hand-checked hunks; a PR with a force push; a suggestion
 `reviewer_wrote_target`; a bot reviewer reaching `is_service_user`; an AI-authored PR dropped at the
 snapshot; a 404 counted; and the identity scrub on every GitHub field that names a person.
 
-## Open, for AJ
+## Decided (2026-10-04)
 
-- H1 is intersection-union over admitted organizations, so each added cell raises every cell's
-  power target (0.95^(1/k)) and runs. With four to six cells, keep that rule or register a reading
-  per organization with a heterogeneity estimate. Decided before Stage 1 is submitted.
-- Whether GitHub organizations enter Stage 1 as candidates behind Qt and Chromium, or as admitted
-  organizations, depends on whether their corpora are built, split-checked and piloted by
-  2026-11-20.
+The research log entry of this date gives the reasons and sources.
+
+- **H1 stays intersection-union over the admitted Gerrit organizations.** How many organizations
+  show the effect is read beside it by the partial conjunction, and a random-effects summary over
+  every organization read (REML, Hartung-Knapp-Sidik-Jonkman interval, a prediction interval from
+  five organizations, platform as moderator) is reported, neither binding a verdict.
+- **The GitHub organizations are a registered replication on a second platform**, not H1
+  candidates: GitHub's optional, post-commit review would confound a GitHub null with platform,
+  and their cells cannot be powered by Stage 1. Collected in the order Apache, LLVM, .NET,
+  Grafana, each entering when frozen and split-checked at N; K and the bound are fixed per cell
+  before its test window is fetched; read per organization, binding no verdict.

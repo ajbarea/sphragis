@@ -7609,3 +7609,48 @@ one- and three-cell bounds are in the artifact (`by_cells`). Against the replace
 differ in per-cell power, window size, trials and resamples, and the rise is within the replaced
 run's bisection resolution, so no one cause is read from it. `registered-decisions.md` and the
 Stage 1 sample-size paragraph take OpenStack's figures from this artifact.
+
+### Decided: H1 stays intersection-union over the admitted Gerrit organizations; the GitHub organizations are a registered replication on a second platform (2026-10-04)
+
+AJ delegated the route spec's two open questions (highest-quality research, decided from current
+practice). Both are decided before any GitHub organization has a corpus beyond its pilot month and
+before any test window exists.
+
+**1. How H1 reads over more organizations: the intersection-union rule stays.** H1 asks whether
+learned style transfers within the evaluated projects *in every admitted organization*, which is
+the claim a perimeter drawn around an organization needs; an intersection-union test makes it at
+the registered level with no adjustment across cells (Berger 1982). Each added cell raises every
+cell's power target, 0.95^(1/k): 0.9747 at two cells, 0.9830 at three, 0.9873 at four, 0.9915 at
+six, and OpenStack's bound at 97.5% moves from +0.0230 at one cell to +0.0248 at two and +0.0261
+at three (`partition-sensitivity-openstack.json`, `by_cells`). A per-organization reading with a
+heterogeneity estimate was the alternative. With two to four confirmatory cells the between-
+organization variance is not estimable with useful precision: the Cochrane Handbook (6.5,
+November 2024, chapter 10) uses the Hartung-Knapp-Sidik-Jonkman interval only above two studies,
+warns it is overly wide with very few, and recommends prediction intervals from about five.
+So the pass rule is unchanged, and two readings beside it answer the other question, neither
+binding a verdict: the partial conjunction "at least r of k" (registered 2026-10-02), and a
+random-effects summary over every organization read, Gerrit and GitHub, with REML for the
+between-organization variance, an HKSJ interval, a prediction interval from five organizations,
+and platform as its one registered moderator.
+
+**2. The GitHub organizations: a registered replication, not H1 candidates.** Two reasons, either
+sufficient. *Platform.* GitHub review is optional and post-commit, with fewer comments per change
+and more of them on surface improvements than Gerrit's mandatory pre-commit review (Sun, Wu,
+Assunção and Stolee, arXiv:2603.15935, March 2026, on test-code review across both). Inside an
+intersection-union H1, a GitHub null would fail the hypothesis for a reason the design does not
+study. *Power.* Registered reports require a priori power of 0.95 for every proposed hypothesis test
+(the standard adopted 2026-09-30), so each confirmatory cell needs its simulated bound at Stage 1.
+Each GitHub organization has one built pilot month; a corpus, its admissible list, a development
+pilot to fix K and the 72-hour simulation cannot all land by 2026-11-20 (collection runs about two
+hours per organization-month at one client; the TIGRIS GPU queue was two weeks on 2026-10-02).
+Chromium's corpus deadline (2026-10-23) is the precedent for admitting only what is ready.
+
+The replication is registered in Stage 1 as a family with its own procedure, read after the
+confirmatory one. Its organizations are collected in the order Apache, LLVM, .NET, Grafana
+(sizing table above), each entering when its corpus is frozen and its split meets the criteria at
+N = 1,850, with the windows, rules, pass rule, levels and estimand of the Gerrit cells. Each cell's
+K comes from its own development pilot and its bound from its own simulation, both fixed before
+its test window is fetched, so no bound is chosen after the data. Each cell is read and reported
+per organization, with the partial conjunction over the family; the family binds no verdict on H1
+or H2. .NET and Grafana are RQ2's federation members whether or not they reach an H1 cell.
+OpenJDK and HashiCorp stay borderline and are not collected unless RQ2's sizing needs them.

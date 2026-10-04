@@ -101,15 +101,18 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   number and their `reason` text carries `<GERRIT_ACCOUNT_n>`; `scrub` replaces `_account_id`
   values and addresses only. Every refined and built example on disk holds none (checked
   2026-10-01, all four Gerrit corpora); the raw snapshots, untracked and never released, do.
-- [ ] **GitHub organizations as candidates** (sized 2026-10-01, `github-sizing-report.json`): Apache and
+- [ ] **GitHub organizations as a registered replication** (decided 2026-10-04: not H1 candidates;
+  read as their own family, binding no verdict; research log). Collect Apache, LLVM, .NET, Grafana
+  in that order (pilot, train, dev windows), then per organization: admissible list, development
+  pilot for K, sensitivity simulation, all before its test window is fetched. Stage 1 registers the
+  family's procedure. Sized 2026-10-01 (`github-sizing-report.json`): Apache and
   LLVM reach an H1 cell, .NET and Grafana reach RQ2; OpenJDK and HashiCorp borderline. Needs: a GitHub
   collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
   removed; pseudonymised at ingestion); GitHub's own thread-to-example conversion from a built pilot
   month per organization (`scripts/github_conversion.py`; OpenJDK 2024-11 first, the rest borrow
   its span until theirs is built); LLVM's projects defined as its top-level directories before
   its split is read; open access for every resulting publication (GitHub's terms: EMSE's open-access
-  option for Stage 2, plus arXiv); the candidate list in Stage 1 extended behind Qt and Chromium; and
-  a decision on H1 over more cells (intersection-union needs power 0.95^(1/k) a cell).
+  option for Stage 2, plus arXiv); Stage 1's replication-family paragraph.
 - [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
   request, with its projects scoped by the component mapping stage.
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to
@@ -195,8 +198,9 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   `decomposition.py` before the seal): "meaningful" when a cell's lower bound clears the SESOI
   (three-sided testing, Isager and Fitzgerald, AMPPS 2026); the largest r with "at least r of k
   organizations" rejected (partial conjunction, Benjamini and Heller 2008), so a failed
-  every-organization test still says how many show the effect. The intersection-union rule stays
-  the pass rule; this answers AJ's open question on reading H1 over four to six organizations.
+  every-organization test still says how many show the effect; and a random-effects summary over
+  every organization read (REML, HKSJ interval, prediction interval from five, platform as
+  moderator). The intersection-union rule stays the pass rule (decided 2026-10-04).
 - [ ] **Controls**: a helper-substitution plant (a call rewritten into the house helper) piloted
   like the marker plant; a report-only plant near the bound (+0.02 to +0.03) read against the
   simulated power; the placebo rerun once on the repeated-partition pipeline.

@@ -42,6 +42,21 @@ A cell is **supported** when its lower bound is above zero, **bounded** when its
 below the cell's registered detectable effect, and **inconclusive** otherwise. A hypothesis is
 bounded only when every cell is.
 
+The admitted organizations are Gerrit hosts. H1 stays intersection-union however many are
+admitted, each cell sized at 0.95^(1/k); with two to four cells a between-organization variance is
+not estimable with useful precision, so heterogeneity is read beside the rule, not in it (below).
+
+### GitHub organizations: a registered replication on a second platform (2026-10-04)
+
+GitHub review is optional and post-commit, so a GitHub cell inside H1 would let platform decide
+the hypothesis, and no GitHub cell can be powered by Stage 1. The GitHub organizations are
+therefore a family of their own, read after the confirmatory hypotheses: Apache, LLVM, .NET and
+Grafana in that order, each entering when its corpus is frozen and its split meets the criteria at
+the registered N. Each cell takes the Gerrit cells' windows, rules, estimand, pass rule and levels,
+its K from its own development pilot and its bound from its own simulation, both fixed before its
+test window is fetched. Each is reported per organization with the partial conjunction over the
+family, and binds no verdict on H1 or H2.
+
 ### Boundary: strictly above zero
 
 Not a formality. On the unequalized pilot, Qt's pooled estimate is +0.045 with a lower bound
@@ -130,6 +145,11 @@ hypothesis the gate reads, on the same draws, at the same levels:
   95% interval. A positive slope excluding zero says part of the organization effect travels
   with shared reviewers rather than the organization as a whole. Reviewers are read from
   attention sets, per change, not per comment.
+
+- **Across organizations.** A random-effects summary of every organization's H1 estimate, Gerrit
+  and GitHub: REML for the between-organization variance, a Hartung-Knapp-Sidik-Jonkman interval
+  (only above two organizations), a prediction interval from five, and platform as its one
+  moderator (Cochrane Handbook 6.5, chapter 10).
 
 Each is implemented before the seal opens (ROADMAP Plan H); none changes the pass rule, the
 estimand or the levels.

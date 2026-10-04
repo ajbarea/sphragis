@@ -21,12 +21,14 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## Next
 
-1. Fold the rerun numbers in, then merge the stack bottom-up, retargeting each dependent first.
-2. Read each pilot month's conversion, re-derive the candidate table, and open the route's PR.
-3. Decisions that are AJ's: H1 over four to six cells (intersection-union) or per organization;
-   GitHub organizations as Stage 1 candidates behind Qt and Chromium or admitted; purging changes
-   withdrawn from the hosts out of the raw snapshots; GitHub Pro (Student Pack) for required
-   checks on papers `main`.
+1. Merge this route (#82, with the 2026-10-04 decisions); the stack below it is on `main`.
+2. Implement the readings beside the pass rule (meaningful, at least r of k, the random-effects
+   summary across organizations) before the seal.
+3. Collect Apache, then LLVM, as the GitHub replication family (pilot, train and dev windows), then
+   each one's admissible list, development pilot and simulation before its test window.
+4. Rebuild the retrieval comparator (#77) on the registered runner.
+5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
+   GitHub Pro (Student Pack) for required checks on papers `main`.
 
 ## Standing
 
