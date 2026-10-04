@@ -103,6 +103,27 @@ def test_min_max_read_the_extreme_over_every_entry(
         assert error is None and value == pytest.approx(expected)
 
 
+@pytest.mark.parametrize(
+    ("data", "reduce"),
+    [
+        ({"a": {"fp": 0.011}, "b": {"fp": float("nan")}}, "min:fp"),
+        ({"a": {"fp": 0.011}, "b": {"fp": True}}, "max:fp"),
+        ({}, "min:fp"),
+        (0.011, "min:fp"),
+        ([{"fp": 0.011}], "min:x"),
+        ({"a": {"fp": 0.011}}, "mni:fp"),
+    ],
+)
+def test_min_max_refuse_what_is_not_a_set_of_numbers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, data: object, reduce: str
+) -> None:
+    """NaN, a bool, no entries, a scalar, a missing leaf or an unknown reduce: refused."""
+    (tmp_path / "a.json").write_text(json.dumps({"by_target": data}))
+    monkeypatch.setattr(harvest, "ROOT", tmp_path)
+    value, error = harvest.resolve("a.json", ["by_target"], {"reduce": reduce})
+    assert value is None and error
+
+
 def test_no_figure_goes_unasserted() -> None:
     """A figure added to a page without a claim behind it fails here, not silently."""
     assert not harvest.unclaimed(), "\n".join(harvest.unclaimed())
