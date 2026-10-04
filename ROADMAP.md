@@ -197,15 +197,16 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   context, mirrored own, sibling and foreign: (a) the organization's own written conventions
   (OpenStack's HACKING guide, MediaWiki's coding conventions), (b) an AGENTS.md-style file an LLM
   distils from each half's training-window review comments, under a fixed prompt. Same examples,
-  exact match and own-minus-sibling contrast as H1; exploratory. Industry moved from fine-tuned
-  custom models to declared rules files and memory (GitHub retired Copilot custom models in
-  2025), and rules files are measured only on task success, never on conventions (Gloaguen et
-  al., arXiv:2602.11988). If a rules file recovers the own-half advantage, adapters are not
+  exact match and own-minus-sibling contrast as H1; exploratory. Coding agents take conventions
+  from declared rules files and memory, and rules files are measured on task success and
+  instruction following, not on whether code follows a team's conventions (Gloaguen et al.,
+  arXiv:2602.11988v3). If a rules file recovers the own-half advantage, adapters are not
   needed for it; if not, that is the answer to "why train weights".
 - [ ] **Exact-match misses, read by people** (Stage 2, exploratory): a blind human audit of 100
   non-matching predictions per arm (own, sibling, foreign), judging whether each is a correct
-  rewrite. Exact match misses 15.7% to 17.4% of correct refinements (Tufano et al., TSE 2024),
-  and if that share differs by arm the contrast is not conservative; the audit measures it.
+  rewrite. About one exact-match failure in six is a correct rewrite (15.7% and 17.4% of
+  non-matching predictions, Tufano et al., TSE 2024), and if that share differs by arm the
+  contrast is not conservative; the audit measures it.
 - [ ] **Renamed identifiers, descriptive**: the base model's exact match on held-out hunks with
   identifiers renamed against the originals, post-cutoff against pre-cutoff, so code reused
   from older repositories (which a time split cannot see; SrDetection, arXiv:2606.29815) shows
@@ -329,10 +330,11 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   cover.
 - [ ] **Test the claim that aggregation stops source inference** (added 2026-10-04).
   Athanasiou, Jung and Palamidessi (ICLR 2026, arXiv:2603.02017) prove that once only the
-  per-round sum is released, source inference falls to random guessing; their own appendix
-  finds client subsampling restores it. Run Hu et al.'s min-loss attack through the paired
-  subset difference over rounds of varying membership, beside RQ2's aggregate results, and state
-  the assumption their theorem leaves implicit (the server does not learn who took part).
+  per-round sum is released, source inference falls to random guessing; their appendix shows
+  client subsampling restores the attack against undefended training, and the defence is not
+  tested under subsampling. Run Hu et al.'s min-loss attack through the paired subset difference
+  over rounds of varying membership, beside RQ2's aggregate results, and state, as our reading,
+  the assumption the result relies on (the server does not learn who took part).
 - [ ] **User inference as the final-model baseline** (Kandpal et al., EMNLP 2024,
   arXiv:2310.09266): their likelihood-ratio statistic at the project and organization unit on the
   final model, so the paper says how much more the transmitted half reveals than the model does.
