@@ -531,21 +531,22 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
         # A range quoted over several entries (spread points, say), checked against its true
         # extremes so that a regenerated artifact moving the extreme cannot pass unnoticed.
         kind, _, sub = reduce.partition(":")
+        where = f"{'.'.join(path)} in {artifact}"
+        if not isinstance(data, (dict, list)):
+            return None, f"{where} is {type(data).__name__}, not entries to reduce"
         values = []
         for entry in data.values() if isinstance(data, dict) else data:
             try:
                 for part in sub.split("/"):
                     entry = step(entry, part)
-            except (KeyError, IndexError, TypeError) as error:
-                return (
-                    None,
-                    f"{sub} does not resolve under {'.'.join(path)} in {artifact} ({error})",
-                )
-            if isinstance(entry, bool) or not isinstance(entry, (int, float)):
-                return None, f"{sub} under {'.'.join(path)} in {artifact} is not a number"
+            except (KeyError, IndexError, TypeError, ValueError) as error:
+                return None, f"{sub} does not resolve under {where} ({error})"
+            # NaN would be skipped by min and max unless it came first.
+            if isinstance(entry, bool) or not isinstance(entry, (int, float)) or entry != entry:
+                return None, f"{sub} under {where} is {entry!r}, not a number"
             values.append(entry)
         if not values:
-            return None, f"{'.'.join(path)} in {artifact} has no entries to reduce"
+            return None, f"{where} has no entries to reduce"
         data = min(values) if kind == "min" else max(values)
     elif reduce == "sum":
         # A window count table quoted as its total.
@@ -562,6 +563,8 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
         if isinstance(data, bool) or not isinstance(data, (int, float)) or not 0 < data < 1:
             return None, f"{'.'.join(path)} in {artifact} is {data!r}, not a confidence level"
         data = (1 - data) / 2
+    elif reduce:
+        return None, f"unknown reduce {reduce!r} for {'.'.join(path)} in {artifact}"
     # bool is an int in Python, and a serialization regression writing true where a bound
     # belongs would otherwise verify as 0.0 against a "+0.0000" literal.
     if isinstance(data, bool) or not isinstance(data, (int, float)):
