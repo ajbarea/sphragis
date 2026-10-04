@@ -326,7 +326,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.016",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.975"},
+        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
     ),
     (
         "rd_partition_mde_975_wm",
