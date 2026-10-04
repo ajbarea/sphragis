@@ -150,7 +150,8 @@ independently (Owen's pigeonhole bootstrap). On one partition at three seeds and
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
 the registered runs its one-sided false-positive rate at the stricter level is 0.011 to 0.0125
 for OpenStack and 0.014 to 0.016 for Wikimedia, against a nominal 0.0125; Wikimedia's sits above
-nominal at every point, by up to two Monte Carlo errors.
+nominal at every point, by up to two Monte Carlo errors, so $H_1$'s size at that level may reach
+0.016.
 
 ### Number of runs: fixed from the pilot, K = 24 for OpenStack
 
