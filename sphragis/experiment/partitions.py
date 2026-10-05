@@ -17,9 +17,11 @@ from statistics import NormalDist, stdev, variance
 from typing import Any
 
 from sphragis.experiment.across import one_sided_p
+from sphragis.experiment.cells import by_level, level_key
 from sphragis.experiment.decomposition import (
     SESOI,
     cell_verdict,
+    meaningful,
     project_clusters,
     within_sesoi,
 )
@@ -155,16 +157,27 @@ def runs_needed(
     }
 
 
-def pilot_sizing(artifact: Mapping[str, Any], name: str) -> int:
+def pilot_sizing(
+    artifact: Mapping[str, Any], name: str, *, org: str, require_org: bool = False
+) -> int:
     """The K an organization's pilot sized: `sizing.runs` of a reading over all its runs.
 
     Every reading re-derives `sizing` from the runs it read, so a reading at a K taken from
     elsewhere (its `k_source` names that file) carries a `sizing` that is not the organization's
-    K, and a test-window reading's would be sized on confirmatory data; both are refused.
+    K, and a test-window reading's would be sized on confirmatory data; both are refused, as is
+    another organization's pilot. A pilot written before readings recorded their window and
+    organization is a development-window reading; with `require_org` (a test-window read) it must
+    name its organization, so it is regenerated first.
     """
+    if require_org and "org" not in artifact:
+        raise ValueError(f"{name} does not name its organization; rerun it to size a test read")
     source = artifact.get("k_source", "all runs")
     if source != "all runs":
         raise ValueError(f"{name} read its K from {source!r}; K comes from the pilot itself")
+    if artifact.get("window", "development") != "development":
+        raise ValueError(f"{name} read the {artifact['window']} window; K comes from the pilot")
+    if artifact.get("org", org) != org:
+        raise ValueError(f"{name} is {artifact['org']}'s pilot, not {org}'s")
     runs = artifact.get("sizing", {}).get("runs")
     if not isinstance(runs, int):
         raise ValueError(f"{name}: no sizing.runs to read K from")
@@ -185,11 +198,11 @@ def sensitivity_bounds(
     if target not in by_target:
         raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")
     bounds = {}
+    levels_in = by_level(by_target[target]["by_level"])
     for c in levels:
-        by_level = by_target[target]["by_level"]
-        if str(c) not in by_level:
-            raise ValueError(f"no bound at level {c}; the artifact has {sorted(by_level)}")
-        by_cells = by_level[str(c)]["by_cells"]
+        if level_key(c) not in levels_in:
+            raise ValueError(f"no bound at level {c}; the artifact has {sorted(levels_in)}")
+        by_cells = levels_in[level_key(c)]["by_cells"]
         if str(cells) not in by_cells:
             raise ValueError(
                 f"no bound for {cells} H1 cell(s); the artifact has {sorted(by_cells)}"
@@ -260,7 +273,10 @@ def h1_over_partitions(
     left_out = [equal_halves(common_runs([run], org=org, metric=metric)[0][0]) for run in runs[k:]]
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
     intervals = {c: percentile_interval(draws, c) for c in levels}
+    registered = by_level(bounds) if bounds else {}
     return {
+        "org": org,
+        "bootstrap_seed": bootstrap_seed,
         "estimate": estimate,
         "per_run": per_run,
         "runs": k,
@@ -270,15 +286,17 @@ def h1_over_partitions(
         "runs_left_out": left_out,
         "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
         "verdicts": {
-            c: cell_verdict(lo, hi, bound=bounds.get(c) if bounds else None)
+            c: cell_verdict(lo, hi, bound=registered.get(level_key(c)))
             for c, (lo, hi) in intervals.items()
         },
         "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
         # Readings beside the pass rule (registered-decisions.md): a supported cell whose lower
         # bound also clears the SESOI, and the inputs of the readings across organizations.
-        "meaningful": {c: lo > SESOI for c, (lo, hi) in intervals.items()},
+        "meaningful": {c: meaningful(lo) for c, (lo, hi) in intervals.items()},
         "p_one_sided": one_sided_p(draws),
         "bootstrap_se": stdev(draws),
         "resamples": resamples,
+        # The bounds the verdicts were read under, so a gate can check them against its own.
+        "bounds": {c: registered.get(level_key(c)) for c in levels},
         **examples,
     }

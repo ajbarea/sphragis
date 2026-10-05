@@ -58,8 +58,8 @@ and Grafana, in that order, each a member only if its pilot, train and developme
 frozen and its split meets the criteria at the registered N by 2026-11-20; one not ready is
 reported as not collected, and none joins later. Each member is read on H1 only, with the Gerrit
 cells' windows, rules and estimand, on the two-sided 97.5% interval; its K comes from its own
-development pilot and its bound from its own simulation, both fixed before its test window is
-fetched. The family's reported outcome is the partial conjunction r over its members at
+development pilot and its bound from its own simulation, of that one cell at 97.5%, both fixed
+before its test window is fetched. The family's reported outcome is the partial conjunction r over its members at
 one-sided 0.0125, with each cell's verdict; it binds no verdict on H1 or H2.
 
 ### Boundary: strictly above zero
@@ -85,6 +85,15 @@ censoring. At the registered fetch month the twelve-month window carries 0.75 po
 the 10.33 points the dev window carries, so the confirmatory contrast is read on far cleaner
 data than any pre-registration estimate. The window closes before the submission deadline, and
 it was set before any test data existed.
+
+### Reading the test window: everything it is read under is fixed first (registered 2026-10-05)
+
+A test-window read (`scripts/partition_pilot.py`) takes its K from the organization's own
+development pilot (`--sizing`), its bounds from the organization's own simulation at that K
+(`--sensitivity`), outcome-neutral check 5 (`--planted`), and 10,000 resamples at bootstrap seed
+7, the values every development reading used; it refuses to run without any of them. A GitHub
+member's test window is read only after the members are frozen. So nothing the reading depends on
+can be chosen, or redrawn, after its result is seen.
 
 ### Fetch horizon: no earlier than three months after the window's final month
 
@@ -226,8 +235,9 @@ one process, at no measurable cost in wall time.
 
 | decision | enforced by |
 |---|---|
-| cells, pass rule, Holm, verdicts | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
+| cells, pass rule, Holm, verdicts, the replication family | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
 | K, the reading over partitions | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
+| what makes a cell readable, the test-window read's resamples and seed | [`sphragis/experiment/cells.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/cells.py) |
 | readings beside the pass rule, across organizations | [`sphragis/experiment/across.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/across.py) |
 | estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |
 | outcome-neutral checks and the halt rule | [`sphragis/experiment/neutral.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/neutral.py) |

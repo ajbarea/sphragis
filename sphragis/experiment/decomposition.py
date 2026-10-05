@@ -20,12 +20,22 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.halves import suffix
+from sphragis.experiment.across import partial_conjunction
+from sphragis.experiment.cells import (
+    MIN_RESAMPLES,
+    by_level,
+    is_real,
+    level_key,
+    require_readable,
+    require_test_read,
+)
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import require_unique_ids, to_clusters
 from sphragis.experiment.walk import _require_registered_seeds
 from sphragis.measure.stats import (
     Cluster,
     Estimator,
+    one_sided_alpha,
     paired_difference,
     percentile_interval,
     stratified_crossed_draws,
@@ -44,9 +54,6 @@ FAMILY_ALPHA = 0.025
 # The summed contrast is reported, never tested, so it reads the family's own level.
 SUMMED_CONFIDENCE = 0.95
 
-# Below this the percentile ranks of neighbouring Holm levels can coincide.
-MIN_RESAMPLES = 1_000
-
 # Registration order. OpenStack is always admitted; Wikimedia when its split qualifies; Qt and
 # Chromium only with written permission for automated access, Chromium's split qualifying too.
 ORGANIZATIONS = ("openstack", "wikimedia", "qt", "chromium")
@@ -64,17 +71,10 @@ def design(admitted: Iterable[str]) -> dict[str, Any]:
     admitted organization gets one exploratory H2 cell instead, paired with the first other
     admitted organization in registration order: computed and reported, never part of a verdict.
     """
-    admitted_list = list(admitted)
-    unknown = sorted(set(admitted_list) - set(ORGANIZATIONS))
-    if unknown:
-        raise ValueError(f"unknown organization(s) {unknown}; registered are {ORGANIZATIONS}")
-    duplicates = sorted({o for o in admitted_list if admitted_list.count(o) > 1})
-    if duplicates:
-        raise ValueError(f"duplicate organization(s) {duplicates} in admitted")
-    admitted_set = set(admitted_list)
+    ordered = _registered(admitted, ORGANIZATIONS, role="admitted")
+    admitted_set = set(ordered)
     if "openstack" not in admitted_set:
         raise ValueError("openstack must always be admitted")
-    ordered = tuple(o for o in ORGANIZATIONS if o in admitted_set)
     h2 = (H2_PAIR, H2_PAIR[::-1]) if set(H2_PAIR) <= admitted_set else ()
     paired = {org for pair in h2 for org in pair}
     exploratory = []
@@ -89,6 +89,141 @@ def design(admitted: Iterable[str]) -> dict[str, Any]:
         "H1": ordered,
         "H2": h2,
         "exploratory_h2": tuple(exploratory),
+    }
+
+
+def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -> tuple[str, ...]:
+    """`names` in registration order, refused if any is outside `registry` or repeated."""
+    listed = list(names)
+    seen = set(listed)
+    unknown = sorted(seen - set(registry))
+    if unknown:
+        raise ValueError(f"unknown organization(s) {unknown} in {role}; registered are {registry}")
+    if len(seen) != len(listed):
+        duplicates = sorted({o for o in seen if listed.count(o) > 1})
+        raise ValueError(f"duplicate organization(s) {duplicates} in {role}")
+    return tuple(o for o in registry if o in seen)
+
+
+def valid_bound(bound: Any) -> bool:
+    """A detectable effect: a finite number above zero, never a bool."""
+    return is_real(bound) and bound > 0
+
+
+# The GitHub replication family in registration order (registered-decisions.md, "GitHub
+# organizations"): read on H1 alone, after the confirmatory hypotheses, binding no verdict.
+REPLICATION_FAMILY = ("apache", "llvm", "dotnet", "grafana")
+
+# The members, set once by the commit that freezes them at Stage 1 (2026-11-20): those whose
+# pilot, train and development windows are frozen and whose split meets the criteria at N.
+# None until then, and `replication_gate` refuses to read the family.
+REPLICATION_MEMBERS: tuple[str, ...] | None = None
+
+# Each member's two-sided interval; its one-sided level, 0.0125, is the partial conjunction's.
+# Registered as a fixed level, not a Holm step: it does not move with the number of confirmatory
+# hypotheses on the Gerrit side.
+REPLICATION_CONFIDENCE = 0.975
+
+_CELL_FIELDS = ("estimate", "bounds")
+
+
+def replication(members: Iterable[str]) -> dict[str, Any]:
+    """The replication family for a set of members.
+
+    `members` must hold only names from `REPLICATION_FAMILY`, no duplicate, and may be empty;
+    every registered organization not among them is reported as not collected. A Gerrit
+    organization is refused here as a GitHub one is by `design`.
+    """
+    ordered = _registered(members, REPLICATION_FAMILY, role="members")
+    return {
+        "members": ordered,
+        "not_collected": tuple(o for o in REPLICATION_FAMILY if o not in ordered),
+        "confidence": REPLICATION_CONFIDENCE,
+    }
+
+
+def replication_gate(
+    cells: Mapping[str, Mapping[str, Any]],
+    *,
+    bounds: Mapping[str, Mapping[float, float]],
+) -> dict[str, Any]:
+    """Each frozen member's H1 verdict and the family's partial conjunction r.
+
+    The members are `REPLICATION_MEMBERS`, never an argument, so none joins after Stage 1; the
+    gate refuses to run before they are frozen. `cells` holds each member's
+    `partition_pilot.py --replication` report on its test window, check 5 passed, read at
+    `REPLICATION_CONFIDENCE` alone, and no other organization (read back from JSON is accepted;
+    each is checked by `require_readable`). It checks a report as `partition_pilot.py` writes
+    one; that no report was edited after it was written is the git history's to show.
+    `bounds` holds each member's bounds by level from its own partition simulation, as
+    `sensitivity_bounds` gives them, fixed before its test window; a member without a positive
+    finite bound at `REPLICATION_CONFIDENCE`, a bound for any other organization, or a cell
+    computed under a different bound is refused. Each verdict is read from the cell's interval at
+    that level, and r at its one-sided level from p-values that must agree with the intervals.
+    """
+    if REPLICATION_MEMBERS is None:
+        raise ValueError("the replication family's members are not frozen yet (Stage 1)")
+    for what, given in (("cells", cells), ("bounds", bounds)):
+        if not isinstance(given, Mapping):
+            raise ValueError(f"{what} must map each member to its own, got {type(given).__name__}")
+    family = replication(REPLICATION_MEMBERS)
+    listed = set(family["members"])
+    for what, names in (("cells", cells), ("bounds", bounds)):
+        extra = sorted(set(names) - listed)
+        if extra:
+            raise ValueError(f"{what} for organization(s) outside the family's members: {extra}")
+    level = level_key(REPLICATION_CONFIDENCE)
+    missing = [o for o in family["members"] if o not in cells]
+    if missing:
+        raise ValueError(f"no cell for member(s) {missing}")
+    intervals = require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
+    read: dict[str, dict[str, Any]] = {}
+    for org in family["members"]:
+        cell = cells[org]
+        require_test_read(cell, org=org)
+        if cell["sensitivity"].get("cells") != 1:
+            raise ValueError(f"{org}: its bounds are not from a simulation of one cell")
+        levels_read = set(intervals[org])
+        if levels_read != {level}:
+            raise ValueError(
+                f"{org}: read at levels {sorted(levels_read)}, not at {REPLICATION_CONFIDENCE} "
+                "alone (partition_pilot.py --replication)"
+            )
+        by_org = bounds.get(org)
+        try:
+            bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
+        except ValueError as error:
+            raise ValueError(f"{org}: registered bounds: {error}") from error
+        if not valid_bound(bound):
+            raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
+        try:
+            recorded = cell["bounds"]
+            computed_under = by_level({} if recorded is None else recorded).get(level)
+        except ValueError as error:
+            raise ValueError(f"{org}: bounds: {error}") from error
+        if computed_under != bound:
+            raise ValueError(
+                f"{org}: the cell was computed under bound {computed_under!r}, "
+                f"the registered bound is {bound!r}"
+            )
+        interval = intervals[org][level]
+        read[org] = {
+            "estimate": cell["estimate"],
+            "interval": {"low": interval["low"], "high": interval["high"]},
+            "bound": bound,
+            "verdict": cell_verdict(interval["low"], interval["high"], bound=bound),
+            "meaningful": meaningful(interval["low"]),
+            "p_one_sided": cell["p_one_sided"],
+        }
+    return {
+        **family,
+        "cells": read,
+        "partial_conjunction": partial_conjunction(
+            {o: c["p_one_sided"] for o, c in read.items()},
+            alpha=one_sided_alpha(REPLICATION_CONFIDENCE),
+        )
+        if read
+        else None,
     }
 
 
@@ -142,6 +277,11 @@ def cell_verdict(low: float, high: float, *, bound: float | None) -> str:
     return "inconclusive"
 
 
+def meaningful(low: float) -> bool:
+    """Whether an interval's lower bound clears the SESOI: reported, never a verdict."""
+    return low > SESOI
+
+
 def within_sesoi(low: float, high: float) -> bool:
     """Whether the interval sits inside the SESOI band: reported, never a verdict."""
     return low > -SESOI and high < SESOI
@@ -154,7 +294,7 @@ def detectable_effects(sensitivity: Mapping[str, Any]) -> dict[str, dict[str, di
     """
     return {
         "H1": {
-            org: {float(c): v["minimum_detectable_effect"] for c, v in cell["by_level"].items()}
+            org: by_level({c: v["minimum_detectable_effect"] for c, v in cell["by_level"].items()})
             for org, cell in sensitivity["cells"].items()
         }
     }
@@ -347,15 +487,14 @@ def decomposition_gate(
     confirmatory = {name: cells[name] for name in ("H1", "H2") if cells[name]}
     levels = holm_levels(len(confirmatory))
     bounds = {
-        name: {
-            org: {round(c, 9): b for c, b in by_level.items()} for org, by_level in cells_.items()
-        }
+        name: {org: by_level(levels_) for org, levels_ in cells_.items()}
         for name, cells_ in detectable.items()
     }
     for name, units in confirmatory.items():
         for unit in units:
             org = unit if name == "H1" else unit[0]
-            missing = [c for c in levels if round(c, 9) not in bounds.get(name, {}).get(org, {})]
+            registered = bounds.get(name, {}).get(org, {})
+            missing = [c for c in levels if not valid_bound(registered.get(level_key(c)))]
             if missing:
                 raise ValueError(f"no registered detectable effect for {name}:{org} at {missing}")
 
@@ -412,7 +551,7 @@ def decomposition_gate(
                     c: cell_verdict(
                         lo,
                         hi,
-                        bound=bounds.get(name, {}).get(org, {}).get(round(c, 9))
+                        bound=bounds.get(name, {}).get(org, {}).get(level_key(c))
                         if roles[name] == "confirmatory"
                         else None,
                     )

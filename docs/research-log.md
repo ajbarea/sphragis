@@ -7757,3 +7757,63 @@ retrieval at k = 1 and 3 (registered decisions), the Stage 2 exact-match audit, 
 exposure check, and for RQ2 a direct test of the aggregation theorem, user inference as the
 final-model baseline and stronger learned attackers (ROADMAP).
 
+### The replication gate implemented beside `design()` (2026-10-05)
+
+`replication()` and `replication_gate()` in `sphragis/experiment/decomposition.py` read the
+GitHub family as registered on 2026-10-04. The family takes only Apache, LLVM, .NET and Grafana,
+in that order; a Gerrit organization is refused there, as `design()` refuses a GitHub one, and a
+registered organization outside the members is reported as not collected.
+
+The members are a constant, `REPLICATION_MEMBERS`, set by the commit that freezes them at Stage 1,
+never an argument; until then the gate refuses to read the family, and afterwards it refuses a
+cell or a bound for any organization outside them, so none joins later. Each member's bound comes
+by level from its own partition simulation (`sensitivity_bounds`), must be a positive finite
+number, and must equal the bound its cell was computed under, which `h1_over_partitions` now
+records in the cell. The gate also refuses fewer than 1,000 resamples, a resample count that puts
+the 0.0125 bound between draws, a missing field, and a p-value that disagrees with its interval
+(below 0.0125 exactly when the lower bound is above zero). It reads each verdict from the cell's
+two-sided 97.5% interval and r from the partial conjunction at one-sided 0.0125. The 97.5% level
+is registered as fixed, not as a Holm step. An empty family has no r.
+
+Each cell now records the organization it was computed for. The checks every reading of an H1
+cell needs are one function, `require_readable` in `across.py`, run by both this gate and
+`across_organizations`, now in `cells.py` beside the level-key helpers and the registered
+test-read constants, so the confirmatory gate does not import its checks from the readings beside
+it: filed under the organization it was computed for; its fields; a whole
+resample count of at least 1,000, whole at the one-sided level; a p-value in [0, 1]; a finite
+interval at the level, low at most high; and a p-value that agrees with the interval. Level keys in both gates, `h1_over_partitions`, `sensitivity_bounds` and
+`detectable_effects` pass through one helper, so a cell or bound read back from JSON (string keys)
+gives the same reading, and two keys naming one level are refused. The Gerrit gate now refuses a
+bound that is not a positive finite number too.
+
+`scripts/partition_pilot.py` takes `--replication` for a GitHub member, reading it at 97.5% alone
+whatever the Gerrit Holm family's size, and refuses the flag for any other organization and its
+absence for a member, and, once members are frozen, refuses an organization outside them. It
+refuses `--hypotheses` beside it, and, before any run is loaded, a resample count the gate would
+refuse; a bound the gate would refuse is refused before the cell is computed. Any test-window
+read, on either platform, now needs `--sensitivity`, `--sizing` and the registered 10,000 resamples
+at bootstrap seed 7, as it needed `--planted`, and a member's only after the freeze (registered
+here as "Reading the test window"). Each run's window is read from every half's source with the
+parser check 5 uses, so a run with one half on the test window is never taken for development.
+`pilot_sizing` refuses a test-window reading or another organization's pilot as the source of K,
+and on a test-window read a pilot that does not name its organization: the committed OpenStack and
+Wikimedia pilots predate the field, so they are rerun before their test reads. The pilot refuses
+another organization's simulation as the source of bounds. The report records the window, the
+pilot K came from (`k_from`), the simulation and the K it ran at (`sensitivity`), and the
+bootstrap seed; `require_test_read` in `cells.py` checks all of them, and that both sources are at
+the read's K, on the report the pilot is about to write (before any verdict is printed) and again
+in the gate, so the two hold one rule. The gate adds what is the family's own: a one-cell
+simulation, 97.5% alone. Decided here: a member's bound comes from a simulation of one cell at 97.5%
+(`--h1-cells 1`), since it is read alone, not as one of an intersection; registered-decisions.md
+says so, and the gate checks the report's simulation is of one cell. Without `--replication` the
+pilot takes only the four registered Gerrit organizations. The partition simulation reads its levels from the pilot, so the member's bound is at
+the same level. The pilot's report no longer carries its own `bounds`, which the cell
+now holds. A test runs the script on synthetic runs and reads its report through the gate, and
+another writes a cell to JSON and reads it back for each of the three verdicts.
+
+Still chosen when the test window is read, and so open until a committed read plan fixes them
+(IMPL): the Holm family's size (`--hypotheses`), the spread target and cell count the bound is
+read at, which development pilot calibrated the simulation, and the H2 reading's resamples and
+seed. None can be used before in-principle acceptance, since the test window stays sealed until
+then. Each run's halves must now all be built from its admissible partition, not only the first.
+

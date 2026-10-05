@@ -8,29 +8,28 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **H1 over repeated admissible partitions** (#67, `measure/repeated-partitions`), with
-  Wikimedia's admission and the planted-convention check stacked on it. The OpenStack power
-  rerun and Wikimedia's sensitivity simulation are queued on TIGRIS; their outputs set the stated
-  power in `docs/registered-decisions.md` and Stage 1 sections 5 and 7 (papers #30).
-- **A GitHub collection route** (`sphragis/corpus/github.py`, stacked on the planted check).
-  Pilot months (2024-11) are collected outside the corpus, under
-  `~/ajsoftworks/sphragis-data-local/github-pilot/`, OpenJDK first, then the other sized
-  candidates in turn (`queue.sh`). Each built month gives that organization's own
-  thread-to-example conversion (`scripts/github_conversion.py`), and
-  `scripts/github_sizing_report.py` re-derives the candidate table from it.
+- **The GitHub replication family's collection**: pilot, train and dev windows (2024-10 to
+  2025-10) for Apache, then LLVM, .NET, Grafana, one organization at a time, from the
+  `data/github-collect` worktree into `~/ajsoftworks/sphragis-data-local/github/` (`collect.sh`,
+  progress in `status.log`). Each month resumes from its checkpoint. A member not frozen and
+  split-checked by 2026-11-20 is reported as not collected.
 
 ## Next
 
-1. Merge this route (#82, with the 2026-10-04 decisions); the stack below it is on `main`.
-2. Implement the readings beside the pass rule (meaningful, at least r of k, the random-effects
-   summary across organizations) before the seal.
-3. Collect Apache, then LLVM, .NET, Grafana, as the GitHub replication family (pilot, train and
+1. Collect Apache, then LLVM, .NET, Grafana, as the GitHub replication family (pilot, train and
    dev windows) to freeze members by 2026-11-20; then each member's admissible list, development
-   pilot and simulation before its test window, and a replication gate beside `design()`, which
-   refuses organizations outside the registered four.
-4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
-5. Rebuild the retrieval comparator (#77) on the registered runner.
-6. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
+   pilot and simulation before its test window. At the freeze, one commit sets
+   `REPLICATION_MEMBERS`; `replication_gate()` refuses to read the family before it.
+2. A committed read plan per organization, fixed before its test window: the pilot K comes from,
+   the simulation and its spread target and cell count, the levels, the resamples and seed.
+   `partition_pilot.py` takes a test-window read's every parameter from it and nothing from the
+   command line; `require_test_read`, `replication_gate` and the H2 reading
+   (`decomposition_gate`) check against it, and the simulation's calibration pilot must be the
+   plan's. The OpenStack and Wikimedia development pilots are rerun first so each names its
+   organization.
+3. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
+4. Rebuild the retrieval comparator (#77) on the registered runner.
+5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`.
 
 ## Standing

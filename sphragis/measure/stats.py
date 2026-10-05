@@ -71,6 +71,11 @@ ESTIMATORS: Mapping[str, Estimator] = {
 MIN_CLUSTERS = 10
 
 
+def one_sided_alpha(confidence: float) -> float:
+    """The one-sided level a two-sided interval at `confidence` reads: 0.975 gives 0.0125."""
+    return (1.0 - confidence) / 2.0
+
+
 def percentile_ranks(resamples: int, confidence: float) -> tuple[int, int]:
     """Zero-based ranks of the percentile interval's bounds, excluding equal tails.
 
@@ -80,7 +85,7 @@ def percentile_ranks(resamples: int, confidence: float) -> tuple[int, int]:
     and left 499 draws below the interval against 500 above. The registered 0.95 was
     unaffected; 0.90 and 0.80 were not.
     """
-    excluded = round(resamples * (1.0 - confidence) / 2.0)
+    excluded = round(resamples * one_sided_alpha(confidence))
     return max(0, excluded - 1), min(resamples - 1, resamples - excluded)
 
 

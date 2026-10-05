@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import math
 from statistics import NormalDist, stdev
 
 import pytest
 
+from sphragis.experiment import decomposition
 from sphragis.experiment.decomposition import SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
@@ -81,11 +83,15 @@ def test_runs_needed_clamps_to_the_burn_in_and_the_list() -> None:
         runs_needed([0.01])
 
 
-def _results(seed: int, wins: dict[str, set[int]], n: int = 24, missing: int | None = None):
+def _results(
+    seed: int, wins: dict[str, set[int]], n: int = 24, missing: int | None = None, org: str = "org"
+):
     """Placebo results for one run: each half's own and sibling adapter on each half's changes."""
     results = {}
-    for window, first in (("org-a", 0), ("org-b", n)):
-        for trained in ("org-a", "org-b"):
+    halves = (f"{org}-a", f"{org}-b")
+    wins = {h: wins[w] for h, w in zip(halves, ("org-a", "org-b"), strict=True)}
+    for window, first in ((halves[0], 0), (halves[1], n)):
+        for trained in halves:
             rows = [
                 {
                     "id": f"x{i}",
@@ -234,13 +240,13 @@ def test_sensitivity_bounds_read_the_named_spread_target_and_cell_count() -> Non
 
 
 def test_pilot_sizing_reads_the_pilot_and_refuses_a_reading_at_another_k() -> None:
-    assert pilot_sizing({"sizing": {"runs": 24}}, "pilot") == 24
-    assert pilot_sizing({"k_source": "all runs", "sizing": {"runs": 24}}, "pilot") == 24
+    assert pilot_sizing({"sizing": {"runs": 24}}, "pilot", org="openstack") == 24
+    assert pilot_sizing({"k_source": "all runs", "sizing": {"runs": 24}}, "p", org="qt") == 24
     reading = {"k_source": "pilot.json: sizing.runs", "sizing": {"runs": 22}}
     with pytest.raises(ValueError, match="read its K from"):
-        pilot_sizing(reading, "k24")
+        pilot_sizing(reading, "k24", org="openstack")
     with pytest.raises(ValueError, match="no sizing.runs"):
-        pilot_sizing({"sizing": {}}, "empty")
+        pilot_sizing({"sizing": {}}, "empty", org="openstack")
 
 
 def test_sensitivity_bounds_name_a_missing_level() -> None:
@@ -268,3 +274,63 @@ def test_a_cell_carries_the_inputs_of_the_readings_beside_the_pass_rule() -> Non
         assert cell["meaningful"][level] == (interval["low"] > SESOI)
         if interval["low"] > 0:
             assert cell["p_one_sided"] <= (1 - level) / 2
+
+
+@pytest.mark.parametrize(
+    ("wins", "every_run", "bound", "verdict"),
+    [
+        ({"org-a": set(range(0, 24, 2)), "org-b": set(range(24, 48, 2))}, True, 0.4, "supported"),
+        ({"org-a": {0}, "org-b": set()}, False, 0.4, "bounded"),
+        ({"org-a": {0}, "org-b": set()}, False, 0.01, "inconclusive"),
+    ],
+)
+def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
+    monkeypatch: pytest.MonkeyPatch, wins: dict, every_run: bool, bound: float, verdict: str
+) -> None:
+    monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("apache",))
+    nothing = {"org-a": set(), "org-b": set()}
+    runs = [
+        (_results(s, wins if every_run or s == 1 else nothing, org="apache"), s)
+        for s in range(1, 5)
+    ]
+    level = decomposition.REPLICATION_CONFIDENCE
+    cell = h1_over_partitions(
+        runs,
+        org="apache",
+        runs_fixed=4,
+        levels=[level],
+        bounds={level: bound},
+        bootstrap_seed=7,
+        resamples=10_000,
+    )
+    assert cell["verdicts"][level] == verdict
+    report = {
+        **cell,
+        "window": "test",
+        "planted_convention": {"passed": True},
+        "k_from": {"file": "partition-pilot-apache.json", "org": "apache", "runs": 4},
+        "sensitivity": {"org": "apache", "cells": 1, "runs": 4},
+    }
+    loaded = json.loads(json.dumps(report))
+    out = decomposition.replication_gate({"apache": loaded}, bounds={"apache": {level: bound}})
+    assert out["cells"]["apache"]["verdict"] == verdict
+    assert out["partial_conjunction"]["at_least"] == (verdict == "supported")
+
+
+@pytest.mark.parametrize(
+    ("artifact", "match"),
+    [
+        ({"window": "test", "sizing": {"runs": 24}}, "test window"),
+        ({"org": "llvm", "sizing": {"runs": 24}}, "llvm's pilot"),
+    ],
+)
+def test_k_comes_from_the_organizations_own_development_pilot(artifact: dict, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        pilot_sizing(artifact, "pilot", org="apache")
+
+
+def test_a_test_read_sizes_k_only_on_a_pilot_that_names_its_organization() -> None:
+    legacy = {"k_source": "all runs", "sizing": {"runs": 24}}
+    assert pilot_sizing(legacy, "pilot", org="openstack") == 24
+    with pytest.raises(ValueError, match="does not name its organization"):
+        pilot_sizing(legacy, "pilot", org="wikimedia", require_org=True)

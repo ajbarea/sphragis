@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from fractions import Fraction
 from itertools import combinations
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from sphragis.corpus.github import GITHUB_ORGS
+from sphragis.experiment import decomposition
 from sphragis.experiment.decomposition import (
     H2_PAIR,
     MIN_RESAMPLES,
     ORGANIZATIONS,
+    REPLICATION_CONFIDENCE,
+    REPLICATION_FAMILY,
     SUMMED_CONFIDENCE,
     below_sesoi,
     cell_verdict,
@@ -31,6 +36,8 @@ from sphragis.experiment.decomposition import (
     organization_clusters,
     project_clusters,
     reading,
+    replication,
+    replication_gate,
     row_path,
 )
 from sphragis.experiment.grid import EvalRun, run_id
@@ -331,6 +338,270 @@ def test_design_orders_by_registration_order_never_input_order() -> None:
     assert design(("qt", "openstack", "chromium"))["H1"] == expected
     assert design({"chromium", "qt", "openstack"})["H1"] == expected
     assert design(frozenset({"chromium", "openstack"}))["H1"] == ("openstack", "chromium")
+
+
+def test_design_refuses_a_replication_member() -> None:
+    with pytest.raises(ValueError, match="unknown organization"):
+        design(["openstack", "apache"])
+
+
+def test_replication_orders_members_and_reports_the_rest_as_not_collected() -> None:
+    family = replication(["grafana", "apache"])
+    assert family["members"] == ("apache", "grafana")
+    assert family["not_collected"] == ("llvm", "dotnet")
+    assert replication([])["not_collected"] == REPLICATION_FAMILY
+
+
+@pytest.mark.parametrize(
+    ("members", "match"),
+    [
+        (["apache", "openstack"], "unknown organization"),
+        (["apache", "openjdk"], "unknown organization"),
+        (["llvm", "llvm"], "duplicate"),
+    ],
+)
+def test_replication_refuses_a_gerrit_late_or_repeated_member(members: list, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        replication(members)
+
+
+def _replication_cell(
+    low: float,
+    high: float,
+    p: float,
+    *,
+    bound: float | None = 0.03,
+    resamples: int = 10_000,
+    org: str = "apache",
+) -> dict:
+    return {
+        "org": org,
+        "estimate": (low + high) / 2,
+        "intervals": {REPLICATION_CONFIDENCE: {"low": low, "high": high}},
+        "p_one_sided": p,
+        "resamples": resamples,
+        "bounds": {REPLICATION_CONFIDENCE: bound},
+        "window": "test",
+        "planted_convention": {"passed": True},
+        "runs": 24,
+        "k_from": {"file": f"partition-pilot-{org}.json", "org": org, "runs": 24},
+        "sensitivity": {"org": org, "cells": 1, "runs": 24},
+        "bootstrap_seed": 7,
+    }
+
+
+def _at(bound: Any) -> dict:
+    return {REPLICATION_CONFIDENCE: bound, 0.95: 1.0}
+
+
+@pytest.fixture
+def frozen(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
+    def freeze(*members: str) -> None:
+        monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", members)
+
+    return freeze
+
+
+def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) -> None:
+    frozen("dotnet", "llvm", "apache")
+    cells = {
+        "apache": _replication_cell(0.02, 0.05, 0.0001),
+        "llvm": _replication_cell(-0.004, 0.006, 0.3, bound=0.008, org="llvm"),
+        "dotnet": _replication_cell(0.005, 0.03, 0.002, org="dotnet"),
+    }
+    bounds = {"apache": _at(0.03), "llvm": _at(0.008), "dotnet": _at(0.03)}
+    out = replication_gate(cells, bounds=bounds)
+    assert out["members"] == ("apache", "llvm", "dotnet")
+    assert out["not_collected"] == ("grafana",)
+    assert {o: c["verdict"] for o, c in out["cells"].items()} == {
+        "apache": "supported",
+        "llvm": "bounded",
+        "dotnet": "supported",
+    }
+    assert out["cells"]["llvm"]["bound"] == 0.008
+    assert out["cells"]["apache"]["meaningful"] and not out["cells"]["dotnet"]["meaningful"]
+    # Adjusted: 3 * 0.0001, then 2 * 0.002, then 0.3: r = 2 at 0.0125.
+    assert out["partial_conjunction"]["alpha"] == pytest.approx(0.0125)
+    assert out["partial_conjunction"]["at_least"] == 2
+
+
+def test_replication_gate_refuses_to_read_before_the_members_are_frozen() -> None:
+    assert decomposition.REPLICATION_MEMBERS is None
+    with pytest.raises(ValueError, match="not frozen"):
+        replication_gate({}, bounds={})
+
+
+def test_replication_gate_reads_a_cell_and_bounds_back_from_json(frozen) -> None:
+    frozen("llvm")
+    cell = _replication_cell(-0.004, 0.006, 0.3, bound=0.008, org="llvm")
+    loaded = json.loads(json.dumps({"cells": {"llvm": cell}, "bounds": {"llvm": _at(0.008)}}))
+    out = replication_gate(loaded["cells"], bounds=loaded["bounds"])
+    assert out["cells"]["llvm"]["verdict"] == "bounded"
+
+
+def test_an_empty_family_has_no_partial_conjunction(frozen) -> None:
+    frozen()
+    out = replication_gate({}, bounds={})
+    assert out["cells"] == {} and out["partial_conjunction"] is None
+    assert out["not_collected"] == REPLICATION_FAMILY
+
+
+def test_a_frozen_member_outside_the_family_is_refused(frozen) -> None:
+    frozen("apache", "openjdk")
+    with pytest.raises(ValueError, match="unknown organization"):
+        replication_gate({}, bounds={})
+
+
+_GOOD = _replication_cell(0.01, 0.02, 0.001)
+
+
+@pytest.mark.parametrize(
+    ("cells", "bounds", "match"),
+    [
+        ({"apache": _GOOD, "llvm": _GOOD}, {"apache": _at(0.03)}, "cells for organization"),
+        ({"apache": _GOOD, "openstack": _GOOD}, {"apache": _at(0.03)}, "cells for organization"),
+        ({"apache": _GOOD}, {"apache": _at(0.03), "grafana": _at(0.03)}, "bounds for organization"),
+        ({}, {"apache": _at(0.03)}, "no cell"),
+        ({"apache": _GOOD}, {}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": 0.03}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": {0.95: 0.03}}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(float("nan"))}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(None)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(True)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(0.0)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(-0.3)}, "no registered detectable effect"),
+        (
+            {"apache": _GOOD},
+            {"apache": {REPLICATION_CONFIDENCE: 0.03, "0.975": 0.5}},
+            "two keys name level",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, bound=None)},
+            {"apache": _at(0.03)},
+            "computed under bound None",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, bound=0.05)},
+            {"apache": _at(0.03)},
+            "computed under bound 0.05",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=80)},
+            {"apache": _at(0.03)},
+            "at least 1000 resamples",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=1_010)},
+            {"apache": _at(0.03)},
+            "between draws",
+        ),
+        (
+            {"apache": _GOOD | {"intervals": {0.95: {"low": 0.0, "high": 1.0}}}},
+            {"apache": _at(0.03)},
+            "no interval at 0.975",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.5)},
+            {"apache": _at(0.03)},
+            "disagree",
+        ),
+        (
+            {"apache": _replication_cell(-0.01, 0.02, 0.001)},
+            {"apache": _at(0.03)},
+            "disagree",
+        ),
+        (
+            {"apache": {k: v for k, v in _GOOD.items() if k != "resamples"}},
+            {"apache": _at(0.03)},
+            r"apache: the cell has no \['resamples'\]",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, org="llvm")},
+            {"apache": _at(0.03)},
+            "computed for 'llvm'",
+        ),
+        ({"apache": _GOOD | {"bounds": []}}, {"apache": _at(0.03)}, "apache: bounds"),
+        (
+            {"apache": _GOOD | {"window": "development"}},
+            {"apache": _at(0.03)},
+            "development window",
+        ),
+        (
+            {"apache": _GOOD | {"planted_convention": {"passed": False}}},
+            {"apache": _at(0.03)},
+            "check 5 did not pass",
+        ),
+        (
+            {"apache": _GOOD | {"planted_convention": None}},
+            {"apache": _at(0.03)},
+            "check 5 did not pass",
+        ),
+        (
+            {
+                "apache": _GOOD
+                | {"intervals": {**_GOOD["intervals"], 0.95: {"low": 0.0, "high": 0.01}}}
+            },
+            {"apache": _at(0.03)},
+            "not at 0.975 alone",
+        ),
+        ({"apache": _GOOD | {"estimate": float("nan")}}, {"apache": _at(0.03)}, "estimate"),
+        ({"apache": _GOOD | {"k_from": None}}, {"apache": _at(0.03)}, "K are not from"),
+        (
+            {"apache": _GOOD | {"k_from": {"org": "openstack", "runs": 24}}},
+            {"apache": _at(0.03)},
+            "K are not from its own k_from",
+        ),
+        (
+            {"apache": _GOOD | {"k_from": {"org": "apache", "runs": 16}}},
+            {"apache": _at(0.03)},
+            "k_from is at K = 16",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {"org": "openstack", "cells": 1, "runs": 24}}},
+            {"apache": _at(0.03)},
+            "bounds are not from its own sensitivity",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 1, "runs": 40}}},
+            {"apache": _at(0.03)},
+            "sensitivity is at K = 40",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 3, "runs": 24}}},
+            {"apache": _at(0.03)},
+            "simulation of one cell",
+        ),
+        ({"apache": _GOOD | {"bootstrap_seed": 8}}, {"apache": _at(0.03)}, "registered 10000"),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=1_040)},
+            {"apache": _at(0.03)},
+            "registered 10000",
+        ),
+        ({"apache": _GOOD}, None, "bounds must map"),
+        ([], {"apache": _at(0.03)}, "cells must map"),
+        (
+            {"apache": _GOOD | {"intervals": {"by_cells": {}}}},
+            {"apache": _at(0.03)},
+            "apache: intervals",
+        ),
+    ],
+)
+def test_replication_gate_refuses(frozen, cells: dict, bounds: dict, match: str) -> None:
+    frozen("apache")
+    with pytest.raises(ValueError, match=match):
+        replication_gate(cells, bounds=bounds)
+
+
+@pytest.mark.parametrize("bad", [0.0, -0.01, True, float("nan")])
+def test_the_gerrit_gate_refuses_a_bound_that_is_not_a_detectable_effect(bad: Any) -> None:
+    detectable = {"H1": {"openstack": {0.95: bad}}}
+    with pytest.raises(ValueError, match="H1:openstack"):
+        _gate(_by_relation(0.75, 0.25, 0.25), admitted=("openstack",), detectable=detectable)
+
+
+def test_the_replication_family_is_registered_on_the_github_route() -> None:
+    assert set(REPLICATION_FAMILY) <= set(GITHUB_ORGS)
+    assert not set(REPLICATION_FAMILY) & set(ORGANIZATIONS)
 
 
 def test_the_gate_refuses_a_confirmatory_wikimedia_cell_with_no_registered_bound() -> None:
@@ -891,3 +1162,11 @@ def test_a_missing_results_cell_is_an_error_cell_in_the_cpp_supplement() -> None
     )
     assert "no results" in outcome["cells"]["qt"]["error"]
     assert "cpp_share" not in outcome["cells"]["qt"]
+
+
+def test_replication_gate_accepts_any_real_number_type(frozen) -> None:
+    """A numpy scalar is a `numbers.Real` and not a float; Fraction stands in for it here."""
+    frozen("apache")
+    cell = _GOOD | {"p_one_sided": Fraction(1, 1000), "bounds": _at(Fraction(3, 100))}
+    out = replication_gate({"apache": cell}, bounds={"apache": _at(Fraction(3, 100))})
+    assert out["cells"]["apache"]["verdict"] == "supported"

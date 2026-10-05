@@ -14,6 +14,9 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from sphragis.experiment.cells import below_level, require_readable
+from sphragis.measure.stats import one_sided_alpha
+
 # The Cochrane Handbook (6.5, chapter 10) uses the HKSJ interval only above two studies and a
 # prediction interval from about five; both thresholds are registered with the reading.
 MIN_FOR_INTERVAL = 3
@@ -218,7 +221,7 @@ def random_effects(
     y = [estimates[o] for o in orgs]
     v = [standard_errors[o] ** 2 for o in orgs]
     k = len(orgs)
-    tail = 1.0 - (1.0 - confidence) / 2.0
+    tail = 1.0 - one_sided_alpha(confidence)
 
     summary = _summary(y, v, [[1.0] for _ in orgs], tail=tail)
     mean = summary["coef"][0]
@@ -295,10 +298,7 @@ def partial_conjunction(p_values: Mapping[str, float], *, alpha: float) -> dict[
     for r, p in enumerate(ordered, start=1):
         running = max(running, min(1.0, (k - r + 1) * p))
         adjusted.append(running)
-    # Rounded so float noise cannot decide a tie: (1 - 0.975) / 2 is 0.012500000000000011, which
-    # would count a p-value of exactly 0.0125 as below it.
-    level = round(alpha, 12)
-    largest = max((r for r, p in enumerate(adjusted, start=1) if round(p, 12) < level), default=0)
+    largest = max((r for r, p in enumerate(adjusted, start=1) if below_level(p, alpha)), default=0)
     return {"k": k, "alpha": alpha, "adjusted": adjusted, "at_least": largest}
 
 
@@ -318,18 +318,10 @@ def across_organizations(
     """Both readings over H1 cells from `h1_over_partitions`, at one Holm step's confidence.
 
     The partial conjunction is read at that step's one-sided level, the cells' own; the summary's
-    interval at the same confidence. A cell's p-value falls below the level exactly when its
-    percentile interval's lower bound lies above zero only when its resample count times the level
-    is a whole number (10,000 draws at 0.0125 or 0.025), so any other count is refused.
+    interval at the same confidence. Each cell is checked by `require_readable`.
     """
-    alpha = (1.0 - confidence) / 2.0
-    for org, cell in cells.items():
-        excluded = cell["resamples"] * alpha
-        if abs(excluded - round(excluded)) > 1e-9 * max(1.0, excluded):
-            raise ValueError(
-                f"{org}: {cell['resamples']} resamples at one-sided {alpha:g} put the interval's "
-                "bound between draws, so its p-value and its verdict could disagree"
-            )
+    alpha = one_sided_alpha(confidence)
+    require_readable(cells, confidence=confidence, fields=("estimate", "bootstrap_se"))
     return {
         "partial_conjunction": partial_conjunction(
             {org: cell["p_one_sided"] for org, cell in cells.items()}, alpha=alpha
