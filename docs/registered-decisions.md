@@ -246,6 +246,7 @@ one process, at no measurable cost in wall time.
 |---|---|
 | cells, pass rule, Holm, verdicts (`h1_test_gate` on test reads), the replication family | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
 | K, the reading over partitions | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
+| power at a test window's realised size (Fetch horizon) | [`scripts/power_at_size.py`](https://github.com/ajbarea/sphragis/blob/main/scripts/power_at_size.py) |
 | what makes a cell readable, the test-window read's resamples and seed | [`sphragis/experiment/cells.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/cells.py) |
 | readings beside the pass rule, across organizations | [`sphragis/experiment/across.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/across.py) |
 | estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |

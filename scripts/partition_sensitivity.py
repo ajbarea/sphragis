@@ -157,6 +157,28 @@ def partition_pool(
     return pool, seeds
 
 
+def pools(
+    placebo: Path, corpus: Path, org: str, admissible_path: Path, count: int, max_seed: int
+) -> tuple[Pool, list[dict[str, int]], int]:
+    """The pilot's clusters, the first `count` admissible partitions and the last seed tried.
+
+    The partitions are rebuilt from `corpus`, so they must reproduce the committed admissible list
+    they extend, and assign every project a pilot change comes from.
+    """
+    admissible = json.loads(admissible_path.read_text())
+    pool = pilot_pool(placebo, corpus, org)
+    partitions, seeds = partition_pool(
+        corpus, org, Path(admissible["reference"]), admissible["size_floor"], count, max_seed
+    )
+    listed = admissible["admissible"]
+    if seeds[: len(listed)] != listed:
+        raise SystemExit(f"{corpus} does not reproduce the admissible list {admissible_path}")
+    missing = {p for _, p in pool} - set(partitions[0])
+    if missing:
+        raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
+    return pool, partitions, seeds[-1]
+
+
 _PARTITIONS: list[dict[str, int]] = []
 
 
@@ -296,23 +318,44 @@ def calibrate(executor, pool, args, target: float, size: int) -> dict:
     }
 
 
-def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=None) -> list[dict]:
+def trials_at(
+    executor,
+    pool: Pool,
+    *,
+    size: int,
+    lift: float,
+    sigma_run: float,
+    redraw: float,
+    resamples: int,
+    seed: int,
+    levels: list,
+    runs: int,
+    count: int,
+    check: bool = False,
+) -> list[dict]:
+    """`count` simulated studies on `size` changes at `lift`, trial t seeded `seed + t`."""
     jobs = [
-        (
-            pool,
-            args.size,
-            lift,
-            sigma_run,
-            args.redraw,
-            args.resamples,
-            args.seed + t,
-            levels,
-            args.runs,
-            check,
-        )
-        for t in range(count or args.trials)
+        (pool, size, lift, sigma_run, redraw, resamples, seed + t, levels, runs, check)
+        for t in range(count)
     ]
     return list(executor.map(trial, jobs, chunksize=1))
+
+
+def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=None) -> list[dict]:
+    return trials_at(
+        executor,
+        pool,
+        size=args.size,
+        lift=lift,
+        sigma_run=sigma_run,
+        redraw=args.redraw,
+        resamples=args.resamples,
+        seed=args.seed,
+        levels=levels,
+        runs=args.runs,
+        count=count or args.trials,
+        check=check,
+    )
 
 
 def _cached_trials(
@@ -348,23 +391,9 @@ def main() -> None:
         raise SystemExit(f"the pilot's K {args.runs} lies outside [{K_MIN}, {K_MAX}]")
     # The per-run spread the simulation is calibrated to, each point named for what it is.
     targets = spread_targets(pilot)
-    pool = pilot_pool(args.placebo, args.corpus, args.org)
-    partitions, pool_seeds = partition_pool(
-        args.corpus,
-        args.org,
-        Path(admissible["reference"]),
-        admissible["size_floor"],
-        args.partitions,
-        args.max_seed,
+    pool, partitions, tried = pools(
+        args.placebo, args.corpus, args.org, args.admissible, args.partitions, args.max_seed
     )
-    # The pool is rebuilt from --corpus, so it must reproduce the committed list it extends.
-    listed = admissible["admissible"]
-    if pool_seeds[: len(listed)] != listed:
-        raise SystemExit(f"{args.corpus} does not reproduce the admissible list {args.admissible}")
-    tried = pool_seeds[-1]
-    missing = {p for _, p in pool} - set(partitions[0])
-    if missing:
-        raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
     # The pilot's own levels (its Holm levels, or a replication member's fixed level), so the
     # simulation reads at the levels the reading does.
     levels = pilot["levels"]
@@ -394,6 +423,7 @@ def main() -> None:
         "null_trials": args.null_trials,
         "resamples": args.resamples,
         "redraw": args.redraw,
+        "seed": args.seed,
         "size_floor": admissible["size_floor"],
         "partitions_pooled": len(partitions),
         "partition_seeds_tried": tried,

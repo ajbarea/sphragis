@@ -755,6 +755,7 @@ _JOB_DEFAULTS = {
     "PRE": "/unused/pre.jsonl",
     "ORG": "qt",
     "PLACEBO": "/unused/placebo.json",
+    "REPORT": "/unused/report.json",
     "CORPUS_WINDOWS": "/unused/corpus",
     "SIZE": "100",
     "PARTITION_SEED": "2",
