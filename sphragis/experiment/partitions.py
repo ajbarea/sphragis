@@ -17,7 +17,7 @@ from statistics import NormalDist, stdev, variance
 from typing import Any
 
 from sphragis.experiment.across import one_sided_p
-from sphragis.experiment.cells import by_level, level_key
+from sphragis.experiment.cells import SPREAD_TARGETS, by_level, level_key
 from sphragis.experiment.decomposition import (
     SESOI,
     cell_verdict,
@@ -129,12 +129,13 @@ def spread_targets(pilot: Mapping[str, Any]) -> dict[str, float]:
     recomputed from the pilot its K came from, so both rest on the same pilot.
     """
     estimates = list(pilot["per_run"]) + list(pilot["runs_left_out"])
-    return {
+    targets = {
         "pilot_lower_90": sd_bound(estimates, 0.90, upper=False),
         "pilot_estimate": stdev(estimates),
         "sizing_bound_90": pilot["sizing"]["sd_upper"],
         "pilot_upper_99": sd_bound(estimates, 0.99, upper=True),
     }
+    return {name: targets[name] for name in SPREAD_TARGETS}
 
 
 def runs_needed(

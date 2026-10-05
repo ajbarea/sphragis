@@ -36,7 +36,9 @@ resting on one. Requiring every cell makes it an intersection-union test, which 
 without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
 evaluated projects) is confirmatory only for Qt and Chromium, when both are admitted. The two
 hypotheses share one family-wise level under Holm's step-down: both are read on a two-sided
-97.5% interval, and if one passes, the other is read again on a 95% one.
+97.5% interval, and if one passes, the other is read again on a 95% one. When H2 has no
+confirmatory cell (Qt and Chromium not both admitted), H1 is the whole family and carries the whole
+family-wise level: it is read on the 95% interval alone, against the bound simulated at that level.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the cell's registered detectable effect, and **inconclusive** otherwise. A hypothesis is
@@ -226,7 +228,8 @@ they agree, was simulated first and rejected: it ran above nominal where it stop
 With two cells each is sized at power 0.9747. At that power, its projected test size and K
 runs, OpenStack's $H_1$ cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
 points at the two Holm levels and Wikimedia's +0.0268 and +0.0246, at the per-run spread K was
-sized on; these are the bounds a bounded reading is judged against. Wikimedia's test size is a
+sized on; these are the bounds a bounded reading is judged against, the 97.5% one only when H2 is
+confirmatory (Pass rule). Wikimedia's test size is a
 lower bound if test-window arrivals hold at the training rate (checked at fetch), and its bounds
 are then conservative. Power from a pilot's own estimate is biased upward, so no
 power at an observed effect is stated.

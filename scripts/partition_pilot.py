@@ -25,8 +25,8 @@ import json
 import re
 from pathlib import Path
 
-from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
     require_resamples,
@@ -68,7 +68,7 @@ parser.add_argument(
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
 parser.add_argument(
     "--spread-target",
-    choices=("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99"),
+    choices=SPREAD_TARGETS,
     help="which point on the pilot's run spread the bounds assume",
 )
 parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 intersects")
@@ -93,9 +93,6 @@ def main() -> None:
     if not args.replication and args.org not in ORGANIZATIONS:
         raise SystemExit(f"{args.org} is not a registered Gerrit organization {ORGANIZATIONS}")
     if args.replication:
-        frozen = decomposition.REPLICATION_MEMBERS
-        if frozen is not None and args.org not in frozen:
-            raise SystemExit(f"{args.org} is not among the frozen members {frozen}")
         if args.hypotheses is not None:
             raise SystemExit("--replication reads one fixed level; --hypotheses does not apply")
         # A member is read alone, so its simulation is of one cell at that level.
@@ -107,11 +104,6 @@ def main() -> None:
         if args.replication
         else holm_levels(2 if args.hypotheses is None else args.hypotheses)
     )
-    for c in levels:
-        try:
-            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
     listing = json.loads(args.admissible.read_text())
     admissible, train_size = listing["admissible"], listing["size_floor"]
     if len(args.runs) > len(admissible):
@@ -168,17 +160,18 @@ def main() -> None:
             raise SystemExit(f"not read: {conflicts} differ from the registered {expected}")
         levels = expected["levels"]
         args.h1_cells, args.spread_target = expected["cells"], expected["spread_target"]
-        for c in levels:
-            try:
-                require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
-            except ValueError as error:
-                raise SystemExit(f"not read: {error}") from error
         # Checked again on the report by require_test_read; here before any draw is taken.
         if (args.resamples, args.bootstrap_seed) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
             raise SystemExit(
                 f"not read: {args.resamples} resamples, seed {args.bootstrap_seed}; "
                 f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
             )
+    # The levels are final here, before any draw is taken.
+    for c in levels:
+        try:
+            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
+        except ValueError as error:
+            raise SystemExit(f"not read: {error}") from error
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
     if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
@@ -203,18 +196,15 @@ def main() -> None:
         except ValueError as error:
             raise SystemExit(str(error)) from error
         k_source = f"{args.sizing}: sizing.runs"
-        try:
-            calibration = spread_targets(sizing_artifact)
-        except (KeyError, TypeError, ValueError) as error:
-            raise SystemExit(
-                f"{args.sizing}: no per-run spread to calibrate on ({error})"
-            ) from error
-        k_from = {
-            "file": str(args.sizing),
-            "org": sizing_artifact.get("org"),
-            "runs": runs_fixed,
-            "spread_targets": calibration,
-        }
+        k_from = {"file": str(args.sizing), "org": sizing_artifact.get("org"), "runs": runs_fixed}
+        # Only a test read is checked against its simulation's calibration.
+        if window == "test":
+            try:
+                k_from["spread_targets"] = spread_targets(sizing_artifact)
+            except (KeyError, TypeError, ValueError) as error:
+                raise SystemExit(
+                    f"{args.sizing}: no per-run spread to calibrate on ({error})"
+                ) from error
     bounds = None
     simulation = None
     if args.sensitivity:

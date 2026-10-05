@@ -150,9 +150,12 @@ def replication(members: Iterable[str]) -> dict[str, Any]:
     }
 
 
-def confirmatory_levels(spec: Mapping[str, Any]) -> list[float]:
-    """The Holm levels of a design's confirmatory hypotheses: H1, and H2 when it has a cell."""
-    return holm_levels(sum(1 for name in ("H1", "H2") if spec[name]))
+def confirmatory(spec: Mapping[str, Any]) -> dict[str, Any]:
+    """A design's confirmatory hypotheses and their cells: H1, and H2 when it has a cell.
+
+    With no H2 cell H1 is the whole family and carries the full one-sided `FAMILY_ALPHA`.
+    """
+    return {name: spec[name] for name in ("H1", "H2") if spec[name]}
 
 
 def registered_read(org: str) -> dict[str, Any]:
@@ -171,7 +174,7 @@ def registered_read(org: str) -> dict[str, Any]:
         if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
             raise ValueError(f"{org} is not among the frozen admitted organizations")
         spec = design(ADMITTED_ORGANIZATIONS)
-        levels = confirmatory_levels(spec)
+        levels = holm_levels(len(confirmatory(spec)))
         cells = len(spec["H1"])
     return {"levels": levels, "cells": cells, "spread_target": REGISTERED_SPREAD_TARGET}
 
@@ -512,22 +515,25 @@ def decomposition_gate(
     share of draws in which each is above zero, and their sum, are read jointly. `detectable`
     holds each cell's registered bound by Holm level (`detectable_effects`); a confirmatory cell
     without one at every level the design reads is refused, so no bound is chosen after the data.
+    It reads single-partition development pilots (`scripts/decomposition_pilot.py`); a test-window
+    read goes through `partition_pilot.py` and `require_test_read`.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
+    admitted = tuple(admitted)
     if ADMITTED_ORGANIZATIONS is not None and set(admitted) != set(ADMITTED_ORGANIZATIONS):
         raise ValueError(
             f"admitted {sorted(admitted)} is not the frozen set {ADMITTED_ORGANIZATIONS}"
         )
     cells = design(admitted)
-    confirmatory = {name: cells[name] for name in ("H1", "H2") if cells[name]}
-    levels = confirmatory_levels(cells)
+    hypotheses = confirmatory(cells)
+    levels = holm_levels(len(hypotheses))
     bounds = {
         name: {org: by_level(levels_) for org, levels_ in cells_.items()}
         for name, cells_ in detectable.items()
     }
-    for name, units in confirmatory.items():
+    for name, units in hypotheses.items():
         for unit in units:
             org = unit if name == "H1" else unit[0]
             registered = bounds.get(name, {}).get(org, {})
@@ -622,7 +628,7 @@ def decomposition_gate(
 
     tested = {
         name: {o: cell for o, cell in per_org[name].items() if cell["role"] == "confirmatory"}
-        for name in confirmatory
+        for name in hypotheses
     }
     verdicts, passed_at = holm_steps(tested)
     return {

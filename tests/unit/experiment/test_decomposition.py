@@ -622,6 +622,13 @@ _SIM = {"apache": _sim(0.03)}
             "calibrated on another pilot than K's",
         ),
         ({"apache": _GOOD | {"levels": None}}, _SIM, "not a list of levels"),
+        ({"apache": _GOOD | {"levels": ["x"]}}, _SIM, "apache: 'x' is not a confidence level"),
+        ({"apache": _GOOD | {"intervals": []}}, _SIM, "apache:"),
+        (
+            {"apache": _GOOD | {"sensitivity": {**_GOOD["sensitivity"], "spread_targets": None}}},
+            _SIM,
+            "records no spread_targets",
+        ),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03) | {"by_target": {"sizing_bound_90": []}}},
@@ -1268,3 +1275,16 @@ def test_same_calibration_allows_libm_noise_and_nothing_more() -> None:
     assert not same_calibration(_CALIBRATION, {**_CALIBRATION, "pilot_estimate": 0.0121})
     assert not same_calibration(_CALIBRATION, {"pilot_estimate": 0.012})
     assert not same_calibration(_CALIBRATION, None)
+
+
+def test_the_frozen_set_check_reads_a_generator_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack",))
+    outcome = decomposition_gate(
+        _results(_by_relation(0.75, 0.25, 0.25), orgs=("openstack",)),
+        admitted=(o for o in ["openstack"]),
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+        detectable=DETECTABLE,
+    )
+    assert outcome["design"]["H1"] == ("openstack",)

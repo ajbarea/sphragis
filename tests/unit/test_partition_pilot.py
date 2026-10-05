@@ -296,7 +296,6 @@ def test_replication_is_for_the_github_family_and_every_member(
         (["--hypotheses", "3"], 0.4, None, "--hypotheses does not apply"),
         (["--h1-cells", "2"], 0.4, None, "--h1-cells 1"),
         ([], 0.0, None, "not detectable effects"),
-        ([], 0.4, ("llvm",), "not among the frozen members"),
     ],
 )
 def test_a_replication_pilot_refuses_what_the_gate_would_refuse(
@@ -417,3 +416,22 @@ def test_a_gerrit_test_read_waits_for_the_admitted_organizations_to_be_frozen(
     assert decomposition.ADMITTED_ORGANIZATIONS is None
     with pytest.raises(SystemExit, match="frozen admitted"):
         _main(monkeypatch, _gerrit_test_argv(tmp_path))
+
+
+def test_a_test_read_of_an_organization_outside_the_frozen_members_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("llvm",))
+    with pytest.raises(SystemExit, match="not a frozen replication member"):
+        _main(monkeypatch, _replication_argv(tmp_path, "test"))
+    assert not (tmp_path / "pilot.json").exists()
+
+
+def test_a_development_read_needs_no_calibration_from_its_sizing_pilot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "minimal.json"
+    path.write_text(json.dumps({"k_source": "all runs", "sizing": {"runs": len(ADMISSIBLE)}}))
+    out = tmp_path / "o.json"
+    _main(monkeypatch, [*_inputs(tmp_path, "openstack"), "--sizing", str(path), "--out", str(out)])
+    assert "spread_targets" not in json.loads(out.read_text())["k_from"]

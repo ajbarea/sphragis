@@ -7839,5 +7839,11 @@ admitted set.
 bound from it, where it took a bound from its caller and could only check that bound against the
 one the cell recorded. With OpenStack and Wikimedia admitted and no H2 cell, the family is H1 alone
 and a test read is at 95%; both levels stay in the simulations, so Qt and Chromium's admission
-changes nothing that is already computed.
+changes nothing that is already computed. Decided here, and written into the Pass rule: the
+registration described only the two-hypothesis case ("both are read on a two-sided 97.5%
+interval"), and a review read that as requiring 97.5% even with no H2 hypothesis. Holm with one
+hypothesis gives it the whole family-wise level, one-sided 0.025, which is what `decomposition_gate`
+has computed since it was written (`holm_levels(len(confirmatory))`); reading H1 at 97.5% then
+would spend power on a hypothesis that does not exist. Stage 1's analysis section gets the same
+sentence.
 

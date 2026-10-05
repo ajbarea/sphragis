@@ -19,8 +19,10 @@ MIN_RESAMPLES = 1_000
 # clears zero (registered-decisions.md, "Reading the test window").
 TEST_RESAMPLES = 10_000
 TEST_BOOTSTRAP_SEED = 7
-# The per-run spread a test-window read's bound is taken at: the one K was sized on ("Stated
-# power", registered-decisions.md).
+# The points on a development pilot's per-run spread a partition simulation is calibrated to
+# (`partitions.spread_targets`), and the one a test-window read's bound is taken at: the spread K
+# was sized on ("Stated power", registered-decisions.md).
+SPREAD_TARGETS = ("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99")
 REGISTERED_SPREAD_TARGET = "sizing_bound_90"
 
 
@@ -192,12 +194,16 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
             )
     if not isinstance(report["levels"], list | tuple):
         raise ValueError(f"{org}: levels {report['levels']!r} is not a list of levels")
-    read_at = [level_key(c) for c in report["levels"]]
+    try:
+        read_at = [level_key(c) for c in report["levels"]]
+        intervals_at = set(by_level(report["intervals"]))
+    except ValueError as error:
+        raise ValueError(f"{org}: {error}") from error
     if read_at != [level_key(c) for c in expected["levels"]]:
         raise ValueError(
             f"{org}: read at levels {report['levels']}, registered {expected['levels']}"
         )
-    if set(by_level(report["intervals"])) != set(read_at):
+    if intervals_at != set(read_at):
         raise ValueError(f"{org}: its intervals are not at the levels it records")
     simulation = report["sensitivity"]
     for name in ("spread_target", "cells"):
@@ -205,6 +211,8 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
             raise ValueError(
                 f"{org}: bounds at {name} {simulation.get(name)!r}, registered {expected[name]!r}"
             )
+    if simulation.get("spread_targets") is None:
+        raise ValueError(f"{org}: its simulation records no spread_targets; rerun it")
     if not same_calibration(
         report["k_from"].get("spread_targets"), simulation.get("spread_targets")
     ):
