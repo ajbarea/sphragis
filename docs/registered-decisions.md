@@ -226,7 +226,7 @@ one process, at no measurable cost in wall time.
 
 | decision | enforced by |
 |---|---|
-| cells, pass rule, Holm, verdicts | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
+| cells, pass rule, Holm, verdicts, the replication family | [`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py) |
 | K, the reading over partitions | [`sphragis/experiment/partitions.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/partitions.py) |
 | readings beside the pass rule, across organizations | [`sphragis/experiment/across.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/across.py) |
 | estimand, interval | [`sphragis/measure/stats.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/measure/stats.py) |

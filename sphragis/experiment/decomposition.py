@@ -20,6 +20,7 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.halves import suffix
+from sphragis.experiment.across import partial_conjunction, require_bound_on_a_draw
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import require_unique_ids, to_clusters
 from sphragis.experiment.walk import _require_registered_seeds
@@ -64,17 +65,10 @@ def design(admitted: Iterable[str]) -> dict[str, Any]:
     admitted organization gets one exploratory H2 cell instead, paired with the first other
     admitted organization in registration order: computed and reported, never part of a verdict.
     """
-    admitted_list = list(admitted)
-    unknown = sorted(set(admitted_list) - set(ORGANIZATIONS))
-    if unknown:
-        raise ValueError(f"unknown organization(s) {unknown}; registered are {ORGANIZATIONS}")
-    duplicates = sorted({o for o in admitted_list if admitted_list.count(o) > 1})
-    if duplicates:
-        raise ValueError(f"duplicate organization(s) {duplicates} in admitted")
-    admitted_set = set(admitted_list)
+    ordered = _registered(admitted, ORGANIZATIONS, role="admitted")
+    admitted_set = set(ordered)
     if "openstack" not in admitted_set:
         raise ValueError("openstack must always be admitted")
-    ordered = tuple(o for o in ORGANIZATIONS if o in admitted_set)
     h2 = (H2_PAIR, H2_PAIR[::-1]) if set(H2_PAIR) <= admitted_set else ()
     paired = {org for pair in h2 for org in pair}
     exploratory = []
@@ -89,6 +83,91 @@ def design(admitted: Iterable[str]) -> dict[str, Any]:
         "H1": ordered,
         "H2": h2,
         "exploratory_h2": tuple(exploratory),
+    }
+
+
+def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -> tuple[str, ...]:
+    """`names` in registration order, refused if any is outside `registry` or repeated."""
+    listed = list(names)
+    unknown = sorted(set(listed) - set(registry))
+    if unknown:
+        raise ValueError(f"unknown organization(s) {unknown}; registered are {registry}")
+    duplicates = sorted({o for o in listed if listed.count(o) > 1})
+    if duplicates:
+        raise ValueError(f"duplicate organization(s) {duplicates} in {role}")
+    return tuple(o for o in registry if o in set(listed))
+
+
+# The GitHub replication family in registration order (registered-decisions.md, "GitHub
+# organizations"): read on H1 alone, after the confirmatory hypotheses, binding no verdict.
+REPLICATION_FAMILY = ("apache", "llvm", "dotnet", "grafana")
+
+# Each member's two-sided interval; its one-sided level, 0.0125, is the partial conjunction's.
+REPLICATION_CONFIDENCE = 0.975
+
+
+def replication(members: Iterable[str]) -> dict[str, Any]:
+    """The replication family: the members frozen and split-checked by 2026-11-20.
+
+    `members` must hold only names from `REPLICATION_FAMILY`, no duplicate, and may be empty;
+    every registered organization not among them is reported as not collected. A Gerrit
+    organization is refused here as a GitHub one is by `design`.
+    """
+    ordered = _registered(members, REPLICATION_FAMILY, role="members")
+    return {
+        "members": ordered,
+        "not_collected": tuple(o for o in REPLICATION_FAMILY if o not in ordered),
+        "confidence": REPLICATION_CONFIDENCE,
+    }
+
+
+def replication_gate(
+    cells: Mapping[str, Mapping[str, Any]],
+    *,
+    members: Iterable[str],
+    bounds: Mapping[str, float],
+) -> dict[str, Any]:
+    """Each member's H1 verdict and the family's partial conjunction r.
+
+    `cells` holds one `h1_over_partitions` cell per member and no other organization, so none
+    joins after Stage 1. `bounds` holds each member's detectable effect from its own simulation,
+    fixed before its test window; a member without one is refused. Verdicts are read from each
+    cell's interval at `REPLICATION_CONFIDENCE`, and r at its one-sided level.
+    """
+    family = replication(members)
+    extra = sorted(set(cells) - set(family["members"]))
+    if extra:
+        raise ValueError(f"cells for organization(s) outside the family's members: {extra}")
+    missing = [o for o in family["members"] if o not in cells]
+    if missing:
+        raise ValueError(f"no cell for member(s) {missing}")
+    unbounded = [o for o in family["members"] if o not in bounds]
+    if unbounded:
+        raise ValueError(f"no registered detectable effect for member(s) {unbounded}")
+    alpha = (1.0 - REPLICATION_CONFIDENCE) / 2.0
+    require_bound_on_a_draw(cells, alpha=alpha)
+    read: dict[str, dict[str, Any]] = {}
+    for org in family["members"]:
+        intervals = {round(c, 9): i for c, i in cells[org]["intervals"].items()}
+        interval = intervals.get(round(REPLICATION_CONFIDENCE, 9))
+        if interval is None:
+            raise ValueError(f"{org}: no interval at {REPLICATION_CONFIDENCE}")
+        read[org] = {
+            "estimate": cells[org]["estimate"],
+            "interval": dict(interval),
+            "bound": bounds[org],
+            "verdict": cell_verdict(interval["low"], interval["high"], bound=bounds[org]),
+            "meaningful": interval["low"] > SESOI,
+            "p_one_sided": cells[org]["p_one_sided"],
+        }
+    return {
+        **family,
+        "cells": read,
+        "partial_conjunction": partial_conjunction(
+            {o: c["p_one_sided"] for o, c in read.items()}, alpha=alpha
+        )
+        if read
+        else None,
     }
 
 

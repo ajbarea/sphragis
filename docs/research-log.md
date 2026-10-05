@@ -7757,3 +7757,15 @@ retrieval at k = 1 and 3 (registered decisions), the Stage 2 exact-match audit, 
 exposure check, and for RQ2 a direct test of the aggregation theorem, user inference as the
 final-model baseline and stronger learned attackers (ROADMAP).
 
+### The replication gate implemented beside `design()` (2026-10-05)
+
+`replication()` and `replication_gate()` in `sphragis/experiment/decomposition.py` read the
+GitHub family as registered on 2026-10-04. The family takes only Apache, LLVM, .NET and Grafana,
+in that order; a Gerrit organization is refused there, as `design()` refuses a GitHub one, and a
+registered organization outside the members is reported as not collected. The gate refuses a cell
+for any organization outside the members, so none joins after Stage 1, and a member without a
+detectable effect from its own simulation. It reads each verdict from the cell's two-sided 97.5%
+interval, not from a verdict stored with the cell, and r from the partial conjunction at one-sided
+0.0125. The resample-count check that keeps a p-value and its interval in agreement is shared with
+`across_organizations`. An empty family has no r.
+

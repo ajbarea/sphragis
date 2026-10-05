@@ -309,6 +309,21 @@ def one_sided_p(draws: Sequence[float]) -> float:
     return sum(1 for d in draws if d <= 0.0) / len(draws)
 
 
+def require_bound_on_a_draw(cells: Mapping[str, Mapping[str, Any]], *, alpha: float) -> None:
+    """Refuse a cell whose resample count times `alpha` is not a whole number.
+
+    Only then does a cell's p-value fall below `alpha` exactly when its percentile interval's lower
+    bound lies above zero (10,000 draws at 0.0125 or 0.025); otherwise the two could disagree.
+    """
+    for org, cell in cells.items():
+        excluded = cell["resamples"] * alpha
+        if abs(excluded - round(excluded)) > 1e-9 * max(1.0, excluded):
+            raise ValueError(
+                f"{org}: {cell['resamples']} resamples at one-sided {alpha:g} put the interval's "
+                "bound between draws, so its p-value and its verdict could disagree"
+            )
+
+
 def across_organizations(
     cells: Mapping[str, Mapping[str, Any]],
     *,
@@ -318,18 +333,10 @@ def across_organizations(
     """Both readings over H1 cells from `h1_over_partitions`, at one Holm step's confidence.
 
     The partial conjunction is read at that step's one-sided level, the cells' own; the summary's
-    interval at the same confidence. A cell's p-value falls below the level exactly when its
-    percentile interval's lower bound lies above zero only when its resample count times the level
-    is a whole number (10,000 draws at 0.0125 or 0.025), so any other count is refused.
+    interval at the same confidence. Resample counts are checked by `require_bound_on_a_draw`.
     """
     alpha = (1.0 - confidence) / 2.0
-    for org, cell in cells.items():
-        excluded = cell["resamples"] * alpha
-        if abs(excluded - round(excluded)) > 1e-9 * max(1.0, excluded):
-            raise ValueError(
-                f"{org}: {cell['resamples']} resamples at one-sided {alpha:g} put the interval's "
-                "bound between draws, so its p-value and its verdict could disagree"
-            )
+    require_bound_on_a_draw(cells, alpha=alpha)
     return {
         "partial_conjunction": partial_conjunction(
             {org: cell["p_one_sided"] for org, cell in cells.items()}, alpha=alpha

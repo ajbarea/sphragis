@@ -14,6 +14,8 @@ from sphragis.experiment.decomposition import (
     H2_PAIR,
     MIN_RESAMPLES,
     ORGANIZATIONS,
+    REPLICATION_CONFIDENCE,
+    REPLICATION_FAMILY,
     SUMMED_CONFIDENCE,
     below_sesoi,
     cell_verdict,
@@ -31,6 +33,8 @@ from sphragis.experiment.decomposition import (
     organization_clusters,
     project_clusters,
     reading,
+    replication,
+    replication_gate,
     row_path,
 )
 from sphragis.experiment.grid import EvalRun, run_id
@@ -331,6 +335,119 @@ def test_design_orders_by_registration_order_never_input_order() -> None:
     assert design(("qt", "openstack", "chromium"))["H1"] == expected
     assert design({"chromium", "qt", "openstack"})["H1"] == expected
     assert design(frozenset({"chromium", "openstack"}))["H1"] == ("openstack", "chromium")
+
+
+def test_design_refuses_a_replication_member() -> None:
+    with pytest.raises(ValueError, match="unknown organization"):
+        design(["openstack", "apache"])
+
+
+def test_replication_orders_members_and_reports_the_rest_as_not_collected() -> None:
+    family = replication(["grafana", "apache"])
+    assert family["members"] == ("apache", "grafana")
+    assert family["not_collected"] == ("llvm", "dotnet")
+    assert replication([])["not_collected"] == REPLICATION_FAMILY
+
+
+@pytest.mark.parametrize(
+    ("members", "match"),
+    [
+        (["apache", "openstack"], "unknown organization"),
+        (["apache", "openjdk"], "unknown organization"),
+        (["llvm", "llvm"], "duplicate"),
+    ],
+)
+def test_replication_refuses_a_gerrit_late_or_repeated_member(members: list, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        replication(members)
+
+
+def _replication_cell(low: float, high: float, p: float, resamples: int = 10_000) -> dict:
+    return {
+        "estimate": (low + high) / 2,
+        "intervals": {
+            REPLICATION_CONFIDENCE: {"low": low, "high": high},
+            0.95: {"low": 0, "high": 0},
+        },
+        "p_one_sided": p,
+        "resamples": resamples,
+    }
+
+
+def test_replication_gate_reads_each_member_and_the_partial_conjunction() -> None:
+    cells = {
+        "apache": _replication_cell(0.02, 0.05, 0.0001),
+        "llvm": _replication_cell(-0.004, 0.006, 0.3),
+        "dotnet": _replication_cell(0.005, 0.03, 0.002),
+    }
+    bounds = {"apache": 0.03, "llvm": 0.008, "dotnet": 0.03}
+    out = replication_gate(cells, members=["dotnet", "llvm", "apache"], bounds=bounds)
+    assert out["members"] == ("apache", "llvm", "dotnet")
+    assert out["not_collected"] == ("grafana",)
+    assert {o: c["verdict"] for o, c in out["cells"].items()} == {
+        "apache": "supported",
+        "llvm": "bounded",
+        "dotnet": "supported",
+    }
+    assert out["cells"]["apache"]["meaningful"] and not out["cells"]["dotnet"]["meaningful"]
+    # Adjusted: 3 * 0.0001, then 2 * 0.002, then 0.3: r = 2 at 0.0125.
+    assert out["partial_conjunction"]["alpha"] == pytest.approx(0.0125)
+    assert out["partial_conjunction"]["at_least"] == 2
+
+
+def test_replication_gate_reads_from_the_registered_interval_not_a_stored_verdict() -> None:
+    cell = _replication_cell(-0.01, 0.02, 0.2) | {"verdicts": {REPLICATION_CONFIDENCE: "supported"}}
+    out = replication_gate({"apache": cell}, members=["apache"], bounds={"apache": 0.015})
+    assert out["cells"]["apache"]["verdict"] == "inconclusive"
+
+
+def test_an_empty_family_has_no_partial_conjunction() -> None:
+    out = replication_gate({}, members=[], bounds={})
+    assert out["cells"] == {} and out["partial_conjunction"] is None
+    assert out["not_collected"] == REPLICATION_FAMILY
+
+
+@pytest.mark.parametrize(
+    ("cells", "bounds", "match"),
+    [
+        (
+            {
+                "apache": _replication_cell(0.01, 0.02, 0.001),
+                "llvm": _replication_cell(0.01, 0.02, 0.001),
+            },
+            {"apache": 0.03, "llvm": 0.03},
+            "outside the family's members",
+        ),
+        (
+            {
+                "apache": _replication_cell(0.01, 0.02, 0.001),
+                "openstack": _replication_cell(0.01, 0.02, 0.001),
+            },
+            {"apache": 0.03},
+            "outside the family's members",
+        ),
+        ({}, {"apache": 0.03}, "no cell"),
+        ({"apache": _replication_cell(0.01, 0.02, 0.001)}, {}, "no registered detectable effect"),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=500)},
+            {"apache": 0.03},
+            "between draws",
+        ),
+        (
+            {
+                "apache": {
+                    **_replication_cell(0.01, 0.02, 0.001),
+                    "intervals": {0.95: {"low": 0, "high": 1}},
+                }
+            },
+            {"apache": 0.03},
+            "no interval at 0.975",
+        ),
+    ],
+)
+def test_replication_gate_refuses(cells: dict, bounds: dict, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        replication_gate(cells, members=["apache"], bounds=bounds)
 
 
 def test_the_gate_refuses_a_confirmatory_wikimedia_cell_with_no_registered_bound() -> None:
