@@ -30,6 +30,7 @@ from sphragis.experiment.cells import (
     TEST_RESAMPLES,
     require_resamples,
     require_test_read,
+    sensitivity_bounds,
 )
 from sphragis.experiment.decomposition import (
     ORGANIZATIONS,
@@ -37,6 +38,7 @@ from sphragis.experiment.decomposition import (
     REPLICATION_FAMILY,
     REPLICATION_MEMBERS,
     holm_levels,
+    registered_read,
     valid_bound,
 )
 from sphragis.experiment.neutral import apparatus_holds, planted_convention, source_windows
@@ -44,7 +46,7 @@ from sphragis.experiment.partitions import (
     h1_over_partitions,
     pilot_sizing,
     runs_needed,
-    sensitivity_bounds,
+    spread_targets,
 )
 from sphragis.measure.stats import one_sided_alpha
 from sphragis.provenance import provenance_header
@@ -153,6 +155,21 @@ def main() -> None:
             raise SystemExit(f"{args.org}'s test window is read only once it is a frozen member")
         if not args.sizing:
             raise SystemExit("a test-window read needs --sizing: K from the development pilot")
+        # Levels, cell count and spread target come from the registration, never the command.
+        try:
+            expected = registered_read(args.org)
+        except ValueError as error:
+            raise SystemExit(f"not read: {error}") from error
+        chosen = {
+            "levels": None if args.hypotheses is None else holm_levels(args.hypotheses),
+            "cells": args.h1_cells,
+            "spread_target": args.spread_target,
+        }
+        conflicts = {k: v for k, v in chosen.items() if v is not None and v != expected[k]}
+        if conflicts:
+            raise SystemExit(f"not read: {conflicts} differ from the registered {expected}")
+        levels = expected["levels"]
+        args.h1_cells, args.spread_target = expected["cells"], expected["spread_target"]
         # Checked again on the report by require_test_read; here before any draw is taken.
         if (args.resamples, args.bootstrap_seed) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
             raise SystemExit(
@@ -200,6 +217,12 @@ def main() -> None:
         invalid = {c: b for c, b in bounds.items() if not valid_bound(b)}
         if invalid:
             raise SystemExit(f"{args.sensitivity}: bounds {invalid} are not detectable effects")
+        if window == "test" and sensitivity.get("spread_targets") != spread_targets(
+            sizing_artifact
+        ):
+            raise SystemExit(
+                f"not read: {args.sensitivity} was calibrated on another pilot than {args.sizing}"
+            )
         simulation = {
             "file": str(args.sensitivity),
             "org": sensitivity["org"],
@@ -246,7 +269,7 @@ def main() -> None:
     }
     if window == "test":
         try:
-            require_test_read(report, org=args.org)
+            require_test_read(report, org=args.org, expected=expected)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
     for c in levels:

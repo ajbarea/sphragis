@@ -20,13 +20,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    dev windows) to freeze members by 2026-11-20; then each member's admissible list, development
    pilot and simulation before its test window. At the freeze, one commit sets
    `REPLICATION_MEMBERS`; `replication_gate()` refuses to read the family before it.
-2. A committed read plan per organization, fixed before its test window: the pilot K comes from,
-   the simulation and its spread target and cell count, the levels, the resamples and seed.
-   `partition_pilot.py` takes a test-window read's every parameter from it and nothing from the
-   command line; `require_test_read`, `replication_gate` and the H2 reading
-   (`decomposition_gate`) check against it, and the simulation's calibration pilot must be the
-   plan's. The OpenStack and Wikimedia development pilots are rerun first so each names its
-   organization.
+2. Before the first test window: one commit sets `ADMITTED_ORGANIZATIONS`; the OpenStack and
+   Wikimedia development pilots are rerun (same runs) so each names its organization, as a test
+   read requires of the pilot it sizes K on; any H2 test read goes through `require_test_read`.
 3. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
 4. Rebuild the retrieval comparator (#77) on the registered runner.
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;

@@ -91,9 +91,15 @@ it was set before any test data existed.
 A test-window read (`scripts/partition_pilot.py`) takes its K from the organization's own
 development pilot (`--sizing`), its bounds from the organization's own simulation at that K
 (`--sensitivity`), outcome-neutral check 5 (`--planted`), and 10,000 resamples at bootstrap seed
-7, the values every development reading used; it refuses to run without any of them. A GitHub
-member's test window is read only after the members are frozen. So nothing the reading depends on
-can be chosen, or redrawn, after its result is seen.
+7, the values every development reading used; it refuses to run without any of them. Its levels,
+the cell count its bound is simulated for and the spread target it is read at come from the
+registration, never the command line: a Gerrit organization's from the design of the admitted
+organizations, frozen by one commit before any test window (the Holm levels of its confirmatory
+hypotheses, a simulation of its H1 cells), a GitHub member's from the replication family (97.5%
+alone, one cell), and for both the spread K was sized on ("Stated power"). The simulation must have
+been calibrated on the same development pilot K came from. A test window is read only after its
+organization is frozen as admitted or as a member. So nothing the reading depends on can be
+chosen, or redrawn, after its result is seen.
 
 ### Fetch horizon: no earlier than three months after the window's final month
 

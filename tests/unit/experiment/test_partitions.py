@@ -9,6 +9,7 @@ from statistics import NormalDist, stdev
 import pytest
 
 from sphragis.experiment import decomposition
+from sphragis.experiment.cells import sensitivity_bounds
 from sphragis.experiment.decomposition import SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
@@ -24,7 +25,7 @@ from sphragis.experiment.partitions import (
     reproducibility,
     runs_needed,
     sd_bound,
-    sensitivity_bounds,
+    spread_targets,
 )
 
 
@@ -308,11 +309,20 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         **cell,
         "window": "test",
         "planted_convention": {"passed": True},
+        "levels": [level],
         "k_from": {"file": "partition-pilot-apache.json", "org": "apache", "runs": 4},
-        "sensitivity": {"org": "apache", "cells": 1, "runs": 4},
+        "sensitivity": {"org": "apache", "cells": 1, "runs": 4, "spread_target": "sizing_bound_90"},
     }
-    loaded = json.loads(json.dumps(report))
-    out = decomposition.replication_gate({"apache": loaded}, bounds={"apache": {level: bound}})
+    by_cells = {"1": {"minimum_detectable_effect": bound}}
+    simulation = {
+        "org": "apache",
+        "runs": 4,
+        "by_target": {"sizing_bound_90": {"by_level": {str(level): {"by_cells": by_cells}}}},
+    }
+    loaded = json.loads(json.dumps({"report": report, "simulation": simulation}))
+    out = decomposition.replication_gate(
+        {"apache": loaded["report"]}, simulations={"apache": loaded["simulation"]}
+    )
     assert out["cells"]["apache"]["verdict"] == verdict
     assert out["partial_conjunction"]["at_least"] == (verdict == "supported")
 
@@ -334,3 +344,16 @@ def test_a_test_read_sizes_k_only_on_a_pilot_that_names_its_organization() -> No
     assert pilot_sizing(legacy, "pilot", org="openstack") == 24
     with pytest.raises(ValueError, match="does not name its organization"):
         pilot_sizing(legacy, "pilot", org="wikimedia", require_org=True)
+
+
+def test_spread_targets_name_each_point_on_the_pilots_run_spread() -> None:
+    pilot = {
+        "per_run": [0.02, -0.01, 0.005, 0.03],
+        "runs_left_out": [0.0],
+        "sizing": {"sd_upper": 9.0},
+    }
+    targets = spread_targets(pilot)
+    estimates = [0.02, -0.01, 0.005, 0.03, 0.0]
+    assert targets["pilot_estimate"] == pytest.approx(stdev(estimates))
+    assert targets["sizing_bound_90"] == 9.0
+    assert targets["pilot_lower_90"] < targets["pilot_estimate"] < targets["pilot_upper_99"]

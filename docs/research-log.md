@@ -7817,3 +7817,23 @@ read at, which development pilot calibrated the simulation, and the H2 reading's
 seed. None can be used before in-principle acceptance, since the test window stays sealed until
 then. Each run's halves must now all be built from its admissible partition, not only the first.
 
+### A test-window read takes its levels, cells and spread target from the registration (2026-10-05)
+
+What a test-window read still took from the command line (the Holm family's size, the cell count
+its bound was simulated for, the spread target, and which development pilot calibrated the
+simulation) now comes from the registration. `registered_read(org)` in
+`sphragis/experiment/decomposition.py` gives a Gerrit organization the Holm levels of
+`design(ADMITTED_ORGANIZATIONS)` and its H1 cell count, a GitHub member 97.5% alone and one cell,
+and both the spread K was sized on (`sizing_bound_90`, as "Stated power" states the bounds).
+`ADMITTED_ORGANIZATIONS` is None until one commit freezes the admitted set before any test window,
+and a read is refused until its organization is frozen. `partition_pilot.py` derives these and
+refuses a flag that differs; it refuses a simulation whose spread targets differ from those
+recomputed from the `--sizing` pilot (`spread_targets` in `partitions.py`, shared with
+`partition_sensitivity.py`), which ties the two by content without rerunning the simulations.
+`require_test_read` checks the report's levels, intervals, spread target and cell count against
+`registered_read`. `replication_gate` now takes each member's simulation artifact and reads the
+bound from it, where it took a bound from its caller and could only check that bound against the
+one the cell recorded. With OpenStack and Wikimedia admitted and no H2 cell, the family is H1 alone
+and a test read is at 95%; both levels stay in the simulations, so Qt and Chromium's admission
+changes nothing that is already computed.
+

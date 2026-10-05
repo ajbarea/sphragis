@@ -36,6 +36,7 @@ from sphragis.experiment.decomposition import (
     organization_clusters,
     project_clusters,
     reading,
+    registered_read,
     replication,
     replication_gate,
     row_path,
@@ -374,9 +375,11 @@ def _replication_cell(
     resamples: int = 10_000,
     org: str = "apache",
 ) -> dict:
+    """A member's test-window report as `partition_pilot.py --replication` writes it."""
     return {
         "org": org,
         "estimate": (low + high) / 2,
+        "levels": [REPLICATION_CONFIDENCE],
         "intervals": {REPLICATION_CONFIDENCE: {"low": low, "high": high}},
         "p_one_sided": p,
         "resamples": resamples,
@@ -385,13 +388,15 @@ def _replication_cell(
         "planted_convention": {"passed": True},
         "runs": 24,
         "k_from": {"file": f"partition-pilot-{org}.json", "org": org, "runs": 24},
-        "sensitivity": {"org": org, "cells": 1, "runs": 24},
+        "sensitivity": {"org": org, "cells": 1, "runs": 24, "spread_target": "sizing_bound_90"},
         "bootstrap_seed": 7,
     }
 
 
-def _at(bound: Any) -> dict:
-    return {REPLICATION_CONFIDENCE: bound, 0.95: 1.0}
+def _sim(bound: Any, org: str = "apache", *, runs: int = 24, by_level: Any = None) -> dict:
+    """A member's partition-simulation artifact, its bound at the registered target and one cell."""
+    levels = by_level or {"0.975": {"by_cells": {"1": {"minimum_detectable_effect": bound}}}}
+    return {"org": org, "runs": runs, "by_target": {"sizing_bound_90": {"by_level": levels}}}
 
 
 @pytest.fixture
@@ -409,8 +414,12 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) 
         "llvm": _replication_cell(-0.004, 0.006, 0.3, bound=0.008, org="llvm"),
         "dotnet": _replication_cell(0.005, 0.03, 0.002, org="dotnet"),
     }
-    bounds = {"apache": _at(0.03), "llvm": _at(0.008), "dotnet": _at(0.03)}
-    out = replication_gate(cells, bounds=bounds)
+    simulations = {
+        "apache": _sim(0.03),
+        "llvm": _sim(0.008, "llvm"),
+        "dotnet": _sim(0.03, "dotnet"),
+    }
+    out = replication_gate(cells, simulations=simulations)
     assert out["members"] == ("apache", "llvm", "dotnet")
     assert out["not_collected"] == ("grafana",)
     assert {o: c["verdict"] for o, c in out["cells"].items()} == {
@@ -428,20 +437,22 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) 
 def test_replication_gate_refuses_to_read_before_the_members_are_frozen() -> None:
     assert decomposition.REPLICATION_MEMBERS is None
     with pytest.raises(ValueError, match="not frozen"):
-        replication_gate({}, bounds={})
+        replication_gate({}, simulations={})
 
 
-def test_replication_gate_reads_a_cell_and_bounds_back_from_json(frozen) -> None:
+def test_replication_gate_reads_a_report_and_simulation_back_from_json(frozen) -> None:
     frozen("llvm")
     cell = _replication_cell(-0.004, 0.006, 0.3, bound=0.008, org="llvm")
-    loaded = json.loads(json.dumps({"cells": {"llvm": cell}, "bounds": {"llvm": _at(0.008)}}))
-    out = replication_gate(loaded["cells"], bounds=loaded["bounds"])
+    loaded = json.loads(
+        json.dumps({"cells": {"llvm": cell}, "sims": {"llvm": _sim(0.008, "llvm")}})
+    )
+    out = replication_gate(loaded["cells"], simulations=loaded["sims"])
     assert out["cells"]["llvm"]["verdict"] == "bounded"
 
 
 def test_an_empty_family_has_no_partial_conjunction(frozen) -> None:
     frozen()
-    out = replication_gate({}, bounds={})
+    out = replication_gate({}, simulations={})
     assert out["cells"] == {} and out["partial_conjunction"] is None
     assert out["not_collected"] == REPLICATION_FAMILY
 
@@ -449,147 +460,173 @@ def test_an_empty_family_has_no_partial_conjunction(frozen) -> None:
 def test_a_frozen_member_outside_the_family_is_refused(frozen) -> None:
     frozen("apache", "openjdk")
     with pytest.raises(ValueError, match="unknown organization"):
-        replication_gate({}, bounds={})
+        replication_gate({}, simulations={})
 
 
 _GOOD = _replication_cell(0.01, 0.02, 0.001)
+_SIM = {"apache": _sim(0.03)}
 
 
 @pytest.mark.parametrize(
-    ("cells", "bounds", "match"),
+    ("cells", "simulations", "match"),
     [
-        ({"apache": _GOOD, "llvm": _GOOD}, {"apache": _at(0.03)}, "cells for organization"),
-        ({"apache": _GOOD, "openstack": _GOOD}, {"apache": _at(0.03)}, "cells for organization"),
-        ({"apache": _GOOD}, {"apache": _at(0.03), "grafana": _at(0.03)}, "bounds for organization"),
-        ({}, {"apache": _at(0.03)}, "no cell"),
-        ({"apache": _GOOD}, {}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": 0.03}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": {0.95: 0.03}}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": _at(float("nan"))}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": _at(None)}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": _at(True)}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": _at(0.0)}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": _at(-0.3)}, "no registered detectable effect"),
+        ({"apache": _GOOD, "llvm": _GOOD}, _SIM, "cells for organization"),
+        ({"apache": _GOOD, "openstack": _GOOD}, _SIM, "cells for organization"),
+        ({"apache": _GOOD}, {**_SIM, "grafana": _sim(0.03, "grafana")}, "simulations for organ"),
+        ({}, _SIM, "no cell and simulation"),
+        ({"apache": _GOOD}, {}, "no cell and simulation"),
+        ({"apache": _GOOD}, {"apache": 0.03}, "not its own"),
+        ({"apache": _GOOD}, {"apache": _sim(0.03, "openstack")}, "not its own"),
+        ({"apache": _GOOD}, {"apache": _sim(0.03, runs=40)}, "simulation is at K = 40"),
         (
             {"apache": _GOOD},
-            {"apache": {REPLICATION_CONFIDENCE: 0.03, "0.975": 0.5}},
-            "two keys name level",
+            {"apache": _sim(0.03, by_level={"0.95": {"by_cells": {}}})},
+            "simulation: no bound at level",
         ),
         (
+            {"apache": _GOOD},
+            {"apache": _sim(0.03, by_level={"0.975": {"by_cells": {"3": {}}}})},
+            "simulation: no bound for 1",
+        ),
+        (
+            {"apache": _GOOD},
+            {"apache": _sim(0.03, by_level={"0.975": {}, 0.975: {}})},
+            "simulation: two keys name level",
+        ),
+        ({"apache": _GOOD}, {"apache": _sim(float("nan"))}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _sim(None)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _sim(True)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _sim(0.0)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _sim(-0.3)}, "no registered detectable effect"),
+        (
             {"apache": _replication_cell(0.01, 0.02, 0.001, bound=None)},
-            {"apache": _at(0.03)},
+            _SIM,
             "computed under bound None",
         ),
         (
             {"apache": _replication_cell(0.01, 0.02, 0.001, bound=0.05)},
-            {"apache": _at(0.03)},
+            _SIM,
             "computed under bound 0.05",
         ),
         (
             {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=80)},
-            {"apache": _at(0.03)},
+            _SIM,
             "at least 1000 resamples",
         ),
         (
             {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=1_010)},
-            {"apache": _at(0.03)},
+            _SIM,
             "between draws",
         ),
         (
             {"apache": _GOOD | {"intervals": {0.95: {"low": 0.0, "high": 1.0}}}},
-            {"apache": _at(0.03)},
+            _SIM,
             "no interval at 0.975",
         ),
-        (
-            {"apache": _replication_cell(0.01, 0.02, 0.5)},
-            {"apache": _at(0.03)},
-            "disagree",
-        ),
-        (
-            {"apache": _replication_cell(-0.01, 0.02, 0.001)},
-            {"apache": _at(0.03)},
-            "disagree",
-        ),
+        ({"apache": _replication_cell(0.01, 0.02, 0.5)}, _SIM, "disagree"),
+        ({"apache": _replication_cell(-0.01, 0.02, 0.001)}, _SIM, "disagree"),
         (
             {"apache": {k: v for k, v in _GOOD.items() if k != "resamples"}},
-            {"apache": _at(0.03)},
+            _SIM,
             r"apache: the cell has no \['resamples'\]",
         ),
-        (
-            {"apache": _replication_cell(0.01, 0.02, 0.001, org="llvm")},
-            {"apache": _at(0.03)},
-            "computed for 'llvm'",
-        ),
-        ({"apache": _GOOD | {"bounds": []}}, {"apache": _at(0.03)}, "apache: bounds"),
-        (
-            {"apache": _GOOD | {"window": "development"}},
-            {"apache": _at(0.03)},
-            "development window",
-        ),
-        (
-            {"apache": _GOOD | {"planted_convention": {"passed": False}}},
-            {"apache": _at(0.03)},
-            "check 5 did not pass",
-        ),
-        (
-            {"apache": _GOOD | {"planted_convention": None}},
-            {"apache": _at(0.03)},
-            "check 5 did not pass",
-        ),
+        ({"apache": _replication_cell(0.01, 0.02, 0.001, org="llvm")}, _SIM, "computed for 'llvm'"),
+        ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds"),
+        ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
+        ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
+        ({"apache": _GOOD | {"planted_convention": None}}, _SIM, "check 5 did not pass"),
         (
             {
                 "apache": _GOOD
                 | {"intervals": {**_GOOD["intervals"], 0.95: {"low": 0.0, "high": 0.01}}}
             },
-            {"apache": _at(0.03)},
-            "not at 0.975 alone",
+            _SIM,
+            "intervals are not at the levels it records",
         ),
-        ({"apache": _GOOD | {"estimate": float("nan")}}, {"apache": _at(0.03)}, "estimate"),
-        ({"apache": _GOOD | {"k_from": None}}, {"apache": _at(0.03)}, "K are not from"),
+        ({"apache": _GOOD | {"levels": [0.975, 0.95]}}, _SIM, "read at levels"),
+        ({"apache": _GOOD | {"estimate": float("nan")}}, _SIM, "estimate"),
+        ({"apache": _GOOD | {"k_from": None}}, _SIM, "K are not from"),
         (
             {"apache": _GOOD | {"k_from": {"org": "openstack", "runs": 24}}},
-            {"apache": _at(0.03)},
+            _SIM,
             "K are not from its own k_from",
         ),
         (
             {"apache": _GOOD | {"k_from": {"org": "apache", "runs": 16}}},
-            {"apache": _at(0.03)},
+            _SIM,
             "k_from is at K = 16",
         ),
         (
-            {"apache": _GOOD | {"sensitivity": {"org": "openstack", "cells": 1, "runs": 24}}},
-            {"apache": _at(0.03)},
+            {"apache": _GOOD | {"sensitivity": {**_GOOD["sensitivity"], "org": "openstack"}}},
+            _SIM,
             "bounds are not from its own sensitivity",
         ),
         (
-            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 1, "runs": 40}}},
-            {"apache": _at(0.03)},
+            {"apache": _GOOD | {"sensitivity": {**_GOOD["sensitivity"], "runs": 40}}},
+            _SIM,
             "sensitivity is at K = 40",
         ),
         (
-            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 3, "runs": 24}}},
-            {"apache": _at(0.03)},
-            "simulation of one cell",
+            {"apache": _GOOD | {"sensitivity": {**_GOOD["sensitivity"], "cells": 3}}},
+            _SIM,
+            "bounds at cells 3, registered 1",
         ),
-        ({"apache": _GOOD | {"bootstrap_seed": 8}}, {"apache": _at(0.03)}, "registered 10000"),
+        (
+            {"apache": _GOOD | {"sensitivity": {**_GOOD["sensitivity"], "spread_target": "x"}}},
+            _SIM,
+            "bounds at spread_target 'x'",
+        ),
+        ({"apache": _GOOD | {"bootstrap_seed": 8}}, _SIM, "registered 10000"),
         (
             {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=1_040)},
-            {"apache": _at(0.03)},
+            _SIM,
             "registered 10000",
         ),
-        ({"apache": _GOOD}, None, "bounds must map"),
-        ([], {"apache": _at(0.03)}, "cells must map"),
-        (
-            {"apache": _GOOD | {"intervals": {"by_cells": {}}}},
-            {"apache": _at(0.03)},
-            "apache: intervals",
-        ),
+        ({"apache": _GOOD}, None, "simulations must map"),
+        ([], _SIM, "cells must map"),
+        ({"apache": _GOOD | {"intervals": {"by_cells": {}}}}, _SIM, "apache: intervals"),
     ],
 )
-def test_replication_gate_refuses(frozen, cells: dict, bounds: dict, match: str) -> None:
+def test_replication_gate_refuses(frozen, cells: Any, simulations: Any, match: str) -> None:
     frozen("apache")
     with pytest.raises(ValueError, match=match):
-        replication_gate(cells, bounds=bounds)
+        replication_gate(cells, simulations=simulations)
+
+
+@pytest.mark.parametrize(
+    ("admitted", "org", "levels", "cells"),
+    [
+        (("openstack", "wikimedia"), "openstack", [0.95], 2),
+        (("openstack",), "openstack", [0.95], 1),
+        (("openstack", "qt", "chromium"), "qt", [0.975, 0.95], 3),
+    ],
+)
+def test_a_gerrit_read_is_registered_by_the_frozen_design(
+    monkeypatch: pytest.MonkeyPatch, admitted: tuple, org: str, levels: list, cells: int
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", admitted)
+    read = registered_read(org)
+    assert read["levels"] == pytest.approx(levels)
+    assert (read["cells"], read["spread_target"]) == (cells, "sizing_bound_90")
+
+
+def test_a_read_waits_for_its_organizations_to_be_frozen(
+    monkeypatch: pytest.MonkeyPatch, frozen
+) -> None:
+    for org in ("openstack", "apache"):
+        with pytest.raises(ValueError, match="frozen"):
+            registered_read(org)
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack",))
+    frozen("apache")
+    with pytest.raises(ValueError, match="frozen admitted"):
+        registered_read("wikimedia")
+    with pytest.raises(ValueError, match="frozen replication member"):
+        registered_read("llvm")
+    assert registered_read("apache") == {
+        "levels": [REPLICATION_CONFIDENCE],
+        "cells": 1,
+        "spread_target": "sizing_bound_90",
+    }
 
 
 @pytest.mark.parametrize("bad", [0.0, -0.01, True, float("nan")])
@@ -1167,6 +1204,6 @@ def test_a_missing_results_cell_is_an_error_cell_in_the_cpp_supplement() -> None
 def test_replication_gate_accepts_any_real_number_type(frozen) -> None:
     """A numpy scalar is a `numbers.Real` and not a float; Fraction stands in for it here."""
     frozen("apache")
-    cell = _GOOD | {"p_one_sided": Fraction(1, 1000), "bounds": _at(Fraction(3, 100))}
-    out = replication_gate({"apache": cell}, bounds={"apache": _at(Fraction(3, 100))})
+    cell = _GOOD | {"p_one_sided": Fraction(1, 1000), "bounds": {0.975: Fraction(3, 100)}}
+    out = replication_gate({"apache": cell}, simulations={"apache": _sim(Fraction(3, 100))})
     assert out["cells"]["apache"]["verdict"] == "supported"

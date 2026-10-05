@@ -12,6 +12,7 @@ import pytest
 from sphragis.experiment import decomposition
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION
+from sphragis.experiment.partitions import spread_targets
 
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location(
@@ -91,15 +92,25 @@ def _planted(tmp_path: Path, org: str) -> list[str]:
     return ["--planted", str(path)]
 
 
-def _sensitivity(tmp_path: Path, levels: list[float], bound: float, org: str) -> Path:
+# The development pilot K is sized on, and the per-run spread its simulation is calibrated to.
+SIZING = {"sd_upper": 0.03}
+PILOT = {"per_run": [0.02, -0.01, 0.005, 0.03], "runs_left_out": [], "sizing": SIZING}
+
+
+def _sensitivity(
+    tmp_path: Path, levels: list[float], bound: float, org: str, *, pilot: dict = PILOT
+) -> Path:
+    """A partition simulation calibrated on `pilot`, its bounds at both named spread targets."""
     path = tmp_path / "sensitivity.json"
     by_level = {str(c): {"by_cells": {"1": {"minimum_detectable_effect": bound}}} for c in levels}
+    targets = {name: {"by_level": by_level} for name in ("pilot_estimate", "sizing_bound_90")}
     path.write_text(
         json.dumps(
             {
                 "org": org,
                 "runs": len(ADMISSIBLE),
-                "by_target": {"pilot_estimate": {"by_level": by_level}},
+                "spread_targets": spread_targets(pilot),
+                "by_target": targets,
             }
         )
     )
@@ -109,8 +120,9 @@ def _sensitivity(tmp_path: Path, levels: list[float], bound: float, org: str) ->
 def _sizing(tmp_path: Path, org: str, **fields: object) -> list[str]:
     """A development pilot that sized K at every run given."""
     path = tmp_path / "sizing.json"
-    artifact = {"org": org, "window": "development", "k_source": "all runs"}
-    path.write_text(json.dumps({**artifact, "sizing": {"runs": len(ADMISSIBLE)}, **fields}))
+    artifact = {"org": org, "window": "development", "k_source": "all runs", **PILOT}
+    sizing = {**SIZING, "runs": len(ADMISSIBLE)}
+    path.write_text(json.dumps({**artifact, "sizing": sizing, **fields}))
     return ["--sizing", str(path)]
 
 
@@ -160,7 +172,7 @@ def _replication_argv(
         "--sensitivity",
         str(sensitivity),
         "--spread-target",
-        "pilot_estimate",
+        "sizing_bound_90",
         "--out",
         str(tmp_path / "pilot.json"),
     ]
@@ -168,8 +180,14 @@ def _replication_argv(
 
 @pytest.fixture
 def members(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Apache a frozen replication member, OpenStack the one admitted Gerrit organization."""
     for module in (decomposition, partition_pilot):
         monkeypatch.setattr(module, "REPLICATION_MEMBERS", ("apache",))
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack",))
+
+
+def _simulation(tmp_path: Path) -> dict:
+    return json.loads((tmp_path / "sensitivity.json").read_text())
 
 
 def test_a_replication_member_reads_its_test_window_through_the_gate(
@@ -181,7 +199,8 @@ def test_a_replication_member_reads_its_test_window_through_the_gate(
     assert report["levels"] == [level] and report["window"] == "test"
     assert report["planted_convention"]["passed"] is True
     assert report["sensitivity"]["org"] == "apache" and report["k_source"].endswith("sizing.runs")
-    gate = decomposition.replication_gate({"apache": report}, bounds={"apache": {level: 0.4}})
+    simulations = {"apache": _simulation(tmp_path)}
+    gate = decomposition.replication_gate({"apache": report}, simulations=simulations)
     assert gate["cells"]["apache"]["verdict"] == report["verdicts"][str(level)] == "supported"
     assert gate["partial_conjunction"]["at_least"] == 1
 
@@ -189,12 +208,13 @@ def test_a_replication_member_reads_its_test_window_through_the_gate(
 def test_the_gate_refuses_a_members_development_pilot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
 ) -> None:
-    level = decomposition.REPLICATION_CONFIDENCE
     _main(monkeypatch, _replication_argv(tmp_path, "dev"))
     report = json.loads((tmp_path / "pilot.json").read_text())
     assert report["window"] == "development"
     with pytest.raises(ValueError, match="development window"):
-        decomposition.replication_gate({"apache": report}, bounds={"apache": {level: 0.4}})
+        decomposition.replication_gate(
+            {"apache": report}, simulations={"apache": _simulation(tmp_path)}
+        )
 
 
 @pytest.mark.parametrize("org", ["apache", "openstack"])
@@ -218,7 +238,7 @@ def test_a_test_window_is_read_only_under_what_was_fixed_before_it(
 ) -> None:
     sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, org)
     given = {
-        "--sensitivity": ["--sensitivity", str(sensitivity), "--spread-target", "pilot_estimate"],
+        "--sensitivity": ["--sensitivity", str(sensitivity)],
         "--sizing": _sizing(tmp_path, org),
     }
     argv = [*_inputs(tmp_path, org, "test"), *_planted(tmp_path, org), *extra]
@@ -340,3 +360,61 @@ def test_every_half_must_be_built_from_the_runs_admissible_partition(
     first.write_text(json.dumps(run))
     with pytest.raises(SystemExit, match="must use admissible partition"):
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
+
+
+def _gerrit_test_argv(tmp_path: Path, *extra: str, pilot: dict = PILOT) -> list[str]:
+    sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack", pilot=pilot)
+    return [
+        *_inputs(tmp_path, "openstack", "test"),
+        *_planted(tmp_path, "openstack"),
+        *_sizing(tmp_path, "openstack"),
+        "--sensitivity",
+        str(sensitivity),
+        *extra,
+        "--out",
+        str(tmp_path / "o.json"),
+    ]
+
+
+def test_a_gerrit_test_read_takes_its_levels_cells_and_target_from_the_registration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    _main(monkeypatch, _gerrit_test_argv(tmp_path))
+    report = json.loads((tmp_path / "o.json").read_text())
+    registered = decomposition.registered_read("openstack")
+    assert report["levels"] == registered["levels"] == [0.95]
+    assert report["sensitivity"]["spread_target"] == "sizing_bound_90"
+    assert report["sensitivity"]["cells"] == 1
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        ["--hypotheses", "2"],
+        ["--spread-target", "pilot_estimate"],
+        ["--h1-cells", "2"],
+    ],
+)
+def test_a_test_read_refuses_a_choice_that_differs_from_the_registration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None, extra: list[str]
+) -> None:
+    with pytest.raises(SystemExit, match="differ from the registered"):
+        _main(monkeypatch, _gerrit_test_argv(tmp_path, *extra))
+    assert not (tmp_path / "o.json").exists()
+
+
+def test_a_test_read_refuses_a_simulation_calibrated_on_another_pilot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    other = {**PILOT, "per_run": [0.01, 0.0, 0.002, 0.04]}
+    with pytest.raises(SystemExit, match="calibrated on another pilot"):
+        _main(monkeypatch, _gerrit_test_argv(tmp_path, pilot=other))
+    assert not (tmp_path / "o.json").exists()
+
+
+def test_a_gerrit_test_read_waits_for_the_admitted_organizations_to_be_frozen(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert decomposition.ADMITTED_ORGANIZATIONS is None
+    with pytest.raises(SystemExit, match="frozen admitted"):
+        _main(monkeypatch, _gerrit_test_argv(tmp_path))
