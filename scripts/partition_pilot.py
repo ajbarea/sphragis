@@ -25,8 +25,9 @@ import json
 import re
 from pathlib import Path
 
-from sphragis.experiment.across import TEST_BOOTSTRAP_SEED, TEST_RESAMPLES, require_resamples
+from sphragis.experiment.cells import TEST_BOOTSTRAP_SEED, TEST_RESAMPLES, require_resamples
 from sphragis.experiment.decomposition import (
+    ORGANIZATIONS,
     REPLICATION_CONFIDENCE,
     REPLICATION_FAMILY,
     REPLICATION_MEMBERS,
@@ -82,6 +83,8 @@ def main() -> None:
             f"{args.org}: --replication is for the GitHub family {REPLICATION_FAMILY} only, "
             "and every member needs it"
         )
+    if not args.replication and args.org not in ORGANIZATIONS:
+        raise SystemExit(f"{args.org} is not a registered Gerrit organization {ORGANIZATIONS}")
     if args.replication:
         if REPLICATION_MEMBERS is not None and args.org not in REPLICATION_MEMBERS:
             raise SystemExit(f"{args.org} is not among the frozen members {REPLICATION_MEMBERS}")

@@ -252,11 +252,14 @@ def test_a_run_with_one_half_on_the_test_window_is_not_read_as_development(
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
 
 
-@pytest.mark.parametrize(("org", "flag"), [("apache", []), ("openstack", ["--replication"])])
+@pytest.mark.parametrize(
+    ("org", "flag"),
+    [("apache", []), ("openstack", ["--replication"]), ("openjdk", [])],
+)
 def test_replication_is_for_the_github_family_and_every_member(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, org: str, flag: list[str]
 ) -> None:
-    with pytest.raises(SystemExit, match="--replication"):
+    with pytest.raises(SystemExit, match="--replication|not a registered Gerrit organization"):
         _main(monkeypatch, [*_inputs(tmp_path, org), *flag, "--out", str(tmp_path / "o.json")])
 
 

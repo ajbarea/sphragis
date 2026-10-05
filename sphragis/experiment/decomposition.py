@@ -20,14 +20,14 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.halves import suffix
-from sphragis.experiment.across import (
+from sphragis.experiment.across import partial_conjunction
+from sphragis.experiment.cells import (
     MIN_RESAMPLES,
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
     by_level,
     is_real,
     level_key,
-    partial_conjunction,
     require_readable,
 )
 from sphragis.experiment.grid import EvalRun, run_id
@@ -162,7 +162,8 @@ def replication_gate(
     gate refuses to run before they are frozen. `cells` holds each member's
     `partition_pilot.py --replication` report on its test window, check 5 passed, read at
     `REPLICATION_CONFIDENCE` alone, and no other organization (read back from JSON is accepted;
-    each is checked by `require_readable`).
+    each is checked by `require_readable`). It checks a report as `partition_pilot.py` writes
+    one; that no report was edited after it was written is the git history's to show.
     `bounds` holds each member's bounds by level from its own partition simulation, as
     `sensitivity_bounds` gives them, fixed before its test window; a member without a positive
     finite bound at `REPLICATION_CONFIDENCE`, a bound for any other organization, or a cell
@@ -198,6 +199,8 @@ def replication_gate(
         simulation = cell["sensitivity"]
         if not (isinstance(simulation, Mapping) and simulation.get("org") == org):
             raise ValueError(f"{org}: its bounds are not from its own simulation")
+        if simulation.get("cells") != 1:
+            raise ValueError(f"{org}: its bounds are not from a simulation of one cell")
         if (cell["resamples"], cell["bootstrap_seed"]) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
             raise ValueError(
                 f"{org}: read at {cell['resamples']} resamples, seed {cell['bootstrap_seed']}; "

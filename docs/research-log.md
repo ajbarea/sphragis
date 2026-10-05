@@ -7777,7 +7777,9 @@ is registered as fixed, not as a Holm step. An empty family has no r.
 
 Each cell now records the organization it was computed for. The checks every reading of an H1
 cell needs are one function, `require_readable` in `across.py`, run by both this gate and
-`across_organizations`: filed under the organization it was computed for; its fields; a whole
+`across_organizations`, now in `cells.py` beside the level-key helpers and the registered
+test-read constants, so the confirmatory gate does not import its checks from the readings beside
+it: filed under the organization it was computed for; its fields; a whole
 resample count of at least 1,000, whole at the one-sided level; a p-value in [0, 1]; a finite
 interval at the level, low at most high; and a p-value that agrees with the interval. Level keys in both gates, `h1_over_partitions`, `sensitivity_bounds` and
 `detectable_effects` pass through one helper, so a cell or bound read back from JSON (string keys)
@@ -7799,7 +7801,8 @@ records the window it read, the simulation it took bounds from and the bootstrap
 takes only a member's test-window report whose check 5 passed, with K from `--sizing`, bounds
 from its own simulation, the registered resamples and seed, read at 97.5% alone. Decided here: a member's bound comes from a simulation of one cell at 97.5%
 (`--h1-cells 1`), since it is read alone, not as one of an intersection; registered-decisions.md
-says so. The partition simulation reads its levels from the pilot, so the member's bound is at
+says so, and the gate checks the report's simulation is of one cell. Without `--replication` the
+pilot takes only the four registered Gerrit organizations. The partition simulation reads its levels from the pilot, so the member's bound is at
 the same level. The pilot's report no longer carries its own `bounds`, which the cell
 now holds. A test runs the script on synthetic runs and reads its report through the gate, and
 another writes a cell to JSON and reads it back for each of the three verdicts.

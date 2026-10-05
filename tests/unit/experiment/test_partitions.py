@@ -309,7 +309,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         "window": "test",
         "planted_convention": {"passed": True},
         "k_source": "partition-pilot-apache.json: sizing.runs",
-        "sensitivity": {"org": "apache"},
+        "sensitivity": {"org": "apache", "cells": 1},
     }
     loaded = json.loads(json.dumps(report))
     out = decomposition.replication_gate({"apache": loaded}, bounds={"apache": {level: bound}})

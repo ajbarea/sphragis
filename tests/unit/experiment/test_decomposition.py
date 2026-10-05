@@ -384,7 +384,7 @@ def _replication_cell(
         "window": "test",
         "planted_convention": {"passed": True},
         "k_source": f"partition-pilot-{org}.json: sizing.runs",
-        "sensitivity": {"org": org},
+        "sensitivity": {"org": org, "cells": 1},
         "bootstrap_seed": 7,
     }
 
@@ -546,9 +546,14 @@ _GOOD = _replication_cell(0.01, 0.02, 0.001)
         ({"apache": _GOOD | {"estimate": float("nan")}}, {"apache": _at(0.03)}, "estimate"),
         ({"apache": _GOOD | {"k_source": "all runs"}}, {"apache": _at(0.03)}, "--sizing"),
         (
-            {"apache": _GOOD | {"sensitivity": {"org": "openstack"}}},
+            {"apache": _GOOD | {"sensitivity": {"org": "openstack", "cells": 1}}},
             {"apache": _at(0.03)},
             "not from its own simulation",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 3}}},
+            {"apache": _at(0.03)},
+            "simulation of one cell",
         ),
         ({"apache": _GOOD | {"bootstrap_seed": 8}}, {"apache": _at(0.03)}, "registered 10000"),
         (

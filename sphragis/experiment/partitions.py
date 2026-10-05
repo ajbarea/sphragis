@@ -16,7 +16,8 @@ from collections.abc import Mapping, Sequence
 from statistics import NormalDist, stdev, variance
 from typing import Any
 
-from sphragis.experiment.across import by_level, level_key, one_sided_p
+from sphragis.experiment.across import one_sided_p
+from sphragis.experiment.cells import by_level, level_key
 from sphragis.experiment.decomposition import (
     SESOI,
     cell_verdict,
