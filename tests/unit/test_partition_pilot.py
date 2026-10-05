@@ -109,6 +109,7 @@ def _sensitivity(
             {
                 "org": org,
                 "runs": len(ADMISSIBLE),
+                "planned_changes": 1,
                 "spread_targets": spread_targets(pilot),
                 "by_target": targets,
             }
@@ -202,6 +203,8 @@ def test_a_replication_member_reads_its_test_window_through_the_gate(
     gate = decomposition.replication_gate({"apache": report}, simulations=simulations)
     assert gate["cells"]["apache"]["verdict"] == report["verdicts"][str(level)] == "supported"
     assert gate["partial_conjunction"]["at_least"] == 1
+    assert gate["cells"]["apache"]["size"] == {"projected": 1, "realised": report["changes"]}
+    assert gate["below_projection"] == []
 
 
 def test_the_gate_refuses_a_members_development_pilot(

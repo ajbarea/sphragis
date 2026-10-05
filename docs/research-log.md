@@ -7863,3 +7863,30 @@ boundary is worded as declared per example, by provenance, before training. The 
 is RQ1 only and states none of these claims. Anonymous submissions are recorded by OpenReview id
 and cited only once public.
 
+### H1's verdict over the admitted organizations' test reads implemented (2026-10-05)
+
+`h1_test_gate` in `sphragis/experiment/decomposition.py` reads H1 the way `replication_gate` reads
+the GitHub family. It takes the organizations from `ADMITTED_ORGANIZATIONS`, never from its
+caller, and refuses to run before they are frozen. It also refuses while H2 is confirmatory (Qt and
+Chromium both admitted), because Holm cannot be read without H2 and H2's test read over partitions
+is not built. It takes one `partition_pilot.py` test report and one simulation artifact per
+admitted organization, exactly those. Each report is checked by `require_readable` at every
+registered Holm level and by `require_test_read` against `registered_read`, and each bound is read
+from the organization's own simulation (`_registered_bounds`, shared with `replication_gate`). H1
+is the intersection-union over the cells at the registered levels through the existing
+`holm_steps`, with `below_sesoi` and the pre-committed reading. With OpenStack and Wikimedia
+admitted, H1 is read at 95% on two cells.
+
+Beside the verdict, binding none, are four things. The first is the readings across organizations
+(partial conjunction, random effects). The random-effects summary needs two organizations and
+positive standard errors. With OpenStack alone admitted, or with a cell whose bootstrap standard
+error is zero, it is reported as unavailable with its reason, and the verdict is still read. The
+second is the design, the SESOI and the registered bounds, as `decomposition_gate` reports them. The third is
+each cell's realised test size against its simulation's projected size. Both gates report it and
+list the organizations whose window is smaller than projected in `below_projection`. Such a window
+must be reported with the simulation's power at its realised size ("Fetch horizon"), which no
+script computes yet (IMPL). The fourth is `meaningful` beside `within_sesoi`, with one
+`read_intervals` building both for every gate and for `h1_over_partitions`. `require_test_read`
+now refuses a K that is not a whole number. A report with K missing on both sides had passed it as
+equal, and the gate then failed with a `KeyError`.
+

@@ -73,14 +73,19 @@ def is_real(value: Any) -> bool:
         return False
 
 
+def is_count(value: Any) -> bool:
+    """A whole number above zero (a numpy integer too), never a bool."""
+    return isinstance(value, numbers.Integral) and not isinstance(value, bool) and value > 0
+
+
 def require_resamples(resamples: Any, *, alpha: float, org: str) -> None:
     """Refuse a resample count below `MIN_RESAMPLES` or whose product with `alpha` is not whole.
 
     Only a whole product (10,000 draws at 0.0125 or 0.025) makes a p-value fall below `alpha`
     exactly when the percentile interval's lower bound lies above zero.
     """
-    if not isinstance(resamples, numbers.Integral) or isinstance(resamples, bool):
-        raise ValueError(f"{org}: resamples must be a whole number, got {resamples!r}")
+    if not is_count(resamples):
+        raise ValueError(f"{org}: resamples must be a positive whole number, got {resamples!r}")
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"{org}: at least {MIN_RESAMPLES} resamples, got {resamples}")
     excluded = resamples * alpha
@@ -158,13 +163,12 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
     """Refuse a `partition_pilot.py` report unless it is a test-window read registered in advance.
 
     "Reading the test window" (registered-decisions.md): read on the test window with check 5
-    passed; K from the organization's own development pilot (`k_from`); bounds from its own
-    simulation, run at that same K and calibrated on that pilot (`sensitivity`); at
+    passed; K, a whole number, from the organization's own development pilot (`k_from`); bounds
+    from its own simulation, run at that same K and calibrated on that pilot (`sensitivity`); at
     `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell count and spread
     target `expected` registers for the organization (`decomposition.registered_read`), so none
     is chosen when the window is read. The pilot runs this on its report before writing it, and
-    `replication_gate` on reading it, so both hold one rule; the Gerrit H1 verdict over test
-    reports is not built yet, and runs it too when it is.
+    `replication_gate` and `h1_test_gate` on reading it, so both sides hold one rule.
     """
     required = (
         "window",
@@ -180,6 +184,8 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
     absent = [f for f in required if f not in report]
     if absent:
         raise ValueError(f"{org}: the report has no {absent}")
+    if not is_count(report["runs"]):
+        raise ValueError(f"{org}: K = {report['runs']!r} is not a whole number of runs")
     if report["window"] != "test":
         raise ValueError(f"{org}: read on the {report['window']} window, not the test window")
     planted = report["planted_convention"]

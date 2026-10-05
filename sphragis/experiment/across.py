@@ -190,6 +190,25 @@ def _reml_tau2(y: Sequence[float], v: Sequence[float], x: Sequence[Sequence[floa
     return min((0.0, grid[best], candidate), key=nll)
 
 
+def unsummable(estimates: Mapping[str, float], standard_errors: Mapping[str, float]) -> str | None:
+    """Why `random_effects` cannot summarise these organizations, or None when it can.
+
+    It needs both numbers for each organization, at least two organizations, a finite estimate and
+    a standard error whose variance is positive and finite.
+    """
+    orgs = sorted(estimates)
+    if sorted(standard_errors) != orgs:
+        return "every organization needs both an estimate and a standard error"
+    if len(orgs) < 2:
+        return f"a summary across organizations needs at least two, got {len(orgs)}"
+    for org in orgs:
+        se = standard_errors[org]
+        variance = se * se if math.isfinite(se) else math.inf
+        if not (0.0 < variance < math.inf) or not math.isfinite(estimates[org]):
+            return f"{org}: estimate {estimates[org]!r}, standard error {se!r}"
+    return None
+
+
 def random_effects(
     estimates: Mapping[str, float],
     standard_errors: Mapping[str, float],
@@ -208,16 +227,10 @@ def random_effects(
     organizations gets the same summary over its own, descriptive: no moderator is tested, since
     meta-regression needs about ten studies (Cochrane Handbook 6.5, chapter 10).
     """
+    unavailable = unsummable(estimates, standard_errors)
+    if unavailable is not None:
+        raise ValueError(unavailable)
     orgs = sorted(estimates)
-    if sorted(standard_errors) != orgs:
-        raise ValueError("every organization needs both an estimate and a standard error")
-    if len(orgs) < 2:
-        raise ValueError(f"a summary across organizations needs at least two, got {len(orgs)}")
-    for org in orgs:
-        se = standard_errors[org]
-        variance = se * se if math.isfinite(se) else math.inf
-        if not (0.0 < variance < math.inf) or not math.isfinite(estimates[org]):
-            raise ValueError(f"{org}: estimate {estimates[org]!r}, standard error {se!r}")
     y = [estimates[o] for o in orgs]
     v = [standard_errors[o] ** 2 for o in orgs]
     k = len(orgs)
@@ -318,18 +331,27 @@ def across_organizations(
     """Both readings over H1 cells from `h1_over_partitions`, at one Holm step's confidence.
 
     The partial conjunction is read at that step's one-sided level, the cells' own; the summary's
-    interval at the same confidence. Each cell is checked by `require_readable`.
+    interval at the same confidence. Each cell is checked by `require_readable`. A summary
+    `random_effects` cannot compute (one organization, or a zero standard error) is reported with
+    the reason in `unavailable`: neither reading binds a verdict, so neither withholds one.
     """
     alpha = one_sided_alpha(confidence)
     require_readable(cells, confidence=confidence, fields=("estimate", "bootstrap_se"))
+    estimates = {org: cell["estimate"] for org, cell in cells.items()}
+    standard_errors = {org: cell["bootstrap_se"] for org, cell in cells.items()}
+    unavailable = unsummable(estimates, standard_errors)
     return {
         "partial_conjunction": partial_conjunction(
             {org: cell["p_one_sided"] for org, cell in cells.items()}, alpha=alpha
         ),
         "random_effects": random_effects(
-            {org: cell["estimate"] for org, cell in cells.items()},
-            {org: cell["bootstrap_se"] for org, cell in cells.items()},
-            confidence=confidence,
-            platforms=platforms,
-        ),
+            estimates, standard_errors, confidence=confidence, platforms=platforms
+        )
+        if unavailable is None
+        else {
+            "organizations": sorted(cells),
+            "k": len(cells),
+            "estimate": None,
+            "unavailable": unavailable,
+        },
     }

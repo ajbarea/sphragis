@@ -28,6 +28,7 @@ from sphragis.experiment.decomposition import (
     design,
     detectable_effects,
     file_type_supplement,
+    h1_test_gate,
     halves,
     holm_levels,
     holm_steps,
@@ -384,10 +385,12 @@ def _replication_cell(
     bound: float | None = 0.03,
     resamples: int = 10_000,
     org: str = "apache",
+    changes: int = 2_000,
 ) -> dict:
     """A member's test-window report as `partition_pilot.py --replication` writes it."""
     return {
         "org": org,
+        "changes": changes,
         "estimate": (low + high) / 2,
         "levels": [REPLICATION_CONFIDENCE],
         "intervals": {REPLICATION_CONFIDENCE: {"low": low, "high": high}},
@@ -409,17 +412,21 @@ def _replication_cell(
             "runs": 24,
             "spread_target": "sizing_bound_90",
             "spread_targets": _CALIBRATION,
+            "planned_changes": 2_000,
         },
         "bootstrap_seed": 7,
     }
 
 
-def _sim(bound: Any, org: str = "apache", *, runs: int = 24, by_level: Any = None) -> dict:
+def _sim(
+    bound: Any, org: str = "apache", *, runs: int = 24, by_level: Any = None, planned: int = 2_000
+) -> dict:
     """A member's partition-simulation artifact, its bound at the registered target and one cell."""
     levels = by_level or {"0.975": {"by_cells": {"1": {"minimum_detectable_effect": bound}}}}
     return {
         "org": org,
         "runs": runs,
+        "planned_changes": planned,
         "spread_targets": _CALIBRATION,
         "by_target": {"sizing_bound_90": {"by_level": levels}},
     }
@@ -460,8 +467,10 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) 
     assert out["partial_conjunction"]["at_least"] == 2
 
 
-def test_replication_gate_refuses_to_read_before_the_members_are_frozen() -> None:
-    assert decomposition.REPLICATION_MEMBERS is None
+def test_replication_gate_refuses_to_read_before_the_members_are_frozen(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", None)
     with pytest.raises(ValueError, match="not frozen"):
         replication_gate({}, simulations={})
 
@@ -499,25 +508,26 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD, "llvm": _GOOD}, _SIM, "cells for organization"),
         ({"apache": _GOOD, "openstack": _GOOD}, _SIM, "cells for organization"),
         ({"apache": _GOOD}, {**_SIM, "grafana": _sim(0.03, "grafana")}, "simulations for organ"),
-        ({}, _SIM, "no cell and simulation"),
-        ({"apache": _GOOD}, {}, "no cell and simulation"),
+        ({}, _SIM, "no cells for"),
+        ({"apache": _GOOD}, {}, "no simulations for"),
         ({"apache": _GOOD}, {"apache": 0.03}, "not the one its cell was read under"),
         ({"apache": _GOOD}, {"apache": _sim(0.03, "openstack")}, "not the one its cell"),
         ({"apache": _GOOD}, {"apache": _sim(0.03, runs=40)}, "not the one its cell"),
+        ({"apache": _GOOD}, {"apache": _sim(0.03, planned=1_999)}, "not the one its cell"),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.95": {"by_cells": {}}})},
-            "simulation: no bound at level",
+            "apache: simulation: no bound at level",
         ),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.975": {"by_cells": {"3": {}}}})},
-            "simulation: no bound for 1",
+            "apache: simulation: no bound for 1",
         ),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.975": {}, 0.975: {}})},
-            "simulation: two keys name level",
+            "apache: simulation: two keys name level",
         ),
         ({"apache": _GOOD}, {"apache": _sim(float("nan"))}, "no registered detectable effect"),
         ({"apache": _GOOD}, {"apache": _sim(None)}, "no registered detectable effect"),
@@ -557,7 +567,7 @@ _SIM = {"apache": _sim(0.03)}
             r"apache: the cell has no \['resamples'\]",
         ),
         ({"apache": _replication_cell(0.01, 0.02, 0.001, org="llvm")}, _SIM, "computed for 'llvm'"),
-        ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds"),
+        ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds:"),
         ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
         ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
         ({"apache": _GOOD | {"planted_convention": None}}, _SIM, "check 5 did not pass"),
@@ -632,9 +642,34 @@ _SIM = {"apache": _sim(0.03)}
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03) | {"by_target": {"sizing_bound_90": []}}},
-            "simulation:",
+            "apache: simulation:",
         ),
         ({"apache": _GOOD}, None, "simulations must map"),
+        (
+            {
+                "apache": _GOOD
+                | {
+                    "runs": None,
+                    "k_from": {**_GOOD["k_from"], "runs": None},
+                    "sensitivity": {k: v for k, v in _GOOD["sensitivity"].items() if k != "runs"},
+                }
+            },
+            {"apache": {k: v for k, v in _sim(0.03).items() if k != "runs"}},
+            "not a whole number of runs",
+        ),
+        ({"apache": _GOOD | {"changes": 0}}, _SIM, "apache: changes 0"),
+        (
+            {
+                "apache": _GOOD
+                | {
+                    "sensitivity": {
+                        k: v for k, v in _GOOD["sensitivity"].items() if k != "planned_changes"
+                    }
+                }
+            },
+            {"apache": {k: v for k, v in _sim(0.03).items() if k != "planned_changes"}},
+            "apache: planned_changes None",
+        ),
         ([], _SIM, "cells must map"),
         ({"apache": _GOOD | {"intervals": {"by_cells": {}}}}, _SIM, "apache: intervals"),
     ],
@@ -1288,3 +1323,157 @@ def test_the_frozen_set_check_reads_a_generator_once(monkeypatch: pytest.MonkeyP
         detectable=DETECTABLE,
     )
     assert outcome["design"]["H1"] == ("openstack",)
+
+
+def _gerrit_report(
+    org: str,
+    low: float,
+    high: float,
+    p: float,
+    *,
+    bound: float = 0.03,
+    cells: int = 2,
+    se: float = 0.005,
+    changes: int = 2_000,
+) -> dict:
+    """An admitted organization's test-window report, read at H1-alone's 95%."""
+    report = _replication_cell(low, high, p, bound=bound, org=org, changes=changes)
+    return report | {
+        "levels": [0.95],
+        "intervals": {0.95: {"low": low, "high": high}},
+        "bounds": {0.95: bound},
+        "sensitivity": {**report["sensitivity"], "cells": cells},
+        "bootstrap_se": se,
+    }
+
+
+def _gerrit_sim(org: str, bound: float = 0.03, *, cells: int = 2) -> dict:
+    by_level = {"0.95": {"by_cells": {str(cells): {"minimum_detectable_effect": bound}}}}
+    return _sim(bound, org, by_level=by_level)
+
+
+@pytest.fixture
+def admitted(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
+    def freeze(*orgs: str) -> None:
+        monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", orgs)
+
+    return freeze
+
+
+@pytest.mark.parametrize(
+    ("openstack", "wikimedia", "verdict", "reading_"),
+    [
+        ((0.01, 0.05, 0.001), (0.02, 0.06, 0.0001), "pass", "within-half"),
+        ((-0.01, 0.02, 0.2), (-0.01, 0.01, 0.3), "bounded", "no within-half transfer"),
+        ((0.01, 0.05, 0.001), (-0.01, 0.05, 0.3), "inconclusive", "unresolved"),
+    ],
+)
+def test_the_h1_test_gate_reads_the_admitted_cells_at_the_registered_level(
+    admitted, openstack: tuple, wikimedia: tuple, verdict: str, reading_: str
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", *openstack),
+        "wikimedia": _gerrit_report("wikimedia", *wikimedia),
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    out = h1_test_gate(reports, simulations=sims)
+    assert out["holm_levels"] == pytest.approx([0.95])
+    assert out["verdicts"] == {"H1": verdict}
+    assert out["reading"] == reading_
+    assert out["passed_at"]["H1"] == (pytest.approx(0.95) if verdict == "pass" else None)
+    assert set(out["across"]) == {"partial_conjunction", "random_effects"}
+
+
+def test_the_h1_test_gate_reads_back_from_json(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    loaded = json.loads(json.dumps({"r": reports, "s": {o: _gerrit_sim(o) for o in reports}}))
+    assert h1_test_gate(loaded["r"], simulations=loaded["s"])["verdicts"] == {"H1": "pass"}
+
+
+def test_the_h1_test_gate_waits_for_the_freeze_and_for_the_h2_read(
+    admitted, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", None)
+    with pytest.raises(ValueError, match="not frozen"):
+        h1_test_gate({}, simulations={})
+    admitted("openstack", "qt", "chromium")
+    with pytest.raises(ValueError, match="H2 is confirmatory"):
+        h1_test_gate({}, simulations={})
+
+
+@pytest.mark.parametrize(
+    ("reports", "sims", "match"),
+    [
+        ({"openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001)}, None, "reports for"),
+        (
+            {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia", "qt")},
+            None,
+            "reports for",
+        ),
+        (
+            {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")},
+            {"openstack": _gerrit_sim("openstack")},
+            "simulations for",
+        ),
+        (
+            {
+                "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001)
+                | {"levels": [0.975, 0.95]},
+                "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+            },
+            None,
+            "read at levels",
+        ),
+        (
+            {
+                "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, bound=0.05),
+                "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+            },
+            None,
+            "computed under bound 0.05",
+        ),
+    ],
+)
+def test_the_h1_test_gate_refuses(admitted, reports: dict, sims: Any, match: str) -> None:
+    admitted("openstack", "wikimedia")
+    sims = sims if sims is not None else {o: _gerrit_sim(o) for o in ("openstack", "wikimedia")}
+    with pytest.raises(ValueError, match=match):
+        h1_test_gate(reports, simulations=sims)
+
+
+@pytest.mark.parametrize(
+    ("orgs", "se", "reason"),
+    [
+        (("openstack",), 0.005, "at least two, got 1"),
+        (("openstack", "wikimedia"), 0.0, "standard error 0.0"),
+    ],
+)
+def test_an_across_reading_that_cannot_be_computed_withholds_no_verdict(
+    admitted, orgs: tuple, se: float, reason: str
+) -> None:
+    """OpenStack alone is a valid frozen set; a zero bootstrap SE is a valid cell."""
+    admitted(*orgs)
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001, cells=len(orgs), se=se) for o in orgs}
+    sims = {o: _gerrit_sim(o, cells=len(orgs)) for o in orgs}
+    out = h1_test_gate(reports, simulations=sims)
+    assert out["verdicts"] == {"H1": "pass"}
+    assert reason in out["across"]["random_effects"]["unavailable"]
+    assert out["across"]["random_effects"]["estimate"] is None
+    assert out["across"]["partial_conjunction"]["k"] == len(orgs)
+
+
+def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
+        "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001, changes=2_000),
+    }
+    out = h1_test_gate(reports, simulations={o: _gerrit_sim(o, 0.03) for o in reports})
+    assert out["design"] == design(("openstack", "wikimedia"))
+    assert out["sesoi"] == decomposition.SESOI
+    assert out["detectable"] == {"H1": {o: {0.95: 0.03} for o in reports}}
+    assert out["cells"]["openstack"]["size"] == {"projected": 2_000, "realised": 1_999}
+    assert out["below_projection"] == ["openstack"]
+    assert set(out["cells"]["openstack"]) >= {"verdicts", "within_sesoi", "meaningful"}

@@ -23,13 +23,14 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 2. Before the first test window: one commit sets `ADMITTED_ORGANIZATIONS`; the OpenStack and
    Wikimedia development pilots are rerun (same runs) so each names its organization, as a test
    read requires of the pilot it sizes K on.
-3. Before the first test window, the Gerrit verdict over test reads: H1's intersection-union over
-   the admitted organizations' `partition_pilot.py` test reports at the registered Holm levels,
-   each report checked by `require_test_read`, as `replication_gate` does for the GitHub family;
-   and the H2 test read over partitions if Qt and Chromium are both admitted.
+3. If Qt and Chromium are both admitted, the H2 test read over partitions, through
+   `require_test_read`; `h1_test_gate` refuses to read H1 while H2 is confirmatory without it.
 4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
-5. Rebuild the retrieval comparator (#77) on the registered runner.
-6. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
+5. Before the first test window: `partition_sensitivity.py` computes power at the registered bound
+   for a given change count, so a window both gates list in `below_projection` is reported with
+   the simulation's power at its realised size ("Fetch horizon").
+6. Rebuild the retrieval comparator (#77) on the registered runner.
+7. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`.
 
 ## Standing
