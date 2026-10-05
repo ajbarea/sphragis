@@ -7775,18 +7775,22 @@ the 0.0125 bound between draws, a missing field, and a p-value that disagrees wi
 two-sided 97.5% interval and r from the partial conjunction at one-sided 0.0125. The 97.5% level
 is registered as fixed, not as a Holm step. An empty family has no r.
 
-Each cell now records the organization it was computed for, and the gate refuses one filed under
-another. The checks every reading of an H1 cell needs (its fields, at least 1,000 resamples, a
-count whole at the one-sided level, an interval at the level, a p-value that agrees with it) are
-one function, `require_readable` in `across.py`, run by both this gate and
-`across_organizations`. Level keys in both gates, `h1_over_partitions`, `sensitivity_bounds` and
+Each cell now records the organization it was computed for. The checks every reading of an H1
+cell needs are one function, `require_readable` in `across.py`, run by both this gate and
+`across_organizations`: filed under the organization it was computed for; its fields; a whole
+resample count of at least 1,000, whole at the one-sided level; a p-value in [0, 1]; a finite
+interval at the level, low at most high; and a p-value that agrees with the interval. Level keys in both gates, `h1_over_partitions`, `sensitivity_bounds` and
 `detectable_effects` pass through one helper, so a cell or bound read back from JSON (string keys)
 gives the same reading, and two keys naming one level are refused. The Gerrit gate now refuses a
 bound that is not a positive finite number too.
 
 `scripts/partition_pilot.py` takes `--replication` for a GitHub member, reading it at 97.5% alone
 whatever the Gerrit Holm family's size, and refuses the flag for any other organization and its
-absence for a member; the partition simulation reads its levels from the pilot, so the member's
-bound is at the same level. The pilot's report no longer carries its own `bounds`, which the cell
+absence for a member, and, once members are frozen, refuses an organization outside them. It
+refuses `--hypotheses` beside it, and before reading anything a resample count or a bound the
+gate would refuse. Decided here: a member's bound comes from a simulation of one cell at 97.5%
+(`--h1-cells 1`), since it is read alone, not as one of an intersection; registered-decisions.md
+says so. The partition simulation reads its levels from the pilot, so the member's bound is at
+the same level. The pilot's report no longer carries its own `bounds`, which the cell
 now holds. A test runs the script on synthetic runs and reads its report through the gate, and
 another writes a cell to JSON and reads it back for each of the three verdicts.

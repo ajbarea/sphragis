@@ -345,41 +345,67 @@ def one_sided_alpha(confidence: float) -> float:
     return (1.0 - confidence) / 2.0
 
 
+def is_real(value: Any) -> bool:
+    """A finite number, never a bool."""
+    return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def require_resamples(resamples: Any, *, alpha: float, org: str) -> None:
+    """Refuse a resample count below `MIN_RESAMPLES` or whose product with `alpha` is not whole.
+
+    Only a whole product (10,000 draws at 0.0125 or 0.025) makes a p-value fall below `alpha`
+    exactly when the percentile interval's lower bound lies above zero.
+    """
+    if not isinstance(resamples, int) or isinstance(resamples, bool):
+        raise ValueError(f"{org}: resamples must be a whole number, got {resamples!r}")
+    if resamples < MIN_RESAMPLES:
+        raise ValueError(f"{org}: at least {MIN_RESAMPLES} resamples, got {resamples}")
+    excluded = resamples * alpha
+    if abs(excluded - round(excluded)) > 1e-9 * max(1.0, excluded):
+        raise ValueError(
+            f"{org}: {resamples} resamples at one-sided {alpha:g} put the interval's "
+            "bound between draws, so its p-value and its verdict could disagree"
+        )
+
+
 def require_readable(
     cells: Mapping[str, Mapping[str, Any]], *, confidence: float, fields: Sequence[str] = ()
 ) -> None:
     """Refuse any H1 cell (`h1_over_partitions`) that cannot be read at `confidence`.
 
-    Each needs `fields`, `p_one_sided`, `resamples` and an interval at that level; at least
-    `MIN_RESAMPLES` draws, and a count whose product with the one-sided level is whole (10,000
-    draws at 0.0125 or 0.025), so a p-value falls below the level exactly when the interval's lower
-    bound lies above zero; and a p-value and interval that agree on that, as draws from one
-    bootstrap do.
+    Each must be filed under the organization it was computed for and hold `fields`; a resample
+    count `require_resamples` accepts; a p-value in [0, 1]; a finite interval at that level, low
+    at most high; and a p-value and interval that agree on whether the effect is above zero at
+    the one-sided level, as draws from one bootstrap do.
     """
     alpha = one_sided_alpha(confidence)
     for org, cell in cells.items():
-        absent = [f for f in (*fields, "p_one_sided", "resamples", "intervals") if f not in cell]
+        if not isinstance(cell, Mapping):
+            raise ValueError(f"{org}: the cell is not a mapping")
+        absent = [
+            f for f in ("org", *fields, "p_one_sided", "resamples", "intervals") if f not in cell
+        ]
         if absent:
             raise ValueError(f"{org}: the cell has no {absent}")
-        resamples = cell["resamples"]
-        if resamples < MIN_RESAMPLES:
-            raise ValueError(f"{org}: at least {MIN_RESAMPLES} resamples, got {resamples}")
-        excluded = resamples * alpha
-        if abs(excluded - round(excluded)) > 1e-9 * max(1.0, excluded):
-            raise ValueError(
-                f"{org}: {resamples} resamples at one-sided {alpha:g} put the interval's "
-                "bound between draws, so its p-value and its verdict could disagree"
-            )
+        if cell["org"] != org:
+            raise ValueError(f"the cell filed under {org} was computed for {cell['org']!r}")
+        require_resamples(cell["resamples"], alpha=alpha, org=org)
+        p = cell["p_one_sided"]
+        if not (is_real(p) and 0.0 <= p <= 1.0):
+            raise ValueError(f"{org}: p-value {p!r} is not in [0, 1]")
         try:
             interval = by_level(cell["intervals"]).get(level_key(confidence))
         except ValueError as error:
             raise ValueError(f"{org}: intervals: {error}") from error
         if not isinstance(interval, Mapping) or not {"low", "high"} <= set(interval):
             raise ValueError(f"{org}: no interval at {confidence}")
-        if below_level(cell["p_one_sided"], alpha) != (interval["low"] > 0.0):
+        low, high = interval["low"], interval["high"]
+        if not (is_real(low) and is_real(high) and low <= high):
+            raise ValueError(f"{org}: interval [{low!r}, {high!r}] at {confidence}")
+        if below_level(p, alpha) != (low > 0.0):
             raise ValueError(
-                f"{org}: p-value {cell['p_one_sided']} and interval low {interval['low']} "
-                f"disagree at one-sided {alpha:g}, so they are not from the same draws"
+                f"{org}: p-value {p} and interval low {low} disagree at one-sided "
+                f"{alpha:g}, so they are not from the same draws"
             )
 
 

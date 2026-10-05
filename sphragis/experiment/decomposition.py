@@ -15,7 +15,6 @@ cells are confirmatory is registered here, not passed in. Design of record:
 
 from __future__ import annotations
 
-import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from statistics import fmean
 from typing import Any
@@ -24,6 +23,7 @@ from sphragis.corpus.halves import suffix
 from sphragis.experiment.across import (
     MIN_RESAMPLES,
     by_level,
+    is_real,
     level_key,
     one_sided_alpha,
     partial_conjunction,
@@ -106,12 +106,7 @@ def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -
 
 def valid_bound(bound: Any) -> bool:
     """A detectable effect: a finite number above zero, never a bool."""
-    return (
-        isinstance(bound, int | float)
-        and not isinstance(bound, bool)
-        and math.isfinite(bound)
-        and bound > 0
-    )
+    return is_real(bound) and bound > 0
 
 
 # The GitHub replication family in registration order (registered-decisions.md, "GitHub
@@ -128,7 +123,7 @@ REPLICATION_MEMBERS: tuple[str, ...] | None = None
 # hypotheses on the Gerrit side.
 REPLICATION_CONFIDENCE = 0.975
 
-_CELL_FIELDS = ("org", "estimate", "bounds")
+_CELL_FIELDS = ("estimate", "bounds")
 
 
 def replication(members: Iterable[str]) -> dict[str, Any]:
@@ -179,10 +174,11 @@ def replication_gate(
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
         cell = cells[org]
-        if cell["org"] != org:
-            raise ValueError(f"the cell filed under {org} was computed for {cell['org']!r}")
         by_org = bounds.get(org)
-        bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
+        try:
+            bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
+        except ValueError as error:
+            raise ValueError(f"{org}: registered bounds: {error}") from error
         if not valid_bound(bound):
             raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
         try:

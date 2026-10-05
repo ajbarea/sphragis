@@ -9,7 +9,8 @@ with `--sensitivity`, each level's bound is the detectable effect that simulatio
 planted dev run must pass outcome-neutral check 5 (`neutral.planted_convention`) or the cell is
 not read. On the development window it is
 the pilot, and `runs_needed` sizes the organization's K from every run computed. A GitHub
-replication member takes `--replication` and is read at its registered fixed level instead.
+replication member takes `--replication` and is read at its registered fixed level instead, as
+one cell (its bounds from a simulation of one cell).
 
     uv run --no-sync --no-active python scripts/partition_pilot.py \\
         --admissible datasets/results/admissible-partitions-openstack.json \\
@@ -24,10 +25,13 @@ import json
 import re
 from pathlib import Path
 
+from sphragis.experiment.across import one_sided_alpha, require_resamples
 from sphragis.experiment.decomposition import (
     REPLICATION_CONFIDENCE,
     REPLICATION_FAMILY,
+    REPLICATION_MEMBERS,
     holm_levels,
+    valid_bound,
 )
 from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
@@ -45,8 +49,8 @@ parser.add_argument("--org", default="openstack")
 parser.add_argument(
     "--sizing", type=Path, help="the organization's pilot artifact: K is its sizing.runs"
 )
-# H1 and H2: the registered Holm family.
-parser.add_argument("--hypotheses", type=int, default=2, help="the Holm family size")
+# H1 and H2: the registered Holm family (2 when omitted).
+parser.add_argument("--hypotheses", type=int, help="the Holm family size")
 parser.add_argument(
     "--replication",
     action="store_true",
@@ -122,7 +126,25 @@ def main() -> None:
             f"{args.org}: --replication is for the GitHub family {REPLICATION_FAMILY} only, "
             "and every member needs it"
         )
-    levels = [REPLICATION_CONFIDENCE] if args.replication else holm_levels(args.hypotheses)
+    if args.replication:
+        if REPLICATION_MEMBERS is not None and args.org not in REPLICATION_MEMBERS:
+            raise SystemExit(f"{args.org} is not among the frozen members {REPLICATION_MEMBERS}")
+        if args.hypotheses is not None:
+            raise SystemExit("--replication reads one fixed level; --hypotheses does not apply")
+        # A member is read alone, so its simulation is of one cell at that level.
+        if args.h1_cells not in (None, 1):
+            raise SystemExit("--replication reads a member as one cell: --h1-cells 1")
+        args.h1_cells = 1
+    levels = (
+        [REPLICATION_CONFIDENCE]
+        if args.replication
+        else holm_levels(2 if args.hypotheses is None else args.hypotheses)
+    )
+    for c in levels:
+        try:
+            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
     bounds = None
     if args.sensitivity:
         if not args.spread_target:
@@ -131,6 +153,9 @@ def main() -> None:
             raise SystemExit("--sensitivity needs --h1-cells")
         sensitivity = json.loads(args.sensitivity.read_text())
         bounds = sensitivity_bounds(sensitivity, args.spread_target, levels, cells=args.h1_cells)
+        invalid = {c: b for c, b in bounds.items() if not valid_bound(b)}
+        if invalid:
+            raise SystemExit(f"{args.sensitivity}: bounds {invalid} are not detectable effects")
     cell = h1_over_partitions(
         runs,
         org=args.org,

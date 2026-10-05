@@ -58,8 +58,8 @@ and Grafana, in that order, each a member only if its pilot, train and developme
 frozen and its split meets the criteria at the registered N by 2026-11-20; one not ready is
 reported as not collected, and none joins later. Each member is read on H1 only, with the Gerrit
 cells' windows, rules and estimand, on the two-sided 97.5% interval; its K comes from its own
-development pilot and its bound from its own simulation, both fixed before its test window is
-fetched. The family's reported outcome is the partial conjunction r over its members at
+development pilot and its bound from its own simulation, of that one cell at 97.5%, both fixed
+before its test window is fetched. The family's reported outcome is the partial conjunction r over its members at
 one-sided 0.0125, with each cell's verdict; it binds no verdict on H1 or H2.
 
 ### Boundary: strictly above zero

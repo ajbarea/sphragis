@@ -171,6 +171,11 @@ def _h1(estimate: float, se: float, p: float, resamples: int = 10_000) -> dict:
     }
 
 
+def _filed(cells: dict) -> dict:
+    """Each cell filed under the organization it was computed for."""
+    return {org: {"org": org, **cell} for org, cell in cells.items()}
+
+
 def test_across_organizations_reads_both_at_the_step_level() -> None:
     cells = {
         org: _h1(e, s, p)
@@ -180,7 +185,7 @@ def test_across_organizations_reads_both_at_the_step_level() -> None:
             ("c", 0.015, 0.004, 0.0005),
         ]
     }
-    out = across_organizations(cells, confidence=0.975)
+    out = across_organizations(_filed(cells), confidence=0.975)
     assert out["partial_conjunction"]["alpha"] == pytest.approx(0.0125)
     assert out["partial_conjunction"]["at_least"] == 2
     assert out["random_effects"]["k"] == 3 and out["random_effects"]["confidence"] == 0.975
@@ -189,7 +194,7 @@ def test_across_organizations_reads_both_at_the_step_level() -> None:
 def test_across_organizations_refuses_a_count_whose_bound_falls_between_draws() -> None:
     cells = {o: _h1(0.01, 0.005, 0.001, resamples=1_010) for o in "ab"}
     with pytest.raises(ValueError, match="between draws"):
-        across_organizations(cells, confidence=0.975)
+        across_organizations(_filed(cells), confidence=0.975)
 
 
 @pytest.mark.parametrize(
@@ -200,11 +205,18 @@ def test_across_organizations_refuses_a_count_whose_bound_falls_between_draws() 
         ({k: v for k, v in _h1(0.01, 0.005, 0.001).items() if k != "bootstrap_se"}, "has no"),
         (_h1(0.01, 0.005, 0.001) | {"intervals": {0.95: {"low": 0, "high": 1}}}, "no interval"),
         (_h1(0.01, 0.005, 0.001) | {"intervals": {"by_cells": {}}}, "not a confidence level"),
+        (_h1(0.01, 0.005, 0.001) | {"p_one_sided": None}, "not in"),
+        (_h1(0.01, 0.005, 0.001) | {"resamples": "10000"}, "whole number"),
+        (
+            _h1(0.01, 0.005, 0.5) | {"intervals": {0.975: {"low": float("nan"), "high": 0.05}}},
+            "interval",
+        ),
+        (_h1(0.01, 0.005, 0.001) | {"intervals": {0.975: {"low": 0.3, "high": -0.2}}}, "interval"),
     ],
 )
 def test_across_organizations_refuses_a_cell_the_gate_refuses(cell: dict, match: str) -> None:
     with pytest.raises(ValueError, match=match):
-        across_organizations({"a": cell, "b": _h1(0.02, 0.005, 0.001)}, confidence=0.975)
+        across_organizations(_filed({"a": cell, "b": _h1(0.02, 0.005, 0.001)}), confidence=0.975)
 
 
 def test_a_p_value_at_the_level_is_not_below_it() -> None:
@@ -317,4 +329,11 @@ def test_random_effects_refuses_a_variance_that_underflows_or_overflows(se: floa
 
 def test_a_large_resample_count_at_a_whole_bound_is_accepted() -> None:
     cells = {o: _h1(e, 0.005, 0.001, resamples=100_000_000) for o, e in (("a", 0.01), ("b", 0.02))}
-    assert across_organizations(cells, confidence=0.975)["random_effects"]["k"] == 2
+    assert across_organizations(_filed(cells), confidence=0.975)["random_effects"]["k"] == 2
+
+
+def test_across_organizations_refuses_a_cell_filed_under_another_organization() -> None:
+    cells = _filed({"a": _h1(0.01, 0.005, 0.001), "b": _h1(0.02, 0.005, 0.001)})
+    cells["a"]["org"] = "zzz"
+    with pytest.raises(ValueError, match="computed for 'zzz'"):
+        across_organizations(cells, confidence=0.975)

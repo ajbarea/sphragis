@@ -371,7 +371,8 @@ def main() -> None:
     missing = {p for _, p in pool} - set(partitions[0])
     if missing:
         raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
-    # The pilot's own Holm levels, so the simulation reads the family the reading does.
+    # The pilot's own levels (its Holm levels, or a replication member's fixed level), so the
+    # simulation reads at the levels the reading does.
     levels = pilot["levels"]
     report: dict = {
         "placebo": str(args.placebo),

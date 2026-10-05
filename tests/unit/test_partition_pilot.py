@@ -134,3 +134,40 @@ def test_replication_is_for_the_github_family_and_every_member(
 ) -> None:
     with pytest.raises(SystemExit, match="--replication"):
         _main(monkeypatch, [*_inputs(tmp_path, org), *flag, "--out", str(tmp_path / "o.json")])
+
+
+@pytest.mark.parametrize(
+    ("extra", "bound", "frozen", "match"),
+    [
+        (["--resamples", "1500"], 0.4, None, "between draws"),
+        (["--resamples", "500"], 0.4, None, "at least 1000"),
+        (["--hypotheses", "3"], 0.4, None, "--hypotheses does not apply"),
+        (["--h1-cells", "2"], 0.4, None, "--h1-cells 1"),
+        ([], 0.0, None, "not detectable effects"),
+        ([], 0.4, ("llvm",), "not among the frozen members"),
+    ],
+)
+def test_a_replication_pilot_refuses_what_the_gate_would_refuse(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    extra: list[str],
+    bound: float,
+    frozen: tuple[str, ...] | None,
+    match: str,
+) -> None:
+    monkeypatch.setattr(partition_pilot, "REPLICATION_MEMBERS", frozen)
+    sensitivity = _sensitivity(tmp_path, [decomposition.REPLICATION_CONFIDENCE], bound)
+    argv = [
+        *_inputs(tmp_path, "apache"),
+        "--replication",
+        "--sensitivity",
+        str(sensitivity),
+        "--spread-target",
+        "pilot_estimate",
+        *extra,
+        "--out",
+        str(tmp_path / "o.json"),
+    ]
+    with pytest.raises(SystemExit, match=match):
+        _main(monkeypatch, argv)
+    assert not (tmp_path / "o.json").exists()
