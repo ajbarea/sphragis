@@ -7763,9 +7763,13 @@ final-model baseline and stronger learned attackers (ROADMAP).
 GitHub family as registered on 2026-10-04. The family takes only Apache, LLVM, .NET and Grafana,
 in that order; a Gerrit organization is refused there, as `design()` refuses a GitHub one, and a
 registered organization outside the members is reported as not collected. The gate refuses a cell
-for any organization outside the members, so none joins after Stage 1, and a member without a
-detectable effect from its own simulation. It reads each verdict from the cell's two-sided 97.5%
-interval, not from a verdict stored with the cell, and r from the partial conjunction at one-sided
-0.0125. The resample-count check that keeps a p-value and its interval in agreement is shared with
-`across_organizations`. An empty family has no r.
-
+or a bound for any organization outside the members, so none joins after Stage 1; a member
+without a finite detectable effect at 97.5% from its own simulation, keyed by level as
+`detectable_effects` gives it; fewer than 1,000 resamples, as every other gate does; and a verdict
+stored with a cell that disagrees with the one its interval gives under the registered bound. It
+reads each verdict from the cell's two-sided 97.5% interval and r from the partial conjunction at
+one-sided 0.0125. The 97.5% level is registered as fixed, not as a Holm step. A cell read back from
+its JSON artifact, with string level keys, is accepted: level keys now pass through one helper in
+every gate. The resample-count check and the one-sided level are shared with
+`across_organizations`, and the meaningful rule with `h1_over_partitions`. An empty family has
+no r.

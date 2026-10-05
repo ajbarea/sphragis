@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 
+from sphragis.corpus.github import GITHUB_ORGS
 from sphragis.experiment.decomposition import (
     H2_PAIR,
     MIN_RESAMPLES,
@@ -367,11 +368,15 @@ def _replication_cell(low: float, high: float, p: float, resamples: int = 10_000
         "estimate": (low + high) / 2,
         "intervals": {
             REPLICATION_CONFIDENCE: {"low": low, "high": high},
-            0.95: {"low": 0, "high": 0},
+            0.95: {"low": 0.0, "high": 0.0},
         },
         "p_one_sided": p,
         "resamples": resamples,
     }
+
+
+def _at(bound: float) -> dict:
+    return {REPLICATION_CONFIDENCE: bound, 0.95: 1.0}
 
 
 def test_replication_gate_reads_each_member_and_the_partial_conjunction() -> None:
@@ -380,7 +385,7 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction() -> Non
         "llvm": _replication_cell(-0.004, 0.006, 0.3),
         "dotnet": _replication_cell(0.005, 0.03, 0.002),
     }
-    bounds = {"apache": 0.03, "llvm": 0.008, "dotnet": 0.03}
+    bounds = {"apache": _at(0.03), "llvm": _at(0.008), "dotnet": _at(0.03)}
     out = replication_gate(cells, members=["dotnet", "llvm", "apache"], bounds=bounds)
     assert out["members"] == ("apache", "llvm", "dotnet")
     assert out["not_collected"] == ("grafana",)
@@ -389,16 +394,25 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction() -> Non
         "llvm": "bounded",
         "dotnet": "supported",
     }
+    assert out["cells"]["llvm"]["bound"] == 0.008
     assert out["cells"]["apache"]["meaningful"] and not out["cells"]["dotnet"]["meaningful"]
     # Adjusted: 3 * 0.0001, then 2 * 0.002, then 0.3: r = 2 at 0.0125.
     assert out["partial_conjunction"]["alpha"] == pytest.approx(0.0125)
     assert out["partial_conjunction"]["at_least"] == 2
 
 
-def test_replication_gate_reads_from_the_registered_interval_not_a_stored_verdict() -> None:
-    cell = _replication_cell(-0.01, 0.02, 0.2) | {"verdicts": {REPLICATION_CONFIDENCE: "supported"}}
-    out = replication_gate({"apache": cell}, members=["apache"], bounds={"apache": 0.015})
-    assert out["cells"]["apache"]["verdict"] == "inconclusive"
+def test_replication_gate_reads_a_cell_and_bounds_back_from_json() -> None:
+    cell = _replication_cell(-0.004, 0.006, 0.3)
+    cell["verdicts"] = {REPLICATION_CONFIDENCE: "bounded"}
+    loaded = json.loads(json.dumps({"cells": {"llvm": cell}, "bounds": {"llvm": _at(0.008)}}))
+    out = replication_gate(loaded["cells"], members=["llvm"], bounds=loaded["bounds"])
+    assert out["cells"]["llvm"]["verdict"] == "bounded"
+
+
+def test_replication_gate_refuses_a_stored_verdict_from_another_bound() -> None:
+    cell = _replication_cell(-0.004, 0.006, 0.3) | {"verdicts": {REPLICATION_CONFIDENCE: "bounded"}}
+    with pytest.raises(ValueError, match="computed with another"):
+        replication_gate({"llvm": cell}, members=["llvm"], bounds={"llvm": _at(0.005)})
 
 
 def test_an_empty_family_has_no_partial_conjunction() -> None:
@@ -407,40 +421,34 @@ def test_an_empty_family_has_no_partial_conjunction() -> None:
     assert out["not_collected"] == REPLICATION_FAMILY
 
 
+_GOOD = _replication_cell(0.01, 0.02, 0.001)
+
+
 @pytest.mark.parametrize(
     ("cells", "bounds", "match"),
     [
+        ({"apache": _GOOD, "llvm": _GOOD}, {"apache": _at(0.03)}, "cells for organization"),
+        ({"apache": _GOOD, "openstack": _GOOD}, {"apache": _at(0.03)}, "cells for organization"),
+        ({"apache": _GOOD}, {"apache": _at(0.03), "grafana": _at(0.03)}, "bounds for organization"),
+        ({}, {"apache": _at(0.03)}, "no cell"),
+        ({"apache": _GOOD}, {}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(float("nan"))}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": {REPLICATION_CONFIDENCE: None}}, "no registered"),
+        ({"apache": _GOOD}, {"apache": {0.95: 0.03}}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": 0.03}, "no registered detectable effect"),
         (
-            {
-                "apache": _replication_cell(0.01, 0.02, 0.001),
-                "llvm": _replication_cell(0.01, 0.02, 0.001),
-            },
-            {"apache": 0.03, "llvm": 0.03},
-            "outside the family's members",
+            {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=80)},
+            {"apache": _at(0.03)},
+            "at least 1000 resamples",
         ),
         (
-            {
-                "apache": _replication_cell(0.01, 0.02, 0.001),
-                "openstack": _replication_cell(0.01, 0.02, 0.001),
-            },
-            {"apache": 0.03},
-            "outside the family's members",
-        ),
-        ({}, {"apache": 0.03}, "no cell"),
-        ({"apache": _replication_cell(0.01, 0.02, 0.001)}, {}, "no registered detectable effect"),
-        (
-            {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=500)},
-            {"apache": 0.03},
+            {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=1_010)},
+            {"apache": _at(0.03)},
             "between draws",
         ),
         (
-            {
-                "apache": {
-                    **_replication_cell(0.01, 0.02, 0.001),
-                    "intervals": {0.95: {"low": 0, "high": 1}},
-                }
-            },
-            {"apache": 0.03},
+            {"apache": _GOOD | {"intervals": {0.95: {"low": 0.0, "high": 1.0}}}},
+            {"apache": _at(0.03)},
             "no interval at 0.975",
         ),
     ],
@@ -448,6 +456,11 @@ def test_an_empty_family_has_no_partial_conjunction() -> None:
 def test_replication_gate_refuses(cells: dict, bounds: dict, match: str) -> None:
     with pytest.raises(ValueError, match=match):
         replication_gate(cells, members=["apache"], bounds=bounds)
+
+
+def test_the_replication_family_is_registered_on_the_github_route() -> None:
+    assert set(REPLICATION_FAMILY) <= set(GITHUB_ORGS)
+    assert not set(REPLICATION_FAMILY) & set(ORGANIZATIONS)
 
 
 def test_the_gate_refuses_a_confirmatory_wikimedia_cell_with_no_registered_bound() -> None:

@@ -20,6 +20,7 @@ from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.decomposition import (
     SESOI,
     cell_verdict,
+    meaningful,
     project_clusters,
     within_sesoi,
 )
@@ -276,7 +277,7 @@ def h1_over_partitions(
         "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
         # Readings beside the pass rule (registered-decisions.md): a supported cell whose lower
         # bound also clears the SESOI, and the inputs of the readings across organizations.
-        "meaningful": {c: lo > SESOI for c, (lo, hi) in intervals.items()},
+        "meaningful": {c: meaningful(lo) for c, (lo, hi) in intervals.items()},
         "p_one_sided": one_sided_p(draws),
         "bootstrap_se": stdev(draws),
         "resamples": resamples,

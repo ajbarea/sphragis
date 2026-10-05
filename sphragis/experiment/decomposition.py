@@ -15,12 +15,17 @@ cells are confirmatory is registered here, not passed in. Design of record:
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.halves import suffix
-from sphragis.experiment.across import partial_conjunction, require_bound_on_a_draw
+from sphragis.experiment.across import (
+    one_sided_alpha,
+    partial_conjunction,
+    require_bound_on_a_draw,
+)
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import require_unique_ids, to_clusters
 from sphragis.experiment.walk import _require_registered_seeds
@@ -89,13 +94,24 @@ def design(admitted: Iterable[str]) -> dict[str, Any]:
 def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -> tuple[str, ...]:
     """`names` in registration order, refused if any is outside `registry` or repeated."""
     listed = list(names)
-    unknown = sorted(set(listed) - set(registry))
+    seen = set(listed)
+    unknown = sorted(seen - set(registry))
     if unknown:
         raise ValueError(f"unknown organization(s) {unknown}; registered are {registry}")
-    duplicates = sorted({o for o in listed if listed.count(o) > 1})
-    if duplicates:
+    if len(seen) != len(listed):
+        duplicates = sorted({o for o in seen if listed.count(o) > 1})
         raise ValueError(f"duplicate organization(s) {duplicates} in {role}")
-    return tuple(o for o in registry if o in set(listed))
+    return tuple(o for o in registry if o in seen)
+
+
+def level_key(confidence: float | str) -> float:
+    """A confidence level as a dictionary key: float noise rounded off, a JSON string key read."""
+    return round(float(confidence), 9)
+
+
+def by_level(values: Mapping[Any, Any]) -> dict[float, Any]:
+    """A mapping keyed by confidence level, its keys passed through `level_key`."""
+    return {level_key(c): v for c, v in values.items()}
 
 
 # The GitHub replication family in registration order (registered-decisions.md, "GitHub
@@ -103,6 +119,8 @@ def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -
 REPLICATION_FAMILY = ("apache", "llvm", "dotnet", "grafana")
 
 # Each member's two-sided interval; its one-sided level, 0.0125, is the partial conjunction's.
+# Registered as a fixed level, not a Holm step: it does not move with the number of confirmatory
+# hypotheses on the Gerrit side.
 REPLICATION_CONFIDENCE = 0.975
 
 
@@ -125,39 +143,64 @@ def replication_gate(
     cells: Mapping[str, Mapping[str, Any]],
     *,
     members: Iterable[str],
-    bounds: Mapping[str, float],
+    bounds: Mapping[str, Mapping[float, float]],
 ) -> dict[str, Any]:
     """Each member's H1 verdict and the family's partial conjunction r.
 
     `cells` holds one `h1_over_partitions` cell per member and no other organization, so none
-    joins after Stage 1. `bounds` holds each member's detectable effect from its own simulation,
-    fixed before its test window; a member without one is refused. Verdicts are read from each
-    cell's interval at `REPLICATION_CONFIDENCE`, and r at its one-sided level.
+    joins after Stage 1; a cell read back from its JSON artifact is accepted. `bounds` holds each
+    member's detectable effect by level, from its own simulation and fixed before its test
+    window, as `detectable_effects` gives them; a member without a finite one at
+    `REPLICATION_CONFIDENCE`, or a bound for any other organization, is refused. Verdicts are
+    read from each cell's interval at that level, and a verdict stored with the cell that
+    disagrees (computed under another bound) is refused; r is read at its one-sided level.
     """
     family = replication(members)
-    extra = sorted(set(cells) - set(family["members"]))
+    listed = set(family["members"])
+    extra = sorted(set(cells) - listed)
     if extra:
         raise ValueError(f"cells for organization(s) outside the family's members: {extra}")
+    stray = sorted(set(bounds) - listed)
+    if stray:
+        raise ValueError(f"bounds for organization(s) outside the family's members: {stray}")
     missing = [o for o in family["members"] if o not in cells]
     if missing:
         raise ValueError(f"no cell for member(s) {missing}")
-    unbounded = [o for o in family["members"] if o not in bounds]
+    level = level_key(REPLICATION_CONFIDENCE)
+    registered: dict[str, float] = {}
+    for org in family["members"]:
+        by_org = bounds.get(org)
+        bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
+        if isinstance(bound, int | float) and math.isfinite(bound):
+            registered[org] = float(bound)
+    unbounded = [o for o in family["members"] if o not in registered]
     if unbounded:
-        raise ValueError(f"no registered detectable effect for member(s) {unbounded}")
-    alpha = (1.0 - REPLICATION_CONFIDENCE) / 2.0
+        raise ValueError(
+            f"no registered detectable effect at {REPLICATION_CONFIDENCE} for member(s) {unbounded}"
+        )
+    thin = [o for o in family["members"] if cells[o]["resamples"] < MIN_RESAMPLES]
+    if thin:
+        raise ValueError(f"at least {MIN_RESAMPLES} resamples, fewer for {thin}")
+    alpha = one_sided_alpha(REPLICATION_CONFIDENCE)
     require_bound_on_a_draw(cells, alpha=alpha)
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
-        intervals = {round(c, 9): i for c, i in cells[org]["intervals"].items()}
-        interval = intervals.get(round(REPLICATION_CONFIDENCE, 9))
+        interval = by_level(cells[org]["intervals"]).get(level)
         if interval is None:
             raise ValueError(f"{org}: no interval at {REPLICATION_CONFIDENCE}")
+        verdict = cell_verdict(interval["low"], interval["high"], bound=registered[org])
+        stored = by_level(cells[org].get("verdicts") or {}).get(level)
+        if stored is not None and stored != verdict:
+            raise ValueError(
+                f"{org}: the cell's own verdict {stored!r} disagrees with {verdict!r} under the "
+                "registered bound, so it was computed with another"
+            )
         read[org] = {
             "estimate": cells[org]["estimate"],
             "interval": dict(interval),
-            "bound": bounds[org],
-            "verdict": cell_verdict(interval["low"], interval["high"], bound=bounds[org]),
-            "meaningful": interval["low"] > SESOI,
+            "bound": registered[org],
+            "verdict": verdict,
+            "meaningful": meaningful(interval["low"]),
             "p_one_sided": cells[org]["p_one_sided"],
         }
     return {
@@ -219,6 +262,11 @@ def cell_verdict(low: float, high: float, *, bound: float | None) -> str:
     if bound is not None and high < bound:
         return "bounded"
     return "inconclusive"
+
+
+def meaningful(low: float) -> bool:
+    """Whether an interval's lower bound clears the SESOI: reported, never a verdict."""
+    return low > SESOI
 
 
 def within_sesoi(low: float, high: float) -> bool:
@@ -426,15 +474,13 @@ def decomposition_gate(
     confirmatory = {name: cells[name] for name in ("H1", "H2") if cells[name]}
     levels = holm_levels(len(confirmatory))
     bounds = {
-        name: {
-            org: {round(c, 9): b for c, b in by_level.items()} for org, by_level in cells_.items()
-        }
+        name: {org: by_level(levels_) for org, levels_ in cells_.items()}
         for name, cells_ in detectable.items()
     }
     for name, units in confirmatory.items():
         for unit in units:
             org = unit if name == "H1" else unit[0]
-            missing = [c for c in levels if round(c, 9) not in bounds.get(name, {}).get(org, {})]
+            missing = [c for c in levels if level_key(c) not in bounds.get(name, {}).get(org, {})]
             if missing:
                 raise ValueError(f"no registered detectable effect for {name}:{org} at {missing}")
 
@@ -491,7 +537,7 @@ def decomposition_gate(
                     c: cell_verdict(
                         lo,
                         hi,
-                        bound=bounds.get(name, {}).get(org, {}).get(round(c, 9))
+                        bound=bounds.get(name, {}).get(org, {}).get(level_key(c))
                         if roles[name] == "confirmatory"
                         else None,
                     )

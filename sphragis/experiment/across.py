@@ -309,6 +309,11 @@ def one_sided_p(draws: Sequence[float]) -> float:
     return sum(1 for d in draws if d <= 0.0) / len(draws)
 
 
+def one_sided_alpha(confidence: float) -> float:
+    """The one-sided level a two-sided interval at `confidence` reads: 0.975 gives 0.0125."""
+    return (1.0 - confidence) / 2.0
+
+
 def require_bound_on_a_draw(cells: Mapping[str, Mapping[str, Any]], *, alpha: float) -> None:
     """Refuse a cell whose resample count times `alpha` is not a whole number.
 
@@ -335,7 +340,7 @@ def across_organizations(
     The partial conjunction is read at that step's one-sided level, the cells' own; the summary's
     interval at the same confidence. Resample counts are checked by `require_bound_on_a_draw`.
     """
-    alpha = (1.0 - confidence) / 2.0
+    alpha = one_sided_alpha(confidence)
     require_bound_on_a_draw(cells, alpha=alpha)
     return {
         "partial_conjunction": partial_conjunction(
