@@ -163,8 +163,7 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
     `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell count and spread
     target `expected` registers for the organization (`decomposition.registered_read`), so none
     is chosen when the window is read. The pilot runs this on its report before writing it, and
-    `replication_gate` on reading it, so both hold one rule; the Gerrit H1 verdict over test
-    reports is not built yet, and runs it too when it is.
+    `replication_gate` and `h1_test_gate` on reading it, so both sides hold one rule.
     """
     required = (
         "window",

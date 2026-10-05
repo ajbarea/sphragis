@@ -7863,3 +7863,18 @@ boundary is worded as declared per example, by provenance, before training. The 
 is RQ1 only and states none of these claims. Anonymous submissions are recorded by OpenReview id
 and cited only once public.
 
+### H1's verdict over the admitted organizations' test reads implemented (2026-10-05)
+
+`h1_test_gate` in `sphragis/experiment/decomposition.py` reads H1 the way `replication_gate` reads
+the GitHub family. It takes the organizations from `ADMITTED_ORGANIZATIONS`, never from its
+caller, and refuses to run before they are frozen. It also refuses while H2 is confirmatory (Qt and
+Chromium both admitted), because Holm cannot be read without H2 and H2's test read over partitions
+is not built. It takes one `partition_pilot.py` test report and one simulation artifact per
+admitted organization, exactly those. Each report is checked by `require_readable` at every
+registered Holm level and by `require_test_read` against `registered_read`, and each bound is read
+from the organization's own simulation (`_registered_bounds`, shared with `replication_gate`). H1
+is the intersection-union over the cells at the registered levels through the existing
+`holm_steps`, with `below_sesoi` and the pre-committed reading. The readings across organizations
+(partial conjunction, random effects) are reported beside it and bind no verdict. With OpenStack
+and Wikimedia admitted, H1 is read at 95% on two cells.
+

@@ -20,7 +20,7 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.halves import suffix
-from sphragis.experiment.across import partial_conjunction
+from sphragis.experiment.across import across_organizations, partial_conjunction
 from sphragis.experiment.cells import (
     MIN_RESAMPLES,
     REGISTERED_SPREAD_TARGET,
@@ -179,6 +179,110 @@ def registered_read(org: str) -> dict[str, Any]:
     return {"levels": levels, "cells": cells, "spread_target": REGISTERED_SPREAD_TARGET}
 
 
+def _registered_bounds(
+    org: str, cell: Mapping[str, Any], simulation: Any, expected: Mapping[str, Any]
+) -> dict[float, float]:
+    """`org`'s bound at each registered level, read from its simulation artifact.
+
+    `require_test_read` has checked the simulation the cell records against the organization, K
+    and the pilot's calibration; the artifact given must be that simulation, every bound a
+    detectable effect, and each the bound the cell was computed under.
+    """
+    recorded = cell["sensitivity"]
+    if not (
+        isinstance(simulation, Mapping)
+        and simulation.get("org") == recorded["org"]
+        and simulation.get("runs") == recorded["runs"]
+        and same_calibration(simulation.get("spread_targets"), recorded["spread_targets"])
+    ):
+        raise ValueError(f"{org}: the simulation given is not the one its cell was read under")
+    try:
+        bounds = sensitivity_bounds(
+            simulation, expected["spread_target"], expected["levels"], cells=expected["cells"]
+        )
+        computed_under = by_level({} if cell["bounds"] is None else cell["bounds"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(f"{org}: simulation or bounds: {error}") from error
+    out: dict[float, float] = {}
+    for c, bound in bounds.items():
+        if not valid_bound(bound):
+            raise ValueError(f"{org}: no registered detectable effect at {c}")
+        if computed_under.get(level_key(c)) != bound:
+            raise ValueError(
+                f"{org}: the cell was computed under bound {computed_under.get(level_key(c))!r} "
+                f"at {c}, its simulation gives {bound!r}"
+            )
+        out[level_key(c)] = bound
+    return out
+
+
+def h1_test_gate(
+    reports: Mapping[str, Mapping[str, Any]],
+    *,
+    simulations: Mapping[str, Mapping[str, Any]],
+) -> dict[str, Any]:
+    """H1's registered verdict over the admitted organizations' test-window reads.
+
+    The organizations are `ADMITTED_ORGANIZATIONS`, never an argument; the gate refuses to run
+    before they are frozen, and while H2 is confirmatory, since H2's test read over partitions is
+    not built and Holm cannot be read without it. `reports` holds each admitted organization's
+    `partition_pilot.py` test-window report and `simulations` its simulation artifact, both for
+    exactly the admitted set; each report is checked by `require_readable` and by
+    `require_test_read` against `registered_read`, and its bounds read from its simulation. H1 is
+    the intersection-union over the cells at the registered Holm levels (`holm_steps`); the
+    readings across organizations are reported beside it and bind no verdict.
+    """
+    if ADMITTED_ORGANIZATIONS is None:
+        raise ValueError("the admitted organizations are not frozen yet")
+    for what, given in (("reports", reports), ("simulations", simulations)):
+        if not isinstance(given, Mapping):
+            raise ValueError(f"{what} must map each organization to its own")
+    spec = design(ADMITTED_ORGANIZATIONS)
+    hypotheses = confirmatory(spec)
+    if "H2" in hypotheses:
+        raise ValueError("H2 is confirmatory, and its test read over partitions is not built")
+    orgs = spec["H1"]
+    for what, given in (("reports", reports), ("simulations", simulations)):
+        if set(given) != set(orgs):
+            raise ValueError(f"{what} for {sorted(given)}, the admitted are {list(orgs)}")
+    levels = holm_levels(len(hypotheses))
+    intervals = {
+        c: require_readable(reports, confidence=c, fields=_CELL_FIELDS + ("bootstrap_se",))
+        for c in levels
+    }
+    cells: dict[str, dict[str, Any]] = {}
+    for org in orgs:
+        report = reports[org]
+        expected = registered_read(org)
+        require_test_read(report, org=org, expected=expected)
+        bounds = _registered_bounds(org, report, simulations[org], expected)
+        at = {c: intervals[c][org][level_key(c)] for c in levels}
+        cells[org] = {
+            "estimate": report["estimate"],
+            "intervals": {c: {"low": i["low"], "high": i["high"]} for c, i in at.items()},
+            "bounds": {c: bounds[level_key(c)] for c in levels},
+            "verdicts": {
+                c: cell_verdict(i["low"], i["high"], bound=bounds[level_key(c)])
+                for c, i in at.items()
+            },
+            "within_sesoi": {c: within_sesoi(i["low"], i["high"]) for c, i in at.items()},
+            "meaningful": {c: meaningful(i["low"]) for c, i in at.items()},
+            "p_one_sided": report["p_one_sided"],
+        }
+    per_hypothesis = {"H1": cells}
+    verdicts, passed_at = holm_steps(per_hypothesis)
+    return {
+        "admitted": orgs,
+        "holm_levels": levels,
+        "verdicts": verdicts,
+        "passed_at": passed_at,
+        "reading": reading(verdicts["H1"], None),
+        "below_sesoi": below_sesoi(per_hypothesis, passed_at),
+        "cells": cells,
+        "across": across_organizations(reports, confidence=levels[0]),
+    }
+
+
 def replication_gate(
     cells: Mapping[str, Mapping[str, Any]],
     *,
@@ -218,34 +322,7 @@ def replication_gate(
         cell, simulation = cells[org], simulations[org]
         expected = registered_read(org)
         require_test_read(cell, org=org, expected=expected)
-        # require_test_read checked the recorded simulation against the organization, K and the
-        # pilot's calibration; the one given must be that simulation.
-        recorded = cell["sensitivity"]
-        if not (
-            isinstance(simulation, Mapping)
-            and simulation.get("org") == recorded["org"]
-            and simulation.get("runs") == recorded["runs"]
-            and same_calibration(simulation.get("spread_targets"), recorded["spread_targets"])
-        ):
-            raise ValueError(f"{org}: the simulation given is not the one its cell was read under")
-        try:
-            bound = sensitivity_bounds(
-                simulation, expected["spread_target"], expected["levels"], cells=expected["cells"]
-            )[REPLICATION_CONFIDENCE]
-        except (KeyError, TypeError, ValueError) as error:
-            raise ValueError(f"{org}: simulation: {error}") from error
-        if not valid_bound(bound):
-            raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
-        try:
-            recorded = cell["bounds"]
-            computed_under = by_level({} if recorded is None else recorded).get(level)
-        except ValueError as error:
-            raise ValueError(f"{org}: bounds: {error}") from error
-        if computed_under != bound:
-            raise ValueError(
-                f"{org}: the cell was computed under bound {computed_under!r}, "
-                f"its simulation gives {bound!r}"
-            )
+        bound = _registered_bounds(org, cell, simulation, expected)[level]
         interval = intervals[org][level]
         read[org] = {
             "estimate": cell["estimate"],

@@ -28,6 +28,7 @@ from sphragis.experiment.decomposition import (
     design,
     detectable_effects,
     file_type_supplement,
+    h1_test_gate,
     halves,
     holm_levels,
     holm_steps,
@@ -507,17 +508,17 @@ _SIM = {"apache": _sim(0.03)}
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.95": {"by_cells": {}}})},
-            "simulation: no bound at level",
+            "simulation or bounds: no bound at level",
         ),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.975": {"by_cells": {"3": {}}}})},
-            "simulation: no bound for 1",
+            "simulation or bounds: no bound for 1",
         ),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.975": {}, 0.975: {}})},
-            "simulation: two keys name level",
+            "simulation or bounds: two keys name level",
         ),
         ({"apache": _GOOD}, {"apache": _sim(float("nan"))}, "no registered detectable effect"),
         ({"apache": _GOOD}, {"apache": _sim(None)}, "no registered detectable effect"),
@@ -557,7 +558,7 @@ _SIM = {"apache": _sim(0.03)}
             r"apache: the cell has no \['resamples'\]",
         ),
         ({"apache": _replication_cell(0.01, 0.02, 0.001, org="llvm")}, _SIM, "computed for 'llvm'"),
-        ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: bounds"),
+        ({"apache": _GOOD | {"bounds": []}}, _SIM, "apache: simulation or bounds"),
         ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
         ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
         ({"apache": _GOOD | {"planted_convention": None}}, _SIM, "check 5 did not pass"),
@@ -632,7 +633,7 @@ _SIM = {"apache": _sim(0.03)}
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03) | {"by_target": {"sizing_bound_90": []}}},
-            "simulation:",
+            "simulation or bounds:",
         ),
         ({"apache": _GOOD}, None, "simulations must map"),
         ([], _SIM, "cells must map"),
@@ -1288,3 +1289,108 @@ def test_the_frozen_set_check_reads_a_generator_once(monkeypatch: pytest.MonkeyP
         detectable=DETECTABLE,
     )
     assert outcome["design"]["H1"] == ("openstack",)
+
+
+def _gerrit_report(org: str, low: float, high: float, p: float, *, bound: float = 0.03) -> dict:
+    """An admitted organization's test-window report, read at H1-alone's 95%, two cells."""
+    report = _replication_cell(low, high, p, bound=bound, org=org)
+    return report | {
+        "levels": [0.95],
+        "intervals": {0.95: {"low": low, "high": high}},
+        "bounds": {0.95: bound},
+        "sensitivity": {**report["sensitivity"], "cells": 2},
+        "bootstrap_se": 0.005,
+    }
+
+
+def _gerrit_sim(org: str, bound: float = 0.03) -> dict:
+    by_level = {"0.95": {"by_cells": {"2": {"minimum_detectable_effect": bound}}}}
+    return _sim(bound, org, by_level=by_level)
+
+
+@pytest.fixture
+def admitted(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
+    def freeze(*orgs: str) -> None:
+        monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", orgs)
+
+    return freeze
+
+
+@pytest.mark.parametrize(
+    ("openstack", "wikimedia", "verdict", "reading_"),
+    [
+        ((0.01, 0.05, 0.001), (0.02, 0.06, 0.0001), "pass", "within-half"),
+        ((-0.01, 0.02, 0.2), (-0.01, 0.01, 0.3), "bounded", "no within-half transfer"),
+        ((0.01, 0.05, 0.001), (-0.01, 0.05, 0.3), "inconclusive", "unresolved"),
+    ],
+)
+def test_the_h1_test_gate_reads_the_admitted_cells_at_the_registered_level(
+    admitted, openstack: tuple, wikimedia: tuple, verdict: str, reading_: str
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", *openstack),
+        "wikimedia": _gerrit_report("wikimedia", *wikimedia),
+    }
+    sims = {o: _gerrit_sim(o) for o in reports}
+    out = h1_test_gate(reports, simulations=sims)
+    assert out["holm_levels"] == pytest.approx([0.95])
+    assert out["verdicts"] == {"H1": verdict}
+    assert out["reading"] == reading_
+    assert out["passed_at"]["H1"] == (pytest.approx(0.95) if verdict == "pass" else None)
+    assert set(out["across"]) == {"partial_conjunction", "random_effects"}
+
+
+def test_the_h1_test_gate_reads_back_from_json(admitted) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")}
+    loaded = json.loads(json.dumps({"r": reports, "s": {o: _gerrit_sim(o) for o in reports}}))
+    assert h1_test_gate(loaded["r"], simulations=loaded["s"])["verdicts"] == {"H1": "pass"}
+
+
+def test_the_h1_test_gate_waits_for_the_freeze_and_for_the_h2_read(admitted) -> None:
+    with pytest.raises(ValueError, match="not frozen"):
+        h1_test_gate({}, simulations={})
+    admitted("openstack", "qt", "chromium")
+    with pytest.raises(ValueError, match="H2 is confirmatory"):
+        h1_test_gate({}, simulations={})
+
+
+@pytest.mark.parametrize(
+    ("reports", "sims", "match"),
+    [
+        ({"openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001)}, None, "reports for"),
+        (
+            {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia", "qt")},
+            None,
+            "reports for",
+        ),
+        (
+            {o: _gerrit_report(o, 0.01, 0.05, 0.001) for o in ("openstack", "wikimedia")},
+            {"openstack": _gerrit_sim("openstack")},
+            "simulations for",
+        ),
+        (
+            {
+                "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001)
+                | {"levels": [0.975, 0.95]},
+                "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+            },
+            None,
+            "read at levels",
+        ),
+        (
+            {
+                "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, bound=0.05),
+                "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+            },
+            None,
+            "computed under bound 0.05",
+        ),
+    ],
+)
+def test_the_h1_test_gate_refuses(admitted, reports: dict, sims: Any, match: str) -> None:
+    admitted("openstack", "wikimedia")
+    sims = sims if sims is not None else {o: _gerrit_sim(o) for o in ("openstack", "wikimedia")}
+    with pytest.raises(ValueError, match=match):
+        h1_test_gate(reports, simulations=sims)
