@@ -412,6 +412,7 @@ def _replication_cell(
             "runs": 24,
             "spread_target": "sizing_bound_90",
             "spread_targets": _CALIBRATION,
+            "planned_changes": 2_000,
         },
         "bootstrap_seed": 7,
     }
@@ -512,6 +513,7 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD}, {"apache": 0.03}, "not the one its cell was read under"),
         ({"apache": _GOOD}, {"apache": _sim(0.03, "openstack")}, "not the one its cell"),
         ({"apache": _GOOD}, {"apache": _sim(0.03, runs=40)}, "not the one its cell"),
+        ({"apache": _GOOD}, {"apache": _sim(0.03, planned=1_999)}, "not the one its cell"),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.95": {"by_cells": {}}})},
@@ -657,7 +659,14 @@ _SIM = {"apache": _sim(0.03)}
         ),
         ({"apache": _GOOD | {"changes": 0}}, _SIM, "apache: changes 0"),
         (
-            {"apache": _GOOD},
+            {
+                "apache": _GOOD
+                | {
+                    "sensitivity": {
+                        k: v for k, v in _GOOD["sensitivity"].items() if k != "planned_changes"
+                    }
+                }
+            },
             {"apache": {k: v for k, v in _sim(0.03).items() if k != "planned_changes"}},
             "apache: planned_changes None",
         ),

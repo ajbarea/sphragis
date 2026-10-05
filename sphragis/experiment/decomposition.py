@@ -170,23 +170,19 @@ def registered_read(org: str) -> dict[str, Any]:
     if org in REPLICATION_FAMILY:
         if REPLICATION_MEMBERS is None or org not in REPLICATION_MEMBERS:
             raise ValueError(f"{org} is not a frozen replication member")
-        return {
-            "levels": [REPLICATION_CONFIDENCE],
-            "cells": 1,
-            "spread_target": REGISTERED_SPREAD_TARGET,
-        }
+        return _read_at([REPLICATION_CONFIDENCE], cells=1)
     if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
         raise ValueError(f"{org} is not among the frozen admitted organizations")
     return _gerrit_read(design(ADMITTED_ORGANIZATIONS))
 
 
+def _read_at(levels: list[float], *, cells: int) -> dict[str, Any]:
+    return {"levels": levels, "cells": cells, "spread_target": REGISTERED_SPREAD_TARGET}
+
+
 def _gerrit_read(spec: Mapping[str, Any]) -> dict[str, Any]:
     """The registered read of every H1 cell in `spec`: its Holm levels and cell count."""
-    return {
-        "levels": holm_levels(len(confirmatory(spec))),
-        "cells": len(spec["H1"]),
-        "spread_target": REGISTERED_SPREAD_TARGET,
-    }
+    return _read_at(holm_levels(len(confirmatory(spec))), cells=len(spec["H1"]))
 
 
 def _require_exactly(given: Any, orgs: Sequence[str], *, what: str) -> None:
@@ -204,7 +200,11 @@ def _require_exactly(given: Any, orgs: Sequence[str], *, what: str) -> None:
 
 
 def _test_size(org: str, report: Mapping[str, Any], simulation: Mapping[str, Any]) -> dict:
-    """The test window's realised change count beside the count its simulation projected."""
+    """The changes the cell is read on beside the count its simulation projected and drew.
+
+    Both count changes a cell is read on, so a shortfall is the one the simulation's power at the
+    realised size measures, whether the window arrived short or lost changes to unscored runs.
+    """
     size = {}
     for name, source, field in (
         ("projected", simulation, "planned_changes"),
@@ -236,6 +236,7 @@ def _registered_bounds(
         isinstance(simulation, Mapping)
         and simulation.get("org") == recorded.get("org")
         and simulation.get("runs") == recorded.get("runs")
+        and simulation.get("planned_changes") == recorded.get("planned_changes")
         and same_calibration(simulation.get("spread_targets"), recorded.get("spread_targets"))
     ):
         raise ValueError(f"{org}: the simulation given is not the one its cell was read under")

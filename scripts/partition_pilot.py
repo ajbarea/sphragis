@@ -245,6 +245,7 @@ def main() -> None:
             "spread_target": args.spread_target,
             "cells": args.h1_cells,
             "spread_targets": sensitivity.get("spread_targets"),
+            "planned_changes": sensitivity.get("planned_changes"),
         }
     cell = h1_over_partitions(
         runs,

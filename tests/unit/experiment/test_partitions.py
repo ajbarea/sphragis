@@ -322,6 +322,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
             "runs": 4,
             "spread_target": "sizing_bound_90",
             "spread_targets": calibration,
+            "planned_changes": cell["changes"] + 1,
         },
     }
     by_cells = {"1": {"minimum_detectable_effect": bound}}
@@ -347,6 +348,8 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
     [
         ({"window": "test", "sizing": {"runs": 24}}, "test window"),
         ({"org": "llvm", "sizing": {"runs": 24}}, "llvm's pilot"),
+        ({"org": "apache", "sizing": {"runs": True}}, "got True"),
+        ({"org": "apache", "sizing": {"runs": 0}}, "got 0"),
     ],
 )
 def test_k_comes_from_the_organizations_own_development_pilot(artifact: dict, match: str) -> None:

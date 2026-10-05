@@ -17,7 +17,7 @@ from statistics import NormalDist, stdev, variance
 from typing import Any
 
 from sphragis.experiment.across import one_sided_p
-from sphragis.experiment.cells import SPREAD_TARGETS, by_level, level_key
+from sphragis.experiment.cells import SPREAD_TARGETS, by_level, is_count, level_key
 from sphragis.experiment.decomposition import SESOI, project_clusters, read_intervals
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 
@@ -189,8 +189,8 @@ def pilot_sizing(
     if artifact.get("org", org) != org:
         raise ValueError(f"{name} is {artifact['org']}'s pilot, not {org}'s")
     runs = artifact.get("sizing", {}).get("runs")
-    if not isinstance(runs, int):
-        raise ValueError(f"{name}: no sizing.runs to read K from")
+    if not is_count(runs):
+        raise ValueError(f"{name}: no sizing.runs to read K from, got {runs!r}")
     return runs
 
 
