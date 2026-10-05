@@ -25,6 +25,7 @@ from sphragis.experiment.cells import (
     MIN_RESAMPLES,
     REGISTERED_SPREAD_TARGET,
     by_level,
+    is_count,
     is_real,
     level_key,
     require_readable,
@@ -169,14 +170,56 @@ def registered_read(org: str) -> dict[str, Any]:
     if org in REPLICATION_FAMILY:
         if REPLICATION_MEMBERS is None or org not in REPLICATION_MEMBERS:
             raise ValueError(f"{org} is not a frozen replication member")
-        levels, cells = [REPLICATION_CONFIDENCE], 1
-    else:
-        if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
-            raise ValueError(f"{org} is not among the frozen admitted organizations")
-        spec = design(ADMITTED_ORGANIZATIONS)
-        levels = holm_levels(len(confirmatory(spec)))
-        cells = len(spec["H1"])
-    return {"levels": levels, "cells": cells, "spread_target": REGISTERED_SPREAD_TARGET}
+        return {
+            "levels": [REPLICATION_CONFIDENCE],
+            "cells": 1,
+            "spread_target": REGISTERED_SPREAD_TARGET,
+        }
+    if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
+        raise ValueError(f"{org} is not among the frozen admitted organizations")
+    return _gerrit_read(design(ADMITTED_ORGANIZATIONS))
+
+
+def _gerrit_read(spec: Mapping[str, Any]) -> dict[str, Any]:
+    """The registered read of every H1 cell in `spec`: its Holm levels and cell count."""
+    return {
+        "levels": holm_levels(len(confirmatory(spec))),
+        "cells": len(spec["H1"]),
+        "spread_target": REGISTERED_SPREAD_TARGET,
+    }
+
+
+def _require_exactly(given: Any, orgs: Sequence[str], *, what: str) -> None:
+    """Refuse `given` unless it maps exactly the organizations `orgs`."""
+    if not isinstance(given, Mapping):
+        raise ValueError(
+            f"{what} must map each organization to its own, got {type(given).__name__}"
+        )
+    extra = sorted(set(given) - set(orgs))
+    if extra:
+        raise ValueError(f"{what} for organization(s) outside {list(orgs)}: {extra}")
+    missing = [o for o in orgs if o not in given]
+    if missing:
+        raise ValueError(f"no {what} for {missing}")
+
+
+def _test_size(org: str, report: Mapping[str, Any], simulation: Mapping[str, Any]) -> dict:
+    """The test window's realised change count beside the count its simulation projected."""
+    size = {}
+    for name, source, field in (
+        ("projected", simulation, "planned_changes"),
+        ("realised", report, "changes"),
+    ):
+        count = source.get(field)
+        if not is_count(count):
+            raise ValueError(f"{org}: {field} {count!r} is not a whole number of changes")
+        size[name] = count
+    return size
+
+
+def _below_projection(cells: Mapping[str, Mapping[str, Any]]) -> list[str]:
+    """Organizations whose test window holds fewer changes than its simulation projected."""
+    return sorted(o for o, c in cells.items() if c["size"]["realised"] < c["size"]["projected"])
 
 
 def _registered_bounds(
@@ -191,18 +234,21 @@ def _registered_bounds(
     recorded = cell["sensitivity"]
     if not (
         isinstance(simulation, Mapping)
-        and simulation.get("org") == recorded["org"]
-        and simulation.get("runs") == recorded["runs"]
-        and same_calibration(simulation.get("spread_targets"), recorded["spread_targets"])
+        and simulation.get("org") == recorded.get("org")
+        and simulation.get("runs") == recorded.get("runs")
+        and same_calibration(simulation.get("spread_targets"), recorded.get("spread_targets"))
     ):
         raise ValueError(f"{org}: the simulation given is not the one its cell was read under")
     try:
         bounds = sensitivity_bounds(
             simulation, expected["spread_target"], expected["levels"], cells=expected["cells"]
         )
-        computed_under = by_level({} if cell["bounds"] is None else cell["bounds"])
     except (KeyError, TypeError, ValueError) as error:
-        raise ValueError(f"{org}: simulation or bounds: {error}") from error
+        raise ValueError(f"{org}: simulation: {error}") from error
+    try:
+        computed_under = by_level({} if cell["bounds"] is None else cell["bounds"])
+    except ValueError as error:
+        raise ValueError(f"{org}: bounds: {error}") from error
     out: dict[float, float] = {}
     for c, bound in bounds.items():
         if not valid_bound(bound):
@@ -228,57 +274,54 @@ def h1_test_gate(
     not built and Holm cannot be read without it. `reports` holds each admitted organization's
     `partition_pilot.py` test-window report and `simulations` its simulation artifact, both for
     exactly the admitted set; each report is checked by `require_readable` and by
-    `require_test_read` against `registered_read`, and its bounds read from its simulation. H1 is
-    the intersection-union over the cells at the registered Holm levels (`holm_steps`); the
-    readings across organizations are reported beside it and bind no verdict.
+    `require_test_read` against the registered read, and its bounds read from its simulation. H1
+    is the intersection-union over the cells at the registered Holm levels (`holm_steps`).
+
+    Beside the verdict, binding none: the readings across organizations, and each cell's realised
+    test size against its simulation's projection ("Fetch horizon", registered-decisions.md).
+    An organization in `below_projection` is reported with the simulation's power at its realised
+    size, which `partition_sensitivity.py` does not compute yet (IMPL).
     """
     if ADMITTED_ORGANIZATIONS is None:
         raise ValueError("the admitted organizations are not frozen yet")
-    for what, given in (("reports", reports), ("simulations", simulations)):
-        if not isinstance(given, Mapping):
-            raise ValueError(f"{what} must map each organization to its own")
     spec = design(ADMITTED_ORGANIZATIONS)
-    hypotheses = confirmatory(spec)
-    if "H2" in hypotheses:
+    if "H2" in confirmatory(spec):
         raise ValueError("H2 is confirmatory, and its test read over partitions is not built")
     orgs = spec["H1"]
     for what, given in (("reports", reports), ("simulations", simulations)):
-        if set(given) != set(orgs):
-            raise ValueError(f"{what} for {sorted(given)}, the admitted are {list(orgs)}")
-    levels = holm_levels(len(hypotheses))
+        _require_exactly(given, orgs, what=what)
+    expected = _gerrit_read(spec)
+    levels = expected["levels"]
     intervals = {
         c: require_readable(reports, confidence=c, fields=_CELL_FIELDS + ("bootstrap_se",))
         for c in levels
     }
     cells: dict[str, dict[str, Any]] = {}
+    detectable: dict[str, dict[float, float]] = {}
     for org in orgs:
-        report = reports[org]
-        expected = registered_read(org)
+        report, simulation = reports[org], simulations[org]
         require_test_read(report, org=org, expected=expected)
-        bounds = _registered_bounds(org, report, simulations[org], expected)
+        detectable[org] = _registered_bounds(org, report, simulation, expected)
         at = {c: intervals[c][org][level_key(c)] for c in levels}
         cells[org] = {
             "estimate": report["estimate"],
-            "intervals": {c: {"low": i["low"], "high": i["high"]} for c, i in at.items()},
-            "bounds": {c: bounds[level_key(c)] for c in levels},
-            "verdicts": {
-                c: cell_verdict(i["low"], i["high"], bound=bounds[level_key(c)])
-                for c, i in at.items()
-            },
-            "within_sesoi": {c: within_sesoi(i["low"], i["high"]) for c, i in at.items()},
-            "meaningful": {c: meaningful(i["low"]) for c, i in at.items()},
+            **read_intervals({c: (i["low"], i["high"]) for c, i in at.items()}, detectable[org]),
             "p_one_sided": report["p_one_sided"],
+            "size": _test_size(org, report, simulation),
         }
     per_hypothesis = {"H1": cells}
     verdicts, passed_at = holm_steps(per_hypothesis)
     return {
-        "admitted": orgs,
-        "holm_levels": levels,
+        "design": spec,
         "verdicts": verdicts,
         "passed_at": passed_at,
         "reading": reading(verdicts["H1"], None),
         "below_sesoi": below_sesoi(per_hypothesis, passed_at),
         "cells": cells,
+        "sesoi": SESOI,
+        "detectable": {"H1": detectable},
+        "holm_levels": levels,
+        "below_projection": _below_projection(cells),
         "across": across_organizations(reports, confidence=levels[0]),
     }
 
@@ -299,23 +342,15 @@ def replication_gate(
     the one the cell was computed under. It checks the artifacts as the scripts write them; that
     none was edited afterwards is the git history's to show. Each verdict is read from the cell's
     interval at `REPLICATION_CONFIDENCE`, and r at its one-sided level from p-values that must
-    agree with the intervals.
+    agree with the intervals. Each member's realised test size is reported against its
+    simulation's projection, as `h1_test_gate` reports it.
     """
     if REPLICATION_MEMBERS is None:
         raise ValueError("the replication family's members are not frozen yet (Stage 1)")
-    for what, given in (("cells", cells), ("simulations", simulations)):
-        if not isinstance(given, Mapping):
-            raise ValueError(f"{what} must map each member to its own, got {type(given).__name__}")
     family = replication(REPLICATION_MEMBERS)
-    listed = set(family["members"])
-    for what, names in (("cells", cells), ("simulations", simulations)):
-        extra = sorted(set(names) - listed)
-        if extra:
-            raise ValueError(f"{what} for organization(s) outside the family's members: {extra}")
+    for what, given in (("cells", cells), ("simulations", simulations)):
+        _require_exactly(given, family["members"], what=what)
     level = level_key(REPLICATION_CONFIDENCE)
-    missing = [o for o in family["members"] if o not in cells or o not in simulations]
-    if missing:
-        raise ValueError(f"no cell and simulation for member(s) {missing}")
     intervals = require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
@@ -331,10 +366,12 @@ def replication_gate(
             "verdict": cell_verdict(interval["low"], interval["high"], bound=bound),
             "meaningful": meaningful(interval["low"]),
             "p_one_sided": cell["p_one_sided"],
+            "size": _test_size(org, cell, simulation),
         }
     return {
         **family,
         "cells": read,
+        "below_projection": _below_projection(read),
         "partial_conjunction": partial_conjunction(
             {o: c["p_one_sided"] for o, c in read.items()},
             alpha=one_sided_alpha(REPLICATION_CONFIDENCE),
@@ -402,6 +439,24 @@ def meaningful(low: float) -> bool:
 def within_sesoi(low: float, high: float) -> bool:
     """Whether the interval sits inside the SESOI band: reported, never a verdict."""
     return low > -SESOI and high < SESOI
+
+
+def read_intervals(
+    intervals: Mapping[float, tuple[float, float]], bounds: Mapping[float, Any]
+) -> dict[str, dict[float, Any]]:
+    """A cell's interval at each level, its verdict against that level's bound in `bounds` (keyed
+    by `level_key`, absent for none), and the readings beside it."""
+    return {
+        "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
+        "verdicts": {
+            c: cell_verdict(lo, hi, bound=bounds.get(level_key(c)))
+            for c, (lo, hi) in intervals.items()
+        },
+        "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
+        # Readings beside the pass rule (registered-decisions.md): a supported cell whose lower
+        # bound also clears the SESOI.
+        "meaningful": {c: meaningful(lo) for c, (lo, hi) in intervals.items()},
+    }
 
 
 def detectable_effects(sensitivity: Mapping[str, Any]) -> dict[str, dict[str, dict[float, float]]]:
@@ -669,20 +724,12 @@ def decomposition_gate(
                 "role": roles[name],
                 "foreign": h2_pairs[org][0] if name == "H2" else None,
                 "estimate": estimates[name],
-                "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
-                "verdicts": {
-                    # Bounds are registered per confirmatory cell; an exploratory cell shares its
-                    # organization with no registered pair, so it can be supported, never bounded.
-                    c: cell_verdict(
-                        lo,
-                        hi,
-                        bound=bounds.get(name, {}).get(org, {}).get(level_key(c))
-                        if roles[name] == "confirmatory"
-                        else None,
-                    )
-                    for c, (lo, hi) in intervals.items()
-                },
-                "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
+                # Bounds are registered per confirmatory cell; an exploratory cell shares its
+                # organization with no registered pair, so it can be supported, never bounded.
+                **read_intervals(
+                    intervals,
+                    bounds.get(name, {}).get(org, {}) if roles[name] == "confirmatory" else {},
+                ),
                 "clusters_per_half": [len(runs[0]) for runs in contrasts[name]],
                 "seeds": len(seeds),
             }

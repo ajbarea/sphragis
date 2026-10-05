@@ -337,3 +337,24 @@ def test_across_organizations_refuses_a_cell_filed_under_another_organization() 
     cells["a"]["org"] = "zzz"
     with pytest.raises(ValueError, match="computed for 'zzz'"):
         across_organizations(cells, confidence=0.975)
+
+
+@pytest.mark.parametrize(
+    ("cells", "reason"),
+    [
+        ({"a": _h1(0.02, 0.005, 0.0001)}, "at least two, got 1"),
+        ({"a": _h1(0.02, 0.0, 0.0001), "b": _h1(0.01, 0.006, 0.0001)}, "standard error 0.0"),
+    ],
+)
+def test_a_summary_that_cannot_be_computed_is_reported_unavailable(
+    cells: dict, reason: str
+) -> None:
+    out = across_organizations(_filed(cells), confidence=0.975)
+    assert out["partial_conjunction"]["k"] == len(cells)
+    assert out["random_effects"]["estimate"] is None
+    assert reason in out["random_effects"]["unavailable"]
+    with pytest.raises(ValueError, match=reason):
+        random_effects(
+            {o: c["estimate"] for o, c in cells.items()},
+            {o: c["bootstrap_se"] for o, c in cells.items()},
+        )

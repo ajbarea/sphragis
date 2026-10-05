@@ -18,13 +18,7 @@ from typing import Any
 
 from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.cells import SPREAD_TARGETS, by_level, level_key
-from sphragis.experiment.decomposition import (
-    SESOI,
-    cell_verdict,
-    meaningful,
-    project_clusters,
-    within_sesoi,
-)
+from sphragis.experiment.decomposition import SESOI, project_clusters, read_intervals
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
@@ -273,15 +267,8 @@ def h1_over_partitions(
         "reproducibility": reproducibility(per_run),
         "runs_computed": len(runs),
         "runs_left_out": left_out,
-        "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
-        "verdicts": {
-            c: cell_verdict(lo, hi, bound=registered.get(level_key(c)))
-            for c, (lo, hi) in intervals.items()
-        },
-        "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
-        # Readings beside the pass rule (registered-decisions.md): a supported cell whose lower
-        # bound also clears the SESOI, and the inputs of the readings across organizations.
-        "meaningful": {c: meaningful(lo) for c, (lo, hi) in intervals.items()},
+        **read_intervals(intervals, registered),
+        # The inputs of the readings across organizations, beside the pass rule.
         "p_one_sided": one_sided_p(draws),
         "bootstrap_se": stdev(draws),
         "resamples": resamples,
