@@ -19,6 +19,11 @@ MIN_RESAMPLES = 1_000
 # clears zero (registered-decisions.md, "Reading the test window").
 TEST_RESAMPLES = 10_000
 TEST_BOOTSTRAP_SEED = 7
+# The points on a development pilot's per-run spread a partition simulation is calibrated to
+# (`partitions.spread_targets`), and the one a test-window read's bound is taken at: the spread K
+# was sized on ("Stated power", registered-decisions.md).
+SPREAD_TARGETS = ("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99")
+REGISTERED_SPREAD_TARGET = "sizing_bound_90"
 
 
 def level_key(confidence: Any) -> float:
@@ -135,14 +140,31 @@ def require_readable(
     return normalized
 
 
-def require_test_read(report: Mapping[str, Any], *, org: str) -> None:
+def same_calibration(a: Any, b: Any) -> bool:
+    """Whether two spread-target mappings name the same points at the same values.
+
+    Within a relative 1e-9: the chi-squared bounds pass through libm, whose last bits can differ
+    between the cluster that ran the simulation and the machine that reads the test window.
+    """
+    if not (isinstance(a, Mapping) and isinstance(b, Mapping)) or set(a) != set(b):
+        return False
+    return all(
+        is_real(a[k]) and is_real(b[k]) and math.isclose(a[k], b[k], rel_tol=1e-9, abs_tol=0.0)
+        for k in a
+    )
+
+
+def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[str, Any]) -> None:
     """Refuse a `partition_pilot.py` report unless it is a test-window read registered in advance.
 
     "Reading the test window" (registered-decisions.md): read on the test window with check 5
-    passed; K from the organization's own development pilot (`k_from`), and bounds from its own
-    simulation, run at that same K (`sensitivity`); at `TEST_RESAMPLES` draws and
-    `TEST_BOOTSTRAP_SEED`. The pilot runs this on its report before writing it, and the gates on
-    reading it, so both hold one rule.
+    passed; K from the organization's own development pilot (`k_from`); bounds from its own
+    simulation, run at that same K and calibrated on that pilot (`sensitivity`); at
+    `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell count and spread
+    target `expected` registers for the organization (`decomposition.registered_read`), so none
+    is chosen when the window is read. The pilot runs this on its report before writing it, and
+    `replication_gate` on reading it, so both hold one rule; the Gerrit H1 verdict over test
+    reports is not built yet, and runs it too when it is.
     """
     required = (
         "window",
@@ -152,6 +174,8 @@ def require_test_read(report: Mapping[str, Any], *, org: str) -> None:
         "runs",
         "resamples",
         "bootstrap_seed",
+        "levels",
+        "intervals",
     )
     absent = [f for f in required if f not in report]
     if absent:
@@ -169,8 +193,60 @@ def require_test_read(report: Mapping[str, Any], *, org: str) -> None:
             raise ValueError(
                 f"{org}: {name} is at K = {source.get('runs')!r}, the read at {report['runs']!r}"
             )
+    if not isinstance(report["levels"], list | tuple):
+        raise ValueError(f"{org}: levels {report['levels']!r} is not a list of levels")
+    try:
+        read_at = [level_key(c) for c in report["levels"]]
+        intervals_at = set(by_level(report["intervals"]))
+    except ValueError as error:
+        raise ValueError(f"{org}: {error}") from error
+    if read_at != [level_key(c) for c in expected["levels"]]:
+        raise ValueError(
+            f"{org}: read at levels {report['levels']}, registered {expected['levels']}"
+        )
+    if intervals_at != set(read_at):
+        raise ValueError(f"{org}: its intervals are not at the levels it records")
+    simulation = report["sensitivity"]
+    for name in ("spread_target", "cells"):
+        if simulation.get(name) != expected[name]:
+            raise ValueError(
+                f"{org}: bounds at {name} {simulation.get(name)!r}, registered {expected[name]!r}"
+            )
+    if simulation.get("spread_targets") is None:
+        raise ValueError(f"{org}: its simulation records no spread_targets; rerun it")
+    if not same_calibration(
+        report["k_from"].get("spread_targets"), simulation.get("spread_targets")
+    ):
+        raise ValueError(f"{org}: its simulation was calibrated on another pilot than K's")
     if (report["resamples"], report["bootstrap_seed"]) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
         raise ValueError(
             f"{org}: read at {report['resamples']} resamples, seed {report['bootstrap_seed']}; "
             f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
         )
+
+
+def sensitivity_bounds(
+    sensitivity: Mapping[str, Any], target: str, levels: Sequence[float], *, cells: int
+) -> dict[float, float]:
+    """Each Holm level's registered bound: the detectable effect the simulation found at `target`
+    for an H1 intersecting `cells` organizations' cells.
+
+    `target` names a point on the pilot's run spread (`partition_sensitivity.py`'s
+    `spread_targets`), so the bound says which spread it assumes; `cells` sets the per-cell power
+    that gives H1 its registered power.
+    """
+    by_target = sensitivity["by_target"]
+    if target not in by_target:
+        raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")
+    bounds = {}
+    levels_in = by_level(by_target[target]["by_level"])
+    for c in levels:
+        if level_key(c) not in levels_in:
+            raise ValueError(f"no bound at level {c}; the artifact has {sorted(levels_in)}")
+        by_cells = levels_in[level_key(c)]["by_cells"]
+        if str(cells) not in by_cells:
+            raise ValueError(
+                f"no bound for {cells} H1 cell(s); the artifact has {sorted(by_cells)}"
+            )
+        bounds[c] = by_cells[str(cells)]["minimum_detectable_effect"]
+    return bounds

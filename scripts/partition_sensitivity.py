@@ -48,7 +48,7 @@ from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves
-from sphragis.experiment.partitions import K_MAX, K_MIN, XI, pilot_sizing, sd_bound
+from sphragis.experiment.partitions import K_MAX, K_MIN, XI, pilot_sizing, spread_targets
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
 from sphragis.experiment.runner import to_clusters
 from sphragis.measure.stats import (
@@ -340,7 +340,6 @@ def main() -> None:
     except ValueError as error:
         raise SystemExit(str(error)) from error
     args.size = int(projection["test"]["projected_changes"])
-    estimates = pilot["per_run"] + pilot["runs_left_out"]
     if max(args.trials, args.null_trials) > CALIBRATION_SEED_OFFSET:
         raise SystemExit(f"trial seeds would reach the calibration's at {CALIBRATION_SEED_OFFSET}")
     if args.partitions < 2 * K_MAX:
@@ -348,12 +347,7 @@ def main() -> None:
     if not K_MIN <= args.runs <= K_MAX:
         raise SystemExit(f"the pilot's K {args.runs} lies outside [{K_MIN}, {K_MAX}]")
     # The per-run spread the simulation is calibrated to, each point named for what it is.
-    targets = {
-        "pilot_lower_90": sd_bound(estimates, 0.90, upper=False),
-        "pilot_estimate": stdev(estimates),
-        "sizing_bound_90": pilot["sizing"]["sd_upper"],
-        "pilot_upper_99": sd_bound(estimates, 0.99, upper=True),
-    }
+    targets = spread_targets(pilot)
     pool = pilot_pool(args.placebo, args.corpus, args.org)
     partitions, pool_seeds = partition_pool(
         args.corpus,

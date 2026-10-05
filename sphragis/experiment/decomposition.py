@@ -23,11 +23,14 @@ from sphragis.corpus.halves import suffix
 from sphragis.experiment.across import partial_conjunction
 from sphragis.experiment.cells import (
     MIN_RESAMPLES,
+    REGISTERED_SPREAD_TARGET,
     by_level,
     is_real,
     level_key,
     require_readable,
     require_test_read,
+    same_calibration,
+    sensitivity_bounds,
 )
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import require_unique_ids, to_clusters
@@ -110,6 +113,11 @@ def valid_bound(bound: Any) -> bool:
     return is_real(bound) and bound > 0
 
 
+# The Gerrit organizations admitted, set once by the commit that freezes them before any test
+# window is read; None until then. A test read's Holm levels and cell count follow from them.
+ADMITTED_ORGANIZATIONS: tuple[str, ...] | None = None
+
+
 # The GitHub replication family in registration order (registered-decisions.md, "GitHub
 # organizations"): read on H1 alone, after the confirmatory hypotheses, binding no verdict.
 REPLICATION_FAMILY = ("apache", "llvm", "dotnet", "grafana")
@@ -142,58 +150,90 @@ def replication(members: Iterable[str]) -> dict[str, Any]:
     }
 
 
+def confirmatory(spec: Mapping[str, Any]) -> dict[str, Any]:
+    """A design's confirmatory hypotheses and their cells: H1, and H2 when it has a cell.
+
+    With no H2 cell H1 is the whole family and carries the full one-sided `FAMILY_ALPHA`.
+    """
+    return {name: spec[name] for name in ("H1", "H2") if spec[name]}
+
+
+def registered_read(org: str) -> dict[str, Any]:
+    """What `org`'s test-window read is registered at: its levels, cell count and spread target.
+
+    A Gerrit organization is read at the Holm levels of `design(ADMITTED_ORGANIZATIONS)`, its
+    bound from a simulation of that design's H1 cells; a GitHub member at
+    `REPLICATION_CONFIDENCE` alone, as one cell. Both take the bound at the registered spread
+    target. Refused before the organizations are frozen, and for one outside them.
+    """
+    if org in REPLICATION_FAMILY:
+        if REPLICATION_MEMBERS is None or org not in REPLICATION_MEMBERS:
+            raise ValueError(f"{org} is not a frozen replication member")
+        levels, cells = [REPLICATION_CONFIDENCE], 1
+    else:
+        if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
+            raise ValueError(f"{org} is not among the frozen admitted organizations")
+        spec = design(ADMITTED_ORGANIZATIONS)
+        levels = holm_levels(len(confirmatory(spec)))
+        cells = len(spec["H1"])
+    return {"levels": levels, "cells": cells, "spread_target": REGISTERED_SPREAD_TARGET}
+
+
 def replication_gate(
     cells: Mapping[str, Mapping[str, Any]],
     *,
-    bounds: Mapping[str, Mapping[float, float]],
+    simulations: Mapping[str, Mapping[str, Any]],
 ) -> dict[str, Any]:
     """Each frozen member's H1 verdict and the family's partial conjunction r.
 
     The members are `REPLICATION_MEMBERS`, never an argument, so none joins after Stage 1; the
     gate refuses to run before they are frozen. `cells` holds each member's
-    `partition_pilot.py --replication` report on its test window, check 5 passed, read at
-    `REPLICATION_CONFIDENCE` alone, and no other organization (read back from JSON is accepted;
-    each is checked by `require_readable`). It checks a report as `partition_pilot.py` writes
-    one; that no report was edited after it was written is the git history's to show.
-    `bounds` holds each member's bounds by level from its own partition simulation, as
-    `sensitivity_bounds` gives them, fixed before its test window; a member without a positive
-    finite bound at `REPLICATION_CONFIDENCE`, a bound for any other organization, or a cell
-    computed under a different bound is refused. Each verdict is read from the cell's interval at
-    that level, and r at its one-sided level from p-values that must agree with the intervals.
+    `partition_pilot.py --replication` test-window report and no other organization (read back
+    from JSON is accepted); each is checked by `require_readable` and by `require_test_read`
+    against `registered_read`. `simulations` holds each member's partition-simulation artifact:
+    the bound is read from it at the registered spread target, level and cell count, and must be
+    the one the cell was computed under. It checks the artifacts as the scripts write them; that
+    none was edited afterwards is the git history's to show. Each verdict is read from the cell's
+    interval at `REPLICATION_CONFIDENCE`, and r at its one-sided level from p-values that must
+    agree with the intervals.
     """
     if REPLICATION_MEMBERS is None:
         raise ValueError("the replication family's members are not frozen yet (Stage 1)")
-    for what, given in (("cells", cells), ("bounds", bounds)):
+    for what, given in (("cells", cells), ("simulations", simulations)):
         if not isinstance(given, Mapping):
             raise ValueError(f"{what} must map each member to its own, got {type(given).__name__}")
     family = replication(REPLICATION_MEMBERS)
     listed = set(family["members"])
-    for what, names in (("cells", cells), ("bounds", bounds)):
+    for what, names in (("cells", cells), ("simulations", simulations)):
         extra = sorted(set(names) - listed)
         if extra:
             raise ValueError(f"{what} for organization(s) outside the family's members: {extra}")
     level = level_key(REPLICATION_CONFIDENCE)
-    missing = [o for o in family["members"] if o not in cells]
+    missing = [o for o in family["members"] if o not in cells or o not in simulations]
     if missing:
-        raise ValueError(f"no cell for member(s) {missing}")
+        raise ValueError(f"no cell and simulation for member(s) {missing}")
     intervals = require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
-        cell = cells[org]
-        require_test_read(cell, org=org)
-        if cell["sensitivity"].get("cells") != 1:
-            raise ValueError(f"{org}: its bounds are not from a simulation of one cell")
-        levels_read = set(intervals[org])
-        if levels_read != {level}:
-            raise ValueError(
-                f"{org}: read at levels {sorted(levels_read)}, not at {REPLICATION_CONFIDENCE} "
-                "alone (partition_pilot.py --replication)"
-            )
-        by_org = bounds.get(org)
+        cell, simulation = cells[org], simulations[org]
+        expected = registered_read(org)
+        require_test_read(cell, org=org, expected=expected)
+        # require_test_read checked the recorded simulation against the organization, K and the
+        # pilot's calibration; the one given must be that simulation.
+        recorded = cell["sensitivity"]
+        if not (
+            isinstance(simulation, Mapping)
+            and simulation.get("org") == recorded["org"]
+            and simulation.get("runs") == recorded["runs"]
+            and same_calibration(simulation.get("spread_targets"), recorded["spread_targets"])
+        ):
+            raise ValueError(f"{org}: the simulation given is not the one its cell was read under")
         try:
-            bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
-        except ValueError as error:
-            raise ValueError(f"{org}: registered bounds: {error}") from error
+            bound = sensitivity_bounds(
+                simulation, expected["spread_target"], expected["levels"], cells=expected["cells"]
+            )[REPLICATION_CONFIDENCE]
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError(f"{org}: simulation: {error}") from error
         if not valid_bound(bound):
             raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
         try:
@@ -204,7 +244,7 @@ def replication_gate(
         if computed_under != bound:
             raise ValueError(
                 f"{org}: the cell was computed under bound {computed_under!r}, "
-                f"the registered bound is {bound!r}"
+                f"its simulation gives {bound!r}"
             )
         interval = intervals[org][level]
         read[org] = {
@@ -479,18 +519,26 @@ def decomposition_gate(
     share of draws in which each is above zero, and their sum, are read jointly. `detectable`
     holds each cell's registered bound by Holm level (`detectable_effects`); a confirmatory cell
     without one at every level the design reads is refused, so no bound is chosen after the data.
+    It reads single-partition development pilots (`scripts/decomposition_pilot.py`). The H2
+    test-window read over partitions is not built yet; when it is, it goes through
+    `require_test_read` as the H1 read does.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
+    admitted = tuple(admitted)
+    if ADMITTED_ORGANIZATIONS is not None and set(admitted) != set(ADMITTED_ORGANIZATIONS):
+        raise ValueError(
+            f"admitted {sorted(admitted)} is not the frozen set {ADMITTED_ORGANIZATIONS}"
+        )
     cells = design(admitted)
-    confirmatory = {name: cells[name] for name in ("H1", "H2") if cells[name]}
-    levels = holm_levels(len(confirmatory))
+    hypotheses = confirmatory(cells)
+    levels = holm_levels(len(hypotheses))
     bounds = {
         name: {org: by_level(levels_) for org, levels_ in cells_.items()}
         for name, cells_ in detectable.items()
     }
-    for name, units in confirmatory.items():
+    for name, units in hypotheses.items():
         for unit in units:
             org = unit if name == "H1" else unit[0]
             registered = bounds.get(name, {}).get(org, {})
@@ -585,7 +633,7 @@ def decomposition_gate(
 
     tested = {
         name: {o: cell for o, cell in per_org[name].items() if cell["role"] == "confirmatory"}
-        for name in confirmatory
+        for name in hypotheses
     }
     verdicts, passed_at = holm_steps(tested)
     return {

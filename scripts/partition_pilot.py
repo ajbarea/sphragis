@@ -25,18 +25,21 @@ import json
 import re
 from pathlib import Path
 
+from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
     require_resamples,
     require_test_read,
+    sensitivity_bounds,
 )
 from sphragis.experiment.decomposition import (
     ORGANIZATIONS,
     REPLICATION_CONFIDENCE,
     REPLICATION_FAMILY,
-    REPLICATION_MEMBERS,
     holm_levels,
+    registered_read,
     valid_bound,
 )
 from sphragis.experiment.neutral import apparatus_holds, planted_convention, source_windows
@@ -44,7 +47,7 @@ from sphragis.experiment.partitions import (
     h1_over_partitions,
     pilot_sizing,
     runs_needed,
-    sensitivity_bounds,
+    spread_targets,
 )
 from sphragis.measure.stats import one_sided_alpha
 from sphragis.provenance import provenance_header
@@ -56,7 +59,7 @@ parser.add_argument("--org", default="openstack")
 parser.add_argument(
     "--sizing", type=Path, help="the organization's pilot artifact: K is its sizing.runs"
 )
-# H1 and H2: the registered Holm family (2 when omitted).
+# A development read's Holm family size (2 when omitted); a test read takes the registered one.
 parser.add_argument("--hypotheses", type=int, help="the Holm family size")
 parser.add_argument(
     "--replication",
@@ -66,7 +69,7 @@ parser.add_argument(
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
 parser.add_argument(
     "--spread-target",
-    choices=("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99"),
+    choices=SPREAD_TARGETS,
     help="which point on the pilot's run spread the bounds assume",
 )
 parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 intersects")
@@ -80,6 +83,15 @@ parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
 parser.add_argument("--out", type=Path, required=True)
 
 
+def check_resamples(args: argparse.Namespace, levels: list[float]) -> None:
+    """Refuse a resample count that puts any level's bound between draws, before any is taken."""
+    for c in levels:
+        try:
+            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
+        except ValueError as error:
+            raise SystemExit(f"not read: {error}") from error
+
+
 def main() -> None:
     args = parser.parse_args()
     # Every check on the arguments alone, before any run is read.
@@ -91,8 +103,9 @@ def main() -> None:
     if not args.replication and args.org not in ORGANIZATIONS:
         raise SystemExit(f"{args.org} is not a registered Gerrit organization {ORGANIZATIONS}")
     if args.replication:
-        if REPLICATION_MEMBERS is not None and args.org not in REPLICATION_MEMBERS:
-            raise SystemExit(f"{args.org} is not among the frozen members {REPLICATION_MEMBERS}")
+        frozen = decomposition.REPLICATION_MEMBERS
+        if frozen is not None and args.org not in frozen:
+            raise SystemExit(f"{args.org} is not among the frozen members {frozen}")
         if args.hypotheses is not None:
             raise SystemExit("--replication reads one fixed level; --hypotheses does not apply")
         # A member is read alone, so its simulation is of one cell at that level.
@@ -104,11 +117,9 @@ def main() -> None:
         if args.replication
         else holm_levels(2 if args.hypotheses is None else args.hypotheses)
     )
-    for c in levels:
-        try:
-            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
+    # A development read's levels are final here; a test read's are replaced by the registered
+    # ones and checked again below.
+    check_resamples(args, levels)
     listing = json.loads(args.admissible.read_text())
     admissible, train_size = listing["admissible"], listing["size_floor"]
     if len(args.runs) > len(admissible):
@@ -148,17 +159,31 @@ def main() -> None:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
     if window == "test":
         # Fixed before the test window: who is read, its K, and the draws its interval takes.
-        # A member outside the frozen set is refused with the arguments; here, before the freeze.
-        if args.replication and REPLICATION_MEMBERS is None:
-            raise SystemExit(f"{args.org}'s test window is read only once it is a frozen member")
         if not args.sizing:
             raise SystemExit("a test-window read needs --sizing: K from the development pilot")
+        # Levels, cell count and spread target come from the registration, never the command.
+        try:
+            expected = registered_read(args.org)
+        except ValueError as error:
+            raise SystemExit(f"not read: {error}") from error
+        chosen = {
+            "levels": None if args.hypotheses is None else holm_levels(args.hypotheses),
+            "cells": args.h1_cells,
+            "spread_target": args.spread_target,
+        }
+        conflicts = {k: v for k, v in chosen.items() if v is not None and v != expected[k]}
+        if conflicts:
+            raise SystemExit(f"not read: {conflicts} differ from the registered {expected}")
+        levels = expected["levels"]
+        args.h1_cells, args.spread_target = expected["cells"], expected["spread_target"]
         # Checked again on the report by require_test_read; here before any draw is taken.
         if (args.resamples, args.bootstrap_seed) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
             raise SystemExit(
                 f"not read: {args.resamples} resamples, seed {args.bootstrap_seed}; "
                 f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
             )
+    if window == "test":
+        check_resamples(args, levels)
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
     if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
@@ -184,6 +209,14 @@ def main() -> None:
             raise SystemExit(str(error)) from error
         k_source = f"{args.sizing}: sizing.runs"
         k_from = {"file": str(args.sizing), "org": sizing_artifact.get("org"), "runs": runs_fixed}
+        # Only a test read is checked against its simulation's calibration.
+        if window == "test":
+            try:
+                k_from["spread_targets"] = spread_targets(sizing_artifact)
+            except (KeyError, TypeError, ValueError) as error:
+                raise SystemExit(
+                    f"{args.sizing}: no per-run spread to calibrate on ({error})"
+                ) from error
     bounds = None
     simulation = None
     if args.sensitivity:
@@ -196,7 +229,12 @@ def main() -> None:
             raise SystemExit(
                 f"{args.sensitivity} simulates {sensitivity.get('org')}, not {args.org}"
             )
-        bounds = sensitivity_bounds(sensitivity, args.spread_target, levels, cells=args.h1_cells)
+        try:
+            bounds = sensitivity_bounds(
+                sensitivity, args.spread_target, levels, cells=args.h1_cells
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            raise SystemExit(f"not read: {args.sensitivity}: {error}") from error
         invalid = {c: b for c, b in bounds.items() if not valid_bound(b)}
         if invalid:
             raise SystemExit(f"{args.sensitivity}: bounds {invalid} are not detectable effects")
@@ -206,6 +244,7 @@ def main() -> None:
             "runs": sensitivity.get("runs"),
             "spread_target": args.spread_target,
             "cells": args.h1_cells,
+            "spread_targets": sensitivity.get("spread_targets"),
         }
     cell = h1_over_partitions(
         runs,
@@ -246,7 +285,7 @@ def main() -> None:
     }
     if window == "test":
         try:
-            require_test_read(report, org=args.org)
+            require_test_read(report, org=args.org, expected=expected)
         except ValueError as error:
             raise SystemExit(f"not read: {error}") from error
     for c in levels:

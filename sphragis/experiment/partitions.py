@@ -17,7 +17,7 @@ from statistics import NormalDist, stdev, variance
 from typing import Any
 
 from sphragis.experiment.across import one_sided_p
-from sphragis.experiment.cells import by_level, level_key
+from sphragis.experiment.cells import SPREAD_TARGETS, by_level, level_key
 from sphragis.experiment.decomposition import (
     SESOI,
     cell_verdict,
@@ -122,6 +122,22 @@ def sd_bound(pilot: Sequence[float], confidence: float, *, upper: bool) -> float
     return stdev(pilot) * math.sqrt((n - 1) / q)
 
 
+def spread_targets(pilot: Mapping[str, Any]) -> dict[str, float]:
+    """The per-run spreads a partition simulation is calibrated to, from a development pilot.
+
+    Each point is named for what it is; a test read checks its simulation's against the ones
+    recomputed from the pilot its K came from, so both rest on the same pilot.
+    """
+    estimates = list(pilot["per_run"]) + list(pilot["runs_left_out"])
+    targets = {
+        "pilot_lower_90": sd_bound(estimates, 0.90, upper=False),
+        "pilot_estimate": stdev(estimates),
+        "sizing_bound_90": pilot["sizing"]["sd_upper"],
+        "pilot_upper_99": sd_bound(estimates, 0.99, upper=True),
+    }
+    return {name: targets[name] for name in SPREAD_TARGETS}
+
+
 def runs_needed(
     pilot: Sequence[float],
     *,
@@ -182,33 +198,6 @@ def pilot_sizing(
     if not isinstance(runs, int):
         raise ValueError(f"{name}: no sizing.runs to read K from")
     return runs
-
-
-def sensitivity_bounds(
-    sensitivity: Mapping[str, Any], target: str, levels: Sequence[float], *, cells: int
-) -> dict[float, float]:
-    """Each Holm level's registered bound: the detectable effect the simulation found at `target`
-    for an H1 intersecting `cells` organizations' cells.
-
-    `target` names a point on the pilot's run spread (`partition_sensitivity.py`'s
-    `spread_targets`), so the bound says which spread it assumes; `cells` sets the per-cell power
-    that gives H1 its registered power.
-    """
-    by_target = sensitivity["by_target"]
-    if target not in by_target:
-        raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")
-    bounds = {}
-    levels_in = by_level(by_target[target]["by_level"])
-    for c in levels:
-        if level_key(c) not in levels_in:
-            raise ValueError(f"no bound at level {c}; the artifact has {sorted(levels_in)}")
-        by_cells = levels_in[level_key(c)]["by_cells"]
-        if str(cells) not in by_cells:
-            raise ValueError(
-                f"no bound for {cells} H1 cell(s); the artifact has {sorted(by_cells)}"
-            )
-        bounds[c] = by_cells[str(cells)]["minimum_detectable_effect"]
-    return bounds
 
 
 def _eval_ids(results: Results) -> set[str]:
