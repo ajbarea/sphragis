@@ -156,16 +156,22 @@ def runs_needed(
     }
 
 
-def pilot_sizing(artifact: Mapping[str, Any], name: str) -> int:
+def pilot_sizing(artifact: Mapping[str, Any], name: str, *, org: str) -> int:
     """The K an organization's pilot sized: `sizing.runs` of a reading over all its runs.
 
     Every reading re-derives `sizing` from the runs it read, so a reading at a K taken from
     elsewhere (its `k_source` names that file) carries a `sizing` that is not the organization's
-    K, and a test-window reading's would be sized on confirmatory data; both are refused.
+    K, and a test-window reading's would be sized on confirmatory data; both are refused, as is
+    another organization's pilot. A pilot written before readings recorded their window and
+    organization is a development-window reading.
     """
     source = artifact.get("k_source", "all runs")
     if source != "all runs":
         raise ValueError(f"{name} read its K from {source!r}; K comes from the pilot itself")
+    if artifact.get("window", "development") != "development":
+        raise ValueError(f"{name} read the {artifact['window']} window; K comes from the pilot")
+    if artifact.get("org", org) != org:
+        raise ValueError(f"{name} is {artifact['org']}'s pilot, not {org}'s")
     runs = artifact.get("sizing", {}).get("runs")
     if not isinstance(runs, int):
         raise ValueError(f"{name}: no sizing.runs to read K from")
@@ -264,6 +270,7 @@ def h1_over_partitions(
     registered = by_level(bounds) if bounds else {}
     return {
         "org": org,
+        "bootstrap_seed": bootstrap_seed,
         "estimate": estimate,
         "per_run": per_run,
         "runs": k,

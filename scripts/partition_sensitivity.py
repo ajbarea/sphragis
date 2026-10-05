@@ -336,7 +336,7 @@ def main() -> None:
         raise SystemExit(f"{args.projection}: no test-window projection for {args.org}")
     # Whole changes, rounded down: a projection is not an observed count.
     try:
-        args.runs = pilot_sizing(pilot, str(args.pilot))
+        args.runs = pilot_sizing(pilot, str(args.pilot), org=args.org)
     except ValueError as error:
         raise SystemExit(str(error)) from error
     args.size = int(projection["test"]["projected_changes"])

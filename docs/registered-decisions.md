@@ -86,6 +86,15 @@ the 10.33 points the dev window carries, so the confirmatory contrast is read on
 data than any pre-registration estimate. The window closes before the submission deadline, and
 it was set before any test data existed.
 
+### Reading the test window: everything it is read under is fixed first (registered 2026-10-05)
+
+A test-window read (`scripts/partition_pilot.py`) takes its K from the organization's own
+development pilot (`--sizing`), its bounds from the organization's own simulation
+(`--sensitivity`), outcome-neutral check 5 (`--planted`), and 10,000 resamples at bootstrap seed
+7, the values every development reading used; it refuses to run without any of them. A GitHub
+member's test window is read only after the members are frozen. So nothing the reading depends on
+can be chosen, or redrawn, after its result is seen.
+
 ### Fetch horizon: no earlier than three months after the window's final month
 
 This makes the confirmatory contrast's low censoring a protocol guarantee rather than an

@@ -25,6 +25,10 @@ MIN_FOR_PREDICTION = 5
 MIN_PER_PLATFORM = 2
 # Below this the percentile ranks of neighbouring Holm levels can coincide.
 MIN_RESAMPLES = 1_000
+# A test-window read uses these and no others, so its interval cannot be redrawn until it
+# clears zero (registered-decisions.md, "Reading the test window").
+TEST_RESAMPLES = 10_000
+TEST_BOOTSTRAP_SEED = 7
 
 
 def level_key(confidence: Any) -> float:
@@ -372,16 +376,18 @@ def require_resamples(resamples: Any, *, alpha: float, org: str) -> None:
 
 def require_readable(
     cells: Mapping[str, Mapping[str, Any]], *, confidence: float, fields: Sequence[str] = ()
-) -> None:
+) -> dict[str, dict[float, Any]]:
     """Refuse any H1 cell (`h1_over_partitions`) that cannot be read at `confidence`.
 
     Each must be filed under the organization it was computed for and hold `fields`, any
     estimate finite; a resample
     count `require_resamples` accepts; a p-value in [0, 1]; a finite interval at that level, low
     at most high; and a p-value and interval that agree on whether the effect is above zero at
-    the one-sided level, as draws from one bootstrap do.
+    the one-sided level, as draws from one bootstrap do. Returns each cell's intervals by level.
     """
     alpha = one_sided_alpha(confidence)
+    level = level_key(confidence)
+    normalized: dict[str, dict[float, Any]] = {}
     for org, cell in cells.items():
         if not isinstance(cell, Mapping):
             raise ValueError(f"{org}: the cell is not a mapping")
@@ -399,9 +405,10 @@ def require_readable(
         if not (is_real(p) and 0.0 <= p <= 1.0):
             raise ValueError(f"{org}: p-value {p!r} is not in [0, 1]")
         try:
-            interval = by_level(cell["intervals"]).get(level_key(confidence))
+            normalized[org] = by_level(cell["intervals"])
         except ValueError as error:
             raise ValueError(f"{org}: intervals: {error}") from error
+        interval = normalized[org].get(level)
         if not isinstance(interval, Mapping) or not {"low", "high"} <= set(interval):
             raise ValueError(f"{org}: no interval at {confidence}")
         low, high = interval["low"], interval["high"]
@@ -412,6 +419,7 @@ def require_readable(
                 f"{org}: p-value {p} and interval low {low} disagree at one-sided "
                 f"{alpha:g}, so they are not from the same draws"
             )
+    return normalized
 
 
 def across_organizations(

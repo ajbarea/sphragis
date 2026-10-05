@@ -240,13 +240,13 @@ def test_sensitivity_bounds_read_the_named_spread_target_and_cell_count() -> Non
 
 
 def test_pilot_sizing_reads_the_pilot_and_refuses_a_reading_at_another_k() -> None:
-    assert pilot_sizing({"sizing": {"runs": 24}}, "pilot") == 24
-    assert pilot_sizing({"k_source": "all runs", "sizing": {"runs": 24}}, "pilot") == 24
+    assert pilot_sizing({"sizing": {"runs": 24}}, "pilot", org="openstack") == 24
+    assert pilot_sizing({"k_source": "all runs", "sizing": {"runs": 24}}, "p", org="qt") == 24
     reading = {"k_source": "pilot.json: sizing.runs", "sizing": {"runs": 22}}
     with pytest.raises(ValueError, match="read its K from"):
-        pilot_sizing(reading, "k24")
+        pilot_sizing(reading, "k24", org="openstack")
     with pytest.raises(ValueError, match="no sizing.runs"):
-        pilot_sizing({"sizing": {}}, "empty")
+        pilot_sizing({"sizing": {}}, "empty", org="openstack")
 
 
 def test_sensitivity_bounds_name_a_missing_level() -> None:
@@ -300,12 +300,30 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         runs_fixed=4,
         levels=[level],
         bounds={level: bound},
-        bootstrap_seed=3,
+        bootstrap_seed=7,
         resamples=10_000,
     )
     assert cell["verdicts"][level] == verdict
-    report = {**cell, "window": "test", "planted_convention": {"passed": True}}
+    report = {
+        **cell,
+        "window": "test",
+        "planted_convention": {"passed": True},
+        "k_source": "partition-pilot-apache.json: sizing.runs",
+        "sensitivity": {"org": "apache"},
+    }
     loaded = json.loads(json.dumps(report))
     out = decomposition.replication_gate({"apache": loaded}, bounds={"apache": {level: bound}})
     assert out["cells"]["apache"]["verdict"] == verdict
     assert out["partial_conjunction"]["at_least"] == (verdict == "supported")
+
+
+@pytest.mark.parametrize(
+    ("artifact", "match"),
+    [
+        ({"window": "test", "sizing": {"runs": 24}}, "test window"),
+        ({"org": "llvm", "sizing": {"runs": 24}}, "llvm's pilot"),
+    ],
+)
+def test_k_comes_from_the_organizations_own_development_pilot(artifact: dict, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        pilot_sizing(artifact, "pilot", org="apache")

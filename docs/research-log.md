@@ -7789,9 +7789,15 @@ whatever the Gerrit Holm family's size, and refuses the flag for any other organ
 absence for a member, and, once members are frozen, refuses an organization outside them. It
 refuses `--hypotheses` beside it, and, before any run is loaded, a resample count the gate would
 refuse; a bound the gate would refuse is refused before the cell is computed. Any test-window
-read, on either platform, now needs `--sensitivity` as it needed `--planted`, so the sealed window
-is never read without its registered bounds. The report records the window it read, and the gate
-takes only a member's test-window report whose check 5 passed, read at 97.5% alone. Decided here: a member's bound comes from a simulation of one cell at 97.5%
+read, on either platform, now needs `--sensitivity`, `--sizing` and the registered 10,000 resamples
+at bootstrap seed 7, as it needed `--planted`, and a member's only after the freeze (registered
+here as "Reading the test window"). Each run's window is read from every half's source with the
+parser check 5 uses, so a run with one half on the test window is never taken for development.
+`pilot_sizing` refuses a test-window reading or another organization's pilot as the source of K,
+and the pilot refuses another organization's simulation as the source of bounds. The report
+records the window it read, the simulation it took bounds from and the bootstrap seed; the gate
+takes only a member's test-window report whose check 5 passed, with K from `--sizing`, bounds
+from its own simulation, the registered resamples and seed, read at 97.5% alone. Decided here: a member's bound comes from a simulation of one cell at 97.5%
 (`--h1-cells 1`), since it is read alone, not as one of an intersection; registered-decisions.md
 says so. The partition simulation reads its levels from the pilot, so the member's bound is at
 the same level. The pilot's report no longer carries its own `bounds`, which the cell

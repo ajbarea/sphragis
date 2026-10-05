@@ -22,10 +22,11 @@ from typing import Any
 from sphragis.corpus.halves import suffix
 from sphragis.experiment.across import (
     MIN_RESAMPLES,
+    TEST_BOOTSTRAP_SEED,
+    TEST_RESAMPLES,
     by_level,
     is_real,
     level_key,
-    one_sided_alpha,
     partial_conjunction,
     require_readable,
 )
@@ -35,6 +36,7 @@ from sphragis.experiment.walk import _require_registered_seeds
 from sphragis.measure.stats import (
     Cluster,
     Estimator,
+    one_sided_alpha,
     paired_difference,
     percentile_interval,
     stratified_crossed_draws,
@@ -123,7 +125,15 @@ REPLICATION_MEMBERS: tuple[str, ...] | None = None
 # hypotheses on the Gerrit side.
 REPLICATION_CONFIDENCE = 0.975
 
-_CELL_FIELDS = ("estimate", "bounds", "window", "planted_convention")
+_CELL_FIELDS = (
+    "estimate",
+    "bounds",
+    "window",
+    "planted_convention",
+    "k_source",
+    "sensitivity",
+    "bootstrap_seed",
+)
 
 
 def replication(members: Iterable[str]) -> dict[str, Any]:
@@ -174,7 +184,7 @@ def replication_gate(
     missing = [o for o in family["members"] if o not in cells]
     if missing:
         raise ValueError(f"no cell for member(s) {missing}")
-    require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
+    intervals = require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
         cell = cells[org]
@@ -183,7 +193,17 @@ def replication_gate(
         planted = cell["planted_convention"]
         if not (isinstance(planted, Mapping) and planted.get("passed") is True):
             raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
-        levels_read = set(by_level(cell["intervals"]))
+        if cell["k_source"] == "all runs":
+            raise ValueError(f"{org}: K was not read from its development pilot (--sizing)")
+        simulation = cell["sensitivity"]
+        if not (isinstance(simulation, Mapping) and simulation.get("org") == org):
+            raise ValueError(f"{org}: its bounds are not from its own simulation")
+        if (cell["resamples"], cell["bootstrap_seed"]) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
+            raise ValueError(
+                f"{org}: read at {cell['resamples']} resamples, seed {cell['bootstrap_seed']}; "
+                f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
+            )
+        levels_read = set(intervals[org])
         if levels_read != {level}:
             raise ValueError(
                 f"{org}: read at levels {sorted(levels_read)}, not at {REPLICATION_CONFIDENCE} "
@@ -206,7 +226,7 @@ def replication_gate(
                 f"{org}: the cell was computed under bound {computed_under!r}, "
                 f"the registered bound is {bound!r}"
             )
-        interval = by_level(cell["intervals"])[level]
+        interval = intervals[org][level]
         read[org] = {
             "estimate": cell["estimate"],
             "interval": {"low": interval["low"], "high": interval["high"]},

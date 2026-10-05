@@ -174,6 +174,11 @@ def non_degeneracy(results: Mapping[str, Sequence[Mapping[str, Any]]]) -> Check:
     return Check("non_degeneracy", not degenerate, {"exact_match": rates, "degenerate": degenerate})
 
 
+def source_windows(source: str) -> str:
+    """The windows a corpus source names: `train -> dev` from `train -> dev windows under ...`."""
+    return source.split(" windows")[0]
+
+
 def planted_convention(
     run: Mapping[str, Any], *, org: str, train_size: int, fraction: float = PLANT_FRACTION
 ) -> Check:
@@ -191,7 +196,7 @@ def planted_convention(
     corpora = run["corpora"]
     sources = [corpus["source"] for corpus in corpora.values()]
     planted = [m.group(1) if (m := re.search(r"-plant([0-9.]+)/", s)) else None for s in sources]
-    windows = {s.split(" windows")[0] for s in sources}
+    windows = {source_windows(s) for s in sources}
     evidence: dict[str, Any] = {
         "verdict": run["verdict"]["verdict"],
         "binding": run["verdict"]["binding"],
