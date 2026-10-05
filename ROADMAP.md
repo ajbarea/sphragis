@@ -368,6 +368,25 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   SPORC's 40 GB A100s. Not for H1: its registered numerics, pilots and simulations are bf16, and
   QLoRA's best reported case is parity, so it would add noise, not quality.
 
+- [ ] **The source claim is narrowed to what is ours** (October 2026 sweep, papers intake). An
+  anonymous ICLR 2027 submission (OpenReview u82w02YBmy) names the document a released LoRA
+  adapter was trained on from its weights, and still tells apart adapter pairs that share data
+  when each holds many documents. RQ2 claims source at the organization unit, from the transmitted
+  half of a split, in federated training; never that adapter weights reveal their source in
+  general. Cited once it is public under its authors' names.
+- [ ] **Organization identity separated from distribution shift** (October 2026 sweep). A second
+  anonymous submission (OpenReview wxEvaxbxFl) shows a post-hoc privacy audit can measure the
+  shift between sources rather than leakage; the adapter-to-document paper concedes the same
+  confound, and the weight-space note below already finds source a small margin that language may
+  explain. RQ2 attributes between organizations matched on language (Qt and Chromium in C++, and
+  within one language elsewhere), and reports beside each attack the same attack between
+  adapters trained on two disjoint draws from one organization, so what shift alone gives is
+  measured, not assumed.
+- [ ] **The owner-declared boundary, worded as ours** (October 2026 sweep). Owner-approved sharing
+  of agent memory already exists (SAP's deployed shared organizational memory,
+  dhanyamraju2026shared; two anonymous submissions on approval-gated and audited memory writes).
+  The claim is the boundary declared per example, by provenance, before training.
+
 - [ ] **RQ2 is rebuilt on permitted hosts before anything is published** (decided 2026-09-29,
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
   robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack and Wikimedia
