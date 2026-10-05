@@ -45,6 +45,7 @@ def _simulation(**fields: Any) -> dict:
         "trials": 40,
         "resamples": 200,
         "redraw": 0.055,
+        "spread_targets": _CALIBRATION,
         "by_target": {
             "sizing_bound_90": {"calibration": {"sigma_run": 0.003}, "by_level": by_level}
         },
@@ -84,6 +85,12 @@ def test_the_lift_and_run_shift_are_the_ones_that_registered_each_bound() -> Non
         (_report(), _simulation(planned_changes=2_000), "planned_changes 2017"),
         (_report(), _simulation(org="wikimedia"), "org 'openstack'"),
         (_report(bounds={"0.975": 0.03, "0.95": 0.02}), _simulation(), "bound at 0.975"),
+        (
+            _report(),
+            _simulation(spread_targets={**_CALIBRATION, "pilot_estimate": 0.02}),
+            "calibrated on another pilot",
+        ),
+        (_report(org="wikimedia"), _simulation(), "report for 'wikimedia'"),
     ],
 )
 def test_a_report_read_under_another_simulation_is_refused(
@@ -122,7 +129,6 @@ def test_power_rises_with_the_lift_and_carries_its_monte_carlo_error(small_pool:
             sigma_run=0.0,
             lifts=lifts,
             simulation=simulation,
-            seed=1,
         )
     null, lifted = out[0.95]["power"], out[0.975]["power"]
     assert null < 0.3 < 0.9 < lifted
@@ -135,5 +141,13 @@ def test_power_rises_with_the_lift_and_carries_its_monte_carlo_error(small_pool:
 def test_a_size_that_is_not_a_whole_count_is_refused(small_pool: list) -> None:
     with pytest.raises(ValueError, match="whole number"):
         power_at_size.power_at(
-            None, small_pool, changes=0, sigma_run=0.0, lifts={}, simulation=_simulation(), seed=1
+            None, small_pool, changes=0, sigma_run=0.0, lifts={}, simulation=_simulation()
         )
+
+
+def test_the_trials_take_the_seed_the_simulation_ran_at() -> None:
+    assert power_at_size.simulation_seed(_simulation(seed=7)) == 7
+    # Simulations that predate the record ran at partition_sensitivity.py's default.
+    assert power_at_size.simulation_seed(_simulation()) == (
+        partition_sensitivity.parser.get_default("seed")
+    )

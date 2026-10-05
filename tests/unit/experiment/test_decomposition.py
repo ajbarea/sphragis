@@ -1464,6 +1464,9 @@ def test_an_across_reading_that_cannot_be_computed_withholds_no_verdict(
     assert out["across"]["partial_conjunction"]["k"] == len(orgs)
 
 
+_SE_93 = (0.93 * 0.07 / 1_000) ** 0.5
+
+
 def _power(org: str, *, changes: int = 1_999, cells: int = 2, bound: float = 0.03) -> dict:
     """A `power_at_size.py` artifact at the registered bound, read at H1-alone's 95%."""
     return {
@@ -1472,7 +1475,8 @@ def _power(org: str, *, changes: int = 1_999, cells: int = 2, bound: float = 0.0
         "planned_changes": 2_000,
         "spread_target": "sizing_bound_90",
         "cells": cells,
-        "by_level": {"0.95": {"lift": 0.05, "bound": bound, "power": 0.93, "mc_se": 0.008}},
+        "trials": 1_000,
+        "by_level": {"0.95": {"lift": 0.05, "bound": bound, "power": 0.93, "mc_se": _SE_93}},
     }
 
 
@@ -1493,7 +1497,7 @@ def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
     assert out["cells"]["openstack"]["size"] == {
         "projected": 2_000,
         "realised": 1_999,
-        "power": {0.95: {"power": 0.93, "mc_se": 0.008}},
+        "power": {0.95: {"power": 0.93, "mc_se": _SE_93}},
     }
     assert "power" not in out["cells"]["wikimedia"]["size"]
     assert out["below_projection"] == ["openstack"]
@@ -1503,11 +1507,19 @@ def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
 @pytest.mark.parametrize(
     ("powers", "match"),
     [
-        (None, "no power-at-size artifacts for \\['openstack'\\]"),
+        (None, "openstack: below its projection, with no power-at-size artifact"),
         (
             {"openstack": _power("openstack"), "wikimedia": _power("wikimedia")},
-            "power-at-size artifacts for organization",
+            "\\['wikimedia'\\], not below their projection",
         ),
+        (
+            {
+                "openstack": _power("openstack")
+                | {"by_level": {"0.95": {"bound": 0.03, "power": 0.93, "mc_se": 0.0}}}
+            },
+            "Monte Carlo SE 0.0",
+        ),
+        ({"openstack": _power("openstack") | {"trials": 0}}, "trials 0"),
         ({"openstack": _power("openstack", changes=1_998)}, "changes 1998, not 1999"),
         ({"openstack": _power("openstack", cells=1)}, "cells 1, not 2"),
         ({"openstack": _power("openstack", bound=0.04)}, "not at the registered bound"),
@@ -1537,11 +1549,12 @@ def test_a_window_below_its_projection_needs_its_power_at_the_realised_size(
 def test_a_replication_member_below_its_projection_carries_its_power(frozen) -> None:
     frozen("apache")
     cells = {"apache": _replication_cell(0.01, 0.02, 0.001, changes=1_999)}
+    se = (0.9 * 0.1 / 1_000) ** 0.5
     power = _power("apache", cells=1) | {
-        "by_level": {"0.975": {"lift": 0.05, "bound": 0.03, "power": 0.9, "mc_se": 0.01}}
+        "by_level": {"0.975": {"lift": 0.05, "bound": 0.03, "power": 0.9, "mc_se": se}}
     }
     out = replication_gate(cells, simulations=_SIM, powers={"apache": power})
     assert out["below_projection"] == ["apache"]
-    assert out["cells"]["apache"]["size"]["power"] == {0.975: {"power": 0.9, "mc_se": 0.01}}
-    with pytest.raises(ValueError, match="no power-at-size artifacts"):
+    assert out["cells"]["apache"]["size"]["power"] == {0.975: {"power": 0.9, "mc_se": se}}
+    with pytest.raises(ValueError, match="no power-at-size artifact"):
         replication_gate(cells, simulations=_SIM)

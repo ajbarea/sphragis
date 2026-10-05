@@ -15,6 +15,7 @@ cells are confirmatory is registered here, not passed in. Design of record:
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from statistics import fmean
 from typing import Any
@@ -199,13 +200,21 @@ def _require_exactly(given: Any, orgs: Sequence[str], *, what: str) -> None:
         raise ValueError(f"no {what} for {missing}")
 
 
-def _test_size(org: str, report: Mapping[str, Any], simulation: Mapping[str, Any]) -> dict:
+def _test_size(
+    org: str,
+    report: Mapping[str, Any],
+    simulation: Mapping[str, Any],
+    powers: Mapping[str, Any] | None,
+    bounds: Mapping[float, float],
+    cells: int,
+) -> dict[str, Any]:
     """The changes the cell is read on beside the count its simulation projected and drew.
 
     Both count changes a cell is read on, so a shortfall is the one the simulation's power at the
-    realised size measures, whether the window arrived short or lost changes to unscored runs.
+    realised size measures, whether the window arrived short or lost changes to unscored runs. A
+    window below its projection carries that power from its `power_at_size.py` artifact.
     """
-    size = {}
+    size: dict[str, Any] = {}
     for name, source, field in (
         ("projected", simulation, "planned_changes"),
         ("realised", report, "changes"),
@@ -214,6 +223,10 @@ def _test_size(org: str, report: Mapping[str, Any], simulation: Mapping[str, Any
         if not is_count(count):
             raise ValueError(f"{org}: {field} {count!r} is not a whole number of changes")
         size[name] = count
+    if size["realised"] < size["projected"]:
+        if powers is None or org not in powers:
+            raise ValueError(f"{org}: below its projection, with no power-at-size artifact")
+        size["power"] = _power_at_realised(org, powers[org], size, bounds, cells)
     return size
 
 
@@ -237,6 +250,8 @@ def _power_at_realised(
     for name, value in wanted.items():
         if power.get(name) != value:
             raise ValueError(f"{org}: power at size has {name} {power.get(name)!r}, not {value!r}")
+    if not is_count(power.get("trials")):
+        raise ValueError(f"{org}: power at size has trials {power.get('trials')!r}")
     try:
         at = by_level(power["by_level"])
     except (KeyError, ValueError) as error:
@@ -249,30 +264,29 @@ def _power_at_realised(
         if not isinstance(entry, Mapping) or entry.get("bound") != bound:
             raise ValueError(f"{org}: power at {c} is not at the registered bound {bound}")
         p, se = entry.get("power"), entry.get("mc_se")
-        if not (is_real(p) and 0.0 <= p <= 1.0 and is_real(se) and se >= 0.0):
+        if not (
+            is_real(p)
+            and 0.0 <= p <= 1.0
+            and is_real(se)
+            and math.isclose(se, math.sqrt(p * (1.0 - p) / power["trials"]), abs_tol=1e-12)
+        ):
             raise ValueError(f"{org}: power {p!r}, Monte Carlo SE {se!r} at {c}")
         out[c] = {"power": p, "mc_se": se}
     return out
 
 
 def _below_projection(
-    cells: Mapping[str, dict[str, Any]],
-    powers: Mapping[str, Any] | None,
-    bounds: Mapping[str, Mapping[float, float]],
-    registered_cells: Mapping[str, int],
+    cells: Mapping[str, Mapping[str, Any]], powers: Mapping[str, Any] | None
 ) -> list[str]:
-    """Organizations whose test window holds fewer changes than its simulation projected.
-
-    Each must have a `power_at_size.py` artifact in `powers` and no other organization may; its
-    power at every level goes into the cell's `size`.
-    """
+    """Organizations whose test window holds fewer changes than its simulation projected; a
+    power-at-size artifact for any other organization is refused."""
     below = sorted(o for o, c in cells.items() if c["size"]["realised"] < c["size"]["projected"])
-    given = {} if powers is None else powers
-    _require_exactly(given, below, what="power-at-size artifacts")
-    for org in below:
-        cells[org]["size"]["power"] = _power_at_realised(
-            org, given[org], cells[org]["size"], bounds[org], registered_cells[org]
-        )
+    if powers is not None:
+        if not isinstance(powers, Mapping):
+            raise ValueError(f"powers must map organizations, got {type(powers).__name__}")
+        extra = sorted(set(powers) - set(below))
+        if extra:
+            raise ValueError(f"power-at-size artifacts for {extra}, not below their projection")
     return below
 
 
@@ -363,7 +377,7 @@ def h1_test_gate(
             "estimate": report["estimate"],
             **read_intervals({c: (i["low"], i["high"]) for c, i in at.items()}, detectable[org]),
             "p_one_sided": report["p_one_sided"],
-            "size": _test_size(org, report, simulation),
+            "size": _test_size(org, report, simulation, powers, detectable[org], expected["cells"]),
         }
     per_hypothesis = {"H1": cells}
     verdicts, passed_at = holm_steps(per_hypothesis)
@@ -377,9 +391,7 @@ def h1_test_gate(
         "sesoi": SESOI,
         "detectable": {"H1": detectable},
         "holm_levels": levels,
-        "below_projection": _below_projection(
-            cells, powers, detectable, dict.fromkeys(orgs, expected["cells"])
-        ),
+        "below_projection": _below_projection(cells, powers),
         "across": across_organizations(reports, confidence=levels[0]),
     }
 
@@ -413,15 +425,12 @@ def replication_gate(
     level = level_key(REPLICATION_CONFIDENCE)
     intervals = require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
     read: dict[str, dict[str, Any]] = {}
-    bounds: dict[str, dict[float, float]] = {}
-    registered_cells: dict[str, int] = {}
     for org in family["members"]:
         cell, simulation = cells[org], simulations[org]
         expected = registered_read(org)
         require_test_read(cell, org=org, expected=expected)
-        bounds[org] = _registered_bounds(org, cell, simulation, expected)
-        registered_cells[org] = expected["cells"]
-        bound = bounds[org][level]
+        bounds = _registered_bounds(org, cell, simulation, expected)
+        bound = bounds[level]
         interval = intervals[org][level]
         read[org] = {
             "estimate": cell["estimate"],
@@ -430,12 +439,12 @@ def replication_gate(
             "verdict": cell_verdict(interval["low"], interval["high"], bound=bound),
             "meaningful": meaningful(interval["low"]),
             "p_one_sided": cell["p_one_sided"],
-            "size": _test_size(org, cell, simulation),
+            "size": _test_size(org, cell, simulation, powers, bounds, expected["cells"]),
         }
     return {
         **family,
         "cells": read,
-        "below_projection": _below_projection(read, powers, bounds, registered_cells),
+        "below_projection": _below_projection(read, powers),
         "partial_conjunction": partial_conjunction(
             {o: c["p_one_sided"] for o, c in read.items()},
             alpha=one_sided_alpha(REPLICATION_CONFIDENCE),

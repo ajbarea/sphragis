@@ -322,25 +322,39 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
             "runs": 4,
             "spread_target": "sizing_bound_90",
             "spread_targets": calibration,
-            "planned_changes": cell["changes"],
+            "planned_changes": cell["changes"] + 1,
         },
     }
     by_cells = {"1": {"minimum_detectable_effect": bound}}
     simulation = {
         "org": "apache",
         "runs": 4,
-        "planned_changes": cell["changes"],
+        "planned_changes": cell["changes"] + 1,
         "spread_targets": calibration,
         "by_target": {"sizing_bound_90": {"by_level": {str(level): {"by_cells": by_cells}}}},
     }
-    loaded = json.loads(json.dumps({"report": report, "simulation": simulation}))
+    power = {
+        "org": "apache",
+        "changes": cell["changes"],
+        "planned_changes": cell["changes"] + 1,
+        "spread_target": "sizing_bound_90",
+        "cells": 1,
+        "trials": 1_000,
+        "by_level": {str(level): {"bound": bound, "power": 0.5, "mc_se": (0.25 / 1_000) ** 0.5}},
+    }
+    loaded = json.loads(json.dumps({"report": report, "simulation": simulation, "power": power}))
     out = decomposition.replication_gate(
-        {"apache": loaded["report"]}, simulations={"apache": loaded["simulation"]}
+        {"apache": loaded["report"]},
+        simulations={"apache": loaded["simulation"]},
+        powers={"apache": loaded["power"]},
     )
     assert out["cells"]["apache"]["verdict"] == verdict
     assert out["partial_conjunction"]["at_least"] == (verdict == "supported")
     assert out["cells"]["apache"]["size"]["realised"] == cell["changes"]
-    assert out["below_projection"] == []
+    assert out["below_projection"] == ["apache"]
+    assert out["cells"]["apache"]["size"]["power"] == {
+        level: {"power": 0.5, "mc_se": (0.25 / 1_000) ** 0.5}
+    }
 
 
 @pytest.mark.parametrize(

@@ -318,23 +318,44 @@ def calibrate(executor, pool, args, target: float, size: int) -> dict:
     }
 
 
-def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=None) -> list[dict]:
+def trials_at(
+    executor,
+    pool: Pool,
+    *,
+    size: int,
+    lift: float,
+    sigma_run: float,
+    redraw: float,
+    resamples: int,
+    seed: int,
+    levels: list,
+    runs: int,
+    count: int,
+    check: bool = False,
+) -> list[dict]:
+    """`count` simulated studies on `size` changes at `lift`, trial t seeded `seed + t`."""
     jobs = [
-        (
-            pool,
-            args.size,
-            lift,
-            sigma_run,
-            args.redraw,
-            args.resamples,
-            args.seed + t,
-            levels,
-            args.runs,
-            check,
-        )
-        for t in range(count or args.trials)
+        (pool, size, lift, sigma_run, redraw, resamples, seed + t, levels, runs, check)
+        for t in range(count)
     ]
     return list(executor.map(trial, jobs, chunksize=1))
+
+
+def _trials(executor, pool, args, lift, sigma_run, levels, check=False, count=None) -> list[dict]:
+    return trials_at(
+        executor,
+        pool,
+        size=args.size,
+        lift=lift,
+        sigma_run=sigma_run,
+        redraw=args.redraw,
+        resamples=args.resamples,
+        seed=args.seed,
+        levels=levels,
+        runs=args.runs,
+        count=count or args.trials,
+        check=check,
+    )
 
 
 def _cached_trials(

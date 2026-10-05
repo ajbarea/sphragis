@@ -34,9 +34,10 @@ from statistics import fmean
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
-from partition_sensitivity import Pool, _init, pools, trial  # noqa: E402
+import partition_sensitivity  # noqa: E402
+from partition_sensitivity import Pool, _init, pools, trials_at  # noqa: E402
 
-from sphragis.experiment.cells import by_level, is_count, level_key  # noqa: E402
+from sphragis.experiment.cells import by_level, is_count, level_key, same_calibration  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -47,8 +48,6 @@ parser.add_argument(
 parser.add_argument("--placebo", type=Path, required=True, help="the simulation's placebo run")
 parser.add_argument("--corpus", type=Path, required=True, help="the corpus root, for projects")
 parser.add_argument("--admissible", type=Path, required=True, help="the admissible list")
-# Any fixed value, fixed so the result reproduces; `partition_sensitivity.py`'s default.
-parser.add_argument("--seed", type=int, default=43)
 parser.add_argument("--workers", type=int, default=6)
 parser.add_argument("--out", type=Path, required=True)
 
@@ -62,12 +61,16 @@ def registered_lifts(
     calibration, and the bound it recorded at each level.
     """
     recorded = report["sensitivity"]
+    if report.get("org") != recorded.get("org"):
+        raise ValueError(f"the report for {report.get('org')!r} records {recorded.get('org')!r}")
     for name in ("org", "runs", "planned_changes"):
         if simulation.get(name) != recorded.get(name):
             raise ValueError(
                 f"the report was read under a simulation with {name} {recorded.get(name)!r}, "
                 f"this one has {simulation.get(name)!r}"
             )
+    if not same_calibration(simulation.get("spread_targets"), recorded.get("spread_targets")):
+        raise ValueError("the report was read under a simulation calibrated on another pilot")
     target = simulation["by_target"][recorded["spread_target"]]
     levels = by_level(target["by_level"])
     read_under = by_level(report["bounds"])
@@ -80,6 +83,12 @@ def registered_lifts(
     return target["calibration"]["sigma_run"], out
 
 
+def simulation_seed(simulation: Mapping[str, Any]) -> int:
+    """The seed the simulation's trials took: recorded, or `partition_sensitivity.py`'s default,
+    which every simulation that predates the record ran at."""
+    return simulation.get("seed", partition_sensitivity.parser.get_default("seed"))
+
+
 def power_at(
     executor: Any,
     pool: Pool,
@@ -88,14 +97,14 @@ def power_at(
     sigma_run: float,
     lifts: Mapping[float, Mapping[str, float]],
     simulation: Mapping[str, Any],
-    seed: int,
 ) -> dict[float, dict[str, float]]:
     """Each level's power at its registered lift on `changes` changes, with its Monte Carlo SE.
 
-    One set of trials per distinct lift reads every level, as the simulation's bisection does.
+    The trials take the simulation's own seed, churn, resamples and K. One set of trials per
+    distinct lift reads every level, as the simulation's bisection does.
     """
     if not is_count(changes):
-        raise ValueError(f"changes {changes!r} is not a whole number")
+        raise ValueError(f"changes {changes!r} is not a positive whole number")
     levels = list(lifts)
     trials = simulation["trials"]
     at_lift: dict[float, list[dict]] = {}
@@ -103,22 +112,19 @@ def power_at(
     for c, registered in lifts.items():
         lift = registered["lift"]
         if lift not in at_lift:
-            jobs = [
-                (
-                    pool,
-                    changes,
-                    lift,
-                    sigma_run,
-                    simulation["redraw"],
-                    simulation["resamples"],
-                    seed + t,
-                    levels,
-                    simulation["runs"],
-                    False,
-                )
-                for t in range(trials)
-            ]
-            at_lift[lift] = list(executor.map(trial, jobs, chunksize=1))
+            at_lift[lift] = trials_at(
+                executor,
+                pool,
+                size=changes,
+                lift=lift,
+                sigma_run=sigma_run,
+                redraw=simulation["redraw"],
+                resamples=simulation["resamples"],
+                seed=simulation_seed(simulation),
+                levels=levels,
+                runs=simulation["runs"],
+                count=trials,
+            )
         power = fmean(t["supported"][c] for t in at_lift[lift])
         out[c] = {
             **registered,
@@ -134,6 +140,14 @@ def main() -> None:
     simulation = json.loads(args.simulation.read_text())
     if report.get("window") != "test":
         raise SystemExit(f"{args.report} is not a test-window read")
+    recorded = report.get("sensitivity") or {}
+    if Path(recorded.get("file", "")).name != args.simulation.name:
+        raise SystemExit(f"{args.report} was read under {recorded.get('file')}")
+    if not report.get("changes", 0) < recorded.get("planned_changes", 0):
+        raise SystemExit(
+            f"{args.report}: {report.get('changes')} changes against "
+            f"{recorded.get('planned_changes')} projected; only a window below it needs this"
+        )
     # By name: the simulation records the path it ran on, which differs between machines.
     if Path(simulation.get("placebo", "")).name != args.placebo.name:
         raise SystemExit(f"{args.simulation} was simulated on {simulation.get('placebo')}")
@@ -142,7 +156,7 @@ def main() -> None:
     except (KeyError, TypeError, ValueError) as error:
         raise SystemExit(f"{args.report}: {error}") from error
     org, changes = report["org"], report["changes"]
-    pool, partitions, _ = pools(
+    pool, partitions, tried = pools(
         args.placebo,
         args.corpus,
         org,
@@ -150,6 +164,13 @@ def main() -> None:
         simulation["partitions_pooled"],
         simulation["partition_seeds_tried"],
     )
+    # The rebuild must be the simulation's own: the same pilot changes and the same partitions.
+    if (len(pool), tried) != (simulation["pilot_changes"], simulation["partition_seeds_tried"]):
+        raise SystemExit(
+            f"{args.corpus} rebuilt {len(pool)} pilot changes and partitions to seed {tried}; "
+            f"the simulation had {simulation['pilot_changes']} and "
+            f"{simulation['partition_seeds_tried']}"
+        )
     with ProcessPoolExecutor(args.workers, initializer=_init, initargs=(partitions,)) as executor:
         by_level_ = power_at(
             executor,
@@ -158,7 +179,6 @@ def main() -> None:
             sigma_run=sigma_run,
             lifts=lifts,
             simulation=simulation,
-            seed=args.seed,
         )
     for c, at in by_level_.items():
         print(
@@ -178,7 +198,7 @@ def main() -> None:
         "sigma_run": sigma_run,
         "trials": simulation["trials"],
         "resamples": simulation["resamples"],
-        "seed": args.seed,
+        "seed": simulation_seed(simulation),
         "by_level": {str(c): at for c, at in by_level_.items()},
         "provenance": provenance_header(),
     }
