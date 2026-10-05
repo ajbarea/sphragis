@@ -25,11 +25,16 @@
   ],
   "admissible": "datasets/results/admissible-partitions-wikimedia.json",
   "k_source": "all runs",
+  "k_from": null,
   "levels": [
     0.975,
     0.95
   ],
-  "bounds": null,
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "org": "wikimedia",
+  "bootstrap_seed": 7,
   "estimate": 0.0007716920772205646,
   "per_run": [
     0.003961575103207354,
@@ -83,6 +88,17 @@
     "0.975": false,
     "0.95": false
   },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.464,
+  "bootstrap_se": 0.006274420479968141,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
   "examples": 711,
   "dropped": 0,
   "sizing": {
@@ -95,10 +111,10 @@
     "clamped": null
   },
   "provenance": {
-    "generated_at": "2026-10-01T10:22:30.384922+00:00",
+    "generated_at": "2026-10-05T23:20:39.615525+00:00",
     "git": {
-      "commit": "ec8cc051644eb6e723b974dc170b7a530a84928e",
-      "branch": "corpus/wikimedia-admission"
+      "commit": "0fd7d82e7ca6b1d052afa7bf0eb2a142b7ff1552",
+      "branch": "data/pilots-name-org"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

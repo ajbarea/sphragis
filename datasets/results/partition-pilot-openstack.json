@@ -24,11 +24,17 @@
     "datasets/results/rq1-partition-openstack-p27-s22-n1850.json"
   ],
   "admissible": "datasets/results/admissible-partitions-openstack.json",
+  "k_source": "all runs",
+  "k_from": null,
   "levels": [
     0.975,
     0.95
   ],
-  "bounds": null,
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "org": "openstack",
+  "bootstrap_seed": 7,
   "estimate": 0.005068228720328398,
   "per_run": [
     0.02032520325203252,
@@ -82,6 +88,17 @@
     "0.975": false,
     "0.95": false
   },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.2082,
+  "bootstrap_se": 0.006304878735822463,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
   "examples": 501,
   "dropped": 0,
   "sizing": {
@@ -90,20 +107,14 @@
     "sd_upper": 0.01765656547039203,
     "confidence": 0.9,
     "formula": 23.951826435955716,
-    "runs": 24
+    "runs": 24,
+    "clamped": null
   },
   "provenance": {
-    "generated_at": "2026-09-29T22:53:06.780863+00:00",
+    "generated_at": "2026-10-05T23:20:34.285585+00:00",
     "git": {
-      "commit": "e2622c70c4f24f14f9a3fdb9e0e0aecd6988c4a7",
-      "branch": "measure/repeated-partitions",
-      "uncommitted_code": [
-        "scripts/partition_pilot.py",
-        "scripts/partition_sensitivity.py",
-        "scripts/training_size.py",
-        "sphragis/experiment/partitions.py"
-      ],
-      "uncommitted_code_sha256": "206ae144fd6cb2a32b90aa25aeedd1908cc4b25a15b48b9791567776cc935289"
+      "commit": "0fd7d82e7ca6b1d052afa7bf0eb2a142b7ff1552",
+      "branch": "data/pilots-name-org"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
