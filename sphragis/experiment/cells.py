@@ -144,13 +144,16 @@ def require_test_read(report: Mapping[str, Any], *, org: str) -> None:
     `TEST_BOOTSTRAP_SEED`. The pilot runs this on its report before writing it, and the gates on
     reading it, so both hold one rule.
     """
-    absent = [
-        f
-        for f in ("window", "planted_convention", "k_from", "sensitivity", "runs", "resamples")
-        if f not in report
-    ]
-    if "bootstrap_seed" not in report:
-        absent.append("bootstrap_seed")
+    required = (
+        "window",
+        "planted_convention",
+        "k_from",
+        "sensitivity",
+        "runs",
+        "resamples",
+        "bootstrap_seed",
+    )
+    absent = [f for f in required if f not in report]
     if absent:
         raise ValueError(f"{org}: the report has no {absent}")
     if report["window"] != "test":

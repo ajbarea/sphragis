@@ -7810,3 +7810,10 @@ pilot takes only the four registered Gerrit organizations. The partition simulat
 the same level. The pilot's report no longer carries its own `bounds`, which the cell
 now holds. A test runs the script on synthetic runs and reads its report through the gate, and
 another writes a cell to JSON and reads it back for each of the three verdicts.
+
+Still chosen when the test window is read, and so open until a committed read plan fixes them
+(IMPL): the Holm family's size (`--hypotheses`), the spread target and cell count the bound is
+read at, which development pilot calibrated the simulation, and the H2 reading's resamples and
+seed. None can be used before in-principle acceptance, since the test window stays sealed until
+then. Each run's halves must now all be built from its admissible partition, not only the first.
+

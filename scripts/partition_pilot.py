@@ -120,12 +120,14 @@ def main() -> None:
         if "halted" in run:
             raise SystemExit(f"{path}: halted at {run['halted']}; the apparatus failed, not read")
         seeds = run["seeds"]
+        sources = [c["source"] for c in run["corpora"].values()]
         # Every half's source, so a run with one half on the test window is a test-window read.
-        windows |= {source_windows(c["source"]) for c in run["corpora"].values()}
-        source = next(iter(run["corpora"].values()))["source"]
-        # The partition's corpus root, `corpus-partition-<org>-p<seed>[-<tags>]`, and its seed.
-        root = re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?/", source)
-        partition = int(root.group(1)) if root else None
+        windows |= {source_windows(source) for source in sources}
+        # Each half's corpus root, `corpus-partition-<org>-p<seed>[-<tags>]`, and its seed.
+        roots = {re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?/", s) for s in sources}
+        found = {int(root.group(1)) if root else None for root in roots}
+        partition = found.pop() if len(found) == 1 else None
+        source = ", ".join(sources)
         if run.get("train_size") != train_size:
             raise SystemExit(
                 f"{path}: trained at {run.get('train_size')}, not the list's {train_size}"
@@ -151,6 +153,12 @@ def main() -> None:
             raise SystemExit(f"{args.org}'s test window is read only once it is a frozen member")
         if not args.sizing:
             raise SystemExit("a test-window read needs --sizing: K from the development pilot")
+        # Checked again on the report by require_test_read; here before any draw is taken.
+        if (args.resamples, args.bootstrap_seed) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
+            raise SystemExit(
+                f"not read: {args.resamples} resamples, seed {args.bootstrap_seed}; "
+                f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
+            )
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
     if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")

@@ -326,3 +326,17 @@ def test_a_test_read_refuses_a_pilot_that_does_not_name_its_organization(
     (tmp_path / "sizing.json").write_text(json.dumps(sizing))
     with pytest.raises(SystemExit, match="does not name its organization"):
         _main(monkeypatch, argv)
+
+
+def test_every_half_must_be_built_from_the_runs_admissible_partition(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _inputs(tmp_path, "openstack")
+    first = Path(argv[0])
+    run = json.loads(first.read_text())
+    run["corpora"]["openstack-b"] = {
+        "source": _source("openstack", "corpus-partition-openstack-p99")
+    }
+    first.write_text(json.dumps(run))
+    with pytest.raises(SystemExit, match="must use admissible partition"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
