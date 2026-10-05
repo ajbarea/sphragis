@@ -218,18 +218,22 @@ def replication_gate(
         cell, simulation = cells[org], simulations[org]
         expected = registered_read(org)
         require_test_read(cell, org=org, expected=expected)
-        if not isinstance(simulation, Mapping) or simulation.get("org") != org:
-            raise ValueError(f"{org}: the simulation given is not its own")
-        if simulation.get("runs") != cell["runs"]:
-            raise ValueError(f"{org}: the simulation is at K = {simulation.get('runs')!r}")
+        # require_test_read checked the recorded simulation against the organization, K and the
+        # pilot's calibration; the one given must be that simulation.
+        recorded = cell["sensitivity"]
+        if not (
+            isinstance(simulation, Mapping)
+            and simulation.get("org") == recorded["org"]
+            and simulation.get("runs") == recorded["runs"]
+            and same_calibration(simulation.get("spread_targets"), recorded["spread_targets"])
+        ):
+            raise ValueError(f"{org}: the simulation given is not the one its cell was read under")
         try:
             bound = sensitivity_bounds(
                 simulation, expected["spread_target"], expected["levels"], cells=expected["cells"]
             )[REPLICATION_CONFIDENCE]
         except (KeyError, TypeError, ValueError) as error:
             raise ValueError(f"{org}: simulation: {error}") from error
-        if not same_calibration(cell["k_from"]["spread_targets"], simulation.get("spread_targets")):
-            raise ValueError(f"{org}: the simulation was calibrated on another pilot than K's")
         if not valid_bound(bound):
             raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
         try:
@@ -515,8 +519,9 @@ def decomposition_gate(
     share of draws in which each is above zero, and their sum, are read jointly. `detectable`
     holds each cell's registered bound by Holm level (`detectable_effects`); a confirmatory cell
     without one at every level the design reads is refused, so no bound is chosen after the data.
-    It reads single-partition development pilots (`scripts/decomposition_pilot.py`); a test-window
-    read goes through `partition_pilot.py` and `require_test_read`.
+    It reads single-partition development pilots (`scripts/decomposition_pilot.py`). The H2
+    test-window read over partitions is not built yet; when it is, it goes through
+    `require_test_read` as the H1 read does.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")

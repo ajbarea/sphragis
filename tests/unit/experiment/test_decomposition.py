@@ -501,9 +501,9 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD}, {**_SIM, "grafana": _sim(0.03, "grafana")}, "simulations for organ"),
         ({}, _SIM, "no cell and simulation"),
         ({"apache": _GOOD}, {}, "no cell and simulation"),
-        ({"apache": _GOOD}, {"apache": 0.03}, "not its own"),
-        ({"apache": _GOOD}, {"apache": _sim(0.03, "openstack")}, "not its own"),
-        ({"apache": _GOOD}, {"apache": _sim(0.03, runs=40)}, "simulation is at K = 40"),
+        ({"apache": _GOOD}, {"apache": 0.03}, "not the one its cell was read under"),
+        ({"apache": _GOOD}, {"apache": _sim(0.03, "openstack")}, "not the one its cell"),
+        ({"apache": _GOOD}, {"apache": _sim(0.03, runs=40)}, "not the one its cell"),
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03, by_level={"0.95": {"by_cells": {}}})},
@@ -611,7 +611,7 @@ _SIM = {"apache": _sim(0.03)}
         (
             {"apache": _GOOD},
             {"apache": _sim(0.03) | {"spread_targets": {**_CALIBRATION, "pilot_estimate": 0.5}}},
-            "calibrated on another pilot",
+            "not the one its cell",
         ),
         (
             {

@@ -295,6 +295,7 @@ def test_replication_is_for_the_github_family_and_every_member(
         (["--resamples", "500"], 0.4, None, "at least 1000"),
         (["--hypotheses", "3"], 0.4, None, "--hypotheses does not apply"),
         (["--h1-cells", "2"], 0.4, None, "--h1-cells 1"),
+        ([], 0.4, ("llvm",), "not among the frozen members"),
         ([], 0.0, None, "not detectable effects"),
     ],
 )
@@ -422,7 +423,7 @@ def test_a_test_read_of_an_organization_outside_the_frozen_members_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("llvm",))
-    with pytest.raises(SystemExit, match="not a frozen replication member"):
+    with pytest.raises(SystemExit, match="not among the frozen members"):
         _main(monkeypatch, _replication_argv(tmp_path, "test"))
     assert not (tmp_path / "pilot.json").exists()
 

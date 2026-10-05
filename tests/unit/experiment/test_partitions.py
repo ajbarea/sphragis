@@ -9,7 +9,11 @@ from statistics import NormalDist, stdev
 import pytest
 
 from sphragis.experiment import decomposition
-from sphragis.experiment.cells import sensitivity_bounds
+from sphragis.experiment.cells import (
+    REGISTERED_SPREAD_TARGET,
+    SPREAD_TARGETS,
+    sensitivity_bounds,
+)
 from sphragis.experiment.decomposition import SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
@@ -365,3 +369,9 @@ def test_spread_targets_name_each_point_on_the_pilots_run_spread() -> None:
     assert targets["pilot_estimate"] == pytest.approx(stdev(estimates))
     assert targets["sizing_bound_90"] == 9.0
     assert targets["pilot_lower_90"] < targets["pilot_estimate"] < targets["pilot_upper_99"]
+
+
+def test_spread_targets_are_named_by_the_one_registered_list() -> None:
+    pilot = {"per_run": [0.02, -0.01, 0.005], "runs_left_out": [0.0], "sizing": {"sd_upper": 1.0}}
+    assert tuple(spread_targets(pilot)) == SPREAD_TARGETS
+    assert REGISTERED_SPREAD_TARGET in SPREAD_TARGETS

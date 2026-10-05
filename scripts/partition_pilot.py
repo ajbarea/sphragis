@@ -25,6 +25,7 @@ import json
 import re
 from pathlib import Path
 
+from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
@@ -82,6 +83,15 @@ parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
 parser.add_argument("--out", type=Path, required=True)
 
 
+def check_resamples(args: argparse.Namespace, levels: list[float]) -> None:
+    """Refuse a resample count that puts any level's bound between draws, before any is taken."""
+    for c in levels:
+        try:
+            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
+        except ValueError as error:
+            raise SystemExit(f"not read: {error}") from error
+
+
 def main() -> None:
     args = parser.parse_args()
     # Every check on the arguments alone, before any run is read.
@@ -93,6 +103,9 @@ def main() -> None:
     if not args.replication and args.org not in ORGANIZATIONS:
         raise SystemExit(f"{args.org} is not a registered Gerrit organization {ORGANIZATIONS}")
     if args.replication:
+        frozen = decomposition.REPLICATION_MEMBERS
+        if frozen is not None and args.org not in frozen:
+            raise SystemExit(f"{args.org} is not among the frozen members {frozen}")
         if args.hypotheses is not None:
             raise SystemExit("--replication reads one fixed level; --hypotheses does not apply")
         # A member is read alone, so its simulation is of one cell at that level.
@@ -104,6 +117,9 @@ def main() -> None:
         if args.replication
         else holm_levels(2 if args.hypotheses is None else args.hypotheses)
     )
+    # A development read's levels are final here; a test read's are replaced by the registered
+    # ones and checked again below.
+    check_resamples(args, levels)
     listing = json.loads(args.admissible.read_text())
     admissible, train_size = listing["admissible"], listing["size_floor"]
     if len(args.runs) > len(admissible):
@@ -166,12 +182,8 @@ def main() -> None:
                 f"not read: {args.resamples} resamples, seed {args.bootstrap_seed}; "
                 f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
             )
-    # The levels are final here, before any draw is taken.
-    for c in levels:
-        try:
-            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
-        except ValueError as error:
-            raise SystemExit(f"not read: {error}") from error
+    if window == "test":
+        check_resamples(args, levels)
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
     if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
