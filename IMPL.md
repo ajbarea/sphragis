@@ -20,9 +20,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    dev windows) to freeze members by 2026-11-20; then each member's admissible list, development
    pilot and simulation before its test window. At the freeze, one commit sets
    `REPLICATION_MEMBERS`; `replication_gate()` refuses to read the family before it.
-2. Before the first test window: one commit sets `ADMITTED_ORGANIZATIONS`; the OpenStack and
-   Wikimedia development pilots are rerun (same runs) so each names its organization, as a test
-   read requires of the pilot it sizes K on.
+2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
+   `ADMITTED_ORGANIZATIONS`. Qt and Chromium can be admitted until then, so it is not set earlier.
 3. If Qt and Chromium are both admitted, the H2 test read over partitions, through
    `require_test_read`; `h1_test_gate` refuses to read H1 while H2 is confirmatory without it.
 4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.

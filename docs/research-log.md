@@ -7890,3 +7890,12 @@ script computes yet (IMPL). The fourth is `meaningful` beside `within_sesoi`, wi
 now refuses a K that is not a whole number. A report with K missing on both sides had passed it as
 equal, and the gate then failed with a `KeyError`.
 
+### OpenStack and Wikimedia development pilots rerun to name their organization (2026-10-05)
+
+`partition-pilot-openstack.json` and `partition-pilot-wikimedia.json` were rerun by the current
+`partition_pilot.py` on the same 22 runs each, in admissible order. A test read sizes K only on a
+pilot that names its organization (`pilot_sizing`), and the earlier artifacts did not. The cell,
+its intervals, its per-run values and the sizing are unchanged, so K stays 24 and 16, and each
+pilot's per-run spread still matches the calibration its simulation records (`same_calibration`),
+as a test read checks. The reruns add the fields the current pilot writes (`org`, `window`,
+`p_one_sided`, `bootstrap_se`, `meaningful`) and record the absent bounds per level.
