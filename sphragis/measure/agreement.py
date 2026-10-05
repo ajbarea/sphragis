@@ -17,6 +17,8 @@ import random
 from collections import Counter
 from collections.abc import Callable, Hashable, Mapping, Sequence
 
+from sphragis.measure.stats import one_sided_alpha
+
 
 def cohen_kappa(first: Sequence[Hashable], second: Sequence[Hashable]) -> float:
     """Cohen's kappa for two raters' labels of the same items, in the same order.
@@ -101,7 +103,7 @@ def bootstrap_interval(
     if not draws:
         raise ValueError("the statistic is undefined on every resample")
     draws.sort()
-    tail = (1 - confidence) / 2
+    tail = one_sided_alpha(confidence)
     return draws[int(tail * (len(draws) - 1))], draws[int((1 - tail) * (len(draws) - 1))]
 
 

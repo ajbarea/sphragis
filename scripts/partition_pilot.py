@@ -75,6 +75,31 @@ parser.add_argument("--out", type=Path, required=True)
 
 def main() -> None:
     args = parser.parse_args()
+    # Every check on the arguments alone, before any run is read.
+    if args.replication != (args.org in REPLICATION_FAMILY):
+        raise SystemExit(
+            f"{args.org}: --replication is for the GitHub family {REPLICATION_FAMILY} only, "
+            "and every member needs it"
+        )
+    if args.replication:
+        if REPLICATION_MEMBERS is not None and args.org not in REPLICATION_MEMBERS:
+            raise SystemExit(f"{args.org} is not among the frozen members {REPLICATION_MEMBERS}")
+        if args.hypotheses is not None:
+            raise SystemExit("--replication reads one fixed level; --hypotheses does not apply")
+        # A member is read alone, so its simulation is of one cell at that level.
+        if args.h1_cells not in (None, 1):
+            raise SystemExit("--replication reads a member as one cell: --h1-cells 1")
+        args.h1_cells = 1
+    levels = (
+        [REPLICATION_CONFIDENCE]
+        if args.replication
+        else holm_levels(2 if args.hypotheses is None else args.hypotheses)
+    )
+    for c in levels:
+        try:
+            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
     listing = json.loads(args.admissible.read_text())
     admissible, train_size = listing["admissible"], listing["size_floor"]
     if len(args.runs) > len(admissible):
@@ -103,9 +128,16 @@ def main() -> None:
                 f"built from {source}"
             )
         runs.append((run["results"], k))
+    on_test = {"-> test windows" in source for source in sources}
+    if len(on_test) != 1:
+        raise SystemExit("runs read on both the development and the test window")
+    window = "test" if on_test == {True} else "development"
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
-    if not args.planted and any("-> test windows" in source for source in sources):
+    if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
+    # Bounds are registered before the test window, so it is never read without them.
+    if window == "test" and not args.sensitivity:
+        raise SystemExit("a test-window read needs --sensitivity: its registered bounds")
     planted = None
     if args.planted:
         check = planted_convention(
@@ -121,30 +153,6 @@ def main() -> None:
         except ValueError as error:
             raise SystemExit(str(error)) from error
         k_source = f"{args.sizing}: sizing.runs"
-    if args.replication != (args.org in REPLICATION_FAMILY):
-        raise SystemExit(
-            f"{args.org}: --replication is for the GitHub family {REPLICATION_FAMILY} only, "
-            "and every member needs it"
-        )
-    if args.replication:
-        if REPLICATION_MEMBERS is not None and args.org not in REPLICATION_MEMBERS:
-            raise SystemExit(f"{args.org} is not among the frozen members {REPLICATION_MEMBERS}")
-        if args.hypotheses is not None:
-            raise SystemExit("--replication reads one fixed level; --hypotheses does not apply")
-        # A member is read alone, so its simulation is of one cell at that level.
-        if args.h1_cells not in (None, 1):
-            raise SystemExit("--replication reads a member as one cell: --h1-cells 1")
-        args.h1_cells = 1
-    levels = (
-        [REPLICATION_CONFIDENCE]
-        if args.replication
-        else holm_levels(2 if args.hypotheses is None else args.hypotheses)
-    )
-    for c in levels:
-        try:
-            require_resamples(args.resamples, alpha=one_sided_alpha(c), org=args.org)
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
     bounds = None
     if args.sensitivity:
         if not args.spread_target:
@@ -183,6 +191,7 @@ def main() -> None:
         "admissible",
         "k_source",
         "levels",
+        "window",
         "planted_convention",
         "sizing",
         "provenance",
@@ -194,6 +203,7 @@ def main() -> None:
         "admissible": str(args.admissible),
         "k_source": k_source,
         "levels": levels,
+        "window": window,
         "planted_convention": planted,
         **cell,
         "sizing": sizing,

@@ -11,6 +11,7 @@ import pytest
 
 from sphragis.experiment import decomposition
 from sphragis.experiment.grid import EvalRun, run_id
+from sphragis.experiment.neutral import PLANT_FRACTION
 
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location(
@@ -41,13 +42,17 @@ def _results(org: str, seed: int) -> dict:
     return results
 
 
-def _inputs(tmp_path: Path, org: str) -> list[str]:
+def _source(org: str, root: str, window: str = "dev") -> str:
+    return f"train -> {window} windows under /data/{root}/{org}-a/refined"
+
+
+def _inputs(tmp_path: Path, org: str, window: str = "dev") -> list[str]:
     admissible = tmp_path / "admissible.json"
     admissible.write_text(json.dumps({"admissible": ADMISSIBLE, "size_floor": TRAIN_SIZE}))
     runs = []
     for k, partition in enumerate(ADMISSIBLE, start=1):
         run = tmp_path / f"run-{k}.json"
-        source = f"/data/corpus-partition-{org}-p{partition}/windows -> dev windows"
+        source = _source(org, f"corpus-partition-{org}-p{partition}", window)
         run.write_text(
             json.dumps(
                 {
@@ -60,6 +65,30 @@ def _inputs(tmp_path: Path, org: str) -> list[str]:
         )
         runs.append(str(run))
     return [*runs, "--admissible", str(admissible), "--org", org]
+
+
+def _planted(tmp_path: Path, org: str) -> list[str]:
+    """A planted development run that passes outcome-neutral check 5."""
+    root = f"corpus-partition-{org}-p{ADMISSIBLE[0]}-plant{PLANT_FRACTION}"
+    results = {
+        run_id(EvalRun(f"adapter:{trained}", window, 1)): [
+            {"id": f"x{i}", "change_id": f"c{i}", "exact_match": float(i % 2)} for i in range(N)
+        ]
+        for window in (f"{org}-a", f"{org}-b")
+        for trained in (f"{org}-a", f"{org}-b")
+    }
+    path = tmp_path / "planted.json"
+    path.write_text(
+        json.dumps(
+            {
+                "train_size": TRAIN_SIZE,
+                "corpora": {h: {"source": _source(org, root)} for h in (f"{org}-a", f"{org}-b")},
+                "verdict": {"verdict": "pass", "binding": True},
+                "results": results,
+            }
+        )
+    )
+    return ["--planted", str(path)]
 
 
 def _sensitivity(tmp_path: Path, levels: list[float], bound: float) -> Path:
@@ -99,33 +128,56 @@ def test_a_gerrit_pilot_writes_its_report_with_the_cell_bounds(
     assert report["bounds"] == {"0.975": 0.4, "0.95": 0.4}
 
 
-def test_a_replication_member_reads_at_its_level_and_through_the_gate(
+def _replication_argv(tmp_path: Path, window: str, bound: float = 0.4) -> list[str]:
+    sensitivity = _sensitivity(tmp_path, [decomposition.REPLICATION_CONFIDENCE], bound)
+    return [
+        *_inputs(tmp_path, "apache", window),
+        *(_planted(tmp_path, "apache") if window == "test" else []),
+        "--replication",
+        "--sensitivity",
+        str(sensitivity),
+        "--spread-target",
+        "pilot_estimate",
+        "--out",
+        str(tmp_path / "pilot.json"),
+    ]
+
+
+def test_a_replication_member_reads_its_test_window_through_the_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    out = tmp_path / "pilot.json"
     level = decomposition.REPLICATION_CONFIDENCE
-    sensitivity = _sensitivity(tmp_path, [level], 0.4)
-    _main(
-        monkeypatch,
-        [
-            *_inputs(tmp_path, "apache"),
-            "--replication",
-            "--sensitivity",
-            str(sensitivity),
-            "--spread-target",
-            "pilot_estimate",
-            "--h1-cells",
-            "1",
-            "--out",
-            str(out),
-        ],
-    )
-    report = json.loads(out.read_text())
-    assert report["levels"] == [level]
+    _main(monkeypatch, _replication_argv(tmp_path, "test"))
+    report = json.loads((tmp_path / "pilot.json").read_text())
+    assert report["levels"] == [level] and report["window"] == "test"
+    assert report["planted_convention"]["passed"] is True
     monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("apache",))
     gate = decomposition.replication_gate({"apache": report}, bounds={"apache": {level: 0.4}})
     assert gate["cells"]["apache"]["verdict"] == report["verdicts"][str(level)] == "supported"
     assert gate["partial_conjunction"]["at_least"] == 1
+
+
+def test_the_gate_refuses_a_members_development_pilot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    level = decomposition.REPLICATION_CONFIDENCE
+    _main(monkeypatch, _replication_argv(tmp_path, "dev"))
+    report = json.loads((tmp_path / "pilot.json").read_text())
+    assert report["window"] == "development"
+    monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("apache",))
+    with pytest.raises(ValueError, match="development window"):
+        decomposition.replication_gate({"apache": report}, bounds={"apache": {level: 0.4}})
+
+
+@pytest.mark.parametrize("org", ["apache", "openstack"])
+def test_a_test_window_is_never_read_without_registered_bounds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, org: str
+) -> None:
+    flag = ["--replication"] if org == "apache" else []
+    argv = [*_inputs(tmp_path, org, "test"), *_planted(tmp_path, org), *flag]
+    with pytest.raises(SystemExit, match="needs --sensitivity"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
+    assert not (tmp_path / "o.json").exists()
 
 
 @pytest.mark.parametrize(("org", "flag"), [("apache", []), ("openstack", ["--replication"])])

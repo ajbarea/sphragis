@@ -123,7 +123,7 @@ REPLICATION_MEMBERS: tuple[str, ...] | None = None
 # hypotheses on the Gerrit side.
 REPLICATION_CONFIDENCE = 0.975
 
-_CELL_FIELDS = ("estimate", "bounds")
+_CELL_FIELDS = ("estimate", "bounds", "window", "planted_convention")
 
 
 def replication(members: Iterable[str]) -> dict[str, Any]:
@@ -149,9 +149,10 @@ def replication_gate(
     """Each frozen member's H1 verdict and the family's partial conjunction r.
 
     The members are `REPLICATION_MEMBERS`, never an argument, so none joins after Stage 1; the
-    gate refuses to run before they are frozen. `cells` holds one `h1_over_partitions` cell per
-    member, computed for that member, and no other organization (a cell read back from its JSON
-    artifact is accepted; each is checked by `require_readable`).
+    gate refuses to run before they are frozen. `cells` holds each member's
+    `partition_pilot.py --replication` report on its test window, check 5 passed, read at
+    `REPLICATION_CONFIDENCE` alone, and no other organization (read back from JSON is accepted;
+    each is checked by `require_readable`).
     `bounds` holds each member's bounds by level from its own partition simulation, as
     `sensitivity_bounds` gives them, fixed before its test window; a member without a positive
     finite bound at `REPLICATION_CONFIDENCE`, a bound for any other organization, or a cell
@@ -160,6 +161,9 @@ def replication_gate(
     """
     if REPLICATION_MEMBERS is None:
         raise ValueError("the replication family's members are not frozen yet (Stage 1)")
+    for what, given in (("cells", cells), ("bounds", bounds)):
+        if not isinstance(given, Mapping):
+            raise ValueError(f"{what} must map each member to its own, got {type(given).__name__}")
     family = replication(REPLICATION_MEMBERS)
     listed = set(family["members"])
     for what, names in (("cells", cells), ("bounds", bounds)):
@@ -174,6 +178,17 @@ def replication_gate(
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
         cell = cells[org]
+        if cell["window"] != "test":
+            raise ValueError(f"{org}: read on the {cell['window']} window, not the test window")
+        planted = cell["planted_convention"]
+        if not (isinstance(planted, Mapping) and planted.get("passed") is True):
+            raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
+        levels_read = set(by_level(cell["intervals"]))
+        if levels_read != {level}:
+            raise ValueError(
+                f"{org}: read at levels {sorted(levels_read)}, not at {REPLICATION_CONFIDENCE} "
+                "alone (partition_pilot.py --replication)"
+            )
         by_org = bounds.get(org)
         try:
             bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None

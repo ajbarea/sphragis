@@ -11,8 +11,11 @@ Standard library only, like the rest of the measurement package.
 from __future__ import annotations
 
 import math
+import numbers
 from collections.abc import Mapping, Sequence
 from typing import Any
+
+from sphragis.measure.stats import one_sided_alpha
 
 # The Cochrane Handbook (6.5, chapter 10) uses the HKSJ interval only above two studies and a
 # prediction interval from about five; both thresholds are registered with the reading.
@@ -340,14 +343,13 @@ def one_sided_p(draws: Sequence[float]) -> float:
     return sum(1 for d in draws if d <= 0.0) / len(draws)
 
 
-def one_sided_alpha(confidence: float) -> float:
-    """The one-sided level a two-sided interval at `confidence` reads: 0.975 gives 0.0125."""
-    return (1.0 - confidence) / 2.0
-
-
 def is_real(value: Any) -> bool:
-    """A finite number, never a bool."""
-    return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
+    """A finite number (a numpy scalar too), never a bool."""
+    return (
+        isinstance(value, numbers.Real)
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+    )
 
 
 def require_resamples(resamples: Any, *, alpha: float, org: str) -> None:
@@ -356,7 +358,7 @@ def require_resamples(resamples: Any, *, alpha: float, org: str) -> None:
     Only a whole product (10,000 draws at 0.0125 or 0.025) makes a p-value fall below `alpha`
     exactly when the percentile interval's lower bound lies above zero.
     """
-    if not isinstance(resamples, int) or isinstance(resamples, bool):
+    if not isinstance(resamples, numbers.Integral) or isinstance(resamples, bool):
         raise ValueError(f"{org}: resamples must be a whole number, got {resamples!r}")
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"{org}: at least {MIN_RESAMPLES} resamples, got {resamples}")
@@ -373,7 +375,8 @@ def require_readable(
 ) -> None:
     """Refuse any H1 cell (`h1_over_partitions`) that cannot be read at `confidence`.
 
-    Each must be filed under the organization it was computed for and hold `fields`; a resample
+    Each must be filed under the organization it was computed for and hold `fields`, any
+    estimate finite; a resample
     count `require_resamples` accepts; a p-value in [0, 1]; a finite interval at that level, low
     at most high; and a p-value and interval that agree on whether the effect is above zero at
     the one-sided level, as draws from one bootstrap do.
@@ -389,6 +392,8 @@ def require_readable(
             raise ValueError(f"{org}: the cell has no {absent}")
         if cell["org"] != org:
             raise ValueError(f"the cell filed under {org} was computed for {cell['org']!r}")
+        if "estimate" in cell and not is_real(cell["estimate"]):
+            raise ValueError(f"{org}: estimate {cell['estimate']!r} is not a finite number")
         require_resamples(cell["resamples"], alpha=alpha, org=org)
         p = cell["p_one_sided"]
         if not (is_real(p) and 0.0 <= p <= 1.0):

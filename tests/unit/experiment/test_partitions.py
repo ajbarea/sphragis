@@ -298,13 +298,14 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         runs,
         org="apache",
         runs_fixed=4,
-        levels=[level, 0.95],
-        bounds={level: bound, 0.95: bound},
+        levels=[level],
+        bounds={level: bound},
         bootstrap_seed=3,
         resamples=10_000,
     )
     assert cell["verdicts"][level] == verdict
-    loaded = json.loads(json.dumps(cell))
+    report = {**cell, "window": "test", "planted_convention": {"passed": True}}
+    loaded = json.loads(json.dumps(report))
     out = decomposition.replication_gate({"apache": loaded}, bounds={"apache": {level: bound}})
     assert out["cells"]["apache"]["verdict"] == verdict
     assert out["partial_conjunction"]["at_least"] == (verdict == "supported")

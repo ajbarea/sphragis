@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from fractions import Fraction
 from itertools import combinations
 from pathlib import Path
 from typing import Any
@@ -376,13 +377,12 @@ def _replication_cell(
     return {
         "org": org,
         "estimate": (low + high) / 2,
-        "intervals": {
-            REPLICATION_CONFIDENCE: {"low": low, "high": high},
-            0.95: {"low": 0.0, "high": 0.0},
-        },
+        "intervals": {REPLICATION_CONFIDENCE: {"low": low, "high": high}},
         "p_one_sided": p,
         "resamples": resamples,
-        "bounds": {REPLICATION_CONFIDENCE: bound, 0.95: 1.0},
+        "bounds": {REPLICATION_CONFIDENCE: bound},
+        "window": "test",
+        "planted_convention": {"passed": True},
     }
 
 
@@ -517,6 +517,32 @@ _GOOD = _replication_cell(0.01, 0.02, 0.001)
             "computed for 'llvm'",
         ),
         ({"apache": _GOOD | {"bounds": []}}, {"apache": _at(0.03)}, "apache: bounds"),
+        (
+            {"apache": _GOOD | {"window": "development"}},
+            {"apache": _at(0.03)},
+            "development window",
+        ),
+        (
+            {"apache": _GOOD | {"planted_convention": {"passed": False}}},
+            {"apache": _at(0.03)},
+            "check 5 did not pass",
+        ),
+        (
+            {"apache": _GOOD | {"planted_convention": None}},
+            {"apache": _at(0.03)},
+            "check 5 did not pass",
+        ),
+        (
+            {
+                "apache": _GOOD
+                | {"intervals": {**_GOOD["intervals"], 0.95: {"low": 0.0, "high": 0.01}}}
+            },
+            {"apache": _at(0.03)},
+            "not at 0.975 alone",
+        ),
+        ({"apache": _GOOD | {"estimate": float("nan")}}, {"apache": _at(0.03)}, "estimate"),
+        ({"apache": _GOOD}, None, "bounds must map"),
+        ([], {"apache": _at(0.03)}, "cells must map"),
         (
             {"apache": _GOOD | {"intervals": {"by_cells": {}}}},
             {"apache": _at(0.03)},
@@ -1100,3 +1126,11 @@ def test_a_missing_results_cell_is_an_error_cell_in_the_cpp_supplement() -> None
     )
     assert "no results" in outcome["cells"]["qt"]["error"]
     assert "cpp_share" not in outcome["cells"]["qt"]
+
+
+def test_replication_gate_accepts_any_real_number_type(frozen) -> None:
+    """A numpy scalar is a `numbers.Real` and not a float; Fraction stands in for it here."""
+    frozen("apache")
+    cell = _GOOD | {"p_one_sided": Fraction(1, 1000), "bounds": _at(Fraction(3, 100))}
+    out = replication_gate({"apache": cell}, bounds={"apache": _at(Fraction(3, 100))})
+    assert out["cells"]["apache"]["verdict"] == "supported"

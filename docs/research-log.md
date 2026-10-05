@@ -7787,8 +7787,11 @@ bound that is not a positive finite number too.
 `scripts/partition_pilot.py` takes `--replication` for a GitHub member, reading it at 97.5% alone
 whatever the Gerrit Holm family's size, and refuses the flag for any other organization and its
 absence for a member, and, once members are frozen, refuses an organization outside them. It
-refuses `--hypotheses` beside it, and before reading anything a resample count or a bound the
-gate would refuse. Decided here: a member's bound comes from a simulation of one cell at 97.5%
+refuses `--hypotheses` beside it, and, before any run is loaded, a resample count the gate would
+refuse; a bound the gate would refuse is refused before the cell is computed. Any test-window
+read, on either platform, now needs `--sensitivity` as it needed `--planted`, so the sealed window
+is never read without its registered bounds. The report records the window it read, and the gate
+takes only a member's test-window report whose check 5 passed, read at 97.5% alone. Decided here: a member's bound comes from a simulation of one cell at 97.5%
 (`--h1-cells 1`), since it is read alone, not as one of an intersection; registered-decisions.md
 says so. The partition simulation reads its levels from the pilot, so the member's bound is at
 the same level. The pilot's report no longer carries its own `bounds`, which the cell
