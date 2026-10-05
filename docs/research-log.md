@@ -7847,3 +7847,19 @@ has computed since it was written (`holm_levels(len(confirmatory))`); reading H1
 would spend power on a hypothesis that does not exist. Stage 1's analysis section gets the same
 sentence.
 
+### The October 2026 related-work sweep: two RQ2 claims narrowed, nothing pre-empted (2026-10-05)
+
+The 2026-10-04 pass and a sweep of September and October 2026 are now positioned in the papers
+intake (papers #54), with a watch list of queries per topic for the weekly sweep. Nothing found
+pre-empts the decomposition (own, sibling and foreign over repeated partitions) or the GitHub
+replication family. Two RQ2 claims are narrowed (ROADMAP, Plan F). An anonymous ICLR 2027
+submission identifies a released LoRA adapter's training document from its weights, so RQ2's
+claim is source at the organization unit from the transmitted half of a split, not that adapter
+weights reveal their source in general. A second shows a post-hoc privacy audit can measure the
+shift between sources instead of leakage; RQ2 therefore attributes between language-matched
+organizations and reports the same attack between two disjoint draws from one organization beside
+each result. Owner-approved sharing of agent memory exists in deployment, so the owner-declared
+boundary is worded as declared per example, by provenance, before training. The Stage 1 report
+is RQ1 only and states none of these claims. Anonymous submissions are recorded by OpenReview id
+and cited only once public.
+
