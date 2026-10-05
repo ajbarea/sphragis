@@ -134,7 +134,8 @@ def main() -> None:
     simulation = json.loads(args.simulation.read_text())
     if report.get("window") != "test":
         raise SystemExit(f"{args.report} is not a test-window read")
-    if simulation.get("placebo") != str(args.placebo):
+    # By name: the simulation records the path it ran on, which differs between machines.
+    if Path(simulation.get("placebo", "")).name != args.placebo.name:
         raise SystemExit(f"{args.simulation} was simulated on {simulation.get('placebo')}")
     try:
         sigma_run, lifts = registered_lifts(report, simulation)
