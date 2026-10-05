@@ -13,6 +13,7 @@ import pytest
 
 from sphragis.corpus.github import GITHUB_ORGS
 from sphragis.experiment import decomposition
+from sphragis.experiment.cells import same_calibration
 from sphragis.experiment.decomposition import (
     H2_PAIR,
     MIN_RESAMPLES,
@@ -366,6 +367,15 @@ def test_replication_refuses_a_gerrit_late_or_repeated_member(members: list, mat
         replication(members)
 
 
+# A development pilot's spread targets, as both its report and its simulation record them.
+_CALIBRATION = {
+    "pilot_lower_90": 0.010,
+    "pilot_estimate": 0.012,
+    "sizing_bound_90": 0.015,
+    "pilot_upper_99": 0.020,
+}
+
+
 def _replication_cell(
     low: float,
     high: float,
@@ -387,8 +397,19 @@ def _replication_cell(
         "window": "test",
         "planted_convention": {"passed": True},
         "runs": 24,
-        "k_from": {"file": f"partition-pilot-{org}.json", "org": org, "runs": 24},
-        "sensitivity": {"org": org, "cells": 1, "runs": 24, "spread_target": "sizing_bound_90"},
+        "k_from": {
+            "file": f"partition-pilot-{org}.json",
+            "org": org,
+            "runs": 24,
+            "spread_targets": _CALIBRATION,
+        },
+        "sensitivity": {
+            "org": org,
+            "cells": 1,
+            "runs": 24,
+            "spread_target": "sizing_bound_90",
+            "spread_targets": _CALIBRATION,
+        },
         "bootstrap_seed": 7,
     }
 
@@ -396,7 +417,12 @@ def _replication_cell(
 def _sim(bound: Any, org: str = "apache", *, runs: int = 24, by_level: Any = None) -> dict:
     """A member's partition-simulation artifact, its bound at the registered target and one cell."""
     levels = by_level or {"0.975": {"by_cells": {"1": {"minimum_detectable_effect": bound}}}}
-    return {"org": org, "runs": runs, "by_target": {"sizing_bound_90": {"by_level": levels}}}
+    return {
+        "org": org,
+        "runs": runs,
+        "spread_targets": _CALIBRATION,
+        "by_target": {"sizing_bound_90": {"by_level": levels}},
+    }
 
 
 @pytest.fixture
@@ -547,7 +573,7 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"estimate": float("nan")}}, _SIM, "estimate"),
         ({"apache": _GOOD | {"k_from": None}}, _SIM, "K are not from"),
         (
-            {"apache": _GOOD | {"k_from": {"org": "openstack", "runs": 24}}},
+            {"apache": _GOOD | {"k_from": {**_GOOD["k_from"], "org": "openstack"}}},
             _SIM,
             "K are not from its own k_from",
         ),
@@ -581,6 +607,25 @@ _SIM = {"apache": _sim(0.03)}
             {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=1_040)},
             _SIM,
             "registered 10000",
+        ),
+        (
+            {"apache": _GOOD},
+            {"apache": _sim(0.03) | {"spread_targets": {**_CALIBRATION, "pilot_estimate": 0.5}}},
+            "calibrated on another pilot",
+        ),
+        (
+            {
+                "apache": _GOOD
+                | {"k_from": {**_GOOD["k_from"], "spread_targets": {"pilot_estimate": 0.012}}}
+            },
+            _SIM,
+            "calibrated on another pilot than K's",
+        ),
+        ({"apache": _GOOD | {"levels": None}}, _SIM, "not a list of levels"),
+        (
+            {"apache": _GOOD},
+            {"apache": _sim(0.03) | {"by_target": {"sizing_bound_90": []}}},
+            "simulation:",
         ),
         ({"apache": _GOOD}, None, "simulations must map"),
         ([], _SIM, "cells must map"),
@@ -1207,3 +1252,19 @@ def test_replication_gate_accepts_any_real_number_type(frozen) -> None:
     cell = _GOOD | {"p_one_sided": Fraction(1, 1000), "bounds": {0.975: Fraction(3, 100)}}
     out = replication_gate({"apache": cell}, simulations={"apache": _sim(Fraction(3, 100))})
     assert out["cells"]["apache"]["verdict"] == "supported"
+
+
+def test_once_frozen_the_gate_reads_only_the_frozen_admitted_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "wikimedia"))
+    with pytest.raises(ValueError, match="not the frozen set"):
+        _gate(_by_relation(0.75, 0.25, 0.25), admitted=("openstack",))
+
+
+def test_same_calibration_allows_libm_noise_and_nothing_more() -> None:
+    noisy = {k: v * (1 + 1e-12) for k, v in _CALIBRATION.items()}
+    assert same_calibration(_CALIBRATION, noisy)
+    assert not same_calibration(_CALIBRATION, {**_CALIBRATION, "pilot_estimate": 0.0121})
+    assert not same_calibration(_CALIBRATION, {"pilot_estimate": 0.012})
+    assert not same_calibration(_CALIBRATION, None)

@@ -7827,9 +7827,13 @@ simulation) now comes from the registration. `registered_read(org)` in
 and both the spread K was sized on (`sizing_bound_90`, as "Stated power" states the bounds).
 `ADMITTED_ORGANIZATIONS` is None until one commit freezes the admitted set before any test window,
 and a read is refused until its organization is frozen. `partition_pilot.py` derives these and
-refuses a flag that differs; it refuses a simulation whose spread targets differ from those
-recomputed from the `--sizing` pilot (`spread_targets` in `partitions.py`, shared with
-`partition_sensitivity.py`), which ties the two by content without rerunning the simulations.
+refuses a flag that differs. The report records the spread targets recomputed from the
+`--sizing` pilot (`spread_targets` in `partitions.py`, shared with `partition_sensitivity.py`) and
+those the simulation was calibrated to, and `require_test_read` and the gate refuse a pair that
+differ beyond a relative 1e-9 (the chi-squared bounds pass through libm, whose last bits can differ
+between the cluster and the reading machine). That ties the two by content without rerunning the
+simulations. Once `ADMITTED_ORGANIZATIONS` is frozen, `decomposition_gate` refuses any other
+admitted set.
 `require_test_read` checks the report's levels, intervals, spread target and cell count against
 `registered_read`. `replication_gate` now takes each member's simulation artifact and reads the
 bound from it, where it took a bound from its caller and could only check that bound against the

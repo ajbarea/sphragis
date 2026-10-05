@@ -29,6 +29,7 @@ from sphragis.experiment.cells import (
     level_key,
     require_readable,
     require_test_read,
+    same_calibration,
     sensitivity_bounds,
 )
 from sphragis.experiment.grid import EvalRun, run_id
@@ -149,6 +150,11 @@ def replication(members: Iterable[str]) -> dict[str, Any]:
     }
 
 
+def confirmatory_levels(spec: Mapping[str, Any]) -> list[float]:
+    """The Holm levels of a design's confirmatory hypotheses: H1, and H2 when it has a cell."""
+    return holm_levels(sum(1 for name in ("H1", "H2") if spec[name]))
+
+
 def registered_read(org: str) -> dict[str, Any]:
     """What `org`'s test-window read is registered at: its levels, cell count and spread target.
 
@@ -165,7 +171,7 @@ def registered_read(org: str) -> dict[str, Any]:
         if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
             raise ValueError(f"{org} is not among the frozen admitted organizations")
         spec = design(ADMITTED_ORGANIZATIONS)
-        levels = holm_levels(sum(1 for name in ("H1", "H2") if spec[name]))
+        levels = confirmatory_levels(spec)
         cells = len(spec["H1"])
     return {"levels": levels, "cells": cells, "spread_target": REGISTERED_SPREAD_TARGET}
 
@@ -217,8 +223,10 @@ def replication_gate(
             bound = sensitivity_bounds(
                 simulation, expected["spread_target"], expected["levels"], cells=expected["cells"]
             )[REPLICATION_CONFIDENCE]
-        except (KeyError, ValueError) as error:
+        except (KeyError, TypeError, ValueError) as error:
             raise ValueError(f"{org}: simulation: {error}") from error
+        if not same_calibration(cell["k_from"]["spread_targets"], simulation.get("spread_targets")):
+            raise ValueError(f"{org}: the simulation was calibrated on another pilot than K's")
         if not valid_bound(bound):
             raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
         try:
@@ -508,9 +516,13 @@ def decomposition_gate(
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
+    if ADMITTED_ORGANIZATIONS is not None and set(admitted) != set(ADMITTED_ORGANIZATIONS):
+        raise ValueError(
+            f"admitted {sorted(admitted)} is not the frozen set {ADMITTED_ORGANIZATIONS}"
+        )
     cells = design(admitted)
     confirmatory = {name: cells[name] for name in ("H1", "H2") if cells[name]}
-    levels = holm_levels(len(confirmatory))
+    levels = confirmatory_levels(cells)
     bounds = {
         name: {org: by_level(levels_) for org, levels_ in cells_.items()}
         for name, cells_ in detectable.items()

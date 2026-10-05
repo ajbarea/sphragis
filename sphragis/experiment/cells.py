@@ -138,16 +138,30 @@ def require_readable(
     return normalized
 
 
+def same_calibration(a: Any, b: Any) -> bool:
+    """Whether two spread-target mappings name the same points at the same values.
+
+    Within a relative 1e-9: the chi-squared bounds pass through libm, whose last bits can differ
+    between the cluster that ran the simulation and the machine that reads the test window.
+    """
+    if not (isinstance(a, Mapping) and isinstance(b, Mapping)) or set(a) != set(b):
+        return False
+    return all(
+        is_real(a[k]) and is_real(b[k]) and math.isclose(a[k], b[k], rel_tol=1e-9, abs_tol=0.0)
+        for k in a
+    )
+
+
 def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[str, Any]) -> None:
     """Refuse a `partition_pilot.py` report unless it is a test-window read registered in advance.
 
     "Reading the test window" (registered-decisions.md): read on the test window with check 5
-    passed; K from the organization's own development pilot (`k_from`), and bounds from its own
-    simulation, run at that same K (`sensitivity`); at `TEST_RESAMPLES` draws and
-    `TEST_BOOTSTRAP_SEED`; at the levels, cell count and spread target `expected` registers for
-    the organization (`decomposition.registered_read`), so none is chosen when the window is read.
-    The pilot runs this on its report before writing it, and the gates on reading it, so both
-    hold one rule.
+    passed; K from the organization's own development pilot (`k_from`); bounds from its own
+    simulation, run at that same K and calibrated on that pilot (`sensitivity`); at
+    `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell count and spread
+    target `expected` registers for the organization (`decomposition.registered_read`), so none
+    is chosen when the window is read. The pilot runs this on its report before writing it, and
+    the gates on reading it, so both hold one rule.
     """
     required = (
         "window",
@@ -158,6 +172,7 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
         "resamples",
         "bootstrap_seed",
         "levels",
+        "intervals",
     )
     absent = [f for f in required if f not in report]
     if absent:
@@ -175,12 +190,14 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
             raise ValueError(
                 f"{org}: {name} is at K = {source.get('runs')!r}, the read at {report['runs']!r}"
             )
+    if not isinstance(report["levels"], list | tuple):
+        raise ValueError(f"{org}: levels {report['levels']!r} is not a list of levels")
     read_at = [level_key(c) for c in report["levels"]]
     if read_at != [level_key(c) for c in expected["levels"]]:
         raise ValueError(
             f"{org}: read at levels {report['levels']}, registered {expected['levels']}"
         )
-    if "intervals" in report and set(by_level(report["intervals"])) != set(read_at):
+    if set(by_level(report["intervals"])) != set(read_at):
         raise ValueError(f"{org}: its intervals are not at the levels it records")
     simulation = report["sensitivity"]
     for name in ("spread_target", "cells"):
@@ -188,6 +205,10 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
             raise ValueError(
                 f"{org}: bounds at {name} {simulation.get(name)!r}, registered {expected[name]!r}"
             )
+    if not same_calibration(
+        report["k_from"].get("spread_targets"), simulation.get("spread_targets")
+    ):
+        raise ValueError(f"{org}: its simulation was calibrated on another pilot than K's")
     if (report["resamples"], report["bootstrap_seed"]) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
         raise ValueError(
             f"{org}: read at {report['resamples']} resamples, seed {report['bootstrap_seed']}; "

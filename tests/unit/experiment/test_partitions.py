@@ -305,18 +305,26 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         resamples=10_000,
     )
     assert cell["verdicts"][level] == verdict
+    calibration = {"pilot_estimate": 0.01, "sizing_bound_90": 0.02}
     report = {
         **cell,
         "window": "test",
         "planted_convention": {"passed": True},
         "levels": [level],
-        "k_from": {"file": "partition-pilot-apache.json", "org": "apache", "runs": 4},
-        "sensitivity": {"org": "apache", "cells": 1, "runs": 4, "spread_target": "sizing_bound_90"},
+        "k_from": {"org": "apache", "runs": 4, "spread_targets": calibration},
+        "sensitivity": {
+            "org": "apache",
+            "cells": 1,
+            "runs": 4,
+            "spread_target": "sizing_bound_90",
+            "spread_targets": calibration,
+        },
     }
     by_cells = {"1": {"minimum_detectable_effect": bound}}
     simulation = {
         "org": "apache",
         "runs": 4,
+        "spread_targets": calibration,
         "by_target": {"sizing_bound_90": {"by_level": {str(level): {"by_cells": by_cells}}}},
     }
     loaded = json.loads(json.dumps({"report": report, "simulation": simulation}))

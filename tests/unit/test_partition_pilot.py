@@ -181,8 +181,7 @@ def _replication_argv(
 @pytest.fixture
 def members(monkeypatch: pytest.MonkeyPatch) -> None:
     """Apache a frozen replication member, OpenStack the one admitted Gerrit organization."""
-    for module in (decomposition, partition_pilot):
-        monkeypatch.setattr(module, "REPLICATION_MEMBERS", ("apache",))
+    monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("apache",))
     monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack",))
 
 
@@ -252,8 +251,8 @@ def test_a_test_window_is_read_only_under_what_was_fixed_before_it(
 def test_a_members_test_window_waits_for_the_freeze(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert partition_pilot.REPLICATION_MEMBERS is None
-    with pytest.raises(SystemExit, match="frozen member"):
+    assert decomposition.REPLICATION_MEMBERS is None
+    with pytest.raises(SystemExit, match="not a frozen replication member"):
         _main(monkeypatch, _replication_argv(tmp_path, "test"))
 
 
@@ -308,7 +307,7 @@ def test_a_replication_pilot_refuses_what_the_gate_would_refuse(
     frozen: tuple[str, ...] | None,
     match: str,
 ) -> None:
-    monkeypatch.setattr(partition_pilot, "REPLICATION_MEMBERS", frozen)
+    monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", frozen)
     sensitivity = _sensitivity(tmp_path, [decomposition.REPLICATION_CONFIDENCE], bound, "apache")
     argv = [
         *_inputs(tmp_path, "apache"),
