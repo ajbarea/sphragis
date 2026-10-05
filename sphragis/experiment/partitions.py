@@ -16,12 +16,10 @@ from collections.abc import Mapping, Sequence
 from statistics import NormalDist, stdev, variance
 from typing import Any
 
-from sphragis.experiment.across import one_sided_p
+from sphragis.experiment.across import by_level, level_key, one_sided_p
 from sphragis.experiment.decomposition import (
     SESOI,
-    by_level,
     cell_verdict,
-    level_key,
     meaningful,
     project_clusters,
     within_sesoi,
@@ -265,6 +263,7 @@ def h1_over_partitions(
     intervals = {c: percentile_interval(draws, c) for c in levels}
     registered = by_level(bounds) if bounds else {}
     return {
+        "org": org,
         "estimate": estimate,
         "per_run": per_run,
         "runs": k,

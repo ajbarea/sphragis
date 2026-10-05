@@ -159,9 +159,21 @@ def test_one_sided_p_counts_draws_at_or_below_zero() -> None:
         one_sided_p([])
 
 
+def _h1(estimate: float, se: float, p: float, resamples: int = 10_000) -> dict:
+    """An H1 cell as `h1_over_partitions` gives it, its 97.5% interval agreeing with its p-value."""
+    low = 0.001 if p < 0.0125 else -0.001
+    return {
+        "estimate": estimate,
+        "bootstrap_se": se,
+        "p_one_sided": p,
+        "resamples": resamples,
+        "intervals": {0.975: {"low": low, "high": estimate + 0.01}},
+    }
+
+
 def test_across_organizations_reads_both_at_the_step_level() -> None:
     cells = {
-        org: {"estimate": e, "bootstrap_se": s, "p_one_sided": p, "resamples": 10_000}
+        org: _h1(e, s, p)
         for org, e, s, p in [
             ("a", 0.02, 0.005, 0.0001),
             ("b", 0.01, 0.006, 0.04),
@@ -175,12 +187,24 @@ def test_across_organizations_reads_both_at_the_step_level() -> None:
 
 
 def test_across_organizations_refuses_a_count_whose_bound_falls_between_draws() -> None:
-    cells = {
-        o: {"estimate": 0.01, "bootstrap_se": 0.005, "p_one_sided": 0.001, "resamples": 500}
-        for o in "ab"
-    }
+    cells = {o: _h1(0.01, 0.005, 0.001, resamples=1_010) for o in "ab"}
     with pytest.raises(ValueError, match="between draws"):
         across_organizations(cells, confidence=0.975)
+
+
+@pytest.mark.parametrize(
+    ("cell", "match"),
+    [
+        (_h1(0.01, 0.005, 0.001, resamples=80), "at least 1000 resamples"),
+        (_h1(0.01, 0.005, 0.001) | {"p_one_sided": 0.5}, "disagree"),
+        ({k: v for k, v in _h1(0.01, 0.005, 0.001).items() if k != "bootstrap_se"}, "has no"),
+        (_h1(0.01, 0.005, 0.001) | {"intervals": {0.95: {"low": 0, "high": 1}}}, "no interval"),
+        (_h1(0.01, 0.005, 0.001) | {"intervals": {"by_cells": {}}}, "not a confidence level"),
+    ],
+)
+def test_across_organizations_refuses_a_cell_the_gate_refuses(cell: dict, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        across_organizations({"a": cell, "b": _h1(0.02, 0.005, 0.001)}, confidence=0.975)
 
 
 def test_a_p_value_at_the_level_is_not_below_it() -> None:
@@ -292,8 +316,5 @@ def test_random_effects_refuses_a_variance_that_underflows_or_overflows(se: floa
 
 
 def test_a_large_resample_count_at_a_whole_bound_is_accepted() -> None:
-    cells = {
-        o: {"estimate": e, "bootstrap_se": 0.005, "p_one_sided": 0.001, "resamples": 100_000_000}
-        for o, e in (("a", 0.01), ("b", 0.02))
-    }
+    cells = {o: _h1(e, 0.005, 0.001, resamples=100_000_000) for o, e in (("a", 0.01), ("b", 0.02))}
     assert across_organizations(cells, confidence=0.975)["random_effects"]["k"] == 2

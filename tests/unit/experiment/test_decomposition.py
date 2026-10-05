@@ -365,9 +365,16 @@ def test_replication_refuses_a_gerrit_late_or_repeated_member(members: list, mat
 
 
 def _replication_cell(
-    low: float, high: float, p: float, *, bound: float | None = 0.03, resamples: int = 10_000
+    low: float,
+    high: float,
+    p: float,
+    *,
+    bound: float | None = 0.03,
+    resamples: int = 10_000,
+    org: str = "apache",
 ) -> dict:
     return {
+        "org": org,
         "estimate": (low + high) / 2,
         "intervals": {
             REPLICATION_CONFIDENCE: {"low": low, "high": high},
@@ -395,8 +402,8 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) 
     frozen("dotnet", "llvm", "apache")
     cells = {
         "apache": _replication_cell(0.02, 0.05, 0.0001),
-        "llvm": _replication_cell(-0.004, 0.006, 0.3, bound=0.008),
-        "dotnet": _replication_cell(0.005, 0.03, 0.002),
+        "llvm": _replication_cell(-0.004, 0.006, 0.3, bound=0.008, org="llvm"),
+        "dotnet": _replication_cell(0.005, 0.03, 0.002, org="dotnet"),
     }
     bounds = {"apache": _at(0.03), "llvm": _at(0.008), "dotnet": _at(0.03)}
     out = replication_gate(cells, bounds=bounds)
@@ -422,7 +429,7 @@ def test_replication_gate_refuses_to_read_before_the_members_are_frozen() -> Non
 
 def test_replication_gate_reads_a_cell_and_bounds_back_from_json(frozen) -> None:
     frozen("llvm")
-    cell = _replication_cell(-0.004, 0.006, 0.3, bound=0.008)
+    cell = _replication_cell(-0.004, 0.006, 0.3, bound=0.008, org="llvm")
     loaded = json.loads(json.dumps({"cells": {"llvm": cell}, "bounds": {"llvm": _at(0.008)}}))
     out = replication_gate(loaded["cells"], bounds=loaded["bounds"])
     assert out["cells"]["llvm"]["verdict"] == "bounded"
@@ -503,6 +510,17 @@ _GOOD = _replication_cell(0.01, 0.02, 0.001)
             {"apache": {k: v for k, v in _GOOD.items() if k != "resamples"}},
             {"apache": _at(0.03)},
             r"apache: the cell has no \['resamples'\]",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, org="llvm")},
+            {"apache": _at(0.03)},
+            "computed for 'llvm'",
+        ),
+        ({"apache": _GOOD | {"bounds": []}}, {"apache": _at(0.03)}, "apache: bounds"),
+        (
+            {"apache": _GOOD | {"intervals": {"by_cells": {}}}},
+            {"apache": _at(0.03)},
+            "apache: intervals",
         ),
     ],
 )

@@ -20,6 +20,40 @@ MIN_FOR_INTERVAL = 3
 MIN_FOR_PREDICTION = 5
 # A platform's subgroup summary needs two organizations, as the summary does.
 MIN_PER_PLATFORM = 2
+# Below this the percentile ranks of neighbouring Holm levels can coincide.
+MIN_RESAMPLES = 1_000
+
+
+def level_key(confidence: Any) -> float:
+    """A confidence level as a dictionary key: float noise rounded off, a JSON string key read."""
+    try:
+        return round(float(confidence), 9)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"{confidence!r} is not a confidence level") from error
+
+
+def by_level(values: Mapping[Any, Any]) -> dict[float, Any]:
+    """A mapping keyed by confidence level, its keys passed through `level_key`.
+
+    Two keys naming one level (0.975 and "0.975") are refused rather than one silently kept.
+    """
+    if not isinstance(values, Mapping):
+        raise ValueError(f"expected a mapping by level, got {type(values).__name__}")
+    out: dict[float, Any] = {}
+    for c, v in values.items():
+        key = level_key(c)
+        if key in out:
+            raise ValueError(f"two keys name level {key}")
+        out[key] = v
+    return out
+
+
+def below_level(p: float, alpha: float) -> bool:
+    """Whether a p-value is below a level, rounded so float noise cannot decide a tie.
+
+    (1 - 0.975) / 2 is 0.012500000000000011, which would count a p-value of exactly 0.0125 as below.
+    """
+    return round(p, 12) < round(alpha, 12)
 
 
 def _beta_continued_fraction(a: float, b: float, x: float) -> float:
@@ -218,7 +252,7 @@ def random_effects(
     y = [estimates[o] for o in orgs]
     v = [standard_errors[o] ** 2 for o in orgs]
     k = len(orgs)
-    tail = 1.0 - (1.0 - confidence) / 2.0
+    tail = 1.0 - one_sided_alpha(confidence)
 
     summary = _summary(y, v, [[1.0] for _ in orgs], tail=tail)
     mean = summary["coef"][0]
@@ -295,10 +329,7 @@ def partial_conjunction(p_values: Mapping[str, float], *, alpha: float) -> dict[
     for r, p in enumerate(ordered, start=1):
         running = max(running, min(1.0, (k - r + 1) * p))
         adjusted.append(running)
-    # Rounded so float noise cannot decide a tie: (1 - 0.975) / 2 is 0.012500000000000011, which
-    # would count a p-value of exactly 0.0125 as below it.
-    level = round(alpha, 12)
-    largest = max((r for r, p in enumerate(adjusted, start=1) if round(p, 12) < level), default=0)
+    largest = max((r for r, p in enumerate(adjusted, start=1) if below_level(p, alpha)), default=0)
     return {"k": k, "alpha": alpha, "adjusted": adjusted, "at_least": largest}
 
 
@@ -314,18 +345,41 @@ def one_sided_alpha(confidence: float) -> float:
     return (1.0 - confidence) / 2.0
 
 
-def require_bound_on_a_draw(cells: Mapping[str, Mapping[str, Any]], *, alpha: float) -> None:
-    """Refuse a cell whose resample count times `alpha` is not a whole number.
+def require_readable(
+    cells: Mapping[str, Mapping[str, Any]], *, confidence: float, fields: Sequence[str] = ()
+) -> None:
+    """Refuse any H1 cell (`h1_over_partitions`) that cannot be read at `confidence`.
 
-    Only then does a cell's p-value fall below `alpha` exactly when its percentile interval's lower
-    bound lies above zero (10,000 draws at 0.0125 or 0.025); otherwise the two could disagree.
+    Each needs `fields`, `p_one_sided`, `resamples` and an interval at that level; at least
+    `MIN_RESAMPLES` draws, and a count whose product with the one-sided level is whole (10,000
+    draws at 0.0125 or 0.025), so a p-value falls below the level exactly when the interval's lower
+    bound lies above zero; and a p-value and interval that agree on that, as draws from one
+    bootstrap do.
     """
+    alpha = one_sided_alpha(confidence)
     for org, cell in cells.items():
-        excluded = cell["resamples"] * alpha
+        absent = [f for f in (*fields, "p_one_sided", "resamples", "intervals") if f not in cell]
+        if absent:
+            raise ValueError(f"{org}: the cell has no {absent}")
+        resamples = cell["resamples"]
+        if resamples < MIN_RESAMPLES:
+            raise ValueError(f"{org}: at least {MIN_RESAMPLES} resamples, got {resamples}")
+        excluded = resamples * alpha
         if abs(excluded - round(excluded)) > 1e-9 * max(1.0, excluded):
             raise ValueError(
-                f"{org}: {cell['resamples']} resamples at one-sided {alpha:g} put the interval's "
+                f"{org}: {resamples} resamples at one-sided {alpha:g} put the interval's "
                 "bound between draws, so its p-value and its verdict could disagree"
+            )
+        try:
+            interval = by_level(cell["intervals"]).get(level_key(confidence))
+        except ValueError as error:
+            raise ValueError(f"{org}: intervals: {error}") from error
+        if not isinstance(interval, Mapping) or not {"low", "high"} <= set(interval):
+            raise ValueError(f"{org}: no interval at {confidence}")
+        if below_level(cell["p_one_sided"], alpha) != (interval["low"] > 0.0):
+            raise ValueError(
+                f"{org}: p-value {cell['p_one_sided']} and interval low {interval['low']} "
+                f"disagree at one-sided {alpha:g}, so they are not from the same draws"
             )
 
 
@@ -338,10 +392,10 @@ def across_organizations(
     """Both readings over H1 cells from `h1_over_partitions`, at one Holm step's confidence.
 
     The partial conjunction is read at that step's one-sided level, the cells' own; the summary's
-    interval at the same confidence. Resample counts are checked by `require_bound_on_a_draw`.
+    interval at the same confidence. Each cell is checked by `require_readable`.
     """
     alpha = one_sided_alpha(confidence)
-    require_bound_on_a_draw(cells, alpha=alpha)
+    require_readable(cells, confidence=confidence, fields=("estimate", "bootstrap_se"))
     return {
         "partial_conjunction": partial_conjunction(
             {org: cell["p_one_sided"] for org, cell in cells.items()}, alpha=alpha

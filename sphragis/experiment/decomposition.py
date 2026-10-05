@@ -22,9 +22,12 @@ from typing import Any
 
 from sphragis.corpus.halves import suffix
 from sphragis.experiment.across import (
+    MIN_RESAMPLES,
+    by_level,
+    level_key,
     one_sided_alpha,
     partial_conjunction,
-    require_bound_on_a_draw,
+    require_readable,
 )
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import require_unique_ids, to_clusters
@@ -49,9 +52,6 @@ FAMILY_ALPHA = 0.025
 
 # The summed contrast is reported, never tested, so it reads the family's own level.
 SUMMED_CONFIDENCE = 0.95
-
-# Below this the percentile ranks of neighbouring Holm levels can coincide.
-MIN_RESAMPLES = 1_000
 
 # Registration order. OpenStack is always admitted; Wikimedia when its split qualifies; Qt and
 # Chromium only with written permission for automated access, Chromium's split qualifying too.
@@ -97,30 +97,11 @@ def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -
     seen = set(listed)
     unknown = sorted(seen - set(registry))
     if unknown:
-        raise ValueError(f"unknown organization(s) {unknown}; registered are {registry}")
+        raise ValueError(f"unknown organization(s) {unknown} in {role}; registered are {registry}")
     if len(seen) != len(listed):
         duplicates = sorted({o for o in seen if listed.count(o) > 1})
         raise ValueError(f"duplicate organization(s) {duplicates} in {role}")
     return tuple(o for o in registry if o in seen)
-
-
-def level_key(confidence: float | str) -> float:
-    """A confidence level as a dictionary key: float noise rounded off, a JSON string key read."""
-    return round(float(confidence), 9)
-
-
-def by_level(values: Mapping[Any, Any]) -> dict[float, Any]:
-    """A mapping keyed by confidence level, its keys passed through `level_key`.
-
-    Two keys naming one level (0.975 and "0.975") are refused rather than one silently kept.
-    """
-    out: dict[float, Any] = {}
-    for c, v in values.items():
-        key = level_key(c)
-        if key in out:
-            raise ValueError(f"two keys name level {key}")
-        out[key] = v
-    return out
 
 
 def valid_bound(bound: Any) -> bool:
@@ -147,7 +128,7 @@ REPLICATION_MEMBERS: tuple[str, ...] | None = None
 # hypotheses on the Gerrit side.
 REPLICATION_CONFIDENCE = 0.975
 
-_CELL_FIELDS = ("estimate", "intervals", "p_one_sided", "resamples", "bounds")
+_CELL_FIELDS = ("org", "estimate", "bounds")
 
 
 def replication(members: Iterable[str]) -> dict[str, Any]:
@@ -174,7 +155,8 @@ def replication_gate(
 
     The members are `REPLICATION_MEMBERS`, never an argument, so none joins after Stage 1; the
     gate refuses to run before they are frozen. `cells` holds one `h1_over_partitions` cell per
-    member and no other organization (a cell read back from its JSON artifact is accepted).
+    member, computed for that member, and no other organization (a cell read back from its JSON
+    artifact is accepted; each is checked by `require_readable`).
     `bounds` holds each member's bounds by level from its own partition simulation, as
     `sensitivity_bounds` gives them, fixed before its test window; a member without a positive
     finite bound at `REPLICATION_CONFIDENCE`, a bound for any other organization, or a cell
@@ -190,40 +172,33 @@ def replication_gate(
         if extra:
             raise ValueError(f"{what} for organization(s) outside the family's members: {extra}")
     level = level_key(REPLICATION_CONFIDENCE)
-    alpha = one_sided_alpha(REPLICATION_CONFIDENCE)
+    missing = [o for o in family["members"] if o not in cells]
+    if missing:
+        raise ValueError(f"no cell for member(s) {missing}")
+    require_readable(cells, confidence=REPLICATION_CONFIDENCE, fields=_CELL_FIELDS)
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
-        if org not in cells:
-            raise ValueError(f"no cell for member {org}")
         cell = cells[org]
-        absent = [f for f in _CELL_FIELDS if f not in cell]
-        if absent:
-            raise ValueError(f"{org}: the cell has no {absent}")
+        if cell["org"] != org:
+            raise ValueError(f"the cell filed under {org} was computed for {cell['org']!r}")
         by_org = bounds.get(org)
         bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
         if not valid_bound(bound):
             raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
-        computed_under = by_level(cell["bounds"] or {}).get(level)
+        try:
+            recorded = cell["bounds"]
+            computed_under = by_level({} if recorded is None else recorded).get(level)
+        except ValueError as error:
+            raise ValueError(f"{org}: bounds: {error}") from error
         if computed_under != bound:
             raise ValueError(
                 f"{org}: the cell was computed under bound {computed_under!r}, "
                 f"the registered bound is {bound!r}"
             )
-        if cell["resamples"] < MIN_RESAMPLES:
-            raise ValueError(f"{org}: at least {MIN_RESAMPLES} resamples, got {cell['resamples']}")
-        require_bound_on_a_draw({org: cell}, alpha=alpha)
-        interval = by_level(cell["intervals"]).get(level)
-        if interval is None:
-            raise ValueError(f"{org}: no interval at {REPLICATION_CONFIDENCE}")
-        below = round(cell["p_one_sided"], 12) < round(alpha, 12)
-        if below != (interval["low"] > 0.0):
-            raise ValueError(
-                f"{org}: p-value {cell['p_one_sided']} and interval low {interval['low']} disagree "
-                f"at one-sided {alpha:g}, so they are not from the same draws"
-            )
+        interval = by_level(cell["intervals"])[level]
         read[org] = {
             "estimate": cell["estimate"],
-            "interval": dict(interval),
+            "interval": {"low": interval["low"], "high": interval["high"]},
             "bound": bound,
             "verdict": cell_verdict(interval["low"], interval["high"], bound=bound),
             "meaningful": meaningful(interval["low"]),
@@ -233,7 +208,8 @@ def replication_gate(
         **family,
         "cells": read,
         "partial_conjunction": partial_conjunction(
-            {o: c["p_one_sided"] for o, c in read.items()}, alpha=alpha
+            {o: c["p_one_sided"] for o, c in read.items()},
+            alpha=one_sided_alpha(REPLICATION_CONFIDENCE),
         )
         if read
         else None,

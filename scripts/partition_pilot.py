@@ -8,7 +8,8 @@ with `--sensitivity`, each level's bound is the detectable effect that simulatio
 `--spread-target` for an H1 over `--h1-cells` organizations. With `--planted`, the organization's
 planted dev run must pass outcome-neutral check 5 (`neutral.planted_convention`) or the cell is
 not read. On the development window it is
-the pilot, and `runs_needed` sizes the organization's K from every run computed.
+the pilot, and `runs_needed` sizes the organization's K from every run computed. A GitHub
+replication member takes `--replication` and is read at its registered fixed level instead.
 
     uv run --no-sync --no-active python scripts/partition_pilot.py \\
         --admissible datasets/results/admissible-partitions-openstack.json \\
@@ -23,7 +24,11 @@ import json
 import re
 from pathlib import Path
 
-from sphragis.experiment.decomposition import holm_levels
+from sphragis.experiment.decomposition import (
+    REPLICATION_CONFIDENCE,
+    REPLICATION_FAMILY,
+    holm_levels,
+)
 from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
     h1_over_partitions,
@@ -42,6 +47,11 @@ parser.add_argument(
 )
 # H1 and H2: the registered Holm family.
 parser.add_argument("--hypotheses", type=int, default=2, help="the Holm family size")
+parser.add_argument(
+    "--replication",
+    action="store_true",
+    help="a GitHub replication member, read at its own fixed level, not a Holm step",
+)
 parser.add_argument("--sensitivity", type=Path, help="a partition-sensitivity artifact")
 parser.add_argument(
     "--spread-target",
@@ -107,7 +117,12 @@ def main() -> None:
         except ValueError as error:
             raise SystemExit(str(error)) from error
         k_source = f"{args.sizing}: sizing.runs"
-    levels = holm_levels(args.hypotheses)
+    if args.replication != (args.org in REPLICATION_FAMILY):
+        raise SystemExit(
+            f"{args.org}: --replication is for the GitHub family {REPLICATION_FAMILY} only, "
+            "and every member needs it"
+        )
+    levels = [REPLICATION_CONFIDENCE] if args.replication else holm_levels(args.hypotheses)
     bounds = None
     if args.sensitivity:
         if not args.spread_target:
@@ -143,7 +158,6 @@ def main() -> None:
         "admissible",
         "k_source",
         "levels",
-        "bounds",
         "planted_convention",
         "sizing",
         "provenance",
@@ -155,7 +169,6 @@ def main() -> None:
         "admissible": str(args.admissible),
         "k_source": k_source,
         "levels": levels,
-        "bounds": bounds,
         "planted_convention": planted,
         **cell,
         "sizing": sizing,
