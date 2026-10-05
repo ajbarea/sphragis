@@ -95,7 +95,13 @@ def _sensitivity(tmp_path: Path, levels: list[float], bound: float, org: str) ->
     path = tmp_path / "sensitivity.json"
     by_level = {str(c): {"by_cells": {"1": {"minimum_detectable_effect": bound}}} for c in levels}
     path.write_text(
-        json.dumps({"org": org, "by_target": {"pilot_estimate": {"by_level": by_level}}})
+        json.dumps(
+            {
+                "org": org,
+                "runs": len(ADMISSIBLE),
+                "by_target": {"pilot_estimate": {"by_level": by_level}},
+            }
+        )
     )
     return path
 
@@ -197,8 +203,8 @@ def test_the_gate_refuses_a_members_development_pilot(
     [
         ("--sensitivity", [], "needs --sensitivity"),
         ("--sizing", [], "needs --sizing"),
-        (None, ["--bootstrap-seed", "8"], "the registered ones"),
-        (None, ["--resamples", "20000"], "the registered ones"),
+        (None, ["--bootstrap-seed", "8"], "registered 10000 at 7"),
+        (None, ["--resamples", "20000"], "registered 10000 at 7"),
     ],
 )
 def test_a_test_window_is_read_only_under_what_was_fixed_before_it(
@@ -298,3 +304,25 @@ def test_a_replication_pilot_refuses_what_the_gate_would_refuse(
     with pytest.raises(SystemExit, match=match):
         _main(monkeypatch, argv)
     assert not (tmp_path / "o.json").exists()
+
+
+def test_a_test_read_refuses_a_simulation_at_another_k(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _replication_argv(tmp_path, "test")
+    sensitivity = json.loads((tmp_path / "sensitivity.json").read_text())
+    (tmp_path / "sensitivity.json").write_text(json.dumps({**sensitivity, "runs": 24}))
+    with pytest.raises(SystemExit, match="sensitivity is at K = 24"):
+        _main(monkeypatch, argv)
+    assert not (tmp_path / "pilot.json").exists()
+
+
+def test_a_test_read_refuses_a_pilot_that_does_not_name_its_organization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _replication_argv(tmp_path, "test")
+    sizing = json.loads((tmp_path / "sizing.json").read_text())
+    del sizing["org"]
+    (tmp_path / "sizing.json").write_text(json.dumps(sizing))
+    with pytest.raises(SystemExit, match="does not name its organization"):
+        _main(monkeypatch, argv)

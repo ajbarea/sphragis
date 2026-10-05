@@ -157,15 +157,20 @@ def runs_needed(
     }
 
 
-def pilot_sizing(artifact: Mapping[str, Any], name: str, *, org: str) -> int:
+def pilot_sizing(
+    artifact: Mapping[str, Any], name: str, *, org: str, require_org: bool = False
+) -> int:
     """The K an organization's pilot sized: `sizing.runs` of a reading over all its runs.
 
     Every reading re-derives `sizing` from the runs it read, so a reading at a K taken from
     elsewhere (its `k_source` names that file) carries a `sizing` that is not the organization's
     K, and a test-window reading's would be sized on confirmatory data; both are refused, as is
     another organization's pilot. A pilot written before readings recorded their window and
-    organization is a development-window reading.
+    organization is a development-window reading; with `require_org` (a test-window read) it must
+    name its organization, so it is regenerated first.
     """
+    if require_org and "org" not in artifact:
+        raise ValueError(f"{name} does not name its organization; rerun it to size a test read")
     source = artifact.get("k_source", "all runs")
     if source != "all runs":
         raise ValueError(f"{name} read its K from {source!r}; K comes from the pilot itself")

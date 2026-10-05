@@ -25,7 +25,12 @@ import json
 import re
 from pathlib import Path
 
-from sphragis.experiment.cells import TEST_BOOTSTRAP_SEED, TEST_RESAMPLES, require_resamples
+from sphragis.experiment.cells import (
+    TEST_BOOTSTRAP_SEED,
+    TEST_RESAMPLES,
+    require_resamples,
+    require_test_read,
+)
 from sphragis.experiment.decomposition import (
     ORGANIZATIONS,
     REPLICATION_CONFIDENCE,
@@ -141,17 +146,11 @@ def main() -> None:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
     if window == "test":
         # Fixed before the test window: who is read, its K, and the draws its interval takes.
-        if args.replication and (
-            REPLICATION_MEMBERS is None or args.org not in REPLICATION_MEMBERS
-        ):
+        # A member outside the frozen set is refused with the arguments; here, before the freeze.
+        if args.replication and REPLICATION_MEMBERS is None:
             raise SystemExit(f"{args.org}'s test window is read only once it is a frozen member")
         if not args.sizing:
             raise SystemExit("a test-window read needs --sizing: K from the development pilot")
-        if (args.resamples, args.bootstrap_seed) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
-            raise SystemExit(
-                f"a test-window read takes {TEST_RESAMPLES} resamples at bootstrap seed "
-                f"{TEST_BOOTSTRAP_SEED}, the registered ones"
-            )
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
     if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
@@ -166,15 +165,17 @@ def main() -> None:
         planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
         if not apparatus_holds([check]):
             raise SystemExit(f"{args.planted}: check 5 failed ({check.evidence}); H1 is not read")
-    runs_fixed, k_source = len(runs), "all runs"
+    runs_fixed, k_source, k_from = len(runs), "all runs", None
     if args.sizing:
+        sizing_artifact = json.loads(args.sizing.read_text())
         try:
             runs_fixed = pilot_sizing(
-                json.loads(args.sizing.read_text()), str(args.sizing), org=args.org
+                sizing_artifact, str(args.sizing), org=args.org, require_org=window == "test"
             )
         except ValueError as error:
             raise SystemExit(str(error)) from error
         k_source = f"{args.sizing}: sizing.runs"
+        k_from = {"file": str(args.sizing), "org": sizing_artifact.get("org"), "runs": runs_fixed}
     bounds = None
     simulation = None
     if args.sensitivity:
@@ -194,6 +195,7 @@ def main() -> None:
         simulation = {
             "file": str(args.sensitivity),
             "org": sensitivity["org"],
+            "runs": sensitivity.get("runs"),
             "spread_target": args.spread_target,
             "cells": args.h1_cells,
         }
@@ -206,23 +208,12 @@ def main() -> None:
         bootstrap_seed=args.bootstrap_seed,
         resamples=args.resamples,
     )
-    for c in levels:
-        interval = cell["intervals"][c]
-        print(
-            f"H1 {args.org} over {len(cell['per_run'])} partitions at {c}: {cell['estimate']:+.4f} "
-            f"[{interval['low']:+.4f}, {interval['high']:+.4f}] {cell['verdicts'][c]}"
-        )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"])
-    print(
-        f"read over K={cell['runs']} of {cell['runs_computed']} computed; examples "
-        f"{cell['examples']}, dropped {cell['dropped']}; reproducible "
-        f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
-        f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
-    )
     head = {
         "run_files",
         "admissible",
         "k_source",
+        "k_from",
         "levels",
         "window",
         "sensitivity",
@@ -236,6 +227,7 @@ def main() -> None:
         "run_files": [str(p) for p in args.runs],
         "admissible": str(args.admissible),
         "k_source": k_source,
+        "k_from": k_from,
         "levels": levels,
         "window": window,
         "sensitivity": simulation,
@@ -244,6 +236,23 @@ def main() -> None:
         "sizing": sizing,
         "provenance": provenance_header(),
     }
+    if window == "test":
+        try:
+            require_test_read(report, org=args.org)
+        except ValueError as error:
+            raise SystemExit(f"not read: {error}") from error
+    for c in levels:
+        interval = cell["intervals"][c]
+        print(
+            f"H1 {args.org} over {len(cell['per_run'])} partitions at {c}: {cell['estimate']:+.4f} "
+            f"[{interval['low']:+.4f}, {interval['high']:+.4f}] {cell['verdicts'][c]}"
+        )
+    print(
+        f"read over K={cell['runs']} of {cell['runs_computed']} computed; examples "
+        f"{cell['examples']}, dropped {cell['dropped']}; reproducible "
+        f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
+        f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
+    )
     args.out.write_text(json.dumps(report, indent=2) + "\n")
     print(f"wrote {args.out}")
 

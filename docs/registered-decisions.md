@@ -89,7 +89,7 @@ it was set before any test data existed.
 ### Reading the test window: everything it is read under is fixed first (registered 2026-10-05)
 
 A test-window read (`scripts/partition_pilot.py`) takes its K from the organization's own
-development pilot (`--sizing`), its bounds from the organization's own simulation
+development pilot (`--sizing`), its bounds from the organization's own simulation at that K
 (`--sensitivity`), outcome-neutral check 5 (`--planted`), and 10,000 resamples at bootstrap seed
 7, the values every development reading used; it refuses to run without any of them. A GitHub
 member's test window is read only after the members are frozen. So nothing the reading depends on

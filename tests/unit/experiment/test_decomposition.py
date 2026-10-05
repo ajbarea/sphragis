@@ -383,8 +383,9 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "planted_convention": {"passed": True},
-        "k_source": f"partition-pilot-{org}.json: sizing.runs",
-        "sensitivity": {"org": org, "cells": 1},
+        "runs": 24,
+        "k_from": {"file": f"partition-pilot-{org}.json", "org": org, "runs": 24},
+        "sensitivity": {"org": org, "cells": 1, "runs": 24},
         "bootstrap_seed": 7,
     }
 
@@ -544,14 +545,29 @@ _GOOD = _replication_cell(0.01, 0.02, 0.001)
             "not at 0.975 alone",
         ),
         ({"apache": _GOOD | {"estimate": float("nan")}}, {"apache": _at(0.03)}, "estimate"),
-        ({"apache": _GOOD | {"k_source": "all runs"}}, {"apache": _at(0.03)}, "--sizing"),
+        ({"apache": _GOOD | {"k_from": None}}, {"apache": _at(0.03)}, "K are not from"),
         (
-            {"apache": _GOOD | {"sensitivity": {"org": "openstack", "cells": 1}}},
+            {"apache": _GOOD | {"k_from": {"org": "openstack", "runs": 24}}},
             {"apache": _at(0.03)},
-            "not from its own simulation",
+            "K are not from its own k_from",
         ),
         (
-            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 3}}},
+            {"apache": _GOOD | {"k_from": {"org": "apache", "runs": 16}}},
+            {"apache": _at(0.03)},
+            "k_from is at K = 16",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {"org": "openstack", "cells": 1, "runs": 24}}},
+            {"apache": _at(0.03)},
+            "bounds are not from its own sensitivity",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 1, "runs": 40}}},
+            {"apache": _at(0.03)},
+            "sensitivity is at K = 40",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {"org": "apache", "cells": 3, "runs": 24}}},
             {"apache": _at(0.03)},
             "simulation of one cell",
         ),

@@ -1,7 +1,7 @@
-"""What makes an H1 cell readable: its level keys, its numbers, its draws.
+"""What makes an H1 cell readable: its level keys, its numbers, its draws, its test-window read.
 
-Shared by the confirmatory gates (`decomposition.py`) and the readings beside them
-(`across.py`), so neither depends on the other for it. Standard library only.
+Shared by the confirmatory gates (`decomposition.py`), the readings beside them (`across.py`) and
+`scripts/partition_pilot.py`, so each checks a cell by the same rules. Standard library only.
 """
 
 from __future__ import annotations
@@ -23,10 +23,15 @@ TEST_BOOTSTRAP_SEED = 7
 
 def level_key(confidence: Any) -> float:
     """A confidence level as a dictionary key: float noise rounded off, a JSON string key read."""
+    if isinstance(confidence, bool):
+        raise ValueError(f"{confidence!r} is not a confidence level")
     try:
-        return round(float(confidence), 9)
-    except (TypeError, ValueError) as error:
+        level = float(confidence)
+    except (TypeError, ValueError, OverflowError) as error:
         raise ValueError(f"{confidence!r} is not a confidence level") from error
+    if not 0.0 < level < 1.0:
+        raise ValueError(f"{confidence!r} is not a confidence level")
+    return round(level, 9)
 
 
 def by_level(values: Mapping[Any, Any]) -> dict[float, Any]:
@@ -55,11 +60,12 @@ def below_level(p: float, alpha: float) -> bool:
 
 def is_real(value: Any) -> bool:
     """A finite number (a numpy scalar too), never a bool."""
-    return (
-        isinstance(value, numbers.Real)
-        and not isinstance(value, bool)
-        and math.isfinite(float(value))
-    )
+    if not isinstance(value, numbers.Real) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except OverflowError:
+        return False
 
 
 def require_resamples(resamples: Any, *, alpha: float, org: str) -> None:
@@ -127,3 +133,41 @@ def require_readable(
                 f"{alpha:g}, so they are not from the same draws"
             )
     return normalized
+
+
+def require_test_read(report: Mapping[str, Any], *, org: str) -> None:
+    """Refuse a `partition_pilot.py` report unless it is a test-window read registered in advance.
+
+    "Reading the test window" (registered-decisions.md): read on the test window with check 5
+    passed; K from the organization's own development pilot (`k_from`), and bounds from its own
+    simulation, run at that same K (`sensitivity`); at `TEST_RESAMPLES` draws and
+    `TEST_BOOTSTRAP_SEED`. The pilot runs this on its report before writing it, and the gates on
+    reading it, so both hold one rule.
+    """
+    absent = [
+        f
+        for f in ("window", "planted_convention", "k_from", "sensitivity", "runs", "resamples")
+        if f not in report
+    ]
+    if "bootstrap_seed" not in report:
+        absent.append("bootstrap_seed")
+    if absent:
+        raise ValueError(f"{org}: the report has no {absent}")
+    if report["window"] != "test":
+        raise ValueError(f"{org}: read on the {report['window']} window, not the test window")
+    planted = report["planted_convention"]
+    if not (isinstance(planted, Mapping) and planted.get("passed") is True):
+        raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
+    for name, what in (("k_from", "K"), ("sensitivity", "bounds")):
+        source = report[name]
+        if not (isinstance(source, Mapping) and source.get("org") == org):
+            raise ValueError(f"{org}: its {what} are not from its own {name}")
+        if source.get("runs") != report["runs"]:
+            raise ValueError(
+                f"{org}: {name} is at K = {source.get('runs')!r}, the read at {report['runs']!r}"
+            )
+    if (report["resamples"], report["bootstrap_seed"]) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
+        raise ValueError(
+            f"{org}: read at {report['resamples']} resamples, seed {report['bootstrap_seed']}; "
+            f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
+        )

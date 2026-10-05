@@ -308,8 +308,8 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         **cell,
         "window": "test",
         "planted_convention": {"passed": True},
-        "k_source": "partition-pilot-apache.json: sizing.runs",
-        "sensitivity": {"org": "apache", "cells": 1},
+        "k_from": {"file": "partition-pilot-apache.json", "org": "apache", "runs": 4},
+        "sensitivity": {"org": "apache", "cells": 1, "runs": 4},
     }
     loaded = json.loads(json.dumps(report))
     out = decomposition.replication_gate({"apache": loaded}, bounds={"apache": {level: bound}})
@@ -327,3 +327,10 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
 def test_k_comes_from_the_organizations_own_development_pilot(artifact: dict, match: str) -> None:
     with pytest.raises(ValueError, match=match):
         pilot_sizing(artifact, "pilot", org="apache")
+
+
+def test_a_test_read_sizes_k_only_on_a_pilot_that_names_its_organization() -> None:
+    legacy = {"k_source": "all runs", "sizing": {"runs": 24}}
+    assert pilot_sizing(legacy, "pilot", org="openstack") == 24
+    with pytest.raises(ValueError, match="does not name its organization"):
+        pilot_sizing(legacy, "pilot", org="wikimedia", require_org=True)

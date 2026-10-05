@@ -23,12 +23,11 @@ from sphragis.corpus.halves import suffix
 from sphragis.experiment.across import partial_conjunction
 from sphragis.experiment.cells import (
     MIN_RESAMPLES,
-    TEST_BOOTSTRAP_SEED,
-    TEST_RESAMPLES,
     by_level,
     is_real,
     level_key,
     require_readable,
+    require_test_read,
 )
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import require_unique_ids, to_clusters
@@ -125,15 +124,7 @@ REPLICATION_MEMBERS: tuple[str, ...] | None = None
 # hypotheses on the Gerrit side.
 REPLICATION_CONFIDENCE = 0.975
 
-_CELL_FIELDS = (
-    "estimate",
-    "bounds",
-    "window",
-    "planted_convention",
-    "k_source",
-    "sensitivity",
-    "bootstrap_seed",
-)
+_CELL_FIELDS = ("estimate", "bounds")
 
 
 def replication(members: Iterable[str]) -> dict[str, Any]:
@@ -189,23 +180,9 @@ def replication_gate(
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
         cell = cells[org]
-        if cell["window"] != "test":
-            raise ValueError(f"{org}: read on the {cell['window']} window, not the test window")
-        planted = cell["planted_convention"]
-        if not (isinstance(planted, Mapping) and planted.get("passed") is True):
-            raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")
-        if cell["k_source"] == "all runs":
-            raise ValueError(f"{org}: K was not read from its development pilot (--sizing)")
-        simulation = cell["sensitivity"]
-        if not (isinstance(simulation, Mapping) and simulation.get("org") == org):
-            raise ValueError(f"{org}: its bounds are not from its own simulation")
-        if simulation.get("cells") != 1:
+        require_test_read(cell, org=org)
+        if cell["sensitivity"].get("cells") != 1:
             raise ValueError(f"{org}: its bounds are not from a simulation of one cell")
-        if (cell["resamples"], cell["bootstrap_seed"]) != (TEST_RESAMPLES, TEST_BOOTSTRAP_SEED):
-            raise ValueError(
-                f"{org}: read at {cell['resamples']} resamples, seed {cell['bootstrap_seed']}; "
-                f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
-            )
         levels_read = set(intervals[org])
         if levels_read != {level}:
             raise ValueError(

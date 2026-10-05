@@ -7796,10 +7796,14 @@ at bootstrap seed 7, as it needed `--planted`, and a member's only after the fre
 here as "Reading the test window"). Each run's window is read from every half's source with the
 parser check 5 uses, so a run with one half on the test window is never taken for development.
 `pilot_sizing` refuses a test-window reading or another organization's pilot as the source of K,
-and the pilot refuses another organization's simulation as the source of bounds. The report
-records the window it read, the simulation it took bounds from and the bootstrap seed; the gate
-takes only a member's test-window report whose check 5 passed, with K from `--sizing`, bounds
-from its own simulation, the registered resamples and seed, read at 97.5% alone. Decided here: a member's bound comes from a simulation of one cell at 97.5%
+and on a test-window read a pilot that does not name its organization: the committed OpenStack and
+Wikimedia pilots predate the field, so they are rerun before their test reads. The pilot refuses
+another organization's simulation as the source of bounds. The report records the window, the
+pilot K came from (`k_from`), the simulation and the K it ran at (`sensitivity`), and the
+bootstrap seed; `require_test_read` in `cells.py` checks all of them, and that both sources are at
+the read's K, on the report the pilot is about to write (before any verdict is printed) and again
+in the gate, so the two hold one rule. The gate adds what is the family's own: a one-cell
+simulation, 97.5% alone. Decided here: a member's bound comes from a simulation of one cell at 97.5%
 (`--h1-cells 1`), since it is read alone, not as one of an intersection; registered-decisions.md
 says so, and the gate checks the report's simulation is of one cell. Without `--replication` the
 pilot takes only the four registered Gerrit organizations. The partition simulation reads its levels from the pilot, so the member's bound is at
