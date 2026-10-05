@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 from sphragis.corpus.github import GITHUB_ORGS
+from sphragis.experiment import decomposition
 from sphragis.experiment.decomposition import (
     H2_PAIR,
     MIN_RESAMPLES,
@@ -363,7 +364,9 @@ def test_replication_refuses_a_gerrit_late_or_repeated_member(members: list, mat
         replication(members)
 
 
-def _replication_cell(low: float, high: float, p: float, resamples: int = 10_000) -> dict:
+def _replication_cell(
+    low: float, high: float, p: float, *, bound: float | None = 0.03, resamples: int = 10_000
+) -> dict:
     return {
         "estimate": (low + high) / 2,
         "intervals": {
@@ -372,21 +375,31 @@ def _replication_cell(low: float, high: float, p: float, resamples: int = 10_000
         },
         "p_one_sided": p,
         "resamples": resamples,
+        "bounds": {REPLICATION_CONFIDENCE: bound, 0.95: 1.0},
     }
 
 
-def _at(bound: float) -> dict:
+def _at(bound: Any) -> dict:
     return {REPLICATION_CONFIDENCE: bound, 0.95: 1.0}
 
 
-def test_replication_gate_reads_each_member_and_the_partial_conjunction() -> None:
+@pytest.fixture
+def frozen(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
+    def freeze(*members: str) -> None:
+        monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", members)
+
+    return freeze
+
+
+def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) -> None:
+    frozen("dotnet", "llvm", "apache")
     cells = {
         "apache": _replication_cell(0.02, 0.05, 0.0001),
-        "llvm": _replication_cell(-0.004, 0.006, 0.3),
+        "llvm": _replication_cell(-0.004, 0.006, 0.3, bound=0.008),
         "dotnet": _replication_cell(0.005, 0.03, 0.002),
     }
     bounds = {"apache": _at(0.03), "llvm": _at(0.008), "dotnet": _at(0.03)}
-    out = replication_gate(cells, members=["dotnet", "llvm", "apache"], bounds=bounds)
+    out = replication_gate(cells, bounds=bounds)
     assert out["members"] == ("apache", "llvm", "dotnet")
     assert out["not_collected"] == ("grafana",)
     assert {o: c["verdict"] for o, c in out["cells"].items()} == {
@@ -401,24 +414,31 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction() -> Non
     assert out["partial_conjunction"]["at_least"] == 2
 
 
-def test_replication_gate_reads_a_cell_and_bounds_back_from_json() -> None:
-    cell = _replication_cell(-0.004, 0.006, 0.3)
-    cell["verdicts"] = {REPLICATION_CONFIDENCE: "bounded"}
+def test_replication_gate_refuses_to_read_before_the_members_are_frozen() -> None:
+    assert decomposition.REPLICATION_MEMBERS is None
+    with pytest.raises(ValueError, match="not frozen"):
+        replication_gate({}, bounds={})
+
+
+def test_replication_gate_reads_a_cell_and_bounds_back_from_json(frozen) -> None:
+    frozen("llvm")
+    cell = _replication_cell(-0.004, 0.006, 0.3, bound=0.008)
     loaded = json.loads(json.dumps({"cells": {"llvm": cell}, "bounds": {"llvm": _at(0.008)}}))
-    out = replication_gate(loaded["cells"], members=["llvm"], bounds=loaded["bounds"])
+    out = replication_gate(loaded["cells"], bounds=loaded["bounds"])
     assert out["cells"]["llvm"]["verdict"] == "bounded"
 
 
-def test_replication_gate_refuses_a_stored_verdict_from_another_bound() -> None:
-    cell = _replication_cell(-0.004, 0.006, 0.3) | {"verdicts": {REPLICATION_CONFIDENCE: "bounded"}}
-    with pytest.raises(ValueError, match="computed with another"):
-        replication_gate({"llvm": cell}, members=["llvm"], bounds={"llvm": _at(0.005)})
-
-
-def test_an_empty_family_has_no_partial_conjunction() -> None:
-    out = replication_gate({}, members=[], bounds={})
+def test_an_empty_family_has_no_partial_conjunction(frozen) -> None:
+    frozen()
+    out = replication_gate({}, bounds={})
     assert out["cells"] == {} and out["partial_conjunction"] is None
     assert out["not_collected"] == REPLICATION_FAMILY
+
+
+def test_a_frozen_member_outside_the_family_is_refused(frozen) -> None:
+    frozen("apache", "openjdk")
+    with pytest.raises(ValueError, match="unknown organization"):
+        replication_gate({}, bounds={})
 
 
 _GOOD = _replication_cell(0.01, 0.02, 0.001)
@@ -432,10 +452,28 @@ _GOOD = _replication_cell(0.01, 0.02, 0.001)
         ({"apache": _GOOD}, {"apache": _at(0.03), "grafana": _at(0.03)}, "bounds for organization"),
         ({}, {"apache": _at(0.03)}, "no cell"),
         ({"apache": _GOOD}, {}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": _at(float("nan"))}, "no registered detectable effect"),
-        ({"apache": _GOOD}, {"apache": {REPLICATION_CONFIDENCE: None}}, "no registered"),
-        ({"apache": _GOOD}, {"apache": {0.95: 0.03}}, "no registered detectable effect"),
         ({"apache": _GOOD}, {"apache": 0.03}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": {0.95: 0.03}}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(float("nan"))}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(None)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(True)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(0.0)}, "no registered detectable effect"),
+        ({"apache": _GOOD}, {"apache": _at(-0.3)}, "no registered detectable effect"),
+        (
+            {"apache": _GOOD},
+            {"apache": {REPLICATION_CONFIDENCE: 0.03, "0.975": 0.5}},
+            "two keys name level",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, bound=None)},
+            {"apache": _at(0.03)},
+            "computed under bound None",
+        ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.001, bound=0.05)},
+            {"apache": _at(0.03)},
+            "computed under bound 0.05",
+        ),
         (
             {"apache": _replication_cell(0.01, 0.02, 0.001, resamples=80)},
             {"apache": _at(0.03)},
@@ -451,11 +489,34 @@ _GOOD = _replication_cell(0.01, 0.02, 0.001)
             {"apache": _at(0.03)},
             "no interval at 0.975",
         ),
+        (
+            {"apache": _replication_cell(0.01, 0.02, 0.5)},
+            {"apache": _at(0.03)},
+            "disagree",
+        ),
+        (
+            {"apache": _replication_cell(-0.01, 0.02, 0.001)},
+            {"apache": _at(0.03)},
+            "disagree",
+        ),
+        (
+            {"apache": {k: v for k, v in _GOOD.items() if k != "resamples"}},
+            {"apache": _at(0.03)},
+            r"apache: the cell has no \['resamples'\]",
+        ),
     ],
 )
-def test_replication_gate_refuses(cells: dict, bounds: dict, match: str) -> None:
+def test_replication_gate_refuses(frozen, cells: dict, bounds: dict, match: str) -> None:
+    frozen("apache")
     with pytest.raises(ValueError, match=match):
-        replication_gate(cells, members=["apache"], bounds=bounds)
+        replication_gate(cells, bounds=bounds)
+
+
+@pytest.mark.parametrize("bad", [0.0, -0.01, True, float("nan")])
+def test_the_gerrit_gate_refuses_a_bound_that_is_not_a_detectable_effect(bad: Any) -> None:
+    detectable = {"H1": {"openstack": {0.95: bad}}}
+    with pytest.raises(ValueError, match="H1:openstack"):
+        _gate(_by_relation(0.75, 0.25, 0.25), admitted=("openstack",), detectable=detectable)
 
 
 def test_the_replication_family_is_registered_on_the_github_route() -> None:

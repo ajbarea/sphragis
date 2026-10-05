@@ -18,7 +18,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 1. Collect Apache, then LLVM, .NET, Grafana, as the GitHub replication family (pilot, train and
    dev windows) to freeze members by 2026-11-20; then each member's admissible list, development
-   pilot and simulation before its test window. The family is read by `replication_gate()`.
+   pilot and simulation before its test window. At the freeze, one commit sets
+   `REPLICATION_MEMBERS`; `replication_gate()` refuses to read the family before it.
 2. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
 3. Rebuild the retrieval comparator (#77) on the registered runner.
 4. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;

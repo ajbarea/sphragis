@@ -7762,14 +7762,21 @@ final-model baseline and stronger learned attackers (ROADMAP).
 `replication()` and `replication_gate()` in `sphragis/experiment/decomposition.py` read the
 GitHub family as registered on 2026-10-04. The family takes only Apache, LLVM, .NET and Grafana,
 in that order; a Gerrit organization is refused there, as `design()` refuses a GitHub one, and a
-registered organization outside the members is reported as not collected. The gate refuses a cell
-or a bound for any organization outside the members, so none joins after Stage 1; a member
-without a finite detectable effect at 97.5% from its own simulation, keyed by level as
-`detectable_effects` gives it; fewer than 1,000 resamples, as every other gate does; and a verdict
-stored with a cell that disagrees with the one its interval gives under the registered bound. It
-reads each verdict from the cell's two-sided 97.5% interval and r from the partial conjunction at
-one-sided 0.0125. The 97.5% level is registered as fixed, not as a Holm step. A cell read back from
-its JSON artifact, with string level keys, is accepted: level keys now pass through one helper in
-every gate. The resample-count check and the one-sided level are shared with
-`across_organizations`, and the meaningful rule with `h1_over_partitions`. An empty family has
-no r.
+registered organization outside the members is reported as not collected.
+
+The members are a constant, `REPLICATION_MEMBERS`, set by the commit that freezes them at Stage 1,
+never an argument; until then the gate refuses to read the family, and afterwards it refuses a
+cell or a bound for any organization outside them, so none joins later. Each member's bound comes
+by level from its own partition simulation (`sensitivity_bounds`), must be a positive finite
+number, and must equal the bound its cell was computed under, which `h1_over_partitions` now
+records in the cell. The gate also refuses fewer than 1,000 resamples, a resample count that puts
+the 0.0125 bound between draws, a missing field, and a p-value that disagrees with its interval
+(below 0.0125 exactly when the lower bound is above zero). It reads each verdict from the cell's
+two-sided 97.5% interval and r from the partial conjunction at one-sided 0.0125. The 97.5% level
+is registered as fixed, not as a Holm step. An empty family has no r.
+
+Level keys in the gates and in `h1_over_partitions`, `sensitivity_bounds` and
+`detectable_effects` pass through one helper, so a cell or bound read back from JSON (string keys)
+gives the same reading, and two keys naming one level are refused. The Gerrit gate now refuses a
+bound that is not a positive finite number too. A test writes an `h1_over_partitions` cell to
+JSON and reads it back through the gate for each of the three verdicts.

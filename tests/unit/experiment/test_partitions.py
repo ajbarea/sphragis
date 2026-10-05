@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import math
 from statistics import NormalDist, stdev
 
 import pytest
 
+from sphragis.experiment import decomposition
 from sphragis.experiment.decomposition import SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
@@ -81,11 +83,15 @@ def test_runs_needed_clamps_to_the_burn_in_and_the_list() -> None:
         runs_needed([0.01])
 
 
-def _results(seed: int, wins: dict[str, set[int]], n: int = 24, missing: int | None = None):
+def _results(
+    seed: int, wins: dict[str, set[int]], n: int = 24, missing: int | None = None, org: str = "org"
+):
     """Placebo results for one run: each half's own and sibling adapter on each half's changes."""
     results = {}
-    for window, first in (("org-a", 0), ("org-b", n)):
-        for trained in ("org-a", "org-b"):
+    halves = (f"{org}-a", f"{org}-b")
+    wins = {h: wins[w] for h, w in zip(halves, ("org-a", "org-b"), strict=True)}
+    for window, first in ((halves[0], 0), (halves[1], n)):
+        for trained in halves:
             rows = [
                 {
                     "id": f"x{i}",
@@ -268,3 +274,37 @@ def test_a_cell_carries_the_inputs_of_the_readings_beside_the_pass_rule() -> Non
         assert cell["meaningful"][level] == (interval["low"] > SESOI)
         if interval["low"] > 0:
             assert cell["p_one_sided"] <= (1 - level) / 2
+
+
+@pytest.mark.parametrize(
+    ("wins", "every_run", "bound", "verdict"),
+    [
+        ({"org-a": set(range(0, 24, 2)), "org-b": set(range(24, 48, 2))}, True, 0.4, "supported"),
+        ({"org-a": {0}, "org-b": set()}, False, 0.4, "bounded"),
+        ({"org-a": {0}, "org-b": set()}, False, 0.01, "inconclusive"),
+    ],
+)
+def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
+    monkeypatch: pytest.MonkeyPatch, wins: dict, every_run: bool, bound: float, verdict: str
+) -> None:
+    monkeypatch.setattr(decomposition, "REPLICATION_MEMBERS", ("apache",))
+    nothing = {"org-a": set(), "org-b": set()}
+    runs = [
+        (_results(s, wins if every_run or s == 1 else nothing, org="apache"), s)
+        for s in range(1, 5)
+    ]
+    level = decomposition.REPLICATION_CONFIDENCE
+    cell = h1_over_partitions(
+        runs,
+        org="apache",
+        runs_fixed=4,
+        levels=[level, 0.95],
+        bounds={level: bound, 0.95: bound},
+        bootstrap_seed=3,
+        resamples=10_000,
+    )
+    assert cell["verdicts"][level] == verdict
+    loaded = json.loads(json.dumps(cell))
+    out = decomposition.replication_gate({"apache": loaded}, bounds={"apache": {level: bound}})
+    assert out["cells"]["apache"]["verdict"] == verdict
+    assert out["partial_conjunction"]["at_least"] == (verdict == "supported")

@@ -19,7 +19,9 @@ from typing import Any
 from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.decomposition import (
     SESOI,
+    by_level,
     cell_verdict,
+    level_key,
     meaningful,
     project_clusters,
     within_sesoi,
@@ -186,11 +188,11 @@ def sensitivity_bounds(
     if target not in by_target:
         raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")
     bounds = {}
+    levels_in = by_level(by_target[target]["by_level"])
     for c in levels:
-        by_level = by_target[target]["by_level"]
-        if str(c) not in by_level:
-            raise ValueError(f"no bound at level {c}; the artifact has {sorted(by_level)}")
-        by_cells = by_level[str(c)]["by_cells"]
+        if level_key(c) not in levels_in:
+            raise ValueError(f"no bound at level {c}; the artifact has {sorted(levels_in)}")
+        by_cells = levels_in[level_key(c)]["by_cells"]
         if str(cells) not in by_cells:
             raise ValueError(
                 f"no bound for {cells} H1 cell(s); the artifact has {sorted(by_cells)}"
@@ -261,6 +263,7 @@ def h1_over_partitions(
     left_out = [equal_halves(common_runs([run], org=org, metric=metric)[0][0]) for run in runs[k:]]
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
     intervals = {c: percentile_interval(draws, c) for c in levels}
+    registered = by_level(bounds) if bounds else {}
     return {
         "estimate": estimate,
         "per_run": per_run,
@@ -271,7 +274,7 @@ def h1_over_partitions(
         "runs_left_out": left_out,
         "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
         "verdicts": {
-            c: cell_verdict(lo, hi, bound=bounds.get(c) if bounds else None)
+            c: cell_verdict(lo, hi, bound=registered.get(level_key(c)))
             for c, (lo, hi) in intervals.items()
         },
         "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
@@ -281,5 +284,7 @@ def h1_over_partitions(
         "p_one_sided": one_sided_p(draws),
         "bootstrap_se": stdev(draws),
         "resamples": resamples,
+        # The bounds the verdicts were read under, so a gate can check them against its own.
+        "bounds": {c: registered.get(level_key(c)) for c in levels},
         **examples,
     }

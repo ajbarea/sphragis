@@ -110,22 +110,48 @@ def level_key(confidence: float | str) -> float:
 
 
 def by_level(values: Mapping[Any, Any]) -> dict[float, Any]:
-    """A mapping keyed by confidence level, its keys passed through `level_key`."""
-    return {level_key(c): v for c, v in values.items()}
+    """A mapping keyed by confidence level, its keys passed through `level_key`.
+
+    Two keys naming one level (0.975 and "0.975") are refused rather than one silently kept.
+    """
+    out: dict[float, Any] = {}
+    for c, v in values.items():
+        key = level_key(c)
+        if key in out:
+            raise ValueError(f"two keys name level {key}")
+        out[key] = v
+    return out
+
+
+def valid_bound(bound: Any) -> bool:
+    """A detectable effect: a finite number above zero, never a bool."""
+    return (
+        isinstance(bound, int | float)
+        and not isinstance(bound, bool)
+        and math.isfinite(bound)
+        and bound > 0
+    )
 
 
 # The GitHub replication family in registration order (registered-decisions.md, "GitHub
 # organizations"): read on H1 alone, after the confirmatory hypotheses, binding no verdict.
 REPLICATION_FAMILY = ("apache", "llvm", "dotnet", "grafana")
 
+# The members, set once by the commit that freezes them at Stage 1 (2026-11-20): those whose
+# pilot, train and development windows are frozen and whose split meets the criteria at N.
+# None until then, and `replication_gate` refuses to read the family.
+REPLICATION_MEMBERS: tuple[str, ...] | None = None
+
 # Each member's two-sided interval; its one-sided level, 0.0125, is the partial conjunction's.
 # Registered as a fixed level, not a Holm step: it does not move with the number of confirmatory
 # hypotheses on the Gerrit side.
 REPLICATION_CONFIDENCE = 0.975
 
+_CELL_FIELDS = ("estimate", "intervals", "p_one_sided", "resamples", "bounds")
+
 
 def replication(members: Iterable[str]) -> dict[str, Any]:
-    """The replication family: the members frozen and split-checked by 2026-11-20.
+    """The replication family for a set of members.
 
     `members` must hold only names from `REPLICATION_FAMILY`, no duplicate, and may be empty;
     every registered organization not among them is reported as not collected. A Gerrit
@@ -142,66 +168,66 @@ def replication(members: Iterable[str]) -> dict[str, Any]:
 def replication_gate(
     cells: Mapping[str, Mapping[str, Any]],
     *,
-    members: Iterable[str],
     bounds: Mapping[str, Mapping[float, float]],
 ) -> dict[str, Any]:
-    """Each member's H1 verdict and the family's partial conjunction r.
+    """Each frozen member's H1 verdict and the family's partial conjunction r.
 
-    `cells` holds one `h1_over_partitions` cell per member and no other organization, so none
-    joins after Stage 1; a cell read back from its JSON artifact is accepted. `bounds` holds each
-    member's detectable effect by level, from its own simulation and fixed before its test
-    window, as `detectable_effects` gives them; a member without a finite one at
-    `REPLICATION_CONFIDENCE`, or a bound for any other organization, is refused. Verdicts are
-    read from each cell's interval at that level, and a verdict stored with the cell that
-    disagrees (computed under another bound) is refused; r is read at its one-sided level.
+    The members are `REPLICATION_MEMBERS`, never an argument, so none joins after Stage 1; the
+    gate refuses to run before they are frozen. `cells` holds one `h1_over_partitions` cell per
+    member and no other organization (a cell read back from its JSON artifact is accepted).
+    `bounds` holds each member's bounds by level from its own partition simulation, as
+    `sensitivity_bounds` gives them, fixed before its test window; a member without a positive
+    finite bound at `REPLICATION_CONFIDENCE`, a bound for any other organization, or a cell
+    computed under a different bound is refused. Each verdict is read from the cell's interval at
+    that level, and r at its one-sided level from p-values that must agree with the intervals.
     """
-    family = replication(members)
+    if REPLICATION_MEMBERS is None:
+        raise ValueError("the replication family's members are not frozen yet (Stage 1)")
+    family = replication(REPLICATION_MEMBERS)
     listed = set(family["members"])
-    extra = sorted(set(cells) - listed)
-    if extra:
-        raise ValueError(f"cells for organization(s) outside the family's members: {extra}")
-    stray = sorted(set(bounds) - listed)
-    if stray:
-        raise ValueError(f"bounds for organization(s) outside the family's members: {stray}")
-    missing = [o for o in family["members"] if o not in cells]
-    if missing:
-        raise ValueError(f"no cell for member(s) {missing}")
+    for what, names in (("cells", cells), ("bounds", bounds)):
+        extra = sorted(set(names) - listed)
+        if extra:
+            raise ValueError(f"{what} for organization(s) outside the family's members: {extra}")
     level = level_key(REPLICATION_CONFIDENCE)
-    registered: dict[str, float] = {}
-    for org in family["members"]:
-        by_org = bounds.get(org)
-        bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
-        if isinstance(bound, int | float) and math.isfinite(bound):
-            registered[org] = float(bound)
-    unbounded = [o for o in family["members"] if o not in registered]
-    if unbounded:
-        raise ValueError(
-            f"no registered detectable effect at {REPLICATION_CONFIDENCE} for member(s) {unbounded}"
-        )
-    thin = [o for o in family["members"] if cells[o]["resamples"] < MIN_RESAMPLES]
-    if thin:
-        raise ValueError(f"at least {MIN_RESAMPLES} resamples, fewer for {thin}")
     alpha = one_sided_alpha(REPLICATION_CONFIDENCE)
-    require_bound_on_a_draw(cells, alpha=alpha)
     read: dict[str, dict[str, Any]] = {}
     for org in family["members"]:
-        interval = by_level(cells[org]["intervals"]).get(level)
+        if org not in cells:
+            raise ValueError(f"no cell for member {org}")
+        cell = cells[org]
+        absent = [f for f in _CELL_FIELDS if f not in cell]
+        if absent:
+            raise ValueError(f"{org}: the cell has no {absent}")
+        by_org = bounds.get(org)
+        bound = by_level(by_org).get(level) if isinstance(by_org, Mapping) else None
+        if not valid_bound(bound):
+            raise ValueError(f"{org}: no registered detectable effect at {REPLICATION_CONFIDENCE}")
+        computed_under = by_level(cell["bounds"] or {}).get(level)
+        if computed_under != bound:
+            raise ValueError(
+                f"{org}: the cell was computed under bound {computed_under!r}, "
+                f"the registered bound is {bound!r}"
+            )
+        if cell["resamples"] < MIN_RESAMPLES:
+            raise ValueError(f"{org}: at least {MIN_RESAMPLES} resamples, got {cell['resamples']}")
+        require_bound_on_a_draw({org: cell}, alpha=alpha)
+        interval = by_level(cell["intervals"]).get(level)
         if interval is None:
             raise ValueError(f"{org}: no interval at {REPLICATION_CONFIDENCE}")
-        verdict = cell_verdict(interval["low"], interval["high"], bound=registered[org])
-        stored = by_level(cells[org].get("verdicts") or {}).get(level)
-        if stored is not None and stored != verdict:
+        below = round(cell["p_one_sided"], 12) < round(alpha, 12)
+        if below != (interval["low"] > 0.0):
             raise ValueError(
-                f"{org}: the cell's own verdict {stored!r} disagrees with {verdict!r} under the "
-                "registered bound, so it was computed with another"
+                f"{org}: p-value {cell['p_one_sided']} and interval low {interval['low']} disagree "
+                f"at one-sided {alpha:g}, so they are not from the same draws"
             )
         read[org] = {
-            "estimate": cells[org]["estimate"],
+            "estimate": cell["estimate"],
             "interval": dict(interval),
-            "bound": registered[org],
-            "verdict": verdict,
+            "bound": bound,
+            "verdict": cell_verdict(interval["low"], interval["high"], bound=bound),
             "meaningful": meaningful(interval["low"]),
-            "p_one_sided": cells[org]["p_one_sided"],
+            "p_one_sided": cell["p_one_sided"],
         }
     return {
         **family,
@@ -281,7 +307,7 @@ def detectable_effects(sensitivity: Mapping[str, Any]) -> dict[str, dict[str, di
     """
     return {
         "H1": {
-            org: {float(c): v["minimum_detectable_effect"] for c, v in cell["by_level"].items()}
+            org: by_level({c: v["minimum_detectable_effect"] for c, v in cell["by_level"].items()})
             for org, cell in sensitivity["cells"].items()
         }
     }
@@ -480,7 +506,8 @@ def decomposition_gate(
     for name, units in confirmatory.items():
         for unit in units:
             org = unit if name == "H1" else unit[0]
-            missing = [c for c in levels if level_key(c) not in bounds.get(name, {}).get(org, {})]
+            registered = bounds.get(name, {}).get(org, {})
+            missing = [c for c in levels if not valid_bound(registered.get(level_key(c)))]
             if missing:
                 raise ValueError(f"no registered detectable effect for {name}:{org} at {missing}")
 

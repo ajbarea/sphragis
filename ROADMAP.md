@@ -106,7 +106,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   in that order (pilot, train, dev windows); members are those frozen and split-checked by
   2026-11-20, named in Stage 1. Then per member: admissible list, development pilot for K,
   sensitivity simulation, all before its test window is fetched. The family is read by
-  `replication_gate()` beside `design()` (2026-10-05). Sized 2026-10-01
+  `replication_gate()` beside `design()` (2026-10-05), once the freeze commit sets
+  `REPLICATION_MEMBERS`. Sized 2026-10-01
   (`github-sizing-report.json`): Apache and LLVM are of H1-cell size, .NET and Grafana of RQ2 size; OpenJDK and HashiCorp borderline. Needs: a GitHub
   collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
   removed; pseudonymised at ingestion); GitHub's own thread-to-example conversion from a built pilot
