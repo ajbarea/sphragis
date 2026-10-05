@@ -7899,3 +7899,19 @@ its intervals, its per-run values and the sizing are unchanged, so K stays 24 an
 pilot's per-run spread still matches the calibration its simulation records (`same_calibration`),
 as a test read checks. The reruns add the fields the current pilot writes (`org`, `window`,
 `p_one_sided`, `bootstrap_se`, `meaningful`) and record the absent bounds per level.
+
+### Power at a test window's realised size implemented (2026-10-05)
+
+"Fetch horizon" registers that a test window holding fewer changes than its simulation projected
+is reported beside its verdict with the simulation's power at the realised size.
+`scripts/power_at_size.py` computes it. It takes the test report and the simulation the report was
+read under, and refuses a simulation whose organization, K, projected size or bounds differ from
+the report's. It reruns the simulation's trials at the number of changes the cell was read on, at
+the lift that registered each level's bound and at the calibrated run shift. Neither the lift nor
+the shift depends on the test size, so no calibration or bisection is redone. It records the share
+of trials supported at each level and its Monte Carlo standard error, sqrt(p(1 - p) / trials), as
+Morris, White and Crowther (Stat. Med. 2019) ask of simulated performance. Power is at the
+registered bound, never at an observed effect. Both gates take these artifacts as `powers`, require
+one for every organization in `below_projection` and none for any other, and report each level's
+power in the cell's `size`. `partition_sensitivity.py` now records its seed, and the pool and
+partition rebuild both scripts use is one function (`pools`).

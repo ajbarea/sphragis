@@ -1464,16 +1464,84 @@ def test_an_across_reading_that_cannot_be_computed_withholds_no_verdict(
     assert out["across"]["partial_conjunction"]["k"] == len(orgs)
 
 
+def _power(org: str, *, changes: int = 1_999, cells: int = 2, bound: float = 0.03) -> dict:
+    """A `power_at_size.py` artifact at the registered bound, read at H1-alone's 95%."""
+    return {
+        "org": org,
+        "changes": changes,
+        "planned_changes": 2_000,
+        "spread_target": "sizing_bound_90",
+        "cells": cells,
+        "by_level": {"0.95": {"lift": 0.05, "bound": bound, "power": 0.93, "mc_se": 0.008}},
+    }
+
+
 def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
     admitted("openstack", "wikimedia")
     reports = {
         "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
         "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001, changes=2_000),
     }
-    out = h1_test_gate(reports, simulations={o: _gerrit_sim(o, 0.03) for o in reports})
+    out = h1_test_gate(
+        reports,
+        simulations={o: _gerrit_sim(o, 0.03) for o in reports},
+        powers=json.loads(json.dumps({"openstack": _power("openstack")})),
+    )
     assert out["design"] == design(("openstack", "wikimedia"))
     assert out["sesoi"] == decomposition.SESOI
     assert out["detectable"] == {"H1": {o: {0.95: 0.03} for o in reports}}
-    assert out["cells"]["openstack"]["size"] == {"projected": 2_000, "realised": 1_999}
+    assert out["cells"]["openstack"]["size"] == {
+        "projected": 2_000,
+        "realised": 1_999,
+        "power": {0.95: {"power": 0.93, "mc_se": 0.008}},
+    }
+    assert "power" not in out["cells"]["wikimedia"]["size"]
     assert out["below_projection"] == ["openstack"]
     assert set(out["cells"]["openstack"]) >= {"verdicts", "within_sesoi", "meaningful"}
+
+
+@pytest.mark.parametrize(
+    ("powers", "match"),
+    [
+        (None, "no power-at-size artifacts for \\['openstack'\\]"),
+        (
+            {"openstack": _power("openstack"), "wikimedia": _power("wikimedia")},
+            "power-at-size artifacts for organization",
+        ),
+        ({"openstack": _power("openstack", changes=1_998)}, "changes 1998, not 1999"),
+        ({"openstack": _power("openstack", cells=1)}, "cells 1, not 2"),
+        ({"openstack": _power("openstack", bound=0.04)}, "not at the registered bound"),
+        ({"openstack": _power("openstack") | {"by_level": {}}}, "power at levels"),
+        (
+            {
+                "openstack": _power("openstack")
+                | {"by_level": {"0.95": {"bound": 0.03, "power": 1.2, "mc_se": 0.0}}}
+            },
+            "power 1.2",
+        ),
+        ({"openstack": []}, "not a mapping"),
+    ],
+)
+def test_a_window_below_its_projection_needs_its_power_at_the_realised_size(
+    admitted, powers: Any, match: str
+) -> None:
+    admitted("openstack", "wikimedia")
+    reports = {
+        "openstack": _gerrit_report("openstack", 0.01, 0.05, 0.001, changes=1_999),
+        "wikimedia": _gerrit_report("wikimedia", 0.01, 0.05, 0.001),
+    }
+    with pytest.raises(ValueError, match=match):
+        h1_test_gate(reports, simulations={o: _gerrit_sim(o) for o in reports}, powers=powers)
+
+
+def test_a_replication_member_below_its_projection_carries_its_power(frozen) -> None:
+    frozen("apache")
+    cells = {"apache": _replication_cell(0.01, 0.02, 0.001, changes=1_999)}
+    power = _power("apache", cells=1) | {
+        "by_level": {"0.975": {"lift": 0.05, "bound": 0.03, "power": 0.9, "mc_se": 0.01}}
+    }
+    out = replication_gate(cells, simulations=_SIM, powers={"apache": power})
+    assert out["below_projection"] == ["apache"]
+    assert out["cells"]["apache"]["size"]["power"] == {0.975: {"power": 0.9, "mc_se": 0.01}}
+    with pytest.raises(ValueError, match="no power-at-size artifacts"):
+        replication_gate(cells, simulations=_SIM)

@@ -322,14 +322,14 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
             "runs": 4,
             "spread_target": "sizing_bound_90",
             "spread_targets": calibration,
-            "planned_changes": cell["changes"] + 1,
+            "planned_changes": cell["changes"],
         },
     }
     by_cells = {"1": {"minimum_detectable_effect": bound}}
     simulation = {
         "org": "apache",
         "runs": 4,
-        "planned_changes": cell["changes"] + 1,
+        "planned_changes": cell["changes"],
         "spread_targets": calibration,
         "by_target": {"sizing_bound_90": {"by_level": {str(level): {"by_cells": by_cells}}}},
     }
@@ -340,7 +340,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
     assert out["cells"]["apache"]["verdict"] == verdict
     assert out["partial_conjunction"]["at_least"] == (verdict == "supported")
     assert out["cells"]["apache"]["size"]["realised"] == cell["changes"]
-    assert out["below_projection"] == ["apache"]
+    assert out["below_projection"] == []
 
 
 @pytest.mark.parametrize(
