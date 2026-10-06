@@ -8056,3 +8056,12 @@ registered sensitivity, reviewer exposure, is defined on the organization contra
 foreign), which the partition design's H1 does not read; it is implemented with the H2 read, if
 Qt and Chromium are admitted.
 
+After two review rounds: both gates refuse a test read that lacks either registered sensitivity; a
+listing records every example it was made from, and the pilot refuses one that does not cover the
+cell's examples; `removed` counts examples that left the cell. The searches are bounded by merge
+date and the windows by creation date, so `sensitivity_ids.py` also counts examples the searches
+never reached (changes merged on or after the search bound, or never): none, on either
+organization's development window. What runs today is the development window: the corpus loader
+refuses the sealed test window, as the runner does, and `ai_trailers.py` searches only up to the
+seal, so the test window's listing and its trailer searches follow the unsealing at acceptance.
+

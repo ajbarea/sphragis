@@ -219,9 +219,10 @@ Before Stage 1 (2026-11-20), each registered before the seal:
 - [ ] **Readings beside the pass rule** (registered in `docs/registered-decisions.md` 2026-10-02,
   with the AI-trailer, backport and reviewer-exposure sensitivities). Implemented 2026-10-04 in
   `sphragis/experiment/across.py` and the H1 cell: meaningful, at least r of k, the random-effects
-  summary. The AI-trailer and backport sensitivities implemented 2026-10-06 (`sensitivity_ids.py`,
-  `partition_pilot.py --without`); reviewer exposure, on the organization contrast, waits for the
-  H2 read. "meaningful" when a cell's lower bound clears the SESOI
+  summary. The AI-trailer and backport sensitivities run on the development window 2026-10-06
+  (`sensitivity_ids.py`, `partition_pilot.py --without`; both gates require them); their test-window
+  listing and trailer searches follow the unsealing at acceptance. Reviewer exposure, on the
+  organization contrast, waits for the H2 read. "meaningful" when a cell's lower bound clears the SESOI
   (three-sided testing, Isager and Fitzgerald, AMPPS 2026); the largest r with "at least r of k
   organizations" rejected (partial conjunction, Benjamini and Heller 2008), so a failed
   every-organization test still says how many show the effect; and a random-effects summary over

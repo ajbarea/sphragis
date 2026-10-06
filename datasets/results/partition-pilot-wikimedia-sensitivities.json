@@ -167,9 +167,9 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-06T15:43:04.743037+00:00",
+    "generated_at": "2026-10-06T16:05:28.010994+00:00",
     "git": {
-      "commit": "1b8fee1864fc6f6b0afa0060ac4b0177b95e199f",
+      "commit": "425b9edb82eba702c7ea7d909dfc54ac03cac6e5",
       "branch": "measure/h1-sensitivities"
     },
     "python": "3.14.4",
