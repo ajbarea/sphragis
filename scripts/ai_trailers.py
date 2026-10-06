@@ -12,7 +12,9 @@ late patch set flags examples from earlier ones. Disclosure itself became policy
 inside the training window.
 
 The search is bounded by `mergedbefore:` the test window's start: a change merged before it was
-created before it, so no sealed change is requested.
+created before it, so no sealed change is requested. Only with `--through-test`, once every
+organization's seal records acceptance, does it run through the test window, to the day of the
+fetch, and tally that window too.
 
     uv run --no-sync --no-active python scripts/ai_trailers.py \\
         --root openstack=../wm-bots/datasets/gerrit \\
@@ -91,11 +93,13 @@ def search_query(search: str, merged_before: str = SEALED_FROM) -> str:
 
 
 def tally(
-    windows: Mapping[str, Iterable[Mapping]], flagged: Mapping[tuple[str, str], set[str]]
+    windows: Mapping[str, Iterable[Mapping]],
+    flagged: Mapping[tuple[str, str], set[str]],
+    read: Iterable[str] = READ_WINDOWS,
 ) -> dict:
     """Examples and changes per window, and how many carry an AI trailer or a scripted one."""
     out: dict = {}
-    for window in READ_WINDOWS:
+    for window in read:
         rows = list(windows.get(window, []))
         changes = {(r["project"], r["change_id"]) for r in rows}
         kinds = {key: flagged.get(key, set()) for key in changes}
@@ -167,7 +171,9 @@ def main() -> None:
             "changes_ai": sorted(f"{p} {c}" for (p, c), k in flagged.items() if k - {"tool"}),
             "changes_tool_generated": sum(k == {"tool"} for k in flagged.values()),
             "ai_trailer_values": dict(values.most_common()),
-            "windows": tally(windows, flagged),
+            "windows": tally(
+                windows, flagged, (*READ_WINDOWS, "test") if args.through_test else READ_WINDOWS
+            ),
         }
         print(org, report["orgs"][org]["windows"])
     report["provenance"] = provenance_header()

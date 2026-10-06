@@ -8062,6 +8062,7 @@ cell's examples; `removed` counts examples that left the cell. The searches are 
 date and the windows by creation date, so `sensitivity_ids.py` also counts examples the searches
 never reached (changes merged on or after the search bound, or never): none, on either
 organization's development window. What runs today is the development window: the corpus loader
-refuses the sealed test window, as the runner does, and `ai_trailers.py` searches only up to the
-seal, so the test window's listing and its trailer searches follow the unsealing at acceptance.
+refuses the sealed test window, as the runner does. `ai_trailers.py --through-test` searches
+through the test window to the day of the fetch and tallies it, but only once every seal records
+acceptance, so the test window's listing follows the unsealing.
 

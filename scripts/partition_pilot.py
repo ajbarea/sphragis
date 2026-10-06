@@ -54,6 +54,9 @@ from sphragis.experiment.partitions import (
 from sphragis.measure.stats import one_sided_alpha
 from sphragis.provenance import provenance_header
 
+#: A sensitivity listing's window (`sensitivity_ids.py --window`) to this read's name for it.
+READ_WINDOW = {"dev": "development", "test": "test"}
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("runs", type=Path, nargs="+", help="partition runs, in admissible order")
 parser.add_argument("--admissible", type=Path, required=True)
@@ -264,20 +267,18 @@ def main() -> None:
             "planned_changes": sensitivity.get("planned_changes"),
         }
     # Each sensitivity's listing checked against this read before any draw is taken: its window,
-    # and the corpus it was made from, which must hold every example the cell reads.
+    # and the corpus it was made from, which must hold every example any run scored (the runs
+    # past K are read too, so their examples are checked as well).
     read = set.intersection(*(eval_ids(results, "adapter") for results, _ in runs[:runs_fixed]))
+    scored = set().union(*(eval_ids(results, "adapter") for results, _ in runs))
     for path, ids_listing in listings.values():
-        listed_window = (
-            "development" if ids_listing.get("window") == "dev" else ids_listing.get("window")
-        )
-        if listed_window != window:
-            raise SystemExit(
-                f"{path} lists the {ids_listing.get('window')} window, not this read's"
-            )
-        outside = sorted(read - set(ids_listing.get("universe", [])))
+        listed = ids_listing.get("window")
+        if READ_WINDOW.get(listed) != window:
+            raise SystemExit(f"{path} lists the {listed} window, not this read's {window}")
+        outside = sorted(scored - set(ids_listing.get("universe", [])))
         if outside:
             raise SystemExit(
-                f"{path} was made from another corpus: {len(outside)} of the cell's examples, "
+                f"{path} was made from another corpus: {len(outside)} of the runs' examples, "
                 f"{outside[:3]}, are not in it"
             )
     if window == "test":
@@ -299,6 +300,8 @@ def main() -> None:
     without = {}
     for name, (path, ids_listing) in listings.items():
         drop = set(ids_listing["ids"][name])
+        # What the AI-trailer searches never reached among the cell's examples, stated beside it.
+        unsearched = len(set(ids_listing.get("ai_unsearched", [])) & read)
         kept = [
             ({arm: [r for r in rows if r["id"] not in drop] for arm, rows in results.items()}, k)
             for results, k in runs
@@ -314,11 +317,14 @@ def main() -> None:
                 resamples=args.resamples,
             )
         except ValueError as error:
-            without[name] = {"file": path, "listed": len(drop), "unreadable": str(error)}
+            without[name] = {
+                "file": path,
+                "listed": len(drop),
+                **({"unsearched": unsearched} if name == "ai_assisted" else {}),
+                "unreadable": str(error),
+            }
             continue
         fields = ("intervals", "within_sesoi", "meaningful", "p_one_sided", "bootstrap_se")
-        # What the AI-trailer searches never reached among the cell's examples, stated beside it.
-        unsearched = len(set(ids_listing.get("ai_unsearched", [])) & read)
         without[name] = {
             "file": path,
             "listed": len(drop),

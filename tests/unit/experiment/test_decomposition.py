@@ -404,8 +404,16 @@ def _replication_cell(
         "window": "test",
         "planted_convention": {"passed": True},
         # Both registered sensitivities, read as partition_pilot.py --without writes them.
+        # Read at every level any test read uses here, so a fixture serves either gate.
         "without": {
-            name: {"listed": 0, "removed": 0, "estimate": 0.0, "intervals": {}}
+            name: {
+                "listed": 0,
+                "removed": 0,
+                "estimate": (low + high) / 2,
+                "intervals": {
+                    c: {"low": low, "high": high} for c in (REPLICATION_CONFIDENCE, 0.95, 0.975)
+                },
+            }
             for name in REGISTERED_SENSITIVITIES
         },
         "runs": 24,
@@ -1598,5 +1606,11 @@ def test_a_test_read_without_its_registered_sensitivities_is_refused() -> None:
     empty = {**report, "without": {**report["without"], "backport_only": {"listed": 2}}}
     with pytest.raises(ValueError, match="'backport_only'"):
         require_sensitivities(empty, org="apache")
+    # Read, but at no interval for the read's level.
+    hollow = {"estimate": 0.0, "intervals": {}}
+    with pytest.raises(ValueError, match="'backport_only'"):
+        require_sensitivities(
+            {**report, "without": {**report["without"], "backport_only": hollow}}, org="apache"
+        )
     noted = {**report, "without": {**report["without"], "backport_only": {"unreadable": "x"}}}
     assert require_sensitivities(noted, org="apache")["backport_only"] == {"unreadable": "x"}

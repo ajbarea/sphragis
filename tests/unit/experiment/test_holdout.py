@@ -144,3 +144,39 @@ def test_equalize_training_cuts_to_a_fixed_size_as_a_nested_prefix() -> None:
 def test_equalize_training_refuses_a_size_it_cannot_honour(size: int) -> None:
     with pytest.raises(ValueError, match="size must be between"):
         equalize_training({"openstack": _rows(10), "qt": _rows(20)}, seed=1, size=size)
+
+
+def test_a_reader_that_must_not_hold_sealed_rows_refuses_a_corpus_that_does(tmp_path) -> None:
+    import json
+
+    import pytest
+
+    from sphragis.corpus.load import refined_dir, write_build_record, write_source_record
+    from sphragis.experiment.holdout import window_split
+
+    train_day, test_day = "2025-01-10 00:00:00.000000000", "2025-12-10 00:00:00.000000000"
+    rows = [
+        {
+            "id": f"o:c{n}:f:1",
+            "change_id": f"c{n}",
+            "project": "p",
+            "org": "o",
+            "created": created,
+            "comments": [f"c{n} " * n],
+            "before": f"b{n} " * n,
+            "after": f"a{n} " * n,
+        }
+        for n, created in ((1, train_day), (2, test_day))
+    ]
+    text = "".join(json.dumps(r) + "\n" for r in rows)
+    built = tmp_path / "o" / "examples" / "2025-01.jsonl"
+    built.parent.mkdir(parents=True)
+    built.write_text(text)
+    write_build_record(built, None, complete=True)
+    refined = refined_dir(tmp_path, "o") / "2025-01.jsonl"
+    refined.parent.mkdir(parents=True)
+    refined.write_text(text)
+    write_source_record(tmp_path, "o", built, refined)
+    window_split(tmp_path, "o")
+    with pytest.raises(ValueError, match="holds test-window examples"):
+        window_split(tmp_path, "o", refuse_sealed_rows=True)

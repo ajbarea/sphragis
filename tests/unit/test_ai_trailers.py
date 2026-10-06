@@ -88,3 +88,11 @@ def test_searching_through_the_test_window_needs_every_seal_open(tmp_path, monke
     )
     with pytest.raises(RuntimeError, match="opened"):
         trailers.main()
+
+
+def test_searching_through_the_test_window_tallies_it_too() -> None:
+    rows = [{"project": "p", "change_id": "I1", "created": "2026-01-01"}]
+    flagged = {("p", "I1"): {"Assisted-By"}}
+    out = trailers.tally({"test": rows}, flagged, (*trailers.READ_WINDOWS, "test"))
+    assert out["test"]["changes_ai"] == 1
+    assert "test" not in trailers.tally({"test": rows}, flagged)

@@ -119,7 +119,12 @@ def split_by_window(
 
 
 def window_split(
-    root: Path, org: str, *, train_window: str = "train", eval_window: str = "dev"
+    root: Path,
+    org: str,
+    *,
+    train_window: str = "train",
+    eval_window: str = "dev",
+    refuse_sealed_rows: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     """One corpus's training and held-out rows as the registered runner reads them.
 
@@ -137,6 +142,9 @@ def window_split(
         raise ValueError(
             f"{org}: {len(straddling)} straddling and {len(unassigned)} unassigned changes"
         )
+    # A reader that must not hold sealed rows at all, as the corpus readers that refuse them.
+    if refuse_sealed_rows and windows.get("test"):
+        raise ValueError(f"{org}: the corpus holds test-window examples; it is sealed")
     train, held_out = split_by_window(windows, train_window=train_window, eval_window=eval_window)
     summary = {
         "source": f"{train_window} -> {eval_window} windows under {root / org / 'refined'}",

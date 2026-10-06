@@ -25,7 +25,7 @@ from sphragis.corpus.backports import (
     index_changes,
     only_backport,
 )
-from sphragis.corpus.split import seal_open
+from sphragis.corpus.split import seal_open, seal_path
 from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.holdout import window_split
 from sphragis.provenance import provenance_header
@@ -63,8 +63,9 @@ def covers(trailers: dict, window: str) -> bool:
 def main() -> None:
     args = parser.parse_args()
     # The sealed window, as the sibling readers refuse it, until acceptance unseals it.
-    if args.window == "test" and not seal_open(args.root, args.org):
-        raise SystemExit(f"{args.org}'s test window is sealed: {args.root / args.org}/seal.json")
+    unsealed = seal_open(args.root, args.org)
+    if args.window == "test" and not unsealed:
+        raise SystemExit(f"{args.org}'s test window is sealed: {seal_path(args.root, args.org)}")
     trailers = json.loads(args.ai_trailers.read_text())
     if not covers(trailers, args.window):
         raise SystemExit(
@@ -73,7 +74,9 @@ def main() -> None:
             "for the test window, after acceptance, rerun ai_trailers.py --through-test"
         )
     try:
-        _, rows, read = window_split(args.root, args.org, eval_window=args.window)
+        _, rows, read = window_split(
+            args.root, args.org, eval_window=args.window, refuse_sealed_rows=not unsealed
+        )
     except ValueError as error:
         raise SystemExit(str(error)) from error
     ai = flagged_changes(trailers, args.org)

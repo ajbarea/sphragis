@@ -614,7 +614,7 @@ def test_a_listing_made_from_another_corpus_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     ids = _ids(tmp_path, ["x0"], universe=[f"x{i}" for i in range(N)])
-    with pytest.raises(SystemExit, match=f"made from another corpus: {N} of the cell's examples"):
+    with pytest.raises(SystemExit, match=f"made from another corpus: {N} of the runs' examples"):
         _main(
             monkeypatch,
             [
