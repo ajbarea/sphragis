@@ -5,9 +5,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+import numpy as np
 import pytest
-
-np = pytest.importorskip("numpy")
 
 _SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "adapter_projection.py"
 _spec = importlib.util.spec_from_file_location("adapter_projection", _SCRIPT)

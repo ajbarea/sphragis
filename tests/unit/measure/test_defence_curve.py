@@ -5,9 +5,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-import pytest
-
-np = pytest.importorskip("numpy")
+import numpy as np
 
 _SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "defence_curve.py"
 _spec = importlib.util.spec_from_file_location("defence_curve", _SCRIPT)

@@ -180,6 +180,12 @@ def pytest_unconfigure(config: pytest.Config) -> None:
 #: Every skip the run reported, from collection (a module-level `importorskip`) and from tests.
 _SKIPS: list[pytest.CollectReport | pytest.TestReport] = []
 
+#: The skips `pytest_sessionfinish` refused, for the terminal summary to name.
+_UNACCEPTED: list[str] = []
+
+#: Beside this conftest rather than at the rootdir, which `--rootdir` or an IDE can move.
+_PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
+
 _MISSING_MODULE = re.compile(r"could not import '([^']+)'")
 
 #: The one skip reason besides an absent GPU stack: a machine with the stack but no GPU
@@ -192,6 +198,9 @@ def _gpu_stack(pyproject: Path) -> frozenset[str]:
 
     A test may skip only because one of these is absent: CI and `make sync` install `dev` and
     never the extra, so these tests run under `make gpu-local` or on the clusters instead.
+    The skip is recognised by `importorskip`'s own message, so one given a `reason=`, or a
+    package whose import name is not its distribution name, is refused: a false alarm the run
+    reports, never a skip let through.
     """
     project = tomllib.loads(pyproject.read_text())
 
@@ -241,11 +250,18 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
         print(f"\noffline test suite: the network was tried: {_VIOLATIONS}")
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
     if _SKIPS:
-        gpu_stack = _gpu_stack(session.config.rootpath / "pyproject.toml")
-        unaccepted = _unaccepted_skips(_SKIPS, gpu_stack)
-        if unaccepted:
-            print(f"\nskipped for a reason other than the GPU stack being absent: {unaccepted}")
+        _UNACCEPTED.extend(_unaccepted_skips(_SKIPS, _gpu_stack(_PYPROJECT)))
+        # Only a passing run is turned into a failure: an interrupt or a usage error keeps its code.
+        if _UNACCEPTED and session.exitstatus == pytest.ExitCode.OK:
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
+
+
+def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
+    if _UNACCEPTED:
+        terminalreporter.section("skips the suite does not accept", sep="=", red=True, bold=True)
+        terminalreporter.line("only an absent GPU stack or GPU may skip a test (tests/conftest.py)")
+        for skip in _UNACCEPTED:
+            terminalreporter.line(skip, red=True)
 
 
 @pytest.fixture(autouse=True)

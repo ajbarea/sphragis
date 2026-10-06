@@ -6,9 +6,8 @@ import importlib.util
 import math
 from pathlib import Path
 
+import numpy as np
 import pytest
-
-np = pytest.importorskip("numpy")
 
 _SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "subspace_split.py"
 _spec = importlib.util.spec_from_file_location("subspace_split", _SCRIPT)

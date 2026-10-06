@@ -176,6 +176,7 @@ class TestRunProvenance:
         assert set(record["slurm"]) >= {"cluster", "job_id", "account"}
         assert record["gpu"] is None
 
+    # tests/conftest.py accepts this reason verbatim.
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA device")
     def test_on_a_gpu_the_record_names_the_device_and_its_peak(self) -> None:
         held = torch.ones(64 * 1024 * 1024, device="cuda")  # 256 MB of float32
