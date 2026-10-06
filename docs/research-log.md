@@ -8049,3 +8049,17 @@ function, so the prompts do not contradict that request. A review distillation n
 chunks, so "in two or more lists" reads as recurrence. The guide prompts are unchanged: a written guide is the organization's own declaration, and its rules
 are kept as stated. The smoke files are not used; every file is distilled again under the amended
 pipeline.
+
+**Amended again before any arm was scored (2026-10-06), after a second smoke read.** At 36ba0d4 the
+mined file for OpenStack partition 2's first half (job 223034) listed tools no OpenStack review
+names ("use black", "use mypy", "use bandit"): asked for the particular, the model invented it. Ten
+of thirteen map answers ran to their budget, and the merge kept 179 rules where it was asked for
+recurrence. The guide file (job 223033) was sound: 37 rules from `HACKING.rst`, nothing capped. So
+mined rules are now grounded and their recurrence counted in code rather than asked of the model.
+Each change in a chunk is numbered; the map lists at most 15 rules, each ending with the numbers
+of the changes that show it; a rule is kept only if it cites two or more of its chunk's changes;
+three or more lists must keep a rule; the merge keeps at most 40. The pipeline fingerprint is now
+the source of `rules.py`, so any change to its prompts, budgets or parsing makes every file
+distilled before it refused. The base model stays the distiller if the grounded files hold up;
+otherwise a larger model of the same family distils, recorded as a change to the design.
+

@@ -138,7 +138,14 @@ def hacking() -> dict[str, Any]:
 
 
 def main() -> None:
-    args = parser.parse_args()
+    """The snapshot, with a library refusal or a page the wiki did not return as its exit."""
+    try:
+        snapshot(parser.parse_args())
+    except (ValueError, KeyError, IndexError) as error:
+        raise SystemExit(f"not written: {error!r}") from error
+
+
+def snapshot(args: argparse.Namespace) -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     present = extensions(args.results, "wikimedia")
     titles = list(MEDIAWIKI_GENERAL)

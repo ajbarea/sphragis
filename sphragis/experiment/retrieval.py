@@ -20,7 +20,7 @@ from typing import Any
 
 from sphragis.corpus.dedup import jaccard, pair_text, shingles
 from sphragis.experiment.decomposition import halves
-from sphragis.experiment.grid import EvalRun, run_id
+from sphragis.experiment.grid import conditioned
 from sphragis.experiment.holdout import equalize_training, window_split
 from sphragis.experiment.neutral import source_root
 from sphragis.experiment.partitions import partition_run_windows
@@ -120,7 +120,7 @@ def condition(k: int) -> str:
 
 def arm_key(k: int, pool: str, evaluated: str) -> str:
     """`retrieval-k<k>:<pool>|<evaluated>`: the adapter arms' key, with no training seed."""
-    return run_id(EvalRun(f"{condition(k)}:{pool}", evaluated, None))
+    return conditioned(condition(k), pool, evaluated)
 
 
 def pools(

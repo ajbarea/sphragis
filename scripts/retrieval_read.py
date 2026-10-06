@@ -53,7 +53,7 @@ from sphragis.experiment.decomposition import (
     project_clusters,
     within_sesoi,
 )
-from sphragis.experiment.grid import EvalRun, run_id
+from sphragis.experiment.grid import EvalRun, conditioned, run_id
 from sphragis.experiment.neutral import LEAKAGE_THRESHOLD
 from sphragis.experiment.partitions import on_common_examples
 from sphragis.experiment.retrieval import KS, adapter_run, condition, first_partitions
@@ -192,11 +192,6 @@ def families(arms: str) -> dict[str, str]:
     return {"distilled": DISTILLED}
 
 
-def keyed(condition_name: str, owner: str, evaluated: str) -> str:
-    """An arm's key from its condition: the one form `project_clusters` and the rest read."""
-    return run_id(EvalRun(f"{condition_name}:{owner}", evaluated, None))
-
-
 def read_family(
     cut: Sequence[Mapping[str, Rows]],
     *,
@@ -214,7 +209,7 @@ def read_family(
     read = {"org": org, "seed": None, "condition": condition_name}
 
     def key(owner: str, evaluated: str) -> str:
-        return keyed(condition_name, owner, evaluated)
+        return conditioned(condition_name, owner, evaluated)
 
     arms = {
         "none": {h: run_id(EvalRun("base", h, None)) for h in (first, second)},
@@ -281,16 +276,16 @@ def read_written(
     half's distilled file, the last comparing the two sources of a rules file."""
     pairs = {
         "written_own_minus_written_foreign": (
-            lambda h: keyed(WRITTEN, org, h),
-            lambda h: keyed(WRITTEN, foreign, h),
+            lambda h: conditioned(WRITTEN, org, h),
+            lambda h: conditioned(WRITTEN, foreign, h),
         ),
         "written_own_minus_none": (
-            lambda h: keyed(WRITTEN, org, h),
+            lambda h: conditioned(WRITTEN, org, h),
             lambda h: run_id(EvalRun("base", h, None)),
         ),
         "distilled_own_minus_written_own": (
-            lambda h: keyed(DISTILLED, h, h),
-            lambda h: keyed(WRITTEN, org, h),
+            lambda h: conditioned(DISTILLED, h, h),
+            lambda h: conditioned(WRITTEN, org, h),
         ),
     }
     return {
@@ -309,8 +304,10 @@ def main() -> None:
         raise SystemExit(f"{args.admissible}: {error}") from error
     if len(args.halves) != len(order):
         raise SystemExit(f"{len(args.halves)} --halves files, not the fixed {len(order)}")
-    if args.arms == "rules" and args.base_job is None:
-        raise SystemExit("--arms rules needs --base-job: the retrieval foreign job's base arm")
+    if (args.arms == "rules") != (args.base_job is not None):
+        raise SystemExit(
+            "--base-job is for --arms rules, which needs it: the retrieval foreign job's base arm"
+        )
     fixed = {"org": args.org, "train_size": size, "ks": list(KS), "limit": None}
     if args.arms == "rules":
         # Every rules job read one distillation: one suffix, one pipeline.

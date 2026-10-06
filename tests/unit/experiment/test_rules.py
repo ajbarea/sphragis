@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from sphragis.experiment.rules import (
@@ -14,6 +16,7 @@ from sphragis.experiment.rules import (
     REDUCE_REVIEWS,
     RULES_BUDGET,
     chunks,
+    cited,
     distil,
     pipeline,
     review_text,
@@ -59,39 +62,78 @@ class _Model:
         return f"- rule {len(self.calls)}", False
 
 
-def _chunk_each(text: str) -> int:
-    """A length under which every source fills a chunk of its own, and an answer is short."""
-    return CHUNK_TOKENS if text.startswith("s") else len(text.split())
+def _half_chunk(text: str) -> int:
+    """A length under which every source fills half a chunk, so a chunk holds two changes."""
+    return CHUNK_TOKENS // 2 if text.split()[-1].startswith("s") else len(text.split())
 
 
-@pytest.mark.parametrize(
-    "kind,map_prompt,reduce_prompt",
-    [("reviews", MAP_REVIEWS, REDUCE_REVIEWS), ("guide", MAP_GUIDE, REDUCE_GUIDE)],
-)
-def test_each_chunk_is_mapped_then_one_reduce_merges_their_lists(
-    kind: str, map_prompt: str, reduce_prompt: str
-) -> None:
+class _Cites(_Model):
+    """Answers each map with one rule citing both of its chunk's changes, and one citing one."""
+
+    def __call__(self, prompt: str, max_new_tokens: int) -> tuple[str, bool]:
+        self.calls.append((prompt, max_new_tokens))
+        if "Below are lists" in prompt:
+            return "Merged:\n" + "\n".join(rule_lines(prompt)), False
+        n = len(self.calls)
+        return f"- rule {n}. [1, 2]\n- lone {n}. [1]\n- none {n}.", False
+
+
+def test_each_chunk_of_a_guide_is_mapped_then_one_reduce_merges_their_lists() -> None:
     model = _Model()
-    result = distil(["s1", "s2", "s3"], kind=kind, generate=model, length=_chunk_each)
-    # Three sources a chunk each: three maps, then one reduce.
+    length = lambda t: CHUNK_TOKENS if t.startswith("s") else len(t.split())  # noqa: E731
+    result = distil(["s1", "s2", "s3"], kind="guide", generate=model, length=length)
     assert result["chunks"] == 3 and len(model.calls) == 4
     *maps, (reduce_call, reduce_budget) = model.calls
     for (map_call, map_budget), source in zip(maps, ("s1", "s2", "s3"), strict=True):
-        assert map_call.startswith(map_prompt.split("{source}")[0])
+        assert map_call.startswith(MAP_GUIDE.split("{source}")[0])
         assert map_call.endswith(source) and map_budget == MAP_ANSWER_TOKENS
     assert reduce_budget == RULES_BUDGET
-    assert reduce_call.startswith(reduce_prompt.split("{lists}")[0])
-    assert "List 1:\n- rule 1" in reduce_call and "List 3:\n- rule 3" in reduce_call
+    assert reduce_call.startswith(REDUCE_GUIDE.split("{lists}")[0])
     assert result["rules"] == ["- rule 1", "- rule 2", "- rule 3"]
-    assert result["kind"] == kind and result["map_lists"] == ["- rule 1", "- rule 2", "- rule 3"]
-    assert result["pipeline"] == pipeline()
+    assert result["pipeline"] == pipeline() and result["evidence"] == []
 
 
-def test_mined_rules_need_three_lists_for_recurrence_to_mean_anything() -> None:
+def test_a_mined_rule_stands_on_two_of_its_chunks_numbered_changes() -> None:
+    model = _Cites()
+    sources = [f"s{n}" for n in range(1, 7)]
+    result = distil(sources, kind="reviews", generate=model, length=_half_chunk)
+    assert result["chunks"] == 3
+    first_map = model.calls[0][0]
+    assert first_map.startswith(MAP_REVIEWS.split("{source}")[0])
+    assert "### Change 1\ns1" in first_map and "### Change 2\ns2" in first_map
+    # Only the rule citing both changes reaches the merge, without its brackets.
+    reduce_call = model.calls[-1][0]
+    assert reduce_call.startswith(REDUCE_REVIEWS.split("{lists}")[0])
+    assert "- rule 1." in reduce_call and "[1, 2]" not in reduce_call
+    assert "lone" not in reduce_call and "none" not in reduce_call
+    assert result["evidence"] == [{"listed": 3, "kept": 1}] * 3
+    assert result["rules"] == ["- rule 1.", "- rule 2.", "- rule 3."]
+
+
+def test_mined_rules_need_three_lists_with_evidence() -> None:
     with pytest.raises(ValueError, match="recurrence across lists needs 3"):
-        distil(["s1", "s2"], kind="reviews", generate=_Model(), length=_chunk_each)
-    # A guide's merge keeps every rule, so one chunk is enough.
-    assert distil(["s1"], kind="guide", generate=_Model(), length=_chunk_each)["chunks"] == 1
+        distil(["s1", "s2", "s3", "s4"], kind="reviews", generate=_Cites(), length=_half_chunk)
+    no_evidence = lambda p, n: ("- a. [1]", False)  # noqa: E731
+    with pytest.raises(ValueError, match="0 lists hold a rule with its evidence"):
+        distil(
+            [f"s{n}" for n in range(6)], kind="reviews", generate=no_evidence, length=_half_chunk
+        )
+
+
+@pytest.mark.parametrize(
+    "line,changes,expected",
+    [
+        ("- Use oslo_log. [3, 17]", 20, ("- Use oslo_log.", {3, 17})),
+        ("- Use oslo_log [3,17].", 20, ("- Use oslo_log", {3, 17})),
+        ("- Out of range. [4, 99]", 10, ("- Out of range.", {4})),
+        ("- No evidence.", 10, ("- No evidence.", set())),
+        ("- Mid [2] line.", 10, ("- Mid [2] line.", set())),
+    ],
+)
+def test_cited_change_numbers_are_read_from_the_lines_end(
+    line: str, changes: int, expected: tuple[str, set[int]]
+) -> None:
+    assert cited(line, changes) == expected
 
 
 def test_a_reduce_that_lists_nothing_is_refused() -> None:
@@ -132,15 +174,12 @@ def test_a_capped_answer_is_flagged_and_its_cut_line_dropped() -> None:
     assert "- three" in reduce_prompts[0] and "- fou" not in reduce_prompts[0]
 
 
-def test_every_prompt_and_budget_is_in_the_pipeline_fingerprint(monkeypatch) -> None:
+def test_the_pipeline_fingerprint_is_the_modules_source() -> None:
+    import hashlib
+
     from sphragis.experiment import rules
 
-    before = rules.pipeline()
-    monkeypatch.setattr(rules, "MAP_ANSWER_TOKENS", rules.MAP_ANSWER_TOKENS + 1)
-    assert rules.pipeline() != before
-    monkeypatch.undo()
-    monkeypatch.setitem(rules.PROMPTS, "guide", ("x {source}", "y {lists}"))
-    assert rules.pipeline() != before
+    assert pipeline() == hashlib.sha256(Path(rules.__file__).read_bytes()).hexdigest()
 
 
 def test_mined_rules_ask_for_the_particular_and_a_guide_keeps_what_it_states() -> None:
@@ -148,3 +187,22 @@ def test_mined_rules_ask_for_the_particular_and_a_guide_keeps_what_it_states() -
     assert "Leave out general good practice" in REDUCE_REVIEWS
     assert "Leave out general good practice" not in MAP_GUIDE
     assert "Leave out general good practice" not in REDUCE_GUIDE
+
+
+class _Template:
+    """A chat template that writes `default` as the system turn when none is given."""
+
+    def __init__(self, default: str) -> None:
+        self.default = default
+
+    def apply_chat_template(self, messages, *, tokenize, add_generation_prompt):
+        if messages[0]["role"] != "system":
+            messages = [{"role": "system", "content": self.default}, *messages]
+        return "|".join(f"{m['role']}:{m['content']}" for m in messages) + "|assistant:"
+
+
+def test_the_default_system_turn_is_checked_against_the_template() -> None:
+    from sphragis.experiment.rules import default_system_holds
+
+    assert default_system_holds(_Template(DEFAULT_SYSTEM))
+    assert not default_system_holds(_Template("You are a different assistant."))

@@ -31,7 +31,7 @@ from sphragis.experiment.retrieval import (
     read_halves,
     trainable,
 )
-from sphragis.experiment.rules import distil, pinned, pipeline, review_text
+from sphragis.experiment.rules import distil, pinned, pipeline, review_chunks, review_text
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--source", choices=["reviews", "guide"], required=True)
@@ -61,6 +61,13 @@ def sources_of(args: argparse.Namespace, tokenizer: Any) -> tuple[dict, dict[str
         if pooled != trained:
             raise ValueError(f"pools hold {pooled} rows, the adapters trained on {trained}")
         head |= {"partition": args.partition, "train_size": size, "corpora": corpora}
+
+        # Enough chunks for recurrence, counted now, before any model loads.
+        def length(text: str) -> int:
+            return len(tokenizer(text, add_special_tokens=False)["input_ids"])
+
+        for index in cut.values():
+            review_chunks([review_text(row) for row in index.pool], length=length)
         return head, {
             half: {
                 "kind": "reviews",

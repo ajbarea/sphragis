@@ -528,7 +528,7 @@ def test_a_rules_reading_needs_the_base_arm(tmp_path: Path) -> None:
     argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
     argv += ["--arms", "rules", "--foreign-job", "f.json", "--halves", *["h.json"] * PARTITIONS]
     argv += ["--results", str(tmp_path), "--out", str(tmp_path / "o.json")]
-    with pytest.raises(SystemExit, match="needs --base-job"):
+    with pytest.raises(SystemExit, match="base-job is for --arms rules"):
         _run(reader, argv)
 
 

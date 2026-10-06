@@ -205,6 +205,12 @@ class HFGenerator:
         # Read back from the model rather than echoed from the request: a `to` that did not
         # apply would otherwise be recorded as though it had.
         self.computed_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
+        # Every id decoding stops on: the model's generation config may name several (Qwen2.5
+        # stops on both <|im_end|> and <|endoftext|>).
+        stops = model.generation_config.eos_token_id
+        self._stops = {stops} if isinstance(stops, int) else set(stops or [])
+        self._stops.add(self.tokenizer.eos_token_id)
+        self.last_capped = False
 
     def generate(self, prompt: str | Sequence[Mapping[str, str]]) -> str:
         """Greedy by default: the output is the model's single most likely refinement.
@@ -228,8 +234,7 @@ class HFGenerator:
         # Whether decoding stopped at the budget rather than at end of turn: counted on the
         # tokens generated, since a decoded answer can re-encode to fewer.
         self.last_capped = bool(
-            generated.shape[-1] >= self.max_new_tokens
-            and int(generated[-1]) != self.tokenizer.eos_token_id
+            generated.shape[-1] >= self.max_new_tokens and int(generated[-1]) not in self._stops
         )
         return str(self.tokenizer.decode(generated, skip_special_tokens=True))
 

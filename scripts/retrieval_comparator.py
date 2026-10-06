@@ -60,7 +60,14 @@ from sphragis.experiment.retrieval import (
     resumable,
     trainable,
 )
-from sphragis.experiment.rules import DISTILLED, WRITTEN, pinned, pipeline, rules_arms
+from sphragis.experiment.rules import (
+    DISTILLED,
+    WRITTEN,
+    default_system_holds,
+    pinned,
+    pipeline,
+    rules_arms,
+)
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
 from sphragis.provenance import provenance_header
@@ -169,6 +176,8 @@ def rules_files(
     if distilled.get("pipeline") != pipeline():
         raise SystemExit(f"{owner} p{partition}'s rules files were distilled under other prompts")
     for half, index in indexes.items():
+        if half not in distilled.get("files", {}):
+            raise SystemExit(f"{owner} p{partition}'s rules files hold no file for {half}")
         made = distilled["files"][half]
         if not args.dry_run and made["pool_ids"] != [row["id"] for row in index.pool]:
             raise SystemExit(f"{half}'s rules file was distilled from another pool")
@@ -223,7 +232,10 @@ def run(args: argparse.Namespace) -> None:
     else:
         from sphragis.experiment.model import MODEL_ID, _require_tokenizer
 
-        fits = trainable(_require_tokenizer(MODEL_ID))
+        tokenizer = _require_tokenizer(MODEL_ID)
+        fits = trainable(tokenizer)
+        if args.arms == "rules" and not default_system_holds(tokenizer):
+            raise SystemExit("the chat template's default system turn is not rules.DEFAULT_SYSTEM")
 
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
