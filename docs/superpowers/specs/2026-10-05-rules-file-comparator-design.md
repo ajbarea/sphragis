@@ -68,7 +68,12 @@ read from the languages of Wikimedia's training window before any distillation.
 
 ## Open before implementation
 
-- The map chunk budget, measured on the pools: the largest that keeps a map prompt and its answer
-  inside the model's context, with room left.
+- The map chunk budget: the largest that keeps a map prompt and its answer inside the model's
+  32,768-token context (its config's `max_position_embeddings`), with room left. Measured
+  2026-10-06 on each organization's first partition, equalized to N before the budget filter,
+  with the model's tokenizer: a half's rows (prompt and revised code) total 228,632 to 241,487
+  tokens for OpenStack and 309,974 to 337,301 for Wikimedia, median 89 to 105 a row; their review
+  comments alone total 73,021 to 97,467. A pool is therefore some ten to fourteen map chunks of
+  rows, or four of comments alone. The budget filter (2,048 tokens a row) lowers both.
 - Whether a pool of 1,850 rows is distilled from every row or from a fixed seeded subsample, if
   the map pass is too long for one job's wall clock.
