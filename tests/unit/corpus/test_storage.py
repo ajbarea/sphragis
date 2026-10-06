@@ -51,3 +51,30 @@ def test_overwrite_is_possible_only_when_asked_for_explicitly(tmp_path: Path) ->
     write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
     path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 2}], record={}, overwrite=True)
     assert read_snapshot(path) == [{"a": 2}]
+
+
+def test_a_stop_before_the_snapshot_lands_leaves_the_month_unfetched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The snapshot's presence marks a month fetched, so it lands last and whole: a stop
+    # before it leaves no snapshot, and the rerun writes both files without `overwrite`.
+    from sphragis.corpus import storage
+
+    real = storage.write_atomic
+
+    def stop_at_snapshot(path: Path, data: bytes) -> None:
+        if path.name.endswith(".ndjson.gz"):
+            raise KeyboardInterrupt
+        real(path, data)
+
+    monkeypatch.setattr(storage, "write_atomic", stop_at_snapshot)
+    with pytest.raises(KeyboardInterrupt):
+        write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    assert not snapshot_path(tmp_path, "qt", "2024-11").exists()
+    monkeypatch.setattr(storage, "write_atomic", real)
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    assert read_snapshot(path) == [{"a": 1}]
+    assert sorted(p.name for p in path.parent.iterdir()) == [
+        "2024-11.ndjson.gz",
+        "2024-11.record.json",
+    ]

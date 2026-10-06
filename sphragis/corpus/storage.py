@@ -13,6 +13,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from sphragis.durable import write_atomic
 from sphragis.provenance import provenance_header
 
 
@@ -43,10 +44,12 @@ def write_snapshot(
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     body = "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
-    path.write_bytes(gzip.compress(body.encode()))
-    snapshot_record_path(path).write_text(
-        json.dumps({**provenance_header(), **dict(record), "rows": len(rows)}, indent=2)
+    # The snapshot lands last: its presence is what marks the month fetched.
+    write_atomic(
+        snapshot_record_path(path),
+        json.dumps({**provenance_header(), **dict(record), "rows": len(rows)}, indent=2).encode(),
     )
+    write_atomic(path, gzip.compress(body.encode()))
     return path
 
 

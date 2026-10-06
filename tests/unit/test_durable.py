@@ -1,0 +1,93 @@
+import json
+from pathlib import Path
+
+import pytest
+
+from sphragis.durable import append_record, read_records, write_atomic
+
+WHOLE = b'{"key": "a#1", "n": 1}\n{"key": "a#2", "n": 2}\n'
+
+
+def _log(tmp_path: Path, data: bytes) -> Path:
+    path = tmp_path / "2025-01.partial.jsonl"
+    path.write_bytes(data)
+    return path
+
+
+def test_a_whole_log_reads_back_untouched(tmp_path: Path) -> None:
+    path = _log(tmp_path, WHOLE)
+    assert [r["n"] for r in read_records(path)] == [1, 2]
+    assert path.read_bytes() == WHOLE
+
+
+@pytest.mark.parametrize(
+    "tail",
+    [
+        b"\0" * 1539,  # the file grew but its data never landed (ext4 after a hard stop)
+        b'{"key": "a#3", "n"',  # an append cut off partway
+        b'{"key": "a#3", "n": 3}',  # a whole record whose newline never landed
+        b'{"key": "a#3"' + b"\0" * 40,  # cut off, then zeros
+        b"\0" * 40 + b"\n",  # zeros ending in a newline, nothing whole after them
+    ],
+)
+def test_a_torn_tail_is_cut_off_and_reported(
+    tmp_path: Path, tail: bytes, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = _log(tmp_path, WHOLE + tail)
+    assert [r["n"] for r in read_records(path)] == [1, 2]
+    assert path.read_bytes() == WHOLE, "the next append must start a clean line"
+    assert f"cut {len(tail)} bytes" in capsys.readouterr().err
+
+
+def test_appending_after_a_cut_leaves_a_readable_log(tmp_path: Path) -> None:
+    path = _log(tmp_path, WHOLE + b"\0" * 64)
+    read_records(path)
+    with path.open("a", encoding="utf-8") as handle:
+        append_record(handle, {"key": "a#3", "n": 3})
+    assert [r["n"] for r in read_records(path)] == [1, 2, 3]
+
+
+def test_an_unreadable_line_with_whole_records_after_it_raises(tmp_path: Path) -> None:
+    damaged = WHOLE + b"\0" * 16 + b"\n" + b'{"key": "a#3", "n": 3}\n'
+    path = _log(tmp_path, damaged)
+    with pytest.raises(ValueError, match="line 3"):
+        read_records(path)
+    assert path.read_bytes() == damaged, "damage that is not a torn append is left for a person"
+
+
+def test_blank_lines_and_an_empty_log_read_as_before(tmp_path: Path) -> None:
+    assert read_records(_log(tmp_path, b"")) == []
+    path = _log(tmp_path, b'{"n": 1}\n\n{"n": 2}\n')
+    assert [r["n"] for r in read_records(path)] == [1, 2]
+
+
+def test_an_append_is_one_json_line(tmp_path: Path) -> None:
+    path = tmp_path / "log.jsonl"
+    with path.open("a", encoding="utf-8") as handle:
+        append_record(handle, {"key": "a#1", "text": "ü\nnext"})
+    assert path.read_text(encoding="utf-8").count("\n") == 1
+    assert json.loads(path.read_text(encoding="utf-8")) == {"key": "a#1", "text": "ü\nnext"}
+
+
+def test_an_atomic_write_replaces_whole_and_leaves_no_staging(tmp_path: Path) -> None:
+    path = tmp_path / "2025-01.ndjson.gz"
+    path.write_bytes(b"old")
+    write_atomic(path, b"new")
+    assert path.read_bytes() == b"new"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["2025-01.ndjson.gz"]
+
+
+def test_a_failed_atomic_write_keeps_the_old_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "2025-01.ndjson.gz"
+    path.write_bytes(b"old")
+
+    def crash(*_: object) -> None:
+        raise OSError("disk gone")
+
+    monkeypatch.setattr("sphragis.durable.os.replace", crash)
+    with pytest.raises(OSError):
+        write_atomic(path, b"new")
+    assert path.read_bytes() == b"old"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["2025-01.ndjson.gz"]
