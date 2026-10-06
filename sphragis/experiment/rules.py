@@ -37,8 +37,13 @@ CHUNK_TOKENS = 16_384
 MAX_MAP_RULES = 15
 MIN_CITED = 2
 MAX_FILE_RULES = 40
-# The review merge keeps a rule found in two or more lists, which reads as recurrence only when
-# there are more lists than two: a pool that fills fewer chunks is refused.
+# A merged rule is kept only if it cites two or more lists, counted here rather than asked of the
+# model: a third smoke run (jobs 223605, 223606) applied "in two or more lists" to one half and
+# not the other (52 rules and 1). Recurrence over lists reads as such only when there are more
+# than two, so a pool that fills fewer chunks is refused. The merge's answer carries citations,
+# so it gets twice a file's budget; the file itself is cut to the budget.
+MIN_CITED_LISTS = 2
+REDUCE_ANSWER_TOKENS = 2 * RULES_BUDGET
 MIN_REVIEW_CHUNKS = 3
 # A map answer's budget: a list, not a file. A chunk holds some hundred and fifty reviewed changes,
 # so a list may run long; an answer that reaches the budget is flagged and its cut line dropped.
@@ -89,14 +94,11 @@ MAP_GUIDE = (
 # industrial rule mining does (Qodo Rule Miner, 2026-07); a written guide states each rule once,
 # so its merge keeps every rule and only the budget cuts.
 REDUCE_REVIEWS = (
-    "Below are lists of coding conventions, each drawn from a different sample of one "
+    "Below are numbered lists of coding conventions, each drawn from a different sample of one "
     "organization's code reviews.\n\n"
-    "Merge them into one rules file for a contributor. Keep a rule only if it appears, in any "
-    "wording, in at least two of the lists. Merge rules that say the same thing. Put the most "
-    f"often repeated rules first, and keep at most {MAX_FILE_RULES}. "
-    + _PARTICULAR
-    + _RULE_FORMAT
-    + "\n\n{lists}"
+    "Merge them into one list for a contributor: merge rules that say the same thing into one, "
+    "keep every rule, merged or not, and end each rule with the numbers of the lists it appears "
+    "in, in brackets, as in '- Rule. [2, 7]'. " + _PARTICULAR + _RULE_FORMAT + "\n\n{lists}"
 )
 
 REDUCE_GUIDE = (
@@ -161,6 +163,23 @@ def review_chunks(sources: Sequence[str], *, length: Callable[[str], int]) -> li
     return groups
 
 
+def recurring(
+    lines: Sequence[str], *, lists: int, length: Callable[[str], int]
+) -> tuple[list[str], list[list[int]]]:
+    """The merged rules citing `MIN_CITED_LISTS` or more of the `lists`, most-cited first (ties
+    in the merge's order), at most `MAX_FILE_RULES`, cut from the end to the file budget; and the
+    lists each cites."""
+    cited_rules = []
+    for order, line in enumerate(lines):
+        rule, numbers = cited(line, lists)
+        if len(numbers) >= MIN_CITED_LISTS:
+            cited_rules.append((-len(numbers), order, rule, sorted(numbers)))
+    kept = sorted(cited_rules)[:MAX_FILE_RULES]
+    while kept and length("\n".join(rule for _, _, rule, _ in kept)) > RULES_BUDGET:
+        kept.pop()
+    return [rule for _, _, rule, _ in kept], [numbers for _, _, _, numbers in kept]
+
+
 def numbered(group: Sequence[str]) -> str:
     """A chunk of reviewed changes, each headed by its number in the chunk, from 1."""
     return "\n\n".join(f"### Change {n}\n{text}" for n, text in enumerate(group, 1))
@@ -221,7 +240,8 @@ def distil(
         kept_lists = []
         for (text, lines, capped), group in zip(mapped, groups, strict=True):
             kept = []
-            for line in lines:
+            # The first MAX_MAP_RULES as listed: the limit is the prompt's, held here.
+            for line in lines[:MAX_MAP_RULES]:
                 rule, numbers = cited(line, len(group))
                 if len(numbers) >= MIN_CITED:
                     kept.append(rule)
@@ -236,7 +256,14 @@ def distil(
     joined = "\n\n".join(
         f"List {n}:\n" + "\n".join(lines) for n, (_, lines, _) in enumerate(mapped, 1)
     )
-    merged, rules, reduce_capped = answer(reduce_prompt.format(lists=joined), RULES_BUDGET)
+    if kind == "reviews":
+        merged, lines, reduce_capped = answer(
+            reduce_prompt.format(lists=joined), REDUCE_ANSWER_TOKENS
+        )
+        rules, recurrence = recurring(lines, lists=len(mapped), length=length)
+    else:
+        merged, rules, reduce_capped = answer(reduce_prompt.format(lists=joined), RULES_BUDGET)
+        recurrence = []
     if not rules:
         raise ValueError("the reduce pass listed no rules")
     return {
@@ -250,6 +277,8 @@ def distil(
         "evidence": evidence,
         "reduce_answer": merged,
         "reduce_capped": reduce_capped,
+        # Per kept mined rule, the lists the merge cited for it.
+        "recurrence": recurrence,
         "rules": rules,
         "pipeline": pipeline(),
         "file": "\n".join(rules),

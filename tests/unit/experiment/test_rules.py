@@ -68,12 +68,13 @@ def _half_chunk(text: str) -> int:
 
 
 class _Cites(_Model):
-    """Answers each map with one rule citing both of its chunk's changes, and one citing one."""
+    """Answers each map with one rule citing both of its chunk's changes, and one citing one;
+    merges with rules citing three lists, two lists, one list and none."""
 
     def __call__(self, prompt: str, max_new_tokens: int) -> tuple[str, bool]:
         self.calls.append((prompt, max_new_tokens))
-        if "Below are lists" in prompt:
-            return "Merged:\n" + "\n".join(rule_lines(prompt)), False
+        if "numbered lists" in prompt:
+            return "- two. [1, 2]\n- one. [3]\n- three. [1, 2, 3]\n- bare.", False
         n = len(self.calls)
         return f"- rule {n}. [1, 2]\n- lone {n}. [1]\n- none {n}.", False
 
@@ -107,7 +108,33 @@ def test_a_mined_rule_stands_on_two_of_its_chunks_numbered_changes() -> None:
     assert "- rule 1." in reduce_call and "[1, 2]" not in reduce_call
     assert "lone" not in reduce_call and "none" not in reduce_call
     assert result["evidence"] == [{"listed": 3, "kept": 1}] * 3
-    assert result["rules"] == ["- rule 1.", "- rule 2.", "- rule 3."]
+    # Kept on two or more cited lists, the most-cited first.
+    assert result["rules"] == ["- three.", "- two."]
+    assert result["recurrence"] == [[1, 2, 3], [1, 2]]
+
+
+def test_a_map_keeps_its_first_rules_up_to_the_limit() -> None:
+    from sphragis.experiment.rules import MAX_MAP_RULES
+
+    class Long(_Cites):
+        def __call__(self, prompt: str, max_new_tokens: int) -> tuple[str, bool]:
+            if "numbered lists" in prompt:
+                return super().__call__(prompt, max_new_tokens)
+            self.calls.append((prompt, max_new_tokens))
+            return "\n".join(f"- r{i}. [1, 2]" for i in range(MAX_MAP_RULES + 5)), False
+
+    result = distil(
+        [f"s{n}" for n in range(6)], kind="reviews", generate=Long(), length=_half_chunk
+    )
+    assert result["evidence"] == [{"listed": MAX_MAP_RULES + 5, "kept": MAX_MAP_RULES}] * 3
+
+
+def test_merged_rules_are_cut_to_the_file_budget_from_the_least_cited() -> None:
+    from sphragis.experiment.rules import recurring
+
+    lines = ["- aaa. [1, 2, 3]", "- bbb. [1, 2]", "- ccc. [2, 3]"]
+    rules, cites = recurring(lines, lists=3, length=lambda t: 10**6 if "ccc" in t else 1)
+    assert rules == ["- aaa.", "- bbb."] and cites == [[1, 2, 3], [1, 2]]
 
 
 def test_mined_rules_need_three_lists_with_evidence() -> None:
@@ -148,9 +175,9 @@ def test_bad_inputs_are_refused() -> None:
         distil([], kind="guide", generate=lambda p, n: ("- r", False), length=_words)
 
 
-def test_the_reviews_reduce_keeps_only_recurring_rules_and_the_guide_reduce_keeps_all() -> None:
-    assert "at least two of the lists" in REDUCE_REVIEWS
-    assert "at least two" not in REDUCE_GUIDE
+def test_the_reviews_merge_cites_its_lists_and_the_guide_merge_keeps_all() -> None:
+    assert "numbers of the lists it appears" in REDUCE_REVIEWS
+    assert "numbers of the lists" not in REDUCE_GUIDE
 
 
 def test_a_rules_arm_keeps_the_default_system_prompt_and_adds_the_file() -> None:

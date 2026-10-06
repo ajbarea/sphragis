@@ -8077,6 +8077,16 @@ arm's fixed input. The base model's guide file (37 rules from `HACKING.rst`) was
 file, guide and review alike, comes from the one distiller, so the written and distilled arms
 differ by source, not by model.
 
+**Recurrence counted in code, after the distiller's first read (2026-10-06).** At 849c25d,
+Qwen3.6-27B mined grounded, organization-specific rules (jobs 223605 and 223606: "use `joinedload`
+instead of the deprecated `joinedload_all`", "use `wfMessage()` for user-facing error messages",
+"use `statslib` instead of `statsd`") and wrote OpenStack's guide file in 44 rules (job 223607).
+But its merge applied "in two or more lists" to one half and not the other: Wikimedia partition
+1's halves kept 52 rules and 1. So the merge now keeps every rule and cites the lists each comes
+from, and code keeps a rule citing two or more lists, most-cited first, at most 40, cut to the
+file budget. A map's first 15 rules are kept, the limit its prompt states, since some chunks
+listed more than 40. Files distilled before this are not used.
+
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
 The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;
