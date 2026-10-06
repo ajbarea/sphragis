@@ -71,6 +71,14 @@ parser.add_argument(
     help="BM25 shots from each pool, or the rules file distilled from it (rules_distil.py)",
 )
 parser.add_argument("--rules", type=Path, help="with --arms rules: the rules_distil.py outputs")
+parser.add_argument(
+    "--rules-suffix",
+    default="",
+    help="with --arms rules: the result suffix they were written under",
+)
+parser.add_argument(
+    "--guides", type=Path, default=Path("datasets/rules"), help="the written guides' snapshot"
+)
 parser.add_argument("--results", type=Path, required=True, help="the adapters' partition runs")
 parser.add_argument("--org", required=True)
 parser.add_argument("--admissible", type=Path, required=True, help="the org's admissible list")
@@ -98,7 +106,8 @@ def exit_on(function: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
 def halves_of(
     root: Path, org: str, recorded: Mapping[str, Mapping[str, Any]]
 ) -> tuple[dict[str, list[dict]], dict[str, list[dict]], dict[str, dict]]:
-    """`read_halves`, its refusal this script's exit."""
+    """`read_halves`, its refusal this script's exit. Called by name, not through `exit_on`, so the
+    corpus-read guard (test_corpus_reads.py) sees this script read through the loader."""
     try:
         return read_halves(root, org, recorded)
     except ValueError as error:
@@ -143,9 +152,10 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
 
 def rules_files(
     args: argparse.Namespace, indexes: Mapping[str, Any], foreign_order: list[int] | None
-) -> dict[tuple[str, str], str]:
-    """The rules files a rules job prompts with, each distilled file checked to come from the
-    pool this job rebuilt (by its rows' ids), so a file stands where its adapter would.
+) -> tuple[dict[tuple[str, str], str], set[str]]:
+    """The rules files a rules job prompts with, and the generators that made them. Each
+    distilled file is checked to come from the pool this job rebuilt (by its rows' ids), so a file
+    stands where its adapter would.
 
     A halves job's files are its partition's halves'; a foreign job's are the foreign
     organization's first partition's halves and both organizations' written guides.
@@ -154,16 +164,20 @@ def rules_files(
         raise SystemExit("--arms rules needs --rules")
 
     def load(name: str) -> dict[str, Any]:
-        path = args.rules / name
+        path = args.rules / f"{name}{args.rules_suffix}.json"
         if not path.is_file():
             raise SystemExit(f"no rules file {path}: run rules_distil.py first")
+        # A claim a running distillation holds is an empty file.
+        if path.stat().st_size == 0:
+            raise SystemExit(f"{path} is still being written")
         return json.loads(path.read_text())
 
     owner, partition = (
         (args.org, args.partition) if args.pools == "halves" else (args.foreign, foreign_order[0])
     )
-    distilled = load(f"rules-reviews-{owner}-p{partition}.json")
+    distilled = load(f"rules-reviews-{owner}-p{partition}")
     files: dict[tuple[str, str], str] = {}
+    made_by = {distilled["generator"]}
     for half, index in indexes.items():
         made = distilled["files"][half]
         if not args.dry_run and made["pool_ids"] != [row["id"] for row in index.pool]:
@@ -171,8 +185,18 @@ def rules_files(
         files[(DISTILLED, half)] = made["file"]
     if args.pools == "foreign":
         for org in (args.org, args.foreign):
-            files[(WRITTEN, org)] = load(f"rules-guide-{org}.json")["files"][org]["file"]
-    return files
+            written = load(f"rules-guide-{org}")
+            # Distilled from the snapshot committed beside this code, page for page.
+            snapshot = json.loads((args.guides / f"guide-{org}.json").read_text())
+            pinned = [
+                {key: source[key] for key in ("title", "revision", "sha256")}
+                for source in snapshot["sources"]
+            ]
+            if written.get("guide") != pinned:
+                raise SystemExit(f"{org}'s written rules file was distilled from another snapshot")
+            files[(WRITTEN, org)] = written["files"][org]["file"]
+            made_by.add(written["generator"])
+    return files, made_by
 
 
 def main() -> None:
@@ -211,7 +235,7 @@ def main() -> None:
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
     prompts: dict[str, list[Prompt]] = {}
-    similarity: dict[str, list[float]] = {}
+    similarity: dict[str, list[float | None]] = {}
     evaluated_by: dict[str, str] = {}
     if args.pools == "halves":
         indexes, held_out, corpora = half_pools(root, args.org, size, fits, recorded)
@@ -232,8 +256,9 @@ def main() -> None:
     if not args.dry_run and pooled != trained:
         raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
     files: dict[tuple[str, str], str] = {}
+    made_by: set[str] = set()
     if args.arms == "rules":
-        files = rules_files(args, indexes, foreign_order)
+        files, made_by = rules_files(args, indexes, foreign_order)
     for evaluated, rows in targets.items():
         if not rows:
             raise SystemExit(f"{evaluated} has no held-out examples to prompt")
@@ -242,7 +267,8 @@ def main() -> None:
             arms, closest = arm_prompts(rows, indexes, evaluated=evaluated)
         else:
             arms = rules_arms(rows, files, evaluated=evaluated)
-            closest = {key: [0.0 for _ in rows] for key in arms}
+            # No shots, so no shot to be a near-duplicate: not measured, not zero.
+            closest = {key: [None for _ in rows] for key in arms}
         for key, texts in arms.items():
             prompts[key], similarity[key], evaluated_by[key] = texts, closest[key], evaluated
 
@@ -280,7 +306,8 @@ def main() -> None:
         # Prompts whose closest shot is a near-duplicate of the target at test 4's threshold:
         # the reader reads own minus sibling without them beside the full reading.
         "near_duplicate_shots": {
-            key: sum(v >= LEAKAGE_THRESHOLD for v in values) for key, values in similarity.items()
+            key: None if None in values else sum(v >= LEAKAGE_THRESHOLD for v in values)
+            for key, values in similarity.items()
         },
         "adapter_items": trained,
         # Which training rows each pool held, so a reading names the examples it retrieved from.
@@ -309,6 +336,10 @@ def main() -> None:
         f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"
     )
+    # A rules file is part of the arm, so it was distilled by the model the arm is scored on.
+    for made in made_by:
+        if not signature.startswith(f"{made}|"):
+            raise SystemExit(f"a rules file was distilled by {made}, the arms run {signature}")
     marks = {key: [fingerprint(signature, p) for p in texts] for key, texts in prompts.items()}
     expected = {
         key: list(zip((t["id"] for t in targets[evaluated_by[key]]), marks[key], strict=True))

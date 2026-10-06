@@ -25,9 +25,10 @@ POOLS="${POOLS:?set POOLS to halves or foreign}"
 # ARMS=rules prompts with the rules files rules_distil.sbatch wrote, from the results directory,
 # instead of BM25 shots; its results are named for it.
 ARMS="${ARMS:-retrieval}"
+# The rules files carry this run's cluster suffix, before any dry or limit tag is added to it.
 case "$ARMS" in
   retrieval) RULES=() ;;
-  rules) RULES=(--arms rules --rules "$SPHRAGIS_RESULTS") ;;
+  rules) RULES=(--arms rules --rules "$SPHRAGIS_RESULTS" --rules-suffix "$RESULT_SUFFIX") ;;
   *) echo "ARMS must be retrieval or rules, not $ARMS" >&2; exit 1 ;;
 esac
 ORG="${ORG:?set ORG to the evaluated organization}"

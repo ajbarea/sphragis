@@ -1575,5 +1575,5 @@ def test_own_against_base_refuses_a_change_in_both_halves() -> None:
     with pytest.raises(ValueError, match="appear in both halves"):
         base_clusters(results, org="o", seed=None, condition="retrieval-k1")
     del results["base|o-b"]
-    with pytest.raises(ValueError, match="no results for .base\|o-b."):
+    with pytest.raises(ValueError, match="base model was not scored on o-b"):
         base_clusters(results, org="o", seed=None, condition="retrieval-k1")

@@ -17,7 +17,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from sphragis.experiment.grid import EvalRun, run_id
-from sphragis.experiment.runner import build_prompt
+from sphragis.experiment.runner import build_prompt, comment_lines
 
 # The file budget, in tokens: one training example's length (training.MAX_SEQ_LENGTH), the
 # context one retrieved shot takes at k = 1.
@@ -25,8 +25,9 @@ RULES_BUDGET = 2048
 # A map chunk's source text, in tokens. It and the map prompt and answer fit the model's 32,768
 # with room to spare; a pool of N rows is some ten to fourteen chunks (spec, measured 2026-10-06).
 CHUNK_TOKENS = 16_384
-# A map answer's budget: a list, not a file.
-MAP_ANSWER_TOKENS = 512
+# A map answer's budget: a list, not a file. A chunk holds some hundred and fifty reviewed changes,
+# so a list may run long; an answer that reaches the budget is flagged and its cut line dropped.
+MAP_ANSWER_TOKENS = 1024
 # The model's own default system prompt (its chat template, read 2026-10-06). The rules arm
 # keeps it and adds the file after it, so the arm differs from the base arm only by the file.
 DEFAULT_SYSTEM = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
@@ -82,9 +83,9 @@ PROMPTS = {
 
 def review_text(row: Mapping[str, Any]) -> str:
     """One reviewed change as a map pass reads it: the comments, the code, the revision."""
-    comments = "\n".join(f"- {c}" for c in row.get("comments", []))
     return (
-        f"Review comments:\n{comments}\n\nCode:\n{row['before']}\n\nRevised code:\n{row['after']}\n"
+        f"Review comments:\n{comment_lines(row)}\n\nCode:\n{row['before']}\n\n"
+        f"Revised code:\n{row['after']}\n"
     )
 
 
@@ -134,20 +135,30 @@ def distil(
         raise ValueError("no sources to distil a rules file from")
     map_prompt, reduce_prompt = PROMPTS[kind]
     parts = chunks(sources, length=length)
-    lists = [generate(map_prompt.format(source=part), MAP_ANSWER_TOKENS) for part in parts]
+
+    def answer(prompt: str, budget: int) -> tuple[str, list[str], bool]:
+        # An answer that reached its budget was cut, so its last line may be half a rule.
+        text = generate(prompt, budget)
+        capped = length(text) >= budget
+        lines = rule_lines(text)
+        return text, lines[:-1] if capped and lines else lines, capped
+
+    mapped = [answer(map_prompt.format(source=part), MAP_ANSWER_TOKENS) for part in parts]
     joined = "\n\n".join(
-        f"List {n}:\n" + "\n".join(rule_lines(answer)) for n, answer in enumerate(lists, 1)
+        f"List {n}:\n" + "\n".join(lines) for n, (_, lines, _) in enumerate(mapped, 1)
     )
-    merged = generate(reduce_prompt.format(lists=joined), RULES_BUDGET)
-    rules = rule_lines(merged)
+    merged, rules, reduce_capped = answer(reduce_prompt.format(lists=joined), RULES_BUDGET)
     if not rules:
         raise ValueError("the reduce pass listed no rules")
     return {
         "kind": kind,
         "chunks": len(parts),
         "chunk_tokens": [length(part) for part in parts],
-        "map_lists": lists,
+        "map_lists": [text for text, _, _ in mapped],
+        # Which answers reached their budget: a capped map list lost its tail.
+        "map_capped": [capped for _, _, capped in mapped],
         "reduce_answer": merged,
+        "reduce_capped": reduce_capped,
         "rules": rules,
         "file": "\n".join(rules),
         "file_tokens": length("\n".join(rules)),

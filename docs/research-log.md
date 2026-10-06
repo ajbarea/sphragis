@@ -8004,15 +8004,17 @@ retrieval comparator's runner, a rules file in each pool's place. Design of reco
 **Distillation** (`sphragis/experiment/rules.py`, `scripts/rules_distil.py`). The base model
 (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32), not a stronger one, so no second model's prior
 about these organizations enters the file. A map pass packs a source into chunks of at most 16,384
-tokens and lists, one imperative rule a line, the conventions each states; a reduce pass merges the
-lists into one file of at most 2,048 tokens, one training example's length, the context one
+tokens and lists, one imperative rule a line, the conventions each states, in at most 1,024 tokens;
+an answer that reaches its budget is flagged and its last, possibly cut, line dropped. A reduce pass
+merges the lists into one file of at most 2,048 tokens, one training example's length, the context one
 retrieved shot takes at k = 1. Two sources, one pipeline. Reviewed changes: each half's pool, the
 rows its adapter trained on (checked by row ids against the comparator's pools), each change's
 comments, code and revision; the merge keeps a rule only if it recurs in two or more lists, the
 promotion rule of industrial rule mining (Qodo's Rule Miner, July 2026: specific, applied by the
 author, recurring). Written guides (`scripts/rules_guides.py`, `datasets/rules/`): OpenStack's
 `HACKING.rst` at e75bfb3, and MediaWiki's general and documentation pages with the page for every
-language that has a file in Wikimedia's training window, as plain text pinned to their revisions;
+language that has a file in Wikimedia's training window, most-used language first, as plain text
+pinned to their revisions;
 MediaWiki's Puppet page soft-redirects to wikitech's Puppet guidelines, read there. A guide states
 each rule once, so its merge keeps every rule and only the budget cuts. 1,795 words for OpenStack,
 20,699 for Wikimedia's twelve pages.

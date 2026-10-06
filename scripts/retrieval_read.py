@@ -201,8 +201,10 @@ def read_family(
     condition_name: str,
     seed: int,
     resamples: int,
+    shots: bool,
 ) -> dict[str, Any]:
-    """One family's contrasts over the runs, the rule applied to own minus sibling."""
+    """One family's contrasts over the runs, the rule applied to own minus sibling; with `shots`,
+    the reading again without targets whose shot is a near-duplicate of them."""
     first, second = halves(org)
     read = {"org": org, "seed": None, "condition": condition_name}
     arms = {
@@ -229,8 +231,12 @@ def read_family(
     # Beside it, the same reading without any target whose own or sibling shot is a
     # near-duplicate of it at test 4's threshold: projects split whole, so such a shot sits in
     # the own half's pool, and copying it would read as a half-split contrast.
-    shots = [k for h in (first, second) for k in (arms["own"][h], arms["sibling"][h])]
-    flagged = near_duplicate_targets(cut, shots)
+    if not shots:
+        # A rules arm has no shots to be near-duplicates: not applicable, not zero.
+        out["without_near_duplicate_shots"] = None
+        return report_family(out, name=name, org=org)
+    retrieved = [k for h in (first, second) for k in (arms["own"][h], arms["sibling"][h])]
+    flagged = near_duplicate_targets(cut, retrieved)
     clean = [
         {k: [row for row in rows if row["id"] not in flagged] for k, rows in r.items()} for r in cut
     ]
@@ -244,6 +250,11 @@ def read_family(
         "threshold": LEAKAGE_THRESHOLD,
         "own_minus_sibling": without,
     }
+    return report_family(out, name=name, org=org)
+
+
+def report_family(out: dict[str, Any], *, name: str, org: str) -> dict[str, Any]:
+    """Print one family's reading line and return it."""
     cell = out["own_minus_sibling"]
     print(
         f"{name} {org}: own-sibling {cell['estimate']:+.4f} "
@@ -337,6 +348,7 @@ def main() -> None:
                 condition_name=condition_name,
                 seed=seed,
                 resamples=resamples,
+                shots=args.arms == "retrieval",
             ),
         }
         if args.arms == "rules":

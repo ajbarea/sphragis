@@ -654,6 +654,9 @@ def base_clusters(
     condition: str = "adapter",
 ) -> list[list[Cluster]]:
     """Each half's own arm against the base model on that half, one list per evaluated half."""
+    for window in halves(org):
+        if run_id(EvalRun("base", window, None)) not in results:
+            raise ValueError(f"the base model was not scored on {window}")
     return paired_clusters(
         results,
         org=org,

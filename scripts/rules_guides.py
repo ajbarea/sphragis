@@ -141,7 +141,8 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     present = extensions(args.results, "wikimedia")
     titles = list(MEDIAWIKI_GENERAL)
-    for extension in sorted(present):
+    # Most-used language first, so a cut, if any, falls on the least-used.
+    for extension, _ in present.most_common():
         page = MEDIAWIKI_PAGES.get(extension)
         if page and page not in titles:
             titles.append(page)

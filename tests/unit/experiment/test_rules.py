@@ -98,3 +98,22 @@ def test_the_reviews_reduce_keeps_only_recurring_rules_and_the_guide_reduce_keep
 def test_a_rules_arm_keeps_the_default_system_prompt_and_adds_the_file() -> None:
     system = rules_system("- Use the logger.")
     assert system.startswith(DEFAULT_SYSTEM + "\n\n") and system.endswith("- Use the logger.")
+
+
+def test_a_capped_answer_is_flagged_and_its_cut_line_dropped() -> None:
+    reduce_prompts: list[str] = []
+
+    def model(prompt: str, budget: int) -> str:
+        if "Below are lists" in prompt:
+            reduce_prompts.append(prompt)
+            return "- one\n- two\n- three"
+        # The map answer runs to its budget: three whole rules and a half one.
+        return "- one\n- two\n- three\n- fou"
+
+    def length(text: str) -> int:
+        return 10**6 if text.endswith("- fou") else len(text.split())
+
+    result = distil(["a"], kind="reviews", generate=model, length=length)
+    assert result["map_capped"] == [True] and result["reduce_capped"] is False
+    # The reduce saw the capped list without its last, cut line.
+    assert "- three" in reduce_prompts[0] and "- fou" not in reduce_prompts[0]

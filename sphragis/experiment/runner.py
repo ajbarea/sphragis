@@ -30,10 +30,14 @@ class Trainer(Protocol):
     def train(self, org: str, seed: int) -> str: ...
 
 
+def comment_lines(example: Mapping[str, Any]) -> str:
+    """The review comments anchored in an example's hunk, one `- ` line each."""
+    return "\n".join(f"- {c}" for c in example.get("comments", []))
+
+
 def build_prompt(example: Mapping[str, Any]) -> str:
     """The refinement prompt: the reviewed hunk plus the comments anchored in it."""
-    comments = "\n".join(f"- {c}" for c in example.get("comments", []))
-    return _PROMPT.format(comments=comments, before=example["before"])
+    return _PROMPT.format(comments=comment_lines(example), before=example["before"])
 
 
 def evaluate(generator: Generator, examples: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:

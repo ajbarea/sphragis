@@ -534,14 +534,57 @@ def test_a_rules_job_prompts_with_each_file_in_the_system_turn(
     rules.mkdir()
     halves = ("openstack-a", "openstack-b")
     files = {h: {"pool_ids": [], "file": f"- rule of {h}"} for h in halves}
-    (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps({"files": files}))
+    made = {"files": files, "generator": "qwen@rev|float32"}
+    (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps(made))
     report = _halves(
         corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
         "--rules", str(rules),
     )  # fmt: skip
     expected = {rules_key(DISTILLED, owner, evaluated) for owner in halves for evaluated in halves}
     assert set(report["prompt_chars"]) == expected and report["arms"] == "rules"
-    assert not any(report["near_duplicate_shots"].values())
+    # No shots in a rules arm: its near-duplicate count is not applicable, not zero.
+    assert set(report["near_duplicate_shots"].values()) == {None}
+
+
+def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
+    import argparse
+
+    rules = tmp_path / "rules"
+    rules.mkdir()
+    pool = [{"id": "x1"}, {"id": "x2"}]
+    files = {"openstack-a": {"pool_ids": ["x1", "other"], "file": "- r"}}
+    made = {"files": files, "generator": "qwen@rev|float32"}
+    (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
+    args = argparse.Namespace(
+        rules=rules, rules_suffix="", pools="halves", org="openstack", partition=3, dry_run=False
+    )
+
+    class Index:
+        def __init__(self, rows: list[dict]) -> None:
+            self.pool = rows
+
+    with pytest.raises(SystemExit, match="distilled from another pool"):
+        comparator.rules_files(args, {"openstack-a": Index(pool)}, None)
+    files["openstack-a"]["pool_ids"] = ["x1", "x2"]
+    (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
+    picked, made_by = comparator.rules_files(args, {"openstack-a": Index(pool)}, None)
+    assert picked == {(DISTILLED, "openstack-a"): "- r"} and made_by == {"qwen@rev|float32"}
+
+
+def test_a_rules_file_still_being_written_is_refused(tmp_path: Path) -> None:
+    import argparse
+
+    (tmp_path / "rules-reviews-openstack-p3-x.json").write_text("")
+    args = argparse.Namespace(
+        rules=tmp_path,
+        rules_suffix="-x",
+        pools="halves",
+        org="openstack",
+        partition=3,
+        dry_run=False,
+    )
+    with pytest.raises(SystemExit, match="still being written"):
+        comparator.rules_files(args, {}, None)
 
 
 def test_a_rules_job_without_its_files_is_refused(corpora: dict[str, Path], tmp_path: Path) -> None:
@@ -550,3 +593,21 @@ def test_a_rules_job_without_its_files_is_refused(corpora: dict[str, Path], tmp_
             corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
             "--rules", str(tmp_path),
         )  # fmt: skip
+
+
+def test_a_guide_whose_text_does_not_match_its_hash_is_refused(tmp_path: Path) -> None:
+    import argparse
+
+    distil_script = _script("rules_distil")
+    guide = {"sources": [{"title": "T", "revision": 1, "sha256": "0" * 64, "text": "Use tabs."}]}
+    (tmp_path / "guide-openstack.json").write_text(json.dumps(guide))
+    args = argparse.Namespace(source="guide", org="openstack", guides=tmp_path)
+    with pytest.raises(ValueError, match="does not match its recorded sha256"):
+        distil_script.sources_of(args, None)
+    import hashlib
+
+    guide["sources"][0]["sha256"] = hashlib.sha256(b"Use tabs.").hexdigest()
+    (tmp_path / "guide-openstack.json").write_text(json.dumps(guide))
+    head, plan = distil_script.sources_of(args, None)
+    assert plan == {"openstack": {"kind": "guide", "sources": ["Use tabs."]}}
+    assert head["guide"] == [{"title": "T", "revision": 1, "sha256": guide["sources"][0]["sha256"]}]
