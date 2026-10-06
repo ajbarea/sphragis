@@ -8043,7 +8043,9 @@ They showed two faults. The guide file stopped at exactly 512 tokens mid-word, a
 its budget with nothing recording it; the map budget is now 1,024, and a capped answer is flagged and
 its cut line dropped. The mined files were mostly practice any project follows ("use meaningful
 variable names", "follow PEP 8"), so the two review prompts now ask the model to leave out general
-good practice and keep conventions particular to the organization, naming what they concern. The
-guide prompts are unchanged: a written guide is the organization's own declaration, and its rules
+good practice and keep conventions particular to the organization, naming what they concern; their
+topic list drops tests and error handling, and the merge no longer drops rules that name a
+function, so the prompts do not contradict that request. A review distillation needs three or more
+chunks, so "in two or more lists" reads as recurrence. The guide prompts are unchanged: a written guide is the organization's own declaration, and its rules
 are kept as stated. The smoke files are not used; every file is distilled again under the amended
 pipeline.

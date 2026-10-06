@@ -13,11 +13,11 @@
   ],
   "selection": "the hacking guidelines",
   "org": "openstack",
-  "fetched_at": "2026-10-06T06:29:11.756164+00:00",
+  "fetched_at": "2026-10-06T07:20:37.088590+00:00",
   "provenance": {
-    "generated_at": "2026-10-06T06:29:11.756178+00:00",
+    "generated_at": "2026-10-06T07:20:37.088605+00:00",
     "git": {
-      "commit": "02e6456d4586b518579882d5aff708c580e8dcdb",
+      "commit": "a2fb93020c0e2a0a20489e72ef22364d5df1f789",
       "branch": "HEAD"
     },
     "python": "3.13.15",
