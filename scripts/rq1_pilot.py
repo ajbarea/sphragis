@@ -14,14 +14,13 @@ from pathlib import Path
 
 import torch
 
-from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.load import derived_file_rows, refined_examples
-from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.load import derived_file_rows
+from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.holdout import (
     equalize_training,
     holdout_by_change,
-    split_by_window,
     verbatim_overlap,
+    window_split,
 )
 from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
@@ -127,31 +126,23 @@ for org in orgs:
         rows = derived_file_rows(Path(path), legacy=args.legacy_corpus)
         kept, removed = run_dedup(rows)
         train, evaluate_on = holdout_by_change(kept, seed=args.split_seed)
-        source_note = f"holdout seed {args.split_seed} over {path}"
+        source_note, examples = f"holdout seed {args.split_seed} over {path}", len(rows)
     else:
         # Study shape: train and evaluate on separate time windows.
-        rows = refined_examples(args.root, org)
-        if not rows:
-            raise SystemExit(f"no refined examples under {args.root / org}; build and refine first")
-        kept, removed = run_dedup(rows)
-        windows, straddling, unassigned = run_split(kept, WINDOWS)
-        if straddling or unassigned:
-            raise SystemExit(
-                f"{org}: {len(straddling)} straddling and {len(unassigned)} unassigned changes"
+        try:
+            train, evaluate_on, read = window_split(
+                args.root, org, train_window=args.train_window, eval_window=args.eval_window
             )
-        train, evaluate_on = split_by_window(
-            windows, train_window=args.train_window, eval_window=args.eval_window
-        )
-        source_note = (
-            f"{args.train_window} -> {args.eval_window} windows under {args.root / org / 'refined'}"
-        )
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+        source_note, examples, removed = read["source"], read["examples"], read["dedup_removed"]
     leaked = verbatim_overlap(train, evaluate_on)
     assert not leaked, f"{org}: {len(leaked)} held-out examples repeat a training pair"
     train_rows[org], held_out[org] = train, evaluate_on
     summary[org] = {
         "source": source_note,
         "legacy_corpus": bool(args.corpus) and args.legacy_corpus,
-        "examples": len(rows),
+        "examples": examples,
         "dedup_removed": removed,
         "train_examples": len(train),
         "held_out_examples": len(evaluate_on),

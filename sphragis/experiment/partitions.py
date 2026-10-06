@@ -194,19 +194,28 @@ def pilot_sizing(
     return runs
 
 
-def _eval_ids(results: Results) -> set[str]:
-    """Every example a run's adapters scored: its two halves' windows together."""
-    ids = {row["id"] for arm, rows in results.items() if arm.startswith("adapter:") for row in rows}
+def eval_ids(results: Results, condition: str) -> set[str]:
+    """Every example a run's arms of `condition` scored: its two halves' windows together."""
+    ids = {
+        row["id"]
+        for arm, rows in results.items()
+        if arm.startswith(f"{condition}:")
+        for row in rows
+    }
     if not ids:
-        raise ValueError("a run with no adapter arms")
+        raise ValueError(f"a run with no {condition} arms")
     return ids
 
 
 def common_runs(
-    runs: Sequence[tuple[Results, int]], *, org: str, metric: str = "exact_match"
+    runs: Sequence[tuple[Results, int | None]],
+    *,
+    org: str,
+    metric: str = "exact_match",
+    condition: str = "adapter",
 ) -> tuple[list[list[list[Any]]], dict[str, int]]:
     """Each run's own-against-sibling clusters on the examples every run scored."""
-    per_run = [_eval_ids(results) for results, _ in runs]
+    per_run = [eval_ids(results, condition) for results, _ in runs]
     union = set().union(*per_run)
     common = set.intersection(*per_run)
     dropped = len(union) - len(common)
@@ -222,6 +231,7 @@ def common_runs(
             org=org,
             seed=seed,
             metric=metric,
+            condition=condition,
         )
         for results, seed in runs
     ]

@@ -7917,3 +7917,50 @@ registered bound, never at an observed effect. Both gates take these artifacts a
 one for every organization in `below_projection` and none for any other, check each Monte Carlo
 SE against its power and trial count, and report each level's power in the cell's `size`. `partition_sensitivity.py` now records its seed, and the pool and
 partition rebuild both scripts use is one function (`pools`).
+
+### Planned before any run: the retrieval comparator on the registered runner (2026-10-05)
+
+The registered comparator (registered decisions, "Comparators and audits"), rebuilt so its contrasts
+are the adapters' contrasts with a pool where each adapter was. A first draft (#77, 2026-10-02) was
+amended before any generation, after an independent review found three biases. Its pools were whole
+halves of unequal size, with a foreign pool twice their size, and closer neighbours in a larger pool
+pull sibling minus foreign toward zero. It deduplicated each organization once, where the runner
+deduplicates each half. And it pooled the halves in one bootstrap. None of these survives here.
+
+**Method** (`scripts/retrieval_comparator.py`, `scripts/retrieval_read.py`,
+`sphragis/experiment/retrieval.py`). A run is one admissible partition, built as
+`partition_run.sbatch` builds it (`placebo_corpus.py --dedup-org --partition-seed`). Each half is
+read by `window_split`, the function `rq1_pilot.py` now reads every corpus through. Each half's pool
+is its adapter's training set: `equalize_training` at the run's seed to the admissible list's size,
+less the rows `build_supervised` refuses at 2,048 tokens. Every development-window example is
+prompted with its k nearest by BM25 over comments and old code, solved in the registered template,
+at k = 1 and 3. The pools are its own half's, its sibling half's, and each half of the other
+organization's first admissible partition, cut to the same size. The other organization's pools are
+averaged per example, as its two adapters are. The base arm and the foreign arms do not depend on the
+evaluated organization's partition, so one job computes them for every run. The generator is the
+registered one (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A pool row repeated verbatim in a
+target refuses the job, and every pool is held to test 4 at the registered threshold and rate.
+
+**Fixed now.** The first 10 admissible partitions of OpenStack and of Wikimedia (`PARTITIONS`,
+Ritzwoller and Romano's least burn-in, `partitions.K_MIN`), the first 10 their adapters ran on, so
+the two readings share partitions. Contrasts are read with the registered estimator
+(`partitioned_crossed_draws`, runs crossed with changes, halves weighted equally) at 95%, on the
+examples every run scored, under the partition design's 1% ceiling on dropped examples. The arms go
+through the adapters' own cluster builders (`project_clusters`, `organization_clusters`, now keyed by
+`condition`). The contrasts are own minus sibling (H1's counterpart), sibling minus foreign (the
+organization contrast's) and own minus none.
+
+**Reading rule**, on own minus sibling at each k. A lower bound above the SESOI (0.01) reads "carries a
+half-split contrast". An interval inside the SESOI band reads "carries none as large as the SESOI".
+Anything else is inconclusive. The adapters' development-window H1 (`partition-pilot-<org>.json`)
+is reported beside it. If retrieval carries the contrast and the adapters do not, the own half's
+conventions are recoverable at inference time and the adapters at N do not learn them. If neither
+does, the half boundary carries no convention either method finds. If retrieval carries none and the
+adapters' contrast is meaningful, the adapters carry what retrieval does not. Exploratory: nothing
+here binds a verdict.
+
+**Cost**, before it is spent. There are 4 generations an example a partition and 5 an example for the
+base and foreign arms. On the pilots' 501 and 711 examples (`examples` in each partition pilot) that
+is 22,545 and 31,995 generations, 54,540 in all. At the measured 38-43 tokens a second (job 143201)
+and the 256-token ceiling (`MAX_NEW_TOKENS`), decoding is bounded by 90 to 102 GH200-hours. The first
+job measures the actual rate. Dry runs on a login node build every prompt and run test 4 first.

@@ -21,9 +21,11 @@ _SCRIPTS = sorted(
 )
 
 # Scripts that legitimately call json.loads on something that is not a training corpus (a prior
-# result, a config file). Named here, narrowly, rather than weakening the rule for everyone; empty
-# because no script currently needs it.
-_JSON_LOADS_ALLOWED: dict[str, str] = {}
+# result, a config file). Named here, narrowly, rather than weakening the rule for everyone.
+_JSON_LOADS_ALLOWED: dict[str, str] = {
+    "retrieval_comparator.py": "reads the admissible list, a partition's placebo.json and its own "
+    "score rows to resume; the corpus goes through window_split",
+}
 
 
 def _module_aliases(tree: ast.AST, module: str) -> set[str]:
@@ -67,16 +69,37 @@ def _calls_any(tree: ast.AST, *, direct: set[str], attrs: set[str], via: set[str
 
 
 _LOADERS = {"derived_file_rows", "refined_examples"}
+# Readers that load through one of `_LOADERS` themselves (checked below), so calling them is
+# reading through the loader.
+_WRAPPERS = {"sphragis.experiment.holdout": {"window_split"}}
 
 
 def _calls_a_loader(tree: ast.AST) -> bool:
-    """`derived_file_rows(...)` or `refined_examples(...)`, resolved through any import form."""
-    return _calls_any(
-        tree,
-        direct=_from_import_aliases(tree, "sphragis.corpus.load", _LOADERS),
-        attrs=_LOADERS,
-        via=_module_aliases(tree, "sphragis.corpus.load"),
+    """A loader or a wrapper of one, resolved through any import form."""
+    modules = {"sphragis.corpus.load": _LOADERS, **_WRAPPERS}
+    return any(
+        _calls_any(
+            tree,
+            direct=_from_import_aliases(tree, module, names),
+            attrs=names,
+            via=_module_aliases(tree, module),
+        )
+        for module, names in modules.items()
     )
+
+
+@pytest.mark.parametrize("module", sorted(_WRAPPERS))
+def test_a_wrapper_reads_through_the_loader(module: str) -> None:
+    path = _ROOT / Path(*module.split(".")).with_suffix(".py")
+    tree = ast.parse(path.read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name in _WRAPPERS[module]:
+            assert _calls_any(
+                node,
+                direct=_from_import_aliases(tree, "sphragis.corpus.load", _LOADERS),
+                attrs=_LOADERS,
+                via=_module_aliases(tree, "sphragis.corpus.load"),
+            ), f"{module}.{node.name} does not read through the loader"
 
 
 _JSON_READERS = {"load", "loads"}

@@ -10,7 +10,12 @@ from __future__ import annotations
 
 import random
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
+
+from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.load import refined_examples
+from sphragis.corpus.pipeline import run_dedup, run_split
 
 
 def holdout_by_change(
@@ -111,3 +116,31 @@ def split_by_window(
     if train_window == eval_window:
         raise ValueError(f"train and eval windows are both {train_window!r}")
     return [dict(r) for r in windows[train_window]], [dict(r) for r in windows[eval_window]]
+
+
+def window_split(
+    root: Path, org: str, *, train_window: str = "train", eval_window: str = "dev"
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+    """One corpus's training and held-out rows as the registered runner reads them.
+
+    Deduplicated as its own corpus, split into the study's time windows, and refused if any
+    change straddles a boundary or falls outside every window. Returns the two row sets and a
+    summary of where they came from. Every reader of a built corpus takes its rows from here,
+    so a comparator is evaluated on the examples the adapters were.
+    """
+    rows = refined_examples(root, org)
+    if not rows:
+        raise ValueError(f"no refined examples under {root / org}; build and refine first")
+    kept, removed = run_dedup(rows)
+    windows, straddling, unassigned = run_split(kept, WINDOWS)
+    if straddling or unassigned:
+        raise ValueError(
+            f"{org}: {len(straddling)} straddling and {len(unassigned)} unassigned changes"
+        )
+    train, held_out = split_by_window(windows, train_window=train_window, eval_window=eval_window)
+    summary = {
+        "source": f"{train_window} -> {eval_window} windows under {root / org / 'refined'}",
+        "examples": len(rows),
+        "dedup_removed": removed,
+    }
+    return train, held_out, summary

@@ -1,0 +1,274 @@
+"""Few-shot retrieval as the adapters' comparator: the generations, one job per pool set.
+
+The base model is prompted with the k training examples nearest a held-out example by BM25,
+solved, from a pool that stands where an adapter would: the rows that adapter trains on. No
+weights are trained. `scripts/retrieval_read.py` reads the contrasts. Exploratory, outside the
+registered cells; the test window is sealed and never read.
+
+`--pools halves`, once per admissible partition of an organization: `--root` is the partition's
+corpus (`placebo_corpus.py --dedup-org --partition-seed`), each half read as the partition run
+reads it (`window_split`) and cut as its adapter's training set (`retrieval.pools`). Every
+held-out example of either half is prompted from each half's pool at each k.
+
+`--pools foreign`, once per organization: the organization's held-out examples, deduplicated
+once (`--root` its windowed corpus), prompted alone (the base arm) and from each half of the
+foreign organization's first admissible partition (`--foreign-root`), cut the same way. These
+arms do not depend on the organization's own partition, so one job serves every run.
+
+    uv run --no-sync python scripts/retrieval_comparator.py --pools halves \\
+        --root <corpus-partition root> --org openstack --partition 2 \\
+        --admissible datasets/results/admissible-partitions-openstack.json \\
+        --out retrieval-halves-openstack-p2.json [--dry-run]
+
+Run on the cluster: scripts/retrieval_comparator.sbatch.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from collections.abc import Callable, Mapping
+from pathlib import Path
+from statistics import median
+from typing import Any
+
+from sphragis.experiment.decomposition import halves
+from sphragis.experiment.grid import EvalRun, run_id
+from sphragis.experiment.holdout import verbatim_overlap, window_split
+from sphragis.experiment.neutral import LEAKAGE_MAX_RATE, LEAKAGE_THRESHOLD, leakage_check
+from sphragis.experiment.retrieval import KS, PARTITIONS, arm_prompts, few_shot_prompt, pools
+from sphragis.experiment.runner import build_prompt, require_unique_ids
+from sphragis.measure.score import score
+from sphragis.provenance import provenance_header
+
+# The training budget every adapter was fitted under (model.TRAINING), in tokens.
+MAX_SEQ_LENGTH = 2048
+# A dry run loads no tokenizer, so it stands in characters at four a token, and says so.
+CHARS_PER_TOKEN = 4
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--pools", choices=["halves", "foreign"], required=True)
+parser.add_argument("--root", type=Path, required=True)
+parser.add_argument("--org", required=True)
+parser.add_argument("--admissible", type=Path, required=True, help="the org's admissible list")
+parser.add_argument("--partition", type=int, help="with --pools halves: the partition seed")
+parser.add_argument("--foreign", help="with --pools foreign: the foreign organization")
+parser.add_argument("--foreign-root", type=Path, help="with --pools foreign: its partition corpus")
+parser.add_argument("--foreign-admissible", type=Path, help="with --pools foreign: its list")
+parser.add_argument("--limit", type=int, help="first N targets per evaluated set, a smoke run")
+parser.add_argument("--dry-run", action="store_true", help="build every prompt, load no model")
+parser.add_argument("--out", type=Path, required=True)
+
+
+def trainable_by_chars(row: Mapping[str, Any]) -> bool:
+    """Whether an example plausibly fits the training budget, for a dry run without a tokenizer."""
+    return len(build_prompt(row)) + len(str(row["after"])) <= MAX_SEQ_LENGTH * CHARS_PER_TOKEN
+
+
+def trainable_by_tokens(tokenizer: Any) -> Callable[[Mapping[str, Any]], bool]:
+    """Whether `build_supervised` would accept an example as a training item."""
+    from sphragis.experiment.training import build_supervised
+
+    def fits(row: Mapping[str, Any]) -> bool:
+        try:
+            build_supervised(tokenizer, row, prompt_builder=build_prompt, max_length=MAX_SEQ_LENGTH)
+        except ValueError:
+            return False
+        return True
+
+    return fits
+
+
+def partition_root(root: Path, org: str, partition: int) -> dict[str, Any]:
+    """The manifest of a partition corpus, refused unless it is `org`'s `partition`, unplanted."""
+    path = root / "placebo.json"
+    if not path.is_file():
+        raise SystemExit(f"{root}: no placebo.json; build it with placebo_corpus.py")
+    manifest = json.loads(path.read_text())
+    found = {
+        "source_org": manifest.get("source_org"),
+        "partition_seed": manifest.get("partition_seed"),
+        "deduplicated once": manifest.get("dedup_org") is not None,
+        "planted": manifest.get("plant") is not None,
+        "names": manifest.get("names"),
+    }
+    wanted = {
+        "source_org": org,
+        "partition_seed": partition,
+        "deduplicated once": True,
+        "planted": False,
+        "names": list(halves(org)),
+    }
+    if found != wanted:
+        raise SystemExit(f"{path}: {found}, not {wanted}")
+    return manifest
+
+
+def admissible(path: Path, org: str) -> tuple[list[int], int]:
+    """The organization's first `PARTITIONS` admissible partitions and its training size."""
+    listing = json.loads(path.read_text())
+    if listing.get("org", org) != org:
+        raise SystemExit(f"{path} lists {listing['org']}'s partitions, not {org}'s")
+    order = listing["admissible"][:PARTITIONS]
+    if len(order) < PARTITIONS:
+        raise SystemExit(f"{path}: {len(order)} admissible partitions, fewer than {PARTITIONS}")
+    return order, listing["size_floor"]
+
+
+def half_pools(
+    root: Path, org: str, size: int, fits: Callable[[Mapping[str, Any]], bool]
+) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
+    """A partition's two half pools, each half's held-out rows, and where each came from."""
+    train, held_out, summary = {}, {}, {}
+    for half in halves(org):
+        try:
+            train[half], held_out[half], summary[half] = window_split(root, half)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+    return pools(train, size=size, fits=fits), held_out, summary
+
+
+def main() -> None:
+    args = parser.parse_args()
+    order, size = admissible(args.admissible, args.org)
+    foreign_order: list[int] | None = None
+    if args.pools == "halves":
+        if args.partition not in order:
+            raise SystemExit(f"partition {args.partition} is not among the first {order}")
+        partition_root(args.root, args.org, args.partition)
+    else:
+        if not (args.foreign and args.foreign_root and args.foreign_admissible):
+            raise SystemExit(
+                "--pools foreign needs --foreign, --foreign-root, --foreign-admissible"
+            )
+        if args.foreign == args.org:
+            raise SystemExit("the foreign organization must not be the one evaluated")
+        foreign_order, foreign_size = admissible(args.foreign_admissible, args.foreign)
+        # A larger pool holds closer neighbours, so the arms compare at one size or not at all.
+        if foreign_size != size:
+            raise SystemExit(f"{args.foreign} trains at {foreign_size}, {args.org} at {size}")
+        partition_root(args.foreign_root, args.foreign, foreign_order[0])
+
+    generator = None
+    if args.dry_run:
+        fits = trainable_by_chars
+    else:
+        from sphragis.experiment.model import HFGenerator
+
+        generator = HFGenerator()
+        fits = trainable_by_tokens(generator.tokenizer)
+
+    # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
+    targets: dict[str, list[dict]] = {}
+    prompts: dict[str, list[str]] = {}
+    evaluated_by: dict[str, str] = {}
+    if args.pools == "halves":
+        indexes, held_out, corpora = half_pools(args.root, args.org, size, fits)
+        for half in halves(args.org):
+            targets[half] = held_out[half][: args.limit]
+    else:
+        try:
+            _, rows, read = window_split(args.root, args.org)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+        indexes, _, corpora = half_pools(args.foreign_root, args.foreign, size, fits)
+        corpora[args.org] = read
+        targets[args.org] = rows[: args.limit]
+        base = run_id(EvalRun("base", args.org, None))
+        prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
+        evaluated_by[base] = args.org
+    for evaluated, rows in targets.items():
+        require_unique_ids(rows, label=f"{evaluated} targets")
+        for key, texts in arm_prompts(rows, indexes, evaluated=evaluated).items():
+            prompts[key], evaluated_by[key] = texts, evaluated
+
+    # A pool row repeated verbatim in a target is the answer in the prompt; near-duplicates are
+    # held to the registered test 4, as the adapters' training rows are.
+    leakage = []
+    for evaluated, rows in targets.items():
+        for pool, index in indexes.items():
+            repeated = verbatim_overlap(index.pool, rows)
+            if repeated:
+                raise SystemExit(f"{len(repeated)} {evaluated} targets repeat a {pool} pool row")
+            check = leakage_check(
+                index.pool,
+                rows,
+                threshold=LEAKAGE_THRESHOLD,
+                max_rate=LEAKAGE_MAX_RATE,
+                label=f"{pool}->{evaluated}",
+            )
+            leakage.append({"name": check.name, "passed": check.passed, **check.evidence})
+    if not all(check["passed"] for check in leakage):
+        raise SystemExit(f"outcome-neutral test 4 fails on a pool: {leakage}")
+
+    report: dict[str, Any] = {
+        "pools": args.pools,
+        "org": args.org,
+        "partition": args.partition,
+        "foreign": args.foreign,
+        "foreign_partition": foreign_order[0] if foreign_order else None,
+        "train_size": size,
+        "ks": list(KS),
+        "limit": args.limit,
+        "pool_filter": "chars/4 proxy" if args.dry_run else f"build_supervised, {MAX_SEQ_LENGTH}",
+        "pool_sizes": {pool: len(index.pool) for pool, index in indexes.items()},
+        # Which training rows each pool held, so a reading names the examples it retrieved from.
+        "pool_ids": {pool: [row["id"] for row in index.pool] for pool, index in indexes.items()},
+        "targets": {evaluated: len(rows) for evaluated, rows in targets.items()},
+        "corpora": corpora,
+        "leakage": leakage,
+    }
+    if args.dry_run:
+        report["prompt_chars"] = {
+            key: {"median": median(map(len, texts)), "max": max(map(len, texts))}
+            for key, texts in prompts.items()
+        }
+        report["provenance"] = provenance_header()
+        args.out.write_text(json.dumps(report, indent=2) + "\n")
+        print(f"DRY RUN: {sum(map(len, prompts.values()))} prompts; wrote {args.out}")
+        return
+
+    from sphragis.experiment.model import run_provenance
+
+    assert generator is not None
+    # Each arm's rows are appended as it finishes, and a rerun skips the arms already there, so a
+    # wall clock loses at most the arm it interrupted.
+    rows_path = args.out.with_suffix(".rows.jsonl")
+    results: dict[str, list[dict]] = {}
+    if rows_path.is_file():
+        for line in rows_path.read_text().splitlines():
+            row = json.loads(line)
+            results.setdefault(row.pop("arm"), []).append(row)
+    for key, rows in results.items():
+        if key not in prompts or len(rows) != len(targets[evaluated_by[key]]):
+            raise SystemExit(f"{rows_path}: arm {key} does not match this job's targets")
+    with rows_path.open("a") as rows_out:
+        for key, texts in prompts.items():
+            evaluated = targets[evaluated_by[key]]
+            if len(results.get(key, [])) == len(evaluated):
+                continue
+            results[key] = []
+            for target, prompt in zip(evaluated, texts, strict=True):
+                prediction = generator.generate(prompt)
+                results[key].append(
+                    {
+                        "id": target["id"],
+                        "change_id": target["change_id"],
+                        "path": target.get("path"),
+                        "prediction": prediction,
+                        **score(prediction, str(target["after"])),
+                    }
+                )
+            rows_out.writelines(json.dumps({"arm": key, **r}) + "\n" for r in results[key])
+            rows_out.flush()
+            em = sum(r["exact_match"] for r in results[key]) / max(1, len(results[key]))
+            print(f"{key:<44} EM={em:.3f}", flush=True)
+    report["inference_dtype"] = generator.computed_dtype
+    report["results"] = results
+    report["provenance"] = run_provenance()
+    args.out.write_text(json.dumps(report, indent=2) + "\n")
+    print(f"wrote {args.out}")
+
+
+if __name__ == "__main__":
+    main()
