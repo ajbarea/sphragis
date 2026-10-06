@@ -8,24 +8,39 @@ traceback.
 
 from __future__ import annotations
 
+import sys
+import sysconfig
 import traceback
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-# The study's code: the package, its scripts and its tests; a virtual environment beside them in
-# the checkout (`.venv-<machine>` on the clusters) is not.
+# The study's code: any file of the checkout but an interpreter's (a virtual environment sits in
+# the checkout on the clusters, `.venv-<machine>`).
 _ROOT = Path(__file__).resolve().parents[1]
-_STUDY = tuple(_ROOT / part for part in ("sphragis", "scripts", "tests"))
+_INTERPRETER = tuple(
+    path
+    for path in {
+        Path(p).resolve()
+        for p in (
+            sys.prefix,
+            sys.base_prefix,
+            *(sysconfig.get_paths()[k] for k in ("stdlib", "purelib", "platlib")),
+        )
+    }
+    # An interpreter path holding the whole checkout would exclude the study itself.
+    if not _ROOT.is_relative_to(path)
+)
 
 
 def _studys(filename: str) -> bool:
-    """Whether a frame's file is the study's: a real file under its code, not a frozen module's
-    or exec'd code's pseudo-name (`<frozen posixpath>`)."""
+    """Whether a frame's file is the study's: a real file of the checkout, not an interpreter's
+    (its venv, its standard library) nor a frozen module's or exec'd code's pseudo-name
+    (`<frozen posixpath>`)."""
     if filename.startswith("<"):
         return False
     path = Path(filename).resolve()
-    return any(path.is_relative_to(root) for root in _STUDY)
+    return path.is_relative_to(_ROOT) and not any(path.is_relative_to(p) for p in _INTERPRETER)
 
 
 @contextmanager

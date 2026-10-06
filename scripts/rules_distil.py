@@ -2,9 +2,10 @@
 
 `--source reviews`: one admissible partition of an organization, each half's file distilled from
 its pool, the rows its adapter trains on (`retrieval.pools`, on the corpus that adapter's run read).
-`--source guide`: the organization's written conventions, from `rules_guides.py`'s snapshot,
-split into paragraphs. Both go through `rules.distil`, the one map and reduce pipeline. Every map
-list and the reduce answer are kept beside the file. Exploratory, outside the registered cells.
+`--source guide`: the organization's written conventions, from `rules_guides.py`'s snapshot, a
+page at a time. Both go through `rules.distil`: the same map pass, then a merge for reviews and
+a page-by-page selection for a guide. Every map list, and a merge's answer, is kept beside the
+file. Exploratory, outside the registered cells.
 
     uv run --no-sync python scripts/rules_distil.py --source reviews --org openstack \\
         --partition 2 --results datasets/results --out rules-reviews-openstack-p2.json
@@ -52,10 +53,10 @@ def cached_part(cache: Path, mark: str) -> dict | None:
     """A file already made under `mark`, or None: missing, cut short by a kill, or made under
     another fingerprint."""
     try:
-        part = json.loads(cache.read_text()) if cache.is_file() else None
-    except json.JSONDecodeError:
+        part = json.loads(cache.read_text(encoding="utf-8")) if cache.is_file() else None
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return None
-    return part if part is not None and part.get("fingerprint") == mark else None
+    return part if isinstance(part, dict) and part.get("fingerprint") == mark else None
 
 
 def sources_of(args: argparse.Namespace, tokenizer: Any) -> tuple[dict, dict[str, dict]]:
@@ -183,7 +184,7 @@ def main() -> None:
     partial.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     os.replace(partial, args.out)
     for name in plan:
-        args.out.with_name(f"{args.out.stem}.{name}.part.json").unlink(missing_ok=True)
+        caches[name].unlink(missing_ok=True)
     print(f"wrote {args.out}")
 
 

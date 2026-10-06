@@ -758,9 +758,11 @@ def test_a_frozen_module_or_the_checkouts_own_venv_is_not_the_study() -> None:
     # A frozen standard-library module's pseudo-name is not a file of the study's.
     with pytest.raises(ValueError, match="empty sequence"), refusal.refusals():
         posixpath.commonpath([])
-    # The clusters' venvs sit inside the checkout, beside the study's code, not in it.
-    venv = refusal._ROOT / ".venv-aarch64" / "lib" / "transformers" / "generation.py"
-    assert not refusal._studys(str(venv))
+    assert not refusal._studys("<frozen posixpath>")
+    # The running interpreter's venv sits inside the checkout on the clusters; it is not the study.
+    import sys
+
+    assert not refusal._studys(str(Path(sys.prefix) / "lib" / "transformers" / "generation.py"))
     assert refusal._studys(str(refusal._ROOT / "scripts" / "rules_distil.py"))
 
 

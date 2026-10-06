@@ -4,8 +4,9 @@ Coding agents take an organization's conventions from a rules file (AGENTS.md an
 loaded into their context. This builds two per arm, by one fixed pipeline over the pinned
 distiller (`model.DISTILLER_ID`), read by the evaluated model: distilled from a half's pool of
 reviewed changes, or from the organization's written coding guide. A map pass lists the
-conventions in each chunk of the source; a reduce pass merges the lists into one file under the
-caps (`capped_file`). Design of record:
+conventions in each chunk of the source (a guide's, a page at a time); for reviews a reduce pass
+merges the lists, and for a guide its pages' rules are taken a page at a time in turn
+(`guide_file`), into one file under the caps (`capped_file`). Design of record:
 `docs/superpowers/specs/2026-10-05-rules-file-comparator-design.md`.
 
 Every prompt here is fixed before any distillation runs, and a change to one is a change to the
@@ -94,7 +95,7 @@ MAP_GUIDE = (
 
 # Mined rules are promoted on recurrence (a reviewer's call that repeats across changes), as
 # industrial rule mining does (Qodo Rule Miner, 2026-07); a written guide states each rule once,
-# so its merge keeps every rule and only the budget cuts.
+# so it has no merge (`guide_file`).
 REDUCE_REVIEWS = (
     "Below are numbered lists of coding conventions, each drawn from a different sample of one "
     "organization's code reviews.\n\n"
@@ -213,8 +214,9 @@ def guide_file(
     pages: Sequence[Sequence[str]], *, length: Callable[[str], int]
 ) -> tuple[list[str], list[int]]:
     """A written guide's file from its pages' rules (each page's map lists, in order): copies
-    kept once (`_same_rule`), then taken a page at a time in turn, so the caps fall on every page
-    alike rather than on the pages that come last; and the page (from 1) each kept rule is from.
+    kept once (`_same_rule`), then chosen a page at a time in turn, so the caps fall on every page
+    alike rather than on the pages that come last, and written in the guide's order; and the page
+    (from 1) each kept rule is from.
 
     A guide's merge kept every rule in source order, so the cap left Wikimedia's file holding
     only its first pages' rules (smoke job 226890, 2026-10-06); its language pages had none."""
@@ -227,9 +229,14 @@ def guide_file(
                 seen.add(_same_rule(rule))
                 queue.append((rule, page))
         queues.append(queue)
+    # The turns choose which rules the caps keep; the file then reads in the guide's own order,
+    # each page's rules together.
     turns = [item for round_ in zip_longest(*queues) for item in round_ if item is not None]
-    kept = capped_file([rule for rule, _ in turns], length=length)
-    return kept, [page for _, page in turns[: len(kept)]]
+    kept = set(capped_file([rule for rule, _ in turns], length=length))
+    ordered = [(rule, page) for queue in queues for rule, page in queue if rule in kept]
+    # The cut was made in turn order; the file in page order must fit the budget as well.
+    rules = capped_file([rule for rule, _ in ordered], length=length)
+    return rules, [page for _, page in ordered[: len(rules)]]
 
 
 def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[str]:
@@ -373,21 +380,23 @@ def distil(
         mapped = kept_lists
         if not any(kept for _, kept, _ in mapped):
             raise ValueError("no list holds a rule with its evidence")
-    # Only lists that hold a rule go to the merge, numbered as it sees them, so no citation can
-    # name an empty one.
-    merge_chunks = [n for n, (_, lines, _) in enumerate(mapped, 1) if lines]
-    merge_lists = [mapped[n - 1][1] for n in merge_chunks]
-    joined = "\n\n".join(
-        f"List {n}:\n" + "\n".join(lines) for n, lines in enumerate(merge_lists, 1)
-    )
     rule_pages: list[int] = []
+    merge_chunks: list[int] | None = None
     if reduce_prompt is not None:
+        # Only lists that hold a rule go to the merge, numbered as it sees them, so no citation
+        # can name an empty one.
+        merge_chunks = [n for n, (_, lines, _) in enumerate(mapped, 1) if lines]
+        merge_lists = [mapped[n - 1][1] for n in merge_chunks]
+        joined = "\n\n".join(
+            f"List {n}:\n" + "\n".join(lines) for n, lines in enumerate(merge_lists, 1)
+        )
         merged, lines, reduce_capped = answer(
             reduce_prompt.format(lists=joined), REDUCE_ANSWER_TOKENS
         )
         rules, recurrence = recurring(lines, lists=merge_lists, length=file_length)
     else:
-        merged, reduce_capped, recurrence = None, False, []
+        # No merge ran: none of its fields is recorded as if one had.
+        merged, reduce_capped, recurrence = None, None, []
         by_page: list[list[str]] = [[] for _ in sources]
         for (_, lines, _), page in zip(mapped, part_pages, strict=True):
             by_page[page - 1].extend(lines)
@@ -405,8 +414,8 @@ def distil(
         "evidence": evidence,
         "reduce_answer": merged,
         "reduce_capped": reduce_capped,
-        # The chunk each list the merge saw came from, by the merge's numbering: list n is
-        # chunk merge_chunks[n - 1] of map_lists (and of evidence, for reviews).
+        # For reviews, the chunk each list the merge saw came from, by the merge's numbering:
+        # list n is chunk merge_chunks[n - 1] of map_lists and evidence. None for a guide.
         "merge_chunks": merge_chunks,
         # Per kept mined rule, the lists the merge cited for it.
         "recurrence": recurrence,

@@ -105,9 +105,11 @@ def test_a_guide_file_shares_the_cap_across_its_pages() -> None:
 
     first = [f"- p1 rule {i}." for i in range(MAX_FILE_RULES)]
     rules, pages = guide_file([first, ["- p2 rule.", "- P1 rule 0"], ["- p3 rule."]], length=len)
-    # Every page reaches the file, though the first alone would fill it; a copy is kept once.
-    assert rules[:3] == ["- p1 rule 0.", "- p2 rule.", "- p3 rule."] and pages[:3] == [1, 2, 3]
-    assert len(rules) == MAX_FILE_RULES and rules.count("- P1 rule 0") == 0
+    # Every page reaches the file, though the first alone would fill it; a copy is kept once;
+    # the file reads in the guide's order.
+    assert len(rules) == MAX_FILE_RULES and "- P1 rule 0" not in rules
+    assert rules[-2:] == ["- p2 rule.", "- p3 rule."] and pages[-2:] == [2, 3]
+    assert rules[0] == "- p1 rule 0." and pages == sorted(pages)
 
 
 def test_a_mined_rule_stands_on_two_of_its_chunks_numbered_changes() -> None:
@@ -298,7 +300,7 @@ def test_a_capped_answer_is_flagged_and_its_cut_line_dropped() -> None:
         return "- one\n- two\n- three\n- fou", True
 
     result = distil(["a"], kind="guide", generate=model, length=_words)
-    assert result["map_capped"] == [True] and result["reduce_capped"] is False
+    assert result["map_capped"] == [True] and result["reduce_capped"] is None
     # The file holds the capped list without its last, cut line.
     assert result["rules"] == ["- one", "- two", "- three"]
 

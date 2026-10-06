@@ -127,18 +127,26 @@ def test_a_wrapper_reads_through_the_loader(module: str) -> None:
     tree = ast.parse(path.read_text())
     found = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
     assert _WRAPPERS[module] <= found, f"{module} defines none of {_WRAPPERS[module] - found}"
-    defs = {
-        n.name: n
-        for n in ast.walk(tree)
-        if isinstance(n, ast.FunctionDef) and n.name in _WRAPPERS[module]
-    }
+    defs = [
+        n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name in _WRAPPERS[module]
+    ]
     # Through the loader itself, or through a sibling wrapper that does, followed to a fixpoint,
-    # so wrappers that only call each other read through nothing.
-    reads = {name for name, node in defs.items() if _calls_a_loader(tree, node)}
-    while more := {name for name, node in defs.items() if _calls_local(node, reads)} - reads:
-        reads |= more
-    for name in defs:
-        assert name in reads, f"{module}.{name} does not read through the loader"
+    # so wrappers that only call each other read through nothing. A name reads through the
+    # loader only if every definition of it does.
+    reads: set[str] = set()
+    while True:
+        passing = {
+            name
+            for name in {n.name for n in defs}
+            if all(
+                _calls_a_loader(tree, n) or _calls_local(n, reads) for n in defs if n.name == name
+            )
+        }
+        if passing == reads:
+            break
+        reads = passing
+    for node in defs:
+        assert node.name in reads, f"{module}.{node.name} does not read through the loader"
 
 
 _JSON_READERS = {"load", "loads"}

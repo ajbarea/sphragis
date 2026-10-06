@@ -12,7 +12,7 @@
 
 # One rules-distillation job (scripts/rules_distil.py). SOURCE=reviews: ORG's partition PARTITION,
 # both halves' files from their pools, about ten to fourteen map calls and one reduce a half.
-# SOURCE=guide: ORG's written conventions from datasets/rules/guide-ORG.json.
+# SOURCE=guide: ORG's written conventions from datasets/rules/guide-ORG.json, a page at a time.
 set -euo pipefail
 
 cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
