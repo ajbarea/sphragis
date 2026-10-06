@@ -19,6 +19,7 @@ from sphragis.corpus.load import refined_dir, write_build_record, write_source_r
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training, window_split
 from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key, resumable
+from sphragis.experiment.rules import DISTILLED, WRITTEN, rules_key
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -324,7 +325,7 @@ def _read(
 def test_an_own_pool_that_wins_reads_as_a_half_split_contrast(tmp_path: Path) -> None:
     report = _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job())
     for k in KS:
-        cell = report["ks"][str(k)]
+        cell = report["families"][f"k{k}"]
         # Own matches every even example, sibling and foreign none: +0.5 own minus sibling and
         # own minus none, and sibling minus foreign exactly zero.
         assert cell["own_minus_sibling"]["estimate"] == pytest.approx(0.5)
@@ -345,7 +346,7 @@ def test_an_own_pool_that_wins_reads_as_a_half_split_contrast(tmp_path: Path) ->
 
 def test_pools_that_never_differ_read_as_no_contrast(tmp_path: Path) -> None:
     report = _read(tmp_path, [_halves_job(p, False) for p in ORDER], _foreign_job())
-    readings = {report["ks"][str(k)]["own_minus_sibling"]["reading"] for k in KS}
+    readings = {report["families"][f"k{k}"]["own_minus_sibling"]["reading"] for k in KS}
     assert readings == {"carries none as large as the SESOI"}
 
 
@@ -435,7 +436,7 @@ def test_without_near_duplicate_shots_drops_every_flagged_target(tmp_path: Path)
                     if row["id"] == flagged:
                         row["shot_jaccard"] = 0.9
     report = _read(tmp_path, jobs, _foreign_job())
-    clean = report["ks"]["1"]["without_near_duplicate_shots"]
+    clean = report["families"]["k1"]["without_near_duplicate_shots"]
     assert clean["excluded"] == 2 and clean["threshold"] == 0.7
     assert clean["own_minus_sibling"]["reading"] == "carries a half-split contrast"
 
@@ -445,3 +446,107 @@ def test_the_reader_refuses_adapters_decoded_otherwise(tmp_path: Path) -> None:
     runs[6]["max_new_tokens"] = 96
     with pytest.raises(SystemExit, match="decoded with"):
         _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(), runs)
+
+
+# The reader on rules arms: a distilled file per half, and both organizations' written guides.
+def _rules_halves_job(partition: int) -> dict:
+    results = {}
+    for owner in _sides(partition):
+        for evaluated, ids in _sides(partition).items():
+            hit = owner == evaluated
+            results[rules_key(DISTILLED, owner, evaluated)] = [
+                _row(i, 1.0 if hit and int(i[1:]) % 2 == 0 else 0.0) for i in ids
+            ]
+    return {
+        "pools": "halves",
+        "arms": "rules",
+        "partition": partition,
+        **_fixed(),
+        **GEN,
+        "results": results,
+    }
+
+
+def _rules_foreign_job() -> dict:
+    results = {
+        rules_key(DISTILLED, pool, "openstack"): [_row(i, 0.0) for i in IDS]
+        for pool in ("wikimedia-a", "wikimedia-b")
+    }
+    # The own guide matches every example divisible by four, the foreign guide none.
+    results[rules_key(WRITTEN, "openstack", "openstack")] = [
+        _row(i, 1.0 if int(i[1:]) % 4 == 0 else 0.0) for i in IDS
+    ]
+    results[rules_key(WRITTEN, "wikimedia", "openstack")] = [_row(i, 0.0) for i in IDS]
+    return {
+        "pools": "foreign",
+        "arms": "rules",
+        "foreign": "wikimedia",
+        **_fixed(),
+        **GEN,
+        "results": results,
+    }
+
+
+def test_the_rules_arms_read_their_files_and_the_written_guides(tmp_path: Path) -> None:
+    base = _foreign_job()
+    (tmp_path / "base.json").write_text(json.dumps(base))
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    halves, results = [], tmp_path / "results"
+    results.mkdir()
+    for n, job in enumerate(jobs):
+        halves.append(tmp_path / f"h{n}.json")
+        halves[-1].write_text(json.dumps(job))
+        seeds = "" if n == 0 else f"-s{n + 1}"
+        name = f"rq1-partition-openstack-p{ORDER[n]}{seeds}-n{SIZE}.json"
+        (results / name).write_text(json.dumps(_adapter_run(n + 1, ORDER[n])))
+    (tmp_path / "f.json").write_text(json.dumps(_rules_foreign_job()))
+    listing = tmp_path / "list.json"
+    listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
+    out = tmp_path / "read.json"
+    argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
+    argv += ["--arms", "rules", "--base-job", str(tmp_path / "base.json")]
+    argv += ["--foreign-job", str(tmp_path / "f.json"), "--halves", *map(str, halves)]
+    argv += ["--results", str(results), "--resamples", "200", "--out", str(out)]
+    _run(reader, argv)
+    cell = json.loads(out.read_text())["families"]["distilled"]
+    assert cell["own_minus_sibling"]["estimate"] == pytest.approx(0.5)
+    assert cell["own_minus_sibling"]["reading"] == "carries a half-split contrast"
+    assert cell["written_own_minus_written_foreign"]["estimate"] == pytest.approx(0.25)
+    assert cell["written_own_minus_none"]["estimate"] == pytest.approx(0.25)
+    # Distilled own matches the even examples, the written guide the quarter: +0.25.
+    assert cell["distilled_own_minus_written_own"]["estimate"] == pytest.approx(0.25)
+
+
+def test_a_rules_reading_needs_the_base_arm(tmp_path: Path) -> None:
+    listing = tmp_path / "list.json"
+    listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
+    argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
+    argv += ["--arms", "rules", "--foreign-job", "f.json", "--halves", *["h.json"] * PARTITIONS]
+    argv += ["--results", str(tmp_path), "--out", str(tmp_path / "o.json")]
+    with pytest.raises(SystemExit, match="needs --base-job"):
+        _run(reader, argv)
+
+
+def test_a_rules_job_prompts_with_each_file_in_the_system_turn(
+    corpora: dict[str, Path], tmp_path: Path
+) -> None:
+    rules = tmp_path / "rules"
+    rules.mkdir()
+    halves = ("openstack-a", "openstack-b")
+    files = {h: {"pool_ids": [], "file": f"- rule of {h}"} for h in halves}
+    (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps({"files": files}))
+    report = _halves(
+        corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
+        "--rules", str(rules),
+    )  # fmt: skip
+    expected = {rules_key(DISTILLED, owner, evaluated) for owner in halves for evaluated in halves}
+    assert set(report["prompt_chars"]) == expected and report["arms"] == "rules"
+    assert not any(report["near_duplicate_shots"].values())
+
+
+def test_a_rules_job_without_its_files_is_refused(corpora: dict[str, Path], tmp_path: Path) -> None:
+    with pytest.raises(SystemExit, match="run rules_distil.py first"):
+        _halves(
+            corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
+            "--rules", str(tmp_path),
+        )  # fmt: skip

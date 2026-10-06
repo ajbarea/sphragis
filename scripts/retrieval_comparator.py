@@ -54,6 +54,7 @@ from sphragis.experiment.retrieval import (
     resumable,
     trainable,
 )
+from sphragis.experiment.rules import DISTILLED, WRITTEN, rules_arms
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
 from sphragis.provenance import provenance_header
@@ -63,6 +64,13 @@ CHARS_PER_TOKEN = 4
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--pools", choices=["halves", "foreign"], required=True)
+parser.add_argument(
+    "--arms",
+    choices=["retrieval", "rules"],
+    default="retrieval",
+    help="BM25 shots from each pool, or the rules file distilled from it (rules_distil.py)",
+)
+parser.add_argument("--rules", type=Path, help="with --arms rules: the rules_distil.py outputs")
 parser.add_argument("--results", type=Path, required=True, help="the adapters' partition runs")
 parser.add_argument("--org", required=True)
 parser.add_argument("--admissible", type=Path, required=True, help="the org's admissible list")
@@ -133,6 +141,40 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
     return sorted(rows.values(), key=lambda row: str(row["id"]))
 
 
+def rules_files(
+    args: argparse.Namespace, indexes: Mapping[str, Any], foreign_order: list[int] | None
+) -> dict[tuple[str, str], str]:
+    """The rules files a rules job prompts with, each distilled file checked to come from the
+    pool this job rebuilt (by its rows' ids), so a file stands where its adapter would.
+
+    A halves job's files are its partition's halves'; a foreign job's are the foreign
+    organization's first partition's halves and both organizations' written guides.
+    """
+    if args.rules is None:
+        raise SystemExit("--arms rules needs --rules")
+
+    def load(name: str) -> dict[str, Any]:
+        path = args.rules / name
+        if not path.is_file():
+            raise SystemExit(f"no rules file {path}: run rules_distil.py first")
+        return json.loads(path.read_text())
+
+    owner, partition = (
+        (args.org, args.partition) if args.pools == "halves" else (args.foreign, foreign_order[0])
+    )
+    distilled = load(f"rules-reviews-{owner}-p{partition}.json")
+    files: dict[tuple[str, str], str] = {}
+    for half, index in indexes.items():
+        made = distilled["files"][half]
+        if not args.dry_run and made["pool_ids"] != [row["id"] for row in index.pool]:
+            raise SystemExit(f"{half}'s rules file was distilled from another pool")
+        files[(DISTILLED, half)] = made["file"]
+    if args.pools == "foreign":
+        for org in (args.org, args.foreign):
+            files[(WRITTEN, org)] = load(f"rules-guide-{org}.json")["files"][org]["file"]
+    return files
+
+
 def main() -> None:
     args = parser.parse_args()
     if args.limit is not None and args.limit < 1:
@@ -178,20 +220,29 @@ def main() -> None:
     else:
         indexes, _, corpora = half_pools(root, args.foreign, size, fits, recorded)
         targets[args.org] = scored(args.results, args.org, order, size)[: args.limit]
-        base = run_id(EvalRun("base", args.org, None))
-        prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
-        similarity[base] = [0.0 for _ in targets[args.org]]
-        evaluated_by[base] = args.org
+        # The base arm is the retrieval foreign job's; a rules job reads it from there.
+        if args.arms == "retrieval":
+            base = run_id(EvalRun("base", args.org, None))
+            prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
+            similarity[base] = [0.0 for _ in targets[args.org]]
+            evaluated_by[base] = args.org
     # Each pool is its adapter's training set: as many rows as the run trained that adapter on.
     # The proxy cannot say so, so a dry run records both.
     pooled = {pool: len(index.pool) for pool, index in indexes.items()}
     if not args.dry_run and pooled != trained:
         raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
+    files: dict[tuple[str, str], str] = {}
+    if args.arms == "rules":
+        files = rules_files(args, indexes, foreign_order)
     for evaluated, rows in targets.items():
         if not rows:
             raise SystemExit(f"{evaluated} has no held-out examples to prompt")
         require_unique_ids(rows, label=f"{evaluated} targets")
-        arms, closest = arm_prompts(rows, indexes, evaluated=evaluated)
+        if args.arms == "retrieval":
+            arms, closest = arm_prompts(rows, indexes, evaluated=evaluated)
+        else:
+            arms = rules_arms(rows, files, evaluated=evaluated)
+            closest = {key: [0.0 for _ in rows] for key in arms}
         for key, texts in arms.items():
             prompts[key], similarity[key], evaluated_by[key] = texts, closest[key], evaluated
 
@@ -216,6 +267,7 @@ def main() -> None:
 
     report: dict[str, Any] = {
         "pools": args.pools,
+        "arms": args.arms,
         "org": args.org,
         "partition": args.partition,
         "foreign": args.foreign,

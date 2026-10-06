@@ -1,6 +1,6 @@
 # A rules-file comparator
 
-Status: design, 2026-10-05. Registered as an exploratory comparator on 2026-10-04 (registered
+Status: design, 2026-10-05; implemented 2026-10-06 (plan of record: research log, 2026-10-06). Registered as an exploratory comparator on 2026-10-04 (registered
 decisions, "Comparators and audits beside the confirmatory test"). Built on the retrieval
 comparator's runner (#77), with each pool replaced by a rules file.
 
@@ -35,7 +35,9 @@ A pool is the retrieval comparator's: the rows the half's adapter trains on (`re
    comparison would then credit the rules file with a second model's prior. One model also keeps
    every arm offline on the cluster.
 2. **One pipeline for both sources.** The written conventions and the review comments go through
-   the same fixed map and reduce prompts. The written guides are OpenStack's `hacking` guidelines
+   one map and reduce pipeline, with prompts that differ only where the sources do: a review
+   merge keeps a rule that recurs in two or more lists (industrial rule mining's promotion rule,
+   Qodo Rule Miner, 2026-07), a guide merge keeps every rule, since a guide states each once. The written guides are OpenStack's `hacking` guidelines
    and MediaWiki's coding conventions, snapshotted once with their URL, date and sha256 under
    `datasets/rules/`. Written own minus distilled own then compares sources, not formatting.
 3. **Map, then reduce.** Map: pack a pool's rows (each row's review comments with its hunk before
@@ -46,10 +48,13 @@ A pool is the retrieval comparator's: the rows the half's adapter trains on (`re
    `max_seq_length`). A rules file then takes the context one retrieved shot takes at k = 1.
    The comparison sits at the retrieval comparator's smallest registered context, not at a
    length chosen after seeing files.
-5. **One reader.** `retrieval_read.py` takes the conditions it reads (`retrieval-k1`,
-   `retrieval-k3`, `rules-distilled`), with the same estimator, reading rule and SESOI. The
-   written arms are organization-level, so they enter a per-example paired contrast, not the
-   half-split.
+5. **The file goes in the system turn**, after the model's default system prompt, where coding
+   agents load a rules file; the user turn is the base arm's prompt unchanged.
+6. **One runner and one reader.** `retrieval_comparator.py --arms rules` and
+   `retrieval_read.py --arms rules` read the arm families (`retrieval-k1` and `retrieval-k3`,
+   or `rules-distilled`) with the same estimator, reading rule and SESOI; the rules reading takes
+   its base arm from the retrieval foreign job. The written arms are organization-level, so they
+   enter paired contrasts per half (`paired_clusters`), not the half split.
 
 ## Cost, before it is spent
 

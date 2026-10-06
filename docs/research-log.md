@@ -7994,3 +7994,42 @@ not which, so a pool's identity with its adapter's training set rests on the cou
 counts and the cut being one deterministic function of them. Adapter runs are found by the TIGRIS
 naming (`-s<k>-n<N>`, no cluster tag); a run made elsewhere is a different study by the repo's
 naming rule and is not read.
+
+### Planned before any run: the rules-file comparator (2026-10-06)
+
+The registered rules-file comparator (registered decisions, "Comparators and audits"), on the
+retrieval comparator's runner, a rules file in each pool's place. Design of record:
+`docs/superpowers/specs/2026-10-05-rules-file-comparator-design.md`. Exploratory, binding nothing.
+
+**Distillation** (`sphragis/experiment/rules.py`, `scripts/rules_distil.py`). The base model
+(Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32), not a stronger one, so no second model's prior
+about these organizations enters the file. A map pass packs a source into chunks of at most 16,384
+tokens and lists, one imperative rule a line, the conventions each states; a reduce pass merges the
+lists into one file of at most 2,048 tokens, one training example's length, the context one
+retrieved shot takes at k = 1. Two sources, one pipeline. Reviewed changes: each half's pool, the
+rows its adapter trained on (checked by row ids against the comparator's pools), each change's
+comments, code and revision; the merge keeps a rule only if it recurs in two or more lists, the
+promotion rule of industrial rule mining (Qodo's Rule Miner, July 2026: specific, applied by the
+author, recurring). Written guides (`scripts/rules_guides.py`, `datasets/rules/`): OpenStack's
+`HACKING.rst` at e75bfb3, and MediaWiki's general and documentation pages with the page for every
+language that has a file in Wikimedia's training window, as plain text pinned to their revisions;
+MediaWiki's Puppet page soft-redirects to wikitech's Puppet guidelines, read there. A guide states
+each rule once, so its merge keeps every rule and only the budget cuts. 1,795 words for OpenStack,
+20,699 for Wikimedia's twelve pages.
+
+**Arms.** The file goes in the system turn, after the model's default system prompt, the place
+coding agents load a rules file; the user turn is the base arm's prompt unchanged. Distilled own,
+sibling and foreign (the other organization's first partition's halves, averaged), over the same
+first ten partitions as the retrieval comparator; written own and written foreign, once per
+organization; the base arm is the retrieval comparator's.
+
+**Readings**, by the retrieval comparator's rule and estimator. Distilled own minus sibling is
+read; sibling minus foreign, own minus none, written own minus written foreign, written own minus
+none, and distilled own minus written own (the two sources of a file) are reported. If no file
+carries a contrast the adapters carry, that is the answer to why train weights rather than declare
+rules.
+
+**Cost**, before it is spent. Distillation: one job per partition (both halves, some ten to
+fourteen map calls and one reduce a half) and one per guide. Evaluation: 2 generations an example
+a partition, 4 an example once: 12,024 for OpenStack and 17,064 for Wikimedia, about 18 GH200-hours
+at the retrieval smoke job's at most 2.2 s a generation.

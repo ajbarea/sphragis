@@ -624,6 +624,27 @@ def project_clusters(
     )
 
 
+def paired_clusters(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    org: str,
+    treatment: Callable[[str], str],
+    control: Callable[[str], str],
+    metric: str = "exact_match",
+) -> list[list[Cluster]]:
+    """Two arms on each evaluated half, keyed by `treatment(half)` and `control(half)`, one
+    cluster list per half, refusing a change in both halves."""
+    per_half = []
+    for window in halves(org):
+        for key in (treatment(window), control(window)):
+            if key not in results:
+                raise ValueError(f"no results for {key!r}: not scored on {window}")
+        per_half.append(
+            to_clusters(results[treatment(window)], results[control(window)], metric=metric)
+        )
+    return _disjoint(per_half)
+
+
 def base_clusters(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
@@ -633,14 +654,13 @@ def base_clusters(
     condition: str = "adapter",
 ) -> list[list[Cluster]]:
     """Each half's own arm against the base model on that half, one list per evaluated half."""
-    per_half = []
-    for window in halves(org):
-        base = run_id(EvalRun("base", window, None))
-        if base not in results:
-            raise ValueError(f"no results for {base!r}: the base model was not scored on {window}")
-        own = _cell(results, window, window, seed, condition=condition)
-        per_half.append(to_clusters(own, results[base], metric=metric))
-    return _disjoint(per_half)
+    return paired_clusters(
+        results,
+        org=org,
+        treatment=lambda window: run_id(EvalRun(f"{condition}:{window}", window, seed)),
+        control=lambda window: run_id(EvalRun("base", window, None)),
+        metric=metric,
+    )
 
 
 def organization_clusters(

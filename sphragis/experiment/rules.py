@@ -16,6 +16,9 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+from sphragis.experiment.grid import EvalRun, run_id
+from sphragis.experiment.runner import build_prompt
+
 # The file budget, in tokens: one training example's length (training.MAX_SEQ_LENGTH), the
 # context one retrieved shot takes at k = 1.
 RULES_BUDGET = 2048
@@ -154,3 +157,38 @@ def distil(
 def rules_system(rules_file: str) -> str:
     """The system turn of a rules arm: the model's default, then the rules file."""
     return f"{DEFAULT_SYSTEM}\n\nFollow these conventions of the organization:\n{rules_file}"
+
+
+def rules_prompt(example: Mapping[str, Any], rules_file: str) -> list[dict[str, str]]:
+    """A rules arm's prompt: the file in the system turn, the registered prompt as the user's."""
+    return [
+        {"role": "system", "content": rules_system(rules_file)},
+        {"role": "user", "content": build_prompt(example)},
+    ]
+
+
+# A distilled file is conditioned on a half, as an adapter is; a written one on an organization.
+DISTILLED = "rules-distilled"
+WRITTEN = "rules-written"
+
+
+def rules_key(condition: str, owner: str, evaluated: str) -> str:
+    """`<condition>:<owner>|<evaluated>`: the adapter arms' key, the file's owner in the adapter's
+    place, with no training seed."""
+    return run_id(EvalRun(f"{condition}:{owner}", evaluated, None))
+
+
+def rules_arms(
+    targets: Sequence[Mapping[str, Any]],
+    files: Mapping[tuple[str, str], str],
+    *,
+    evaluated: str,
+) -> dict[str, list[list[dict[str, str]]]]:
+    """Every target's prompt under every rules file, keyed as `rules_key`.
+
+    `files` maps (condition, owner) to the file: (`DISTILLED`, half) or (`WRITTEN`, organization).
+    """
+    return {
+        rules_key(condition, owner, evaluated): [rules_prompt(t, text) for t in targets]
+        for (condition, owner), text in files.items()
+    }

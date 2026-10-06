@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from statistics import fmean
 from typing import Any
@@ -45,6 +45,7 @@ from sphragis.experiment.decomposition import (
     halves,
     meaningful,
     organization_clusters,
+    paired_clusters,
     project_clusters,
     within_sesoi,
 )
@@ -52,6 +53,7 @@ from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import LEAKAGE_THRESHOLD
 from sphragis.experiment.partitions import on_common_examples
 from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, first_partitions
+from sphragis.experiment.rules import DISTILLED, WRITTEN, rules_key
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 from sphragis.provenance import provenance_header
 
@@ -64,6 +66,8 @@ parser.add_argument("--admissible", type=Path, required=True)
 parser.add_argument("--foreign-job", type=Path, required=True)
 parser.add_argument("--halves", type=Path, nargs="+", required=True, help="admissible order")
 parser.add_argument("--results", type=Path, required=True, help="the adapters' partition runs")
+parser.add_argument("--arms", choices=["retrieval", "rules"], default="retrieval")
+parser.add_argument("--base-job", type=Path, help="with --arms rules: the retrieval foreign job")
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--resamples", type=int, default=10_000)
 parser.add_argument("--out", type=Path, required=True)
@@ -74,7 +78,8 @@ Rows = list[dict[str, Any]]
 def load(path: Path, **expected: Any) -> dict[str, Any]:
     """A generation job's report, refused unless it is the job named and complete."""
     job = json.loads(path.read_text())
-    found = {name: job.get(name) for name in expected}
+    # Jobs written before rules arms existed (d077d54) record no `arms`: they are retrieval jobs.
+    found = {name: job.get(name, "retrieval" if name == "arms" else None) for name in expected}
     if found != expected:
         raise SystemExit(f"{path}: {found}, not {expected}")
     if "results" not in job:
@@ -83,24 +88,19 @@ def load(path: Path, **expected: Any) -> dict[str, Any]:
 
 
 def run_results(
-    own: Mapping[str, Rows], foreign: Mapping[str, Rows], *, org: str, foreign_org: str
+    own: Mapping[str, Rows], once: Mapping[str, Rows], *, org: str, keys: Sequence[str]
 ) -> dict[str, Rows]:
-    """One partition's arms, the foreign and base arms cut to each of its halves' examples."""
+    """One partition's arms, with the arms computed once per organization (`keys`, each ending
+    `|<org>`) cut to each of its halves' examples and keyed to the half."""
     out = dict(own)
     for half in halves(org):
-        ids = {row["id"] for row in own[arm_key(KS[0], half, half)]}
-        cut = [(run_id(EvalRun("base", half, None)), run_id(EvalRun("base", org, None)))]
-        cut += [
-            (arm_key(k, pool, half), arm_key(k, pool, org))
-            for k in KS
-            for pool in halves(foreign_org)
-        ]
-        for key, source in cut:
-            rows = [row for row in foreign[source] if row["id"] in ids]
+        ids = {row["id"] for key, rows in own.items() if key.endswith(f"|{half}") for row in rows}
+        for source in keys:
+            rows = [row for row in once[source] if row["id"] in ids]
             missing = ids - {row["id"] for row in rows}
             if missing:
                 raise SystemExit(f"{source} lacks {len(missing)} of {half}'s examples")
-            out[key] = rows
+            out[source.removesuffix(f"|{org}") + f"|{half}"] = rows
     return out
 
 
@@ -179,6 +179,108 @@ def near_duplicate_targets(runs: Sequence[Mapping[str, Rows]], keys: Sequence[st
     }
 
 
+def families(arms: str) -> dict[str, tuple[str, Callable[[str, str], str]]]:
+    """The arms a reading compares, by name: each one's condition and its key function."""
+    if arms == "retrieval":
+        return {
+            f"k{k}": (condition(k), lambda owner, evaluated, k=k: arm_key(k, owner, evaluated))
+            for k in KS
+        }
+    return {
+        "distilled": (DISTILLED, lambda owner, evaluated: rules_key(DISTILLED, owner, evaluated))
+    }
+
+
+def read_family(
+    cut: Sequence[Mapping[str, Rows]],
+    *,
+    org: str,
+    foreign: str,
+    name: str,
+    key: Callable[[str, str], str],
+    condition_name: str,
+    seed: int,
+    resamples: int,
+) -> dict[str, Any]:
+    """One family's contrasts over the runs, the rule applied to own minus sibling."""
+    first, second = halves(org)
+    read = {"org": org, "seed": None, "condition": condition_name}
+    arms = {
+        "none": {h: run_id(EvalRun("base", h, None)) for h in (first, second)},
+        "own": {h: key(h, h) for h in (first, second)},
+        "sibling": {first: key(second, first), second: key(first, second)},
+    }
+    out: dict[str, Any] = {
+        # Each run's arm pooled over its two halves' examples, then averaged over runs.
+        "exact_match": {
+            arm: fmean(
+                fmean(row["exact_match"] for k in keys.values() for row in r[k]) for r in cut
+            )
+            for arm, keys in arms.items()
+        },
+        "own_minus_sibling": reading(
+            contrast([project_clusters(r, **read) for r in cut], seed, resamples)
+        ),
+        "sibling_minus_foreign": contrast(
+            [organization_clusters(r, foreign=foreign, **read) for r in cut], seed, resamples
+        ),
+        "own_minus_none": contrast([base_clusters(r, **read) for r in cut], seed, resamples),
+    }
+    # Beside it, the same reading without any target whose own or sibling shot is a
+    # near-duplicate of it at test 4's threshold: projects split whole, so such a shot sits in
+    # the own half's pool, and copying it would read as a half-split contrast.
+    shots = [k for h in (first, second) for k in (arms["own"][h], arms["sibling"][h])]
+    flagged = near_duplicate_targets(cut, shots)
+    clean = [
+        {k: [row for row in rows if row["id"] not in flagged] for k, rows in r.items()} for r in cut
+    ]
+    try:
+        without = reading(contrast([project_clusters(r, **read) for r in clean], seed, resamples))
+    except ValueError as error:
+        # Too few examples left in some half to read: reported, not a crash.
+        without = {"unreadable": str(error)}
+    out["without_near_duplicate_shots"] = {
+        "excluded": len(flagged),
+        "threshold": LEAKAGE_THRESHOLD,
+        "own_minus_sibling": without,
+    }
+    cell = out["own_minus_sibling"]
+    print(
+        f"{name} {org}: own-sibling {cell['estimate']:+.4f} "
+        f"[{cell['low']:+.4f}, {cell['high']:+.4f}] -> {cell['reading']}; "
+        f"sibling-foreign {out['sibling_minus_foreign']['estimate']:+.4f}; "
+        f"own-none {out['own_minus_none']['estimate']:+.4f}"
+    )
+    return out
+
+
+def read_written(
+    cut: Sequence[Mapping[str, Rows]], *, org: str, foreign: str, seed: int, resamples: int
+) -> dict[str, Any]:
+    """The written guides' contrasts: own against foreign, against none, and against the own
+    half's distilled file, the last comparing the two sources of a rules file."""
+    pairs = {
+        "written_own_minus_written_foreign": (
+            lambda h: rules_key(WRITTEN, org, h),
+            lambda h: rules_key(WRITTEN, foreign, h),
+        ),
+        "written_own_minus_none": (
+            lambda h: rules_key(WRITTEN, org, h),
+            lambda h: run_id(EvalRun("base", h, None)),
+        ),
+        "distilled_own_minus_written_own": (
+            lambda h: rules_key(DISTILLED, h, h),
+            lambda h: rules_key(WRITTEN, org, h),
+        ),
+    }
+    return {
+        name: contrast(
+            [paired_clusters(r, org=org, treatment=t, control=c) for r in cut], seed, resamples
+        )
+        for name, (t, c) in pairs.items()
+    }
+
+
 def main() -> None:
     args = parser.parse_args()
     try:
@@ -187,8 +289,12 @@ def main() -> None:
         raise SystemExit(f"{args.admissible}: {error}") from error
     if len(args.halves) != len(order):
         raise SystemExit(f"{len(args.halves)} --halves files, not the fixed {len(order)}")
+    if args.arms == "rules" and args.base_job is None:
+        raise SystemExit("--arms rules needs --base-job: the retrieval foreign job's base arm")
     fixed = {"org": args.org, "train_size": size, "ks": list(KS), "limit": None}
-    foreign_job = load(args.foreign_job, pools="foreign", foreign=args.foreign, **fixed)
+    foreign_job = load(
+        args.foreign_job, pools="foreign", foreign=args.foreign, arms=args.arms, **fixed
+    )
     # Every arm is compared with arms from other jobs, so all of them ran one generator.
     generator = {
         key: foreign_job.get(key)
@@ -197,71 +303,46 @@ def main() -> None:
     if None in generator.values():
         raise SystemExit(f"{args.foreign_job} does not record its generator")
     fixed |= generator
+    once = dict(foreign_job["results"])
+    if args.base_job:
+        base = load(args.base_job, pools="foreign", foreign=args.foreign, arms="retrieval", **fixed)
+        once[run_id(EvalRun("base", args.org, None))] = base["results"][
+            run_id(EvalRun("base", args.org, None))
+        ]
     runs = [
         run_results(
-            load(path, pools="halves", partition=partition, **fixed)["results"],
-            foreign_job["results"],
+            load(path, pools="halves", partition=partition, arms=args.arms, **fixed)["results"],
+            once,
             org=args.org,
-            foreign_org=args.foreign,
+            keys=sorted(once),
         )
         for path, partition in zip(args.halves, order, strict=True)
     ]
     seed, resamples = args.bootstrap_seed, args.resamples
-    first, second = halves(args.org)
-    per_k: dict[str, Any] = {}
+    per_family: dict[str, Any] = {}
     adapters = None
-    for k in KS:
+    for name, (condition_name, key) in families(args.arms).items():
         try:
-            cut, examples = on_common_examples(runs, condition=condition(k))
+            cut, examples = on_common_examples(runs, condition=condition_name)
         except ValueError as error:
             raise SystemExit(str(error)) from error
-        read = {"org": args.org, "seed": None, "condition": condition(k)}
-        arms = {
-            "none": {h: run_id(EvalRun("base", h, None)) for h in (first, second)},
-            "own": {h: arm_key(k, h, h) for h in (first, second)},
-            "sibling": {first: arm_key(k, second, first), second: arm_key(k, first, second)},
-        }
-        per_k[str(k)] = {
+        per_family[name] = {
             **examples,
-            # Each run's arm pooled over its two halves' examples, then averaged over runs.
-            "exact_match": {
-                arm: fmean(
-                    fmean(row["exact_match"] for key in keys.values() for row in r[key])
-                    for r in cut
-                )
-                for arm, keys in arms.items()
-            },
-            "own_minus_sibling": reading(
-                contrast([project_clusters(r, **read) for r in cut], seed, resamples)
+            **read_family(
+                cut,
+                org=args.org,
+                foreign=args.foreign,
+                name=name,
+                key=key,
+                condition_name=condition_name,
+                seed=seed,
+                resamples=resamples,
             ),
-            "sibling_minus_foreign": contrast(
-                [organization_clusters(r, foreign=args.foreign, **read) for r in cut],
-                seed,
-                resamples,
-            ),
-            "own_minus_none": contrast([base_clusters(r, **read) for r in cut], seed, resamples),
         }
-        # Beside it, the same reading without any target whose own or sibling shot is a
-        # near-duplicate of it at test 4's threshold: projects split whole, so such a shot sits
-        # in the own half's pool, and copying it would read as a half-split contrast.
-        shots = [k_key for h in (first, second) for k_key in (arms["own"][h], arms["sibling"][h])]
-        flagged = near_duplicate_targets(cut, shots)
-        clean = [
-            {key: [row for row in rows if row["id"] not in flagged] for key, rows in r.items()}
-            for r in cut
-        ]
-        try:
-            without = reading(
-                contrast([project_clusters(r, **read) for r in clean], seed, resamples)
+        if args.arms == "rules":
+            per_family[name] |= read_written(
+                cut, org=args.org, foreign=args.foreign, seed=seed, resamples=resamples
             )
-        except ValueError as error:
-            # Too few examples left in some half to read: reported, not a crash.
-            without = {"unreadable": str(error)}
-        per_k[str(k)]["without_near_duplicate_shots"] = {
-            "excluded": len(flagged),
-            "threshold": LEAKAGE_THRESHOLD,
-            "own_minus_sibling": without,
-        }
         if adapters is None:
             ids = {row["id"] for rows in cut[0].values() for row in rows}
             # The adapter runs record the dtypes they decoded in as a list.
@@ -283,13 +364,6 @@ def main() -> None:
                     )
                 ),
             }
-        cell = per_k[str(k)]["own_minus_sibling"]
-        print(
-            f"k={k} {args.org}: own-sibling {cell['estimate']:+.4f} "
-            f"[{cell['low']:+.4f}, {cell['high']:+.4f}] -> {cell['reading']}; "
-            f"sibling-foreign {per_k[str(k)]['sibling_minus_foreign']['estimate']:+.4f}; "
-            f"own-none {per_k[str(k)]['own_minus_none']['estimate']:+.4f}"
-        )
     assert adapters is not None
     cell = adapters["own_minus_sibling"]
     print(
@@ -299,13 +373,15 @@ def main() -> None:
     report = {
         "org": args.org,
         "foreign": args.foreign,
+        "arms": args.arms,
         "partitions": order,
         "halves_jobs": [str(p) for p in args.halves],
         "foreign_job": str(args.foreign_job),
+        "base_job": str(args.base_job) if args.base_job else None,
         "generator": fixed["generator"],
         "bootstrap_seed": seed,
         "resamples": resamples,
-        "ks": per_k,
+        "families": per_family,
         "adapters": adapters,
         "provenance": provenance_header(),
     }
