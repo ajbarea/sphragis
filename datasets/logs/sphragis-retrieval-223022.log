@@ -1,0 +1,10 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:01, 269.36it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:00, 301.39it/s]Loading weights:  28%|██▊       | 95/339 [00:00<00:00, 288.39it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:00, 288.99it/s]Loading weights:  45%|████▌     | 153/339 [00:00<00:00, 280.09it/s]Loading weights:  54%|█████▍    | 184/339 [00:00<00:00, 287.59it/s]Loading weights:  63%|██████▎   | 213/339 [00:00<00:00, 280.13it/s]Loading weights:  72%|███████▏  | 244/339 [00:00<00:00, 288.33it/s]Loading weights:  81%|████████  | 273/339 [00:00<00:00, 281.82it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 288.44it/s]Loading weights:  98%|█████████▊| 333/339 [00:01<00:00, 281.40it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 288.31it/s]
+retrieval-k1:wikimedia-a|wikimedia-a         EM=0.159
+retrieval-k3:wikimedia-a|wikimedia-a         EM=0.193
+retrieval-k1:wikimedia-b|wikimedia-a         EM=0.172
+retrieval-k3:wikimedia-b|wikimedia-a         EM=0.207
+retrieval-k1:wikimedia-a|wikimedia-b         EM=0.199
+retrieval-k3:wikimedia-a|wikimedia-b         EM=0.251
+retrieval-k1:wikimedia-b|wikimedia-b         EM=0.255
+retrieval-k3:wikimedia-b|wikimedia-b         EM=0.279
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/retrieval-halves-wikimedia-p5.json

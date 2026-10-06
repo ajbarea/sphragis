@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 293 artifacts under
-53 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 317 artifacts under
+55 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -436,6 +436,32 @@ Does the lag distribution hold still across creation cohorts?
 | artifact | |
 |---|---|
 | `quasi-independence.json` |  |
+
+## `scripts/retrieval_comparator.py`
+
+Few-shot retrieval as the adapters' comparator: the generations, one job per pool set.
+
+| artifact | |
+|---|---|
+| `retrieval-foreign-openstack.json` | `retrieval-foreign-wikimedia.json` |
+| `retrieval-halves-openstack-p10.json` | `retrieval-halves-openstack-p11.json` |
+| `retrieval-halves-openstack-p12.json` | `retrieval-halves-openstack-p2.json` |
+| `retrieval-halves-openstack-p3.json` | `retrieval-halves-openstack-p4.json` |
+| `retrieval-halves-openstack-p5.json` | `retrieval-halves-openstack-p7.json` |
+| `retrieval-halves-openstack-p8.json` | `retrieval-halves-openstack-p9.json` |
+| `retrieval-halves-wikimedia-p1.json` | `retrieval-halves-wikimedia-p10.json` |
+| `retrieval-halves-wikimedia-p11.json` | `retrieval-halves-wikimedia-p2.json` |
+| `retrieval-halves-wikimedia-p3.json` | `retrieval-halves-wikimedia-p5.json` |
+| `retrieval-halves-wikimedia-p6.json` | `retrieval-halves-wikimedia-p7.json` |
+| `retrieval-halves-wikimedia-p8.json` | `retrieval-halves-wikimedia-p9.json` |
+
+## `scripts/retrieval_read.py`
+
+Read the retrieval comparator: its contrasts over partitions, beside the adapters' H1.
+
+| artifact | |
+|---|---|
+| `retrieval-reading-openstack.json` | `retrieval-reading-wikimedia.json` |
 
 ## `scripts/reviewer_overlap.py`
 

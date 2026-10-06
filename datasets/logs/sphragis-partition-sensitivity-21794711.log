@@ -1,0 +1,29 @@
+pilot_lower_90: spread 0.0118 at 206 changes -> sigma_run 0.0085 (realised 0.0118)
+pilot_lower_90 (sigma_run 0.0085) at 0.975, 1 cell(s), power 0.9500: detects +0.0204; null FP 0.013, bounded 0.978; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0085) at 0.975, 2 cell(s), power 0.9747: detects +0.0220; null FP 0.013, bounded 0.991; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0085) at 0.975, 3 cell(s), power 0.9830: detects +0.0225; null FP 0.013, bounded 0.993; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0085) at 0.95, 1 cell(s), power 0.9500: detects +0.0188; null FP 0.023, bounded 0.976; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0085) at 0.95, 2 cell(s), power 0.9747: detects +0.0202; null FP 0.023, bounded 0.989; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0085) at 0.95, 3 cell(s), power 0.9830: detects +0.0210; null FP 0.023, bounded 0.993; reproducibility failure 0.000
+pilot_estimate: spread 0.0140 at 206 changes -> sigma_run 0.0111 (realised 0.0140)
+pilot_estimate (sigma_run 0.0111) at 0.975, 1 cell(s), power 0.9500: detects +0.0212; null FP 0.013, bounded 0.979; reproducibility failure 0.003
+pilot_estimate (sigma_run 0.0111) at 0.975, 2 cell(s), power 0.9747: detects +0.0232; null FP 0.013, bounded 0.991; reproducibility failure 0.003
+pilot_estimate (sigma_run 0.0111) at 0.975, 3 cell(s), power 0.9830: detects +0.0237; null FP 0.013, bounded 0.995; reproducibility failure 0.003
+pilot_estimate (sigma_run 0.0111) at 0.95, 1 cell(s), power 0.9500: detects +0.0199; null FP 0.024, bounded 0.980; reproducibility failure 0.003
+pilot_estimate (sigma_run 0.0111) at 0.95, 2 cell(s), power 0.9747: detects +0.0210; null FP 0.024, bounded 0.988; reproducibility failure 0.003
+pilot_estimate (sigma_run 0.0111) at 0.95, 3 cell(s), power 0.9830: detects +0.0218; null FP 0.024, bounded 0.991; reproducibility failure 0.003
+sizing_bound_90: spread 0.0177 at 206 changes -> sigma_run 0.0152 (realised 0.0177)
+sizing_bound_90 (sigma_run 0.0152) at 0.975, 1 cell(s), power 0.9500: detects +0.0230; null FP 0.012, bounded 0.979; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0152) at 0.975, 2 cell(s), power 0.9747: detects +0.0248; null FP 0.012, bounded 0.991; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0152) at 0.975, 3 cell(s), power 0.9830: detects +0.0261; null FP 0.012, bounded 0.995; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0152) at 0.95, 1 cell(s), power 0.9500: detects +0.0212; null FP 0.025, bounded 0.977; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0152) at 0.95, 2 cell(s), power 0.9747: detects +0.0234; null FP 0.025, bounded 0.991; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0152) at 0.95, 3 cell(s), power 0.9830: detects +0.0239; null FP 0.025, bounded 0.993; reproducibility failure 0.022
+pilot_upper_99: spread 0.0215 at 206 changes -> sigma_run 0.0195 (realised 0.0216)
+pilot_upper_99 (sigma_run 0.0195) at 0.975, 1 cell(s), power 0.9500: detects +0.0254; null FP 0.011, bounded 0.981; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0195) at 0.975, 2 cell(s), power 0.9747: detects +0.0274; null FP 0.011, bounded 0.991; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0195) at 0.975, 3 cell(s), power 0.9830: detects +0.0283; null FP 0.011, bounded 0.994; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0195) at 0.95, 1 cell(s), power 0.9500: detects +0.0232; null FP 0.026, bounded 0.975; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0195) at 0.95, 2 cell(s), power 0.9747: detects +0.0256; null FP 0.026, bounded 0.991; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0195) at 0.95, 3 cell(s), power 0.9830: detects +0.0268; null FP 0.026, bounded 0.994; reproducibility failure 0.077
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-openstack-sporc.json
