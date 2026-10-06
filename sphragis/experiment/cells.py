@@ -159,6 +159,30 @@ def same_calibration(a: Any, b: Any) -> bool:
     )
 
 
+#: The sensitivities registered beside the pass rule that recompute a cell without a set of
+#: examples (registered decisions, 2026-10-02): every test read carries both.
+REGISTERED_SENSITIVITIES = ("ai_assisted", "backport_only")
+
+
+def require_sensitivities(report: Mapping[str, Any], *, org: str) -> dict[str, Any]:
+    """A test read's registered sensitivities, each read or recorded unreadable with its reason.
+
+    An entry with neither an estimate and intervals nor an `unreadable` reason was not read.
+    """
+    without = report.get("without", {})
+    if not isinstance(without, Mapping):
+        raise ValueError(f"{org}: its sensitivities are not a mapping")
+    readings = {}
+    for name in REGISTERED_SENSITIVITIES:
+        entry = without.get(name)
+        read = isinstance(entry, Mapping) and {"estimate", "intervals"} <= set(entry)
+        noted = isinstance(entry, Mapping) and isinstance(entry.get("unreadable"), str)
+        if not (read or noted):
+            raise ValueError(f"{org}: the test read lacks its registered sensitivity {name!r}")
+        readings[name] = dict(entry)
+    return readings
+
+
 def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[str, Any]) -> None:
     """Refuse a `partition_pilot.py` report unless it is a test-window read registered in advance.
 
@@ -188,6 +212,7 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
         raise ValueError(f"{org}: K = {report['runs']!r} is not a whole number of runs")
     if report["window"] != "test":
         raise ValueError(f"{org}: read on the {report['window']} window, not the test window")
+    require_sensitivities(report, org=org)
     planted = report["planted_convention"]
     if not (isinstance(planted, Mapping) and planted.get("passed") is True):
         raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")

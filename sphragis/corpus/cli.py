@@ -45,7 +45,7 @@ from sphragis.corpus.pipeline import freeze_windows, run_dedup, run_split, windo
 from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
 from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
-from sphragis.corpus.split import seal_open
+from sphragis.corpus.split import seal_open, seal_path
 from sphragis.corpus.storage import read_snapshot, write_snapshot
 from sphragis.corpus.windows import WINDOWS
 
@@ -403,11 +403,10 @@ def refuse_if_sealed(root: Path, org: str, month: str) -> None:
     """
     if f"{month}-01" < WINDOWS["test"][0]:
         return
-    seal_path = root / org / "seal.json"
     if not seal_open(root, org):
         raise SystemExit(
             f"refusing to fetch {org} {month}: on or after the sealed test window's start "
-            f"({WINDOWS['test'][0]}), and {seal_path} records no in-principle acceptance"
+            f"({WINDOWS['test'][0]}), and {seal_path(root, org)} records no in-principle acceptance"
         )
 
 

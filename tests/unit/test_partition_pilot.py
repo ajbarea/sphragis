@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from sphragis.experiment import decomposition
+from sphragis.experiment.cells import REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION
 from sphragis.experiment.partitions import spread_targets
@@ -165,7 +166,7 @@ def _registered_without(
     listing = {
         "org": org,
         "window": "test",
-        "ids": ids or {name: [] for name in decomposition.REGISTERED_SENSITIVITIES},
+        "ids": ids or {name: [] for name in REGISTERED_SENSITIVITIES},
         "universe": [f"x{i}" for i in range(2 * N)],
     }
     path.write_text(json.dumps(listing))
@@ -384,12 +385,18 @@ def test_every_half_must_be_built_from_the_runs_admissible_partition(
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
 
 
-def _gerrit_test_argv(tmp_path: Path, *extra: str, pilot: dict = PILOT) -> list[str]:
+def _gerrit_test_argv(
+    tmp_path: Path,
+    *extra: str,
+    pilot: dict = PILOT,
+    names: tuple[str, ...] = REGISTERED_SENSITIVITIES,
+) -> list[str]:
     sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack", pilot=pilot)
     return [
         *_inputs(tmp_path, "openstack", "test"),
         *_planted(tmp_path, "openstack"),
         *_sizing(tmp_path, "openstack"),
+        *_registered_without(tmp_path, "openstack", {name: [] for name in names}),
         "--sensitivity",
         str(sensitivity),
         *extra,
@@ -498,7 +505,10 @@ def test_a_sensitivity_reads_the_cell_again_without_its_examples(
 
 @pytest.mark.parametrize(
     "listing,message",
-    [({"org": "wikimedia"}, "not this read's"), ({"window": "test"}, "not this read's")],
+    [
+        ({"org": "wikimedia"}, "lists wikimedia's examples, not openstack's"),
+        ({"window": "test"}, "lists the test window, not this read's"),
+    ],
 )
 def test_a_sensitivity_for_another_read_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, listing: dict, message: str
@@ -611,6 +621,30 @@ def test_a_listing_made_from_another_corpus_is_refused(
                 *_inputs(tmp_path, "openstack"),
                 "--without",
                 f"ai_assisted={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )
+
+
+def test_a_test_read_without_its_registered_sensitivities_is_refused_before_any_draw(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    with pytest.raises(SystemExit, match=r"needs --without for \['backport_only'\]"):
+        _main(monkeypatch, _gerrit_test_argv(tmp_path, names=("ai_assisted",)))
+
+
+def test_an_unregistered_sensitivity_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"])
+    with pytest.raises(SystemExit, match="'tool_generated' is not a registered sensitivity"):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"tool_generated={ids}",
                 "--out",
                 str(tmp_path / "o.json"),
             ],

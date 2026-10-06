@@ -26,6 +26,7 @@ from pathlib import Path
 
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    REGISTERED_SENSITIVITIES,
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
@@ -100,13 +101,15 @@ def check_resamples(args: argparse.Namespace, levels: list[float]) -> None:
             raise SystemExit(f"not read: {error}") from error
 
 
-def sensitivity_listings(specs: list[str]) -> dict[str, tuple[str, dict]]:
+def sensitivity_listings(specs: list[str], *, org: str) -> dict[str, tuple[str, dict]]:
     """Each --without as (file, listing), checked on the arguments alone, before any run is read."""
     listings: dict[str, tuple[str, dict]] = {}
     for spec in specs:
         name, sep, path = spec.partition("=")
         if not (name and sep and path):
             raise SystemExit(f"--without {spec!r}: give NAME=FILE")
+        if name not in REGISTERED_SENSITIVITIES:
+            raise SystemExit(f"--without {name!r} is not a registered sensitivity")
         if name in listings:
             raise SystemExit(f"--without names {name!r} twice")
         if not Path(path).is_file():
@@ -114,13 +117,15 @@ def sensitivity_listings(specs: list[str]) -> dict[str, tuple[str, dict]]:
         listing = json.loads(Path(path).read_text())
         if name not in listing.get("ids", {}):
             raise SystemExit(f"{path} lists no {name!r} ids")
+        if listing.get("org") != org:
+            raise SystemExit(f"{path} lists {listing.get('org')}'s examples, not {org}'s")
         listings[name] = (path, listing)
     return listings
 
 
 def main() -> None:
     args = parser.parse_args()
-    listings = sensitivity_listings(args.without)
+    listings = sensitivity_listings(args.without, org=args.org)
     # Every check on the arguments alone, before any run is read.
     if args.replication != (args.org in REPLICATION_FAMILY):
         raise SystemExit(
@@ -258,6 +263,27 @@ def main() -> None:
             "spread_targets": sensitivity.get("spread_targets"),
             "planned_changes": sensitivity.get("planned_changes"),
         }
+    # Each sensitivity's listing checked against this read before any draw is taken: its window,
+    # and the corpus it was made from, which must hold every example the cell reads.
+    read = set.intersection(*(eval_ids(results, "adapter") for results, _ in runs[:runs_fixed]))
+    for path, ids_listing in listings.values():
+        listed_window = (
+            "development" if ids_listing.get("window") == "dev" else ids_listing.get("window")
+        )
+        if listed_window != window:
+            raise SystemExit(
+                f"{path} lists the {ids_listing.get('window')} window, not this read's"
+            )
+        outside = sorted(read - set(ids_listing.get("universe", [])))
+        if outside:
+            raise SystemExit(
+                f"{path} was made from another corpus: {len(outside)} of the cell's examples, "
+                f"{outside[:3]}, are not in it"
+            )
+    if window == "test":
+        missing = [n for n in REGISTERED_SENSITIVITIES if n not in listings]
+        if missing:
+            raise SystemExit(f"a test-window read needs --without for {missing}")
     cell = h1_over_partitions(
         runs,
         org=args.org,
@@ -272,19 +298,6 @@ def main() -> None:
     # seed and draws, without each named set of examples.
     without = {}
     for name, (path, ids_listing) in listings.items():
-        this_read = {"org": args.org, "window": "dev" if window == "development" else window}
-        found = {key: ids_listing.get(key) for key in this_read}
-        if found != this_read:
-            raise SystemExit(f"{path}: {found}, not this read's {this_read}")
-        # Made from the corpus these runs came from: every example the cell reads is in it.
-        universe = set(ids_listing.get("universe", []))
-        read = set.intersection(*(eval_ids(results, "adapter") for results, _ in runs[:runs_fixed]))
-        outside = sorted(read - universe)
-        if outside:
-            raise SystemExit(
-                f"{path} was made from another corpus: {len(outside)} of the cell's examples, "
-                f"{outside[:3]}, are not in it"
-            )
         drop = set(ids_listing["ids"][name])
         kept = [
             ({arm: [r for r in rows if r["id"] not in drop] for arm, rows in results.items()}, k)
@@ -304,9 +317,12 @@ def main() -> None:
             without[name] = {"file": path, "listed": len(drop), "unreadable": str(error)}
             continue
         fields = ("intervals", "within_sesoi", "meaningful", "p_one_sided", "bootstrap_se")
+        # What the AI-trailer searches never reached among the cell's examples, stated beside it.
+        unsearched = len(set(ids_listing.get("ai_unsearched", [])) & read)
         without[name] = {
             "file": path,
             "listed": len(drop),
+            **({"unsearched": unsearched} if name == "ai_assisted" else {}),
             # The examples that left the cell, not ids that never entered it.
             "removed": cell["examples"] - reduced["examples"],
             "estimate": reduced["estimate"],

@@ -71,8 +71,13 @@ def is_test_window_unlocked(seal_record: Mapping[str, Any]) -> bool:
     return bool(seal_record.get("accepted_at"))
 
 
+def seal_path(root: Path, org: str) -> Path:
+    """Where an organization's seal lives: `<root>/<org>/seal.json`."""
+    return Path(root) / org / "seal.json"
+
+
 def seal_open(root: Path, org: str) -> bool:
-    """Whether `<root>/<org>/seal.json` records in-principle acceptance; missing is locked."""
-    seal_path = Path(root) / org / "seal.json"
-    record = json.loads(seal_path.read_text()) if seal_path.is_file() else {}
+    """Whether the organization's seal records in-principle acceptance; missing is locked."""
+    path = seal_path(root, org)
+    record = json.loads(path.read_text()) if path.is_file() else {}
     return is_test_window_unlocked(record)

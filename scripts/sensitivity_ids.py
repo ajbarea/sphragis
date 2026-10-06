@@ -22,8 +22,7 @@ from pathlib import Path
 
 from sphragis.corpus.backports import (
     BACKPORT,
-    branches_by_change,
-    merged_by_change,
+    index_changes,
     only_backport,
 )
 from sphragis.corpus.split import seal_open
@@ -71,18 +70,17 @@ def main() -> None:
         raise SystemExit(
             f"{args.ai_trailers} searched changes merged {trailers['since']} to "
             f"{trailers['merged_before']}, not the {args.window} window {WINDOWS[args.window]}; "
-            "ai_trailers.py stops at the seal, so the test window's searches follow acceptance"
+            "for the test window, after acceptance, rerun ai_trailers.py --through-test"
         )
     try:
         _, rows, read = window_split(args.root, args.org, eval_window=args.window)
     except ValueError as error:
         raise SystemExit(str(error)) from error
     ai = flagged_changes(trailers, args.org)
-    branches = branches_by_change(args.root, args.org)
+    branches, merged = index_changes(args.root, args.org)
     # The searches are bounded by merge date and windows by creation date, so an example whose
     # change merged on or after the search bound, or never, was never searched: counted, so the
     # AI-assisted reading states what it could not see.
-    merged = merged_by_change(args.root, args.org)
 
     def searched(row: dict) -> bool:
         when = merged.get((row["project"], row["change_id"]))

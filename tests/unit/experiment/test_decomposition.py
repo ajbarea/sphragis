@@ -13,12 +13,15 @@ import pytest
 
 from sphragis.corpus.github import GITHUB_ORGS
 from sphragis.experiment import decomposition
-from sphragis.experiment.cells import same_calibration
+from sphragis.experiment.cells import (
+    REGISTERED_SENSITIVITIES,
+    require_sensitivities,
+    same_calibration,
+)
 from sphragis.experiment.decomposition import (
     H2_PAIR,
     MIN_RESAMPLES,
     ORGANIZATIONS,
-    REGISTERED_SENSITIVITIES,
     REPLICATION_CONFIDENCE,
     REPLICATION_FAMILY,
     SUMMED_CONFIDENCE,
@@ -401,7 +404,10 @@ def _replication_cell(
         "window": "test",
         "planted_convention": {"passed": True},
         # Both registered sensitivities, read as partition_pilot.py --without writes them.
-        "without": {name: {"listed": 0, "removed": 0} for name in REGISTERED_SENSITIVITIES},
+        "without": {
+            name: {"listed": 0, "removed": 0, "estimate": 0.0, "intervals": {}}
+            for name in REGISTERED_SENSITIVITIES
+        },
         "runs": 24,
         "k_from": {
             "file": f"partition-pilot-{org}.json",
@@ -1583,10 +1589,14 @@ def test_own_against_base_refuses_a_change_in_both_halves() -> None:
 
 
 def test_a_test_read_without_its_registered_sensitivities_is_refused() -> None:
-    from sphragis.experiment.decomposition import _require_sensitivities
-
     report = _replication_cell(0.01, 0.02, 0.001)
-    assert set(_require_sensitivities("apache", report)) == set(REGISTERED_SENSITIVITIES)
-    lacking = {**report, "without": {"ai_assisted": {}}}
-    with pytest.raises(ValueError, match=r"lacks its registered sensitivities \['backport_only'\]"):
-        _require_sensitivities("apache", lacking)
+    assert set(require_sensitivities(report, org="apache")) == set(REGISTERED_SENSITIVITIES)
+    lacking = {**report, "without": {"ai_assisted": report["without"]["ai_assisted"]}}
+    with pytest.raises(ValueError, match="lacks its registered sensitivity 'backport_only'"):
+        require_sensitivities(lacking, org="apache")
+    # An entry that was neither read nor recorded unreadable was not read.
+    empty = {**report, "without": {**report["without"], "backport_only": {"listed": 2}}}
+    with pytest.raises(ValueError, match="'backport_only'"):
+        require_sensitivities(empty, org="apache")
+    noted = {**report, "without": {**report["without"], "backport_only": {"unreadable": "x"}}}
+    assert require_sensitivities(noted, org="apache")["backport_only"] == {"unreadable": "x"}

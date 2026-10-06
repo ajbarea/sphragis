@@ -33,24 +33,24 @@ def raw_changes(root: Path, org: str) -> Iterator[dict]:
                 yield json.loads(line)
 
 
-def branches_by_change(root: Path, org: str) -> dict[tuple[str, str], set[str]]:
-    """Every branch a (project, Change-Id) has a raw change on, from the raw snapshots."""
+def index_changes(
+    root: Path, org: str
+) -> tuple[dict[tuple[str, str], set[str]], dict[tuple[str, str], str | None]]:
+    """In one pass over the raw snapshots, per (project, Change-Id): every branch it has a raw
+    change on, and the earliest merge of any of them (None if none merged)."""
     branches: dict[tuple[str, str], set[str]] = {}
-    for change in raw_changes(root, org):
-        key = (change["project"], change["change_id"])
-        branches.setdefault(key, set()).add(str(change.get("branch") or ""))
-    return branches
-
-
-def merged_by_change(root: Path, org: str) -> dict[tuple[str, str], str | None]:
-    """The earliest merge of any raw change with a (project, Change-Id); None if none merged."""
     merged: dict[tuple[str, str], str | None] = {}
     for change in raw_changes(root, org):
         key = (change["project"], change["change_id"])
+        branches.setdefault(key, set()).add(str(change.get("branch") or ""))
         when = change.get("submitted") if change.get("status") == "MERGED" else None
-        earlier = merged.get(key)
-        merged[key] = min((t for t in (earlier, when) if t), default=None)
-    return merged
+        merged[key] = min((t for t in (merged.get(key), when) if t), default=None)
+    return branches, merged
+
+
+def branches_by_change(root: Path, org: str) -> dict[tuple[str, str], set[str]]:
+    """Every branch a (project, Change-Id) has a raw change on, from the raw snapshots."""
+    return index_changes(root, org)[0]
 
 
 def only_backport(names: set[str]) -> bool:

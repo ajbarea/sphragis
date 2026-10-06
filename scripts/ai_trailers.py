@@ -27,12 +27,14 @@ import json
 import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sphragis.corpus.cli import GERRIT, http_transport
 from sphragis.corpus.gerrit import fetch_changes
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.split import seal_open
 from sphragis.corpus.windows import WINDOWS
 from sphragis.provenance import provenance_header
 
@@ -62,6 +64,11 @@ READ_WINDOWS = ("pilot", "train", "dev")
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--root", action="append", required=True, help="org=root of a built corpus")
 parser.add_argument("--out", type=Path, required=True)
+parser.add_argument(
+    "--through-test",
+    action="store_true",
+    help="after acceptance only: search through the test window, up to the day of the fetch",
+)
 
 
 def trailer_kinds(message: str) -> dict[str, list[str]]:
@@ -77,9 +84,10 @@ def trailer_kinds(message: str) -> dict[str, list[str]]:
     return dict(kinds)
 
 
-def search_query(search: str) -> str:
-    """A merged-change search that can return no change created in the sealed window."""
-    return f"status:merged mergedafter:{SINCE} mergedbefore:{SEALED_FROM} message:{search}"
+def search_query(search: str, merged_before: str = SEALED_FROM) -> str:
+    """A merged-change search, by default one that can return no change created in the sealed
+    window; `merged_before` later than the seal only once the test window is unsealed."""
+    return f"status:merged mergedafter:{SINCE} mergedbefore:{merged_before} message:{search}"
 
 
 def tally(
@@ -106,13 +114,22 @@ def tally(
 
 def main() -> None:
     args = parser.parse_args()
+    # The test window is searched only once every organization's seal records acceptance, and
+    # then up to the day of the fetch: the registered "read at fetch time for the test window".
+    bound = SEALED_FROM
+    if args.through_test:
+        roots = dict(spec.split("=", 1) for spec in args.root)
+        sealed = [org for org, root in roots.items() if not seal_open(Path(root), org)]
+        if sealed:
+            raise SystemExit(f"--through-test: the test window of {sealed} is still sealed")
+        bound = datetime.now(UTC).date().isoformat()
     transport = http_transport()
     report: dict = {
         "searches": list(SEARCHES),
         "ai_tools": AI_TOOLS,
         "ai_tools_also_names": AI_TOOLS_ALSO_NAMES,
         "since": SINCE,
-        "merged_before": SEALED_FROM,
+        "merged_before": bound,
         "orgs": {},
     }
     for spec in args.root:
@@ -123,7 +140,7 @@ def main() -> None:
         for search in SEARCHES:
             changes, record = fetch_changes(
                 GERRIT[org],
-                search_query(search),
+                search_query(search, bound),
                 transport=transport,
                 options=("CURRENT_REVISION", "CURRENT_COMMIT"),
             )
@@ -143,7 +160,7 @@ def main() -> None:
                     )
         kept, _ = run_dedup(refined_examples(Path(root), org))
         windows, _, _ = run_split(kept, WINDOWS)
-        if windows.get("test"):
+        if windows.get("test") and not args.through_test:
             raise SystemExit(f"{org}: the corpus holds test-window examples; it is sealed")
         report["orgs"][org] = {
             "nominated_by_search": nominated,
