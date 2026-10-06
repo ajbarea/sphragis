@@ -189,13 +189,13 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   them (a lower bound, trailers being voluntary). Measured first on the GitHub pilot months.
 - [ ] **Reviewers, not the organization**: a secondary analysis splitting dev and test examples
   by whether their reviewer also reviewed the sibling half's training data (salted pseudonyms).
-- [ ] **A retrieval comparator**: the base model with BM25 top-k examples from the own-half,
+- [x] **A retrieval comparator**: the base model with BM25 top-k examples from the own-half,
   sibling-half and foreign pools, mirroring H1 without training (Pornprasit and
   Tantithamthavorn, IST 2024; retrieval beat fine-tuning in arXiv:2505.15179, lost in
   arXiv:2606.06492). Exploratory. Reported at k = 1 and k = 3: a single most similar past review
   works best for review generation and more retrieval hurts (RARe, arXiv:2511.05302).
-  Built on the registered runner (`scripts/retrieval_comparator.py`, `scripts/retrieval_read.py`;
-  plan, reading rule and cost in the research log, 2026-10-05); the generations run on TIGRIS.
+  Read on the development window 2026-10-06 (research log): every own-minus-sibling reading
+  inconclusive, as are the adapters' over the same partitions.
 - [ ] **A rules-file comparator** (added 2026-10-04): the base model with a house-rules file in
   context, mirrored own, sibling and foreign: (a) the organization's own written conventions
   (OpenStack's HACKING guide, MediaWiki's coding conventions), (b) an AGENTS.md-style file an LLM

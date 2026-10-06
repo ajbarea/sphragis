@@ -1,0 +1,11 @@
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (45388 > 32768). Running this sequence through the model will result in indexing errors
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   5%|▌         | 17/339 [00:00<00:01, 161.64it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:01, 183.06it/s]Loading weights:  17%|█▋        | 59/339 [00:00<00:01, 182.47it/s]Loading weights:  23%|██▎       | 78/339 [00:00<00:01, 155.33it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:01, 166.34it/s]Loading weights:  35%|███▌      | 120/339 [00:00<00:01, 174.74it/s]Loading weights:  41%|████      | 138/339 [00:00<00:01, 154.87it/s]Loading weights:  47%|████▋     | 161/339 [00:00<00:01, 168.07it/s]Loading weights:  53%|█████▎    | 179/339 [00:01<00:00, 170.27it/s]Loading weights:  58%|█████▊    | 197/339 [00:01<00:00, 153.33it/s]Loading weights:  65%|██████▍   | 220/339 [00:01<00:00, 170.81it/s]Loading weights:  70%|███████   | 238/339 [00:01<00:00, 166.97it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 170.01it/s]Loading weights:  81%|████████  | 274/339 [00:01<00:00, 168.97it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 170.11it/s]Loading weights:  91%|█████████▏| 310/339 [00:01<00:00, 164.11it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 167.26it/s]Loading weights: 100%|██████████| 339/339 [00:02<00:00, 168.61it/s]
+retrieval-k1:wikimedia-a|wikimedia-a         EM=0.170
+retrieval-k3:wikimedia-a|wikimedia-a         EM=0.210
+retrieval-k1:wikimedia-b|wikimedia-a         EM=0.153
+retrieval-k3:wikimedia-b|wikimedia-a         EM=0.184
+retrieval-k1:wikimedia-a|wikimedia-b         EM=0.204
+retrieval-k3:wikimedia-a|wikimedia-b         EM=0.223
+retrieval-k1:wikimedia-b|wikimedia-b         EM=0.207
+retrieval-k3:wikimedia-b|wikimedia-b         EM=0.271
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/retrieval-halves-wikimedia-p11.json
