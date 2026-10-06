@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import urllib.parse
 import urllib.request
 from collections import Counter
@@ -30,6 +31,8 @@ from sphragis.provenance import provenance_header
 USER_AGENT = "sphragis-research (ajb6289@rit.edu)"
 MEDIAWIKI_API = "https://www.mediawiki.org/w/api.php"
 MEDIAWIKI_LICENSE = "CC BY-SA 4.0 (mediawiki.org)"
+WIKITECH_API = "https://wikitech.wikimedia.org/w/api.php"
+WIKITECH_LICENSE = "CC BY-SA 4.0 (wikitech.wikimedia.org)"
 OPENDEV_API = "https://opendev.org/api/v1/repos/openstack/hacking"
 OPENDEV_LICENSE = "Apache-2.0 (openstack/hacking)"
 # Language-independent pages, always included.
@@ -75,12 +78,19 @@ def extensions(results: Path, org: str) -> Counter[str]:
     return counts
 
 
-def mediawiki(title: str) -> dict[str, Any]:
-    """A MediaWiki page's current wikitext, pinned to its revision."""
+def mediawiki(title: str, *, api: str = MEDIAWIKI_API, site: str = "www.mediawiki.org") -> dict:
+    """A wiki page's current text, as plain text (TextExtracts), pinned to its revision.
+
+    Plain text, not wikitext, so a map pass reads the conventions rather than translation and
+    template markup. A soft redirect to wikitech, as MediaWiki's Puppet page is, is followed
+    there, and the source records the page it was read from.
+    """
     query = urllib.parse.urlencode(
         {
             "action": "query",
-            "prop": "revisions",
+            "prop": "revisions|extracts",
+            "explaintext": "1",
+            "redirects": "1",
             "titles": title,
             "rvprop": "ids|timestamp|content",
             "rvslots": "main",
@@ -88,17 +98,26 @@ def mediawiki(title: str) -> dict[str, Any]:
             "formatversion": "2",
         }
     )
-    page = json.loads(fetch(f"{MEDIAWIKI_API}?{query}"))["query"]["pages"][0]
+    page = json.loads(fetch(f"{api}?{query}"))["query"]["pages"][0]
     revision = page["revisions"][0]
-    text = revision["slots"]["main"]["content"]
+    soft = re.fullmatch(
+        r"\{\{soft redirect\|wikitech:([^}|]+)\}\}", revision["slots"]["main"]["content"].strip()
+    )
+    if soft and api == MEDIAWIKI_API:
+        return {
+            **mediawiki(soft.group(1), api=WIKITECH_API, site="wikitech.wikimedia.org"),
+            "redirected_from": title,
+        }
+    if not page.get("extract", "").strip():
+        raise SystemExit(f"{title}: no text on {site}")
     return {
-        "title": title,
-        "url": f"https://www.mediawiki.org/w/index.php?title="
-        f"{urllib.parse.quote(title)}&oldid={revision['revid']}",
+        "title": page["title"],
+        "url": f"https://{site}/w/index.php?title="
+        f"{urllib.parse.quote(page['title'])}&oldid={revision['revid']}",
         "revision": revision["revid"],
         "timestamp": revision["timestamp"],
-        "license": MEDIAWIKI_LICENSE,
-        "text": text,
+        "license": MEDIAWIKI_LICENSE if site == "www.mediawiki.org" else WIKITECH_LICENSE,
+        "text": page["extract"],
     }
 
 
