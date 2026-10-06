@@ -52,6 +52,11 @@ MIN_REVIEW_CHUNKS = 3
 # A map answer's budget: a list, not a file. A chunk holds some hundred and fifty reviewed changes,
 # so a list may run long; an answer that reaches the budget is flagged and its cut line dropped.
 MAP_ANSWER_TOKENS = 1024
+
+# A first smoke run (2026-10-06, job 223030) mined mostly practice any project follows ("use
+# meaningful variable names", "follow PEP 8"), so the review prompts ask for what is particular
+# to this organization; amended before any arm was scored. A written guide is the organization's
+# own declaration, so its prompts keep every rule it states.
 _PARTICULAR = (
     "Leave out general good practice that any project would follow (meaningful names, PEP 8, "
     "writing tests, handling errors). Keep conventions particular to this organization, and "
@@ -175,9 +180,14 @@ def recurring(
         backed = sorted(n for n in numbers if any(grounded(rule, r) for r in lists[n - 1]))
         if len(backed) >= MIN_CITED_LISTS:
             kept_rules.append((-len(backed), order, rule, backed))
-    kept = capped_file([rule for *_, rule, _ in sorted(kept_rules)], length=length)
-    cites = {rule: backed for *_, rule, backed in kept_rules}
-    return kept, [cites[rule] for rule in kept]
+    # A rule the merge wrote twice is kept once, at its best-cited copy.
+    ranked, seen = [], set()
+    for _, _, rule, backed in sorted(kept_rules):
+        if rule not in seen:
+            seen.add(rule)
+            ranked.append((rule, backed))
+    kept = capped_file([rule for rule, _ in ranked], length=length)
+    return kept, [backed for _, backed in ranked[: len(kept)]]
 
 
 def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[str]:
@@ -189,26 +199,36 @@ def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[s
     return kept
 
 
-# Words too common in rules to tie one to another.
+# Words too common in rules to tie one to another (only words of four or more letters are read).
 # fmt: off
 _COMMON = frozenset((
-    "use", "using", "used", "instead", "rather", "than", "with", "when", "from", "that", "this",
-    "these", "those", "only", "must", "should", "avoid", "prefer", "always", "never", "code",
-    "each", "such", "into", "over", "their", "which", "where", "there", "make", "sure", "file",
-    "files", "line", "lines", "name", "names", "value", "values"
+    "using", "used", "instead", "rather", "than", "with", "when", "from", "that", "this", "these",
+    "those", "only", "must", "should", "avoid", "prefer", "always", "never", "code", "each",
+    "such", "into", "over", "their", "which", "where", "there", "make", "sure", "file", "files",
+    "line", "lines", "name", "names", "value", "values"
 ))
 # fmt: on
 _WORD = re.compile(r"[a-z][a-z0-9_]{3,}")
 _TICKED = re.compile(r"`([^`]+)`")
+# An identifier: a dotted or snake_case name, or a camelCase or PascalCase one.
+_IDENTIFIER = re.compile(r"[A-Za-z]\w*[_.]\w[\w.]*|[a-z]+[A-Z]\w*|[A-Z][a-z0-9]+[A-Z]\w*")
+# Ticked words a rule shares with many that say nothing of the convention.
+_TRIVIAL = frozenset({"none", "true", "false", "self", "null", "this", "cls"})
+
+
+def _names(text: str) -> set[str]:
+    """The identifiers a rule names: ticked spans and identifier-shaped words, lower-cased,
+    without the trivial ones."""
+    found = {t.strip().lower() for t in _TICKED.findall(text)}
+    found |= {w.lower() for w in _IDENTIFIER.findall(text)}
+    return {n for n in found if len(n) >= 3 and n not in _TRIVIAL}
 
 
 def grounded(rule: str, source: str) -> bool:
-    """Whether a merged rule shares wording with a source rule: a backticked identifier in both,
-    or two words of four or more letters beyond the common ones."""
-    ticked = {t.lower() for t in _TICKED.findall(rule)} & {
-        t.lower() for t in _TICKED.findall(source)
-    }
-    if ticked:
+    """Whether a merged rule shares wording with a source rule: an identifier both name (ticked
+    or identifier-shaped, beyond `None` and its kin), or two words of four or more letters
+    beyond the common ones."""
+    if _names(rule) & _names(source):
         return True
     words = set(_WORD.findall(rule.lower())) - _COMMON
     return len(words & (set(_WORD.findall(source.lower())) - _COMMON)) >= 2
@@ -293,7 +313,8 @@ def distil(
             )
     # Only lists that hold a rule go to the merge, numbered as it sees them, so no citation can
     # name an empty one.
-    merge_lists = [lines for _, lines, _ in mapped if lines]
+    merge_chunks = [n for n, (_, lines, _) in enumerate(mapped, 1) if lines]
+    merge_lists = [mapped[n - 1][1] for n in merge_chunks]
     joined = "\n\n".join(
         f"List {n}:\n" + "\n".join(lines) for n, lines in enumerate(merge_lists, 1)
     )
@@ -318,6 +339,9 @@ def distil(
         "evidence": evidence,
         "reduce_answer": merged,
         "reduce_capped": reduce_capped,
+        # The chunk each list the merge saw came from, by the merge's numbering: list n is
+        # chunk merge_chunks[n - 1] of map_lists and evidence.
+        "merge_chunks": merge_chunks,
         # Per kept mined rule, the lists the merge cited for it.
         "recurrence": recurrence,
         "rules": rules,

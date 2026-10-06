@@ -156,6 +156,8 @@ def test_a_list_left_empty_is_not_numbered_for_the_merge() -> None:
     reduce_call = model.calls[-1][0]
     assert result["evidence"][1] == {"listed": 1, "kept": 0}
     assert "List 3:" in reduce_call and "List 4:" not in reduce_call
+    # The merge's list 2 is chunk 3, recorded so a citation reads back to its chunk.
+    assert result["merge_chunks"] == [1, 3, 4]
 
 
 def test_a_rule_is_grounded_by_a_shared_identifier_or_two_uncommon_words() -> None:
@@ -163,8 +165,20 @@ def test_a_rule_is_grounded_by_a_shared_identifier_or_two_uncommon_words() -> No
 
     assert grounded("- Prefer `joinedload` here.", "- Replace `joinedload_all` with `joinedload`.")
     assert grounded("- Log through oslo logging.", "- Route messages via oslo logging helpers.")
+    # One identifier is enough, ticked or not; a trivial ticked word is not one.
+    assert grounded("- Use oslo_log for logging.", "- Log with oslo_log, not print.")
+    assert not grounded("- Return `None` from handlers.", "- Compare to `None` with is.")
     assert not grounded("- Use black for formatting.", "- Use `joinedload` instead of others.")
     assert not grounded("- Use the logger.", "- Use the logger instead.")
+
+
+def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> None:
+    from sphragis.experiment.rules import recurring
+
+    lines = ["- Use `oslo_log`. [1]", "- Use `oslo_log`. [1, 2]", "- Use `ddt`. [2]"]
+    lists = [["- `oslo_log` and `ddt`."]] * 2
+    rules, cites = recurring(lines, lists=lists, length=len)
+    assert rules == ["- Use `oslo_log`.", "- Use `ddt`."] and cites == [[1, 2], [2]]
 
 
 def test_mined_rules_need_three_lists_with_evidence() -> None:

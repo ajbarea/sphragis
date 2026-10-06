@@ -39,6 +39,7 @@ from sphragis.experiment.rules import (
     review_chunks,
     review_text,
 )
+from sphragis.refusal import refusals
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--source", choices=["reviews", "guide"], required=True)
@@ -115,19 +116,14 @@ def main() -> None:
     )
 
     # Only the tokenizers until the data has passed every check: the model loads after.
-    try:
-        report, plan = sources_of(
-            args, _require_tokenizer(MODEL_ID), _require_tokenizer(DISTILLER_ID)
-        )
-    except ValueError as error:
-        raise SystemExit(str(error)) from error
+    evaluated = _require_tokenizer(MODEL_ID)
+    with refusals():
+        report, plan = sources_of(args, evaluated, _require_tokenizer(DISTILLER_ID))
 
     generator = HFGenerator(
         model_id=DISTILLER_ID, dtype=DISTILLER_DTYPE, template=DISTILLER_TEMPLATE
     )
     tokenizer = generator.tokenizer
-    # The evaluated model's tokenizer, which reads the file, sets the file's budget.
-    evaluated = _require_tokenizer(MODEL_ID)
     signature = distiller_signature(
         f"{generator.model_id}@{revision(generator.model_id)}",
         generator.computed_dtype,
@@ -136,6 +132,8 @@ def main() -> None:
 
     def length(text: str) -> int:
         return len(tokenizer(text, add_special_tokens=False)["input_ids"])
+
+    budgeted_by = f"{MODEL_ID}@{revision(MODEL_ID)}"
 
     def file_length(text: str) -> int:
         return len(evaluated(text, add_special_tokens=False)["input_ids"])
@@ -149,14 +147,14 @@ def main() -> None:
     report["files"] = {}
     for name, item in plan.items():
         cache = args.out.with_name(f"{args.out.stem}.{name}.part.json")
-        mark = fingerprint(signature, json.dumps([item, pipeline()], sort_keys=True))
+        mark = fingerprint(signature, json.dumps([item, pipeline(), budgeted_by], sort_keys=True))
         try:
             made = json.loads(cache.read_text()) if cache.is_file() else None
         except json.JSONDecodeError:
             # A write a kill cut short: made again.
             made = None
         if made is None or made.get("fingerprint") != mark:
-            try:
+            with refusals(f"{name}: "):
                 made = distil(
                     item["sources"],
                     kind=item["kind"],
@@ -164,8 +162,6 @@ def main() -> None:
                     length=length,
                     file_length=file_length,
                 )
-            except ValueError as error:
-                raise SystemExit(f"{name}: {error}") from error
             made["fingerprint"] = mark
             partial = cache.with_suffix(".partial")
             partial.write_text(json.dumps(made, ensure_ascii=False) + "\n")
@@ -179,6 +175,8 @@ def main() -> None:
     from sphragis.experiment.model import run_provenance
 
     report["generator"] = signature
+    # The model whose tokens the file budget is counted in: the one that reads the file.
+    report["budgeted_by"] = budgeted_by
     report["pipeline"] = pipeline()
     report["provenance"] = run_provenance()
     # Whole or not at all, so a rules job never reads a file half written.

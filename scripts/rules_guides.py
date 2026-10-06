@@ -82,7 +82,10 @@ def extensions(results: Path, org: str) -> Counter[str]:
 # MediaWiki template names are case-insensitive in their first letter, and a stub may carry text
 # after the template: matched at the start of the page.
 SOFT_REDIRECT = re.compile(r"\{\{\s*[Ss]oft[ _]redirect\s*\|")
-_WIKITECH = re.compile(r"\{\{\s*[Ss]oft[ _]redirect\s*\|\s*wikitech:([^}|]+?)\s*(?:\|[^}]*)?\}\}")
+# Interwiki prefixes are case-insensitive.
+_WIKITECH = re.compile(
+    r"\{\{\s*[Ss]oft[ _]redirect\s*\|\s*(?i:wikitech):([^}|]+?)\s*(?:\|[^}]*)?\}\}"
+)
 
 
 def soft_target(content: str) -> str | None:

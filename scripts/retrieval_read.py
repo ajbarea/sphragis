@@ -60,6 +60,7 @@ from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, f
 from sphragis.experiment.rules_arms import DISTILLED, WRITTEN
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 from sphragis.provenance import provenance_header
+from sphragis.refusal import refusals
 
 CONFIDENCE = 0.95
 
@@ -91,17 +92,16 @@ def load(path: Path, **expected: Any) -> dict[str, Any]:
     return job
 
 
-def needed_once(arms: str, *, org: str, foreign: str, written: bool) -> list[str]:
+def needed_once(arms: str, *, org: str, foreign: str) -> list[str]:
     """The arms a reading takes from the organization-wide jobs, each evaluated on `org`: base,
-    and the foreign halves' arms of the family read; the written files' own and foreign arms
-    when the job holds any."""
+    and the foreign halves' arms of the family read; for rules, both written files' too, which
+    every rules foreign job holds."""
     keys = [run_id(EvalRun("base", org, None))]
     if arms == "retrieval":
         keys += [arm_key(k, pool, org) for k in KS for pool in halves(foreign)]
     else:
         keys += [conditioned(DISTILLED, pool, org) for pool in halves(foreign)]
-        if written:
-            keys += [conditioned(WRITTEN, owner, org) for owner in (org, foreign)]
+        keys += [conditioned(WRITTEN, owner, org) for owner in (org, foreign)]
     return keys
 
 
@@ -166,12 +166,10 @@ def adapter_runs(
     """
     paths, runs, ranks = [], [], set()
     for partition in order:
-        try:
+        with refusals():
             path, run, _, _ = adapter_run(
                 results, org=org, partition=partition, order=order, size=size
             )
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
         found = {key: run.get(key) for key in decoding}
         if found != dict(decoding):
             raise SystemExit(f"{path} decoded with {found}, the retrieval arms with {decoding}")
@@ -197,6 +195,10 @@ def near_duplicate_targets(runs: Sequence[Mapping[str, Rows]], keys: Sequence[st
         for row in results[key]
         if row["shot_jaccard"] >= LEAKAGE_THRESHOLD
     }
+
+
+#: What every rules job records of the distillation and the arm prompts it read, held equal.
+RULES_RECORD = ("rules_suffix", "rules_pipeline", "rules_arms")
 
 
 def families(arms: str) -> dict[str, str]:
@@ -318,10 +320,8 @@ def read_written(
 
 def main() -> None:
     args = parser.parse_args()
-    try:
+    with refusals(f"{args.admissible}: "):
         order, size = first_partitions(json.loads(args.admissible.read_text()), org=args.org)
-    except ValueError as error:
-        raise SystemExit(f"{args.admissible}: {error}") from error
     if len(args.halves) != len(order):
         raise SystemExit(f"{len(args.halves)} --halves files, not the fixed {len(order)}")
     if (args.arms == "rules") != (args.base_job is not None):
@@ -332,7 +332,7 @@ def main() -> None:
     if args.arms == "rules":
         # Every rules job read one distillation: one suffix, one pipeline.
         head = json.loads(args.foreign_job.read_text())
-        fixed |= {key: head.get(key) for key in ("rules_suffix", "rules_pipeline")}
+        fixed |= {key: head.get(key) for key in RULES_RECORD}
         if fixed["rules_pipeline"] is None:
             raise SystemExit(f"{args.foreign_job} does not record the rules files it read")
     foreign_job = load(
@@ -348,15 +348,14 @@ def main() -> None:
     fixed |= generator
     once = dict(foreign_job["results"])
     if args.base_job:
-        base_fixed = {k: v for k, v in fixed.items() if k not in ("rules_suffix", "rules_pipeline")}
+        base_fixed = {k: v for k, v in fixed.items() if k not in RULES_RECORD}
         base = load(
             args.base_job, pools="foreign", foreign=args.foreign, arms="retrieval", **base_fixed
         )
         once[run_id(EvalRun("base", args.org, None))] = base["results"][
             run_id(EvalRun("base", args.org, None))
         ]
-    written = any(key.startswith(f"{WRITTEN}:") for key in once)
-    needed = needed_once(args.arms, org=args.org, foreign=args.foreign, written=written)
+    needed = needed_once(args.arms, org=args.org, foreign=args.foreign)
     lacking = [key for key in needed if key not in once]
     if lacking:
         raise SystemExit(f"{args.foreign_job} (with any --base-job) lacks the arms {lacking}")
@@ -373,10 +372,8 @@ def main() -> None:
     per_family: dict[str, Any] = {}
     adapters = None
     for name, condition_name in families(args.arms).items():
-        try:
+        with refusals():
             cut, examples = on_common_examples(runs, condition=condition_name)
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
         per_family[name] = {
             **examples,
             **read_family(

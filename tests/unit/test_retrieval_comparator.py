@@ -551,7 +551,12 @@ def test_a_rules_job_prompts_with_each_file_in_the_system_turn(
     rules.mkdir()
     halves = ("openstack-a", "openstack-b")
     files = {h: {"pool_ids": [], "file": f"- rule of {h}"} for h in halves}
-    made = {"files": files, "generator": "qwen@rev|float32", "pipeline": pipeline()}
+    made = {
+        "files": files,
+        "generator": "qwen@rev|float32",
+        "budgeted_by": "q@r",
+        "pipeline": pipeline(),
+    }
     (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps(made))
     report = _halves(
         corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
@@ -570,7 +575,12 @@ def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
     rules.mkdir()
     pool = [{"id": "x1"}, {"id": "x2"}]
     files = {"openstack-a": {"pool_ids": ["x1", "other"], "file": "- r"}}
-    made = {"files": files, "generator": "qwen@rev|float32", "pipeline": pipeline()}
+    made = {
+        "files": files,
+        "generator": "qwen@rev|float32",
+        "budgeted_by": "q@r",
+        "pipeline": pipeline(),
+    }
     (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
     args = argparse.Namespace(
         rules=rules, rules_suffix="", pools="halves", org="openstack", partition=3, dry_run=False
@@ -585,7 +595,9 @@ def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
     files["openstack-a"]["pool_ids"] = ["x1", "x2"]
     (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
     picked, made_by = comparator.rules_files(args, {"openstack-a": Index(pool)}, None)
-    assert picked == {(DISTILLED, "openstack-a"): "- r"} and made_by == {"qwen@rev|float32"}
+    assert picked == {(DISTILLED, "openstack-a"): "- r"} and made_by == {
+        ("qwen@rev|float32", "q@r")
+    }
 
 
 def test_a_rules_file_still_being_written_is_refused(tmp_path: Path) -> None:

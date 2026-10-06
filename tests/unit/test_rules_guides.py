@@ -24,3 +24,7 @@ def test_a_soft_redirect_is_followed_in_either_case_and_with_text_after() -> Non
 def test_a_soft_redirect_elsewhere_is_recognised_so_it_is_refused() -> None:
     assert guides.SOFT_REDIRECT.match("{{Soft redirect|meta:Page}}")
     assert guides.soft_target("{{Soft redirect|meta:Page}}") is None
+
+
+def test_the_interwiki_prefix_matches_in_either_case() -> None:
+    assert guides.soft_target("{{Soft redirect|Wikitech:Puppet coding}}") == "Puppet coding"

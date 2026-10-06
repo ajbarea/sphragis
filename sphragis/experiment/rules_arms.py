@@ -6,7 +6,9 @@ the arms, does not change the fingerprint every distilled file is checked agains
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 from sphragis.experiment.grid import conditioned
@@ -16,11 +18,6 @@ from sphragis.experiment.training import render_chat
 # The model's own default system prompt (its chat template, read 2026-10-06). The rules arm
 # keeps it and adds the file after it, so the arm differs from the base arm only by the file.
 DEFAULT_SYSTEM = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
-
-# A first smoke run (2026-10-06, job 223030) mined mostly practice any project follows ("use
-# meaningful variable names", "follow PEP 8"), so the review prompts ask for what is particular
-# to this organization; amended before any arm was scored. A written guide is the organization's
-# own declaration, so its prompts keep every rule it states.
 
 
 def rules_system(rules_file: str) -> str:
@@ -61,6 +58,11 @@ def rules_arms(
         rules_key(condition, owner, evaluated): [rules_prompt(t, text) for t in targets]
         for (condition, owner), text in files.items()
     }
+
+
+def arms_fingerprint() -> str:
+    """This module's source, hashed: the arm prompts a rules job ran, held equal across jobs."""
+    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
 
 def default_system_holds(tokenizer: Any) -> bool:

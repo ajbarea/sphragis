@@ -37,7 +37,6 @@ import argparse
 import hashlib
 import json
 import os
-import traceback
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from statistics import median
@@ -62,10 +61,17 @@ from sphragis.experiment.retrieval import (
     trainable,
 )
 from sphragis.experiment.rules import distiller_signature, pinned, pipeline
-from sphragis.experiment.rules_arms import DISTILLED, WRITTEN, default_system_holds, rules_arms
+from sphragis.experiment.rules_arms import (
+    DISTILLED,
+    WRITTEN,
+    arms_fingerprint,
+    default_system_holds,
+    rules_arms,
+)
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
 from sphragis.provenance import provenance_header
+from sphragis.refusal import refusals
 
 # A dry run loads no tokenizer, so it stands in characters at four a token, and says so.
 CHARS_PER_TOKEN = 4
@@ -105,10 +111,9 @@ def trainable_by_chars(row: Mapping[str, Any]) -> bool:
 
 def admissible(path: Path, org: str) -> tuple[list[int], int]:
     """The organization's first admissible partitions and its training size."""
-    try:
-        return first_partitions(json.loads(path.read_text()), org=org)
-    except ValueError as error:
-        raise SystemExit(f"{path}: {error}") from error
+    with refusals(f"{path}: "):
+        found = first_partitions(json.loads(path.read_text()), org=org)
+    return found
 
 
 def half_pools(
@@ -141,7 +146,7 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
 
 def rules_files(
     args: argparse.Namespace, indexes: Mapping[str, Any], foreign_order: list[int] | None
-) -> tuple[dict[tuple[str, str], str], set[str]]:
+) -> tuple[dict[tuple[str, str], str], set[tuple[str, str | None]]]:
     """The rules files a rules job prompts with, and the generators that made them. Each
     distilled file is checked to come from the pool this job rebuilt (by its rows' ids), so a file
     stands where its adapter would.
@@ -166,7 +171,8 @@ def rules_files(
     )
     distilled = load(f"rules-reviews-{owner}-p{partition}")
     files: dict[tuple[str, str], str] = {}
-    made_by = {distilled["generator"]}
+    # What wrote each file, and whose tokens its budget was counted in.
+    made_by = {(distilled["generator"], distilled.get("budgeted_by"))}
     # Made under the prompts and budgets the research log describes, not an earlier set.
     if distilled.get("pipeline") != pipeline():
         raise SystemExit(f"{owner} p{partition}'s rules files were distilled under other prompts")
@@ -187,20 +193,14 @@ def rules_files(
             if written.get("guide") != pinned(snapshot):
                 raise SystemExit(f"{org}'s written rules file was distilled from another snapshot")
             files[(WRITTEN, org)] = written["files"][org]["file"]
-            made_by.add(written["generator"])
+            made_by.add((written["generator"], written.get("budgeted_by")))
     return files, made_by
 
 
 def main() -> None:
-    """The job, with every library refusal (a plain `ValueError`) its exit, its message and where
-    it was raised. A subclass (a file that does not decode, say) keeps its traceback."""
-    try:
+    """The job, with every library refusal its exit (`refusals`), and where it was raised."""
+    with refusals(where=True):
         run(parser.parse_args())
-    except ValueError as error:
-        if type(error) is not ValueError:
-            raise
-        frame = traceback.extract_tb(error.__traceback__)[-1]
-        raise SystemExit(f"{error} (at {Path(frame.filename).name}:{frame.lineno})") from error
 
 
 def run(args: argparse.Namespace) -> None:
@@ -234,7 +234,9 @@ def run(args: argparse.Namespace) -> None:
         tokenizer = _require_tokenizer(MODEL_ID)
         fits = trainable(tokenizer)
         if args.arms == "rules" and not default_system_holds(tokenizer):
-            raise SystemExit("the chat template's default system turn is not rules.DEFAULT_SYSTEM")
+            raise SystemExit(
+                "the chat template's default system turn is not rules_arms.DEFAULT_SYSTEM"
+            )
 
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
@@ -260,7 +262,7 @@ def run(args: argparse.Namespace) -> None:
     if not args.dry_run and pooled != trained:
         raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
     files: dict[tuple[str, str], str] = {}
-    made_by: set[str] = set()
+    made_by: set[tuple[str, str | None]] = set()
     if args.arms == "rules":
         files, made_by = rules_files(args, indexes, foreign_order)
     for evaluated, rows in targets.items():
@@ -301,6 +303,7 @@ def run(args: argparse.Namespace) -> None:
         # Which distillation the rules arms read, so a reading combines one set of them.
         "rules_suffix": args.rules_suffix if args.arms == "rules" else None,
         "rules_pipeline": pipeline() if args.arms == "rules" else None,
+        "rules_arms": arms_fingerprint() if args.arms == "rules" else None,
         "rules_files": {
             f"{condition}:{owner}": hashlib.sha256(text.encode()).hexdigest()
             for (condition, owner), text in files.items()
@@ -354,10 +357,14 @@ def run(args: argparse.Namespace) -> None:
     distiller = distiller_signature(
         f"{DISTILLER_ID}@{revision(DISTILLER_ID)}", DISTILLER_DTYPE, DISTILLER_TEMPLATE
     )
-    for made in made_by:
+    generator = HFGenerator()
+    # And budgeted in the tokens of the model these arms run, which reads it.
+    reader = f"{generator.model_id}@{revision(generator.model_id)}"
+    for made, budgeted_by in made_by:
         if made != distiller:
             raise SystemExit(f"a rules file was distilled by {made}, not {distiller}")
-    generator = HFGenerator()
+        if budgeted_by != reader:
+            raise SystemExit(f"a rules file was budgeted in {budgeted_by}'s tokens, not {reader}'s")
     signature = (
         f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"
