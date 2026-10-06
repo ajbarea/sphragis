@@ -32,6 +32,8 @@ experiment = [
 dev = [
     "pytest>=9.0.3",
     "pytest-cov>=6.0",
+    # The analysis scripts import it, so their tests need it; on the clusters torch brings it.
+    "numpy>=2.5",
     "ruff>=0.16.8",
     "ty>=0.0.82,<0.1",
     # The docs site. In `dev` rather than run through `uv tool` because the docs workflow

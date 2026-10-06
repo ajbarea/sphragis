@@ -25,11 +25,19 @@ from __future__ import annotations
 
 import ipaddress
 import os
+import re
 import socket
-from collections.abc import Iterator
+import tomllib
+from collections.abc import Iterable, Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
+
+#: For `test_skip_guard.py`, which runs this conftest in a child session.
+pytest_plugins = ("pytester",)
 
 #: Everything git exports to a hook starts with this. Matched by prefix rather than by a
 #: list, because the list is git's and grows with it.
@@ -169,11 +177,75 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     socket.getnameinfo = _real_getnameinfo
 
 
+#: Every skip the run reported, from collection (a module-level `importorskip`) and from tests.
+_SKIPS: list[pytest.CollectReport | pytest.TestReport] = []
+
+_MISSING_MODULE = re.compile(r"could not import '([^']+)'")
+
+#: The one skip reason besides an absent GPU stack: a machine with the stack but no GPU
+#: (`test_model_stack.py`'s `skipif`).
+_NO_CUDA = "needs a CUDA device"
+
+
+def _gpu_stack(pyproject: Path) -> frozenset[str]:
+    """The packages the `experiment` extra installs and the `dev` group does not.
+
+    A test may skip only because one of these is absent: CI and `make sync` install `dev` and
+    never the extra, so these tests run under `make gpu-local` or on the clusters instead.
+    """
+    project = tomllib.loads(pyproject.read_text())
+
+    def names(requirements: Iterable[str]) -> set[str]:
+        return {canonicalize_name(Requirement(requirement).name) for requirement in requirements}
+
+    extra = names(project["project"]["optional-dependencies"]["experiment"])
+    dev = names(r for r in project["dependency-groups"]["dev"] if isinstance(r, str))
+    return frozenset(extra - dev)
+
+
+def _unaccepted_skips(
+    reports: Iterable[pytest.CollectReport | pytest.TestReport], gpu_stack: frozenset[str]
+) -> list[str]:
+    """Every skip not explained by the GPU stack or a GPU being absent, as `nodeid: reason`."""
+    unaccepted = []
+    for report in reports:
+        longrepr = report.longrepr
+        reason = longrepr[2] if isinstance(longrepr, tuple) else str(longrepr)
+        missing = _MISSING_MODULE.search(reason)
+        if missing and canonicalize_name(missing[1].split(".")[0]) in gpu_stack:
+            continue
+        if reason.removeprefix("Skipped: ") == _NO_CUDA:
+            continue
+        unaccepted.append(f"{report.nodeid}: {reason}")
+    return unaccepted
+
+
+def pytest_collectreport(report: pytest.CollectReport) -> None:
+    if report.skipped:
+        _SKIPS.append(report)
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    if report.skipped and not hasattr(report, "wasxfail"):
+        _SKIPS.append(report)
+
+
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
-    """A refusal caught where no test's teardown sees it, as in a module fixture, fails the run."""
+    """Fail the run on a refusal no test saw, or on a skip for any reason but the GPU stack.
+
+    A refusal caught where no test's teardown sees it, as in a module fixture, is one. A skip
+    is the other: a test that `importorskip`s a package `make sync` does not install passes green
+    without running, as five modules of script tests once did in CI.
+    """
     if _VIOLATIONS:
         print(f"\noffline test suite: the network was tried: {_VIOLATIONS}")
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
+    if _SKIPS:
+        gpu_stack = _gpu_stack(session.config.rootpath / "pyproject.toml")
+        unaccepted = _unaccepted_skips(_SKIPS, gpu_stack)
+        if unaccepted:
+            print(f"\nskipped for a reason other than the GPU stack being absent: {unaccepted}")
+            session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
 @pytest.fixture(autouse=True)
