@@ -85,16 +85,21 @@ def _calls_any(tree: ast.AST, *, direct: set[str], attrs: set[str], via: set[str
 _LOADERS = {"derived_file_rows", "refined_examples"}
 # Readers that load through one of `_LOADERS` themselves (checked below), so calling them is
 # reading through the loader.
-_WRAPPERS = {"sphragis.experiment.holdout": {"window_split"}}
+_WRAPPERS = {
+    "sphragis.experiment.holdout": {"window_split"},
+    "sphragis.experiment.retrieval": {"read_halves"},
+}
 
 
-def _calls_a_loader(tree: ast.AST) -> bool:
-    """A loader or a wrapper of one, resolved through any import form."""
+def _calls_a_loader(tree: ast.AST, scope: ast.AST | None = None, *, skip: str = "") -> bool:
+    """A call in `scope` (the whole tree by default) to a loader or to a wrapper of one other than
+    `skip`, resolved through the tree's imports in any form, or to a wrapper defined beside it."""
     modules = {"sphragis.corpus.load": _LOADERS, **_WRAPPERS}
+    local = {name for names in _WRAPPERS.values() for name in names} - {skip}
     return any(
         _calls_any(
-            tree,
-            direct=_from_import_aliases(tree, module, names),
+            scope or tree,
+            direct=_from_import_aliases(tree, module, names) | (names & local),
             attrs=names,
             via=_module_aliases(tree, module),
         )
@@ -110,12 +115,10 @@ def test_a_wrapper_reads_through_the_loader(module: str) -> None:
     assert _WRAPPERS[module] <= found, f"{module} defines none of {_WRAPPERS[module] - found}"
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name in _WRAPPERS[module]:
-            assert _calls_any(
-                node,
-                direct=_from_import_aliases(tree, "sphragis.corpus.load", _LOADERS),
-                attrs=_LOADERS,
-                via=_module_aliases(tree, "sphragis.corpus.load"),
-            ), f"{module}.{node.name} does not read through the loader"
+            # Through the loader itself, or through another wrapper that is checked here too.
+            assert _calls_a_loader(tree, node, skip=node.name), (
+                f"{module}.{node.name} does not read through the loader"
+            )
 
 
 _JSON_READERS = {"load", "loads"}

@@ -38,20 +38,21 @@ from typing import Any
 
 from sphragis.experiment.decomposition import halves
 from sphragis.experiment.grid import EvalRun, run_id
-from sphragis.experiment.holdout import verbatim_overlap, window_split
+from sphragis.experiment.holdout import verbatim_overlap
 from sphragis.experiment.neutral import LEAKAGE_MAX_RATE, LEAKAGE_THRESHOLD, leakage_check
 from sphragis.experiment.retrieval import (
-    EQUALIZE_SEED,
     KS,
     Prompt,
-    adapter_run,
     arm_prompts,
+    corpus_of,
     few_shot_prompt,
     fingerprint,
     first_partitions,
     pools,
     prompt_text,
+    read_halves,
     resumable,
+    trainable,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
@@ -78,39 +79,22 @@ def trainable_by_chars(row: Mapping[str, Any]) -> bool:
     return len(build_prompt(row)) + len(str(row["after"])) <= MAX_SEQ_LENGTH * CHARS_PER_TOKEN
 
 
-def trainable_by_tokens(tokenizer: Any) -> Callable[[Mapping[str, Any]], bool]:
-    """Whether an example is one an adapter trains on: `supervised` keeps it."""
-    from sphragis.experiment.training import supervised
-
-    def fits(row: Mapping[str, Any]) -> bool:
-        return supervised(tokenizer, [row], prompt_builder=build_prompt)[1] == 0
-
-    return fits
+def exit_on(function: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    """A library refusal as this script's exit, its message unchanged."""
+    try:
+        return function(*args, **kwargs)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
 
 
-def partition_root(root: Path, org: str, partition: int) -> dict[str, Any]:
-    """The manifest of a partition corpus, refused unless it is `org`'s `partition`, unplanted."""
-    path = root / "placebo.json"
-    if not path.is_file():
-        raise SystemExit(f"{root}: no placebo.json; build it with placebo_corpus.py")
-    manifest = json.loads(path.read_text())
-    found = {
-        "source_org": manifest.get("source_org"),
-        "partition_seed": manifest.get("partition_seed"),
-        "deduplicated once": manifest.get("dedup_org") is not None,
-        "planted": manifest.get("plant") is not None,
-        "names": manifest.get("names"),
-    }
-    wanted = {
-        "source_org": org,
-        "partition_seed": partition,
-        "deduplicated once": True,
-        "planted": False,
-        "names": list(halves(org)),
-    }
-    if found != wanted:
-        raise SystemExit(f"{path}: {found}, not {wanted}")
-    return manifest
+def halves_of(
+    root: Path, org: str, recorded: Mapping[str, Mapping[str, Any]]
+) -> tuple[dict[str, list[dict]], dict[str, list[dict]], dict[str, dict]]:
+    """`read_halves`, its refusal this script's exit."""
+    try:
+        return read_halves(root, org, recorded)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
 
 
 def admissible(path: Path, org: str) -> tuple[list[int], int]:
@@ -121,56 +105,6 @@ def admissible(path: Path, org: str) -> tuple[list[int], int]:
         raise SystemExit(f"{path}: {error}") from error
 
 
-def corpus_of(
-    results: Path, org: str, partition: int, order: list[int], size: int
-) -> tuple[Path, dict[str, int], dict[str, dict]]:
-    """The corpus the adapters' run on `partition` read, how many rows each half trained on,
-    and what the run recorded of each half's corpus.
-
-    Refused unless the corpus is that partition's and the run cut its training sets as the pools
-    are cut: equalized, at `EQUALIZE_SEED`.
-    """
-    try:
-        path, run, root, position = adapter_run(
-            results, org=org, partition=partition, order=order, size=size
-        )
-    except ValueError as error:
-        raise SystemExit(str(error)) from error
-    if (run.get("equalize_train"), run.get("split_seed")) != (True, EQUALIZE_SEED):
-        raise SystemExit(
-            f"{path}: equalize_train {run.get('equalize_train')}, split_seed "
-            f"{run.get('split_seed')}; the pools are cut equalized at {EQUALIZE_SEED}"
-        )
-    partition_root(root, org, partition)
-    trained = {half: run["training"][f"{half}-s{position}"]["items"] for half in halves(org)}
-    return root, trained, run["corpora"]
-
-
-def read_halves(
-    root: Path, org: str, recorded: Mapping[str, Mapping[str, Any]]
-) -> tuple[dict[str, list[dict]], dict[str, list[dict]], dict[str, dict]]:
-    """Each half's training and held-out rows, refused unless they are what the run recorded.
-
-    A corpus rebuilt at the same root since the adapters trained passes its manifest check; the
-    counts the run recorded of each half (examples, dedup, train, held out) catch it.
-    """
-    train, held_out, summary = {}, {}, {}
-    for half in halves(org):
-        try:
-            train[half], held_out[half], summary[half] = window_split(root, half)
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
-        now = {
-            **summary[half],
-            "train_examples": len(train[half]),
-            "held_out_examples": len(held_out[half]),
-        }
-        then = {key: recorded[half].get(key) for key in now}
-        if now != then:
-            raise SystemExit(f"{root / half}: {now}, but the adapters' run read {then}")
-    return train, held_out, summary
-
-
 def half_pools(
     root: Path,
     org: str,
@@ -179,7 +113,7 @@ def half_pools(
     recorded: Mapping[str, Mapping[str, Any]],
 ) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
     """A partition's two half pools, each half's held-out rows, and where each came from."""
-    train, held_out, summary = read_halves(root, org, recorded)
+    train, held_out, summary = halves_of(root, org, recorded)
     return pools(train, size=size, fits=fits), held_out, summary
 
 
@@ -187,8 +121,8 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
     """Every held-out example any of the organization's first partitions scores, once each."""
     rows: dict[str, dict] = {}
     for partition in order:
-        root, _, recorded = corpus_of(results, org, partition, order, size)
-        for held_out in read_halves(root, org, recorded)[1].values():
+        root, _, recorded = exit_on(corpus_of, results, org, partition, order, size)
+        for held_out in halves_of(root, org, recorded)[1].values():
             for row in held_out:
                 first = rows.setdefault(row["id"], row)
                 # The same example in every partition, or the arms are scored on two references.
@@ -208,7 +142,9 @@ def main() -> None:
     if args.pools == "halves":
         if args.partition is None:
             raise SystemExit("--pools halves needs --partition")
-        root, trained, recorded = corpus_of(args.results, args.org, args.partition, order, size)
+        root, trained, recorded = exit_on(
+            corpus_of, args.results, args.org, args.partition, order, size
+        )
     else:
         if not (args.foreign and args.foreign_admissible):
             raise SystemExit("--pools foreign needs --foreign and --foreign-admissible")
@@ -218,8 +154,8 @@ def main() -> None:
         # A larger pool holds closer neighbours, so the arms compare at one size or not at all.
         if foreign_size != size:
             raise SystemExit(f"{args.foreign} trains at {foreign_size}, {args.org} at {size}")
-        root, trained, recorded = corpus_of(
-            args.results, args.foreign, foreign_order[0], foreign_order, size
+        root, trained, recorded = exit_on(
+            corpus_of, args.results, args.foreign, foreign_order[0], foreign_order, size
         )
 
     # Only the tokenizer before test 4: the model loads once the data has passed it.
@@ -228,7 +164,7 @@ def main() -> None:
     else:
         from sphragis.experiment.model import MODEL_ID, _require_tokenizer
 
-        fits = trainable_by_tokens(_require_tokenizer(MODEL_ID))
+        fits = trainable(_require_tokenizer(MODEL_ID))
 
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
