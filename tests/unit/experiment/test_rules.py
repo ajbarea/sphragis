@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from sphragis.experiment.rules import (
+    CHUNK_TOKENS,
     DEFAULT_SYSTEM,
     MAP_ANSWER_TOKENS,
     MAP_GUIDE,
@@ -14,6 +15,7 @@ from sphragis.experiment.rules import (
     RULES_BUDGET,
     chunks,
     distil,
+    pipeline,
     review_text,
     rule_lines,
     rules_system,
@@ -57,6 +59,11 @@ class _Model:
         return f"- rule {len(self.calls)}", False
 
 
+def _chunk_each(text: str) -> int:
+    """A length under which every source fills a chunk of its own, and an answer is short."""
+    return CHUNK_TOKENS if text.startswith("s") else len(text.split())
+
+
 @pytest.mark.parametrize(
     "kind,map_prompt,reduce_prompt",
     [("reviews", MAP_REVIEWS, REDUCE_REVIEWS), ("guide", MAP_GUIDE, REDUCE_GUIDE)],
@@ -65,22 +72,31 @@ def test_each_chunk_is_mapped_then_one_reduce_merges_their_lists(
     kind: str, map_prompt: str, reduce_prompt: str
 ) -> None:
     model = _Model()
-    result = distil(["s1 s1", "s2 s2", "s3 s3"], kind=kind, generate=model, length=_words)
-    # Three sources of two words under a 16,384 budget are one chunk: one map, one reduce.
-    assert result["chunks"] == 1 and len(model.calls) == 2
-    (map_call, map_budget), (reduce_call, reduce_budget) = model.calls
-    assert map_call.startswith(map_prompt.split("{source}")[0])
-    assert "s1 s1\n\ns2 s2\n\ns3 s3" in map_call
-    assert (map_budget, reduce_budget) == (MAP_ANSWER_TOKENS, RULES_BUDGET)
+    result = distil(["s1", "s2", "s3"], kind=kind, generate=model, length=_chunk_each)
+    # Three sources a chunk each: three maps, then one reduce.
+    assert result["chunks"] == 3 and len(model.calls) == 4
+    *maps, (reduce_call, reduce_budget) = model.calls
+    for (map_call, map_budget), source in zip(maps, ("s1", "s2", "s3"), strict=True):
+        assert map_call.startswith(map_prompt.split("{source}")[0])
+        assert map_call.endswith(source) and map_budget == MAP_ANSWER_TOKENS
+    assert reduce_budget == RULES_BUDGET
     assert reduce_call.startswith(reduce_prompt.split("{lists}")[0])
-    assert "List 1:\n- rule 1" in reduce_call
-    assert result["rules"] == ["- rule 1"] and result["file"] == "- rule 1"
-    assert result["kind"] == kind and result["map_lists"] == ["- rule 1"]
+    assert "List 1:\n- rule 1" in reduce_call and "List 3:\n- rule 3" in reduce_call
+    assert result["rules"] == ["- rule 1", "- rule 2", "- rule 3"]
+    assert result["kind"] == kind and result["map_lists"] == ["- rule 1", "- rule 2", "- rule 3"]
+    assert result["pipeline"] == pipeline()
+
+
+def test_mined_rules_need_three_lists_for_recurrence_to_mean_anything() -> None:
+    with pytest.raises(ValueError, match="recurrence across lists needs 3"):
+        distil(["s1", "s2"], kind="reviews", generate=_Model(), length=_chunk_each)
+    # A guide's merge keeps every rule, so one chunk is enough.
+    assert distil(["s1"], kind="guide", generate=_Model(), length=_chunk_each)["chunks"] == 1
 
 
 def test_a_reduce_that_lists_nothing_is_refused() -> None:
     with pytest.raises(ValueError, match="listed no rules"):
-        distil(["a"], kind="reviews", generate=lambda p, n: ("no list here", False), length=_words)
+        distil(["a"], kind="guide", generate=lambda p, n: ("no list here", False), length=_words)
 
 
 def test_bad_inputs_are_refused() -> None:
@@ -110,7 +126,7 @@ def test_a_capped_answer_is_flagged_and_its_cut_line_dropped() -> None:
         # The map answer stops at its budget: three whole rules and a half one.
         return "- one\n- two\n- three\n- fou", True
 
-    result = distil(["a"], kind="reviews", generate=model, length=_words)
+    result = distil(["a"], kind="guide", generate=model, length=_words)
     assert result["map_capped"] == [True] and result["reduce_capped"] is False
     # The reduce saw the capped list without its last, cut line.
     assert "- three" in reduce_prompts[0] and "- fou" not in reduce_prompts[0]

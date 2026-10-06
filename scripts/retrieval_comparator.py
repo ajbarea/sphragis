@@ -23,7 +23,12 @@ one job serves every run.
         --admissible datasets/results/admissible-partitions-openstack.json \\
         --out retrieval-halves-openstack-p2.json [--dry-run]
 
-Run on the cluster: scripts/retrieval_comparator.sbatch.
+`--arms rules`: the same jobs, each pool replaced by the rules file `rules_distil.py` distilled
+from it (from `--rules`, under `--rules-suffix`, checked by pool ids, pipeline and generator), and
+the foreign job's base arm replaced by both organizations' written guides' files (checked against
+the snapshot in `--guides`). The base arm comes from the retrieval foreign job.
+
+Run on the cluster: scripts/retrieval_comparator.sbatch (ARMS=rules for the rules arms).
 """
 
 from __future__ import annotations
@@ -96,25 +101,6 @@ def trainable_by_chars(row: Mapping[str, Any]) -> bool:
     return len(build_prompt(row)) + len(str(row["after"])) <= MAX_SEQ_LENGTH * CHARS_PER_TOKEN
 
 
-def exit_on(function: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
-    """A library refusal as this script's exit, its message unchanged."""
-    try:
-        return function(*args, **kwargs)
-    except ValueError as error:
-        raise SystemExit(str(error)) from error
-
-
-def halves_of(
-    root: Path, org: str, recorded: Mapping[str, Mapping[str, Any]]
-) -> tuple[dict[str, list[dict]], dict[str, list[dict]], dict[str, dict]]:
-    """`read_halves`, its refusal this script's exit. Called by name, not through `exit_on`, so the
-    corpus-read guard (test_corpus_reads.py) sees this script read through the loader."""
-    try:
-        return read_halves(root, org, recorded)
-    except ValueError as error:
-        raise SystemExit(str(error)) from error
-
-
 def admissible(path: Path, org: str) -> tuple[list[int], int]:
     """The organization's first admissible partitions and its training size."""
     try:
@@ -131,7 +117,7 @@ def half_pools(
     recorded: Mapping[str, Mapping[str, Any]],
 ) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
     """A partition's two half pools, each half's held-out rows, and where each came from."""
-    train, held_out, summary = halves_of(root, org, recorded)
+    train, held_out, summary = read_halves(root, org, recorded)
     return pools(train, size=size, fits=fits), held_out, summary
 
 
@@ -139,8 +125,8 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
     """Every held-out example any of the organization's first partitions scores, once each."""
     rows: dict[str, dict] = {}
     for partition in order:
-        root, _, recorded = exit_on(corpus_of, results, org, partition, order, size)
-        for held_out in halves_of(root, org, recorded)[1].values():
+        root, _, recorded = corpus_of(results, org, partition, order, size)
+        for held_out in read_halves(root, org, recorded)[1].values():
             for row in held_out:
                 first = rows.setdefault(row["id"], row)
                 # The same example in every partition, or the arms are scored on two references.
@@ -202,7 +188,14 @@ def rules_files(
 
 
 def main() -> None:
-    args = parser.parse_args()
+    """The job, with every library refusal (a `ValueError`) its exit, message unchanged."""
+    try:
+        run(parser.parse_args())
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+
+
+def run(args: argparse.Namespace) -> None:
     if args.limit is not None and args.limit < 1:
         raise SystemExit(f"--limit must be at least 1, got {args.limit}")
     order, size = admissible(args.admissible, args.org)
@@ -210,9 +203,7 @@ def main() -> None:
     if args.pools == "halves":
         if args.partition is None:
             raise SystemExit("--pools halves needs --partition")
-        root, trained, recorded = exit_on(
-            corpus_of, args.results, args.org, args.partition, order, size
-        )
+        root, trained, recorded = corpus_of(args.results, args.org, args.partition, order, size)
     else:
         if not (args.foreign and args.foreign_admissible):
             raise SystemExit("--pools foreign needs --foreign and --foreign-admissible")
@@ -222,8 +213,8 @@ def main() -> None:
         # A larger pool holds closer neighbours, so the arms compare at one size or not at all.
         if foreign_size != size:
             raise SystemExit(f"{args.foreign} trains at {foreign_size}, {args.org} at {size}")
-        root, trained, recorded = exit_on(
-            corpus_of, args.results, args.foreign, foreign_order[0], foreign_order, size
+        root, trained, recorded = corpus_of(
+            args.results, args.foreign, foreign_order[0], foreign_order, size
         )
 
     # Only the tokenizer before test 4: the model loads once the data has passed it.
@@ -338,17 +329,26 @@ def main() -> None:
         print(f"DRY RUN: {sum(map(len, prompts.values()))} prompts; wrote {args.out}")
         return
 
-    from sphragis.experiment.model import HFGenerator, revision, run_provenance
+    from sphragis.experiment.model import (
+        INFERENCE_DTYPE,
+        MODEL_ID,
+        HFGenerator,
+        revision,
+        run_provenance,
+    )
 
+    # A rules file is part of its arm, so the model that scores the arm distilled it: checked on
+    # the registered model and dtype before the model loads.
+    for made in made_by:
+        if made != f"{MODEL_ID}@{revision(MODEL_ID)}|{INFERENCE_DTYPE}":
+            raise SystemExit(f"a rules file was distilled by {made}, not the registered model")
     generator = HFGenerator()
     signature = (
         f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"
     )
-    # A rules file is part of the arm, so it was distilled by the model the arm is scored on.
-    for made in made_by:
-        if not signature.startswith(f"{made}|"):
-            raise SystemExit(f"a rules file was distilled by {made}, the arms run {signature}")
+    if made_by and generator.computed_dtype != INFERENCE_DTYPE:
+        raise SystemExit(f"the arms run in {generator.computed_dtype}, not {INFERENCE_DTYPE}")
     marks = {key: [fingerprint(signature, p) for p in texts] for key, texts in prompts.items()}
     expected = {
         key: list(zip((t["id"] for t in targets[evaluated_by[key]]), marks[key], strict=True))

@@ -20,13 +20,17 @@ from typing import Any
 
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.runner import build_prompt, comment_lines
+from sphragis.experiment.training import MAX_SEQ_LENGTH
 
 # The file budget, in tokens: one training example's length (training.MAX_SEQ_LENGTH), the
 # context one retrieved shot takes at k = 1.
-RULES_BUDGET = 2048
+RULES_BUDGET = MAX_SEQ_LENGTH
 # A map chunk's source text, in tokens. It and the map prompt and answer fit the model's 32,768
 # with room to spare; a pool of N rows is some ten to fourteen chunks (spec, measured 2026-10-06).
 CHUNK_TOKENS = 16_384
+# The review merge keeps a rule found in two or more lists, which reads as recurrence only when
+# there are more lists than two: a pool that fills fewer chunks is refused.
+MIN_REVIEW_CHUNKS = 3
 # A map answer's budget: a list, not a file. A chunk holds some hundred and fifty reviewed changes,
 # so a list may run long; an answer that reaches the budget is flagged and its cut line dropped.
 MAP_ANSWER_TOKENS = 1024
@@ -40,8 +44,8 @@ DEFAULT_SYSTEM = "You are Qwen, created by Alibaba Cloud. You are a helpful assi
 # own declaration, so its prompts keep every rule it states.
 _PARTICULAR = (
     "Leave out general good practice that any project would follow (meaningful names, PEP 8, "
-    "writing tests, handling errors). Keep conventions particular to this organization, naming "
-    "the identifiers, functions, libraries, file formats or wording they concern. "
+    "writing tests, handling errors). Keep conventions particular to this organization, and "
+    "name the identifiers, functions, libraries, file formats or wording each concerns. "
 )
 
 _RULE_FORMAT = (
@@ -53,9 +57,11 @@ MAP_REVIEWS = (
     "Below are changes from one software organization's code review. Each shows the comments "
     "reviewers left on a piece of code and the revised code the author wrote in answer.\n\n"
     "List the coding conventions these reviewers enforce: rules a contributor could follow when "
-    "writing new code for this organization. Keep only rules that are specific (naming, "
-    "formatting, idioms, error handling, logging, tests, documentation, API use) and that the "
-    "revisions applied. " + _PARTICULAR + _RULE_FORMAT + "\n\n{source}"
+    "writing new code for this organization, about naming, formatting, idioms, logging, "
+    "documentation, or the use of its own APIs and libraries, that the revisions applied. "
+    + _PARTICULAR
+    + _RULE_FORMAT
+    + "\n\n{source}"
 )
 
 MAP_GUIDE = (
@@ -74,11 +80,8 @@ REDUCE_REVIEWS = (
     "Below are lists of coding conventions, each drawn from a different sample of one "
     "organization's code reviews.\n\n"
     "Merge them into one rules file for a contributor. Keep a rule only if it appears, in any "
-    "wording, in at least two of the lists. Merge rules that say the same thing, and drop rules "
-    "about one particular function or file. Put the most often repeated rules first. "
-    + _PARTICULAR
-    + _RULE_FORMAT
-    + "\n\n{lists}"
+    "wording, in at least two of the lists. Merge rules that say the same thing. Put the most "
+    "often repeated rules first. " + _PARTICULAR + _RULE_FORMAT + "\n\n{lists}"
 )
 
 REDUCE_GUIDE = (
@@ -149,6 +152,10 @@ def distil(
         raise ValueError("no sources to distil a rules file from")
     map_prompt, reduce_prompt = PROMPTS[kind]
     parts = chunks(sources, length=length)
+    if kind == "reviews" and len(parts) < MIN_REVIEW_CHUNKS:
+        raise ValueError(
+            f"{len(parts)} chunks of reviews; recurrence across lists needs {MIN_REVIEW_CHUNKS}"
+        )
 
     def answer(prompt: str, budget: int) -> tuple[str, list[str], bool]:
         # An answer that reached its budget was cut, so its last line may be half a rule.
@@ -222,7 +229,7 @@ def rules_arms(
 def pipeline() -> str:
     """A fingerprint of everything a file's distillation depends on besides its sources and
     model: the prompts and every budget. A file made under another is not this comparator's."""
-    fixed = [PROMPTS, CHUNK_TOKENS, MAP_ANSWER_TOKENS, RULES_BUDGET]
+    fixed = [PROMPTS, CHUNK_TOKENS, MAP_ANSWER_TOKENS, RULES_BUDGET, MIN_REVIEW_CHUNKS]
     return hashlib.sha256(json.dumps(fixed, sort_keys=True).encode()).hexdigest()
 
 

@@ -10,9 +10,13 @@ and every contrast is read with the registered crossed runs-by-changes estimator
 - own minus sibling, the counterpart of H1's half-split contrast;
 - sibling minus foreign, of the organization contrast (the foreign organization's two half
   pools averaged per example, as its two adapters are);
-- own minus none, what retrieval from the own half adds over the base model.
+- own minus none, what the own half's pool adds over the base model.
 
-The adapters' own minus sibling is read beside them over the same partitions and examples.
+With `--arms rules` the pools are the rules files `rules_distil.py` distilled from them, the
+jobs `retrieval_comparator.py --arms rules` wrote, and the base arm comes from the retrieval
+foreign job (`--base-job`); beside them, the written guides' contrasts: written own minus written
+foreign, written own minus none, and distilled own minus written own. The adapters' own minus
+sibling is read beside every family over the same partitions and examples.
 
 Reading rule, fixed before any generation (research log, 2026-10-05): own minus sibling at each
 k, on its 95% interval, reads "carries a half-split contrast" when the lower bound clears the
@@ -35,7 +39,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from statistics import fmean
 from typing import Any
@@ -52,8 +56,8 @@ from sphragis.experiment.decomposition import (
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import LEAKAGE_THRESHOLD
 from sphragis.experiment.partitions import on_common_examples
-from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, first_partitions
-from sphragis.experiment.rules import DISTILLED, WRITTEN, rules_key
+from sphragis.experiment.retrieval import KS, adapter_run, condition, first_partitions
+from sphragis.experiment.rules import DISTILLED, WRITTEN
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 from sphragis.provenance import provenance_header
 
@@ -181,16 +185,16 @@ def near_duplicate_targets(runs: Sequence[Mapping[str, Rows]], keys: Sequence[st
     }
 
 
-def families(arms: str) -> dict[str, tuple[str, Callable[[str, str], str]]]:
-    """The arms a reading compares, by name: each one's condition and its key function."""
+def families(arms: str) -> dict[str, str]:
+    """The arm families a reading compares, by name, each its condition."""
     if arms == "retrieval":
-        return {
-            f"k{k}": (condition(k), lambda owner, evaluated, k=k: arm_key(k, owner, evaluated))
-            for k in KS
-        }
-    return {
-        "distilled": (DISTILLED, lambda owner, evaluated: rules_key(DISTILLED, owner, evaluated))
-    }
+        return {f"k{k}": condition(k) for k in KS}
+    return {"distilled": DISTILLED}
+
+
+def keyed(condition_name: str, owner: str, evaluated: str) -> str:
+    """An arm's key from its condition: the one form `project_clusters` and the rest read."""
+    return run_id(EvalRun(f"{condition_name}:{owner}", evaluated, None))
 
 
 def read_family(
@@ -199,7 +203,6 @@ def read_family(
     org: str,
     foreign: str,
     name: str,
-    key: Callable[[str, str], str],
     condition_name: str,
     seed: int,
     resamples: int,
@@ -209,6 +212,10 @@ def read_family(
     the reading again without targets whose shot is a near-duplicate of them."""
     first, second = halves(org)
     read = {"org": org, "seed": None, "condition": condition_name}
+
+    def key(owner: str, evaluated: str) -> str:
+        return keyed(condition_name, owner, evaluated)
+
     arms = {
         "none": {h: run_id(EvalRun("base", h, None)) for h in (first, second)},
         "own": {h: key(h, h) for h in (first, second)},
@@ -274,16 +281,16 @@ def read_written(
     half's distilled file, the last comparing the two sources of a rules file."""
     pairs = {
         "written_own_minus_written_foreign": (
-            lambda h: rules_key(WRITTEN, org, h),
-            lambda h: rules_key(WRITTEN, foreign, h),
+            lambda h: keyed(WRITTEN, org, h),
+            lambda h: keyed(WRITTEN, foreign, h),
         ),
         "written_own_minus_none": (
-            lambda h: rules_key(WRITTEN, org, h),
+            lambda h: keyed(WRITTEN, org, h),
             lambda h: run_id(EvalRun("base", h, None)),
         ),
         "distilled_own_minus_written_own": (
-            lambda h: rules_key(DISTILLED, h, h),
-            lambda h: rules_key(WRITTEN, org, h),
+            lambda h: keyed(DISTILLED, h, h),
+            lambda h: keyed(WRITTEN, org, h),
         ),
     }
     return {
@@ -343,7 +350,7 @@ def main() -> None:
     seed, resamples = args.bootstrap_seed, args.resamples
     per_family: dict[str, Any] = {}
     adapters = None
-    for name, (condition_name, key) in families(args.arms).items():
+    for name, condition_name in families(args.arms).items():
         try:
             cut, examples = on_common_examples(runs, condition=condition_name)
         except ValueError as error:
@@ -355,7 +362,6 @@ def main() -> None:
                 org=args.org,
                 foreign=args.foreign,
                 name=name,
-                key=key,
                 condition_name=condition_name,
                 seed=seed,
                 resamples=resamples,

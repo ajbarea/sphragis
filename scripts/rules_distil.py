@@ -137,7 +137,10 @@ def main() -> None:
     report["generator"] = signature
     report["pipeline"] = pipeline()
     report["provenance"] = run_provenance()
-    args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+    # Whole or not at all, so a rules job never reads a file half written.
+    partial = args.out.with_suffix(".partial")
+    partial.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+    os.replace(partial, args.out)
     for name in plan:
         args.out.with_name(f"{args.out.stem}.{name}.part.json").unlink(missing_ok=True)
     print(f"wrote {args.out}")
