@@ -748,3 +748,29 @@ def test_a_value_error_from_outside_the_study_is_not_a_refusal() -> None:
         Fraction("x")
     with pytest.raises(SystemExit, match="mine"), refusals():
         raise ValueError("mine")
+
+
+def test_a_frozen_module_or_the_checkouts_own_venv_is_not_the_study() -> None:
+    import posixpath
+
+    from sphragis import refusal
+
+    # A frozen standard-library module's pseudo-name is not a file of the study's.
+    with pytest.raises(ValueError, match="empty sequence"), refusal.refusals():
+        posixpath.commonpath([])
+    # The clusters' venvs sit inside the checkout, beside the study's code, not in it.
+    venv = refusal._ROOT / ".venv-aarch64" / "lib" / "transformers" / "generation.py"
+    assert not refusal._studys(str(venv))
+    assert refusal._studys(str(refusal._ROOT / "scripts" / "rules_distil.py"))
+
+
+def test_a_part_is_reused_only_whole_and_under_its_fingerprint(tmp_path: Path) -> None:
+    distil_script = _script("rules_distil")
+    cache = tmp_path / "p.part.json"
+    assert distil_script.cached_part(cache, "m") is None
+    cache.write_text('{"fingerprint": "m", "rules": []')
+    assert distil_script.cached_part(cache, "m") is None
+    cache.write_text(json.dumps({"fingerprint": "other"}))
+    assert distil_script.cached_part(cache, "m") is None
+    cache.write_text(json.dumps({"fingerprint": "m"}))
+    assert distil_script.cached_part(cache, "m") == {"fingerprint": "m"}

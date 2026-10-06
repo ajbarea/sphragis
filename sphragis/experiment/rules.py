@@ -19,6 +19,7 @@ import inspect
 import json
 import re
 from collections.abc import Callable, Mapping, Sequence
+from itertools import zip_longest
 from pathlib import Path
 from typing import Any
 
@@ -102,16 +103,11 @@ REDUCE_REVIEWS = (
     "in, in brackets, as in '- Rule. [2, 7]'. " + _PARTICULAR + _RULE_FORMAT + "\n\n{lists}"
 )
 
-REDUCE_GUIDE = (
-    "Below are lists of coding conventions, each drawn from a different part of one "
-    "organization's written coding conventions.\n\n"
-    "Merge them into one rules file for a contributor. Merge rules that say the same thing, and "
-    "keep the rest in the order given. " + _RULE_FORMAT + "\n\n{lists}"
-)
-
 PROMPTS = {
     "reviews": (MAP_REVIEWS, REDUCE_REVIEWS),
-    "guide": (MAP_GUIDE, REDUCE_GUIDE),
+    # A guide states each rule once: no merge, its pages' lists are selected from in code
+    # (`guide_file`).
+    "guide": (MAP_GUIDE, None),
 }
 
 
@@ -129,7 +125,11 @@ def review_text(row: Mapping[str, Any]) -> str:
 
 
 def packed(
-    texts: Sequence[str], *, length: Callable[[str], int], budget: int = CHUNK_TOKENS
+    texts: Sequence[str],
+    *,
+    length: Callable[[str], int],
+    budget: int = CHUNK_TOKENS,
+    separator: int | None = None,
 ) -> list[list[str]]:
     """`texts` packed in order into groups of at most `budget` by `length`, the separator joining
     them (`chunks`, `numbered`) counted between each two.
@@ -140,7 +140,8 @@ def packed(
     out: list[list[str]] = []
     current: list[str] = []
     used = 0
-    separator = length("\n\n")
+    # The separator's own length, given apart when `length` counts more than a text's tokens.
+    separator = length("\n\n") if separator is None else separator
     for text in texts:
         size = length(text)
         if current and used + separator + size > budget:
@@ -162,7 +163,11 @@ def chunks(
 
 def review_chunks(sources: Sequence[str], *, length: Callable[[str], int]) -> list[list[str]]:
     """Reviewed changes packed into chunks, the header each gets counted at its widest."""
-    return packed(sources, length=lambda t: length(f"### Change {len(sources)}\n{t}"))
+    return packed(
+        sources,
+        length=lambda t: length(f"### Change {len(sources)}\n{t}"),
+        separator=length("\n\n"),
+    )
 
 
 def recurring(
@@ -202,6 +207,29 @@ def _same_rule(rule: str) -> str:
     """A rule as copies of it compare: lower-cased, code too (as `content_words` reads it),
     spacing collapsed, no closing period."""
     return " ".join(rule.lower().split()).rstrip(" .")
+
+
+def guide_file(
+    pages: Sequence[Sequence[str]], *, length: Callable[[str], int]
+) -> tuple[list[str], list[int]]:
+    """A written guide's file from its pages' rules (each page's map lists, in order): copies
+    kept once (`_same_rule`), then taken a page at a time in turn, so the caps fall on every page
+    alike rather than on the pages that come last; and the page (from 1) each kept rule is from.
+
+    A guide's merge kept every rule in source order, so the cap left Wikimedia's file holding
+    only its first pages' rules (smoke job 226890, 2026-10-06); its language pages had none."""
+    seen: set[str] = set()
+    queues: list[list[tuple[str, int]]] = []
+    for page, rules in enumerate(pages, 1):
+        queue = []
+        for rule in rules:
+            if _same_rule(rule) not in seen:
+                seen.add(_same_rule(rule))
+                queue.append((rule, page))
+        queues.append(queue)
+    turns = [item for round_ in zip_longest(*queues) for item in round_ if item is not None]
+    kept = capped_file([rule for rule, _ in turns], length=length)
+    return kept, [page for _, page in turns[: len(kept)]]
 
 
 def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[str]:
@@ -295,7 +323,7 @@ def distil(
     length: Callable[[str], int],
     file_length: Callable[[str], int] | None = None,
 ) -> dict[str, Any]:
-    """A rules file from `sources` (reviewed changes or guide sections), and every step to it.
+    """A rules file from `sources` (reviewed changes, or a guide's pages), and every step to it.
 
     `generate(prompt, max_new_tokens)` is the distiller, greedy: its answer, and whether decoding
     stopped at the budget. `length` counts the distiller's tokens, for chunks; `file_length` the
@@ -308,11 +336,18 @@ def distil(
     if not sources:
         raise ValueError("no sources to distil a rules file from")
     map_prompt, reduce_prompt = PROMPTS[kind]
+    # The page each chunk of a guide is from: a guide is mapped a page at a time, so no page sits
+    # in another's capped tail.
+    part_pages: list[int] = []
     if kind == "reviews":
         groups = review_chunks(sources, length=length)
         parts = [numbered(group) for group in groups]
     else:
-        parts = chunks(sources, length=length)
+        parts = []
+        for page, text in enumerate(sources, 1):
+            for part in chunks(paragraphs(text), length=length):
+                parts.append(part)
+                part_pages.append(page)
 
     def answer(prompt: str, budget: int) -> tuple[str, list[str], bool]:
         # An answer that reached its budget was cut, so its last line may be half a rule.
@@ -345,16 +380,20 @@ def distil(
     joined = "\n\n".join(
         f"List {n}:\n" + "\n".join(lines) for n, lines in enumerate(merge_lists, 1)
     )
-    if kind == "reviews":
+    rule_pages: list[int] = []
+    if reduce_prompt is not None:
         merged, lines, reduce_capped = answer(
             reduce_prompt.format(lists=joined), REDUCE_ANSWER_TOKENS
         )
         rules, recurrence = recurring(lines, lists=merge_lists, length=file_length)
     else:
-        merged, lines, reduce_capped = answer(reduce_prompt.format(lists=joined), RULES_BUDGET)
-        rules, recurrence = capped_file(lines, length=file_length), []
+        merged, reduce_capped, recurrence = None, False, []
+        by_page: list[list[str]] = [[] for _ in sources]
+        for (_, lines, _), page in zip(mapped, part_pages, strict=True):
+            by_page[page - 1].extend(lines)
+        rules, rule_pages = guide_file(by_page, length=file_length)
     if not rules:
-        raise ValueError("the reduce pass listed no rules")
+        raise ValueError("no rules for the file")
     return {
         "kind": kind,
         "chunks": len(parts),
@@ -371,6 +410,9 @@ def distil(
         "merge_chunks": merge_chunks,
         # Per kept mined rule, the lists the merge cited for it.
         "recurrence": recurrence,
+        # For a guide: each chunk's page, and each kept rule's (from 1, in the guide's order).
+        "part_pages": part_pages,
+        "rule_pages": rule_pages,
         "rules": rules,
         "pipeline": pipeline(),
         "file": "\n".join(rules),

@@ -43,7 +43,10 @@ A pool is the retrieval comparator's: the rows the half's adapter trains on (`re
    Qodo Rule Miner, 2026-07), a guide merge keeps every rule, since a guide states each once.
    Amended 2026-10-06, before any arm was scored: a mined rule's evidence is its chunk's changes
    (two or more), and recurrence across lists ranks rules rather than filtering them, since
-   requiring two lists left one to five rules a half (research log, 2026-10-06). The written guides are OpenStack's `hacking` guidelines
+   requiring two lists left one to five rules a half (research log, 2026-10-06). Amended again
+   the same day: a guide is mapped a page at a time and has no merge; its file takes its pages'
+   rules a page at a time in turn (`rules.guide_file`), since a merge that kept rules in source
+   order left the cap on Wikimedia's language pages (smoke job 226890). The written guides are OpenStack's `hacking` guidelines
    and MediaWiki's coding conventions, snapshotted once with their URL, date and sha256 under
    `datasets/rules/`. Written own minus distilled own then compares sources, not formatting.
 3. **Map, then reduce.** Map: pack a pool's rows (each row's review comments with its hunk before

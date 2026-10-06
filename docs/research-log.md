@@ -8161,6 +8161,20 @@ a rule (its reason was recurrence across lists, which now only ranks; a half who
 rule is refused), and made the comparator check each file's recorded source, organization,
 partition and size, not only its name.
 
+**The written guide's file, as smoke-read and changed (2026-10-06).** Job 226890 distilled
+Wikimedia's twelve-page guide at 21b7ea4: its paragraphs packed into two chunks, both map answers
+reached their budget, the merge kept every rule in source order, and the 40-rule cap kept the
+first 40, every one from the first chunk (the general, documentation and PHP pages). The
+JavaScript, Vue, Python, Puppet, CSS, Java, Lua, database and SVG pages reached the file not at
+all, by position alone. A guide is now mapped a page at a time, so no page sits in another's
+capped tail, and has no merge: its file takes the pages' rules a page at a time in turn, copies
+kept once (`rules.guide_file`), so the cap falls on every page alike. OpenStack's guide is one
+page. Review-mined files keep their merge, which their recurrence needs. The final review's
+other findings are fixed beside it: a refusal is a plain `ValueError` raised in the study's own
+files (not a cluster venv's, nor a frozen module's); the distiller loads, outside any refusal,
+only when a file is still to be made; each cached part keeps the provenance of the run that made
+it; the separator between packed reviews is counted once.
+
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
 The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;

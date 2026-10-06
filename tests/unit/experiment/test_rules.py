@@ -9,7 +9,6 @@ from sphragis.experiment.rules import (
     MAP_ANSWER_TOKENS,
     MAP_GUIDE,
     MAP_REVIEWS,
-    REDUCE_GUIDE,
     REDUCE_REVIEWS,
     RULES_BUDGET,
     chunks,
@@ -62,7 +61,8 @@ class _Model:
 def _half_chunk(text: str) -> int:
     """A length under which every source fills nearly half a chunk, so a chunk holds two changes
     and the separator between them."""
-    return CHUNK_TOKENS // 2 - 8 if text.split()[-1].startswith("s") else len(text.split())
+    words = text.split()
+    return CHUNK_TOKENS // 2 - 8 if words and words[-1].startswith("s") else len(words)
 
 
 class _Cites(_Model):
@@ -84,19 +84,30 @@ class _Cites(_Model):
         )
 
 
-def test_each_chunk_of_a_guide_is_mapped_then_one_reduce_merges_their_lists() -> None:
+def test_each_page_of_a_guide_is_mapped_apart_and_no_merge_runs() -> None:
     model = _Model()
     length = lambda t: CHUNK_TOKENS if t.startswith("s") else len(t.split())  # noqa: E731
-    result = distil(["s1", "s2", "s3"], kind="guide", generate=model, length=length)
-    assert result["chunks"] == 3 and len(model.calls) == 4
-    *maps, (reduce_call, reduce_budget) = model.calls
-    for (map_call, map_budget), source in zip(maps, ("s1", "s2", "s3"), strict=True):
+    # Two pages, the second of two paragraphs each a chunk.
+    result = distil(["s1", "s2\n\ns3"], kind="guide", generate=model, length=length)
+    assert result["chunks"] == 3 and len(model.calls) == 3
+    for (map_call, map_budget), source in zip(model.calls, ("s1", "s2", "s3"), strict=True):
         assert map_call.startswith(MAP_GUIDE.split("{source}")[0])
         assert map_call.endswith(source) and map_budget == MAP_ANSWER_TOKENS
-    assert reduce_budget == RULES_BUDGET
-    assert reduce_call.startswith(REDUCE_GUIDE.split("{lists}")[0])
+    assert result["part_pages"] == [1, 2, 2] and result["reduce_answer"] is None
+    # A page at a time in turn: page 1's rule, then page 2's two.
     assert result["rules"] == ["- rule 1", "- rule 2", "- rule 3"]
+    assert result["rule_pages"] == [1, 2, 2]
     assert result["pipeline"] == pipeline() and result["evidence"] == []
+
+
+def test_a_guide_file_shares_the_cap_across_its_pages() -> None:
+    from sphragis.experiment.rules import MAX_FILE_RULES, guide_file
+
+    first = [f"- p1 rule {i}." for i in range(MAX_FILE_RULES)]
+    rules, pages = guide_file([first, ["- p2 rule.", "- P1 rule 0"], ["- p3 rule."]], length=len)
+    # Every page reaches the file, though the first alone would fill it; a copy is kept once.
+    assert rules[:3] == ["- p1 rule 0.", "- p2 rule.", "- p3 rule."] and pages[:3] == [1, 2, 3]
+    assert len(rules) == MAX_FILE_RULES and rules.count("- P1 rule 0") == 0
 
 
 def test_a_mined_rule_stands_on_two_of_its_chunks_numbered_changes() -> None:
@@ -257,8 +268,8 @@ def test_cited_change_numbers_are_read_from_the_lines_end(
     assert cited(line, changes) == expected
 
 
-def test_a_reduce_that_lists_nothing_is_refused() -> None:
-    with pytest.raises(ValueError, match="listed no rules"):
+def test_a_guide_that_lists_nothing_is_refused() -> None:
+    with pytest.raises(ValueError, match="no rules for the file"):
         distil(["a"], kind="guide", generate=lambda p, n: ("no list here", False), length=_words)
 
 
@@ -269,9 +280,11 @@ def test_bad_inputs_are_refused() -> None:
         distil([], kind="guide", generate=lambda p, n: ("- r", False), length=_words)
 
 
-def test_the_reviews_merge_cites_its_lists_and_the_guide_merge_keeps_all() -> None:
+def test_the_reviews_merge_cites_its_lists_and_a_guide_has_no_merge() -> None:
+    from sphragis.experiment.rules import PROMPTS
+
     assert "numbers of the lists it appears" in REDUCE_REVIEWS
-    assert "numbers of the lists" not in REDUCE_GUIDE
+    assert PROMPTS["guide"][1] is None
 
 
 def test_a_rules_arm_keeps_the_default_system_prompt_and_adds_the_file() -> None:
@@ -280,19 +293,14 @@ def test_a_rules_arm_keeps_the_default_system_prompt_and_adds_the_file() -> None
 
 
 def test_a_capped_answer_is_flagged_and_its_cut_line_dropped() -> None:
-    reduce_prompts: list[str] = []
-
     def model(prompt: str, budget: int) -> tuple[str, bool]:
-        if "Below are lists" in prompt:
-            reduce_prompts.append(prompt)
-            return "- one\n- two\n- three", False
         # The map answer stops at its budget: three whole rules and a half one.
         return "- one\n- two\n- three\n- fou", True
 
     result = distil(["a"], kind="guide", generate=model, length=_words)
     assert result["map_capped"] == [True] and result["reduce_capped"] is False
-    # The reduce saw the capped list without its last, cut line.
-    assert "- three" in reduce_prompts[0] and "- fou" not in reduce_prompts[0]
+    # The file holds the capped list without its last, cut line.
+    assert result["rules"] == ["- one", "- two", "- three"]
 
 
 def test_the_pipeline_fingerprint_covers_the_code_distillation_runs_through(
@@ -310,7 +318,6 @@ def test_mined_rules_ask_for_the_particular_and_a_guide_keeps_what_it_states() -
     assert "Leave out general good practice" in MAP_REVIEWS
     assert "Leave out general good practice" in REDUCE_REVIEWS
     assert "Leave out general good practice" not in MAP_GUIDE
-    assert "Leave out general good practice" not in REDUCE_GUIDE
 
 
 class _Template:

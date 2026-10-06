@@ -13,8 +13,19 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-# The study's code: the package and the scripts beside it.
-_STUDY = Path(__file__).resolve().parents[1]
+# The study's code: the package, its scripts and its tests; a virtual environment beside them in
+# the checkout (`.venv-<machine>` on the clusters) is not.
+_ROOT = Path(__file__).resolve().parents[1]
+_STUDY = tuple(_ROOT / part for part in ("sphragis", "scripts", "tests"))
+
+
+def _studys(filename: str) -> bool:
+    """Whether a frame's file is the study's: a real file under its code, not a frozen module's
+    or exec'd code's pseudo-name (`<frozen posixpath>`)."""
+    if filename.startswith("<"):
+        return False
+    path = Path(filename).resolve()
+    return any(path.is_relative_to(root) for root in _STUDY)
 
 
 @contextmanager
@@ -25,12 +36,7 @@ def refusals(prefix: str = "", *, where: bool = False) -> Iterator[None]:
         yield
     except ValueError as error:
         frame = traceback.extract_tb(error.__traceback__)[-1]
-        raised = Path(frame.filename).resolve()
-        if (
-            type(error) is not ValueError
-            or not raised.is_relative_to(_STUDY)
-            or ".venv" in raised.parts
-        ):
+        if type(error) is not ValueError or not _studys(frame.filename):
             raise
-        at = f" (at {raised.name}:{frame.lineno})" if where else ""
+        at = f" (at {Path(frame.filename).name}:{frame.lineno})" if where else ""
         raise SystemExit(f"{prefix}{error}{at}") from error

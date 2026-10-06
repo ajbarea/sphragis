@@ -112,12 +112,13 @@ def _calls_a_loader(tree: ast.AST, scope: ast.AST | None = None) -> bool:
     )
 
 
-def _calls_local(scope: ast.AST, names: set[str]) -> bool:
-    """A bare-name call in `scope` to one of `names`, functions of the same module."""
-    return any(
-        isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in names
+def _calls_local(scope: ast.AST, names: set[str]) -> set[str]:
+    """The names among `names`, functions of the same module, that `scope` calls by bare name."""
+    return {
+        n.func.id
         for n in ast.walk(scope)
-    )
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in names
+    }
 
 
 @pytest.mark.parametrize("module", sorted(_WRAPPERS))
@@ -126,13 +127,18 @@ def test_a_wrapper_reads_through_the_loader(module: str) -> None:
     tree = ast.parse(path.read_text())
     found = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
     assert _WRAPPERS[module] <= found, f"{module} defines none of {_WRAPPERS[module] - found}"
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and node.name in _WRAPPERS[module]:
-            # Through the loader itself, or through another wrapper that is checked here too.
-            siblings = _WRAPPERS[module] - {node.name}
-            assert _calls_a_loader(tree, node) or _calls_local(node, siblings), (
-                f"{module}.{node.name} does not read through the loader"
-            )
+    defs = {
+        n.name: n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.FunctionDef) and n.name in _WRAPPERS[module]
+    }
+    # Through the loader itself, or through a sibling wrapper that does, followed to a fixpoint,
+    # so wrappers that only call each other read through nothing.
+    reads = {name for name, node in defs.items() if _calls_a_loader(tree, node)}
+    while more := {name for name, node in defs.items() if _calls_local(node, reads)} - reads:
+        reads |= more
+    for name in defs:
+        assert name in reads, f"{module}.{name} does not read through the loader"
 
 
 _JSON_READERS = {"load", "loads"}
