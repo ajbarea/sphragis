@@ -30,10 +30,13 @@ A pool is the retrieval comparator's: the rows the half's adapter trains on (`re
 
 ## Decisions
 
-1. **The distiller is the base model** (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A
-   frontier distiller would bring in what it already knows about OpenStack and MediaWiki, and the
-   comparison would then credit the rules file with a second model's prior. One model also keeps
-   every arm offline on the cluster.
+1. **The distiller is Qwen3.6-27B** (pinned, bf16, greedy, thinking off), the newest dense model
+   of the evaluated model's family that fits one GH200. The base model was the first choice, to
+   keep a second model's prior out of the file, and four smoke jobs showed it cannot distil
+   grounded rules from reviews: it ignored the per-chunk limit, cited changes that did not show
+   the rule, and its merge added tools no list named. A file it wrote would be a strawman, so a
+   stronger distiller writes the files; every arm is still generated and scored by the evaluated
+   model. The prior a larger model brings is the price of a file that says what the reviews say.
 2. **One pipeline for both sources.** The written conventions and the review comments go through
    one map and reduce pipeline, with prompts that differ only where the sources do: a review
    merge keeps a rule that recurs in two or more lists (industrial rule mining's promotion rule,

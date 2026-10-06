@@ -8063,3 +8063,17 @@ the source of `rules.py`, so any change to its prompts, budgets or parsing makes
 distilled before it refused. The base model stays the distiller if the grounded files hold up;
 otherwise a larger model of the same family distils, recorded as a change to the design.
 
+**The distiller changed, before any arm was scored (2026-10-06).** Under the grounded prompts at
+73c6422, the base model still could not distil rules from reviews (jobs 223245 and 223246, OpenStack
+partition 2 and Wikimedia partition 1). Asked for at most 15 rules a chunk, it listed up to 83;
+several chunks kept every rule they listed (55 of 55, 38 of 38), so its change numbers did not show
+the rule; and its merge added tools no list named ("use the `helm` package manager", "use the
+`prometheus` monitoring tool"). The rules files are therefore distilled by Qwen3.6-27B (2026-04,
+Apache-2.0, revision 6a9e13b), the newest dense model of the evaluated model's family that fits one
+GH200, in bf16, greedy, thinking off; the evaluated model still generates and scores every arm.
+Greedy decoding departs from the card's sampling advice, for a file that reproduces from its
+inputs; bf16's run-to-run drift is recorded rather than removed, since a file once written is the
+arm's fixed input. The base model's guide file (37 rules from `HACKING.rst`) was sound, but every
+file, guide and review alike, comes from the one distiller, so the written and distilled arms
+differ by source, not by model.
+

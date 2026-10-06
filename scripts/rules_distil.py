@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -47,9 +48,13 @@ def paragraphs(text: str) -> list[str]:
     return [block.strip() for block in text.split("\n\n") if block.strip()]
 
 
-def sources_of(args: argparse.Namespace, tokenizer: Any) -> tuple[dict, dict[str, dict]]:
+def sources_of(
+    args: argparse.Namespace, tokenizer: Any, distiller_tokenizer: Any = None
+) -> tuple[dict, dict[str, dict]]:
     """What the job distils, checked before any model loads: the report's head, and per file
-    its kind, its sources and what they are recorded as."""
+    its kind, its sources and what they are recorded as. Pools are cut by `tokenizer`, the
+    evaluated model's, as its adapters' training sets were; chunks are counted by the
+    distiller's."""
     head: dict[str, Any] = {"source": args.source, "org": args.org}
     if args.source == "reviews":
         listing = json.loads((args.results / f"admissible-partitions-{args.org}.json").read_text())
@@ -64,7 +69,7 @@ def sources_of(args: argparse.Namespace, tokenizer: Any) -> tuple[dict, dict[str
 
         # Enough chunks for recurrence, counted now, before any model loads.
         def length(text: str) -> int:
-            return len(tokenizer(text, add_special_tokens=False)["input_ids"])
+            return len(distiller_tokenizer(text, add_special_tokens=False)["input_ids"])
 
         for index in cut.values():
             review_chunks([review_text(row) for row in index.pool], length=length)
@@ -93,15 +98,27 @@ def main() -> None:
     if args.source == "guide" and args.guides is None:
         raise SystemExit("--source guide needs --guides")
 
-    from sphragis.experiment.model import MODEL_ID, HFGenerator, _require_tokenizer, revision
+    from sphragis.experiment.model import (
+        DISTILLER_DTYPE,
+        DISTILLER_ID,
+        DISTILLER_TEMPLATE,
+        MODEL_ID,
+        HFGenerator,
+        _require_tokenizer,
+        revision,
+    )
 
-    # Only the tokenizer until the data has passed every check: the model loads after.
+    # Only the tokenizers until the data has passed every check: the model loads after.
     try:
-        report, plan = sources_of(args, _require_tokenizer(MODEL_ID))
+        report, plan = sources_of(
+            args, _require_tokenizer(MODEL_ID), _require_tokenizer(DISTILLER_ID)
+        )
     except ValueError as error:
         raise SystemExit(str(error)) from error
 
-    generator = HFGenerator()
+    generator = HFGenerator(
+        model_id=DISTILLER_ID, dtype=DISTILLER_DTYPE, template=DISTILLER_TEMPLATE
+    )
     tokenizer = generator.tokenizer
     signature = f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}"
 
@@ -110,7 +127,8 @@ def main() -> None:
 
     def generate(prompt: str, max_new_tokens: int) -> tuple[str, bool]:
         generator.max_new_tokens = max_new_tokens
-        text = generator.generate(prompt)
+        # Thinking is off; an empty think block the template leaves is not part of the answer.
+        text = re.sub(r"<think>.*?</think>", "", generator.generate(prompt), flags=re.S).strip()
         return text, generator.last_capped
 
     # Each file is kept beside the result as it is made, under a fingerprint of what made it, so

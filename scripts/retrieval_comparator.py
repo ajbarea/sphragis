@@ -342,18 +342,19 @@ def run(args: argparse.Namespace) -> None:
         return
 
     from sphragis.experiment.model import (
+        DISTILLER_DTYPE,
+        DISTILLER_ID,
         INFERENCE_DTYPE,
-        MODEL_ID,
         HFGenerator,
         revision,
         run_provenance,
     )
 
-    # A rules file is part of its arm, so the model that scores the arm distilled it: checked on
-    # the registered model and dtype before the model loads.
+    # Every rules file was written by the one pinned distiller, checked before the model loads.
+    distiller = f"{DISTILLER_ID}@{revision(DISTILLER_ID)}|{DISTILLER_DTYPE}"
     for made in made_by:
-        if made != f"{MODEL_ID}@{revision(MODEL_ID)}|{INFERENCE_DTYPE}":
-            raise SystemExit(f"a rules file was distilled by {made}, not the registered model")
+        if made != distiller:
+            raise SystemExit(f"a rules file was distilled by {made}, not {distiller}")
     generator = HFGenerator()
     signature = (
         f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"

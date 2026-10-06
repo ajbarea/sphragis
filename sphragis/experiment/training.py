@@ -18,7 +18,11 @@ IGNORE_INDEX = -100
 MAX_SEQ_LENGTH = 2048
 
 
-def render_chat(tokenizer: Any, prompt: str | Sequence[Mapping[str, str]]) -> str:
+def render_chat(
+    tokenizer: Any,
+    prompt: str | Sequence[Mapping[str, str]],
+    template: Mapping[str, Any] | None = None,
+) -> str:
     """The exact text the model receives: the prompt as a user turn, ready for an answer.
 
     `prompt` may instead be the whole conversation as chat messages, ending in the user turn to
@@ -34,7 +38,12 @@ def render_chat(tokenizer: Any, prompt: str | Sequence[Mapping[str, str]]) -> st
     messages = [{"role": "user", "content": prompt}] if isinstance(prompt, str) else list(prompt)
     if not messages or messages[-1]["role"] != "user":
         raise ValueError("a conversation to answer ends in a user turn")
-    return str(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True))
+    # `template` passes a chat template's own options, as the distiller's `enable_thinking`.
+    return str(
+        tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True, **(template or {})
+        )
+    )
 
 
 def build_supervised(

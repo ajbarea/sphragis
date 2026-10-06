@@ -22,7 +22,12 @@ from typing import Any
 
 import torch
 from peft import LoraConfig, PeftMixedModel, PeftModel, get_peft_model
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoModelForImageTextToText,
+    AutoTokenizer,
+)
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from sphragis.experiment.training import (
@@ -47,8 +52,19 @@ MEMBERSHIP_MODEL_ID = "Qwen/Qwen2.5-Coder-7B"
 # Every checkpoint loads at a pinned Hub revision, never `main`: both 7B repositories changed
 # their config and tokenizer files on 2024-11-18, after the checkpoints were published. These are
 # the revisions the cluster's cache held for every run to date (weights unchanged since 2024-09).
+# The rules-file comparator's distiller: the registered model could not distil grounded rules
+# from reviews (smoke jobs 223030, 223034, 223245, 223246; research log 2026-10-06), so the newest
+# dense model of its family that fits one GH200 in bf16 does (Qwen3.6-27B, 2026-04, Apache-2.0).
+# It writes the rules files only; every arm is still generated and scored by MODEL_ID.
+DISTILLER_ID = "Qwen/Qwen3.6-27B"
+# Its weights' own precision. A 27B model in fp32 would not fit a GH200, and its files are saved
+# artifacts, so bf16's run-to-run drift in greedy decoding changes no arm once a file is written.
+DISTILLER_DTYPE = "bfloat16"
+# Thinking off: the distiller answers with the list, as the prompts ask.
+DISTILLER_TEMPLATE = {"enable_thinking": False}
 MODEL_REVISIONS = {
     MODEL_ID: "c03e6d358207e414f1eca0bb1891e29f1db0e242",
+    DISTILLER_ID: "6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
     MEMBERSHIP_MODEL_ID: "0396a76181e127dfc13e5c5ec48a8cee09938b02",
     DEV_MODEL_ID: "2e1fd397ee46e1388853d2af2c993145b0f1098a",
 }
@@ -185,13 +201,23 @@ class HFGenerator:
     # bf16 it replaced; a default that could not be overridden would make that job rewrite its
     # own evidence in fp32.
     dtype: str = INFERENCE_DTYPE
+    # A chat template's own options (render_chat's `template`), as the distiller's.
+    template: Mapping[str, Any] | None = None
 
     def __post_init__(self) -> None:
         self.tokenizer = _require_tokenizer(self.model_id)
         self._decoding = decoding_kwargs(self.temperature)
         if self.temperature:
             torch.manual_seed(self.seed)
-        model = AutoModelForCausalLM.from_pretrained(
+        # A multimodal checkpoint (the distiller's) loads through its image-text class; it is
+        # given text only.
+        config = AutoConfig.from_pretrained(self.model_id, revision=revision(self.model_id))
+        loader = (
+            AutoModelForImageTextToText
+            if hasattr(config, "vision_config")
+            else AutoModelForCausalLM
+        )
+        model = loader.from_pretrained(
             self.model_id,
             revision=revision(self.model_id),
             dtype=torch.bfloat16,
@@ -218,7 +244,7 @@ class HFGenerator:
         Computed in fp32 (`INFERENCE_DTYPE`) because greedy decoding in bf16 does not reproduce
         between jobs; see the constant for the measurement.
         """
-        text = render_chat(self.tokenizer, prompt)
+        text = render_chat(self.tokenizer, prompt, self.template)
         inputs = self.tokenizer(text, return_tensors="pt", add_special_tokens=False).to(self.device)
         with torch.inference_mode():
             # ty: the transformers stub types generate() on GenerativePreTrainedModel,
