@@ -8034,18 +8034,19 @@ window from the corpus the partitions were built from (`corpus-v3`, deduplicated
 study loads it): examples whose (project, Change-Id) `ai_trailers.py` flagged, and examples whose
 (project, Change-Id) sits only on backport branches (`sphragis.corpus.backports`, now the one rule
 `backport_share.py` reads too). `partition_pilot.py --without NAME=FILE` reads the cell again
-without them, on the same runs, levels, seed and draws, beside the cell and binding nothing. On
+without them, on the same runs, levels, seed and draws, beside the cell and binding nothing, and
+both gates carry the readings. On
 the development pilots (`partition-pilot-<org>-sensitivities.json`, 22 runs each; the registered
 cell reproduces the committed pilots exactly), generated from the artifacts:
 
 | organization | reading | examples | H1 at 95% |
 |---|---|---|---|
 | openstack | registered | 501 | +0.0051 [-0.0073, +0.0175] |
-| openstack | without ai assisted (40 removed) | 461 | +0.0056 [-0.0075, +0.0191] |
-| openstack | without backport only (0 removed) | 501 | +0.0051 [-0.0073, +0.0175] |
+| openstack | without ai assisted (40 of 45 listed removed) | 461 | +0.0056 [-0.0075, +0.0191] |
+| openstack | without backport only (0 of 0 listed removed) | 501 | +0.0051 [-0.0073, +0.0175] |
 | wikimedia | registered | 711 | +0.0008 [-0.0111, +0.0137] |
-| wikimedia | without ai assisted (0 removed) | 711 | +0.0008 [-0.0111, +0.0137] |
-| wikimedia | without backport only (0 removed) | 711 | +0.0008 [-0.0111, +0.0137] |
+| wikimedia | without ai assisted (0 of 0 listed removed) | 711 | +0.0008 [-0.0111, +0.0137] |
+| wikimedia | without backport only (0 of 2 listed removed) | 711 | +0.0008 [-0.0111, +0.0137] |
 
 The listed sets match the earlier counts (45 AI-flagged OpenStack development examples, 0 and 2
 backport-only); 5 of OpenStack's 45 and both of Wikimedia's backports are not among the examples

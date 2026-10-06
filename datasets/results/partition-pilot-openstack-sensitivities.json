@@ -113,6 +113,7 @@
   "without": {
     "ai_assisted": {
       "file": "datasets/results/sensitivity-ids-openstack-dev.json",
+      "listed": 45,
       "removed": 40,
       "estimate": 0.005615952836744013,
       "examples": 461,
@@ -133,10 +134,13 @@
       "meaningful": {
         "0.975": false,
         "0.95": false
-      }
+      },
+      "p_one_sided": 0.2104,
+      "bootstrap_se": 0.006820193700528912
     },
     "backport_only": {
       "file": "datasets/results/sensitivity-ids-openstack-dev.json",
+      "listed": 0,
       "removed": 0,
       "estimate": 0.005068228720328398,
       "examples": 501,
@@ -157,13 +161,15 @@
       "meaningful": {
         "0.975": false,
         "0.95": false
-      }
+      },
+      "p_one_sided": 0.2082,
+      "bootstrap_se": 0.006304878735822463
     }
   },
   "provenance": {
-    "generated_at": "2026-10-06T15:23:37.748762+00:00",
+    "generated_at": "2026-10-06T15:42:49.468931+00:00",
     "git": {
-      "commit": "9bdd2c6494128524c0a81e1ee6b771836558eee8",
+      "commit": "1b8fee1864fc6f6b0afa0060ac4b0177b95e199f",
       "branch": "measure/h1-sensitivities"
     },
     "python": "3.14.4",

@@ -59,9 +59,9 @@
     "backport_only": []
   },
   "provenance": {
-    "generated_at": "2026-10-06T15:21:31.044529+00:00",
+    "generated_at": "2026-10-06T15:41:14.266578+00:00",
     "git": {
-      "commit": "9bdd2c6494128524c0a81e1ee6b771836558eee8",
+      "commit": "1b8fee1864fc6f6b0afa0060ac4b0177b95e199f",
       "branch": "HEAD"
     },
     "python": "3.13.15",
