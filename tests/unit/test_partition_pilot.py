@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from sphragis.experiment import decomposition
+from sphragis.experiment.cells import REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION
 from sphragis.experiment.partitions import spread_targets
@@ -157,12 +158,32 @@ def test_a_gerrit_pilot_writes_its_report_with_the_cell_bounds(
     assert report["bounds"] == {"0.975": 0.4, "0.95": 0.4}
 
 
+def _registered_without(
+    tmp_path: Path, org: str, ids: dict[str, list[str]] | None = None
+) -> list[str]:
+    """Both registered sensitivities for a test read, from one listing over every example."""
+    path = tmp_path / f"sensitivity-ids-{org}-test.json"
+    listing = {
+        "org": org,
+        "window": "test",
+        "ids": ids or {name: [] for name in REGISTERED_SENSITIVITIES},
+        "universe": [f"x{i}" for i in range(2 * N)],
+    }
+    path.write_text(json.dumps(listing))
+    return [arg for name in listing["ids"] for arg in ("--without", f"{name}={path}")]
+
+
 def _replication_argv(
-    tmp_path: Path, window: str, bound: float = 0.4, simulated: str = "apache"
+    tmp_path: Path,
+    window: str,
+    bound: float = 0.4,
+    simulated: str = "apache",
+    ids: dict[str, list[str]] | None = None,
 ) -> list[str]:
     level = decomposition.REPLICATION_CONFIDENCE
     sensitivity = _sensitivity(tmp_path, [level], bound, simulated)
     return [
+        *(_registered_without(tmp_path, "apache", ids) if window == "test" else []),
         *_inputs(tmp_path, "apache", window),
         *(
             [*_planted(tmp_path, "apache"), *_sizing(tmp_path, "apache")]
@@ -364,12 +385,18 @@ def test_every_half_must_be_built_from_the_runs_admissible_partition(
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
 
 
-def _gerrit_test_argv(tmp_path: Path, *extra: str, pilot: dict = PILOT) -> list[str]:
+def _gerrit_test_argv(
+    tmp_path: Path,
+    *extra: str,
+    pilot: dict = PILOT,
+    names: tuple[str, ...] = REGISTERED_SENSITIVITIES,
+) -> list[str]:
     sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack", pilot=pilot)
     return [
         *_inputs(tmp_path, "openstack", "test"),
         *_planted(tmp_path, "openstack"),
         *_sizing(tmp_path, "openstack"),
+        *_registered_without(tmp_path, "openstack", {name: [] for name in names}),
         "--sensitivity",
         str(sensitivity),
         *extra,
@@ -439,3 +466,186 @@ def test_a_development_read_needs_no_calibration_from_its_sizing_pilot(
     out = tmp_path / "o.json"
     _main(monkeypatch, [*_inputs(tmp_path, "openstack"), "--sizing", str(path), "--out", str(out)])
     assert "spread_targets" not in json.loads(out.read_text())["k_from"]
+
+
+def _ids(
+    tmp_path: Path,
+    ids: list[str],
+    *,
+    org: str = "openstack",
+    window: str = "dev",
+    universe: list[str] | None = None,
+) -> Path:
+    path = tmp_path / "sensitivity-ids.json"
+    every = [f"x{i}" for i in range(2 * N)] if universe is None else universe
+    listing = {"org": org, "window": window, "ids": {"ai_assisted": ids}, "universe": every}
+    path.write_text(json.dumps(listing))
+    return path
+
+
+def test_a_sensitivity_reads_the_cell_again_without_its_examples(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "pilot.json"
+    # Own wins on every even example; drop them all and the cell falls to zero.
+    even = [f"x{i}" for i in range(0, 2 * N, 2)]
+    ids = _ids(tmp_path, even)
+    _main(
+        monkeypatch,
+        [*_inputs(tmp_path, "openstack"), "--without", f"ai_assisted={ids}", "--out", str(out)],
+    )
+    report = json.loads(out.read_text())
+    assert report["estimate"] == pytest.approx(0.5)
+    reduced = report["without"]["ai_assisted"]
+    assert reduced["estimate"] == pytest.approx(0.0) and reduced["removed"] == len(even)
+    assert reduced["examples"] == report["examples"] - len(even)
+    assert set(reduced["intervals"]) == set(report["intervals"])
+    assert "verdicts" not in reduced
+
+
+@pytest.mark.parametrize(
+    "listing,message",
+    [
+        ({"org": "wikimedia"}, "lists wikimedia's examples, not openstack's"),
+        ({"window": "test"}, "lists the test window, not this read's"),
+    ],
+)
+def test_a_sensitivity_for_another_read_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, listing: dict, message: str
+) -> None:
+    ids = _ids(tmp_path, ["x0"], **listing)
+    with pytest.raises(SystemExit, match=message):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"ai_assisted={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )
+
+
+def test_a_sensitivity_naming_ids_the_file_lacks_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"])
+    with pytest.raises(SystemExit, match="lists no 'backport_only' ids"):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"backport_only={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )
+
+
+def test_a_test_window_read_reports_its_sensitivities_through_the_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    flagged = {"ai_assisted": ["x0", "x2"], "backport_only": []}
+    _main(monkeypatch, _replication_argv(tmp_path, "test", ids=flagged))
+    report = json.loads((tmp_path / "pilot.json").read_text())
+    reduced = report["without"]["ai_assisted"]
+    assert (reduced["listed"], reduced["removed"]) == (2, 2)
+    assert {"p_one_sided", "bootstrap_se"} <= set(reduced)
+    simulations = {"apache": _simulation(tmp_path)}
+    gate = decomposition.replication_gate({"apache": report}, simulations=simulations)
+    assert gate["cells"]["apache"]["verdict"] == "supported"
+    assert gate["cells"]["apache"]["without"] == report["without"]
+
+
+@pytest.mark.parametrize(
+    "spec,message", [("ai_assisted", "give NAME=FILE"), ("=x.json", "give NAME=FILE")]
+)
+def test_a_malformed_sensitivity_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, spec: str, message: str
+) -> None:
+    with pytest.raises(SystemExit, match=message):
+        _main(
+            monkeypatch,
+            [*_inputs(tmp_path, "openstack"), "--without", spec, "--out", str(tmp_path / "o.json")],
+        )
+
+
+def test_a_sensitivity_named_twice_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"])
+    twice = ["--without", f"ai_assisted={ids}", "--without", f"ai_assisted={ids}"]
+    with pytest.raises(SystemExit, match="names 'ai_assisted' twice"):
+        _main(
+            monkeypatch,
+            [*_inputs(tmp_path, "openstack"), *twice, "--out", str(tmp_path / "o.json")],
+        )
+
+
+def test_listed_ids_absent_from_the_runs_are_counted_not_hidden(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0", "other-corpus-1", "other-corpus-2"])
+    out = tmp_path / "o.json"
+    _main(
+        monkeypatch,
+        [*_inputs(tmp_path, "openstack"), "--without", f"ai_assisted={ids}", "--out", str(out)],
+    )
+    reduced = json.loads(out.read_text())["without"]["ai_assisted"]
+    assert (reduced["listed"], reduced["removed"]) == (3, 1)
+
+
+def test_a_sensitivity_that_empties_a_half_is_reported_unreadable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, [f"x{i}" for i in range(N)])
+    out = tmp_path / "o.json"
+    _main(
+        monkeypatch,
+        [*_inputs(tmp_path, "openstack"), "--without", f"ai_assisted={ids}", "--out", str(out)],
+    )
+    reduced = json.loads(out.read_text())["without"]["ai_assisted"]
+    assert "unreadable" in reduced and reduced["listed"] == N
+
+
+def test_a_listing_made_from_another_corpus_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"], universe=[f"x{i}" for i in range(N)])
+    with pytest.raises(SystemExit, match=f"made from another corpus: {N} of the runs' examples"):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"ai_assisted={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )
+
+
+def test_a_test_read_without_its_registered_sensitivities_is_refused_before_any_draw(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    with pytest.raises(SystemExit, match=r"needs --without for \['backport_only'\]"):
+        _main(monkeypatch, _gerrit_test_argv(tmp_path, names=("ai_assisted",)))
+
+
+def test_an_unregistered_sensitivity_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"])
+    with pytest.raises(SystemExit, match="'tool_generated' is not a registered sensitivity"):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"tool_generated={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )

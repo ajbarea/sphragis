@@ -159,7 +159,53 @@ def same_calibration(a: Any, b: Any) -> bool:
     )
 
 
-def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[str, Any]) -> None:
+#: The sensitivities registered beside the pass rule that recompute a cell without a set of
+#: examples (registered decisions, 2026-10-02): every test read carries both.
+REGISTERED_SENSITIVITIES = ("ai_assisted", "backport_only")
+
+
+def require_sensitivities(report: Mapping[str, Any], *, org: str) -> dict[str, Any]:
+    """A test read's registered sensitivities, each read or recorded unreadable with its reason.
+
+    An entry with neither an estimate and intervals nor an `unreadable` reason was not read.
+    """
+    without = report.get("without", {})
+    if not isinstance(without, Mapping):
+        raise ValueError(f"{org}: its sensitivities are not a mapping")
+    levels = [level_key(c) for c in report.get("levels", [])]
+    readings = {}
+    for name in REGISTERED_SENSITIVITIES:
+        entry = without.get(name)
+        noted = isinstance(entry, Mapping) and isinstance(entry.get("unreadable"), str)
+        if not (noted or (isinstance(entry, Mapping) and _read_at(entry, levels))):
+            raise ValueError(
+                f"{org}: the test read lacks its registered sensitivity {name!r}, read at "
+                f"every level of the read or recorded unreadable"
+            )
+        readings[name] = dict(entry)
+    return readings
+
+
+def _read_at(entry: Mapping[str, Any], levels: list[float]) -> bool:
+    """Whether a sensitivity has a numeric estimate and a numeric interval at every level."""
+    if not _number(entry.get("estimate")):
+        return False
+    intervals = by_level(entry.get("intervals") or {})
+    return bool(levels) and all(
+        isinstance(intervals.get(c), Mapping)
+        and _number(intervals[c].get("low"))
+        and _number(intervals[c].get("high"))
+        for c in levels
+    )
+
+
+def _number(value: Any) -> bool:
+    return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def require_test_read(
+    report: Mapping[str, Any], *, org: str, expected: Mapping[str, Any]
+) -> dict[str, Any]:
     """Refuse a `partition_pilot.py` report unless it is a test-window read registered in advance.
 
     "Reading the test window" (registered-decisions.md): read on the test window with check 5
@@ -168,7 +214,8 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
     `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell count and spread
     target `expected` registers for the organization (`decomposition.registered_read`), so none
     is chosen when the window is read. The pilot runs this on its report before writing it, and
-    `replication_gate` and `h1_test_gate` on reading it, so both sides hold one rule.
+    `replication_gate` and `h1_test_gate` on reading it, so both sides hold one rule. Returns
+    the report's registered sensitivities (`require_sensitivities`), which the gates carry.
     """
     required = (
         "window",
@@ -229,6 +276,8 @@ def require_test_read(report: Mapping[str, Any], *, org: str, expected: Mapping[
             f"{org}: read at {report['resamples']} resamples, seed {report['bootstrap_seed']}; "
             f"registered {TEST_RESAMPLES} at {TEST_BOOTSTRAP_SEED}"
         )
+    # Last, once the levels the sensitivities are read at have been checked.
+    return require_sensitivities(report, org=org)
 
 
 def sensitivity_bounds(

@@ -370,7 +370,7 @@ def h1_test_gate(
     detectable: dict[str, dict[float, float]] = {}
     for org in orgs:
         report, simulation = reports[org], simulations[org]
-        require_test_read(report, org=org, expected=expected)
+        readings = require_test_read(report, org=org, expected=expected)
         detectable[org] = _registered_bounds(org, report, simulation, expected)
         at = {c: intervals[c][org][level_key(c)] for c in levels}
         cells[org] = {
@@ -378,6 +378,8 @@ def h1_test_gate(
             **read_intervals({c: (i["low"], i["high"]) for c, i in at.items()}, detectable[org]),
             "p_one_sided": report["p_one_sided"],
             "size": _test_size(org, report, simulation, powers, detectable[org], expected["cells"]),
+            # The registered sensitivities the report read (partition_pilot.py --without).
+            "without": readings,
         }
     per_hypothesis = {"H1": cells}
     verdicts, passed_at = holm_steps(per_hypothesis)
@@ -428,7 +430,7 @@ def replication_gate(
     for org in family["members"]:
         cell, simulation = cells[org], simulations[org]
         expected = registered_read(org)
-        require_test_read(cell, org=org, expected=expected)
+        readings = require_test_read(cell, org=org, expected=expected)
         bounds = _registered_bounds(org, cell, simulation, expected)
         bound = bounds[level]
         interval = intervals[org][level]
@@ -440,6 +442,8 @@ def replication_gate(
             "meaningful": meaningful(interval["low"]),
             "p_one_sided": cell["p_one_sided"],
             "size": _test_size(org, cell, simulation, powers, bounds, expected["cells"]),
+            # The registered sensitivities the report read (partition_pilot.py --without).
+            "without": readings,
         }
     return {
         **family,
