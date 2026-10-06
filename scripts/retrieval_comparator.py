@@ -41,6 +41,7 @@ from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import verbatim_overlap, window_split
 from sphragis.experiment.neutral import LEAKAGE_MAX_RATE, LEAKAGE_THRESHOLD, leakage_check
 from sphragis.experiment.retrieval import (
+    EQUALIZE_SEED,
     KS,
     adapter_run,
     arm_prompts,
@@ -50,12 +51,10 @@ from sphragis.experiment.retrieval import (
     pools,
     resumable,
 )
-from sphragis.experiment.runner import build_prompt, require_unique_ids
-from sphragis.measure.score import score
+from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
+from sphragis.experiment.training import MAX_SEQ_LENGTH
 from sphragis.provenance import provenance_header
 
-# The training budget every adapter was fitted under (model.TRAINING), in tokens.
-MAX_SEQ_LENGTH = 2048
 # A dry run loads no tokenizer, so it stands in characters at four a token, and says so.
 CHARS_PER_TOKEN = 4
 
@@ -124,14 +123,26 @@ def admissible(path: Path, org: str) -> tuple[list[int], int]:
         raise SystemExit(f"{path}: {error}") from error
 
 
-def corpus_of(results: Path, org: str, partition: int, order: list[int], size: int) -> Path:
-    """The corpus the adapters' run on `partition` read, checked to be that partition's."""
+def corpus_of(
+    results: Path, org: str, partition: int, order: list[int], size: int
+) -> tuple[Path, dict[str, int]]:
+    """The corpus the adapters' run on `partition` read, and how many rows each half trained on.
+
+    Refused unless the corpus is that partition's and the run cut its training sets as the pools
+    are cut: equalized, at `EQUALIZE_SEED`.
+    """
     try:
-        _, _, root = adapter_run(results, org=org, partition=partition, order=order, size=size)
+        path, run, root = adapter_run(results, org=org, partition=partition, order=order, size=size)
     except ValueError as error:
         raise SystemExit(str(error)) from error
+    if (run.get("equalize_train"), run.get("split_seed")) != (True, EQUALIZE_SEED):
+        raise SystemExit(
+            f"{path}: equalize_train {run.get('equalize_train')}, split_seed "
+            f"{run.get('split_seed')}; the pools are cut equalized at {EQUALIZE_SEED}"
+        )
     partition_root(root, org, partition)
-    return root
+    position = order.index(partition) + 1
+    return root, {half: run["training"][f"{half}-s{position}"]["items"] for half in halves(org)}
 
 
 def half_pools(
@@ -151,7 +162,7 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
     """Every held-out example any of the organization's first partitions scores, once each."""
     rows: dict[str, dict] = {}
     for partition in order:
-        root = corpus_of(results, org, partition, order, size)
+        root, _ = corpus_of(results, org, partition, order, size)
         for half in halves(org):
             try:
                 _, held_out, _ = window_split(root, half)
@@ -169,7 +180,7 @@ def main() -> None:
     if args.pools == "halves":
         if args.partition is None:
             raise SystemExit("--pools halves needs --partition")
-        root = corpus_of(args.results, args.org, args.partition, order, size)
+        root, trained = corpus_of(args.results, args.org, args.partition, order, size)
     else:
         if not (args.foreign and args.foreign_admissible):
             raise SystemExit("--pools foreign needs --foreign and --foreign-admissible")
@@ -179,18 +190,14 @@ def main() -> None:
         # A larger pool holds closer neighbours, so the arms compare at one size or not at all.
         if foreign_size != size:
             raise SystemExit(f"{args.foreign} trains at {foreign_size}, {args.org} at {size}")
-        root = corpus_of(args.results, args.foreign, foreign_order[0], foreign_order, size)
+        root, trained = corpus_of(args.results, args.foreign, foreign_order[0], foreign_order, size)
 
     # Only the tokenizer before test 4: the model loads once the data has passed it.
     if args.dry_run:
         fits = trainable_by_chars
     else:
-        from sphragis.experiment.model import MODEL_ID, TRAINING, _require_tokenizer
+        from sphragis.experiment.model import MODEL_ID, _require_tokenizer
 
-        if TRAINING["max_seq_length"] != MAX_SEQ_LENGTH:
-            raise SystemExit(
-                f"adapters train at {TRAINING['max_seq_length']} tokens, not {MAX_SEQ_LENGTH}"
-            )
         fits = trainable_by_tokens(_require_tokenizer(MODEL_ID))
 
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
@@ -207,6 +214,11 @@ def main() -> None:
         base = run_id(EvalRun("base", args.org, None))
         prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
         evaluated_by[base] = args.org
+    # Each pool is its adapter's training set: as many rows as the run trained that adapter on.
+    # The proxy cannot say so, so a dry run records both.
+    pooled = {pool: len(index.pool) for pool, index in indexes.items()}
+    if not args.dry_run and pooled != trained:
+        raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
     for evaluated, rows in targets.items():
         require_unique_ids(rows, label=f"{evaluated} targets")
         for key, texts in arm_prompts(rows, indexes, evaluated=evaluated).items():
@@ -241,7 +253,8 @@ def main() -> None:
         "ks": list(KS),
         "limit": args.limit,
         "pool_filter": "chars/4 proxy" if args.dry_run else f"build_supervised, {MAX_SEQ_LENGTH}",
-        "pool_sizes": {pool: len(index.pool) for pool, index in indexes.items()},
+        "pool_sizes": pooled,
+        "adapter_items": trained,
         # Which training rows each pool held, so a reading names the examples it retrieved from.
         "pool_ids": {pool: [row["id"] for row in index.pool] for pool, index in indexes.items()},
         "targets": {evaluated: len(rows) for evaluated, rows in targets.items()},
@@ -279,6 +292,13 @@ def main() -> None:
         results, dropped = resumable(rows_path.read_text().splitlines(), expected)
         if dropped:
             print(f"{rows_path}: regenerating {dropped}", flush=True)
+        # A kept generation is rescored against the current reference and metric, which the
+        # fingerprint does not cover.
+        for key, rows in results.items():
+            results[key] = [
+                {**scored_row(target, row["prediction"]), "fingerprint": row["fingerprint"]}
+                for target, row in zip(targets[evaluated_by[key]], rows, strict=True)
+            ]
         partial = rows_path.with_suffix(".partial")
         partial.write_text(
             "".join(
@@ -295,16 +315,7 @@ def main() -> None:
                 targets[evaluated_by[key]], texts, marks[key], strict=True
             ):
                 prediction = generator.generate(prompt)
-                results[key].append(
-                    {
-                        "id": target["id"],
-                        "change_id": target["change_id"],
-                        "path": target.get("path"),
-                        "fingerprint": mark,
-                        "prediction": prediction,
-                        **score(prediction, str(target["after"])),
-                    }
-                )
+                results[key].append({**scored_row(target, prediction), "fingerprint": mark})
             rows_out.writelines(json.dumps({"arm": key, **r}) + "\n" for r in results[key])
             rows_out.flush()
             em = sum(r["exact_match"] for r in results[key]) / max(1, len(results[key]))

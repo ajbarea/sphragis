@@ -16,8 +16,9 @@ The adapters' own minus sibling is read beside them over the same partitions and
 
 Reading rule, fixed before any generation (research log, 2026-10-05): own minus sibling at each
 k, on its 95% interval, reads "carries a half-split contrast" when the lower bound clears the
-SESOI, "carries none as large as the SESOI" when the interval sits inside the SESOI band, and
-"inconclusive" otherwise; the adapters' interval is read by the same rule. Exploratory: no
+SESOI, "reversed" when the upper bound sits below minus the SESOI, "carries none as large as the
+SESOI" when the interval sits inside the SESOI band, and "inconclusive" otherwise; the adapters'
+interval is read by the same rule. The other two contrasts are reported, not read. Exploratory: no
 reading here binds a verdict.
 
     uv run --no-sync python scripts/retrieval_read.py --org openstack --foreign wikimedia \\
@@ -101,7 +102,7 @@ def run_results(
 
 
 def contrast(clusters: Sequence[Sequence[Sequence[Any]]], seed: int, resamples: int) -> dict:
-    """A contrast over runs: the registered estimate, its interval, its reading, each run's."""
+    """A contrast over runs: the registered estimate, its interval, and each run's estimate."""
     estimate, draws = partitioned_crossed_draws(clusters, seed=seed, resamples=resamples)
     low, high = percentile_interval(draws, CONFIDENCE)
     return {
@@ -109,18 +110,22 @@ def contrast(clusters: Sequence[Sequence[Sequence[Any]]], seed: int, resamples: 
         "confidence": CONFIDENCE,
         "low": low,
         "high": high,
-        "reading": reading(low, high),
         "per_run": [equal_halves(run) for run in clusters],
     }
 
 
-def reading(low: float, high: float) -> str:
-    """The rule fixed before generation."""
+def reading(cell: dict) -> dict:
+    """An own-minus-sibling contrast with the rule fixed before generation applied to it."""
+    low, high = cell["low"], cell["high"]
     if meaningful(low):
-        return "carries a half-split contrast"
-    if within_sesoi(low, high):
-        return "carries none as large as the SESOI"
-    return "inconclusive"
+        verdict = "carries a half-split contrast"
+    elif meaningful(-high):
+        verdict = "reversed: the sibling half carries the contrast"
+    elif within_sesoi(low, high):
+        verdict = "carries none as large as the SESOI"
+    else:
+        verdict = "inconclusive"
+    return {**cell, "reading": verdict}
 
 
 def adapter_runs(
@@ -154,11 +159,16 @@ def main() -> None:
     if len(args.halves) != len(order):
         raise SystemExit(f"{len(args.halves)} --halves files, not the fixed {len(order)}")
     fixed = {"org": args.org, "train_size": size, "ks": list(KS), "limit": None}
-    foreign = load(args.foreign_job, pools="foreign", foreign=args.foreign, **fixed)["results"]
+    foreign_job = load(args.foreign_job, pools="foreign", foreign=args.foreign, **fixed)
+    # Every arm is compared with arms from other jobs, so all of them ran one generator.
+    generator = {key: foreign_job.get(key) for key in ("generator", "inference_dtype")}
+    if None in generator.values():
+        raise SystemExit(f"{args.foreign_job} does not record its generator")
+    fixed |= generator
     runs = [
         run_results(
             load(path, pools="halves", partition=partition, **fixed)["results"],
-            foreign,
+            foreign_job["results"],
             org=args.org,
             foreign_org=args.foreign,
         )
@@ -189,8 +199,8 @@ def main() -> None:
                 )
                 for arm, keys in arms.items()
             },
-            "own_minus_sibling": contrast(
-                [project_clusters(r, **read) for r in cut], seed, resamples
+            "own_minus_sibling": reading(
+                contrast([project_clusters(r, **read) for r in cut], seed, resamples)
             ),
             "sibling_minus_foreign": contrast(
                 [organization_clusters(r, foreign=args.foreign, **read) for r in cut],
@@ -205,13 +215,15 @@ def main() -> None:
             adapters = {
                 "runs": [str(p) for p in paths],
                 "examples": len(ids),
-                "own_minus_sibling": contrast(
-                    [
-                        project_clusters(r, org=args.org, seed=position)
-                        for position, r in enumerate(trained, start=1)
-                    ],
-                    seed,
-                    resamples,
+                "own_minus_sibling": reading(
+                    contrast(
+                        [
+                            project_clusters(r, org=args.org, seed=position)
+                            for position, r in enumerate(trained, start=1)
+                        ],
+                        seed,
+                        resamples,
+                    )
                 ),
             }
         cell = per_k[str(k)]["own_minus_sibling"]
@@ -233,6 +245,7 @@ def main() -> None:
         "partitions": order,
         "halves_jobs": [str(p) for p in args.halves],
         "foreign_job": str(args.foreign_job),
+        "generator": fixed["generator"],
         "bootstrap_seed": seed,
         "resamples": resamples,
         "ks": per_k,

@@ -13,9 +13,9 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.windows import WINDOWS
 
 
 def holdout_by_change(

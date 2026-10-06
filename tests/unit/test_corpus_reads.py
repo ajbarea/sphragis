@@ -92,6 +92,8 @@ def _calls_a_loader(tree: ast.AST) -> bool:
 def test_a_wrapper_reads_through_the_loader(module: str) -> None:
     path = _ROOT / Path(*module.split(".")).with_suffix(".py")
     tree = ast.parse(path.read_text())
+    found = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    assert _WRAPPERS[module] <= found, f"{module} defines none of {_WRAPPERS[module] - found}"
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name in _WRAPPERS[module]:
             assert _calls_any(

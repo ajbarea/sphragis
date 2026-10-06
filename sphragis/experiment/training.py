@@ -13,6 +13,9 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 IGNORE_INDEX = -100
+# The registered training budget, in tokens: prompt and target together (model.TRAINING). Here,
+# where no GPU stack is imported, so code that must refuse what training refuses can read it.
+MAX_SEQ_LENGTH = 2048
 
 
 def render_chat(tokenizer: Any, prompt: str) -> str:
@@ -37,7 +40,7 @@ def build_supervised(
     example: Mapping[str, Any],
     *,
     prompt_builder: Callable[[Mapping[str, Any]], str],
-    max_length: int = 2048,
+    max_length: int = MAX_SEQ_LENGTH,
 ) -> dict[str, list[int]]:
     """One training item: prompt tokens masked, target tokens supervised.
 

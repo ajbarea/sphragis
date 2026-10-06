@@ -7941,7 +7941,9 @@ averaged per example, as its two adapters are. The base arm and the foreign arms
 evaluated organization's partition, so one job computes them for every run, on every example the
 first ten partitions score. The generator is the
 registered one (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A pool row repeated verbatim in a
-target refuses the job, and every pool is held to test 4 at the registered threshold and rate.
+target refuses the job, and every pool is held to test 4 at the registered threshold and rate. A
+pool must hold exactly as many rows as its run records its adapter trained on, and the run must
+have cut its training sets equalized at the pools' seed.
 
 **Fixed now.** The first 10 admissible partitions of OpenStack and of Wikimedia (`PARTITIONS`,
 Ritzwoller and Romano's least burn-in, `partitions.K_MIN`), the first 10 their adapters ran on, so
@@ -7953,8 +7955,9 @@ through the adapters' own cluster builders (`project_clusters`, `organization_cl
 organization contrast's) and own minus none.
 
 **Reading rule**, on own minus sibling at each k. A lower bound above the SESOI (0.01) reads "carries a
-half-split contrast". An interval inside the SESOI band reads "carries none as large as the SESOI".
-Anything else is inconclusive. The adapters' own minus sibling is read beside it by the same rule,
+half-split contrast", and an upper bound below minus the SESOI reads "reversed". An interval inside
+the SESOI band reads "carries none as large as the SESOI". Anything else is inconclusive. Sibling
+minus foreign and own minus none are reported, not read. The adapters' own minus sibling is read beside it by the same rule,
 over the same ten partitions and the same examples, from their committed partition runs (the
 22-run development pilot is a different K and is not the comparison). If retrieval carries the contrast and the adapters do not, the own half's
 conventions are recoverable at inference time and the adapters at N do not learn them. If neither

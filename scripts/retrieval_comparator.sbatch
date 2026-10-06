@@ -23,8 +23,15 @@ source sphragis/experiment/cluster-env.sh
 
 POOLS="${POOLS:?set POOLS to halves or foreign}"
 ORG="${ORG:?set ORG to the evaluated organization}"
-# A dry run or a limited smoke run claims a result of its own, never the full run's.
-RESULT_SUFFIX="$RESULT_SUFFIX${DRY_RUN:+-dry}${LIMIT:+-limit$LIMIT}"
+# DRY_RUN=1 builds every prompt and loads no model, 0 (the default) is a real run, and any
+# other value is refused. A dry run or a limited smoke run claims a result of its own, never the
+# full run's.
+case "${DRY_RUN:-0}" in
+  1) DRY=--dry-run; RESULT_SUFFIX="$RESULT_SUFFIX-dry" ;;
+  0) DRY="" ;;
+  *) echo "DRY_RUN must be 0 or 1, not $DRY_RUN" >&2; exit 1 ;;
+esac
+RESULT_SUFFIX="$RESULT_SUFFIX${LIMIT:+-limit$LIMIT}"
 LISTS=datasets/results
 
 case "$POOLS" in
@@ -34,7 +41,7 @@ case "$POOLS" in
     uv run --no-sync python scripts/retrieval_comparator.py --pools halves \
       --org "$ORG" --partition "$PARTITION" --results "$LISTS" \
       --admissible "$LISTS/admissible-partitions-$ORG.json" ${LIMIT:+--limit "$LIMIT"} \
-      ${DRY_RUN:+--dry-run} --out "$OUT"
+      ${DRY:+"$DRY"} --out "$OUT"
     ;;
   foreign)
     FOREIGN="${FOREIGN:?set FOREIGN to the other organization}"
@@ -42,7 +49,7 @@ case "$POOLS" in
     uv run --no-sync python scripts/retrieval_comparator.py --pools foreign \
       --org "$ORG" --results "$LISTS" --admissible "$LISTS/admissible-partitions-$ORG.json" \
       --foreign "$FOREIGN" --foreign-admissible "$LISTS/admissible-partitions-$FOREIGN.json" \
-      ${LIMIT:+--limit "$LIMIT"} ${DRY_RUN:+--dry-run} --out "$OUT"
+      ${LIMIT:+--limit "$LIMIT"} ${DRY:+"$DRY"} --out "$OUT"
     ;;
   *)
     echo "POOLS must be halves or foreign, not $POOLS" >&2

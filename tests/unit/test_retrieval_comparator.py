@@ -97,7 +97,16 @@ def _run_file(results: Path, org: str, position: int, root: Path) -> None:
     seeds = "" if position == 1 else f"-s{position}"
     halves = (f"{org}-a", f"{org}-b")
     corpora = {h: {"source": f"train -> dev windows under {root}/{h}/refined"} for h in halves}
-    run = {"seeds": [position], "train_size": SIZE, "corpora": corpora, "results": {}}
+    training = {f"{h}-s{position}": {"items": SIZE} for h in halves}
+    run = {
+        "seeds": [position],
+        "train_size": SIZE,
+        "split_seed": 0,
+        "equalize_train": True,
+        "training": training,
+        "corpora": corpora,
+        "results": {},
+    }
     name = f"rq1-partition-{org}-p{ORDER[position - 1]}{seeds}-n{SIZE}.json"
     (results / name).write_text(json.dumps(run))
 
@@ -141,6 +150,7 @@ def test_each_pool_is_its_adapters_training_set(corpora: dict[str, Path], tmp_pa
     assert report["pool_sizes"] == {h: len(rows) for h, rows in expected.items()}
     assert report["pool_ids"] == {h: [r["id"] for r in rows] for h, rows in expected.items()}
     assert report["train_size"] == SIZE and report["partition"] == ORDER[0]
+    assert report["adapter_items"] == {"openstack-a": SIZE, "openstack-b": SIZE}
     keys = set(report["prompt_chars"])
     for k in KS:
         for pool in ("openstack-a", "openstack-b"):
@@ -228,7 +238,7 @@ def _halves_job(partition: int, own_wins: bool) -> dict:
                 results[arm_key(k, pool, evaluated)] = [
                     _row(i, 1.0 if hit and int(i[1:]) % 2 == 0 else 0.0) for i in ids
                 ]
-    return {"pools": "halves", "partition": partition, **_fixed(), "results": results}
+    return {"pools": "halves", "partition": partition, **_fixed(), **GEN, "results": results}
 
 
 def _adapter_run(position: int, partition: int) -> dict:
@@ -241,7 +251,20 @@ def _adapter_run(position: int, partition: int) -> dict:
             ]
     root = f"/d/corpus-partition-openstack-p{partition}-n{SIZE}"
     corpora = {h: {"source": f"train -> dev windows under {root}/{h}/refined"} for h in _sides(1)}
-    return {"seeds": [position], "train_size": SIZE, "corpora": corpora, "results": results}
+    return {
+        "seeds": [position],
+        "train_size": SIZE,
+        "split_seed": 0,
+        "equalize_train": True,
+        "corpora": corpora,
+        "results": results,
+    }
+
+
+GEN = {
+    "generator": "qwen@rev|float32|max_new_tokens=256|temperature=0.0",
+    "inference_dtype": "float32",
+}
 
 
 def _fixed() -> dict:
@@ -254,7 +277,7 @@ def _foreign_job(drop: str | None = None) -> dict:
     for k in KS:
         for pool in ("wikimedia-a", "wikimedia-b"):
             results[arm_key(k, pool, "openstack")] = [_row(i, 0.0) for i in ids]
-    return {"pools": "foreign", "foreign": "wikimedia", **_fixed(), "results": results}
+    return {"pools": "foreign", "foreign": "wikimedia", **_fixed(), **GEN, "results": results}
 
 
 def _read(
@@ -295,6 +318,9 @@ def test_an_own_pool_that_wins_reads_as_a_half_split_contrast(tmp_path: Path) ->
         assert cell["own_minus_none"]["estimate"] == pytest.approx(0.5)
         assert cell["sibling_minus_foreign"]["estimate"] == pytest.approx(0.0)
         assert cell["own_minus_sibling"]["reading"] == "carries a half-split contrast"
+        # The rule reads own minus sibling only; the other contrasts are reported.
+        assert "reading" not in cell["own_minus_none"]
+        assert "reading" not in cell["sibling_minus_foreign"]
         assert cell["examples"] == len(IDS) and cell["dropped"] == 0
         assert len(cell["own_minus_sibling"]["per_run"]) == PARTITIONS
     # The adapters are read over the same partitions and examples, by the same rule.
@@ -362,3 +388,24 @@ def test_a_line_a_kill_cut_short_drops_only_its_arm() -> None:
     lines[-1] = lines[-1][:15]
     kept, dropped = resumable(lines, {"a": marks, "b": marks})
     assert list(kept) == ["a"] and "b" in dropped
+
+
+def test_the_reader_refuses_jobs_from_another_generator(tmp_path: Path) -> None:
+    jobs = [_halves_job(p, True) for p in ORDER]
+    jobs[5]["generator"] = "qwen@other|float32|max_new_tokens=256|temperature=0.0"
+    with pytest.raises(SystemExit, match="generator"):
+        _read(tmp_path, jobs, _foreign_job())
+
+
+@pytest.mark.parametrize(
+    "low,high,verdict",
+    [
+        (0.02, 0.06, "carries a half-split contrast"),
+        (-0.06, -0.02, "reversed: the sibling half carries the contrast"),
+        (-0.005, 0.005, "carries none as large as the SESOI"),
+        (-0.02, 0.03, "inconclusive"),
+        (0.005, 0.03, "inconclusive"),
+    ],
+)
+def test_the_reading_rule_on_each_kind_of_interval(low: float, high: float, verdict: str) -> None:
+    assert reader.reading({"low": low, "high": high})["reading"] == verdict
