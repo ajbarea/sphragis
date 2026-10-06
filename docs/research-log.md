@@ -8095,6 +8095,20 @@ to two or more of its chunk's changes. So a merged rule is kept when it cites a 
 the merge from adding rules, and the most-cited come first, at most 40 within the file budget.
 Files distilled before this are not used.
 
+**The pipeline the files are distilled under, as smoke-read (2026-10-06).** At 19320d6 (jobs 225114
+and 225115, 42 and 59 minutes on a GH200 for a partition's two halves), generated from the files:
+
+| partition | half | rules | tokens | capped maps |
+|---|---|---|---|---|
+| openstack p2 | openstack-a | 21 | 473 | 3 of 15 |
+| openstack p2 | openstack-b | 24 | 484 | 9 of 14 |
+| wikimedia p1 | wikimedia-a | 34 | 687 | 6 of 16 |
+| wikimedia p1 | wikimedia-b | 23 | 473 | 7 of 16 |
+
+Every file holds grounded, organization-specific rules within the budget ("use `joinedload` instead
+of the deprecated `joinedload_all`", "use `ConnectionProvider` instead of `DBLoadBalancerFactory`").
+This is the pipeline the full distillation runs; no arm has been scored.
+
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
 The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;
