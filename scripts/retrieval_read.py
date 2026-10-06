@@ -1,10 +1,11 @@
 """Read the retrieval comparator: its contrasts over partitions, beside the adapters' H1.
 
 Takes an organization's `retrieval_comparator.py --pools foreign` job, one `--pools halves` job
-per partition and the adapters' `partition_run` result on the same partition, both in admissible
-order (the first `retrieval.PARTITIONS`). Each partition is a run as an adapter partition run
-is, its two pools in place of its two adapters, and every contrast is read with the registered
-crossed runs-by-changes estimator (`partitioned_crossed_draws`) on the examples every run scored:
+per partition in admissible order (the first `retrieval.PARTITIONS`), and the adapters'
+`partition_run` result on each partition from `--results` (`retrieval.adapter_run`). Each
+partition is a run as an adapter partition run is, its two pools in place of its two adapters,
+and every contrast is read with the registered crossed runs-by-changes estimator
+(`partitioned_crossed_draws`) on the examples every run scored:
 
 - own minus sibling, the counterpart of H1's half-split contrast;
 - sibling minus foreign, of the organization contrast (the foreign organization's two half
@@ -23,7 +24,7 @@ reading here binds a verdict.
         --admissible datasets/results/admissible-partitions-openstack.json \\
         --foreign-job retrieval-foreign-openstack.json \\
         --halves retrieval-halves-openstack-p2.json ... \\
-        --adapter-runs datasets/results/rq1-partition-openstack-p2-n1850.json ... \\
+        --results datasets/results \\
         --out retrieval-openstack.json
 """
 
@@ -45,8 +46,8 @@ from sphragis.experiment.decomposition import (
     within_sesoi,
 )
 from sphragis.experiment.grid import EvalRun, run_id
-from sphragis.experiment.partitions import on_common_examples, partition_run_windows
-from sphragis.experiment.retrieval import KS, arm_key, condition, first_partitions
+from sphragis.experiment.partitions import on_common_examples
+from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, first_partitions
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 from sphragis.provenance import provenance_header
 
@@ -58,9 +59,7 @@ parser.add_argument("--foreign", required=True)
 parser.add_argument("--admissible", type=Path, required=True)
 parser.add_argument("--foreign-job", type=Path, required=True)
 parser.add_argument("--halves", type=Path, nargs="+", required=True, help="admissible order")
-parser.add_argument(
-    "--adapter-runs", type=Path, nargs="+", required=True, help="partition_run results, in order"
-)
+parser.add_argument("--results", type=Path, required=True, help="the adapters' partition runs")
 parser.add_argument("--bootstrap-seed", type=int, default=7)
 parser.add_argument("--resamples", type=int, default=10_000)
 parser.add_argument("--out", type=Path, required=True)
@@ -125,27 +124,25 @@ def reading(low: float, high: float) -> str:
 
 
 def adapter_runs(
-    paths: Sequence[Path], order: Sequence[int], size: int, ids: set[str]
-) -> list[dict[str, Rows]]:
+    results: Path, org: str, order: Sequence[int], size: int, ids: set[str]
+) -> tuple[list[Path], list[dict[str, Rows]]]:
     """The adapters' development-window runs on the same partitions, cut to `ids`."""
-    runs = []
-    for position, path in enumerate(paths, start=1):
-        run = json.loads(path.read_text())
+    paths, runs = [], []
+    for partition in order:
         try:
-            windows = partition_run_windows(
-                run, position=position, admissible=order, train_size=size
+            path, run, _ = adapter_run(
+                results, org=org, partition=partition, order=order, size=size
             )
         except ValueError as error:
-            raise SystemExit(f"{path}: {error}") from error
-        if windows != {"train -> dev"}:
-            raise SystemExit(f"{path}: read on {sorted(windows)}, not the development window")
-        scored = {r["id"] for arm, rows in run["results"].items() for r in rows}
+            raise SystemExit(str(error)) from error
+        scored = {r["id"] for rows in run["results"].values() for r in rows}
         if ids - scored:
             raise SystemExit(f"{path} lacks {len(ids - scored)} of the retrieval examples")
+        paths.append(path)
         runs.append(
             {arm: [r for r in rows if r["id"] in ids] for arm, rows in run["results"].items()}
         )
-    return runs
+    return paths, runs
 
 
 def main() -> None:
@@ -154,9 +151,8 @@ def main() -> None:
         order, size = first_partitions(json.loads(args.admissible.read_text()), org=args.org)
     except ValueError as error:
         raise SystemExit(f"{args.admissible}: {error}") from error
-    for name, given in (("--halves", args.halves), ("--adapter-runs", args.adapter_runs)):
-        if len(given) != len(order):
-            raise SystemExit(f"{len(given)} {name} files, not the fixed {len(order)}")
+    if len(args.halves) != len(order):
+        raise SystemExit(f"{len(args.halves)} --halves files, not the fixed {len(order)}")
     fixed = {"org": args.org, "train_size": size, "ks": list(KS), "limit": None}
     foreign = load(args.foreign_job, pools="foreign", foreign=args.foreign, **fixed)["results"]
     runs = [
@@ -205,9 +201,9 @@ def main() -> None:
         }
         if adapters is None:
             ids = {row["id"] for rows in cut[0].values() for row in rows}
-            trained = adapter_runs(args.adapter_runs, order, size, ids)
+            paths, trained = adapter_runs(args.results, args.org, order, size, ids)
             adapters = {
-                "runs": [str(p) for p in args.adapter_runs],
+                "runs": [str(p) for p in paths],
                 "examples": len(ids),
                 "own_minus_sibling": contrast(
                     [

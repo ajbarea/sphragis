@@ -15,10 +15,12 @@ import math
 import re
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training
+from sphragis.experiment.partitions import partition_run_windows
 from sphragis.experiment.runner import build_prompt
 
 # The registered k (registered-decisions.md, comparators): one most similar past review, which
@@ -190,3 +192,35 @@ def resumable(
         else:
             dropped.add(arm)
     return kept, sorted(dropped)
+
+
+def adapter_run(
+    results: Path, *, org: str, partition: int, order: Sequence[int], size: int
+) -> tuple[Path, dict[str, Any], Path]:
+    """The adapters' development-window run on `partition`, and the corpus its halves read.
+
+    Named as `partition_run.sbatch` names it (`-s<k>` for the k-th run past the first, `-n<N>`),
+    checked by `partition_run_windows`, and its corpus root read from its halves' sources, so a
+    pool is drawn from the corpus that run's adapters trained on, not a rebuild of it.
+    """
+    if partition not in order:
+        raise ValueError(f"partition {partition} is not among the first {list(order)}")
+    position = list(order).index(partition) + 1
+    seeds = "" if position == 1 else f"-s{position}"
+    path = results / f"rq1-partition-{org}-p{partition}{seeds}-n{size}.json"
+    if not path.is_file():
+        raise ValueError(f"no adapter run {path}")
+    run = json.loads(path.read_text())
+    try:
+        windows = partition_run_windows(run, position=position, admissible=order, train_size=size)
+    except ValueError as error:
+        raise ValueError(f"{path}: {error}") from error
+    if windows != {"train -> dev"}:
+        raise ValueError(f"{path}: read on {sorted(windows)}, not the development window")
+    roots = {
+        Path(corpus["source"].split(" windows under ", 1)[1]).parent.parent
+        for corpus in run["corpora"].values()
+    }
+    if len(roots) != 1:
+        raise ValueError(f"{path}: its halves read different corpora {sorted(map(str, roots))}")
+    return path, run, roots.pop()

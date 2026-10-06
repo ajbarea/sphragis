@@ -5,18 +5,21 @@ solved, from a pool that stands where an adapter would: the rows that adapter tr
 weights are trained. `scripts/retrieval_read.py` reads the contrasts. Exploratory, outside the
 registered cells; the test window is sealed and never read.
 
-`--pools halves`, once per admissible partition of an organization: `--root` is the partition's
-corpus (`placebo_corpus.py --dedup-org --partition-seed`), each half read as the partition run
-reads it (`window_split`) and cut as its adapter's training set (`retrieval.pools`). Every
-held-out example of either half is prompted from each half's pool at each k.
+Every corpus is the one an adapter partition run read, found through that run's committed
+result under `--results` (`retrieval.adapter_run`), so nothing is rebuilt.
 
-`--pools foreign`, once per organization: the organization's held-out examples, deduplicated
-once (`--root` its windowed corpus), prompted alone (the base arm) and from each half of the
-foreign organization's first admissible partition (`--foreign-root`), cut the same way. These
-arms do not depend on the organization's own partition, so one job serves every run.
+`--pools halves`, once per admissible partition of an organization: each half read as the
+partition run reads it (`window_split`) and cut as its adapter's training set
+(`retrieval.pools`). Every held-out example of either half is prompted from each half's pool at
+each k.
+
+`--pools foreign`, once per organization: every example any of its first partitions scores,
+prompted alone (the base arm) and from each half of the foreign organization's first admissible
+partition, cut the same way. These arms do not depend on the organization's own partition, so
+one job serves every run.
 
     uv run --no-sync python scripts/retrieval_comparator.py --pools halves \\
-        --root <corpus-partition root> --org openstack --partition 2 \\
+        --org openstack --partition 2 --results datasets/results \\
         --admissible datasets/results/admissible-partitions-openstack.json \\
         --out retrieval-halves-openstack-p2.json [--dry-run]
 
@@ -33,14 +36,13 @@ from pathlib import Path
 from statistics import median
 from typing import Any
 
-from sphragis.corpus.cli import WINDOWS
-from sphragis.corpus.halves import project_counts
 from sphragis.experiment.decomposition import halves
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import verbatim_overlap, window_split
 from sphragis.experiment.neutral import LEAKAGE_MAX_RATE, LEAKAGE_THRESHOLD, leakage_check
 from sphragis.experiment.retrieval import (
     KS,
+    adapter_run,
     arm_prompts,
     few_shot_prompt,
     fingerprint,
@@ -59,12 +61,11 @@ CHARS_PER_TOKEN = 4
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--pools", choices=["halves", "foreign"], required=True)
-parser.add_argument("--root", type=Path, required=True)
+parser.add_argument("--results", type=Path, required=True, help="the adapters' partition runs")
 parser.add_argument("--org", required=True)
 parser.add_argument("--admissible", type=Path, required=True, help="the org's admissible list")
 parser.add_argument("--partition", type=int, help="with --pools halves: the partition seed")
 parser.add_argument("--foreign", help="with --pools foreign: the foreign organization")
-parser.add_argument("--foreign-root", type=Path, help="with --pools foreign: its partition corpus")
 parser.add_argument("--foreign-admissible", type=Path, help="with --pools foreign: its list")
 parser.add_argument("--limit", type=int, help="first N targets per evaluated set, a smoke run")
 parser.add_argument("--dry-run", action="store_true", help="build every prompt, load no model")
@@ -123,6 +124,16 @@ def admissible(path: Path, org: str) -> tuple[list[int], int]:
         raise SystemExit(f"{path}: {error}") from error
 
 
+def corpus_of(results: Path, org: str, partition: int, order: list[int], size: int) -> Path:
+    """The corpus the adapters' run on `partition` read, checked to be that partition's."""
+    try:
+        _, _, root = adapter_run(results, org=org, partition=partition, order=order, size=size)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    partition_root(root, org, partition)
+    return root
+
+
 def half_pools(
     root: Path, org: str, size: int, fits: Callable[[Mapping[str, Any]], bool]
 ) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
@@ -136,26 +147,39 @@ def half_pools(
     return pools(train, size=size, fits=fits), held_out, summary
 
 
+def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
+    """Every held-out example any of the organization's first partitions scores, once each."""
+    rows: dict[str, dict] = {}
+    for partition in order:
+        root = corpus_of(results, org, partition, order, size)
+        for half in halves(org):
+            try:
+                _, held_out, _ = window_split(root, half)
+            except ValueError as error:
+                raise SystemExit(str(error)) from error
+            for row in held_out:
+                rows.setdefault(row["id"], row)
+    return sorted(rows.values(), key=lambda row: str(row["id"]))
+
+
 def main() -> None:
     args = parser.parse_args()
     order, size = admissible(args.admissible, args.org)
     foreign_order: list[int] | None = None
     if args.pools == "halves":
-        if args.partition not in order:
-            raise SystemExit(f"partition {args.partition} is not among the first {order}")
-        partition_root(args.root, args.org, args.partition)
+        if args.partition is None:
+            raise SystemExit("--pools halves needs --partition")
+        root = corpus_of(args.results, args.org, args.partition, order, size)
     else:
-        if not (args.foreign and args.foreign_root and args.foreign_admissible):
-            raise SystemExit(
-                "--pools foreign needs --foreign, --foreign-root, --foreign-admissible"
-            )
+        if not (args.foreign and args.foreign_admissible):
+            raise SystemExit("--pools foreign needs --foreign and --foreign-admissible")
         if args.foreign == args.org:
             raise SystemExit("the foreign organization must not be the one evaluated")
         foreign_order, foreign_size = admissible(args.foreign_admissible, args.foreign)
         # A larger pool holds closer neighbours, so the arms compare at one size or not at all.
         if foreign_size != size:
             raise SystemExit(f"{args.foreign} trains at {foreign_size}, {args.org} at {size}")
-        partition_root(args.foreign_root, args.foreign, foreign_order[0])
+        root = corpus_of(args.results, args.foreign, foreign_order[0], foreign_order, size)
 
     # Only the tokenizer before test 4: the model loads once the data has passed it.
     if args.dry_run:
@@ -174,20 +198,12 @@ def main() -> None:
     prompts: dict[str, list[str]] = {}
     evaluated_by: dict[str, str] = {}
     if args.pools == "halves":
-        indexes, held_out, corpora = half_pools(args.root, args.org, size, fits)
+        indexes, held_out, corpora = half_pools(root, args.org, size, fits)
         for half in halves(args.org):
             targets[half] = held_out[half][: args.limit]
     else:
-        try:
-            train_rows, rows, read = window_split(args.root, args.org)
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
-        indexes, _, corpora = half_pools(args.foreign_root, args.foreign, size, fits)
-        corpora[args.org] = read
-        # Only what a partition scores: placebo_corpus drops a project with no training-window
-        # rows from both halves.
-        trained = set(project_counts(train_rows, WINDOWS["train"]))
-        targets[args.org] = [r for r in rows if r["project"] in trained][: args.limit]
+        indexes, _, corpora = half_pools(root, args.foreign, size, fits)
+        targets[args.org] = scored(args.results, args.org, order, size)[: args.limit]
         base = run_id(EvalRun("base", args.org, None))
         prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
         evaluated_by[base] = args.org

@@ -7928,17 +7928,18 @@ pull sibling minus foreign toward zero. It deduplicated each organization once, 
 deduplicates each half. And it pooled the halves in one bootstrap. None of these survives here.
 
 **Method** (`scripts/retrieval_comparator.py`, `scripts/retrieval_read.py`,
-`sphragis/experiment/retrieval.py`). A run is one admissible partition, built as
-`partition_run.sbatch` builds it (`placebo_corpus.py --dedup-org --partition-seed`). Each half is
-read by `window_split`, the function `rq1_pilot.py` now reads every corpus through. Each half's pool
+`sphragis/experiment/retrieval.py`). A run is one admissible partition, read from the corpus that
+partition's adapter run read: its root is taken from the run's committed result
+(`retrieval.adapter_run`) and checked against the corpus's own manifest, so nothing is rebuilt. Each
+half is read by `window_split`, the function `rq1_pilot.py` now reads every corpus through. Each half's pool
 is its adapter's training set: `equalize_training` at the run's seed to the admissible list's size,
 less the rows `build_supervised` refuses at 2,048 tokens. Every development-window example is
 prompted with its k nearest by BM25 over comments and old code, solved in the registered template,
 at k = 1 and 3. The pools are its own half's, its sibling half's, and each half of the other
 organization's first admissible partition, cut to the same size. The other organization's pools are
 averaged per example, as its two adapters are. The base arm and the foreign arms do not depend on the
-evaluated organization's partition, so one job computes them for every run, on the examples the
-partitions score (a project with no training-window rows is in neither half). The generator is the
+evaluated organization's partition, so one job computes them for every run, on every example the
+first ten partitions score. The generator is the
 registered one (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A pool row repeated verbatim in a
 target refuses the job, and every pool is held to test 4 at the registered threshold and rate.
 

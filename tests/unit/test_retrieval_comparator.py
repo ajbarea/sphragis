@@ -92,13 +92,29 @@ ORDER = [3, 1, 4, 5, 9, 2, 6, 8, 7, 10]
 SIZE = 20
 
 
+def _run_file(results: Path, org: str, position: int, root: Path) -> None:
+    """The adapters' partition run on the position-th partition, named as its job names it."""
+    seeds = "" if position == 1 else f"-s{position}"
+    halves = (f"{org}-a", f"{org}-b")
+    corpora = {h: {"source": f"train -> dev windows under {root}/{h}/refined"} for h in halves}
+    run = {"seeds": [position], "train_size": SIZE, "corpora": corpora, "results": {}}
+    name = f"rq1-partition-{org}-p{ORDER[position - 1]}{seeds}-n{SIZE}.json"
+    (results / name).write_text(json.dumps(run))
+
+
 @pytest.fixture
 def corpora(tmp_path: Path) -> dict[str, Path]:
-    paths = {"src": tmp_path / "src"}
+    """Both organizations' first ten partitions, built as partition_run.sbatch builds them, and
+    the adapters' run on each, naming the corpus it read."""
+    paths = {"src": tmp_path / "src", "results": tmp_path / "results"}
+    paths["results"].mkdir()
     for org, seed in (("openstack", 1), ("wikimedia", 2)):
         _source(paths["src"], org, seed)
-        _partition(paths["src"], tmp_path / f"part-{org}", org, ORDER[0])
-        paths[org] = tmp_path / f"part-{org}"
+        for position, partition in enumerate(ORDER, start=1):
+            root = tmp_path / f"corpus-partition-{org}-p{partition}-n{SIZE}"
+            _partition(paths["src"], root, org, partition)
+            _run_file(paths["results"], org, position, root)
+        paths[org] = tmp_path / f"corpus-partition-{org}-p{ORDER[0]}-n{SIZE}"
         listing = {"org": org, "admissible": ORDER, "size_floor": SIZE}
         paths[f"{org}-list"] = tmp_path / f"admissible-{org}.json"
         paths[f"{org}-list"].write_text(json.dumps(listing))
@@ -109,7 +125,7 @@ def _halves(paths: dict[str, Path], out: Path, *extra: str) -> dict:
     _run(
         comparator,
         [
-            "--pools", "halves", "--root", str(paths["openstack"]), "--org", "openstack",
+            "--pools", "halves", "--results", str(paths["results"]), "--org", "openstack",
             "--admissible", str(paths["openstack-list"]), "--dry-run", "--out", str(out),
             *extra,
         ],
@@ -134,12 +150,20 @@ def test_each_pool_is_its_adapters_training_set(corpora: dict[str, Path], tmp_pa
     assert all(check["passed"] for check in report["leakage"])
 
 
-def test_a_partition_outside_the_first_ten_or_not_the_corpus_is_refused(
+def test_a_partition_outside_the_first_ten_is_refused(
     corpora: dict[str, Path], tmp_path: Path
 ) -> None:
     with pytest.raises(SystemExit, match="not among the first"):
         _halves(corpora, tmp_path / "h.json", "--partition", "11")
-    # The corpus on disk is partition 3; asking for 1 must not read it as 1.
+
+
+def test_a_run_whose_corpus_is_another_partition_is_refused(
+    corpora: dict[str, Path], tmp_path: Path
+) -> None:
+    # Named for partition 1, built as partition 3: the corpus's own manifest decides.
+    wrong = tmp_path / f"corpus-partition-openstack-p{ORDER[1]}-x-n{SIZE}"
+    _partition(corpora["src"], wrong, "openstack", ORDER[0])
+    _run_file(corpora["results"], "openstack", 2, wrong)
     with pytest.raises(SystemExit, match="partition_seed"):
         _halves(corpora, tmp_path / "h.json", "--partition", str(ORDER[1]))
 
@@ -148,9 +172,8 @@ def _foreign(paths: dict[str, Path], out: Path, foreign_list: Path | None = None
     _run(
         comparator,
         [
-            "--pools", "foreign", "--root", str(paths["src"]), "--org", "openstack",
+            "--pools", "foreign", "--results", str(paths["results"]), "--org", "openstack",
             "--admissible", str(paths["openstack-list"]), "--foreign", "wikimedia",
-            "--foreign-root", str(paths["wikimedia"]),
             "--foreign-admissible", str(foreign_list or paths["wikimedia-list"]),
             "--dry-run", "--out", str(out),
         ],
@@ -158,7 +181,7 @@ def _foreign(paths: dict[str, Path], out: Path, foreign_list: Path | None = None
     return json.loads(out.read_text())
 
 
-def test_the_foreign_job_prompts_every_held_out_example_once_per_arm(
+def test_the_foreign_job_prompts_every_scored_example_once_per_arm(
     corpora: dict[str, Path], tmp_path: Path
 ) -> None:
     report = _foreign(corpora, tmp_path / "f.json")
@@ -171,6 +194,7 @@ def test_the_foreign_job_prompts_every_held_out_example_once_per_arm(
     expected |= {arm_key(k, p, "openstack") for k in KS for p in ("wikimedia-a", "wikimedia-b")}
     assert set(report["prompt_chars"]) == expected
     assert report["foreign_partition"] == ORDER[0]
+    assert report["pool_ids"].keys() == {"wikimedia-a", "wikimedia-b"}
 
 
 def test_a_foreign_pool_of_another_size_is_refused(
@@ -241,19 +265,22 @@ def _read(
     listing_org: str = "openstack",
 ) -> dict:
     adapters = adapters or [_adapter_run(n, p) for n, p in enumerate(ORDER, start=1)]
-    halves, runs = [], []
+    results = tmp_path / "results"
+    results.mkdir(exist_ok=True)
+    halves = []
     for n, (job, run) in enumerate(zip(jobs, adapters, strict=False)):
         halves.append(tmp_path / f"h{n}.json")
         halves[-1].write_text(json.dumps(job))
-        runs.append(tmp_path / f"a{n}.json")
-        runs[-1].write_text(json.dumps(run))
+        seeds = "" if n == 0 else f"-s{n + 1}"
+        name = f"rq1-partition-openstack-p{ORDER[n]}{seeds}-n{SIZE}.json"
+        (results / name).write_text(json.dumps(run))
     (tmp_path / "f.json").write_text(json.dumps(foreign))
     listing = tmp_path / "list.json"
     listing.write_text(json.dumps({"org": listing_org, "admissible": ORDER, "size_floor": SIZE}))
     out = tmp_path / "read.json"
     argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
     argv += ["--foreign-job", str(tmp_path / "f.json"), "--halves", *map(str, halves)]
-    argv += ["--adapter-runs", *map(str, runs), "--resamples", "200", "--out", str(out)]
+    argv += ["--results", str(results), "--resamples", "200", "--out", str(out)]
     _run(reader, argv)
     return json.loads(out.read_text())
 
