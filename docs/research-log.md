@@ -8115,20 +8115,26 @@ model that reads the file, not the distiller's; each smoke file is shorter in th
 near the budget. A map list left empty by the evidence filter no longer goes to the merge (up to
 half of Wikimedia's lists were empty and still numbered, so a merged rule could cite one). A merged
 rule's citation counts only where one rule of that list holds more than half of its content words
-(`rules.grounded`: word tokens, identifiers whole, function and imperative words aside). Three
+(`rules.grounded`: word tokens, identifiers whole, numbers kept, code spans in their own case,
+function, imperative and connective words aside). Three
 rounds of hand-built identifier rules (backticks, snake_case, PascalCase) each let a new kind of
 token ground unrelated rules; containment is the measure of support that replaced them. On the
 smoke merges, replayed: every cited merged rule passes in a list it cites, one in a hundred passes
 against the other organization's lists, no invented rule tried ("use black for formatting",
 "follow OpenStack hacking rules", "use `in` to test keys") passes, and every file keeps the
-rules it had. A rule the merge writes twice (case outside code, spacing and a closing period
-aside) is kept once, citing every list either copy is grounded in, and the file records which
+rules it had. Support is lexical, so a merged rule that inverts its source or changes a value in
+it would pass; read rule by rule beside its best source, most smoke merges copy a source rule
+verbatim, the rest restate one or join two, and none inverts or alters one. A polarity test was
+tried and refused faithful rules ("instead of" against "rather than"), so the limit is stated
+rather than patched. A rule the merge writes twice (case outside code, spacing and a closing period
+aside) is kept once, citing every list either copy is grounded in (the threshold held for the copies together), and the file records which
 chunk each merged list came from. A written guide's file is held to the same caps as a distilled one (`capped_file`: at most
 40 rules, within the budget), so the distilled-against-written contrast does not also compare file
 size. The distiller signature now carries the chat-template options, each file records the
 model its budget was counted in (the comparator refuses another), and the think-block strip lives
 in `rules.py` under the pipeline fingerprint. The arm-side prompts moved to `rules_arms.py`, under
-a fingerprint of the prompt as built for a fixed example, which every rules job records and the
+a fingerprint of every arm `rules_arms` builds (keys and prompts, both conditions) for fixed
+targets and files, which every rules job records and the
 reader holds equal (refusing a job that lacks it), so a change there neither voids the distilled
 files nor mixes arms prompted two ways. The rules foreign job also records each target's base
 prompt as it would mark it, and the reader refuses a base arm (taken from the retrieval foreign

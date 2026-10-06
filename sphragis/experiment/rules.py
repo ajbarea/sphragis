@@ -177,16 +177,16 @@ def recurring(
     merged: dict[str, tuple[str, set[int], int]] = {}
     # A rule the merge wrote twice is kept once, as first written, citing every list any copy is
     # grounded in; copies are told apart by their words, case outside code spans, spacing and a
-    # closing period aside.
+    # closing period aside. The threshold holds for the copies' citations together.
     for order, line in enumerate(lines):
         rule, numbers = cited(line, len(lists))
         backed = {n for n in numbers if any(grounded(rule, r) for r in lists[n - 1])}
-        if len(backed) >= MIN_CITED_LISTS:
-            first, cites, at = merged.get(_same_rule(rule), (rule, set(), order))
-            merged[_same_rule(rule)] = (first, cites | backed, at)
+        first, cites, at = merged.get(_same_rule(rule), (rule, set(), order))
+        merged[_same_rule(rule)] = (first, cites | backed, at)
     ranked = [
         (rule, sorted(cites))
         for rule, cites, _ in sorted(merged.values(), key=lambda r: (-len(r[1]), r[2]))
+        if len(cites) >= MIN_CITED_LISTS
     ]
     kept = capped_file([rule for rule, _ in ranked], length=length)
     return kept, [backed for _, backed in ranked[: len(kept)]]
@@ -195,7 +195,7 @@ def recurring(
 def _same_rule(rule: str) -> str:
     """A rule as copies of it compare: lower-cased outside its code spans, spacing collapsed,
     no closing period."""
-    parts = re.split(r"(`[^`]*`)", " ".join(rule.split()).rstrip(" ."))
+    parts = _CODE.split(" ".join(rule.split()).rstrip(" ."))
     return "".join(part if part.startswith("`") else part.lower() for part in parts)
 
 
@@ -208,7 +208,8 @@ def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[s
     return kept
 
 
-# Function words, and the imperative words every rule uses, which say nothing of its convention.
+# Function words, the imperative and connective words every rule uses, and the names every
+# Python file holds (`self`, `None`), which say nothing of a rule's convention.
 # fmt: off
 _FUNCTION = frozenset((
     "a", "an", "the", "to", "of", "in", "on", "for", "and", "or", "not", "no", "is", "are", "be",
@@ -216,15 +217,26 @@ _FUNCTION = frozenset((
     "using", "used", "instead", "rather", "than", "when", "which", "where", "there", "into",
     "over", "only", "must", "should", "always", "never", "avoid", "prefer", "make", "sure",
     "each", "such", "their", "do", "does", "any", "all", "new", "old", "more", "less", "eg", "ie",
+    "through", "via", "if", "but", "can", "may", "per", "you", "your", "so", "then", "also",
+    "them", "they", "we", "our", "one", "none", "self", "true", "false", "null", "cls",
 ))
 # fmt: on
-_TOKEN = re.compile(r"[a-z_][a-z0-9_]*")
+_TOKEN = re.compile(r"[A-Za-z0-9_]+")
+_CODE = re.compile(r"(`[^`]*`)")
 
 
 def content_words(rule: str) -> set[str]:
-    """A rule's content words: lower-cased word tokens (identifier parts kept whole, so `oslo_log`
-    is one), without function words or single letters."""
-    return {w for w in _TOKEN.findall(rule.lower()) if len(w) > 1 and w not in _FUNCTION}
+    """A rule's content words: word tokens (identifier parts kept whole, so `oslo_log` is one;
+    numbers kept, so 2 and 4 differ), lower-cased outside code spans and as written inside them,
+    without function words or single letters."""
+    words = set()
+    for part in _CODE.split(rule):
+        code = part.startswith("`")
+        for token in _TOKEN.findall(part):
+            word = token if code else token.lower()
+            if (len(word) > 1 or word.isdigit()) and word.lower() not in _FUNCTION:
+                words.add(word)
+    return words
 
 
 def grounded(rule: str, source: str) -> bool:
@@ -232,7 +244,12 @@ def grounded(rule: str, source: str) -> bool:
     appear in the source. On the smoke files (research log, 2026-10-06) every merged rule's best
     cited source holds more than half of its words, most all of them; a rule invented outright
     ("use black for formatting") shares at most half with any, and so does nearly every rule
-    against the other organization's lists."""
+    against the other organization's lists.
+
+    Support is lexical: a rule that inverts its source ("use print" from "not print"), or
+    changes one value in it, shares its words and passes. None of the smoke merges does, read
+    rule by rule; a polarity test was tried and refused faithful rules ("instead of" against
+    "rather than")."""
     words = content_words(rule)
     return bool(words) and 2 * len(words & content_words(source)) > len(words)
 

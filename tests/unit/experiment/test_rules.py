@@ -179,6 +179,15 @@ def test_a_rule_is_grounded_where_a_source_holds_more_than_half_its_words() -> N
     assert not grounded("- Use `in` to test keys.", "- Check membership with `in` on sets.")
     assert not grounded("- Prefer short names, e.g. ids.", "- Wrap long calls, e.g. in parens.")
     assert not grounded("- Use the.", "- Use the logger.")
+    # Numbers count, code keeps its case, and `self` and its kin say nothing.
+    assert grounded("- Log through oslo logging.", "- Route messages via oslo logging helpers.")
+    assert not grounded("- Use 4 spaces.", "- Indent with 2 spaces.")
+    assert not grounded("- Use `Session` here.", "- Use `session` here.")
+    assert not grounded("- Use `self`.", "- Pass `self` first.")
+    # Support is lexical: an inverted rule, or one with a value changed, shares its source's
+    # words (the stated limit).
+    assert grounded("- Use print for logging.", "- Log with oslo_log for logging, not print.")
+    assert grounded("- Indent with 4 spaces.", "- Indent with 2 spaces.")
 
 
 def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> None:
@@ -309,3 +318,12 @@ def test_the_file_budget_is_counted_by_the_model_that_reads_it() -> None:
         file_length=lambda t: RULES_BUDGET + 1 if t.count("\n") >= 2 else len(t),
     )
     assert result["rules"] == ["- g0.", "- g1."] and result["file_tokens"] == len("- g0.\n- g1.")
+
+
+def test_copies_of_a_rule_meet_the_threshold_together(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sphragis.experiment import rules
+
+    monkeypatch.setattr(rules, "MIN_CITED_LISTS", 2)
+    lines = ["- Use `ddt`. [1]", "- use `ddt` [2]", "- Use `mock`. [1]"]
+    kept, cites = rules.recurring(lines, lists=[["- Use `ddt`, `mock`."]] * 2, length=len)
+    assert kept == ["- Use `ddt`."] and cites == [[1, 2]]

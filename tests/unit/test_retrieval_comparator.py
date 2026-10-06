@@ -562,6 +562,11 @@ def test_a_base_arm_prompted_otherwise_is_refused(tmp_path: Path) -> None:
     foreign["base_marks"][IDS[0]] = "another prompt"
     with pytest.raises(SystemExit, match="1 rows differ"):
         _rules_read(tmp_path, [_rules_halves_job(p) for p in ORDER], foreign)
+    # A base row the rules jobs did not target is one the check cannot vouch for.
+    foreign = _rules_foreign_job()
+    del foreign["base_marks"][IDS[1]]
+    with pytest.raises(SystemExit, match="are not among their targets"):
+        _rules_read(tmp_path / "extra", [_rules_halves_job(p) for p in ORDER], foreign)
     del foreign["base_marks"]
     with pytest.raises(SystemExit, match="no base_marks"):
         _rules_read(tmp_path / "unmarked", [_rules_halves_job(p) for p in ORDER], foreign)
