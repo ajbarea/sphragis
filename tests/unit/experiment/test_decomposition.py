@@ -1558,3 +1558,22 @@ def test_a_replication_member_below_its_projection_carries_its_power(frozen) -> 
     assert out["cells"]["apache"]["size"]["power"] == {0.975: {"power": 0.9, "mc_se": se}}
     with pytest.raises(ValueError, match="no power-at-size artifact"):
         replication_gate(cells, simulations=_SIM)
+
+
+def test_own_against_base_refuses_a_change_in_both_halves() -> None:
+    from sphragis.experiment.decomposition import base_clusters
+
+    def rows(ids: list[str]) -> list[dict]:
+        return [{"id": i, "change_id": "shared", "exact_match": 1.0} for i in ids]
+
+    results = {
+        "retrieval-k1:o-a|o-a": rows(["1"]),
+        "retrieval-k1:o-b|o-b": rows(["2"]),
+        "base|o-a": rows(["1"]),
+        "base|o-b": rows(["2"]),
+    }
+    with pytest.raises(ValueError, match="appear in both halves"):
+        base_clusters(results, org="o", seed=None, condition="retrieval-k1")
+    del results["base|o-b"]
+    with pytest.raises(ValueError, match="base model was not scored on o-b"):
+        base_clusters(results, org="o", seed=None, condition="retrieval-k1")

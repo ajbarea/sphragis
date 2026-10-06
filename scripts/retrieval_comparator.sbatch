@@ -31,9 +31,10 @@ first_admissible() {
     "import json, sys; print(json.load(open(sys.argv[1]))['admissible'][0])" "$1"
 }
 partition_corpus() {
-  # $1 org, $2 partition seed, $3 role: the partition run's corpus, under a root of the job's own
-  # role, so a foreign job and a halves job never rebuild one root at once.
-  local root="$SPHRAGIS_DATA/corpus-retrieval-$3-$1-p$2"
+  # $1 org, $2 partition seed, $3 role: the partition run's corpus, under a root named for the
+  # job's role and result suffix, so no two jobs (foreign and halves, dry and real, two
+  # clusters) ever rebuild one root at once.
+  local root="$SPHRAGIS_DATA/corpus-retrieval-$3-$1-p$2$RESULT_SUFFIX"
   uv run --no-sync python scripts/placebo_corpus.py \
     --root "$WINDOWS_ROOT" --org "$1" --out-root "$root" \
     --dedup-org --partition-seed "$2" >&2

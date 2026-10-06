@@ -27,16 +27,27 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from statistics import median
 from typing import Any
 
+from sphragis.corpus.cli import WINDOWS
+from sphragis.corpus.halves import project_counts
 from sphragis.experiment.decomposition import halves
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import verbatim_overlap, window_split
 from sphragis.experiment.neutral import LEAKAGE_MAX_RATE, LEAKAGE_THRESHOLD, leakage_check
-from sphragis.experiment.retrieval import KS, PARTITIONS, arm_prompts, few_shot_prompt, pools
+from sphragis.experiment.retrieval import (
+    KS,
+    arm_prompts,
+    few_shot_prompt,
+    fingerprint,
+    first_partitions,
+    pools,
+    resumable,
+)
 from sphragis.experiment.runner import build_prompt, require_unique_ids
 from sphragis.measure.score import score
 from sphragis.provenance import provenance_header
@@ -105,14 +116,11 @@ def partition_root(root: Path, org: str, partition: int) -> dict[str, Any]:
 
 
 def admissible(path: Path, org: str) -> tuple[list[int], int]:
-    """The organization's first `PARTITIONS` admissible partitions and its training size."""
-    listing = json.loads(path.read_text())
-    if listing.get("org", org) != org:
-        raise SystemExit(f"{path} lists {listing['org']}'s partitions, not {org}'s")
-    order = listing["admissible"][:PARTITIONS]
-    if len(order) < PARTITIONS:
-        raise SystemExit(f"{path}: {len(order)} admissible partitions, fewer than {PARTITIONS}")
-    return order, listing["size_floor"]
+    """The organization's first admissible partitions and its training size."""
+    try:
+        return first_partitions(json.loads(path.read_text()), org=org)
+    except ValueError as error:
+        raise SystemExit(f"{path}: {error}") from error
 
 
 def half_pools(
@@ -149,14 +157,17 @@ def main() -> None:
             raise SystemExit(f"{args.foreign} trains at {foreign_size}, {args.org} at {size}")
         partition_root(args.foreign_root, args.foreign, foreign_order[0])
 
-    generator = None
+    # Only the tokenizer before test 4: the model loads once the data has passed it.
     if args.dry_run:
         fits = trainable_by_chars
     else:
-        from sphragis.experiment.model import HFGenerator
+        from sphragis.experiment.model import MODEL_ID, TRAINING, _require_tokenizer
 
-        generator = HFGenerator()
-        fits = trainable_by_tokens(generator.tokenizer)
+        if TRAINING["max_seq_length"] != MAX_SEQ_LENGTH:
+            raise SystemExit(
+                f"adapters train at {TRAINING['max_seq_length']} tokens, not {MAX_SEQ_LENGTH}"
+            )
+        fits = trainable_by_tokens(_require_tokenizer(MODEL_ID))
 
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
@@ -168,12 +179,15 @@ def main() -> None:
             targets[half] = held_out[half][: args.limit]
     else:
         try:
-            _, rows, read = window_split(args.root, args.org)
+            train_rows, rows, read = window_split(args.root, args.org)
         except ValueError as error:
             raise SystemExit(str(error)) from error
         indexes, _, corpora = half_pools(args.foreign_root, args.foreign, size, fits)
         corpora[args.org] = read
-        targets[args.org] = rows[: args.limit]
+        # Only what a partition scores: placebo_corpus drops a project with no training-window
+        # rows from both halves.
+        trained = set(project_counts(train_rows, WINDOWS["train"]))
+        targets[args.org] = [r for r in rows if r["project"] in trained][: args.limit]
         base = run_id(EvalRun("base", args.org, None))
         prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
         evaluated_by[base] = args.org
@@ -228,33 +242,49 @@ def main() -> None:
         print(f"DRY RUN: {sum(map(len, prompts.values()))} prompts; wrote {args.out}")
         return
 
-    from sphragis.experiment.model import run_provenance
+    from sphragis.experiment.model import HFGenerator, revision, run_provenance
 
-    assert generator is not None
-    # Each arm's rows are appended as it finishes, and a rerun skips the arms already there, so a
-    # wall clock loses at most the arm it interrupted.
+    generator = HFGenerator()
+    signature = (
+        f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"
+        f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"
+    )
+    marks = {key: [fingerprint(signature, p) for p in texts] for key, texts in prompts.items()}
+    expected = {
+        key: list(zip((t["id"] for t in targets[evaluated_by[key]]), marks[key], strict=True))
+        for key in prompts
+    }
+    # Each arm's rows are appended as it finishes. A rerun keeps only the arms it would generate
+    # identically, rewritten in place first, so a wall clock or a kill loses at most the arm it
+    # interrupted, and a changed prompt, pool or generator is regenerated.
     rows_path = args.out.with_suffix(".rows.jsonl")
     results: dict[str, list[dict]] = {}
     if rows_path.is_file():
-        for line in rows_path.read_text().splitlines():
-            row = json.loads(line)
-            results.setdefault(row.pop("arm"), []).append(row)
-    for key, rows in results.items():
-        if key not in prompts or len(rows) != len(targets[evaluated_by[key]]):
-            raise SystemExit(f"{rows_path}: arm {key} does not match this job's targets")
+        results, dropped = resumable(rows_path.read_text().splitlines(), expected)
+        if dropped:
+            print(f"{rows_path}: regenerating {dropped}", flush=True)
+        partial = rows_path.with_suffix(".partial")
+        partial.write_text(
+            "".join(
+                json.dumps({"arm": key, **r}) + "\n" for key, rows in results.items() for r in rows
+            )
+        )
+        os.replace(partial, rows_path)
     with rows_path.open("a") as rows_out:
         for key, texts in prompts.items():
-            evaluated = targets[evaluated_by[key]]
-            if len(results.get(key, [])) == len(evaluated):
+            if key in results:
                 continue
             results[key] = []
-            for target, prompt in zip(evaluated, texts, strict=True):
+            for target, prompt, mark in zip(
+                targets[evaluated_by[key]], texts, marks[key], strict=True
+            ):
                 prediction = generator.generate(prompt)
                 results[key].append(
                     {
                         "id": target["id"],
                         "change_id": target["change_id"],
                         "path": target.get("path"),
+                        "fingerprint": mark,
                         "prediction": prediction,
                         **score(prediction, str(target["after"])),
                     }
@@ -263,6 +293,7 @@ def main() -> None:
             rows_out.flush()
             em = sum(r["exact_match"] for r in results[key]) / max(1, len(results[key]))
             print(f"{key:<44} EM={em:.3f}", flush=True)
+    report["generator"] = signature
     report["inference_dtype"] = generator.computed_dtype
     report["results"] = results
     report["provenance"] = run_provenance()

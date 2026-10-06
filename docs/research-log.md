@@ -7937,7 +7937,8 @@ prompted with its k nearest by BM25 over comments and old code, solved in the re
 at k = 1 and 3. The pools are its own half's, its sibling half's, and each half of the other
 organization's first admissible partition, cut to the same size. The other organization's pools are
 averaged per example, as its two adapters are. The base arm and the foreign arms do not depend on the
-evaluated organization's partition, so one job computes them for every run. The generator is the
+evaluated organization's partition, so one job computes them for every run, on the examples the
+partitions score (a project with no training-window rows is in neither half). The generator is the
 registered one (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A pool row repeated verbatim in a
 target refuses the job, and every pool is held to test 4 at the registered threshold and rate.
 
@@ -7952,8 +7953,9 @@ organization contrast's) and own minus none.
 
 **Reading rule**, on own minus sibling at each k. A lower bound above the SESOI (0.01) reads "carries a
 half-split contrast". An interval inside the SESOI band reads "carries none as large as the SESOI".
-Anything else is inconclusive. The adapters' development-window H1 (`partition-pilot-<org>.json`)
-is reported beside it. If retrieval carries the contrast and the adapters do not, the own half's
+Anything else is inconclusive. The adapters' own minus sibling is read beside it by the same rule,
+over the same ten partitions and the same examples, from their committed partition runs (the
+22-run development pilot is a different K and is not the comparison). If retrieval carries the contrast and the adapters do not, the own half's
 conventions are recoverable at inference time and the adapters at N do not learn them. If neither
 does, the half boundary carries no convention either method finds. If retrieval carries none and the
 adapters' contrast is meaningful, the adapters carry what retrieval does not. Exploratory: nothing

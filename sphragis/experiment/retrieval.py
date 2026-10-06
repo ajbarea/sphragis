@@ -9,6 +9,8 @@ BM25), and prompts the base model with them solved, then the target in the regis
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 import re
 from collections import Counter
@@ -144,3 +146,47 @@ def arm_prompts(
                 for target, shots in zip(targets, nearest, strict=True)
             ]
     return out
+
+
+def first_partitions(listing: Mapping[str, Any], *, org: str) -> tuple[list[int], int]:
+    """An admissible list's first `PARTITIONS` partitions and its training size, for `org` only."""
+    if listing.get("org", org) != org:
+        raise ValueError(f"the list is {listing['org']}'s partitions, not {org}'s")
+    order = list(listing["admissible"][:PARTITIONS])
+    if len(order) < PARTITIONS:
+        raise ValueError(f"{len(order)} admissible partitions, fewer than {PARTITIONS}")
+    return order, int(listing["size_floor"])
+
+
+def fingerprint(signature: str, prompt: str) -> str:
+    """What one generation depends on: the generator's settings and the prompt it was given."""
+    return hashlib.sha256(f"{signature}\n{prompt}".encode()).hexdigest()
+
+
+def resumable(
+    lines: Sequence[str], expected: Mapping[str, Sequence[tuple[str, str]]]
+) -> tuple[dict[str, list[dict[str, Any]]], list[str]]:
+    """The arms of a rows file that this job would regenerate identically, and what was dropped.
+
+    `expected` maps each arm to its targets' (id, fingerprint) in order. An arm is kept only if
+    its rows are exactly those: an arm from another prompt, pool, corpus or generator is dropped
+    and regenerated, as is an arm cut short. A line that does not parse (a write a kill
+    interrupted) is dropped with it.
+    """
+    found: dict[str, list[dict[str, Any]]] = {}
+    dropped: set[str] = set()
+    for line in lines:
+        try:
+            row = json.loads(line)
+            arm = row.pop("arm")
+        except (json.JSONDecodeError, AttributeError, KeyError):
+            dropped.add("<unreadable line>")
+            continue
+        found.setdefault(arm, []).append(row)
+    kept: dict[str, list[dict[str, Any]]] = {}
+    for arm, rows in found.items():
+        if [(r.get("id"), r.get("fingerprint")) for r in rows] == list(expected.get(arm, [])):
+            kept[arm] = rows
+        else:
+            dropped.add(arm)
+    return kept, sorted(dropped)

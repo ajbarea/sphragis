@@ -18,7 +18,7 @@ import pytest
 from sphragis.corpus.load import refined_dir, write_build_record, write_source_record
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training, window_split
-from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key
+from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key, resumable
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -50,16 +50,17 @@ def _words(rng: random.Random, n: int) -> str:
 
 
 def _source(root: Path, org: str, seed: int) -> None:
-    """A refined corpus of six projects, training-window and dev-window changes, no duplicates."""
+    """Six projects with training-window and dev-window changes, no duplicates, and a seventh
+    with dev-window changes only, which no partition keeps."""
     rng = random.Random(seed)
     rows = []
-    for i in range(96):
+    for i in range(106):
         day = "2025-01-10" if i < 72 else "2025-09-15"
         rows.append(
             {
                 "id": f"{org}-{i}",
                 "change_id": f"{org}-c{i}",
-                "project": f"{org}/p{i % 6}",
+                "project": f"{org}/p{i % 6}" if i < 96 else f"{org}/dev-only",
                 "org": org,
                 "created": f"{day} 00:00:00.000000000",
                 "comments": [_words(rng, 6)],
@@ -161,8 +162,11 @@ def test_the_foreign_job_prompts_every_held_out_example_once_per_arm(
     corpora: dict[str, Path], tmp_path: Path
 ) -> None:
     report = _foreign(corpora, tmp_path / "f.json")
+    halves = _halves(corpora, tmp_path / "h.json", "--partition", str(ORDER[0]))
+    # Exactly what the partitions score: the dev-only project is in neither half, so not here.
+    assert report["targets"] == {"openstack": sum(halves["targets"].values())}
     held_out = window_split(corpora["src"], "openstack")[1]
-    assert report["targets"] == {"openstack": len(held_out)}
+    assert len(held_out) - report["targets"]["openstack"] == 10
     expected = {run_id(EvalRun("base", "openstack", None))}
     expected |= {arm_key(k, p, "openstack") for k in KS for p in ("wikimedia-a", "wikimedia-b")}
     assert set(report["prompt_chars"]) == expected
@@ -186,19 +190,34 @@ def _row(i: str, em: float) -> dict:
     return {"id": i, "change_id": f"c{i}", "exact_match": em}
 
 
+def _sides(partition: int) -> dict[str, list[str]]:
+    shuffled = random.Random(partition).sample(IDS, len(IDS))
+    return {"openstack-a": shuffled[:20], "openstack-b": shuffled[20:]}
+
+
 def _halves_job(partition: int, own_wins: bool) -> dict:
-    rng = random.Random(partition)
-    shuffled = rng.sample(IDS, len(IDS))
-    side = {"openstack-a": shuffled[:20], "openstack-b": shuffled[20:]}
     results = {}
     for k in KS:
-        for pool in side:
-            for evaluated, ids in side.items():
+        for pool in _sides(partition):
+            for evaluated, ids in _sides(partition).items():
                 hit = own_wins and pool == evaluated
                 results[arm_key(k, pool, evaluated)] = [
                     _row(i, 1.0 if hit and int(i[1:]) % 2 == 0 else 0.0) for i in ids
                 ]
     return {"pools": "halves", "partition": partition, **_fixed(), "results": results}
+
+
+def _adapter_run(position: int, partition: int) -> dict:
+    """The adapters' partition run: own never beats sibling."""
+    results = {}
+    for window, ids in _sides(partition).items():
+        for trained in _sides(partition):
+            results[run_id(EvalRun(f"adapter:{trained}", window, position))] = [
+                _row(i, 0.0) for i in ids
+            ]
+    root = f"/d/corpus-partition-openstack-p{partition}-n{SIZE}"
+    corpora = {h: {"source": f"train -> dev windows under {root}/{h}/refined"} for h in _sides(1)}
+    return {"seeds": [position], "train_size": SIZE, "corpora": corpora, "results": results}
 
 
 def _fixed() -> dict:
@@ -214,18 +233,28 @@ def _foreign_job(drop: str | None = None) -> dict:
     return {"pools": "foreign", "foreign": "wikimedia", **_fixed(), "results": results}
 
 
-def _read(tmp_path: Path, jobs: list[dict], foreign: dict) -> dict:
-    paths = []
-    for n, job in enumerate(jobs):
-        paths.append(tmp_path / f"h{n}.json")
-        paths[-1].write_text(json.dumps(job))
+def _read(
+    tmp_path: Path,
+    jobs: list[dict],
+    foreign: dict,
+    adapters: list[dict] | None = None,
+    listing_org: str = "openstack",
+) -> dict:
+    adapters = adapters or [_adapter_run(n, p) for n, p in enumerate(ORDER, start=1)]
+    halves, runs = [], []
+    for n, (job, run) in enumerate(zip(jobs, adapters, strict=False)):
+        halves.append(tmp_path / f"h{n}.json")
+        halves[-1].write_text(json.dumps(job))
+        runs.append(tmp_path / f"a{n}.json")
+        runs[-1].write_text(json.dumps(run))
     (tmp_path / "f.json").write_text(json.dumps(foreign))
     listing = tmp_path / "list.json"
-    listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
+    listing.write_text(json.dumps({"org": listing_org, "admissible": ORDER, "size_floor": SIZE}))
     out = tmp_path / "read.json"
-    argv = [*map(str, paths), "--org", "openstack", "--foreign", "wikimedia"]
-    argv += ["--admissible", str(listing), "--foreign-job", str(tmp_path / "f.json")]
-    _run(reader, [*argv, "--resamples", "200", "--out", str(out)])
+    argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
+    argv += ["--foreign-job", str(tmp_path / "f.json"), "--halves", *map(str, halves)]
+    argv += ["--adapter-runs", *map(str, runs), "--resamples", "200", "--out", str(out)]
+    _run(reader, argv)
     return json.loads(out.read_text())
 
 
@@ -238,14 +267,20 @@ def test_an_own_pool_that_wins_reads_as_a_half_split_contrast(tmp_path: Path) ->
         assert cell["own_minus_sibling"]["estimate"] == pytest.approx(0.5)
         assert cell["own_minus_none"]["estimate"] == pytest.approx(0.5)
         assert cell["sibling_minus_foreign"]["estimate"] == pytest.approx(0.0)
-        assert cell["reading"] == "carries a half-split contrast"
+        assert cell["own_minus_sibling"]["reading"] == "carries a half-split contrast"
         assert cell["examples"] == len(IDS) and cell["dropped"] == 0
         assert len(cell["own_minus_sibling"]["per_run"]) == PARTITIONS
+    # The adapters are read over the same partitions and examples, by the same rule.
+    adapters = report["adapters"]
+    assert adapters["examples"] == len(IDS)
+    assert len(adapters["own_minus_sibling"]["per_run"]) == PARTITIONS
+    assert adapters["own_minus_sibling"]["reading"] == "carries none as large as the SESOI"
 
 
 def test_pools_that_never_differ_read_as_no_contrast(tmp_path: Path) -> None:
     report = _read(tmp_path, [_halves_job(p, False) for p in ORDER], _foreign_job())
-    assert {report["ks"][str(k)]["reading"] for k in KS} == {"carries none as large as the SESOI"}
+    readings = {report["ks"][str(k)]["own_minus_sibling"]["reading"] for k in KS}
+    assert readings == {"carries none as large as the SESOI"}
 
 
 def test_the_reader_refuses_a_foreign_job_missing_an_example(tmp_path: Path) -> None:
@@ -263,6 +298,40 @@ def test_the_reader_refuses_runs_out_of_admissible_order_or_a_dry_run(tmp_path: 
         _read(tmp_path, dry, _foreign_job())
 
 
+def test_the_reader_refuses_adapters_from_another_partition(tmp_path: Path) -> None:
+    runs = [_adapter_run(n, p) for n, p in enumerate(ORDER, start=1)]
+    runs[2] = _adapter_run(3, ORDER[3])
+    with pytest.raises(SystemExit, match="admissible partition"):
+        _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(), runs)
+
+
+def test_the_reader_refuses_another_organizations_list(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit, match="wikimedia's partitions"):
+        _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(), None, "wikimedia")
+
+
 def test_the_reader_reads_exactly_the_fixed_number_of_partitions(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="not the fixed"):
         _read(tmp_path, [_halves_job(p, True) for p in ORDER[:9]], _foreign_job())
+
+
+# Resuming a generation job.
+def _rows(arm: str, marks: list[tuple[str, str]]) -> list[str]:
+    return [
+        json.dumps({"arm": arm, "id": i, "fingerprint": f, "exact_match": 0.0}) for i, f in marks
+    ]
+
+
+def test_a_resume_keeps_only_arms_it_would_generate_identically() -> None:
+    same, changed, short = [("x1", "f1"), ("x2", "f2")], [("x1", "g1")], [("x1", "f1")]
+    lines = _rows("a", same) + _rows("b", [("x1", "old")]) + _rows("c", short)
+    kept, dropped = resumable(lines, {"a": same, "b": changed, "c": same})
+    assert list(kept) == ["a"] and dropped == ["b", "c"]
+
+
+def test_a_line_a_kill_cut_short_drops_only_its_arm() -> None:
+    marks = [("x1", "f1"), ("x2", "f2")]
+    lines = _rows("a", marks) + _rows("b", marks)
+    lines[-1] = lines[-1][:15]
+    kept, dropped = resumable(lines, {"a": marks, "b": marks})
+    assert list(kept) == ["a"] and "b" in dropped
