@@ -206,7 +206,7 @@ class HFGenerator:
         # apply would otherwise be recorded as though it had.
         self.computed_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str | Sequence[Mapping[str, str]]) -> str:
         """Greedy by default: the output is the model's single most likely refinement.
 
         Computed in fp32 (`INFERENCE_DTYPE`) because greedy decoding in bf16 does not reproduce

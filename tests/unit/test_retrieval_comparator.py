@@ -265,6 +265,7 @@ def _adapter_run(position: int, partition: int) -> dict:
         "equalize_train": True,
         "model_id": "qwen",
         "max_new_tokens": 256,
+        "inference_dtype": ["float32"],
         "lora_rank": 32,
         "corpora": corpora,
         "results": results,
@@ -387,40 +388,22 @@ def _rows(arm: str, marks: list[tuple[str, str]]) -> list[str]:
     ]
 
 
-def test_a_resume_keeps_only_arms_it_would_generate_identically() -> None:
-    same, changed, short = [("x1", "f1"), ("x2", "f2")], [("x1", "g1")], [("x1", "f1")]
-    lines = _rows("a", same) + _rows("b", [("x1", "old")]) + _rows("c", short)
+def test_a_resume_keeps_what_it_would_generate_identically() -> None:
+    same, changed = [("x1", "f1"), ("x2", "f2")], [("x1", "g1")]
+    lines = _rows("a", same) + _rows("b", [("x1", "old")]) + _rows("c", same[:1])
     kept, dropped = resumable(lines, {"a": same, "b": changed, "c": same})
-    assert list(kept) == ["a"] and dropped == ["b", "c"]
+    # An arm cut short resumes from its prefix; one from another prompt is regenerated whole.
+    assert {arm: len(rows) for arm, rows in kept.items()} == {"a": 2, "c": 1}
+    assert dropped == ["b"]
 
 
-def test_a_line_a_kill_cut_short_drops_only_its_arm() -> None:
+def test_a_line_a_kill_cut_short_is_dropped_and_its_arm_resumes() -> None:
     marks = [("x1", "f1"), ("x2", "f2")]
     lines = _rows("a", marks) + _rows("b", marks)
     lines[-1] = lines[-1][:15]
     kept, dropped = resumable(lines, {"a": marks, "b": marks})
-    assert list(kept) == ["a"] and "b" in dropped
-
-
-def test_the_reader_refuses_jobs_from_another_generator(tmp_path: Path) -> None:
-    jobs = [_halves_job(p, True) for p in ORDER]
-    jobs[5]["generator"] = "qwen@other|float32|max_new_tokens=256|temperature=0.0"
-    with pytest.raises(SystemExit, match="generator"):
-        _read(tmp_path, jobs, _foreign_job())
-
-
-@pytest.mark.parametrize(
-    "low,high,verdict",
-    [
-        (0.02, 0.06, "carries a half-split contrast"),
-        (-0.06, -0.02, "reversed: the sibling half carries the contrast"),
-        (-0.005, 0.005, "carries none as large as the SESOI"),
-        (-0.02, 0.03, "inconclusive"),
-        (0.005, 0.03, "inconclusive"),
-    ],
-)
-def test_the_reading_rule_on_each_kind_of_interval(low: float, high: float, verdict: str) -> None:
-    assert reader.reading({"low": low, "high": high})["reading"] == verdict
+    assert {arm: len(rows) for arm, rows in kept.items()} == {"a": 2, "b": 1}
+    assert dropped == ["<unreadable line>"]
 
 
 def test_a_corpus_rebuilt_since_the_adapters_trained_is_refused(

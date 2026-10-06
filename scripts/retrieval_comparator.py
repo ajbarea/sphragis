@@ -49,6 +49,7 @@ from sphragis.experiment.retrieval import (
     fingerprint,
     first_partitions,
     pools,
+    prompt_text,
     resumable,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
@@ -198,6 +199,8 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
 
 def main() -> None:
     args = parser.parse_args()
+    if args.limit is not None and args.limit < 1:
+        raise SystemExit(f"--limit must be at least 1, got {args.limit}")
     order, size = admissible(args.admissible, args.org)
     foreign_order: list[int] | None = None
     if args.pools == "halves":
@@ -247,6 +250,8 @@ def main() -> None:
     if not args.dry_run and pooled != trained:
         raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
     for evaluated, rows in targets.items():
+        if not rows:
+            raise SystemExit(f"{evaluated} has no held-out examples to prompt")
         require_unique_ids(rows, label=f"{evaluated} targets")
         arms, closest = arm_prompts(rows, indexes, evaluated=evaluated)
         for key, texts in arms.items():
@@ -296,7 +301,10 @@ def main() -> None:
     }
     if args.dry_run:
         report["prompt_chars"] = {
-            key: {"median": median(map(len, texts)), "max": max(map(len, texts))}
+            key: {
+                "median": median(len(prompt_text(t)) for t in texts),
+                "max": max(len(prompt_text(t)) for t in texts),
+            }
             for key, texts in prompts.items()
         }
         report["provenance"] = provenance_header()
@@ -334,8 +342,9 @@ def main() -> None:
                     "fingerprint": row["fingerprint"],
                     "shot_jaccard": closest,
                 }
+                # A kept arm may be a prefix of its targets: the rows a kill left.
                 for target, row, closest in zip(
-                    targets[evaluated_by[key]], rows, similarity[key], strict=True
+                    targets[evaluated_by[key]], rows, similarity[key], strict=False
                 )
             ]
         partial = rows_path.with_suffix(".partial")
@@ -345,20 +354,19 @@ def main() -> None:
             )
         )
         os.replace(partial, rows_path)
+    # Each row is written as it is generated, so a kill loses at most the one in progress.
     with rows_path.open("a") as rows_out:
         for key, texts in prompts.items():
-            if key in results:
-                continue
-            results[key] = []
-            for target, prompt, mark, closest in zip(
-                targets[evaluated_by[key]], texts, marks[key], similarity[key], strict=True
-            ):
-                prediction = generator.generate(prompt)
-                row = scored_row(target, prediction)
-                results[key].append({**row, "fingerprint": mark, "shot_jaccard": closest})
-            rows_out.writelines(json.dumps({"arm": key, **r}) + "\n" for r in results[key])
-            rows_out.flush()
-            em = sum(r["exact_match"] for r in results[key]) / max(1, len(results[key]))
+            done = results.setdefault(key, [])
+            todo = zip(targets[evaluated_by[key]], texts, marks[key], similarity[key], strict=True)
+            for position, (target, prompt, mark, closest) in enumerate(todo):
+                if position < len(done):
+                    continue
+                row = scored_row(target, generator.generate(prompt))
+                done.append({**row, "fingerprint": mark, "shot_jaccard": closest})
+                rows_out.write(json.dumps({"arm": key, **done[-1]}) + "\n")
+                rows_out.flush()
+            em = sum(r["exact_match"] for r in done) / max(1, len(done))
             print(f"{key:<44} EM={em:.3f}", flush=True)
     report["generator"] = signature
     report["model_id"], report["max_new_tokens"] = generator.model_id, generator.max_new_tokens

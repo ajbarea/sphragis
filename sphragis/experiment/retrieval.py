@@ -37,7 +37,8 @@ EQUALIZE_SEED = 0
 # BM25's usual constants (Robertson and Zaragoza, 2009).
 K1 = 1.2
 B = 0.75
-_TOKEN = re.compile(r"[a-z]+|[0-9]+")
+# Letters of any script, so a comment in German, Russian or Chinese is matched on its words.
+_TOKEN = re.compile(r"[^\W\d_]+|\d+")
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 
 
@@ -69,37 +70,45 @@ class BM25:
 
     def top(self, example: Mapping[str, Any], k: int) -> list[Mapping[str, Any]]:
         """The `k` pool examples scoring highest for this target, ties broken by pool order."""
-        query = set(tokens(query_text(example)))
+        # A term repeated in the query counts each time, as the usual implementation scores it.
+        query = Counter(tokens(query_text(example)))
         scored = []
         for index, (doc, length) in enumerate(zip(self.docs, self.lengths, strict=True)):
             value = 0.0
-            for term in query & doc.keys():
+            for term in query.keys() & doc.keys():
                 tf = doc[term]
                 norm = tf + K1 * (1 - B + B * length / self.mean_length)
-                value += self.idf[term] * tf * (K1 + 1) / norm
+                value += query[term] * self.idf[term] * tf * (K1 + 1) / norm
             scored.append((-value, index))
         scored.sort()
         return [self.pool[index] for _, index in scored[:k]]
 
 
-def few_shot_prompt(example: Mapping[str, Any], shots: Sequence[Mapping[str, Any]]) -> str:
-    """Solved examples in the registered template, then the target in it, as one prompt.
+Prompt = str | list[dict[str, str]]
 
-    `shots` come most similar first, as `BM25.top` returns them, and are written in reverse, so
-    the closest example sits next to the target.
+
+def few_shot_prompt(example: Mapping[str, Any], shots: Sequence[Mapping[str, Any]]) -> Prompt:
+    """The target in the registered template, after its shots as solved prior chat turns.
+
+    Each shot is a user turn in the registered template and an assistant turn holding its
+    revised code: the format every adapter was trained on, so the target's turn and the reply
+    it asks for are those of the base arm. `shots` come most similar first, as `BM25.top`
+    returns them, and are given in reverse, so the closest is the turn before the target's.
+    Without shots, the registered prompt itself.
     """
     if not shots:
         return build_prompt(example)
-    parts = [
-        "Here are past review comments from code review and the revised code that answered "
-        "each one.\n"
-    ]
-    for number, shot in enumerate(reversed(shots), 1):
-        parts.append(
-            f"### Example {number}\n{build_prompt(shot)}\nRevised code:\n{shot['after']}\n"
-        )
-    parts.append(f"### Now this one\n{build_prompt(example)}")
-    return "\n".join(parts)
+    messages: list[dict[str, str]] = []
+    for shot in reversed(shots):
+        messages.append({"role": "user", "content": build_prompt(shot)})
+        messages.append({"role": "assistant", "content": str(shot["after"])})
+    messages.append({"role": "user", "content": build_prompt(example)})
+    return messages
+
+
+def prompt_text(prompt: Prompt) -> str:
+    """A prompt as one string, to fingerprint it or measure it without a tokenizer."""
+    return prompt if isinstance(prompt, str) else json.dumps(prompt, sort_keys=True)
 
 
 def condition(k: int) -> str:
@@ -144,14 +153,14 @@ def arm_prompts(
     *,
     evaluated: str,
     ks: Sequence[int] = KS,
-) -> tuple[dict[str, list[str]], dict[str, list[float]]]:
+) -> tuple[dict[str, list[Prompt]], dict[str, list[float]]]:
     """Every target's prompt under every pool at every k, keyed as `arm_key`, and each prompt's
     closest shot's similarity to its target (`shot_similarity`).
 
     One retrieval at the largest k serves every k: BM25's ranking is fixed, so the k nearest
     are a prefix of the K nearest.
     """
-    prompts: dict[str, list[str]] = {}
+    prompts: dict[str, list[Prompt]] = {}
     similarity: dict[str, list[float]] = {}
     for pool, index in indexes.items():
         nearest = [index.top(target, max(ks)) for target in targets]
@@ -173,20 +182,20 @@ def first_partitions(listing: Mapping[str, Any], *, org: str) -> tuple[list[int]
     return order, int(listing["size_floor"])
 
 
-def fingerprint(signature: str, prompt: str) -> str:
+def fingerprint(signature: str, prompt: Prompt) -> str:
     """What one generation depends on: the generator's settings and the prompt it was given."""
-    return hashlib.sha256(f"{signature}\n{prompt}".encode()).hexdigest()
+    return hashlib.sha256(f"{signature}\n{prompt_text(prompt)}".encode()).hexdigest()
 
 
 def resumable(
     lines: Sequence[str], expected: Mapping[str, Sequence[tuple[str, str]]]
 ) -> tuple[dict[str, list[dict[str, Any]]], list[str]]:
-    """The arms of a rows file that this job would regenerate identically, and what was dropped.
+    """The rows of a rows file that this job would regenerate identically, and what was dropped.
 
-    `expected` maps each arm to its targets' (id, fingerprint) in order. An arm is kept only if
-    its rows are exactly those: an arm from another prompt, pool, corpus or generator is dropped
-    and regenerated, as is an arm cut short. A line that does not parse (a write a kill
-    interrupted) is dropped with it.
+    `expected` maps each arm to its targets' (id, fingerprint) in order. An arm's rows are kept
+    if they are a prefix of those, so an arm a kill cut short resumes where it stopped; an arm
+    from another prompt, pool, corpus or generator is dropped whole and regenerated. A line that
+    does not parse (a write the kill interrupted) is dropped.
     """
     found: dict[str, list[dict[str, Any]]] = {}
     dropped: set[str] = set()
@@ -202,7 +211,8 @@ def resumable(
         found.setdefault(arm, []).append(row)
     kept: dict[str, list[dict[str, Any]]] = {}
     for arm, rows in found.items():
-        if [(r.get("id"), r.get("fingerprint")) for r in rows] == list(expected.get(arm, [])):
+        marks = [(r.get("id"), r.get("fingerprint")) for r in rows]
+        if marks == list(expected.get(arm, []))[: len(marks)]:
             kept[arm] = rows
         else:
             dropped.add(arm)

@@ -7934,8 +7934,12 @@ partition's adapter run read: its root is taken from the run's committed result
 half is read by `window_split`, the function `rq1_pilot.py` now reads every corpus through. Each half's pool
 is its adapter's training set: `equalize_training` at the run's seed to the admissible list's size,
 less the rows `build_supervised` refuses at 2,048 tokens. Every development-window example is
-prompted with its k nearest by BM25 over comments and old code, solved in the registered template,
-at k = 1 and 3. The pools are its own half's, its sibling half's, and each half of the other
+prompted with its k nearest by BM25 over comments and old code (Unicode words, query terms counted
+with their repeats), at k = 1 and 3. Each shot is a prior chat turn pair: the registered prompt as a
+user turn and its revised code as the assistant's reply, the format every adapter trained on. The
+target's turn is the base arm's prompt unchanged, so no arm is taught a reply format the exact
+match would penalize (a first draft labelled each shot's answer "Revised code:", which the model
+would copy and `extract_code` would not remove). The pools are its own half's, its sibling half's, and each half of the other
 organization's first admissible partition, cut to the same size. The other organization's pools are
 averaged per example, as its two adapters are. The base arm and the foreign arms do not depend on the
 evaluated organization's partition, so one job computes them for every run, on every example the
@@ -7979,4 +7983,11 @@ is 22,545 and 31,995 generations, 54,540 in all. At the measured 38-43 tokens a 
 and the 256-token ceiling (`MAX_NEW_TOKENS`), decoding is bounded by 90 to 102 GH200-hours. The first
 job measures the actual rate. Dry runs on a login node build every prompt and run test 4 on pools
 cut by a character proxy; each GPU job reruns both on the tokenizer's pools before the model loads.
-A foreign job's start-up rereads its ten partitions, about 6 minutes in the dry run.
+A foreign job's start-up rereads its ten partitions, about 6 minutes in the dry run. Rows are
+written as they are generated, so a kill loses one generation.
+
+**Limits of the checks, stated.** The adapter runs record how many rows each adapter trained on,
+not which, so a pool's identity with its adapter's training set rests on the count, the corpus
+counts and the cut being one deterministic function of them. Adapter runs are found by the TIGRIS
+naming (`-s<k>-n<N>`, no cluster tag); a run made elsewhere is a different study by the repo's
+naming rule and is not read.

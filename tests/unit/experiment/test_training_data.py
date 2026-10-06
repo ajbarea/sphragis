@@ -266,3 +266,23 @@ def test_a_negative_temperature_is_refused() -> None:
 
     with pytest.raises(ValueError, match="non-negative"):
         decoding_kwargs(-0.5)
+
+
+def test_a_conversation_renders_as_its_turns_ending_in_the_one_to_answer() -> None:
+    from sphragis.experiment.training import render_chat
+
+    class Template:
+        def apply_chat_template(self, messages, *, tokenize, add_generation_prompt):
+            assert not tokenize and add_generation_prompt
+            return "|".join(f"{m['role']}:{m['content']}" for m in messages) + "|assistant:"
+
+    tok = Template()
+    assert render_chat(tok, "fix") == "user:fix|assistant:"
+    turns = [
+        {"role": "user", "content": "a"},
+        {"role": "assistant", "content": "b"},
+        {"role": "user", "content": "fix"},
+    ]
+    assert render_chat(tok, turns) == "user:a|assistant:b|user:fix|assistant:"
+    with pytest.raises(ValueError, match="ends in a user turn"):
+        render_chat(tok, turns[:2])

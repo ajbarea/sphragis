@@ -18,8 +18,11 @@ IGNORE_INDEX = -100
 MAX_SEQ_LENGTH = 2048
 
 
-def render_chat(tokenizer: Any, prompt: str) -> str:
+def render_chat(tokenizer: Any, prompt: str | Sequence[Mapping[str, str]]) -> str:
     """The exact text the model receives: the prompt as a user turn, ready for an answer.
+
+    `prompt` may instead be the whole conversation as chat messages, ending in the user turn to
+    answer; few-shot retrieval gives each solved example as a prior user and assistant turn.
 
     The single definition of prompt format for training and for every generator.
     Qwen2.5-Coder-7B-Instruct is instruction-tuned, and its eos is the chat turn
@@ -28,11 +31,10 @@ def render_chat(tokenizer: Any, prompt: str) -> str:
     0.193, median answer 344 characters; chat template 0.022, 0.754 and 64 characters
     against a 63-character reference.
     """
-    return str(
-        tokenizer.apply_chat_template(
-            [{"role": "user", "content": prompt}], tokenize=False, add_generation_prompt=True
-        )
-    )
+    messages = [{"role": "user", "content": prompt}] if isinstance(prompt, str) else list(prompt)
+    if messages[-1]["role"] != "user":
+        raise ValueError("a conversation to answer ends in a user turn")
+    return str(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True))
 
 
 def build_supervised(

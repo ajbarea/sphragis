@@ -52,20 +52,46 @@ def test_a_prompt_without_shots_is_the_registered_prompt() -> None:
     assert few_shot_prompt(target, []) == build_prompt(target)
 
 
-def test_shots_come_solved_before_the_target_in_the_registered_template() -> None:
+def test_shots_are_prior_chat_turns_in_the_format_the_adapters_trained_on() -> None:
     target = _row(1, "fix it", "a = 1")
     shot = _row(2, "rename", "b = 1", after="bb = 1")
-    prompt = few_shot_prompt(target, [shot])
-    assert build_prompt(shot) in prompt and "Revised code:\nbb = 1" in prompt
-    assert prompt.endswith(build_prompt(target))
-    assert prompt.index(build_prompt(shot)) < prompt.index("### Now this one")
+    assert few_shot_prompt(target, [shot]) == [
+        {"role": "user", "content": build_prompt(shot)},
+        {"role": "assistant", "content": "bb = 1"},
+        {"role": "user", "content": build_prompt(target)},
+    ]
 
 
-def test_the_closest_shot_is_written_next_to_the_target() -> None:
+def test_the_closest_shot_is_the_turn_before_the_targets() -> None:
     target = _row(1, "fix it", "a = 1")
     closest, farther = _row(2, "near", "b = 1"), _row(3, "far", "c = 1")
-    prompt = few_shot_prompt(target, [closest, farther])
-    assert prompt.index(build_prompt(farther)) < prompt.index(build_prompt(closest))
+    turns = few_shot_prompt(target, [closest, farther])
+    assert isinstance(turns, list)
+    assert [t["content"] for t in turns if t["role"] == "user"] == [
+        build_prompt(farther),
+        build_prompt(closest),
+        build_prompt(target),
+    ]
+
+
+def test_words_of_any_script_are_tokens() -> None:
+    assert tokens("Bitte für alle Sprachen prüfen; проверьте 修正") == [
+        "bitte",
+        "für",
+        "alle",
+        "sprachen",
+        "prüfen",
+        "проверьте",
+        "修正",
+    ]
+
+
+def test_a_term_repeated_in_the_query_weighs_more() -> None:
+    pool = [_row(1, "timeout", "x = 1"), _row(2, "retry", "y = 2")]
+    index = BM25(pool)
+    # Once each, the tie goes to pool order; repeated, the repeated term decides.
+    assert index.top(_row(9, "timeout retry", "z"), 1)[0]["id"] == "1"
+    assert index.top(_row(9, "timeout retry retry retry", "z"), 1)[0]["id"] == "2"
 
 
 def test_an_empty_pool_is_refused() -> None:

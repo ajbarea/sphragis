@@ -250,16 +250,23 @@ def main() -> None:
             {key: [row for row in rows if row["id"] not in flagged] for key, rows in r.items()}
             for r in cut
         ]
+        try:
+            without = reading(
+                contrast([project_clusters(r, **read) for r in clean], seed, resamples)
+            )
+        except ValueError as error:
+            # Too few examples left in some half to read: reported, not a crash.
+            without = {"unreadable": str(error)}
         per_k[str(k)]["without_near_duplicate_shots"] = {
             "excluded": len(flagged),
             "threshold": LEAKAGE_THRESHOLD,
-            "own_minus_sibling": reading(
-                contrast([project_clusters(r, **read) for r in clean], seed, resamples)
-            ),
+            "own_minus_sibling": without,
         }
         if adapters is None:
             ids = {row["id"] for rows in cut[0].values() for row in rows}
+            # The adapter runs record the dtypes they decoded in as a list.
             decoding = {key: generator[key] for key in ("model_id", "max_new_tokens")}
+            decoding["inference_dtype"] = [generator["inference_dtype"]]
             paths, trained, rank = adapter_runs(args.results, args.org, order, size, ids, decoding)
             adapters = {
                 "runs": [str(p) for p in paths],
