@@ -37,6 +37,7 @@ import argparse
 import hashlib
 import json
 import os
+import traceback
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from statistics import median
@@ -60,14 +61,8 @@ from sphragis.experiment.retrieval import (
     resumable,
     trainable,
 )
-from sphragis.experiment.rules import (
-    DISTILLED,
-    WRITTEN,
-    default_system_holds,
-    pinned,
-    pipeline,
-    rules_arms,
-)
+from sphragis.experiment.rules import distiller_signature, pinned, pipeline
+from sphragis.experiment.rules_arms import DISTILLED, WRITTEN, default_system_holds, rules_arms
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
 from sphragis.provenance import provenance_header
@@ -197,11 +192,15 @@ def rules_files(
 
 
 def main() -> None:
-    """The job, with every library refusal (a `ValueError`) its exit, message unchanged."""
+    """The job, with every library refusal (a plain `ValueError`) its exit, its message and where
+    it was raised. A subclass (a file that does not decode, say) keeps its traceback."""
     try:
         run(parser.parse_args())
     except ValueError as error:
-        raise SystemExit(str(error)) from error
+        if type(error) is not ValueError:
+            raise
+        frame = traceback.extract_tb(error.__traceback__)[-1]
+        raise SystemExit(f"{error} (at {Path(frame.filename).name}:{frame.lineno})") from error
 
 
 def run(args: argparse.Namespace) -> None:
@@ -344,6 +343,7 @@ def run(args: argparse.Namespace) -> None:
     from sphragis.experiment.model import (
         DISTILLER_DTYPE,
         DISTILLER_ID,
+        DISTILLER_TEMPLATE,
         INFERENCE_DTYPE,
         HFGenerator,
         revision,
@@ -351,7 +351,9 @@ def run(args: argparse.Namespace) -> None:
     )
 
     # Every rules file was written by the one pinned distiller, checked before the model loads.
-    distiller = f"{DISTILLER_ID}@{revision(DISTILLER_ID)}|{DISTILLER_DTYPE}"
+    distiller = distiller_signature(
+        f"{DISTILLER_ID}@{revision(DISTILLER_ID)}", DISTILLER_DTYPE, DISTILLER_TEMPLATE
+    )
     for made in made_by:
         if made != distiller:
             raise SystemExit(f"a rules file was distilled by {made}, not {distiller}")

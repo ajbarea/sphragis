@@ -8,7 +8,6 @@ import pytest
 
 from sphragis.experiment.rules import (
     CHUNK_TOKENS,
-    DEFAULT_SYSTEM,
     MAP_ANSWER_TOKENS,
     MAP_GUIDE,
     MAP_REVIEWS,
@@ -21,8 +20,8 @@ from sphragis.experiment.rules import (
     pipeline,
     review_text,
     rule_lines,
-    rules_system,
 )
+from sphragis.experiment.rules_arms import DEFAULT_SYSTEM, rules_system
 
 
 def _words(text: str) -> int:
@@ -69,14 +68,18 @@ def _half_chunk(text: str) -> int:
 
 class _Cites(_Model):
     """Answers each map with one rule citing both of its chunk's changes, and one citing one;
-    merges with rules citing three lists, two lists, one list and none."""
+    merges with rules on the lists' wording citing three lists, two lists and one, one citing
+    none, and one citing a list it shares no wording with."""
 
     def __call__(self, prompt: str, max_new_tokens: int) -> tuple[str, bool]:
         self.calls.append((prompt, max_new_tokens))
         if "numbered lists" in prompt:
-            return "- two. [1, 2]\n- one. [3]\n- three. [1, 2, 3]\n- bare.", False
+            return (
+                "- two on `shared`. [1, 2]\n- one on `shared`. [3]\n"
+                "- three on `shared`. [1, 2, 3]\n- bare.\n- Use black for formatting. [2]"
+            ), False
         n = len(self.calls)
-        return f"- rule {n}. [1, 2]\n- lone {n}. [1]\n- none {n}.", False
+        return f"- rule {n} on `shared`. [1, 2]\n- lone {n}. [1]\n- none {n}.", False
 
 
 def test_each_chunk_of_a_guide_is_mapped_then_one_reduce_merges_their_lists() -> None:
@@ -105,11 +108,12 @@ def test_a_mined_rule_stands_on_two_of_its_chunks_numbered_changes() -> None:
     # Only the rule citing both changes reaches the merge, without its brackets.
     reduce_call = model.calls[-1][0]
     assert reduce_call.startswith(REDUCE_REVIEWS.split("{lists}")[0])
-    assert "- rule 1." in reduce_call and "[1, 2]" not in reduce_call
+    assert "- rule 1 on `shared`." in reduce_call and "[1, 2]" not in reduce_call
     assert "lone" not in reduce_call and "none" not in reduce_call
     assert result["evidence"] == [{"listed": 3, "kept": 1}] * 3
-    # Kept when it cites a list, the most-cited first; an uncited rule is the merge's own.
-    assert result["rules"] == ["- three.", "- two.", "- one."]
+    # Kept when it cites a list it shares wording with, the most-cited first; an uncited rule,
+    # or one labelled with a list it shares nothing with, is the merge's own.
+    assert result["rules"] == ["- three on `shared`.", "- two on `shared`.", "- one on `shared`."]
     assert result["recurrence"] == [[1, 2, 3], [1, 2], [3]]
 
 
@@ -121,7 +125,8 @@ def test_a_map_keeps_its_first_rules_up_to_the_limit() -> None:
             if "numbered lists" in prompt:
                 return super().__call__(prompt, max_new_tokens)
             self.calls.append((prompt, max_new_tokens))
-            return "\n".join(f"- r{i}. [1, 2]" for i in range(MAX_MAP_RULES + 5)), False
+            rules = (f"- r{i} on `shared`. [1, 2]" for i in range(MAX_MAP_RULES + 5))
+            return "\n".join(rules), False
 
     result = distil(
         [f"s{n}" for n in range(6)], kind="reviews", generate=Long(), length=_half_chunk
@@ -132,9 +137,34 @@ def test_a_map_keeps_its_first_rules_up_to_the_limit() -> None:
 def test_merged_rules_are_cut_to_the_file_budget_from_the_least_cited() -> None:
     from sphragis.experiment.rules import recurring
 
-    lines = ["- aaa. [1, 2, 3]", "- bbb. [1, 2]", "- ccc. [2, 3]"]
-    rules, cites = recurring(lines, lists=3, length=lambda t: 10**6 if "ccc" in t else 1)
-    assert rules == ["- aaa.", "- bbb."] and cites == [[1, 2, 3], [1, 2]]
+    lines = ["- `aaa`. [1, 2, 3]", "- `bbb`. [1, 2]", "- `ccc`. [2, 3]"]
+    lists = [["- `aaa`, `bbb` and `ccc`."]] * 3
+    rules, cites = recurring(lines, lists=lists, length=lambda t: 10**6 if "ccc" in t else 1)
+    assert rules == ["- `aaa`.", "- `bbb`."] and cites == [[1, 2, 3], [1, 2]]
+
+
+def test_a_list_left_empty_is_not_numbered_for_the_merge() -> None:
+    class Gappy(_Cites):
+        def __call__(self, prompt: str, max_new_tokens: int) -> tuple[str, bool]:
+            if "numbered lists" in prompt or len(self.calls) != 1:
+                return super().__call__(prompt, max_new_tokens)
+            self.calls.append((prompt, max_new_tokens))
+            return "- lone. [1]", False
+
+    model = Gappy()
+    result = distil([f"s{n}" for n in range(8)], kind="reviews", generate=model, length=_half_chunk)
+    reduce_call = model.calls[-1][0]
+    assert result["evidence"][1] == {"listed": 1, "kept": 0}
+    assert "List 3:" in reduce_call and "List 4:" not in reduce_call
+
+
+def test_a_rule_is_grounded_by_a_shared_identifier_or_two_uncommon_words() -> None:
+    from sphragis.experiment.rules import grounded
+
+    assert grounded("- Prefer `joinedload` here.", "- Replace `joinedload_all` with `joinedload`.")
+    assert grounded("- Log through oslo logging.", "- Route messages via oslo logging helpers.")
+    assert not grounded("- Use black for formatting.", "- Use `joinedload` instead of others.")
+    assert not grounded("- Use the logger.", "- Use the logger instead.")
 
 
 def test_mined_rules_need_three_lists_with_evidence() -> None:
@@ -229,7 +259,27 @@ class _Template:
 
 
 def test_the_default_system_turn_is_checked_against_the_template() -> None:
-    from sphragis.experiment.rules import default_system_holds
+    from sphragis.experiment.rules_arms import default_system_holds
 
     assert default_system_holds(_Template(DEFAULT_SYSTEM))
     assert not default_system_holds(_Template("You are a different assistant."))
+
+
+def test_a_guide_file_is_held_to_the_caps_of_a_distilled_one() -> None:
+    from sphragis.experiment.rules import MAX_FILE_RULES
+
+    many = lambda p, n: ("\n".join(f"- g{i}." for i in range(MAX_FILE_RULES + 9)), False)  # noqa: E731
+    result = distil(["s1"], kind="guide", generate=many, length=lambda t: len(t.split()))
+    assert len(result["rules"]) == MAX_FILE_RULES
+
+
+def test_the_file_budget_is_counted_by_the_model_that_reads_it() -> None:
+    many = lambda p, n: ("\n".join(f"- g{i}." for i in range(6)), False)  # noqa: E731
+    result = distil(
+        ["s1"],
+        kind="guide",
+        generate=many,
+        length=lambda t: 1,
+        file_length=lambda t: RULES_BUDGET + 1 if t.count("\n") >= 2 else len(t),
+    )
+    assert result["rules"] == ["- g0.", "- g1."] and result["file_tokens"] == len("- g0.\n- g1.")

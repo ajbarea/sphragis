@@ -555,10 +555,13 @@ def _cell(
 ) -> Sequence[Mapping[str, Any]]:
     key = run_id(EvalRun(f"{condition}:{trained}", window, seed))
     if key not in results:
-        raise ValueError(
-            f"no results for {key!r}: the {trained} {condition} was not scored on {window}"
-        )
+        raise ValueError(_unscored(key, f"the {trained} {condition}", window))
     return results[key]
+
+
+def _unscored(key: str, arm: str, window: str) -> str:
+    """The refusal for an arm the results lack: its key, and what was not scored where."""
+    return f"no results for {key!r}: {arm} was not scored on {window}"
 
 
 def _mean_arm(arms: Sequence[Sequence[Mapping[str, Any]]], *, metric: str) -> list[dict[str, Any]]:
@@ -662,10 +665,12 @@ def base_clusters(
         treatment=lambda window: run_id(EvalRun(f"{condition}:{window}", window, seed)),
         control=lambda window: run_id(EvalRun("base", window, None)),
         metric=metric,
-        missing=lambda key, window: (
-            f"the base model was not scored on {window}"
-            if key.startswith("base|")
-            else f"no results for {key!r}: the {window} {condition} was not scored on {window}"
+        missing=lambda key, window: _unscored(
+            key,
+            "the base model"
+            if key == run_id(EvalRun("base", window, None))
+            else f"the {window} {condition}",
+            window,
         ),
     )
 

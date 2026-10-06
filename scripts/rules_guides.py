@@ -79,6 +79,18 @@ def extensions(results: Path, org: str) -> Counter[str]:
     return counts
 
 
+# MediaWiki template names are case-insensitive in their first letter, and a stub may carry text
+# after the template: matched at the start of the page.
+SOFT_REDIRECT = re.compile(r"\{\{\s*[Ss]oft[ _]redirect\s*\|")
+_WIKITECH = re.compile(r"\{\{\s*[Ss]oft[ _]redirect\s*\|\s*wikitech:([^}|]+?)\s*(?:\|[^}]*)?\}\}")
+
+
+def soft_target(content: str) -> str | None:
+    """The wikitech page a soft-redirect stub points to, or None for any other page."""
+    found = _WIKITECH.match(content.strip())
+    return found.group(1) if found else None
+
+
 def mediawiki(title: str, *, api: str = MEDIAWIKI_API, site: str = "www.mediawiki.org") -> dict:
     """A wiki page's current text, as plain text (TextExtracts), pinned to its revision.
 
@@ -101,14 +113,15 @@ def mediawiki(title: str, *, api: str = MEDIAWIKI_API, site: str = "www.mediawik
     )
     page = json.loads(fetch(f"{api}?{query}"))["query"]["pages"][0]
     revision = page["revisions"][0]
-    soft = re.fullmatch(
-        r"\{\{soft redirect\|wikitech:([^}|]+)\}\}", revision["slots"]["main"]["content"].strip()
-    )
-    if soft and api == MEDIAWIKI_API:
+    content = revision["slots"]["main"]["content"]
+    target = soft_target(content)
+    if target and api == MEDIAWIKI_API:
         return {
-            **mediawiki(soft.group(1), api=WIKITECH_API, site="wikitech.wikimedia.org"),
+            **mediawiki(target, api=WIKITECH_API, site="wikitech.wikimedia.org"),
             "redirected_from": title,
         }
+    if SOFT_REDIRECT.match(content.strip()):
+        raise SystemExit(f"{title}: a soft redirect on {site} this does not follow")
     if not page.get("extract", "").strip():
         raise SystemExit(f"{title}: no text on {site}")
     return {

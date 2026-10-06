@@ -19,7 +19,8 @@ from sphragis.corpus.load import refined_dir, write_build_record, write_source_r
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training, window_split
 from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key, resumable
-from sphragis.experiment.rules import DISTILLED, WRITTEN, pipeline, rules_key
+from sphragis.experiment.rules import pipeline
+from sphragis.experiment.rules_arms import DISTILLED, WRITTEN, rules_key
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -324,8 +325,12 @@ def _read(
 
 def test_an_own_pool_that_wins_reads_as_a_half_split_contrast(tmp_path: Path) -> None:
     report = _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job())
+    # The layout the committed readings were written in.
+    committed = {"org", "foreign", "partitions", "halves_jobs", "foreign_job", "generator"}
+    committed |= {"bootstrap_seed", "resamples", "ks", "adapters", "provenance"}
+    assert set(report) == committed
     for k in KS:
-        cell = report["families"][f"k{k}"]
+        cell = report["ks"][str(k)]
         # Own matches every even example, sibling and foreign none: +0.5 own minus sibling and
         # own minus none, and sibling minus foreign exactly zero.
         assert cell["own_minus_sibling"]["estimate"] == pytest.approx(0.5)
@@ -346,13 +351,20 @@ def test_an_own_pool_that_wins_reads_as_a_half_split_contrast(tmp_path: Path) ->
 
 def test_pools_that_never_differ_read_as_no_contrast(tmp_path: Path) -> None:
     report = _read(tmp_path, [_halves_job(p, False) for p in ORDER], _foreign_job())
-    readings = {report["families"][f"k{k}"]["own_minus_sibling"]["reading"] for k in KS}
+    readings = {report["ks"][str(k)]["own_minus_sibling"]["reading"] for k in KS}
     assert readings == {"carries none as large as the SESOI"}
 
 
 def test_the_reader_refuses_a_foreign_job_missing_an_example(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="lacks 1"):
         _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(drop="x3"))
+
+
+def test_the_reader_refuses_a_foreign_job_missing_an_arm(tmp_path: Path) -> None:
+    foreign = _foreign_job()
+    del foreign["results"][arm_key(KS[-1], "wikimedia-b", "openstack")]
+    with pytest.raises(SystemExit, match="lacks the arms"):
+        _read(tmp_path, [_halves_job(p, True) for p in ORDER], foreign)
 
 
 def test_the_reader_refuses_runs_out_of_admissible_order_or_a_dry_run(tmp_path: Path) -> None:
@@ -436,7 +448,7 @@ def test_without_near_duplicate_shots_drops_every_flagged_target(tmp_path: Path)
                     if row["id"] == flagged:
                         row["shot_jaccard"] = 0.9
     report = _read(tmp_path, jobs, _foreign_job())
-    clean = report["families"]["k1"]["without_near_duplicate_shots"]
+    clean = report["ks"]["1"]["without_near_duplicate_shots"]
     assert clean["excluded"] == 2 and clean["threshold"] == 0.7
     assert clean["own_minus_sibling"]["reading"] == "carries a half-split contrast"
 
@@ -636,3 +648,22 @@ def test_a_rules_reading_refuses_jobs_from_another_distillation(tmp_path: Path) 
     argv += ["--results", str(results), "--out", str(tmp_path / "o.json")]
     with pytest.raises(SystemExit, match="rules_suffix"):
         _run(reader, argv)
+
+
+def test_a_refusal_exits_with_where_it_was_raised_and_a_corrupt_file_keeps_its_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def refuses(args: object) -> None:
+        raise ValueError("no examples")
+
+    monkeypatch.setattr(comparator, "run", refuses)
+    monkeypatch.setattr(comparator.parser, "parse_args", lambda: None)
+    with pytest.raises(SystemExit, match=r"no examples \(at test_retrieval_comparator\.py:\d+\)"):
+        comparator.main()
+
+    def corrupt(args: object) -> None:
+        json.loads("{")
+
+    monkeypatch.setattr(comparator, "run", corrupt)
+    with pytest.raises(json.JSONDecodeError):
+        comparator.main()

@@ -26,6 +26,7 @@ _ORCHESTRATION = (
     "preflight.py",
     "retrieval.py",
     "rules.py",
+    "rules_arms.py",
     "runner.py",
     "runs.py",
     "slurm.py",

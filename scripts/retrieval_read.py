@@ -56,8 +56,8 @@ from sphragis.experiment.decomposition import (
 from sphragis.experiment.grid import EvalRun, conditioned, run_id
 from sphragis.experiment.neutral import LEAKAGE_THRESHOLD
 from sphragis.experiment.partitions import on_common_examples
-from sphragis.experiment.retrieval import KS, adapter_run, condition, first_partitions
-from sphragis.experiment.rules import DISTILLED, WRITTEN
+from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, first_partitions
+from sphragis.experiment.rules_arms import DISTILLED, WRITTEN
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 from sphragis.provenance import provenance_header
 
@@ -89,6 +89,20 @@ def load(path: Path, **expected: Any) -> dict[str, Any]:
     if "results" not in job:
         raise SystemExit(f"{path} is a dry run: no results")
     return job
+
+
+def needed_once(arms: str, *, org: str, foreign: str, written: bool) -> list[str]:
+    """The arms a reading takes from the organization-wide jobs, each evaluated on `org`: base,
+    and the foreign halves' arms of the family read; the written files' own and foreign arms
+    when the job holds any."""
+    keys = [run_id(EvalRun("base", org, None))]
+    if arms == "retrieval":
+        keys += [arm_key(k, pool, org) for k in KS for pool in halves(foreign)]
+    else:
+        keys += [conditioned(DISTILLED, pool, org) for pool in halves(foreign)]
+        if written:
+            keys += [conditioned(WRITTEN, owner, org) for owner in (org, foreign)]
+    return keys
 
 
 def run_results(
@@ -186,10 +200,16 @@ def near_duplicate_targets(runs: Sequence[Mapping[str, Rows]], keys: Sequence[st
 
 
 def families(arms: str) -> dict[str, str]:
-    """The arm families a reading compares, by name, each its condition."""
+    """The arm families a reading compares, by name, each its condition: the retrieval ones by k,
+    as the committed readings key them under `ks`."""
     if arms == "retrieval":
-        return {f"k{k}": condition(k) for k in KS}
+        return {str(k): condition(k) for k in KS}
     return {"distilled": DISTILLED}
+
+
+def label(name: str) -> str:
+    """A family as its reading line names it: `k=1` for a retrieval one."""
+    return f"k={name}" if name.isdigit() else name
 
 
 def read_family(
@@ -261,7 +281,7 @@ def report_family(out: dict[str, Any], *, name: str, org: str) -> dict[str, Any]
     """Print one family's reading line and return it."""
     cell = out["own_minus_sibling"]
     print(
-        f"{name} {org}: own-sibling {cell['estimate']:+.4f} "
+        f"{label(name)} {org}: own-sibling {cell['estimate']:+.4f} "
         f"[{cell['low']:+.4f}, {cell['high']:+.4f}] -> {cell['reading']}; "
         f"sibling-foreign {out['sibling_minus_foreign']['estimate']:+.4f}; "
         f"own-none {out['own_minus_none']['estimate']:+.4f}"
@@ -335,6 +355,11 @@ def main() -> None:
         once[run_id(EvalRun("base", args.org, None))] = base["results"][
             run_id(EvalRun("base", args.org, None))
         ]
+    written = any(key.startswith(f"{WRITTEN}:") for key in once)
+    needed = needed_once(args.arms, org=args.org, foreign=args.foreign, written=written)
+    lacking = [key for key in needed if key not in once]
+    if lacking:
+        raise SystemExit(f"{args.foreign_job} (with any --base-job) lacks the arms {lacking}")
     runs = [
         run_results(
             load(path, pools="halves", partition=partition, arms=args.arms, **fixed)["results"],
@@ -399,15 +424,16 @@ def main() -> None:
     report = {
         "org": args.org,
         "foreign": args.foreign,
-        "arms": args.arms,
+        **({"arms": args.arms} if args.arms != "retrieval" else {}),
         "partitions": order,
         "halves_jobs": [str(p) for p in args.halves],
         "foreign_job": str(args.foreign_job),
-        "base_job": str(args.base_job) if args.base_job else None,
+        **({"base_job": str(args.base_job)} if args.base_job else {}),
         "generator": fixed["generator"],
         "bootstrap_seed": seed,
         "resamples": resamples,
-        "families": per_family,
+        # The retrieval readings keep the layout the committed ones were written in.
+        ("ks" if args.arms == "retrieval" else "families"): per_family,
         "adapters": adapters,
         "provenance": provenance_header(),
     }

@@ -1,4 +1,4 @@
-"""Distil the rules files the rules-file comparator prompts with, by the base model, greedy.
+"""Distil the rules files the rules-file comparator prompts with, by the pinned distiller, greedy.
 
 `--source reviews`: one admissible partition of an organization, each half's file distilled from
 its pool, the rows its adapter trains on (`retrieval.pools`, on the corpus that adapter's run read).
@@ -20,7 +20,6 @@ import argparse
 import hashlib
 import json
 import os
-import re
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +31,14 @@ from sphragis.experiment.retrieval import (
     read_halves,
     trainable,
 )
-from sphragis.experiment.rules import distil, pinned, pipeline, review_chunks, review_text
+from sphragis.experiment.rules import (
+    distil,
+    distiller_signature,
+    pinned,
+    pipeline,
+    review_chunks,
+    review_text,
+)
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--source", choices=["reviews", "guide"], required=True)
@@ -120,16 +126,23 @@ def main() -> None:
         model_id=DISTILLER_ID, dtype=DISTILLER_DTYPE, template=DISTILLER_TEMPLATE
     )
     tokenizer = generator.tokenizer
-    signature = f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}"
+    # The evaluated model's tokenizer, which reads the file, sets the file's budget.
+    evaluated = _require_tokenizer(MODEL_ID)
+    signature = distiller_signature(
+        f"{generator.model_id}@{revision(generator.model_id)}",
+        generator.computed_dtype,
+        DISTILLER_TEMPLATE,
+    )
 
     def length(text: str) -> int:
         return len(tokenizer(text, add_special_tokens=False)["input_ids"])
 
+    def file_length(text: str) -> int:
+        return len(evaluated(text, add_special_tokens=False)["input_ids"])
+
     def generate(prompt: str, max_new_tokens: int) -> tuple[str, bool]:
         generator.max_new_tokens = max_new_tokens
-        # Thinking is off; an empty think block the template leaves is not part of the answer.
-        text = re.sub(r"<think>.*?</think>", "", generator.generate(prompt), flags=re.S).strip()
-        return text, generator.last_capped
+        return generator.generate(prompt), generator.last_capped
 
     # Each file is kept beside the result as it is made, under a fingerprint of what made it, so
     # a refusal or a wall clock after one file does not cost the files already distilled.
@@ -144,7 +157,13 @@ def main() -> None:
             made = None
         if made is None or made.get("fingerprint") != mark:
             try:
-                made = distil(item["sources"], kind=item["kind"], generate=generate, length=length)
+                made = distil(
+                    item["sources"],
+                    kind=item["kind"],
+                    generate=generate,
+                    length=length,
+                    file_length=file_length,
+                )
             except ValueError as error:
                 raise SystemExit(f"{name}: {error}") from error
             made["fingerprint"] = mark

@@ -1,10 +1,11 @@
 """A rules file: the comparator that asks whether declared conventions recover what adapters learn.
 
 Coding agents take an organization's conventions from a rules file (AGENTS.md and its kin)
-loaded into their context. This builds two per arm, by one fixed pipeline over the base model:
-distilled from a half's pool of reviewed changes, or from the organization's written coding
-guide. A map pass lists the conventions in each chunk of the source; a reduce pass merges the
-lists into one file under the budget. Design of record:
+loaded into their context. This builds two per arm, by one fixed pipeline over the pinned
+distiller (`model.DISTILLER_ID`), read by the evaluated model: distilled from a half's pool of
+reviewed changes, or from the organization's written coding guide. A map pass lists the
+conventions in each chunk of the source; a reduce pass merges the lists into one file under the
+caps (`capped_file`). Design of record:
 `docs/superpowers/specs/2026-10-05-rules-file-comparator-design.md`.
 
 Every prompt here is fixed before any distillation runs, and a change to one is a change to the
@@ -14,20 +15,21 @@ comparator, recorded in the research log.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from sphragis.experiment.grid import conditioned
-from sphragis.experiment.runner import build_prompt, comment_lines
-from sphragis.experiment.training import MAX_SEQ_LENGTH, render_chat
+from sphragis.experiment.runner import comment_lines
+from sphragis.experiment.training import MAX_SEQ_LENGTH
 
 # The file budget, in tokens: one training example's length (training.MAX_SEQ_LENGTH), the
 # context one retrieved shot takes at k = 1.
 RULES_BUDGET = MAX_SEQ_LENGTH
-# A map chunk's source text, in tokens. It and the map prompt and answer fit the model's 32,768
-# with room to spare; a pool of N rows is some ten to fourteen chunks (spec, measured 2026-10-06).
+# A map chunk's source text, in the distiller's tokens. It and the map prompt and answer fit
+# the distiller's context with room to spare; a pool of N rows is some ten to fourteen chunks
+# (spec, measured 2026-10-06).
 CHUNK_TOKENS = 16_384
 # A map list's length, and the evidence a mined rule needs: a second smoke run (2026-10-06, job
 # 223034) listed tools no organization's reviews had named ("use black", "use mypy"), ten of
@@ -50,14 +52,6 @@ MIN_REVIEW_CHUNKS = 3
 # A map answer's budget: a list, not a file. A chunk holds some hundred and fifty reviewed changes,
 # so a list may run long; an answer that reaches the budget is flagged and its cut line dropped.
 MAP_ANSWER_TOKENS = 1024
-# The model's own default system prompt (its chat template, read 2026-10-06). The rules arm
-# keeps it and adds the file after it, so the arm differs from the base arm only by the file.
-DEFAULT_SYSTEM = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
-
-# A first smoke run (2026-10-06, job 223030) mined mostly practice any project follows ("use
-# meaningful variable names", "follow PEP 8"), so the review prompts ask for what is particular
-# to this organization; amended before any arm was scored. A written guide is the organization's
-# own declaration, so its prompts keep every rule it states.
 _PARTICULAR = (
     "Leave out general good practice that any project would follow (meaningful names, PEP 8, "
     "writing tests, handling errors). Keep conventions particular to this organization, and "
@@ -166,20 +160,58 @@ def review_chunks(sources: Sequence[str], *, length: Callable[[str], int]) -> li
 
 
 def recurring(
-    lines: Sequence[str], *, lists: int, length: Callable[[str], int]
+    lines: Sequence[str], *, lists: Sequence[Sequence[str]], length: Callable[[str], int]
 ) -> tuple[list[str], list[list[int]]]:
-    """The merged rules citing `MIN_CITED_LISTS` or more of the `lists`, most-cited first (ties
-    in the merge's order), at most `MAX_FILE_RULES`, cut from the end to the file budget; and the
-    lists each cites."""
-    cited_rules = []
+    """The merged rules grounded in `MIN_CITED_LISTS` or more of the `lists` they cite (each a
+    non-empty map list, numbered from 1 as the merge saw them), most-cited first (ties in the
+    merge's order), as a file within the caps; and the lists each is grounded in.
+
+    A citation counts only where the merged rule shares wording with a rule of that list
+    (`grounded`), so a rule the merge invented and labelled with a list number is dropped.
+    """
+    kept_rules = []
     for order, line in enumerate(lines):
-        rule, numbers = cited(line, lists)
-        if len(numbers) >= MIN_CITED_LISTS:
-            cited_rules.append((-len(numbers), order, rule, sorted(numbers)))
-    kept = sorted(cited_rules)[:MAX_FILE_RULES]
-    while kept and length("\n".join(rule for _, _, rule, _ in kept)) > RULES_BUDGET:
+        rule, numbers = cited(line, len(lists))
+        backed = sorted(n for n in numbers if any(grounded(rule, r) for r in lists[n - 1]))
+        if len(backed) >= MIN_CITED_LISTS:
+            kept_rules.append((-len(backed), order, rule, backed))
+    kept = capped_file([rule for *_, rule, _ in sorted(kept_rules)], length=length)
+    cites = {rule: backed for *_, rule, backed in kept_rules}
+    return kept, [cites[rule] for rule in kept]
+
+
+def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[str]:
+    """At most `MAX_FILE_RULES` rules, in order, cut from the end until the file fits
+    `RULES_BUDGET` by `length`: the caps every file is held to, mined or written."""
+    kept = list(rules[:MAX_FILE_RULES])
+    while kept and length("\n".join(kept)) > RULES_BUDGET:
         kept.pop()
-    return [rule for _, _, rule, _ in kept], [numbers for _, _, _, numbers in kept]
+    return kept
+
+
+# Words too common in rules to tie one to another.
+# fmt: off
+_COMMON = frozenset((
+    "use", "using", "used", "instead", "rather", "than", "with", "when", "from", "that", "this",
+    "these", "those", "only", "must", "should", "avoid", "prefer", "always", "never", "code",
+    "each", "such", "into", "over", "their", "which", "where", "there", "make", "sure", "file",
+    "files", "line", "lines", "name", "names", "value", "values"
+))
+# fmt: on
+_WORD = re.compile(r"[a-z][a-z0-9_]{3,}")
+_TICKED = re.compile(r"`([^`]+)`")
+
+
+def grounded(rule: str, source: str) -> bool:
+    """Whether a merged rule shares wording with a source rule: a backticked identifier in both,
+    or two words of four or more letters beyond the common ones."""
+    ticked = {t.lower() for t in _TICKED.findall(rule)} & {
+        t.lower() for t in _TICKED.findall(source)
+    }
+    if ticked:
+        return True
+    words = set(_WORD.findall(rule.lower())) - _COMMON
+    return len(words & (set(_WORD.findall(source.lower())) - _COMMON)) >= 2
 
 
 def numbered(group: Sequence[str]) -> str:
@@ -210,13 +242,16 @@ def distil(
     kind: str,
     generate: Callable[[str, int], tuple[str, bool]],
     length: Callable[[str], int],
+    file_length: Callable[[str], int] | None = None,
 ) -> dict[str, Any]:
     """A rules file from `sources` (reviewed changes or guide sections), and every step to it.
 
-    `generate(prompt, max_new_tokens)` is the base model, greedy: its answer, and whether
-    decoding stopped at the budget. The map lists and the reduce
-    answer are kept, so the file can be read back to the source it came from.
+    `generate(prompt, max_new_tokens)` is the distiller, greedy: its answer, and whether decoding
+    stopped at the budget. `length` counts the distiller's tokens, for chunks; `file_length` the
+    evaluated model's, which reads the file, for the file's budget (`length` when omitted). The
+    map lists and the merge's answer are kept, so the file reads back to its sources.
     """
+    file_length = file_length or length
     if kind not in PROMPTS:
         raise ValueError(f"kind must be one of {sorted(PROMPTS)}, got {kind!r}")
     if not sources:
@@ -231,7 +266,8 @@ def distil(
 
     def answer(prompt: str, budget: int) -> tuple[str, list[str], bool]:
         # An answer that reached its budget was cut, so its last line may be half a rule.
-        text, capped = generate(prompt, budget)
+        raw, capped = generate(prompt, budget)
+        text = answer_text(raw)
         lines = rule_lines(text)
         return text, lines[:-1] if capped and lines else lines, capped
 
@@ -255,17 +291,20 @@ def distil(
             raise ValueError(
                 f"{lists} lists hold a rule with its evidence; recurrence needs {MIN_REVIEW_CHUNKS}"
             )
+    # Only lists that hold a rule go to the merge, numbered as it sees them, so no citation can
+    # name an empty one.
+    merge_lists = [lines for _, lines, _ in mapped if lines]
     joined = "\n\n".join(
-        f"List {n}:\n" + "\n".join(lines) for n, (_, lines, _) in enumerate(mapped, 1)
+        f"List {n}:\n" + "\n".join(lines) for n, lines in enumerate(merge_lists, 1)
     )
     if kind == "reviews":
         merged, lines, reduce_capped = answer(
             reduce_prompt.format(lists=joined), REDUCE_ANSWER_TOKENS
         )
-        rules, recurrence = recurring(lines, lists=len(mapped), length=length)
+        rules, recurrence = recurring(lines, lists=merge_lists, length=file_length)
     else:
-        merged, rules, reduce_capped = answer(reduce_prompt.format(lists=joined), RULES_BUDGET)
-        recurrence = []
+        merged, lines, reduce_capped = answer(reduce_prompt.format(lists=joined), RULES_BUDGET)
+        rules, recurrence = capped_file(lines, length=file_length), []
     if not rules:
         raise ValueError("the reduce pass listed no rules")
     return {
@@ -284,48 +323,24 @@ def distil(
         "rules": rules,
         "pipeline": pipeline(),
         "file": "\n".join(rules),
-        "file_tokens": length("\n".join(rules)),
+        # In the evaluated model's tokens: the context the file takes in the arm.
+        "file_tokens": file_length("\n".join(rules)),
     }
 
 
-def rules_system(rules_file: str) -> str:
-    """The system turn of a rules arm: the model's default, then the rules file."""
-    return f"{DEFAULT_SYSTEM}\n\nFollow these conventions of the organization:\n{rules_file}"
+_THINK = re.compile(r"<think>.*?</think>", re.S)
 
 
-def rules_prompt(example: Mapping[str, Any], rules_file: str) -> list[dict[str, str]]:
-    """A rules arm's prompt: the file in the system turn, the registered prompt as the user's."""
-    return [
-        {"role": "system", "content": rules_system(rules_file)},
-        {"role": "user", "content": build_prompt(example)},
-    ]
+def answer_text(raw: str) -> str:
+    """A distiller answer as the pipeline reads it: an empty think block, left by a template with
+    thinking off, is not part of it."""
+    return _THINK.sub("", raw).strip()
 
 
-# A distilled file is conditioned on a half, as an adapter is; a written one on an organization.
-DISTILLED = "rules-distilled"
-WRITTEN = "rules-written"
-
-
-def rules_key(condition: str, owner: str, evaluated: str) -> str:
-    """`<condition>:<owner>|<evaluated>`: the adapter arms' key, the file's owner in the adapter's
-    place, with no training seed."""
-    return conditioned(condition, owner, evaluated)
-
-
-def rules_arms(
-    targets: Sequence[Mapping[str, Any]],
-    files: Mapping[tuple[str, str], str],
-    *,
-    evaluated: str,
-) -> dict[str, list[list[dict[str, str]]]]:
-    """Every target's prompt under every rules file, keyed as `rules_key`.
-
-    `files` maps (condition, owner) to the file: (`DISTILLED`, half) or (`WRITTEN`, organization).
-    """
-    return {
-        rules_key(condition, owner, evaluated): [rules_prompt(t, text) for t in targets]
-        for (condition, owner), text in files.items()
-    }
+def distiller_signature(model: str, dtype: Any, template: Mapping[str, Any]) -> str:
+    """What wrote a file: the distiller at its revision, its dtype, and the chat-template options
+    it was prompted under (thinking off), so a file distilled under others is told apart."""
+    return f"{model}|{dtype}|template={json.dumps(dict(template), sort_keys=True)}"
 
 
 def pipeline() -> str:
@@ -338,13 +353,3 @@ def pipeline() -> str:
 def pinned(guide: Mapping[str, Any]) -> list[dict[str, Any]]:
     """A guide snapshot's pages as a distilled file records them: title, revision and hash."""
     return [{key: s[key] for key in ("title", "revision", "sha256")} for s in guide["sources"]]
-
-
-def default_system_holds(tokenizer: Any) -> bool:
-    """Whether the model's chat template, given no system turn, renders `DEFAULT_SYSTEM`: so a
-    rules arm, which writes the default then the file, differs from the base arm by the file."""
-    implicit = render_chat(tokenizer, "U")
-    explicit = render_chat(
-        tokenizer, [{"role": "system", "content": DEFAULT_SYSTEM}, {"role": "user", "content": "U"}]
-    )
-    return implicit == explicit

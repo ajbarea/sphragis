@@ -8098,7 +8098,7 @@ Files distilled before this are not used.
 **The pipeline the files are distilled under, as smoke-read (2026-10-06).** At 19320d6 (jobs 225114
 and 225115, 42 and 59 minutes on a GH200 for a partition's two halves), generated from the files:
 
-| partition | half | rules | tokens | capped maps |
+| partition | half | rules | distiller tokens | capped maps |
 |---|---|---|---|---|
 | openstack p2 | openstack-a | 21 | 473 | 3 of 15 |
 | openstack p2 | openstack-b | 24 | 484 | 9 of 14 |
@@ -8107,7 +8107,21 @@ and 225115, 42 and 59 minutes on a GH200 for a partition's two halves), generate
 
 Every file holds grounded, organization-specific rules within the budget ("use `joinedload` instead
 of the deprecated `joinedload_all`", "use `ConnectionProvider` instead of `DBLoadBalancerFactory`").
-This is the pipeline the full distillation runs; no arm has been scored.
+No arm has been scored.
+
+**The pipeline as reviewed, before the full distillation (2026-10-06).** Four changes after the
+smoke read, each from review. The file budget is counted in the evaluated model's tokens, the
+model that reads the file, not the distiller's; each smoke file is shorter in them, and none came
+near the budget. A map list left empty by the evidence filter no longer goes to the merge (up to
+half of Wikimedia's lists were empty and still numbered, so a merged rule could cite one). A merged
+rule's citation counts only where the rule shares a backticked identifier, or two uncommon words,
+with a rule in that list (`rules.grounded`): on the smoke files every cited merged rule passes,
+against the other organization's lists few do, and an invented "use black for formatting" passes
+none. A written guide's file is held to the same caps as a distilled one (`capped_file`: at most
+40 rules, within the budget), so the distilled-against-written contrast does not also compare file
+size. The distiller signature now carries the chat-template options, and the think-block strip
+lives in `rules.py` under the pipeline fingerprint; the arm-side prompts moved to `rules_arms.py`
+so a change there does not void the distilled files. The full distillation runs this pipeline.
 
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
