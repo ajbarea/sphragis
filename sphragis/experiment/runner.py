@@ -38,19 +38,18 @@ def build_prompt(example: Mapping[str, Any]) -> str:
 
 def evaluate(generator: Generator, examples: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     """Score one condition over one window with the whole metric ladder."""
-    results: list[dict[str, Any]] = []
-    for example in examples:
-        prediction = generator.generate(build_prompt(example))
-        results.append(
-            {
-                "id": example["id"],
-                "change_id": example["change_id"],
-                "path": example.get("path"),
-                "prediction": prediction,
-                **score(prediction, str(example["after"])),
-            }
-        )
-    return results
+    return [scored_row(example, generator.generate(build_prompt(example))) for example in examples]
+
+
+def scored_row(example: Mapping[str, Any], prediction: str) -> dict[str, Any]:
+    """One evaluated example: who it is, what was predicted, and the whole metric ladder."""
+    return {
+        "id": example["id"],
+        "change_id": example["change_id"],
+        "path": example.get("path"),
+        "prediction": prediction,
+        **score(prediction, str(example["after"])),
+    }
 
 
 def require_unique_ids(rows: Sequence[Mapping[str, Any]], *, label: str) -> None:

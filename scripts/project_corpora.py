@@ -22,9 +22,9 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.load import refined_month_files, write_derived_file
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.corpus.windows import WINDOWS
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--org", default="qt")

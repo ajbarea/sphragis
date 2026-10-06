@@ -13,10 +13,16 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 IGNORE_INDEX = -100
+# The registered training budget, in tokens: prompt and target together (model.TRAINING). Here,
+# where no GPU stack is imported, so code that must refuse what training refuses can read it.
+MAX_SEQ_LENGTH = 2048
 
 
-def render_chat(tokenizer: Any, prompt: str) -> str:
+def render_chat(tokenizer: Any, prompt: str | Sequence[Mapping[str, str]]) -> str:
     """The exact text the model receives: the prompt as a user turn, ready for an answer.
+
+    `prompt` may instead be the whole conversation as chat messages, ending in the user turn to
+    answer; few-shot retrieval gives each solved example as a prior user and assistant turn.
 
     The single definition of prompt format for training and for every generator.
     Qwen2.5-Coder-7B-Instruct is instruction-tuned, and its eos is the chat turn
@@ -25,11 +31,10 @@ def render_chat(tokenizer: Any, prompt: str) -> str:
     0.193, median answer 344 characters; chat template 0.022, 0.754 and 64 characters
     against a 63-character reference.
     """
-    return str(
-        tokenizer.apply_chat_template(
-            [{"role": "user", "content": prompt}], tokenize=False, add_generation_prompt=True
-        )
-    )
+    messages = [{"role": "user", "content": prompt}] if isinstance(prompt, str) else list(prompt)
+    if not messages or messages[-1]["role"] != "user":
+        raise ValueError("a conversation to answer ends in a user turn")
+    return str(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True))
 
 
 def build_supervised(
@@ -37,7 +42,7 @@ def build_supervised(
     example: Mapping[str, Any],
     *,
     prompt_builder: Callable[[Mapping[str, Any]], str],
-    max_length: int = 2048,
+    max_length: int = MAX_SEQ_LENGTH,
 ) -> dict[str, list[int]]:
     """One training item: prompt tokens masked, target tokens supervised.
 
@@ -196,3 +201,28 @@ def decoding_kwargs(temperature: float) -> dict[str, Any]:
     if temperature == 0:
         return {"do_sample": False}
     return {"do_sample": True, "temperature": temperature, "top_k": 0, "top_p": 1.0}
+
+
+def supervised(
+    tokenizer: Any,
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    prompt_builder: Callable[[Mapping[str, Any]], str],
+    max_length: int = MAX_SEQ_LENGTH,
+) -> tuple[list[dict[str, list[int]]], int]:
+    """The training items `rows` give, and how many rows `build_supervised` refused.
+
+    The one place a training set is cut to what fits the budget: every adapter is trained on
+    these items, and a retrieval pool holds exactly the rows they came from.
+    """
+    items, refused = [], 0
+    for row in rows:
+        try:
+            items.append(
+                build_supervised(
+                    tokenizer, row, prompt_builder=prompt_builder, max_length=max_length
+                )
+            )
+        except ValueError:
+            refused += 1
+    return items, refused

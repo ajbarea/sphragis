@@ -16,14 +16,30 @@ from pathlib import Path
 import pytest
 
 _ROOT = Path(__file__).resolve().parents[2]
-_SCRIPTS = sorted(
-    p for p in (_ROOT / "scripts").glob("*.py") if "build_supervised" in p.read_text()
-)
+# A script trains when it names `build_supervised` (the rule as first written) or imports
+# `supervised`, the training module's loop over a training set built on it; the import is read
+# from the tree, since prose also says "supervised".
+_TRAINING = {"build_supervised", "supervised"}
+
+
+def _trains(path: Path) -> bool:
+    text = path.read_text()
+    return "build_supervised" in text or any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "sphragis.experiment.training"
+        and bool({alias.name for alias in node.names} & _TRAINING)
+        for node in ast.walk(ast.parse(text))
+    )
+
+
+_SCRIPTS = sorted(p for p in (_ROOT / "scripts").glob("*.py") if _trains(p))
 
 # Scripts that legitimately call json.loads on something that is not a training corpus (a prior
-# result, a config file). Named here, narrowly, rather than weakening the rule for everyone; empty
-# because no script currently needs it.
-_JSON_LOADS_ALLOWED: dict[str, str] = {}
+# result, a config file). Named here, narrowly, rather than weakening the rule for everyone.
+_JSON_LOADS_ALLOWED: dict[str, str] = {
+    "retrieval_comparator.py": "reads the admissible list, a partition's placebo.json and its own "
+    "score rows to resume; the corpus goes through window_split",
+}
 
 
 def _module_aliases(tree: ast.AST, module: str) -> set[str]:
@@ -67,16 +83,39 @@ def _calls_any(tree: ast.AST, *, direct: set[str], attrs: set[str], via: set[str
 
 
 _LOADERS = {"derived_file_rows", "refined_examples"}
+# Readers that load through one of `_LOADERS` themselves (checked below), so calling them is
+# reading through the loader.
+_WRAPPERS = {"sphragis.experiment.holdout": {"window_split"}}
 
 
 def _calls_a_loader(tree: ast.AST) -> bool:
-    """`derived_file_rows(...)` or `refined_examples(...)`, resolved through any import form."""
-    return _calls_any(
-        tree,
-        direct=_from_import_aliases(tree, "sphragis.corpus.load", _LOADERS),
-        attrs=_LOADERS,
-        via=_module_aliases(tree, "sphragis.corpus.load"),
+    """A loader or a wrapper of one, resolved through any import form."""
+    modules = {"sphragis.corpus.load": _LOADERS, **_WRAPPERS}
+    return any(
+        _calls_any(
+            tree,
+            direct=_from_import_aliases(tree, module, names),
+            attrs=names,
+            via=_module_aliases(tree, module),
+        )
+        for module, names in modules.items()
     )
+
+
+@pytest.mark.parametrize("module", sorted(_WRAPPERS))
+def test_a_wrapper_reads_through_the_loader(module: str) -> None:
+    path = _ROOT / Path(*module.split(".")).with_suffix(".py")
+    tree = ast.parse(path.read_text())
+    found = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    assert _WRAPPERS[module] <= found, f"{module} defines none of {_WRAPPERS[module] - found}"
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name in _WRAPPERS[module]:
+            assert _calls_any(
+                node,
+                direct=_from_import_aliases(tree, "sphragis.corpus.load", _LOADERS),
+                attrs=_LOADERS,
+                via=_module_aliases(tree, "sphragis.corpus.load"),
+            ), f"{module}.{node.name} does not read through the loader"
 
 
 _JSON_READERS = {"load", "loads"}
@@ -218,3 +257,8 @@ def test_preflight_pilot_reports_a_refused_corpus_rather_than_exiting() -> None:
     generic_at = loop.index("except Exception")
     assert system_exit_at < generic_at, "SystemExit must be caught before the generic Exception"
     assert "problems.append" in loop[system_exit_at:generic_at]
+
+
+def test_the_runner_and_the_comparator_are_held_to_the_rule() -> None:
+    names = {script.name for script in _SCRIPTS}
+    assert {"rq1_pilot.py", "retrieval_comparator.py"} <= names

@@ -194,6 +194,8 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   Tantithamthavorn, IST 2024; retrieval beat fine-tuning in arXiv:2505.15179, lost in
   arXiv:2606.06492). Exploratory. Reported at k = 1 and k = 3: a single most similar past review
   works best for review generation and more retrieval hurts (RARe, arXiv:2511.05302).
+  Built on the registered runner (`scripts/retrieval_comparator.py`, `scripts/retrieval_read.py`;
+  plan, reading rule and cost in the research log, 2026-10-05); the generations run on TIGRIS.
 - [ ] **A rules-file comparator** (added 2026-10-04): the base model with a house-rules file in
   context, mirrored own, sibling and foreign: (a) the organization's own written conventions
   (OpenStack's HACKING guide, MediaWiki's coding conventions), (b) an AGENTS.md-style file an LLM

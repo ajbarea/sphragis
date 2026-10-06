@@ -546,12 +546,17 @@ def detectable_effects(sensitivity: Mapping[str, Any]) -> dict[str, dict[str, di
 
 
 def _cell(
-    results: Mapping[str, Sequence[Mapping[str, Any]]], trained: str, window: str, seed: int
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    trained: str,
+    window: str,
+    seed: int | None,
+    *,
+    condition: str = "adapter",
 ) -> Sequence[Mapping[str, Any]]:
-    key = run_id(EvalRun(f"adapter:{trained}", window, seed))
+    key = run_id(EvalRun(f"{condition}:{trained}", window, seed))
     if key not in results:
         raise ValueError(
-            f"no results for {key!r}: the {trained} adapter was not scored on {window}"
+            f"no results for {key!r}: the {trained} {condition} was not scored on {window}"
         )
     return results[key]
 
@@ -598,16 +603,20 @@ def project_clusters(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
     org: str,
-    seed: int,
+    seed: int | None,
     metric: str = "exact_match",
+    condition: str = "adapter",
 ) -> list[list[Cluster]]:
-    """Own half against sibling half, one cluster list per evaluated half."""
+    """Own half against sibling half, one cluster list per evaluated half.
+
+    `condition` names what was conditioned on each half: its adapter, or a retrieval pool.
+    """
     first, second = halves(org)
     return _disjoint(
         [
             to_clusters(
-                _cell(results, window, window, seed),
-                _cell(results, sibling, window, seed),
+                _cell(results, window, window, seed, condition=condition),
+                _cell(results, sibling, window, seed, condition=condition),
                 metric=metric,
             )
             for window, sibling in ((first, second), (second, first))
@@ -615,13 +624,33 @@ def project_clusters(
     )
 
 
+def base_clusters(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    org: str,
+    seed: int | None,
+    metric: str = "exact_match",
+    condition: str = "adapter",
+) -> list[list[Cluster]]:
+    """Each half's own arm against the base model on that half, one list per evaluated half."""
+    per_half = []
+    for window in halves(org):
+        base = run_id(EvalRun("base", window, None))
+        if base not in results:
+            raise ValueError(f"no results for {base!r}: the base model was not scored on {window}")
+        own = _cell(results, window, window, seed, condition=condition)
+        per_half.append(to_clusters(own, results[base], metric=metric))
+    return _disjoint(per_half)
+
+
 def organization_clusters(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
     org: str,
     foreign: str,
-    seed: int,
+    seed: int | None,
     metric: str = "exact_match",
+    condition: str = "adapter",
 ) -> list[list[Cluster]]:
     """Sibling half against the foreign organization's halves, one list per evaluated half."""
     if foreign == org:
@@ -630,9 +659,12 @@ def organization_clusters(
     return _disjoint(
         [
             to_clusters(
-                _cell(results, sibling, window, seed),
+                _cell(results, sibling, window, seed, condition=condition),
                 _mean_arm(
-                    [_cell(results, other, window, seed) for other in halves(foreign)],
+                    [
+                        _cell(results, other, window, seed, condition=condition)
+                        for other in halves(foreign)
+                    ],
                     metric=metric,
                 ),
                 metric=metric,

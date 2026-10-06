@@ -26,8 +26,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from sphragis.corpus.cli import WINDOWS as _CLI_WINDOWS
 from sphragis.corpus.load import refined_month_files
+from sphragis.corpus.windows import WINDOWS as _CLI_WINDOWS
 from sphragis.provenance import provenance_header
 
 

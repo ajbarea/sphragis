@@ -26,6 +26,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 from sphragis.experiment.training import (
+    MAX_SEQ_LENGTH,
     decoding_kwargs,
     lr_multiplier,
     render_chat,
@@ -153,7 +154,7 @@ TRAINING = {
     "batch_size": 16,
     "warmup_ratio": 0.03,
     "lr_scheduler": "cosine",
-    "max_seq_length": 2048,
+    "max_seq_length": MAX_SEQ_LENGTH,
 }
 
 # Greedy decoding stops here, so a reference longer than this can never be an exact match.
@@ -205,7 +206,7 @@ class HFGenerator:
         # apply would otherwise be recorded as though it had.
         self.computed_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str | Sequence[Mapping[str, str]]) -> str:
         """Greedy by default: the output is the model's single most likely refinement.
 
         Computed in fp32 (`INFERENCE_DTYPE`) because greedy decoding in bf16 does not reproduce

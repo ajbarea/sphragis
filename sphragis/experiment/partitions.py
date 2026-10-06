@@ -12,6 +12,7 @@ Ritzwoller and Romano's sizing formula for reproducible aggregation. Design of r
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Mapping, Sequence
 from statistics import NormalDist, stdev, variance
 from typing import Any
@@ -19,6 +20,7 @@ from typing import Any
 from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.cells import SPREAD_TARGETS, by_level, is_count, level_key
 from sphragis.experiment.decomposition import SESOI, project_clusters, read_intervals
+from sphragis.experiment.neutral import source_root, source_windows
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
@@ -194,19 +196,56 @@ def pilot_sizing(
     return runs
 
 
-def _eval_ids(results: Results) -> set[str]:
-    """Every example a run's adapters scored: its two halves' windows together."""
-    ids = {row["id"] for arm, rows in results.items() if arm.startswith("adapter:") for row in rows}
+def partition_run_windows(
+    run: Mapping[str, Any], *, position: int, admissible: Sequence[int], train_size: int
+) -> set[str]:
+    """The windows of the `position`-th partition run (from 1), refused unless it is that run.
+
+    A run must not have halted, must be trained at the list's `train_size` with training seed
+    `position`, and must have been built from the `position`-th admissible partition, read from
+    each half's corpus root, `corpus-partition-<org>-p<seed>[-<tags>]`.
+    """
+    if "halted" in run:
+        raise ValueError(f"halted at {run['halted']}; the apparatus failed, not read")
+    sources = [c["source"] for c in run["corpora"].values()]
+    names = {str(source_root(source)) for source in sources}
+    roots = {re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?$", name) for name in names}
+    found = {int(root.group(1)) if root else None for root in roots}
+    partition = found.pop() if len(found) == 1 else None
+    if run.get("train_size") != train_size:
+        raise ValueError(f"trained at {run.get('train_size')}, not the list's {train_size}")
+    if run["seeds"] != [position]:
+        raise ValueError(f"run {position} must use training seed {position}, has {run['seeds']}")
+    if partition != admissible[position - 1]:
+        raise ValueError(
+            f"run {position} must use admissible partition {admissible[position - 1]}, "
+            f"built from {', '.join(sources)}"
+        )
+    # Every half's source, so a run with one half on the test window is a test-window read.
+    return {source_windows(source) for source in sources}
+
+
+def eval_ids(results: Results, condition: str) -> set[str]:
+    """Every example a run's arms of `condition` scored: its two halves' windows together."""
+    ids = {
+        row["id"]
+        for arm, rows in results.items()
+        if arm.startswith(f"{condition}:")
+        for row in rows
+    }
     if not ids:
-        raise ValueError("a run with no adapter arms")
+        raise ValueError(f"a run with no {condition} arms")
     return ids
 
 
-def common_runs(
-    runs: Sequence[tuple[Results, int]], *, org: str, metric: str = "exact_match"
-) -> tuple[list[list[list[Any]]], dict[str, int]]:
-    """Each run's own-against-sibling clusters on the examples every run scored."""
-    per_run = [_eval_ids(results) for results, _ in runs]
+def on_common_examples(
+    runs: Sequence[Results], *, condition: str
+) -> tuple[list[dict[str, list[Any]]], dict[str, int]]:
+    """Every run's arms cut to the examples every run's `condition` arms scored.
+
+    Refuses runs that lose more than `MAX_DROPPED_SHARE` of their examples that way.
+    """
+    per_run = [eval_ids(results, condition) for results in runs]
     union = set().union(*per_run)
     common = set.intersection(*per_run)
     dropped = len(union) - len(common)
@@ -216,16 +255,23 @@ def common_runs(
             f"{MAX_DROPPED_SHARE:.0%} the design allows; the runs were not built from one "
             "deduplicated organization"
         )
-    clusters = [
-        project_clusters(
-            {arm: [row for row in rows if row["id"] in common] for arm, rows in results.items()},
-            org=org,
-            seed=seed,
-            metric=metric,
-        )
-        for results, seed in runs
+    cut = [
+        {arm: [row for row in rows if row["id"] in common] for arm, rows in results.items()}
+        for results in runs
     ]
-    return clusters, {"examples": len(common), "dropped": dropped}
+    return cut, {"examples": len(common), "dropped": dropped}
+
+
+def common_runs(
+    runs: Sequence[tuple[Results, int]], *, org: str, metric: str = "exact_match"
+) -> tuple[list[list[list[Any]]], dict[str, int]]:
+    """Each run's own-against-sibling clusters on the examples every run scored."""
+    cut, examples = on_common_examples([results for results, _ in runs], condition="adapter")
+    clusters = [
+        project_clusters(results, org=org, seed=seed, metric=metric)
+        for results, (_, seed) in zip(cut, runs, strict=True)
+    ]
+    return clusters, examples
 
 
 def h1_over_partitions(

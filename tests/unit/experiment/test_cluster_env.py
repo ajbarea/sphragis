@@ -761,6 +761,8 @@ _JOB_DEFAULTS = {
     "PARTITION_SEED": "2",
     "TRAIN_SIZE": "1850",
     "SEEDS": "1",
+    "POOLS": "halves",
+    "PARTITION": "2",
 }
 
 

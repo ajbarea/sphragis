@@ -107,7 +107,7 @@ def main() -> None:
     # The split balances the window the adapters train on, because that is the budget a side
     # could be advantaged by. Every other window follows the same project assignment, so no
     # window is balanced twice and the evaluation sets are whatever the assignment gives.
-    from sphragis.corpus.cli import WINDOWS
+    from sphragis.corpus.windows import WINDOWS
 
     train_counts = project_counts(
         (row for rows in rows_by_month.values() for row in rows), WINDOWS[args.train_window]

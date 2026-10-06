@@ -13,9 +13,9 @@ import json
 from collections import Counter
 from pathlib import Path, PurePosixPath
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.load import refined_month_files
 from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.neutral import closest_training_match
 from sphragis.provenance import provenance_header
 

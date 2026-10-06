@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from pathlib import Path
 
 from sphragis.experiment import decomposition
@@ -42,9 +41,10 @@ from sphragis.experiment.decomposition import (
     registered_read,
     valid_bound,
 )
-from sphragis.experiment.neutral import apparatus_holds, planted_convention, source_windows
+from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
     h1_over_partitions,
+    partition_run_windows,
     pilot_sizing,
     runs_needed,
     spread_targets,
@@ -128,28 +128,12 @@ def main() -> None:
     windows: set[str] = set()
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
-        if "halted" in run:
-            raise SystemExit(f"{path}: halted at {run['halted']}; the apparatus failed, not read")
-        seeds = run["seeds"]
-        sources = [c["source"] for c in run["corpora"].values()]
-        # Every half's source, so a run with one half on the test window is a test-window read.
-        windows |= {source_windows(source) for source in sources}
-        # Each half's corpus root, `corpus-partition-<org>-p<seed>[-<tags>]`, and its seed.
-        roots = {re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?/", s) for s in sources}
-        found = {int(root.group(1)) if root else None for root in roots}
-        partition = found.pop() if len(found) == 1 else None
-        source = ", ".join(sources)
-        if run.get("train_size") != train_size:
-            raise SystemExit(
-                f"{path}: trained at {run.get('train_size')}, not the list's {train_size}"
+        try:
+            windows |= partition_run_windows(
+                run, position=k, admissible=admissible, train_size=train_size
             )
-        if seeds != [k]:
-            raise SystemExit(f"{path}: run {k} must use training seed {k}, has {seeds}")
-        if partition != admissible[k - 1]:
-            raise SystemExit(
-                f"{path}: run {k} must use admissible partition {admissible[k - 1]}, "
-                f"built from {source}"
-            )
+        except ValueError as error:
+            raise SystemExit(f"{path}: {error}") from error
         runs.append((run["results"], k))
     if windows == {"train -> test"}:
         window = "test"

@@ -7917,3 +7917,80 @@ registered bound, never at an observed effect. Both gates take these artifacts a
 one for every organization in `below_projection` and none for any other, check each Monte Carlo
 SE against its power and trial count, and report each level's power in the cell's `size`. `partition_sensitivity.py` now records its seed, and the pool and
 partition rebuild both scripts use is one function (`pools`).
+
+### Planned before any run: the retrieval comparator on the registered runner (2026-10-05)
+
+The registered comparator (registered decisions, "Comparators and audits"), rebuilt so its contrasts
+are the adapters' contrasts with a pool where each adapter was. A first draft (#77, 2026-10-02) was
+amended before any generation, after an independent review found three biases. Its pools were whole
+halves of unequal size, with a foreign pool twice their size, and closer neighbours in a larger pool
+pull sibling minus foreign toward zero. It deduplicated each organization once, where the runner
+deduplicates each half. And it pooled the halves in one bootstrap. None of these survives here.
+
+**Method** (`scripts/retrieval_comparator.py`, `scripts/retrieval_read.py`,
+`sphragis/experiment/retrieval.py`). A run is one admissible partition, read from the corpus that
+partition's adapter run read: its root is taken from the run's committed result
+(`retrieval.adapter_run`) and checked against the corpus's own manifest, so nothing is rebuilt. Each
+half is read by `window_split`, the function `rq1_pilot.py` now reads every corpus through. Each half's pool
+is its adapter's training set: `equalize_training` at the run's seed to the admissible list's size,
+less the rows `build_supervised` refuses at 2,048 tokens. Every development-window example is
+prompted with its k nearest by BM25 over comments and old code (Unicode words, query terms counted
+with their repeats), at k = 1 and 3. Each shot is a prior chat turn pair: the registered prompt as a
+user turn and its revised code as the assistant's reply, the format every adapter trained on. The
+target's turn is the base arm's prompt unchanged, so no arm is taught a reply format the exact
+match would penalize (a first draft labelled each shot's answer "Revised code:", which the model
+would copy and `extract_code` would not remove). The pools are its own half's, its sibling half's, and each half of the other
+organization's first admissible partition, cut to the same size. The other organization's pools are
+averaged per example, as its two adapters are. The base arm and the foreign arms do not depend on the
+evaluated organization's partition, so one job computes them for every run, on every example the
+first ten partitions score. The generator is the
+registered one (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A pool row repeated verbatim in a
+target refuses the job, and every pool is held to test 4 at the registered threshold and rate. A
+pool must hold exactly as many rows as its run records its adapter trained on, the run must have
+cut its training sets equalized at the pools' seed, and each half must read back with the
+examples, dedup and window counts the run recorded, so a corpus rebuilt at the same root is
+refused. The adapter runs read beside the comparator must have decoded with its model and output
+budget, at one LoRA rank.
+
+**Fixed now.** The first 10 admissible partitions of OpenStack and of Wikimedia (`PARTITIONS`,
+Ritzwoller and Romano's least burn-in, `partitions.K_MIN`), the first 10 their adapters ran on, so
+the two readings share partitions. Contrasts are read with the registered estimator
+(`partitioned_crossed_draws`, runs crossed with changes, halves weighted equally) at 95%, on the
+examples every run scored, under the partition design's 1% ceiling on dropped examples. The arms go
+through the adapters' own cluster builders (`project_clusters`, `organization_clusters`, now keyed by
+`condition`). The contrasts are own minus sibling (H1's counterpart), sibling minus foreign (the
+organization contrast's) and own minus none.
+
+**Reading rule**, on own minus sibling at each k. A lower bound above the SESOI (0.01) reads "carries a
+half-split contrast", and an upper bound below minus the SESOI reads "reversed". An interval inside
+the SESOI band reads "carries none as large as the SESOI". Anything else is inconclusive. Sibling
+minus foreign and own minus none are reported, not read. Beside the reading, own minus sibling is
+read again without every target whose own or sibling shot is a near-duplicate of it (Jaccard 0.7,
+test 4's measure). Projects split whole, so a target's near-duplicate from the training window sits
+in its own half's pool, and test 4 tolerates up to 2% of them. Copying one into the prompt would
+read as a half-split contrast. If the two readings differ, the contrast is attributed to
+near-duplicate shots, not to conventions. The adapters' own minus sibling is read beside it by the same rule,
+over the same ten partitions and the same examples, from their committed partition runs (the
+22-run development pilot is a different K and is not the comparison). If retrieval carries the contrast and the adapters do not, the own half's
+conventions are recoverable at inference time and the adapters at N do not learn them. If neither
+does, the half boundary carries no convention either method finds. If retrieval carries none and the
+adapters' contrast is meaningful, the adapters carry what retrieval does not. Exploratory: nothing
+here binds a verdict.
+
+**Cost**, before it is spent. There are 4 generations an example a partition and 5 an example for the
+base and foreign arms. On the pilots' 501 and 711 examples (`examples` in each partition pilot) that
+is 22,545 and 31,995 generations, 54,540 in all. At the measured 38-43 tokens a second (job 143201)
+and the 256-token ceiling (`MAX_NEW_TOKENS`), decoding is bounded by 90 to 102 GH200-hours. Measured on
+a smoke job (222691, OpenStack partition 2, 20 targets a half): 160 generations in 358 s with the
+model load included, at most 2.2 s a generation, so the full run is at most about 34 GH200-hours.
+The smoke job's pools held exactly the rows its adapters trained on (1,847 and 1,848), and no reply
+began with a label or differed between raw and extracted exact match. Dry runs on a login node build every prompt and run test 4 on pools
+cut by a character proxy; each GPU job reruns both on the tokenizer's pools before the model loads.
+A foreign job's start-up rereads its ten partitions, about 6 minutes in the dry run. Rows are
+written as they are generated, so a kill loses one generation.
+
+**Limits of the checks, stated.** The adapter runs record how many rows each adapter trained on,
+not which, so a pool's identity with its adapter's training set rests on the count, the corpus
+counts and the cut being one deterministic function of them. Adapter runs are found by the TIGRIS
+naming (`-s<k>-n<N>`, no cluster tag); a run made elsewhere is a different study by the repo's
+naming rule and is not read.
