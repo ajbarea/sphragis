@@ -12,6 +12,7 @@ from __future__ import annotations
 import gzip
 import json
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 # Release, maintenance and deployment branches, as named on the two hosts (read from the raw
@@ -24,16 +25,32 @@ BACKPORT = re.compile(
 )
 
 
-def branches_by_change(root: Path, org: str) -> dict[tuple[str, str], set[str]]:
-    """Every branch a (project, Change-Id) has a raw change on, from the raw snapshots."""
-    branches: dict[tuple[str, str], set[str]] = {}
+def raw_changes(root: Path, org: str) -> Iterator[dict]:
+    """Every raw change in an organization's snapshots, month by month."""
     for path in sorted((Path(root) / org / "raw").glob("*.ndjson.gz")):
         with gzip.open(path, "rt") as lines:
             for line in lines:
-                change = json.loads(line)
-                key = (change["project"], change["change_id"])
-                branches.setdefault(key, set()).add(str(change.get("branch") or ""))
+                yield json.loads(line)
+
+
+def branches_by_change(root: Path, org: str) -> dict[tuple[str, str], set[str]]:
+    """Every branch a (project, Change-Id) has a raw change on, from the raw snapshots."""
+    branches: dict[tuple[str, str], set[str]] = {}
+    for change in raw_changes(root, org):
+        key = (change["project"], change["change_id"])
+        branches.setdefault(key, set()).add(str(change.get("branch") or ""))
     return branches
+
+
+def merged_by_change(root: Path, org: str) -> dict[tuple[str, str], str | None]:
+    """The earliest merge of any raw change with a (project, Change-Id); None if none merged."""
+    merged: dict[tuple[str, str], str | None] = {}
+    for change in raw_changes(root, org):
+        key = (change["project"], change["change_id"])
+        when = change.get("submitted") if change.get("status") == "MERGED" else None
+        earlier = merged.get(key)
+        merged[key] = min((t for t in (earlier, when) if t), default=None)
+    return merged
 
 
 def only_backport(names: set[str]) -> bool:

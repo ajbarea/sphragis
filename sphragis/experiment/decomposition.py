@@ -331,6 +331,20 @@ def _registered_bounds(
     return out
 
 
+#: The sensitivities registered beside the pass rule that recompute a cell without a set of
+#: examples (registered decisions, 2026-10-02): every test read carries both.
+REGISTERED_SENSITIVITIES = ("ai_assisted", "backport_only")
+
+
+def _require_sensitivities(org: str, report: Mapping[str, Any]) -> dict[str, Any]:
+    """A test read's registered sensitivities, refused if any was not read."""
+    without = report.get("without", {})
+    missing = [name for name in REGISTERED_SENSITIVITIES if name not in without]
+    if missing:
+        raise ValueError(f"{org}'s test read lacks its registered sensitivities {missing}")
+    return dict(without)
+
+
 def h1_test_gate(
     reports: Mapping[str, Mapping[str, Any]],
     *,
@@ -379,7 +393,7 @@ def h1_test_gate(
             "p_one_sided": report["p_one_sided"],
             "size": _test_size(org, report, simulation, powers, detectable[org], expected["cells"]),
             # The registered sensitivities the report read (partition_pilot.py --without).
-            "without": report.get("without", {}),
+            "without": _require_sensitivities(org, report),
         }
     per_hypothesis = {"H1": cells}
     verdicts, passed_at = holm_steps(per_hypothesis)
@@ -443,7 +457,7 @@ def replication_gate(
             "p_one_sided": cell["p_one_sided"],
             "size": _test_size(org, cell, simulation, powers, bounds, expected["cells"]),
             # The registered sensitivities the report read (partition_pilot.py --without).
-            "without": cell.get("without", {}),
+            "without": _require_sensitivities(org, cell),
         }
     return {
         **family,

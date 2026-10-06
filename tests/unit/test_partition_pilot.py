@@ -157,12 +157,32 @@ def test_a_gerrit_pilot_writes_its_report_with_the_cell_bounds(
     assert report["bounds"] == {"0.975": 0.4, "0.95": 0.4}
 
 
+def _registered_without(
+    tmp_path: Path, org: str, ids: dict[str, list[str]] | None = None
+) -> list[str]:
+    """Both registered sensitivities for a test read, from one listing over every example."""
+    path = tmp_path / f"sensitivity-ids-{org}-test.json"
+    listing = {
+        "org": org,
+        "window": "test",
+        "ids": ids or {name: [] for name in decomposition.REGISTERED_SENSITIVITIES},
+        "universe": [f"x{i}" for i in range(2 * N)],
+    }
+    path.write_text(json.dumps(listing))
+    return [arg for name in listing["ids"] for arg in ("--without", f"{name}={path}")]
+
+
 def _replication_argv(
-    tmp_path: Path, window: str, bound: float = 0.4, simulated: str = "apache"
+    tmp_path: Path,
+    window: str,
+    bound: float = 0.4,
+    simulated: str = "apache",
+    ids: dict[str, list[str]] | None = None,
 ) -> list[str]:
     level = decomposition.REPLICATION_CONFIDENCE
     sensitivity = _sensitivity(tmp_path, [level], bound, simulated)
     return [
+        *(_registered_without(tmp_path, "apache", ids) if window == "test" else []),
         *_inputs(tmp_path, "apache", window),
         *(
             [*_planted(tmp_path, "apache"), *_sizing(tmp_path, "apache")]
@@ -441,9 +461,18 @@ def test_a_development_read_needs_no_calibration_from_its_sizing_pilot(
     assert "spread_targets" not in json.loads(out.read_text())["k_from"]
 
 
-def _ids(tmp_path: Path, ids: list[str], *, org: str = "openstack", window: str = "dev") -> Path:
+def _ids(
+    tmp_path: Path,
+    ids: list[str],
+    *,
+    org: str = "openstack",
+    window: str = "dev",
+    universe: list[str] | None = None,
+) -> Path:
     path = tmp_path / "sensitivity-ids.json"
-    path.write_text(json.dumps({"org": org, "window": window, "ids": {"ai_assisted": ids}}))
+    every = [f"x{i}" for i in range(2 * N)] if universe is None else universe
+    listing = {"org": org, "window": window, "ids": {"ai_assisted": ids}, "universe": every}
+    path.write_text(json.dumps(listing))
     return path
 
 
@@ -508,8 +537,8 @@ def test_a_sensitivity_naming_ids_the_file_lacks_is_refused(
 def test_a_test_window_read_reports_its_sensitivities_through_the_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
 ) -> None:
-    ids = _ids(tmp_path, ["x0", "x2"], org="apache", window="test")
-    _main(monkeypatch, [*_replication_argv(tmp_path, "test"), "--without", f"ai_assisted={ids}"])
+    flagged = {"ai_assisted": ["x0", "x2"], "backport_only": []}
+    _main(monkeypatch, _replication_argv(tmp_path, "test", ids=flagged))
     report = json.loads((tmp_path / "pilot.json").read_text())
     reduced = report["without"]["ai_assisted"]
     assert (reduced["listed"], reduced["removed"]) == (2, 2)
@@ -568,4 +597,21 @@ def test_a_sensitivity_that_empties_a_half_is_reported_unreadable(
         [*_inputs(tmp_path, "openstack"), "--without", f"ai_assisted={ids}", "--out", str(out)],
     )
     reduced = json.loads(out.read_text())["without"]["ai_assisted"]
-    assert "unreadable" in reduced and reduced["removed"] == N
+    assert "unreadable" in reduced and reduced["listed"] == N
+
+
+def test_a_listing_made_from_another_corpus_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"], universe=[f"x{i}" for i in range(N)])
+    with pytest.raises(SystemExit, match=f"made from another corpus: {N} of the cell's examples"):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"ai_assisted={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )

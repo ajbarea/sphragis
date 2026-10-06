@@ -54,5 +54,5 @@ def test_the_sealed_window_and_an_uncovered_window_are_refused(tmp_path: Path) -
         _run([*argv, "--window", "test", "--out", str(tmp_path / "o.json")])
     (tmp_path / "openstack").mkdir()
     (tmp_path / "openstack" / "seal.json").write_text(json.dumps({"accepted_at": "2027-02-01"}))
-    with pytest.raises(SystemExit, match="rerun ai_trailers.py"):
+    with pytest.raises(SystemExit, match="stops at the seal"):
         _run([*argv, "--window", "test", "--out", str(tmp_path / "o.json")])

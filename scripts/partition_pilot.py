@@ -43,6 +43,7 @@ from sphragis.experiment.decomposition import (
 )
 from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
+    eval_ids,
     h1_over_partitions,
     partition_run_windows,
     pilot_sizing,
@@ -99,8 +100,27 @@ def check_resamples(args: argparse.Namespace, levels: list[float]) -> None:
             raise SystemExit(f"not read: {error}") from error
 
 
+def sensitivity_listings(specs: list[str]) -> dict[str, tuple[str, dict]]:
+    """Each --without as (file, listing), checked on the arguments alone, before any run is read."""
+    listings: dict[str, tuple[str, dict]] = {}
+    for spec in specs:
+        name, sep, path = spec.partition("=")
+        if not (name and sep and path):
+            raise SystemExit(f"--without {spec!r}: give NAME=FILE")
+        if name in listings:
+            raise SystemExit(f"--without names {name!r} twice")
+        if not Path(path).is_file():
+            raise SystemExit(f"--without {name}: no file {path}")
+        listing = json.loads(Path(path).read_text())
+        if name not in listing.get("ids", {}):
+            raise SystemExit(f"{path} lists no {name!r} ids")
+        listings[name] = (path, listing)
+    return listings
+
+
 def main() -> None:
     args = parser.parse_args()
+    listings = sensitivity_listings(args.without)
     # Every check on the arguments alone, before any run is read.
     if args.replication != (args.org in REPLICATION_FAMILY):
         raise SystemExit(
@@ -251,27 +271,25 @@ def main() -> None:
     # The registered sensitivities, beside the cell and binding nothing: the same runs, levels,
     # seed and draws, without each named set of examples.
     without = {}
-    present = {r["id"] for results, _ in runs for rows in results.values() for r in rows}
-    for spec in args.without:
-        name, sep, path = spec.partition("=")
-        if not (name and sep and path):
-            raise SystemExit(f"--without {spec!r}: give NAME=FILE")
-        if name in without:
-            raise SystemExit(f"--without names {name!r} twice")
-        ids_listing = json.loads(Path(path).read_text())
+    for name, (path, ids_listing) in listings.items():
         this_read = {"org": args.org, "window": "dev" if window == "development" else window}
         found = {key: ids_listing.get(key) for key in this_read}
         if found != this_read:
             raise SystemExit(f"{path}: {found}, not this read's {this_read}")
-        if name not in ids_listing.get("ids", {}):
-            raise SystemExit(f"{path} lists no {name!r} ids")
+        # Made from the corpus these runs came from: every example the cell reads is in it.
+        universe = set(ids_listing.get("universe", []))
+        read = set.intersection(*(eval_ids(results, "adapter") for results, _ in runs[:runs_fixed]))
+        outside = sorted(read - universe)
+        if outside:
+            raise SystemExit(
+                f"{path} was made from another corpus: {len(outside)} of the cell's examples, "
+                f"{outside[:3]}, are not in it"
+            )
         drop = set(ids_listing["ids"][name])
         kept = [
             ({arm: [r for r in rows if r["id"] not in drop] for arm, rows in results.items()}, k)
             for results, k in runs
         ]
-        # Listed and found are both kept, so a listing from another corpus shows as such.
-        counts = {"file": path, "listed": len(drop), "removed": len(drop & present)}
         try:
             reduced = h1_over_partitions(
                 kept,
@@ -283,11 +301,14 @@ def main() -> None:
                 resamples=args.resamples,
             )
         except ValueError as error:
-            without[name] = {**counts, "unreadable": str(error)}
+            without[name] = {"file": path, "listed": len(drop), "unreadable": str(error)}
             continue
         fields = ("intervals", "within_sesoi", "meaningful", "p_one_sided", "bootstrap_se")
         without[name] = {
-            **counts,
+            "file": path,
+            "listed": len(drop),
+            # The examples that left the cell, not ids that never entered it.
+            "removed": cell["examples"] - reduced["examples"],
             "estimate": reduced["estimate"],
             "examples": reduced["examples"],
             **{key: reduced[key] for key in fields},

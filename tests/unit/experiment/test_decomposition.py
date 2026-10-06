@@ -18,6 +18,7 @@ from sphragis.experiment.decomposition import (
     H2_PAIR,
     MIN_RESAMPLES,
     ORGANIZATIONS,
+    REGISTERED_SENSITIVITIES,
     REPLICATION_CONFIDENCE,
     REPLICATION_FAMILY,
     SUMMED_CONFIDENCE,
@@ -399,6 +400,8 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "planted_convention": {"passed": True},
+        # Both registered sensitivities, read as partition_pilot.py --without writes them.
+        "without": {name: {"listed": 0, "removed": 0} for name in REGISTERED_SENSITIVITIES},
         "runs": 24,
         "k_from": {
             "file": f"partition-pilot-{org}.json",
@@ -1577,3 +1580,13 @@ def test_own_against_base_refuses_a_change_in_both_halves() -> None:
     del results["base|o-b"]
     with pytest.raises(ValueError, match="base model was not scored on o-b"):
         base_clusters(results, org="o", seed=None, condition="retrieval-k1")
+
+
+def test_a_test_read_without_its_registered_sensitivities_is_refused() -> None:
+    from sphragis.experiment.decomposition import _require_sensitivities
+
+    report = _replication_cell(0.01, 0.02, 0.001)
+    assert set(_require_sensitivities("apache", report)) == set(REGISTERED_SENSITIVITIES)
+    lacking = {**report, "without": {"ai_assisted": {}}}
+    with pytest.raises(ValueError, match=r"lacks its registered sensitivities \['backport_only'\]"):
+        _require_sensitivities("apache", lacking)

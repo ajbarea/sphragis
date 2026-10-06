@@ -20,7 +20,12 @@ import argparse
 import json
 from pathlib import Path
 
-from sphragis.corpus.backports import BACKPORT, branches_by_change, only_backport
+from sphragis.corpus.backports import (
+    BACKPORT,
+    branches_by_change,
+    merged_by_change,
+    only_backport,
+)
 from sphragis.corpus.split import seal_open
 from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.holdout import window_split
@@ -29,7 +34,12 @@ from sphragis.provenance import provenance_header
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--root", type=Path, required=True, help="the corpus the partitions came from")
 parser.add_argument("--org", required=True)
-parser.add_argument("--window", default="dev", help="never the sealed test window before its time")
+parser.add_argument(
+    "--window",
+    default="dev",
+    choices=sorted(WINDOWS),
+    help="the test window only once it is unsealed, as the runner reads it",
+)
 parser.add_argument("--ai-trailers", type=Path, required=True, help="ai_trailers.py's artifact")
 parser.add_argument("--out", type=Path, required=True)
 
@@ -59,8 +69,9 @@ def main() -> None:
     trailers = json.loads(args.ai_trailers.read_text())
     if not covers(trailers, args.window):
         raise SystemExit(
-            f"{args.ai_trailers} searched {trailers['since']} to {trailers['merged_before']}, "
-            f"not the {args.window} window {WINDOWS[args.window]}: rerun ai_trailers.py for it"
+            f"{args.ai_trailers} searched changes merged {trailers['since']} to "
+            f"{trailers['merged_before']}, not the {args.window} window {WINDOWS[args.window]}; "
+            "ai_trailers.py stops at the seal, so the test window's searches follow acceptance"
         )
     try:
         _, rows, read = window_split(args.root, args.org, eval_window=args.window)
@@ -68,6 +79,16 @@ def main() -> None:
         raise SystemExit(str(error)) from error
     ai = flagged_changes(trailers, args.org)
     branches = branches_by_change(args.root, args.org)
+    # The searches are bounded by merge date and windows by creation date, so an example whose
+    # change merged on or after the search bound, or never, was never searched: counted, so the
+    # AI-assisted reading states what it could not see.
+    merged = merged_by_change(args.root, args.org)
+
+    def searched(row: dict) -> bool:
+        when = merged.get((row["project"], row["change_id"]))
+        return when is not None and when < trailers["merged_before"]
+
+    unsearched = sorted(r["id"] for r in rows if not searched(r))
     removed = {
         "ai_assisted": sorted(r["id"] for r in rows if (r["project"], r["change_id"]) in ai),
         "backport_only": sorted(
@@ -87,10 +108,17 @@ def main() -> None:
             "backport_only": f"(project, Change-Id) only on branches matching {BACKPORT.pattern}",
         },
         "ids": removed,
+        "ai_unsearched": unsearched,
+        # Every example this listing was made from, so a reader can check its runs came from it.
+        "universe": sorted(r["id"] for r in rows),
         "provenance": provenance_header(),
     }
     args.out.write_text(json.dumps(report, indent=2) + "\n")
-    print({name: len(ids) for name, ids in removed.items()}, f"of {len(rows)}")
+    print(
+        {name: len(ids) for name, ids in removed.items()},
+        f"of {len(rows)};",
+        f"{len(unsearched)} unsearched",
+    )
     print(f"wrote {args.out}")
 
 

@@ -314,6 +314,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         **cell,
         "window": "test",
         "planted_convention": {"passed": True},
+        "without": {"ai_assisted": {}, "backport_only": {}},
         "levels": [level],
         "k_from": {"org": "apache", "runs": 4, "spread_targets": calibration},
         "sensitivity": {
