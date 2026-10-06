@@ -8154,3 +8154,43 @@ inference recovers a half-split convention the adapters do not, has no answer he
 method shows a half-split contrast as large as the SESOI on either organization's development
 window.
 
+### H1's AI-trailer and backport sensitivities implemented, read on the development pilots (2026-10-06)
+
+Two of the readings registered beside the pass rule (registered decisions, 2026-10-02) recompute an
+H1 cell without a set of examples. `scripts/sensitivity_ids.py` lists them per organization and
+window from the corpus the partitions were built from (`corpus-v3`, deduplicated and split as the
+study loads it): examples whose (project, Change-Id) `ai_trailers.py` flagged, and examples whose
+(project, Change-Id) sits only on backport branches (`sphragis.corpus.backports`, now the one rule
+`backport_share.py` reads too). `partition_pilot.py --without NAME=FILE` reads the cell again
+without them, on the same runs, levels, seed and draws, beside the cell and binding nothing, and
+both gates carry the readings. On
+the development pilots (`partition-pilot-<org>-sensitivities.json`, 22 runs each; the registered
+cell reproduces the committed pilots exactly), generated from the artifacts:
+
+| organization | reading | examples | H1 at 95% |
+|---|---|---|---|
+| openstack | registered | 501 | +0.0051 [-0.0073, +0.0175] |
+| openstack | without ai assisted (40 of 45 listed removed) | 461 | +0.0056 [-0.0075, +0.0191] |
+| openstack | without backport only (0 of 0 listed removed) | 501 | +0.0051 [-0.0073, +0.0175] |
+| wikimedia | registered | 711 | +0.0008 [-0.0111, +0.0137] |
+| wikimedia | without ai assisted (0 of 0 listed removed) | 711 | +0.0008 [-0.0111, +0.0137] |
+| wikimedia | without backport only (0 of 2 listed removed) | 711 | +0.0008 [-0.0111, +0.0137] |
+
+The listed sets match the earlier counts (45 AI-flagged OpenStack development examples, 0 and 2
+backport-only); 5 of OpenStack's 45 and both of Wikimedia's backports are not among the examples
+the partitions score, which per-half deduplication and the projects the split excludes account
+for. Removing OpenStack's AI-flagged examples moves its cell by less than a thousandth. The third
+registered sensitivity, reviewer exposure, is defined on the organization contrast (sibling minus
+foreign), which the partition design's H1 does not read; it is implemented with the H2 read, if
+Qt and Chromium are admitted.
+
+After two review rounds: both gates refuse a test read that lacks either registered sensitivity; a
+listing records every example it was made from, and the pilot refuses one that does not cover the
+cell's examples; `removed` counts examples that left the cell. The searches are bounded by merge
+date and the windows by creation date, so `sensitivity_ids.py` also counts examples the searches
+never reached (changes merged on or after the search bound, or never): none, on either
+organization's development window. What runs today is the development window: the corpus loader
+refuses the sealed test window, as the runner does. `ai_trailers.py --through-test` searches
+through the test window to the day of the fetch and tallies it, but only once every seal records
+acceptance, so the test window's listing follows the unsealing.
+

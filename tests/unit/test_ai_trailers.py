@@ -64,3 +64,35 @@ def test_examples_and_changes_are_counted_by_project_and_change_id() -> None:
     }
     assert counted["train"]["examples_tool_generated"] == 1 and counted["train"]["examples_ai"] == 0
     assert counted["pilot"]["examples"] == 0
+
+
+def test_the_searches_stop_at_the_seal_unless_told_the_window_is_open() -> None:
+    assert f"mergedbefore:{trailers.SEALED_FROM}" in trailers.search_query("Assisted-By")
+    assert "mergedbefore:2027-03-01" in trailers.search_query("Assisted-By", "2027-03-01")
+
+
+def test_searching_through_the_test_window_needs_every_seal_open(tmp_path, monkeypatch) -> None:
+    import json
+    import sys
+
+    import pytest
+
+    (tmp_path / "openstack").mkdir()
+    argv = ["ai_trailers", "--root", f"openstack={tmp_path}", "--out", str(tmp_path / "o.json")]
+    monkeypatch.setattr(sys, "argv", [*argv, "--through-test"])
+    with pytest.raises(SystemExit, match=r"test window of \['openstack'\] is still sealed"):
+        trailers.main()
+    (tmp_path / "openstack" / "seal.json").write_text(json.dumps({"accepted_at": "2027-02-01"}))
+    monkeypatch.setattr(
+        trailers, "http_transport", lambda: (_ for _ in ()).throw(RuntimeError("opened"))
+    )
+    with pytest.raises(RuntimeError, match="opened"):
+        trailers.main()
+
+
+def test_searching_through_the_test_window_tallies_it_too() -> None:
+    rows = [{"project": "p", "change_id": "I1", "created": "2026-01-01"}]
+    flagged = {("p", "I1"): {"Assisted-By"}}
+    out = trailers.tally({"test": rows}, flagged, (*trailers.READ_WINDOWS, "test"))
+    assert out["test"]["changes_ai"] == 1
+    assert "test" not in trailers.tally({"test": rows}, flagged)
