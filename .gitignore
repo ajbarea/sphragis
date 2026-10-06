@@ -9,6 +9,7 @@ __pycache__/
 coverage.xml
 dist/
 build/
+*.whl
 *.egg-info/
 .env
 
