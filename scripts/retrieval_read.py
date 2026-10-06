@@ -114,12 +114,18 @@ def require_base_prompted_alike(
         raise SystemExit("the rules foreign job records no base_marks to check the base arm by")
     # Every row: one the rules jobs did not target, or one written without a fingerprint, is
     # one the check cannot vouch for.
-    differ = [row["id"] for row in rows if row.get("fingerprint") != marks.get(row["id"])]
+    untargeted = [row["id"] for row in rows if row["id"] not in marks]
+    differ = [
+        row["id"]
+        for row in rows
+        if row["id"] in marks and row.get("fingerprint", None) != marks[row["id"]]
+    ]
     missing = set(marks) - {row["id"] for row in rows}
-    if differ or missing:
+    if untargeted or differ or missing:
         raise SystemExit(
             f"{job}'s base arm was not prompted as the rules jobs prompt it: {len(differ)} rows "
-            f"differ or are not among their targets, {len(missing)} targets missing"
+            f"prompted otherwise or unmarked, {len(untargeted)} not among their targets, "
+            f"{len(missing)} targets missing"
         )
 
 

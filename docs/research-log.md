@@ -8115,14 +8115,16 @@ model that reads the file, not the distiller's; each smoke file is shorter in th
 near the budget. A map list left empty by the evidence filter no longer goes to the merge (up to
 half of Wikimedia's lists were empty and still numbered, so a merged rule could cite one). A merged
 rule's citation counts only where one rule of that list holds more than half of its content words
-(`rules.grounded`: word tokens, identifiers whole, numbers kept, code spans in their own case,
-function, imperative and connective words aside). Three
+(`rules.grounded`: lower-cased word tokens, identifiers whole, numbers kept, function,
+imperative and connective words aside), and only where the merged rule has two content words or
+more, since one shared word is not support. Every case the reviews raised is pinned as a test
+with its decision. Three
 rounds of hand-built identifier rules (backticks, snake_case, PascalCase) each let a new kind of
 token ground unrelated rules; containment is the measure of support that replaced them. On the
 smoke merges, replayed: every cited merged rule passes in a list it cites, one in a hundred passes
 against the other organization's lists, no invented rule tried ("use black for formatting",
 "follow OpenStack hacking rules", "use `in` to test keys") passes, and every file keeps the
-rules it had. Support is lexical, so a merged rule that inverts its source or changes a value in
+same rules, ranked now by grounded citations alone. Support is lexical, so a merged rule that inverts its source or changes a value in
 it would pass; read rule by rule beside its best source, most smoke merges copy a source rule
 verbatim, the rest restate one or join two, and none inverts or alters one. A polarity test was
 tried and refused faithful rules ("instead of" against "rather than"), so the limit is stated

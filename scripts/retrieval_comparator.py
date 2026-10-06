@@ -51,7 +51,6 @@ from sphragis.experiment.retrieval import (
     Prompt,
     arm_prompts,
     corpus_of,
-    few_shot_prompt,
     fingerprint,
     first_partitions,
     pools,
@@ -197,12 +196,6 @@ def rules_files(
     return files, made_by
 
 
-def base_prompt(target: Mapping[str, Any]) -> Prompt:
-    """The base arm's prompt: the registered one, with no shot. One definition for the arm the
-    retrieval foreign job runs and the marks a rules foreign job checks it by."""
-    return few_shot_prompt(target, [])
-
-
 def require_made_by(made_by: set[tuple[str, str | None]], *, distiller: str, reader: str) -> None:
     """Refuse a rules file not written by the pinned `distiller`, or not budgeted in the tokens
     of the model the arms run (`reader`), which reads it."""
@@ -269,7 +262,7 @@ def run(args: argparse.Namespace) -> None:
         # The base arm is the retrieval foreign job's; a rules job reads it from there.
         if args.arms == "retrieval":
             base = run_id(EvalRun("base", args.org, None))
-            prompts[base] = [base_prompt(t) for t in targets[args.org]]
+            prompts[base] = [build_prompt(t) for t in targets[args.org]]
             similarity[base] = [0.0 for _ in targets[args.org]]
             evaluated_by[base] = args.org
     # Each pool is its adapter's training set: as many rows as the run trained that adapter on.
@@ -440,10 +433,10 @@ def run(args: argparse.Namespace) -> None:
             print(f"{key:<44} EM={em:.3f}", flush=True)
     report["generator"] = signature
     if args.arms == "rules" and args.pools == "foreign":
-        # The base arm is the retrieval foreign job's: each target's base prompt as this job
-        # would mark it, so the reader can check that job prompted it the same way.
+        # The base arm is the retrieval foreign job's: each target's base prompt (the registered
+        # one, as that job builds it) as this job would mark it, so the reader can check it.
         report["base_marks"] = {
-            t["id"]: fingerprint(signature, base_prompt(t)) for t in targets[args.org]
+            t["id"]: fingerprint(signature, build_prompt(t)) for t in targets[args.org]
         }
     report["model_id"], report["max_new_tokens"] = generator.model_id, generator.max_new_tokens
     report["inference_dtype"] = generator.computed_dtype

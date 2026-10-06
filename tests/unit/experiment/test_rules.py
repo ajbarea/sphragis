@@ -142,10 +142,10 @@ def test_a_map_keeps_its_first_rules_up_to_the_limit() -> None:
 def test_merged_rules_are_cut_to_the_file_budget_from_the_least_cited() -> None:
     from sphragis.experiment.rules import recurring
 
-    lines = ["- `aaa`. [1, 2, 3]", "- `bbb`. [1, 2]", "- `ccc`. [2, 3]"]
-    lists = [["- `aaa`, `bbb` and `ccc`."]] * 3
+    lines = ["- `aaa` here. [1, 2, 3]", "- `bbb` here. [1, 2]", "- `ccc` here. [2, 3]"]
+    lists = [["- `aaa` here, `bbb` here and `ccc` here."]] * 3
     rules, cites = recurring(lines, lists=lists, length=lambda t: 10**6 if "ccc" in t else 1)
-    assert rules == ["- `aaa`.", "- `bbb`."] and cites == [[1, 2, 3], [1, 2]]
+    assert rules == ["- `aaa` here.", "- `bbb` here."] and cites == [[1, 2, 3], [1, 2]]
 
 
 def test_a_list_left_empty_is_not_numbered_for_the_merge() -> None:
@@ -165,40 +165,57 @@ def test_a_list_left_empty_is_not_numbered_for_the_merge() -> None:
     assert result["merge_chunks"] == [1, 3, 4]
 
 
-def test_a_rule_is_grounded_where_a_source_holds_more_than_half_its_words() -> None:
+# Every grounding case a review raised, with what `grounded` decides: the specification, so a
+# change to the predicate that flips one fails here.
+GROUNDING_CASES = [
+    # Restatements of a source rule.
+    ("- Prefer `joinedload` for eager loads.", "- Use `joinedload` for eager loads.", True),
+    # One word, however distinctive, is not support.
+    ("- Prefer `joinedload`.", "- Replace `joinedload_all` with `joinedload`.", False),
+    ("- Use oslo_log for logging.", "- Log with oslo_log for logging, not print.", True),
+    ("- Use oslo.log for logging.", "- Log via oslo.log for logging, not print.", True),
+    ("- Log through oslo logging.", "- Route messages via oslo logging helpers.", True),
+    ("- Import `os` lazily.", "- Import `os` lazily, never at module top.", True),
+    ("- Use `assertEqual` rather than `assertTrue`.", "- Use assertEqual over assertTrue.", True),
+    ("- Use the `Session` class.", "- Use the Session class.", True),
+    ("- Don't use print for logging.", "- Never use print for logging.", True),
+    ("- Compare with `is None`, not `== None`.", "- Compare to None with is.", True),
+    # Invented, or sharing only a name, a keyword, an abbreviation or one word.
+    ("- Use black for formatting.", "- Keep formatting changes apart.", False),
+    ("- Follow OpenStack hacking rules.", "- Name OpenStack services in lowercase.", False),
+    ("- Use `in` to test keys.", "- Check membership with `in` on sets.", False),
+    ("- Prefer short names, e.g. ids.", "- Wrap long calls, e.g. in parens.", False),
+    ("- Return `None` from handlers.", "- Compare to `None` with is.", False),
+    ("- Use `self`.", "- Pass `self` first.", False),
+    ("- Use `true`/`false` instead of `'1'`.", "- Number lists from 1.", False),
+    ("- Compare with `is None`, not `== None`.", "- Compare floats with assertAlmostEqual.", False),
+    ("- Use 4 spaces.", "- Indent with 2 spaces.", False),
+    ("- Use the.", "- Use the logger.", False),
+    # The stated limit: support is lexical, so an inverted or altered rule passes.
+    ("- Use print for logging.", "- Log with oslo_log for logging, not print.", True),
+    ("- Indent with 4 spaces.", "- Indent with 2 spaces.", True),
+]
+
+
+@pytest.mark.parametrize(("rule", "source", "expected"), GROUNDING_CASES)
+def test_grounding_decides_every_case_a_review_raised(
+    rule: str, source: str, expected: bool
+) -> None:
     from sphragis.experiment.rules import grounded
 
-    assert grounded("- Prefer `joinedload`.", "- Replace `joinedload_all` with `joinedload`.")
-    assert grounded("- Use oslo_log for logging.", "- Log with oslo_log for logging, not print.")
-    assert grounded("- Import `os` lazily.", "- Import `os` lazily, never at module top.")
-    # Half or less: an invented rule, an organization's name, a keyword, an abbreviation.
-    assert not grounded("- Use black for formatting.", "- Keep formatting changes apart.")
-    assert not grounded(
-        "- Follow OpenStack hacking rules.", "- Name OpenStack services in lowercase."
-    )
-    assert not grounded("- Use `in` to test keys.", "- Check membership with `in` on sets.")
-    assert not grounded("- Prefer short names, e.g. ids.", "- Wrap long calls, e.g. in parens.")
-    assert not grounded("- Use the.", "- Use the logger.")
-    # Numbers count, code keeps its case, and `self` and its kin say nothing.
-    assert grounded("- Log through oslo logging.", "- Route messages via oslo logging helpers.")
-    assert not grounded("- Use 4 spaces.", "- Indent with 2 spaces.")
-    assert not grounded("- Use `Session` here.", "- Use `session` here.")
-    assert not grounded("- Use `self`.", "- Pass `self` first.")
-    # Support is lexical: an inverted rule, or one with a value changed, shares its source's
-    # words (the stated limit).
-    assert grounded("- Use print for logging.", "- Log with oslo_log for logging, not print.")
-    assert grounded("- Indent with 4 spaces.", "- Indent with 2 spaces.")
+    assert grounded(rule, source) is expected
 
 
 def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> None:
     from sphragis.experiment.rules import recurring
 
-    lines = ["- Use `oslo_log`. [1]", "- use  `oslo_log` [2, 3]", "- Use `Session`. [2]"]
-    lines += ["- Use `session`. [3]"]
-    lists = [["- Use `oslo_log`."], ["- Use `oslo_log`, `Session`."], ["- `oslo_log`, `session`."]]
+    lines = ["- Use `oslo_log` here. [1]", "- use  `oslo_log` here [2, 3]"]
+    lines += ["- Use `Session` too. [2]", "- Use `session` too. [3]"]
+    lists = [["- Use `oslo_log` here."], ["- Use `oslo_log` here, `Session` too."]]
+    lists += [["- Use `oslo_log` here, `session` too."]]
     rules, cites = recurring(lines, lists=lists, length=len)
     # Copies merge their citations; a different identifier's case is a different rule.
-    assert rules == ["- Use `oslo_log`.", "- Use `Session`.", "- Use `session`."]
+    assert rules == ["- Use `oslo_log` here.", "- Use `Session` too.", "- Use `session` too."]
     assert cites == [[1, 2, 3], [2], [3]]
 
 
@@ -324,6 +341,7 @@ def test_copies_of_a_rule_meet_the_threshold_together(monkeypatch: pytest.Monkey
     from sphragis.experiment import rules
 
     monkeypatch.setattr(rules, "MIN_CITED_LISTS", 2)
-    lines = ["- Use `ddt`. [1]", "- use `ddt` [2]", "- Use `mock`. [1]"]
-    kept, cites = rules.recurring(lines, lists=[["- Use `ddt`, `mock`."]] * 2, length=len)
-    assert kept == ["- Use `ddt`."] and cites == [[1, 2]]
+    lines = ["- Use `ddt` here. [1]", "- use `ddt` here [2]", "- Use `mock` here. [1]"]
+    lists = [["- Use `ddt` here, `mock` here."]] * 2
+    kept, cites = rules.recurring(lines, lists=lists, length=len)
+    assert kept == ["- Use `ddt` here."] and cites == [[1, 2]]
