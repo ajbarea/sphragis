@@ -167,7 +167,14 @@ def test_a_rule_is_grounded_by_a_shared_identifier_or_two_uncommon_words() -> No
     assert grounded("- Log through oslo logging.", "- Route messages via oslo logging helpers.")
     # One identifier is enough, ticked or not; a trivial ticked word is not one.
     assert grounded("- Use oslo_log for logging.", "- Log with oslo_log, not print.")
+    assert grounded("- Use oslo.log.", "- Log via oslo.log, not print.")
+    assert grounded("- Import `os` lazily.", "- Never shadow `os`.")
     assert not grounded("- Return `None` from handlers.", "- Compare to `None` with is.")
+    # Neither an organization's name nor an abbreviation is an identifier.
+    assert not grounded(
+        "- Follow OpenStack hacking rules.", "- Name OpenStack services in lowercase."
+    )
+    assert not grounded("- Prefer short names, e.g. ids.", "- Wrap long calls, e.g. in parens.")
     assert not grounded("- Use black for formatting.", "- Use `joinedload` instead of others.")
     assert not grounded("- Use the logger.", "- Use the logger instead.")
 
@@ -175,10 +182,10 @@ def test_a_rule_is_grounded_by_a_shared_identifier_or_two_uncommon_words() -> No
 def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> None:
     from sphragis.experiment.rules import recurring
 
-    lines = ["- Use `oslo_log`. [1]", "- Use `oslo_log`. [1, 2]", "- Use `ddt`. [2]"]
+    lines = ["- Use `oslo_log`. [1]", "- use  `oslo_log` [1, 2]", "- Use `ddt`. [2]"]
     lists = [["- `oslo_log` and `ddt`."]] * 2
     rules, cites = recurring(lines, lists=lists, length=len)
-    assert rules == ["- Use `oslo_log`.", "- Use `ddt`."] and cites == [[1, 2], [2]]
+    assert rules == ["- use  `oslo_log`", "- Use `ddt`."] and cites == [[1, 2], [2]]
 
 
 def test_mined_rules_need_three_lists_with_evidence() -> None:

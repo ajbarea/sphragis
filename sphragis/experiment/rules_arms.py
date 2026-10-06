@@ -7,8 +7,8 @@ the arms, does not change the fingerprint every distilled file is checked agains
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 from typing import Any
 
 from sphragis.experiment.grid import conditioned
@@ -60,9 +60,15 @@ def rules_arms(
     }
 
 
+#: A fixed example and file the arm prompt is rendered for, to fingerprint it.
+_PROBE = ({"before": "x = 1\n", "comments": ["Name it."]}, "- Use `ddt`.")
+
+
 def arms_fingerprint() -> str:
-    """This module's source, hashed: the arm prompts a rules job ran, held equal across jobs."""
-    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    """The arm prompt as it is built, for a fixed example and file, hashed: what a rules job
+    prompted with, held equal across jobs, whatever the code around it says."""
+    messages = rules_prompt(*_PROBE)
+    return hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()
 
 
 def default_system_holds(tokenizer: Any) -> bool:

@@ -180,11 +180,13 @@ def recurring(
         backed = sorted(n for n in numbers if any(grounded(rule, r) for r in lists[n - 1]))
         if len(backed) >= MIN_CITED_LISTS:
             kept_rules.append((-len(backed), order, rule, backed))
-    # A rule the merge wrote twice is kept once, at its best-cited copy.
+    # A rule the merge wrote twice is kept once, at its best-cited copy, copies told apart by
+    # their words alone (case, spacing and a closing period aside).
     ranked, seen = [], set()
     for _, _, rule, backed in sorted(kept_rules):
-        if rule not in seen:
-            seen.add(rule)
+        same = " ".join(rule.lower().rstrip(" .").split())
+        if same not in seen:
+            seen.add(same)
             ranked.append((rule, backed))
     kept = capped_file([rule for rule, _ in ranked], length=length)
     return kept, [backed for _, backed in ranked[: len(kept)]]
@@ -210,8 +212,12 @@ _COMMON = frozenset((
 # fmt: on
 _WORD = re.compile(r"[a-z][a-z0-9_]{3,}")
 _TICKED = re.compile(r"`([^`]+)`")
-# An identifier: a dotted or snake_case name, or a camelCase or PascalCase one.
-_IDENTIFIER = re.compile(r"[A-Za-z]\w*[_.]\w[\w.]*|[a-z]+[A-Z]\w*|[A-Z][a-z0-9]+[A-Z]\w*")
+# An unticked identifier: snake_case, dotted (each part two or more characters, so neither "e.g."
+# nor a sentence's last period is one), or camelCase from a lower-case start. PascalCase counts
+# only ticked: unticked it is as often a product or the organization's name ("OpenStack").
+_IDENTIFIER = re.compile(
+    r"\b[A-Za-z]\w*_\w+|\b[A-Za-z_]\w+(?:\.[A-Za-z_]\w+)+|\b[a-z][a-z0-9]*[A-Z]\w*"
+)
 # Ticked words a rule shares with many that say nothing of the convention.
 _TRIVIAL = frozenset({"none", "true", "false", "self", "null", "this", "cls"})
 
@@ -220,8 +226,8 @@ def _names(text: str) -> set[str]:
     """The identifiers a rule names: ticked spans and identifier-shaped words, lower-cased,
     without the trivial ones."""
     found = {t.strip().lower() for t in _TICKED.findall(text)}
-    found |= {w.lower() for w in _IDENTIFIER.findall(text)}
-    return {n for n in found if len(n) >= 3 and n not in _TRIVIAL}
+    found |= {w.lower() for w in _IDENTIFIER.findall(_TICKED.sub(" ", text))}
+    return {n for n in found if n and n not in _TRIVIAL}
 
 
 def grounded(rule: str, source: str) -> bool:
@@ -340,7 +346,7 @@ def distil(
         "reduce_answer": merged,
         "reduce_capped": reduce_capped,
         # The chunk each list the merge saw came from, by the merge's numbering: list n is
-        # chunk merge_chunks[n - 1] of map_lists and evidence.
+        # chunk merge_chunks[n - 1] of map_lists (and of evidence, for reviews).
         "merge_chunks": merge_chunks,
         # Per kept mined rule, the lists the merge cited for it.
         "recurrence": recurrence,

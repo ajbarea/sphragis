@@ -20,7 +20,7 @@ from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training, window_split
 from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key, resumable
 from sphragis.experiment.rules import pipeline
-from sphragis.experiment.rules_arms import DISTILLED, WRITTEN, rules_key
+from sphragis.experiment.rules_arms import DISTILLED, WRITTEN, arms_fingerprint, rules_key
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -461,7 +461,7 @@ def test_the_reader_refuses_adapters_decoded_otherwise(tmp_path: Path) -> None:
 
 
 # The reader on rules arms: a distilled file per half, and both organizations' written guides.
-RULES = {"rules_suffix": "", "rules_pipeline": pipeline()}
+RULES = {"rules_suffix": "", "rules_pipeline": pipeline(), "rules_arms": arms_fingerprint()}
 
 
 def _rules_halves_job(partition: int) -> dict:
@@ -504,10 +504,10 @@ def _rules_foreign_job() -> dict:
     }
 
 
-def test_the_rules_arms_read_their_files_and_the_written_guides(tmp_path: Path) -> None:
+def _rules_read(tmp_path: Path, jobs: list[dict], foreign: dict) -> dict:
+    tmp_path.mkdir(exist_ok=True)
     base = _foreign_job()
     (tmp_path / "base.json").write_text(json.dumps(base))
-    jobs = [_rules_halves_job(p) for p in ORDER]
     halves, results = [], tmp_path / "results"
     results.mkdir()
     for n, job in enumerate(jobs):
@@ -516,7 +516,7 @@ def test_the_rules_arms_read_their_files_and_the_written_guides(tmp_path: Path) 
         seeds = "" if n == 0 else f"-s{n + 1}"
         name = f"rq1-partition-openstack-p{ORDER[n]}{seeds}-n{SIZE}.json"
         (results / name).write_text(json.dumps(_adapter_run(n + 1, ORDER[n])))
-    (tmp_path / "f.json").write_text(json.dumps(_rules_foreign_job()))
+    (tmp_path / "f.json").write_text(json.dumps(foreign))
     listing = tmp_path / "list.json"
     listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
     out = tmp_path / "read.json"
@@ -525,13 +525,28 @@ def test_the_rules_arms_read_their_files_and_the_written_guides(tmp_path: Path) 
     argv += ["--foreign-job", str(tmp_path / "f.json"), "--halves", *map(str, halves)]
     argv += ["--results", str(results), "--resamples", "200", "--out", str(out)]
     _run(reader, argv)
-    cell = json.loads(out.read_text())["families"]["distilled"]
+    return json.loads(out.read_text())
+
+
+def test_the_rules_arms_read_their_files_and_the_written_guides(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    cell = _rules_read(tmp_path, jobs, _rules_foreign_job())["families"]["distilled"]
     assert cell["own_minus_sibling"]["estimate"] == pytest.approx(0.5)
     assert cell["own_minus_sibling"]["reading"] == "carries a half-split contrast"
     assert cell["written_own_minus_written_foreign"]["estimate"] == pytest.approx(0.25)
     assert cell["written_own_minus_none"]["estimate"] == pytest.approx(0.25)
     # Distilled own matches the even examples, the written guide the quarter: +0.25.
     assert cell["distilled_own_minus_written_own"]["estimate"] == pytest.approx(0.25)
+
+
+def test_rules_jobs_prompted_two_ways_or_unrecorded_are_refused(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    jobs[-1]["rules_arms"] = "another"
+    with pytest.raises(SystemExit, match="rules_arms"):
+        _rules_read(tmp_path / "mixed", jobs, _rules_foreign_job())
+    unrecorded = {k: v for k, v in _rules_foreign_job().items() if k != "rules_arms"}
+    with pytest.raises(SystemExit, match="does not record the rules files and prompts"):
+        _rules_read(tmp_path / "none", [_rules_halves_job(p) for p in ORDER], unrecorded)
 
 
 def test_a_rules_reading_needs_the_base_arm(tmp_path: Path) -> None:
@@ -679,3 +694,13 @@ def test_a_refusal_exits_with_where_it_was_raised_and_a_corrupt_file_keeps_its_t
     monkeypatch.setattr(comparator, "run", corrupt)
     with pytest.raises(json.JSONDecodeError):
         comparator.main()
+
+
+def test_a_rules_file_from_another_distiller_or_budget_is_refused() -> None:
+    comparator.require_made_by({("d", "m")}, distiller="d", reader="m")
+    with pytest.raises(SystemExit, match="distilled by e"):
+        comparator.require_made_by({("e", "m")}, distiller="d", reader="m")
+    # A file from before the budget was recorded, or counted in another model's tokens.
+    for budget in (None, "n"):
+        with pytest.raises(SystemExit, match="budgeted in"):
+            comparator.require_made_by({("d", budget)}, distiller="d", reader="m")

@@ -197,6 +197,16 @@ def rules_files(
     return files, made_by
 
 
+def require_made_by(made_by: set[tuple[str, str | None]], *, distiller: str, reader: str) -> None:
+    """Refuse a rules file not written by the pinned `distiller`, or not budgeted in the tokens
+    of the model the arms run (`reader`), which reads it."""
+    for made, budgeted_by in made_by:
+        if made != distiller:
+            raise SystemExit(f"a rules file was distilled by {made}, not {distiller}")
+        if budgeted_by != reader:
+            raise SystemExit(f"a rules file was budgeted in {budgeted_by}'s tokens, not {reader}'s")
+
+
 def main() -> None:
     """The job, with every library refusal its exit (`refusals`), and where it was raised."""
     with refusals(where=True):
@@ -348,6 +358,7 @@ def run(args: argparse.Namespace) -> None:
         DISTILLER_ID,
         DISTILLER_TEMPLATE,
         INFERENCE_DTYPE,
+        MODEL_ID,
         HFGenerator,
         revision,
         run_provenance,
@@ -357,14 +368,8 @@ def run(args: argparse.Namespace) -> None:
     distiller = distiller_signature(
         f"{DISTILLER_ID}@{revision(DISTILLER_ID)}", DISTILLER_DTYPE, DISTILLER_TEMPLATE
     )
+    require_made_by(made_by, distiller=distiller, reader=f"{MODEL_ID}@{revision(MODEL_ID)}")
     generator = HFGenerator()
-    # And budgeted in the tokens of the model these arms run, which reads it.
-    reader = f"{generator.model_id}@{revision(generator.model_id)}"
-    for made, budgeted_by in made_by:
-        if made != distiller:
-            raise SystemExit(f"a rules file was distilled by {made}, not {distiller}")
-        if budgeted_by != reader:
-            raise SystemExit(f"a rules file was budgeted in {budgeted_by}'s tokens, not {reader}'s")
     signature = (
         f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"

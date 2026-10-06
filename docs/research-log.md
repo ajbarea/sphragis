@@ -8114,17 +8114,20 @@ smoke read, each from review. The file budget is counted in the evaluated model'
 model that reads the file, not the distiller's; each smoke file is shorter in them, and none came
 near the budget. A map list left empty by the evidence filter no longer goes to the merge (up to
 half of Wikimedia's lists were empty and still numbered, so a merged rule could cite one). A merged
-rule's citation counts only where the rule names an identifier a rule in that list names (ticked or
-identifier-shaped, beyond `None` and its kin), or shares two uncommon words with one
-(`rules.grounded`): on the smoke files every cited merged rule passes, against the other
-organization's lists few do, and an invented "use black for formatting" passes none. A rule the
-merge writes twice is kept once, and the file records which chunk each merged list came from. A written guide's file is held to the same caps as a distilled one (`capped_file`: at most
+rule's citation counts only where the rule names an identifier a rule in that list names (ticked;
+or unticked snake_case, dotted or camelCase, so neither "OpenStack" nor "e.g." is one; never `None`
+and its kin), or shares two uncommon words with one (`rules.grounded`). Measured with this
+predicate on the smoke files: every cited merged rule passes, against the other organization's
+lists few do, and an invented "use black for formatting" passes none. A rule the merge writes
+twice (case, spacing and a closing period aside) is kept once, and the file records which chunk
+each merged list came from. A written guide's file is held to the same caps as a distilled one (`capped_file`: at most
 40 rules, within the budget), so the distilled-against-written contrast does not also compare file
 size. The distiller signature now carries the chat-template options, each file records the
 model its budget was counted in (the comparator refuses another), and the think-block strip lives
 in `rules.py` under the pipeline fingerprint. The arm-side prompts moved to `rules_arms.py`, under
-a fingerprint of their own that every rules job records and the reader holds equal, so a change
-there neither voids the distilled files nor mixes arms prompted two ways. The full distillation runs this pipeline.
+a fingerprint of the prompt as built for a fixed example, which every rules job records and the
+reader holds equal (refusing a job that lacks it), so a change there neither voids the distilled
+files nor mixes arms prompted two ways. The full distillation runs this pipeline.
 
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 

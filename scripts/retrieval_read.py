@@ -333,8 +333,10 @@ def main() -> None:
         # Every rules job read one distillation: one suffix, one pipeline.
         head = json.loads(args.foreign_job.read_text())
         fixed |= {key: head.get(key) for key in RULES_RECORD}
-        if fixed["rules_pipeline"] is None:
-            raise SystemExit(f"{args.foreign_job} does not record the rules files it read")
+        if None in (fixed["rules_pipeline"], fixed["rules_arms"]):
+            raise SystemExit(
+                f"{args.foreign_job} does not record the rules files and prompts it read"
+            )
     foreign_job = load(
         args.foreign_job, pools="foreign", foreign=args.foreign, arms=args.arms, **fixed
     )
