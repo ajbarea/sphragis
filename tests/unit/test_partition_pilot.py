@@ -439,3 +439,67 @@ def test_a_development_read_needs_no_calibration_from_its_sizing_pilot(
     out = tmp_path / "o.json"
     _main(monkeypatch, [*_inputs(tmp_path, "openstack"), "--sizing", str(path), "--out", str(out)])
     assert "spread_targets" not in json.loads(out.read_text())["k_from"]
+
+
+def _ids(tmp_path: Path, ids: list[str], *, org: str = "openstack", window: str = "dev") -> Path:
+    path = tmp_path / "sensitivity-ids.json"
+    path.write_text(json.dumps({"org": org, "window": window, "ids": {"ai_assisted": ids}}))
+    return path
+
+
+def test_a_sensitivity_reads_the_cell_again_without_its_examples(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "pilot.json"
+    # Own wins on every even example; drop them all and the cell falls to zero.
+    even = [f"x{i}" for i in range(0, 2 * N, 2)]
+    ids = _ids(tmp_path, even)
+    _main(
+        monkeypatch,
+        [*_inputs(tmp_path, "openstack"), "--without", f"ai_assisted={ids}", "--out", str(out)],
+    )
+    report = json.loads(out.read_text())
+    assert report["estimate"] == pytest.approx(0.5)
+    reduced = report["without"]["ai_assisted"]
+    assert reduced["estimate"] == pytest.approx(0.0) and reduced["removed"] == len(even)
+    assert reduced["examples"] == report["examples"] - len(even)
+    assert set(reduced["intervals"]) == set(report["intervals"])
+    assert "verdicts" not in reduced
+
+
+@pytest.mark.parametrize(
+    "listing,message",
+    [({"org": "wikimedia"}, "not this read's"), ({"window": "test"}, "not this read's")],
+)
+def test_a_sensitivity_for_another_read_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, listing: dict, message: str
+) -> None:
+    ids = _ids(tmp_path, ["x0"], **listing)
+    with pytest.raises(SystemExit, match=message):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"ai_assisted={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )
+
+
+def test_a_sensitivity_naming_ids_the_file_lacks_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"])
+    with pytest.raises(SystemExit, match="lists no 'backport_only' ids"):
+        _main(
+            monkeypatch,
+            [
+                *_inputs(tmp_path, "openstack"),
+                "--without",
+                f"backport_only={ids}",
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )

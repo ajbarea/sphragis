@@ -18,25 +18,21 @@ Windows are the corpus's own; the test window is never read.
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
-import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
+from sphragis.corpus.backports import (
+    BACKPORT,
+    branches_by_change,
+    only_backport,
+    possibly_backport,
+)
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.corpus.windows import WINDOWS
 from sphragis.provenance import provenance_header
 
-# Release, maintenance and deployment branches, as named on the two hosts (read from the raw
-# snapshots): OpenStack `stable/`, `unmaintained/`, `bugfix/`, `release_N` and StarlingX `r/stx`;
-# MediaWiki `REL1_xx` (also under `fundraising/`), `wmf/` and `deploy/wmf/`, `wmf_deploy`,
-# `deployment` and a bare `stable`. Feature branches (`feature/`, `f/`) are development.
-BACKPORT = re.compile(
-    r"^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\d|r/stx|(?:fundraising/)?REL\d"
-    r"|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
-)
 READ_WINDOWS = ("pilot", "train", "dev")
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -55,8 +51,8 @@ def bounds(
         for row in rows:
             names = branches.get((row["project"], row["change_id"]), set())
             unmatched += not names
-            upper += any(BACKPORT.match(b) for b in names)
-            lower += bool(names) and all(BACKPORT.match(b) for b in names)
+            upper += possibly_backport(names)
+            lower += only_backport(names)
         out[window] = {
             "examples": len(rows),
             "only_backport": lower,
@@ -71,13 +67,7 @@ def main() -> None:
     report: dict = {"backport_branches": BACKPORT.pattern, "orgs": {}}
     for spec in args.root:
         org, root = spec.split("=", 1)
-        branches: dict[tuple[str, str], set[str]] = {}
-        for path in sorted((Path(root) / org / "raw").glob("*.ndjson.gz")):
-            with gzip.open(path, "rt") as lines:
-                for line in lines:
-                    change = json.loads(line)
-                    key = (change["project"], change["change_id"])
-                    branches.setdefault(key, set()).add(str(change.get("branch") or ""))
+        branches = branches_by_change(Path(root), org)
         kept, _ = run_dedup(refined_examples(Path(root), org))
         windows, _, _ = run_split(kept, WINDOWS)
         if windows.get("test"):

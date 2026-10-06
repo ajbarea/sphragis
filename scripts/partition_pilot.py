@@ -77,6 +77,13 @@ parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 
 parser.add_argument(
     "--planted", type=Path, help="the organization's planted dev run (outcome-neutral check 5)"
 )
+parser.add_argument(
+    "--without",
+    action="append",
+    default=[],
+    metavar="NAME=FILE",
+    help="a registered sensitivity: the cell again without sensitivity_ids.py's NAME ids",
+)
 parser.add_argument("--bootstrap-seed", type=int, default=TEST_BOOTSTRAP_SEED)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
@@ -241,6 +248,40 @@ def main() -> None:
         resamples=args.resamples,
     )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"])
+    # The registered sensitivities, beside the cell and binding nothing: the same runs, levels,
+    # seed and draws, without each named set of examples.
+    without = {}
+    for spec in args.without:
+        name, _, path = spec.partition("=")
+        listing = json.loads(Path(path).read_text())
+        expected = {"org": args.org, "window": "dev" if window == "development" else window}
+        found = {key: listing.get(key) for key in expected}
+        if found != expected:
+            raise SystemExit(f"{path}: {found}, not this read's {expected}")
+        if name not in listing.get("ids", {}):
+            raise SystemExit(f"{path} lists no {name!r} ids")
+        drop = set(listing["ids"][name])
+        kept = [
+            ({arm: [r for r in rows if r["id"] not in drop] for arm, rows in results.items()}, k)
+            for results, k in runs
+        ]
+        present = {r["id"] for results, _ in runs for rows in results.values() for r in rows}
+        reduced = h1_over_partitions(
+            kept,
+            org=args.org,
+            runs_fixed=runs_fixed,
+            levels=levels,
+            bounds=None,
+            bootstrap_seed=args.bootstrap_seed,
+            resamples=args.resamples,
+        )
+        without[name] = {
+            "file": path,
+            "removed": len(drop & present),
+            "estimate": reduced["estimate"],
+            "examples": reduced["examples"],
+            **{key: reduced[key] for key in ("intervals", "within_sesoi", "meaningful")},
+        }
     head = {
         "run_files",
         "admissible",
@@ -251,6 +292,7 @@ def main() -> None:
         "sensitivity",
         "planted_convention",
         "sizing",
+        "without",
         "provenance",
     }
     if head & set(cell):
@@ -266,6 +308,7 @@ def main() -> None:
         "planted_convention": planted,
         **cell,
         "sizing": sizing,
+        "without": without,
         "provenance": provenance_header(),
     }
     if window == "test":

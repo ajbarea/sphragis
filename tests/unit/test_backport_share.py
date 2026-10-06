@@ -47,3 +47,19 @@ def test_development_branches_are_not_backports() -> None:
         "deployment",
     ):
         assert script.BACKPORT.match(name), name
+
+
+def test_the_ai_flag_reads_project_and_change_id_from_the_trailer_artifact() -> None:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "sensitivity_ids", Path(__file__).resolve().parents[2] / "scripts" / "sensitivity_ids.py"
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    trailers = {"orgs": {"openstack": {"changes_ai": ["openstack/nova I1", "x/y z I2"]}}}
+    assert module.flagged_changes(trailers, "openstack") == {
+        ("openstack/nova", "I1"),
+        ("x/y z", "I2"),
+    }
