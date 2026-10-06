@@ -37,12 +37,14 @@ CHUNK_TOKENS = 16_384
 MAX_MAP_RULES = 15
 MIN_CITED = 2
 MAX_FILE_RULES = 40
-# A merged rule is kept only if it cites two or more lists, counted here rather than asked of the
-# model: a third smoke run (jobs 223605, 223606) applied "in two or more lists" to one half and
-# not the other (52 rules and 1). Recurrence over lists reads as such only when there are more
-# than two, so a pool that fills fewer chunks is refused. The merge's answer carries citations,
-# so it gets twice a file's budget; the file itself is cut to the budget.
-MIN_CITED_LISTS = 2
+# A merged rule is kept only if it cites a list, so the merge adds no rule the lists lacked, and
+# the most-cited come first. Recurrence is the map's: a rule there stands on two or more of its
+# chunk's changes. A merge left to apply "in two or more lists" applied it to one half and not
+# the other (jobs 223605, 223606: 52 rules and 1), and counted here it left one to five rules a
+# half (jobs 224850, 224851), since conventions that are a project's own seldom recur across
+# chunks. The merge's answer carries citations, so it gets twice a file's budget; the file
+# itself is cut to the budget. A pool that fills fewer than three chunks is refused.
+MIN_CITED_LISTS = 1
 REDUCE_ANSWER_TOKENS = 2 * RULES_BUDGET
 MIN_REVIEW_CHUNKS = 3
 # A map answer's budget: a list, not a file. A chunk holds some hundred and fifty reviewed changes,

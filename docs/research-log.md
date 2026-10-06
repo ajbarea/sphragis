@@ -8087,6 +8087,14 @@ from, and code keeps a rule citing two or more lists, most-cited first, at most 
 file budget. A map's first 15 rules are kept, the limit its prompt states, since some chunks
 listed more than 40. Files distilled before this are not used.
 
+**Recurrence across lists ranks, it does not filter (2026-10-06).** Counted in code at ba42aed,
+"in two or more lists" left one to five rules a half (jobs 224850 and 224851: 3 and 5 for
+OpenStack partition 2, 1 and 1 for Wikimedia partition 1): a convention particular to one of an
+organization's hundreds of projects seldom recurs across chunks, and the map already holds a rule
+to two or more of its chunk's changes. So a merged rule is kept when it cites a list, which keeps
+the merge from adding rules, and the most-cited come first, at most 40 within the file budget.
+Files distilled before this are not used.
+
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
 The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;

@@ -108,9 +108,9 @@ def test_a_mined_rule_stands_on_two_of_its_chunks_numbered_changes() -> None:
     assert "- rule 1." in reduce_call and "[1, 2]" not in reduce_call
     assert "lone" not in reduce_call and "none" not in reduce_call
     assert result["evidence"] == [{"listed": 3, "kept": 1}] * 3
-    # Kept on two or more cited lists, the most-cited first.
-    assert result["rules"] == ["- three.", "- two."]
-    assert result["recurrence"] == [[1, 2, 3], [1, 2]]
+    # Kept when it cites a list, the most-cited first; an uncited rule is the merge's own.
+    assert result["rules"] == ["- three.", "- two.", "- one."]
+    assert result["recurrence"] == [[1, 2, 3], [1, 2], [3]]
 
 
 def test_a_map_keeps_its_first_rules_up_to_the_limit() -> None:
