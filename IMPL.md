@@ -25,9 +25,11 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 3. If Qt and Chromium are both admitted, the H2 test read over partitions, through
    `require_test_read`; `h1_test_gate` refuses to read H1 while H2 is confirmatory without it.
 4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
-5. The rules-file comparator (#96, draft): the base model cannot distil grounded rules from
-   reviews (smoke jobs 223245 and 223246, recorded on #96), so choose a larger distiller,
-   then distil and run it on the same runner.
+5. The rules-file comparator (#96): distilled by Qwen3.6-27B (the base model's rules were not
+   grounded), pipeline settled through review and smoke jobs (research log, 2026-10-06). Merge,
+   then distil the first ten admissible partitions per organization and both written guides
+   (`rules_distil.sbatch`), run the 22 `ARMS=rules` jobs, and read them with
+   `retrieval_read.py --arms rules --base-job`.
 6. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`.
 
