@@ -114,6 +114,7 @@
     "ai_assisted": {
       "file": "datasets/results/sensitivity-ids-wikimedia-dev.json",
       "listed": 0,
+      "unsearched": 0,
       "removed": 0,
       "estimate": 0.0007716920772205646,
       "examples": 711,
@@ -167,9 +168,9 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-06T16:05:28.010994+00:00",
+    "generated_at": "2026-10-06T20:31:15.343265+00:00",
     "git": {
-      "commit": "425b9edb82eba702c7ea7d909dfc54ac03cac6e5",
+      "commit": "f9cebd4ed03c8768de3c6a625bebc49203804218",
       "branch": "measure/h1-sensitivities"
     },
     "python": "3.14.4",

@@ -114,6 +114,7 @@
     "ai_assisted": {
       "file": "datasets/results/sensitivity-ids-openstack-dev.json",
       "listed": 45,
+      "unsearched": 0,
       "removed": 40,
       "estimate": 0.005615952836744013,
       "examples": 461,
@@ -167,9 +168,9 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-06T16:05:12.216367+00:00",
+    "generated_at": "2026-10-06T20:31:01.245201+00:00",
     "git": {
-      "commit": "425b9edb82eba702c7ea7d909dfc54ac03cac6e5",
+      "commit": "f9cebd4ed03c8768de3c6a625bebc49203804218",
       "branch": "measure/h1-sensitivities"
     },
     "python": "3.14.4",

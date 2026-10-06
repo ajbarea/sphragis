@@ -577,9 +577,9 @@
     "openstack:Iffea25529cf792d91d0c903526d1fb213f09a338:playbooks/roles/install-docker/tasks/Ubuntu.noble.yaml:3:39"
   ],
   "provenance": {
-    "generated_at": "2026-10-06T16:03:42.191851+00:00",
+    "generated_at": "2026-10-06T20:29:34.127761+00:00",
     "git": {
-      "commit": "425b9edb82eba702c7ea7d909dfc54ac03cac6e5",
+      "commit": "f9cebd4ed03c8768de3c6a625bebc49203804218",
       "branch": "HEAD"
     },
     "python": "3.13.15",
