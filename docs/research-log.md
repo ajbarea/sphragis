@@ -7994,3 +7994,35 @@ not which, so a pool's identity with its adapter's training set rests on the cou
 counts and the cut being one deterministic function of them. Adapter runs are found by the TIGRIS
 naming (`-s<k>-n<N>`, no cluster tag); a run made elsewhere is a different study by the repo's
 naming rule and is not read.
+
+### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
+
+The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;
+logs in `datasets/logs/`), read by `retrieval_read.py` as merged
+(`retrieval-reading-openstack.json`, `retrieval-reading-wikimedia.json`), on the development
+window over the first ten admissible partitions, 501 and 711 examples, none dropped. The adapters'
+row is their own minus sibling over the same partitions and examples (rank 32). Generated from the
+artifacts:
+
+| organization | arm | own minus sibling (95%) | reading | without near-duplicate shots | sibling minus foreign | own minus none |
+|---|---|---|---|---|---|---|
+| openstack | retrieval k = 1 | +0.0220 [+0.0023, +0.0412] | inconclusive | +0.0201 [+0.0010, +0.0389] (4 excluded) | +0.0110 [-0.0090, +0.0318] | +0.1197 [+0.0938, +0.1500] |
+| openstack | retrieval k = 3 | +0.0264 [+0.0059, +0.0468] | inconclusive | +0.0248 [+0.0051, +0.0446] (5 excluded) | -0.0005 [-0.0190, +0.0176] | +0.1727 [+0.1432, +0.2071] |
+| openstack | adapters, same partitions | +0.0082 [-0.0086, +0.0244] | inconclusive | | | |
+| wikimedia | retrieval k = 1 | +0.0054 [-0.0121, +0.0240] | inconclusive | +0.0054 [-0.0121, +0.0240] (0 excluded) | +0.0640 [+0.0434, +0.0853] | +0.1696 [+0.1414, +0.1995] |
+| wikimedia | retrieval k = 3 | +0.0092 [-0.0066, +0.0257] | inconclusive | +0.0092 [-0.0066, +0.0258] (1 excluded) | +0.0351 [+0.0164, +0.0546] | +0.2122 [+0.1823, +0.2438] |
+| wikimedia | adapters, same partitions | +0.0022 [-0.0130, +0.0182] | inconclusive | | | |
+
+**By the rule fixed before the run, every own-minus-sibling reading is inconclusive**: no lower
+bound clears the SESOI (0.01), and no interval sits inside the SESOI band. OpenStack's retrieval
+intervals exclude zero at both k, below the SESOI, and the adapters' over the same partitions do
+not; the near-duplicate exclusion moves them by at most 0.002, so copied near-duplicates do not
+explain them. Wikimedia's retrieval and adapter readings both sit near zero. Reported, not read:
+retrieval adds 0.12 to 0.21 exact match over the base model, and for Wikimedia a pool from the
+organization's other half beats the other organization's by 0.035 to 0.064, intervals clear of
+zero, where OpenStack's is near zero. Exploratory: none of this binds a verdict, and the test
+window stays sealed. The question the comparator was registered to answer, whether retrieval at
+inference recovers a half-split convention the adapters do not, has no answer here, since neither
+method shows a half-split contrast as large as the SESOI on either organization's development
+window.
+

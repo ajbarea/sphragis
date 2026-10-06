@@ -8,9 +8,6 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **The retrieval comparator's generations**: 22 GH200 jobs (2 foreign, 20 halves), at most about
-  34 GH200-hours at the smoke job's measured rate.
-
 - **The GitHub replication family's collection**: pilot, train and dev windows (2024-10 to
   2025-10) for Apache, then LLVM, .NET, Grafana, one organization at a time, from the
   `data/github-collect` worktree into `~/ajsoftworks/sphragis-data-local/github/` (`collect.sh`,
@@ -28,14 +25,10 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 3. If Qt and Chromium are both admitted, the H2 test read over partitions, through
    `require_test_read`; `h1_test_gate` refuses to read H1 while H2 is confirmatory without it.
 4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
-5. Read the retrieval comparator: its 22 TIGRIS jobs (223007 to 223028, pinned at d077d54, all
-   22 dry runs passed) write `retrieval-{foreign,halves}-<org>[-p<seed>].json`; then
-   `retrieval_read.py` per organization, `make pull-logs`, and the reading into the research log
-   by the rule fixed there on 2026-10-05.
-6. The rules-file comparator on the same runner
-   (`docs/superpowers/specs/2026-10-05-rules-file-comparator-design.md`): measure the map chunk
-   budget on the pools first.
-7. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
+5. The rules-file comparator (#96, draft): the base model cannot distil grounded rules from
+   reviews (smoke jobs 223245 and 223246, recorded on #96), so choose a larger distiller,
+   then distil and run it on the same runner.
+6. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`.
 
 ## Standing
