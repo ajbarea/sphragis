@@ -378,6 +378,8 @@ def h1_test_gate(
             **read_intervals({c: (i["low"], i["high"]) for c, i in at.items()}, detectable[org]),
             "p_one_sided": report["p_one_sided"],
             "size": _test_size(org, report, simulation, powers, detectable[org], expected["cells"]),
+            # The registered sensitivities the report read (partition_pilot.py --without).
+            "without": report.get("without", {}),
         }
     per_hypothesis = {"H1": cells}
     verdicts, passed_at = holm_steps(per_hypothesis)
@@ -440,6 +442,8 @@ def replication_gate(
             "meaningful": meaningful(interval["low"]),
             "p_one_sided": cell["p_one_sided"],
             "size": _test_size(org, cell, simulation, powers, bounds, expected["cells"]),
+            # The registered sensitivities the report read (partition_pilot.py --without).
+            "without": cell.get("without", {}),
         }
     return {
         **family,

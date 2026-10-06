@@ -7,6 +7,7 @@ import json
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 
@@ -68,3 +69,10 @@ def seal(definition: Mapping[str, Any]) -> dict[str, Any]:
 def is_test_window_unlocked(seal_record: Mapping[str, Any]) -> bool:
     """True only once an in-principle acceptance date has been written into the seal."""
     return bool(seal_record.get("accepted_at"))
+
+
+def seal_open(root: Path, org: str) -> bool:
+    """Whether `<root>/<org>/seal.json` records in-principle acceptance; missing is locked."""
+    seal_path = Path(root) / org / "seal.json"
+    record = json.loads(seal_path.read_text()) if seal_path.is_file() else {}
+    return is_test_window_unlocked(record)

@@ -503,3 +503,69 @@ def test_a_sensitivity_naming_ids_the_file_lacks_is_refused(
                 str(tmp_path / "o.json"),
             ],
         )
+
+
+def test_a_test_window_read_reports_its_sensitivities_through_the_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    ids = _ids(tmp_path, ["x0", "x2"], org="apache", window="test")
+    _main(monkeypatch, [*_replication_argv(tmp_path, "test"), "--without", f"ai_assisted={ids}"])
+    report = json.loads((tmp_path / "pilot.json").read_text())
+    reduced = report["without"]["ai_assisted"]
+    assert (reduced["listed"], reduced["removed"]) == (2, 2)
+    assert {"p_one_sided", "bootstrap_se"} <= set(reduced)
+    simulations = {"apache": _simulation(tmp_path)}
+    gate = decomposition.replication_gate({"apache": report}, simulations=simulations)
+    assert gate["cells"]["apache"]["verdict"] == "supported"
+    assert gate["cells"]["apache"]["without"] == report["without"]
+
+
+@pytest.mark.parametrize(
+    "spec,message", [("ai_assisted", "give NAME=FILE"), ("=x.json", "give NAME=FILE")]
+)
+def test_a_malformed_sensitivity_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, spec: str, message: str
+) -> None:
+    with pytest.raises(SystemExit, match=message):
+        _main(
+            monkeypatch,
+            [*_inputs(tmp_path, "openstack"), "--without", spec, "--out", str(tmp_path / "o.json")],
+        )
+
+
+def test_a_sensitivity_named_twice_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0"])
+    twice = ["--without", f"ai_assisted={ids}", "--without", f"ai_assisted={ids}"]
+    with pytest.raises(SystemExit, match="names 'ai_assisted' twice"):
+        _main(
+            monkeypatch,
+            [*_inputs(tmp_path, "openstack"), *twice, "--out", str(tmp_path / "o.json")],
+        )
+
+
+def test_listed_ids_absent_from_the_runs_are_counted_not_hidden(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, ["x0", "other-corpus-1", "other-corpus-2"])
+    out = tmp_path / "o.json"
+    _main(
+        monkeypatch,
+        [*_inputs(tmp_path, "openstack"), "--without", f"ai_assisted={ids}", "--out", str(out)],
+    )
+    reduced = json.loads(out.read_text())["without"]["ai_assisted"]
+    assert (reduced["listed"], reduced["removed"]) == (3, 1)
+
+
+def test_a_sensitivity_that_empties_a_half_is_reported_unreadable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ids = _ids(tmp_path, [f"x{i}" for i in range(N)])
+    out = tmp_path / "o.json"
+    _main(
+        monkeypatch,
+        [*_inputs(tmp_path, "openstack"), "--without", f"ai_assisted={ids}", "--out", str(out)],
+    )
+    reduced = json.loads(out.read_text())["without"]["ai_assisted"]
+    assert "unreadable" in reduced and reduced["removed"] == N

@@ -36,14 +36,22 @@ def test_a_change_is_only_a_backport_when_every_branch_it_sits_on_is_one(tmp_pat
     assert not only_backport(set())
 
 
-def test_mediawiki_release_and_deployment_branches_are_backports() -> None:
+def test_release_maintenance_and_deployment_branches_are_backports() -> None:
+    for name in ("master", "main", "production", "feature/mpu", "f/caracal", "stablekit"):
+        assert not possibly_backport({name}), name
     for name in (
+        "stable/2025.1",
+        "stable/release-3",
+        "stable",
+        "unmaintained/2023.1",
+        "bugfix/12",
+        "release_9",
+        "r/stx.10.0",
         "REL1_43",
-        "fundraising/REL1_42",
-        "wmf/1.45.0-wmf.3",
-        "deploy/wmf/x",
+        "fundraising/REL1_43",
+        "wmf/1.45.0-wmf.21",
+        "deploy/wmf/stable-3.10",
         "wmf_deploy",
+        "deployment",
     ):
         assert only_backport({name}), name
-    for name in ("master", "main", "feature/x", "f/y"):
-        assert not possibly_backport({name}), name

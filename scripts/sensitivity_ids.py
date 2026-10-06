@@ -21,6 +21,8 @@ import json
 from pathlib import Path
 
 from sphragis.corpus.backports import BACKPORT, branches_by_change, only_backport
+from sphragis.corpus.split import seal_open
+from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.holdout import window_split
 from sphragis.provenance import provenance_header
 
@@ -43,13 +45,28 @@ def flagged_changes(trailers: dict, org: str) -> set[tuple[str, str]]:
     return pairs
 
 
+def covers(trailers: dict, window: str) -> bool:
+    """Whether the trailer searches span the window: changes are flagged only where searched."""
+    start, end = WINDOWS[window]
+    return trailers["since"] <= start and end <= trailers["merged_before"]
+
+
 def main() -> None:
     args = parser.parse_args()
+    # The sealed window, as the sibling readers refuse it, until acceptance unseals it.
+    if args.window == "test" and not seal_open(args.root, args.org):
+        raise SystemExit(f"{args.org}'s test window is sealed: {args.root / args.org}/seal.json")
+    trailers = json.loads(args.ai_trailers.read_text())
+    if not covers(trailers, args.window):
+        raise SystemExit(
+            f"{args.ai_trailers} searched {trailers['since']} to {trailers['merged_before']}, "
+            f"not the {args.window} window {WINDOWS[args.window]}: rerun ai_trailers.py for it"
+        )
     try:
         _, rows, read = window_split(args.root, args.org, eval_window=args.window)
     except ValueError as error:
         raise SystemExit(str(error)) from error
-    ai = flagged_changes(json.loads(args.ai_trailers.read_text()), args.org)
+    ai = flagged_changes(trailers, args.org)
     branches = branches_by_change(args.root, args.org)
     removed = {
         "ai_assisted": sorted(r["id"] for r in rows if (r["project"], r["change_id"]) in ai),
@@ -64,7 +81,7 @@ def main() -> None:
         "window": args.window,
         "source": read["source"],
         "examples": len(rows),
-        "changes": len({r["change_id"] for r in rows}),
+        "changes": len({(r["project"], r["change_id"]) for r in rows}),
         "rules": {
             "ai_assisted": f"(project, Change-Id) among {args.ai_trailers}'s changes_ai",
             "backport_only": f"(project, Change-Id) only on branches matching {BACKPORT.pattern}",
