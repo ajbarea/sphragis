@@ -1,0 +1,75 @@
+{
+  "org": "openstack",
+  "window": "dev",
+  "source": "train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-v3/openstack/refined",
+  "examples": 515,
+  "changes": 214,
+  "rules": {
+    "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers.json's changes_ai",
+    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
+  },
+  "ids": {
+    "ai_assisted": [
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/conf/workarounds.py:11:38",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/conf/workarounds.py:11:58",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/conf/workarounds.py:11:62",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/conf/workarounds.py:11:66",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/objects/allocation_candidate.py:11:705",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/objects/allocation_candidate.py:11:708",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/objects/allocation_candidate.py:11:710",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/objects/allocation_candidate.py:16:752",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/objects/allocation_candidate.py:17:711",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/tests/unit/objects/test_allocation_candidate.py:11:216",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/tests/unit/objects/test_allocation_candidate.py:11:264",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/tests/unit/test_util.py:17:1508",
+      "openstack:I13ab83a165c229ae57876df4570e8af25221a45e:placement/util.py:17:631",
+      "openstack:I1a67ab33c3040cfab0538f9d7cf9eb14ee2dd302:watcher/common/executor.py:4:55",
+      "openstack:I1a67ab33c3040cfab0538f9d7cf9eb14ee2dd302:watcher/tests/common/test_executor.py:4:53",
+      "openstack:I2320d05e544f130d336877f917758045f1b31781:doc/source/admin/deferred_deletion.rst:3:36",
+      "openstack:I2320d05e544f130d336877f917758045f1b31781:doc/source/admin/deferred_deletion.rst:3:60",
+      "openstack:I2320d05e544f130d336877f917758045f1b31781:doc/source/admin/deferred_deletion.rst:3:63",
+      "openstack:I2320d05e544f130d336877f917758045f1b31781:doc/source/admin/deferred_deletion.rst:3:9",
+      "openstack:I2b062ea0c59d5d92c7c518f6256fbdaa4bf719f4:python3-k8sapp-kubevirt/k8sapp_kubevirt/k8sapp_kubevirt/lifecycle/lifecycle_kubevirt.py:19:314",
+      "openstack:I2b062ea0c59d5d92c7c518f6256fbdaa4bf719f4:python3-k8sapp-kubevirt/k8sapp_kubevirt/k8sapp_kubevirt/lifecycle/lifecycle_kubevirt.py:19:364",
+      "openstack:I2b062ea0c59d5d92c7c518f6256fbdaa4bf719f4:python3-k8sapp-kubevirt/k8sapp_kubevirt/k8sapp_kubevirt/lifecycle/lifecycle_kubevirt.py:19:455",
+      "openstack:I2b062ea0c59d5d92c7c518f6256fbdaa4bf719f4:python3-k8sapp-kubevirt/k8sapp_kubevirt/k8sapp_kubevirt/lifecycle/lifecycle_kubevirt.py:19:64",
+      "openstack:I2b062ea0c59d5d92c7c518f6256fbdaa4bf719f4:python3-k8sapp-kubevirt/k8sapp_kubevirt/k8sapp_kubevirt/lifecycle/lifecycle_kubevirt.py:19:81",
+      "openstack:I38c8286c644d93a6f16137bd73f6e267948642b1:ironic/drivers/modules/drac/boot.py:2:86",
+      "openstack:I38c8286c644d93a6f16137bd73f6e267948642b1:ironic/drivers/modules/drac/boot.py:3:112",
+      "openstack:I38c8286c644d93a6f16137bd73f6e267948642b1:ironic/drivers/modules/drac/boot.py:3:72",
+      "openstack:I38c8286c644d93a6f16137bd73f6e267948642b1:ironic/drivers/modules/redfish/boot.py:1:305",
+      "openstack:I38c8286c644d93a6f16137bd73f6e267948642b1:ironic/drivers/modules/redfish/boot.py:3:313",
+      "openstack:I38c8286c644d93a6f16137bd73f6e267948642b1:ironic/tests/unit/drivers/modules/drac/test_boot.py:4:145",
+      "openstack:I42f1d504a063f1d8542c861b3b7caffe56c47bf1:neutron/services/externaldns/drivers/designate/driver.py:1:170",
+      "openstack:I42f1d504a063f1d8542c861b3b7caffe56c47bf1:neutron/services/externaldns/drivers/designate/driver.py:1:174",
+      "openstack:I5723320f578192f7e0beead7d5df5d7e47d54d2b:nova/api/openstack/compute/hypervisors.py:1:108",
+      "openstack:I5723320f578192f7e0beead7d5df5d7e47d54d2b:nova/api/openstack/compute/hypervisors.py:1:113",
+      "openstack:I5cb72f62d3fc62c3ad750c62924842cef59e79b8:ironic/conf/redfish.py:16:102",
+      "openstack:I5cb72f62d3fc62c3ad750c62924842cef59e79b8:ironic/conf/redfish.py:16:99",
+      "openstack:I5cb72f62d3fc62c3ad750c62924842cef59e79b8:ironic/drivers/modules/redfish/firmware.py:16:321",
+      "openstack:I5cb72f62d3fc62c3ad750c62924842cef59e79b8:ironic/drivers/modules/redfish/firmware.py:16:323",
+      "openstack:I5cb72f62d3fc62c3ad750c62924842cef59e79b8:ironic/drivers/modules/redfish/firmware.py:16:350",
+      "openstack:I5cb72f62d3fc62c3ad750c62924842cef59e79b8:ironic/drivers/modules/redfish/firmware.py:16:578",
+      "openstack:Ic86db90db441909848f7ec566c94e4018e322faf:doc/source/admin/adoption.rst:2:168",
+      "openstack:Ic86db90db441909848f7ec566c94e4018e322faf:doc/source/admin/troubleshooting.rst:2:632",
+      "openstack:Ic86db90db441909848f7ec566c94e4018e322faf:doc/source/admin/upgrade-guide.rst:2:22",
+      "openstack:Id1eced2e0a30044b0da7dd5f4f2dedc50a5297b6:ironic/tests/unit/drivers/modules/test_image_cache.py:2:264",
+      "openstack:Id9ae61bd6e4a9a65f919c1560eadba1ee42d935c:doc/source/admin/availability-zones.rst:2:13"
+    ],
+    "backport_only": []
+  },
+  "provenance": {
+    "generated_at": "2026-10-06T15:21:31.044529+00:00",
+    "git": {
+      "commit": "9bdd2c6494128524c0a81e1ee6b771836558eee8",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

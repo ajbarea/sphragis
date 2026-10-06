@@ -1,0 +1,32 @@
+{
+  "org": "wikimedia",
+  "window": "dev",
+  "source": "train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-v3/wikimedia/refined",
+  "examples": 747,
+  "changes": 448,
+  "rules": {
+    "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers.json's changes_ai",
+    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
+  },
+  "ids": {
+    "ai_assisted": [],
+    "backport_only": [
+      "wikimedia:I6dcc94fd95a8cd5b26c008adfca56f67e376974a:src/SkinTuleapSkin.php:1:130",
+      "wikimedia:I9039a39aa92de193a2f2e9816856adc8c757cf85:includes/specials/CargoExport.php:1:149"
+    ]
+  },
+  "provenance": {
+    "generated_at": "2026-10-06T15:23:14.126886+00:00",
+    "git": {
+      "commit": "9bdd2c6494128524c0a81e1ee6b771836558eee8",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}
