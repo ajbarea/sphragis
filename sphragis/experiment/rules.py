@@ -34,6 +34,16 @@ MAP_ANSWER_TOKENS = 1024
 # keeps it and adds the file after it, so the arm differs from the base arm only by the file.
 DEFAULT_SYSTEM = "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."
 
+# A first smoke run (2026-10-06, job 223030) mined mostly practice any project follows ("use
+# meaningful variable names", "follow PEP 8"), so the review prompts ask for what is particular
+# to this organization; amended before any arm was scored. A written guide is the organization's
+# own declaration, so its prompts keep every rule it states.
+_PARTICULAR = (
+    "Leave out general good practice that any project would follow (meaningful names, PEP 8, "
+    "writing tests, handling errors). Keep conventions particular to this organization, naming "
+    "the identifiers, functions, libraries, file formats or wording they concern. "
+)
+
 _RULE_FORMAT = (
     "Write one imperative rule a line, each starting with '- '. Give rules only: no headings, "
     "no description of the project, no explanation."
@@ -45,7 +55,7 @@ MAP_REVIEWS = (
     "List the coding conventions these reviewers enforce: rules a contributor could follow when "
     "writing new code for this organization. Keep only rules that are specific (naming, "
     "formatting, idioms, error handling, logging, tests, documentation, API use) and that the "
-    "revisions applied. " + _RULE_FORMAT + "\n\n{source}"
+    "revisions applied. " + _PARTICULAR + _RULE_FORMAT + "\n\n{source}"
 )
 
 MAP_GUIDE = (
@@ -66,6 +76,7 @@ REDUCE_REVIEWS = (
     "Merge them into one rules file for a contributor. Keep a rule only if it appears, in any "
     "wording, in at least two of the lists. Merge rules that say the same thing, and drop rules "
     "about one particular function or file. Put the most often repeated rules first. "
+    + _PARTICULAR
     + _RULE_FORMAT
     + "\n\n{lists}"
 )

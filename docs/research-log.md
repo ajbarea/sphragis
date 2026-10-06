@@ -8035,3 +8035,15 @@ rules.
 fourteen map calls and one reduce a half) and one per guide. Evaluation: 2 generations an example
 a partition, 4 an example once: 12,024 for OpenStack and 17,064 for Wikimedia, about 18 GH200-hours
 at the retrieval smoke job's at most 2.2 s a generation.
+
+**Amended before any arm was scored (2026-10-06).** Two distillation smoke jobs at 6a3b230 ran on
+the real model: OpenStack's guide (job 223029, 58 s) and OpenStack partition 2's two halves (job
+223030, 16 min, thirteen chunks a half). Only the files were read, no arm was generated or scored.
+They showed two faults. The guide file stopped at exactly 512 tokens mid-word, a map answer cut by
+its budget with nothing recording it; the map budget is now 1,024, and a capped answer is flagged and
+its cut line dropped. The mined files were mostly practice any project follows ("use meaningful
+variable names", "follow PEP 8"), so the two review prompts now ask the model to leave out general
+good practice and keep conventions particular to the organization, naming what they concern. The
+guide prompts are unchanged: a written guide is the organization's own declaration, and its rules
+are kept as stated. The smoke files are not used; every file is distilled again under the amended
+pipeline.

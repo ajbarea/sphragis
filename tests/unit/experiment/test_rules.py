@@ -125,3 +125,10 @@ def test_every_prompt_and_budget_is_in_the_pipeline_fingerprint(monkeypatch) -> 
     monkeypatch.undo()
     monkeypatch.setitem(rules.PROMPTS, "guide", ("x {source}", "y {lists}"))
     assert rules.pipeline() != before
+
+
+def test_mined_rules_ask_for_the_particular_and_a_guide_keeps_what_it_states() -> None:
+    assert "Leave out general good practice" in MAP_REVIEWS
+    assert "Leave out general good practice" in REDUCE_REVIEWS
+    assert "Leave out general good practice" not in MAP_GUIDE
+    assert "Leave out general good practice" not in REDUCE_GUIDE
