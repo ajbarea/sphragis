@@ -15,6 +15,7 @@ comparator, recorded in the research log.
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import re
 from collections.abc import Callable, Mapping, Sequence
@@ -22,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.experiment.runner import comment_lines
-from sphragis.experiment.training import MAX_SEQ_LENGTH
+from sphragis.experiment.training import MAX_SEQ_LENGTH, render_chat
 
 # The file budget, in tokens: one training example's length (training.MAX_SEQ_LENGTH), the
 # context one retrieved shot takes at k = 1.
@@ -45,10 +46,9 @@ MAX_FILE_RULES = 40
 # the other (jobs 223605, 223606: 52 rules and 1), and counted here it left one to five rules a
 # half (jobs 224850, 224851), since conventions that are a project's own seldom recur across
 # chunks. The merge's answer carries citations, so it gets twice a file's budget; the file
-# itself is cut to the budget. A pool that fills fewer than three chunks is refused.
+# itself is cut to the budget. A half whose lists hold no rule with its evidence is refused.
 MIN_CITED_LISTS = 1
 REDUCE_ANSWER_TOKENS = 2 * RULES_BUDGET
-MIN_REVIEW_CHUNKS = 3
 # A map answer's budget: a list, not a file. A chunk holds some hundred and fifty reviewed changes,
 # so a list may run long; an answer that reaches the budget is flagged and its cut line dropped.
 MAP_ANSWER_TOKENS = 1024
@@ -115,6 +115,11 @@ PROMPTS = {
 }
 
 
+def paragraphs(text: str) -> list[str]:
+    """A guide's paragraphs, blank-line separated, the units its chunks are packed from."""
+    return [block.strip() for block in text.split("\n\n") if block.strip()]
+
+
 def review_text(row: Mapping[str, Any]) -> str:
     """One reviewed change as a map pass reads it: the comments, the code, the revision."""
     return (
@@ -126,7 +131,8 @@ def review_text(row: Mapping[str, Any]) -> str:
 def packed(
     texts: Sequence[str], *, length: Callable[[str], int], budget: int = CHUNK_TOKENS
 ) -> list[list[str]]:
-    """`texts` packed in order into groups of at most `budget` by `length`.
+    """`texts` packed in order into groups of at most `budget` by `length`, the separator joining
+    them (`chunks`, `numbered`) counted between each two.
 
     A text longer than the budget is a group of its own rather than being cut, since cutting a
     change or a guide section mid-way would hand the map pass half a convention.
@@ -134,13 +140,14 @@ def packed(
     out: list[list[str]] = []
     current: list[str] = []
     used = 0
+    separator = length("\n\n")
     for text in texts:
         size = length(text)
-        if current and used + size > budget:
+        if current and used + separator + size > budget:
             out.append(current)
             current, used = [], 0
+        used += separator + size if current else size
         current.append(text)
-        used += size
     if current:
         out.append(current)
     return out
@@ -154,14 +161,8 @@ def chunks(
 
 
 def review_chunks(sources: Sequence[str], *, length: Callable[[str], int]) -> list[list[str]]:
-    """Reviewed changes packed into chunks, the header each gets counted at its widest, refused
-    if fewer than `MIN_REVIEW_CHUNKS`, since recurrence across lists needs that many."""
-    groups = packed(sources, length=lambda t: length(f"### Change {len(sources)}\n{t}"))
-    if len(groups) < MIN_REVIEW_CHUNKS:
-        raise ValueError(
-            f"{len(groups)} chunks of reviews; recurrence across lists needs {MIN_REVIEW_CHUNKS}"
-        )
-    return groups
+    """Reviewed changes packed into chunks, the header each gets counted at its widest."""
+    return packed(sources, length=lambda t: length(f"### Change {len(sources)}\n{t}"))
 
 
 def recurring(
@@ -311,8 +312,7 @@ def distil(
         groups = review_chunks(sources, length=length)
         parts = [numbered(group) for group in groups]
     else:
-        groups = packed(sources, length=length)
-        parts = ["\n\n".join(group) for group in groups]
+        parts = chunks(sources, length=length)
 
     def answer(prompt: str, budget: int) -> tuple[str, list[str], bool]:
         # An answer that reached its budget was cut, so its last line may be half a rule.
@@ -336,11 +336,8 @@ def distil(
             kept_lists.append((text, kept, capped))
             evidence.append({"listed": len(lines), "kept": len(kept)})
         mapped = kept_lists
-        lists = sum(1 for _, kept, _ in mapped if kept)
-        if lists < MIN_REVIEW_CHUNKS:
-            raise ValueError(
-                f"{lists} lists hold a rule with its evidence; recurrence needs {MIN_REVIEW_CHUNKS}"
-            )
+        if not any(kept for _, kept, _ in mapped):
+            raise ValueError("no list holds a rule with its evidence")
     # Only lists that hold a rule go to the merge, numbered as it sees them, so no citation can
     # name an empty one.
     merge_chunks = [n for n, (_, lines, _) in enumerate(mapped, 1) if lines]
@@ -398,10 +395,19 @@ def distiller_signature(model: str, dtype: Any, template: Mapping[str, Any]) -> 
 
 
 def pipeline() -> str:
-    """A fingerprint of everything a file's distillation depends on besides its sources and
-    model: this module's source, which holds the prompts, every budget and the parsing. A file
-    made under another is not this comparator's."""
-    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    """A fingerprint of everything a file's distillation depends on besides its sources and the
+    distiller (`distiller_signature`): this module's source, which holds the prompts, budgets,
+    splitting and parsing; the code it renders reviews and chat turns with (`comment_lines`,
+    `render_chat`); and the budget's value (`MAX_SEQ_LENGTH`). A file made under another is not
+    this comparator's. The generator's own decoding code is pinned by the commit each file's
+    provenance records."""
+    parts = [
+        Path(__file__).read_text(),
+        inspect.getsource(comment_lines),
+        inspect.getsource(render_chat),
+        str(MAX_SEQ_LENGTH),
+    ]
+    return hashlib.sha256("\0".join(parts).encode()).hexdigest()
 
 
 def pinned(guide: Mapping[str, Any]) -> list[dict[str, Any]]:

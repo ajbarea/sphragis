@@ -39,8 +39,11 @@ A pool is the retrieval comparator's: the rows the half's adapter trains on (`re
    model. The prior a larger model brings is the price of a file that says what the reviews say.
 2. **One pipeline for both sources.** The written conventions and the review comments go through
    one map and reduce pipeline, with prompts that differ only where the sources do: a review
-   merge keeps a rule that recurs in two or more lists (industrial rule mining's promotion rule,
-   Qodo Rule Miner, 2026-07), a guide merge keeps every rule, since a guide states each once. The written guides are OpenStack's `hacking` guidelines
+   merge ranks rules by how many lists they recur in (industrial rule mining's promotion rule,
+   Qodo Rule Miner, 2026-07), a guide merge keeps every rule, since a guide states each once.
+   Amended 2026-10-06, before any arm was scored: a mined rule's evidence is its chunk's changes
+   (two or more), and recurrence across lists ranks rules rather than filtering them, since
+   requiring two lists left one to five rules a half (research log, 2026-10-06). The written guides are OpenStack's `hacking` guidelines
    and MediaWiki's coding conventions, snapshotted once with their URL, date and sha256 under
    `datasets/rules/`. Written own minus distilled own then compares sources, not formatting.
 3. **Map, then reduce.** Map: pack a pool's rows (each row's review comments with its hunk before

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from sphragis.experiment.rules import (
@@ -62,8 +60,9 @@ class _Model:
 
 
 def _half_chunk(text: str) -> int:
-    """A length under which every source fills half a chunk, so a chunk holds two changes."""
-    return CHUNK_TOKENS // 2 if text.split()[-1].startswith("s") else len(text.split())
+    """A length under which every source fills nearly half a chunk, so a chunk holds two changes
+    and the separator between them."""
+    return CHUNK_TOKENS // 2 - 8 if text.split()[-1].startswith("s") else len(text.split())
 
 
 class _Cites(_Model):
@@ -226,14 +225,20 @@ def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> N
     assert cites == [[1, 2, 3], [2, 3]]
 
 
-def test_mined_rules_need_three_lists_with_evidence() -> None:
-    with pytest.raises(ValueError, match="recurrence across lists needs 3"):
-        distil(["s1", "s2", "s3", "s4"], kind="reviews", generate=_Cites(), length=_half_chunk)
+def test_a_half_whose_lists_hold_no_rule_with_its_evidence_is_refused() -> None:
     no_evidence = lambda p, n: ("- a. [1]", False)  # noqa: E731
-    with pytest.raises(ValueError, match="0 lists hold a rule with its evidence"):
+    with pytest.raises(ValueError, match="no list holds a rule with its evidence"):
         distil(
             [f"s{n}" for n in range(6)], kind="reviews", generate=no_evidence, length=_half_chunk
         )
+
+
+def test_packing_counts_the_separator_between_texts() -> None:
+    from sphragis.experiment.rules import packed
+
+    # Two texts of 5 and a separator of 1 fill 11, one over a budget of 10.
+    assert packed(["a", "b"], length=lambda t: 1 if t == "\n\n" else 5, budget=10) == [["a"], ["b"]]
+    assert packed(["a", "b"], length=lambda t: 1 if t == "\n\n" else 5, budget=11) == [["a", "b"]]
 
 
 @pytest.mark.parametrize(
@@ -290,12 +295,15 @@ def test_a_capped_answer_is_flagged_and_its_cut_line_dropped() -> None:
     assert "- three" in reduce_prompts[0] and "- fou" not in reduce_prompts[0]
 
 
-def test_the_pipeline_fingerprint_is_the_modules_source() -> None:
-    import hashlib
-
+def test_the_pipeline_fingerprint_covers_the_code_distillation_runs_through(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from sphragis.experiment import rules
 
-    assert pipeline() == hashlib.sha256(Path(rules.__file__).read_bytes()).hexdigest()
+    before = pipeline()
+    # The budget's value, set outside this module, moves it.
+    monkeypatch.setattr(rules, "MAX_SEQ_LENGTH", rules.MAX_SEQ_LENGTH + 1)
+    assert pipeline() != before
 
 
 def test_mined_rules_ask_for_the_particular_and_a_guide_keeps_what_it_states() -> None:

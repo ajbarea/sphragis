@@ -93,7 +93,7 @@ _LOADERS = {"derived_file_rows", "refined_examples"}
 # reading through the loader.
 _WRAPPERS = {
     "sphragis.experiment.holdout": {"window_split"},
-    "sphragis.experiment.retrieval": {"read_halves"},
+    "sphragis.experiment.retrieval": {"read_halves", "half_pools"},
 }
 
 
@@ -112,6 +112,14 @@ def _calls_a_loader(tree: ast.AST, scope: ast.AST | None = None) -> bool:
     )
 
 
+def _calls_local(scope: ast.AST, names: set[str]) -> bool:
+    """A bare-name call in `scope` to one of `names`, functions of the same module."""
+    return any(
+        isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in names
+        for n in ast.walk(scope)
+    )
+
+
 @pytest.mark.parametrize("module", sorted(_WRAPPERS))
 def test_a_wrapper_reads_through_the_loader(module: str) -> None:
     path = _ROOT / Path(*module.split(".")).with_suffix(".py")
@@ -121,7 +129,8 @@ def test_a_wrapper_reads_through_the_loader(module: str) -> None:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name in _WRAPPERS[module]:
             # Through the loader itself, or through another wrapper that is checked here too.
-            assert _calls_a_loader(tree, node), (
+            siblings = _WRAPPERS[module] - {node.name}
+            assert _calls_a_loader(tree, node) or _calls_local(node, siblings), (
                 f"{module}.{node.name} does not read through the loader"
             )
 

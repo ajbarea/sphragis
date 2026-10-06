@@ -8144,6 +8144,23 @@ files nor mixes arms prompted two ways. The rules foreign job also records each 
 prompt as it would mark it, and the reader refuses a base arm (taken from the retrieval foreign
 job) whose rows were prompted otherwise. The full distillation runs this pipeline.
 
+**Smoke6 and the last review, before the full distillation (2026-10-06).** At 21b7ea4, job 226889
+(53 minutes) distilled Wikimedia partition 1 through the new paths; generated from its file:
+
+| half | merged rules | kept | evaluated-model tokens | lists merged |
+|---|---|---|---|---|
+| wikimedia-a | 53 | 40 | 734 | 9 of 16 |
+| wikimedia-b | 23 | 23 | 446 | 9 of 16 |
+
+The file records its distiller and the model its budget was counted in, every cited merged rule
+is grounded in a list it cites, and one half's merge wrote more rules than the 40-rule cap,
+which kept the most-cited. The final review then widened the pipeline fingerprint to the code
+outside `rules.py` that distillation runs through (the review and chat rendering, the budget's
+value, the guide's paragraph split, now in `rules.py`), dropped the floor of three lists holding
+a rule (its reason was recurrence across lists, which now only ranks; a half whose lists hold no
+rule is refused), and made the comparator check each file's recorded source, organization,
+partition and size, not only its name.
+
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
 The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;

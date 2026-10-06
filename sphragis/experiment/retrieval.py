@@ -328,3 +328,23 @@ def read_halves(
         if now != then:
             raise ValueError(f"{root / half}: {now}, but the adapters' run read {then}")
     return train, held_out, summary
+
+
+def half_pools(
+    root: Path,
+    org: str,
+    size: int,
+    fits: Callable[[Mapping[str, Any]], bool],
+    recorded: Mapping[str, Mapping[str, Any]],
+    trained: Mapping[str, int] | None = None,
+) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
+    """A partition's two half pools, each half's held-out rows, and where each came from: the
+    one cut the comparator prompts from and the distiller distils, so both stand where the
+    adapters did. With `trained` (each adapter's training-set size, from its run), a pool of
+    another size is refused: each pool is its adapter's training set."""
+    train, held_out, summary = read_halves(root, org, recorded)
+    cut = pools(train, size=size, fits=fits)
+    pooled = {half: len(index.pool) for half, index in cut.items()}
+    if trained is not None and pooled != dict(trained):
+        raise ValueError(f"pools hold {pooled} rows, the adapters trained on {dict(trained)}")
+    return cut, held_out, summary

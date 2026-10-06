@@ -37,7 +37,7 @@ import argparse
 import hashlib
 import json
 import os
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 from statistics import median
 from typing import Any
@@ -53,7 +53,7 @@ from sphragis.experiment.retrieval import (
     corpus_of,
     fingerprint,
     first_partitions,
-    pools,
+    half_pools,
     prompt_text,
     read_halves,
     resumable,
@@ -115,18 +115,6 @@ def admissible(path: Path, org: str) -> tuple[list[int], int]:
     return found
 
 
-def half_pools(
-    root: Path,
-    org: str,
-    size: int,
-    fits: Callable[[Mapping[str, Any]], bool],
-    recorded: Mapping[str, Mapping[str, Any]],
-) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
-    """A partition's two half pools, each half's held-out rows, and where each came from."""
-    train, held_out, summary = read_halves(root, org, recorded)
-    return pools(train, size=size, fits=fits), held_out, summary
-
-
 def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
     """Every held-out example any of the organization's first partitions scores, once each."""
     rows: dict[str, dict] = {}
@@ -144,7 +132,10 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
 
 
 def rules_files(
-    args: argparse.Namespace, indexes: Mapping[str, Any], foreign_order: list[int] | None
+    args: argparse.Namespace,
+    indexes: Mapping[str, Any],
+    foreign_order: list[int] | None,
+    size: int,
 ) -> tuple[dict[tuple[str, str], str], set[tuple[str, str | None]]]:
     """The rules files a rules job prompts with, and the generators that made them. Each
     distilled file is checked to come from the pool this job rebuilt (by its rows' ids), so a file
@@ -169,6 +160,11 @@ def rules_files(
         (args.org, args.partition) if args.pools == "halves" else (args.foreign, foreign_order[0])
     )
     distilled = load(f"rules-reviews-{owner}-p{partition}")
+    # What the file says it is, not only what it is named.
+    recorded = {k: distilled.get(k) for k in ("source", "org", "partition", "train_size")}
+    claimed = {"source": "reviews", "org": owner, "partition": partition, "train_size": size}
+    if recorded != claimed:
+        raise SystemExit(f"rules-reviews-{owner}-p{partition} records {recorded}, not {claimed}")
     files: dict[tuple[str, str], str] = {}
     # What wrote each file, and whose tokens its budget was counted in.
     made_by = {(distilled["generator"], distilled.get("budgeted_by"))}
@@ -185,6 +181,8 @@ def rules_files(
     if args.pools == "foreign":
         for org in (args.org, args.foreign):
             written = load(f"rules-guide-{org}")
+            if (written.get("source"), written.get("org")) != ("guide", org):
+                raise SystemExit(f"rules-guide-{org} records another guide")
             # Distilled from the snapshot committed beside this code, page for page.
             snapshot = json.loads((args.guides / f"guide-{org}.json").read_text())
             if written.get("pipeline") != pipeline():
@@ -252,12 +250,14 @@ def run(args: argparse.Namespace) -> None:
     prompts: dict[str, list[Prompt]] = {}
     similarity: dict[str, list[float | None]] = {}
     evaluated_by: dict[str, str] = {}
+    # Each pool is its adapter's training set: as many rows as the run trained it on.
+    checked = None if args.dry_run else trained
     if args.pools == "halves":
-        indexes, held_out, corpora = half_pools(root, args.org, size, fits, recorded)
+        indexes, held_out, corpora = half_pools(root, args.org, size, fits, recorded, checked)
         for half in halves(args.org):
             targets[half] = held_out[half][: args.limit]
     else:
-        indexes, _, corpora = half_pools(root, args.foreign, size, fits, recorded)
+        indexes, _, corpora = half_pools(root, args.foreign, size, fits, recorded, checked)
         targets[args.org] = scored(args.results, args.org, order, size)[: args.limit]
         # The base arm is the retrieval foreign job's; a rules job reads it from there.
         if args.arms == "retrieval":
@@ -265,15 +265,12 @@ def run(args: argparse.Namespace) -> None:
             prompts[base] = [build_prompt(t) for t in targets[args.org]]
             similarity[base] = [0.0 for _ in targets[args.org]]
             evaluated_by[base] = args.org
-    # Each pool is its adapter's training set: as many rows as the run trained that adapter on.
-    # The proxy cannot say so, so a dry run records both.
+    # A dry run's length proxy cannot cut the pools exactly, so it records both sizes.
     pooled = {pool: len(index.pool) for pool, index in indexes.items()}
-    if not args.dry_run and pooled != trained:
-        raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
     files: dict[tuple[str, str], str] = {}
     made_by: set[tuple[str, str | None]] = set()
     if args.arms == "rules":
-        files, made_by = rules_files(args, indexes, foreign_order)
+        files, made_by = rules_files(args, indexes, foreign_order, size)
         if not args.dry_run:
             # Every rules file was written by the one pinned distiller and budgeted in the
             # tokens of the model these arms run, checked before the pools are prompted.

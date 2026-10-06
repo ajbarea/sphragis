@@ -596,6 +596,7 @@ def test_a_rules_job_prompts_with_each_file_in_the_system_turn(
         "generator": "qwen@rev|float32",
         "budgeted_by": "q@r",
         "pipeline": pipeline(),
+        **{"source": "reviews", "org": "openstack", "partition": ORDER[0], "train_size": SIZE},
     }
     (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps(made))
     report = _halves(
@@ -620,6 +621,7 @@ def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
         "generator": "qwen@rev|float32",
         "budgeted_by": "q@r",
         "pipeline": pipeline(),
+        **{"source": "reviews", "org": "openstack", "partition": 3, "train_size": SIZE},
     }
     (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
     args = argparse.Namespace(
@@ -631,13 +633,17 @@ def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
             self.pool = rows
 
     with pytest.raises(SystemExit, match="distilled from another pool"):
-        comparator.rules_files(args, {"openstack-a": Index(pool)}, None)
+        comparator.rules_files(args, {"openstack-a": Index(pool)}, None, SIZE)
     files["openstack-a"]["pool_ids"] = ["x1", "x2"]
     (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
-    picked, made_by = comparator.rules_files(args, {"openstack-a": Index(pool)}, None)
+    picked, made_by = comparator.rules_files(args, {"openstack-a": Index(pool)}, None, SIZE)
     assert picked == {(DISTILLED, "openstack-a"): "- r"} and made_by == {
         ("qwen@rev|float32", "q@r")
     }
+    # Named as partition 3's, recorded as another's.
+    (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps({**made, "partition": 5}))
+    with pytest.raises(SystemExit, match="records"):
+        comparator.rules_files(args, {"openstack-a": Index(pool)}, None, SIZE)
 
 
 def test_a_rules_file_still_being_written_is_refused(tmp_path: Path) -> None:
@@ -653,7 +659,7 @@ def test_a_rules_file_still_being_written_is_refused(tmp_path: Path) -> None:
         dry_run=False,
     )
     with pytest.raises(SystemExit, match="still being written"):
-        comparator.rules_files(args, {}, None)
+        comparator.rules_files(args, {}, None, SIZE)
 
 
 def test_a_rules_job_without_its_files_is_refused(corpora: dict[str, Path], tmp_path: Path) -> None:
@@ -729,3 +735,16 @@ def test_a_rules_file_from_another_distiller_or_budget_is_refused() -> None:
     for budget in (None, "n"):
         with pytest.raises(SystemExit, match="budgeted in"):
             comparator.require_made_by({("d", budget)}, distiller="d", reader="m")
+
+
+def test_a_value_error_from_outside_the_study_is_not_a_refusal() -> None:
+    from fractions import Fraction
+
+    from sphragis.refusal import refusals
+
+    # Raised inside a library (the standard library's fractions.py), as transformers would
+    # during generation: it keeps its traceback.
+    with pytest.raises(ValueError, match="Invalid literal"), refusals():
+        Fraction("x")
+    with pytest.raises(SystemExit, match="mine"), refusals():
+        raise ValueError("mine")

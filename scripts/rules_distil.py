@@ -27,16 +27,15 @@ from sphragis.experiment.retrieval import (
     corpus_of,
     fingerprint,
     first_partitions,
-    pools,
-    read_halves,
+    half_pools,
     trainable,
 )
 from sphragis.experiment.rules import (
     distil,
     distiller_signature,
+    paragraphs,
     pinned,
     pipeline,
-    review_chunks,
     review_text,
 )
 from sphragis.refusal import refusals
@@ -50,36 +49,17 @@ parser.add_argument("--guides", type=Path, help="with --source guide: the guides
 parser.add_argument("--out", type=Path, required=True)
 
 
-def paragraphs(text: str) -> list[str]:
-    """A guide's paragraphs, blank-line separated, the units its chunks are packed from."""
-    return [block.strip() for block in text.split("\n\n") if block.strip()]
-
-
-def sources_of(
-    args: argparse.Namespace, tokenizer: Any, distiller_tokenizer: Any = None
-) -> tuple[dict, dict[str, dict]]:
+def sources_of(args: argparse.Namespace, tokenizer: Any) -> tuple[dict, dict[str, dict]]:
     """What the job distils, checked before any model loads: the report's head, and per file
     its kind, its sources and what they are recorded as. Pools are cut by `tokenizer`, the
-    evaluated model's, as its adapters' training sets were; chunks are counted by the
-    distiller's."""
+    evaluated model's, as its adapters' training sets were."""
     head: dict[str, Any] = {"source": args.source, "org": args.org}
     if args.source == "reviews":
         listing = json.loads((args.results / f"admissible-partitions-{args.org}.json").read_text())
         order, size = first_partitions(listing, org=args.org)
         root, trained, recorded = corpus_of(args.results, args.org, args.partition, order, size)
-        train, _, corpora = read_halves(root, args.org, recorded)
-        cut = pools(train, size=size, fits=trainable(tokenizer))
-        pooled = {half: len(index.pool) for half, index in cut.items()}
-        if pooled != trained:
-            raise ValueError(f"pools hold {pooled} rows, the adapters trained on {trained}")
+        cut, _, corpora = half_pools(root, args.org, size, trainable(tokenizer), recorded, trained)
         head |= {"partition": args.partition, "train_size": size, "corpora": corpora}
-
-        # Enough chunks for recurrence, counted now, before any model loads.
-        def length(text: str) -> int:
-            return len(distiller_tokenizer(text, add_special_tokens=False)["input_ids"])
-
-        for index in cut.values():
-            review_chunks([review_text(row) for row in index.pool], length=length)
         return head, {
             half: {
                 "kind": "reviews",
@@ -118,20 +98,16 @@ def main() -> None:
     # Only the tokenizers until the data has passed every check: the model loads after.
     evaluated = _require_tokenizer(MODEL_ID)
     with refusals():
-        report, plan = sources_of(args, evaluated, _require_tokenizer(DISTILLER_ID))
+        report, plan = sources_of(args, evaluated)
 
-    generator = HFGenerator(
-        model_id=DISTILLER_ID, dtype=DISTILLER_DTYPE, template=DISTILLER_TEMPLATE
-    )
-    tokenizer = generator.tokenizer
-    signature = distiller_signature(
-        pinned_id(generator.model_id),
-        generator.computed_dtype,
-        DISTILLER_TEMPLATE,
-    )
+    # The distiller loads only when a file is not already cached under this signature, so a
+    # resubmitted job whose files were all made spends no model load.
+    signature = distiller_signature(pinned_id(DISTILLER_ID), DISTILLER_DTYPE, DISTILLER_TEMPLATE)
+    distiller_tokens = _require_tokenizer(DISTILLER_ID)
+    loaded: list[Any] = []
 
     def length(text: str) -> int:
-        return len(tokenizer(text, add_special_tokens=False)["input_ids"])
+        return len(distiller_tokens(text, add_special_tokens=False)["input_ids"])
 
     budgeted_by = pinned_id(MODEL_ID)
 
@@ -139,6 +115,15 @@ def main() -> None:
         return len(evaluated(text, add_special_tokens=False)["input_ids"])
 
     def generate(prompt: str, max_new_tokens: int) -> tuple[str, bool]:
+        if not loaded:
+            loaded.append(
+                HFGenerator(
+                    model_id=DISTILLER_ID, dtype=DISTILLER_DTYPE, template=DISTILLER_TEMPLATE
+                )
+            )
+            if str(loaded[0].computed_dtype) != str(DISTILLER_DTYPE):
+                raise SystemExit(f"the distiller loaded in {loaded[0].computed_dtype}")
+        generator = loaded[0]
         generator.max_new_tokens = max_new_tokens
         return generator.generate(prompt), generator.last_capped
 
