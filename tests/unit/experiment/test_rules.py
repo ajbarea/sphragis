@@ -179,7 +179,8 @@ GROUNDING_CASES = [
     ("- Use `assertEqual` rather than `assertTrue`.", "- Use assertEqual over assertTrue.", True),
     ("- Use the `Session` class.", "- Use the Session class.", True),
     ("- Don't use print for logging.", "- Never use print for logging.", True),
-    ("- Compare with `is None`, not `== None`.", "- Compare to None with is.", True),
+    # A rule whose only subject is a name every Python file holds cannot be grounded (one word).
+    ("- Compare with `is None`, not `== None`.", "- Compare to None with is.", False),
     # Invented, or sharing only a name, a keyword, an abbreviation or one word.
     ("- Use black for formatting.", "- Keep formatting changes apart.", False),
     ("- Follow OpenStack hacking rules.", "- Name OpenStack services in lowercase.", False),
@@ -190,6 +191,10 @@ GROUNDING_CASES = [
     ("- Use `true`/`false` instead of `'1'`.", "- Number lists from 1.", False),
     ("- Compare with `is None`, not `== None`.", "- Compare floats with assertAlmostEqual.", False),
     ("- Use 4 spaces.", "- Indent with 2 spaces.", False),
+    ("- Set `self.x` to `None`.", "- Return `None` from `self.close`.", False),
+    ("- Use `self` and `cls`.", "- Name `self` and `cls` in methods.", False),
+    ("- Return `None`, not `False`.", "- Never compare `True`/`False`/`None` with ==.", False),
+    ("- Couldn't log here, mustn't print.", "- Mustn't print, couldn't skip.", False),
     ("- Use the.", "- Use the logger.", False),
     # The stated limit: support is lexical, so an inverted or altered rule passes.
     ("- Use print for logging.", "- Log with oslo_log for logging, not print.", True),
@@ -201,9 +206,11 @@ GROUNDING_CASES = [
 def test_grounding_decides_every_case_a_review_raised(
     rule: str, source: str, expected: bool
 ) -> None:
-    from sphragis.experiment.rules import grounded
+    from sphragis.experiment.rules import content_words, grounded, supports
 
     assert grounded(rule, source) is expected
+    # The word sets `recurring` compares decide the same.
+    assert supports(content_words(rule), content_words(source)) is expected
 
 
 def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> None:
@@ -214,9 +221,9 @@ def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> N
     lists = [["- Use `oslo_log` here."], ["- Use `oslo_log` here, `Session` too."]]
     lists += [["- Use `oslo_log` here, `session` too."]]
     rules, cites = recurring(lines, lists=lists, length=len)
-    # Copies merge their citations; a different identifier's case is a different rule.
-    assert rules == ["- Use `oslo_log` here.", "- Use `Session` too.", "- Use `session` too."]
-    assert cites == [[1, 2, 3], [2], [3]]
+    # Copies merge their citations, identifier case aside, as grounding reads them.
+    assert rules == ["- Use `oslo_log` here.", "- Use `Session` too."]
+    assert cites == [[1, 2, 3], [2, 3]]
 
 
 def test_mined_rules_need_three_lists_with_evidence() -> None:

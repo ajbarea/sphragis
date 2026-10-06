@@ -168,17 +168,18 @@ def recurring(
     lines: Sequence[str], *, lists: Sequence[Sequence[str]], length: Callable[[str], int]
 ) -> tuple[list[str], list[list[int]]]:
     """The merged rules grounded in `MIN_CITED_LISTS` or more of the `lists` they cite (each a
-    non-empty map list, numbered from 1 as the merge saw them), most-cited first (ties in the
-    merge's order), as a file within the caps; and the lists each is grounded in.
+    non-empty map list, numbered from 1 as the merge saw them), most-cited first (ties by where
+    each rule's first grounded copy stands in the merge), as a file within the caps; and the
+    lists each is grounded in.
 
     A citation counts only where a rule of that list supports the merged rule (`grounded`), so a
     rule the merge invented and labelled with a list number is dropped.
     """
     sources = [[content_words(r) for r in rules] for rules in lists]
     merged: dict[str, tuple[str, set[int], int]] = {}
-    # A rule the merge wrote twice is kept once, as its first grounded copy reads, citing every
-    # list any copy is grounded in; copies are told apart by their words, case outside code
-    # spans, spacing and a closing period aside. The threshold holds for the copies together.
+    # A rule the merge wrote twice is kept once, as its first grounded copy reads and where that
+    # copy stands, citing every list any copy is grounded in; copies are told apart by their
+    # words, case, spacing and a closing period aside. The threshold holds for them together.
     for order, line in enumerate(lines):
         rule, numbers = cited(line, len(lists))
         words = content_words(rule)
@@ -197,10 +198,9 @@ def recurring(
 
 
 def _same_rule(rule: str) -> str:
-    """A rule as copies of it compare: lower-cased outside its code spans, spacing collapsed,
-    no closing period."""
-    parts = _CODE.split(" ".join(rule.split()).rstrip(" ."))
-    return "".join(part if part.startswith("`") else part.lower() for part in parts)
+    """A rule as copies of it compare: lower-cased, code too (as `content_words` reads it),
+    spacing collapsed, no closing period."""
+    return " ".join(rule.lower().split()).rstrip(" .")
 
 
 def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[str]:
@@ -212,8 +212,9 @@ def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[s
     return kept
 
 
-# Function words, the imperative and connective words every rule uses, and contraction stems
-# ("don't" is "don" and "t"), which say nothing of a rule's convention.
+# Function, imperative, connective and auxiliary words every rule uses, and the names every
+# Python file holds (`self`, `None`), which say nothing of a rule's convention. Contractions are
+# split off first (`_CONTRACTION`), so "don't" is "do".
 # fmt: off
 _FUNCTION = frozenset((
     "a", "an", "the", "to", "of", "in", "on", "for", "and", "or", "not", "no", "is", "are", "be",
@@ -222,12 +223,12 @@ _FUNCTION = frozenset((
     "over", "only", "must", "should", "always", "never", "avoid", "prefer", "make", "sure",
     "each", "such", "their", "do", "does", "any", "all", "new", "old", "more", "less", "eg", "ie",
     "through", "via", "if", "but", "can", "may", "per", "you", "your", "so", "then", "also",
-    "them", "they", "we", "our", "one", "don", "doesn", "isn", "aren", "shouldn", "won", "wasn",
-    "didn",
+    "them", "they", "we", "our", "one", "could", "would", "has", "have", "had", "were", "was",
+    "need", "let", "will", "none", "self", "cls", "true", "false", "null",
 ))
 # fmt: on
 _TOKEN = re.compile(r"[a-z0-9_]+")
-_CODE = re.compile(r"(`[^`]*`)")
+_CONTRACTION = re.compile(r"n't\b|'(?:s|re|ll|ve|d|m)\b")
 # One shared word is not support: a merged rule is grounded only on two or more content words.
 MIN_RULE_WORDS = 2
 
@@ -238,7 +239,7 @@ def content_words(rule: str) -> frozenset[str]:
     or single letters."""
     return frozenset(
         w
-        for w in _TOKEN.findall(rule.lower())
+        for w in _TOKEN.findall(_CONTRACTION.sub(" ", rule.lower().replace("\u2019", "'")))
         if (len(w) > 1 or w.isdigit()) and w not in _FUNCTION
     )
 

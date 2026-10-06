@@ -8115,21 +8115,23 @@ model that reads the file, not the distiller's; each smoke file is shorter in th
 near the budget. A map list left empty by the evidence filter no longer goes to the merge (up to
 half of Wikimedia's lists were empty and still numbered, so a merged rule could cite one). A merged
 rule's citation counts only where one rule of that list holds more than half of its content words
-(`rules.grounded`: lower-cased word tokens, identifiers whole, numbers kept, function,
-imperative and connective words aside), and only where the merged rule has two content words or
-more, since one shared word is not support. Every case the reviews raised is pinned as a test
+(`rules.grounded`: lower-cased word tokens, contractions split off, identifiers whole, numbers
+kept; function, imperative, connective and auxiliary words aside, and the names every Python
+file holds, `self` and `None`), and only where the merged rule has two content words or more,
+since one shared word is not support. Every case the reviews raised is pinned as a test
 with its decision. Three
 rounds of hand-built identifier rules (backticks, snake_case, PascalCase) each let a new kind of
 token ground unrelated rules; containment is the measure of support that replaced them. On the
 smoke merges, replayed: every cited merged rule passes in a list it cites, one in a hundred passes
 against the other organization's lists, no invented rule tried ("use black for formatting",
 "follow OpenStack hacking rules", "use `in` to test keys") passes, and every file keeps the
-same rules, ranked now by grounded citations alone. Support is lexical, so a merged rule that inverts its source or changes a value in
+same rules, ranked by its grounded citations where the smoke run's code ranked by every citation
+(re-derived under the code as merged). Support is lexical, so a merged rule that inverts its source or changes a value in
 it would pass; read rule by rule beside its best source, most smoke merges copy a source rule
 verbatim, the rest restate one or join two, and none inverts or alters one. A polarity test was
 tried and refused faithful rules ("instead of" against "rather than"), so the limit is stated
-rather than patched. A rule the merge writes twice (case outside code, spacing and a closing period
-aside) is kept once, citing every list either copy is grounded in (the threshold held for the copies together), and the file records which
+rather than patched. A rule the merge writes twice (case, spacing and a closing period aside) is kept
+once, as its first grounded copy reads, citing every list either copy is grounded in (the threshold held for the copies together), and the file records which
 chunk each merged list came from. A written guide's file is held to the same caps as a distilled one (`capped_file`: at most
 40 rules, within the budget), so the distilled-against-written contrast does not also compare file
 size. The distiller signature now carries the chat-template options, each file records the
