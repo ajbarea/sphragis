@@ -29,6 +29,7 @@ Run on the cluster: scripts/retrieval_comparator.sbatch.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from collections.abc import Callable, Mapping
@@ -54,7 +55,7 @@ from sphragis.experiment.retrieval import (
     resumable,
     trainable,
 )
-from sphragis.experiment.rules import DISTILLED, WRITTEN, rules_arms
+from sphragis.experiment.rules import DISTILLED, WRITTEN, pinned, pipeline, rules_arms
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
 from sphragis.provenance import provenance_header
@@ -178,6 +179,9 @@ def rules_files(
     distilled = load(f"rules-reviews-{owner}-p{partition}")
     files: dict[tuple[str, str], str] = {}
     made_by = {distilled["generator"]}
+    # Made under the prompts and budgets the research log describes, not an earlier set.
+    if distilled.get("pipeline") != pipeline():
+        raise SystemExit(f"{owner} p{partition}'s rules files were distilled under other prompts")
     for half, index in indexes.items():
         made = distilled["files"][half]
         if not args.dry_run and made["pool_ids"] != [row["id"] for row in index.pool]:
@@ -188,11 +192,9 @@ def rules_files(
             written = load(f"rules-guide-{org}")
             # Distilled from the snapshot committed beside this code, page for page.
             snapshot = json.loads((args.guides / f"guide-{org}.json").read_text())
-            pinned = [
-                {key: source[key] for key in ("title", "revision", "sha256")}
-                for source in snapshot["sources"]
-            ]
-            if written.get("guide") != pinned:
+            if written.get("pipeline") != pipeline():
+                raise SystemExit(f"{org}'s written rules file was distilled under other prompts")
+            if written.get("guide") != pinned(snapshot):
                 raise SystemExit(f"{org}'s written rules file was distilled from another snapshot")
             files[(WRITTEN, org)] = written["files"][org]["file"]
             made_by.add(written["generator"])
@@ -294,6 +296,13 @@ def main() -> None:
     report: dict[str, Any] = {
         "pools": args.pools,
         "arms": args.arms,
+        # Which distillation the rules arms read, so a reading combines one set of them.
+        "rules_suffix": args.rules_suffix if args.arms == "rules" else None,
+        "rules_pipeline": pipeline() if args.arms == "rules" else None,
+        "rules_files": {
+            f"{condition}:{owner}": hashlib.sha256(text.encode()).hexdigest()
+            for (condition, owner), text in files.items()
+        },
         "org": args.org,
         "partition": args.partition,
         "foreign": args.foreign,

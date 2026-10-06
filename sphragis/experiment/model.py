@@ -225,6 +225,12 @@ class HFGenerator:
                 **self._decoding,
             )
         generated = out[0][inputs["input_ids"].shape[-1] :]
+        # Whether decoding stopped at the budget rather than at end of turn: counted on the
+        # tokens generated, since a decoded answer can re-encode to fewer.
+        self.last_capped = bool(
+            generated.shape[-1] >= self.max_new_tokens
+            and int(generated[-1]) != self.tokenizer.eos_token_id
+        )
         return str(self.tokenizer.decode(generated, skip_special_tokens=True))
 
 

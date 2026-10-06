@@ -19,7 +19,7 @@ from sphragis.corpus.load import refined_dir, write_build_record, write_source_r
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training, window_split
 from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key, resumable
-from sphragis.experiment.rules import DISTILLED, WRITTEN, rules_key
+from sphragis.experiment.rules import DISTILLED, WRITTEN, pipeline, rules_key
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -449,6 +449,9 @@ def test_the_reader_refuses_adapters_decoded_otherwise(tmp_path: Path) -> None:
 
 
 # The reader on rules arms: a distilled file per half, and both organizations' written guides.
+RULES = {"rules_suffix": "", "rules_pipeline": pipeline()}
+
+
 def _rules_halves_job(partition: int) -> dict:
     results = {}
     for owner in _sides(partition):
@@ -463,6 +466,7 @@ def _rules_halves_job(partition: int) -> dict:
         "partition": partition,
         **_fixed(),
         **GEN,
+        **RULES,
         "results": results,
     }
 
@@ -483,6 +487,7 @@ def _rules_foreign_job() -> dict:
         "foreign": "wikimedia",
         **_fixed(),
         **GEN,
+        **RULES,
         "results": results,
     }
 
@@ -534,7 +539,7 @@ def test_a_rules_job_prompts_with_each_file_in_the_system_turn(
     rules.mkdir()
     halves = ("openstack-a", "openstack-b")
     files = {h: {"pool_ids": [], "file": f"- rule of {h}"} for h in halves}
-    made = {"files": files, "generator": "qwen@rev|float32"}
+    made = {"files": files, "generator": "qwen@rev|float32", "pipeline": pipeline()}
     (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps(made))
     report = _halves(
         corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
@@ -553,7 +558,7 @@ def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
     rules.mkdir()
     pool = [{"id": "x1"}, {"id": "x2"}]
     files = {"openstack-a": {"pool_ids": ["x1", "other"], "file": "- r"}}
-    made = {"files": files, "generator": "qwen@rev|float32"}
+    made = {"files": files, "generator": "qwen@rev|float32", "pipeline": pipeline()}
     (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
     args = argparse.Namespace(
         rules=rules, rules_suffix="", pools="halves", org="openstack", partition=3, dry_run=False
@@ -611,3 +616,23 @@ def test_a_guide_whose_text_does_not_match_its_hash_is_refused(tmp_path: Path) -
     head, plan = distil_script.sources_of(args, None)
     assert plan == {"openstack": {"kind": "guide", "sources": ["Use tabs."]}}
     assert head["guide"] == [{"title": "T", "revision": 1, "sha256": guide["sources"][0]["sha256"]}]
+
+
+def test_a_rules_reading_refuses_jobs_from_another_distillation(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    jobs[2]["rules_suffix"] = "-other"
+    (tmp_path / "base.json").write_text(json.dumps(_foreign_job()))
+    halves, results = [], tmp_path / "results"
+    results.mkdir()
+    for n, job in enumerate(jobs):
+        halves.append(tmp_path / f"h{n}.json")
+        halves[-1].write_text(json.dumps(job))
+    (tmp_path / "f.json").write_text(json.dumps(_rules_foreign_job()))
+    listing = tmp_path / "list.json"
+    listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
+    argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
+    argv += ["--arms", "rules", "--base-job", str(tmp_path / "base.json")]
+    argv += ["--foreign-job", str(tmp_path / "f.json"), "--halves", *map(str, halves)]
+    argv += ["--results", str(results), "--out", str(tmp_path / "o.json")]
+    with pytest.raises(SystemExit, match="rules_suffix"):
+        _run(reader, argv)

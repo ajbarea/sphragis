@@ -50,11 +50,11 @@ class _Model:
     def __init__(self) -> None:
         self.calls: list[tuple[str, int]] = []
 
-    def __call__(self, prompt: str, max_new_tokens: int) -> str:
+    def __call__(self, prompt: str, max_new_tokens: int) -> tuple[str, bool]:
         self.calls.append((prompt, max_new_tokens))
         if "Below are lists" in prompt:
-            return "Merged:\n" + "\n".join(rule_lines(prompt))
-        return f"- rule {len(self.calls)}"
+            return "Merged:\n" + "\n".join(rule_lines(prompt)), False
+        return f"- rule {len(self.calls)}", False
 
 
 @pytest.mark.parametrize(
@@ -80,14 +80,14 @@ def test_each_chunk_is_mapped_then_one_reduce_merges_their_lists(
 
 def test_a_reduce_that_lists_nothing_is_refused() -> None:
     with pytest.raises(ValueError, match="listed no rules"):
-        distil(["a"], kind="reviews", generate=lambda p, n: "no list here", length=_words)
+        distil(["a"], kind="reviews", generate=lambda p, n: ("no list here", False), length=_words)
 
 
 def test_bad_inputs_are_refused() -> None:
     with pytest.raises(ValueError, match="kind must be"):
-        distil(["a"], kind="other", generate=lambda p, n: "- r", length=_words)
+        distil(["a"], kind="other", generate=lambda p, n: ("- r", False), length=_words)
     with pytest.raises(ValueError, match="no sources"):
-        distil([], kind="guide", generate=lambda p, n: "- r", length=_words)
+        distil([], kind="guide", generate=lambda p, n: ("- r", False), length=_words)
 
 
 def test_the_reviews_reduce_keeps_only_recurring_rules_and_the_guide_reduce_keeps_all() -> None:
@@ -103,17 +103,25 @@ def test_a_rules_arm_keeps_the_default_system_prompt_and_adds_the_file() -> None
 def test_a_capped_answer_is_flagged_and_its_cut_line_dropped() -> None:
     reduce_prompts: list[str] = []
 
-    def model(prompt: str, budget: int) -> str:
+    def model(prompt: str, budget: int) -> tuple[str, bool]:
         if "Below are lists" in prompt:
             reduce_prompts.append(prompt)
-            return "- one\n- two\n- three"
-        # The map answer runs to its budget: three whole rules and a half one.
-        return "- one\n- two\n- three\n- fou"
+            return "- one\n- two\n- three", False
+        # The map answer stops at its budget: three whole rules and a half one.
+        return "- one\n- two\n- three\n- fou", True
 
-    def length(text: str) -> int:
-        return 10**6 if text.endswith("- fou") else len(text.split())
-
-    result = distil(["a"], kind="reviews", generate=model, length=length)
+    result = distil(["a"], kind="reviews", generate=model, length=_words)
     assert result["map_capped"] == [True] and result["reduce_capped"] is False
     # The reduce saw the capped list without its last, cut line.
     assert "- three" in reduce_prompts[0] and "- fou" not in reduce_prompts[0]
+
+
+def test_every_prompt_and_budget_is_in_the_pipeline_fingerprint(monkeypatch) -> None:
+    from sphragis.experiment import rules
+
+    before = rules.pipeline()
+    monkeypatch.setattr(rules, "MAP_ANSWER_TOKENS", rules.MAP_ANSWER_TOKENS + 1)
+    assert rules.pipeline() != before
+    monkeypatch.undo()
+    monkeypatch.setitem(rules.PROMPTS, "guide", ("x {source}", "y {lists}"))
+    assert rules.pipeline() != before

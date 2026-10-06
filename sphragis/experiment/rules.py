@@ -13,6 +13,8 @@ comparator, recorded in the research log.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
@@ -121,12 +123,13 @@ def distil(
     sources: Sequence[str],
     *,
     kind: str,
-    generate: Callable[[str, int], str],
+    generate: Callable[[str, int], tuple[str, bool]],
     length: Callable[[str], int],
 ) -> dict[str, Any]:
     """A rules file from `sources` (reviewed changes or guide sections), and every step to it.
 
-    `generate(prompt, max_new_tokens)` is the base model, greedy. The map lists and the reduce
+    `generate(prompt, max_new_tokens)` is the base model, greedy: its answer, and whether
+    decoding stopped at the budget. The map lists and the reduce
     answer are kept, so the file can be read back to the source it came from.
     """
     if kind not in PROMPTS:
@@ -138,8 +141,7 @@ def distil(
 
     def answer(prompt: str, budget: int) -> tuple[str, list[str], bool]:
         # An answer that reached its budget was cut, so its last line may be half a rule.
-        text = generate(prompt, budget)
-        capped = length(text) >= budget
+        text, capped = generate(prompt, budget)
         lines = rule_lines(text)
         return text, lines[:-1] if capped and lines else lines, capped
 
@@ -160,6 +162,7 @@ def distil(
         "reduce_answer": merged,
         "reduce_capped": reduce_capped,
         "rules": rules,
+        "pipeline": pipeline(),
         "file": "\n".join(rules),
         "file_tokens": length("\n".join(rules)),
     }
@@ -203,3 +206,15 @@ def rules_arms(
         rules_key(condition, owner, evaluated): [rules_prompt(t, text) for t in targets]
         for (condition, owner), text in files.items()
     }
+
+
+def pipeline() -> str:
+    """A fingerprint of everything a file's distillation depends on besides its sources and
+    model: the prompts and every budget. A file made under another is not this comparator's."""
+    fixed = [PROMPTS, CHUNK_TOKENS, MAP_ANSWER_TOKENS, RULES_BUDGET]
+    return hashlib.sha256(json.dumps(fixed, sort_keys=True).encode()).hexdigest()
+
+
+def pinned(guide: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """A guide snapshot's pages as a distilled file records them: title, revision and hash."""
+    return [{key: s[key] for key in ("title", "revision", "sha256")} for s in guide["sources"]]

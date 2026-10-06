@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +31,7 @@ from sphragis.experiment.retrieval import (
     read_halves,
     trainable,
 )
-from sphragis.experiment.rules import CHUNK_TOKENS, PROMPTS, distil, review_text
+from sphragis.experiment.rules import distil, pinned, pipeline, review_text
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--source", choices=["reviews", "guide"], required=True)
@@ -73,9 +74,7 @@ def sources_of(args: argparse.Namespace, tokenizer: Any) -> tuple[dict, dict[str
     for source in guide["sources"]:
         if hashlib.sha256(source["text"].encode()).hexdigest() != source["sha256"]:
             raise ValueError(f"{source['title']}: its text does not match its recorded sha256")
-    head["guide"] = [
-        {key: source[key] for key in ("title", "revision", "sha256")} for source in guide["sources"]
-    ]
+    head["guide"] = pinned(guide)
     sources = [p for source in guide["sources"] for p in paragraphs(source["text"])]
     return head, {args.org: {"kind": "guide", "sources": sources}}
 
@@ -102,24 +101,31 @@ def main() -> None:
     def length(text: str) -> int:
         return len(tokenizer(text, add_special_tokens=False)["input_ids"])
 
-    def generate(prompt: str, max_new_tokens: int) -> str:
+    def generate(prompt: str, max_new_tokens: int) -> tuple[str, bool]:
         generator.max_new_tokens = max_new_tokens
-        return generator.generate(prompt)
+        text = generator.generate(prompt)
+        return text, generator.last_capped
 
     # Each file is kept beside the result as it is made, under a fingerprint of what made it, so
     # a refusal or a wall clock after one file does not cost the files already distilled.
     report["files"] = {}
     for name, item in plan.items():
         cache = args.out.with_name(f"{args.out.stem}.{name}.part.json")
-        mark = fingerprint(signature, json.dumps([item, PROMPTS, CHUNK_TOKENS], sort_keys=True))
-        made = json.loads(cache.read_text()) if cache.is_file() else None
+        mark = fingerprint(signature, json.dumps([item, pipeline()], sort_keys=True))
+        try:
+            made = json.loads(cache.read_text()) if cache.is_file() else None
+        except json.JSONDecodeError:
+            # A write a kill cut short: made again.
+            made = None
         if made is None or made.get("fingerprint") != mark:
             try:
                 made = distil(item["sources"], kind=item["kind"], generate=generate, length=length)
             except ValueError as error:
                 raise SystemExit(f"{name}: {error}") from error
             made["fingerprint"] = mark
-            cache.write_text(json.dumps(made, ensure_ascii=False) + "\n")
+            partial = cache.with_suffix(".partial")
+            partial.write_text(json.dumps(made, ensure_ascii=False) + "\n")
+            os.replace(partial, cache)
         report["files"][name] = {
             **({"pool_ids": item["pool_ids"]} if "pool_ids" in item else {}),
             **made,
@@ -129,6 +135,7 @@ def main() -> None:
     from sphragis.experiment.model import run_provenance
 
     report["generator"] = signature
+    report["pipeline"] = pipeline()
     report["provenance"] = run_provenance()
     args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     for name in plan:

@@ -24,8 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.experiment.decomposition import halves
-from sphragis.experiment.holdout import window_split
-from sphragis.experiment.retrieval import adapter_run, first_partitions
+from sphragis.experiment.retrieval import corpus_of, first_partitions, read_halves
 from sphragis.provenance import provenance_header
 
 USER_AGENT = "sphragis-research (ajb6289@rit.edu)"
@@ -68,10 +67,12 @@ def extensions(results: Path, org: str) -> Counter[str]:
     """File extensions of the organization's training-window rows, both halves together."""
     listing = json.loads((results / f"admissible-partitions-{org}.json").read_text())
     order, size = first_partitions(listing, org=org)
-    _, _, root, _ = adapter_run(results, org=org, partition=order[0], order=order, size=size)
+    # Through the comparator's checks: the corpus the adapters read, as they recorded it.
+    root, _, recorded = corpus_of(results, org, order[0], order, size)
+    train, _, _ = read_halves(root, org, recorded)
     counts: Counter[str] = Counter()
     for half in halves(org):
-        for row in window_split(root, half)[0]:
+        for row in train[half]:
             name = str(row.get("path") or "").rsplit("/", 1)[-1]
             if "." in name:
                 counts[name.rsplit(".", 1)[-1].lower()] += 1

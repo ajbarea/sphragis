@@ -96,6 +96,8 @@ def run_results(
     for half in halves(org):
         ids = {row["id"] for key, rows in own.items() if key.endswith(f"|{half}") for row in rows}
         for source in keys:
+            if not source.endswith(f"|{org}"):
+                raise SystemExit(f"{source} is not evaluated on {org}'s examples")
             rows = [row for row in once[source] if row["id"] in ids]
             missing = ids - {row["id"] for row in rows}
             if missing:
@@ -303,6 +305,12 @@ def main() -> None:
     if args.arms == "rules" and args.base_job is None:
         raise SystemExit("--arms rules needs --base-job: the retrieval foreign job's base arm")
     fixed = {"org": args.org, "train_size": size, "ks": list(KS), "limit": None}
+    if args.arms == "rules":
+        # Every rules job read one distillation: one suffix, one pipeline.
+        head = json.loads(args.foreign_job.read_text())
+        fixed |= {key: head.get(key) for key in ("rules_suffix", "rules_pipeline")}
+        if fixed["rules_pipeline"] is None:
+            raise SystemExit(f"{args.foreign_job} does not record the rules files it read")
     foreign_job = load(
         args.foreign_job, pools="foreign", foreign=args.foreign, arms=args.arms, **fixed
     )
@@ -316,7 +324,10 @@ def main() -> None:
     fixed |= generator
     once = dict(foreign_job["results"])
     if args.base_job:
-        base = load(args.base_job, pools="foreign", foreign=args.foreign, arms="retrieval", **fixed)
+        base_fixed = {k: v for k, v in fixed.items() if k not in ("rules_suffix", "rules_pipeline")}
+        base = load(
+            args.base_job, pools="foreign", foreign=args.foreign, arms="retrieval", **base_fixed
+        )
         once[run_id(EvalRun("base", args.org, None))] = base["results"][
             run_id(EvalRun("base", args.org, None))
         ]
