@@ -112,7 +112,7 @@ def main() -> None:
         MODEL_ID,
         HFGenerator,
         _require_tokenizer,
-        revision,
+        pinned_id,
     )
 
     # Only the tokenizers until the data has passed every check: the model loads after.
@@ -125,7 +125,7 @@ def main() -> None:
     )
     tokenizer = generator.tokenizer
     signature = distiller_signature(
-        f"{generator.model_id}@{revision(generator.model_id)}",
+        pinned_id(generator.model_id),
         generator.computed_dtype,
         DISTILLER_TEMPLATE,
     )
@@ -133,7 +133,7 @@ def main() -> None:
     def length(text: str) -> int:
         return len(tokenizer(text, add_special_tokens=False)["input_ids"])
 
-    budgeted_by = f"{MODEL_ID}@{revision(MODEL_ID)}"
+    budgeted_by = pinned_id(MODEL_ID)
 
     def file_length(text: str) -> int:
         return len(evaluated(text, add_special_tokens=False)["input_ids"])

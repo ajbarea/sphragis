@@ -60,15 +60,21 @@ def rules_arms(
     }
 
 
-#: A fixed example and file the arm prompt is rendered for, to fingerprint it.
-_PROBE = ({"before": "x = 1\n", "comments": ["Name it."]}, "- Use `ddt`.")
+#: Fixed targets and files the arms are built for, to fingerprint them: one file of each
+#: condition, so the keying and the prompts are both covered.
+_PROBE_TARGETS = (
+    {"before": "x = 1\n", "comments": ["Name it."]},
+    {"before": "y\n", "comments": []},
+)
+_PROBE_FILES = {(DISTILLED, "o-a"): "- Use `ddt`.", (WRITTEN, "o"): "- Log with `oslo_log`."}
 
 
 def arms_fingerprint() -> str:
-    """The arm prompt as it is built, for a fixed example and file, hashed: what a rules job
-    prompted with, held equal across jobs, whatever the code around it says."""
-    messages = rules_prompt(*_PROBE)
-    return hashlib.sha256(json.dumps(messages, sort_keys=True).encode()).hexdigest()
+    """Every arm as `rules_arms` builds it, keys and prompts, for fixed targets and files,
+    hashed: what a rules job prompted with, held equal across jobs, whatever the code around it
+    says."""
+    arms = rules_arms(_PROBE_TARGETS, _PROBE_FILES, evaluated="o-b")
+    return hashlib.sha256(json.dumps(arms, sort_keys=True).encode()).hexdigest()
 
 
 def default_system_holds(tokenizer: Any) -> bool:

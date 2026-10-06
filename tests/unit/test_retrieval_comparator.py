@@ -230,7 +230,13 @@ IDS = [f"x{i}" for i in range(40)]
 
 
 def _row(i: str, em: float, shot: float = 0.0) -> dict:
-    return {"id": i, "change_id": f"c{i}", "exact_match": em, "shot_jaccard": shot}
+    return {
+        "id": i,
+        "change_id": f"c{i}",
+        "exact_match": em,
+        "shot_jaccard": shot,
+        "fingerprint": f"m{i}",
+    }
 
 
 def _sides(partition: int) -> dict[str, list[str]]:
@@ -500,6 +506,8 @@ def _rules_foreign_job() -> dict:
         **_fixed(),
         **GEN,
         **RULES,
+        # The base arm's rows (`_foreign_job`) as this job would mark them.
+        "base_marks": {i: f"m{i}" for i in IDS},
         "results": results,
     }
 
@@ -547,6 +555,16 @@ def test_rules_jobs_prompted_two_ways_or_unrecorded_are_refused(tmp_path: Path) 
     unrecorded = {k: v for k, v in _rules_foreign_job().items() if k != "rules_arms"}
     with pytest.raises(SystemExit, match="does not record the rules files and prompts"):
         _rules_read(tmp_path / "none", [_rules_halves_job(p) for p in ORDER], unrecorded)
+
+
+def test_a_base_arm_prompted_otherwise_is_refused(tmp_path: Path) -> None:
+    foreign = _rules_foreign_job()
+    foreign["base_marks"][IDS[0]] = "another prompt"
+    with pytest.raises(SystemExit, match="1 rows differ"):
+        _rules_read(tmp_path, [_rules_halves_job(p) for p in ORDER], foreign)
+    del foreign["base_marks"]
+    with pytest.raises(SystemExit, match="no base_marks"):
+        _rules_read(tmp_path / "unmarked", [_rules_halves_job(p) for p in ORDER], foreign)
 
 
 def test_a_rules_reading_needs_the_base_arm(tmp_path: Path) -> None:

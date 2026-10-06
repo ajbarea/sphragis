@@ -75,11 +75,14 @@ class _Cites(_Model):
         self.calls.append((prompt, max_new_tokens))
         if "numbered lists" in prompt:
             return (
-                "- two on `shared`. [1, 2]\n- one on `shared`. [3]\n"
-                "- three on `shared`. [1, 2, 3]\n- bare.\n- Use black for formatting. [2]"
+                "- `shared` alpha. [1, 2]\n- `shared` beta. [3]\n"
+                "- `shared` gamma. [1, 2, 3]\n- bare.\n- Use black for formatting. [2]"
             ), False
         n = len(self.calls)
-        return f"- rule {n} on `shared`. [1, 2]\n- lone {n}. [1]\n- none {n}.", False
+        return (
+            f"- rule {n} on `shared` alpha beta gamma. [1, 2]\n- lone {n}. [1]\n- none {n}.",
+            False,
+        )
 
 
 def test_each_chunk_of_a_guide_is_mapped_then_one_reduce_merges_their_lists() -> None:
@@ -108,12 +111,12 @@ def test_a_mined_rule_stands_on_two_of_its_chunks_numbered_changes() -> None:
     # Only the rule citing both changes reaches the merge, without its brackets.
     reduce_call = model.calls[-1][0]
     assert reduce_call.startswith(REDUCE_REVIEWS.split("{lists}")[0])
-    assert "- rule 1 on `shared`." in reduce_call and "[1, 2]" not in reduce_call
+    assert "- rule 1 on `shared` alpha beta gamma." in reduce_call and "[1, 2]" not in reduce_call
     assert "lone" not in reduce_call and "none" not in reduce_call
     assert result["evidence"] == [{"listed": 3, "kept": 1}] * 3
     # Kept when it cites a list it shares wording with, the most-cited first; an uncited rule,
     # or one labelled with a list it shares nothing with, is the merge's own.
-    assert result["rules"] == ["- three on `shared`.", "- two on `shared`.", "- one on `shared`."]
+    assert result["rules"] == ["- `shared` gamma.", "- `shared` alpha.", "- `shared` beta."]
     assert result["recurrence"] == [[1, 2, 3], [1, 2], [3]]
 
 
@@ -125,7 +128,9 @@ def test_a_map_keeps_its_first_rules_up_to_the_limit() -> None:
             if "numbered lists" in prompt:
                 return super().__call__(prompt, max_new_tokens)
             self.calls.append((prompt, max_new_tokens))
-            rules = (f"- r{i} on `shared`. [1, 2]" for i in range(MAX_MAP_RULES + 5))
+            rules = (
+                f"- r{i} on `shared` alpha beta gamma. [1, 2]" for i in range(MAX_MAP_RULES + 5)
+            )
             return "\n".join(rules), False
 
     result = distil(
@@ -160,32 +165,32 @@ def test_a_list_left_empty_is_not_numbered_for_the_merge() -> None:
     assert result["merge_chunks"] == [1, 3, 4]
 
 
-def test_a_rule_is_grounded_by_a_shared_identifier_or_two_uncommon_words() -> None:
+def test_a_rule_is_grounded_where_a_source_holds_more_than_half_its_words() -> None:
     from sphragis.experiment.rules import grounded
 
-    assert grounded("- Prefer `joinedload` here.", "- Replace `joinedload_all` with `joinedload`.")
-    assert grounded("- Log through oslo logging.", "- Route messages via oslo logging helpers.")
-    # One identifier is enough, ticked or not; a trivial ticked word is not one.
-    assert grounded("- Use oslo_log for logging.", "- Log with oslo_log, not print.")
-    assert grounded("- Use oslo.log.", "- Log via oslo.log, not print.")
-    assert grounded("- Import `os` lazily.", "- Never shadow `os`.")
-    assert not grounded("- Return `None` from handlers.", "- Compare to `None` with is.")
-    # Neither an organization's name nor an abbreviation is an identifier.
+    assert grounded("- Prefer `joinedload`.", "- Replace `joinedload_all` with `joinedload`.")
+    assert grounded("- Use oslo_log for logging.", "- Log with oslo_log for logging, not print.")
+    assert grounded("- Import `os` lazily.", "- Import `os` lazily, never at module top.")
+    # Half or less: an invented rule, an organization's name, a keyword, an abbreviation.
+    assert not grounded("- Use black for formatting.", "- Keep formatting changes apart.")
     assert not grounded(
         "- Follow OpenStack hacking rules.", "- Name OpenStack services in lowercase."
     )
+    assert not grounded("- Use `in` to test keys.", "- Check membership with `in` on sets.")
     assert not grounded("- Prefer short names, e.g. ids.", "- Wrap long calls, e.g. in parens.")
-    assert not grounded("- Use black for formatting.", "- Use `joinedload` instead of others.")
-    assert not grounded("- Use the logger.", "- Use the logger instead.")
+    assert not grounded("- Use the.", "- Use the logger.")
 
 
 def test_a_rule_the_merge_wrote_twice_is_kept_once_at_its_best_cited_copy() -> None:
     from sphragis.experiment.rules import recurring
 
-    lines = ["- Use `oslo_log`. [1]", "- use  `oslo_log` [1, 2]", "- Use `ddt`. [2]"]
-    lists = [["- `oslo_log` and `ddt`."]] * 2
+    lines = ["- Use `oslo_log`. [1]", "- use  `oslo_log` [2, 3]", "- Use `Session`. [2]"]
+    lines += ["- Use `session`. [3]"]
+    lists = [["- Use `oslo_log`."], ["- Use `oslo_log`, `Session`."], ["- `oslo_log`, `session`."]]
     rules, cites = recurring(lines, lists=lists, length=len)
-    assert rules == ["- use  `oslo_log`", "- Use `ddt`."] and cites == [[1, 2], [2]]
+    # Copies merge their citations; a different identifier's case is a different rule.
+    assert rules == ["- Use `oslo_log`.", "- Use `Session`.", "- Use `session`."]
+    assert cites == [[1, 2, 3], [2], [3]]
 
 
 def test_mined_rules_need_three_lists_with_evidence() -> None:

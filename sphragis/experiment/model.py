@@ -77,6 +77,11 @@ def revision(model_id: str) -> str:
     return MODEL_REVISIONS[model_id]
 
 
+def pinned_id(model_id: str) -> str:
+    """A checkpoint as the records name it: `<id>@<pinned revision>`."""
+    return f"{model_id}@{revision(model_id)}"
+
+
 # research(2026-09): alpha = 2r, because a fixed low alpha at high rank is unstable;
 # attention plus MLP beats attention alone, and coverage matters more than rank. Rank 32 is
 # above what current tooling defaults to (16) and below what Biderman et al. (TMLR 2024)

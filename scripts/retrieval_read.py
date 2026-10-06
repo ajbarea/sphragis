@@ -105,6 +105,24 @@ def needed_once(arms: str, *, org: str, foreign: str) -> list[str]:
     return keys
 
 
+def require_base_prompted_alike(
+    rows: Sequence[Mapping[str, Any]], marks: Mapping[str, str] | None, *, job: Path
+) -> None:
+    """Refuse a base arm whose rows were prompted otherwise than the rules jobs would prompt
+    them: every row's prompt fingerprint against the rules foreign job's `base_marks`."""
+    if not marks:
+        raise SystemExit("the rules foreign job records no base_marks to check the base arm by")
+    differ = [
+        row["id"] for row in rows if row["id"] in marks and row["fingerprint"] != marks[row["id"]]
+    ]
+    unmarked = sorted(set(marks) - {row["id"] for row in rows})
+    if differ or unmarked:
+        raise SystemExit(
+            f"{job}'s base arm was not prompted as the rules jobs prompt it: {len(differ)} rows "
+            f"differ, {len(unmarked)} targets missing"
+        )
+
+
 def run_results(
     own: Mapping[str, Rows], once: Mapping[str, Rows], *, org: str, keys: Sequence[str]
 ) -> dict[str, Rows]:
@@ -354,9 +372,9 @@ def main() -> None:
         base = load(
             args.base_job, pools="foreign", foreign=args.foreign, arms="retrieval", **base_fixed
         )
-        once[run_id(EvalRun("base", args.org, None))] = base["results"][
-            run_id(EvalRun("base", args.org, None))
-        ]
+        key = run_id(EvalRun("base", args.org, None))
+        once[key] = base["results"][key]
+        require_base_prompted_alike(once[key], foreign_job.get("base_marks"), job=args.base_job)
     needed = needed_once(args.arms, org=args.org, foreign=args.foreign)
     lacking = [key for key in needed if key not in once]
     if lacking:

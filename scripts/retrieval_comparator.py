@@ -275,6 +275,21 @@ def run(args: argparse.Namespace) -> None:
     made_by: set[tuple[str, str | None]] = set()
     if args.arms == "rules":
         files, made_by = rules_files(args, indexes, foreign_order)
+        if not args.dry_run:
+            # Every rules file was written by the one pinned distiller and budgeted in the
+            # tokens of the model these arms run, checked before the pools are prompted.
+            from sphragis.experiment.model import (
+                DISTILLER_DTYPE,
+                DISTILLER_ID,
+                DISTILLER_TEMPLATE,
+                MODEL_ID,
+                pinned_id,
+            )
+
+            distiller = distiller_signature(
+                pinned_id(DISTILLER_ID), DISTILLER_DTYPE, DISTILLER_TEMPLATE
+            )
+            require_made_by(made_by, distiller=distiller, reader=pinned_id(MODEL_ID))
     for evaluated, rows in targets.items():
         if not rows:
             raise SystemExit(f"{evaluated} has no held-out examples to prompt")
@@ -354,24 +369,16 @@ def run(args: argparse.Namespace) -> None:
         return
 
     from sphragis.experiment.model import (
-        DISTILLER_DTYPE,
-        DISTILLER_ID,
-        DISTILLER_TEMPLATE,
         INFERENCE_DTYPE,
         MODEL_ID,
         HFGenerator,
-        revision,
+        pinned_id,
         run_provenance,
     )
 
-    # Every rules file was written by the one pinned distiller, checked before the model loads.
-    distiller = distiller_signature(
-        f"{DISTILLER_ID}@{revision(DISTILLER_ID)}", DISTILLER_DTYPE, DISTILLER_TEMPLATE
-    )
-    require_made_by(made_by, distiller=distiller, reader=f"{MODEL_ID}@{revision(MODEL_ID)}")
-    generator = HFGenerator()
+    generator = HFGenerator(model_id=MODEL_ID)
     signature = (
-        f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"
+        f"{pinned_id(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"
     )
     if made_by and generator.computed_dtype != INFERENCE_DTYPE:
@@ -426,6 +433,12 @@ def run(args: argparse.Namespace) -> None:
             em = sum(r["exact_match"] for r in done) / max(1, len(done))
             print(f"{key:<44} EM={em:.3f}", flush=True)
     report["generator"] = signature
+    if args.arms == "rules" and args.pools == "foreign":
+        # The base arm is the retrieval foreign job's: each target's base prompt as this job
+        # would mark it, so the reader can check that job prompted it the same way.
+        report["base_marks"] = {
+            t["id"]: fingerprint(signature, few_shot_prompt(t, [])) for t in targets[args.org]
+        }
     report["model_id"], report["max_new_tokens"] = generator.model_id, generator.max_new_tokens
     report["inference_dtype"] = generator.computed_dtype
     report["results"] = results

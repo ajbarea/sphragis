@@ -171,25 +171,32 @@ def recurring(
     non-empty map list, numbered from 1 as the merge saw them), most-cited first (ties in the
     merge's order), as a file within the caps; and the lists each is grounded in.
 
-    A citation counts only where the merged rule shares wording with a rule of that list
-    (`grounded`), so a rule the merge invented and labelled with a list number is dropped.
+    A citation counts only where a rule of that list supports the merged rule (`grounded`), so a
+    rule the merge invented and labelled with a list number is dropped.
     """
-    kept_rules = []
+    merged: dict[str, tuple[str, set[int], int]] = {}
+    # A rule the merge wrote twice is kept once, as first written, citing every list any copy is
+    # grounded in; copies are told apart by their words, case outside code spans, spacing and a
+    # closing period aside.
     for order, line in enumerate(lines):
         rule, numbers = cited(line, len(lists))
-        backed = sorted(n for n in numbers if any(grounded(rule, r) for r in lists[n - 1]))
+        backed = {n for n in numbers if any(grounded(rule, r) for r in lists[n - 1])}
         if len(backed) >= MIN_CITED_LISTS:
-            kept_rules.append((-len(backed), order, rule, backed))
-    # A rule the merge wrote twice is kept once, at its best-cited copy, copies told apart by
-    # their words alone (case, spacing and a closing period aside).
-    ranked, seen = [], set()
-    for _, _, rule, backed in sorted(kept_rules):
-        same = " ".join(rule.lower().rstrip(" .").split())
-        if same not in seen:
-            seen.add(same)
-            ranked.append((rule, backed))
+            first, cites, at = merged.get(_same_rule(rule), (rule, set(), order))
+            merged[_same_rule(rule)] = (first, cites | backed, at)
+    ranked = [
+        (rule, sorted(cites))
+        for rule, cites, _ in sorted(merged.values(), key=lambda r: (-len(r[1]), r[2]))
+    ]
     kept = capped_file([rule for rule, _ in ranked], length=length)
     return kept, [backed for _, backed in ranked[: len(kept)]]
+
+
+def _same_rule(rule: str) -> str:
+    """A rule as copies of it compare: lower-cased outside its code spans, spacing collapsed,
+    no closing period."""
+    parts = re.split(r"(`[^`]*`)", " ".join(rule.split()).rstrip(" ."))
+    return "".join(part if part.startswith("`") else part.lower() for part in parts)
 
 
 def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[str]:
@@ -201,43 +208,33 @@ def capped_file(rules: Sequence[str], *, length: Callable[[str], int]) -> list[s
     return kept
 
 
-# Words too common in rules to tie one to another (only words of four or more letters are read).
+# Function words, and the imperative words every rule uses, which say nothing of its convention.
 # fmt: off
-_COMMON = frozenset((
-    "using", "used", "instead", "rather", "than", "with", "when", "from", "that", "this", "these",
-    "those", "only", "must", "should", "avoid", "prefer", "always", "never", "code", "each",
-    "such", "into", "over", "their", "which", "where", "there", "make", "sure", "file", "files",
-    "line", "lines", "name", "names", "value", "values"
+_FUNCTION = frozenset((
+    "a", "an", "the", "to", "of", "in", "on", "for", "and", "or", "not", "no", "is", "are", "be",
+    "by", "as", "at", "it", "its", "with", "from", "that", "this", "these", "those", "use",
+    "using", "used", "instead", "rather", "than", "when", "which", "where", "there", "into",
+    "over", "only", "must", "should", "always", "never", "avoid", "prefer", "make", "sure",
+    "each", "such", "their", "do", "does", "any", "all", "new", "old", "more", "less", "eg", "ie",
 ))
 # fmt: on
-_WORD = re.compile(r"[a-z][a-z0-9_]{3,}")
-_TICKED = re.compile(r"`([^`]+)`")
-# An unticked identifier: snake_case, dotted (each part two or more characters, so neither "e.g."
-# nor a sentence's last period is one), or camelCase from a lower-case start. PascalCase counts
-# only ticked: unticked it is as often a product or the organization's name ("OpenStack").
-_IDENTIFIER = re.compile(
-    r"\b[A-Za-z]\w*_\w+|\b[A-Za-z_]\w+(?:\.[A-Za-z_]\w+)+|\b[a-z][a-z0-9]*[A-Z]\w*"
-)
-# Ticked words a rule shares with many that say nothing of the convention.
-_TRIVIAL = frozenset({"none", "true", "false", "self", "null", "this", "cls"})
+_TOKEN = re.compile(r"[a-z_][a-z0-9_]*")
 
 
-def _names(text: str) -> set[str]:
-    """The identifiers a rule names: ticked spans and identifier-shaped words, lower-cased,
-    without the trivial ones."""
-    found = {t.strip().lower() for t in _TICKED.findall(text)}
-    found |= {w.lower() for w in _IDENTIFIER.findall(_TICKED.sub(" ", text))}
-    return {n for n in found if n and n not in _TRIVIAL}
+def content_words(rule: str) -> set[str]:
+    """A rule's content words: lower-cased word tokens (identifier parts kept whole, so `oslo_log`
+    is one), without function words or single letters."""
+    return {w for w in _TOKEN.findall(rule.lower()) if len(w) > 1 and w not in _FUNCTION}
 
 
 def grounded(rule: str, source: str) -> bool:
-    """Whether a merged rule shares wording with a source rule: an identifier both name (ticked
-    or identifier-shaped, beyond `None` and its kin), or two words of four or more letters
-    beyond the common ones."""
-    if _names(rule) & _names(source):
-        return True
-    words = set(_WORD.findall(rule.lower())) - _COMMON
-    return len(words & (set(_WORD.findall(source.lower())) - _COMMON)) >= 2
+    """Whether a merged rule is supported by a source rule: more than half of its content words
+    appear in the source. On the smoke files (research log, 2026-10-06) every merged rule's best
+    cited source holds more than half of its words, most all of them; a rule invented outright
+    ("use black for formatting") shares at most half with any, and so does nearly every rule
+    against the other organization's lists."""
+    words = content_words(rule)
+    return bool(words) and 2 * len(words & content_words(source)) > len(words)
 
 
 def numbered(group: Sequence[str]) -> str:
