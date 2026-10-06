@@ -125,8 +125,8 @@ def window_split(
 
     Deduplicated as its own corpus, split into the study's time windows, and refused if any
     change straddles a boundary or falls outside every window. Returns the two row sets and a
-    summary of where they came from. Every reader of a built corpus takes its rows from here,
-    so a comparator is evaluated on the examples the adapters were.
+    summary of where they came from. `rq1_pilot.py` and the retrieval comparator read through
+    it, so a comparator is evaluated on the examples the adapters were.
     """
     rows = refined_examples(root, org)
     if not rows:

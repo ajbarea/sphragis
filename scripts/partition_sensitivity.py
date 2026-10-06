@@ -42,11 +42,11 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from statistics import fmean, stdev
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.halves import assign, organization_train, project_counts, split_criteria
 from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves
 from sphragis.experiment.partitions import K_MAX, K_MIN, XI, pilot_sizing, spread_targets
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs

@@ -22,10 +22,10 @@ import json
 import random
 from pathlib import Path
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.halves import assign, project_counts
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.windows import WINDOWS
 
 LABELS = ("valid", "non_actionable", "unrelated_rewrite", "partial", "context_dependent")
 

@@ -26,10 +26,10 @@ import json
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.halves import assign, project_counts
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.windows import WINDOWS
 from sphragis.provenance import provenance_header
 
 ATTENTION = ("attention_set", "removed_from_attention_set")

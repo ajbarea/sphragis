@@ -39,9 +39,9 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.load import refined_month_files
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.corpus.windows import WINDOWS
 from sphragis.measure.probe import accuracy_interval, code_shapes, comment_words, documents
 from sphragis.provenance import provenance_header
 

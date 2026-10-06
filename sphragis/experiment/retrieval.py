@@ -18,6 +18,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from sphragis.corpus.dedup import jaccard, pair_text, shingles
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training
 from sphragis.experiment.partitions import partition_run_windows
@@ -59,7 +60,7 @@ class BM25:
         self.pool = list(pool)
         self.docs = [Counter(tokens(query_text(row))) for row in self.pool]
         self.lengths = [sum(doc.values()) for doc in self.docs]
-        self.mean_length = sum(self.lengths) / len(self.lengths) if self.lengths else 0.0
+        self.mean_length = sum(self.lengths) / len(self.lengths)
         frequency: Counter[str] = Counter()
         for doc in self.docs:
             frequency.update(doc.keys())
@@ -127,33 +128,45 @@ def pools(
     return {half: BM25([row for row in rows if fits(row)]) for half, rows in cut.items()}
 
 
+def shot_similarity(target: Mapping[str, Any], shots: Sequence[Mapping[str, Any]]) -> float:
+    """The closest shot's Jaccard similarity to the target, as test 4 measures near-duplicates.
+
+    Over the normalized before/after pair, so a shot carrying the target's own answer scores
+    near 1. 0.0 for no shots.
+    """
+    pair = shingles(pair_text(target))
+    return max((jaccard(pair, shingles(pair_text(shot))) for shot in shots), default=0.0)
+
+
 def arm_prompts(
     targets: Sequence[Mapping[str, Any]],
     indexes: Mapping[str, BM25],
     *,
     evaluated: str,
     ks: Sequence[int] = KS,
-) -> dict[str, list[str]]:
-    """Every target's prompt under every pool at every k, keyed as `arm_key`.
+) -> tuple[dict[str, list[str]], dict[str, list[float]]]:
+    """Every target's prompt under every pool at every k, keyed as `arm_key`, and each prompt's
+    closest shot's similarity to its target (`shot_similarity`).
 
     One retrieval at the largest k serves every k: BM25's ranking is fixed, so the k nearest
     are a prefix of the K nearest.
     """
-    out: dict[str, list[str]] = {}
+    prompts: dict[str, list[str]] = {}
+    similarity: dict[str, list[float]] = {}
     for pool, index in indexes.items():
         nearest = [index.top(target, max(ks)) for target in targets]
         for k in ks:
-            out[arm_key(k, pool, evaluated)] = [
-                few_shot_prompt(target, shots[:k])
-                for target, shots in zip(targets, nearest, strict=True)
-            ]
-    return out
+            key = arm_key(k, pool, evaluated)
+            pairs = list(zip(targets, (shots[:k] for shots in nearest), strict=True))
+            prompts[key] = [few_shot_prompt(target, shots) for target, shots in pairs]
+            similarity[key] = [shot_similarity(target, shots) for target, shots in pairs]
+    return prompts, similarity
 
 
 def first_partitions(listing: Mapping[str, Any], *, org: str) -> tuple[list[int], int]:
     """An admissible list's first `PARTITIONS` partitions and its training size, for `org` only."""
-    if listing.get("org", org) != org:
-        raise ValueError(f"the list is {listing['org']}'s partitions, not {org}'s")
+    if listing.get("org") != org:
+        raise ValueError(f"the list is {listing.get('org')}'s partitions, not {org}'s")
     order = list(listing["admissible"][:PARTITIONS])
     if len(order) < PARTITIONS:
         raise ValueError(f"{len(order)} admissible partitions, fewer than {PARTITIONS}")
@@ -180,8 +193,10 @@ def resumable(
     for line in lines:
         try:
             row = json.loads(line)
-            arm = row.pop("arm")
-        except (json.JSONDecodeError, AttributeError, KeyError):
+            arm = row.pop("arm") if isinstance(row, dict) else None
+        except (json.JSONDecodeError, KeyError):
+            arm = None
+        if not isinstance(arm, str):
             dropped.add("<unreadable line>")
             continue
         found.setdefault(arm, []).append(row)
@@ -196,8 +211,9 @@ def resumable(
 
 def adapter_run(
     results: Path, *, org: str, partition: int, order: Sequence[int], size: int
-) -> tuple[Path, dict[str, Any], Path]:
-    """The adapters' development-window run on `partition`, and the corpus its halves read.
+) -> tuple[Path, dict[str, Any], Path, int]:
+    """The adapters' development-window run on `partition`, the corpus its halves read, and the
+    run's position in the admissible order (its training seed).
 
     Named as `partition_run.sbatch` names it (`-s<k>` for the k-th run past the first, `-n<N>`),
     checked by `partition_run_windows`, and its corpus root read from its halves' sources, so a
@@ -223,4 +239,4 @@ def adapter_run(
     }
     if len(roots) != 1:
         raise ValueError(f"{path}: its halves read different corpora {sorted(map(str, roots))}")
-    return path, run, roots.pop()
+    return path, run, roots.pop(), position

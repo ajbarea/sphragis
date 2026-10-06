@@ -7942,8 +7942,11 @@ evaluated organization's partition, so one job computes them for every run, on e
 first ten partitions score. The generator is the
 registered one (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A pool row repeated verbatim in a
 target refuses the job, and every pool is held to test 4 at the registered threshold and rate. A
-pool must hold exactly as many rows as its run records its adapter trained on, and the run must
-have cut its training sets equalized at the pools' seed.
+pool must hold exactly as many rows as its run records its adapter trained on, the run must have
+cut its training sets equalized at the pools' seed, and each half must read back with the
+examples, dedup and window counts the run recorded, so a corpus rebuilt at the same root is
+refused. The adapter runs read beside the comparator must have decoded with its model and output
+budget, at one LoRA rank.
 
 **Fixed now.** The first 10 admissible partitions of OpenStack and of Wikimedia (`PARTITIONS`,
 Ritzwoller and Romano's least burn-in, `partitions.K_MIN`), the first 10 their adapters ran on, so
@@ -7957,7 +7960,12 @@ organization contrast's) and own minus none.
 **Reading rule**, on own minus sibling at each k. A lower bound above the SESOI (0.01) reads "carries a
 half-split contrast", and an upper bound below minus the SESOI reads "reversed". An interval inside
 the SESOI band reads "carries none as large as the SESOI". Anything else is inconclusive. Sibling
-minus foreign and own minus none are reported, not read. The adapters' own minus sibling is read beside it by the same rule,
+minus foreign and own minus none are reported, not read. Beside the reading, own minus sibling is
+read again without every target whose own or sibling shot is a near-duplicate of it (Jaccard 0.7,
+test 4's measure). Projects split whole, so a target's near-duplicate from the training window sits
+in its own half's pool, and test 4 tolerates up to 2% of them. Copying one into the prompt would
+read as a half-split contrast. If the two readings differ, the contrast is attributed to
+near-duplicate shots, not to conventions. The adapters' own minus sibling is read beside it by the same rule,
 over the same ten partitions and the same examples, from their committed partition runs (the
 22-run development pilot is a different K and is not the comparison). If retrieval carries the contrast and the adapters do not, the own half's
 conventions are recoverable at inference time and the adapters at N do not learn them. If neither
@@ -7969,4 +7977,6 @@ here binds a verdict.
 base and foreign arms. On the pilots' 501 and 711 examples (`examples` in each partition pilot) that
 is 22,545 and 31,995 generations, 54,540 in all. At the measured 38-43 tokens a second (job 143201)
 and the 256-token ceiling (`MAX_NEW_TOKENS`), decoding is bounded by 90 to 102 GH200-hours. The first
-job measures the actual rate. Dry runs on a login node build every prompt and run test 4 first.
+job measures the actual rate. Dry runs on a login node build every prompt and run test 4 on pools
+cut by a character proxy; each GPU job reruns both on the tokenizer's pools before the model loads.
+A foreign job's start-up rereads its ten partitions, about 6 minutes in the dry run.

@@ -96,7 +96,14 @@ def _run_file(results: Path, org: str, position: int, root: Path) -> None:
     """The adapters' partition run on the position-th partition, named as its job names it."""
     seeds = "" if position == 1 else f"-s{position}"
     halves = (f"{org}-a", f"{org}-b")
-    corpora = {h: {"source": f"train -> dev windows under {root}/{h}/refined"} for h in halves}
+    corpora = {}
+    for h in halves:
+        train, held_out, read = window_split(root, h)
+        corpora[h] = {
+            **read,
+            "train_examples": len(train),
+            "held_out_examples": len(held_out),
+        }
     training = {f"{h}-s{position}": {"items": SIZE} for h in halves}
     run = {
         "seeds": [position],
@@ -220,8 +227,8 @@ def test_a_foreign_pool_of_another_size_is_refused(
 IDS = [f"x{i}" for i in range(40)]
 
 
-def _row(i: str, em: float) -> dict:
-    return {"id": i, "change_id": f"c{i}", "exact_match": em}
+def _row(i: str, em: float, shot: float = 0.0) -> dict:
+    return {"id": i, "change_id": f"c{i}", "exact_match": em, "shot_jaccard": shot}
 
 
 def _sides(partition: int) -> dict[str, list[str]]:
@@ -256,6 +263,9 @@ def _adapter_run(position: int, partition: int) -> dict:
         "train_size": SIZE,
         "split_seed": 0,
         "equalize_train": True,
+        "model_id": "qwen",
+        "max_new_tokens": 256,
+        "lora_rank": 32,
         "corpora": corpora,
         "results": results,
     }
@@ -264,6 +274,8 @@ def _adapter_run(position: int, partition: int) -> dict:
 GEN = {
     "generator": "qwen@rev|float32|max_new_tokens=256|temperature=0.0",
     "inference_dtype": "float32",
+    "model_id": "qwen",
+    "max_new_tokens": 256,
 }
 
 
@@ -409,3 +421,44 @@ def test_the_reader_refuses_jobs_from_another_generator(tmp_path: Path) -> None:
 )
 def test_the_reading_rule_on_each_kind_of_interval(low: float, high: float, verdict: str) -> None:
     assert reader.reading({"low": low, "high": high})["reading"] == verdict
+
+
+def test_a_corpus_rebuilt_since_the_adapters_trained_is_refused(
+    corpora: dict[str, Path], tmp_path: Path
+) -> None:
+    run_path = corpora["results"] / f"rq1-partition-openstack-p{ORDER[0]}-n{SIZE}.json"
+    run = json.loads(run_path.read_text())
+    run["corpora"]["openstack-a"]["held_out_examples"] += 1
+    run_path.write_text(json.dumps(run))
+    with pytest.raises(SystemExit, match="but the adapters' run read"):
+        _halves(corpora, tmp_path / "h.json", "--partition", str(ORDER[0]))
+
+
+def test_the_dry_run_counts_near_duplicate_shots(corpora: dict[str, Path], tmp_path: Path) -> None:
+    report = _halves(corpora, tmp_path / "h.json", "--partition", str(ORDER[0]))
+    # The synthetic rows share no text, so no shot is a near-duplicate of its target.
+    assert set(report["near_duplicate_shots"]) == set(report["prompt_chars"])
+    assert not any(report["near_duplicate_shots"].values())
+
+
+def test_without_near_duplicate_shots_drops_every_flagged_target(tmp_path: Path) -> None:
+    jobs = [_halves_job(p, True) for p in ORDER]
+    # x0 and x2 win in the own arm only because their own shot copies them, in one run each.
+    for job, flagged in ((jobs[0], "x0"), (jobs[3], "x2")):
+        for key, rows in job["results"].items():
+            pool, evaluated = key.split(":")[1].split("|")
+            if pool == evaluated:
+                for row in rows:
+                    if row["id"] == flagged:
+                        row["shot_jaccard"] = 0.9
+    report = _read(tmp_path, jobs, _foreign_job())
+    clean = report["ks"]["1"]["without_near_duplicate_shots"]
+    assert clean["excluded"] == 2 and clean["threshold"] == 0.7
+    assert clean["own_minus_sibling"]["reading"] == "carries a half-split contrast"
+
+
+def test_the_reader_refuses_adapters_decoded_otherwise(tmp_path: Path) -> None:
+    runs = [_adapter_run(n, p) for n, p in enumerate(ORDER, start=1)]
+    runs[6]["max_new_tokens"] = 96
+    with pytest.raises(SystemExit, match="decoded with"):
+        _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(), runs)

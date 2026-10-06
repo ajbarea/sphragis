@@ -13,6 +13,8 @@ from sphragis.experiment.retrieval import (
     condition,
     few_shot_prompt,
     pools,
+    resumable,
+    shot_similarity,
     tokens,
 )
 from sphragis.experiment.runner import build_prompt
@@ -79,7 +81,7 @@ def test_an_arm_is_keyed_as_an_adapter_arm_is_without_a_seed() -> None:
 def test_the_smaller_k_takes_the_nearest_of_the_larger_ks_shots() -> None:
     pool = [_row(n, f"comment {n} rename", f"v{n} = {n}") for n in range(6)]
     target = _row(9, "comment 2 rename", "v2 = 3")
-    prompts = arm_prompts([target], {"p": BM25(pool)}, evaluated="e", ks=(1, 3))
+    prompts, _ = arm_prompts([target], {"p": BM25(pool)}, evaluated="e", ks=(1, 3))
     nearest = BM25(pool).top(target, 3)
     assert prompts[arm_key(1, "p", "e")] == [few_shot_prompt(target, nearest[:1])]
     assert prompts[arm_key(3, "p", "e")] == [few_shot_prompt(target, nearest)]
@@ -93,3 +95,26 @@ def test_a_pool_is_the_equalized_cut_less_the_rows_training_refuses() -> None:
         assert [r["id"] for r in built[half].pool] == [
             r["id"] for r in cut[half] if int(r["id"]) % 2 == 0
         ]
+
+
+def test_a_shot_carrying_the_targets_answer_is_a_near_duplicate() -> None:
+    target = _row(
+        1, "rename it", "value = compute_total(items)", after="total = compute_total(items)"
+    )
+    copy = dict(target, id="2")
+    other = _row(3, "use a logger", "print(message)", after="log.info(message)")
+    assert shot_similarity(target, [other, copy]) == 1.0
+    assert shot_similarity(target, [other]) < 0.7
+    assert shot_similarity(target, []) == 0.0
+
+
+def test_a_list_or_number_line_is_unreadable_not_a_crash() -> None:
+    kept, dropped = resumable(["[1]", "7", '"x"'], {})
+    assert kept == {} and dropped == ["<unreadable line>"]
+
+
+def test_an_admissible_list_must_name_its_organization() -> None:
+    from sphragis.experiment.retrieval import first_partitions
+
+    with pytest.raises(ValueError, match="None's partitions"):
+        first_partitions({"admissible": list(range(10)), "size_floor": 5}, org="openstack")

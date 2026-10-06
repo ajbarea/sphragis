@@ -125,14 +125,17 @@ def admissible(path: Path, org: str) -> tuple[list[int], int]:
 
 def corpus_of(
     results: Path, org: str, partition: int, order: list[int], size: int
-) -> tuple[Path, dict[str, int]]:
-    """The corpus the adapters' run on `partition` read, and how many rows each half trained on.
+) -> tuple[Path, dict[str, int], dict[str, dict]]:
+    """The corpus the adapters' run on `partition` read, how many rows each half trained on,
+    and what the run recorded of each half's corpus.
 
     Refused unless the corpus is that partition's and the run cut its training sets as the pools
     are cut: equalized, at `EQUALIZE_SEED`.
     """
     try:
-        path, run, root = adapter_run(results, org=org, partition=partition, order=order, size=size)
+        path, run, root, position = adapter_run(
+            results, org=org, partition=partition, order=order, size=size
+        )
     except ValueError as error:
         raise SystemExit(str(error)) from error
     if (run.get("equalize_train"), run.get("split_seed")) != (True, EQUALIZE_SEED):
@@ -141,20 +144,44 @@ def corpus_of(
             f"{run.get('split_seed')}; the pools are cut equalized at {EQUALIZE_SEED}"
         )
     partition_root(root, org, partition)
-    position = order.index(partition) + 1
-    return root, {half: run["training"][f"{half}-s{position}"]["items"] for half in halves(org)}
+    trained = {half: run["training"][f"{half}-s{position}"]["items"] for half in halves(org)}
+    return root, trained, run["corpora"]
 
 
-def half_pools(
-    root: Path, org: str, size: int, fits: Callable[[Mapping[str, Any]], bool]
-) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
-    """A partition's two half pools, each half's held-out rows, and where each came from."""
+def read_halves(
+    root: Path, org: str, recorded: Mapping[str, Mapping[str, Any]]
+) -> tuple[dict[str, list[dict]], dict[str, list[dict]], dict[str, dict]]:
+    """Each half's training and held-out rows, refused unless they are what the run recorded.
+
+    A corpus rebuilt at the same root since the adapters trained passes its manifest check; the
+    counts the run recorded of each half (examples, dedup, train, held out) catch it.
+    """
     train, held_out, summary = {}, {}, {}
     for half in halves(org):
         try:
             train[half], held_out[half], summary[half] = window_split(root, half)
         except ValueError as error:
             raise SystemExit(str(error)) from error
+        now = {
+            **summary[half],
+            "train_examples": len(train[half]),
+            "held_out_examples": len(held_out[half]),
+        }
+        then = {key: recorded[half].get(key) for key in now}
+        if now != then:
+            raise SystemExit(f"{root / half}: {now}, but the adapters' run read {then}")
+    return train, held_out, summary
+
+
+def half_pools(
+    root: Path,
+    org: str,
+    size: int,
+    fits: Callable[[Mapping[str, Any]], bool],
+    recorded: Mapping[str, Mapping[str, Any]],
+) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
+    """A partition's two half pools, each half's held-out rows, and where each came from."""
+    train, held_out, summary = read_halves(root, org, recorded)
     return pools(train, size=size, fits=fits), held_out, summary
 
 
@@ -162,12 +189,8 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
     """Every held-out example any of the organization's first partitions scores, once each."""
     rows: dict[str, dict] = {}
     for partition in order:
-        root, _ = corpus_of(results, org, partition, order, size)
-        for half in halves(org):
-            try:
-                _, held_out, _ = window_split(root, half)
-            except ValueError as error:
-                raise SystemExit(str(error)) from error
+        root, _, recorded = corpus_of(results, org, partition, order, size)
+        for held_out in read_halves(root, org, recorded)[1].values():
             for row in held_out:
                 rows.setdefault(row["id"], row)
     return sorted(rows.values(), key=lambda row: str(row["id"]))
@@ -180,7 +203,7 @@ def main() -> None:
     if args.pools == "halves":
         if args.partition is None:
             raise SystemExit("--pools halves needs --partition")
-        root, trained = corpus_of(args.results, args.org, args.partition, order, size)
+        root, trained, recorded = corpus_of(args.results, args.org, args.partition, order, size)
     else:
         if not (args.foreign and args.foreign_admissible):
             raise SystemExit("--pools foreign needs --foreign and --foreign-admissible")
@@ -190,7 +213,9 @@ def main() -> None:
         # A larger pool holds closer neighbours, so the arms compare at one size or not at all.
         if foreign_size != size:
             raise SystemExit(f"{args.foreign} trains at {foreign_size}, {args.org} at {size}")
-        root, trained = corpus_of(args.results, args.foreign, foreign_order[0], foreign_order, size)
+        root, trained, recorded = corpus_of(
+            args.results, args.foreign, foreign_order[0], foreign_order, size
+        )
 
     # Only the tokenizer before test 4: the model loads once the data has passed it.
     if args.dry_run:
@@ -203,16 +228,18 @@ def main() -> None:
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
     prompts: dict[str, list[str]] = {}
+    similarity: dict[str, list[float]] = {}
     evaluated_by: dict[str, str] = {}
     if args.pools == "halves":
-        indexes, held_out, corpora = half_pools(root, args.org, size, fits)
+        indexes, held_out, corpora = half_pools(root, args.org, size, fits, recorded)
         for half in halves(args.org):
             targets[half] = held_out[half][: args.limit]
     else:
-        indexes, _, corpora = half_pools(root, args.foreign, size, fits)
+        indexes, _, corpora = half_pools(root, args.foreign, size, fits, recorded)
         targets[args.org] = scored(args.results, args.org, order, size)[: args.limit]
         base = run_id(EvalRun("base", args.org, None))
         prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
+        similarity[base] = [0.0 for _ in targets[args.org]]
         evaluated_by[base] = args.org
     # Each pool is its adapter's training set: as many rows as the run trained that adapter on.
     # The proxy cannot say so, so a dry run records both.
@@ -221,8 +248,9 @@ def main() -> None:
         raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
     for evaluated, rows in targets.items():
         require_unique_ids(rows, label=f"{evaluated} targets")
-        for key, texts in arm_prompts(rows, indexes, evaluated=evaluated).items():
-            prompts[key], evaluated_by[key] = texts, evaluated
+        arms, closest = arm_prompts(rows, indexes, evaluated=evaluated)
+        for key, texts in arms.items():
+            prompts[key], similarity[key], evaluated_by[key] = texts, closest[key], evaluated
 
     # A pool row repeated verbatim in a target is the answer in the prompt; near-duplicates are
     # held to the registered test 4, as the adapters' training rows are.
@@ -254,6 +282,11 @@ def main() -> None:
         "limit": args.limit,
         "pool_filter": "chars/4 proxy" if args.dry_run else f"build_supervised, {MAX_SEQ_LENGTH}",
         "pool_sizes": pooled,
+        # Prompts whose closest shot is a near-duplicate of the target at test 4's threshold:
+        # the reader reads own minus sibling without them beside the full reading.
+        "near_duplicate_shots": {
+            key: sum(v >= LEAKAGE_THRESHOLD for v in values) for key, values in similarity.items()
+        },
         "adapter_items": trained,
         # Which training rows each pool held, so a reading names the examples it retrieved from.
         "pool_ids": {pool: [row["id"] for row in index.pool] for pool, index in indexes.items()},
@@ -296,8 +329,14 @@ def main() -> None:
         # fingerprint does not cover.
         for key, rows in results.items():
             results[key] = [
-                {**scored_row(target, row["prediction"]), "fingerprint": row["fingerprint"]}
-                for target, row in zip(targets[evaluated_by[key]], rows, strict=True)
+                {
+                    **scored_row(target, row["prediction"]),
+                    "fingerprint": row["fingerprint"],
+                    "shot_jaccard": closest,
+                }
+                for target, row, closest in zip(
+                    targets[evaluated_by[key]], rows, similarity[key], strict=True
+                )
             ]
         partial = rows_path.with_suffix(".partial")
         partial.write_text(
@@ -311,16 +350,18 @@ def main() -> None:
             if key in results:
                 continue
             results[key] = []
-            for target, prompt, mark in zip(
-                targets[evaluated_by[key]], texts, marks[key], strict=True
+            for target, prompt, mark, closest in zip(
+                targets[evaluated_by[key]], texts, marks[key], similarity[key], strict=True
             ):
                 prediction = generator.generate(prompt)
-                results[key].append({**scored_row(target, prediction), "fingerprint": mark})
+                row = scored_row(target, prediction)
+                results[key].append({**row, "fingerprint": mark, "shot_jaccard": closest})
             rows_out.writelines(json.dumps({"arm": key, **r}) + "\n" for r in results[key])
             rows_out.flush()
             em = sum(r["exact_match"] for r in results[key]) / max(1, len(results[key]))
             print(f"{key:<44} EM={em:.3f}", flush=True)
     report["generator"] = signature
+    report["model_id"], report["max_new_tokens"] = generator.model_id, generator.max_new_tokens
     report["inference_dtype"] = generator.computed_dtype
     report["results"] = results
     report["provenance"] = run_provenance()

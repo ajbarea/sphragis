@@ -18,7 +18,9 @@ Reading rule, fixed before any generation (research log, 2026-10-05): own minus 
 k, on its 95% interval, reads "carries a half-split contrast" when the lower bound clears the
 SESOI, "reversed" when the upper bound sits below minus the SESOI, "carries none as large as the
 SESOI" when the interval sits inside the SESOI band, and "inconclusive" otherwise; the adapters'
-interval is read by the same rule. The other two contrasts are reported, not read. Exploratory: no
+interval is read by the same rule. The other two contrasts are reported, not read. Beside the
+reading, own minus sibling is read again without every target whose own or sibling shot is a
+near-duplicate of it at test 4's threshold. Exploratory: no
 reading here binds a verdict.
 
     uv run --no-sync python scripts/retrieval_read.py --org openstack --foreign wikimedia \\
@@ -47,6 +49,7 @@ from sphragis.experiment.decomposition import (
     within_sesoi,
 )
 from sphragis.experiment.grid import EvalRun, run_id
+from sphragis.experiment.neutral import LEAKAGE_THRESHOLD
 from sphragis.experiment.partitions import on_common_examples
 from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, first_partitions
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
@@ -129,17 +132,30 @@ def reading(cell: dict) -> dict:
 
 
 def adapter_runs(
-    results: Path, org: str, order: Sequence[int], size: int, ids: set[str]
-) -> tuple[list[Path], list[dict[str, Rows]]]:
-    """The adapters' development-window runs on the same partitions, cut to `ids`."""
-    paths, runs = [], []
+    results: Path,
+    org: str,
+    order: Sequence[int],
+    size: int,
+    ids: set[str],
+    decoding: Mapping[str, Any],
+) -> tuple[list[Path], list[dict[str, Rows]], Any]:
+    """The adapters' development-window runs on the same partitions, cut to `ids`.
+
+    Refused unless every run decoded as the retrieval generator did (`decoding`: model and
+    output budget) and all were trained at one LoRA rank, which is returned.
+    """
+    paths, runs, ranks = [], [], set()
     for partition in order:
         try:
-            path, run, _ = adapter_run(
+            path, run, _, _ = adapter_run(
                 results, org=org, partition=partition, order=order, size=size
             )
         except ValueError as error:
             raise SystemExit(str(error)) from error
+        found = {key: run.get(key) for key in decoding}
+        if found != dict(decoding):
+            raise SystemExit(f"{path} decoded with {found}, the retrieval arms with {decoding}")
+        ranks.add(run.get("lora_rank"))
         scored = {r["id"] for rows in run["results"].values() for r in rows}
         if ids - scored:
             raise SystemExit(f"{path} lacks {len(ids - scored)} of the retrieval examples")
@@ -147,7 +163,20 @@ def adapter_runs(
         runs.append(
             {arm: [r for r in rows if r["id"] in ids] for arm, rows in run["results"].items()}
         )
-    return paths, runs
+    if len(ranks) != 1:
+        raise SystemExit(f"the adapter runs were trained at ranks {sorted(map(str, ranks))}")
+    return paths, runs, ranks.pop()
+
+
+def near_duplicate_targets(runs: Sequence[Mapping[str, Rows]], keys: Sequence[str]) -> set[str]:
+    """Targets whose closest shot in any of `keys`, in any run, is a near-duplicate of them."""
+    return {
+        row["id"]
+        for results in runs
+        for key in keys
+        for row in results[key]
+        if row["shot_jaccard"] >= LEAKAGE_THRESHOLD
+    }
 
 
 def main() -> None:
@@ -161,7 +190,10 @@ def main() -> None:
     fixed = {"org": args.org, "train_size": size, "ks": list(KS), "limit": None}
     foreign_job = load(args.foreign_job, pools="foreign", foreign=args.foreign, **fixed)
     # Every arm is compared with arms from other jobs, so all of them ran one generator.
-    generator = {key: foreign_job.get(key) for key in ("generator", "inference_dtype")}
+    generator = {
+        key: foreign_job.get(key)
+        for key in ("generator", "inference_dtype", "model_id", "max_new_tokens")
+    }
     if None in generator.values():
         raise SystemExit(f"{args.foreign_job} does not record its generator")
     fixed |= generator
@@ -209,11 +241,29 @@ def main() -> None:
             ),
             "own_minus_none": contrast([base_clusters(r, **read) for r in cut], seed, resamples),
         }
+        # Beside it, the same reading without any target whose own or sibling shot is a
+        # near-duplicate of it at test 4's threshold: projects split whole, so such a shot sits
+        # in the own half's pool, and copying it would read as a half-split contrast.
+        shots = [k_key for h in (first, second) for k_key in (arms["own"][h], arms["sibling"][h])]
+        flagged = near_duplicate_targets(cut, shots)
+        clean = [
+            {key: [row for row in rows if row["id"] not in flagged] for key, rows in r.items()}
+            for r in cut
+        ]
+        per_k[str(k)]["without_near_duplicate_shots"] = {
+            "excluded": len(flagged),
+            "threshold": LEAKAGE_THRESHOLD,
+            "own_minus_sibling": reading(
+                contrast([project_clusters(r, **read) for r in clean], seed, resamples)
+            ),
+        }
         if adapters is None:
             ids = {row["id"] for rows in cut[0].values() for row in rows}
-            paths, trained = adapter_runs(args.results, args.org, order, size, ids)
+            decoding = {key: generator[key] for key in ("model_id", "max_new_tokens")}
+            paths, trained, rank = adapter_runs(args.results, args.org, order, size, ids, decoding)
             adapters = {
                 "runs": [str(p) for p in paths],
+                "lora_rank": rank,
                 "examples": len(ids),
                 "own_minus_sibling": reading(
                     contrast(

@@ -20,10 +20,10 @@ import json
 import math
 from pathlib import Path
 
-from sphragis.corpus.cli import WINDOWS
 from sphragis.corpus.halves import halves, organization_train
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.corpus.windows import WINDOWS
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
