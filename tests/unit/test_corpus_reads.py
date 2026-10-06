@@ -16,9 +16,23 @@ from pathlib import Path
 import pytest
 
 _ROOT = Path(__file__).resolve().parents[2]
-_SCRIPTS = sorted(
-    p for p in (_ROOT / "scripts").glob("*.py") if "build_supervised" in p.read_text()
-)
+# A script trains when it names `build_supervised` (the rule as first written) or imports
+# `supervised`, the training module's loop over a training set built on it; the import is read
+# from the tree, since prose also says "supervised".
+_TRAINING = {"build_supervised", "supervised"}
+
+
+def _trains(path: Path) -> bool:
+    text = path.read_text()
+    return "build_supervised" in text or any(
+        isinstance(node, ast.ImportFrom)
+        and node.module == "sphragis.experiment.training"
+        and bool({alias.name for alias in node.names} & _TRAINING)
+        for node in ast.walk(ast.parse(text))
+    )
+
+
+_SCRIPTS = sorted(p for p in (_ROOT / "scripts").glob("*.py") if _trains(p))
 
 # Scripts that legitimately call json.loads on something that is not a training corpus (a prior
 # result, a config file). Named here, narrowly, rather than weakening the rule for everyone.
@@ -243,3 +257,8 @@ def test_preflight_pilot_reports_a_refused_corpus_rather_than_exiting() -> None:
     generic_at = loop.index("except Exception")
     assert system_exit_at < generic_at, "SystemExit must be caught before the generic Exception"
     assert "problems.append" in loop[system_exit_at:generic_at]
+
+
+def test_the_runner_and_the_comparator_are_held_to_the_rule() -> None:
+    names = {script.name for script in _SCRIPTS}
+    assert {"rq1_pilot.py", "retrieval_comparator.py"} <= names

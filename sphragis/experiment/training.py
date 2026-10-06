@@ -32,7 +32,7 @@ def render_chat(tokenizer: Any, prompt: str | Sequence[Mapping[str, str]]) -> st
     against a 63-character reference.
     """
     messages = [{"role": "user", "content": prompt}] if isinstance(prompt, str) else list(prompt)
-    if messages[-1]["role"] != "user":
+    if not messages or messages[-1]["role"] != "user":
         raise ValueError("a conversation to answer ends in a user turn")
     return str(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True))
 
@@ -201,3 +201,28 @@ def decoding_kwargs(temperature: float) -> dict[str, Any]:
     if temperature == 0:
         return {"do_sample": False}
     return {"do_sample": True, "temperature": temperature, "top_k": 0, "top_p": 1.0}
+
+
+def supervised(
+    tokenizer: Any,
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    prompt_builder: Callable[[Mapping[str, Any]], str],
+    max_length: int = MAX_SEQ_LENGTH,
+) -> tuple[list[dict[str, list[int]]], int]:
+    """The training items `rows` give, and how many rows `build_supervised` refused.
+
+    The one place a training set is cut to what fits the budget: every adapter is trained on
+    these items, and a retrieval pool holds exactly the rows they came from.
+    """
+    items, refused = [], 0
+    for row in rows:
+        try:
+            items.append(
+                build_supervised(
+                    tokenizer, row, prompt_builder=prompt_builder, max_length=max_length
+                )
+            )
+        except ValueError:
+            refused += 1
+    return items, refused

@@ -21,6 +21,7 @@ from typing import Any
 from sphragis.corpus.dedup import jaccard, pair_text, shingles
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training
+from sphragis.experiment.neutral import source_root
 from sphragis.experiment.partitions import partition_run_windows
 from sphragis.experiment.runner import build_prompt
 
@@ -243,10 +244,7 @@ def adapter_run(
         raise ValueError(f"{path}: {error}") from error
     if windows != {"train -> dev"}:
         raise ValueError(f"{path}: read on {sorted(windows)}, not the development window")
-    roots = {
-        Path(corpus["source"].split(" windows under ", 1)[1]).parent.parent
-        for corpus in run["corpora"].values()
-    }
+    roots = {source_root(corpus["source"]) for corpus in run["corpora"].values()}
     if len(roots) != 1:
         raise ValueError(f"{path}: its halves read different corpora {sorted(map(str, roots))}")
     return path, run, roots.pop(), position

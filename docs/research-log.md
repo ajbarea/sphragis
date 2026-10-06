@@ -7980,8 +7980,11 @@ here binds a verdict.
 **Cost**, before it is spent. There are 4 generations an example a partition and 5 an example for the
 base and foreign arms. On the pilots' 501 and 711 examples (`examples` in each partition pilot) that
 is 22,545 and 31,995 generations, 54,540 in all. At the measured 38-43 tokens a second (job 143201)
-and the 256-token ceiling (`MAX_NEW_TOKENS`), decoding is bounded by 90 to 102 GH200-hours. The first
-job measures the actual rate. Dry runs on a login node build every prompt and run test 4 on pools
+and the 256-token ceiling (`MAX_NEW_TOKENS`), decoding is bounded by 90 to 102 GH200-hours. Measured on
+a smoke job (222691, OpenStack partition 2, 20 targets a half): 160 generations in 358 s with the
+model load included, at most 2.2 s a generation, so the full run is at most about 33 GH200-hours.
+The smoke job's pools held exactly the rows its adapters trained on (1,847 and 1,848), and no reply
+began with a label or differed between raw and extracted exact match. Dry runs on a login node build every prompt and run test 4 on pools
 cut by a character proxy; each GPU job reruns both on the tokenizer's pools before the model loads.
 A foreign job's start-up rereads its ten partitions, about 6 minutes in the dry run. Rows are
 written as they are generated, so a kill loses one generation.

@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from statistics import fmean
 from typing import Any
 
@@ -174,9 +175,22 @@ def non_degeneracy(results: Mapping[str, Sequence[Mapping[str, Any]]]) -> Check:
     return Check("non_degeneracy", not degenerate, {"exact_match": rates, "degenerate": degenerate})
 
 
+_UNDER = " windows under "
+
+
 def source_windows(source: str) -> str:
     """The windows a corpus source names: `train -> dev` from `train -> dev windows under ...`."""
     return source.split(" windows")[0]
+
+
+def source_root(source: str) -> Path:
+    """The corpus root a source names: `<root>` from `... windows under <root>/<half>/refined`.
+
+    The one reader of the path half of `window_split`'s source note.
+    """
+    if _UNDER not in source:
+        raise ValueError(f"not a window_split source: {source!r}")
+    return Path(source.split(_UNDER, 1)[1]).parent.parent
 
 
 def planted_convention(

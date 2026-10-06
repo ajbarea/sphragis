@@ -20,7 +20,7 @@ from typing import Any
 from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.cells import SPREAD_TARGETS, by_level, is_count, level_key
 from sphragis.experiment.decomposition import SESOI, project_clusters, read_intervals
-from sphragis.experiment.neutral import source_windows
+from sphragis.experiment.neutral import source_root, source_windows
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
@@ -208,7 +208,8 @@ def partition_run_windows(
     if "halted" in run:
         raise ValueError(f"halted at {run['halted']}; the apparatus failed, not read")
     sources = [c["source"] for c in run["corpora"].values()]
-    roots = {re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?/", s) for s in sources}
+    names = {str(source_root(source)) for source in sources}
+    roots = {re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?$", name) for name in names}
     found = {int(root.group(1)) if root else None for root in roots}
     partition = found.pop() if len(found) == 1 else None
     if run.get("train_size") != train_size:

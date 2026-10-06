@@ -42,7 +42,7 @@ from sphragis.experiment.neutral import (
     positive_control,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids
-from sphragis.experiment.training import build_supervised
+from sphragis.experiment.training import supervised
 from sphragis.experiment.walk import gate, walk
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -220,16 +220,9 @@ class InProcessTrainer:
         model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
             tok.pad_token = tok.eos_token
-        items, refused = [], 0
-        for r in train_rows[org]:
-            try:
-                items.append(
-                    build_supervised(
-                        tok, r, prompt_builder=build_prompt, max_length=TRAINING["max_seq_length"]
-                    )
-                )
-            except ValueError:
-                refused += 1
+        items, refused = supervised(
+            tok, train_rows[org], prompt_builder=build_prompt, max_length=TRAINING["max_seq_length"]
+        )
         report = train_adapter(model, items, pad_token_id=tok.pad_token_id, seed=seed)
         epochs = int(TRAINING["epochs"])
         assert report.skipped_steps == 0, f"{org} s{seed}: {report.skipped_steps} steps skipped"

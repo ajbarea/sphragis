@@ -43,6 +43,7 @@ from sphragis.experiment.neutral import LEAKAGE_MAX_RATE, LEAKAGE_THRESHOLD, lea
 from sphragis.experiment.retrieval import (
     EQUALIZE_SEED,
     KS,
+    Prompt,
     adapter_run,
     arm_prompts,
     few_shot_prompt,
@@ -78,15 +79,11 @@ def trainable_by_chars(row: Mapping[str, Any]) -> bool:
 
 
 def trainable_by_tokens(tokenizer: Any) -> Callable[[Mapping[str, Any]], bool]:
-    """Whether `build_supervised` would accept an example as a training item."""
-    from sphragis.experiment.training import build_supervised
+    """Whether an example is one an adapter trains on: `supervised` keeps it."""
+    from sphragis.experiment.training import supervised
 
     def fits(row: Mapping[str, Any]) -> bool:
-        try:
-            build_supervised(tokenizer, row, prompt_builder=build_prompt, max_length=MAX_SEQ_LENGTH)
-        except ValueError:
-            return False
-        return True
+        return supervised(tokenizer, [row], prompt_builder=build_prompt)[1] == 0
 
     return fits
 
@@ -193,7 +190,12 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
         root, _, recorded = corpus_of(results, org, partition, order, size)
         for held_out in read_halves(root, org, recorded)[1].values():
             for row in held_out:
-                rows.setdefault(row["id"], row)
+                first = rows.setdefault(row["id"], row)
+                # The same example in every partition, or the arms are scored on two references.
+                if any(
+                    first.get(f) != row.get(f) for f in ("change_id", "comments", "before", "after")
+                ):
+                    raise SystemExit(f"example {row['id']} differs between partition corpora")
     return sorted(rows.values(), key=lambda row: str(row["id"]))
 
 
@@ -230,7 +232,7 @@ def main() -> None:
 
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
-    prompts: dict[str, list[str]] = {}
+    prompts: dict[str, list[Prompt]] = {}
     similarity: dict[str, list[float]] = {}
     evaluated_by: dict[str, str] = {}
     if args.pools == "halves":
@@ -324,9 +326,9 @@ def main() -> None:
         key: list(zip((t["id"] for t in targets[evaluated_by[key]]), marks[key], strict=True))
         for key in prompts
     }
-    # Each arm's rows are appended as it finishes. A rerun keeps only the arms it would generate
-    # identically, rewritten in place first, so a wall clock or a kill loses at most the arm it
-    # interrupted, and a changed prompt, pool or generator is regenerated.
+    # A rerun keeps only the rows it would generate identically, rewritten in place first: an arm
+    # a kill cut short resumes from its kept prefix, and a changed prompt, pool or generator is
+    # regenerated.
     rows_path = args.out.with_suffix(".rows.jsonl")
     results: dict[str, list[dict]] = {}
     if rows_path.is_file():
