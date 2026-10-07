@@ -185,3 +185,21 @@ def test_a_durable_logs_close_reaches_the_disk_and_its_derived_paths_are_plain(
     sibling.write_text('{\n  "rows": 1\n}\n')
     assert type(sibling) is not DurableLog and type(log.parent) is not DurableLog
     assert sibling.read_text() == '{\n  "rows": 1\n}\n', "a sibling is never rewritten as a log"
+
+
+def test_appending_to_a_torn_log_repairs_it_first_and_close_always_closes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log = DurableLog(_log(tmp_path, WHOLE + b"\0" * 10))
+    with log.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"key": "a#3", "n": 3}) + "\n")
+    assert [r["n"] for r in read_records(log)] == [1, 2, 3], "the new record is not lost"
+    handle = log.open("a", encoding="utf-8")
+
+    def failing(fd: int) -> None:
+        raise OSError("disk gone")
+
+    monkeypatch.setattr("sphragis.durable.os.fsync", failing)
+    with pytest.raises(OSError, match="disk gone"):
+        handle.close()
+    assert handle.closed

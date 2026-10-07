@@ -84,11 +84,13 @@ def exclusive(lock: Path) -> Iterator[None]:
 class DurableLog(Path):
     """An append-only JSON-lines log path that is durable through ordinary `Path` calls.
 
-    Reading it cuts torn records first (see `read_records`), and a handle opened to append makes
-    each `flush()` and `close()` reach the disk, with a new file's directory entry made durable
-    as it is created. The code that reads and appends the log stays as it was, so durability
-    changes here never touch the code whose text digests a route's rules. Paths derived from it
-    (`parent`, `with_name`, `/`) are plain: only the log itself rewrites what it reads.
+    `read_text()` cuts torn records first (see `read_records`), as does opening it to append, so a
+    record never lands after a torn one; an append handle makes each `flush()` and `close()` reach
+    the disk, with a new file's directory entry made durable as it is created. Other reads
+    (`read_bytes`, `open("r")`) see the file as it is. The code that reads and appends the log
+    stays as it was, so durability changes here never touch the code whose text digests a route's
+    rules. Paths derived from it (`parent`, `with_name`, `/`) are plain: only the log itself
+    rewrites what it reads.
     """
 
     # Narrower than PurePath's on purpose: derived paths are plain, not logs.
@@ -102,6 +104,8 @@ class DurableLog(Path):
     def open(self, mode: str = "r", *args: Any, **kwargs: Any) -> IO[Any]:  # ty: ignore[invalid-method-override]
         if "a" not in mode:
             return super().open(mode, *args, **kwargs)
+        if self.is_file():
+            read_records(self)
         created = [p for p in (self, *self.parents) if not p.exists()]
         self.parent.mkdir(parents=True, exist_ok=True)
         handle = super().open(mode, *args, **kwargs)
@@ -124,10 +128,15 @@ class _Fsynced:
         self._handle.flush()
         os.fsync(self._handle.fileno())
 
+    def __iter__(self) -> Iterator[Any]:
+        return iter(self._handle)
+
     def close(self) -> None:
-        if not self._handle.closed:
-            self.flush()
-        self._handle.close()
+        try:
+            if not self._handle.closed:
+                self.flush()
+        finally:
+            self._handle.close()
 
     def __enter__(self) -> _Fsynced:
         return self

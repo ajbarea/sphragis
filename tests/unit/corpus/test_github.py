@@ -526,13 +526,14 @@ def test_the_route_module_imports_no_storage_plumbing() -> None:
     from sphragis.corpus import github
 
     tree = ast.parse(Path(github.__file__).read_text())
-    imported = {
-        node.module if isinstance(node, ast.ImportFrom) else alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import | ast.ImportFrom)
-        for alias in node.names
-    }
+    package = github.__name__.rsplit(".", 1)[0].split(".")
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported |= {alias.name for alias in node.names}
+        elif isinstance(node, ast.ImportFrom):
+            base = ".".join(package[: len(package) - node.level + 1]) if node.level else ""
+            module = ".".join(part for part in (base, node.module or "") if part)
+            imported |= {module} | {f"{module}.{alias.name}" for alias in node.names}
     plumbing = {"sphragis.durable", "sphragis.corpus.storage"}
-    assert not {name for name in imported if name and (name in plumbing or name == "sphragis")}, (
-        "import rule code only; storage belongs to the checkpoint the caller passes"
-    )
+    assert not imported & plumbing, "storage belongs to the checkpoint the caller passes"
