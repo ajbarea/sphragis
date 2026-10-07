@@ -9,11 +9,11 @@ count only backports that keep their Change-Id. One definition, read by `backpor
 
 from __future__ import annotations
 
-import gzip
-import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
+
+from sphragis.corpus.storage import iter_snapshot
 
 # Release, maintenance and deployment branches, as named on the two hosts (read from the raw
 # snapshots): OpenStack `stable/`, `unmaintained/`, `bugfix/`, `release_N` and StarlingX `r/stx`;
@@ -28,9 +28,7 @@ BACKPORT = re.compile(
 def raw_changes(root: Path, org: str) -> Iterator[dict]:
     """Every raw change in an organization's snapshots, month by month."""
     for path in sorted((Path(root) / org / "raw").glob("*.ndjson.gz")):
-        with gzip.open(path, "rt") as lines:
-            for line in lines:
-                yield json.loads(line)
+        yield from iter_snapshot(path)
 
 
 def index_changes(

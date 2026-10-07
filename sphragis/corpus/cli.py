@@ -46,8 +46,14 @@ from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
 from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import seal_open, seal_path
-from sphragis.corpus.storage import read_snapshot, write_snapshot
+from sphragis.corpus.storage import (
+    iter_snapshot,
+    read_snapshot,
+    refused_snapshot,
+    write_snapshot,
+)
 from sphragis.corpus.windows import WINDOWS
+from sphragis.durable import exclusive, read_json_object, write_atomic, write_json_atomic
 
 STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "verify")
 
@@ -243,6 +249,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=sorted(set(GERRIT) | set(GIT_HOSTS) | set(GITHUB_ORGS)),
     )
     parser.add_argument("--month", default="2024-10", help="YYYY-MM, for fetch")
+    parser.add_argument(
+        "--expect-month",
+        help="build: exit 0 if this YYYY-MM was built or found current, "
+        f"{BUILD_NEEDS_REFETCH} if its snapshot is refused or missing (fetch it)",
+    )
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
     parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
     parser.add_argument(
@@ -420,9 +431,14 @@ def _fetched_routes(root: Path, org: str) -> set[str]:
     raw = Path(root) / org / "raw"
     routes = set()
     for record_path in sorted(raw.glob("*.record.json")):
-        record = _read_record(record_path)
-        if record is not None:
-            routes.add(record.get("route") or "rest")
+        record = read_json_object(record_path)
+        if record is None:
+            continue
+        snapshot = record_path.with_name(record_path.name.replace(".record.json", ".ndjson.gz"))
+        if not record.get("complete", True) and not snapshot.exists():
+            # A new month stopped before its snapshot landed: no route fetched anything here.
+            continue
+        routes.add(record.get("route") or "rest")
     return routes
 
 
@@ -448,6 +464,14 @@ def _stage_fetch(args: argparse.Namespace) -> int:
     """One organization-month into an immutable snapshot, scrubbed on the way in."""
     salt = require_salt()
     refuse_if_sealed(Path(args.root), args.org, args.month)
+    # One fetch of an org-month at a time, whatever the route: a second would replace a month
+    # the first is still writing, or append to a checkpoint the first rewrites.
+    with exclusive(Path(args.root) / ".locks" / args.org / f"{args.month}.lock"):
+        return _fetch_month(args, salt)
+
+
+def _fetch_month(args: argparse.Namespace, salt: str) -> int:
+    """The route-specific half of `_stage_fetch`, run while the org-month is held."""
     if args.via == "git":
         return _stage_fetch_git(args, salt)
     if args.via == "github":
@@ -509,7 +533,6 @@ def _stage_fetch_github(args: argparse.Namespace, salt: str) -> int:
     refuse_mixed_routes(Path(args.root), args.org, "github", allow=args.allow_mixed_routes)
     # Rows land here as each PR finishes (scrubbed), so a failed month resumes where it stopped.
     checkpoint = Path(args.root) / args.org / "raw" / f"{args.month}.partial.jsonl"
-    checkpoint.parent.mkdir(parents=True, exist_ok=True)
     rows, record = collect_month(
         args.org, args.month, _github_api(args), salt=salt, checkpoint=checkpoint
     )
@@ -593,6 +616,9 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
 # when acceptance happened to land. 2026-10 plus three months is 2027-01; MSR 2027 notifies
 # on 2027-02-04.
 FETCH_HORIZON_MONTHS = 3
+# Build's exit when some months were refused: everything else built, those need a refetch.
+# Not 2, which uv and argparse already use for their own failures.
+BUILD_NEEDS_REFETCH = 3
 
 
 def _examples_dir(args: argparse.Namespace) -> Path:
@@ -611,9 +637,19 @@ def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
 def _stage_refine(args: argparse.Namespace) -> int:
     """Apply the data audit's label rules to every built month, from its raw snapshots."""
     raw = Path(args.root) / args.org / "raw"
-    index = index_changes(
-        change for path in sorted(raw.glob("*.ndjson.gz")) for change in read_snapshot(path)
-    )
+    # Refine indexes every month's raw changes, so one unreadable month refuses them all. Every
+    # month the quick check refuses is named at once; damage past a header surfaces while reading.
+    snapshots = sorted(raw.glob("*.ndjson.gz"))
+    refused = [(path.name, reason) for path in snapshots if (reason := refused_snapshot(path))]
+    for name, reason in refused:
+        print(f"{args.org} {name}: {reason}")
+    if refused:
+        return 1
+    try:
+        index = index_changes(change for path in snapshots for change in iter_snapshot(path))
+    except ValueError as error:
+        print(f"{args.org}: {error}")
+        return 1
     built = sorted(_examples_dir(args).glob("*.jsonl"))
     if not built:
         print(f"no examples under {_examples_dir(args)}; run build first")
@@ -635,10 +671,8 @@ def _stage_refine(args: argparse.Namespace) -> int:
         totals.update(counts)
         kept_total += len(kept)
         target = out / path.name
-        tmp = target.with_suffix(".jsonl.tmp")
-        tmp.write_text("".join(json.dumps(r) + "\n" for r in kept))
-        (out / path.name.replace(".jsonl", ".drops.json")).write_text(json.dumps(counts, indent=2))
-        os.replace(tmp, target)
+        write_json_atomic(out / path.name.replace(".jsonl", ".drops.json"), counts)
+        write_atomic(target, "".join(json.dumps(r) + "\n" for r in kept).encode())
         # Written last: a refined month counts as current only once its examples have landed.
         write_source_record(Path(args.root), args.org, path, target)
     print(f"{args.org}: {kept_total} examples kept over {len(built)} months, {dict(totals)}")
@@ -713,14 +747,6 @@ def _stamp_allowlist() -> dict[str, Any]:
     return json.loads(STAMP_ALLOWLIST.read_text())
 
 
-def _read_record(record: Path) -> dict[str, Any] | None:
-    try:
-        recorded = json.loads(record.read_text())
-    except (ValueError, OSError):
-        return None
-    return recorded if isinstance(recorded, dict) else None
-
-
 def _stage_stamp(args: argparse.Namespace) -> int:
     """Record the build rules on the months the 2026-09-23 audit accepted without a rebuild.
 
@@ -746,7 +772,7 @@ def _stage_stamp(args: argparse.Namespace) -> int:
     refused = []
     for path in built:
         month = path.name.removesuffix(".jsonl")
-        recorded = _read_record(source_path(path))
+        recorded = read_json_object(source_path(path))
         snapshot = raw / f"{month}.ndjson.gz"
         digest = recorded.get("snapshot_sha256") if recorded else None
         if recorded is None:
@@ -778,7 +804,7 @@ def _stage_stamp(args: argparse.Namespace) -> int:
         print(f"refusing to stamp {args.org}: {refused}")
         return 1
     for record, stamp in plans:
-        record.write_text(json.dumps(stamp, indent=2) + "\n")
+        write_json_atomic(record, stamp)
     print(f"{args.org}: stamped {len(plans)} of {len(built)} months with build rules {BUILD_RULES}")
     return 0
 
@@ -820,10 +846,16 @@ def _stage_build(args: argparse.Namespace) -> int:
 
     out_dir = _examples_dir(args)
     out_dir.mkdir(parents=True, exist_ok=True)
-    total, drops = 0, Counter()
+    total, drops, refused, current = 0, Counter(), [], set()
     for snapshot in snapshots:
         month = snapshot.name.removesuffix(".ndjson.gz")
         target = out_dir / f"{month}.jsonl"
+        reason = refused_snapshot(snapshot)
+        if reason:
+            # Skipped, not raised: one month whose fetch stopped must not cost every month after.
+            print(f"{args.org} {month}: {reason}")
+            refused.append(month)
+            continue
         # A month refetched after it was built leaves examples derived from a snapshot that
         # no longer exists, and resume cannot tell those from finished work: it skips them,
         # and the corpus quietly mixes months built under different fetch parameters. Seen
@@ -856,10 +888,18 @@ def _stage_build(args: argparse.Namespace) -> int:
                 json.loads(drops_path(target).read_text()) if drops_path(target).is_file() else {}
             )
             print(f"{args.org} {month}: skip, already built ({skipped} examples)")
+            current.add(month)
+            continue
+        try:
+            changes = read_snapshot(snapshot)
+        except ValueError as error:
+            # A snapshot whose header reads but whose body does not: zeros past the header.
+            print(f"{args.org} {month}: {error}")
+            refused.append(month)
             continue
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
-        for change in read_snapshot(snapshot):
+        for change in changes:
             built, dropped = build_from_change(args.org, change, *fetchers_for(change))
             rows.extend(built)
             month_drops.update(dropped)
@@ -867,9 +907,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         # them. They were printed and lost: the files on disk are post-filter, so the
         # discard rate by reason could not be reconstructed without refetching every diff,
         # and the Stage 1 report states those rates.
-        drops_path(target).write_text(
-            json.dumps(dict(sorted(month_drops.items())), indent=2) + "\n"
-        )
+        write_json_atomic(drops_path(target), dict(sorted(month_drops.items())))
         # The record is the completion marker, so it is written open before the examples and
         # closed after them, and the examples land by rename. `write_text` is not atomic: an
         # interrupted rebuild otherwise leaves a truncated month beside a digest that still
@@ -877,16 +915,27 @@ def _stage_build(args: argparse.Namespace) -> int:
         # an example.
         digest = snapshot_digest(snapshot)
         write_build_record(target, digest, complete=False)
-        staging = target.with_suffix(".jsonl.partial")
-        staging.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
-        staging.replace(target)
+        write_atomic(target, "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows).encode())
         write_build_record(target, digest, complete=True)
         drops.update(month_drops)
+        current.add(month)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)
-    months = len(snapshots)
+    months = len(snapshots) - len(refused)
     print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
-    return 0
+    if refused:
+        print(f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build")
+    if args.expect_month:
+        # Build walks the whole org, so a caller after one month needs that month's verdict,
+        # judged by what this loop did with it rather than by the files it left.
+        expected = args.expect_month
+        if expected in current:
+            return 0
+        if expected not in refused:
+            print(f"{args.org} {expected}: no snapshot; fetch it")
+        return BUILD_NEEDS_REFETCH
+    # Not 1: the months that could be built were, and building again will not help the rest.
+    return BUILD_NEEDS_REFETCH if refused else 0
 
 
 def _stage_dedup(args: argparse.Namespace) -> int:
