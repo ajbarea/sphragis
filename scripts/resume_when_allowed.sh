@@ -52,16 +52,14 @@ while :; do
 
   echo "$(date '+%m-%d %H:%M') building $ORG $MONTH"
   built=0
-  uv run --no-active python -m sphragis.corpus build \
+  uv run --no-active python -m sphragis.corpus build --expect-month "$MONTH" \
     --org "$ORG" --month "$MONTH" --cutoff "$CUTOFF" --request-interval 1.0 || built=$?
-  examples="datasets/gerrit/$ORG/examples/$MONTH.jsonl"
-  # 3: build skipped some refused month and built the rest. That is this month's success when
-  # its own examples landed; otherwise this month is the refused one, and only a refetch helps.
-  if [ "$built" -eq 0 ] || { [ "$built" -eq 3 ] && [ -f "$examples" ]; }; then
-    echo "$(date '+%m-%d %H:%M') built $ORG $MONTH: $(wc -l < "$examples") examples"
+  if [ "$built" -eq 0 ]; then
+    echo "$(date '+%m-%d %H:%M') built $ORG $MONTH: $(wc -l < "datasets/gerrit/$ORG/examples/$MONTH.jsonl") examples"
     exit 0
   fi
   if [ "$built" -eq 3 ]; then
+    # This month's snapshot was refused; building again will not fix it, refetching will.
     echo "$(date '+%m-%d %H:%M') build refused $ORG $MONTH's snapshot (see above); refetch it"
     exit 1
   fi

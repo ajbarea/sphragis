@@ -249,6 +249,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=sorted(set(GERRIT) | set(GIT_HOSTS) | set(GITHUB_ORGS)),
     )
     parser.add_argument("--month", default="2024-10", help="YYYY-MM, for fetch")
+    parser.add_argument(
+        "--expect-month",
+        help="build: exit 0 only if this YYYY-MM is built from its current snapshot, "
+        f"{BUILD_NEEDS_REFETCH} if its snapshot was refused (fetch it again), 1 otherwise",
+    )
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
     parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
     parser.add_argument(
@@ -841,7 +846,7 @@ def _stage_build(args: argparse.Namespace) -> int:
 
     out_dir = _examples_dir(args)
     out_dir.mkdir(parents=True, exist_ok=True)
-    total, drops, refused = 0, Counter(), 0
+    total, drops, refused = 0, Counter(), []
     for snapshot in snapshots:
         month = snapshot.name.removesuffix(".ndjson.gz")
         target = out_dir / f"{month}.jsonl"
@@ -849,7 +854,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         if reason:
             # Skipped, not raised: one month whose fetch stopped must not cost every month after.
             print(f"{args.org} {month}: {reason}")
-            refused += 1
+            refused.append(month)
             continue
         # A month refetched after it was built leaves examples derived from a snapshot that
         # no longer exists, and resume cannot tell those from finished work: it skips them,
@@ -889,7 +894,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         except ValueError as error:
             # A snapshot whose header reads but whose body does not: zeros past the header.
             print(f"{args.org} {month}: {error}")
-            refused += 1
+            refused.append(month)
             continue
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
@@ -914,10 +919,23 @@ def _stage_build(args: argparse.Namespace) -> int:
         drops.update(month_drops)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)
-    months = len(snapshots) - refused
+    months = len(snapshots) - len(refused)
     print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
     if refused:
-        print(f"{args.org}: {refused} month(s) not built; fetch them again, then build")
+        print(f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build")
+    if args.expect_month:
+        # Build walks the whole org, so a caller after one month needs that month's verdict:
+        # examples on disk may be left from a snapshot since refused or replaced.
+        expected = args.expect_month
+        if expected in refused:
+            return BUILD_NEEDS_REFETCH
+        target = out_dir / f"{expected}.jsonl"
+        if not target.exists() or not built_from_current_snapshot(
+            target, raw / f"{expected}.ndjson.gz"
+        ):
+            print(f"{args.org} {expected}: not built from its current snapshot")
+            return 1
+        return 0
     # Not 1: the months that could be built were, and building again will not help the rest.
     return BUILD_NEEDS_REFETCH if refused else 0
 

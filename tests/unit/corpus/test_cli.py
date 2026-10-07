@@ -493,6 +493,22 @@ def test_two_fetches_of_one_org_month_never_run_together(
     assert main(argv) == 0
 
 
+def test_build_gives_the_expected_months_own_verdict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Build walks the whole org; --expect-month answers for one month, so old examples left
+    # beside a since-refused snapshot never pass for a build of it.
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    _snapshot(tmp_path, "openstack", "2024-11", [])
+    argv = ["build", "--org", "openstack", "--root", str(tmp_path), "--expect-month"]
+    assert main([*argv, "2024-10"]) == 0
+    _open_snapshot_record(tmp_path, "openstack", "2024-11")
+    assert main([*argv, "2024-10"]) == 0, "another month's refusal is not this month's"
+    assert main([*argv, "2024-11"]) == 3, "its examples are from a snapshot since refused"
+    assert main([*argv, "2024-12"]) == 1, "never fetched, so never built"
+
+
 def test_build_reports_a_missing_snapshot_rather_than_raising(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

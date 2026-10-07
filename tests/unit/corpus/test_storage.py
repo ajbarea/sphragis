@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from sphragis.corpus.storage import (
+    finished_month,
     read_snapshot,
     refused_snapshot,
     snapshot_path,
@@ -204,3 +205,38 @@ def test_a_disk_error_is_not_taken_for_a_damaged_snapshot(
     monkeypatch.setattr(gzip.GzipFile, "read", failing_read)
     with pytest.raises(OSError, match="Input/output"):
         refused_snapshot(path, whole=True)
+
+
+def test_a_finished_month_is_told_from_every_partial_write_and_a_disk_error_raises(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def month() -> Path:
+        return write_snapshot(
+            tmp_path, "qt", "2024-11", [{"n": i} for i in range(500)], record={}, overwrite=True
+        )
+
+    def record(path: Path) -> Path:
+        return path.with_suffix("").with_suffix(".record.json")
+
+    assert finished_month(month())
+    assert finished_month(str(month())), "the shell passes a str"
+    path = month()
+    record(path).write_text(json.dumps({**json.loads(record(path).read_text()), "complete": False}))
+    assert not finished_month(path)
+    record(month()).write_bytes(b"\0" * 64)
+    assert not finished_month(path)
+    record(month()).unlink()
+    assert not finished_month(path)
+    data = month().read_bytes()
+    path.write_bytes(data[:12] + b"\0" * (len(data) - 12))
+    assert not finished_month(path)
+    assert not finished_month(tmp_path / "qt" / "raw" / "2099-01.ndjson.gz")
+
+    month()
+
+    def eio(self: Path) -> bytes:
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(Path, "read_bytes", eio)
+    with pytest.raises(OSError):
+        finished_month(path)

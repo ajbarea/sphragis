@@ -31,14 +31,9 @@ for m in $MONTHS; do
     --org "$ORG" --month "$m" --root "$ROOT" --cutoff "$CUTOFF" --overwrite \
     --request-interval 1.0 || { echo "$m: fetch failed, stopping"; exit 1; }
   echo "=== $m build $(date +%H:%M:%S) ==="
-  built=0
-  uv run --no-active python -m sphragis.corpus build \
+  uv run --no-active python -m sphragis.corpus build --expect-month "$m" \
     --org "$ORG" --month "$m" --root "$ROOT" --cutoff "$CUTOFF" \
-    --request-interval 1.0 || built=$?
-  # 3: build skipped some other refused month; this one counts once its examples landed.
-  if [ "$built" -ne 0 ] && { [ "$built" -ne 3 ] || [ ! -f "$ROOT/$ORG/examples/$m.jsonl" ]; }; then
-    echo "$m: build failed (exit $built), stopping"; exit 1
-  fi
+    --request-interval 1.0 || { echo "$m: build failed, stopping"; exit 1; }
   echo "=== $m done $(date +%H:%M:%S): $(wc -l < $ROOT/$ORG/examples/$m.jsonl) examples ==="
 done
 echo "=== control window complete $(date +%H:%M:%S) ==="

@@ -63,10 +63,8 @@ for m in $MONTHS; do
   if [ -s "$raw.ndjson.gz" ] && [ -s "$raw.record.json" ]; then
     refused=0
     uv run --no-sync --no-active python -c 'import sys
-from sphragis.corpus.storage import read_snapshot_record, refused_snapshot
-p = sys.argv[1]
-sys.exit(3 if refused_snapshot(p, whole=True) or read_snapshot_record(p) is None else 0)' \
-      "$raw.ndjson.gz" || refused=$?
+from sphragis.corpus.storage import finished_month
+sys.exit(0 if finished_month(sys.argv[1]) else 3)' "$raw.ndjson.gz" || refused=$?
     if [ "$refused" -ne 0 ] && [ "$refused" -ne 3 ]; then
       echo "$m: could not check the snapshot (probe exit $refused); stopping"
       exit 1

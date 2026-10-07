@@ -105,6 +105,23 @@ def refused_snapshot(path: Path, *, whole: bool = False) -> str | None:
     return None
 
 
+def finished_month(path: Path | str) -> bool:
+    """Whether a snapshot on disk is a month fetched for good: its record reads and is closed,
+    and its whole stream decompresses.
+
+    For a caller about to skip a refetch. A disk error raises rather than answering False, since
+    False sends the month to be refetched over the top of what may be a finished snapshot.
+    """
+    path = Path(path)
+    if not path.is_file():
+        return False
+    try:
+        record = json.loads(snapshot_record_path(path).read_bytes())
+    except (FileNotFoundError, ValueError):
+        return False
+    return isinstance(record, dict) and refused_snapshot(path, whole=True) is None
+
+
 def iter_snapshot(path: Path) -> Iterator[dict[str, Any]]:
     """A snapshot's rows one at a time, refusing one whose write did not finish.
 
