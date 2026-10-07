@@ -8175,6 +8175,32 @@ files (not a cluster venv's, nor a frozen module's); the distiller loads, outsid
 only when a file is still to be made; each cached part keeps the provenance of the run that made
 it; the separator between packed reviews is counted once.
 
+**Every page of a written guide reaches its file (2026-10-06).** Jobs 227100 and 227101
+(RUN_TAG=smoke7, at c8f0de2) distilled Wikimedia's guide in 12 chunks, one a page, 2 map answers
+capped, and OpenStack's in 1, none capped; each file holds 40 rules (514 and 619 tokens of the
+evaluated model). Replayed under 8bd68b1, `rules.guide_file` on the job's map lists, grouped by
+`part_pages`, keeps the same rules for both organizations and the per-page counts the job
+recorded; Wikimedia's file now reads in page order rather than in turn. Generated from
+`rules-guide-wikimedia-smoke7.json`:
+
+| page | rules listed | rules kept |
+|---|---|---|
+| Manual:Coding conventions | 46 | 4 |
+| Manual:Coding conventions/Documentation | 8 | 4 |
+| Manual:Coding conventions/PHP | 69 | 4 |
+| Manual:Coding conventions/JavaScript | 73 | 4 |
+| Manual:Coding conventions/Vue | 27 | 3 |
+| Manual:Coding conventions/Python | 7 | 3 |
+| Puppet/Coding and style guidelines | 55 | 3 |
+| Manual:Coding conventions/CSS | 37 | 3 |
+| Manual:Coding conventions/Java | 23 | 3 |
+| Manual:Coding conventions/Lua | 10 | 3 |
+| Manual:Coding conventions/Database | 3 | 3 |
+| Manual:Coding conventions/SVG | 43 | 3 |
+
+The 40-rule cap now falls on every page alike: each holds 3 or 4 of the file's rules, where job
+226890's file held none from the JavaScript page on.
+
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
 The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;
