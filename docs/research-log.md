@@ -8310,3 +8310,45 @@ every Wikimedia partition's distillation and evaluation but partition 5's, and O
 evaluation, which builds Wikimedia's pools. `build_supervised` tokenizes each example whole before refusing any over 2,048
 tokens, so that example is left out of the pools as it is out of the adapters' training sets, and
 no model reads it. Some retrieval jobs' logs carry the same notice.
+
+### The contamination battery read against blind baselines: the windows separate without the model (2026-10-07)
+
+`# research(2026-10)`. `scripts/contamination_blind.py`, `datasets/results/contamination-openstack-6mo-blind.json`.
+The battery compares a pre-cutoff window with a post-cutoff one, and the windows differ in time as
+well as in exposure. Duan et al. (COLM 2024, arXiv:2402.07841) attribute membership attacks' apparent
+success on such splits to "a distribution shift, such as when members and non-members are drawn from
+the seemingly identical domain but with different temporal ranges", and Das, Zhang and Tramèr
+(arXiv:2406.16201, read from the paper) show "blind attacks -- that distinguish the member and
+non-member distributions without looking at any trained model -- outperform state-of-the-art MI
+attacks", with a bag of words and date detection. The Stage 1 novelty review (papers#64) flagged
+that the battery reads a near-zero gap as inconclusive but has no rule for a gap away from zero.
+
+Their two blind attacks, on the battery's own scored examples (the six-month OpenStack windows,
+hunks with context; 1,971 post and 2,502 pre over 1,674 changes), beside the
+battery's membership scores. Separation is the AUC that a post-cutoff example looks more
+post-cutoff than a pre-cutoff one; a membership score's post-likeness is its negation. The bag of
+words is trained out of fold, five folds grouped by change, so no change is scored by a classifier
+that saw it; intervals resample whole changes, one resample for every arm. Generated from the
+artifact:
+
+| separation, AUC | estimate | 95%, by change |
+|---|---|---|
+| bag of words, naive Bayes, folds by change | 0.657 | [0.611, 0.698] |
+| latest year in the text | 0.504 | [0.496, 0.512] |
+| Min-K%++ (registered) | 0.541 | [0.515, 0.566] |
+| Min-K% | 0.530 | [0.496, 0.563] |
+| Gap-K% | 0.533 | [0.506, 0.558] |
+| bag of words minus Min-K%++ | 0.116 | [0.067, 0.164] |
+
+**A classifier that never sees the model separates the windows better than every membership score
+does.** The registered Min-K%++ separates them a little (its interval clears 0.5), but a bag of
+words over the same text separates them more, so the battery's membership gap cannot be read as
+exposure: the windows differ in content by more than the scores move. Dates carry nothing here;
+only 165 of the scored texts hold a year. This keeps the reading the report already
+commits to (a flat gap is inconclusive) and closes the case it left open.
+
+**For Stage 1.** Register the blind baseline beside the battery: a membership statistic is read as
+evidence of exposure only when its separation exceeds the bag of words', the interval of the
+difference above zero; otherwise the battery reports that exposure cannot be told from the
+windows' drift. On this pilot that reading is the latter.
+

@@ -779,6 +779,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-07** — The contamination battery read against blind baselines: a bag of words separates the pilot windows better than any membership score, so the battery's gap cannot be read as exposure; proposed for Stage 1 as the battery's reading rule (research log).
 - **2026-10-07** — The rules-file comparator read on the development window: 22 distillations (Qwen3.6-27B) and 22 `ARMS=rules` evaluations at 05465f1; distilled own minus sibling carries no contrast as large as the SESOI on either organization (research log).
 - **2026-09-28** — Corpus v3: `refine` removes examples carrying a Gerrit suggested edit or "Fix applied." reply, whose target is already in the prompt; OpenStack and Qt refrozen, OpenStack's split criteria refixed on v3 (ceiling 0.3187, floor 2,004), and examples whose target a reviewer typed into a comment reported per half (research log).
 - **2026-09-29** — LineageOS added as a candidate organization, fetched under its robots.txt; the candidate order is Wikimedia, LineageOS, then Qt and Chromium on permission, and the Linux Foundation hosts are too small (research log).

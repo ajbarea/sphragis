@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 375 artifacts under
-57 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 376 artifacts under
+58 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -142,6 +142,14 @@ Outcome-neutral test 1 on real data: is the post-cutoff corpus less familiar to 
 | `contamination-openstack-6mo-with_context-gapk.json` | `contamination-openstack-6mo-with_context.json` |
 | `contamination-openstack-6mo-with_context.partial.json` | `contamination-openstack-after.json` |
 | `contamination-openstack-with_context.json` |  |
+
+## `scripts/contamination_blind.py`
+
+Outcome-neutral test 1, read against blind baselines: do the windows separate without the model?
+
+| artifact | |
+|---|---|
+| `contamination-openstack-6mo-blind.json` |  |
 
 ## `scripts/crossed_coverage.py`
 
