@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -63,16 +64,19 @@ def _stop_at_write(monkeypatch: pytest.MonkeyPatch, stop: int) -> None:
     """Make a snapshot's `stop`-th write stop, as a hard stop there would."""
     from sphragis.corpus import storage
 
-    real = storage.write_atomic
     calls: list[Path] = []
 
-    def stopping(path: Path, data: bytes) -> None:
-        calls.append(path)
-        if len(calls) == stop:
-            raise KeyboardInterrupt
-        real(path, data)
+    def stopping(real: Callable[..., None]) -> Callable[..., None]:
+        def write(path: Path, *rest: object) -> None:
+            calls.append(path)
+            if len(calls) == stop:
+                raise KeyboardInterrupt
+            real(path, *rest)
 
-    monkeypatch.setattr(storage, "write_atomic", stopping)
+        return write
+
+    monkeypatch.setattr(storage, "write_atomic", stopping(storage.write_atomic))
+    monkeypatch.setattr(storage, "write_json_atomic", stopping(storage.write_json_atomic))
 
 
 @pytest.mark.parametrize("stop", [2, 3])
@@ -152,3 +156,15 @@ def test_every_raw_reader_refuses_an_unfinished_month(tmp_path: Path) -> None:
     record_path.write_text(json.dumps({**json.loads(record_path.read_text()), "complete": False}))
     with pytest.raises(ValueError, match="did not finish"):
         list(raw_changes(tmp_path, "qt"))
+
+
+def test_a_zeroed_snapshot_from_before_the_marker_is_refused(tmp_path: Path) -> None:
+    # Written before atomic writes, its record has no `complete` key, and a hard stop left
+    # zeros where its data should be; nothing about its record gives that away.
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    record_path = path.with_suffix("").with_suffix(".record.json")
+    record = json.loads(record_path.read_text())
+    del record["complete"]
+    record_path.write_text(json.dumps(record))
+    path.write_bytes(b"\0" * path.stat().st_size)
+    assert "not a gzip stream" in (refused_snapshot(path) or "")

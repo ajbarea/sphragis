@@ -55,12 +55,22 @@ current_projects=${current_projects% }
 for m in $MONTHS; do
   raw="$ROOT/$ORG/raw/$m"
   # The record is the completion marker: written open before the snapshot and closed after
-  # it, so a snapshot without one, or beside an open one, is a partial write. A complete
-  # snapshot is immutable and is never refetched: build resumes from it.
-  if [ -s "$raw.ndjson.gz" ] && [ -s "$raw.record.json" ] \
-    && uv run --no-sync --no-active python -c 'import sys
+  # it, so a snapshot without one, or one storage refuses, is a partial write. A complete
+  # snapshot is immutable and is never refetched: build resumes from it. The probe exits 0
+  # for a complete month and 3 for a refused one; anything else is the probe failing, and
+  # refetching on that would replace a month that may be complete.
+  refused=3
+  if [ -s "$raw.ndjson.gz" ] && [ -s "$raw.record.json" ]; then
+    refused=0
+    uv run --no-sync --no-active python -c 'import sys
 from sphragis.corpus.storage import refused_snapshot
-sys.exit(bool(refused_snapshot(sys.argv[1])))' "$raw.ndjson.gz"; then
+sys.exit(3 if refused_snapshot(sys.argv[1]) else 0)' "$raw.ndjson.gz" || refused=$?
+    if [ "$refused" -ne 0 ] && [ "$refused" -ne 3 ]; then
+      echo "$m: could not check the snapshot (probe exit $refused); stopping"
+      exit 1
+    fi
+  fi
+  if [ "$refused" -eq 0 ]; then
     recorded=$(python3 -c '
 import json, sys
 record = json.load(open(sys.argv[1]))

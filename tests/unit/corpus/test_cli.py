@@ -435,6 +435,38 @@ def test_build_skips_a_month_whose_fetch_did_not_finish_and_builds_the_rest(
     assert (examples / "2024-11.jsonl").exists() and not (examples / "2024-10.jsonl").exists()
 
 
+def test_build_skips_a_month_whose_body_is_zeroed_and_builds_the_rest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import gzip
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    _snapshot(tmp_path, "openstack", "2024-11", [])
+    torn = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
+    whole = gzip.compress(b'{"a": 1}\n' * 50)
+    torn.write_bytes(whole[:12] + b"\0" * (len(whole) - 12))
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert "2024-10: unreadable" in capsys.readouterr().out
+    assert (tmp_path / "openstack" / "examples" / "2024-11.jsonl").exists()
+
+
+def test_two_fetches_of_one_org_month_never_run_together(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.corpus import cli
+    from sphragis.durable import exclusive
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "_fetch_month", lambda args, salt: 0)
+    argv = ["fetch", "--org", "openstack", "--month", "2024-10", "--root", str(tmp_path)]
+    with exclusive(tmp_path / ".locks" / "openstack" / "2024-10.lock"):
+        with pytest.raises(SystemExit, match="held by another process"):
+            main(argv)
+        assert main([*argv[:4], "2024-11", *argv[5:]]) == 0, "another month is not held"
+    assert main(argv) == 0
+
+
 def test_build_reports_a_missing_snapshot_rather_than_raising(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -1,11 +1,20 @@
 import json
 import os
+import socket
 import subprocess
 from pathlib import Path
 
 import pytest
 
-from sphragis.durable import append_record, exclusive, open_log, read_records, write_atomic
+from sphragis.durable import (
+    append_record,
+    exclusive,
+    open_log,
+    read_json_object,
+    read_records,
+    write_atomic,
+    write_json_atomic,
+)
 
 WHOLE = b'{"key": "a#1", "n": 1}\n{"key": "a#2", "n": 2}\n'
 
@@ -118,21 +127,36 @@ def test_an_atomic_write_keeps_a_replaced_files_mode_and_gives_a_new_one_the_uma
     assert fresh.stat().st_mode & 0o777 == 0o666 & ~umask
 
 
-def test_staging_a_stopped_process_left_is_swept_and_a_live_ones_kept(tmp_path: Path) -> None:
+def test_staging_a_stopped_process_left_is_swept_and_others_kept(tmp_path: Path) -> None:
     path = tmp_path / "2025-01.ndjson.gz"
     dead = subprocess.Popen(["true"])
     dead.wait()
-    stale = tmp_path / f".{path.name}.{dead.pid}.tmp"
-    live = tmp_path / f".{path.name}.{os.getppid()}.tmp"
-    stale.write_bytes(b"left by a stop")
-    live.write_bytes(b"another writer")
+    host = socket.gethostname()
+    stale = tmp_path / f".{path.name}.{host}.{dead.pid}.tmp"
+    live = tmp_path / f".{path.name}.{host}.{os.getppid()}.tmp"
+    elsewhere = tmp_path / f".{path.name}.another-node.{dead.pid}.tmp"
+    for staging in (stale, live, elsewhere):
+        staging.write_bytes(b"left behind")
     write_atomic(path, b"new")
-    assert not stale.exists() and live.exists() and path.read_bytes() == b"new"
+    assert not stale.exists(), "a dead process on this host left it"
+    assert live.exists(), "a live writer's staging is not ours to remove"
+    assert elsewhere.exists(), "another host's process cannot be seen from here"
+    assert path.read_bytes() == b"new"
 
 
 def test_a_second_holder_is_refused_while_the_first_holds(tmp_path: Path) -> None:
-    path = tmp_path / "2025-01.partial.jsonl"
+    path = tmp_path / ".locks" / "apache" / "2025-01.lock"
     with exclusive(path), pytest.raises(SystemExit, match="held by another"), exclusive(path):
         pass
     with exclusive(path):
         pass
+
+
+def test_a_json_record_is_written_whole_and_read_back(tmp_path: Path) -> None:
+    path = tmp_path / "record.json"
+    write_json_atomic(path, {"b": 1, "a": 2})
+    assert path.read_text().endswith("}\n") and read_json_object(path) == {"b": 1, "a": 2}
+    for bad in (b"", b"\0" * 8, b"[1, 2]"):
+        path.write_bytes(bad)
+        assert read_json_object(path) is None
+    assert read_json_object(tmp_path / "missing.json") is None

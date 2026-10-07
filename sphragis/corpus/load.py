@@ -22,7 +22,7 @@ from typing import Any
 
 from sphragis.corpus.rules import BUILD_RULES, FETCH_RULES, GITHUB_RULES, RULES_VERSION
 from sphragis.corpus.storage import read_snapshot_record, refused_snapshot
-from sphragis.durable import write_atomic
+from sphragis.durable import read_json_object, write_atomic, write_json_atomic
 
 DERIVED = "derived.json"
 
@@ -55,7 +55,7 @@ def build_record(built: Path) -> Path:
 def write_build_record(built: Path, snapshot_sha256: str | None, *, complete: bool) -> None:
     """What a month was built from and under which build rules; `complete` once it has landed."""
     record = {"snapshot_sha256": snapshot_sha256, "build_rules": BUILD_RULES, "complete": complete}
-    write_atomic(build_record(built), (json.dumps(record, indent=2) + "\n").encode())
+    write_json_atomic(build_record(built), record)
 
 
 def source_record(root: Path, org: str, month_file: str) -> Path:
@@ -63,29 +63,15 @@ def source_record(root: Path, org: str, month_file: str) -> Path:
 
 
 def write_source_record(root: Path, org: str, built: Path, refined: Path) -> None:
-    write_atomic(
+    write_json_atomic(
         source_record(root, org, built.name),
-        (
-            json.dumps(
-                {
-                    "examples_sha256": sha256(built),
-                    "refined_sha256": sha256(refined),
-                    "raw_digest": raw_digest(root, org),
-                    "rules": RULES_VERSION,
-                },
-                indent=2,
-            )
-        ).encode(),
+        {
+            "examples_sha256": sha256(built),
+            "refined_sha256": sha256(refined),
+            "raw_digest": raw_digest(root, org),
+            "rules": RULES_VERSION,
+        },
     )
-
-
-def _read_json(path: Path) -> dict[str, Any] | None:
-    """A record as a dict, or None when it is missing, unreadable or not an object."""
-    try:
-        record = json.loads(Path(path).read_text())
-    except (ValueError, OSError):
-        return None
-    return record if isinstance(record, dict) else None
 
 
 def _months(root: Path, org: str) -> dict[str, str]:
@@ -129,18 +115,13 @@ def mark_derived(root: Path, org: str, *, source_root: Path, source_org: str) ->
         raise ValueError(f"{org} cannot be derived from itself")
     out = refined_dir(root, org)
     out.mkdir(parents=True, exist_ok=True)
-    write_atomic(
-        (out / DERIVED),
-        (
-            json.dumps(
-                {
-                    "rules": RULES_VERSION,
-                    "months": _months(root, org),
-                    "source": _source(source_root, source_org),
-                },
-                indent=2,
-            )
-        ).encode(),
+    write_json_atomic(
+        out / DERIVED,
+        {
+            "rules": RULES_VERSION,
+            "months": _months(root, org),
+            "source": _source(source_root, source_org),
+        },
     )
 
 
@@ -148,7 +129,7 @@ def _stale_derived(root: Path, org: str, seen: Seen) -> list[str]:
     record_path = refined_dir(root, org) / DERIVED
     if not record_path.exists():
         return [f"{org}: no built months and no derived record"]
-    record = _read_json(record_path)
+    record = read_json_object(record_path)
     if record is None:
         return [f"{org}: unreadable derived record"]
     if record.get("rules") != RULES_VERSION:
@@ -168,7 +149,7 @@ def _stale_build(built: Path) -> str | None:
     record_path = build_record(built)
     if not record_path.is_file():
         return f"{built.name}: no build record"
-    record = _read_json(record_path)
+    record = read_json_object(record_path)
     if record is None:
         return f"{built.name}: unreadable build record"
     # Records written before the completion marker carry no `complete` key and were closed.
@@ -232,7 +213,7 @@ def stale_refinements(root: Path, org: str, *, _seen: Seen = frozenset()) -> lis
         if not record_path.exists() or not refined.exists():
             stale.append(f"{built.name}: not refined")
             continue
-        record = _read_json(record_path)
+        record = read_json_object(record_path)
         if record is None:
             stale.append(f"{built.name}: unreadable refinement record")
         elif record.get("rules") != RULES_VERSION:
@@ -288,19 +269,14 @@ def write_derived_file(
     """
     path = Path(path)
     write_atomic(path, ("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows)).encode())
-    write_atomic(
+    write_json_atomic(
         file_record(path),
-        (
-            json.dumps(
-                {
-                    "rules": RULES_VERSION,
-                    "sha256": sha256(path),
-                    "sources": [_source(root, org) for root, org in sources],
-                    "via": [{"path": str(Path(v).resolve()), "sha256": sha256(v)} for v in via],
-                },
-                indent=2,
-            )
-        ).encode(),
+        {
+            "rules": RULES_VERSION,
+            "sha256": sha256(path),
+            "sources": [_source(root, org) for root, org in sources],
+            "via": [{"path": str(Path(v).resolve()), "sha256": sha256(v)} for v in via],
+        },
     )
 
 
@@ -309,7 +285,7 @@ def stale_derived_file(path: Path) -> str | None:
     record_path = file_record(path)
     if not record_path.exists():
         return f"{path}: no record; cut it from refined examples (scripts/project_corpora.py)"
-    record = _read_json(record_path)
+    record = read_json_object(record_path)
     if record is None:
         return f"{path}: unreadable record"
     if record.get("rules") != RULES_VERSION:
@@ -332,7 +308,7 @@ def stale_derived_file(path: Path) -> str | None:
 
 def derived_sources(path: Path) -> list[tuple[Path, str]]:
     """The sources a derived file was cut from, for a file cut from it in turn."""
-    record = _read_json(file_record(path)) or {}
+    record = read_json_object(file_record(path)) or {}
     return [(Path(source["root"]), source["org"]) for source in record.get("sources", [])]
 
 

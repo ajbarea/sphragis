@@ -14,6 +14,7 @@ import fcntl
 import glob
 import json
 import os
+import socket
 import stat
 import sys
 from collections.abc import Iterator, Mapping
@@ -21,17 +22,20 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Any
 
+_HOST = socket.gethostname()
+
 
 def write_atomic(path: Path, data: bytes) -> None:
     """Replace `path` with `data`; a crash leaves the old file or the new one, never part of one.
 
-    The staging file is named for this process, so a stop that leaves one behind is swept by the
-    next write of the same path once its process is gone. A replaced file keeps its mode; a new
-    one gets the umask's, as `write_bytes` would give it.
+    The staging file is named for this host and process, so a stop that leaves one behind is swept
+    by this host's next write of the same path once its process is gone; another host's is left
+    alone, since its liveness cannot be seen from here. A replaced file keeps its mode; a new one
+    gets the umask's, as `write_bytes` would give it.
     """
     path = Path(path)
     _sweep_staging(path)
-    staging = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    staging = path.with_name(f".{path.name}.{_HOST}.{os.getpid()}.tmp")
     fd = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
     try:
         with os.fdopen(fd, "wb") as handle:
@@ -47,19 +51,34 @@ def write_atomic(path: Path, data: bytes) -> None:
     _sync_directory(path.parent)
 
 
-@contextmanager
-def exclusive(path: Path) -> Iterator[None]:
-    """Hold `path` for one process: a second one is refused at once rather than interleaved.
+def write_json_atomic(path: Path, record: Any, *, sort_keys: bool = False) -> None:
+    """Write a JSON record with `write_atomic`, indented, ending in a newline."""
+    write_atomic(path, (json.dumps(record, indent=2, sort_keys=sort_keys) + "\n").encode())
 
-    The lock is a sidecar file, so it survives `read_records` replacing the log it guards.
+
+def read_json_object(path: Path) -> dict[str, Any] | None:
+    """A JSON record as a dict, or None when it is missing, unreadable or not an object."""
+    try:
+        record = json.loads(Path(path).read_bytes())
+    except (OSError, ValueError):
+        return None
+    return record if isinstance(record, dict) else None
+
+
+@contextmanager
+def exclusive(lock: Path) -> Iterator[None]:
+    """Hold `lock` for one process: a second one is refused at once rather than interleaved.
+
+    The lock file is kept apart from what it guards, so it survives `read_records` replacing a
+    log and leaves nothing in the directory it protects.
     """
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.with_name(f".{path.name}.lock").open("a") as handle:
+    lock = Path(lock)
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with lock.open("a") as handle:
         try:
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
-            raise SystemExit(f"{path} is held by another process; let it finish") from None
+            raise SystemExit(f"{lock} is held by another process; let it finish") from None
         yield
 
 
@@ -117,8 +136,8 @@ def read_records(path: Path) -> list[Any]:
 
 
 def _sweep_staging(path: Path) -> None:
-    """Remove staging files a stopped process left beside `path`."""
-    prefix = f".{path.name}."
+    """Remove staging files a stopped process on this host left beside `path`."""
+    prefix = f".{path.name}.{_HOST}."
     for stale in path.parent.glob(f"{glob.escape(prefix)}*.tmp"):
         pid = stale.name[len(prefix) : -len(".tmp")]
         # This process's own name is free to take: it holds no write of this path open.

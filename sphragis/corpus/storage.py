@@ -13,8 +13,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from sphragis.durable import write_atomic
+from sphragis.durable import read_json_object, write_atomic, write_json_atomic
 from sphragis.provenance import provenance_header
+
+GZIP_MAGIC = b"\x1f\x8b"
 
 
 def snapshot_path(root: Path, org: str, month: str) -> Path:
@@ -29,11 +31,7 @@ def snapshot_record_path(snapshot: Path) -> Path:
 
 def read_snapshot_record(snapshot: Path) -> dict[str, Any] | None:
     """A snapshot's record as a dict, or None when it is missing, unreadable or not an object."""
-    try:
-        record = json.loads(snapshot_record_path(Path(snapshot)).read_bytes())
-    except (OSError, ValueError):
-        return None
-    return record if isinstance(record, dict) else None
+    return read_json_object(snapshot_record_path(Path(snapshot)))
 
 
 def unfinished_snapshot(snapshot: Path) -> bool:
@@ -72,9 +70,9 @@ def write_snapshot(
     header = {**provenance_header(), **dict(record), "rows": len(rows)}
     # Each file lands whole. A stop before the closing record leaves the month unfinished,
     # whichever snapshot is on disk, so a new record never vouches for an old snapshot.
-    write_atomic(snapshot_record_path(path), _record_bytes({**header, "complete": False}))
+    write_json_atomic(snapshot_record_path(path), {**header, "complete": False})
     write_atomic(path, gzip.compress(body.encode()))
-    write_atomic(snapshot_record_path(path), _record_bytes({**header, "complete": True}))
+    write_json_atomic(snapshot_record_path(path), {**header, "complete": True})
     return path
 
 
@@ -82,8 +80,13 @@ def refused_snapshot(path: Path) -> str | None:
     """Why a snapshot on disk cannot be read as a fetched month, or None when it can."""
     if unfinished_snapshot(path):
         return "its fetch did not finish; fetch the month again"
-    if Path(path).stat().st_size == 0:
+    with Path(path).open("rb") as handle:
+        head = handle.read(2)
+    if not head:
         return "empty, so its write never landed; fetch the month again"
+    if head != GZIP_MAGIC:
+        # Zeros where a write's data never landed, on a snapshot from before atomic writes.
+        return "not a gzip stream, so its write never landed; fetch the month again"
     return None
 
 
@@ -105,7 +108,3 @@ def iter_snapshot(path: Path) -> Iterator[dict[str, Any]]:
 def read_snapshot(path: Path) -> list[dict[str, Any]]:
     """Read a snapshot back, refusing one whose write did not finish."""
     return list(iter_snapshot(path))
-
-
-def _record_bytes(record: Mapping[str, Any]) -> bytes:
-    return json.dumps(record, indent=2).encode()
