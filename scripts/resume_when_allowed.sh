@@ -51,10 +51,17 @@ while :; do
   fi
 
   echo "$(date '+%m-%d %H:%M') building $ORG $MONTH"
-  if uv run --no-active python -m sphragis.corpus build \
-       --org "$ORG" --month "$MONTH" --cutoff "$CUTOFF" --request-interval 1.0; then
+  built=0
+  uv run --no-active python -m sphragis.corpus build \
+    --org "$ORG" --month "$MONTH" --cutoff "$CUTOFF" --request-interval 1.0 || built=$?
+  if [ "$built" -eq 0 ]; then
     echo "$(date '+%m-%d %H:%M') built $ORG $MONTH: $(wc -l < "datasets/gerrit/$ORG/examples/$MONTH.jsonl") examples"
     exit 0
+  fi
+  if [ "$built" -eq 2 ]; then
+    # Some month's snapshot was refused; building again will not fix it, refetching will.
+    echo "$(date '+%m-%d %H:%M') build refused a snapshot (see above); refetch it, then rerun"
+    exit 1
   fi
   echo "$(date '+%m-%d %H:%M') build failed after being admitted; backing off"
   sleep "$AFTER_FAIL"

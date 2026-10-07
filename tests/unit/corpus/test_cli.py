@@ -429,26 +429,38 @@ def test_build_skips_a_month_whose_fetch_did_not_finish_and_builds_the_rest(
     _snapshot(tmp_path, "openstack", "2024-10", [])
     _snapshot(tmp_path, "openstack", "2024-11", [])
     _open_snapshot_record(tmp_path, "openstack", "2024-10")
-    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 2
     assert "2024-10: its fetch did not finish" in capsys.readouterr().out
     examples = tmp_path / "openstack" / "examples"
     assert (examples / "2024-11.jsonl").exists() and not (examples / "2024-10.jsonl").exists()
 
 
+def _zero_body(snapshot: Path) -> None:
+    """Keep the gzip header, zero the rest: what a hard stop leaves in a pre-atomic write."""
+    data = snapshot.read_bytes()
+    snapshot.write_bytes(data[:20] + b"\0" * (len(data) - 20))
+
+
 def test_build_skips_a_month_whose_body_is_zeroed_and_builds_the_rest(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    import gzip
-
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
-    _snapshot(tmp_path, "openstack", "2024-10", [])
+    _snapshot(tmp_path, "openstack", "2024-10", [{"n": i, "pad": "x" * 40} for i in range(3000)])
     _snapshot(tmp_path, "openstack", "2024-11", [])
-    torn = tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz"
-    whole = gzip.compress(b'{"a": 1}\n' * 50)
-    torn.write_bytes(whole[:12] + b"\0" * (len(whole) - 12))
-    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 1
-    assert "2024-10: unreadable" in capsys.readouterr().out
+    _zero_body(tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz")
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 2
+    assert "2024-10.ndjson.gz: unreadable" in capsys.readouterr().out
     assert (tmp_path / "openstack" / "examples" / "2024-11.jsonl").exists()
+
+
+def test_refine_refuses_a_zeroed_body_by_name_without_a_traceback(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _built_corpus(tmp_path)
+    snapshot = sorted((tmp_path / "openstack" / "raw").glob("*.ndjson.gz"))[0]
+    _zero_body(snapshot)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert f"{snapshot.name}: unreadable" in capsys.readouterr().out
 
 
 def test_two_fetches_of_one_org_month_never_run_together(

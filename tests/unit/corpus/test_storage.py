@@ -168,3 +168,21 @@ def test_a_zeroed_snapshot_from_before_the_marker_is_refused(tmp_path: Path) -> 
     record_path.write_text(json.dumps(record))
     path.write_bytes(b"\0" * path.stat().st_size)
     assert "not a gzip stream" in (refused_snapshot(path) or "")
+
+
+def test_only_the_whole_check_finds_a_zeroed_body_and_every_reader_names_it(
+    tmp_path: Path,
+) -> None:
+    path = write_snapshot(
+        tmp_path, "qt", "2024-11", [{"n": i, "pad": "x" * 40} for i in range(3000)], record={}
+    )
+    data = path.read_bytes()
+    path.write_bytes(data[:20] + b"\0" * (len(data) - 20))
+    assert refused_snapshot(path) is None, "the quick check reads the header only"
+    assert "unreadable" in (refused_snapshot(path, whole=True) or "")
+    with pytest.raises(ValueError, match=f"{path.name}: unreadable"):
+        read_snapshot(path)
+    assert (
+        refused_snapshot(write_snapshot(tmp_path, "qt", "2024-12", [], record={}), whole=True)
+        is None
+    )

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import zlib
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,8 @@ from sphragis.durable import read_json_object, write_atomic, write_json_atomic
 from sphragis.provenance import provenance_header
 
 GZIP_MAGIC = b"\x1f\x8b"
+# What a damaged gzip stream raises: a bad header or CRC, a cut-off end, a corrupt deflate body.
+_DAMAGED = (OSError, EOFError, zlib.error)
 
 
 def snapshot_path(root: Path, org: str, month: str) -> Path:
@@ -76,8 +79,12 @@ def write_snapshot(
     return path
 
 
-def refused_snapshot(path: Path) -> str | None:
-    """Why a snapshot on disk cannot be read as a fetched month, or None when it can."""
+def refused_snapshot(path: Path, *, whole: bool = False) -> str | None:
+    """Why a snapshot on disk cannot be read as a fetched month, or None when it can.
+
+    The quick check reads the record and the gzip header. `whole` also decompresses the stream
+    to its end and checks its CRC, for a caller about to treat the month as finished for good.
+    """
     if unfinished_snapshot(path):
         return "its fetch did not finish; fetch the month again"
     with Path(path).open("rb") as handle:
@@ -87,22 +94,32 @@ def refused_snapshot(path: Path) -> str | None:
     if head != GZIP_MAGIC:
         # Zeros where a write's data never landed, on a snapshot from before atomic writes.
         return "not a gzip stream, so its write never landed; fetch the month again"
+    if whole:
+        try:
+            with gzip.open(path, "rb") as stream:
+                while stream.read(1 << 20):
+                    pass
+        except _DAMAGED as error:
+            return f"unreadable ({error}); fetch the month again"
     return None
 
 
 def iter_snapshot(path: Path) -> Iterator[dict[str, Any]]:
     """A snapshot's rows one at a time, refusing one whose write did not finish.
 
-    Every reader of raw rows comes through here. An empty file is refused too: a snapshot of no
-    rows is still a gzip stream, so an empty one is a write that never landed.
+    Every reader of raw rows comes through here, and every way a snapshot can be refused or
+    found damaged surfaces as one ValueError naming the file.
     """
     reason = refused_snapshot(path)
     if reason:
         raise ValueError(f"{path}: {reason}")
-    with gzip.open(path, "rt") as lines:
-        for line in lines:
-            if line.strip():
-                yield json.loads(line)
+    try:
+        with gzip.open(path, "rt") as lines:
+            for line in lines:
+                if line.strip():
+                    yield json.loads(line)
+    except _DAMAGED as error:
+        raise ValueError(f"{path}: unreadable ({error}); fetch the month again") from error
 
 
 def read_snapshot(path: Path) -> list[dict[str, Any]]:

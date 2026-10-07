@@ -49,7 +49,6 @@ from sphragis.corpus.split import seal_open, seal_path
 from sphragis.corpus.storage import (
     iter_snapshot,
     read_snapshot,
-    read_snapshot_record,
     refused_snapshot,
     write_snapshot,
 )
@@ -427,10 +426,10 @@ def _fetched_routes(root: Path, org: str) -> set[str]:
     raw = Path(root) / org / "raw"
     routes = set()
     for record_path in sorted(raw.glob("*.record.json")):
-        snapshot = record_path.with_name(record_path.name.replace(".record.json", ".ndjson.gz"))
-        record = read_snapshot_record(snapshot)
+        record = read_json_object(record_path)
         if record is None:
             continue
+        snapshot = record_path.with_name(record_path.name.replace(".record.json", ".ndjson.gz"))
         if not record.get("complete", True) and not snapshot.exists():
             # A new month stopped before its snapshot landed: no route fetched anything here.
             continue
@@ -612,6 +611,8 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
 # when acceptance happened to land. 2026-10 plus three months is 2027-01; MSR 2027 notifies
 # on 2027-02-04.
 FETCH_HORIZON_MONTHS = 3
+# Build's exit when some months were refused: everything else built, those need a refetch.
+BUILD_NEEDS_REFETCH = 2
 
 
 def _examples_dir(args: argparse.Namespace) -> Path:
@@ -630,14 +631,14 @@ def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
 def _stage_refine(args: argparse.Namespace) -> int:
     """Apply the data audit's label rules to every built month, from its raw snapshots."""
     raw = Path(args.root) / args.org / "raw"
-    snapshots = sorted(raw.glob("*.ndjson.gz"))
     # Refine indexes every month's raw changes, so one unreadable month refuses them all.
-    refused = [(path.name, reason) for path in snapshots if (reason := refused_snapshot(path))]
-    for name, reason in refused:
-        print(f"{args.org} {name}: {reason}")
-    if refused:
+    try:
+        index = index_changes(
+            change for path in sorted(raw.glob("*.ndjson.gz")) for change in iter_snapshot(path)
+        )
+    except ValueError as error:
+        print(f"{args.org}: {error}")
         return 1
-    index = index_changes(change for path in snapshots for change in iter_snapshot(path))
     built = sorted(_examples_dir(args).glob("*.jsonl"))
     if not built:
         print(f"no examples under {_examples_dir(args)}; run build first")
@@ -800,11 +801,7 @@ def _stage_stamp(args: argparse.Namespace) -> int:
 def _load_drops(args: argparse.Namespace) -> dict[str, int]:
     """Build-stage drop counts summed over every month on disk."""
     total: Counter[str] = Counter()
-    raw = Path(args.root) / args.org / "raw"
     for path in sorted(_examples_dir(args).glob("*.drops.json")):
-        snapshot = raw / path.name.replace(".drops.json", ".ndjson.gz")
-        if snapshot.exists() and refused_snapshot(snapshot):
-            continue  # built from a snapshot since refused; build will redo it
         total.update(json.loads(path.read_text()))
     return dict(sorted(total.items()))
 
@@ -883,9 +880,9 @@ def _stage_build(args: argparse.Namespace) -> int:
             continue
         try:
             changes = read_snapshot(snapshot)
-        except (OSError, EOFError, ValueError) as error:
+        except ValueError as error:
             # A snapshot whose header reads but whose body does not: zeros past the header.
-            print(f"{args.org} {month}: unreadable ({error}); fetch the month again")
+            print(f"{args.org} {month}: {error}")
             refused += 1
             continue
         rows: list[dict[str, Any]] = []
@@ -915,7 +912,8 @@ def _stage_build(args: argparse.Namespace) -> int:
     print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
     if refused:
         print(f"{args.org}: {refused} month(s) not built; fetch them again, then build")
-    return 1 if refused else 0
+    # 2, not 1: the months that could be built were, and building again will not help the rest.
+    return BUILD_NEEDS_REFETCH if refused else 0
 
 
 def _stage_dedup(args: argparse.Namespace) -> int:
