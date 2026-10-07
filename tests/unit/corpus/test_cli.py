@@ -506,7 +506,13 @@ def test_build_gives_the_expected_months_own_verdict(
     _open_snapshot_record(tmp_path, "openstack", "2024-11")
     assert main([*argv, "2024-10"]) == 0, "another month's refusal is not this month's"
     assert main([*argv, "2024-11"]) == 3, "its examples are from a snapshot since refused"
-    assert main([*argv, "2024-12"]) == 1, "never fetched, so never built"
+    assert main([*argv, "2024-12"]) == 3, "never fetched: fetch it"
+    # A month the loop skips as already built is current to the verdict too, whatever its
+    # record says; and examples whose snapshot is gone send the month to be fetched.
+    (tmp_path / "openstack" / "examples" / "2024-10.source.json").write_text('{"snapshot_sha')
+    assert main([*argv, "2024-10"]) == 0
+    (tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz").unlink()
+    assert main([*argv, "2024-10"]) == 3
 
 
 def test_build_reports_a_missing_snapshot_rather_than_raising(

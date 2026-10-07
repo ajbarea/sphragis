@@ -251,8 +251,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--month", default="2024-10", help="YYYY-MM, for fetch")
     parser.add_argument(
         "--expect-month",
-        help="build: exit 0 only if this YYYY-MM is built from its current snapshot, "
-        f"{BUILD_NEEDS_REFETCH} if its snapshot was refused (fetch it again), 1 otherwise",
+        help="build: exit 0 if this YYYY-MM was built or found current, "
+        f"{BUILD_NEEDS_REFETCH} if its snapshot is refused or missing (fetch it)",
     )
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
     parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
@@ -846,7 +846,7 @@ def _stage_build(args: argparse.Namespace) -> int:
 
     out_dir = _examples_dir(args)
     out_dir.mkdir(parents=True, exist_ok=True)
-    total, drops, refused = 0, Counter(), []
+    total, drops, refused, current = 0, Counter(), [], set()
     for snapshot in snapshots:
         month = snapshot.name.removesuffix(".ndjson.gz")
         target = out_dir / f"{month}.jsonl"
@@ -888,6 +888,7 @@ def _stage_build(args: argparse.Namespace) -> int:
                 json.loads(drops_path(target).read_text()) if drops_path(target).is_file() else {}
             )
             print(f"{args.org} {month}: skip, already built ({skipped} examples)")
+            current.add(month)
             continue
         try:
             changes = read_snapshot(snapshot)
@@ -917,6 +918,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         write_atomic(target, "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows).encode())
         write_build_record(target, digest, complete=True)
         drops.update(month_drops)
+        current.add(month)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
         total += len(rows)
     months = len(snapshots) - len(refused)
@@ -924,18 +926,14 @@ def _stage_build(args: argparse.Namespace) -> int:
     if refused:
         print(f"{args.org}: {len(refused)} month(s) not built; fetch them again, then build")
     if args.expect_month:
-        # Build walks the whole org, so a caller after one month needs that month's verdict:
-        # examples on disk may be left from a snapshot since refused or replaced.
+        # Build walks the whole org, so a caller after one month needs that month's verdict,
+        # judged by what this loop did with it rather than by the files it left.
         expected = args.expect_month
-        if expected in refused:
-            return BUILD_NEEDS_REFETCH
-        target = out_dir / f"{expected}.jsonl"
-        if not target.exists() or not built_from_current_snapshot(
-            target, raw / f"{expected}.ndjson.gz"
-        ):
-            print(f"{args.org} {expected}: not built from its current snapshot")
-            return 1
-        return 0
+        if expected in current:
+            return 0
+        if expected not in refused:
+            print(f"{args.org} {expected}: no snapshot; fetch it")
+        return BUILD_NEEDS_REFETCH
     # Not 1: the months that could be built were, and building again will not help the rest.
     return BUILD_NEEDS_REFETCH if refused else 0
 
