@@ -19,7 +19,8 @@ from sphragis.provenance import provenance_header
 
 GZIP_MAGIC = b"\x1f\x8b"
 # What a damaged gzip stream raises: a bad header or CRC, a cut-off end, a corrupt deflate body.
-_DAMAGED = (OSError, EOFError, zlib.error)
+# Not bare OSError: a disk error says nothing about the file, and must not trigger a refetch.
+_DAMAGED = (gzip.BadGzipFile, EOFError, zlib.error)
 
 
 def snapshot_path(root: Path, org: str, month: str) -> Path:

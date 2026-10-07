@@ -612,7 +612,8 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
 # on 2027-02-04.
 FETCH_HORIZON_MONTHS = 3
 # Build's exit when some months were refused: everything else built, those need a refetch.
-BUILD_NEEDS_REFETCH = 2
+# Not 2, which uv and argparse already use for their own failures.
+BUILD_NEEDS_REFETCH = 3
 
 
 def _examples_dir(args: argparse.Namespace) -> Path:
@@ -631,11 +632,16 @@ def _load_examples(args: argparse.Namespace) -> list[dict[str, Any]]:
 def _stage_refine(args: argparse.Namespace) -> int:
     """Apply the data audit's label rules to every built month, from its raw snapshots."""
     raw = Path(args.root) / args.org / "raw"
-    # Refine indexes every month's raw changes, so one unreadable month refuses them all.
+    # Refine indexes every month's raw changes, so one unreadable month refuses them all. Every
+    # month the quick check refuses is named at once; damage past a header surfaces while reading.
+    snapshots = sorted(raw.glob("*.ndjson.gz"))
+    refused = [(path.name, reason) for path in snapshots if (reason := refused_snapshot(path))]
+    for name, reason in refused:
+        print(f"{args.org} {name}: {reason}")
+    if refused:
+        return 1
     try:
-        index = index_changes(
-            change for path in sorted(raw.glob("*.ndjson.gz")) for change in iter_snapshot(path)
-        )
+        index = index_changes(change for path in snapshots for change in iter_snapshot(path))
     except ValueError as error:
         print(f"{args.org}: {error}")
         return 1
@@ -912,7 +918,7 @@ def _stage_build(args: argparse.Namespace) -> int:
     print(f"{args.org}: {total} examples over {months} months, drops {dict(drops)}")
     if refused:
         print(f"{args.org}: {refused} month(s) not built; fetch them again, then build")
-    # 2, not 1: the months that could be built were, and building again will not help the rest.
+    # Not 1: the months that could be built were, and building again will not help the rest.
     return BUILD_NEEDS_REFETCH if refused else 0
 
 

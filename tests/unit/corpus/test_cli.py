@@ -429,7 +429,7 @@ def test_build_skips_a_month_whose_fetch_did_not_finish_and_builds_the_rest(
     _snapshot(tmp_path, "openstack", "2024-10", [])
     _snapshot(tmp_path, "openstack", "2024-11", [])
     _open_snapshot_record(tmp_path, "openstack", "2024-10")
-    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 2
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
     assert "2024-10: its fetch did not finish" in capsys.readouterr().out
     examples = tmp_path / "openstack" / "examples"
     assert (examples / "2024-11.jsonl").exists() and not (examples / "2024-10.jsonl").exists()
@@ -448,9 +448,23 @@ def test_build_skips_a_month_whose_body_is_zeroed_and_builds_the_rest(
     _snapshot(tmp_path, "openstack", "2024-10", [{"n": i, "pad": "x" * 40} for i in range(3000)])
     _snapshot(tmp_path, "openstack", "2024-11", [])
     _zero_body(tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz")
-    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 2
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
     assert "2024-10.ndjson.gz: unreadable" in capsys.readouterr().out
     assert (tmp_path / "openstack" / "examples" / "2024-11.jsonl").exists()
+
+
+def test_refine_names_every_refused_month_at_once(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _built_corpus(tmp_path)
+    _snapshot(tmp_path, "openstack", "2099-01", [])
+    _snapshot(tmp_path, "openstack", "2099-02", [])
+    _open_snapshot_record(tmp_path, "openstack", "2099-01")
+    _open_snapshot_record(tmp_path, "openstack", "2099-02")
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    out = capsys.readouterr().out
+    assert "2099-01.ndjson.gz: its fetch did not finish" in out
+    assert "2099-02.ndjson.gz: its fetch did not finish" in out
 
 
 def test_refine_refuses_a_zeroed_body_by_name_without_a_traceback(

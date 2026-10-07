@@ -186,3 +186,21 @@ def test_only_the_whole_check_finds_a_zeroed_body_and_every_reader_names_it(
         refused_snapshot(write_snapshot(tmp_path, "qt", "2024-12", [], record={}), whole=True)
         is None
     )
+
+
+def test_a_disk_error_is_not_taken_for_a_damaged_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A refused snapshot is refetched with --overwrite, so only damage to the file itself may
+    # refuse it; an I/O error says nothing about the file and must surface as itself.
+    import errno
+    import gzip
+
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+
+    def failing_read(self: object, *_: object) -> bytes:
+        raise OSError(errno.EIO, "Input/output error")
+
+    monkeypatch.setattr(gzip.GzipFile, "read", failing_read)
+    with pytest.raises(OSError, match="Input/output"):
+        refused_snapshot(path, whole=True)

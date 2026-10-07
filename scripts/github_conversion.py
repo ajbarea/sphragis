@@ -29,7 +29,7 @@ from pathlib import Path
 
 from sphragis.corpus.github import GITHUB_ORGS
 from sphragis.corpus.github_api import GitHubAPI, Gone
-from sphragis.corpus.storage import snapshot_path, snapshot_record_path
+from sphragis.corpus.storage import read_snapshot_record, refused_snapshot, snapshot_path
 from sphragis.provenance import provenance_header
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -178,9 +178,11 @@ def main() -> None:
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         raise SystemExit("set GITHUB_TOKEN (e.g. GITHUB_TOKEN=$(gh auth token))")
-    record = json.loads(
-        snapshot_record_path(snapshot_path(args.root, args.org, args.month)).read_text()
-    )
+    snapshot = snapshot_path(args.root, args.org, args.month)
+    refused = refused_snapshot(snapshot)
+    record = read_snapshot_record(snapshot)
+    if refused or record is None:
+        raise SystemExit(f"{snapshot}: {refused or 'no readable record'}")
     built, refined = (
         Counter(json.loads(line)["change_id"] for line in (args.root / args.org / d / f).open())
         for d, f in (("examples", f"{args.month}.jsonl"), ("refined", f"{args.month}.jsonl"))
