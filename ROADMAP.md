@@ -196,7 +196,7 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   works best for review generation and more retrieval hurts (RARe, arXiv:2511.05302).
   Read on the development window 2026-10-06 (research log): every own-minus-sibling reading
   inconclusive, as are the adapters' over the same partitions.
-- [ ] **A rules-file comparator** (added 2026-10-04): the base model with a house-rules file in
+- [x] **A rules-file comparator** (added 2026-10-04): the base model with a house-rules file in
   context, mirrored own, sibling and foreign: (a) the organization's own written conventions
   (OpenStack's HACKING guide, MediaWiki's coding conventions), (b) an AGENTS.md-style file an LLM
   (Qwen3.6-27B, pinned) distils from each half's training-window review comments, under a fixed
@@ -206,6 +206,8 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   instruction following, not on whether code follows a team's conventions (Gloaguen et al.,
   arXiv:2602.11988v3). If a rules file recovers the own-half advantage, adapters are not
   needed for it; if not, that is the answer to "why train weights".
+  Read on the development window 2026-10-07 (research log): distilled own minus sibling carries
+  no contrast as large as the SESOI on either organization; the adapters' stays inconclusive.
 - [ ] **Exact-match misses, read by people** (Stage 2, exploratory): a blind human audit of 100
   non-matching predictions per arm (own, sibling, foreign), judging whether each is a correct
   rewrite. About one exact-match failure in six is a correct rewrite (15.7% and 17.4% of
@@ -764,6 +766,7 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Completed
 
+- **2026-10-07** — The rules-file comparator read on the development window: 22 distillations (Qwen3.6-27B) and 22 `ARMS=rules` evaluations at 05465f1; distilled own minus sibling carries no contrast as large as the SESOI on either organization (research log).
 - **2026-09-28** — Corpus v3: `refine` removes examples carrying a Gerrit suggested edit or "Fix applied." reply, whose target is already in the prompt; OpenStack and Qt refrozen, OpenStack's split criteria refixed on v3 (ceiling 0.3187, floor 2,004), and examples whose target a reviewer typed into a comment reported per half (research log).
 - **2026-09-29** — LineageOS added as a candidate organization, fetched under its robots.txt; the candidate order is Wikimedia, LineageOS, then Qt and Chromium on permission, and the Linux Foundation hosts are too small (research log).
 - **2026-09-28** — The model stack frozen against Dependabot version updates for the study; security updates still open (#62).

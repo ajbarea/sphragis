@@ -1,0 +1,7 @@
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (45388 > 32768). Running this sequence through the model will result in indexing errors
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:01, 285.09it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:00, 302.14it/s]Loading weights:  28%|██▊       | 95/339 [00:00<00:00, 279.70it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:00, 281.70it/s]Loading weights:  45%|████▌     | 153/339 [00:00<00:00, 272.14it/s]Loading weights:  54%|█████▍    | 184/339 [00:00<00:00, 279.96it/s]Loading weights:  63%|██████▎   | 213/339 [00:00<00:00, 272.85it/s]Loading weights:  72%|███████▏  | 244/339 [00:00<00:00, 280.76it/s]Loading weights:  81%|████████  | 273/339 [00:00<00:00, 274.55it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 272.82it/s]Loading weights:  99%|█████████▉| 335/339 [00:01<00:00, 283.34it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 282.65it/s]
+rules-distilled:wikimedia-a|wikimedia-a      EM=0.018
+rules-distilled:wikimedia-b|wikimedia-a      EM=0.018
+rules-distilled:wikimedia-a|wikimedia-b      EM=0.009
+rules-distilled:wikimedia-b|wikimedia-b      EM=0.012
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rules-halves-wikimedia-p9.json

@@ -1,0 +1,7 @@
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (45388 > 32768). Running this sequence through the model will result in indexing errors
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  11%|█         | 38/339 [00:00<00:00, 374.95it/s]Loading weights:  22%|██▏       | 76/339 [00:00<00:00, 289.28it/s]Loading weights:  32%|███▏      | 107/339 [00:00<00:00, 284.58it/s]Loading weights:  40%|████      | 137/339 [00:00<00:00, 271.87it/s]Loading weights:  49%|████▊     | 165/339 [00:00<00:00, 266.35it/s]Loading weights:  58%|█████▊    | 196/339 [00:00<00:00, 273.31it/s]Loading weights:  66%|██████▌   | 224/339 [00:00<00:00, 263.41it/s]Loading weights:  76%|███████▌  | 256/339 [00:00<00:00, 272.03it/s]Loading weights:  84%|████████▍ | 284/339 [00:01<00:00, 260.43it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 258.63it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 274.52it/s]
+rules-distilled:wikimedia-a|openstack        EM=0.030
+rules-distilled:wikimedia-b|openstack        EM=0.032
+rules-written:openstack|openstack            EM=0.030
+rules-written:wikimedia|openstack            EM=0.034
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rules-foreign-openstack.json

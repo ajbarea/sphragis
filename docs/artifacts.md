@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 321 artifacts under
-56 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 375 artifacts under
+57 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -455,6 +455,17 @@ Few-shot retrieval as the adapters' comparator: the generations, one job per poo
 | `retrieval-halves-wikimedia-p3.json` | `retrieval-halves-wikimedia-p5.json` |
 | `retrieval-halves-wikimedia-p6.json` | `retrieval-halves-wikimedia-p7.json` |
 | `retrieval-halves-wikimedia-p8.json` | `retrieval-halves-wikimedia-p9.json` |
+| `rules-foreign-openstack.json` | `rules-foreign-wikimedia.json` |
+| `rules-halves-openstack-p10.json` | `rules-halves-openstack-p11.json` |
+| `rules-halves-openstack-p12.json` | `rules-halves-openstack-p2.json` |
+| `rules-halves-openstack-p3.json` | `rules-halves-openstack-p4.json` |
+| `rules-halves-openstack-p5.json` | `rules-halves-openstack-p7.json` |
+| `rules-halves-openstack-p8.json` | `rules-halves-openstack-p9.json` |
+| `rules-halves-wikimedia-p1.json` | `rules-halves-wikimedia-p10.json` |
+| `rules-halves-wikimedia-p11.json` | `rules-halves-wikimedia-p2.json` |
+| `rules-halves-wikimedia-p3.json` | `rules-halves-wikimedia-p5.json` |
+| `rules-halves-wikimedia-p6.json` | `rules-halves-wikimedia-p7.json` |
+| `rules-halves-wikimedia-p8.json` | `rules-halves-wikimedia-p9.json` |
 
 ## `scripts/retrieval_read.py`
 
@@ -492,6 +503,29 @@ Pilot-scale RQ1: does the matched adapter beat the mismatched one, per organizat
 | `rq1-windows-qtfull-s3.json` | `rq1-windows-qtfull.json` |
 | `rq1-windows-r256.json` | `rq1-windows-s2-r256.json` |
 | `rq1-windows-s3-r256.json` | `rq1-windows.json` |
+
+## `scripts/rules_distil.py`
+
+Distil the rules files the rules-file comparator prompts with, by the pinned distiller, greedy.
+
+| artifact | |
+|---|---|
+| `rules-guide-openstack.json` | `rules-guide-wikimedia.json` |
+| `rules-reviews-openstack-p10.json` | `rules-reviews-openstack-p11.json` |
+| `rules-reviews-openstack-p12.json` | `rules-reviews-openstack-p2-smoke.openstack-a.part.json` |
+| `rules-reviews-openstack-p2-smoke2.json` | `rules-reviews-openstack-p2-smoke3.json` |
+| `rules-reviews-openstack-p2-smoke4.json` | `rules-reviews-openstack-p2-smoke5.json` |
+| `rules-reviews-openstack-p2.json` | `rules-reviews-openstack-p3.json` |
+| `rules-reviews-openstack-p4.json` | `rules-reviews-openstack-p5.json` |
+| `rules-reviews-openstack-p7.json` | `rules-reviews-openstack-p8.json` |
+| `rules-reviews-openstack-p9.json` | `rules-reviews-wikimedia-p1-smoke2.json` |
+| `rules-reviews-wikimedia-p1-smoke3.json` | `rules-reviews-wikimedia-p1-smoke4.json` |
+| `rules-reviews-wikimedia-p1-smoke5.json` | `rules-reviews-wikimedia-p1-smoke6.json` |
+| `rules-reviews-wikimedia-p1.json` | `rules-reviews-wikimedia-p10.json` |
+| `rules-reviews-wikimedia-p11.json` | `rules-reviews-wikimedia-p2.json` |
+| `rules-reviews-wikimedia-p3.json` | `rules-reviews-wikimedia-p5.json` |
+| `rules-reviews-wikimedia-p6.json` | `rules-reviews-wikimedia-p7.json` |
+| `rules-reviews-wikimedia-p8.json` | `rules-reviews-wikimedia-p9.json` |
 
 ## `scripts/seed_effect.py`
 
@@ -589,6 +623,8 @@ of the research log rather than out of the code.
 - `manifest-openstack-v2.json`
 - `rq1-qtfull-fp32-seeds.json`
 - `rq1-r256-seeds.json`
+- `rules-reading-openstack.json`
+- `rules-reading-wikimedia.json`
 - `stratified-coverage-0.95.json`
 - `stratified-coverage-0.975.json`
 - `stratified-coverage-h1-0.95.json`

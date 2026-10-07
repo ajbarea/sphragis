@@ -1,0 +1,200 @@
+{
+  "org": "wikimedia",
+  "foreign": "openstack",
+  "arms": "rules",
+  "partitions": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "halves_jobs": [
+    "datasets/results/rules-halves-wikimedia-p1.json",
+    "datasets/results/rules-halves-wikimedia-p2.json",
+    "datasets/results/rules-halves-wikimedia-p3.json",
+    "datasets/results/rules-halves-wikimedia-p5.json",
+    "datasets/results/rules-halves-wikimedia-p6.json",
+    "datasets/results/rules-halves-wikimedia-p7.json",
+    "datasets/results/rules-halves-wikimedia-p8.json",
+    "datasets/results/rules-halves-wikimedia-p9.json",
+    "datasets/results/rules-halves-wikimedia-p10.json",
+    "datasets/results/rules-halves-wikimedia-p11.json"
+  ],
+  "foreign_job": "datasets/results/rules-foreign-wikimedia.json",
+  "base_job": "datasets/results/retrieval-foreign-wikimedia.json",
+  "generator": "Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242|float32|max_new_tokens=256|temperature=0.0",
+  "bootstrap_seed": 7,
+  "resamples": 10000,
+  "families": {
+    "distilled": {
+      "examples": 711,
+      "dropped": 0,
+      "exact_match": {
+        "none": 0.015471167369901548,
+        "own": 0.014627285513361463,
+        "sibling": 0.015049226441631505
+      },
+      "own_minus_sibling": {
+        "estimate": -0.0005685613568276359,
+        "confidence": 0.95,
+        "low": -0.0039653901717370725,
+        "high": 0.002315923602698301,
+        "per_run": [
+          0.00016275007939028224,
+          -0.00040781716869902306,
+          0.002183406113537118,
+          0.001086956521739131,
+          -0.006230529595015576,
+          -0.0028781230266034094,
+          -0.0024390243902439024,
+          0.0015151515151515154,
+          0.001282051282051281,
+          3.956510041622447e-05
+        ],
+        "reading": "carries none as large as the SESOI"
+      },
+      "sibling_minus_foreign": {
+        "estimate": -0.000456569849324064,
+        "confidence": 0.95,
+        "low": -0.0059220179098481126,
+        "high": 0.004724373729324859,
+        "per_run": [
+          -0.0014111622737376954,
+          -0.0024630541871921187,
+          -0.003067987641748796,
+          -0.0041659449159882215,
+          0.005817157919961659,
+          0.002444987775061124,
+          -0.0014403208816141317,
+          -0.0014137437365783828,
+          0.001144260723699976,
+          -9.891275104055141e-06
+        ]
+      },
+      "own_minus_none": {
+        "estimate": -0.0012567282757676348,
+        "confidence": 0.95,
+        "low": -0.007441189762990618,
+        "high": 0.004286522720174536,
+        "per_run": [
+          -0.0011670371546522711,
+          -0.0028708713558911417,
+          -0.0017691630564233571,
+          -0.00398406374501992,
+          -0.00027558111670261307,
+          -0.00043313525154228556,
+          -0.004100153958350214,
+          0.0,
+          0.002012940330697339,
+          1.9782550208112017e-05
+        ]
+      },
+      "without_near_duplicate_shots": null,
+      "written_own_minus_written_foreign": {
+        "estimate": 0.005607677394003904,
+        "confidence": 0.95,
+        "low": 0.001195153664238112,
+        "high": 0.011642475801076434,
+        "per_run": [
+          0.005644649094950777,
+          0.005333925543083259,
+          0.006135975283497592,
+          0.006157976788498182,
+          0.005679367361610353,
+          0.005323110801664534,
+          0.005319666153472167,
+          0.0054521593891672625,
+          0.00540378624490774,
+          0.005626157279187176
+        ]
+      },
+      "written_own_minus_none": {
+        "estimate": 0.0011383788308034037,
+        "confidence": 0.95,
+        "low": -0.005106891222993306,
+        "high": 0.007329336903825248,
+        "per_run": [
+          0.0016552873928231179,
+          0.0016393442622950807,
+          0.0002071215285568799,
+          0.0010869565217391302,
+          0.0015576323987538938,
+          0.001222493887530562,
+          0.0007778948221375918,
+          0.0011095204008589833,
+          0.0007308890486460579,
+          0.0013966480446927377
+        ]
+      },
+      "distilled_own_minus_written_own": {
+        "estimate": -0.0023951071065710385,
+        "confidence": 0.95,
+        "low": -0.006969915132063134,
+        "high": 0.0011855717241336875,
+        "per_run": [
+          -0.002822324547475389,
+          -0.004510215618186222,
+          -0.001976284584980237,
+          -0.0050710202667590505,
+          -0.0018332135154565067,
+          -0.0016556291390728475,
+          -0.004878048780487806,
+          -0.0011095204008589833,
+          0.001282051282051281,
+          -0.0013768654944846257
+        ]
+      }
+    }
+  },
+  "adapters": {
+    "runs": [
+      "datasets/results/rq1-partition-wikimedia-p1-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p2-s2-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p3-s3-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p5-s4-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p6-s5-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p7-s6-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p8-s7-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p9-s8-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p10-s9-n1850.json",
+      "datasets/results/rq1-partition-wikimedia-p11-s10-n1850.json"
+    ],
+    "lora_rank": 32,
+    "examples": 711,
+    "own_minus_sibling": {
+      "estimate": 0.0021905732102142886,
+      "confidence": 0.95,
+      "low": -0.01298708102851509,
+      "high": 0.018164531509001148,
+      "per_run": [
+        0.003961575103207354,
+        -0.0012234515060970674,
+        0.008789719868132623,
+        -0.01720509267278711,
+        0.007596453390845914,
+        0.018847455431597007,
+        0.013078356697188265,
+        -0.019494154139823444,
+        0.009070213275820777,
+        -0.0015153433459414306
+      ],
+      "reading": "inconclusive"
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-07T17:19:08.086420+00:00",
+    "git": {
+      "commit": "6804898748af848d4aba2cccd528dea56408516c",
+      "branch": "measure/rules-read"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

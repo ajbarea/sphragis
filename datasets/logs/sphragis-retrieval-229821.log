@@ -1,0 +1,6 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  12%|█▏        | 40/339 [00:00<00:00, 383.51it/s]Loading weights:  23%|██▎       | 79/339 [00:00<00:00, 286.22it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:00, 294.28it/s]Loading weights:  42%|████▏     | 143/339 [00:00<00:00, 282.29it/s]Loading weights:  51%|█████     | 172/339 [00:00<00:00, 283.09it/s]Loading weights:  59%|█████▉    | 201/339 [00:00<00:00, 273.98it/s]Loading weights:  68%|██████▊   | 231/339 [00:00<00:00, 275.78it/s]Loading weights:  76%|███████▋  | 259/339 [00:00<00:00, 264.69it/s]Loading weights:  86%|████████▌ | 292/339 [00:01<00:00, 277.19it/s]Loading weights:  94%|█████████▍| 320/339 [00:01<00:00, 265.41it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 281.89it/s]
+rules-distilled:openstack-a|wikimedia        EM=0.014
+rules-distilled:openstack-b|wikimedia        EM=0.017
+rules-written:wikimedia|wikimedia            EM=0.017
+rules-written:openstack|wikimedia            EM=0.011
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rules-foreign-wikimedia.json

@@ -1,0 +1,182 @@
+{
+  "source": "guide",
+  "org": "openstack",
+  "guide": [
+    {
+      "title": "HACKING.rst",
+      "revision": "e75bfb397486c0f52f071b3275a03572ae58625a",
+      "sha256": "b3e5272d5dc127e46fbf67b050d09b084139a64a839e2f19414b1098fd63c214"
+    }
+  ],
+  "files": {
+    "openstack": {
+      "kind": "guide",
+      "chunks": 1,
+      "chunk_tokens": [
+        3344
+      ],
+      "map_lists": [
+        "- Read and follow PEP 8 style guidelines.\n- Use only UNIX style newlines (`\\n`).\n- Wrap long lines in parentheses instead of using backslashes for line continuation.\n- Use specific exception types in `except` clauses (e.g., `except Exception:`) rather than bare `except:`.\n- Include your name in TODO comments (e.g., `# TODO(yourname)`).\n- Do not use author tags in source files.\n- Do not put vim configuration in source files.\n- Delay string interpolations at logging calls.\n- Do not import eventlet; use threading or asyncio instead.\n- Do not shadow built-in or reserved words.\n- Use `LOG.warning` instead of the deprecated `Log.warn`.\n- Import modules rather than objects, with specific exceptions for stdlib `collections.abc`, `types`, `typing`, third-party `sqlalchemy`, type hinting objects, and `i18n` function imports.\n- Do not import more than one module per line.\n- Do not use wildcard `*` imports.\n- Do not make relative imports.\n- Alphabetically order imports by full module path.\n- Organize imports into stdlib, third-party, and project groups, separated by blank lines.\n- Ensure docstrings do not start with a space.\n- End multi-line docstrings on a new line.\n- Start multi-line docstrings without a leading new line.\n- Start multi-line docstrings with a one-line summary followed by an empty line.\n- Split dictionary or list items with newlines if the object exceeds 80 characters.\n- Indent items in embedded iterables.\n- Add a trailing comma to the last item in dictionaries and lists.\n- Do not use `locals()` or `self.__dict__` for formatting strings.\n- Format method call arguments with newlines if the call exceeds 80 characters.\n- Break up parameter construction into separate variables rather than constructing them inline.\n- Internationalize template strings before performing variable replacement.\n- Use keyword parameters for multiple variables in internationalized strings.\n- Create unit tests for every new feature.\n- Add a failing unit test for bug fixes that previously lacked tests.\n- Use the most specific exception possible when asserting raised exceptions.\n- Do not test for generic `Exception` being raised.\n- Use `assertIsNone` or `assertIsNotNone` instead of `assertEqual` with `None`.\n- Use `assertEqual` or `assertNotEqual` instead of `assertTrue`/`assertFalse` with equality checks.\n- Use `assertGreater`, `assertLess`, `assertGreaterEqual`, or `assertLessEqual` instead of `assertTrue`/`assertFalse` with comparison operators.\n- Require `autospec`, `spec`, or `spec_set` in `mock.patch()` or `mock.patch.object()` calls.\n- Use `assertIsInstance` instead of `assertTrue(isinstance(A, B))`.\n- Use `assertIsInstance` instead of `assertEqual(type(A), B)`.\n- Do not use the deprecated `assertRaisesRegexp`.\n- Use `assertIn` or `assertNotIn` instead of `assertTrue`/`assertFalse` with `in`/`not in` checks.\n- Use `assertIn` or `assertNotIn` instead of `assertEqual` with `in` checks.\n- Use `unittest.mock` instead of the third-party `mock` library.\n- License newly contributed source code under the Apache 2.0 license.\n- Include the Apache 2.0 license header or SPDX identifier in all source files.\n- Leave files with no code completely empty, without license headers or comments."
+      ],
+      "map_capped": [
+        false
+      ],
+      "evidence": [],
+      "reduce_answer": null,
+      "reduce_capped": null,
+      "merge_chunks": null,
+      "recurrence": [],
+      "part_pages": [
+        1
+      ],
+      "rule_pages": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "rules": [
+        "- Read and follow PEP 8 style guidelines.",
+        "- Use only UNIX style newlines (`\\n`).",
+        "- Wrap long lines in parentheses instead of using backslashes for line continuation.",
+        "- Use specific exception types in `except` clauses (e.g., `except Exception:`) rather than bare `except:`.",
+        "- Include your name in TODO comments (e.g., `# TODO(yourname)`).",
+        "- Do not use author tags in source files.",
+        "- Do not put vim configuration in source files.",
+        "- Delay string interpolations at logging calls.",
+        "- Do not import eventlet; use threading or asyncio instead.",
+        "- Do not shadow built-in or reserved words.",
+        "- Use `LOG.warning` instead of the deprecated `Log.warn`.",
+        "- Import modules rather than objects, with specific exceptions for stdlib `collections.abc`, `types`, `typing`, third-party `sqlalchemy`, type hinting objects, and `i18n` function imports.",
+        "- Do not import more than one module per line.",
+        "- Do not use wildcard `*` imports.",
+        "- Do not make relative imports.",
+        "- Alphabetically order imports by full module path.",
+        "- Organize imports into stdlib, third-party, and project groups, separated by blank lines.",
+        "- Ensure docstrings do not start with a space.",
+        "- End multi-line docstrings on a new line.",
+        "- Start multi-line docstrings without a leading new line.",
+        "- Start multi-line docstrings with a one-line summary followed by an empty line.",
+        "- Split dictionary or list items with newlines if the object exceeds 80 characters.",
+        "- Indent items in embedded iterables.",
+        "- Add a trailing comma to the last item in dictionaries and lists.",
+        "- Do not use `locals()` or `self.__dict__` for formatting strings.",
+        "- Format method call arguments with newlines if the call exceeds 80 characters.",
+        "- Break up parameter construction into separate variables rather than constructing them inline.",
+        "- Internationalize template strings before performing variable replacement.",
+        "- Use keyword parameters for multiple variables in internationalized strings.",
+        "- Create unit tests for every new feature.",
+        "- Add a failing unit test for bug fixes that previously lacked tests.",
+        "- Use the most specific exception possible when asserting raised exceptions.",
+        "- Do not test for generic `Exception` being raised.",
+        "- Use `assertIsNone` or `assertIsNotNone` instead of `assertEqual` with `None`.",
+        "- Use `assertEqual` or `assertNotEqual` instead of `assertTrue`/`assertFalse` with equality checks.",
+        "- Use `assertGreater`, `assertLess`, `assertGreaterEqual`, or `assertLessEqual` instead of `assertTrue`/`assertFalse` with comparison operators.",
+        "- Require `autospec`, `spec`, or `spec_set` in `mock.patch()` or `mock.patch.object()` calls.",
+        "- Use `assertIsInstance` instead of `assertTrue(isinstance(A, B))`.",
+        "- Use `assertIsInstance` instead of `assertEqual(type(A), B)`.",
+        "- Do not use the deprecated `assertRaisesRegexp`."
+      ],
+      "pipeline": "ac3ad3cfa8ad9475f24da2fe947c2d1188be975498892054d5d51a65512ed43f",
+      "file": "- Read and follow PEP 8 style guidelines.\n- Use only UNIX style newlines (`\\n`).\n- Wrap long lines in parentheses instead of using backslashes for line continuation.\n- Use specific exception types in `except` clauses (e.g., `except Exception:`) rather than bare `except:`.\n- Include your name in TODO comments (e.g., `# TODO(yourname)`).\n- Do not use author tags in source files.\n- Do not put vim configuration in source files.\n- Delay string interpolations at logging calls.\n- Do not import eventlet; use threading or asyncio instead.\n- Do not shadow built-in or reserved words.\n- Use `LOG.warning` instead of the deprecated `Log.warn`.\n- Import modules rather than objects, with specific exceptions for stdlib `collections.abc`, `types`, `typing`, third-party `sqlalchemy`, type hinting objects, and `i18n` function imports.\n- Do not import more than one module per line.\n- Do not use wildcard `*` imports.\n- Do not make relative imports.\n- Alphabetically order imports by full module path.\n- Organize imports into stdlib, third-party, and project groups, separated by blank lines.\n- Ensure docstrings do not start with a space.\n- End multi-line docstrings on a new line.\n- Start multi-line docstrings without a leading new line.\n- Start multi-line docstrings with a one-line summary followed by an empty line.\n- Split dictionary or list items with newlines if the object exceeds 80 characters.\n- Indent items in embedded iterables.\n- Add a trailing comma to the last item in dictionaries and lists.\n- Do not use `locals()` or `self.__dict__` for formatting strings.\n- Format method call arguments with newlines if the call exceeds 80 characters.\n- Break up parameter construction into separate variables rather than constructing them inline.\n- Internationalize template strings before performing variable replacement.\n- Use keyword parameters for multiple variables in internationalized strings.\n- Create unit tests for every new feature.\n- Add a failing unit test for bug fixes that previously lacked tests.\n- Use the most specific exception possible when asserting raised exceptions.\n- Do not test for generic `Exception` being raised.\n- Use `assertIsNone` or `assertIsNotNone` instead of `assertEqual` with `None`.\n- Use `assertEqual` or `assertNotEqual` instead of `assertTrue`/`assertFalse` with equality checks.\n- Use `assertGreater`, `assertLess`, `assertGreaterEqual`, or `assertLessEqual` instead of `assertTrue`/`assertFalse` with comparison operators.\n- Require `autospec`, `spec`, or `spec_set` in `mock.patch()` or `mock.patch.object()` calls.\n- Use `assertIsInstance` instead of `assertTrue(isinstance(A, B))`.\n- Use `assertIsInstance` instead of `assertEqual(type(A), B)`.\n- Do not use the deprecated `assertRaisesRegexp`.",
+      "file_tokens": 619,
+      "fingerprint": "fa448bbf8b5893a50bbce1b8a1e30058dd0a1e04697010542ed31fb4fc3e7a4f",
+      "computed_dtype": "bfloat16",
+      "provenance": {
+        "generated_at": "2026-10-07T09:56:57.196617+00:00",
+        "git": {
+          "commit": "05465f1445cdc9c4fff2d66b50c8479e824063a2",
+          "branch": "HEAD"
+        },
+        "python": "3.13.15",
+        "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+        "packages": {
+          "torch": "2.14.0+cu130",
+          "transformers": "5.17.0",
+          "peft": "0.20.0"
+        },
+        "slurm": {
+          "cluster": "tigris",
+          "job_id": "229779",
+          "account": "fl-mlm",
+          "partition": "tigris",
+          "node": "gh-a-108"
+        },
+        "gpu": {
+          "name": "NVIDIA GH200 480GB",
+          "total_gb": 102.01,
+          "peak_allocated_gb": 56.43,
+          "peak_reserved_gb": 56.68,
+          "cuda": "13.0"
+        }
+      }
+    }
+  },
+  "generator": "Qwen/Qwen3.6-27B@6a9e13bd6fc8f0983b9b99948120bc37f49c13e9|bfloat16|template={\"enable_thinking\": false}",
+  "budgeted_by": "Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242",
+  "pipeline": "ac3ad3cfa8ad9475f24da2fe947c2d1188be975498892054d5d51a65512ed43f",
+  "provenance": {
+    "generated_at": "2026-10-07T09:56:58.218416+00:00",
+    "git": {
+      "commit": "05465f1445cdc9c4fff2d66b50c8479e824063a2",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": "tigris",
+      "job_id": "229779",
+      "account": "fl-mlm",
+      "partition": "tigris",
+      "node": "gh-a-108"
+    },
+    "gpu": {
+      "name": "NVIDIA GH200 480GB",
+      "total_gb": 102.01,
+      "peak_allocated_gb": 56.43,
+      "peak_reserved_gb": 56.68,
+      "cuda": "13.0"
+    }
+  }
+}
