@@ -7,9 +7,8 @@ from pathlib import Path
 import pytest
 
 from sphragis.durable import (
-    append_record,
+    DurableLog,
     exclusive,
-    open_log,
     read_json_object,
     read_records,
     write_atomic,
@@ -51,10 +50,11 @@ def test_a_torn_tail_is_cut_off_and_reported(
 
 
 def test_appending_after_a_cut_leaves_a_readable_log(tmp_path: Path) -> None:
-    path = _log(tmp_path, WHOLE + b"\0" * 64)
-    read_records(path)
+    path = DurableLog(_log(tmp_path, WHOLE + b"\0" * 64))
+    path.read_text(encoding="utf-8")
     with path.open("a", encoding="utf-8") as handle:
-        append_record(handle, {"key": "a#3", "n": 3})
+        handle.write(json.dumps({"key": "a#3", "n": 3}) + "\n")
+        handle.flush()
     assert [r["n"] for r in read_records(path)] == [1, 2, 3]
 
 
@@ -73,12 +73,19 @@ def test_blank_lines_and_an_empty_log_read_as_before(tmp_path: Path) -> None:
     assert [r["n"] for r in read_records(path)] == [1, 2]
 
 
-def test_an_append_is_one_json_line(tmp_path: Path) -> None:
-    path = tmp_path / "log.jsonl"
+def test_a_durable_logs_flush_reaches_the_disk(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    synced: list[int] = []
+    real = os.fsync
+    monkeypatch.setattr("sphragis.durable.os.fsync", lambda fd: (synced.append(fd), real(fd)))
+    path = DurableLog(tmp_path, "log.jsonl")
     with path.open("a", encoding="utf-8") as handle:
-        append_record(handle, {"key": "a#1", "text": "ü\nnext"})
-    assert path.read_text(encoding="utf-8").count("\n") == 1
-    assert json.loads(path.read_text(encoding="utf-8")) == {"key": "a#1", "text": "ü\nnext"}
+        handle.write('{"key": "a#1"}\n')
+        before = len(synced)
+        handle.flush()
+        assert len(synced) == before + 1, "flush fsyncs the record"
+    assert read_records(path) == [{"key": "a#1"}]
 
 
 def test_an_atomic_write_replaces_whole_and_leaves_no_staging(tmp_path: Path) -> None:
@@ -90,10 +97,11 @@ def test_an_atomic_write_replaces_whole_and_leaves_no_staging(tmp_path: Path) ->
 
 
 def test_a_new_log_and_its_directory_are_made(tmp_path: Path) -> None:
-    path = tmp_path / "apache" / "raw" / "2025-01.partial.jsonl"
-    with open_log(path) as handle:
-        append_record(handle, {"key": "a#1"})
+    path = DurableLog(tmp_path, "apache", "raw", "2025-01.partial.jsonl")
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write('{"key": "a#1"}\n')
     assert read_records(path) == [{"key": "a#1"}]
+    assert path.read_text(encoding="utf-8") == '{"key": "a#1"}\n', "reads like a Path"
 
 
 def test_a_failed_atomic_write_keeps_the_old_file(
@@ -160,3 +168,38 @@ def test_a_json_record_is_written_whole_and_read_back(tmp_path: Path) -> None:
         path.write_bytes(bad)
         assert read_json_object(path) is None
     assert read_json_object(tmp_path / "missing.json") is None
+
+
+def test_a_durable_logs_close_reaches_the_disk_and_its_derived_paths_are_plain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    synced: list[int] = []
+    real = os.fsync
+    monkeypatch.setattr("sphragis.durable.os.fsync", lambda fd: (synced.append(fd), real(fd)))
+    log = DurableLog(tmp_path, "raw", "2025-01.partial.jsonl")
+    with log.open("a", encoding="utf-8") as handle:
+        handle.write('{"key": "a#1"}\n')
+        before = len(synced)
+    assert len(synced) > before, "closing without a flush still fsyncs the record"
+    sibling = log.with_name("2025-01.record.json")
+    sibling.write_text('{\n  "rows": 1\n}\n')
+    assert type(sibling) is not DurableLog and type(log.parent) is not DurableLog
+    assert sibling.read_text() == '{\n  "rows": 1\n}\n', "a sibling is never rewritten as a log"
+
+
+def test_appending_to_a_torn_log_repairs_it_first_and_close_always_closes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    log = DurableLog(_log(tmp_path, WHOLE + b"\0" * 10))
+    with log.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"key": "a#3", "n": 3}) + "\n")
+    assert [r["n"] for r in read_records(log)] == [1, 2, 3], "the new record is not lost"
+    handle = log.open("a", encoding="utf-8")
+
+    def failing(fd: int) -> None:
+        raise OSError("disk gone")
+
+    monkeypatch.setattr("sphragis.durable.os.fsync", failing)
+    with pytest.raises(OSError, match="disk gone"):
+        handle.close()
+    assert handle.closed

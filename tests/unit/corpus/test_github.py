@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -26,6 +27,7 @@ from sphragis.corpus.github import (
 )
 from sphragis.corpus.github_api import Gone
 from sphragis.corpus.rules import GITHUB_RULES
+from sphragis.durable import DurableLog
 
 PATCH = """@@ -2,7 +2,7 @@ def main():
  a = 1
@@ -483,7 +485,7 @@ def test_a_month_resumes_from_a_checkpoint_torn_by_a_hard_stop(tmp_path: Any) ->
             self.fetched.append(number)
             return super().pr_comments(repo, number)
 
-    checkpoint = tmp_path / "2025-01.partial.jsonl"
+    checkpoint = DurableLog(tmp_path, "2025-01.partial.jsonl")
     rows, record = collect_month("llvm", "2025-01", FakeAPI(), salt="s", checkpoint=checkpoint)
     whole = checkpoint.read_bytes()
     last = whole.rstrip(b"\n").rfind(b"\n") + 1
@@ -514,3 +516,24 @@ def test_a_resumed_month_asks_again_for_a_pr_that_failed(tmp_path: Any) -> None:
     assert "llvm/llvm-project#9" in {row["change_id"] for row in rows}
     _, replayed = collect_month("llvm", "2025-01", FakeAPI(), salt="s", checkpoint=checkpoint)
     assert replayed == record, "the recovered outcome, written after the failure, is the one read"
+
+
+def test_the_route_module_imports_no_storage_plumbing() -> None:
+    # GITHUB_RULES digests github.py's text, so any edit to it marks every GitHub month fetched
+    # so far as fetched under other rules. Durability lives in the checkpoint object instead.
+    import ast
+
+    from sphragis.corpus import github
+
+    tree = ast.parse(Path(github.__file__).read_text())
+    package = github.__name__.rsplit(".", 1)[0].split(".")
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported |= {alias.name for alias in node.names}
+        elif isinstance(node, ast.ImportFrom):
+            base = ".".join(package[: len(package) - node.level + 1]) if node.level else ""
+            module = ".".join(part for part in (base, node.module or "") if part)
+            imported |= {module} | {f"{module}.{alias.name}" for alias in node.names}
+    plumbing = {"sphragis.durable", "sphragis.corpus.storage"}
+    assert not imported & plumbing, "storage belongs to the checkpoint the caller passes"
