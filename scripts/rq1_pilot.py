@@ -102,6 +102,16 @@ parser.add_argument(
 )
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 parser.add_argument(
+    "--repetition-penalty",
+    type=float,
+    help="decode with this penalty; by default the checkpoint's generation config sets it",
+)
+parser.add_argument(
+    "--reuse-adapters",
+    action="store_true",
+    help="load an adapter already saved under --adapters instead of training it again",
+)
+parser.add_argument(
     "--dry-run",
     action="store_true",
     help="report the split and exit, before any model is loaded: runs on a login node",
@@ -217,6 +227,13 @@ class InProcessTrainer:
         self.losses: dict[str, list[float]] = {}
 
     def train(self, org: str, seed: int) -> str:
+        target = args.adapters / f"{org}-s{seed}"
+        if args.reuse_adapters:
+            if not (target / "adapter_config.json").exists():
+                raise SystemExit(f"--reuse-adapters: no saved adapter at {target}")
+            print(f"reusing {target}", flush=True)
+            self.reports[f"{org}-s{seed}"] = {"reused": str(target)}
+            return str(target)
         model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
             tok.pad_token = tok.eos_token
@@ -226,7 +243,6 @@ class InProcessTrainer:
         report = train_adapter(model, items, pad_token_id=tok.pad_token_id, seed=seed)
         epochs = int(TRAINING["epochs"])
         assert report.skipped_steps == 0, f"{org} s{seed}: {report.skipped_steps} steps skipped"
-        target = args.adapters / f"{org}-s{seed}"
         self.losses[f"{org}-s{seed}"] = list(report.losses)
         model.save_pretrained(target)
         self.reports[f"{org}-s{seed}"] = {
@@ -250,14 +266,20 @@ class InProcessTrainer:
 
 
 inference_dtypes: set[str] = set()
+repetition_penalties: set[float] = set()
 
 
 def generator_for(adapter: str | None) -> HFGenerator:
     gc.collect()
     torch.cuda.empty_cache()
     print(f"evaluating with {adapter or 'base'}", flush=True)
-    generator = HFGenerator(adapter_path=adapter, max_new_tokens=args.max_new_tokens)
+    generator = HFGenerator(
+        adapter_path=adapter,
+        max_new_tokens=args.max_new_tokens,
+        repetition_penalty=args.repetition_penalty,
+    )
     inference_dtypes.add(generator.computed_dtype)
+    repetition_penalties.add(generator.effective_repetition_penalty)
     return generator
 
 
@@ -297,6 +319,9 @@ for org in orgs:
                 bootstrap_seed=args.bootstrap_seed,
             )
         )
+        # A reused adapter was not trained here; its own run recorded the manipulation check.
+        if args.reuse_adapters:
+            continue
         checks.append(
             manipulation_check(
                 trainer.losses[f"{org}-s{seed}"],
@@ -328,6 +353,7 @@ args.out.write_text(
             "train_size": args.train_size,
             "bootstrap_seed": args.bootstrap_seed,
             "max_new_tokens": args.max_new_tokens,
+            "repetition_penalty": sorted(repetition_penalties),
             "corpora": summary,
             "training": trainer.reports,
             "verdict": verdict,

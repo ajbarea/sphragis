@@ -201,6 +201,8 @@ class HFGenerator:
     max_new_tokens: int = MAX_NEW_TOKENS
     # 0 is greedy, the registered decoder. Non-zero only for the decoding check.
     temperature: float = 0.0
+    # None leaves the checkpoint's own penalty in force (decoding_kwargs); recorded either way.
+    repetition_penalty: float | None = None
     seed: int = 0
     # The registered compute precision. Only the determinism check overrides it, to measure the
     # bf16 it replaced; a default that could not be overridden would make that job rewrite its
@@ -211,7 +213,7 @@ class HFGenerator:
 
     def __post_init__(self) -> None:
         self.tokenizer = _require_tokenizer(self.model_id)
-        self._decoding = decoding_kwargs(self.temperature)
+        self._decoding = decoding_kwargs(self.temperature, self.repetition_penalty)
         if self.temperature:
             torch.manual_seed(self.seed)
         # A multimodal checkpoint (the distiller's) loads through its image-text class; it is
@@ -238,6 +240,12 @@ class HFGenerator:
         self.computed_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
         # Every id decoding stops on: the model's generation config may name several (Qwen2.5
         # stops on both <|im_end|> and <|endoftext|>).
+        # The penalty decoding applies, read from the request or else the loaded config.
+        self.effective_repetition_penalty = float(
+            self._decoding.get("repetition_penalty")
+            or model.generation_config.repetition_penalty
+            or 1.0
+        )
         stops = model.generation_config.eos_token_id
         self._stops = {stops} if isinstance(stops, int) else set(stops or [])
         self._stops.add(self.tokenizer.eos_token_id)
