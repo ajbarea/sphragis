@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from sphragis.durable import append_record, read_records, write_atomic
+from sphragis.durable import append_record, open_log, read_records, write_atomic
 
 WHOLE = b'{"key": "a#1", "n": 1}\n{"key": "a#2", "n": 2}\n'
 
@@ -36,7 +36,7 @@ def test_a_torn_tail_is_cut_off_and_reported(
     path = _log(tmp_path, WHOLE + tail)
     assert [r["n"] for r in read_records(path)] == [1, 2]
     assert path.read_bytes() == WHOLE, "the next append must start a clean line"
-    assert f"cut {len(tail)} bytes" in capsys.readouterr().err
+    assert f", {len(tail)} bytes;" in capsys.readouterr().err
 
 
 def test_appending_after_a_cut_leaves_a_readable_log(tmp_path: Path) -> None:
@@ -47,12 +47,13 @@ def test_appending_after_a_cut_leaves_a_readable_log(tmp_path: Path) -> None:
     assert [r["n"] for r in read_records(path)] == [1, 2, 3]
 
 
-def test_an_unreadable_line_with_whole_records_after_it_raises(tmp_path: Path) -> None:
-    damaged = WHOLE + b"\0" * 16 + b"\n" + b'{"key": "a#3", "n": 3}\n'
-    path = _log(tmp_path, damaged)
-    with pytest.raises(ValueError, match="line 3"):
-        read_records(path)
-    assert path.read_bytes() == damaged, "damage that is not a torn append is left for a person"
+def test_zeros_inside_a_log_written_without_fsync_are_dropped(tmp_path: Path) -> None:
+    # ext4 can write a later block back before an earlier one, so a log appended without
+    # fsync can hold zeros with whole records after them; only the torn record is lost.
+    line3 = b'{"key": "a#3", "n": 3}\n'
+    path = _log(tmp_path, WHOLE + b"\0" * 16 + b'"n": 9}\n' + line3)
+    assert [r["n"] for r in read_records(path)] == [1, 2, 3]
+    assert path.read_bytes() == WHOLE + line3
 
 
 def test_blank_lines_and_an_empty_log_read_as_before(tmp_path: Path) -> None:
@@ -75,6 +76,13 @@ def test_an_atomic_write_replaces_whole_and_leaves_no_staging(tmp_path: Path) ->
     write_atomic(path, b"new")
     assert path.read_bytes() == b"new"
     assert sorted(p.name for p in tmp_path.iterdir()) == ["2025-01.ndjson.gz"]
+
+
+def test_a_new_log_and_its_directory_are_made(tmp_path: Path) -> None:
+    path = tmp_path / "apache" / "raw" / "2025-01.partial.jsonl"
+    with open_log(path) as handle:
+        append_record(handle, {"key": "a#1"})
+    assert read_records(path) == [{"key": "a#1"}]
 
 
 def test_a_failed_atomic_write_keeps_the_old_file(

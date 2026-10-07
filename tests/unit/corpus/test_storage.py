@@ -8,7 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from sphragis.corpus.storage import read_snapshot, snapshot_path, write_snapshot
+from sphragis.corpus.storage import (
+    read_snapshot,
+    snapshot_path,
+    unfinished_snapshot,
+    write_snapshot,
+)
 
 
 def test_snapshot_path_is_org_and_month_scoped(tmp_path: Path) -> None:
@@ -53,28 +58,65 @@ def test_overwrite_is_possible_only_when_asked_for_explicitly(tmp_path: Path) ->
     assert read_snapshot(path) == [{"a": 2}]
 
 
-def test_a_stop_before_the_snapshot_lands_leaves_the_month_unfetched(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    # The snapshot's presence marks a month fetched, so it lands last and whole: a stop
-    # before it leaves no snapshot, and the rerun writes both files without `overwrite`.
+def _stop_at_write(monkeypatch: pytest.MonkeyPatch, stop: int) -> None:
+    """Make a snapshot's `stop`-th write stop, as a hard stop there would."""
     from sphragis.corpus import storage
 
     real = storage.write_atomic
+    calls: list[Path] = []
 
-    def stop_at_snapshot(path: Path, data: bytes) -> None:
-        if path.name.endswith(".ndjson.gz"):
+    def stopping(path: Path, data: bytes) -> None:
+        calls.append(path)
+        if len(calls) == stop:
             raise KeyboardInterrupt
         real(path, data)
 
-    monkeypatch.setattr(storage, "write_atomic", stop_at_snapshot)
-    with pytest.raises(KeyboardInterrupt):
-        write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
-    assert not snapshot_path(tmp_path, "qt", "2024-11").exists()
-    monkeypatch.setattr(storage, "write_atomic", real)
-    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
-    assert read_snapshot(path) == [{"a": 1}]
+    monkeypatch.setattr(storage, "write_atomic", stopping)
+
+
+@pytest.mark.parametrize("stop", [2, 3])
+def test_a_stop_partway_leaves_a_new_month_unfinished_and_rewritable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stop: int
+) -> None:
+    with monkeypatch.context() as patched:
+        _stop_at_write(patched, stop)
+        with pytest.raises(KeyboardInterrupt):
+            write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    path = snapshot_path(tmp_path, "qt", "2024-11")
+    assert unfinished_snapshot(path)
+    if path.exists():
+        with pytest.raises(ValueError, match="did not finish"):
+            read_snapshot(path)
+    write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    assert not unfinished_snapshot(path) and read_snapshot(path) == [{"a": 1}]
     assert sorted(p.name for p in path.parent.iterdir()) == [
         "2024-11.ndjson.gz",
         "2024-11.record.json",
     ]
+
+
+@pytest.mark.parametrize("stop", [2, 3])
+def test_a_stop_partway_through_a_replacement_is_refused_until_refetched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stop: int
+) -> None:
+    # Old snapshot beside a new record (stop at 2) or new beside an open record (stop at 3):
+    # either way no record vouches for a snapshot it was not written with.
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={"rules": "old"})
+    with monkeypatch.context() as patched:
+        _stop_at_write(patched, stop)
+        with pytest.raises(KeyboardInterrupt):
+            write_snapshot(
+                tmp_path, "qt", "2024-11", [{"a": 2}], record={"rules": "new"}, overwrite=True
+            )
+    assert unfinished_snapshot(path)
+    with pytest.raises(ValueError, match="did not finish"):
+        read_snapshot(path)
+
+
+def test_a_record_from_before_the_marker_reads_as_finished(tmp_path: Path) -> None:
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    record_path = path.with_suffix("").with_suffix(".record.json")
+    record = json.loads(record_path.read_text())
+    del record["complete"]
+    record_path.write_text(json.dumps(record))
+    assert not unfinished_snapshot(path) and read_snapshot(path) == [{"a": 1}]

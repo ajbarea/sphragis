@@ -46,8 +46,9 @@ from sphragis.corpus.refine import RULES_VERSION, index_changes, refine
 from sphragis.corpus.rules import BUILD_RULES
 from sphragis.corpus.scrub import scrub
 from sphragis.corpus.split import seal_open, seal_path
-from sphragis.corpus.storage import read_snapshot, write_snapshot
+from sphragis.corpus.storage import read_snapshot, unfinished_snapshot, write_snapshot
 from sphragis.corpus.windows import WINDOWS
+from sphragis.durable import write_atomic
 
 STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "verify")
 
@@ -420,6 +421,10 @@ def _fetched_routes(root: Path, org: str) -> set[str]:
     raw = Path(root) / org / "raw"
     routes = set()
     for record_path in sorted(raw.glob("*.record.json")):
+        snapshot = record_path.with_name(record_path.name.replace(".record.json", ".ndjson.gz"))
+        if not snapshot.exists() and unfinished_snapshot(snapshot):
+            # A new month stopped before its snapshot landed: no route fetched anything here.
+            continue
         record = _read_record(record_path)
         if record is not None:
             routes.add(record.get("route") or "rest")
@@ -635,10 +640,8 @@ def _stage_refine(args: argparse.Namespace) -> int:
         totals.update(counts)
         kept_total += len(kept)
         target = out / path.name
-        tmp = target.with_suffix(".jsonl.tmp")
-        tmp.write_text("".join(json.dumps(r) + "\n" for r in kept))
         (out / path.name.replace(".jsonl", ".drops.json")).write_text(json.dumps(counts, indent=2))
-        os.replace(tmp, target)
+        write_atomic(target, "".join(json.dumps(r) + "\n" for r in kept).encode())
         # Written last: a refined month counts as current only once its examples have landed.
         write_source_record(Path(args.root), args.org, path, target)
     print(f"{args.org}: {kept_total} examples kept over {len(built)} months, {dict(totals)}")
@@ -877,9 +880,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         # an example.
         digest = snapshot_digest(snapshot)
         write_build_record(target, digest, complete=False)
-        staging = target.with_suffix(".jsonl.partial")
-        staging.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
-        staging.replace(target)
+        write_atomic(target, "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows).encode())
         write_build_record(target, digest, complete=True)
         drops.update(month_drops)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")

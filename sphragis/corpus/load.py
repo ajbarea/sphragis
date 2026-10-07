@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.rules import BUILD_RULES, FETCH_RULES, GITHUB_RULES, RULES_VERSION
-from sphragis.corpus.storage import snapshot_record_path
+from sphragis.corpus.storage import snapshot_record_path, unfinished_snapshot
 
 DERIVED = "derived.json"
 
@@ -186,6 +186,8 @@ def _stale_fetch(snapshot: Path) -> str | None:
     """
     if not snapshot.is_file():
         return None
+    if unfinished_snapshot(snapshot):
+        return "its fetch did not finish; fetch the month again"
     record = _read_json(snapshot_record_path(snapshot))
     if record is not None and record.get("route") == "github":
         # No GitHub month predates the digest, so a record without one fails closed.

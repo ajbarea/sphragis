@@ -54,9 +54,12 @@ current_projects=${current_projects% }
 
 for m in $MONTHS; do
   raw="$ROOT/$ORG/raw/$m"
-  # The record is written after the snapshot, so a snapshot without one is a partial write.
-  # A complete snapshot is immutable and is never refetched: build resumes from it.
-  if [ -s "$raw.ndjson.gz" ] && [ -s "$raw.record.json" ]; then
+  # The record is the completion marker: written open before the snapshot and closed after
+  # it, so a snapshot without one, or beside an open one, is a partial write. A complete
+  # snapshot is immutable and is never refetched: build resumes from it.
+  if [ -s "$raw.ndjson.gz" ] && [ -s "$raw.record.json" ] \
+    && python3 -c 'import json, sys; sys.exit(not json.load(open(sys.argv[1])).get("complete", True))' \
+      "$raw.record.json" 2>/dev/null; then
     recorded=$(python3 -c '
 import json, sys
 record = json.load(open(sys.argv[1]))

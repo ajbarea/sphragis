@@ -25,7 +25,7 @@ from typing import Any, Protocol
 from sphragis.corpus.github_api import Gone, order_commits
 from sphragis.corpus.rules import GITHUB_RULES
 from sphragis.corpus.scrub import pseudonym, scrub
-from sphragis.durable import append_record, read_records
+from sphragis.durable import append_record, open_log, read_records
 
 # Accounts that are AI coding agents or AI reviewers without GitHub's `Bot` type. Registered and
 # versioned with the route: the population changes month to month, and a login on it is treated
@@ -526,7 +526,7 @@ def collect_month(
     if checkpoint is not None and checkpoint.is_file():
         for entry in read_records(checkpoint):
             done[entry["key"]] = entry
-    log = checkpoint.open("a", encoding="utf-8") if checkpoint is not None else None
+    log = open_log(checkpoint) if checkpoint is not None else None
     outcomes: list[dict[str, Any]] = []
     listed = 0
     try:
