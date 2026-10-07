@@ -183,6 +183,13 @@ Before Stage 1 (2026-11-20), each registered before the seal:
 - [ ] **Pin the checkpoint revisions** (pins done: `model.MODEL_REVISIONS`, every load pinned; still to do: the checkpoint date and the disclosure table below; the Qwen repos changed config and
   tokenizer files on 2024-11-18) to the revision the pilots ran on, and cite the weight-upload
   commit as the checkpoint date; adopt a contamination disclosure table (arXiv:2608.29463).
+- [ ] **AI-assisted pull requests on the GitHub family**: the route drops accounts typed `Bot` and
+  the logins in `github.AGENT_LOGINS`, which misses agents that commit under a developer's account
+  (an agent `Co-Authored-By:` trailer, Cursor's `cursoragent` committer). The raw rows carry no
+  commit messages, so, as `ai_trailers.py` does on Gerrit, read each member's trailers and
+  committers after collection and report its H1 cell without those changes as a sensitivity;
+  `GITHUB_RULES` and the frozen months stay as they are. Stage 1 states detection at the login
+  level only.
 - [ ] **AI-assisted targets**: flag an example whose successor commit carries `Assisted-by`,
   `Generated-by` or an agent `Co-authored-by` trailer (OpenInfra's AI policy requires them) or an
   agent committer; report the share per organization, window and half, and an estimate without

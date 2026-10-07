@@ -23,7 +23,7 @@
 # request overlapping the monthly 08:00-20:00 maintenance reservation will not schedule.
 set -euo pipefail
 
-# MODE=pilot|windows, e.g. `sbatch --export=ALL,MODE=windows scripts/rq1_pilot.sbatch`.
+# MODE=pilot|windows, e.g. `sbatch --export=ALL,MODE=windows scripts/rq1.sbatch`.
 # pilot holds out changes at random from a single month, which measures that the apparatus
 # runs. windows trains on the train window and evaluates on dev, which is the study's own
 # split; the test window stays sealed and split_by_window refuses to name it.
