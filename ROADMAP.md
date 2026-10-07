@@ -5,7 +5,9 @@ down -- is learnable from the code it reviews,
 and what a declared boundary protects once it can. It is the apparatus for the Federated Agents
 research direction: RQ1 is a go/no-go gate, RQ2 the leakage study that follows it.
 
-**Design of record:** `docs/superpowers/specs/2026-09-13-gerrit-review-corpus-harness-design.md`
+**Design of record:** RQ1's design is `docs/superpowers/specs/2026-09-22-granularity-redesign.md`, with the
+repeated partitions of `2026-09-29-repeated-partitions-design.md`; the corpus harness is
+`2026-09-13-gerrit-review-corpus-harness-design.md`.
 **Deadline that sets the order:** MSR 2027 Registered Reports Stage 1, **2026-11-20**, with the
 abstract a week earlier on **2026-11-13** (read from the call, 2026-09-18). PC reviews come
 2026-12-23, the response letter and revision 2027-01-15, Stage 1 notification 2027-02-04, the
@@ -24,9 +26,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   after acceptance that touches the protocol is recorded with its date and reason.
 - Stage 1 review is not double-anonymous: the track chair confirmed it by email on 2026-09-18,
   and is correcting the submission site, which was set for blind submissions. The artifact link
-  may therefore identify the author and no anonymized mirror is needed. Whether this repository
-  is public at submission is a separate decision, and the report needs a link a reviewer can
-  open.
+  may therefore identify the author and no anonymized mirror is needed. The repository is public;
+  the artifact link is its GitHub URL (and the Zenodo DOI once minted).
 - Generative-AI use must be disclosed in the paper, so it is logged as the work happens.
 
 ---
@@ -87,15 +88,16 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
   older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).
 - [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
-  (deleted or made private after the snapshot listed them) are counted `change_gone` and never
+  (deleted or made private after the snapshot listed them) are counted `comment_error` and never
   built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
   release, or keep raw internal for reproducibility and exclude it from every release. Ground the
   choice in MSR ethics guidance (Gold and Krinke, "Ethics in the mining of software repositories", EMSE 27, 2022, doi:10.1007/s10664-021-10057-7) before deciding.
   The same rewrite would also re-scrub the raw snapshots' Gerrit account numbers (next item), so
   the two are one decision about rewriting raw snapshots.
-- [ ] **With the next build-rules change: count a 404 as `change_gone`** (`gerrit.NotFound`, caught
-  apart from `comment_error` in `build_from_change`; written and tested 2026-10-01, held back because
-  any `build.py` edit stales every frozen corpus month).
+- [ ] **With the next build-rules change: count a 404 as `change_gone`**, apart from
+  `comment_error`, which counts it today (`build_from_change` drops any failed comments fetch under
+  `comment_error`). The patch is not committed and has to be written again; any `build.py` edit
+  stales every frozen corpus month.
 - [ ] **With the next build-rules change: scrub Gerrit account numbers that are not `_account_id`
   values** (`scrub.py` is in `BUILD_SOURCES`). Attention-set entries are keyed by the raw account
   number and their `reason` text carries `<GERRIT_ACCOUNT_n>`; `scrub` replaces `_account_id`
@@ -133,7 +135,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 ## Plan B — measurement
 
 - [x] `score` — exact match binds the pass rule; normalized EM and edit similarity reported.
-- [x] `stats` — pairs cluster bootstrap over changes; `gate_verdict` is the pass rule as code.
+- [x] `stats` — pairs cluster bootstrap over changes; `gate_verdict` is the pass rule as code
+  (superseded 2026-09-22 by `decomposition.h1_test_gate`).
 - [x] `contamination` — Min-K%++ (base checkpoint), guided completion (Instruct model), time
   partition, each post-versus-pre. Min-K% had been implemented under the Min-K%++ name; fixed.
 - [x] **Battery run on real data** (2026-09-15), OpenStack 2024-10 against a 2024-01 control.
@@ -177,7 +180,9 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   and the battery's model-less baseline beats Min-K%++ here; protection rests on provenance.
   Score only target tokens given context; Min-K%++ is read as exposure only above the blind
   baseline.
-- [ ] **Pre-cutoff code through cherry-picks and backports**: look each target's added lines up
+- [ ] **Pre-cutoff code through cherry-picks and backports** (the bounded dev-window share landed
+  2026-10-06: `backport_share.py`, `backport-share.json`, read beside H1 in
+  `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches remains): look each target's added lines up
   in every branch as it stood at the checkpoint's weight upload, report the rate and a
   sensitivity estimate without them (infini-gram mini, arXiv:2506.12229, as exact-lookup practice).
 - [ ] **Pin the checkpoint revisions** (pins done: `model.MODEL_REVISIONS`, every load pinned; still to do: the checkpoint date and the disclosure table below; the Qwen repos changed config and
@@ -190,7 +195,9 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   committers after collection and report its H1 cell without those changes as a sensitivity;
   `GITHUB_RULES` and the frozen months stay as they are. Stage 1 states detection at the login
   level only.
-- [ ] **AI-assisted targets**: flag an example whose successor commit carries `Assisted-by`,
+- [ ] **AI-assisted targets** (development windows landed 2026-10-06: `ai_trailers.py`,
+  `ai-trailers.json`, read beside H1 in `partition-pilot-*-sensitivities.json`; the test window's
+  listing follows the unsealing, and the GitHub pilot months remain): flag an example whose successor commit carries `Assisted-by`,
   `Generated-by` or an agent `Co-authored-by` trailer (OpenInfra's AI policy requires them) or an
   agent committer; report the share per organization, window and half, and an estimate without
   them (a lower bound, trailers being voluntary). Measured first on the GitHub pilot months.
@@ -254,7 +261,8 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   CodeReviewer's evaluation code does); a descriptive specification curve (Cassee and Feldt,
   arXiv:2512.08910); ADEMP for the simulations; the 2026 LLM-in-SE guidelines checklist
   (arXiv:2508.15503); background on industrial comment resolution and retrieval vs fine-tuning.
-- [ ] **An open-weight label-audit rater** at pinned weights beside the two API raters.
+- [x] **An open-weight label-audit rater** at pinned weights beside the two API raters (2026-10-02,
+  `label-audit-v2-open-rater-labels.json`).
 
 From the lab meeting of 2026-10-02 (Dr. Reznik's questions), carried as directions, not Stage 1 work:
 
@@ -535,9 +543,9 @@ adaptation" and "a blind instrument".
 - [x] **A tagless submission can no longer destroy a result.** Job 148093 was submitted without
   `RUN_TAG`, so its output and adapters overwrote the first windowed run's on the cluster; that
   result survived only because it was committed. Remembering the tag is not a fix, so every job
-  now takes its output through `result_path` in `cluster-env.sh`, which stops the job before the
+  now takes its output through `claim_result` in `cluster-env.sh`, which stops the job before the
   queue time if the file exists and takes `OVERWRITE=1` to replace one deliberately. A test holds
-  all eleven sbatch scripts to it. The guard found its first live case the day it landed: the
+  every sbatch script to it. The guard found its first live case the day it landed: the
   geometry and projection jobs named their output after `RUN_TAG` while `PATTERN` chose the
   input, so the 128-example run would have overwritten the 64-example geometry every committed
   RQ2 number rests on. Those two now name the output after the adapters they read.
@@ -686,8 +694,8 @@ as the unit; the evidence says the codebase is.
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
   analysis at the half size on corpus v2 for OpenStack (2026-09-27).
-- [ ] The sensitivity analysis for every other admitted organization: Wikimedia's is queued on
-  TIGRIS.
+- [x] The sensitivity analysis for every other admitted organization (Wikimedia's:
+  `partition-sensitivity-wikimedia.json`).
 - [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
 - [ ] The C++-restricted estimand beside H2.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
@@ -769,8 +777,6 @@ of 3 on output that was 3 of 3 right. `score()` now scores extracted code and re
 `exact_match_raw` beside it. This changes the primary metric's definition and is therefore
 a Stage 1 pre-registration item, not an implementation detail.
 
-Plan C is the only part needing a GPU, and the only part needing collected data.
-
 ## Completed
 
 - **2026-10-07** — The rules-file comparator read on the development window: 22 distillations (Qwen3.6-27B) and 22 `ARMS=rules` evaluations at 05465f1; distilled own minus sibling carries no contrast as large as the SESOI on either organization (research log).
@@ -806,56 +812,8 @@ Plan C is the only part needing a GPU, and the only part needing collected data.
 
 ## Registered decisions
 
-Each of these is fixed before the seal opens and stated in the Stage 1 report. Every one is
-recorded with the evidence that chose it, so a reader can check the choice rather than take
-it. Changing one after the test window is fetched is a protocol deviation and has to be
-declared as one.
-
-| decision | registered | why |
-|---|---|---|
-| **Estimand** | pooled (`paired_difference`) | Cluster size is non-informative here: correlation with the outcome is -0.052 and -0.019, with the per-change effect -0.025 and +0.004, so the two estimands do not answer materially different questions (Kahan et al., IJE 2023, make this the deciding test). RQ1 is a claim about refinements, so the participant-average is the matching unit. And change-averaged runs at roughly twice nominal alpha at 48-91 changes where pooled sits at nominal, which disqualifies it from binding a confirmatory gate. Both are computed and reported. **Tested on 2026-09-18**: under fp32 at three seeds, pooled returns mixed and change-averaged returns a pass on both organizations, so the choice decides the headline. It was fixed before that run existed. |
-| **Rebase edits** | kept in the primary label on every organization; the test window records Gerrit's `due_to_rebase` per hunk, and H1 and H2 are re-read with those hunks removed as a registered sensitivity analysis (2026-09-24) | One rule for every organization: the stored REST snapshots hold neither the flag nor patch-set parents, so a drop could not reach the held training corpora without refetching from hosts that disallow it. The git route attributed none of 60 rebased AOSP examples' hunks to the rebase. Rebasing is handled rather than filtered, as Paixão and Maia (SCAM 2019) ask of review-mining studies. The record sits beside the build output, since a build-code change unseals every stamped month. |
-| **Hypotheses** | H1, the half-split contrast, on every admitted organization; H2, the organization beyond the evaluated projects, on Qt and Chromium against each other when both are admitted (2026-09-22, superseding the organization-only H1; cells a rule over admitted organizations since 2026-09-27) | A single-level test cannot tell a project effect from an organization effect. H2 is confirmatory only on the language-matched pair. Spec `2026-09-22-granularity-redesign.md`. |
-| **Pass rule** | each hypothesis an intersection-union test over its cells, strictly above zero; Holm across the two at one-sided 0.025 (97.5%, then 95%); a cell is bounded when its upper bound lies below its registered detectable effect, and the 0.01 SESOI is reported beside it (2026-09-22; bound amended 2026-09-24) | Supersedes "conjunctive: both organizations' 95% intervals strictly above zero". The generality argument for requiring every cell stands; Holm dominates Bonferroni. No cell can read inside ±0.01 at the test window's size, so a negative reading is claimed against the effect the design detects (Lakens, Scheel and Isager 2018), at which a true null reads bounded about as often as that effect reads supported. |
-| **Rank 256** | the whole grid, supplementary, never changes a verdict; a negative reading needs bounded at both ranks (2026-09-22) | The branch fired only when neither arm excluded zero, so a per-arm capacity artefact went unchecked, and it left open a second look that could turn a fail into a pass. |
-| **Boundary** | strictly above zero (`>`) | Not a formality: on the unequalized pilot Qt's pooled lower bound is exactly `0.0` in 19 of 20 bootstrap seeds, so `>=` would have read that run as supporting the hypothesis. It decided a second verdict on 2026-09-18, when OpenStack's fp32 lower bound came out at exactly 0.0. |
-| **Reported power** | conjunctive, not marginal | The gate passes only when both arms do, so its power is the joint probability, which for near-independent arms is the product: two arms at 80% give a gate at 64%. Section 5 had been stating two marginal figures. The figure itself is now a sensitivity analysis: the 0.833 computed at the windowed run's own effects is withdrawn, since power from a pilot's estimate is biased upward. |
-| **Test window** | 2025-11 to 2026-10, twelve months | Twelve months buys more changes for 0.4 points of additional differential censoring (0.36 to 0.75), still a twelfth of what the dev window carries. The figures that chose it, 0.757 against 0.833, are superseded as absolute power (see **Reported power**); the comparison between ten months and twelve is what the choice rested on. Set before any test data exists: 2026-10 closes before the 2026-11-20 submission. |
-| **Fetch horizon** | no earlier than three months after the window's final month | Makes the confirmatory contrast's low censoring a protocol guarantee rather than an accident of when acceptance landed. 2026-10 plus three is 2027-01; MSR 2027 notifies 2027-02-04, so the horizon binds only if acceptance comes early, in which case the answer is to accept more censoring rather than fetch sooner. |
-| **Contamination** | Min-K%++ on the base checkpoint is primary; the time partition is corroborative only | Temporal decay is not dependable contamination evidence (Zhang et al., ACL 2026): item construction distorts it independently of the source. Identical construction across windows answers their specific confound, not the confound with ordinary distribution shift. |
-| **Guided completion** | reported as a null instrument | At its floor under both criteria the literature offers: 0 of 55 hunks verbatim, and edit similarity 0.380 against 0.387, a gap of -0.007 [-0.118, +0.085]. Swapping criteria until one separates is what pre-registration exists to prevent. |
-| **Contamination scored text** | the hunk with three context lines either side | Bare hunks put only about 20% of a deduplicated month over the 32-token minimum (35 of 172, 28 of 133), too few to read. With context the scored share rose to 94% and 87%, and on the six-month windows to 1,971 and 2,503 examples. The same text is what the model-less baseline was run on, so the two are directly comparable. |
-| **Secondary estimate** | pooled across organizations, reported beside the gate, never binding it | The gate asks whether each organization shows the effect, which is what generality needs and what limits the resolution. The pooled estimate answers the weaker question, whether organizations show the effect on average, and is sharper for it: +0.0260 [+0.0090, +0.0440] over 697 dev changes against 0.74 and 1.28 effect-to-half-width alone. It cannot bind the gate, since one organization could carry it and two organizations cannot support a heterogeneity model. |
-| **Leakage threshold** | 2% at Jaccard >= 0.7 | Must clear the measured train-into-dev rate, 1.06% for OpenStack and 0.42% for Qt. At J >= 0.8 both are 0.0000 by construction, because dedup removes pairs at that threshold across windows, so registering there is a test that cannot fail. |
-
-**Decided by the measurements their rules named in advance.**
-
-| decision | decided by | rule |
-|---|---|---|
-| **Interval the gate reads** | coverage and the seed runs | **The crossed seed x change interval.** It holds nominal where the median-seed rule reaches 0.122 two-sided, and costs no width at the measured seed effect. |
-| **Seed count** | the seed main effect in RQ1's own setting | **Three**, by the rule fixed before the runs: the effect is 0.000 with a one-sided 95% upper bound of 0.0098, at or below the 0.01 where three seeds stop holding nominal. The null at 1,800 training examples gives 0.013, which is not the registered setting. |
-| **Stated power** | sensitivity, not power at an observed effect | **The design detects between 1.3 and 2.4 exact-match points**, bracketing the seed effect's own uncertainty: +0.0160 and +0.0129 at its point estimate, +0.0235 and +0.0211 at its upper bound at three seeds and the seed effect's upper bound, for a conjunctive gate near 0.80 (`sensitivity-b0.0098.json`). Power from a pilot's own estimate is biased upward (Albers and Lakens 2018), so the 0.833 figure is withdrawn. Qt's dev-window effect is above its threshold and OpenStack's below, which is the mixed verdict the dev window gave. |
-| **Inference numerics** | `determinism_check` across jobs and nodes | **fp32**, weights upcast exactly from bf16: it reproduces on 150 of 150 predictions across two jobs on different nodes, where bf16 differs on 5 to 7 and on up to 2 within one process. |
-
-**A sharper RQ1 is now available, and it is AJ's call.** The dev window says the two organizations
-differ in kind: Qt's projects all lean the same way, OpenStack's disagree in sign. That suggests
-replacing "is an organization's house style learnable" with "what unit carries it, and what
-makes an organization one". RQ2 has since measured the second half directly: AOSP behaves as a
-coherent unit in update space and Qt does not, but four candidate mechanisms for that difference,
-each registered before its test, were refuted (pairwise and centroid coherence, shared people,
-shared code conventions). So the sharpened question is answerable and its answer is not yet
-known, which is a better position for a registered report than a question whose only reachable
-answer is "mixed".
-The apparatus already measures both altitudes, RQ2's client updates point the same way, and the
-test window is still sealed, so the question can be sharpened at no cost to pre-registration. My
-recommendation is to sharpen it: the current phrasing can only return "mixed" on a federation, and
-mixed is the least informative outcome the design can produce. Against it: the registered question
-is the one the proposal was written around, and a reframing costs a rewrite of sections 1 and 3.
-
-**Open, and genuinely a question about the claim rather than the statistics.** Whether RQ1
-asserts "an organization's house style is learnable" (conjunctive, as registered above) or
-"this organization does" (per-organization, higher power, weaker claim). Everything above
-assumes the first, which is what the research question as written says.
+Every registered decision, with the evidence that chose it, is on the docs site:
+[`docs/registered-decisions.md`](docs/registered-decisions.md).
 
 ## Study invariants
 
@@ -880,6 +838,6 @@ Sphragis is the Federated Agents apparatus. It does not vendor the others.
 | `pharos` | The disclosure-measurement methodology this study reuses on real rather than generated data. Cited. |
 | `papers` | `org-house-style/` holds the Stage 1 report. LINEAGE row P4. |
 
-`provenance.py` is copied from phalanx-fl, not imported. Twelve lines of standard library is
+`provenance.py` is copied from phalanx-fl, not imported. A short standard-library module is
 the wrong thing to take a cross-repo dependency for, especially on a repo whose stated
 invariant is to ride the latest Flower while this one must stay reproducible.

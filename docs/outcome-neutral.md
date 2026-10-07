@@ -33,8 +33,8 @@ for the checkpoint, a post-versus-pre difference near zero means either no expos
 instrument blind to it, and the reading is pre-committed in the report rather than computed:
 it is reported as an inconclusive exposure bound, never as evidence of absence.
 
-Measured on six months each side, every membership statistic separates the windows by less
-than a tenth of a point:
+Measured on six months each side, every membership statistic separates the windows by at
+most 0.13:
 
 | statistic | gap |
 |---|---|
@@ -102,7 +102,7 @@ with each half's own comment marker planted in half of its training refinements 
 condition on them would depend on the outcome.
 
 Planted on every refinement of one half, a convention returns +0.310 and +0.316 over the two
-sides, about ten times what the two real organizations differ by, so the contrast can see a house
+sides, about fifteen times what the two real organizations differ by, so the contrast can see a house
 style of that size. Its strength was measured before it was registered, on OpenStack's first ten admissible
 partitions under a rule fixed before the runs: planted in a quarter of the refinements it would
 have halted a working apparatus most of the time, and planted in half it passed every run

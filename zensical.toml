@@ -16,6 +16,7 @@ nav = [
   { "Registered decisions" = "registered-decisions.md" },
   { "Outcome-neutral tests" = "outcome-neutral.md" },
   { "Artifact index" = "artifacts.md" },
+  { "Scripts" = "scripts.md" },
   { "Research log" = ["log/index.md"] },
 ]
 

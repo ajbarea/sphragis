@@ -24,30 +24,35 @@ than as a system contribution. It is the code behind an MSR 2027 Registered Repo
 
 ## The question
 
-**RQ1.** Is there measurable **organization-specific adaptation** in code review? That is:
-does a LoRA adapter trained on one organization's review history outperform, on that
-organization's held-out refinements, an adapter trained on a different organization's review
-history?
+**RQ1.** At what boundary does learned house style transfer in code review: the project, the
+organization that contains it, or neither? A LoRA adapter is trained on some of an
+organization's projects. How much of what it learns applies to the organization's other
+projects, and how much of that is lost again at the organization's boundary?
 
-The hypothesis is directional and stated per organization. For organization `O` with
-counterpart `O'`:
+A *run* splits each organization's projects into two halves and trains one adapter per half.
+For a refinement from half `a` of organization `O`, three adapters are scored on the same
+example: `O_a`, trained on its own half; `O_b`, trained on the sibling half of the same
+organization; and `P_x`, trained on a half of a foreign organization `P`. `O_b` and `P_x` have
+not seen the evaluated projects, and they differ only in whether they come from the same house.
+With `EM` exact match, pooled over examples:
 
 ```text
-g(O) = EM(adapter_O  on O_test)
-     - EM(adapter_O' on O_test)
-
-H1: g(O) >  0
-H0: g(O) <= 0
+d_proj(O) = EM(O_a) - EM(O_b)      H1 (half-split):                       d_proj(O) > 0
+d_org(O)  = EM(O_b) - EM(P_x)      H2 (organization beyond its projects): d_org(O)  > 0
 ```
 
-`EM` is exact match, aggregated per change. The hypothesis is tested independently for
-OpenStack and for Qt.
+Each contrast is the mean of its two halves' contrasts within a run, then the mean over the
+organization's K runs, each on its own admissible split. H1 is tested for every admitted
+organization. H2 is confirmatory for Qt against Chromium and Chromium against Qt when both are
+admitted, the one pair that writes the same language, so the organizational boundary is not also
+a language boundary. Every other organization's `d_org` is reported as exploratory. The cells are
+defined by `design` in
+[`sphragis/experiment/decomposition.py`](https://github.com/ajbarea/sphragis/blob/main/sphragis/experiment/decomposition.py).
 
-Both outcomes are informative and neither is argued for. Support for `H1` in both
-organizations establishes that an organization-level signal exists and is learnable, which is
-the premise the wider direction requires. Failure to support it means the premise does not
-hold at this unit of analysis under this design, and the report pre-commits what the
-direction becomes in that case.
+Both outcomes are informative and neither is argued for. The report fixes what every
+combination of H1 and H2 outcomes means before any test data exists. The question was first
+registered at the organization level, as OpenStack against Qt; the
+[research log](log/index.md) records why it was re-registered at this one.
 
 ## What the question is not
 
@@ -88,7 +93,8 @@ comments, deduplicated, pseudonymised at ingestion, and split into windows by ch
 confirmatory cells are Gerrit organizations (OpenStack and Wikimedia admitted; Qt and Chromium on
 permission); GitHub organizations, collected through an adapter that shapes pull requests as
 Gerrit changes, are a registered replication family read beside them ([registered
-decisions](registered-decisions.md)). The table below is the original OpenStack and Qt pilot.
+decisions](registered-decisions.md)). The table below holds the tracked corpus-v3 manifests of
+OpenStack and Qt.
 
 The scrub replaces Gerrit account objects and sweeps addresses out of review comment text. It
 leaves the diff payload alone on purpose, because rewriting anything in the source that merely
@@ -114,7 +120,8 @@ and the share of such examples grows from the training window to the development
 
 The test window is defined and hash-sealed now and fetched only after in-principle
 acceptance, no earlier than three months after the window's final month. Its content hash in
-both frozen manifests is the hash over no content:
+the tracked manifests is the hash over no content. Wikimedia is frozen on corpus v3 as well, and its
+manifest is not tracked; its window sizes are in `window-report-wikimedia-v3.json`:
 
 ```text
 openstack  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -141,6 +148,17 @@ development window's 206 changes:
 The development window holds about a tenth of the test window's projected changes, so an inconclusive
 reading here says the design needs the test window, not that the effect is absent.
 
+Wikimedia's H1 cell, over K = 16 admissible partitions, also reads inconclusive at both levels
+(`partition-pilot-wikimedia-k16.json`).
+
+Two comparators are read on the development window over the first ten admissible partitions of
+each organization, as exploratory readings that bind no verdict. A few-shot retrieval arm
+(`retrieval-reading-*.json`) reads inconclusive on own half against sibling half for
+both organizations at both pool sizes. A rules-file arm, a distilled rules file and a written
+guide placed in the system turn (`rules-reading-*.json`), carries no own-minus-sibling
+contrast as large as the smallest effect of interest on either organization. The figures are in
+the [artifact index](artifacts.md) and the [research log](log/index.md).
+
 ## What is on this site
 
 - [Registered decisions](registered-decisions.md): every choice fixed before the seal opens,
@@ -148,6 +166,7 @@ reading here says the design needs the test window, not that the effect is absen
 - [Outcome-neutral tests](outcome-neutral.md): what has to hold for the study to be
   interpretable at all, and the pilot evidence that each one can fire.
 - [Artifact index](artifacts.md): every committed measurement, and the script that wrote it.
+- [Scripts](scripts.md): how the jobs fit together, and the order the H1 reading runs in.
 - [Research log](log/index.md): the dated record, including the readings that were
   withdrawn and why.
 
