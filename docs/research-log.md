@@ -8272,3 +8272,41 @@ refuses the sealed test window, as the runner does. `ai_trailers.py --through-te
 through the test window to the day of the fetch and tallies it, but only once every seal records
 acceptance, so the test window's listing follows the unsealing.
 
+### The rules-file comparator read: no rules file carries a half-split contrast (2026-10-07)
+
+The 44 TIGRIS jobs pinned at 05465f1, every one completed (logs in `datasets/logs/`): 22
+distillations, 229778 and 229779 the written guides and 229780 to 229799 the first ten admissible
+partitions of each organization (19.2 GH200-hours, 40 to 85 minutes a partition), and 22
+`ARMS=rules` evaluations, 229800 to 229821, each queued behind the files it reads (12.0
+GH200-hours). Read by `retrieval_read.py --arms rules` (`rules-reading-openstack.json`,
+`rules-reading-wikimedia.json`) with the retrieval foreign jobs as the base arm. The adapters'
+row reproduces the retrieval read's exactly, so both reads cover the same partitions and
+examples. Generated from the artifacts:
+
+| contrast, 95% | openstack | wikimedia |
+|---|---|---|
+| distilled own minus sibling (read) | +0.0019 [-0.0033, +0.0072] | -0.0006 [-0.0040, +0.0023] |
+| distilled sibling minus foreign | -0.0021 [-0.0109, +0.0068] | -0.0005 [-0.0059, +0.0047] |
+| distilled own minus none | -0.0105 [-0.0215, +0.0006] | -0.0013 [-0.0074, +0.0043] |
+| written own minus written foreign | -0.0039 [-0.0147, +0.0065] | +0.0056 [+0.0012, +0.0116] |
+| written own minus none | -0.0112 [-0.0230, +0.0013] | +0.0011 [-0.0051, +0.0073] |
+| distilled own minus written own | +0.0008 [-0.0075, +0.0082] | -0.0024 [-0.0070, +0.0012] |
+| adapters own minus sibling | +0.0082 [-0.0086, +0.0244] | +0.0022 [-0.0130, +0.0182] |
+
+**By the rule fixed before the run, distilled own minus sibling carries no contrast as large as
+the SESOI on either organization**: both intervals sit inside the SESOI band (0.01), and they are
+narrower than the retrieval arm's or the adapters'. Reported, not read: neither a distilled file
+nor the written guide lifts exact match over the base model (OpenStack's estimates are near minus
+the SESOI, intervals touching zero); a file from the organization's other half does no better than
+the other organization's; and the distilled and written files score alike. The one interval clear
+of zero is Wikimedia's written own minus written foreign, +0.0056, below the SESOI. The adapters'
+own minus sibling stays inconclusive, so the plan's question (does any file carry a contrast the
+adapters carry) has no adapter contrast to compare against on the development window; what the
+read does show is that a rules file in the system turn moves the 7B model's revisions by less than
+the SESOI. Exploratory: nothing here binds a verdict, and the test window stays sealed.
+
+Nineteen logs carry one tokenizer notice, a 45,388-token sequence against the model's 32,768:
+every Wikimedia partition's distillation and evaluation but partition 5's, and OpenStack's foreign
+evaluation, which builds Wikimedia's pools. `build_supervised` tokenizes each example whole before refusing any over 2,048
+tokens, so that example is left out of the pools as it is out of the adapters' training sets, and
+no model reads it. Some retrieval jobs' logs carry the same notice.

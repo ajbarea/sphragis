@@ -1,0 +1,281 @@
+{
+  "source": "guide",
+  "org": "wikimedia",
+  "guide": [
+    {
+      "title": "Manual:Coding conventions",
+      "revision": 8372748,
+      "sha256": "2f79f374dea847eb66cc2b9d8dbb4595105e393a2d81ce2d472a85f9db289fd3"
+    },
+    {
+      "title": "Manual:Coding conventions/Documentation",
+      "revision": 7987515,
+      "sha256": "0d8f6d69904e05db05d86bae61abee347c4aa25e96a2cb48f008e8aae78b7e7c"
+    },
+    {
+      "title": "Manual:Coding conventions/PHP",
+      "revision": 8551549,
+      "sha256": "7d46265cc0a2b5f64e90e4ce33f845aa2c83a0ab4b46606ecab4e34c3725b2e1"
+    },
+    {
+      "title": "Manual:Coding conventions/JavaScript",
+      "revision": 8559680,
+      "sha256": "8ace8dfd9e4581162f3ade4bdc74fc764bda220631ce9b50338e6081e1ac5b1b"
+    },
+    {
+      "title": "Manual:Coding conventions/Vue",
+      "revision": 7987507,
+      "sha256": "ed0d95583355d39c99646b6ee456c9f18c814874d275eeaabe4613dfa1d7d86f"
+    },
+    {
+      "title": "Manual:Coding conventions/Python",
+      "revision": 8562015,
+      "sha256": "431e025bfa8d5d30c089e2ad2170c0e615370d3458491fb954e48b254d1f3fe0"
+    },
+    {
+      "title": "Puppet/Coding and style guidelines",
+      "revision": 2337421,
+      "sha256": "f2f95804e613957d15b25a847200269f54e65ea14fc4685cfeccef7e117641b8"
+    },
+    {
+      "title": "Manual:Coding conventions/CSS",
+      "revision": 8632350,
+      "sha256": "42d543fd5b5e3294522152c3fbbcec2d9a2c392ba16506bc813663778e5cb3d1"
+    },
+    {
+      "title": "Manual:Coding conventions/Java",
+      "revision": 7490954,
+      "sha256": "b67b3c3bbfddaa00118845dbf9739dfb38ae1bcf06db1ad425c3f48d23a2d8db"
+    },
+    {
+      "title": "Manual:Coding conventions/Lua",
+      "revision": 8501353,
+      "sha256": "834098b39d6149f8ca42b04501f0a0aa00cdc3e8fc2aba8ca7aada9b4e6add12"
+    },
+    {
+      "title": "Manual:Coding conventions/Database",
+      "revision": 6585713,
+      "sha256": "29b7d095213f42bff14f4c21f76337892e2ce162ebd4fea6564bc62f61ef352c"
+    },
+    {
+      "title": "Manual:Coding conventions/SVG",
+      "revision": 7766480,
+      "sha256": "a08d0d59b767cf6413a40143aabc521e0934d207fff8f1b92875f2267ebd23af"
+    }
+  ],
+  "files": {
+    "wikimedia": {
+      "kind": "guide",
+      "chunks": 12,
+      "chunk_tokens": [
+        3568,
+        501,
+        6019,
+        4360,
+        1330,
+        795,
+        6218,
+        1567,
+        1589,
+        373,
+        208,
+        2650
+      ],
+      "map_lists": [
+        "- Indent lines with a single tab character per indenting level.\n- Use Unix-style newlines (single LF character).\n- Ensure all files end with a newline.\n- Encode all text files with UTF-8 without a Byte Order Mark.\n- Avoid adding trailing whitespace.\n- Do not use parentheses with keywords where they are not necessary.\n- Place braces on the same line as the start of the function, conditional, or loop.\n- Place else/elseif on the same line as the previous closing brace.\n- Indent multi-line statements by one extra level for the second and subsequent lines.\n- Avoid vertical alignment.\n- Use spaces rather than tabs for mid-line vertical alignment when needed.\n- Break lines between 80 and 100 columns.\n- Place the operator separating two lines consistently at the end or start of the line.\n- Put the method operator at the beginning of the next line.\n- Do not write control structure blocks as a single line.\n- Never build URLs manually with string concatenation.\n- Use appropriate API methods (e.g., Linker, Title, mw.util.getUrl) to construct URLs.\n- Name server-side code files in UpperCamelCase.\n- Name files after the most important class they contain.\n- Treat acronyms and abbreviations as single words in CamelCase (e.g., HtmlId).\n- Name access point files (e.g., index.php) in lowercase.\n- Name maintenance scripts in lowerCamelCase.\n- Name files intended for site administrators (e.g., readmes) in UPPERCASE.\n- Never include spaces in file names or directories.\n- Never use non-ASCII characters in file names.\n- Use hyphens instead of underscores for lowercase titles.\n- Place JavaScript, CSS, and media files in a directory named after the module bundle.\n- Name JavaScript files that define classes to match the class name exactly.\n- Register extension module bundles with names like ext.myExtension.\n- Include a license header at the top of every source file.\n- Refer to licenses by their full name or acronym as per SPDX standard.\n- Avoid dynamically constructing identifiers such as interface message keys, CSS class names, or file names.\n- Write out identifiers and select between them using conditionals or switches.\n- Leave a comment with possible values if concatenating identifiers with variables is necessary.\n- Document all significant changes in the RELEASE-NOTES-N.NN file.\n- Include Phabricator task IDs at the start of release note entries if applicable.\n- Add new release note entries in chronological order at the end of the section.\n- Use hyphens instead of CamelCase or snake_case for new system message keys.\n- Do not hardcode colons in system messages used as labels.\n- Use message keys as whole strings in code rather than building them on the fly.\n- Use American English spelling for messages, comments, and documentation.\n- Add punctuation to non-title error messages.\n- Prefer improving core components over duplicating code in extensions.\n- Refactor code as changes are made.\n- Use separate commits for large refactoring efforts.\n- Use reserved data attributes (data-ooui, data-parsoid, data-mw) to distinguish trusted HTML sources.",
+        "- Reference code entities exactly as they appear in the code.\n- Use quotes around code entity names that start with a lowercase letter.\n- Use sentence case for all headings and page titles.\n- Write the first line of a method doc-block in the imperative mood to describe what the method does in one sentence.\n- Separate additional text in a method doc-block from the first line with an empty line.\n- Start parameter descriptions with a capital letter.\n- Omit \"a\" or \"the\" at the beginning of parameter descriptions.\n- Include a period at the end of a parameter description only if it contains multiple sentences.",
+        "- Indent with tabs, not spaces.\n- Limit lines to 120 characters.\n- Put spaces on either side of binary operators.\n- Put spaces next to parentheses on the inside, except where the parentheses are empty.\n- Do not put a space following a function name.\n- Put a space after the : in the function return type hint, but not before.\n- Put spaces in brackets when declaring an array, except where the array is empty.\n- Follow control structures (if, while, for, foreach, switch, catch) with a space.\n- Do not use a space within or after the cast operator when type casting.\n- Put one space between the # or // character and the comment in comments.\n- Use if blocks instead of multi-line ternary operators.\n- Place the question mark and colon at the beginning of the second and third lines in multi-line ternary expressions.\n- Prefer single quotes for string literals where equivalent to double quotes.\n- Avoid passing huge numbers of parameters to functions or constructors.\n- Avoid using boolean parameters in functions.\n- Do not repurpose variables over the course of a function.\n- Avoid modifying parameters passed to a function unless passed by reference.\n- Do not use assignment as an expression.\n- Use string literals instead of constants for enum-like sets.\n- Use lowercase for true, false, and null.\n- Use elseif instead of else if.\n- Avoid alternative syntax for control structures; use braces instead.\n- Prefer arrow functions for single-line anonymous functions.\n- Use native type declarations and return type declarations when applicable.\n- Use PHP 7.1 syntax for nullable parameters.\n- Do not add PHPDoc comments that only repeat native types.\n- Treat acronyms and abbreviations as single words in CamelCase naming.\n- Prefix top-level functions with wf.\n- Prefix global extension functions with ef.\n- Use verb phrases for function names.\n- Mark functions exposed for testing as @internal.\n- Prefix global variables with $wg.\n- Place global declarations at the beginning of a function.\n- Name Database objects for writing $dbw.\n- Name Database objects for non-concurrency-sensitive reading $dbr.\n- Avoid using $ws, $wc, $wp, and $m prefixes in new code.\n- Use empty() only to suppress errors; otherwise use boolean conversion.\n- Do not use isset() to test for null; use === null instead.\n- Do not use ! or empty to test if a string or array is empty; use === '' or === [] instead.\n- Use array_merge() instead of array plus to renumber keys.\n- Set error_reporting() to -1.\n- Omit trailing ?> tags in pure PHP files.\n- Do not use the goto syntax.\n- Do not pass by reference when traversing an array with foreach unless necessary.\n- Do not use static variables within non-static methods.\n- Prefer triple-equals (===) over double-equals (==) for comparisons.\n- Use == to check equality of scalars that are supposed to be numeric.\n- Provide the third parameter to in_array.\n- Do not use Yoda conditionals.\n- Represent potentially large integers as strings in JSON.\n- Do not use PHP's built-in serialize() and unserialize() for data stored outside the current process.\n- Use JSON-based serialization instead of PHP serialization.\n- Do not add type declarations for big legacy classes (Title, Article, WikiPage, User, MediaWiki, OutputPage, WebRequest, EditPage).\n- Omit explicit type declarations for DOM classes or use Wikimedia\\Parsoid\\DOM\\Document aliases.\n- Include Doxygen-style comments for new classes, methods, and member variables.\n- Document parameters and return values for all new methods.\n- Begin Doxygen comments with /**.\n- Use @ rather than \\ as the escape character for Doxygen tags.\n- Provide a @since VERSION tag for every public interface added or changed.\n- Use FIXME for bad or broken code, TODO for needed improvements, and HACK for suboptimal solutions.\n- Include a license header at the top of every source file.\n- Use Doxygen tags in the specified order.\n- Mark code as private unless there is a reason to make it more visible.\n- Do not access PHP superglobals directly; use $request->get*() methods.\n- Do not access $_SERVER directly; use $request->getIP() for IP addresses.\n- Use static::func() for calling overridable static methods from inside a class.\n- Use self::func() for calling static methods that may not be overridden.\n- Use parent::func() for calling a parent method from an override.\n- Do not write out the class name like ClassName::func() for static method calls.\n- Use :: for",
+        "- Use ESLint with the eslint-config-wikimedia preset for code quality and style enforcement.\n- Configure ESLint with \"root\": true in .eslintrc.json to prevent unintended configuration inheritance.\n- Use tabs for indentation.\n- Do not use trailing whitespace.\n- Use blank lines to separate logically related blocks of code.\n- Use one space on both sides of binary and assignment operators.\n- Separate keywords followed by a left parenthesis with one space.\n- Do not place a space between a function name and its left parenthesis.\n- Use one space inside parentheses for if statements, function calls, and argument lists.\n- Do not use operators (delete, void, typeof, new, return) as if they are functions.\n- Wrap lines at no more than 80–100 characters.\n- Indent statement continuations one extra level.\n- Place function calls and objects on a single line or split them with one segment per line.\n- Align closing parentheses with their opening counterparts.\n- Wrap individual JavaScript files in an immediately-invoked function expression (IIFE) if not using package files.\n- Declare variables before use.\n- Place each assignment on its own line.\n- Declare functions before use.\n- Place function declarations after variable declarations and before main statements in the function body.\n- Place comments on their own line above the code they describe.\n- Separate comment syntax from text with a single space.\n- Start comment text with a capital letter.\n- End valid sentence comments with a full stop.\n- Use line comments (//) within functions and code blocks.\n- Use block comments (/* */) only for documentation blocks.\n- Use sentence case for text in free-form documentation blocks.\n- Indent continued sentences in annotations with one additional space.\n- Use @classdesc to document ES5 classes and @description for their constructors.\n- Use separate comments to document ES6 classes and their constructors.\n- Use JSDoc for building documentation.\n- Use strict equality operators (=== and !==) instead of loose equality.\n- Do not use Yoda conditionals.\n- Use typeof val === 'string' for string type checks.\n- Use typeof val === 'number' for number type checks.\n- Use typeof val === 'boolean' for boolean type checks.\n- Use typeof val === 'function' for function type checks.\n- Use val === Object( val ) for object type checks.\n- Use jQuery.isPlainObject( val ) for plain object type checks.\n- Use Array.isArray( val ) for array type checks.\n- Use obj.nodeType === Node.ELEMENT_NODE for HTMLElement type checks.\n- Use val === null for null type checks.\n- Use val === undefined for undefined type checks.\n- Use single quotes for string literals.\n- Use the slice() method to extract parts of strings.\n- Avoid using substr() or substring() methods.\n- Access browser globals (document, navigator, URL, fetch) directly rather than as properties of window.\n- Access window properties (location, history, name) as properties of window, not as bare globals.\n- Avoid creating new global variables.\n- Avoid modifying globals not owned by your code.\n- Do not extend built-in globals like String or Object with utility methods.\n- Use module.exports or the mw hierarchy to publicly expose functionality.\n- Access MediaWiki configuration variables via mw.config.\n- Do not modify built-in prototypes such as Object.prototype.\n- Name variables using CamelCase starting with a lowercase letter.\n- Name constant variables using all caps with underscores for separation.\n- Name functions using CamelCase starting with a lowercase letter.\n- Name class constructors using CamelCase starting with an uppercase letter.\n- Start method names with a verb.\n- Treat acronyms in names as normal words, uppercasing only the first letter as needed.\n- Prefix variables holding jQuery objects with a dollar sign.\n- Publish standalone npm projects under the @wikimedia namespace where appropriate.\n- Use the simple <tag> syntax in the jQuery constructor to create plain elements.\n- Avoid using for-in loops to iterate over arrays.\n- Access localStorage and sessionStorage keys via mw.storage or mw.storage.session.\n- Start storage keys with mw and use camel case or hyphens.\n- Do not use underscores in storage keys.\n- Store values in storage as strings.\n- Use \"1\" or \"0\" for boolean state in storage.\n- Store numbers as-is and cast with Number on retrieval.\n- Use comma-separated or pipe-separated strings for lists of software-defined values in storage.\n- Use JSON for lists of user-generated or complex values in storage.\n- Avoid using user-generated input as part of a storage key name.\n- Avoid creating a large number of storage keys; use a single key with LRU strategy if necessary.\n- Implement an",
+        "- Use the defineComponent() function from Vue for component definitions.\n- Write new code using Vue 3 and ES6.\n- Use Vue's single-file components format (.vue) wherever possible.\n- Follow the Vue community's style guide, specifically all \"Priority A: Essential\" recommendations.\n- Order single-file component sections as <template>, <script>, and <style>.\n- List each component file individually under the packageFiles property in extension.json.\n- Include the vue module as a dependency in the module definition.\n- Do not use self-closing component tags; always include a closing tag.\n- Use kebab-case for component tags.\n- Use directive short-hands (:foo, @click) instead of full syntax (v-bind:, v-on:).\n- Break multiple element attributes onto separate lines.\n- Keep template expressions simple; define complex logic as computed properties or methods.\n- Internationalize message strings in templates.\n- Use v-html sparingly and only after auditing for XSS vulnerabilities.\n- Use v-i18n-html instead of v-html for parsed i18n messages where possible.\n- Add an eslint-disable-next-line comment if v-html usage is verified as safe.\n- Use CommonJS module format with module.exports and require() for components delivered via ResourceLoader.\n- Order component options as: name, components, mixins, props, emits, setup, data, computed properties, methods, watchers, lifecycle hooks, and render functions.\n- Avoid render functions; prefer HTML-style templates.\n- Define prop defaults and validation where necessary.\n- Default boolean props to false.\n- Avoid implicit parent-child communication and mutation of received props.\n- Prefer the \"props down / events up\" approach for component communication.\n- Nest styles under a single selector if using LESS.\n- Use conditional CSS classes for dynamic styles.\n- Use object syntax for computed properties bound to class attributes.\n- Follow CSS class naming patterns for Vue transition names, including extension-specific prefixes.",
+        "- Indent lines with 4 spaces.\n- End files with a newline.\n- Keep lines under 80 characters long.\n- Organize imports in alphabetical order.\n- Separate standard library, third party, and local library imports with empty lines.\n- Include docstrings for all but the simplest functions.\n- Append an underscore to variable names that conflict with builtins.",
+        "- Adopt the role/profile pattern for organizing new code into modules, profiles, and roles.\n- Ensure any node declaration includes only one role invoked with the role function.\n- Prevent classes, defines, or resources in modules from using classes from other modules.\n- Avoid using defines from other modules within a module wherever possible.\n- Prohibit explicit or implicit hiera calls within modules.\n- Set profile class parameters only via explicit lookup calls, optionally providing a default value.\n- Deprecate the use of legacy hiera functions (hiera, hiera_hash, hiera_include).\n- Prohibit hiera calls outside of profile class parameters.\n- Instantiate classes explicitly in profiles rather than using the include class method, except for specific global classes.\n- List profile preconditions using the require keyword at the start of the class.\n- Include profiles in roles only via the include keyword and a system::role definition.\n- Prohibit conditionals and hiera calls within roles.\n- Discourage inheritance between roles.\n- Include the standard profile in all roles.\n- Prohibit class parameter autolookup; explicitly declare variables as parameters in profile classes.\n- Define hiera calls only in profiles as default values of class parameters.\n- Define hiera definitions for parameters in the role hierarchy, reserving the common hierarchy for shared data structures.\n- Limit per-host hiera usage to testing tweaks or canary declarations, not for adding or subtracting functionality.\n- Name hiera keys to reflect the most specific common shared namespace of the puppet classes looking them up.\n- Avoid global variables in hiera; use snake case and no semicolons for global keys.\n- Define nodes in site.pp as simple one-liners including the role class.\n- Include the base class for every node.\n- Use a system::role definition for every deployed service to indicate what the server is running.\n- Set read-only file mode (0444 or 0555) for files fully deployed by Puppet using the file type.\n- Create a nested class named profile::service::monitoring for each service to set up monitoring configuration.\n- Document top-level class definitions with descriptive headers.\n- Use four-space soft tabs for indentation.\n- Prohibit the use of literal tab characters.\n- Prohibit trailing white space.\n- Align fat comma arrows (=>) within blocks of attributes.\n- Use single quotes for strings unless interpolating variables.\n- Enclose variables in braces ({}) when interpolating them in a string.\n- Do not quote variables standing by themselves.\n- Do not quote booleans.\n- Single quote all resource names and their attributes, except for ensure and variables.\n- Place the ensure attribute first in resource declarations.\n- Put a trailing comma after the final resource parameter.\n- Prohibit grouping resources of the same type (compression).\n- Keep the resource name and resource type on the same line.\n- Prohibit the use of selectors inside resources.\n- Include default cases in case statements.\n- Place all classes and resource type definitions in separate files in the manifests directory.\n- Prohibit nesting classes.\n- Prohibit the use of inheritance.\n- Favor using the facts hash when referring to facts to distinguish them from global variables.\n- Refer to global variables using fully qualified names.\n- Do not use dashes in class names; prefer alphabetic names only.\n- List required parameters before optional parameters in parameterized class and defined resource type declarations.\n- Avoid parameters that do not have a default value.\n- Place one include per line.\n- Include only one class per include statement.\n- Include only the specific class needed, not the entire scope.\n- Use Debian packages from the WMF apt repo or official upstream Ubuntu repos for software installation.\n- Prohibit the use of source-based packaging systems like pip or gem.\n- Use the stdlib function ensure_packages for installing apt packages when possible.",
+        "- Name classes and IDs using all lowercase letters separated by dashes.\n- Prefix classes and IDs with mw- to avoid conflicts with wikitext parser IDs.\n- Place one selector and one property per line.\n- Place opening braces for CSS declaration blocks on the same line as the last selector.\n- Indent property declarations with a tab.\n- Do not place a space before the colon.\n- Place one space between the colon and the value.\n- Place one space after commas in multi-value properties.\n- Place a semi-colon after each declaration, including the last one.\n- Unindent closing braces to the left.\n- Place annotation comments for CSSJanus and CSSMin on their own line above the CSS declaration.\n- Place an empty line between CSS rule sets.\n- Use url() syntax without quotes in background-image declarations.\n- Use lowercase hex colour values, preferring shorthand notation where possible.\n- Use rgba() values when alpha transparency is necessary.\n- Use the transparent colour keyword.\n- Avoid other colour keyword values, rgb(), hsl(), and hsla() notations.\n- Ensure colour contrast ratios meet WCAG 2.0 level AA.\n- Place newer CSS vendor prefixes after older versions, with the standardized declaration at the end.\n- Use the .client-js or .client-nojs class to conditionally style elements based on JavaScript support.\n- Avoid using z-index when possible, relying on natural DOM stacking order instead.\n- Avoid using !important unless overriding upstream code that uses !important.\n- Increase selector specificity by repeating selectors or adding attribute selectors instead of using !important.\n- Indent nested Less blocks with one tab.\n- Do not space-align declaration values inside Less mixins.\n- Do not place spaces on the outside of parameter lists in Less function invocations, mixin uses, or mixin definitions.\n- Do not place quotes around parameter values in Less.\n- Separate nested CSS rules from parent declarations in Less with one empty line.\n- Place @noflip tags on the immediate line above the declaration in Less.\n- Omit the .less file extension in Less import statements.\n- Use @import in Less only for loading mixins and variables, not for bundling conceptually related stylesheets.\n- Name Less mixins using hyphen-case.\n- Prefix Less mixin names with mixin-.\n- Use semi-colons to separate arguments in Less mixin calls if the arguments contain commas.\n- Include a .stylelintrc.json file in the root directory of the repository.\n- Do not override the stylelint-config-wikimedia preset configuration except for selector-class-pattern.\n- Enforce Stylelint passing by including it in the npm test script.",
+        "- Use Maven as the build tool.\n- Inherit from the JVM Parent POM.\n- Target Java 8 or Java 11.\n- Use Caffeine instead of Guava for caching.\n- Use Lombok for generating getters, setters, equals, and hashCode methods.\n- Use @SneakyThrows to handle checked exceptions.\n- Use JSR 305 annotations (@Nonnull, @Nullable, @ParametersAreNonnullByDefault, @Immutable, @ThreadSafe, @NotThreadSafe) to document expected behavior.\n- Use Jackson for JSON and XML parsing and serialization.\n- Use Apache HttpComponents as the HTTP client.\n- Share a single instance of HttpClient within an application.\n- Configure a custom User-Agent string for HTTP clients.\n- Use JUnit 5 as the unit testing framework where possible.\n- Use Mockito for mocking.\n- Use WireMock for HTTP mocking.\n- Use AssertJ for assertions.\n- Avoid null values and prefer Null Objects.\n- Expect parameters to be non-null without explicit checks unless they come from an untrusted caller.\n- Mark parameters with @Nonnull or @Nullable.\n- Use Optionals sparingly.\n- Manually define serialVersionUID only when classes are expected to be deserialized and the class or JVM version might change between serialization and deserialization.\n- Start manually defined serialVersionUID at 0 and increment it on each change to the class structure.\n- Declare constants as public static final with names in capital letters.\n- Define dependency versions in the main pom's <dependencyManagement/> section in multi-module projects.\n- Specify shared dependency versions as properties.",
+        "- Use tabs for indentation.\n- Limit the length of a single line.\n- Avoid extraneous whitespace when calling a function or subscripting an array or dictionary.\n- Do not use spaces immediately before or inside bracketing characters ([, (, { and their matches).\n- Avoid putting multiple statements on one line unless the expression is very short.\n- Avoid putting multiple statements on one line for multi-clause statements.\n- Split large statements over multiple lines with a hanging indent that aligns with the opening delimiter if a single line is too long.\n- Place if statement conditions on the next line.\n- Define the entry method as unpacking parameters from the frame and passing them to a function with the same name prefixed with a single underscore.\n- Use camelCase for function names.",
+        "- Use abstract schema for new tables or schema changes.\n- Name tables using singular nouns.\n- Prefix column names with the table name or an abbreviation of the table name.",
+        "- Use minimal code with readability in mind.\n- Set SVGO transformPrecision to at least 7.\n- Verify visual quality by diffing files before and after using unsafe SVGO plugins.\n- Enable the sortAttrs plugin in SVGO.\n- Enable the cleanupEnableBackground plugin in SVGO.\n- Use pretty output for human-readable code.\n- Indent code by tabs.\n- Retain xml:space=\"preserve\" attributes.\n- Retain XML comments.\n- Retain <title> elements.\n- Retain newline, carriage return, and tab characters.\n- Retain <g> elements.\n- Retain visibility=\"hidden\", opacity=\"0\", and display=\"none\" attributes.\n- Retain requiredFeatures attributes.\n- Retain <?xml version=\"1.0\" encoding=\"UTF-8\"?> declarations.\n- Retain <defs> elements.\n- Retain <rect> elements.\n- Retain <style type=\"text/css\"> elements.\n- Retain class attributes.\n- Retain data-name attributes.\n- Retain inkscape:label attributes.\n- Retain <rdf:RDF> elements.\n- Retain aria-label attributes.\n- Retain <inkscape:grid> elements.\n- Retain <sodipodi:guide> elements.\n- Retain sodipodi:cx, sodipodi:cy, sodipodi:rx, sodipodi:ry, and sodipodi:type=\"arc\" attributes.\n- Retain vector-effect attributes.\n- Retain inkscape:groupmode=\"layer\" attributes.\n- Retain sodipodi:role=\"line\" attributes.\n- Remove standalone=\"no\" from XML processing instructions.\n- Lowercase hex color values.\n- Shorten hex color values where possible (e.g., #fff instead of #FFFFFF).\n- Apply common attributes to a parent <g> element or <svg> statement instead of individual elements.\n- Rely on default values for fill and stroke-width.\n- Prefer specific shape elements like <circle>, <ellipse>, and <rect> over <path> for readability and editability.\n- Merge <path> elements where applicable, unless separate editing is required.\n- Do not remove redundant ry attributes when identical to rx.\n- Remove unnecessary fill-rule and clip-rule attributes.\n- Remove IEEE rounding errors from numeric values.\n- Align points to a non-fractional pixel grid.\n- Use relative commands instead of absolute commands in paths.\n- Use scour with --disable-simplify-colors, --disable-style-to-xml, --disable-group-collapsing, --keep-editor-data, --keep-unreferenced-defs, --protect-ids-noninkscape, --disable-embed-rasters, --set-precision=8, and --set-c-precision=8.\n- Use svgcleaner with --allow-bigger-file, --indent yes, --resolve-use no, --apply-transform-to-gradients yes, --apply-transform-to-shapes yes, --convert-shapes no, --group-by-style no, --join-arcto-flags no, --join-style-attributes no, --merge-gradients yes, --regroup-gradient-stops yes, --remove-comments no, --remove-declarations no, --remove-default-attributes yes, --remove-desc no, --remove-dupl-cmd-in-paths yes, --remove-dupl-fegaussianblur yes, --remove-dupl-lineargradient yes, --remove-dupl-radialgradient yes, --remove-gradient-attributes yes, --remove-invalid-stops yes, --remove-invisible-elements no, --remove-metadata no, --remove-needless-attributes yes, --remove-nonsvg-attributes no, --remove-nonsvg-elements no, --remove-text-attributes no, --remove-title no, --remove-unreferenced-ids no, --remove-unresolved-classes yes, --remove-unused-coordinates yes, --remove-unused-defs yes, --remove-version yes, --remove-xmlns-xlink-attribute yes, --simplify-transforms yes, --trim-colors yes, --trim-ids no, --trim-paths yes, --ungroup-defs yes, --ungroup-groups no, --use-implicit-cmds yes, --list-separator comma, --paths-to-relative yes, --remove-unused-segments yes, --convert-segments yes, --apply-transform-to-paths yes, --coordinates-precision 2, --paths-coordinates-precision 5, --properties-precision 3, and --transforms-precision 7."
+      ],
+      "map_capped": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "evidence": [],
+      "reduce_answer": null,
+      "reduce_capped": null,
+      "merge_chunks": null,
+      "recurrence": [],
+      "part_pages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "rule_pages": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        3,
+        4,
+        4,
+        4,
+        4,
+        5,
+        5,
+        5,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7,
+        8,
+        8,
+        8,
+        9,
+        9,
+        9,
+        10,
+        10,
+        10,
+        11,
+        11,
+        11,
+        12,
+        12,
+        12
+      ],
+      "rules": [
+        "- Indent lines with a single tab character per indenting level.",
+        "- Use Unix-style newlines (single LF character).",
+        "- Ensure all files end with a newline.",
+        "- Encode all text files with UTF-8 without a Byte Order Mark.",
+        "- Reference code entities exactly as they appear in the code.",
+        "- Use quotes around code entity names that start with a lowercase letter.",
+        "- Use sentence case for all headings and page titles.",
+        "- Write the first line of a method doc-block in the imperative mood to describe what the method does in one sentence.",
+        "- Indent with tabs, not spaces.",
+        "- Limit lines to 120 characters.",
+        "- Put spaces on either side of binary operators.",
+        "- Put spaces next to parentheses on the inside, except where the parentheses are empty.",
+        "- Use ESLint with the eslint-config-wikimedia preset for code quality and style enforcement.",
+        "- Configure ESLint with \"root\": true in .eslintrc.json to prevent unintended configuration inheritance.",
+        "- Use tabs for indentation.",
+        "- Do not use trailing whitespace.",
+        "- Use the defineComponent() function from Vue for component definitions.",
+        "- Write new code using Vue 3 and ES6.",
+        "- Use Vue's single-file components format (.vue) wherever possible.",
+        "- Indent lines with 4 spaces.",
+        "- End files with a newline.",
+        "- Keep lines under 80 characters long.",
+        "- Adopt the role/profile pattern for organizing new code into modules, profiles, and roles.",
+        "- Ensure any node declaration includes only one role invoked with the role function.",
+        "- Prevent classes, defines, or resources in modules from using classes from other modules.",
+        "- Name classes and IDs using all lowercase letters separated by dashes.",
+        "- Prefix classes and IDs with mw- to avoid conflicts with wikitext parser IDs.",
+        "- Place one selector and one property per line.",
+        "- Use Maven as the build tool.",
+        "- Inherit from the JVM Parent POM.",
+        "- Target Java 8 or Java 11.",
+        "- Limit the length of a single line.",
+        "- Avoid extraneous whitespace when calling a function or subscripting an array or dictionary.",
+        "- Do not use spaces immediately before or inside bracketing characters ([, (, { and their matches).",
+        "- Use abstract schema for new tables or schema changes.",
+        "- Name tables using singular nouns.",
+        "- Prefix column names with the table name or an abbreviation of the table name.",
+        "- Use minimal code with readability in mind.",
+        "- Set SVGO transformPrecision to at least 7.",
+        "- Verify visual quality by diffing files before and after using unsafe SVGO plugins."
+      ],
+      "pipeline": "ac3ad3cfa8ad9475f24da2fe947c2d1188be975498892054d5d51a65512ed43f",
+      "file": "- Indent lines with a single tab character per indenting level.\n- Use Unix-style newlines (single LF character).\n- Ensure all files end with a newline.\n- Encode all text files with UTF-8 without a Byte Order Mark.\n- Reference code entities exactly as they appear in the code.\n- Use quotes around code entity names that start with a lowercase letter.\n- Use sentence case for all headings and page titles.\n- Write the first line of a method doc-block in the imperative mood to describe what the method does in one sentence.\n- Indent with tabs, not spaces.\n- Limit lines to 120 characters.\n- Put spaces on either side of binary operators.\n- Put spaces next to parentheses on the inside, except where the parentheses are empty.\n- Use ESLint with the eslint-config-wikimedia preset for code quality and style enforcement.\n- Configure ESLint with \"root\": true in .eslintrc.json to prevent unintended configuration inheritance.\n- Use tabs for indentation.\n- Do not use trailing whitespace.\n- Use the defineComponent() function from Vue for component definitions.\n- Write new code using Vue 3 and ES6.\n- Use Vue's single-file components format (.vue) wherever possible.\n- Indent lines with 4 spaces.\n- End files with a newline.\n- Keep lines under 80 characters long.\n- Adopt the role/profile pattern for organizing new code into modules, profiles, and roles.\n- Ensure any node declaration includes only one role invoked with the role function.\n- Prevent classes, defines, or resources in modules from using classes from other modules.\n- Name classes and IDs using all lowercase letters separated by dashes.\n- Prefix classes and IDs with mw- to avoid conflicts with wikitext parser IDs.\n- Place one selector and one property per line.\n- Use Maven as the build tool.\n- Inherit from the JVM Parent POM.\n- Target Java 8 or Java 11.\n- Limit the length of a single line.\n- Avoid extraneous whitespace when calling a function or subscripting an array or dictionary.\n- Do not use spaces immediately before or inside bracketing characters ([, (, { and their matches).\n- Use abstract schema for new tables or schema changes.\n- Name tables using singular nouns.\n- Prefix column names with the table name or an abbreviation of the table name.\n- Use minimal code with readability in mind.\n- Set SVGO transformPrecision to at least 7.\n- Verify visual quality by diffing files before and after using unsafe SVGO plugins.",
+      "file_tokens": 514,
+      "fingerprint": "ec99a2d3d6a3b31ad12b57348b396ae601f349bb0a4ca64332c5a2d11ab047e2",
+      "computed_dtype": "bfloat16",
+      "provenance": {
+        "generated_at": "2026-10-07T10:10:54.753514+00:00",
+        "git": {
+          "commit": "05465f1445cdc9c4fff2d66b50c8479e824063a2",
+          "branch": "HEAD"
+        },
+        "python": "3.13.15",
+        "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+        "packages": {
+          "torch": "2.14.0+cu130",
+          "transformers": "5.17.0",
+          "peft": "0.20.0"
+        },
+        "slurm": {
+          "cluster": "tigris",
+          "job_id": "229778",
+          "account": "fl-mlm",
+          "partition": "tigris",
+          "node": "gh-a-027"
+        },
+        "gpu": {
+          "name": "NVIDIA GH200 480GB",
+          "total_gb": 102.01,
+          "peak_allocated_gb": 57.65,
+          "peak_reserved_gb": 60.76,
+          "cuda": "13.0"
+        }
+      }
+    }
+  },
+  "generator": "Qwen/Qwen3.6-27B@6a9e13bd6fc8f0983b9b99948120bc37f49c13e9|bfloat16|template={\"enable_thinking\": false}",
+  "budgeted_by": "Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242",
+  "pipeline": "ac3ad3cfa8ad9475f24da2fe947c2d1188be975498892054d5d51a65512ed43f",
+  "provenance": {
+    "generated_at": "2026-10-07T10:10:55.293113+00:00",
+    "git": {
+      "commit": "05465f1445cdc9c4fff2d66b50c8479e824063a2",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    },
+    "slurm": {
+      "cluster": "tigris",
+      "job_id": "229778",
+      "account": "fl-mlm",
+      "partition": "tigris",
+      "node": "gh-a-027"
+    },
+    "gpu": {
+      "name": "NVIDIA GH200 480GB",
+      "total_gb": 102.01,
+      "peak_allocated_gb": 57.65,
+      "peak_reserved_gb": 60.76,
+      "cuda": "13.0"
+    }
+  }
+}
