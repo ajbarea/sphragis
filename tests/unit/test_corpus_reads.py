@@ -16,18 +16,22 @@ from pathlib import Path
 import pytest
 
 _ROOT = Path(__file__).resolve().parents[2]
-# A script trains when it names `build_supervised` (the rule as first written) or imports
-# `supervised`, the training module's loop over a training set built on it; the import is read
+# A script trains, or builds a training set, when it names `build_supervised` (the rule as first
+# written) or imports one of these: `supervised`, the training module's loop over a training set,
+# or `trainable`, the retrieval module's cut of a pool to what training accepts. Imports are read
 # from the tree, since prose also says "supervised".
-_TRAINING = {"build_supervised", "supervised"}
+_TRAINING = {
+    "sphragis.experiment.training": {"build_supervised", "supervised"},
+    "sphragis.experiment.retrieval": {"trainable"},
+}
 
 
 def _trains(path: Path) -> bool:
     text = path.read_text()
     return "build_supervised" in text or any(
         isinstance(node, ast.ImportFrom)
-        and node.module == "sphragis.experiment.training"
-        and bool({alias.name for alias in node.names} & _TRAINING)
+        and node.module in _TRAINING
+        and bool({alias.name for alias in node.names} & _TRAINING[node.module])
         for node in ast.walk(ast.parse(text))
     )
 
@@ -39,6 +43,8 @@ _SCRIPTS = sorted(p for p in (_ROOT / "scripts").glob("*.py") if _trains(p))
 _JSON_LOADS_ALLOWED: dict[str, str] = {
     "retrieval_comparator.py": "reads the admissible list, a partition's placebo.json and its own "
     "score rows to resume; the corpus goes through window_split",
+    "rules_distil.py": "reads the admissible list, the guides' snapshot and its own cached files; "
+    "the corpus goes through read_halves",
 }
 
 
@@ -85,15 +91,19 @@ def _calls_any(tree: ast.AST, *, direct: set[str], attrs: set[str], via: set[str
 _LOADERS = {"derived_file_rows", "refined_examples"}
 # Readers that load through one of `_LOADERS` themselves (checked below), so calling them is
 # reading through the loader.
-_WRAPPERS = {"sphragis.experiment.holdout": {"window_split"}}
+_WRAPPERS = {
+    "sphragis.experiment.holdout": {"window_split"},
+    "sphragis.experiment.retrieval": {"read_halves", "half_pools"},
+}
 
 
-def _calls_a_loader(tree: ast.AST) -> bool:
-    """A loader or a wrapper of one, resolved through any import form."""
+def _calls_a_loader(tree: ast.AST, scope: ast.AST | None = None) -> bool:
+    """A call in `scope` (the whole tree by default) to a loader or to a wrapper of one, each
+    resolved through the tree's imports in any form; a bare name with no import does not count."""
     modules = {"sphragis.corpus.load": _LOADERS, **_WRAPPERS}
     return any(
         _calls_any(
-            tree,
+            scope or tree,
             direct=_from_import_aliases(tree, module, names),
             attrs=names,
             via=_module_aliases(tree, module),
@@ -102,20 +112,41 @@ def _calls_a_loader(tree: ast.AST) -> bool:
     )
 
 
+def _calls_local(scope: ast.AST, names: set[str]) -> set[str]:
+    """The names among `names`, functions of the same module, that `scope` calls by bare name."""
+    return {
+        n.func.id
+        for n in ast.walk(scope)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in names
+    }
+
+
 @pytest.mark.parametrize("module", sorted(_WRAPPERS))
 def test_a_wrapper_reads_through_the_loader(module: str) -> None:
     path = _ROOT / Path(*module.split(".")).with_suffix(".py")
     tree = ast.parse(path.read_text())
     found = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
     assert _WRAPPERS[module] <= found, f"{module} defines none of {_WRAPPERS[module] - found}"
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and node.name in _WRAPPERS[module]:
-            assert _calls_any(
-                node,
-                direct=_from_import_aliases(tree, "sphragis.corpus.load", _LOADERS),
-                attrs=_LOADERS,
-                via=_module_aliases(tree, "sphragis.corpus.load"),
-            ), f"{module}.{node.name} does not read through the loader"
+    defs = [
+        n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name in _WRAPPERS[module]
+    ]
+    # Through the loader itself, or through a sibling wrapper that does, followed to a fixpoint,
+    # so wrappers that only call each other read through nothing. A name reads through the
+    # loader only if every definition of it does.
+    reads: set[str] = set()
+    while True:
+        passing = {
+            name
+            for name in {n.name for n in defs}
+            if all(
+                _calls_a_loader(tree, n) or _calls_local(n, reads) for n in defs if n.name == name
+            )
+        }
+        if passing == reads:
+            break
+        reads = passing
+    for node in defs:
+        assert node.name in reads, f"{module}.{node.name} does not read through the loader"
 
 
 _JSON_READERS = {"load", "loads"}
@@ -259,6 +290,11 @@ def test_preflight_pilot_reports_a_refused_corpus_rather_than_exiting() -> None:
     assert "problems.append" in loop[system_exit_at:generic_at]
 
 
-def test_the_runner_and_the_comparator_are_held_to_the_rule() -> None:
+def test_the_runner_the_comparator_and_the_distiller_are_held_to_the_rule() -> None:
     names = {script.name for script in _SCRIPTS}
-    assert {"rq1_pilot.py", "retrieval_comparator.py"} <= names
+    assert {"rq1_pilot.py", "retrieval_comparator.py", "rules_distil.py"} <= names
+
+
+def test_a_bare_name_without_its_import_is_not_a_loader_call() -> None:
+    tree = ast.parse("def read_halves(root):\n    return []\n\nread_halves(1)\n")
+    assert not _calls_a_loader(tree)

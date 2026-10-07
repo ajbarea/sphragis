@@ -48,3 +48,9 @@ def run_id(run: EvalRun) -> str:
     """Stable identifier for one evaluation."""
     suffix = "" if run.seed is None else f"|s{run.seed}"
     return f"{run.condition}|{run.eval_org}{suffix}"
+
+
+def conditioned(condition: str, owner: str, evaluated: str) -> str:
+    """`<condition>:<owner>|<evaluated>`: an arm conditioned on `owner` (an adapter's training
+    set, a retrieval pool, a rules file), scored on `evaluated`, with no training seed."""
+    return run_id(EvalRun(f"{condition}:{owner}", evaluated, None))

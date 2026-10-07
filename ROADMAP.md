@@ -199,7 +199,8 @@ Before Stage 1 (2026-11-20), each registered before the seal:
 - [ ] **A rules-file comparator** (added 2026-10-04): the base model with a house-rules file in
   context, mirrored own, sibling and foreign: (a) the organization's own written conventions
   (OpenStack's HACKING guide, MediaWiki's coding conventions), (b) an AGENTS.md-style file an LLM
-  distils from each half's training-window review comments, under a fixed prompt. Same examples,
+  (Qwen3.6-27B, pinned) distils from each half's training-window review comments, under a fixed
+  prompt and a fixed grounding check. Same examples,
   exact match and own-minus-sibling contrast as H1; exploratory. Coding agents take conventions
   from declared rules files and memory, and rules files are measured on task success and
   instruction following, not on whether code follows a team's conventions (Gloaguen et al.,

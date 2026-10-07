@@ -23,45 +23,75 @@ one job serves every run.
         --admissible datasets/results/admissible-partitions-openstack.json \\
         --out retrieval-halves-openstack-p2.json [--dry-run]
 
-Run on the cluster: scripts/retrieval_comparator.sbatch.
+`--arms rules`: the same jobs, each pool replaced by the rules file `rules_distil.py` distilled
+from it (from `--rules`, under `--rules-suffix`, checked by pool ids, pipeline and generator), and
+the foreign job's base arm replaced by both organizations' written guides' files (checked against
+the snapshot in `--guides`). The base arm comes from the retrieval foreign job.
+
+Run on the cluster: scripts/retrieval_comparator.sbatch (ARMS=rules for the rules arms).
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 from statistics import median
 from typing import Any
 
 from sphragis.experiment.decomposition import halves
 from sphragis.experiment.grid import EvalRun, run_id
-from sphragis.experiment.holdout import verbatim_overlap, window_split
+from sphragis.experiment.holdout import verbatim_overlap
 from sphragis.experiment.neutral import LEAKAGE_MAX_RATE, LEAKAGE_THRESHOLD, leakage_check
 from sphragis.experiment.retrieval import (
-    EQUALIZE_SEED,
     KS,
     Prompt,
-    adapter_run,
     arm_prompts,
-    few_shot_prompt,
+    corpus_of,
     fingerprint,
     first_partitions,
-    pools,
+    half_pools,
     prompt_text,
+    read_halves,
     resumable,
+    trainable,
+)
+from sphragis.experiment.rules import distiller_signature, pinned, pipeline
+from sphragis.experiment.rules_arms import (
+    DISTILLED,
+    WRITTEN,
+    arms_fingerprint,
+    default_system_holds,
+    rules_arms,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
 from sphragis.provenance import provenance_header
+from sphragis.refusal import refusals
 
 # A dry run loads no tokenizer, so it stands in characters at four a token, and says so.
 CHARS_PER_TOKEN = 4
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--pools", choices=["halves", "foreign"], required=True)
+parser.add_argument(
+    "--arms",
+    choices=["retrieval", "rules"],
+    default="retrieval",
+    help="BM25 shots from each pool, or the rules file distilled from it (rules_distil.py)",
+)
+parser.add_argument("--rules", type=Path, help="with --arms rules: the rules_distil.py outputs")
+parser.add_argument(
+    "--rules-suffix",
+    default="",
+    help="with --arms rules: the result suffix they were written under",
+)
+parser.add_argument(
+    "--guides", type=Path, default=Path("datasets/rules"), help="the written guides' snapshot"
+)
 parser.add_argument("--results", type=Path, required=True, help="the adapters' partition runs")
 parser.add_argument("--org", required=True)
 parser.add_argument("--admissible", type=Path, required=True, help="the org's admissible list")
@@ -78,109 +108,11 @@ def trainable_by_chars(row: Mapping[str, Any]) -> bool:
     return len(build_prompt(row)) + len(str(row["after"])) <= MAX_SEQ_LENGTH * CHARS_PER_TOKEN
 
 
-def trainable_by_tokens(tokenizer: Any) -> Callable[[Mapping[str, Any]], bool]:
-    """Whether an example is one an adapter trains on: `supervised` keeps it."""
-    from sphragis.experiment.training import supervised
-
-    def fits(row: Mapping[str, Any]) -> bool:
-        return supervised(tokenizer, [row], prompt_builder=build_prompt)[1] == 0
-
-    return fits
-
-
-def partition_root(root: Path, org: str, partition: int) -> dict[str, Any]:
-    """The manifest of a partition corpus, refused unless it is `org`'s `partition`, unplanted."""
-    path = root / "placebo.json"
-    if not path.is_file():
-        raise SystemExit(f"{root}: no placebo.json; build it with placebo_corpus.py")
-    manifest = json.loads(path.read_text())
-    found = {
-        "source_org": manifest.get("source_org"),
-        "partition_seed": manifest.get("partition_seed"),
-        "deduplicated once": manifest.get("dedup_org") is not None,
-        "planted": manifest.get("plant") is not None,
-        "names": manifest.get("names"),
-    }
-    wanted = {
-        "source_org": org,
-        "partition_seed": partition,
-        "deduplicated once": True,
-        "planted": False,
-        "names": list(halves(org)),
-    }
-    if found != wanted:
-        raise SystemExit(f"{path}: {found}, not {wanted}")
-    return manifest
-
-
 def admissible(path: Path, org: str) -> tuple[list[int], int]:
     """The organization's first admissible partitions and its training size."""
-    try:
-        return first_partitions(json.loads(path.read_text()), org=org)
-    except ValueError as error:
-        raise SystemExit(f"{path}: {error}") from error
-
-
-def corpus_of(
-    results: Path, org: str, partition: int, order: list[int], size: int
-) -> tuple[Path, dict[str, int], dict[str, dict]]:
-    """The corpus the adapters' run on `partition` read, how many rows each half trained on,
-    and what the run recorded of each half's corpus.
-
-    Refused unless the corpus is that partition's and the run cut its training sets as the pools
-    are cut: equalized, at `EQUALIZE_SEED`.
-    """
-    try:
-        path, run, root, position = adapter_run(
-            results, org=org, partition=partition, order=order, size=size
-        )
-    except ValueError as error:
-        raise SystemExit(str(error)) from error
-    if (run.get("equalize_train"), run.get("split_seed")) != (True, EQUALIZE_SEED):
-        raise SystemExit(
-            f"{path}: equalize_train {run.get('equalize_train')}, split_seed "
-            f"{run.get('split_seed')}; the pools are cut equalized at {EQUALIZE_SEED}"
-        )
-    partition_root(root, org, partition)
-    trained = {half: run["training"][f"{half}-s{position}"]["items"] for half in halves(org)}
-    return root, trained, run["corpora"]
-
-
-def read_halves(
-    root: Path, org: str, recorded: Mapping[str, Mapping[str, Any]]
-) -> tuple[dict[str, list[dict]], dict[str, list[dict]], dict[str, dict]]:
-    """Each half's training and held-out rows, refused unless they are what the run recorded.
-
-    A corpus rebuilt at the same root since the adapters trained passes its manifest check; the
-    counts the run recorded of each half (examples, dedup, train, held out) catch it.
-    """
-    train, held_out, summary = {}, {}, {}
-    for half in halves(org):
-        try:
-            train[half], held_out[half], summary[half] = window_split(root, half)
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
-        now = {
-            **summary[half],
-            "train_examples": len(train[half]),
-            "held_out_examples": len(held_out[half]),
-        }
-        then = {key: recorded[half].get(key) for key in now}
-        if now != then:
-            raise SystemExit(f"{root / half}: {now}, but the adapters' run read {then}")
-    return train, held_out, summary
-
-
-def half_pools(
-    root: Path,
-    org: str,
-    size: int,
-    fits: Callable[[Mapping[str, Any]], bool],
-    recorded: Mapping[str, Mapping[str, Any]],
-) -> tuple[dict, dict[str, list[dict]], dict[str, dict]]:
-    """A partition's two half pools, each half's held-out rows, and where each came from."""
-    train, held_out, summary = read_halves(root, org, recorded)
-    return pools(train, size=size, fits=fits), held_out, summary
+    with refusals(f"{path}: "):
+        found = first_partitions(json.loads(path.read_text()), org=org)
+    return found
 
 
 def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
@@ -199,8 +131,86 @@ def scored(results: Path, org: str, order: list[int], size: int) -> list[dict]:
     return sorted(rows.values(), key=lambda row: str(row["id"]))
 
 
+def rules_files(
+    args: argparse.Namespace,
+    indexes: Mapping[str, Any],
+    foreign_order: list[int] | None,
+    size: int,
+) -> tuple[dict[tuple[str, str], str], set[tuple[str, str | None]]]:
+    """The rules files a rules job prompts with, and the generators that made them. Each
+    distilled file is checked to come from the pool this job rebuilt (by its rows' ids), so a file
+    stands where its adapter would.
+
+    A halves job's files are its partition's halves'; a foreign job's are the foreign
+    organization's first partition's halves and both organizations' written guides.
+    """
+    if args.rules is None:
+        raise SystemExit("--arms rules needs --rules")
+
+    def load(name: str) -> dict[str, Any]:
+        path = args.rules / f"{name}{args.rules_suffix}.json"
+        if not path.is_file():
+            raise SystemExit(f"no rules file {path}: run rules_distil.py first")
+        # A claim a running distillation holds is an empty file.
+        if path.stat().st_size == 0:
+            raise SystemExit(f"{path} is still being written")
+        return json.loads(path.read_text())
+
+    owner, partition = (
+        (args.org, args.partition) if args.pools == "halves" else (args.foreign, foreign_order[0])
+    )
+    distilled = load(f"rules-reviews-{owner}-p{partition}")
+    # What the file says it is, not only what it is named.
+    recorded = {k: distilled.get(k) for k in ("source", "org", "partition", "train_size")}
+    claimed = {"source": "reviews", "org": owner, "partition": partition, "train_size": size}
+    if recorded != claimed:
+        raise SystemExit(f"rules-reviews-{owner}-p{partition} records {recorded}, not {claimed}")
+    files: dict[tuple[str, str], str] = {}
+    # What wrote each file, and whose tokens its budget was counted in.
+    made_by = {(distilled["generator"], distilled.get("budgeted_by"))}
+    # Made under the prompts and budgets the research log describes, not an earlier set.
+    if distilled.get("pipeline") != pipeline():
+        raise SystemExit(f"{owner} p{partition}'s rules files were distilled under other prompts")
+    for half, index in indexes.items():
+        if half not in distilled.get("files", {}):
+            raise SystemExit(f"{owner} p{partition}'s rules files hold no file for {half}")
+        made = distilled["files"][half]
+        if not args.dry_run and made["pool_ids"] != [row["id"] for row in index.pool]:
+            raise SystemExit(f"{half}'s rules file was distilled from another pool")
+        files[(DISTILLED, half)] = made["file"]
+    if args.pools == "foreign":
+        for org in (args.org, args.foreign):
+            written = load(f"rules-guide-{org}")
+            if (written.get("source"), written.get("org")) != ("guide", org):
+                raise SystemExit(f"rules-guide-{org} records another guide")
+            # Distilled from the snapshot committed beside this code, page for page.
+            snapshot = json.loads((args.guides / f"guide-{org}.json").read_text())
+            if written.get("pipeline") != pipeline():
+                raise SystemExit(f"{org}'s written rules file was distilled under other prompts")
+            if written.get("guide") != pinned(snapshot):
+                raise SystemExit(f"{org}'s written rules file was distilled from another snapshot")
+            files[(WRITTEN, org)] = written["files"][org]["file"]
+            made_by.add((written["generator"], written.get("budgeted_by")))
+    return files, made_by
+
+
+def require_made_by(made_by: set[tuple[str, str | None]], *, distiller: str, reader: str) -> None:
+    """Refuse a rules file not written by the pinned `distiller`, or not budgeted in the tokens
+    of the model the arms run (`reader`), which reads it."""
+    for made, budgeted_by in made_by:
+        if made != distiller:
+            raise SystemExit(f"a rules file was distilled by {made}, not {distiller}")
+        if budgeted_by != reader:
+            raise SystemExit(f"a rules file was budgeted in {budgeted_by}'s tokens, not {reader}'s")
+
+
 def main() -> None:
-    args = parser.parse_args()
+    """The job, with every library refusal its exit (`refusals`), and where it was raised."""
+    with refusals(where=True):
+        run(parser.parse_args())
+
+
+def run(args: argparse.Namespace) -> None:
     if args.limit is not None and args.limit < 1:
         raise SystemExit(f"--limit must be at least 1, got {args.limit}")
     order, size = admissible(args.admissible, args.org)
@@ -228,34 +238,64 @@ def main() -> None:
     else:
         from sphragis.experiment.model import MODEL_ID, _require_tokenizer
 
-        fits = trainable_by_tokens(_require_tokenizer(MODEL_ID))
+        tokenizer = _require_tokenizer(MODEL_ID)
+        fits = trainable(tokenizer)
+        if args.arms == "rules" and not default_system_holds(tokenizer):
+            raise SystemExit(
+                "the chat template's default system turn is not rules_arms.DEFAULT_SYSTEM"
+            )
 
     # Each evaluated set's targets, and every prompt for them, keyed as the reader reads them.
     targets: dict[str, list[dict]] = {}
     prompts: dict[str, list[Prompt]] = {}
-    similarity: dict[str, list[float]] = {}
+    similarity: dict[str, list[float | None]] = {}
     evaluated_by: dict[str, str] = {}
+    # Each pool is its adapter's training set: as many rows as the run trained it on.
+    checked = None if args.dry_run else trained
     if args.pools == "halves":
-        indexes, held_out, corpora = half_pools(root, args.org, size, fits, recorded)
+        indexes, held_out, corpora = half_pools(root, args.org, size, fits, recorded, checked)
         for half in halves(args.org):
             targets[half] = held_out[half][: args.limit]
     else:
-        indexes, _, corpora = half_pools(root, args.foreign, size, fits, recorded)
+        indexes, _, corpora = half_pools(root, args.foreign, size, fits, recorded, checked)
         targets[args.org] = scored(args.results, args.org, order, size)[: args.limit]
-        base = run_id(EvalRun("base", args.org, None))
-        prompts[base] = [few_shot_prompt(t, []) for t in targets[args.org]]
-        similarity[base] = [0.0 for _ in targets[args.org]]
-        evaluated_by[base] = args.org
-    # Each pool is its adapter's training set: as many rows as the run trained that adapter on.
-    # The proxy cannot say so, so a dry run records both.
+        # The base arm is the retrieval foreign job's; a rules job reads it from there.
+        if args.arms == "retrieval":
+            base = run_id(EvalRun("base", args.org, None))
+            prompts[base] = [build_prompt(t) for t in targets[args.org]]
+            similarity[base] = [0.0 for _ in targets[args.org]]
+            evaluated_by[base] = args.org
+    # A dry run's length proxy cannot cut the pools exactly, so it records both sizes.
     pooled = {pool: len(index.pool) for pool, index in indexes.items()}
-    if not args.dry_run and pooled != trained:
-        raise SystemExit(f"pools hold {pooled} rows, the adapters trained on {trained}")
+    files: dict[tuple[str, str], str] = {}
+    made_by: set[tuple[str, str | None]] = set()
+    if args.arms == "rules":
+        files, made_by = rules_files(args, indexes, foreign_order, size)
+        if not args.dry_run:
+            # Every rules file was written by the one pinned distiller and budgeted in the
+            # tokens of the model these arms run, checked before the pools are prompted.
+            from sphragis.experiment.model import (
+                DISTILLER_DTYPE,
+                DISTILLER_ID,
+                DISTILLER_TEMPLATE,
+                MODEL_ID,
+                pinned_id,
+            )
+
+            distiller = distiller_signature(
+                pinned_id(DISTILLER_ID), DISTILLER_DTYPE, DISTILLER_TEMPLATE
+            )
+            require_made_by(made_by, distiller=distiller, reader=pinned_id(MODEL_ID))
     for evaluated, rows in targets.items():
         if not rows:
             raise SystemExit(f"{evaluated} has no held-out examples to prompt")
         require_unique_ids(rows, label=f"{evaluated} targets")
-        arms, closest = arm_prompts(rows, indexes, evaluated=evaluated)
+        if args.arms == "retrieval":
+            arms, closest = arm_prompts(rows, indexes, evaluated=evaluated)
+        else:
+            arms = rules_arms(rows, files, evaluated=evaluated)
+            # No shots, so no shot to be a near-duplicate: not measured, not zero.
+            closest = {key: [None for _ in rows] for key in arms}
         for key, texts in arms.items():
             prompts[key], similarity[key], evaluated_by[key] = texts, closest[key], evaluated
 
@@ -280,6 +320,15 @@ def main() -> None:
 
     report: dict[str, Any] = {
         "pools": args.pools,
+        "arms": args.arms,
+        # Which distillation the rules arms read, so a reading combines one set of them.
+        "rules_suffix": args.rules_suffix if args.arms == "rules" else None,
+        "rules_pipeline": pipeline() if args.arms == "rules" else None,
+        "rules_arms": arms_fingerprint() if args.arms == "rules" else None,
+        "rules_files": {
+            f"{condition}:{owner}": hashlib.sha256(text.encode()).hexdigest()
+            for (condition, owner), text in files.items()
+        },
         "org": args.org,
         "partition": args.partition,
         "foreign": args.foreign,
@@ -292,7 +341,8 @@ def main() -> None:
         # Prompts whose closest shot is a near-duplicate of the target at test 4's threshold:
         # the reader reads own minus sibling without them beside the full reading.
         "near_duplicate_shots": {
-            key: sum(v >= LEAKAGE_THRESHOLD for v in values) for key, values in similarity.items()
+            key: None if None in values else sum(v >= LEAKAGE_THRESHOLD for v in values)
+            for key, values in similarity.items()
         },
         "adapter_items": trained,
         # Which training rows each pool held, so a reading names the examples it retrieved from.
@@ -314,13 +364,21 @@ def main() -> None:
         print(f"DRY RUN: {sum(map(len, prompts.values()))} prompts; wrote {args.out}")
         return
 
-    from sphragis.experiment.model import HFGenerator, revision, run_provenance
+    from sphragis.experiment.model import (
+        INFERENCE_DTYPE,
+        MODEL_ID,
+        HFGenerator,
+        pinned_id,
+        run_provenance,
+    )
 
-    generator = HFGenerator()
+    generator = HFGenerator(model_id=MODEL_ID)
     signature = (
-        f"{generator.model_id}@{revision(generator.model_id)}|{generator.computed_dtype}|"
+        f"{pinned_id(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"
     )
+    if made_by and generator.computed_dtype != INFERENCE_DTYPE:
+        raise SystemExit(f"the arms run in {generator.computed_dtype}, not {INFERENCE_DTYPE}")
     marks = {key: [fingerprint(signature, p) for p in texts] for key, texts in prompts.items()}
     expected = {
         key: list(zip((t["id"] for t in targets[evaluated_by[key]]), marks[key], strict=True))
@@ -371,6 +429,12 @@ def main() -> None:
             em = sum(r["exact_match"] for r in done) / max(1, len(done))
             print(f"{key:<44} EM={em:.3f}", flush=True)
     report["generator"] = signature
+    if args.arms == "rules" and args.pools == "foreign":
+        # The base arm is the retrieval foreign job's: each target's base prompt (the registered
+        # one, as that job builds it) as this job would mark it, so the reader can check it.
+        report["base_marks"] = {
+            t["id"]: fingerprint(signature, build_prompt(t)) for t in targets[args.org]
+        }
     report["model_id"], report["max_new_tokens"] = generator.model_id, generator.max_new_tokens
     report["inference_dtype"] = generator.computed_dtype
     report["results"] = results

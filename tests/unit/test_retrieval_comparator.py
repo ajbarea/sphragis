@@ -19,6 +19,8 @@ from sphragis.corpus.load import refined_dir, write_build_record, write_source_r
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import equalize_training, window_split
 from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key, resumable
+from sphragis.experiment.rules import pipeline
+from sphragis.experiment.rules_arms import DISTILLED, WRITTEN, arms_fingerprint, rules_key
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -228,7 +230,13 @@ IDS = [f"x{i}" for i in range(40)]
 
 
 def _row(i: str, em: float, shot: float = 0.0) -> dict:
-    return {"id": i, "change_id": f"c{i}", "exact_match": em, "shot_jaccard": shot}
+    return {
+        "id": i,
+        "change_id": f"c{i}",
+        "exact_match": em,
+        "shot_jaccard": shot,
+        "fingerprint": f"m{i}",
+    }
 
 
 def _sides(partition: int) -> dict[str, list[str]]:
@@ -323,6 +331,10 @@ def _read(
 
 def test_an_own_pool_that_wins_reads_as_a_half_split_contrast(tmp_path: Path) -> None:
     report = _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job())
+    # The layout the committed readings were written in.
+    committed = {"org", "foreign", "partitions", "halves_jobs", "foreign_job", "generator"}
+    committed |= {"bootstrap_seed", "resamples", "ks", "adapters", "provenance"}
+    assert set(report) == committed
     for k in KS:
         cell = report["ks"][str(k)]
         # Own matches every even example, sibling and foreign none: +0.5 own minus sibling and
@@ -352,6 +364,13 @@ def test_pools_that_never_differ_read_as_no_contrast(tmp_path: Path) -> None:
 def test_the_reader_refuses_a_foreign_job_missing_an_example(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="lacks 1"):
         _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(drop="x3"))
+
+
+def test_the_reader_refuses_a_foreign_job_missing_an_arm(tmp_path: Path) -> None:
+    foreign = _foreign_job()
+    del foreign["results"][arm_key(KS[-1], "wikimedia-b", "openstack")]
+    with pytest.raises(SystemExit, match="lacks the arms"):
+        _read(tmp_path, [_halves_job(p, True) for p in ORDER], foreign)
 
 
 def test_the_reader_refuses_runs_out_of_admissible_order_or_a_dry_run(tmp_path: Path) -> None:
@@ -445,3 +464,315 @@ def test_the_reader_refuses_adapters_decoded_otherwise(tmp_path: Path) -> None:
     runs[6]["max_new_tokens"] = 96
     with pytest.raises(SystemExit, match="decoded with"):
         _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(), runs)
+
+
+# The reader on rules arms: a distilled file per half, and both organizations' written guides.
+RULES = {"rules_suffix": "", "rules_pipeline": pipeline(), "rules_arms": arms_fingerprint()}
+
+
+def _rules_halves_job(partition: int) -> dict:
+    results = {}
+    for owner in _sides(partition):
+        for evaluated, ids in _sides(partition).items():
+            hit = owner == evaluated
+            results[rules_key(DISTILLED, owner, evaluated)] = [
+                _row(i, 1.0 if hit and int(i[1:]) % 2 == 0 else 0.0) for i in ids
+            ]
+    return {
+        "pools": "halves",
+        "arms": "rules",
+        "partition": partition,
+        **_fixed(),
+        **GEN,
+        **RULES,
+        "results": results,
+    }
+
+
+def _rules_foreign_job() -> dict:
+    results = {
+        rules_key(DISTILLED, pool, "openstack"): [_row(i, 0.0) for i in IDS]
+        for pool in ("wikimedia-a", "wikimedia-b")
+    }
+    # The own guide matches every example divisible by four, the foreign guide none.
+    results[rules_key(WRITTEN, "openstack", "openstack")] = [
+        _row(i, 1.0 if int(i[1:]) % 4 == 0 else 0.0) for i in IDS
+    ]
+    results[rules_key(WRITTEN, "wikimedia", "openstack")] = [_row(i, 0.0) for i in IDS]
+    return {
+        "pools": "foreign",
+        "arms": "rules",
+        "foreign": "wikimedia",
+        **_fixed(),
+        **GEN,
+        **RULES,
+        # The base arm's rows (`_foreign_job`) as this job would mark them.
+        "base_marks": {i: f"m{i}" for i in IDS},
+        "results": results,
+    }
+
+
+def _rules_read(tmp_path: Path, jobs: list[dict], foreign: dict) -> dict:
+    tmp_path.mkdir(exist_ok=True)
+    base = _foreign_job()
+    (tmp_path / "base.json").write_text(json.dumps(base))
+    halves, results = [], tmp_path / "results"
+    results.mkdir()
+    for n, job in enumerate(jobs):
+        halves.append(tmp_path / f"h{n}.json")
+        halves[-1].write_text(json.dumps(job))
+        seeds = "" if n == 0 else f"-s{n + 1}"
+        name = f"rq1-partition-openstack-p{ORDER[n]}{seeds}-n{SIZE}.json"
+        (results / name).write_text(json.dumps(_adapter_run(n + 1, ORDER[n])))
+    (tmp_path / "f.json").write_text(json.dumps(foreign))
+    listing = tmp_path / "list.json"
+    listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
+    out = tmp_path / "read.json"
+    argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
+    argv += ["--arms", "rules", "--base-job", str(tmp_path / "base.json")]
+    argv += ["--foreign-job", str(tmp_path / "f.json"), "--halves", *map(str, halves)]
+    argv += ["--results", str(results), "--resamples", "200", "--out", str(out)]
+    _run(reader, argv)
+    return json.loads(out.read_text())
+
+
+def test_the_rules_arms_read_their_files_and_the_written_guides(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    cell = _rules_read(tmp_path, jobs, _rules_foreign_job())["families"]["distilled"]
+    assert cell["own_minus_sibling"]["estimate"] == pytest.approx(0.5)
+    assert cell["own_minus_sibling"]["reading"] == "carries a half-split contrast"
+    assert cell["written_own_minus_written_foreign"]["estimate"] == pytest.approx(0.25)
+    assert cell["written_own_minus_none"]["estimate"] == pytest.approx(0.25)
+    # Distilled own matches the even examples, the written guide the quarter: +0.25.
+    assert cell["distilled_own_minus_written_own"]["estimate"] == pytest.approx(0.25)
+
+
+def test_rules_jobs_prompted_two_ways_or_unrecorded_are_refused(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    jobs[-1]["rules_arms"] = "another"
+    with pytest.raises(SystemExit, match="rules_arms"):
+        _rules_read(tmp_path / "mixed", jobs, _rules_foreign_job())
+    unrecorded = {k: v for k, v in _rules_foreign_job().items() if k != "rules_arms"}
+    with pytest.raises(SystemExit, match="does not record the rules files and prompts"):
+        _rules_read(tmp_path / "none", [_rules_halves_job(p) for p in ORDER], unrecorded)
+
+
+def test_a_base_arm_prompted_otherwise_is_refused(tmp_path: Path) -> None:
+    foreign = _rules_foreign_job()
+    foreign["base_marks"][IDS[0]] = "another prompt"
+    with pytest.raises(SystemExit, match="1 rows prompted otherwise or unmarked, 0 not"):
+        _rules_read(tmp_path, [_rules_halves_job(p) for p in ORDER], foreign)
+    # A base row the rules jobs did not target is one the check cannot vouch for.
+    foreign = _rules_foreign_job()
+    del foreign["base_marks"][IDS[1]]
+    with pytest.raises(
+        SystemExit, match="0 rows prompted otherwise or unmarked, 1 not among their targets"
+    ):
+        _rules_read(tmp_path / "extra", [_rules_halves_job(p) for p in ORDER], foreign)
+    del foreign["base_marks"]
+    with pytest.raises(SystemExit, match="no base_marks"):
+        _rules_read(tmp_path / "unmarked", [_rules_halves_job(p) for p in ORDER], foreign)
+
+
+def test_a_rules_reading_needs_the_base_arm(tmp_path: Path) -> None:
+    listing = tmp_path / "list.json"
+    listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
+    argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
+    argv += ["--arms", "rules", "--foreign-job", "f.json", "--halves", *["h.json"] * PARTITIONS]
+    argv += ["--results", str(tmp_path), "--out", str(tmp_path / "o.json")]
+    with pytest.raises(SystemExit, match="base-job is for --arms rules"):
+        _run(reader, argv)
+
+
+def test_a_rules_job_prompts_with_each_file_in_the_system_turn(
+    corpora: dict[str, Path], tmp_path: Path
+) -> None:
+    rules = tmp_path / "rules"
+    rules.mkdir()
+    halves = ("openstack-a", "openstack-b")
+    files = {h: {"pool_ids": [], "file": f"- rule of {h}"} for h in halves}
+    made = {
+        "files": files,
+        "generator": "qwen@rev|float32",
+        "budgeted_by": "q@r",
+        "pipeline": pipeline(),
+        **{"source": "reviews", "org": "openstack", "partition": ORDER[0], "train_size": SIZE},
+    }
+    (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps(made))
+    report = _halves(
+        corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
+        "--rules", str(rules),
+    )  # fmt: skip
+    expected = {rules_key(DISTILLED, owner, evaluated) for owner in halves for evaluated in halves}
+    assert set(report["prompt_chars"]) == expected and report["arms"] == "rules"
+    # No shots in a rules arm: its near-duplicate count is not applicable, not zero.
+    assert set(report["near_duplicate_shots"].values()) == {None}
+
+
+def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
+    import argparse
+
+    rules = tmp_path / "rules"
+    rules.mkdir()
+    pool = [{"id": "x1"}, {"id": "x2"}]
+    files = {"openstack-a": {"pool_ids": ["x1", "other"], "file": "- r"}}
+    made = {
+        "files": files,
+        "generator": "qwen@rev|float32",
+        "budgeted_by": "q@r",
+        "pipeline": pipeline(),
+        **{"source": "reviews", "org": "openstack", "partition": 3, "train_size": SIZE},
+    }
+    (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
+    args = argparse.Namespace(
+        rules=rules, rules_suffix="", pools="halves", org="openstack", partition=3, dry_run=False
+    )
+
+    class Index:
+        def __init__(self, rows: list[dict]) -> None:
+            self.pool = rows
+
+    with pytest.raises(SystemExit, match="distilled from another pool"):
+        comparator.rules_files(args, {"openstack-a": Index(pool)}, None, SIZE)
+    files["openstack-a"]["pool_ids"] = ["x1", "x2"]
+    (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps(made))
+    picked, made_by = comparator.rules_files(args, {"openstack-a": Index(pool)}, None, SIZE)
+    assert picked == {(DISTILLED, "openstack-a"): "- r"} and made_by == {
+        ("qwen@rev|float32", "q@r")
+    }
+    # Named as partition 3's, recorded as another's.
+    (rules / "rules-reviews-openstack-p3.json").write_text(json.dumps({**made, "partition": 5}))
+    with pytest.raises(SystemExit, match="records"):
+        comparator.rules_files(args, {"openstack-a": Index(pool)}, None, SIZE)
+
+
+def test_a_rules_file_still_being_written_is_refused(tmp_path: Path) -> None:
+    import argparse
+
+    (tmp_path / "rules-reviews-openstack-p3-x.json").write_text("")
+    args = argparse.Namespace(
+        rules=tmp_path,
+        rules_suffix="-x",
+        pools="halves",
+        org="openstack",
+        partition=3,
+        dry_run=False,
+    )
+    with pytest.raises(SystemExit, match="still being written"):
+        comparator.rules_files(args, {}, None, SIZE)
+
+
+def test_a_rules_job_without_its_files_is_refused(corpora: dict[str, Path], tmp_path: Path) -> None:
+    with pytest.raises(SystemExit, match="run rules_distil.py first"):
+        _halves(
+            corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
+            "--rules", str(tmp_path),
+        )  # fmt: skip
+
+
+def test_a_guide_whose_text_does_not_match_its_hash_is_refused(tmp_path: Path) -> None:
+    import argparse
+
+    distil_script = _script("rules_distil")
+    guide = {"sources": [{"title": "T", "revision": 1, "sha256": "0" * 64, "text": "Use tabs."}]}
+    (tmp_path / "guide-openstack.json").write_text(json.dumps(guide))
+    args = argparse.Namespace(source="guide", org="openstack", guides=tmp_path)
+    with pytest.raises(ValueError, match="does not match its recorded sha256"):
+        distil_script.sources_of(args, None)
+    import hashlib
+
+    guide["sources"][0]["sha256"] = hashlib.sha256(b"Use tabs.").hexdigest()
+    (tmp_path / "guide-openstack.json").write_text(json.dumps(guide))
+    head, plan = distil_script.sources_of(args, None)
+    assert plan == {"openstack": {"kind": "guide", "sources": ["Use tabs."]}}
+    assert head["guide"] == [{"title": "T", "revision": 1, "sha256": guide["sources"][0]["sha256"]}]
+
+
+def test_a_rules_reading_refuses_jobs_from_another_distillation(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    jobs[2]["rules_suffix"] = "-other"
+    (tmp_path / "base.json").write_text(json.dumps(_foreign_job()))
+    halves, results = [], tmp_path / "results"
+    results.mkdir()
+    for n, job in enumerate(jobs):
+        halves.append(tmp_path / f"h{n}.json")
+        halves[-1].write_text(json.dumps(job))
+    (tmp_path / "f.json").write_text(json.dumps(_rules_foreign_job()))
+    listing = tmp_path / "list.json"
+    listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))
+    argv = ["--org", "openstack", "--foreign", "wikimedia", "--admissible", str(listing)]
+    argv += ["--arms", "rules", "--base-job", str(tmp_path / "base.json")]
+    argv += ["--foreign-job", str(tmp_path / "f.json"), "--halves", *map(str, halves)]
+    argv += ["--results", str(results), "--out", str(tmp_path / "o.json")]
+    with pytest.raises(SystemExit, match="rules_suffix"):
+        _run(reader, argv)
+
+
+def test_a_refusal_exits_with_where_it_was_raised_and_a_corrupt_file_keeps_its_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def refuses(args: object) -> None:
+        raise ValueError("no examples")
+
+    monkeypatch.setattr(comparator, "run", refuses)
+    monkeypatch.setattr(comparator.parser, "parse_args", lambda: None)
+    with pytest.raises(SystemExit, match=r"no examples \(at test_retrieval_comparator\.py:\d+\)"):
+        comparator.main()
+
+    def corrupt(args: object) -> None:
+        json.loads("{")
+
+    monkeypatch.setattr(comparator, "run", corrupt)
+    with pytest.raises(json.JSONDecodeError):
+        comparator.main()
+
+
+def test_a_rules_file_from_another_distiller_or_budget_is_refused() -> None:
+    comparator.require_made_by({("d", "m")}, distiller="d", reader="m")
+    with pytest.raises(SystemExit, match="distilled by e"):
+        comparator.require_made_by({("e", "m")}, distiller="d", reader="m")
+    # A file from before the budget was recorded, or counted in another model's tokens.
+    for budget in (None, "n"):
+        with pytest.raises(SystemExit, match="budgeted in"):
+            comparator.require_made_by({("d", budget)}, distiller="d", reader="m")
+
+
+def test_a_value_error_from_outside_the_study_is_not_a_refusal() -> None:
+    from fractions import Fraction
+
+    from sphragis.refusal import refusals
+
+    # Raised inside a library (the standard library's fractions.py), as transformers would
+    # during generation: it keeps its traceback.
+    with pytest.raises(ValueError, match="Invalid literal"), refusals():
+        Fraction("x")
+    with pytest.raises(SystemExit, match="mine"), refusals():
+        raise ValueError("mine")
+
+
+def test_a_frozen_module_or_the_checkouts_own_venv_is_not_the_study() -> None:
+    import posixpath
+
+    from sphragis import refusal
+
+    # A frozen standard-library module's pseudo-name is not a file of the study's.
+    with pytest.raises(ValueError, match="empty sequence"), refusal.refusals():
+        posixpath.commonpath([])
+    assert not refusal._studys("<frozen posixpath>")
+    # The running interpreter's venv sits inside the checkout on the clusters; it is not the study.
+    import sys
+
+    assert not refusal._studys(str(Path(sys.prefix) / "lib" / "transformers" / "generation.py"))
+    assert refusal._studys(str(refusal._ROOT / "scripts" / "rules_distil.py"))
+
+
+def test_a_part_is_reused_only_whole_and_under_its_fingerprint(tmp_path: Path) -> None:
+    distil_script = _script("rules_distil")
+    cache = tmp_path / "p.part.json"
+    assert distil_script.cached_part(cache, "m") is None
+    cache.write_text('{"fingerprint": "m", "rules": []')
+    assert distil_script.cached_part(cache, "m") is None
+    cache.write_text(json.dumps({"fingerprint": "other"}))
+    assert distil_script.cached_part(cache, "m") is None
+    cache.write_text(json.dumps({"fingerprint": "m"}))
+    assert distil_script.cached_part(cache, "m") == {"fingerprint": "m"}

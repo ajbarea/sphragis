@@ -7995,6 +7995,212 @@ counts and the cut being one deterministic function of them. Adapter runs are fo
 naming (`-s<k>-n<N>`, no cluster tag); a run made elsewhere is a different study by the repo's
 naming rule and is not read.
 
+### Planned before any run: the rules-file comparator (2026-10-06)
+
+The registered rules-file comparator (registered decisions, "Comparators and audits"), on the
+retrieval comparator's runner, a rules file in each pool's place. Design of record:
+`docs/superpowers/specs/2026-10-05-rules-file-comparator-design.md`. Exploratory, binding nothing.
+
+**Distillation** (`sphragis/experiment/rules.py`, `scripts/rules_distil.py`). The base model
+(Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32), not a stronger one, so no second model's prior
+about these organizations enters the file. A map pass packs a source into chunks of at most 16,384
+tokens and lists, one imperative rule a line, the conventions each states, in at most 1,024 tokens;
+an answer that reaches its budget is flagged and its last, possibly cut, line dropped. A reduce pass
+merges the lists into one file of at most 2,048 tokens, one training example's length, the context one
+retrieved shot takes at k = 1. Two sources, one pipeline. Reviewed changes: each half's pool, the
+rows its adapter trained on (checked by row ids against the comparator's pools), each change's
+comments, code and revision; the merge keeps a rule only if it recurs in two or more lists, the
+promotion rule of industrial rule mining (Qodo's Rule Miner, July 2026: specific, applied by the
+author, recurring). Written guides (`scripts/rules_guides.py`, `datasets/rules/`): OpenStack's
+`HACKING.rst` at e75bfb3, and MediaWiki's general and documentation pages with the page for every
+language that has a file in Wikimedia's training window, most-used language first, as plain text
+pinned to their revisions;
+MediaWiki's Puppet page soft-redirects to wikitech's Puppet guidelines, read there. A guide states
+each rule once, so its merge keeps every rule and only the budget cuts. 1,795 words for OpenStack,
+20,699 for Wikimedia's twelve pages.
+
+**Arms.** The file goes in the system turn, after the model's default system prompt, the place
+coding agents load a rules file; the user turn is the base arm's prompt unchanged. Distilled own,
+sibling and foreign (the other organization's first partition's halves, averaged), over the same
+first ten partitions as the retrieval comparator; written own and written foreign, once per
+organization; the base arm is the retrieval comparator's.
+
+**Readings**, by the retrieval comparator's rule and estimator. Distilled own minus sibling is
+read; sibling minus foreign, own minus none, written own minus written foreign, written own minus
+none, and distilled own minus written own (the two sources of a file) are reported. If no file
+carries a contrast the adapters carry, that is the answer to why train weights rather than declare
+rules.
+
+**Cost**, before it is spent. Distillation: one job per partition (both halves, some ten to
+fourteen map calls and one reduce a half) and one per guide. Evaluation: 2 generations an example
+a partition, 4 an example once: 12,024 for OpenStack and 17,064 for Wikimedia, about 18 GH200-hours
+at the retrieval smoke job's at most 2.2 s a generation.
+
+**Amended before any arm was scored (2026-10-06).** Two distillation smoke jobs at 6a3b230 ran on
+the real model: OpenStack's guide (job 223029, 58 s) and OpenStack partition 2's two halves (job
+223030, 16 min, thirteen chunks a half). Only the files were read, no arm was generated or scored.
+They showed two faults. The guide file stopped at exactly 512 tokens mid-word, a map answer cut by
+its budget with nothing recording it; the map budget is now 1,024, and a capped answer is flagged and
+its cut line dropped. The mined files were mostly practice any project follows ("use meaningful
+variable names", "follow PEP 8"), so the two review prompts now ask the model to leave out general
+good practice and keep conventions particular to the organization, naming what they concern; their
+topic list drops tests and error handling, and the merge no longer drops rules that name a
+function, so the prompts do not contradict that request. A review distillation needs three or more
+chunks, so "in two or more lists" reads as recurrence. The guide prompts are unchanged: a written guide is the organization's own declaration, and its rules
+are kept as stated. The smoke files are not used; every file is distilled again under the amended
+pipeline.
+
+**Amended again before any arm was scored (2026-10-06), after a second smoke read.** At 36ba0d4 the
+mined file for OpenStack partition 2's first half (job 223034) listed tools no OpenStack review
+names ("use black", "use mypy", "use bandit"): asked for the particular, the model invented it. Ten
+of thirteen map answers ran to their budget, and the merge kept 179 rules where it was asked for
+recurrence. The guide file (job 223033) was sound: 37 rules from `HACKING.rst`, nothing capped. So
+mined rules are now grounded and their recurrence counted in code rather than asked of the model.
+Each change in a chunk is numbered; the map lists at most 15 rules, each ending with the numbers
+of the changes that show it; a rule is kept only if it cites two or more of its chunk's changes;
+three or more lists must keep a rule; the merge keeps at most 40. The pipeline fingerprint is now
+the source of `rules.py`, so any change to its prompts, budgets or parsing makes every file
+distilled before it refused. The base model stays the distiller if the grounded files hold up;
+otherwise a larger model of the same family distils, recorded as a change to the design.
+
+**The distiller changed, before any arm was scored (2026-10-06).** Under the grounded prompts at
+73c6422, the base model still could not distil rules from reviews (jobs 223245 and 223246, OpenStack
+partition 2 and Wikimedia partition 1). Asked for at most 15 rules a chunk, it listed up to 83;
+several chunks kept every rule they listed (55 of 55, 38 of 38), so its change numbers did not show
+the rule; and its merge added tools no list named ("use the `helm` package manager", "use the
+`prometheus` monitoring tool"). The rules files are therefore distilled by Qwen3.6-27B (2026-04,
+Apache-2.0, revision 6a9e13b), the newest dense model of the evaluated model's family that fits one
+GH200, in bf16, greedy, thinking off; the evaluated model still generates and scores every arm.
+Greedy decoding departs from the card's sampling advice, for a file that reproduces from its
+inputs; bf16's run-to-run drift is recorded rather than removed, since a file once written is the
+arm's fixed input. The base model's guide file (37 rules from `HACKING.rst`) was sound, but every
+file, guide and review alike, comes from the one distiller, so the written and distilled arms
+differ by source, not by model.
+
+**Recurrence counted in code, after the distiller's first read (2026-10-06).** At 849c25d,
+Qwen3.6-27B mined grounded, organization-specific rules (jobs 223605 and 223606: "use `joinedload`
+instead of the deprecated `joinedload_all`", "use `wfMessage()` for user-facing error messages",
+"use `statslib` instead of `statsd`") and wrote OpenStack's guide file in 44 rules (job 223607).
+But its merge applied "in two or more lists" to one half and not the other: Wikimedia partition
+1's halves kept 52 rules and 1. So the merge now keeps every rule and cites the lists each comes
+from, and code keeps a rule citing two or more lists, most-cited first, at most 40, cut to the
+file budget. A map's first 15 rules are kept, the limit its prompt states, since some chunks
+listed more than 40. Files distilled before this are not used.
+
+**Recurrence across lists ranks, it does not filter (2026-10-06).** Counted in code at ba42aed,
+"in two or more lists" left one to five rules a half (jobs 224850 and 224851: 3 and 5 for
+OpenStack partition 2, 1 and 1 for Wikimedia partition 1): a convention particular to one of an
+organization's hundreds of projects seldom recurs across chunks, and the map already holds a rule
+to two or more of its chunk's changes. So a merged rule is kept when it cites a list, which keeps
+the merge from adding rules, and the most-cited come first, at most 40 within the file budget.
+Files distilled before this are not used.
+
+**The pipeline the files are distilled under, as smoke-read (2026-10-06).** At 19320d6 (jobs 225114
+and 225115, 42 and 59 minutes on a GH200 for a partition's two halves), generated from the files:
+
+| partition | half | rules | distiller tokens | capped maps |
+|---|---|---|---|---|
+| openstack p2 | openstack-a | 21 | 473 | 3 of 15 |
+| openstack p2 | openstack-b | 24 | 484 | 9 of 14 |
+| wikimedia p1 | wikimedia-a | 34 | 687 | 6 of 16 |
+| wikimedia p1 | wikimedia-b | 23 | 473 | 7 of 16 |
+
+Every file holds grounded, organization-specific rules within the budget ("use `joinedload` instead
+of the deprecated `joinedload_all`", "use `ConnectionProvider` instead of `DBLoadBalancerFactory`").
+No arm has been scored.
+
+**The pipeline as reviewed, before the full distillation (2026-10-06).** Four changes after the
+smoke read, each from review. The file budget is counted in the evaluated model's tokens, the
+model that reads the file, not the distiller's; each smoke file is shorter in them, and none came
+near the budget. A map list left empty by the evidence filter no longer goes to the merge (up to
+half of Wikimedia's lists were empty and still numbered, so a merged rule could cite one). A merged
+rule's citation counts only where one rule of that list holds more than half of its content words
+(`rules.grounded`: lower-cased word tokens, contractions split off, identifiers whole, numbers
+kept; function, imperative, connective and auxiliary words aside, and the names every Python
+file holds, `self` and `None`), and only where the merged rule has two content words or more,
+since one shared word is not support. Every case the reviews raised is pinned as a test
+with its decision. Three
+rounds of hand-built identifier rules (backticks, snake_case, PascalCase) each let a new kind of
+token ground unrelated rules; containment is the measure of support that replaced them. On the
+smoke merges, replayed: every cited merged rule passes in a list it cites, one in a hundred passes
+against the other organization's lists, no invented rule tried ("use black for formatting",
+"follow OpenStack hacking rules", "use `in` to test keys") passes, and every file keeps the
+same rules, ranked by its grounded citations where the smoke run's code ranked by every citation
+(re-derived under the code as merged). Support is lexical, so a merged rule that inverts its source or changes a value in
+it would pass; read rule by rule beside its best source, most smoke merges copy a source rule
+verbatim, the rest restate one or join two, and none inverts or alters one. A polarity test was
+tried and refused faithful rules ("instead of" against "rather than"), so the limit is stated
+rather than patched. A rule the merge writes twice (case, spacing and a closing period aside) is kept
+once, as its first grounded copy reads, citing every list either copy is grounded in (the threshold held for the copies together), and the file records which
+chunk each merged list came from. A written guide's file is held to the same caps as a distilled one (`capped_file`: at most
+40 rules, within the budget), so the distilled-against-written contrast does not also compare file
+size. The distiller signature now carries the chat-template options, each file records the
+model its budget was counted in (the comparator refuses another), and the think-block strip lives
+in `rules.py` under the pipeline fingerprint. The arm-side prompts moved to `rules_arms.py`, under
+a fingerprint of every arm `rules_arms` builds (keys and prompts, both conditions) for fixed
+targets and files, which every rules job records and the
+reader holds equal (refusing a job that lacks it), so a change there neither voids the distilled
+files nor mixes arms prompted two ways. The rules foreign job also records each target's base
+prompt as it would mark it, and the reader refuses a base arm (taken from the retrieval foreign
+job) whose rows were prompted otherwise. The full distillation runs this pipeline.
+
+**Smoke6 and the last review, before the full distillation (2026-10-06).** At 21b7ea4, job 226889
+(53 minutes) distilled Wikimedia partition 1 through the new paths; generated from its file:
+
+| half | merged rules | kept | evaluated-model tokens | lists merged |
+|---|---|---|---|---|
+| wikimedia-a | 53 | 40 | 734 | 9 of 16 |
+| wikimedia-b | 23 | 23 | 446 | 9 of 16 |
+
+The file records its distiller and the model its budget was counted in, every cited merged rule
+is grounded in a list it cites, and one half's merge wrote more rules than the 40-rule cap,
+which kept the most-cited. The final review then widened the pipeline fingerprint to the code
+outside `rules.py` that distillation runs through (the review and chat rendering, the budget's
+value, the guide's paragraph split, now in `rules.py`), dropped the floor of three lists holding
+a rule (its reason was recurrence across lists, which now only ranks; a half whose lists hold no
+rule is refused), and made the comparator check each file's recorded source, organization,
+partition and size, not only its name.
+
+**The written guide's file, as smoke-read and changed (2026-10-06).** Job 226890 distilled
+Wikimedia's twelve-page guide at 21b7ea4: its paragraphs packed into two chunks, both map answers
+reached their budget, the merge kept every rule in source order, and the 40-rule cap kept the
+first 40, every one from the first chunk (the general, documentation and PHP pages). The
+JavaScript, Vue, Python, Puppet, CSS, Java, Lua, database and SVG pages reached the file not at
+all, by position alone. A guide is now mapped a page at a time, so no page sits in another's
+capped tail, and has no merge: its file takes the pages' rules a page at a time in turn, copies
+kept once (`rules.guide_file`), so the cap falls on every page alike. OpenStack's guide is one
+page. Review-mined files keep their merge, which their recurrence needs. The final review's
+other findings are fixed beside it: a refusal is a plain `ValueError` raised in the study's own
+files (not a cluster venv's, nor a frozen module's); the distiller loads, outside any refusal,
+only when a file is still to be made; each cached part keeps the provenance of the run that made
+it; the separator between packed reviews is counted once.
+
+**Every page of a written guide reaches its file (2026-10-06).** Jobs 227100 and 227101
+(RUN_TAG=smoke7, at c8f0de2) distilled Wikimedia's guide in 12 chunks, one a page, 2 map answers
+capped, and OpenStack's in 1, none capped; each file holds 40 rules (514 and 619 tokens of the
+evaluated model). Replayed under 8bd68b1, `rules.guide_file` on the job's map lists, grouped by
+`part_pages`, keeps the same rules for both organizations and the per-page counts the job
+recorded; Wikimedia's file now reads in page order rather than in turn. Generated from
+`rules-guide-wikimedia-smoke7.json`:
+
+| page | rules listed | rules kept |
+|---|---|---|
+| Manual:Coding conventions | 46 | 4 |
+| Manual:Coding conventions/Documentation | 8 | 4 |
+| Manual:Coding conventions/PHP | 69 | 4 |
+| Manual:Coding conventions/JavaScript | 73 | 4 |
+| Manual:Coding conventions/Vue | 27 | 3 |
+| Manual:Coding conventions/Python | 7 | 3 |
+| Puppet/Coding and style guidelines | 55 | 3 |
+| Manual:Coding conventions/CSS | 37 | 3 |
+| Manual:Coding conventions/Java | 23 | 3 |
+| Manual:Coding conventions/Lua | 10 | 3 |
+| Manual:Coding conventions/Database | 3 | 3 |
+| Manual:Coding conventions/SVG | 43 | 3 |
+
+The 40-rule cap now falls on every page alike: each holds 3 or 4 of the file's rules, where job
+226890's file held none from the JavaScript page on.
+
 ### The retrieval comparator read: every own-minus-sibling reading inconclusive (2026-10-06)
 
 The 22 TIGRIS jobs planned on 2026-10-05 (223007 to 223028, pinned at d077d54, every one completed;

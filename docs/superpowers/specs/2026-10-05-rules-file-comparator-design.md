@@ -1,6 +1,6 @@
 # A rules-file comparator
 
-Status: design, 2026-10-05. Registered as an exploratory comparator on 2026-10-04 (registered
+Status: design, 2026-10-05; implemented 2026-10-06 (plan of record: research log, 2026-10-06). Registered as an exploratory comparator on 2026-10-04 (registered
 decisions, "Comparators and audits beside the confirmatory test"). Built on the retrieval
 comparator's runner (#77), with each pool replaced by a rules file.
 
@@ -30,12 +30,23 @@ A pool is the retrieval comparator's: the rows the half's adapter trains on (`re
 
 ## Decisions
 
-1. **The distiller is the base model** (Qwen2.5-Coder-7B-Instruct, pinned, greedy, fp32). A
-   frontier distiller would bring in what it already knows about OpenStack and MediaWiki, and the
-   comparison would then credit the rules file with a second model's prior. One model also keeps
-   every arm offline on the cluster.
+1. **The distiller is Qwen3.6-27B** (pinned, bf16, greedy, thinking off), the newest dense model
+   of the evaluated model's family that fits one GH200. The base model was the first choice, to
+   keep a second model's prior out of the file, and four smoke jobs showed it cannot distil
+   grounded rules from reviews: it ignored the per-chunk limit, cited changes that did not show
+   the rule, and its merge added tools no list named. A file it wrote would be a strawman, so a
+   stronger distiller writes the files; every arm is still generated and scored by the evaluated
+   model. The prior a larger model brings is the price of a file that says what the reviews say.
 2. **One pipeline for both sources.** The written conventions and the review comments go through
-   the same fixed map and reduce prompts. The written guides are OpenStack's `hacking` guidelines
+   one map and reduce pipeline, with prompts that differ only where the sources do: a review
+   merge ranks rules by how many lists they recur in (industrial rule mining's promotion rule,
+   Qodo Rule Miner, 2026-07), a guide merge keeps every rule, since a guide states each once.
+   Amended 2026-10-06, before any arm was scored: a mined rule's evidence is its chunk's changes
+   (two or more), and recurrence across lists ranks rules rather than filtering them, since
+   requiring two lists left one to five rules a half (research log, 2026-10-06). Amended again
+   the same day: a guide is mapped a page at a time and has no merge; its file takes its pages'
+   rules a page at a time in turn (`rules.guide_file`), since a merge that kept rules in source
+   order left the cap on Wikimedia's language pages (smoke job 226890). The written guides are OpenStack's `hacking` guidelines
    and MediaWiki's coding conventions, snapshotted once with their URL, date and sha256 under
    `datasets/rules/`. Written own minus distilled own then compares sources, not formatting.
 3. **Map, then reduce.** Map: pack a pool's rows (each row's review comments with its hunk before
@@ -46,10 +57,13 @@ A pool is the retrieval comparator's: the rows the half's adapter trains on (`re
    `max_seq_length`). A rules file then takes the context one retrieved shot takes at k = 1.
    The comparison sits at the retrieval comparator's smallest registered context, not at a
    length chosen after seeing files.
-5. **One reader.** `retrieval_read.py` takes the conditions it reads (`retrieval-k1`,
-   `retrieval-k3`, `rules-distilled`), with the same estimator, reading rule and SESOI. The
-   written arms are organization-level, so they enter a per-example paired contrast, not the
-   half-split.
+5. **The file goes in the system turn**, after the model's default system prompt, where coding
+   agents load a rules file; the user turn is the base arm's prompt unchanged.
+6. **One runner and one reader.** `retrieval_comparator.py --arms rules` and
+   `retrieval_read.py --arms rules` read the arm families (`retrieval-k1` and `retrieval-k3`,
+   or `rules-distilled`) with the same estimator, reading rule and SESOI; the rules reading takes
+   its base arm from the retrieval foreign job. The written arms are organization-level, so they
+   enter paired contrasts per half (`paired_clusters`), not the half split.
 
 ## Cost, before it is spent
 

@@ -763,6 +763,7 @@ _JOB_DEFAULTS = {
     "SEEDS": "1",
     "POOLS": "halves",
     "PARTITION": "2",
+    "SOURCE": "reviews",
 }
 
 
