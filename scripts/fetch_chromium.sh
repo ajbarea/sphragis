@@ -58,8 +58,9 @@ for m in $MONTHS; do
   # it, so a snapshot without one, or beside an open one, is a partial write. A complete
   # snapshot is immutable and is never refetched: build resumes from it.
   if [ -s "$raw.ndjson.gz" ] && [ -s "$raw.record.json" ] \
-    && python3 -c 'import json, sys; sys.exit(not json.load(open(sys.argv[1])).get("complete", True))' \
-      "$raw.record.json" 2>/dev/null; then
+    && uv run --no-sync --no-active python -c 'import sys
+from sphragis.corpus.storage import refused_snapshot
+sys.exit(bool(refused_snapshot(sys.argv[1])))' "$raw.ndjson.gz"; then
     recorded=$(python3 -c '
 import json, sys
 record = json.load(open(sys.argv[1]))

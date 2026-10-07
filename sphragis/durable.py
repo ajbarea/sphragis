@@ -10,29 +10,57 @@ returned.
 from __future__ import annotations
 
 import errno
+import fcntl
+import glob
 import json
 import os
+import stat
 import sys
-import tempfile
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Any
 
 
 def write_atomic(path: Path, data: bytes) -> None:
-    """Replace `path` with `data`; a crash leaves the old file or the new one, never part of one."""
+    """Replace `path` with `data`; a crash leaves the old file or the new one, never part of one.
+
+    The staging file is named for this process, so a stop that leaves one behind is swept by the
+    next write of the same path once its process is gone. A replaced file keeps its mode; a new
+    one gets the umask's, as `write_bytes` would give it.
+    """
     path = Path(path)
-    fd, staging = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    _sweep_staging(path)
+    staging = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    fd = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
     try:
         with os.fdopen(fd, "wb") as handle:
+            if path.exists():
+                os.fchmod(handle.fileno(), stat.S_IMODE(path.stat().st_mode))
             handle.write(data)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(staging, path)
     except BaseException:
-        Path(staging).unlink(missing_ok=True)
+        staging.unlink(missing_ok=True)
         raise
     _sync_directory(path.parent)
+
+
+@contextmanager
+def exclusive(path: Path) -> Iterator[None]:
+    """Hold `path` for one process: a second one is refused at once rather than interleaved.
+
+    The lock is a sidecar file, so it survives `read_records` replacing the log it guards.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.with_name(f".{path.name}.lock").open("a") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit(f"{path} is held by another process; let it finish") from None
+        yield
 
 
 def open_log(path: Path) -> IO[str]:
@@ -86,6 +114,26 @@ def read_records(path: Path) -> list[Any]:
         )
         write_atomic(path, whole)
     return records
+
+
+def _sweep_staging(path: Path) -> None:
+    """Remove staging files a stopped process left beside `path`."""
+    prefix = f".{path.name}."
+    for stale in path.parent.glob(f"{glob.escape(prefix)}*.tmp"):
+        pid = stale.name[len(prefix) : -len(".tmp")]
+        # This process's own name is free to take: it holds no write of this path open.
+        if pid.isdigit() and (int(pid) == os.getpid() or not _alive(int(pid))):
+            stale.unlink(missing_ok=True)
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
 def _sync_directory(directory: Path) -> None:

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import gzip
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -27,21 +27,25 @@ def snapshot_record_path(snapshot: Path) -> Path:
     return snapshot.with_suffix("").with_suffix(".record.json")
 
 
+def read_snapshot_record(snapshot: Path) -> dict[str, Any] | None:
+    """A snapshot's record as a dict, or None when it is missing, unreadable or not an object."""
+    try:
+        record = json.loads(snapshot_record_path(Path(snapshot)).read_bytes())
+    except (OSError, ValueError):
+        return None
+    return record if isinstance(record, dict) else None
+
+
 def unfinished_snapshot(snapshot: Path) -> bool:
-    """Whether a snapshot's record marks its write unfinished, or cannot be read.
+    """Whether a snapshot's record says its write did not finish.
 
     The record is the completion marker, as a build's is: written open before the snapshot and
-    closed after it. A missing record, or one from before the marker (no `complete` key), says
-    nothing either way.
+    closed after it. Only an open record says so. A missing or unreadable record, or one from
+    before the marker (no `complete` key), says nothing, so it never licenses replacing a
+    snapshot without `overwrite`.
     """
-    record_path = snapshot_record_path(Path(snapshot))
-    if not record_path.is_file():
-        return False
-    try:
-        record = json.loads(record_path.read_bytes())
-    except ValueError:
-        return True
-    return not isinstance(record, dict) or not record.get("complete", True)
+    record = read_snapshot_record(snapshot)
+    return record is not None and not record.get("complete", True)
 
 
 def write_snapshot(
@@ -74,12 +78,33 @@ def write_snapshot(
     return path
 
 
+def refused_snapshot(path: Path) -> str | None:
+    """Why a snapshot on disk cannot be read as a fetched month, or None when it can."""
+    if unfinished_snapshot(path):
+        return "its fetch did not finish; fetch the month again"
+    if Path(path).stat().st_size == 0:
+        return "empty, so its write never landed; fetch the month again"
+    return None
+
+
+def iter_snapshot(path: Path) -> Iterator[dict[str, Any]]:
+    """A snapshot's rows one at a time, refusing one whose write did not finish.
+
+    Every reader of raw rows comes through here. An empty file is refused too: a snapshot of no
+    rows is still a gzip stream, so an empty one is a write that never landed.
+    """
+    reason = refused_snapshot(path)
+    if reason:
+        raise ValueError(f"{path}: {reason}")
+    with gzip.open(path, "rt") as lines:
+        for line in lines:
+            if line.strip():
+                yield json.loads(line)
+
+
 def read_snapshot(path: Path) -> list[dict[str, Any]]:
     """Read a snapshot back, refusing one whose write did not finish."""
-    if unfinished_snapshot(path):
-        raise ValueError(f"{path}: its fetch did not finish; fetch the month again")
-    text = gzip.decompress(Path(path).read_bytes()).decode()
-    return [json.loads(line) for line in text.splitlines() if line]
+    return list(iter_snapshot(path))
 
 
 def _record_bytes(record: Mapping[str, Any]) -> bytes:

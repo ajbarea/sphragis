@@ -21,7 +21,6 @@ reviewed. The test window is sealed and never read.
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -29,6 +28,7 @@ from pathlib import Path
 from sphragis.corpus.halves import assign, project_counts
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.storage import iter_snapshot
 from sphragis.corpus.windows import WINDOWS
 from sphragis.provenance import provenance_header
 
@@ -114,11 +114,9 @@ def main() -> None:
         org, root = spec.split("=", 1)
         reviewers: dict[tuple[str, str], set[str]] = {}
         for path in sorted((Path(root) / org / "raw").glob("*.ndjson.gz")):
-            with gzip.open(path, "rt") as lines:
-                for line in lines:
-                    change = json.loads(line)
-                    key = (change["project"], change["change_id"])
-                    reviewers[key] = change_reviewers(change)
+            for change in iter_snapshot(path):
+                key = (change["project"], change["change_id"])
+                reviewers[key] = change_reviewers(change)
         rows = refined_examples(Path(root), org)
         side = assign(dict(project_counts(rows, WINDOWS["train"])))
         kept, _ = run_dedup(rows)

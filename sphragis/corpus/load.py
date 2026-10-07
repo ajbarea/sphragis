@@ -21,7 +21,8 @@ from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.rules import BUILD_RULES, FETCH_RULES, GITHUB_RULES, RULES_VERSION
-from sphragis.corpus.storage import snapshot_record_path, unfinished_snapshot
+from sphragis.corpus.storage import read_snapshot_record, refused_snapshot
+from sphragis.durable import write_atomic
 
 DERIVED = "derived.json"
 
@@ -54,7 +55,7 @@ def build_record(built: Path) -> Path:
 def write_build_record(built: Path, snapshot_sha256: str | None, *, complete: bool) -> None:
     """What a month was built from and under which build rules; `complete` once it has landed."""
     record = {"snapshot_sha256": snapshot_sha256, "build_rules": BUILD_RULES, "complete": complete}
-    build_record(built).write_text(json.dumps(record, indent=2) + "\n")
+    write_atomic(build_record(built), (json.dumps(record, indent=2) + "\n").encode())
 
 
 def source_record(root: Path, org: str, month_file: str) -> Path:
@@ -62,16 +63,19 @@ def source_record(root: Path, org: str, month_file: str) -> Path:
 
 
 def write_source_record(root: Path, org: str, built: Path, refined: Path) -> None:
-    source_record(root, org, built.name).write_text(
-        json.dumps(
-            {
-                "examples_sha256": sha256(built),
-                "refined_sha256": sha256(refined),
-                "raw_digest": raw_digest(root, org),
-                "rules": RULES_VERSION,
-            },
-            indent=2,
-        )
+    write_atomic(
+        source_record(root, org, built.name),
+        (
+            json.dumps(
+                {
+                    "examples_sha256": sha256(built),
+                    "refined_sha256": sha256(refined),
+                    "raw_digest": raw_digest(root, org),
+                    "rules": RULES_VERSION,
+                },
+                indent=2,
+            )
+        ).encode(),
     )
 
 
@@ -125,15 +129,18 @@ def mark_derived(root: Path, org: str, *, source_root: Path, source_org: str) ->
         raise ValueError(f"{org} cannot be derived from itself")
     out = refined_dir(root, org)
     out.mkdir(parents=True, exist_ok=True)
-    (out / DERIVED).write_text(
-        json.dumps(
-            {
-                "rules": RULES_VERSION,
-                "months": _months(root, org),
-                "source": _source(source_root, source_org),
-            },
-            indent=2,
-        )
+    write_atomic(
+        (out / DERIVED),
+        (
+            json.dumps(
+                {
+                    "rules": RULES_VERSION,
+                    "months": _months(root, org),
+                    "source": _source(source_root, source_org),
+                },
+                indent=2,
+            )
+        ).encode(),
     )
 
 
@@ -186,9 +193,10 @@ def _stale_fetch(snapshot: Path) -> str | None:
     """
     if not snapshot.is_file():
         return None
-    if unfinished_snapshot(snapshot):
-        return "its fetch did not finish; fetch the month again"
-    record = _read_json(snapshot_record_path(snapshot))
+    refused = refused_snapshot(snapshot)
+    if refused:
+        return refused
+    record = read_snapshot_record(snapshot)
     if record is not None and record.get("route") == "github":
         # No GitHub month predates the digest, so a record without one fails closed.
         if record.get("github_rules") != GITHUB_RULES:
@@ -279,17 +287,20 @@ def write_derived_file(
     files this one was cut from in turn, which are checked the same way.
     """
     path = Path(path)
-    path.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
-    file_record(path).write_text(
-        json.dumps(
-            {
-                "rules": RULES_VERSION,
-                "sha256": sha256(path),
-                "sources": [_source(root, org) for root, org in sources],
-                "via": [{"path": str(Path(v).resolve()), "sha256": sha256(v)} for v in via],
-            },
-            indent=2,
-        )
+    write_atomic(path, ("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows)).encode())
+    write_atomic(
+        file_record(path),
+        (
+            json.dumps(
+                {
+                    "rules": RULES_VERSION,
+                    "sha256": sha256(path),
+                    "sources": [_source(root, org) for root, org in sources],
+                    "via": [{"path": str(Path(v).resolve()), "sha256": sha256(v)} for v in via],
+                },
+                indent=2,
+            )
+        ).encode(),
     )
 
 

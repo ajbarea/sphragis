@@ -1,9 +1,11 @@
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
 
-from sphragis.durable import append_record, open_log, read_records, write_atomic
+from sphragis.durable import append_record, exclusive, open_log, read_records, write_atomic
 
 WHOLE = b'{"key": "a#1", "n": 1}\n{"key": "a#2", "n": 2}\n'
 
@@ -99,3 +101,38 @@ def test_a_failed_atomic_write_keeps_the_old_file(
         write_atomic(path, b"new")
     assert path.read_bytes() == b"old"
     assert sorted(p.name for p in tmp_path.iterdir()) == ["2025-01.ndjson.gz"]
+
+
+def test_an_atomic_write_keeps_a_replaced_files_mode_and_gives_a_new_one_the_umasks(
+    tmp_path: Path,
+) -> None:
+    kept = tmp_path / "kept.json"
+    kept.write_bytes(b"old")
+    kept.chmod(0o640)
+    write_atomic(kept, b"new")
+    assert kept.stat().st_mode & 0o777 == 0o640
+    umask = os.umask(0)
+    os.umask(umask)
+    fresh = tmp_path / "fresh.json"
+    write_atomic(fresh, b"new")
+    assert fresh.stat().st_mode & 0o777 == 0o666 & ~umask
+
+
+def test_staging_a_stopped_process_left_is_swept_and_a_live_ones_kept(tmp_path: Path) -> None:
+    path = tmp_path / "2025-01.ndjson.gz"
+    dead = subprocess.Popen(["true"])
+    dead.wait()
+    stale = tmp_path / f".{path.name}.{dead.pid}.tmp"
+    live = tmp_path / f".{path.name}.{os.getppid()}.tmp"
+    stale.write_bytes(b"left by a stop")
+    live.write_bytes(b"another writer")
+    write_atomic(path, b"new")
+    assert not stale.exists() and live.exists() and path.read_bytes() == b"new"
+
+
+def test_a_second_holder_is_refused_while_the_first_holds(tmp_path: Path) -> None:
+    path = tmp_path / "2025-01.partial.jsonl"
+    with exclusive(path), pytest.raises(SystemExit, match="held by another"), exclusive(path):
+        pass
+    with exclusive(path):
+        pass

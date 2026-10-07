@@ -415,6 +415,26 @@ def test_build_reads_every_snapshot_and_writes_examples(
     assert drops["author_comment"] == 0 and set(drops) >= {"no_anchored_hunk", "metadata_file"}
 
 
+def _open_snapshot_record(tmp_path: Path, org: str, month: str) -> None:
+    import json
+
+    record = tmp_path / org / "raw" / f"{month}.record.json"
+    record.write_text(json.dumps({**json.loads(record.read_text()), "complete": False}))
+
+
+def test_build_skips_a_month_whose_fetch_did_not_finish_and_builds_the_rest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    _snapshot(tmp_path, "openstack", "2024-11", [])
+    _open_snapshot_record(tmp_path, "openstack", "2024-10")
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert "2024-10: its fetch did not finish" in capsys.readouterr().out
+    examples = tmp_path / "openstack" / "examples"
+    assert (examples / "2024-11.jsonl").exists() and not (examples / "2024-10.jsonl").exists()
+
+
 def test_build_reports_a_missing_snapshot_rather_than_raising(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -900,6 +920,16 @@ def test_refine_writes_examples_drops_and_a_source_record(tmp_path: Path) -> Non
     assert len((refined / "2024-10.jsonl").read_text().splitlines()) == 2
     assert json.loads((refined / "2024-10.drops.json").read_text())["not_rework_successor"] == 0
     assert "examples_sha256" in json.loads((refined / "2024-10.source.json").read_text())
+
+
+def test_refine_refuses_cleanly_while_a_months_fetch_is_unfinished(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _built_corpus(tmp_path)
+    month = sorted((tmp_path / "openstack" / "raw").glob("*.ndjson.gz"))[0].name[:7]
+    _open_snapshot_record(tmp_path, "openstack", month)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert "did not finish" in capsys.readouterr().out
 
 
 def test_refine_drops_examples_whose_successor_only_rebased(tmp_path: Path) -> None:

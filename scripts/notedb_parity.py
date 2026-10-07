@@ -34,7 +34,6 @@ Run: set -a; . ./.env; set +a
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
 import shutil
 import signal
@@ -73,6 +72,7 @@ from sphragis.corpus.notedb import (
 )
 from sphragis.corpus.pacing import Pacer
 from sphragis.corpus.refine import ChangeIndex, index_changes, refine
+from sphragis.corpus.storage import iter_snapshot
 from sphragis.provenance import provenance_header
 
 RESULTS = Path("datasets/results/notedb-parity-aosp.json")
@@ -112,8 +112,7 @@ def rest_rows(root: Path) -> dict[str, list[dict[str, Any]]]:
     """Every REST snapshot row for the project, by snapshot month."""
     by_month = {}
     for path in sorted((root / "raw").glob("*.ndjson.gz")):
-        with gzip.open(path, "rt") as handle:
-            rows = [json.loads(line) for line in handle if line.strip()]
+        rows = list(iter_snapshot(path))
         by_month[path.name.removesuffix(".ndjson.gz")] = [
             r for r in rows if r["project"] == PROJECT
         ]
@@ -147,11 +146,8 @@ def rest_timing(root: Path) -> dict[str, Any]:
     """
     rows: dict[str, dict[str, Any]] = {}
     for path in sorted((root / "raw").glob("*.ndjson.gz")):
-        with gzip.open(path, "rt") as handle:
-            for line in handle:
-                if line.strip():
-                    row = json.loads(line)
-                    rows[row["id"]] = row
+        for row in iter_snapshot(path):
+            rows[row["id"]] = row
 
     def stamp(text: str) -> datetime:
         return datetime.strptime(text[:19], "%Y-%m-%d %H:%M:%S")

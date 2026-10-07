@@ -10,6 +10,7 @@ import pytest
 
 from sphragis.corpus.storage import (
     read_snapshot,
+    refused_snapshot,
     snapshot_path,
     unfinished_snapshot,
     write_snapshot,
@@ -120,3 +121,34 @@ def test_a_record_from_before_the_marker_reads_as_finished(tmp_path: Path) -> No
     del record["complete"]
     record_path.write_text(json.dumps(record))
     assert not unfinished_snapshot(path) and read_snapshot(path) == [{"a": 1}]
+
+
+def test_an_unreadable_record_never_licenses_replacing_a_snapshot(tmp_path: Path) -> None:
+    # Only a record that says its write did not finish lets a rerun replace the snapshot;
+    # a record a hard stop zeroed says nothing, so the snapshot stays immutable.
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    path.with_suffix("").with_suffix(".record.json").write_bytes(b"\0" * 64)
+    assert not unfinished_snapshot(path)
+    with pytest.raises(FileExistsError, match="immutable"):
+        write_snapshot(tmp_path, "qt", "2024-11", [{"a": 999}], record={})
+    assert read_snapshot(path) == [{"a": 1}]
+
+
+def test_an_empty_snapshot_is_refused_not_read_as_zero_rows(tmp_path: Path) -> None:
+    path = snapshot_path(tmp_path, "qt", "2024-11")
+    path.parent.mkdir(parents=True)
+    path.write_bytes(b"")
+    assert refused_snapshot(path)
+    with pytest.raises(ValueError, match="never landed"):
+        read_snapshot(path)
+    assert read_snapshot(write_snapshot(tmp_path, "qt", "2024-12", [], record={})) == []
+
+
+def test_every_raw_reader_refuses_an_unfinished_month(tmp_path: Path) -> None:
+    from sphragis.corpus.backports import raw_changes
+
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    record_path = path.with_suffix("").with_suffix(".record.json")
+    record_path.write_text(json.dumps({**json.loads(record_path.read_text()), "complete": False}))
+    with pytest.raises(ValueError, match="did not finish"):
+        list(raw_changes(tmp_path, "qt"))
