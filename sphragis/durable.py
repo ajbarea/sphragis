@@ -17,7 +17,7 @@ import os
 import socket
 import stat
 import sys
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Any
@@ -82,22 +82,51 @@ def exclusive(lock: Path) -> Iterator[None]:
         yield
 
 
-def open_log(path: Path) -> IO[str]:
-    """Open an append-only log, making its entry (and any directory made for it) durable."""
-    path = Path(path)
-    created = [p for p in (path, *path.parents) if not p.exists()]
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handle = path.open("a", encoding="utf-8")
-    for entry in created:
-        _sync_directory(entry.parent)
-    return handle
+class DurableLog(Path):
+    """An append-only JSON-lines log path that is durable through ordinary `Path` calls.
+
+    Reading it cuts torn records first (see `read_records`), and a handle opened to append makes
+    each `flush()` reach the disk, with a new file's directory entry made durable as it is
+    created. The code that reads and appends the log stays as it was, so durability changes here
+    never touch the code whose text digests a route's rules.
+    """
+
+    def read_text(self, encoding: str | None = None, errors: str | None = None) -> str:
+        read_records(self)
+        return super().read_text(encoding=encoding, errors=errors)
+
+    def open(self, mode: str = "r", *args: Any, **kwargs: Any) -> Any:  # type: ignore[override]
+        if "a" not in mode:
+            return super().open(mode, *args, **kwargs)
+        created = [p for p in (self, *self.parents) if not p.exists()]
+        self.parent.mkdir(parents=True, exist_ok=True)
+        handle = super().open(mode, *args, **kwargs)
+        for entry in created:
+            _sync_directory(entry.parent)
+        return _Fsynced(handle)
 
 
-def append_record(handle: IO[str], entry: Mapping[str, Any]) -> None:
-    """Append one JSON line to a log, returning once it is on disk."""
-    handle.write(json.dumps(entry) + "\n")
-    handle.flush()
-    os.fsync(handle.fileno())
+class _Fsynced:
+    """A file handle whose `flush()` also fsyncs, so a flushed record survives a hard stop."""
+
+    def __init__(self, handle: IO[Any]) -> None:
+        self._handle = handle
+
+    def write(self, text: Any) -> int:
+        return self._handle.write(text)
+
+    def flush(self) -> None:
+        self._handle.flush()
+        os.fsync(self._handle.fileno())
+
+    def close(self) -> None:
+        self._handle.close()
+
+    def __enter__(self) -> _Fsynced:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
 
 
 def read_records(path: Path) -> list[Any]:

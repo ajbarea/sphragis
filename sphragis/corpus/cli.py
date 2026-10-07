@@ -53,7 +53,13 @@ from sphragis.corpus.storage import (
     write_snapshot,
 )
 from sphragis.corpus.windows import WINDOWS
-from sphragis.durable import exclusive, read_json_object, write_atomic, write_json_atomic
+from sphragis.durable import (
+    DurableLog,
+    exclusive,
+    read_json_object,
+    write_atomic,
+    write_json_atomic,
+)
 
 STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "verify")
 
@@ -532,7 +538,7 @@ def _stage_fetch_github(args: argparse.Namespace, salt: str) -> int:
     """
     refuse_mixed_routes(Path(args.root), args.org, "github", allow=args.allow_mixed_routes)
     # Rows land here as each PR finishes (scrubbed), so a failed month resumes where it stopped.
-    checkpoint = Path(args.root) / args.org / "raw" / f"{args.month}.partial.jsonl"
+    checkpoint = DurableLog(args.root, args.org, "raw", f"{args.month}.partial.jsonl")
     rows, record = collect_month(
         args.org, args.month, _github_api(args), salt=salt, checkpoint=checkpoint
     )
