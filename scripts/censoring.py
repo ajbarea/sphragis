@@ -18,7 +18,6 @@ Run: uv run --no-active python scripts/censoring.py
 
 from __future__ import annotations
 
-import gzip
 import json
 from collections import Counter
 from collections.abc import Mapping
@@ -27,6 +26,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from sphragis.corpus.load import refined_month_files
+from sphragis.corpus.storage import iter_snapshot
 from sphragis.corpus.windows import WINDOWS as _CLI_WINDOWS
 from sphragis.provenance import provenance_header
 
@@ -104,18 +104,14 @@ def observations(
     seen: set[str] = set()
     out: list[Observation] = []
     for path in sorted((root / RAW.format(org=org)).glob("*.ndjson.gz")):
-        with gzip.open(path, "rt") as handle:
-            for line in handle:
-                row = json.loads(line)
-                if row["id"] in seen:
-                    continue
-                seen.add(row["id"])
-                if only is not None and change_key(row) not in only:
-                    continue
-                created = month_index(row["created"])
-                out.append(
-                    Observation(month_index(row["updated"]) - created, last_collected - created)
-                )
+        for row in iter_snapshot(path):
+            if row["id"] in seen:
+                continue
+            seen.add(row["id"])
+            if only is not None and change_key(row) not in only:
+                continue
+            created = month_index(row["created"])
+            out.append(Observation(month_index(row["updated"]) - created, last_collected - created))
     return out
 
 

@@ -31,7 +31,7 @@ for m in $MONTHS; do
     --org "$ORG" --month "$m" --root "$ROOT" --cutoff "$CUTOFF" --overwrite \
     --request-interval 1.0 || { echo "$m: fetch failed, stopping"; exit 1; }
   echo "=== $m build $(date +%H:%M:%S) ==="
-  uv run --no-active python -m sphragis.corpus build \
+  uv run --no-active python -m sphragis.corpus build --expect-month "$m" \
     --org "$ORG" --month "$m" --root "$ROOT" --cutoff "$CUTOFF" \
     --request-interval 1.0 || { echo "$m: build failed, stopping"; exit 1; }
   echo "=== $m done $(date +%H:%M:%S): $(wc -l < $ROOT/$ORG/examples/$m.jsonl) examples ==="

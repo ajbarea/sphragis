@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import gzip
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
-from sphragis.corpus.storage import read_snapshot, snapshot_path, write_snapshot
+from sphragis.corpus.storage import (
+    finished_month,
+    read_snapshot,
+    refused_snapshot,
+    snapshot_path,
+    unfinished_snapshot,
+    write_snapshot,
+)
 
 
 def test_snapshot_path_is_org_and_month_scoped(tmp_path: Path) -> None:
@@ -51,3 +59,184 @@ def test_overwrite_is_possible_only_when_asked_for_explicitly(tmp_path: Path) ->
     write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
     path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 2}], record={}, overwrite=True)
     assert read_snapshot(path) == [{"a": 2}]
+
+
+def _stop_at_write(monkeypatch: pytest.MonkeyPatch, stop: int) -> None:
+    """Make a snapshot's `stop`-th write stop, as a hard stop there would."""
+    from sphragis.corpus import storage
+
+    calls: list[Path] = []
+
+    def stopping(real: Callable[..., None]) -> Callable[..., None]:
+        def write(path: Path, *rest: object) -> None:
+            calls.append(path)
+            if len(calls) == stop:
+                raise KeyboardInterrupt
+            real(path, *rest)
+
+        return write
+
+    monkeypatch.setattr(storage, "write_atomic", stopping(storage.write_atomic))
+    monkeypatch.setattr(storage, "write_json_atomic", stopping(storage.write_json_atomic))
+
+
+@pytest.mark.parametrize("stop", [2, 3])
+def test_a_stop_partway_leaves_a_new_month_unfinished_and_rewritable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stop: int
+) -> None:
+    with monkeypatch.context() as patched:
+        _stop_at_write(patched, stop)
+        with pytest.raises(KeyboardInterrupt):
+            write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    path = snapshot_path(tmp_path, "qt", "2024-11")
+    assert unfinished_snapshot(path)
+    if path.exists():
+        with pytest.raises(ValueError, match="did not finish"):
+            read_snapshot(path)
+    write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    assert not unfinished_snapshot(path) and read_snapshot(path) == [{"a": 1}]
+    assert sorted(p.name for p in path.parent.iterdir()) == [
+        "2024-11.ndjson.gz",
+        "2024-11.record.json",
+    ]
+
+
+@pytest.mark.parametrize("stop", [2, 3])
+def test_a_stop_partway_through_a_replacement_is_refused_until_refetched(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stop: int
+) -> None:
+    # Old snapshot beside a new record (stop at 2) or new beside an open record (stop at 3):
+    # either way no record vouches for a snapshot it was not written with.
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={"rules": "old"})
+    with monkeypatch.context() as patched:
+        _stop_at_write(patched, stop)
+        with pytest.raises(KeyboardInterrupt):
+            write_snapshot(
+                tmp_path, "qt", "2024-11", [{"a": 2}], record={"rules": "new"}, overwrite=True
+            )
+    assert unfinished_snapshot(path)
+    with pytest.raises(ValueError, match="did not finish"):
+        read_snapshot(path)
+
+
+def test_a_record_from_before_the_marker_reads_as_finished(tmp_path: Path) -> None:
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    record_path = path.with_suffix("").with_suffix(".record.json")
+    record = json.loads(record_path.read_text())
+    del record["complete"]
+    record_path.write_text(json.dumps(record))
+    assert not unfinished_snapshot(path) and read_snapshot(path) == [{"a": 1}]
+
+
+def test_an_unreadable_record_never_licenses_replacing_a_snapshot(tmp_path: Path) -> None:
+    # Only a record that says its write did not finish lets a rerun replace the snapshot;
+    # a record a hard stop zeroed says nothing, so the snapshot stays immutable.
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    path.with_suffix("").with_suffix(".record.json").write_bytes(b"\0" * 64)
+    assert not unfinished_snapshot(path)
+    with pytest.raises(FileExistsError, match="immutable"):
+        write_snapshot(tmp_path, "qt", "2024-11", [{"a": 999}], record={})
+    assert read_snapshot(path) == [{"a": 1}]
+
+
+def test_an_empty_snapshot_is_refused_not_read_as_zero_rows(tmp_path: Path) -> None:
+    path = snapshot_path(tmp_path, "qt", "2024-11")
+    path.parent.mkdir(parents=True)
+    path.write_bytes(b"")
+    assert refused_snapshot(path)
+    with pytest.raises(ValueError, match="never landed"):
+        read_snapshot(path)
+    assert read_snapshot(write_snapshot(tmp_path, "qt", "2024-12", [], record={})) == []
+
+
+def test_every_raw_reader_refuses_an_unfinished_month(tmp_path: Path) -> None:
+    from sphragis.corpus.backports import raw_changes
+
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    record_path = path.with_suffix("").with_suffix(".record.json")
+    record_path.write_text(json.dumps({**json.loads(record_path.read_text()), "complete": False}))
+    with pytest.raises(ValueError, match="did not finish"):
+        list(raw_changes(tmp_path, "qt"))
+
+
+def test_a_zeroed_snapshot_from_before_the_marker_is_refused(tmp_path: Path) -> None:
+    # Written before atomic writes, its record has no `complete` key, and a hard stop left
+    # zeros where its data should be; nothing about its record gives that away.
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+    record_path = path.with_suffix("").with_suffix(".record.json")
+    record = json.loads(record_path.read_text())
+    del record["complete"]
+    record_path.write_text(json.dumps(record))
+    path.write_bytes(b"\0" * path.stat().st_size)
+    assert "not a gzip stream" in (refused_snapshot(path) or "")
+
+
+def test_only_the_whole_check_finds_a_zeroed_body_and_every_reader_names_it(
+    tmp_path: Path,
+) -> None:
+    path = write_snapshot(
+        tmp_path, "qt", "2024-11", [{"n": i, "pad": "x" * 40} for i in range(3000)], record={}
+    )
+    data = path.read_bytes()
+    path.write_bytes(data[:20] + b"\0" * (len(data) - 20))
+    assert refused_snapshot(path) is None, "the quick check reads the header only"
+    assert "unreadable" in (refused_snapshot(path, whole=True) or "")
+    with pytest.raises(ValueError, match=f"{path.name}: unreadable"):
+        read_snapshot(path)
+    assert (
+        refused_snapshot(write_snapshot(tmp_path, "qt", "2024-12", [], record={}), whole=True)
+        is None
+    )
+
+
+def test_a_disk_error_is_not_taken_for_a_damaged_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A refused snapshot is refetched with --overwrite, so only damage to the file itself may
+    # refuse it; an I/O error says nothing about the file and must surface as itself.
+    import errno
+    import gzip
+
+    path = write_snapshot(tmp_path, "qt", "2024-11", [{"a": 1}], record={})
+
+    def failing_read(self: object, *_: object) -> bytes:
+        raise OSError(errno.EIO, "Input/output error")
+
+    monkeypatch.setattr(gzip.GzipFile, "read", failing_read)
+    with pytest.raises(OSError, match="Input/output"):
+        refused_snapshot(path, whole=True)
+
+
+def test_a_finished_month_is_told_from_every_partial_write_and_a_disk_error_raises(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def month() -> Path:
+        return write_snapshot(
+            tmp_path, "qt", "2024-11", [{"n": i} for i in range(500)], record={}, overwrite=True
+        )
+
+    def record(path: Path) -> Path:
+        return path.with_suffix("").with_suffix(".record.json")
+
+    assert finished_month(month())
+    assert finished_month(str(month())), "the shell passes a str"
+    path = month()
+    record(path).write_text(json.dumps({**json.loads(record(path).read_text()), "complete": False}))
+    assert not finished_month(path)
+    record(month()).write_bytes(b"\0" * 64)
+    assert not finished_month(path)
+    record(month()).unlink()
+    assert not finished_month(path)
+    data = month().read_bytes()
+    path.write_bytes(data[:12] + b"\0" * (len(data) - 12))
+    assert not finished_month(path)
+    assert not finished_month(tmp_path / "qt" / "raw" / "2099-01.ndjson.gz")
+
+    month()
+
+    def eio(self: Path) -> bytes:
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(Path, "read_bytes", eio)
+    with pytest.raises(OSError):
+        finished_month(path)

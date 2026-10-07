@@ -415,6 +415,106 @@ def test_build_reads_every_snapshot_and_writes_examples(
     assert drops["author_comment"] == 0 and set(drops) >= {"no_anchored_hunk", "metadata_file"}
 
 
+def _open_snapshot_record(tmp_path: Path, org: str, month: str) -> None:
+    import json
+
+    record = tmp_path / org / "raw" / f"{month}.record.json"
+    record.write_text(json.dumps({**json.loads(record.read_text()), "complete": False}))
+
+
+def test_build_skips_a_month_whose_fetch_did_not_finish_and_builds_the_rest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    _snapshot(tmp_path, "openstack", "2024-11", [])
+    _open_snapshot_record(tmp_path, "openstack", "2024-10")
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
+    assert "2024-10: its fetch did not finish" in capsys.readouterr().out
+    examples = tmp_path / "openstack" / "examples"
+    assert (examples / "2024-11.jsonl").exists() and not (examples / "2024-10.jsonl").exists()
+
+
+def _zero_body(snapshot: Path) -> None:
+    """Keep the gzip header, zero the rest: what a hard stop leaves in a pre-atomic write."""
+    data = snapshot.read_bytes()
+    snapshot.write_bytes(data[:20] + b"\0" * (len(data) - 20))
+
+
+def test_build_skips_a_month_whose_body_is_zeroed_and_builds_the_rest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [{"n": i, "pad": "x" * 40} for i in range(3000)])
+    _snapshot(tmp_path, "openstack", "2024-11", [])
+    _zero_body(tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz")
+    assert main(["build", "--org", "openstack", "--root", str(tmp_path)]) == 3
+    assert "2024-10.ndjson.gz: unreadable" in capsys.readouterr().out
+    assert (tmp_path / "openstack" / "examples" / "2024-11.jsonl").exists()
+
+
+def test_refine_names_every_refused_month_at_once(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _built_corpus(tmp_path)
+    _snapshot(tmp_path, "openstack", "2099-01", [])
+    _snapshot(tmp_path, "openstack", "2099-02", [])
+    _open_snapshot_record(tmp_path, "openstack", "2099-01")
+    _open_snapshot_record(tmp_path, "openstack", "2099-02")
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    out = capsys.readouterr().out
+    assert "2099-01.ndjson.gz: its fetch did not finish" in out
+    assert "2099-02.ndjson.gz: its fetch did not finish" in out
+
+
+def test_refine_refuses_a_zeroed_body_by_name_without_a_traceback(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _built_corpus(tmp_path)
+    snapshot = sorted((tmp_path / "openstack" / "raw").glob("*.ndjson.gz"))[0]
+    _zero_body(snapshot)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert f"{snapshot.name}: unreadable" in capsys.readouterr().out
+
+
+def test_two_fetches_of_one_org_month_never_run_together(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.corpus import cli
+    from sphragis.durable import exclusive
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "_fetch_month", lambda args, salt: 0)
+    argv = ["fetch", "--org", "openstack", "--month", "2024-10", "--root", str(tmp_path)]
+    with exclusive(tmp_path / ".locks" / "openstack" / "2024-10.lock"):
+        with pytest.raises(SystemExit, match="held by another process"):
+            main(argv)
+        assert main([*argv[:4], "2024-11", *argv[5:]]) == 0, "another month is not held"
+    assert main(argv) == 0
+
+
+def test_build_gives_the_expected_months_own_verdict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Build walks the whole org; --expect-month answers for one month, so old examples left
+    # beside a since-refused snapshot never pass for a build of it.
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _snapshot(tmp_path, "openstack", "2024-10", [])
+    _snapshot(tmp_path, "openstack", "2024-11", [])
+    argv = ["build", "--org", "openstack", "--root", str(tmp_path), "--expect-month"]
+    assert main([*argv, "2024-10"]) == 0
+    _open_snapshot_record(tmp_path, "openstack", "2024-11")
+    assert main([*argv, "2024-10"]) == 0, "another month's refusal is not this month's"
+    assert main([*argv, "2024-11"]) == 3, "its examples are from a snapshot since refused"
+    assert main([*argv, "2024-12"]) == 3, "never fetched: fetch it"
+    # A month the loop skips as already built is current to the verdict too, whatever its
+    # record says; and examples whose snapshot is gone send the month to be fetched.
+    (tmp_path / "openstack" / "examples" / "2024-10.source.json").write_text('{"snapshot_sha')
+    assert main([*argv, "2024-10"]) == 0
+    (tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz").unlink()
+    assert main([*argv, "2024-10"]) == 3
+
+
 def test_build_reports_a_missing_snapshot_rather_than_raising(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -900,6 +1000,16 @@ def test_refine_writes_examples_drops_and_a_source_record(tmp_path: Path) -> Non
     assert len((refined / "2024-10.jsonl").read_text().splitlines()) == 2
     assert json.loads((refined / "2024-10.drops.json").read_text())["not_rework_successor"] == 0
     assert "examples_sha256" in json.loads((refined / "2024-10.source.json").read_text())
+
+
+def test_refine_refuses_cleanly_while_a_months_fetch_is_unfinished(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _built_corpus(tmp_path)
+    month = sorted((tmp_path / "openstack" / "raw").glob("*.ndjson.gz"))[0].name[:7]
+    _open_snapshot_record(tmp_path, "openstack", month)
+    assert main(["refine", "--org", "openstack", "--root", str(tmp_path)]) == 1
+    assert "did not finish" in capsys.readouterr().out
 
 
 def test_refine_drops_examples_whose_successor_only_rebased(tmp_path: Path) -> None:

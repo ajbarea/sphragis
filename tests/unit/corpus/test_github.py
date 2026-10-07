@@ -471,6 +471,33 @@ def test_a_month_resumes_from_its_checkpoint(tmp_path: Any) -> None:
     assert again.fetched == [9], "every PR came back from the checkpoint but the failed one"
 
 
+def test_a_month_resumes_from_a_checkpoint_torn_by_a_hard_stop(tmp_path: Any) -> None:
+    """Zeros where the checkpoint grew before its data landed: the month resumes, unchanged."""
+
+    class Counting(FakeAPI):
+        def __init__(self) -> None:
+            super().__init__()
+            self.fetched: list[int] = []
+
+        def pr_comments(self, repo: str, number: int) -> list[dict[str, Any]]:
+            self.fetched.append(number)
+            return super().pr_comments(repo, number)
+
+    checkpoint = tmp_path / "2025-01.partial.jsonl"
+    rows, record = collect_month("llvm", "2025-01", FakeAPI(), salt="s", checkpoint=checkpoint)
+    whole = checkpoint.read_bytes()
+    last = whole.rstrip(b"\n").rfind(b"\n") + 1
+    torn = int(json.loads(whole[last:])["key"].rsplit("#", 1)[1])
+    checkpoint.write_bytes(whole[:last] + whole[last : last + 10] + b"\0" * 1539)
+    again = Counting()
+    rows_again, record_again = collect_month(
+        "llvm", "2025-01", again, salt="s", checkpoint=checkpoint
+    )
+    assert rows_again == rows and record_again == record
+    assert set(again.fetched) == {torn, 9}, "only the torn PR, and the failed one, asked again"
+    assert checkpoint.read_bytes().count(b"\0") == 0
+
+
 def test_a_resumed_month_asks_again_for_a_pr_that_failed(tmp_path: Any) -> None:
     """A failure checkpointed on one run is retried on the next, and its new outcome kept."""
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 from pathlib import Path
 
@@ -33,7 +34,7 @@ def _month(root: Path, org: str = "o", name: str = "2024-10.jsonl", *, refine: b
     raw = root / org / "raw"
     raw.mkdir(parents=True, exist_ok=True)
     snapshot = raw / name.replace(".jsonl", ".ndjson.gz")
-    snapshot.write_bytes(b"raw")
+    snapshot.write_bytes(gzip.compress(b"raw", mtime=0))
     write_build_record(built, sha256(snapshot), complete=True)
     refined = refined_dir(root, org) / name
     if refine:
@@ -88,13 +89,15 @@ def test_a_rebuilt_month_is_refused(tmp_path: Path) -> None:
 
 def test_changed_raw_snapshots_are_refused(tmp_path: Path) -> None:
     _month(tmp_path)
-    (tmp_path / "o" / "raw" / "2099-01.ndjson.gz").write_bytes(b"another month's kinds")
+    (tmp_path / "o" / "raw" / "2099-01.ndjson.gz").write_bytes(
+        gzip.compress(b"another month's kinds", mtime=0)
+    )
     assert "raw snapshots changed" in stale_refinements(tmp_path, "o")[0]
 
 
 def test_a_month_built_from_a_snapshot_since_refetched_is_refused(tmp_path: Path) -> None:
     _month(tmp_path)
-    (tmp_path / "o" / "raw" / "2024-10.ndjson.gz").write_bytes(b"refetched")
+    (tmp_path / "o" / "raw" / "2024-10.ndjson.gz").write_bytes(gzip.compress(b"refetched", mtime=0))
     assert "since refetched" in stale_refinements(tmp_path, "o")[0]
 
 

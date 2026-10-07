@@ -14,7 +14,6 @@ this module and the client it collects with.
 from __future__ import annotations
 
 import calendar
-import json
 import re
 import subprocess
 import tempfile
@@ -26,6 +25,7 @@ from typing import Any, Protocol
 from sphragis.corpus.github_api import Gone, order_commits
 from sphragis.corpus.rules import GITHUB_RULES
 from sphragis.corpus.scrub import pseudonym, scrub
+from sphragis.durable import append_record, open_log, read_records
 
 # Accounts that are AI coding agents or AI reviewers without GitHub's `Bot` type. Registered and
 # versioned with the route: the population changes month to month, and a login on it is treated
@@ -524,11 +524,9 @@ def collect_month(
     year, number = map(int, month.split("-"))
     done: dict[str, dict[str, Any]] = {}
     if checkpoint is not None and checkpoint.is_file():
-        for line in checkpoint.read_text(encoding="utf-8").splitlines():
-            if line.strip():
-                entry = json.loads(line)
-                done[entry["key"]] = entry
-    log = checkpoint.open("a", encoding="utf-8") if checkpoint is not None else None
+        for entry in read_records(checkpoint):
+            done[entry["key"]] = entry
+    log = open_log(checkpoint) if checkpoint is not None else None
     outcomes: list[dict[str, Any]] = []
     listed = 0
     try:
@@ -540,8 +538,7 @@ def collect_month(
                 if entry is None or entry["outcome"] == "failed":
                     entry = _collect_pr(org, pr, api, salt)
                     if log is not None:
-                        log.write(json.dumps({"key": key, **entry}) + "\n")
-                        log.flush()
+                        append_record(log, {"key": key, **entry})
                 outcomes.append(entry)
     finally:
         if log is not None:
