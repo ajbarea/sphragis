@@ -518,9 +518,21 @@ def test_a_resumed_month_asks_again_for_a_pr_that_failed(tmp_path: Any) -> None:
     assert replayed == record, "the recovered outcome, written after the failure, is the one read"
 
 
-def test_the_route_module_carries_no_storage_plumbing() -> None:
+def test_the_route_module_imports_no_storage_plumbing() -> None:
     # GITHUB_RULES digests github.py's text, so any edit to it marks every GitHub month fetched
     # so far as fetched under other rules. Durability lives in the checkpoint object instead.
+    import ast
+
     from sphragis.corpus import github
 
-    assert "sphragis.durable" not in Path(github.__file__).read_text()
+    tree = ast.parse(Path(github.__file__).read_text())
+    imported = {
+        node.module if isinstance(node, ast.ImportFrom) else alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import | ast.ImportFrom)
+        for alias in node.names
+    }
+    plumbing = {"sphragis.durable", "sphragis.corpus.storage"}
+    assert not {name for name in imported if name and (name in plumbing or name == "sphragis")}, (
+        "import rule code only; storage belongs to the checkpoint the caller passes"
+    )

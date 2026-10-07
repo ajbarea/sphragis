@@ -1837,6 +1837,33 @@ def _github(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stub: _GitHubStub, 
     return cli.main([*argv, "--org", "apache", "--root", str(tmp_path)])
 
 
+def test_a_github_fetch_resumes_a_checkpoint_a_hard_stop_left_zeros_in(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.corpus.github import collect_month
+    from sphragis.durable import DurableLog
+
+    checkpoint = DurableLog(tmp_path, "apache", "raw", "2024-10.partial.jsonl")
+    seed: Any = _GitHubStub()
+    collect_month("apache", "2024-10", seed, salt="salt", checkpoint=checkpoint)
+    with checkpoint.open("ab") as handle:
+        handle.write(b"\0" * 1539)
+
+    class Counting(_GitHubStub):
+        asked: list[int] = []
+
+        def pr_comments(self, repo, number):
+            self.asked.append(number)
+            return super().pr_comments(repo, number)
+
+    stub = Counting()
+    assert (
+        _github(tmp_path, monkeypatch, stub, "fetch", "--via", "github", "--month", "2024-10") == 0
+    )
+    assert stub.asked == [], "every PR came back from the repaired checkpoint"
+    assert (tmp_path / "apache" / "raw" / "2024-10.ndjson.gz").is_file()
+
+
 def test_a_github_month_is_fetched_and_built_through_the_gerrit_build(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -168,3 +168,20 @@ def test_a_json_record_is_written_whole_and_read_back(tmp_path: Path) -> None:
         path.write_bytes(bad)
         assert read_json_object(path) is None
     assert read_json_object(tmp_path / "missing.json") is None
+
+
+def test_a_durable_logs_close_reaches_the_disk_and_its_derived_paths_are_plain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    synced: list[int] = []
+    real = os.fsync
+    monkeypatch.setattr("sphragis.durable.os.fsync", lambda fd: (synced.append(fd), real(fd)))
+    log = DurableLog(tmp_path, "raw", "2025-01.partial.jsonl")
+    with log.open("a", encoding="utf-8") as handle:
+        handle.write('{"key": "a#1"}\n')
+        before = len(synced)
+    assert len(synced) > before, "closing without a flush still fsyncs the record"
+    sibling = log.with_name("2025-01.record.json")
+    sibling.write_text('{\n  "rows": 1\n}\n')
+    assert type(sibling) is not DurableLog and type(log.parent) is not DurableLog
+    assert sibling.read_text() == '{\n  "rows": 1\n}\n', "a sibling is never rewritten as a log"

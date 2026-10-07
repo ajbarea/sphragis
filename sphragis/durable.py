@@ -3,8 +3,7 @@
 A snapshot is the reproducibility floor and its checkpoint is the only record of a month in
 progress, and neither can be rebuilt from anything downstream. WSL can be stopped without
 warning, and ext4 can then keep a file's new length while losing the data it grew for, leaving
-zeros. A file written here lands whole or not at all, and a log keeps every record whose append
-returned.
+zeros. A file written here lands whole or not at all, and a log keeps every record flushed to it.
 """
 
 from __future__ import annotations
@@ -20,7 +19,7 @@ import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import IO, Any
+from typing import IO, Any, cast
 
 _HOST = socket.gethostname()
 
@@ -86,16 +85,21 @@ class DurableLog(Path):
     """An append-only JSON-lines log path that is durable through ordinary `Path` calls.
 
     Reading it cuts torn records first (see `read_records`), and a handle opened to append makes
-    each `flush()` reach the disk, with a new file's directory entry made durable as it is
-    created. The code that reads and appends the log stays as it was, so durability changes here
-    never touch the code whose text digests a route's rules.
+    each `flush()` and `close()` reach the disk, with a new file's directory entry made durable
+    as it is created. The code that reads and appends the log stays as it was, so durability
+    changes here never touch the code whose text digests a route's rules. Paths derived from it
+    (`parent`, `with_name`, `/`) are plain: only the log itself rewrites what it reads.
     """
 
-    def read_text(self, encoding: str | None = None, errors: str | None = None) -> str:
-        read_records(self)
-        return super().read_text(encoding=encoding, errors=errors)
+    # Narrower than PurePath's on purpose: derived paths are plain, not logs.
+    def with_segments(self, *pathsegments: str | os.PathLike[str]) -> Path:  # ty: ignore[invalid-method-override]
+        return Path(*pathsegments)
 
-    def open(self, mode: str = "r", *args: Any, **kwargs: Any) -> Any:  # type: ignore[override]
+    def read_text(self, *args: Any, **kwargs: Any) -> str:
+        read_records(self)
+        return super().read_text(*args, **kwargs)
+
+    def open(self, mode: str = "r", *args: Any, **kwargs: Any) -> IO[Any]:  # ty: ignore[invalid-method-override]
         if "a" not in mode:
             return super().open(mode, *args, **kwargs)
         created = [p for p in (self, *self.parents) if not p.exists()]
@@ -103,23 +107,26 @@ class DurableLog(Path):
         handle = super().open(mode, *args, **kwargs)
         for entry in created:
             _sync_directory(entry.parent)
-        return _Fsynced(handle)
+        return cast(IO[Any], _Fsynced(handle))
 
 
 class _Fsynced:
-    """A file handle whose `flush()` also fsyncs, so a flushed record survives a hard stop."""
+    """A file handle whose `flush()` and `close()` also fsync, so a flushed record survives a
+    hard stop. Everything else is the wrapped handle's."""
 
     def __init__(self, handle: IO[Any]) -> None:
         self._handle = handle
 
-    def write(self, text: Any) -> int:
-        return self._handle.write(text)
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._handle, name)
 
     def flush(self) -> None:
         self._handle.flush()
         os.fsync(self._handle.fileno())
 
     def close(self) -> None:
+        if not self._handle.closed:
+            self.flush()
         self._handle.close()
 
     def __enter__(self) -> _Fsynced:
