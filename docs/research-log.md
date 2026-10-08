@@ -8456,13 +8456,20 @@ group examples. On that reading the study falls outside 3(2)(b). It does not rel
 and keeps the safeguards Article 89(1) asks of research anyway: minimisation, pseudonymisation at
 ingestion, and no release of review text.
 
-**Human subjects: due now, not before Stage 1.** RIT Policy C05.0 says "The IRB shall determine what
-research is exempt", "Investigators do not have the authority to make an independent determination",
-and "Before a research project involving human subjects is conducted, the protocol must be reviewed
-and approved by the IRB." Exempt category 4 covers existing records that are publicly available
-(45 CFR 46.104(d)(4)(i)), the category this study expects. But the determination is the IRB's.
-Review was deferred for every host on 2026-09-14, the day collection began, and collection has continued since. The
-determination request goes to RIT's IRB now; AJ files it.
+**Human subjects.** RIT Policy C05.0 says "The IRB shall determine what research is exempt" and
+"Before a research project involving human subjects is conducted, the protocol must be reviewed and
+approved by the IRB."
+
+> **Corrected later on 2026-10-08.** The first version of this paragraph said a determination was
+> due now. It overreached: C05.0's review applies to human-subjects research, and this study is
+> not that under the federal definition RIT's HSRO applies. A human subject is someone about whom a
+> researcher obtains information "through intervention or interaction with the individual" or
+> obtains "identifiable private information" (45 CFR 46.102(e)(1)). Private information is behaviour
+> where one "can reasonably expect that no observation or recording is taking place" or information
+> one "can reasonably expect will not be made public" (46.102(e)(4)). The study contacts no one, and
+> it reads review comments that their authors posted publicly on open-source hosts. A written
+> "not human subjects research" determination from hsro@rit.edu is optional, a record to cite in
+> the ethics section, not a precondition.
 
 ### The checkpoint's repetition penalty, measured: plain greedy is registered (2026-10-08)
 
