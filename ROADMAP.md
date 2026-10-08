@@ -417,10 +417,9 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   organizations (2026-10-04); Qt only with permission. AOSP's git host is permitted (terms re-read
   2026-10-08), so AOSP may enter again through the NoteDb route once its data audit shows how
   Android's 2025 move to internal development changed its public review stream in the windows.
-- [ ] **The IRB determination, now.** AJ files it with RIT's IRB. RIT Policy C05.0 requires one
-  before human-subjects research is conducted and leaves investigators no authority to determine
-  exemption themselves; collection began 2026-09-14. The study expects exempt category 4,
-  publicly available records (45 CFR 46.104(d)(4)(i)); research log, 2026-10-08.
+- [ ] **Optional: a written "not human subjects research" determination** from hsro@rit.edu, to
+  cite in the ethics section. The study contacts no one and reads only publicly posted reviews,
+  so it is not human-subjects research under 45 CFR 46.102(e) (research log, 2026-10-08).
 - [ ] **GitHub's written confirmation** that its Acceptable Use Policies permit research on public
   pull-request review threads, which its Privacy Statement counts as personal data. AJ sends the
   request. Collection continues; the GitHub organizations stay out of every published figure until
