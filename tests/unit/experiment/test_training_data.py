@@ -249,7 +249,7 @@ def test_decoding_is_greedy_by_default() -> None:
 
 
 def test_sampling_leaves_the_distribution_unaltered() -> None:
-    """Top-k or top-p would truncate the distribution and test a different hypothesis."""
+    """Top-k, top-p or a repetition penalty would alter the distribution under test."""
     from sphragis.experiment.training import decoding_kwargs
 
     kwargs = decoding_kwargs(1.0)
@@ -257,6 +257,7 @@ def test_sampling_leaves_the_distribution_unaltered() -> None:
     assert kwargs["temperature"] == 1.0
     assert kwargs["top_k"] == 0
     assert kwargs["top_p"] == 1.0
+    assert kwargs["repetition_penalty"] == 1.0
 
 
 def test_a_negative_temperature_is_refused() -> None:
@@ -289,7 +290,7 @@ def test_a_conversation_renders_as_its_turns_ending_in_the_one_to_answer() -> No
 
 
 def test_decoding_kwargs_pass_an_explicit_repetition_penalty() -> None:
-    """None leaves the checkpoint's config in force; a value is passed to generate either way."""
+    """Greedy with None keeps the checkpoint's penalty; sampling with None turns it off."""
     from sphragis.experiment.training import decoding_kwargs
 
     assert decoding_kwargs(0.0, 1.0) == {"do_sample": False, "repetition_penalty": 1.0}

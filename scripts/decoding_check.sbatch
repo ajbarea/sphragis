@@ -20,13 +20,20 @@ cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-marker-0.25}"
+# The calibration run whose adapter and examples are reused: the condition's, or a variant of
+# it such as marker-0.25-fp32.
+CALIBRATION="${CALIBRATION:-$CONDITION}"
 TEMPERATURE="${TEMPERATURE:-1.0}"
+# Named in every result. 1.0 is off; the checkpoint's generation config sets 1.1.
+# REPETITION_PENALTY=1.0|1.1
+REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
 
-claim_result OUT "$SPHRAGIS_RESULTS/decoding-$CONDITION-t$TEMPERATURE$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/decoding-$CALIBRATION-t$TEMPERATURE-rp$REPETITION_PENALTY$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/decoding_check.py \
   --condition "$CONDITION" \
-  --results "$SPHRAGIS_RESULTS/calibration-$CONDITION.json" \
+  --results "$SPHRAGIS_RESULTS/calibration-$CALIBRATION.json" \
   --corpus-dir "$SPHRAGIS_DATA/corpus/planted" \
-  --adapter "$SPHRAGIS_ADAPTERS/sphragis-adapters-$CONDITION/b-s1" \
+  --adapter "$SPHRAGIS_ADAPTERS/sphragis-adapters-$CALIBRATION/b-s1" \
   --temperature "$TEMPERATURE" \
+  --repetition-penalty "$REPETITION_PENALTY" \
   --out "$OUT"

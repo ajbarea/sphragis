@@ -203,11 +203,12 @@ def decoding_kwargs(temperature: float, repetition_penalty: float | None = None)
     25% of training refinements into one the adapter emitted 64% of the time. At temperature 1 with
     top-k and top-p disabled the model samples from its own distribution unaltered, so if
     greedy is the amplifier, the emission rate should fall back toward the training rate.
-    Anything other than exactly that unaltered distribution would test something else.
+    Anything other than exactly that unaltered distribution would test something else, so
+    sampling also turns the repetition penalty off unless one is asked for.
 
-    `repetition_penalty` None leaves the checkpoint's generation config in force, and
-    transformers applies its penalty under greedy decoding too, over the prompt's tokens as
-    well as the output's: Qwen2.5-Coder-7B-Instruct's pinned config sets 1.1.
+    Under greedy decoding `repetition_penalty` None leaves the checkpoint's generation config in
+    force, and transformers applies its penalty there too, over the prompt's tokens as well as
+    the output's: Qwen2.5-Coder-7B-Instruct's pinned config sets 1.1.
     """
     if repetition_penalty is not None and repetition_penalty <= 0:
         raise ValueError(f"repetition_penalty must be positive, got {repetition_penalty}")
@@ -216,7 +217,8 @@ def decoding_kwargs(temperature: float, repetition_penalty: float | None = None)
         raise ValueError(f"temperature must be non-negative, got {temperature}")
     if temperature == 0:
         return {"do_sample": False, **penalty}
-    return {"do_sample": True, "temperature": temperature, "top_k": 0, "top_p": 1.0, **penalty}
+    unaltered = {"repetition_penalty": 1.0, **penalty}
+    return {"do_sample": True, "temperature": temperature, "top_k": 0, "top_p": 1.0, **unaltered}
 
 
 def supervised(

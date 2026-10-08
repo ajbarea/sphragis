@@ -1801,6 +1801,13 @@ organizational one, not that every project has one.
 
 ### Greedy decoding adds to the amplification; it does not cause it (2026-09-18, job 148202)
 
+> **Corrected on 2026-10-08.** Neither arm decoded the adapter's unaltered distribution.
+> `scripts/decoding_check.py` wrote `datasets/results/decoding-marker-0.25-t1.0.json` under
+> transformers 5.17.0, which applies the checkpoint's `repetition_penalty: 1.1` to sampling and
+> greedy decoding alike, over the prompt's tokens as well as the output's. Both rates below are
+> therefore at penalty 1.1, and the claim about the unaltered distribution is withdrawn pending a
+> rerun of greedy and sampling at penalties 1.0 and 1.1 in fp32 on the `marker-0.25-fp32` adapter.
+
 `datasets/results/decoding-marker-0.25-t1.0.json`. The saved `marker-0.25` adapter, trained with the
 annotation on 25.1% of refinements, re-evaluated on exactly the held-out examples the calibration
 scored, with only the decoder changed.
