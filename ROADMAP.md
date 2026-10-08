@@ -129,8 +129,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   a query the host truncated. Selection rule, feasibility and split outcome are in the research log.
 - [ ] **Collect Chromium** over train and dev with `scripts/fetch_chromium.sh`, frozen by
   2026-10-23. Blocked on the cut of chromium/src below the project (no project-level set meets the
-  split criteria), on the robots.txt and terms question for googlesource hosts, and then on
-  sub-month fetching for chromium/src.
+  split criteria), on the permission bulk Chromium collection waits for (the terms permit the git
+  host, research log 2026-10-08), and then on sub-month fetching for chromium/src.
 
 ## Plan B — measurement
 
@@ -414,8 +414,16 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
   robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack and Wikimedia
   among the Gerrit hosts (LineageOS is too small for a cell, 2026-09-30) and the GitHub
-  organizations (2026-10-04); AOSP enters again through the NoteDb route once its host's terms
-  allow, and Qt only with permission.
+  organizations (2026-10-04); Qt only with permission. AOSP's git host is permitted (terms re-read
+  2026-10-08), so AOSP may enter again through the NoteDb route once its data audit shows how
+  Android's 2025 move to internal development changed its public review stream in the windows.
+- [ ] **A human-subjects determination from RIT's HSRO before the Stage 1 submission.** AJ files it.
+  The study is secondary research on publicly available review records, pseudonymised at
+  ingestion (45 CFR 46.104(d)(4)(i)); the determination and the GitHub data handling are in the
+  research log (2026-10-08).
+- [ ] **Removal on request.** `docs/protocol.md` promises it, and GitHub's Acceptable Use Policies
+  (section 8) require it: a script that takes an account name, salts it as the scrub does, and
+  drops that author's comments and examples from the corpus, its manifests and the next release.
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
 

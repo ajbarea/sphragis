@@ -61,9 +61,10 @@ NoteDb route's `embedded_fetchers` already does.
    release-time check proposed for Gerrit (ROADMAP Plan A) covers GitHub too.
 8. **Politeness.** Authenticated requests only, GraphQL where it saves calls, conditional requests
    with ETags, the secondary-rate-limit `Retry-After` honoured, no parallel clients.
-9. **Terms.** GitHub's Acceptable Use Policies allow research use of public information when the
-   publications are open access: every paper using this data is posted to arXiv and takes the
-   publisher's open-access option (EMSE for the registered report's Stage 2).
+9. **Terms.** GitHub's Acceptable Use Policies allow research use of "public, non-personal
+   information" when the publications are open access. Review threads are personal, so section 8
+   governs them instead (corrected 2026-10-08, research log): every paper using this data is posted
+   to arXiv and takes the publisher's open-access option (EMSE for the registered report's Stage 2).
 
 ## Testing
 

@@ -7007,6 +7007,9 @@ more than two cells. The permitted Gerrit hosts give OpenStack and Wikimedia; Li
 Acceptable Use Policies allow research use of public information when the resulting publications
 are open access; identities are pseudonymised at ingestion as on Gerrit.
 
+> **Corrected on 2026-10-08.** The clause reads "public, non-personal information", and review
+> threads are personal. Section 8 governs them instead. See "The hosts' terms re-read" below.
+
 A first pass (50 PRs an organization, unweighted) ranked twelve organizations; six went forward:
 OpenJDK, LLVM, Apache, HashiCorp, Grafana and .NET. It counted OpenJDK at zero until its PRs were
 read as integrated rather than merged, since its bot closes them.
@@ -8362,3 +8365,68 @@ separation exceeds the bag of words', the interval of the difference above zero;
 battery reports that exposure cannot be told from the windows' drift. On this pilot that reading is
 the latter.
 
+
+### The hosts' terms re-read: AOSP's git host is permitted, and GitHub review data is personal (2026-10-08)
+
+`# research(2026-10)`. AJ asked for the two open terms questions to be settled from current
+sources. Everything quoted here was read on 2026-10-08.
+
+**AOSP.** The 2026-09-29 decision returned AOSP through the NoteDb route "once its host's terms
+allow bulk fetching". They do.
+
+- Google's Terms of Service (effective 2026-07-30) prohibit "using automated means to access content
+  from any of our services in violation of the machine-readable instructions on our web pages".
+- android.googlesource.com's robots.txt disallows `/?format=TEXT`, `/?format=JSON`,
+  `/new-password`, the `+archive`, `+blame` and `+log` views, and tarballs. A git fetch requests
+  none of them.
+- AOSP's own download documentation provisions automated access. "Each IP address that's used to
+  access source is associated with a quota", and authenticated access gets a quota per user.
+
+`GIT_PERMITTED` already recorded this; the ROADMAP's condition was stale. The same reading covers
+chromium.googlesource.com, which stays refused as recorded on 2026-09-22. That is a choice to wait
+for permission before collecting at Chromium's scale, not a reading of the terms.
+
+One check comes before AOSP is admitted as a client. In 2025 Google moved Android's active
+development to internal branches, and from 2026 it publishes source to AOSP twice a year (Android
+Authority; The Register, 2026-01-08). The training window (2024-11 to 2025-09) spans that change,
+and the development and test windows follow it, so the public review stream may move from Google's
+reviewers to external patches inside the study's windows. AOSP's data audit reports merged changes
+and inline-commented changes per month, and the share by reviewers seen before the change, before
+it enters a cell.
+
+**GitHub.** The route's code comment and the 2026-10-01 entry said GitHub's Acceptable Use Policies
+allow research use of "public information". Section 7 is narrower: "Researchers may use public,
+non-personal information from the Service for research purposes, only if any publications resulting
+from that research are open access." Review threads are personal information. The CJEU held in EDPS
+v SRB (C-413/23 P, 2025-09-04) that comments expressing their authors' views relate to those authors.
+Pseudonymisation does not make the study's copy non-personal. The study holds the salt, and a
+verbatim comment can be found again by searching its host, so its author stays identifiable by
+means reasonably likely to be used, the test the same judgment applies.
+
+The study therefore rests on section 8, which governs personal information collected from the
+Service: use it only for the purpose its user authorised, secure it reasonably, and answer removal
+requests promptly. The text does not settle whether posting a public review authorises research
+use. Gold and Krinke (MSR 2020, read from the authors' copy; extended in EMSE 27, 2022) call
+anonymisation of repository data "almost impossible" but hold that "anonymisation and
+pseudonymisation should still be used to lower the risk", and that analysing public data is not
+exempt from ethics consideration. The study's handling:
+
+- collect through the API, which section 7 does not count as scraping;
+- pseudonymise accounts, addresses and @-mentions at ingestion;
+- publish aggregates and never corpus text;
+- remove an author's reviews on request, from the corpus and every later release, as section 8
+  requires (`docs/protocol.md` gives the address; the tool is a ROADMAP item);
+- state these in an ethics section of every paper, as Gold and Krinke recommend.
+
+**GDPR.** RIT has no establishment in the Union, so the GDPR reaches the study only through Article
+3(2)(b), monitoring the behaviour of people in the Union. Recital 24 tests that by whether people are
+"tracked on the internet", including profiling to analyse or predict "personal preferences,
+behaviours and attitudes". The study measures conventions by organization and project and reports
+nothing about any individual; the planned reviewer analysis uses pseudonyms only to group examples. So the
+study falls outside 3(2)(b). It does not rely on that, and keeps the safeguards Article 89(1) asks
+of research anyway: minimisation, pseudonymisation at ingestion, and no release of personal text.
+
+**Human subjects.** Under the US Common Rule, secondary research on identifiable information that
+is publicly available is exempt (45 CFR 46.104(d)(4)(i)). The determination is the institution's,
+not the study's. Review was deferred for every host on 2026-09-14 and is now a ROADMAP item. AJ files
+it with RIT's HSRO before the Stage 1 submission.
