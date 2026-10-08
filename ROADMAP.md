@@ -129,8 +129,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   a query the host truncated. Selection rule, feasibility and split outcome are in the research log.
 - [ ] **Collect Chromium** over train and dev with `scripts/fetch_chromium.sh`, frozen by
   2026-10-23. Blocked on the cut of chromium/src below the project (no project-level set meets the
-  split criteria), on the robots.txt and terms question for googlesource hosts, and then on
-  sub-month fetching for chromium/src.
+  split criteria), on the permission bulk Chromium collection waits for (the terms permit the git
+  host, research log 2026-10-08), and then on sub-month fetching for chromium/src.
 
 ## Plan B — measurement
 
@@ -414,8 +414,21 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
   robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack and Wikimedia
   among the Gerrit hosts (LineageOS is too small for a cell, 2026-09-30) and the GitHub
-  organizations (2026-10-04); AOSP enters again through the NoteDb route once its host's terms
-  allow, and Qt only with permission.
+  organizations (2026-10-04); Qt only with permission. AOSP's git host is permitted (terms re-read
+  2026-10-08), so AOSP may enter again through the NoteDb route once its data audit shows how
+  Android's 2025 move to internal development changed its public review stream in the windows.
+- [ ] **The IRB determination, now.** AJ files it with RIT's IRB. RIT Policy C05.0 requires one
+  before human-subjects research is conducted and leaves investigators no authority to determine
+  exemption themselves; collection began 2026-09-14. The study expects exempt category 4,
+  publicly available records (45 CFR 46.104(d)(4)(i)); research log, 2026-10-08.
+- [ ] **GitHub's written confirmation** that its Acceptable Use Policies permit research on public
+  pull-request review threads, which its Privacy Statement counts as personal data. AJ sends the
+  request. Collection continues; the GitHub organizations stay out of every published figure until
+  GitHub answers, and a refusal is met by deleting what was collected.
+- [ ] **Removal on request.** `docs/protocol.md` promises it, and GitHub's Acceptable Use Policies
+  (section 8) require it: a script that looks up the account's numeric id, computes the pseudonyms
+  the scrub writes for it (the salted id, and on GitHub the salted login its @-mentions carry), and
+  drops that author's comments and examples from the corpus, its manifests and the next release.
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
 

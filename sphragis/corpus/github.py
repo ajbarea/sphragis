@@ -433,9 +433,10 @@ class GitHubOrg:
     monorepos: tuple[str, ...] = ()
 
 
-# Candidates sized on 2026-10-01 (research log, "The confirmation pass"). GitHub's Acceptable Use
-# Policies allow research use of public information when the resulting publications are open
-# access; every publication using these corpora is posted to arXiv and published open access.
+# Candidates sized on 2026-10-01 (research log, "The confirmation pass"). Review threads count as
+# personal data under GitHub's Privacy Statement, so whether its Acceptable Use Policies permit
+# research on them waits on GitHub's confirmation; until then these organizations stay out of every
+# published figure (research log, 2026-10-08). Every publication using them is open access.
 GITHUB_ORGS = {
     "apache": GitHubOrg("apache"),
     "llvm": GitHubOrg("llvm", monorepos=("llvm/llvm-project",)),
