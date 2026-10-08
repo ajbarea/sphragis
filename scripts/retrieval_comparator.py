@@ -100,6 +100,7 @@ parser.add_argument("--foreign", help="with --pools foreign: the foreign organiz
 parser.add_argument("--foreign-admissible", type=Path, help="with --pools foreign: its list")
 parser.add_argument("--limit", type=int, help="first N targets per evaluated set, a smoke run")
 parser.add_argument("--dry-run", action="store_true", help="build every prompt, load no model")
+parser.add_argument("--repetition-penalty", type=float, help="the registered one by default")
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -367,12 +368,14 @@ def run(args: argparse.Namespace) -> None:
     from sphragis.experiment.model import (
         INFERENCE_DTYPE,
         MODEL_ID,
+        REPETITION_PENALTY,
         HFGenerator,
         pinned_id,
         run_provenance,
     )
 
-    generator = HFGenerator(model_id=MODEL_ID)
+    penalty = REPETITION_PENALTY if args.repetition_penalty is None else args.repetition_penalty
+    generator = HFGenerator(model_id=MODEL_ID, repetition_penalty=penalty)
     signature = (
         f"{pinned_id(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"

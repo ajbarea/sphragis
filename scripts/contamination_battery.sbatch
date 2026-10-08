@@ -30,6 +30,9 @@ PRE="${PRE:-$SPHRAGIS_DATA/corpus/openstack-pre.jsonl}"
 TAG="${TAG:-6mo}"
 # Inputs must come from scripts/contamination_windows.py, which records each; LEGACY_CORPUS=1
 # reads an older file anyway, to reproduce an earlier result.
+# Guided completion's penalty tags every result.
+repetition_penalty
+RESULT_SUFFIX="$RESULT_SUFFIX-rp$REPETITION_PENALTY"
 claim_result OUT "$SPHRAGIS_RESULTS/contamination-openstack-$TAG-$SCORED_TEXT$RESULT_SUFFIX.json"
 # The script also writes the membership half early, beside the result, so a run that hits its wall
 # during guided completion keeps the primary instrument. That file is a result too.
@@ -39,4 +42,5 @@ uv run --no-sync python scripts/contamination_battery.py \
   --pre "$PRE" \
   $(legacy_corpus_flag) \
   --scored-text "$SCORED_TEXT" \
+  --repetition-penalty "$REPETITION_PENALTY" \
   --out "$OUT"

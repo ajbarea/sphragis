@@ -13,17 +13,16 @@ Each job runs the base model over the same prompts four times:
   bf16_fresh   a reloaded model: does loading it again change anything?
   fp32         the same weights upcast exactly, computed in fp32 (LayerCast's idea)
 
-The question is between jobs, so submit it twice, pinned to the two nodes the stored runs used
+The question is between jobs, so submit it twice, pinned to two nodes
 (scripts/determinism_check.sbatch), then compare locally:
 
     uv run --no-sync --no-active python scripts/determinism_check.py --compare \
-        datasets/results/determinism-sym-0-gh-a-081.json \
-        datasets/results/determinism-sym-0-gh-a-103.json \
-        --stored datasets/results/calibration-marker-0.json datasets/results/calibration-sym-0.json
+        datasets/results/determinism-sym-0-gh-a-081-rp1.0.json \
+        datasets/results/determinism-sym-0-gh-a-003-rp1.0.json
 
-If the job on gh-a-081 reproduces 148088's predictions and the one on gh-a-103 reproduces
-148199's, the node is the variable; if fp32 agrees across nodes where bf16 does not, computing
-in fp32 is the fix for the confirmatory run.
+`--stored` adds stored runs' base predictions as columns, refused unless they decoded at the jobs'
+penalty: the first jobs (gh-a-081 and gh-a-103, untagged, at 1.1) compared against the null runs
+148088 and 148199 to find that the node was the variable and fp32 the fix.
 
 (PyTorch's allocator aligns every block to 512 bytes, so allocation state cannot change the
 alignment a GEMM kernel is chosen on, and is not tested.)
@@ -40,7 +39,12 @@ parser.add_argument("--condition", default="sym-0")
 parser.add_argument("--half", default="a")
 parser.add_argument("--corpus-dir", type=Path, help="where the condition's corpus halves are")
 parser.add_argument(
-    "--stored", type=Path, nargs="+", required=True, help="runs whose base predictions to compare"
+    "--stored",
+    type=Path,
+    nargs="*",
+    default=[],
+    help="runs whose base predictions to compare, decoded at the jobs' penalty; generating "
+    "takes its prompts from the first",
 )
 parser.add_argument("--examples", type=int, default=150)
 parser.add_argument("--repetition-penalty", type=float, help="the registered one by default")
@@ -64,6 +68,8 @@ def generate(args: argparse.Namespace) -> None:
 
     penalty = REPETITION_PENALTY if args.repetition_penalty is None else args.repetition_penalty
 
+    if not args.stored:
+        raise SystemExit("--stored: a run to take the prompts from")
     stored = stored_predictions(args.stored, f"base|{args.half}")
     ids = sorted(next(iter(stored.values())))[: args.examples]
     # The corpus keeps an address that appears in a file path, and the published runs have

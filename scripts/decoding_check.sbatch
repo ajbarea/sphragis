@@ -26,7 +26,7 @@ CALIBRATION="${CALIBRATION:-$CONDITION-fp32}"
 TEMPERATURE="${TEMPERATURE:-1.0}"
 # Named in every result. 1.0 is off; the checkpoint's generation config sets 1.1.
 # REPETITION_PENALTY=1.0|1.1
-REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
+repetition_penalty
 
 claim_result OUT "$SPHRAGIS_RESULTS/decoding-$CALIBRATION-t$TEMPERATURE-rp$REPETITION_PENALTY$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/decoding_check.py \

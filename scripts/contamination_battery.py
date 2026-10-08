@@ -22,6 +22,7 @@ from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
     MEMBERSHIP_MODEL_ID,
     MODEL_ID,
+    REPETITION_PENALTY,
     HFGenerator,
     revision,
     run_provenance,
@@ -62,6 +63,7 @@ parser.add_argument(
     help="read inputs not cut under the current label rules, to reproduce an earlier result; "
     "recorded in the output",
 )
+parser.add_argument("--repetition-penalty", type=float, default=REPETITION_PENALTY)
 parser.add_argument("--out", type=Path, default=Path("contamination.json"))
 args = parser.parse_args()
 
@@ -169,7 +171,9 @@ args.out.with_suffix(".partial.json").write_text(json.dumps(_partial, indent=2) 
 print(f"wrote {args.out.with_suffix('.partial.json')} (membership only)", flush=True)
 
 # --- Guided completion on the registered model -------------------------------------------
-generator = HFGenerator(model_id=MODEL_ID, max_new_tokens=MAX_NEW_TOKENS)
+generator = HFGenerator(
+    model_id=MODEL_ID, max_new_tokens=MAX_NEW_TOKENS, repetition_penalty=args.repetition_penalty
+)
 guided_dtype = generator.computed_dtype  # kept: the generator is released before the write
 guided_penalty = generator.effective_repetition_penalty
 

@@ -41,6 +41,9 @@ case "${DRY_RUN:-0}" in
   *) echo "DRY_RUN must be 0 or 1, not $DRY_RUN" >&2; exit 1 ;;
 esac
 RESULT_SUFFIX="$RESULT_SUFFIX${LIMIT:+-limit$LIMIT}"
+# The penalty tags every result, after the rules lookup above: the rules files carry no tag.
+repetition_penalty
+RESULT_SUFFIX="$RESULT_SUFFIX-rp$REPETITION_PENALTY"
 LISTS=datasets/results
 
 case "$POOLS" in
@@ -50,7 +53,7 @@ case "$POOLS" in
     uv run --no-sync python scripts/retrieval_comparator.py --pools halves \
       --org "$ORG" --partition "$PARTITION" --results "$LISTS" ${RULES[@]+"${RULES[@]}"} \
       --admissible "$LISTS/admissible-partitions-$ORG.json" ${LIMIT:+--limit "$LIMIT"} \
-      ${DRY:+"$DRY"} --out "$OUT"
+      --repetition-penalty "$REPETITION_PENALTY" ${DRY:+"$DRY"} --out "$OUT"
     ;;
   foreign)
     FOREIGN="${FOREIGN:?set FOREIGN to the other organization}"
@@ -59,7 +62,8 @@ case "$POOLS" in
       --org "$ORG" --results "$LISTS" --admissible "$LISTS/admissible-partitions-$ORG.json" \
       ${RULES[@]+"${RULES[@]}"} \
       --foreign "$FOREIGN" --foreign-admissible "$LISTS/admissible-partitions-$FOREIGN.json" \
-      ${LIMIT:+--limit "$LIMIT"} ${DRY:+"$DRY"} --out "$OUT"
+      ${LIMIT:+--limit "$LIMIT"} --repetition-penalty "$REPETITION_PENALTY" ${DRY:+"$DRY"} \
+      --out "$OUT"
     ;;
   *)
     echo "POOLS must be halves or foreign, not $POOLS" >&2

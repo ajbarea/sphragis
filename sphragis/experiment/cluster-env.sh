@@ -236,6 +236,17 @@ claim_result() {
 # Another seed set or training size is another run, not a rerun, so it is named whatever
 # RUN_TAG says: SEEDS=2 alone would otherwise overwrite the seed-1 result and its adapters.
 # A script calls this with the variables it passes on, so one it ignores never renames it.
+# The decoder's repetition penalty, 1.0 (registered, research log 2026-10-08) unless given, written
+# as Python writes the float so a result's `-rp<penalty>` tag is the name a reader looks up
+# (`f"-rp{penalty}"`). Results from before the registration carry no tag and decoded at 1.1.
+repetition_penalty() {
+  REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
+  if ! [[ "$REPETITION_PENALTY" =~ ^[0-9]+\.([0-9]*[1-9]|0)$ ]]; then
+    echo "REPETITION_PENALTY must be written as Python writes a float (1.0, 1.1), not $REPETITION_PENALTY" >&2
+    return 1
+  fi
+  export REPETITION_PENALTY
+}
 tag_result_suffix() {
   local name
   for name in "$@"; do
