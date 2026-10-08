@@ -58,6 +58,7 @@ from sphragis.experiment.neutral import LEAKAGE_THRESHOLD
 from sphragis.experiment.partitions import on_common_examples
 from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, first_partitions
 from sphragis.experiment.rules_arms import DISTILLED, WRITTEN
+from sphragis.experiment.runs import UNRECORDED_REPETITION_PENALTY, decoder
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
 from sphragis.provenance import provenance_header
 from sphragis.refusal import refusals
@@ -185,18 +186,31 @@ def adapter_runs(
 ) -> tuple[list[Path], list[dict[str, Rows]], Any]:
     """The adapters' development-window runs on the same partitions, cut to `ids`.
 
-    Refused unless every run decoded as the retrieval generator did (`decoding`: model and
-    output budget) and all were trained at one LoRA rank, which is returned.
+    Each partition's run is the stored one if it decoded as the retrieval generator did
+    (`decoding`: model, output budget, dtype and penalty, as `runs.decoder` reads them), else
+    its rescoring at the generator's penalty; refused if neither did, or unless all were trained
+    at one LoRA rank, which is returned.
     """
     paths, runs, ranks = [], [], set()
+    (penalty,) = decoding["repetition_penalty"]
     for partition in order:
-        with refusals():
-            path, run, _, _ = adapter_run(
-                results, org=org, partition=partition, order=order, size=size
+        candidates, refused = [], []
+        for suffix in ("", f"-rp{penalty}"):
+            try:
+                path, run, _, _ = adapter_run(
+                    results, org=org, partition=partition, order=order, size=size, suffix=suffix
+                )
+            except ValueError as error:
+                refused.append(str(error))
+                continue
+            if {"model_id": run.get("model_id"), **decoder(run)} == dict(decoding):
+                candidates.append((path, run))
+        if not candidates:
+            raise SystemExit(
+                f"partition {partition}: no adapter run decoded as {decoding}; refused: {refused}"
             )
-        found = {key: run.get(key) for key in decoding}
-        if found != dict(decoding):
-            raise SystemExit(f"{path} decoded with {found}, the retrieval arms with {decoding}")
+        # The stored run when it decoded alike; a rescoring at its own penalty is a control.
+        path, run = candidates[0]
         ranks.add(run.get("lora_rank"))
         scored = {r["id"] for rows in run["results"].values() for r in rows}
         if ids - scored:
@@ -372,6 +386,9 @@ def main() -> None:
     if None in generator.values():
         raise SystemExit(f"{args.foreign_job} does not record its generator")
     fixed |= generator
+    # Outside `fixed`: the generator signature already binds every job to one penalty, and a
+    # job from before the penalty was recorded decoded at the checkpoint's.
+    penalty = foreign_job.get("repetition_penalty", UNRECORDED_REPETITION_PENALTY)
     once = dict(foreign_job["results"])
     if args.base_job:
         base_fixed = {k: v for k, v in fixed.items() if k not in RULES_RECORD}
@@ -419,9 +436,10 @@ def main() -> None:
             )
         if adapters is None:
             ids = {row["id"] for rows in cut[0].values() for row in rows}
-            # The adapter runs record the dtypes they decoded in as a list.
+            # As `runs.decoder` reads an adapter run: dtypes and penalties as tuples.
             decoding = {key: generator[key] for key in ("model_id", "max_new_tokens")}
-            decoding["inference_dtype"] = [generator["inference_dtype"]]
+            decoding["inference_dtype"] = (generator["inference_dtype"],)
+            decoding["repetition_penalty"] = (penalty,)
             paths, trained, rank = adapter_runs(args.results, args.org, order, size, ids, decoding)
             adapters = {
                 "runs": [str(p) for p in paths],

@@ -193,8 +193,8 @@ INFERENCE_DTYPE = "float32"
 # No repetition penalty, passed to every generate call rather than left to the checkpoint, whose
 # generation config sets 1.1 and which transformers applies under greedy decoding too, over the
 # prompt's tokens. A refinement is mostly copied code, and 1.1 penalises the copy: the base
-# model's exact match rose by 1.6 to 2.5 times without it, and a convention planted in 25% of
-# training refinements was emitted at 0.65 with it and 0.02 to 0.03 without
+# model's exact match rose by 1.15 to 2.5 times without it, and a convention planted in 25% of
+# training refinements was emitted greedily at 0.63 to 0.65 with it and 0.02 to 0.03 without
 # (datasets/results/decoder-penalty.json).
 REPETITION_PENALTY = 1.0
 

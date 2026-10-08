@@ -438,6 +438,7 @@ def run(args: argparse.Namespace) -> None:
         }
     report["model_id"], report["max_new_tokens"] = generator.model_id, generator.max_new_tokens
     report["inference_dtype"] = generator.computed_dtype
+    report["repetition_penalty"] = generator.effective_repetition_penalty
     report["results"] = results
     report["provenance"] = run_provenance()
     args.out.write_text(json.dumps(report, indent=2) + "\n")

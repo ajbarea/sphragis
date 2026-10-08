@@ -199,10 +199,10 @@ def decoding_kwargs(temperature: float, repetition_penalty: float | None = None)
 
     Greedy is the registered decoder: one most likely output per prompt, no sampling draw to
     average over. It reproduces between jobs in fp32 (`model.INFERENCE_DTYPE`). Sampling
-    exists to test one hypothesis, that greedy decoding is what turned a convention present in
-    25% of training refinements into one the adapter emitted 64% of the time. At temperature 1 with
-    top-k and top-p disabled the model samples from its own distribution unaltered, so if
-    greedy is the amplifier, the emission rate should fall back toward the training rate.
+    exists for the decoding check, which asks what turned a convention present in 25% of
+    training refinements into one the adapter emitted 64% of the time; the checkpoint's
+    repetition penalty did (research log, 2026-10-08). At temperature 1 with top-k and top-p
+    disabled the model samples from its own distribution unaltered.
     Anything other than exactly that unaltered distribution would test something else, so
     sampling also turns the repetition penalty off unless one is asked for.
 

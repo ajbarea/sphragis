@@ -8466,7 +8466,9 @@ determination request goes to RIT's IRB now; AJ files it.
 
 ### The checkpoint's repetition penalty, measured: plain greedy is registered (2026-10-08)
 
-`# research(2026-10)`. `scripts/decoder_read.py`, `datasets/results/decoder-penalty.json`. Qwen2.5-Coder-7B-Instruct's
+`# research(2026-10)`. `scripts/decoder_read.py`, `datasets/results/decoder-penalty.json`. The three
+rescored partition runs ran at 3264e08, the pre-rebase copy of 09e1511, through the first
+`--reuse-adapters`, which records no test 3. Qwen2.5-Coder-7B-Instruct's
 pinned `generation_config.json` sets `repetition_penalty: 1.1`, and transformers 5.17.0 adds its
 processor whether or not it samples, over the prompt's tokens as well as the output's. Every
 result before this entry therefore decoded greedy at 1.1, while the registration says greedy. A
@@ -8479,12 +8481,12 @@ the copy. Measured on stored adapters, rescored with only the decoder changed
   all 449 and 488. Rescoring isolates the decoder.
 - **Without the penalty, exact match rises, most for the base model.** On partition 2 the base
   model goes from 0.031 to 0.078 on half a and 0.053 to 0.061 on half b; on partition 3 from 0.036
-  to 0.059 and 0.045 to 0.075. Adapter arms move by -0.006 to +0.036. Between a third and a half of
-  every arm's predictions change.
-- **Per-run contrasts move by more than the SESOI.** Partition 2's own-minus-sibling on half a
-  goes from 0.000 to -0.008, half b stays at +0.041 with its interval now above zero; partition 3's
-  half a goes from +0.024 to +0.041 (interval above zero) and half b from +0.018 to 0.000. Both runs'
-  pilot verdicts move from fail to mixed.
+  to 0.059 and 0.045 to 0.075. Adapter arms move by -0.006 to +0.036. The base arms change 59 to
+  63% of their predictions, the adapter arms 37 to 47%.
+- **Per-run contrasts move, partition 3's by more than the SESOI.** Partition 2's own-minus-sibling
+  on half a goes from 0.000 to -0.008 and half b stays at +0.041, its interval now above zero;
+  partition 3's half a goes from +0.024 to +0.041 (interval above zero) and half b from +0.018 to
+  0.000. Both runs' pilot verdicts move from fail to mixed.
 - **The planted calibration reverses.** With the annotation on 25.1% of training refinements, the
   adapter emitted it on 0.628 and 0.650 of greedy outputs at 1.1. Sampled at temperature 1 without
   the penalty, the adapter's unaltered distribution, it emits 0.243 and 0.219, near the trained

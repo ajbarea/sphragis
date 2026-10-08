@@ -43,6 +43,7 @@ parser.add_argument(
     "--stored", type=Path, nargs="+", required=True, help="runs whose base predictions to compare"
 )
 parser.add_argument("--examples", type=int, default=150)
+parser.add_argument("--repetition-penalty", type=float, help="the registered one by default")
 parser.add_argument("--out", type=Path, help="this job's passes")
 parser.add_argument("--compare", type=Path, nargs="*", help="job outputs to compare, no GPU")
 
@@ -58,8 +59,10 @@ def generate(args: argparse.Namespace) -> None:
     import torch
 
     from sphragis.corpus.redact import redact_text
-    from sphragis.experiment.model import HFGenerator, run_provenance
+    from sphragis.experiment.model import REPETITION_PENALTY, HFGenerator, run_provenance
     from sphragis.experiment.runner import build_prompt
+
+    penalty = REPETITION_PENALTY if args.repetition_penalty is None else args.repetition_penalty
 
     stored = stored_predictions(args.stored, f"base|{args.half}")
     ids = sorted(next(iter(stored.values())))[: args.examples]
@@ -88,16 +91,16 @@ def generate(args: argparse.Namespace) -> None:
     passes: dict[str, dict[str, str]] = {}
     # bf16 explicitly: the registered default is fp32, and a pass that inherited it would be
     # labelled bf16 while computing in fp32, which is the measurement this job exists to make.
-    generator = HFGenerator(dtype="bfloat16")
+    generator = HFGenerator(dtype="bfloat16", repetition_penalty=penalty)
     passes["bf16"] = run(generator, "bf16")
     passes["bf16_repeat"] = run(generator, "bf16 repeat")
     del generator
     torch.cuda.empty_cache()
-    generator = HFGenerator(dtype="bfloat16")
+    generator = HFGenerator(dtype="bfloat16", repetition_penalty=penalty)
     passes["bf16_fresh"] = run(generator, "bf16 fresh")
     del generator
     torch.cuda.empty_cache()
-    generator = HFGenerator(dtype="float32")
+    generator = HFGenerator(dtype="float32", repetition_penalty=penalty)
     passes["fp32"] = run(generator, "fp32")
     args.out.write_text(
         json.dumps(
@@ -111,6 +114,7 @@ def generate(args: argparse.Namespace) -> None:
                     "fp32": "float32",
                 },
                 "ids": ids,
+                "repetition_penalty": generator.effective_repetition_penalty,
                 "passes": passes,
                 "provenance": run_provenance(),
             },
@@ -126,6 +130,16 @@ def compare(args: argparse.Namespace) -> None:
     ids = jobs[0]["ids"]
     if any(job["ids"] != ids for job in jobs):
         raise SystemExit("the jobs generated for different prompts")
+    from sphragis.experiment.runs import UNRECORDED_REPETITION_PENALTY, decoder
+
+    # A job from before the penalty was recorded decoded at the checkpoint's. Predictions made
+    # at another penalty differ by the decoder, which this comparison would count as noise.
+    penalties = {job.get("repetition_penalty", UNRECORDED_REPETITION_PENALTY) for job in jobs}
+    if len(penalties) != 1:
+        raise SystemExit(f"the jobs decoded at penalties {sorted(penalties)}")
+    for path in args.stored:
+        if decoder(json.loads(path.read_text()))["repetition_penalty"] != tuple(penalties):
+            raise SystemExit(f"{path} decoded at another penalty than the jobs' {penalties}")
     columns: dict[str, dict[str, str]] = {}
     for job in jobs:
         node = job["provenance"]["slurm"]["node"]
