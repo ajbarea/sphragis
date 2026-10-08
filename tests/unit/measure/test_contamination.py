@@ -213,3 +213,15 @@ def test_the_window_cost_covers_every_example_not_the_first() -> None:
     only_clean = contamination._window_cost([clean, clean], window=3)
     assert only_clean["windows_dropped"] == 0
     assert only_clean["examples_losing_a_window"] == 0
+
+
+def test_scored_text_is_the_hunk_or_the_hunk_with_its_context() -> None:
+    from sphragis.measure.contamination import scored_text
+
+    row = {"id": "x", "after": "b", "context_before": "a", "context_after": ""}
+    assert scored_text(row, "after") == "b"
+    assert scored_text(row, "with_context") == "a\nb"
+    with pytest.raises(ValueError):
+        scored_text({"id": "x", "after": "b"}, "with_context")
+    with pytest.raises(ValueError):
+        scored_text(row, "context")

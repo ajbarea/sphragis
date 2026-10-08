@@ -12,6 +12,7 @@ from sphragis.measure.blind import (
     latest_year,
     naive_bayes,
     out_of_fold,
+    repeated_out_of_fold,
 )
 
 
@@ -83,3 +84,14 @@ def test_clustered_separation_pairs_the_arms_on_one_resample() -> None:
     )
     assert result["a"]["estimate"] == 1.0 == result["a"]["low"]
     assert result["a - b"] == {"estimate": 0.0, "low": 0.0, "high": 0.0}
+
+
+def test_repeated_out_of_fold_averages_every_seed_and_keeps_each() -> None:
+    texts = [f"common {'new' if i % 2 else 'old'} {i}" for i in range(40)]
+    labels = [i % 2 for i in range(40)]
+    groups = [f"g{i}" for i in range(40)]
+    mean, runs = repeated_out_of_fold(texts, labels, groups, folds=4, seeds=[0, 1, 2])
+    assert len(runs) == 3
+    assert mean == pytest.approx([sum(r[i] for r in runs) / 3 for i in range(40)])
+    with pytest.raises(ValueError):
+        repeated_out_of_fold(texts, labels, groups, folds=4, seeds=[])

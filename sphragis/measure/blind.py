@@ -92,6 +92,25 @@ def out_of_fold(
     return scores
 
 
+def repeated_out_of_fold(
+    texts: Sequence[str],
+    labels: Sequence[int],
+    groups: Sequence[str],
+    *,
+    folds: int,
+    seeds: Sequence[int],
+) -> tuple[list[float], list[list[float]]]:
+    """Out-of-fold log-odds averaged over fold seeds, and each seed's own scores.
+
+    One fold draw is one draw: the average is the reading, the per-seed scores its spread.
+    """
+    if not seeds:
+        raise ValueError("repeated_out_of_fold needs at least one seed")
+    runs = [out_of_fold(texts, labels, groups, folds=folds, seed=seed) for seed in seeds]
+    mean = [sum(column) / len(runs) for column in zip(*runs, strict=True)]
+    return mean, runs
+
+
 def auc(scores: Sequence[float], labels: Sequence[int]) -> float:
     """Probability that a label-1 example outscores a label-0 one, ties counted half."""
     order = sorted(range(len(scores)), key=lambda i: scores[i])
