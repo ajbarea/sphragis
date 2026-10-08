@@ -9,6 +9,8 @@ hide:
 
 <div class="hero" markdown>
 
+<div class="hero-copy" markdown>
+
 # Sphragis
 
 **Can a model learn an organization's house style from the code it reviews?**
@@ -25,6 +27,13 @@ hide:
 
 <p class="hero-modes" markdown><span class="hero-chip">:octicons-lock-24: Sealed test window</span> <span class="hero-chip">:octicons-git-pull-request-24: Public code review</span> <span class="hero-chip">:octicons-mortar-board-24: MSR 2027 Registered Report</span></p>
 
+</div>
+
+</div>
+
+<div class="hero-art">
+  <img class="seal--dark" src="assets/seal-hero.svg" alt="" width="720" height="720">
+  <img class="seal--light" src="assets/seal-hero-light.svg" alt="" width="720" height="720">
 </div>
 
 </div>
