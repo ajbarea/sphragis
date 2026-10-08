@@ -77,7 +77,8 @@ These predate the H1 and H2 decomposition and stay as the record the registered 
 | `project_corpora.py` | Builds those two projects' corpora, one per side. |
 | `calibration.sbatch` | The weakest house style the contrast can see, by planting conventions of known strength. |
 | `estimands.py` | What the estimand choice costs, on a run that has already happened. |
-| `decoding_check.sbatch` | Re-evaluates a saved adapter with sampling, to test whether greedy decoding amplifies a planted convention. |
+| `decoding_check.sbatch` | Re-evaluates a saved calibration adapter at a chosen temperature and repetition penalty, to test whether the decoder amplifies a planted convention. |
+| `decoder_check.sbatch` | Rescores a stored H1 partition run at an explicit repetition penalty, its adapters reused, so the decoder is the only change. |
 | `determinism_check.sbatch` | Four passes of the base model over the same prompts, to locate run-to-run variation in greedy decoding. |
 | `prompt_format_probe.sbatch` | Measures how much of the pilot's base-model floor is the prompt format. |
 | `contamination_battery.sbatch` | The contamination battery, run on the windows `contamination_windows.py` assembles. |

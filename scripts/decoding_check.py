@@ -44,7 +44,8 @@ def emits(text: str) -> bool:
 
 def main() -> None:
     args = parser.parse_args()
-    run = json.loads(args.results.read_text())["results"]
+    calibration = json.loads(args.results.read_text())
+    run = calibration["results"]
     examples = {}
     for side in ("a", "b"):
         path = args.corpus_dir / f"{args.condition}-{side}.jsonl"
@@ -59,6 +60,12 @@ def main() -> None:
         repetition_penalty=args.repetition_penalty,
         seed=args.seed,
     )
+    # A calibration from before runs recorded their dtype was decoded in bf16.
+    stored_dtype = calibration["provenance"].get("inference_dtype", "unrecorded")
+    if stored_dtype != generator.computed_dtype:
+        raise SystemExit(
+            f"{args.results} decoded in {stored_dtype}, this run in {generator.computed_dtype}"
+        )
     halves: dict[str, dict[str, float | int]] = {}
     # The planted half is b, so b's adapter is the one whose emission is in question. Evaluate
     # it on both halves, on the same examples the greedy run scored.
@@ -70,7 +77,7 @@ def main() -> None:
         halves[half] = {
             "examples": len(stored),
             "greedy_emission": greedy,
-            "sampled_emission": rate,
+            "rerun_emission": rate,
             "matches_stored": sum(
                 text == r.get("prediction") for text, r in zip(rerun, stored, strict=True)
             ),

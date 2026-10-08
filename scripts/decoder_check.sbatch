@@ -27,6 +27,7 @@ REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
 tag_result_suffix SEEDS TRAIN_SIZE
 ROOT="$SPHRAGIS_DATA/corpus-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX"
 
+STORED="$SPHRAGIS_RESULTS/rq1-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX.json"
 claim_result OUT "$SPHRAGIS_RESULTS/rq1-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX-rp$REPETITION_PENALTY.json"
 
 uv run --no-sync python scripts/rq1_pilot.py \
@@ -34,6 +35,6 @@ uv run --no-sync python scripts/rq1_pilot.py \
   --seeds "$SEEDS" \
   --equalize-train --train-size "$TRAIN_SIZE" \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX" \
-  --reuse-adapters \
+  --reuse-from "$STORED" \
   --repetition-penalty "$REPETITION_PENALTY" \
   --out "$OUT"

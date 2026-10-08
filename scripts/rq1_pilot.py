@@ -35,6 +35,7 @@ from sphragis.experiment.model import (
 from sphragis.experiment.neutral import (
     LEAKAGE_MAX_RATE,
     LEAKAGE_THRESHOLD,
+    Check,
     apparatus_holds,
     leakage_check,
     manipulation_check,
@@ -42,6 +43,7 @@ from sphragis.experiment.neutral import (
     positive_control,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids
+from sphragis.experiment.runs import reused_adapter
 from sphragis.experiment.training import supervised
 from sphragis.experiment.walk import gate, walk
 
@@ -107,9 +109,9 @@ parser.add_argument(
     help="decode with this penalty; by default the checkpoint's generation config sets it",
 )
 parser.add_argument(
-    "--reuse-adapters",
-    action="store_true",
-    help="load an adapter already saved under --adapters instead of training it again",
+    "--reuse-from",
+    type=Path,
+    help="the stored result whose adapters, saved under --adapters, are evaluated again untrained",
 )
 parser.add_argument(
     "--dry-run",
@@ -225,15 +227,12 @@ class InProcessTrainer:
     def __init__(self) -> None:
         self.reports: dict[str, dict] = {}
         self.losses: dict[str, list[float]] = {}
+        self.reused_checks: dict[str, Check] = {}
 
     def train(self, org: str, seed: int) -> str:
         target = args.adapters / f"{org}-s{seed}"
-        if args.reuse_adapters:
-            if not (target / "adapter_config.json").exists():
-                raise SystemExit(f"--reuse-adapters: no saved adapter at {target}")
-            print(f"reusing {target}", flush=True)
-            self.reports[f"{org}-s{seed}"] = {"reused": str(target)}
-            return str(target)
+        if args.reuse_from:
+            return self.reuse(org, seed, target)
         model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
             tok.pad_token = tok.eos_token
@@ -262,6 +261,20 @@ class InProcessTrainer:
         del model
         gc.collect()
         torch.cuda.empty_cache()
+        return str(target)
+
+    def reuse(self, org: str, seed: int, target: Path) -> str:
+        """The adapter a stored run trained, with that run's training report and test 3."""
+        key = f"{org}-s{seed}"
+        try:
+            report, check = reused_adapter(
+                args.reuse_from, key, target, train_size=args.train_size, rank=args.lora_rank
+            )
+        except ValueError as error:
+            raise SystemExit(f"--reuse-from: {error}") from error
+        self.reports[key] = report
+        self.reused_checks[key] = Check(check["name"], check["passed"], check["evidence"])
+        print(f"reusing {target} from {args.reuse_from}", flush=True)
         return str(target)
 
 
@@ -319,8 +332,9 @@ for org in orgs:
                 bootstrap_seed=args.bootstrap_seed,
             )
         )
-        # A reused adapter was not trained here; its own run recorded the manipulation check.
-        if args.reuse_adapters:
+        # A reused adapter's test 3 is the stored run's, which trained it.
+        if f"{org}-s{seed}" in trainer.reused_checks:
+            checks.append(trainer.reused_checks[f"{org}-s{seed}"])
             continue
         checks.append(
             manipulation_check(

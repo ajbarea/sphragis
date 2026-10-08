@@ -20,9 +20,9 @@ cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-marker-0.25}"
-# The calibration run whose adapter and examples are reused: the condition's, or a variant of
-# it such as marker-0.25-fp32.
-CALIBRATION="${CALIBRATION:-$CONDITION}"
+# The calibration run whose adapter and examples are reused, decoded in the dtype this run
+# loads (decoding_check.py refuses another): the condition's fp32 run.
+CALIBRATION="${CALIBRATION:-$CONDITION-fp32}"
 TEMPERATURE="${TEMPERATURE:-1.0}"
 # Named in every result. 1.0 is off; the checkpoint's generation config sets 1.1.
 # REPETITION_PENALTY=1.0|1.1
