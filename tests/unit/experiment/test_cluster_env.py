@@ -175,6 +175,27 @@ def test_rendered_jobs_carry_the_same_environment_as_the_scripts() -> None:
     assert _ENV.read_text().strip() in script
 
 
+@pytest.mark.parametrize(
+    ("given", "named"),
+    [("", "1.0"), ("1.0", "1.0"), ("1.1", "1.1"), ("1.05", "1.05"), ("1", None), ("1.10", None)],
+)
+def test_a_penalty_is_named_as_the_readers_look_it_up(
+    tmp_path: Path, given: str, named: str | None
+) -> None:
+    """`f"-rp{penalty}"` finds 1.0 and 1.1; a tag written `1` or `1.10` would never be found."""
+    _fake_uv(tmp_path / ".local" / "bin" / _MACHINE)
+    _fake_venv(tmp_path)
+    probe = f'REPETITION_PENALTY="{given}"; repetition_penalty; echo "$REPETITION_PENALTY"'
+    result = _source(tmp_path, tmp_path, probe)
+    if named is None:
+        assert result.returncode != 0
+        assert "as Python writes a float" in result.stderr
+    else:
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.strip() == named
+        assert f"{float(named)}" == named
+
+
 @pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
 def test_every_script_defaults_to_the_default_target(script: Path) -> None:
     text = script.read_text()

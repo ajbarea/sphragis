@@ -12,10 +12,11 @@
 
 # Where does greedy decoding's run-to-run variation come from? Four passes of the base model
 # over the same 150 prompts, no training: 600 generations, under the decoding check's 57
-# minutes for 940 even with the fp32 pass slower. Submit once per node the stored runs used:
+# minutes for 940 even with the fp32 pass slower. Submit once on each of two nodes, those the
+# registered fp32 measurement used:
 #
 #   make submit JOB=determinism_check SBATCH_ARGS=--nodelist=gh-a-081
-#   make submit JOB=determinism_check SBATCH_ARGS=--nodelist=gh-a-103
+#   make submit JOB=determinism_check SBATCH_ARGS=--nodelist=gh-a-003
 #
 # The node is in the result name, so the two never overwrite each other.
 set -euo pipefail
@@ -25,9 +26,7 @@ source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-sym-0}"
 
-# Named in every result since the registration of 1.0 (research log, 2026-10-08); results from
-# before it carry no tag and decoded at the checkpoint's 1.1.
-REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
+repetition_penalty
 RESULT_SUFFIX="$RESULT_SUFFIX-rp$REPETITION_PENALTY"
 claim_result OUT "$SPHRAGIS_RESULTS/determinism-$CONDITION-$SLURMD_NODENAME$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/determinism_check.py \

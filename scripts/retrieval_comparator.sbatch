@@ -41,10 +41,8 @@ case "${DRY_RUN:-0}" in
   *) echo "DRY_RUN must be 0 or 1, not $DRY_RUN" >&2; exit 1 ;;
 esac
 RESULT_SUFFIX="$RESULT_SUFFIX${LIMIT:+-limit$LIMIT}"
-# Named in every result since the registration of 1.0 (research log, 2026-10-08); results from
-# before it carry no tag and decoded at the checkpoint's 1.1. After the rules lookup above, since
-# the rules files are distilled without a penalty and carry no tag.
-REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
+# The penalty tags every result, after the rules lookup above: the rules files carry no tag.
+repetition_penalty
 RESULT_SUFFIX="$RESULT_SUFFIX-rp$REPETITION_PENALTY"
 LISTS=datasets/results
 

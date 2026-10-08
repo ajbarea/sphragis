@@ -23,7 +23,7 @@ ORG="${ORG:?set ORG to the organization}"
 PARTITION_SEED="${PARTITION_SEED:?set PARTITION_SEED of the stored run}"
 TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE of the stored run}"
 SEEDS="${SEEDS:?set SEEDS of the stored run}"
-REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
+repetition_penalty
 # A planted run (partition_run.sbatch's PLANT) is named and stored with its fraction.
 PLANT="${PLANT:-}"
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
