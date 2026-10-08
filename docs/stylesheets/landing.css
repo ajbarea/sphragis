@@ -13,9 +13,6 @@
   --sph-graphite: #0f1118;
   --sph-ink: #1a1d27;
   --sph-mist: rgba(244, 168, 150, 0.08);
-  --hero-bg-image: url('../assets/seal-hero.svg');
-  /* The artwork is one object, not a scene: sized to the hero's height and held to the right. */
-  --hero-bg-place: right -7vw center / auto 88%;
 }
 
 [data-md-color-scheme="slate"] {
@@ -57,36 +54,26 @@ body.hero-page .md-content__inner {
 }
 
 .md-typeset .hero {
+  /* Text and seal are two grid cells, so they cannot overlap at any width. The hero
+     spans the viewport, so its stage has no edge against the page; on a wide screen
+     both hold to a 64rem band (rem: the theme raises the root font size there). */
+  --hero-band: calc(50vw - 32rem);
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 38%);
+  align-content: center;
+  align-items: center;
+  column-gap: 2rem;
   text-align: left;
-  padding: 6rem 8vw 5rem;
-  margin: -1.2rem -0.8rem 0;
+  padding: 6rem max(8vw, var(--hero-band)) 5rem;
+  width: 100vw;
+  margin: -1.2rem 0 0 calc(-50vw + 50%);
+  box-sizing: border-box;
   overflow: hidden;
-  background-color: var(--sph-obsidian);
-
   background:
-    radial-gradient(ellipse 60% 70% at 78% 52%,
-      transparent 0%,
-      color-mix(in srgb, var(--sph-obsidian) 22%, transparent) 55%,
-      color-mix(in srgb, var(--sph-obsidian) 75%, transparent) 85%,
-      var(--sph-obsidian) 100%),
-    linear-gradient(to right,
-      var(--sph-obsidian) 0%,
-      color-mix(in srgb, var(--sph-obsidian) 92%, transparent) 32%,
-      color-mix(in srgb, var(--sph-obsidian) 40%, transparent) 60%,
-      transparent 100%),
-    linear-gradient(to bottom,
-      color-mix(in srgb, var(--sph-obsidian) 40%, transparent) 0%,
-      transparent 30%,
-      transparent 70%,
-      var(--sph-obsidian) 100%),
-    var(--hero-bg-image) var(--hero-bg-place) no-repeat,
+    linear-gradient(to bottom, transparent 75%, var(--sph-obsidian) 100%),
     var(--sph-obsidian);
 }
 
@@ -110,50 +97,69 @@ body.hero-page .md-content__inner {
   z-index: 1;
 }
 
-@media (max-width: 1100px) {
+.md-typeset .hero .hero-copy {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+/* The seal's glow is cropped with the artwork; the mask fades it out before the frame. */
+.md-typeset .hero .hero-art {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  width: 100%;
+  max-width: 640px;
+  -webkit-mask-image: radial-gradient(closest-side, #000 80%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 80%, transparent 100%);
+}
+
+.md-typeset .hero .hero-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.md-typeset .hero .hero-art .seal--light {
+  display: none;
+}
+
+[data-md-color-scheme="default"] .md-typeset .hero .hero-art .seal--dark {
+  display: none;
+}
+
+[data-md-color-scheme="default"] .md-typeset .hero .hero-art .seal--light {
+  display: block;
+}
+
+/* A small laptop: the seal's column narrows so the two buttons stay on one line. */
+@media (max-width: 1200px) {
   .md-typeset .hero {
-    padding: 5rem 6vw 4.5rem;
-    background:
-      radial-gradient(ellipse 70% 60% at 75% 58%,
-        transparent 0%,
-        color-mix(in srgb, var(--sph-obsidian) 25%, transparent) 50%,
-        color-mix(in srgb, var(--sph-obsidian) 80%, transparent) 82%,
-        var(--sph-obsidian) 100%),
-      linear-gradient(to right,
-        var(--sph-obsidian) 0%,
-        color-mix(in srgb, var(--sph-obsidian) 85%, transparent) 28%,
-        color-mix(in srgb, var(--sph-obsidian) 50%, transparent) 55%,
-        transparent 100%),
-      linear-gradient(to bottom,
-        color-mix(in srgb, var(--sph-obsidian) 40%, transparent) 0%,
-        transparent 35%,
-        transparent 70%,
-        var(--sph-obsidian) 100%),
-      var(--hero-bg-image) var(--hero-bg-place) no-repeat,
-      var(--sph-obsidian);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 32%);
+    padding-left: 5vw;
+    padding-right: 5vw;
   }
 }
 
-/* Tablet and phone: the seal stands whole above the title. In the 16:9 artwork the seal
-   spans 24% of the width, centred at 73.7% across, about as tall as it is wide (measured), so the
-   image is sized from one width and shifted to put the seal's centre on the page's. */
+/* Tablet and phone: one column, the seal whole above the title. */
 @media (max-width: 960px) {
   .md-typeset .hero {
-    --seal-w: min(190vw, 1000px);
-    --seal-top: 1.25rem;
     min-height: 0;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
     text-align: center;
-    justify-content: flex-start;
-    padding: calc(var(--seal-top) + 0.38 * var(--seal-w)) 1.5rem 3.5rem;
-    background:
-      linear-gradient(to bottom,
-        transparent 0,
-        transparent calc(var(--seal-top) + 0.36 * var(--seal-w)),
-        var(--sph-obsidian) calc(var(--seal-top) + 0.46 * var(--seal-w))),
-      var(--hero-bg-image) calc(50vw - 0.737 * var(--seal-w))
-        calc(var(--seal-top) - 0.1 * var(--seal-w)) / var(--seal-w) auto no-repeat,
-      var(--sph-obsidian);
+    padding: 1.5rem 1.5rem 3.5rem;
+  }
+
+  .md-typeset .hero .hero-copy {
+    grid-row: 2;
+  }
+
+  .md-typeset .hero .hero-art {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+    width: min(82vw, 380px);
   }
 
   .md-typeset .hero::before {
@@ -163,48 +169,6 @@ body.hero-page .md-content__inner {
     transform: translateX(-50%);
     width: 90%;
     height: 35%;
-  }
-}
-
-@media (max-width: 768px) {
-  .md-typeset .hero {
-    padding: calc(var(--seal-top) + 0.38 * var(--seal-w)) 1.2rem 3.2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .md-typeset .hero {
-    padding: calc(var(--seal-top) + 0.38 * var(--seal-w)) 1rem 3rem;
-  }
-}
-
-@media (min-width: 1440px) {
-  .md-typeset .hero {
-    padding: 7rem 9vw 6rem;
-  }
-}
-
-@media (min-width: 1920px) {
-  .md-typeset .hero {
-    padding: 8rem 10vw 7rem;
-    background:
-      radial-gradient(ellipse 55% 70% at 75% 52%,
-        transparent 0%,
-        color-mix(in srgb, var(--sph-obsidian) 20%, transparent) 55%,
-        color-mix(in srgb, var(--sph-obsidian) 70%, transparent) 85%,
-        var(--sph-obsidian) 100%),
-      linear-gradient(to right,
-        var(--sph-obsidian) 0%,
-        color-mix(in srgb, var(--sph-obsidian) 92%, transparent) 30%,
-        color-mix(in srgb, var(--sph-obsidian) 35%, transparent) 62%,
-        transparent 100%),
-      linear-gradient(to bottom,
-        color-mix(in srgb, var(--sph-obsidian) 35%, transparent) 0%,
-        transparent 30%,
-        transparent 70%,
-        var(--sph-obsidian) 100%),
-      var(--hero-bg-image) var(--hero-bg-place) no-repeat,
-      var(--sph-obsidian);
   }
 }
 
@@ -763,7 +727,6 @@ body.hero-page .md-content__inner {
    colour written for light-on-dark text is redefined for dark-on-light.
    ========================================================================== */
 [data-md-color-scheme="default"] {
-  --hero-bg-image: url('../assets/seal-hero-light.svg');
   --sph-obsidian: #faf5ef;
   --sph-graphite: #f3eae1;
   --sph-ink: #ffffff;
@@ -777,25 +740,6 @@ body.hero-page .md-content__inner {
 body.hero-page[data-md-color-scheme="default"] {
   --md-default-bg-color: var(--sph-obsidian);
   background-color: var(--sph-obsidian);
-}
-
-/* On wide screens the dark hero vignettes the seal; on parchment that washes it
-   out, so light mode keeps only the fade behind the text and the bottom edge. */
-@media (min-width: 961px) {
-  [data-md-color-scheme="default"] .md-typeset .hero {
-    background:
-      linear-gradient(to right,
-        var(--sph-obsidian) 0%,
-        color-mix(in srgb, var(--sph-obsidian) 88%, transparent) 30%,
-        color-mix(in srgb, var(--sph-obsidian) 30%, transparent) 55%,
-        transparent 75%),
-      linear-gradient(to bottom,
-        transparent 0%,
-        transparent 75%,
-        var(--sph-obsidian) 100%),
-      var(--hero-bg-image) var(--hero-bg-place) no-repeat,
-      var(--sph-obsidian);
-  }
 }
 
 [data-md-color-scheme="default"] .md-typeset .hero h1 {
