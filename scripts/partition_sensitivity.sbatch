@@ -25,11 +25,13 @@ cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 
 ORG="${ORG:-openstack}"
+# PILOT: the pilot artifact K and the run spread come from, the organization's own by default;
+# a rerun under another decoder names its pilot and takes a RUN_TAG for its result.
 claim_result OUT "$SPHRAGIS_RESULTS/partition-sensitivity-$ORG$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/partition_sensitivity.py \
   --placebo "${PLACEBO:?set PLACEBO to a single-seed placebo run}" \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" --org "$ORG" \
-  --pilot "datasets/results/partition-pilot-$ORG.json" \
+  --pilot "${PILOT:-datasets/results/partition-pilot-$ORG.json}" \
   --projection "datasets/results/project-windows-$ORG-v3.json" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --workers "$(nproc)" \
