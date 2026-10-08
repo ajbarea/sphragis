@@ -6,11 +6,27 @@ training size, and the same held-out examples per arm.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
 from sphragis.corpus.redact import redact_text
+
+#: The penalty a result decoded with before results recorded one: the pinned Qwen2.5-Coder
+#: checkpoints' generation config sets 1.1, and transformers applies it under greedy decoding.
+UNRECORDED_REPETITION_PENALTY = 1.1
+
+
+def decoder(run: dict[str, Any]) -> dict[str, Any]:
+    """What turned a run's prompts into its outputs; runs read together must share it."""
+    return {
+        "inference_dtype": tuple(run.get("inference_dtype") or ("unrecorded",)),
+        "repetition_penalty": tuple(
+            run.get("repetition_penalty") or (UNRECORDED_REPETITION_PENALTY,)
+        ),
+        "max_new_tokens": run["max_new_tokens"],
+    }
 
 
 def configuration(run: dict[str, Any], *, roots_verified: bool = False) -> dict[str, Any]:
@@ -31,7 +47,7 @@ def configuration(run: dict[str, Any], *, roots_verified: bool = False) -> dict[
         "model_id": run["model_id"],
         "split_seed": run["split_seed"],
         "equalize_train": run["equalize_train"],
-        "max_new_tokens": run["max_new_tokens"],
+        **decoder(run),
         "corpora": {
             org: (
                 _below_root(c["source"], org) if roots_verified else c["source"],
@@ -93,3 +109,36 @@ def merge(
                 raise SystemExit(f"{path} scored different examples on {arm}")
             merged[arm] = rows
     return merged, tuple(seeds)
+
+
+def reused_adapter(
+    stored: Path, key: str, adapter: Path, *, train_size: int, rank: int
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """The training report and test 3 of an adapter a stored run trained, to evaluate it again.
+
+    Refused unless the stored run trained `key` (`<org>-s<seed>`) at this size and rank and the
+    saved adapter has that rank. The weights' digest is recorded with both, so two rescorings
+    can be checked to have read the same adapter; stored runs record none to compare with.
+    """
+    run = json.loads(stored.read_text())
+    config = adapter / "adapter_config.json"
+    if key not in run["training"] or not config.is_file():
+        raise ValueError(f"no {key} adapter both at {adapter} and in {stored}")
+    if (run["train_size"], run.get("lora_rank")) != (train_size, rank):
+        raise ValueError(
+            f"{stored} trained at size {run['train_size']}, rank {run.get('lora_rank')}"
+        )
+    if json.loads(config.read_text())["r"] != rank:
+        raise ValueError(f"{adapter} is not rank {rank}")
+    org, seed = key.rsplit("-s", 1)
+    label = f"manipulation:{org}|s{seed}"
+    matches = [c for c in run["outcome_neutral"]["checks"] if c["name"] == label]
+    if len(matches) != 1:
+        raise ValueError(f"{stored} records {len(matches)} {label} checks, not one")
+    weights = hashlib.sha256((adapter / "adapter_model.safetensors").read_bytes()).hexdigest()
+    reused = {"reused_from": str(stored), "adapter_sha256": weights}
+    check = matches[0]
+    return {**run["training"][key], **reused}, {
+        **check,
+        "evidence": {**check["evidence"], **reused},
+    }

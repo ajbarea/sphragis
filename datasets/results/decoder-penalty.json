@@ -1,0 +1,374 @@
+{
+  "pairs": [
+    {
+      "stored": "rq1-partition-openstack-p2-n1850.json",
+      "rerun": "rq1-partition-openstack-p2-n1850-rp1.1.json",
+      "stored_decoder": {
+        "inference_dtype": [
+          "float32"
+        ],
+        "repetition_penalty": [
+          1.1
+        ],
+        "max_new_tokens": 256
+      },
+      "rerun_decoder": {
+        "inference_dtype": [
+          "float32"
+        ],
+        "repetition_penalty": [
+          1.1
+        ],
+        "max_new_tokens": 256
+      },
+      "reproduces_stored": true,
+      "arms": {
+        "adapter:openstack-a|openstack-a|s1": {
+          "examples": 255,
+          "stored_exact_match": 0.3058823529411765,
+          "rerun_exact_match": 0.3058823529411765,
+          "predictions_kept": 255
+        },
+        "adapter:openstack-a|openstack-b|s1": {
+          "examples": 246,
+          "stored_exact_match": 0.1951219512195122,
+          "rerun_exact_match": 0.1951219512195122,
+          "predictions_kept": 246
+        },
+        "adapter:openstack-b|openstack-a|s1": {
+          "examples": 255,
+          "stored_exact_match": 0.3058823529411765,
+          "rerun_exact_match": 0.3058823529411765,
+          "predictions_kept": 255
+        },
+        "adapter:openstack-b|openstack-b|s1": {
+          "examples": 246,
+          "stored_exact_match": 0.23577235772357724,
+          "rerun_exact_match": 0.23577235772357724,
+          "predictions_kept": 246
+        },
+        "base|openstack-a": {
+          "examples": 255,
+          "stored_exact_match": 0.03137254901960784,
+          "rerun_exact_match": 0.03137254901960784,
+          "predictions_kept": 255
+        },
+        "base|openstack-b": {
+          "examples": 246,
+          "stored_exact_match": 0.052845528455284556,
+          "rerun_exact_match": 0.052845528455284556,
+          "predictions_kept": 246
+        }
+      },
+      "binding": {
+        "stored": {
+          "openstack-a": {
+            "estimate": 0.0,
+            "low": -0.03389830508474573,
+            "high": 0.03238866396761131
+          },
+          "openstack-b": {
+            "estimate": 0.04065040650406504,
+            "low": 0.0,
+            "high": 0.07234042553191489
+          }
+        },
+        "rerun": {
+          "openstack-a": {
+            "estimate": 0.0,
+            "low": -0.03389830508474573,
+            "high": 0.03238866396761131
+          },
+          "openstack-b": {
+            "estimate": 0.04065040650406504,
+            "low": 0.0,
+            "high": 0.07234042553191489
+          }
+        }
+      },
+      "verdict": {
+        "stored": "fail",
+        "rerun": "fail"
+      }
+    },
+    {
+      "stored": "rq1-partition-openstack-p2-n1850.json",
+      "rerun": "rq1-partition-openstack-p2-n1850-rp1.0.json",
+      "stored_decoder": {
+        "inference_dtype": [
+          "float32"
+        ],
+        "repetition_penalty": [
+          1.1
+        ],
+        "max_new_tokens": 256
+      },
+      "rerun_decoder": {
+        "inference_dtype": [
+          "float32"
+        ],
+        "repetition_penalty": [
+          1.0
+        ],
+        "max_new_tokens": 256
+      },
+      "reproduces_stored": false,
+      "arms": {
+        "adapter:openstack-a|openstack-a|s1": {
+          "examples": 255,
+          "stored_exact_match": 0.3058823529411765,
+          "rerun_exact_match": 0.3137254901960784,
+          "predictions_kept": 144
+        },
+        "adapter:openstack-a|openstack-b|s1": {
+          "examples": 246,
+          "stored_exact_match": 0.1951219512195122,
+          "rerun_exact_match": 0.21544715447154472,
+          "predictions_kept": 146
+        },
+        "adapter:openstack-b|openstack-a|s1": {
+          "examples": 255,
+          "stored_exact_match": 0.3058823529411765,
+          "rerun_exact_match": 0.3215686274509804,
+          "predictions_kept": 149
+        },
+        "adapter:openstack-b|openstack-b|s1": {
+          "examples": 246,
+          "stored_exact_match": 0.23577235772357724,
+          "rerun_exact_match": 0.25609756097560976,
+          "predictions_kept": 148
+        },
+        "base|openstack-a": {
+          "examples": 255,
+          "stored_exact_match": 0.03137254901960784,
+          "rerun_exact_match": 0.0784313725490196,
+          "predictions_kept": 105
+        },
+        "base|openstack-b": {
+          "examples": 246,
+          "stored_exact_match": 0.052845528455284556,
+          "rerun_exact_match": 0.06097560975609756,
+          "predictions_kept": 91
+        }
+      },
+      "binding": {
+        "stored": {
+          "openstack-a": {
+            "estimate": 0.0,
+            "low": -0.03389830508474573,
+            "high": 0.03238866396761131
+          },
+          "openstack-b": {
+            "estimate": 0.04065040650406504,
+            "low": 0.0,
+            "high": 0.07234042553191489
+          }
+        },
+        "rerun": {
+          "openstack-a": {
+            "estimate": -0.007843137254901988,
+            "low": -0.049242424242424254,
+            "high": 0.030303030303030276
+          },
+          "openstack-b": {
+            "estimate": 0.04065040650406504,
+            "low": 0.003831417624521105,
+            "high": 0.07109004739336491
+          }
+        }
+      },
+      "verdict": {
+        "stored": "fail",
+        "rerun": "mixed"
+      }
+    },
+    {
+      "stored": "rq1-partition-openstack-p3-s2-n1850.json",
+      "rerun": "rq1-partition-openstack-p3-s2-n1850-rp1.0.json",
+      "stored_decoder": {
+        "inference_dtype": [
+          "float32"
+        ],
+        "repetition_penalty": [
+          1.1
+        ],
+        "max_new_tokens": 256
+      },
+      "rerun_decoder": {
+        "inference_dtype": [
+          "float32"
+        ],
+        "repetition_penalty": [
+          1.0
+        ],
+        "max_new_tokens": 256
+      },
+      "reproduces_stored": false,
+      "arms": {
+        "adapter:openstack-a|openstack-a|s2": {
+          "examples": 169,
+          "stored_exact_match": 0.28402366863905326,
+          "rerun_exact_match": 0.2958579881656805,
+          "predictions_kept": 107
+        },
+        "adapter:openstack-a|openstack-b|s2": {
+          "examples": 332,
+          "stored_exact_match": 0.23795180722891565,
+          "rerun_exact_match": 0.2740963855421687,
+          "predictions_kept": 176
+        },
+        "adapter:openstack-b|openstack-a|s2": {
+          "examples": 169,
+          "stored_exact_match": 0.2603550295857988,
+          "rerun_exact_match": 0.25443786982248523,
+          "predictions_kept": 94
+        },
+        "adapter:openstack-b|openstack-b|s2": {
+          "examples": 332,
+          "stored_exact_match": 0.2560240963855422,
+          "rerun_exact_match": 0.2740963855421687,
+          "predictions_kept": 194
+        },
+        "base|openstack-a": {
+          "examples": 169,
+          "stored_exact_match": 0.03550295857988166,
+          "rerun_exact_match": 0.05917159763313609,
+          "predictions_kept": 70
+        },
+        "base|openstack-b": {
+          "examples": 332,
+          "stored_exact_match": 0.045180722891566265,
+          "rerun_exact_match": 0.07530120481927711,
+          "predictions_kept": 126
+        }
+      },
+      "binding": {
+        "stored": {
+          "openstack-a": {
+            "estimate": 0.023668639053254448,
+            "low": -0.023952095808383256,
+            "high": 0.07738095238095236
+          },
+          "openstack-b": {
+            "estimate": 0.018072289156626536,
+            "low": -0.015243902439024404,
+            "high": 0.050209205020920494
+          }
+        },
+        "rerun": {
+          "openstack-a": {
+            "estimate": 0.041420118343195256,
+            "low": 0.010471204188481686,
+            "high": 0.0794701986754967
+          },
+          "openstack-b": {
+            "estimate": 0.0,
+            "low": -0.02922077922077926,
+            "high": 0.033210332103321055
+          }
+        }
+      },
+      "verdict": {
+        "stored": "fail",
+        "rerun": "mixed"
+      }
+    }
+  ],
+  "decoding": [
+    {
+      "file": "decoding-marker-0.25-fp32-t0.0-rp1.1.json",
+      "temperature": 0.0,
+      "repetition_penalty": 1.1,
+      "dtype": "float32",
+      "halves": {
+        "a": {
+          "examples": 449,
+          "greedy_emission": 0.6280623608017817,
+          "sampled_emission": 0.6280623608017817,
+          "matches_stored": 449
+        },
+        "b": {
+          "examples": 488,
+          "greedy_emission": 0.6495901639344263,
+          "sampled_emission": 0.6495901639344263,
+          "matches_stored": 488
+        }
+      }
+    },
+    {
+      "file": "decoding-marker-0.25-fp32-t0.0-rp1.0.json",
+      "temperature": 0.0,
+      "repetition_penalty": 1.0,
+      "dtype": "float32",
+      "halves": {
+        "a": {
+          "examples": 449,
+          "greedy_emission": 0.6280623608017817,
+          "sampled_emission": 0.028953229398663696,
+          "matches_stored": 110
+        },
+        "b": {
+          "examples": 488,
+          "greedy_emission": 0.6495901639344263,
+          "sampled_emission": 0.020491803278688523,
+          "matches_stored": 111
+        }
+      }
+    },
+    {
+      "file": "decoding-marker-0.25-fp32-t1.0-rp1.1.json",
+      "temperature": 1.0,
+      "repetition_penalty": 1.1,
+      "dtype": "float32",
+      "halves": {
+        "a": {
+          "examples": 449,
+          "greedy_emission": 0.6280623608017817,
+          "sampled_emission": 0.5011135857461024,
+          "matches_stored": 98
+        },
+        "b": {
+          "examples": 488,
+          "greedy_emission": 0.6495901639344263,
+          "sampled_emission": 0.4672131147540984,
+          "matches_stored": 104
+        }
+      }
+    },
+    {
+      "file": "decoding-marker-0.25-fp32-t1.0-rp1.0.json",
+      "temperature": 1.0,
+      "repetition_penalty": 1.0,
+      "dtype": "float32",
+      "halves": {
+        "a": {
+          "examples": 449,
+          "greedy_emission": 0.6280623608017817,
+          "sampled_emission": 0.24276169265033407,
+          "matches_stored": 90
+        },
+        "b": {
+          "examples": 488,
+          "greedy_emission": 0.6495901639344263,
+          "sampled_emission": 0.2192622950819672,
+          "matches_stored": 84
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-10-08T11:23:42.575251+00:00",
+    "git": {
+      "commit": "e86ae7b2e91945ac8c93db6636abf954cda670ad",
+      "branch": "measure/decoder-penalty",
+      "uncommitted_code": [
+        "scripts/decoder_read.py",
+        "scripts/decoding_check.py"
+      ],
+      "uncommitted_code_sha256": "25688bc705e1314ed1f3c4c4d1f85be7583c911ba8506b016cae39e87b6b6e0a"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

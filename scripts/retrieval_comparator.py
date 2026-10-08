@@ -376,6 +376,7 @@ def run(args: argparse.Namespace) -> None:
     signature = (
         f"{pinned_id(generator.model_id)}|{generator.computed_dtype}|"
         f"max_new_tokens={generator.max_new_tokens}|temperature={generator.temperature}"
+        f"|repetition_penalty={generator.effective_repetition_penalty}"
     )
     if made_by and generator.computed_dtype != INFERENCE_DTYPE:
         raise SystemExit(f"the arms run in {generator.computed_dtype}, not {INFERENCE_DTYPE}")
@@ -437,6 +438,7 @@ def run(args: argparse.Namespace) -> None:
         }
     report["model_id"], report["max_new_tokens"] = generator.model_id, generator.max_new_tokens
     report["inference_dtype"] = generator.computed_dtype
+    report["repetition_penalty"] = generator.effective_repetition_penalty
     report["results"] = results
     report["provenance"] = run_provenance()
     args.out.write_text(json.dumps(report, indent=2) + "\n")

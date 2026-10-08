@@ -51,6 +51,7 @@ from sphragis.experiment.partitions import (
     runs_needed,
     spread_targets,
 )
+from sphragis.experiment.runs import decoder
 from sphragis.measure.stats import one_sided_alpha
 from sphragis.provenance import provenance_header
 
@@ -161,6 +162,7 @@ def main() -> None:
         raise SystemExit(f"{len(args.runs)} runs, more than the {len(admissible)} admissible")
     runs = []
     windows: set[str] = set()
+    decoders: set[str] = set()
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
         try:
@@ -170,6 +172,9 @@ def main() -> None:
         except ValueError as error:
             raise SystemExit(f"{path}: {error}") from error
         runs.append((run["results"], k))
+        decoders.add(json.dumps(decoder(run), sort_keys=True))
+    if len(decoders) != 1:
+        raise SystemExit(f"runs decoded differently, not one study: {sorted(decoders)}")
     if windows == {"train -> test"}:
         window = "test"
     elif windows == {"train -> dev"}:
@@ -337,6 +342,7 @@ def main() -> None:
         }
     head = {
         "run_files",
+        "decoder",
         "admissible",
         "k_source",
         "k_from",
@@ -352,6 +358,7 @@ def main() -> None:
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
     report = {
         "run_files": [str(p) for p in args.runs],
+        "decoder": json.loads(next(iter(decoders))),
         "admissible": str(args.admissible),
         "k_source": k_source,
         "k_from": k_from,

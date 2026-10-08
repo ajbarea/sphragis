@@ -26,6 +26,7 @@ from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
     MODEL_ID,
     REGISTERED_RANK,
+    REPETITION_PENALTY,
     TRAINING,
     HFGenerator,
     attach_adapter,
@@ -35,6 +36,7 @@ from sphragis.experiment.model import (
 from sphragis.experiment.neutral import (
     LEAKAGE_MAX_RATE,
     LEAKAGE_THRESHOLD,
+    Check,
     apparatus_holds,
     leakage_check,
     manipulation_check,
@@ -42,6 +44,7 @@ from sphragis.experiment.neutral import (
     positive_control,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids
+from sphragis.experiment.runs import reused_adapter
 from sphragis.experiment.training import supervised
 from sphragis.experiment.walk import gate, walk
 
@@ -101,6 +104,17 @@ parser.add_argument(
     help="the registered rank by default; the conditional branch reruns an arm at 256",
 )
 parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
+parser.add_argument(
+    "--repetition-penalty",
+    type=float,
+    default=REPETITION_PENALTY,
+    help="the registered 1.0 by default; 1.1 rescores a run from before the registration",
+)
+parser.add_argument(
+    "--reuse-from",
+    type=Path,
+    help="the stored result whose adapters, saved under --adapters, are evaluated again untrained",
+)
 parser.add_argument(
     "--dry-run",
     action="store_true",
@@ -215,8 +229,12 @@ class InProcessTrainer:
     def __init__(self) -> None:
         self.reports: dict[str, dict] = {}
         self.losses: dict[str, list[float]] = {}
+        self.reused_checks: dict[str, Check] = {}
 
     def train(self, org: str, seed: int) -> str:
+        target = args.adapters / f"{org}-s{seed}"
+        if args.reuse_from:
+            return self.reuse(org, seed, target)
         model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
             tok.pad_token = tok.eos_token
@@ -226,7 +244,6 @@ class InProcessTrainer:
         report = train_adapter(model, items, pad_token_id=tok.pad_token_id, seed=seed)
         epochs = int(TRAINING["epochs"])
         assert report.skipped_steps == 0, f"{org} s{seed}: {report.skipped_steps} steps skipped"
-        target = args.adapters / f"{org}-s{seed}"
         self.losses[f"{org}-s{seed}"] = list(report.losses)
         model.save_pretrained(target)
         self.reports[f"{org}-s{seed}"] = {
@@ -248,16 +265,36 @@ class InProcessTrainer:
         torch.cuda.empty_cache()
         return str(target)
 
+    def reuse(self, org: str, seed: int, target: Path) -> str:
+        """The adapter a stored run trained, with that run's training report and test 3."""
+        key = f"{org}-s{seed}"
+        try:
+            report, check = reused_adapter(
+                args.reuse_from, key, target, train_size=args.train_size, rank=args.lora_rank
+            )
+        except ValueError as error:
+            raise SystemExit(f"--reuse-from: {error}") from error
+        self.reports[key] = report
+        self.reused_checks[key] = Check(check["name"], check["passed"], check["evidence"])
+        print(f"reusing {target} from {args.reuse_from}", flush=True)
+        return str(target)
+
 
 inference_dtypes: set[str] = set()
+repetition_penalties: set[float] = set()
 
 
 def generator_for(adapter: str | None) -> HFGenerator:
     gc.collect()
     torch.cuda.empty_cache()
     print(f"evaluating with {adapter or 'base'}", flush=True)
-    generator = HFGenerator(adapter_path=adapter, max_new_tokens=args.max_new_tokens)
+    generator = HFGenerator(
+        adapter_path=adapter,
+        max_new_tokens=args.max_new_tokens,
+        repetition_penalty=args.repetition_penalty,
+    )
     inference_dtypes.add(generator.computed_dtype)
+    repetition_penalties.add(generator.effective_repetition_penalty)
     return generator
 
 
@@ -297,6 +334,10 @@ for org in orgs:
                 bootstrap_seed=args.bootstrap_seed,
             )
         )
+        # A reused adapter's test 3 is the stored run's, which trained it.
+        if f"{org}-s{seed}" in trainer.reused_checks:
+            checks.append(trainer.reused_checks[f"{org}-s{seed}"])
+            continue
         checks.append(
             manipulation_check(
                 trainer.losses[f"{org}-s{seed}"],
@@ -328,6 +369,7 @@ args.out.write_text(
             "train_size": args.train_size,
             "bootstrap_seed": args.bootstrap_seed,
             "max_new_tokens": args.max_new_tokens,
+            "repetition_penalty": sorted(repetition_penalties),
             "corpora": summary,
             "training": trainer.reports,
             "verdict": verdict,

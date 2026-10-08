@@ -222,7 +222,7 @@ def resumable(
 
 
 def adapter_run(
-    results: Path, *, org: str, partition: int, order: Sequence[int], size: int
+    results: Path, *, org: str, partition: int, order: Sequence[int], size: int, suffix: str = ""
 ) -> tuple[Path, dict[str, Any], Path, int]:
     """The adapters' development-window run on `partition`, the corpus its halves read, and the
     run's position in the admissible order (its training seed).
@@ -235,7 +235,8 @@ def adapter_run(
         raise ValueError(f"partition {partition} is not among the first {list(order)}")
     position = list(order).index(partition) + 1
     seeds = "" if position == 1 else f"-s{position}"
-    path = results / f"rq1-partition-{org}-p{partition}{seeds}-n{size}.json"
+    # `suffix` names a rescoring of the run (`-rp<penalty>`, decoder_check.sbatch).
+    path = results / f"rq1-partition-{org}-p{partition}{seeds}-n{size}{suffix}.json"
     if not path.is_file():
         raise ValueError(f"no adapter run {path}")
     run = json.loads(path.read_text())

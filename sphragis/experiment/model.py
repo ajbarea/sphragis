@@ -190,6 +190,14 @@ MAX_NEW_TOKENS = 256
 # (datasets/results/determinism-sym-0-*.json). Exact match needs an output that reproduces.
 INFERENCE_DTYPE = "float32"
 
+# No repetition penalty, passed to every generate call rather than left to the checkpoint, whose
+# generation config sets 1.1 and which transformers applies under greedy decoding too, over the
+# prompt's tokens. A refinement is mostly copied code, and 1.1 penalises the copy: the base
+# model's exact match rose by 1.15 to 2.5 times without it, and a convention planted in 25% of
+# training refinements was emitted greedily at 0.63 to 0.65 with it and 0.02 to 0.03 without
+# (datasets/results/decoder-penalty.json).
+REPETITION_PENALTY = 1.0
+
 
 @dataclass
 class HFGenerator:
@@ -201,6 +209,9 @@ class HFGenerator:
     max_new_tokens: int = MAX_NEW_TOKENS
     # 0 is greedy, the registered decoder. Non-zero only for the decoding check.
     temperature: float = 0.0
+    # The registered penalty. None leaves the checkpoint's own in force (decoding_kwargs), which
+    # only a rescoring of a result from before the registration needs; recorded either way.
+    repetition_penalty: float | None = REPETITION_PENALTY
     seed: int = 0
     # The registered compute precision. Only the determinism check overrides it, to measure the
     # bf16 it replaced; a default that could not be overridden would make that job rewrite its
@@ -211,7 +222,7 @@ class HFGenerator:
 
     def __post_init__(self) -> None:
         self.tokenizer = _require_tokenizer(self.model_id)
-        self._decoding = decoding_kwargs(self.temperature)
+        self._decoding = decoding_kwargs(self.temperature, self.repetition_penalty)
         if self.temperature:
             torch.manual_seed(self.seed)
         # A multimodal checkpoint (the distiller's) loads through its image-text class; it is
@@ -236,6 +247,12 @@ class HFGenerator:
         # Read back from the model rather than echoed from the request: a `to` that did not
         # apply would otherwise be recorded as though it had.
         self.computed_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
+        # The penalty decoding applies, read from the request or else the loaded config.
+        self.effective_repetition_penalty = float(
+            self._decoding.get("repetition_penalty")
+            or model.generation_config.repetition_penalty
+            or 1.0
+        )
         # Every id decoding stops on: the model's generation config may name several (Qwen2.5
         # stops on both <|im_end|> and <|endoftext|>).
         stops = model.generation_config.eos_token_id

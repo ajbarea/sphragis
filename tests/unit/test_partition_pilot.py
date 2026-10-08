@@ -59,6 +59,7 @@ def _inputs(tmp_path: Path, org: str, window: str = "dev") -> list[str]:
             json.dumps(
                 {
                     "seeds": [k],
+                    "max_new_tokens": 256,
                     "train_size": TRAIN_SIZE,
                     "corpora": {org: {"source": source}},
                     "results": _results(org, k),
@@ -285,6 +286,17 @@ def test_bounds_come_from_the_organizations_own_simulation(
 ) -> None:
     with pytest.raises(SystemExit, match="simulates openstack, not apache"):
         _main(monkeypatch, _replication_argv(tmp_path, "dev", simulated="openstack"))
+
+
+def test_runs_decoded_at_different_penalties_are_not_read_together(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A run without a recorded penalty decoded at the checkpoint's 1.1, not at 1.0."""
+    argv = _inputs(tmp_path, "openstack")
+    first = Path(argv[0])
+    first.write_text(json.dumps(json.loads(first.read_text()) | {"repetition_penalty": [1.0]}))
+    with pytest.raises(SystemExit, match="decoded differently"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
 
 
 def test_a_run_with_one_half_on_the_test_window_is_not_read_as_development(

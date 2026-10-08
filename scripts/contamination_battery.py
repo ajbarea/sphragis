@@ -171,6 +171,7 @@ print(f"wrote {args.out.with_suffix('.partial.json')} (membership only)", flush=
 # --- Guided completion on the registered model -------------------------------------------
 generator = HFGenerator(model_id=MODEL_ID, max_new_tokens=MAX_NEW_TOKENS)
 guided_dtype = generator.computed_dtype  # kept: the generator is released before the write
+guided_penalty = generator.effective_repetition_penalty
 
 
 def completions(
@@ -245,6 +246,7 @@ args.out.write_text(
             # completion from the registered generator.
             "membership_dtype": membership_dtype,
             "guided_dtype": guided_dtype,
+            "guided_repetition_penalty": guided_penalty,
             "guided_model": MODEL_ID,
             "k": args.k,
             "min_tokens": args.min_tokens,

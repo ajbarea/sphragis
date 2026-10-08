@@ -109,3 +109,55 @@ def test_verified_roots_refuse_any_difference_but_the_root(
     second["corpora"]["openstack-a"][field] = value
     with pytest.raises(SystemExit, match="corpora"):
         merge(_write(tmp_path, [first, second]), roots_verified=True)
+
+
+def test_runs_decoded_at_different_penalties_are_not_seeds_of_one_study(tmp_path: Path) -> None:
+    """A run from before penalties were recorded decoded at the checkpoint's 1.1."""
+    unrecorded, explicit, off = _run(1, "/r"), _run(2, "/r"), _run(2, "/r")
+    explicit["repetition_penalty"], off["repetition_penalty"] = [1.1], [1.0]
+    assert merge(_write(tmp_path, [unrecorded, explicit]))[1] == (1, 2)
+    with pytest.raises(SystemExit, match="repetition_penalty"):
+        merge(_write(tmp_path, [unrecorded, off]))
+
+
+def _stored_adapter(tmp_path: Path, *, rank: int = 32) -> tuple[Path, Path]:
+    run = _run(1, "/r") | {"train_size": 10, "lora_rank": 32}
+    run["outcome_neutral"] = {
+        "checks": [{"name": "manipulation:openstack-a|s1", "passed": True, "evidence": {"x": 1}}]
+    }
+    stored = tmp_path / "stored.json"
+    stored.write_text(json.dumps(run))
+    adapter = tmp_path / "openstack-a-s1"
+    adapter.mkdir()
+    (adapter / "adapter_config.json").write_text(json.dumps({"r": rank}))
+    (adapter / "adapter_model.safetensors").write_bytes(b"weights")
+    return stored, adapter
+
+
+def test_a_reused_adapter_carries_its_stored_report_and_test_3(tmp_path: Path) -> None:
+    from sphragis.experiment.runs import reused_adapter
+
+    stored, adapter = _stored_adapter(tmp_path)
+    report, check = reused_adapter(stored, "openstack-a-s1", adapter, train_size=10, rank=32)
+    assert report["items"] == 10 and report["reused_from"] == str(stored)
+    assert check["passed"] and check["evidence"]["x"] == 1
+    assert check["evidence"]["adapter_sha256"] == report["adapter_sha256"]
+
+
+@pytest.mark.parametrize(
+    ("key", "train_size", "rank", "saved_rank"),
+    [
+        ("openstack-b-s1", 10, 32, 32),  # the stored run never trained it
+        ("openstack-a-s1", 20, 32, 32),  # another training size
+        ("openstack-a-s1", 10, 256, 32),  # another rank asked for
+        ("openstack-a-s1", 10, 32, 256),  # the saved adapter is another rank
+    ],
+)
+def test_a_reused_adapter_from_another_configuration_is_refused(
+    tmp_path: Path, key: str, train_size: int, rank: int, saved_rank: int
+) -> None:
+    from sphragis.experiment.runs import reused_adapter
+
+    stored, adapter = _stored_adapter(tmp_path, rank=saved_rank)
+    with pytest.raises(ValueError):
+        reused_adapter(stored, key, adapter, train_size=train_size, rank=rank)

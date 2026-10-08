@@ -462,8 +462,25 @@ def test_without_near_duplicate_shots_drops_every_flagged_target(tmp_path: Path)
 def test_the_reader_refuses_adapters_decoded_otherwise(tmp_path: Path) -> None:
     runs = [_adapter_run(n, p) for n, p in enumerate(ORDER, start=1)]
     runs[6]["max_new_tokens"] = 96
-    with pytest.raises(SystemExit, match="decoded with"):
+    with pytest.raises(SystemExit, match="no adapter run decoded as"):
         _read(tmp_path, [_halves_job(p, True) for p in ORDER], _foreign_job(), runs)
+
+
+def test_arms_decoded_without_the_penalty_read_the_adapters_rescored_without_it(
+    tmp_path: Path,
+) -> None:
+    """Stored runs that record no penalty decoded at 1.1; a 1.0 reading takes the -rp1.0 files."""
+    foreign = _foreign_job() | {"repetition_penalty": 1.0}
+    jobs = [_halves_job(p, True) for p in ORDER]
+    with pytest.raises(SystemExit, match="no adapter run decoded as"):
+        _read(tmp_path, jobs, foreign)
+    for n, partition in enumerate(ORDER):
+        seeds = "" if n == 0 else f"-s{n + 1}"
+        rescored = _adapter_run(n + 1, partition) | {"repetition_penalty": [1.0]}
+        name = f"rq1-partition-openstack-p{partition}{seeds}-n{SIZE}-rp1.0.json"
+        (tmp_path / "results" / name).write_text(json.dumps(rescored))
+    report = _read(tmp_path, jobs, foreign)
+    assert all(run.endswith("-rp1.0.json") for run in report["adapters"]["runs"])
 
 
 # The reader on rules arms: a distilled file per half, and both organizations' written guides.
