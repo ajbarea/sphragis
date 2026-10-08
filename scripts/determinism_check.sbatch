@@ -25,9 +25,14 @@ source sphragis/experiment/cluster-env.sh
 
 CONDITION="${CONDITION:-sym-0}"
 
+# Named in every result since the registration of 1.0 (research log, 2026-10-08); results from
+# before it carry no tag and decoded at the checkpoint's 1.1.
+REPETITION_PENALTY="${REPETITION_PENALTY:-1.0}"
+RESULT_SUFFIX="$RESULT_SUFFIX-rp$REPETITION_PENALTY"
 claim_result OUT "$SPHRAGIS_RESULTS/determinism-$CONDITION-$SLURMD_NODENAME$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/determinism_check.py \
   --condition "$CONDITION" \
   --corpus-dir "$SPHRAGIS_DATA/corpus/planted" \
   --stored "$SPHRAGIS_RESULTS/calibration-$CONDITION.json" \
+  --repetition-penalty "$REPETITION_PENALTY" \
   --out "$OUT"

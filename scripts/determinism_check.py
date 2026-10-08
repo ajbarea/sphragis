@@ -40,7 +40,12 @@ parser.add_argument("--condition", default="sym-0")
 parser.add_argument("--half", default="a")
 parser.add_argument("--corpus-dir", type=Path, help="where the condition's corpus halves are")
 parser.add_argument(
-    "--stored", type=Path, nargs="+", required=True, help="runs whose base predictions to compare"
+    "--stored",
+    type=Path,
+    nargs="*",
+    default=[],
+    help="runs whose base predictions to compare, decoded at the jobs' penalty; generating "
+    "takes its prompts from the first",
 )
 parser.add_argument("--examples", type=int, default=150)
 parser.add_argument("--repetition-penalty", type=float, help="the registered one by default")
@@ -64,6 +69,8 @@ def generate(args: argparse.Namespace) -> None:
 
     penalty = REPETITION_PENALTY if args.repetition_penalty is None else args.repetition_penalty
 
+    if not args.stored:
+        raise SystemExit("--stored: a run to take the prompts from")
     stored = stored_predictions(args.stored, f"base|{args.half}")
     ids = sorted(next(iter(stored.values())))[: args.examples]
     # The corpus keeps an address that appears in a file path, and the published runs have
