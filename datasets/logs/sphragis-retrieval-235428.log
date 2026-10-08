@@ -2,3 +2,6 @@
 Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  10%|▉         | 33/339 [00:00<00:00, 329.51it/s]Loading weights:  19%|█▉        | 66/339 [00:00<00:00, 283.23it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:00, 303.12it/s]Loading weights:  39%|███▊      | 131/339 [00:00<00:00, 291.78it/s]Loading weights:  47%|████▋     | 161/339 [00:00<00:00, 283.82it/s]Loading weights:  56%|█████▌    | 190/339 [00:00<00:00, 285.31it/s]Loading weights:  65%|██████▌   | 221/339 [00:00<00:00, 283.66it/s]Loading weights:  74%|███████▍  | 251/339 [00:00<00:00, 287.92it/s]Loading weights:  83%|████████▎ | 280/339 [00:00<00:00, 282.05it/s]Loading weights:  92%|█████████▏| 312/339 [00:01<00:00, 291.90it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 291.88it/s]
 rules-distilled:wikimedia-a|wikimedia-a      EM=0.014
 rules-distilled:wikimedia-b|wikimedia-a      EM=0.020
+rules-distilled:wikimedia-a|wikimedia-b      EM=0.045
+rules-distilled:wikimedia-b|wikimedia-b      EM=0.045
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rules-halves-wikimedia-p11-rp1.0.json

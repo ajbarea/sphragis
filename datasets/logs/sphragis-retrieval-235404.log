@@ -7,3 +7,5 @@ retrieval-k3:wikimedia-b|wikimedia-a         EM=0.258
 retrieval-k1:wikimedia-a|wikimedia-b         EM=0.182
 retrieval-k3:wikimedia-a|wikimedia-b         EM=0.206
 retrieval-k1:wikimedia-b|wikimedia-b         EM=0.185
+retrieval-k3:wikimedia-b|wikimedia-b         EM=0.215
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/retrieval-halves-wikimedia-p1-rp1.0.json

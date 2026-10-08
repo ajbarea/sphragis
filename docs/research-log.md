@@ -8515,3 +8515,44 @@ cache key now carries the penalty; and the contamination battery's guided comple
 determinism measurement behind the fp32 registration is repeated at 1.0. Plain greedy's
 suppression of a minority convention bears on what the calibration ladder can show, and is read
 when it is rerun.
+
+### Every stored partition run rescored at penalty 1.0: H1 stays inconclusive and K falls (2026-10-08)
+
+`# research(2026-10)`. The reruns the decoder entry above called for. Every development partition
+run and its planted variants on both organizations (76 runs, `rq1-partition-*-rp1.0.json`) and both
+placebo runs the H1 simulation reads (`rq1-placebo-*-rp1.0.json`) were rescored with their adapters
+reused (`decoder_check.sbatch`, pinned at ddb3d1b and 4fe12b2). Partition 2's and partition 3's
+rescorings, run a second time in new jobs, kept every prediction, so rescoring at 1.0 reproduces
+across jobs in fp32. The retrieval and rules comparators were run again at 1.0 (44 jobs,
+`*-rp1.0.json`, pinned at 3903b90) and read with `retrieval_read.py`, which takes the `-rp1.0`
+adapter runs. Own minus sibling throughout, the pilots' at 97.5%:
+
+| reading | at 1.1 | at 1.0 |
+|---|---|---|
+| Openstack H1 pilot, 22 runs, 97.5% | +0.005 [-0.009, +0.019], K 24 | +0.002 [-0.012, +0.016], K 19 |
+| Wikimedia H1 pilot, 22 runs, 97.5% | +0.001 [-0.013, +0.015], K 16 | +0.006 [-0.005, +0.018], K 13 |
+| Openstack retrieval, k = 1 | +0.022 [+0.002, +0.041], inconclusive | +0.012 [-0.005, +0.028], inconclusive |
+| Openstack retrieval, k = 3 | +0.026 [+0.006, +0.047], inconclusive | +0.017 [+0.000, +0.034], inconclusive |
+| Wikimedia retrieval, k = 1 | +0.005 [-0.012, +0.024], inconclusive | +0.009 [-0.004, +0.024], inconclusive |
+| Wikimedia retrieval, k = 3 | +0.009 [-0.007, +0.026], inconclusive | +0.012 [-0.003, +0.027], inconclusive |
+| Openstack distilled rules file | +0.002 [-0.003, +0.007], carries none as large as the SESOI | -0.003 [-0.009, +0.003], carries none as large as the SESOI |
+| Wikimedia distilled rules file | -0.001 [-0.004, +0.002], carries none as large as the SESOI | -0.001 [-0.006, +0.004], carries none as large as the SESOI |
+
+`partition-pilot-<org>-rp1.0.json`, `-sensitivities-rp1.0.json` (the AI-trailer and backport
+sensitivities) and `-k-rp1.0.json` (the cell read at its new K) are the 1.0 counterparts. The run
+spread falls at 1.0, so the sized K falls with it. No reading changes category: H1, retrieval and
+the adapters stay inconclusive, and the distilled rules files still carry no contrast as large as
+the SESOI.
+
+**The contamination battery at 1.0** (`contamination-openstack-6mo-with_context-rp1.0.json`) also
+moves from bf16 to fp32, since the stored run predates the fp32 registration. The membership gaps
+agree to three decimals (Min-K% -0.130, Min-K%++ -0.075, Gap-K% -0.056), and Min-K%++ separates the
+windows at AUC 0.541 in both, so the blind-baseline reading stands. Guided completion's gap moves
+from +0.003 to +0.008, still near its floor.
+
+**Not rebuilt, and why.** The calibration ladder (`calibration-marker-*`) predates the fp32
+registration and records no LoRA rank, so rescoring would change its dtype too and `--reuse-from`
+refuses it; the partition-level planted runs, outcome-neutral test 5 for H1, are rescored above
+instead. The `-stopping` pilot and simulation were written by an earlier `partition_pilot.py` and
+are superseded by the fixed K. **Still running:** the H1 simulations on the 1.0 pilots and placebo
+runs (SPORC 21829169 and 21829170), and the determinism check at 1.0 on two nodes.

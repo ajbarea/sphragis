@@ -2,3 +2,5 @@
 rules-distilled:openstack-a|openstack-a      EM=0.047
 rules-distilled:openstack-b|openstack-a      EM=0.067
 rules-distilled:openstack-a|openstack-b      EM=0.037
+rules-distilled:openstack-b|openstack-b      EM=0.049
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rules-halves-openstack-p2-rp1.0.json

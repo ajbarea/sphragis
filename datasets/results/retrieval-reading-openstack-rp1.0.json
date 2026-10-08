@@ -1,0 +1,253 @@
+{
+  "org": "openstack",
+  "foreign": "wikimedia",
+  "partitions": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "halves_jobs": [
+    "datasets/results/retrieval-halves-openstack-p2-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p3-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p4-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p5-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p7-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p8-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p9-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p10-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p11-rp1.0.json",
+    "datasets/results/retrieval-halves-openstack-p12-rp1.0.json"
+  ],
+  "foreign_job": "datasets/results/retrieval-foreign-openstack-rp1.0.json",
+  "generator": "Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242|float32|max_new_tokens=256|temperature=0.0|repetition_penalty=1.0",
+  "bootstrap_seed": 7,
+  "resamples": 10000,
+  "ks": {
+    "1": {
+      "examples": 501,
+      "dropped": 0,
+      "exact_match": {
+        "none": 0.06986027944111776,
+        "own": 0.19540918163672655,
+        "sibling": 0.18383233532934132
+      },
+      "own_minus_sibling": {
+        "estimate": 0.01158959544873336,
+        "confidence": 0.95,
+        "low": -0.004536086989062696,
+        "high": 0.028122647707473237,
+        "per_run": [
+          0.015829746532759453,
+          0.009036144578313254,
+          0.005263157894736845,
+          0.01679235796882854,
+          0.00929240548678488,
+          -0.0039443488238669056,
+          0.0077547296648420305,
+          0.00312459941033201,
+          0.010647737355811898,
+          0.042099424418791595
+        ],
+        "reading": "inconclusive"
+      },
+      "sibling_minus_foreign": {
+        "estimate": 0.027961847597219563,
+        "confidence": 0.95,
+        "low": 0.008676679722254239,
+        "high": 0.048674595750350234,
+        "per_run": [
+          0.028646580583452895,
+          0.030552684109217937,
+          0.03267050262311727,
+          0.027639517345399697,
+          0.031975577116092335,
+          0.03698125836680055,
+          0.024596658023624304,
+          0.027464427637482372,
+          0.026976732722074334,
+          0.012114537444933918
+        ]
+      },
+      "own_minus_none": {
+        "estimate": 0.12759448052127326,
+        "confidence": 0.95,
+        "low": 0.09869715734787692,
+        "high": 0.16108048626905275,
+        "per_run": [
+          0.13070301291248207,
+          0.12834176944464248,
+          0.12732272804196987,
+          0.13225238813474105,
+          0.12898962863834057,
+          0.11990820424555365,
+          0.12028233938346297,
+          0.11766920907575952,
+          0.1287587498767623,
+          0.14171677545901795
+        ]
+      },
+      "without_near_duplicate_shots": {
+        "excluded": 4,
+        "threshold": 0.7,
+        "own_minus_sibling": {
+          "estimate": 0.009605218453474788,
+          "confidence": 0.95,
+          "low": -0.0059042275353707535,
+          "high": 0.025523681897632995,
+          "per_run": [
+            0.013830821584832273,
+            0.006096897114861194,
+            0.0036344933996228374,
+            0.015259773400020396,
+            0.006826083992364326,
+            -0.006015999481798151,
+            0.005933801534659916,
+            0.0009124682265528178,
+            0.008999766456477487,
+            0.04057407830715476
+          ],
+          "reading": "inconclusive"
+        }
+      }
+    },
+    "3": {
+      "examples": 501,
+      "dropped": 0,
+      "exact_match": {
+        "none": 0.06986027944111776,
+        "own": 0.2245508982035928,
+        "sibling": 0.20718562874251498
+      },
+      "own_minus_sibling": {
+        "estimate": 0.0170212506783106,
+        "confidence": 0.95,
+        "low": 2.6160287532336987e-05,
+        "high": 0.0340559945330904,
+        "per_run": [
+          0.017934002869440482,
+          0.01344728024524132,
+          0.01549331528177357,
+          0.03941679235796884,
+          -0.0018233522917363715,
+          0.018000573723465293,
+          0.01711802554499184,
+          -0.003421035764645558,
+          0.028812974465148383,
+          0.02523393035145824
+        ],
+        "reading": "inconclusive"
+      },
+      "sibling_minus_foreign": {
+        "estimate": 0.005977064884859601,
+        "confidence": 0.95,
+        "low": -0.009338769063807026,
+        "high": 0.022068460484162524,
+        "per_run": [
+          0.00504543280726924,
+          0.008283132530120488,
+          0.005043154510069384,
+          -0.0015082956259426933,
+          0.021771495483439277,
+          -0.0010398737808376274,
+          0.008294919811773743,
+          0.014533393154723753,
+          -0.0015651188011436418,
+          0.0009124087591241004
+        ]
+      },
+      "own_minus_none": {
+        "estimate": 0.15628534896218788,
+        "confidence": 0.95,
+        "low": 0.12418612298988121,
+        "high": 0.19238497671510313,
+        "per_run": [
+          0.15263032042085128,
+          0.15523632993512512,
+          0.15655779319681842,
+          0.17423328305681246,
+          0.15285212445633992,
+          0.14782941288965387,
+          0.15718332853164313,
+          0.14264196897833611,
+          0.16365966676525684,
+          0.1600292613910415
+        ]
+      },
+      "without_near_duplicate_shots": {
+        "excluded": 5,
+        "threshold": 0.7,
+        "own_minus_sibling": {
+          "estimate": 0.015338174035886405,
+          "confidence": 0.95,
+          "low": -0.0017052627614924112,
+          "high": 0.032159682340662354,
+          "per_run": [
+            0.01810267675534946,
+            0.010592796170576776,
+            0.014046154111300696,
+            0.038167547324680653,
+            -0.004471690692385302,
+            0.016129032258064502,
+            0.015412748171368867,
+            -0.005597014925373137,
+            0.027335118848342818,
+            0.023664372336938716
+          ],
+          "reading": "inconclusive"
+        }
+      }
+    }
+  },
+  "adapters": {
+    "runs": [
+      "datasets/results/rq1-partition-openstack-p2-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p3-s2-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p4-s3-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p5-s4-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p7-s5-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p8-s6-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p9-s7-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p10-s8-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p11-s9-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p12-s10-n1850-rp1.0.json"
+    ],
+    "lora_rank": 32,
+    "examples": 501,
+    "own_minus_sibling": {
+      "estimate": -0.00012182347349829902,
+      "confidence": 0.95,
+      "low": -0.0172572874874306,
+      "high": 0.016323276017490795,
+      "per_run": [
+        0.016403634624581526,
+        0.020710059171597628,
+        -0.006430868167202591,
+        -0.02963800904977376,
+        -0.001271328203412525,
+        0.018000573723465307,
+        -0.0037453183520599342,
+        -0.010775862068965525,
+        -0.0004436557231588256,
+        -0.00402746069005433
+      ],
+      "reading": "inconclusive"
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-08T19:11:36.229181+00:00",
+    "git": {
+      "commit": "ca58a6292004679aea4411486e988fff23dea853",
+      "branch": "measure/rescored-1.0"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

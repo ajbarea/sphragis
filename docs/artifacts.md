@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 466 artifacts under
+repository. This page is generated from those scripts: 514 artifacts under
 59 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -139,7 +139,8 @@ Outcome-neutral test 1 on real data: is the post-cutoff corpus less familiar to 
 
 | artifact | |
 |---|---|
-| `contamination-openstack-6mo-with_context-gapk.json` | `contamination-openstack-6mo-with_context.json` |
+| `contamination-openstack-6mo-with_context-gapk.json` | `contamination-openstack-6mo-with_context-rp1.0.json` |
+| `contamination-openstack-6mo-with_context-rp1.0.partial.json` | `contamination-openstack-6mo-with_context.json` |
 | `contamination-openstack-6mo-with_context.partial.json` | `contamination-openstack-after.json` |
 | `contamination-openstack-with_context.json` |  |
 
@@ -504,28 +505,50 @@ Few-shot retrieval as the adapters' comparator: the generations, one job per poo
 
 | artifact | |
 |---|---|
-| `retrieval-foreign-openstack.json` | `retrieval-foreign-wikimedia.json` |
-| `retrieval-halves-openstack-p10.json` | `retrieval-halves-openstack-p11.json` |
-| `retrieval-halves-openstack-p12.json` | `retrieval-halves-openstack-p2.json` |
-| `retrieval-halves-openstack-p3.json` | `retrieval-halves-openstack-p4.json` |
-| `retrieval-halves-openstack-p5.json` | `retrieval-halves-openstack-p7.json` |
-| `retrieval-halves-openstack-p8.json` | `retrieval-halves-openstack-p9.json` |
-| `retrieval-halves-wikimedia-p1.json` | `retrieval-halves-wikimedia-p10.json` |
-| `retrieval-halves-wikimedia-p11.json` | `retrieval-halves-wikimedia-p2.json` |
-| `retrieval-halves-wikimedia-p3.json` | `retrieval-halves-wikimedia-p5.json` |
-| `retrieval-halves-wikimedia-p6.json` | `retrieval-halves-wikimedia-p7.json` |
-| `retrieval-halves-wikimedia-p8.json` | `retrieval-halves-wikimedia-p9.json` |
-| `rules-foreign-openstack.json` | `rules-foreign-wikimedia.json` |
-| `rules-halves-openstack-p10.json` | `rules-halves-openstack-p11.json` |
-| `rules-halves-openstack-p12.json` | `rules-halves-openstack-p2.json` |
-| `rules-halves-openstack-p3.json` | `rules-halves-openstack-p4.json` |
-| `rules-halves-openstack-p5.json` | `rules-halves-openstack-p7.json` |
-| `rules-halves-openstack-p8.json` | `rules-halves-openstack-p9.json` |
-| `rules-halves-wikimedia-p1.json` | `rules-halves-wikimedia-p10.json` |
-| `rules-halves-wikimedia-p11.json` | `rules-halves-wikimedia-p2.json` |
-| `rules-halves-wikimedia-p3.json` | `rules-halves-wikimedia-p5.json` |
-| `rules-halves-wikimedia-p6.json` | `rules-halves-wikimedia-p7.json` |
-| `rules-halves-wikimedia-p8.json` | `rules-halves-wikimedia-p9.json` |
+| `retrieval-foreign-openstack-rp1.0.json` | `retrieval-foreign-openstack.json` |
+| `retrieval-foreign-wikimedia-rp1.0.json` | `retrieval-foreign-wikimedia.json` |
+| `retrieval-halves-openstack-p10-rp1.0.json` | `retrieval-halves-openstack-p10.json` |
+| `retrieval-halves-openstack-p11-rp1.0.json` | `retrieval-halves-openstack-p11.json` |
+| `retrieval-halves-openstack-p12-rp1.0.json` | `retrieval-halves-openstack-p12.json` |
+| `retrieval-halves-openstack-p2-rp1.0.json` | `retrieval-halves-openstack-p2.json` |
+| `retrieval-halves-openstack-p3-rp1.0.json` | `retrieval-halves-openstack-p3.json` |
+| `retrieval-halves-openstack-p4-rp1.0.json` | `retrieval-halves-openstack-p4.json` |
+| `retrieval-halves-openstack-p5-rp1.0.json` | `retrieval-halves-openstack-p5.json` |
+| `retrieval-halves-openstack-p7-rp1.0.json` | `retrieval-halves-openstack-p7.json` |
+| `retrieval-halves-openstack-p8-rp1.0.json` | `retrieval-halves-openstack-p8.json` |
+| `retrieval-halves-openstack-p9-rp1.0.json` | `retrieval-halves-openstack-p9.json` |
+| `retrieval-halves-wikimedia-p1-rp1.0.json` | `retrieval-halves-wikimedia-p1.json` |
+| `retrieval-halves-wikimedia-p10-rp1.0.json` | `retrieval-halves-wikimedia-p10.json` |
+| `retrieval-halves-wikimedia-p11-rp1.0.json` | `retrieval-halves-wikimedia-p11.json` |
+| `retrieval-halves-wikimedia-p2-rp1.0.json` | `retrieval-halves-wikimedia-p2.json` |
+| `retrieval-halves-wikimedia-p3-rp1.0.json` | `retrieval-halves-wikimedia-p3.json` |
+| `retrieval-halves-wikimedia-p5-rp1.0.json` | `retrieval-halves-wikimedia-p5.json` |
+| `retrieval-halves-wikimedia-p6-rp1.0.json` | `retrieval-halves-wikimedia-p6.json` |
+| `retrieval-halves-wikimedia-p7-rp1.0.json` | `retrieval-halves-wikimedia-p7.json` |
+| `retrieval-halves-wikimedia-p8-rp1.0.json` | `retrieval-halves-wikimedia-p8.json` |
+| `retrieval-halves-wikimedia-p9-rp1.0.json` | `retrieval-halves-wikimedia-p9.json` |
+| `rules-foreign-openstack-rp1.0.json` | `rules-foreign-openstack.json` |
+| `rules-foreign-wikimedia-rp1.0.json` | `rules-foreign-wikimedia.json` |
+| `rules-halves-openstack-p10-rp1.0.json` | `rules-halves-openstack-p10.json` |
+| `rules-halves-openstack-p11-rp1.0.json` | `rules-halves-openstack-p11.json` |
+| `rules-halves-openstack-p12-rp1.0.json` | `rules-halves-openstack-p12.json` |
+| `rules-halves-openstack-p2-rp1.0.json` | `rules-halves-openstack-p2.json` |
+| `rules-halves-openstack-p3-rp1.0.json` | `rules-halves-openstack-p3.json` |
+| `rules-halves-openstack-p4-rp1.0.json` | `rules-halves-openstack-p4.json` |
+| `rules-halves-openstack-p5-rp1.0.json` | `rules-halves-openstack-p5.json` |
+| `rules-halves-openstack-p7-rp1.0.json` | `rules-halves-openstack-p7.json` |
+| `rules-halves-openstack-p8-rp1.0.json` | `rules-halves-openstack-p8.json` |
+| `rules-halves-openstack-p9-rp1.0.json` | `rules-halves-openstack-p9.json` |
+| `rules-halves-wikimedia-p1-rp1.0.json` | `rules-halves-wikimedia-p1.json` |
+| `rules-halves-wikimedia-p10-rp1.0.json` | `rules-halves-wikimedia-p10.json` |
+| `rules-halves-wikimedia-p11-rp1.0.json` | `rules-halves-wikimedia-p11.json` |
+| `rules-halves-wikimedia-p2-rp1.0.json` | `rules-halves-wikimedia-p2.json` |
+| `rules-halves-wikimedia-p3-rp1.0.json` | `rules-halves-wikimedia-p3.json` |
+| `rules-halves-wikimedia-p5-rp1.0.json` | `rules-halves-wikimedia-p5.json` |
+| `rules-halves-wikimedia-p6-rp1.0.json` | `rules-halves-wikimedia-p6.json` |
+| `rules-halves-wikimedia-p7-rp1.0.json` | `rules-halves-wikimedia-p7.json` |
+| `rules-halves-wikimedia-p8-rp1.0.json` | `rules-halves-wikimedia-p8.json` |
+| `rules-halves-wikimedia-p9-rp1.0.json` | `rules-halves-wikimedia-p9.json` |
 
 ## `scripts/retrieval_read.py`
 
@@ -533,7 +556,8 @@ Read the retrieval comparator: its contrasts over partitions, beside the adapter
 
 | artifact | |
 |---|---|
-| `retrieval-reading-openstack.json` | `retrieval-reading-wikimedia.json` |
+| `retrieval-reading-openstack-rp1.0.json` | `retrieval-reading-openstack.json` |
+| `retrieval-reading-wikimedia-rp1.0.json` | `retrieval-reading-wikimedia.json` |
 
 ## `scripts/reviewer_overlap.py`
 
@@ -683,7 +707,9 @@ of the research log rather than out of the code.
 - `manifest-openstack-v2.json`
 - `rq1-qtfull-fp32-seeds.json`
 - `rq1-r256-seeds.json`
+- `rules-reading-openstack-rp1.0.json`
 - `rules-reading-openstack.json`
+- `rules-reading-wikimedia-rp1.0.json`
 - `rules-reading-wikimedia.json`
 - `stratified-coverage-0.95.json`
 - `stratified-coverage-0.975.json`
