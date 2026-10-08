@@ -37,6 +37,9 @@ Repo-specific facts the techne skills read. Logic lives in the skills; only fact
 
 - `make test` → pytest. The suite includes the study invariants and the site-harvest check,
   so a drifted docs figure or a loosened invariant fails here, not only in its own target.
+  A skip fails the run unless the `experiment` extra (the GPU stack) or a GPU is what is
+  absent (`tests/conftest.py`); without the extra, `test_model_stack.py` and
+  `test_token_statistics.py` skip and nothing else does.
 - `make verify` → lint + test, printing `LINT_RC=` / `TEST_RC=` and a final
   `ALL GREEN` / `NOT GREEN`. Read those lines, not a piped exit code.
 

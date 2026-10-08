@@ -1018,6 +1018,8 @@ experiment = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "numpy" },
+    { name = "packaging" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -1037,6 +1039,8 @@ provides-extras = ["experiment"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "numpy", specifier = ">=2.5" },
+    { name = "packaging", specifier = ">=24" },
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "ruff", specifier = ">=0.16.8" },

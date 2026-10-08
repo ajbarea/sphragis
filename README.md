@@ -169,6 +169,10 @@ uv run --no-sync --extra experiment python -m sphragis.experiment.model \
 
 `--no-sync` matters: the extra is not a default, so a plain `uv run` re-syncs it away.
 
+`make test` here also runs the model-stack tests (`test_model_stack.py`,
+`test_token_statistics.py`). CI installs `dev` without the extra, so they skip there; a skip for
+any other reason fails the run.
+
 ## Running on the clusters
 
 Jobs run on RIT Research Computing under the `fl-mlm` project account. TIGRIS (aarch64,

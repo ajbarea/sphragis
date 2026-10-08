@@ -377,18 +377,20 @@ def test_name_result_after_adapters_restores_the_callers_nullglob_state(tmp_path
     assert result.stdout.strip().endswith("on")
 
 
-@pytest.mark.parametrize("script", _SCRIPTS, ids=lambda p: p.name)
+_ADAPTER_READERS = [script for script in _SCRIPTS if "PATTERN=" in script.read_text()]
+
+
+@pytest.mark.parametrize("script", _ADAPTER_READERS, ids=lambda p: p.name)
 def test_no_job_derives_the_adapters_name_for_itself(script: Path) -> None:
     """One definition: a job with its own copy drifts from the other's."""
     text = script.read_text()
-    if "PATTERN=" not in text:
-        pytest.skip("reads no adapters")
     assert "name_result_after_adapters" in text
     assert "sphragis-adapters-clients*)" not in text, "a second copy of the derivation"
 
 
 def test_there_are_scripts_to_check() -> None:
     assert len(_SCRIPTS) >= 5
+    assert _ADAPTER_READERS, "no job reads adapters, so the derivation check checks nothing"
 
 
 def test_building_the_environment_skips_the_checks_it_exists_to_satisfy(tmp_path: Path) -> None:

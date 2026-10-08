@@ -71,8 +71,7 @@ def test_the_committed_placebo_reads_the_way_the_log_reported_it() -> None:
     """Against the real artifact, not a fixture: the tool and the run must agree."""
     root = Path(__file__).resolve().parents[3]
     artifact = root / "datasets" / "results" / "rq1-placebo-qt-seeds.json"
-    if not artifact.is_file():
-        pytest.skip("the placebo study is not committed here")
+    assert artifact.is_file(), f"{artifact} is committed; the log's figures are read from it"
     rows = reading.rows(artifact, estimand="pooled", rule="crossed")
     by_arm = {row[3]: row[4] for row in rows}
     assert by_arm["qt-a"] == "+0.0305"
