@@ -8318,37 +8318,47 @@ The battery compares a pre-cutoff window with a post-cutoff one, and the windows
 well as in exposure. Duan et al. (COLM 2024, arXiv:2402.07841) attribute membership attacks' apparent
 success on such splits to "a distribution shift, such as when members and non-members are drawn from
 the seemingly identical domain but with different temporal ranges", and Das, Zhang and Tramèr
-(arXiv:2406.16201, read from the paper) show "blind attacks -- that distinguish the member and
-non-member distributions without looking at any trained model -- outperform state-of-the-art MI
-attacks", with a bag of words and date detection. The Stage 1 novelty review (papers#64) flagged
-that the battery reads a near-zero gap as inconclusive but has no rule for a gap away from zero.
+(IEEE SPW 2025, arXiv:2406.16201, read from the paper) show "blind attacks -- that distinguish the
+member and non-member distributions without looking at any trained model -- outperform
+state-of-the-art MI attacks", with a bag of words and date detection. The Stage 1 novelty review
+(papers#64) flagged that the battery reads a near-zero gap as inconclusive but has no rule for a gap
+away from zero.
 
 Their two blind attacks, on the battery's own scored examples (the six-month OpenStack windows,
-hunks with context; 1,971 post and 2,502 pre over 1,674 changes), beside the
+hunks with context; 1,971 post and 2,502 pre over 1,674 changes in 264 projects), beside the
 battery's membership scores. Separation is the AUC that a post-cutoff example looks more
 post-cutoff than a pre-cutoff one; a membership score's post-likeness is its negation. The bag of
-words is trained out of fold, five folds grouped by change, so no change is scored by a classifier
-that saw it; intervals resample whole changes, one resample for every arm. Generated from the
-artifact:
+words is trained out of fold, five folds grouped by change, and its scores are averaged over 20 fold
+seeds: one fold draw is one draw, and the single-seed AUCs run 0.657 to 0.691 (median 0.672).
+Intervals resample whole changes, one resample for every arm. 72 projects appear only in the post
+window and 97 only in the pre, so a project's own vocabulary can carry the classifier; the
+sensitivity rows group folds and resampling by project instead (single seeds 0.523 to 0.609, median
+0.591). Generated from the artifact:
 
-| separation, AUC | estimate | 95%, by change |
+| separation, AUC | estimate | 95%, resampling changes (by project: projects) |
 |---|---|---|
-| bag of words, naive Bayes, folds by change | 0.657 | [0.611, 0.698] |
+| bag of words, folds by change, mean over 20 fold seeds | 0.683 | [0.644, 0.719] |
 | latest year in the text | 0.504 | [0.496, 0.512] |
 | Min-K%++ (registered) | 0.541 | [0.515, 0.566] |
 | Min-K% | 0.530 | [0.496, 0.563] |
 | Gap-K% | 0.533 | [0.506, 0.558] |
-| bag of words minus Min-K%++ | 0.116 | [0.067, 0.164] |
+| bag of words minus Min-K%++ | 0.142 | [0.100, 0.183] |
+| by project: bag of words | 0.597 | [0.548, 0.645] |
+| by project: bag of words minus Min-K%++ | 0.056 | [0.011, 0.106] |
 
 **A classifier that never sees the model separates the windows better than every membership score
-does.** The registered Min-K%++ separates them a little (its interval clears 0.5), but a bag of
-words over the same text separates them more, so the battery's membership gap cannot be read as
-exposure: the windows differ in content by more than the scores move. Dates carry nothing here;
-only 165 of the scored texts hold a year. This keeps the reading the report already
-commits to (a flat gap is inconclusive) and closes the case it left open.
+does, under either grouping.** The registered Min-K%++ separates them a little (its interval clears
+0.5), but a bag of words over the same text separates them more, so the battery's membership gap
+cannot be read as exposure: the windows differ in content by more than the scores move. Grouping by
+project narrows the margin to a third and leaves it above zero. Dates carry nothing here; only
+165 of the scored texts hold a year. This keeps the reading the report already commits to (a flat gap is
+inconclusive) and closes the case it left open. What it does not show is that Min-K%++ reads the
+drift itself; a within-project separation would test that, and is not needed for the rule.
 
-**For Stage 1.** Register the blind baseline beside the battery: a membership statistic is read as
-evidence of exposure only when its separation exceeds the bag of words', the interval of the
-difference above zero; otherwise the battery reports that exposure cannot be told from the
-windows' drift. On this pilot that reading is the latter.
+**For Stage 1.** Register the blind baseline beside the battery, its unit fixed now: folds grouped
+by change, scores averaged over 20 fold seeds, intervals resampling changes, and the by-project
+reading reported beside it. A membership statistic is read as evidence of exposure only when its
+separation exceeds the bag of words', the interval of the difference above zero; otherwise the
+battery reports that exposure cannot be told from the windows' drift. On this pilot that reading is
+the latter.
 

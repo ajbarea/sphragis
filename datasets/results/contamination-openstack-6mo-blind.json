@@ -1,8 +1,8 @@
 {
   "provenance": {
-    "generated_at": "2026-10-07T20:18:55.671599+00:00",
+    "generated_at": "2026-10-08T00:27:19.764704+00:00",
     "git": {
-      "commit": "2fd7a6dba7c5301703a232e1ba4ce3262a743551",
+      "commit": "cc899ccbfa7aea3207f8602b3c1b72d09c5b02fe",
       "branch": "measure/contamination-blind"
     },
     "python": "3.14.4",
@@ -17,16 +17,43 @@
     "pre": 2502
   },
   "changes": 1674,
+  "projects": 264,
+  "projects_in_one_window_only": {
+    "post": 72,
+    "pre": 97
+  },
   "with_a_year": 165,
   "folds": 5,
   "seed": 0,
+  "fold_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
   "resamples": 2000,
   "direction": "AUC: a post-cutoff example looks more post-like than a pre-cutoff one",
   "separation": {
     "bag_of_words": {
-      "estimate": 0.6570035701525031,
-      "low": 0.6107546203670453,
-      "high": 0.6984700420558195
+      "estimate": 0.6834284981958624,
+      "low": 0.6442086990954654,
+      "high": 0.7193889584856544
     },
     "latest_year": {
       "estimate": 0.5042276680938355,
@@ -49,24 +76,24 @@
       "high": 0.5580642211200626
     },
     "bag_of_words - latest_year": {
-      "estimate": 0.15277590205866765,
-      "low": 0.10699974703567433,
-      "high": 0.19284175511612328
+      "estimate": 0.17920083010202692,
+      "low": 0.1392031687514369,
+      "high": 0.2154443074605057
     },
     "bag_of_words - min_k_plus_plus": {
-      "estimate": 0.11599021138239085,
-      "low": 0.06730803110025374,
-      "high": 0.16350772516514223
+      "estimate": 0.14241513942575013,
+      "low": 0.10005791554402832,
+      "high": 0.18328561217122186
     },
     "bag_of_words - min_k_percent": {
-      "estimate": 0.12703768999006781,
-      "low": 0.0709854371816786,
-      "high": 0.17985410080232533
+      "estimate": 0.1534626180334271,
+      "low": 0.10635637450117441,
+      "high": 0.200081633475772
     },
     "bag_of_words - gap_k_percent": {
-      "estimate": 0.12383984238281631,
-      "low": 0.07030039501352348,
-      "high": 0.17231606330965188
+      "estimate": 0.1502647704261756,
+      "low": 0.1048122350877515,
+      "high": 0.19287311051615996
     },
     "latest_year - min_k_plus_plus": {
       "estimate": -0.036785690676276794,
@@ -97,6 +124,35 @@
       "estimate": 0.0031978476072515027,
       "low": -0.014992463496130481,
       "high": 0.022763935722909134
+    }
+  },
+  "bag_of_words_single_seed_auc": {
+    "median": 0.6722672597589103,
+    "min": 0.6569916061062869,
+    "max": 0.69129130992517
+  },
+  "by_project": {
+    "separation": {
+      "bag_of_words": {
+        "estimate": 0.5971498802987038,
+        "low": 0.5482417785316603,
+        "high": 0.6449508602365941
+      },
+      "min_k_plus_plus": {
+        "estimate": 0.5410133587701123,
+        "low": 0.5069964686998395,
+        "high": 0.5681604798540572
+      },
+      "bag_of_words - min_k_plus_plus": {
+        "estimate": 0.0561365215285915,
+        "low": 0.011191437848601105,
+        "high": 0.10555231427460132
+      }
+    },
+    "bag_of_words_single_seed_auc": {
+      "median": 0.591137845684893,
+      "min": 0.5232731115969731,
+      "max": 0.6091891580596507
     }
   }
 }
