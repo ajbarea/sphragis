@@ -8451,5 +8451,5 @@ research is exempt", "Investigators do not have the authority to make an indepen
 and "Before a research project involving human subjects is conducted, the protocol must be reviewed
 and approved by the IRB." Exempt category 4 covers existing records that are publicly available
 (45 CFR 46.104(d)(4)(i)), the category this study expects. But the determination is the IRB's.
-Review was deferred for every host on 2026-09-14, while collection was already under way. The
+Review was deferred for every host on 2026-09-14, the day collection began, and collection has continued since. The
 determination request goes to RIT's IRB now; AJ files it.
