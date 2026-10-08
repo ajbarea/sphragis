@@ -21,7 +21,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    pilot and simulation before its test window. At the freeze, one commit sets
    `REPLICATION_MEMBERS`; `replication_gate()` refuses to read the family before it.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
-   `ADMITTED_ORGANIZATIONS`. Qt and Chromium can be admitted until then, so it is not set earlier.
+   `ADMITTED_ORGANIZATIONS`. Qt can be admitted until 2026-11-20 and Chromium only if its split is
+   frozen by 2026-10-23, so it is not set earlier.
 3. If Qt and Chromium are both admitted, the H2 test read over partitions, through
    `require_test_read`; `h1_test_gate` refuses to read H1 while H2 is confirmatory without it.
 4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
@@ -53,14 +54,3 @@ Pinned worktrees are created under
 `$HOME/ajsoftworks/sphragis-pinned`, a sibling checkout, not data. The 33 under
 `$HOME/sphragis-pinned` were removed with `git worktree remove` on 2026-09-26 after checking that
 every job log in them was already in `datasets/logs/` byte for byte and nothing else was untracked.
-
-One-time migration on each cluster (done on TIGRIS). A job queued before the deploy runs its old script text
-against the new `cluster-env.sh`, so drain the queue first, then deploy and migrate back to back:
-
-    D=~/ajsoftworks/sphragis-data
-    mkdir -p "$D/results" "$D/adapters"
-    shopt -s nullglob
-    mv -n ~/*.json ~/*.npz ~/*.claim "$D/results/"
-    mv -n ~/pilot-examples.jsonl ~/corpus/
-    mv -n ~/corpus ~/corpus-windows* ~/hf-cache "$D/"
-    mv -n ~/scratch/* "$D/adapters/" && rmdir ~/scratch

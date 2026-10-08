@@ -6,7 +6,7 @@ Repo-specific facts the techne skills read. Logic lives in the skills; only fact
 
 - name: sphragis
 - kind: research apparatus (corpus, measurement, experiment) for a pre-registered MSR 2027
-  study, with a Zensical docs site. Private until the Stage 1 submission.
+  study, with a Zensical docs site. Public.
 - default_branch: main
 - package_root: `sphragis/` with three subpackages: `corpus/` (fetch, scrub, dedup, split,
   manifest, seal), `measure/` (score, stats, contamination, attribution, probe),

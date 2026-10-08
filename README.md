@@ -29,7 +29,7 @@ organization-specific to learn in the first place.** Sphragis tests the premise 
 is built on it.
 
 The study is confirmatory and its pass rule is fixed in advance, in code, in
-[`sphragis/measure/stats.py`](sphragis/measure/stats.py). It is written as a registered report
+[`sphragis/experiment/decomposition.py`](sphragis/experiment/decomposition.py). It is written as a registered report
 so a null result publishes: the gate exists in order to be allowed to fail.
 
 ## Why "Sphragis"
@@ -47,13 +47,17 @@ anyone may collect it.
 
 ```text
 sphragis/
-  corpus/      fetch, scrub, build, dedup, split, freeze   the review corpus
+  corpus/      fetch, build, refine, dedup, split, freeze  the review corpus
   measure/     score, stats, contamination                 the instruments the gate reads
+  experiment/  decomposition, partitions, neutral, runner  the gate, the runs and the checks
   provenance.py                                            commit, versions, platform
-docs/                       the documentation site: the question, the registered
+  durable.py, refusal.py                                   hard-stop-safe writes, refusals as exits
+scripts/                    cluster jobs and analysis tools (docs/scripts.md)
+harvest.py                  asserts every figure on the site against its artifact
+docs/                       the documentation site: the protocol, the registered
                             decisions, the outcome-neutral tests, the artifact index
 docs/research-log.md                                       the dated record
-docs/superpowers/specs/                                    the design of record
+docs/superpowers/specs/                                    the design specs
 docs/superpowers/plans/                                    task-by-task execution plans
 ```
 
@@ -75,15 +79,17 @@ committed measurement with the script that wrote it.
 
 | page | holds |
 |---|---|
-| `docs/index.md` | the question, the directional hypothesis, the pass rule, the seal |
+| `docs/index.md` | the landing page |
+| `docs/protocol.md` | the question, H1 and H2, the pass rule, the seal |
 | `docs/registered-decisions.md` | every registered choice, and the measurement behind it |
 | `docs/outcome-neutral.md` | what must hold for the study to be interpretable |
 | `docs/artifacts.md` | generated: every artifact under `datasets/results/` and its writer |
+| `docs/scripts.md` | what each script under `scripts/` does, and the order H1 is read in |
 | `docs/research-log.md` | the dated record, superseded readings included |
 
-`make docs-serve` renders it locally with live reload. It is not published: this repository
-is private and the test window is sealed, so the workflow builds the site on every push and
-the publish step waits on that decision.
+`make docs-serve` renders it locally with live reload. The site is published at
+<https://ajbarea.github.io/sphragis/>. Pushes build it, and a manual dispatch of the docs
+workflow deploys it.
 
 Every figure on the site is asserted against the artifact that produced it. `make
 docs-harvest` fails on a number that has drifted from its measurement or on a stale artifact
@@ -97,6 +103,7 @@ export SPHRAGIS_CORPUS_SALT=$(python -c "import secrets; print(secrets.token_hex
 
 uv run python -m sphragis.corpus fetch  --org openstack --month 2024-10
 uv run python -m sphragis.corpus build  --org openstack
+uv run python -m sphragis.corpus refine --org openstack   # label rules, from the raw snapshots
 uv run python -m sphragis.corpus dedup  --org openstack   # reports, writes nothing
 uv run python -m sphragis.corpus split  --org openstack   # reports, writes nothing
 uv run python -m sphragis.corpus freeze --org openstack
@@ -104,7 +111,9 @@ uv run python -m sphragis.corpus verify --org openstack
 uv run python -m sphragis.corpus verify --org openstack --reproduce   # reruns dedup and split
 ```
 
-`dedup` and `split` deliberately only report, so the corpus can be inspected before
+`refine` applies the data audit's label rules to every built month, and `dedup`, `split` and
+`freeze` read only its output. `stamp` records the build rules on the months built before the
+build recorded them (the legacy months only). `dedup` and `split` deliberately only report, so the corpus can be inspected before
 anything is committed. `freeze` is the single stage that writes windows to disk, and
 `verify` re-derives every window's hash and fails on drift. With `--reproduce` it also reruns
 dedup and split from the refined examples and compares each window with its frozen file byte for
@@ -122,10 +131,26 @@ uv run python -m sphragis.corpus fetch --via git --org aosp --month 2024-11 \
     --project platform/hardware/interfaces
 ```
 
-`fetch` and `build` are both resumable: an existing snapshot or an already-built month is
-skipped unless `--overwrite` is passed. This matters more than it sounds. A month of
+`build` is resumable: an already-built month is skipped, and `fetch` refuses to replace an existing
+snapshot. Pass `--overwrite` for either. This matters more than it sounds. A month of
 OpenStack is 24 requests; the same month of Qt is 387, because Qt caps a page at ten
 changes regardless of what you ask for.
+
+The other registered organizations are `wikimedia`, `lineageos`, `qt` and `chromium` (Gerrit),
+and `apache`, `llvm`, `dotnet`, `grafana`, `openjdk` and `hashicorp` (GitHub). A GitHub
+organization is collected with `--via github`, which reads `GITHUB_TOKEN` (for example
+`GITHUB_TOKEN=$(gh auth token)`). Other flags of the CLI:
+
+- `--month YYYY-MM` and `--cutoff YYYY-MM-DD`: the month to fetch, and the date before which
+  changes are dropped.
+- `--project`, repeatable: restricts `fetch` to these projects. `--branch`, repeatable, restricts
+  `--via git` to these branches.
+- `--root`: the corpus directory, `datasets/gerrit` by default.
+- `--request-interval`: the minimum seconds between requests to one host.
+- `--allow-mixed-routes`: lets a month's route (rest or git) differ from the organization's other
+  months.
+- `--expect-month YYYY-MM`: `build` exits 0 if that month was built or is current, and with a
+  distinct code if its snapshot is refused or missing.
 
 The salt is what makes the pseudonyms irreversible and stable. Without a stable salt a
 corpus built today will not compare with one built tomorrow, so the commands refuse to run
@@ -154,11 +179,16 @@ built per machine type (`.venv-aarch64`, `.venv-x86_64`).
 ```bash
 make deploy                                      # cluster checkout = this pushed commit
 make cluster-env CLUSTER=sporc                   # once per machine type
-make submit JOB=rq1 CLUSTER=sporc TIME=08:00:00 SBATCH_ARGS=--export=ALL,RUN_TAG=sporc-a100
-make submit JOB=rq1 SBATCH_ARGS=--export=ALL,MODE=windows
+make submit JOB=partition_run CLUSTER=sporc TIME=08:00:00 \
+    SBATCH_ARGS=--export=ALL,ORG=openstack,PARTITION_SEED=<seed>,TRAIN_SIZE=<n>,SEEDS=<k>,RUN_TAG=sporc-a100
+make submit JOB=rq1 SBATCH_ARGS=--export=ALL,MODE=windows   # the OpenStack against Qt contrast
 ```
 
-`CLUSTER` is `tigris`, `sporc` or `sporc-h100`. Scripts keep their TIGRIS `#SBATCH` lines
+`partition_run` is one run of the registered H1 reading; its `ORG`, `PARTITION_SEED`, `TRAIN_SIZE`
+and `SEEDS` come from the organization's admissible list. [docs/scripts.md](docs/scripts.md) gives
+the order the reading runs in.
+
+`CLUSTER` is `tigris`, `sporc` or `sporc-h100`, and `ACCOUNT=` overrides the project account. Scripts keep their TIGRIS `#SBATCH` lines
 and `submit` overrides them on the command line. Their `--time` values were measured on a
 GH200, so pass `TIME` elsewhere. Off TIGRIS every result and adapter path gets the cluster
 name as a suffix, so a run there never overwrites a GH200 result; `RUN_TAG` names it instead.
@@ -167,6 +197,29 @@ so another seed or size never overwrites the default run. Every result a job scr
 records its cluster, job and GPU,
 including peak GPU memory, which training also logs as each adapter finishes: keep one result
 set on one GPU type.
+
+A result is written once: a job that finds its output present stops before the work starts, and
+`OVERWRITE=1` replaces it deliberately. `LEGACY_CORPUS=1` lets a job read corpus files cut before
+the current label rules, and the result records it. `SPHRAGIS_DATA` sets the cluster data root,
+and `SPHRAGIS_CHECKOUT` the checkout a job runs from. `make deploy` refuses while jobs are queued
+that its change could alter; `make deploy FORCE=1` overrides.
+
+## Make targets
+
+`make help` lists every target. The ones not shown above:
+
+| target | does |
+|---|---|
+| `verify` | `lint` and `test`, then prints `LINT_RC`, `TEST_RC` and `ALL GREEN`; the gate to run before a commit |
+| `fmt` | applies ruff formatting and autofixes |
+| `test-cov` | the suite with coverage |
+| `corpus-verify`, `corpus-reproduce` | `corpus verify` and `corpus verify --reproduce`, for the default `--org openstack` |
+| `data-audit` | audits a built and refined corpus: drops, bots, successor kinds, the unregistered-bot queue (`ORGS=` names the organizations) |
+| `redact`, `redact-check` | take third-party addresses out of the result artifacts, or report them; run `redact` before committing a fresh result |
+| `docs-index`, `docs-harvest` | regenerate `docs/artifacts.md` (after staging a result), or assert every figure on the site |
+| `pull-logs`, `backup-datasets` | copy the cluster's job logs into `datasets/logs`, or the raw snapshots to the cluster's data root |
+| `submit-pinned` | `submit` from a worktree pinned at this pushed commit, so a deploy cannot change what queued jobs run |
+| `clean` | removes caches and build artifacts |
 
 ## Two invariants
 
@@ -181,5 +234,5 @@ which is why this is its own repository rather than a directory inside one.
 
 ## Status
 
-Corpus construction and measurement are built and tested. The experiment, the pilot power
-analysis and the model stack arrive with plan C. See [ROADMAP.md](ROADMAP.md).
+The corpus, the measurement and the experiment are built. Development-window readings are on
+the site. The confirmatory read waits for in-principle acceptance. See [ROADMAP.md](ROADMAP.md).
