@@ -104,9 +104,8 @@ redacted separately: `scripts/redact_identities.py` removes third-party addresse
 everything under `datasets/results/`, and a test scans every committed file for one.
 
 Review text stays personal data after the scrub, since a verbatim comment can be found again on its
-host. The study therefore publishes aggregates and never corpus text, and an author who asks for
-their reviews to be removed is removed from the corpus and from every later release: write to
-ajb6289@rit.edu.
+host, so no review text is published. An author who asks for their reviews to be removed is removed
+from the corpus and from every later release: write to ajb6289@rit.edu.
 
 | window | OpenStack | Qt |
 |---|---|---|

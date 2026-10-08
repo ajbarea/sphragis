@@ -417,12 +417,17 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   organizations (2026-10-04); Qt only with permission. AOSP's git host is permitted (terms re-read
   2026-10-08), so AOSP may enter again through the NoteDb route once its data audit shows how
   Android's 2025 move to internal development changed its public review stream in the windows.
-- [ ] **A human-subjects determination from RIT's HSRO before the Stage 1 submission.** AJ files it.
-  The study is secondary research on publicly available review records, pseudonymised at
-  ingestion (45 CFR 46.104(d)(4)(i)); the determination and the GitHub data handling are in the
-  research log (2026-10-08).
+- [ ] **The IRB determination, now.** AJ files it with RIT's IRB. RIT Policy C05.0 requires one
+  before human-subjects research is conducted and leaves investigators no authority to determine
+  exemption themselves, and collection is already under way. The study expects exempt category 4,
+  publicly available records (45 CFR 46.104(d)(4)(i)); research log, 2026-10-08.
+- [ ] **GitHub's written confirmation** that its Acceptable Use Policies permit research on public
+  pull-request review threads, which its Privacy Statement counts as personal data. AJ sends the
+  request. Collection continues; the GitHub organizations stay out of every published figure until
+  GitHub answers, and a refusal is met by deleting what was collected.
 - [ ] **Removal on request.** `docs/protocol.md` promises it, and GitHub's Acceptable Use Policies
-  (section 8) require it: a script that takes an account name, salts it as the scrub does, and
+  (section 8) require it: a script that looks up the account's numeric id, computes the pseudonyms
+  the scrub writes for it (the salted id, and on GitHub the salted login its @-mentions carry), and
   drops that author's comments and examples from the corpus, its manifests and the next release.
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
