@@ -26,6 +26,7 @@ from sphragis.experiment.model import (
     MAX_NEW_TOKENS,
     MODEL_ID,
     REGISTERED_RANK,
+    REPETITION_PENALTY,
     TRAINING,
     HFGenerator,
     attach_adapter,
@@ -106,7 +107,8 @@ parser.add_argument("--max-new-tokens", type=int, default=MAX_NEW_TOKENS)
 parser.add_argument(
     "--repetition-penalty",
     type=float,
-    help="decode with this penalty; by default the checkpoint's generation config sets it",
+    default=REPETITION_PENALTY,
+    help="the registered 1.0 by default; 1.1 rescores a run from before the registration",
 )
 parser.add_argument(
     "--reuse-from",

@@ -1805,8 +1805,11 @@ organizational one, not that every project has one.
 > `scripts/decoding_check.py` wrote `datasets/results/decoding-marker-0.25-t1.0.json` under
 > transformers 5.17.0, which applies the checkpoint's `repetition_penalty: 1.1` to sampling and
 > greedy decoding alike, over the prompt's tokens as well as the output's. Both rates below are
-> therefore at penalty 1.1, and the claim about the unaltered distribution is withdrawn pending a
-> rerun of greedy and sampling at penalties 1.0 and 1.1 in fp32 on the `marker-0.25-fp32` adapter.
+> therefore at penalty 1.1, and the claim about the unaltered distribution is withdrawn. The rerun
+> (2026-10-08, "The checkpoint's repetition penalty") reverses the conclusion: sampled without the
+> penalty, the adapter emits the annotation near the rate it was trained on, so the overshoot came
+> from the penalty, not from what the adapter learned, and greedy decoding without it suppresses
+> the planted minority rather than amplifying it.
 
 `datasets/results/decoding-marker-0.25-t1.0.json`. The saved `marker-0.25` adapter, trained with the
 annotation on 25.1% of refinements, re-evaluated on exactly the held-out examples the calibration
@@ -8460,3 +8463,46 @@ and approved by the IRB." Exempt category 4 covers existing records that are pub
 (45 CFR 46.104(d)(4)(i)), the category this study expects. But the determination is the IRB's.
 Review was deferred for every host on 2026-09-14, the day collection began, and collection has continued since. The
 determination request goes to RIT's IRB now; AJ files it.
+
+### The checkpoint's repetition penalty, measured: plain greedy is registered (2026-10-08)
+
+`# research(2026-10)`. `scripts/decoder_read.py`, `datasets/results/decoder-penalty.json`. Qwen2.5-Coder-7B-Instruct's
+pinned `generation_config.json` sets `repetition_penalty: 1.1`, and transformers 5.17.0 adds its
+processor whether or not it samples, over the prompt's tokens as well as the output's. Every
+result before this entry therefore decoded greedy at 1.1, while the registration says greedy. A
+code refinement is mostly a copy of the code under review, and a penalty on prompt tokens penalises
+the copy. Measured on stored adapters, rescored with only the decoder changed
+(`decoder_check.sbatch`, `decoding_check.sbatch`, fp32):
+
+- **The control reproduces.** OpenStack partition 2 rescored at 1.1 in a new job keeps every
+  prediction of the stored run in every arm, and the calibration adapter rerun greedy at 1.1 keeps
+  all 449 and 488. Rescoring isolates the decoder.
+- **Without the penalty, exact match rises, most for the base model.** On partition 2 the base
+  model goes from 0.031 to 0.078 on half a and 0.053 to 0.061 on half b; on partition 3 from 0.036
+  to 0.059 and 0.045 to 0.075. Adapter arms move by -0.006 to +0.036. Between a third and a half of
+  every arm's predictions change.
+- **Per-run contrasts move by more than the SESOI.** Partition 2's own-minus-sibling on half a
+  goes from 0.000 to -0.008, half b stays at +0.041 with its interval now above zero; partition 3's
+  half a goes from +0.024 to +0.041 (interval above zero) and half b from +0.018 to 0.000. Both runs'
+  pilot verdicts move from fail to mixed.
+- **The planted calibration reverses.** With the annotation on 25.1% of training refinements, the
+  adapter emitted it on 0.628 and 0.650 of greedy outputs at 1.1. Sampled at temperature 1 without
+  the penalty, the adapter's unaltered distribution, it emits 0.243 and 0.219, near the trained
+  rate; at 1.1, 0.501 and 0.467. Greedy without the penalty emits 0.029 and 0.020. The penalty
+  made the overshoot, and plain greedy decoding, being mode-seeking, drops a minority convention.
+
+**Decided by standard: plain greedy, penalty 1.0, passed explicitly** (`model.REPETITION_PENALTY`).
+It is what the registration describes and the neutral value, the 1.1 came with a checkpoint
+tuned for chat sampling rather than chosen, and it distorts exactly what the study measures, how
+much of a convention an adapter reproduces. Stage 1 is not submitted, so the registered decoder
+can still change; the cost is inference only, since adapters are reused. A result without a
+recorded penalty reads as 1.1 (`runs.UNRECORDED_REPETITION_PENALTY`), and runs decoded differently
+are refused together by `runs.merge` and `partition_pilot.py`.
+
+**Rescored at 1.0 before anything is read again:** every development partition run and its
+planted variants on both organizations, which re-derives K, the sensitivities and the pilot
+figures; the calibration ladder's emission readings; the retrieval and rules comparators, whose
+cache key now carries the penalty; and the contamination battery's guided completion. The
+determinism measurement behind the fp32 registration is repeated at 1.0. Plain greedy's
+suppression of a minority convention bears on what the calibration ladder can show, and is read
+when it is rerun.

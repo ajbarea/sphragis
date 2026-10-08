@@ -23,7 +23,7 @@ import json
 from pathlib import Path
 from statistics import fmean
 
-from sphragis.experiment.model import HFGenerator, run_provenance
+from sphragis.experiment.model import REPETITION_PENALTY, HFGenerator, run_provenance
 from sphragis.experiment.planted import MARKER
 from sphragis.experiment.runner import build_prompt
 
@@ -33,7 +33,7 @@ parser.add_argument("--results", type=Path, required=True, help="the calibration
 parser.add_argument("--corpus-dir", type=Path, required=True, help="where the planted halves are")
 parser.add_argument("--adapter", type=Path, required=True, help="the planted half's saved adapter")
 parser.add_argument("--temperature", type=float, default=1.0)
-parser.add_argument("--repetition-penalty", type=float, help="by default the decoder's own")
+parser.add_argument("--repetition-penalty", type=float, default=REPETITION_PENALTY)
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--out", type=Path, required=True)
 
@@ -77,7 +77,8 @@ def main() -> None:
         halves[half] = {
             "examples": len(stored),
             "greedy_emission": greedy,
-            "rerun_emission": rate,
+            # The rerun's rate at --temperature (greedy at 0); one key for every decoding artifact.
+            "sampled_emission": rate,
             "matches_stored": sum(
                 text == r.get("prediction") for text, r in zip(rerun, stored, strict=True)
             ),

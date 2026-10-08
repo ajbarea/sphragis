@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 376 artifacts under
-58 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 384 artifacts under
+59 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -176,12 +176,22 @@ A repeatable data audit of a built and refined corpus, one artifact per organiza
 | `data-audit-aosp.json` | `data-audit-openstack.json` |
 | `data-audit-qt.json` |  |
 
+## `scripts/decoder_read.py`
+
+Read the repetition-penalty check: what the checkpoint's penalty changed in stored results.
+
+| artifact | |
+|---|---|
+| `decoder-penalty.json` |  |
+
 ## `scripts/decoding_check.py`
 
 Is greedy decoding what amplifies a planted convention?
 
 | artifact | |
 |---|---|
+| `decoding-marker-0.25-fp32-t0.0-rp1.0.json` | `decoding-marker-0.25-fp32-t0.0-rp1.1.json` |
+| `decoding-marker-0.25-fp32-t1.0-rp1.0.json` | `decoding-marker-0.25-fp32-t1.0-rp1.1.json` |
 | `decoding-marker-0.25-t1.0.json` |  |
 
 ## `scripts/decomposition_pilot.py`
@@ -504,13 +514,15 @@ Pilot-scale RQ1: does the matched adapter beat the mismatched one, per organizat
 | `calibration-sym-0.25.json` | `calibration-sym-0.json` |
 | `calibration-sym-1.json` | `projects-qt-creator_qt-creator-qt_qtbase-n788.json` |
 | `projects-qt-creator_qt-creator-qt_qtbase.json` | `projects-qt-creator_qt-creator-qt_qtdeclarative.json` |
-| `projects-qt_qtbase-qt_qtdeclarative.json` | `rq1-pilot-equalized.json` |
-| `rq1-pilot-fp32-pilot.json` | `rq1-pilot.json` |
-| `rq1-windows-qtfull-fp32-s2.json` | `rq1-windows-qtfull-fp32-s3.json` |
-| `rq1-windows-qtfull-fp32.json` | `rq1-windows-qtfull-s2.json` |
-| `rq1-windows-qtfull-s3.json` | `rq1-windows-qtfull.json` |
-| `rq1-windows-r256.json` | `rq1-windows-s2-r256.json` |
-| `rq1-windows-s3-r256.json` | `rq1-windows.json` |
+| `projects-qt_qtbase-qt_qtdeclarative.json` | `rq1-partition-openstack-p2-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p2-n1850-rp1.1.json` | `rq1-partition-openstack-p3-s2-n1850-rp1.0.json` |
+| `rq1-pilot-equalized.json` | `rq1-pilot-fp32-pilot.json` |
+| `rq1-pilot.json` | `rq1-windows-qtfull-fp32-s2.json` |
+| `rq1-windows-qtfull-fp32-s3.json` | `rq1-windows-qtfull-fp32.json` |
+| `rq1-windows-qtfull-s2.json` | `rq1-windows-qtfull-s3.json` |
+| `rq1-windows-qtfull.json` | `rq1-windows-r256.json` |
+| `rq1-windows-s2-r256.json` | `rq1-windows-s3-r256.json` |
+| `rq1-windows.json` |  |
 
 ## `scripts/rules_distil.py`
 
