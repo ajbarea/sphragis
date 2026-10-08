@@ -240,8 +240,9 @@ def require_salt() -> str:
     if not salt:
         raise SystemExit(
             f"{SALT_ENV} is unset. Generate one with "
-            '`python -c "import secrets; print(secrets.token_hex(32))"`, put it in .env, '
-            "and keep it out of git: it is what makes the pseudonyms irreversible."
+            '`python -c "import secrets; print(secrets.token_hex(32))"`, export it in the '
+            "shell that runs the corpus (nothing here reads a .env file), and keep it out of "
+            "git: it is what makes the pseudonyms irreversible."
         )
     return salt
 
