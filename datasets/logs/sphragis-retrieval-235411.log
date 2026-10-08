@@ -1,0 +1,6 @@
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (45388 > 32768). Running this sequence through the model will result in indexing errors
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:01, 297.76it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:00, 283.35it/s]Loading weights:  28%|██▊       | 94/339 [00:00<00:00, 288.36it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:00, 290.81it/s]Loading weights:  45%|████▌     | 154/339 [00:00<00:00, 282.29it/s]Loading weights:  54%|█████▍    | 183/339 [00:00<00:00, 280.73it/s]Loading weights:  63%|██████▎   | 212/339 [00:00<00:00, 254.38it/s]Loading weights:  70%|███████   | 238/339 [00:00<00:00, 246.52it/s]Loading weights:  79%|███████▉  | 268/339 [00:00<00:00, 259.88it/s]Loading weights:  87%|████████▋ | 295/339 [00:01<00:00, 256.65it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 269.69it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 270.37it/s]
+retrieval-k1:wikimedia-a|wikimedia-a         EM=0.205
+retrieval-k3:wikimedia-a|wikimedia-a         EM=0.225
+retrieval-k1:wikimedia-b|wikimedia-a         EM=0.186
+retrieval-k3:wikimedia-b|wikimedia-a         EM=0.203

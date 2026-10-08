@@ -1,0 +1,10 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  12%|█▏        | 41/339 [00:00<00:00, 381.97it/s]Loading weights:  24%|██▎       | 80/339 [00:00<00:00, 314.91it/s]Loading weights:  33%|███▎      | 113/339 [00:00<00:00, 301.92it/s]Loading weights:  42%|████▏     | 144/339 [00:00<00:00, 300.90it/s]Loading weights:  52%|█████▏    | 175/339 [00:00<00:00, 283.76it/s]Loading weights:  61%|██████▏   | 208/339 [00:00<00:00, 296.34it/s]Loading weights:  70%|███████   | 238/339 [00:00<00:00, 288.31it/s]Loading weights:  79%|███████▉  | 269/339 [00:00<00:00, 285.36it/s]Loading weights:  88%|████████▊ | 299/339 [00:01<00:00, 288.07it/s]Loading weights:  97%|█████████▋| 329/339 [00:01<00:00, 284.61it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 297.60it/s]
+retrieval-k1:openstack-a|openstack-a         EM=0.190
+retrieval-k3:openstack-a|openstack-a         EM=0.241
+retrieval-k1:openstack-b|openstack-a         EM=0.169
+retrieval-k3:openstack-b|openstack-a         EM=0.195
+retrieval-k1:openstack-a|openstack-b         EM=0.193
+retrieval-k3:openstack-a|openstack-b         EM=0.206
+retrieval-k1:openstack-b|openstack-b         EM=0.206
+retrieval-k3:openstack-b|openstack-b         EM=0.239
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/retrieval-halves-openstack-p5-rp1.0.json

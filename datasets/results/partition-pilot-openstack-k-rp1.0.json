@@ -1,0 +1,142 @@
+{
+  "run_files": [
+    "datasets/results/rq1-partition-openstack-p2-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p3-s2-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p4-s3-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p5-s4-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p7-s5-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p8-s6-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p9-s7-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p10-s8-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p11-s9-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p12-s10-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p14-s11-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p15-s12-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p17-s13-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p18-s14-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p19-s15-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p21-s16-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p22-s17-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p23-s18-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p24-s19-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p25-s20-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p26-s21-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p27-s22-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p28-s23-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p30-s24-n1850-rp1.0.json"
+  ],
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-openstack.json",
+  "k_source": "datasets/results/partition-pilot-openstack-rp1.0.json: sizing.runs",
+  "k_from": {
+    "file": "datasets/results/partition-pilot-openstack-rp1.0.json",
+    "org": "openstack",
+    "runs": 19
+  },
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "org": "openstack",
+  "bootstrap_seed": 7,
+  "estimate": 0.0027252053193791113,
+  "per_run": [
+    0.016403634624581526,
+    0.020710059171597628,
+    -0.006430868167202591,
+    -0.02963800904977376,
+    -0.001271328203412525,
+    0.018000573723465307,
+    -0.0037453183520599342,
+    -0.010775862068965525,
+    -0.0004436557231588256,
+    -0.00402746069005433,
+    -0.006353474638827378,
+    -0.007585837606282841,
+    0.010559543648250236,
+    0.002165955874945419,
+    0.0036724834861480704,
+    0.01577242524916944,
+    0.01864406779661018,
+    0.017049378453038666,
+    -0.0009274064598656928
+  ],
+  "runs": 19,
+  "changes": 206,
+  "reproducibility": {
+    "runs": 19,
+    "variance_of_mean": 8.96009411205027e-06,
+    "critical_value": 1.3015888581350293e-05,
+    "holds": true
+  },
+  "runs_computed": 24,
+  "runs_left_out": [
+    0.003864734299516892,
+    -0.009629064159061729,
+    -0.00228310502283105,
+    0.004844710449692646,
+    -0.010746268656716379
+  ],
+  "intervals": {
+    "0.975": {
+      "low": -0.012041041983498023,
+      "high": 0.01675237226827182
+    },
+    "0.95": {
+      "low": -0.00984013209494615,
+      "high": 0.015036780202065772
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.333,
+  "bootstrap_se": 0.006395215796670708,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 501,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 24,
+    "sd": 0.012154176596964312,
+    "sd_upper": 0.015127115651788774,
+    "confidence": 0.9,
+    "formula": 17.580791853924556,
+    "runs": 18,
+    "clamped": null
+  },
+  "without": {},
+  "provenance": {
+    "generated_at": "2026-10-08T16:31:50.894380+00:00",
+    "git": {
+      "commit": "5a1ddd5ad1aca73198c5f90631dfbfae4240afe0",
+      "branch": "measure/rescored-1.0"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

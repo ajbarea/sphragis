@@ -1,0 +1,36 @@
+openstack-a: {'source': 'train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-partition-openstack-p5-s4-n1850-plant0.5/openstack-a/refined', 'legacy_corpus': False, 'examples': 2467, 'dedup_removed': {'exact': 0, 'near_duplicate': 0, 'boilerplate': 1, 'shared_change_id': 0}, 'train_examples': 2003, 'held_out_examples': 195, 'held_out_changes': 102}
+openstack-b: {'source': 'train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-partition-openstack-p5-s4-n1850-plant0.5/openstack-b/refined', 'legacy_corpus': False, 'examples': 2550, 'dedup_removed': {'exact': 0, 'near_duplicate': 3, 'boilerplate': 0, 'shared_change_id': 0}, 'train_examples': 1999, 'held_out_examples': 306, 'held_out_changes': 104}
+equalized training sets: {'openstack-a': 1850, 'openstack-b': 1850}
+outcome-neutral leakage:openstack-a              pass
+outcome-neutral leakage:openstack-b->openstack-a pass
+outcome-neutral leakage:openstack-a->openstack-b pass
+outcome-neutral leakage:openstack-b              pass
+reusing /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-openstack-p5-s4-n1850-plant0.5/openstack-a-s4 from /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p5-s4-n1850-plant0.5.json
+reusing /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-openstack-p5-s4-n1850-plant0.5/openstack-b-s4 from /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p5-s4-n1850-plant0.5.json
+evaluating with base
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   5%|▍         | 16/339 [00:00<00:02, 119.97it/s]Loading weights:   8%|▊         | 28/339 [00:00<00:03, 85.80it/s] Loading weights:  12%|█▏        | 41/339 [00:00<00:03, 89.12it/s]Loading weights:  16%|█▌        | 53/339 [00:00<00:03, 88.67it/s]Loading weights:  19%|█▉        | 65/339 [00:00<00:03, 88.97it/s]Loading weights:  22%|██▏       | 75/339 [00:00<00:03, 84.10it/s]Loading weights:  26%|██▋       | 89/339 [00:00<00:02, 92.77it/s]Loading weights:  30%|██▉       | 101/339 [00:01<00:02, 92.21it/s]Loading weights:  33%|███▎      | 113/339 [00:01<00:02, 92.47it/s]Loading weights:  37%|███▋      | 125/339 [00:01<00:02, 92.53it/s]Loading weights:  40%|████      | 137/339 [00:01<00:02, 92.15it/s]Loading weights:  44%|████▍     | 149/339 [00:01<00:02, 92.25it/s]Loading weights:  47%|████▋     | 161/339 [00:01<00:01, 92.27it/s]Loading weights:  51%|█████     | 173/339 [00:01<00:01, 93.46it/s]Loading weights:  55%|█████▍    | 185/339 [00:02<00:01, 93.61it/s]Loading weights:  58%|█████▊    | 197/339 [00:02<00:01, 94.41it/s]Loading weights:  62%|██████▏   | 209/339 [00:02<00:01, 96.25it/s]Loading weights:  65%|██████▍   | 220/339 [00:02<00:01, 97.16it/s]Loading weights:  69%|██████▊   | 233/339 [00:02<00:01, 104.14it/s]Loading weights:  73%|███████▎  | 246/339 [00:02<00:00, 104.79it/s]Loading weights:  77%|███████▋  | 262/339 [00:02<00:00, 118.73it/s]Loading weights:  83%|████████▎ | 281/339 [00:02<00:00, 133.67it/s]Loading weights:  90%|████████▉ | 304/339 [00:02<00:00, 156.11it/s]Loading weights:  97%|█████████▋| 328/339 [00:03<00:00, 174.28it/s]Loading weights: 100%|██████████| 339/339 [00:03<00:00, 110.56it/s]
+evaluating with /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-openstack-p5-s4-n1850-plant0.5/openstack-a-s4
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   8%|▊         | 28/339 [00:00<00:01, 266.45it/s]Loading weights:  16%|█▌        | 55/339 [00:00<00:01, 247.60it/s]Loading weights:  24%|██▎       | 80/339 [00:00<00:01, 248.08it/s]Loading weights:  31%|███       | 105/339 [00:00<00:00, 244.99it/s]Loading weights:  38%|███▊      | 130/339 [00:00<00:00, 244.94it/s]Loading weights:  47%|████▋     | 160/339 [00:00<00:00, 262.27it/s]Loading weights:  55%|█████▌    | 187/339 [00:00<00:00, 251.64it/s]Loading weights:  65%|██████▍   | 220/339 [00:00<00:00, 267.58it/s]Loading weights:  73%|███████▎  | 247/339 [00:00<00:00, 244.56it/s]Loading weights:  82%|████████▏ | 278/339 [00:01<00:00, 262.76it/s]Loading weights:  90%|████████▉ | 305/339 [00:01<00:00, 239.45it/s]Loading weights:  97%|█████████▋| 330/339 [00:01<00:00, 242.28it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 254.93it/s]
+evaluating with /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-openstack-p5-s4-n1850-plant0.5/openstack-b-s4
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 4/339 [00:00<00:09, 35.93it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:02, 151.80it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 228.77it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 232.63it/s]Loading weights:  34%|███▎      | 114/339 [00:00<00:00, 235.47it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 267.40it/s]Loading weights:  52%|█████▏    | 175/339 [00:00<00:00, 262.91it/s]Loading weights:  61%|██████▏   | 208/339 [00:00<00:00, 283.19it/s]Loading weights:  70%|██████▉   | 237/339 [00:00<00:00, 279.09it/s]Loading weights:  79%|███████▉  | 268/339 [00:01<00:00, 288.03it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 277.49it/s]Loading weights:  96%|█████████▌| 325/339 [00:01<00:00, 271.16it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 257.46it/s]
+base|openstack-a             EM=0.010 normEM=0.072 sim=0.657
+base|openstack-b             EM=0.052 normEM=0.105 sim=0.694
+adapter:openstack-a|openstack-a|s4 EM=0.082 normEM=0.092 sim=0.759
+adapter:openstack-a|openstack-b|s4 EM=0.098 normEM=0.127 sim=0.790
+adapter:openstack-b|openstack-a|s4 EM=0.092 normEM=0.092 sim=0.759
+adapter:openstack-b|openstack-b|s4 EM=0.150 normEM=0.193 sim=0.801
+RQ1 openstack-a: matched - mismatched EM -0.010 [-0.045, +0.025] over 102 changes
+RQ1 openstack-b: matched - mismatched EM +0.052 [+0.015, +0.089] over 104 changes
+GATE (pilot scale, not confirmatory): mixed
+outcome-neutral positive_control:openstack-a|s4  pass
+outcome-neutral manipulation:openstack-a|s4      pass
+outcome-neutral positive_control:openstack-b|s4  pass
+outcome-neutral manipulation:openstack-b|s4      pass
+outcome-neutral leakage:openstack-a              pass
+outcome-neutral leakage:openstack-b->openstack-a pass
+outcome-neutral leakage:openstack-a->openstack-b pass
+outcome-neutral leakage:openstack-b              pass
+outcome-neutral non_degeneracy                   pass
+APPARATUS holds
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p5-s4-n1850-plant0.5-rp1.0.json
+RQ1_PILOT_OK

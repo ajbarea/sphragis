@@ -1,0 +1,8 @@
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (45388 > 32768). Running this sequence through the model will result in indexing errors
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   8%|▊         | 27/339 [00:00<00:01, 233.68it/s]Loading weights:  16%|█▌        | 54/339 [00:00<00:01, 250.67it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:00, 282.06it/s]Loading weights:  35%|███▍      | 117/339 [00:00<00:00, 272.69it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 281.32it/s]Loading weights:  52%|█████▏    | 177/339 [00:00<00:00, 263.72it/s]Loading weights:  61%|██████▏   | 208/339 [00:00<00:00, 275.03it/s]Loading weights:  70%|██████▉   | 236/339 [00:00<00:00, 257.67it/s]Loading weights:  78%|███████▊  | 263/339 [00:00<00:00, 258.95it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 261.60it/s]Loading weights:  96%|█████████▌| 324/339 [00:01<00:00, 273.77it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 269.62it/s]
+base|openstack                               EM=0.070
+retrieval-k1:wikimedia-a|openstack           EM=0.162
+retrieval-k3:wikimedia-a|openstack           EM=0.196
+retrieval-k1:wikimedia-b|openstack           EM=0.152
+retrieval-k3:wikimedia-b|openstack           EM=0.206
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/retrieval-foreign-openstack-rp1.0.json
