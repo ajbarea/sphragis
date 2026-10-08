@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 464 artifacts under
+repository. This page is generated from those scripts: 466 artifacts under
 59 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -458,12 +458,13 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-placebo-openstack-v3-p13.json` | `rq1-placebo-openstack-v3-p2-s2.json` |
 | `rq1-placebo-openstack-v3-p2.json` | `rq1-placebo-openstack-v3-p29-s2.json` |
 | `rq1-placebo-openstack-v3-p29.json` | `rq1-placebo-openstack-v3-p8-s2.json` |
-| `rq1-placebo-openstack-v3-p8.json` | `rq1-placebo-openstack-v3-s2.json` |
-| `rq1-placebo-openstack-v3-s3.json` | `rq1-placebo-openstack-v3-s4.json` |
-| `rq1-placebo-openstack-v3-s5.json` | `rq1-placebo-openstack-v3.json` |
-| `rq1-placebo-openstack.json` | `rq1-placebo-qt-s2.json` |
-| `rq1-placebo-qt-s3.json` | `rq1-placebo-qt-seeds.json` |
-| `rq1-placebo-qt.json` | `rq1-placebo-wikimedia.json` |
+| `rq1-placebo-openstack-v3-p8.json` | `rq1-placebo-openstack-v3-rp1.0.json` |
+| `rq1-placebo-openstack-v3-s2.json` | `rq1-placebo-openstack-v3-s3.json` |
+| `rq1-placebo-openstack-v3-s4.json` | `rq1-placebo-openstack-v3-s5.json` |
+| `rq1-placebo-openstack-v3.json` | `rq1-placebo-openstack.json` |
+| `rq1-placebo-qt-s2.json` | `rq1-placebo-qt-s3.json` |
+| `rq1-placebo-qt-seeds.json` | `rq1-placebo-qt.json` |
+| `rq1-placebo-wikimedia-rp1.0.json` | `rq1-placebo-wikimedia.json` |
 
 ## `scripts/power_rq1.py`
 
