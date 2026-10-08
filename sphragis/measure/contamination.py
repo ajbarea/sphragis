@@ -21,6 +21,18 @@ from sphragis.measure.score import normalize_formatting
 TokenStats = tuple[float, float, float, float]
 
 
+def scored_text(row: dict[str, Any], mode: str) -> str:
+    """The text a membership score is computed over: the revised hunk, or it with its context."""
+    if mode == "after":
+        return str(row["after"])
+    if mode != "with_context":
+        raise ValueError(f"unknown scored text {mode!r}")
+    if "context_before" not in row:
+        raise ValueError(f"scoring with context needs a corpus built with context: {row['id']}")
+    parts = (row["context_before"], str(row["after"]), row["context_after"])
+    return "\n".join(part for part in parts if part)
+
+
 def min_k_percent(logprobs: Sequence[float], *, k: float = 20.0) -> float:
     """Mean log-probability of the least likely k percent of tokens."""
     if not logprobs:

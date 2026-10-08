@@ -34,6 +34,7 @@ from sphragis.measure.contamination import (
     min_k_plus_plus,
     min_k_plus_plus_scores,
 )
+from sphragis.measure.contamination import scored_text as contamination_scored_text
 from sphragis.measure.score import extract_code, score
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -75,14 +76,10 @@ GUIDED = (
 
 def scored_text(row: dict) -> str:
     """The text a membership score is computed over, per --scored-text."""
-    if args.scored_text == "after":
-        return str(row["after"])
-    if "context_before" not in row:
-        raise SystemExit(
-            f"--scored-text with_context needs a corpus built with context: {row['id']}"
-        )
-    parts = (row["context_before"], str(row["after"]), row["context_after"])
-    return "\n".join(part for part in parts if part)
+    try:
+        return contamination_scored_text(row, args.scored_text)
+    except ValueError as error:
+        raise SystemExit(f"--scored-text {args.scored_text}: {error}") from None
 
 
 def load(path: Path) -> tuple[list[dict], dict]:

@@ -1,0 +1,158 @@
+{
+  "provenance": {
+    "generated_at": "2026-10-08T00:27:19.764704+00:00",
+    "git": {
+      "commit": "cc899ccbfa7aea3207f8602b3c1b72d09c5b02fe",
+      "branch": "measure/contamination-blind"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  },
+  "battery": "datasets/results/contamination-openstack-6mo-with_context-gapk.json",
+  "scored_text": "with_context",
+  "legacy_corpus": true,
+  "examples": {
+    "post": 1971,
+    "pre": 2502
+  },
+  "changes": 1674,
+  "projects": 264,
+  "projects_in_one_window_only": {
+    "post": 72,
+    "pre": 97
+  },
+  "with_a_year": 165,
+  "folds": 5,
+  "seed": 0,
+  "fold_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "resamples": 2000,
+  "direction": "AUC: a post-cutoff example looks more post-like than a pre-cutoff one",
+  "separation": {
+    "bag_of_words": {
+      "estimate": 0.6834284981958624,
+      "low": 0.6442086990954654,
+      "high": 0.7193889584856544
+    },
+    "latest_year": {
+      "estimate": 0.5042276680938355,
+      "low": 0.4959410634917335,
+      "high": 0.5123144813456759
+    },
+    "min_k_plus_plus": {
+      "estimate": 0.5410133587701123,
+      "low": 0.5148197005393407,
+      "high": 0.5655632917944156
+    },
+    "min_k_percent": {
+      "estimate": 0.5299658801624353,
+      "low": 0.49565166615495027,
+      "high": 0.5634753112519522
+    },
+    "gap_k_percent": {
+      "estimate": 0.5331637277696868,
+      "low": 0.5064941377883534,
+      "high": 0.5580642211200626
+    },
+    "bag_of_words - latest_year": {
+      "estimate": 0.17920083010202692,
+      "low": 0.1392031687514369,
+      "high": 0.2154443074605057
+    },
+    "bag_of_words - min_k_plus_plus": {
+      "estimate": 0.14241513942575013,
+      "low": 0.10005791554402832,
+      "high": 0.18328561217122186
+    },
+    "bag_of_words - min_k_percent": {
+      "estimate": 0.1534626180334271,
+      "low": 0.10635637450117441,
+      "high": 0.200081633475772
+    },
+    "bag_of_words - gap_k_percent": {
+      "estimate": 0.1502647704261756,
+      "low": 0.1048122350877515,
+      "high": 0.19287311051615996
+    },
+    "latest_year - min_k_plus_plus": {
+      "estimate": -0.036785690676276794,
+      "low": -0.06265698617937854,
+      "high": -0.008984908361453492
+    },
+    "latest_year - min_k_percent": {
+      "estimate": -0.02573821206859983,
+      "low": -0.06239105464769734,
+      "high": 0.012237824075873593
+    },
+    "min_k_percent - min_k_plus_plus": {
+      "estimate": -0.011047478607676964,
+      "low": -0.03373767923725857,
+      "high": 0.010055727724371133
+    },
+    "gap_k_percent - latest_year": {
+      "estimate": 0.028936059675851333,
+      "low": -0.0005010320336019669,
+      "high": 0.05547673675679787
+    },
+    "gap_k_percent - min_k_plus_plus": {
+      "estimate": -0.007849631000425461,
+      "low": -0.019741216820906682,
+      "high": 0.003650565417456786
+    },
+    "gap_k_percent - min_k_percent": {
+      "estimate": 0.0031978476072515027,
+      "low": -0.014992463496130481,
+      "high": 0.022763935722909134
+    }
+  },
+  "bag_of_words_single_seed_auc": {
+    "median": 0.6722672597589103,
+    "min": 0.6569916061062869,
+    "max": 0.69129130992517
+  },
+  "by_project": {
+    "separation": {
+      "bag_of_words": {
+        "estimate": 0.5971498802987038,
+        "low": 0.5482417785316603,
+        "high": 0.6449508602365941
+      },
+      "min_k_plus_plus": {
+        "estimate": 0.5410133587701123,
+        "low": 0.5069964686998395,
+        "high": 0.5681604798540572
+      },
+      "bag_of_words - min_k_plus_plus": {
+        "estimate": 0.0561365215285915,
+        "low": 0.011191437848601105,
+        "high": 0.10555231427460132
+      }
+    },
+    "bag_of_words_single_seed_auc": {
+      "median": 0.591137845684893,
+      "min": 0.5232731115969731,
+      "max": 0.6091891580596507
+    }
+  }
+}
