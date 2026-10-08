@@ -220,7 +220,8 @@ def _unaccepted_skips(
     for report in reports:
         longrepr = report.longrepr
         reason = longrepr[2] if isinstance(longrepr, tuple) else str(longrepr)
-        missing = _MISSING_MODULE.search(reason)
+        # Anchored: importorskip's message opens the reason; a module named mid-text is refused.
+        missing = _MISSING_MODULE.match(reason.removeprefix("Skipped: "))
         if missing and canonicalize_name(missing[1].split(".")[0]) in gpu_stack:
             continue
         if reason.removeprefix("Skipped: ") == _NO_CUDA:

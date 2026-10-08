@@ -74,8 +74,18 @@ def test_an_absent_dev_package_fails_the_run(suite: pytest.Pytester) -> None:
         'def test_x():\n    pytest.skip("not here")\n',
         '@pytest.mark.skip(reason="later")\ndef test_x():\n    pass\n',
         '@pytest.mark.parametrize("n", [])\ndef test_x(n):\n    pass\n',
+        "def test_x():\n    pytest.skip(\"see: could not import 'torch' here\")\n",
+        'pytestmark = pytest.mark.skip(reason="module")\n\ndef test_x():\n    pass\n',
+        '@pytest.fixture\ndef f():\n    pytest.skip("fixture")\n\ndef test_x(f):\n    pass\n',
     ],
-    ids=["skip-call", "skip-mark", "empty-parametrize"],
+    ids=[
+        "skip-call",
+        "skip-mark",
+        "empty-parametrize",
+        "module-named-mid-reason",
+        "module-skip",
+        "fixture-skip",
+    ],
 )
 def test_any_other_skip_fails_the_run(suite: pytest.Pytester, body: str) -> None:
     result = _run(suite, test_x="import pytest\n\n" + body)
