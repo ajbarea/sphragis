@@ -238,14 +238,14 @@ class HFGenerator:
         # Read back from the model rather than echoed from the request: a `to` that did not
         # apply would otherwise be recorded as though it had.
         self.computed_dtype = str(next(model.parameters()).dtype).removeprefix("torch.")
-        # Every id decoding stops on: the model's generation config may name several (Qwen2.5
-        # stops on both <|im_end|> and <|endoftext|>).
         # The penalty decoding applies, read from the request or else the loaded config.
         self.effective_repetition_penalty = float(
             self._decoding.get("repetition_penalty")
             or model.generation_config.repetition_penalty
             or 1.0
         )
+        # Every id decoding stops on: the model's generation config may name several (Qwen2.5
+        # stops on both <|im_end|> and <|endoftext|>).
         stops = model.generation_config.eos_token_id
         self._stops = {stops} if isinstance(stops, int) else set(stops or [])
         self._stops.add(self.tokenizer.eos_token_id)
