@@ -8306,6 +8306,10 @@ examples. Generated from the artifacts:
 | distilled own minus written own | +0.0008 [-0.0075, +0.0082] | -0.0024 [-0.0070, +0.0012] |
 | adapters own minus sibling | +0.0082 [-0.0086, +0.0244] | +0.0022 [-0.0130, +0.0182] |
 
+> **Superseded on 2026-10-08 for the reported contrasts.** At the registered decoder (penalty 1.0)
+> the read contrast is unchanged, but the reported ones are not: see "The rules files against no
+> file and against each other, at penalty 1.0" below.
+
 **By the rule fixed before the run, distilled own minus sibling carries no contrast as large as
 the SESOI on either organization**: both intervals sit inside the SESOI band (0.01), and they are
 narrower than the retrieval arm's or the adapters'. Reported, not read: neither a distilled file
@@ -8565,3 +8569,25 @@ nodes (TIGRIS 239444 and 243769, the second excluding the first's node rather th
 node the 1.1 measurement used). fp32 differs on 0 of 150 predictions between the jobs; bf16 differs on
 3 to 5 between them and on at most 1 within one process. The fp32 registration holds
 under the registered decoder.
+
+### The rules files against no file and against each other, at penalty 1.0 (2026-10-08)
+
+`# research(2026-10)`. `rules-reading-openstack-rp1.0.json`, `rules-reading-wikimedia-rp1.0.json`. The
+read contrast, distilled own minus sibling, keeps its reading at penalty 1.0 (the rescoring entry
+above). The contrasts the 2026-10-07 read reported but did not read move, and two now exclude zero
+by more than the SESOI. Each is a 95% interval over the first ten admissible partitions:
+
+| contrast | OpenStack, 1.1 | OpenStack, 1.0 | Wikimedia, 1.1 | Wikimedia, 1.0 |
+|---|---|---|---|---|
+| distilled own minus none | -0.0105 [-0.0215, +0.0006] | -0.0241 [-0.0401, -0.0089] | -0.0013 [-0.0074, +0.0043] | -0.0107 [-0.0207, -0.0014] |
+| written own minus none | -0.0112 [-0.0230, +0.0013] | -0.0240 [-0.0396, -0.0096] | +0.0011 [-0.0051, +0.0073] | +0.0197 [+0.0059, +0.0345] |
+| written own minus written foreign | -0.0039 [-0.0147, +0.0065] | -0.0274 [-0.0455, -0.0120] | +0.0056 [+0.0012, +0.0116] | +0.0397 [+0.0247, +0.0564] |
+| distilled own minus written own | +0.0008 [-0.0075, +0.0082] | -0.0001 [-0.0080, +0.0084] | -0.0024 [-0.0070, +0.0012] | -0.0303 [-0.0452, -0.0167] |
+
+At the registered decoder a distilled file lowers exact match on both organizations, by more than
+the SESOI on OpenStack. The written guides split: Wikimedia's raises exact match over no file and
+beats OpenStack's guide on Wikimedia code by about four times the SESOI, while OpenStack's lowers
+it and loses to Wikimedia's guide on OpenStack code. These remain reported, exploratory contrasts:
+the rule fixed before the run reads only distilled own minus sibling. That a written guide can carry
+an organization-level difference the distilled files do not is the question the comparator was
+added to ask, and on Wikimedia it now has a development-window answer to test.
