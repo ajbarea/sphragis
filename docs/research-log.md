@@ -8574,8 +8574,8 @@ under the registered decoder.
 
 `# research(2026-10)`. `rules-reading-openstack-rp1.0.json`, `rules-reading-wikimedia-rp1.0.json`. The
 read contrast, distilled own minus sibling, keeps its reading at penalty 1.0 (the rescoring entry
-above). The contrasts the 2026-10-07 read reported but did not read move, and two now exclude zero
-by more than the SESOI. Each is a 95% interval over the first ten admissible partitions:
+above). The contrasts the 2026-10-07 read reported but did not read move, and three now lie wholly
+beyond the SESOI. Each is a 95% interval over the first ten admissible partitions:
 
 | contrast | OpenStack, 1.1 | OpenStack, 1.0 | Wikimedia, 1.1 | Wikimedia, 1.0 |
 |---|---|---|---|---|
@@ -8584,8 +8584,8 @@ by more than the SESOI. Each is a 95% interval over the first ten admissible par
 | written own minus written foreign | -0.0039 [-0.0147, +0.0065] | -0.0274 [-0.0455, -0.0120] | +0.0056 [+0.0012, +0.0116] | +0.0397 [+0.0247, +0.0564] |
 | distilled own minus written own | +0.0008 [-0.0075, +0.0082] | -0.0001 [-0.0080, +0.0084] | -0.0024 [-0.0070, +0.0012] | -0.0303 [-0.0452, -0.0167] |
 
-At the registered decoder a distilled file lowers exact match on both organizations, by more than
-the SESOI on OpenStack. The written guides split: Wikimedia's raises exact match over no file and
+At the registered decoder a distilled file lowers exact match on both organizations, both intervals
+below zero. The written guides split: Wikimedia's raises exact match over no file and
 beats OpenStack's guide on Wikimedia code by about four times the SESOI, while OpenStack's lowers
 it and loses to Wikimedia's guide on OpenStack code. These remain reported, exploratory contrasts:
 the rule fixed before the run reads only distilled own minus sibling. That a written guide can carry
