@@ -36,6 +36,10 @@ case "${KIND:-partition}" in
     ;;
   placebo)
     PLACEBO_ROOT="${PLACEBO_ROOT:?set PLACEBO_ROOT to the corpus root the stored run read}"
+    if [ "${SEEDS:-1}" != 1 ] || [ -n "${TRAIN_SIZE:-}${PLANT:-}" ]; then
+      echo "KIND=placebo rescores a single-seed run without a size or plant" >&2
+      exit 1
+    fi
     SEEDS=1 TRAIN_SIZE="" PLANT=""
     NAME="placebo-$ORG"
     ;;

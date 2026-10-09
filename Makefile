@@ -42,7 +42,7 @@ CLUSTER     ?= tigris
 SLURM_CLI    = uv run --no-sync --no-active python -m sphragis.experiment.slurm
 # ACCOUNT= overrides the project account, which is defined once, in slurm.py. CPU_ONLY=1 requests
 # no GPU, for CPU work such as partition_sensitivity.sbatch that a GPU request can leave unschedulable.
-SLURM_TARGET = --target $(CLUSTER) $(if $(ACCOUNT),--account $(ACCOUNT)) $(if $(CPU_ONLY),--cpu-only)
+SLURM_TARGET = --target $(CLUSTER) $(if $(ACCOUNT),--account $(ACCOUNT)) $(if $(filter 1,$(CPU_ONLY)),--cpu-only)
 SSH_OPTS     = -o ConnectTimeout=20 -o ServerAliveInterval=10 -o ServerAliveCountMax=3
 
 deploy:                    ## Put the cluster on this branch's pushed HEAD, by SHA

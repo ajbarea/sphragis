@@ -8521,7 +8521,7 @@ when it is rerun.
 `# research(2026-10)`. The reruns the decoder entry above called for. Every development partition
 run and its planted variants on both organizations (76 runs, `rq1-partition-*-rp1.0.json`) and both
 placebo runs the H1 simulation reads (`rq1-placebo-*-rp1.0.json`) were rescored with their adapters
-reused (`decoder_check.sbatch`, pinned at ddb3d1b and 4fe12b2). Partition 2's and partition 3's
+reused (`decoder_check.sbatch`, pinned at ddb3d1b and 121d0c6). Partition 2's and partition 3's
 rescorings, run a second time in new jobs, kept every prediction, so rescoring at 1.0 reproduces
 across jobs in fp32. The retrieval and rules comparators were run again at 1.0 (44 jobs,
 `*-rp1.0.json`, pinned at 3903b90) and read with `retrieval_read.py`, which takes the `-rp1.0`
@@ -8544,9 +8544,9 @@ spread falls at 1.0, so the sized K falls with it. No reading changes category: 
 the adapters stay inconclusive, and the distilled rules files still carry no contrast as large as
 the SESOI.
 
-**The contamination battery at 1.0** (`contamination-openstack-6mo-with_context-rp1.0.json`) also
-moves from bf16 to fp32, since the stored run predates the fp32 registration. The membership gaps
-agree to three decimals (Min-K% -0.130, Min-K%++ -0.075, Gap-K% -0.056), and Min-K%++ separates the
+**The contamination battery at 1.0** (`contamination-openstack-6mo-with_context-rp1.0.json`) runs in
+the dtypes of the stored `-gapk` run (membership in bf16, guided completion in fp32), on another
+node. The membership gaps agree to three decimals (Min-K% -0.130, Min-K%++ -0.075, Gap-K% -0.056), and Min-K%++ separates the
 windows at AUC 0.541 in both, so the blind-baseline reading stands. Guided completion's gap moves
 from +0.003 to +0.008, still near its floor.
 

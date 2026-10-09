@@ -51,6 +51,7 @@ from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves
 from sphragis.experiment.partitions import K_MAX, K_MIN, XI, pilot_sizing, spread_targets
 from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
 from sphragis.experiment.runner import to_clusters
+from sphragis.experiment.runs import decoder
 from sphragis.measure.stats import (
     Cluster,
     equal_halves,
@@ -373,6 +374,16 @@ def main() -> None:
         raise SystemExit("--cells counts H1 cells, at least one")
     cell_power = {str(k): args.hypothesis_power ** (1 / k) for k in sorted(set(args.cells))}
     pilot = json.loads(args.pilot.read_text())
+    # The pilot's spread and the placebo's outcomes must come from one decoder; a pilot written
+    # before pilots recorded theirs is read through its first run.
+    pilot_decoder = pilot.get("decoder") or decoder(
+        json.loads(Path(pilot["run_files"][0]).read_text())
+    )
+    placebo_decoder = decoder(json.loads(args.placebo.read_text()))
+    if json.dumps(pilot_decoder, sort_keys=True) != json.dumps(placebo_decoder, sort_keys=True):
+        raise SystemExit(
+            f"{args.pilot} decoded as {pilot_decoder}, {args.placebo} as {placebo_decoder}"
+        )
     admissible = json.loads(args.admissible.read_text())
     projection = json.loads(args.projection.read_text())
     if projection["org"] != args.org or projection["test"] is None:
