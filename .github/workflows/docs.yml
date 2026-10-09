@@ -25,7 +25,6 @@ on:
   # Deliberately unfiltered, unlike the push trigger: a required check skipped by a paths
   # filter leaves unrelated PRs waiting on a status that never arrives.
   pull_request:
-  # Publishing happens here and only here. See the deploy job.
   workflow_dispatch:
 
 permissions:
@@ -72,11 +71,11 @@ jobs:
       # is a decision rather than a consequence of a merge. To publish, run this workflow
       # from the Actions tab on main.
       - name: Configure Pages
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload artifact
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site
@@ -89,7 +88,7 @@ jobs:
 
   deploy:
     needs: build
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write

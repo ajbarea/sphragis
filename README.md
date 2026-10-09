@@ -88,8 +88,8 @@ committed measurement with the script that wrote it.
 | `docs/research-log.md` | the dated record, superseded readings included |
 
 `make docs-serve` renders it locally with live reload. The site is published at
-<https://ajbarea.github.io/sphragis/>. Pushes build it, and a manual dispatch of the docs
-workflow deploys it.
+<https://ajbarea.github.io/sphragis/>. Each push to `main` that touches the docs builds and
+deploys it.
 
 Every figure on the site is asserted against the artifact that produced it. `make
 docs-harvest` fails on a number that has drifted from its measurement or on a stale artifact
