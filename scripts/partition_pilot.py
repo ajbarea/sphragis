@@ -92,7 +92,13 @@ parser.add_argument(
 )
 # The per-example score H1 is read on: greedy exact match, or the reference's mean log-probability
 # per token from `likelihood_score.py` (research log, 2026-10-09).
-parser.add_argument("--metric", choices=("exact_match", "logprob_per_token"), default="exact_match")
+parser.add_argument(
+    "--metric", choices=("exact_match", "logprob_per_token", "logprob"), default="exact_match"
+)
+
+#: The metrics whose SESOI, and the reproducibility margin and K sized from it, are registered.
+#: On any other, every reading that compares against them is reported as unregistered.
+REGISTERED_SESOI = ("exact_match",)
 parser.add_argument("--bootstrap-seed", type=int, default=TEST_BOOTSTRAP_SEED)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
@@ -174,6 +180,11 @@ def main() -> None:
             )
         except ValueError as error:
             raise SystemExit(f"{path}: {error}") from error
+        missing = sorted(
+            arm for arm, rows in run["results"].items() if rows and args.metric not in rows[0]
+        )
+        if missing:
+            raise SystemExit(f"{path}: arms {missing} carry no {args.metric}")
         runs.append((run["results"], k))
         decoders.add(json.dumps(decoder(run), sort_keys=True))
     if len(decoders) != 1:
@@ -212,6 +223,13 @@ def main() -> None:
     if window == "test":
         check_resamples(args, levels)
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
+    # A K, a bound or a test read rests on the SESOI, so none is taken on an unregistered metric.
+    if args.metric not in REGISTERED_SESOI and (
+        args.sizing or args.sensitivity or window == "test"
+    ):
+        raise SystemExit(
+            f"{args.metric} has no registered SESOI: no --sizing, --sensitivity or test read"
+        )
     if window == "test" and not args.planted:
         raise SystemExit("a test-window read needs --planted: outcome-neutral check 5 halts it")
     # Bounds are registered before the test window, so it is never read without them.
@@ -308,6 +326,12 @@ def main() -> None:
         metric=args.metric,
     )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"])
+    if args.metric not in REGISTERED_SESOI:
+        # The SESOI is 0.01 in exact match; on this metric it has no meaning, nor have the
+        # verdicts, margins and K that compare against it. Intervals and estimates stand.
+        for key in ("verdicts", "within_sesoi", "meaningful", "reproducibility"):
+            cell[key] = None
+        sizing = {**sizing, "runs": None}
     # The registered sensitivities, beside the cell and binding nothing: the same runs, levels,
     # seed and draws, without each named set of examples.
     without = {}
@@ -339,6 +363,8 @@ def main() -> None:
             }
             continue
         fields = ("intervals", "within_sesoi", "meaningful", "p_one_sided", "bootstrap_se")
+        if args.metric not in REGISTERED_SESOI:
+            fields = ("intervals", "p_one_sided", "bootstrap_se")
         without[name] = {
             "file": path,
             "listed": len(drop),
@@ -391,12 +417,14 @@ def main() -> None:
         interval = cell["intervals"][c]
         print(
             f"H1 {args.org} over {len(cell['per_run'])} partitions at {c}: {cell['estimate']:+.4f} "
-            f"[{interval['low']:+.4f}, {interval['high']:+.4f}] {cell['verdicts'][c]}"
+            f"[{interval['low']:+.4f}, {interval['high']:+.4f}] "
+            f"{cell['verdicts'][c] if cell['verdicts'] else 'no registered SESOI'}"
         )
     print(
         f"read over K={cell['runs']} of {cell['runs_computed']} computed; examples "
         f"{cell['examples']}, dropped {cell['dropped']}; reproducible "
-        f"{cell['reproducibility']['holds']}; sizing: sd {sizing['sd']:.4f}, upper "
+        f"{cell['reproducibility']['holds'] if cell['reproducibility'] else None}; "
+        f"sizing: sd {sizing['sd']:.4f}, upper "
         f"{sizing['sd_upper']:.4f}, K {sizing['runs']}"
     )
     args.out.write_text(json.dumps(report, indent=2) + "\n")

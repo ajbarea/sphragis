@@ -299,6 +299,65 @@ def test_runs_decoded_at_different_penalties_are_not_read_together(
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
 
 
+def _with_likelihood(argv: list[str]) -> None:
+    """Give every row of the written runs a per-token log-probability: exact match, shifted."""
+    for path in argv:
+        if not path.endswith(".json") or "run-" not in path:
+            continue
+        run = json.loads(Path(path).read_text())
+        for rows in run["results"].values():
+            for row in rows:
+                row["logprob_per_token"] = row["exact_match"] - 1.0
+        Path(path).write_text(json.dumps(run))
+
+
+def test_a_run_without_the_metric_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _inputs(tmp_path, "openstack")
+    with pytest.raises(SystemExit, match="carry no logprob_per_token"):
+        _main(
+            monkeypatch, [*argv, "--metric", "logprob_per_token", "--out", str(tmp_path / "o.json")]
+        )
+
+
+def test_a_likelihood_read_reports_nothing_against_the_exact_match_sesoi(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The estimate and intervals stand; verdicts, margins and K wait on a registered SESOI."""
+    argv = _inputs(tmp_path, "openstack")
+    _with_likelihood(argv)
+    out = tmp_path / "o.json"
+    _main(monkeypatch, [*argv, "--metric", "logprob_per_token", "--out", str(out)])
+    report = json.loads(out.read_text())
+    assert report["metric"] == "logprob_per_token"
+    assert report["intervals"] and report["estimate"] is not None
+    assert report["verdicts"] is None and report["within_sesoi"] is None
+    assert report["sizing"]["runs"] is None
+
+
+def test_k_is_not_sized_on_an_unregistered_metric(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _inputs(tmp_path, "openstack")
+    _with_likelihood(argv)
+    sizing = tmp_path / "sizing.json"
+    sizing.write_text(json.dumps(PILOT))
+    with pytest.raises(SystemExit, match="no registered SESOI"):
+        _main(
+            monkeypatch,
+            [
+                *argv,
+                "--metric",
+                "logprob_per_token",
+                "--sizing",
+                str(sizing),
+                "--out",
+                str(tmp_path / "o.json"),
+            ],
+        )
+
+
 def test_a_run_with_one_half_on_the_test_window_is_not_read_as_development(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -230,6 +230,8 @@ def planted_convention(
         evidence["reason"] = "not read on the development window"
     else:
         adapters = {arm: rows for arm, rows in run["results"].items() if arm.startswith("adapter:")}
+        # On exact match whatever the run is scored on: it asks whether the adapters generate at
+        # all at the registered decoder, a precondition of reading them by any metric.
         arms = non_degeneracy(adapters)
         evidence["adapter_exact_match"] = arms.evidence["exact_match"]
         if not adapters or not arms.passed:

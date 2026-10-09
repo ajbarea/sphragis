@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import hashlib
 import json
 from pathlib import Path
 
@@ -25,7 +26,13 @@ import torch
 from sphragis.corpus.redact import redact_text
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.holdout import window_split
-from sphragis.experiment.model import HFGenerator, reference_logprob, run_provenance
+from sphragis.experiment.model import (
+    HFGenerator,
+    load_tokenizer,
+    reference_logprob,
+    run_provenance,
+    scorable,
+)
 from sphragis.experiment.neutral import source_root, source_windows
 from sphragis.experiment.runner import build_prompt
 from sphragis.experiment.walk import gate
@@ -49,12 +56,24 @@ def held_out_rows(run: dict, org: str) -> dict[str, dict]:
         source_root(source), org, train_window=train_window, eval_window=eval_window
     )
     by_id = {redact_text(row["id"]): row for row in rows}
-    stored = {r["id"] for r in run["results"][run_id(EvalRun("base", org, None))]}
+    stored = {redact_text(r["id"]) for r in run["results"][run_id(EvalRun("base", org, None))]}
     if set(by_id) != stored:
         raise SystemExit(
             f"{org}: the corpus holds {len(by_id)} held-out rows, the run {len(stored)}"
         )
     return by_id
+
+
+def adapter_checked(run: dict, adapters: Path, org: str, seed: int) -> str:
+    """The saved adapter the stored run scored, refused if its rank or recorded digest differs."""
+    path = adapters / f"{org}-s{seed}"
+    if json.loads((path / "adapter_config.json").read_text())["r"] != run["lora_rank"]:
+        raise SystemExit(f"{path} is not rank {run['lora_rank']}")
+    recorded = run["training"][f"{org}-s{seed}"].get("adapter_sha256")
+    weights = hashlib.sha256((path / "adapter_model.safetensors").read_bytes()).hexdigest()
+    if recorded is not None and weights != recorded:
+        raise SystemExit(f"{path} is not the adapter the stored run scored")
+    return str(path)
 
 
 def score(generator: HFGenerator, rows: dict[str, dict], stored: list[dict]) -> list[dict]:
@@ -63,7 +82,7 @@ def score(generator: HFGenerator, rows: dict[str, dict], stored: list[dict]) -> 
         total, tokens = reference_logprob(
             generator.model,
             generator.tokenizer,
-            rows[row["id"]],
+            rows[redact_text(row["id"])],
             prompt_builder=build_prompt,
             device=generator.device,
         )
@@ -88,15 +107,23 @@ def main() -> None:
         raise SystemExit(f"{args.run} has seeds {run['seeds']} at {run['train_size']}, not these")
     orgs = sorted(run["corpora"])
     rows = {org: held_out_rows(run, org) for org in orgs}
+    # Every row is tokenized before any model loads, so one that cannot be scored costs no GPU.
+    tokenizer = load_tokenizer(run["model_id"])
+    for org in orgs:
+        for row in rows[org].values():
+            scorable(tokenizer, row, prompt_builder=build_prompt)
+    adapters = {
+        (org, seed): adapter_checked(run, args.adapters, org, seed)
+        for org in orgs
+        for seed in run["seeds"]
+    }
     # One model load an arm's model: the base, then each adapter, each scored on every half.
     models: list[tuple[str | None, str | None, int | None]] = [(None, None, None)]
-    models += [
-        (org, str(args.adapters / f"{org}-s{seed}"), seed) for org in orgs for seed in run["seeds"]
-    ]
+    models += [(org, adapters[org, seed], seed) for org in orgs for seed in run["seeds"]]
     results: dict[str, list[dict]] = {}
     dtypes: set[str] = set()
     for trained, adapter, seed in models:
-        generator = HFGenerator(adapter_path=adapter)
+        generator = HFGenerator(model_id=run["model_id"], adapter_path=adapter)
         dtypes.add(generator.computed_dtype)
         for evaluated in orgs:
             arm = run_id(

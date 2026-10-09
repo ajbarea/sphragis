@@ -612,8 +612,16 @@ def main() -> int:
     return 1
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+def scorable(
+    tokenizer: Any, row: Mapping[str, Any], *, prompt_builder: Callable[[Mapping[str, Any]], str]
+) -> None:
+    """Refuse, before any model loads, a row `reference_logprob` would refuse mid-job."""
+    build_supervised(tokenizer, row, prompt_builder=prompt_builder, max_length=SCORING_MAX_LENGTH)
+
+
+def load_tokenizer(model_id: str = MODEL_ID) -> PreTrainedTokenizerBase:
+    """The pinned tokenizer alone, for checks that need no model."""
+    return _require_tokenizer(model_id)
 
 
 def reference_logprob(
@@ -638,5 +646,10 @@ def reference_logprob(
         logits = model(input_ids=ids, logits_to_keep=len(target) + 1).logits[0, :-1]
     logprobs = torch.log_softmax(logits.float(), dim=-1)
     picked = logprobs.gather(1, torch.tensor(target, device=logits.device).unsqueeze(1))
-    assert ids.shape[1] - start == len(target)
+    if ids.shape[1] - start != len(target):
+        raise ValueError("the target is not the end of the item")
     return float(picked.sum()), len(target)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

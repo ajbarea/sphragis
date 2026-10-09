@@ -29,7 +29,7 @@ repetition_penalty
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
 NAME="partition-$ORG-p$PARTITION_SEED"
 
-claim_result OUT "$SPHRAGIS_RESULTS/likelihood-$NAME$RESULT_SUFFIX.json"
+claim_result OUT "$SPHRAGIS_RESULTS/likelihood-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json"
 uv run --no-sync python scripts/likelihood_score.py \
   --run "$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json" \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-$NAME$RESULT_SUFFIX" \
