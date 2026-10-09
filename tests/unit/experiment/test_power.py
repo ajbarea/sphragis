@@ -304,11 +304,14 @@ def test_averaged_truth_averages_each_example_and_splits_its_noise() -> None:
         _pilot_run(1, {"x": ("cx", "o-a", -0.8), "y": ("cy", "o-b", -0.9)}),
         _pilot_run(2, {"x": ("cx", "o-b", -0.6), "y": ("cy", "o-a", -0.9)}),
     ]
-    truth, (shared, per_example) = averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")
+    truth, (shared, per_example), shrink = averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")
     assert [c.change_id for c in truth] == ["cx", "cy"]
-    assert truth[0].treatment == pytest.approx((-0.7,)) and truth[0].control == (-1.0,)
     # x's contrasts 0.2 and 0.4 around 0.3, y's 0.1 twice: squares 0.02 over four, times 2 / 1.
     assert shared == 0.0 and per_example == pytest.approx(0.1)
+    # Mean contrasts 0.3 and 0.1 spread 0.02 around 0.2, of which 0.01 / 2 is noise: shrink 0.75,
+    # so x's treatment is its control -1.0 plus 0.2 + 0.75 * 0.1.
+    assert shrink == pytest.approx(0.75)
+    assert truth[0].treatment == pytest.approx((-0.725,)) and truth[0].control == (-1.0,)
 
 
 def test_examples_that_move_together_read_as_shared_noise() -> None:
@@ -318,6 +321,45 @@ def test_examples_that_move_together_read_as_shared_noise() -> None:
         _pilot_run(1, {"x": ("c", "o-a", -0.8), "y": ("c", "o-a", -0.8)}),
         _pilot_run(2, {"x": ("c", "o-b", -0.6), "y": ("c", "o-b", -0.6)}),
     ]
-    _, (shared, per_example) = averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")
+    _, (shared, per_example), _ = averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")
     # Residuals of +-0.1 on both: variance 0.01 times 2 / 1 for centering, all of it shared.
     assert shared == pytest.approx(0.02**0.5) and per_example == pytest.approx(0.0, abs=1e-6)
+
+
+def test_averaged_truth_recovers_known_noise_and_shrinks_by_its_share() -> None:
+    """Synthetic runs with a known spread of true contrasts and known change-by-run noise."""
+    from sphragis.experiment.power import averaged_truth
+
+    rng = random.Random(11)
+    shared_sd, example_sd, signal_sd, n_runs = 0.05, 0.10, 0.06, 22
+    sizes = {f"c{i}": 1 + i % 3 for i in range(150)}
+    true = {(c, j): rng.gauss(0.02, signal_sd) for c, m in sizes.items() for j in range(m)}
+    runs = []
+    for seed in range(1, n_runs + 1):
+        contrasts = {}
+        for c, m in sizes.items():
+            common, half = rng.gauss(0.0, shared_sd), rng.choice(("o-a", "o-b"))
+            for j in range(m):
+                value = -1.0 + true[c, j] + common + rng.gauss(0.0, example_sd)
+                contrasts[f"{c}-{j}"] = (c, half, value)
+        runs.append(_pilot_run(seed, contrasts))
+    _, (shared, per_example), shrink = averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")
+    assert shared == pytest.approx(shared_sd, abs=0.015)
+    assert per_example == pytest.approx(example_sd, rel=0.05)
+    expected = signal_sd**2 / (signal_sd**2 + (shared_sd**2 + example_sd**2) / n_runs)
+    assert shrink == pytest.approx(expected, abs=0.05)
+
+
+@pytest.mark.parametrize("problem", ["one run", "a repeated seed", "an example changing change"])
+def test_averaged_truth_refuses_runs_it_cannot_read(problem: str) -> None:
+    from sphragis.experiment.power import averaged_truth
+
+    first = _pilot_run(1, {"x": ("cx", "o-a", -0.8)})
+    if problem == "one run":
+        runs = [first]
+    elif problem == "a repeated seed":
+        runs = [first, _pilot_run(1, {"x": ("cx", "o-b", -0.6)})]
+    else:
+        runs = [first, _pilot_run(2, {"x": ("cz", "o-b", -0.6)})]
+    with pytest.raises(ValueError):
+        averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")

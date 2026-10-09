@@ -106,15 +106,25 @@ def averaged_truth(
     *,
     halves: tuple[str, str],
     metric: str,
-) -> tuple[list[Cluster], tuple[float, float]]:
-    """Each change's outcomes averaged over a pilot's runs, and the change-by-run noise.
+) -> tuple[list[Cluster], tuple[float, float], float]:
+    """Each change's outcomes averaged over a pilot's runs, the change-by-run noise, the shrinkage.
 
     Every run scores every example, in one half or the other, so an example's own-minus-sibling
     is seen once a run. Averaging over runs keeps one run's noise out of the truth a simulation
     resamples. The noise is each example's deviation from its own mean contrast, split into the
     part its change's examples share (their mean cross-product within a run) and the rest, both
     corrected for centering on R runs; `continuous_runs` adds it back once a simulated run.
+
+    An example's averaged contrast still carries 1/R of that noise, which a simulated run would
+    add to its own, so each is shrunk toward the mean contrast by the share of the examples'
+    spread that is not noise (empirical Bayes); the control arm is kept and the treatment arm
+    moved, and the factor is returned.
     """
+    seeds = [seed for _, seed in runs]
+    if len(set(seeds)) != len(seeds):
+        raise ValueError(f"runs repeat a seed: {sorted(seeds)}")
+    if len(runs) < 2:
+        raise ValueError("change-by-run noise needs at least two runs")
     own: dict[str, list[float]] = defaultdict(list)
     other: dict[str, list[float]] = defaultdict(list)
     contrast: dict[str, list[float]] = defaultdict(list)
@@ -130,7 +140,8 @@ def averaged_truth(
                 own[example].append(a)
                 other[example].append(b)
                 contrast[example].append(a - b)
-                change_of[example] = row["change_id"]
+                if change_of.setdefault(example, row["change_id"]) != row["change_id"]:
+                    raise ValueError(f"example {example} belongs to two changes across runs")
     counts = {len(values) for values in own.values()}
     if counts != {len(runs)}:
         raise ValueError(
@@ -140,12 +151,6 @@ def averaged_truth(
     examples: dict[str, list[str]] = defaultdict(list)
     for example in sorted(own):
         examples[change_of[example]].append(example)
-    truth = [
-        Cluster(change, tuple(fmean(own[e]) for e in ids), tuple(fmean(other[e]) for e in ids))
-        for change, ids in sorted(examples.items())
-    ]
-    if n_runs < 2:
-        return truth, (0.0, 0.0)
     residual = {e: [d - fmean(ds) for d in ds] for e, ds in contrast.items()}
     correction = n_runs / (n_runs - 1)
     total = fmean(v * v for vs in residual.values() for v in vs) * correction
@@ -156,7 +161,21 @@ def averaged_truth(
             cross += sum(values) ** 2 - sum(v * v for v in values)
             pairs += len(values) * (len(values) - 1)
     shared = max(cross / pairs * correction, 0.0) if pairs else 0.0
-    return truth, (shared**0.5, max(total - shared, 0.0) ** 0.5)
+    per_example = max(total - shared, 0.0)
+    means = {e: fmean(ds) for e, ds in contrast.items()}
+    centre = fmean(means.values())
+    spread = fmean((m - centre) ** 2 for m in means.values()) * len(means) / (len(means) - 1)
+    noise_of_mean = (shared + per_example) / n_runs
+    shrink = max(0.0, 1.0 - noise_of_mean / spread) if spread > 0 else 0.0
+
+    def treated(e: str) -> float:
+        return fmean(other[e]) + centre + shrink * (means[e] - centre)
+
+    truth = [
+        Cluster(change, tuple(treated(e) for e in ids), tuple(fmean(other[e]) for e in ids))
+        for change, ids in sorted(examples.items())
+    ]
+    return truth, (shared**0.5, per_example**0.5), shrink
 
 
 def _resolve_size(clusters: Sequence[Cluster], n_changes: int | None) -> int:

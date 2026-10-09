@@ -179,7 +179,7 @@ def partition_pool(
 
 def averaged_pool(
     pilot: dict, corpus: Path, org: str, metric: str
-) -> tuple[Pool, tuple[float, float]]:
+) -> tuple[Pool, tuple[float, float], float]:
     """A continuous score's pool: each change averaged over the pilot's runs, with its project,
     and the change-by-run noise the simulated runs add back (`power.averaged_truth`)."""
     project_of: dict[str, set[str]] = defaultdict(set)
@@ -189,14 +189,14 @@ def averaged_pool(
     for path in pilot["run_files"]:
         run = json.loads(Path(path).read_text())
         runs.append((run["results"], run["seeds"][0]))
-    truth, noise = averaged_truth(runs, halves=halves(org), metric=metric)
+    truth, noise, shrink = averaged_truth(runs, halves=halves(org), metric=metric)
     pool: Pool = []
     for cluster in truth:
         projects = project_of.get(cluster.change_id, set())
         if len(projects) != 1:
             raise SystemExit(f"change {cluster.change_id} maps to projects {projects}")
         pool.append((cluster, next(iter(projects))))
-    return pool, noise
+    return pool, noise, shrink
 
 
 def pools(
@@ -208,7 +208,7 @@ def pools(
     max_seed: int,
     metric: str = "exact_match",
     pilot: dict | None = None,
-) -> tuple[Pool, list[dict[str, int]], int, tuple[float, float]]:
+) -> tuple[Pool, list[dict[str, int]], int, tuple[float, float], float | None]:
     """The pilot's clusters, the first `count` admissible partitions and the last seed tried.
 
     The partitions are rebuilt from `corpus`, so they must reproduce the committed admissible list
@@ -218,9 +218,9 @@ def pools(
     # A binary score resamples the placebo run, its churn calibrated apart (--redraw); a continuous
     # one resamples the pilot's runs averaged, with their change-by-run sd as its churn.
     if metric == "exact_match" or pilot is None:
-        pool, noise = pilot_pool(placebo, corpus, org, metric), (0.0, 0.0)
+        pool, noise, shrink = pilot_pool(placebo, corpus, org, metric), (0.0, 0.0), None
     else:
-        pool, noise = averaged_pool(pilot, corpus, org, metric)
+        pool, noise, shrink = averaged_pool(pilot, corpus, org, metric)
     partitions, seeds = partition_pool(
         corpus, org, Path(admissible["reference"]), admissible["size_floor"], count, max_seed
     )
@@ -230,7 +230,7 @@ def pools(
     missing = {p for _, p in pool} - set(partitions[0])
     if missing:
         raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
-    return pool, partitions, seeds[-1], noise
+    return pool, partitions, seeds[-1], noise, shrink
 
 
 _PARTITIONS: list[dict[str, int]] = []
@@ -497,7 +497,7 @@ def main() -> None:
     placebo = json.loads(args.placebo.read_text())
     if not continuous and placebo.get("metric", "exact_match") != args.metric:
         raise SystemExit(f"the placebo is scored on {placebo.get('metric', 'exact_match')}")
-    pool, partitions, tried, noise = pools(
+    pool, partitions, tried, noise, shrink = pools(
         args.placebo,
         args.corpus,
         args.org,
@@ -531,6 +531,7 @@ def main() -> None:
         "metric": args.metric,
         "pool": "the pilot's runs, averaged per change" if continuous else "the placebo run",
         "change_by_run_noise": {"shared_by_change": noise[0], "per_example": noise[1]},
+        "truth_shrinkage": shrink,
         "sesoi": sesoi,
         "xi": sesoi,
         "runs": args.runs,

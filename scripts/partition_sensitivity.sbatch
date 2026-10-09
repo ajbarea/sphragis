@@ -29,7 +29,11 @@ ORG="${ORG:-openstack}"
 # a rerun under another decoder names its pilot and takes a RUN_TAG for its result.
 # METRIC: exact_match, or logprob_per_token with a likelihood pilot; the result is named for it.
 METRIC="${METRIC:-exact_match}"
-[ "$METRIC" = exact_match ] || RESULT_SUFFIX="$RESULT_SUFFIX-$METRIC"
+case "$METRIC" in
+  exact_match) PILOT_TAG="" ;;
+  logprob_per_token) PILOT_TAG="-likelihood"; RESULT_SUFFIX="$RESULT_SUFFIX-$METRIC" ;;
+  *) echo "METRIC must be exact_match or logprob_per_token, not $METRIC" >&2; exit 1 ;;
+esac
 # SMOKE=1: a few trials end to end before the full run, under a result name of its own.
 case "${SMOKE:-0}" in
   1) SMOKE_ARGS=(--trials 20 --null-trials 40 --calibration-trials 4 --steps 3); RESULT_SUFFIX="$RESULT_SUFFIX-smoke" ;;
@@ -40,7 +44,7 @@ claim_result OUT "$SPHRAGIS_RESULTS/partition-sensitivity-$ORG$RESULT_SUFFIX.jso
 uv run --no-sync python scripts/partition_sensitivity.py \
   --placebo "${PLACEBO:?set PLACEBO to a single-seed placebo run}" \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" --org "$ORG" \
-  --pilot "${PILOT:-datasets/results/partition-pilot-$ORG.json}" \
+  --pilot "${PILOT:-datasets/results/partition-pilot-$ORG$PILOT_TAG.json}" \
   --projection "datasets/results/project-windows-$ORG-v3.json" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --metric "$METRIC" ${SMOKE_ARGS[@]+"${SMOKE_ARGS[@]}"} \
