@@ -8660,14 +8660,15 @@ Fixed now, before the 76 likelihood jobs (`likelihood-partition-*-rp1.0.json`) a
    so this rate is fixed without reading own minus sibling. It sets K through xi as the
    exact-match SESOI did.
 4. **No H1 likelihood verdict, margin or K is reported** until the SESOI above is computed and
-   committed; `partition_pilot.py` reports them as unregistered on any metric outside
-   `REGISTERED_SESOI` until then.
+   committed; `partition_pilot.py` reports them as unregistered on any metric `metric_sesoi`
+   gives no SESOI for until then.
 
 ### H1 on likelihood: check 5 passes at half and a quarter, and OpenStack carries a contrast (2026-10-09)
 
 `# research(2026-10)`. Read under the rules fixed in "Planned before any likelihood result is read" above,
 committed (ea562bf) before the 76 likelihood jobs were pulled. `likelihood-partition-*-rp1.0.json`,
-`likelihood-sesoi.json` (74e8195, committed before any own-minus-sibling contrast was read),
+`likelihood-sesoi.json` (74e8195, computed by rule 3 as fixed in ea562bf, which leaves no free
+parameter; the job logs committed with it print each run's arm means),
 `partition-pilot-<org>-likelihood.json` and `-likelihood-total.json`.
 
 **The SESOI** carried from exact match by the positive control: adapters raise the per-token
@@ -8684,7 +8685,8 @@ check-5 entry queued for option 1): every run's own verdict is `pass` (own minus
 and every run fails check 5 on test 6, because a sibling adapter that writes its own marker on
 nearly every output never matches the other half's references exactly, so its exact match is 0,
 which test 6 reads as degenerate. Greedy exact match therefore detects a convention applied in
-three refinements of four and not one applied in half; likelihood detects both and a quarter.
+three refinements of four and not one applied in half; likelihood, scored at half and a quarter,
+detects both.
 
 **H1 on the development window, likelihood** (22 runs an organization, own minus sibling in nats per
 token, the registered Holm levels; total log-probability, the registered sensitivity, and greedy

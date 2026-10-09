@@ -103,16 +103,18 @@
     "sd": 0.11809442008607547,
     "sd_upper": 0.14873104396221004,
     "confidence": 0.9,
-    "formula": 1699.532329262916,
-    "runs": null,
-    "clamped": "max"
+    "runs": null
   },
   "without": {},
   "provenance": {
-    "generated_at": "2026-10-09T15:33:43.019371+00:00",
+    "generated_at": "2026-10-09T15:48:59.753296+00:00",
     "git": {
-      "commit": "74e8195e6ce02d7c66d879a18bc48391dba5354c",
-      "branch": "measure/likelihood"
+      "commit": "cd9c2a7da00340dde521dcfbcbedf743c52f844d",
+      "branch": "measure/likelihood",
+      "uncommitted_code": [
+        "scripts/partition_pilot.py"
+      ],
+      "uncommitted_code_sha256": "f0810106774abd05e1be1631d4db69e41ee81548832f870136d5b2ed7efb5bf3"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

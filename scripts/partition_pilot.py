@@ -350,7 +350,9 @@ def main() -> None:
         # verdicts, margins and K that compare against it. Intervals and estimates stand.
         for key in ("verdicts", "within_sesoi", "meaningful", "reproducibility"):
             cell[key] = None
-        sizing = {**sizing, "runs": None}
+        kept = ("pilot_runs", "sd", "sd_upper", "confidence")
+        sizing = {key: value for key, value in sizing.items() if key in kept}
+        sizing["runs"] = None
     # The registered sensitivities, beside the cell and binding nothing: the same runs, levels,
     # seed and draws, without each named set of examples.
     without = {}
