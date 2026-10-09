@@ -161,3 +161,21 @@ def test_a_reused_adapter_from_another_configuration_is_refused(
     stored, adapter = _stored_adapter(tmp_path, rank=saved_rank)
     with pytest.raises(ValueError):
         reused_adapter(stored, key, adapter, train_size=train_size, rank=rank)
+
+
+@pytest.mark.parametrize(
+    ("labels", "start", "target"),
+    [([-100, -100, 7, 8, 2], 2, [7, 8, 2]), ([-100, 5], 1, [5])],
+)
+def test_the_target_is_the_supervised_suffix(labels, start, target) -> None:
+    from sphragis.experiment.likelihood import target_span
+
+    assert target_span(labels) == (start, target)
+
+
+@pytest.mark.parametrize("labels", [[-100, -100], [7, 8], [-100, 7, -100, 8]])
+def test_an_item_without_one_masked_prompt_and_one_target_is_refused(labels) -> None:
+    from sphragis.experiment.likelihood import target_span
+
+    with pytest.raises(ValueError):
+        target_span(labels)

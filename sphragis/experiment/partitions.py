@@ -284,8 +284,11 @@ def h1_over_partitions(
     bootstrap_seed: int,
     resamples: int = 10_000,
     metric: str = "exact_match",
+    sesoi: float = SESOI,
 ) -> dict[str, Any]:
     """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order.
+
+    `sesoi` is the metric's own: the readings and the reproducibility margin compare against it.
 
     Runs computed past K are reported, each on its own examples, and never enter the cell: not
     its estimate, not its interval, not the set of examples it is read on.
@@ -310,10 +313,10 @@ def h1_over_partitions(
         "per_run": per_run,
         "runs": k,
         "changes": sum(len(half) for half in clusters[0]),
-        "reproducibility": reproducibility(per_run),
+        "reproducibility": reproducibility(per_run, xi=sesoi),
         "runs_computed": len(runs),
         "runs_left_out": left_out,
-        **read_intervals(intervals, registered),
+        **read_intervals(intervals, registered, sesoi=sesoi),
         # The inputs of the readings across organizations, beside the pass rule.
         "p_one_sided": one_sided_p(draws),
         "bootstrap_se": stdev(draws),

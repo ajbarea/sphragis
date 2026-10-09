@@ -1,0 +1,1 @@
+openstack: corpus not current under the build and label rules (13: ['2024-10.jsonl: no build record', '2024-11.jsonl: no build record', '2024-12.jsonl: no build record']); rebuild or refine it (`python -m sphragis.corpus`)

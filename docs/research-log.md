@@ -8628,3 +8628,82 @@ invisible to H1, whatever the adapter learned. Three ways forward, none chosen y
 **Next, a measurement for option 1:** the first ten admissible partitions of each organization
 planted at 0.75 and read at 1.0 (`partition_run.sbatch PLANT=0.75`). Whether greedy detects a 75%
 convention bounds what option 1 can claim. The choice among the three is AJ's.
+
+### Planned before any likelihood result is read: H1 on the reference's log-probability (2026-10-09)
+
+`# research(2026-10)`. Decided with AJ after the check-5 failure above: H1's primary per-example score
+becomes the mean log-probability per token of the held-out reference under each arm
+(`likelihood_score.py`, `logprob_per_token`), with greedy exact match kept as a registered
+secondary. Held-out log-likelihood is the log score, a strictly proper scoring rule (Gneiting and
+Raftery, JASA 2007), and comparing per-author language models by the perplexity they assign a text
+is the established attribution method (Huang, Murakami and Grieve, PLOS ONE 2025, authorial language
+models). It needs no decoder, so it cannot drop a convention learned at a minority rate the way
+greedy decoding does. Sampling-based exact match was rejected: greedy beats the average sample on
+most benchmarks and sampling adds variance that can reorder models (Song et al., NAACL 2025), and
+temperature 0 was best for code refinement in a 2024 replication (arXiv:2412.02789).
+
+Fixed now, before the 76 likelihood jobs (`likelihood-partition-*-rp1.0.json`) are read:
+
+1. **Per-example score.** Mean log-probability per token, so each example weighs equally as in exact
+   match. Within an example the own-minus-sibling difference is the total log-likelihood ratio over
+   the reference's token count, which shrinks an edit inside a long hunk; the total log-probability
+   (`--metric logprob`) is reported beside it as a sensitivity, deciding nothing.
+2. **Check 5 on likelihood.** The planted-at-0.5 runs pass when the registered gate, read on
+   `logprob_per_token`, gives `pass` (both halves' binding intervals above zero), on every run as
+   for exact match, with check 6 still read on exact match (the adapters must generate).
+3. **The SESOI, by anchor.** No published threshold exists for a likelihood gain, so the SESOI keeps
+   its cost-benefit meaning, one more exact refinement per hundred review comments (0.01 in exact
+   match, 2026-09-30 entry), carried into likelihood units by the exchange rate between the two
+   scores on the positive control: SESOI_lik = 0.01 * (adapter minus base, logprob_per_token) /
+   (adapter minus base, exact match), each the mean over every adapter arm on its own half in the
+   46 unplanted development runs of both organizations. The positive control is not H1's contrast,
+   so this rate is fixed without reading own minus sibling. It sets K through xi as the
+   exact-match SESOI did.
+4. **No H1 likelihood verdict, margin or K is reported** until the SESOI above is computed and
+   committed; `partition_pilot.py` reports them as unregistered on any metric `metric_sesoi`
+   gives no SESOI for until then.
+
+### H1 on likelihood: check 5 passes at half and a quarter, and OpenStack carries a contrast (2026-10-09)
+
+`# research(2026-10)`. Read under the rules fixed in "Planned before any likelihood result is read" above,
+committed (ea562bf) before the 76 likelihood jobs were pulled. `likelihood-partition-*-rp1.0.json`,
+`likelihood-sesoi.json` (74e8195, computed by rule 3 as fixed in ea562bf, which leaves no free
+parameter; the job logs committed with it print each run's arm means),
+`partition-pilot-<org>-likelihood.json` and `-likelihood-total.json`.
+
+**The SESOI** carried from exact match by the positive control: adapters raise the per-token
+log-probability of their own half's references over the base model by
+0.4372 nats and exact match by 0.2384, over 92 arms in 46 runs, so
+SESOI = 0.01 * 0.4372 / 0.2384 = 0.0183 nats per token.
+
+**Check 5 on likelihood passes.** Planted in half of each half's refinements: OpenStack 10 of 10,
+Wikimedia 10 of 10 (greedy exact match: 0 of 10 and 2 of 10). Planted in a quarter, below what
+check 5 requires: OpenStack 10 of 10. The measure sees a convention learned at a minority rate.
+
+**Greedy exact match planted at 0.75** (`rq1-partition-*-plant0.75.json`, `partition_run.sbatch PLANT=0.75`, 20 runs, the measurement the
+check-5 entry queued for option 1): every run's own verdict is `pass` (own minus sibling near +0.2),
+and every run fails check 5 on test 6, because a sibling adapter that writes its own marker on
+nearly every output never matches the other half's references exactly, so its exact match is 0,
+which test 6 reads as degenerate. Greedy exact match therefore detects a convention applied in
+three refinements of four and not one applied in half; likelihood, scored at half and a quarter,
+detects both.
+
+**H1 on the development window, likelihood** (22 runs an organization, own minus sibling in nats per
+token, the registered Holm levels; total log-probability, the registered sensitivity, and greedy
+exact match, the registered secondary, beside it at 97.5%):
+
+| organization | 97.5% | 95% | inside the SESOI band | total log-probability, 97.5% | exact match, 97.5% |
+|---|---|---|---|---|---|
+| OpenStack | +0.0231 [+0.0081, +0.0402], supported | +0.0231 [+0.0097, +0.0376], supported | no | +0.740 [+0.243, +1.351] | +0.002 [-0.012, +0.016] |
+| Wikimedia | +0.0058 [-0.0004, +0.0125], inconclusive | +0.0058 [+0.0003, +0.0117], supported | yes | +0.161 [+0.033, +0.293] | +0.006 [-0.005, +0.018] |
+
+OpenStack's adapters assign their own half's references more probability than the sibling half's
+adapters do, at both levels; the estimate is above the SESOI and the lower bounds are below it. Wikimedia's
+contrast is positive at 95% and sits inside the SESOI band at both levels. Total log-probability
+agrees in direction on both. Exact match reads both as inconclusive, as before. K, sized on the
+likelihood pilot's run spread at the SESOI, falls to the floor of 10 on both. This is the
+development pilot, not a confirmatory read; the confirmatory cells read the sealed test window.
+
+**Still to do before Stage 1:** the H1 sensitivity simulation on likelihood (`partition_sensitivity.py`
+simulates exact match from the placebo run; it needs the metric), and the manuscript's H1 measure,
+SESOI, K and check 5 rewritten from these readings.

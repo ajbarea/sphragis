@@ -1,0 +1,135 @@
+{
+  "run_files": [
+    "datasets/results/likelihood-partition-openstack-p2-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p3-s2-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p4-s3-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p5-s4-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p7-s5-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p8-s6-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p9-s7-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p10-s8-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p11-s9-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p12-s10-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p14-s11-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p15-s12-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p17-s13-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p18-s14-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p19-s15-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p21-s16-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p22-s17-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p23-s18-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p24-s19-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p25-s20-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p26-s21-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p27-s22-n1850-rp1.0.json"
+  ],
+  "metric": "logprob_per_token",
+  "sesoi": 0.018336619495924602,
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-openstack.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "org": "openstack",
+  "bootstrap_seed": 7,
+  "estimate": 0.02305021727715797,
+  "per_run": [
+    0.021287692368406774,
+    0.023152444817303053,
+    0.019810909088764622,
+    0.012879065717721572,
+    0.026302103666658416,
+    0.024388884206621053,
+    0.02216267401007757,
+    0.03221840191713382,
+    0.027803234931164517,
+    0.028689252813599714,
+    0.02983773701681003,
+    0.01921882206448347,
+    0.0203508697204714,
+    0.0250189103861764,
+    0.01607347849262422,
+    0.02859752732497506,
+    0.020403337069994892,
+    0.02271734590717961,
+    0.03287941471508554,
+    0.01925129349195767,
+    0.01754557476031615,
+    0.016515805609949752
+  ],
+  "runs": 22,
+  "changes": 206,
+  "reproducibility": {
+    "runs": 22,
+    "variance_of_mean": 1.3229081064079845e-06,
+    "critical_value": 4.3763532323583204e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": 0.008145324293454754,
+      "high": 0.04024369981785635
+    },
+    "0.95": {
+      "low": 0.009727626826597259,
+      "high": 0.03756305001796003
+    }
+  },
+  "verdicts": {
+    "0.975": "supported",
+    "0.95": "supported"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.0,
+  "bootstrap_se": 0.007138325073461599,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 501,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.005394810315569553,
+    "sd_upper": 0.006794358019861835,
+    "confidence": 0.9,
+    "formula": 1.0548348922279396,
+    "runs": 10,
+    "clamped": "min"
+  },
+  "without": {},
+  "provenance": {
+    "generated_at": "2026-10-09T15:33:29.674923+00:00",
+    "git": {
+      "commit": "74e8195e6ce02d7c66d879a18bc48391dba5354c",
+      "branch": "measure/likelihood"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

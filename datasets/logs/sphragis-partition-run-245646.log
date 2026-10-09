@@ -1,0 +1,1 @@
+wikimedia: corpus not current under the build and label rules (1: ['wikimedia: no built months and no derived record']); rebuild or refine it (`python -m sphragis.corpus`)
