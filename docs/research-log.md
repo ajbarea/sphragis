@@ -8628,3 +8628,37 @@ invisible to H1, whatever the adapter learned. Three ways forward, none chosen y
 **Next, a measurement for option 1:** the first ten admissible partitions of each organization
 planted at 0.75 and read at 1.0 (`partition_run.sbatch PLANT=0.75`). Whether greedy detects a 75%
 convention bounds what option 1 can claim. The choice among the three is AJ's.
+
+### Planned before any likelihood result is read: H1 on the reference's log-probability (2026-10-09)
+
+`# research(2026-10)`. Decided with AJ after the check-5 failure above: H1's primary per-example score
+becomes the mean log-probability per token of the held-out reference under each arm
+(`likelihood_score.py`, `logprob_per_token`), with greedy exact match kept as a registered
+secondary. Held-out log-likelihood is the log score, a strictly proper scoring rule (Gneiting and
+Raftery, JASA 2007), and comparing per-author language models by the perplexity they assign a text
+is the established attribution method (Huang, Chen and Grieve, PLOS ONE 2025, authorial language
+models). It needs no decoder, so it cannot drop a convention learned at a minority rate the way
+greedy decoding does. Sampling-based exact match was rejected: greedy beats the average sample on
+most benchmarks and sampling adds variance that can reorder models (Song et al., NAACL 2025), and
+temperature 0 was best for code refinement in a 2024 replication (arXiv:2412.02789).
+
+Fixed now, before the 76 likelihood jobs (`likelihood-partition-*-rp1.0.json`) are read:
+
+1. **Per-example score.** Mean log-probability per token, so each example weighs equally as in exact
+   match. Within an example the own-minus-sibling difference is the total log-likelihood ratio over
+   the reference's token count, which shrinks an edit inside a long hunk; the total log-probability
+   (`--metric logprob`) is reported beside it as a sensitivity, deciding nothing.
+2. **Check 5 on likelihood.** The planted-at-0.5 runs pass when the registered gate, read on
+   `logprob_per_token`, gives `pass` (both halves' binding intervals above zero), on every run as
+   for exact match, with check 6 still read on exact match (the adapters must generate).
+3. **The SESOI, by anchor.** No published threshold exists for a likelihood gain, so the SESOI keeps
+   its cost-benefit meaning, one more exact refinement per hundred review comments (0.01 in exact
+   match, 2026-09-30 entry), carried into likelihood units by the exchange rate between the two
+   scores on the positive control: SESOI_lik = 0.01 * (adapter minus base, logprob_per_token) /
+   (adapter minus base, exact match), each the mean over every adapter arm on its own half in the
+   46 unplanted development runs of both organizations. The positive control is not H1's contrast,
+   so this rate is fixed without reading own minus sibling. It sets K through xi as the
+   exact-match SESOI did.
+4. **No H1 likelihood verdict, margin or K is reported** until the SESOI above is computed and
+   committed; `partition_pilot.py` reports them as unregistered on any metric outside
+   `REGISTERED_SESOI` until then.
