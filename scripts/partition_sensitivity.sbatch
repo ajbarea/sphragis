@@ -27,6 +27,15 @@ source sphragis/experiment/cluster-env.sh
 ORG="${ORG:-openstack}"
 # PILOT: the pilot artifact K and the run spread come from, the organization's own by default;
 # a rerun under another decoder names its pilot and takes a RUN_TAG for its result.
+# METRIC: exact_match, or logprob_per_token with a likelihood pilot; the result is named for it.
+METRIC="${METRIC:-exact_match}"
+[ "$METRIC" = exact_match ] || RESULT_SUFFIX="$RESULT_SUFFIX-$METRIC"
+# SMOKE=1: a few trials end to end before the full run, under a result name of its own.
+case "${SMOKE:-0}" in
+  1) SMOKE_ARGS=(--trials 20 --null-trials 40 --calibration-trials 4 --steps 3); RESULT_SUFFIX="$RESULT_SUFFIX-smoke" ;;
+  0) SMOKE_ARGS=() ;;
+  *) echo "SMOKE must be 0 or 1, not $SMOKE" >&2; exit 1 ;;
+esac
 claim_result OUT "$SPHRAGIS_RESULTS/partition-sensitivity-$ORG$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/partition_sensitivity.py \
   --placebo "${PLACEBO:?set PLACEBO to a single-seed placebo run}" \
@@ -34,5 +43,6 @@ uv run --no-sync python scripts/partition_sensitivity.py \
   --pilot "${PILOT:-datasets/results/partition-pilot-$ORG.json}" \
   --projection "datasets/results/project-windows-$ORG-v3.json" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
+  --metric "$METRIC" ${SMOKE_ARGS[@]+"${SMOKE_ARGS[@]}"} \
   --workers "$(nproc)" \
   --out "$OUT"
