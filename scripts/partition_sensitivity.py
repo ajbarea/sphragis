@@ -48,8 +48,15 @@ from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves
-from sphragis.experiment.partitions import K_MAX, K_MIN, XI, pilot_sizing, spread_targets
-from sphragis.experiment.power import _null, _shift, realised_difference, seed_runs
+from sphragis.experiment.partitions import K_MAX, K_MIN, pilot_sizing, spread_targets
+from sphragis.experiment.power import (
+    _null,
+    _shift,
+    continuous_runs,
+    realised_difference,
+    seed_runs,
+    shift_by,
+)
 from sphragis.experiment.runner import to_clusters
 from sphragis.experiment.runs import decoder
 from sphragis.measure.stats import (
@@ -106,12 +113,24 @@ parser.add_argument("--partitions", type=int, default=400, help="admissible part
 # As `admissible_partitions.py` bounds its search: an organization that rarely qualifies is
 # refused rather than searched until the allocation ends.
 parser.add_argument("--max-seed", type=int, default=2_000, help="stop searching past this seed")
+# The per-example score simulated: exact match, binary, or the reference's mean log-probability
+# per token, continuous (research log, 2026-10-09). The pilot and placebo must be scored on it.
+parser.add_argument("--metric", choices=("exact_match", "logprob_per_token"), default="exact_match")
 parser.add_argument("--out", type=Path, required=True)
 
 Pool = list[tuple[Cluster, str]]
 
+#: Each metric's SESOI, which the "absent" reading and the reproducibility margin compare against.
+LIKELIHOOD_SESOI = Path("datasets/results/likelihood-sesoi.json")
 
-def pilot_pool(placebo: Path, corpus: Path, org: str) -> Pool:
+
+def metric_sesoi(metric: str) -> float:
+    if metric == "exact_match":
+        return SESOI
+    return json.loads(LIKELIHOOD_SESOI.read_text())["sesoi"]
+
+
+def pilot_pool(placebo: Path, corpus: Path, org: str, metric: str = "exact_match") -> Pool:
     """The pilot's own-against-sibling clusters on both halves, each with its change's project."""
     results = json.loads(placebo.read_text())["results"]
     seed = json.loads(placebo.read_text())["seeds"][0]
@@ -123,7 +142,7 @@ def pilot_pool(placebo: Path, corpus: Path, org: str) -> Pool:
     for window, sibling in ((first, second), (second, first)):
         own = results[f"adapter:{window}|{window}|s{seed}"]
         other = results[f"adapter:{sibling}|{window}|s{seed}"]
-        for cluster in to_clusters(own, other):
+        for cluster in to_clusters(own, other, metric=metric):
             projects = project_of.get(cluster.change_id, set())
             if len(projects) != 1:
                 raise SystemExit(f"change {cluster.change_id} maps to projects {projects}")
@@ -159,7 +178,13 @@ def partition_pool(
 
 
 def pools(
-    placebo: Path, corpus: Path, org: str, admissible_path: Path, count: int, max_seed: int
+    placebo: Path,
+    corpus: Path,
+    org: str,
+    admissible_path: Path,
+    count: int,
+    max_seed: int,
+    metric: str = "exact_match",
 ) -> tuple[Pool, list[dict[str, int]], int]:
     """The pilot's clusters, the first `count` admissible partitions and the last seed tried.
 
@@ -167,7 +192,7 @@ def pools(
     they extend, and assign every project a pilot change comes from.
     """
     admissible = json.loads(admissible_path.read_text())
-    pool = pilot_pool(placebo, corpus, org)
+    pool = pilot_pool(placebo, corpus, org, metric)
     partitions, seeds = partition_pool(
         corpus, org, Path(admissible["reference"]), admissible["size_floor"], count, max_seed
     )
@@ -181,18 +206,25 @@ def pools(
 
 
 _PARTITIONS: list[dict[str, int]] = []
+# Set once per worker: whether the score is continuous, and the SESOI its readings compare to.
+_CONTINUOUS = False
+_SESOI = SESOI
 
 
-def _init(partitions: list[dict[str, int]]) -> None:
-    global _PARTITIONS
-    _PARTITIONS = partitions
+def _init(partitions: list[dict[str, int]], continuous: bool = False, sesoi: float = SESOI) -> None:
+    global _PARTITIONS, _CONTINUOUS, _SESOI
+    _PARTITIONS, _CONTINUOUS, _SESOI = partitions, continuous, sesoi
 
 
 def _run(
     truth: Pool, side_of: dict[str, int], *, sigma_run: float, redraw: float, rng: random.Random
 ) -> list[list]:
     """One run: an admissible partition of the projects, scored once with its own shift."""
-    (scored,) = seed_runs([c for c, _ in truth], seeds=1, sigma_b=sigma_run, redraw=redraw, rng=rng)
+    clusters = [c for c, _ in truth]
+    if _CONTINUOUS:
+        (scored,) = continuous_runs(clusters, seeds=1, sigma_b=sigma_run, rng=rng)
+    else:
+        (scored,) = seed_runs(clusters, seeds=1, sigma_b=sigma_run, redraw=redraw, rng=rng)
     run: list[list] = [[], []]
     for cluster, (_, project) in zip(scored, truth, strict=True):
         run[side_of[project]].append(cluster)
@@ -226,7 +258,8 @@ def trial(job: tuple) -> dict:
     for _ in range(size):
         cluster, project = pool[rng.randrange(len(pool))]
         # Positional ids: a change drawn twice is two clusters, as the bootstrap assumes.
-        drawn = _shift(_null(cluster, rng), lift, rng)
+        nulled = _null(cluster, rng)
+        drawn = shift_by(nulled, lift) if _CONTINUOUS else _shift(nulled, lift, rng)
         truth.append((Cluster(f"c{len(truth)}", drawn.treatment, drawn.control), project))
     # Two disjoint sequences of partitions: the second is the independent aggregation the
     # reproducibility check compares against.
@@ -243,13 +276,14 @@ def trial(job: tuple) -> dict:
         "estimate": estimate,
         "supported": {c: lo > 0.0 for c, (lo, _) in intervals.items()},
         "high": {c: hi for c, (_, hi) in intervals.items()},
-        "absent": {c: lo > -SESOI and hi < SESOI for c, (lo, hi) in intervals.items()},
+        "absent": {c: lo > -_SESOI and hi < _SESOI for c, (lo, hi) in intervals.items()},
     }
     if check:
         again = _sequence(
             truth, order[K_MAX:], k, sigma_run=sigma_run, redraw=redraw, stream=f"again-{seed}"
         )
-        out["disagree"] = abs(fmean(equal_halves(r) for r in again) - estimate) > XI
+        # XI is the SESOI (`partitions.XI`), in the metric's own units.
+        out["disagree"] = abs(fmean(equal_halves(r) for r in again) - estimate) > _SESOI
     return out
 
 
@@ -402,8 +436,22 @@ def main() -> None:
         raise SystemExit(f"the pilot's K {args.runs} lies outside [{K_MIN}, {K_MAX}]")
     # The per-run spread the simulation is calibrated to, each point named for what it is.
     targets = spread_targets(pilot)
+    continuous = args.metric != "exact_match"
+    if continuous and args.redraw:
+        raise SystemExit("--redraw is binary churn; a continuous metric takes --redraw 0")
+    sesoi = metric_sesoi(args.metric)
+    # The pilot and placebo must be read on the metric simulated.
+    for name, artifact in (("pilot", pilot), ("placebo", json.loads(args.placebo.read_text()))):
+        if artifact.get("metric", "exact_match") != args.metric:
+            raise SystemExit(f"the {name} is scored on {artifact.get('metric', 'exact_match')}")
     pool, partitions, tried = pools(
-        args.placebo, args.corpus, args.org, args.admissible, args.partitions, args.max_seed
+        args.placebo,
+        args.corpus,
+        args.org,
+        args.admissible,
+        args.partitions,
+        args.max_seed,
+        args.metric,
     )
     # The pilot's own levels (its Holm levels, or a replication member's fixed level), so the
     # simulation reads at the levels the reading does.
@@ -426,8 +474,9 @@ def main() -> None:
         "family_alpha": FAMILY_ALPHA,
         "hypothesis_power": args.hypothesis_power,
         "cell_power": cell_power,
-        "sesoi": SESOI,
-        "xi": XI,
+        "metric": args.metric,
+        "sesoi": sesoi,
+        "xi": sesoi,
         "runs": args.runs,
         "levels": levels,
         "trials": args.trials,
@@ -448,7 +497,9 @@ def main() -> None:
     # partition, which is the first admissible one.
     first = partitions[0]
     pilot_halves = [[c for c, p in pool if first[p] == side] for side in (0, 1)]
-    with ProcessPoolExecutor(args.workers, initializer=_init, initargs=(partitions,)) as executor:
+    with ProcessPoolExecutor(
+        args.workers, initializer=_init, initargs=(partitions, continuous, sesoi)
+    ) as executor:
         for label, target in targets.items():
             calibration = calibrate(executor, pool, args, target, pilot["changes"])
             sigma_run = calibration["sigma_run"]
@@ -485,9 +536,14 @@ def main() -> None:
                             low = mid
                     if high == LIFT_CEILING:
                         raise SystemExit(f"{label} at {level}: power {target_power} not reached")
-                    effect = fmean(
-                        realised_difference(h, lift=high, seed=args.seed, draws=EFFECT_DRAWS)
-                        for h in pilot_halves
+                    # A shift realises itself; a lift realises what the pilot's rates allow.
+                    effect = (
+                        high
+                        if continuous
+                        else fmean(
+                            realised_difference(h, lift=high, seed=args.seed, draws=EFFECT_DRAWS)
+                            for h in pilot_halves
+                        )
                     )
                     at = {
                         "cell_power": target_power,

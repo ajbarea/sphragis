@@ -236,3 +236,30 @@ def test_one_planned_size_per_half_is_required() -> None:
             confidences=[0.95],
             sesoi=0.01,
         )
+
+
+def test_a_location_shift_moves_only_the_treatment_arm_by_the_effect() -> None:
+    from sphragis.experiment.power import shift_by
+
+    cluster = Cluster("c", (-1.25, -0.5), (-1.0, -0.75))
+    moved = shift_by(cluster, 0.25)
+    assert moved.treatment == (-1.0, -0.25) and moved.control == cluster.control
+    assert paired_difference([moved]) == pytest.approx(paired_difference([cluster]) + 0.25)
+
+
+def test_continuous_runs_shift_each_run_whole_by_its_own_draw() -> None:
+    """A run's departure from the truth is one shift for every treatment outcome in it."""
+    from sphragis.experiment.power import continuous_runs
+
+    truth = [Cluster(f"c{i}", (-1.0 - i / 10,), (-1.2,)) for i in range(5)]
+    runs = continuous_runs(truth, seeds=400, sigma_b=0.05, rng=random.Random(3))
+    shifts = []
+    for run in runs:
+        moved = {c.treatment[0] - t.treatment[0] for c, t in zip(run, truth, strict=True)}
+        assert len({round(m, 12) for m in moved}) == 1
+        assert all(c.control == t.control for c, t in zip(run, truth, strict=True))
+        shifts.append(moved.pop())
+    mean = sum(shifts) / len(shifts)
+    sd = (sum((s - mean) ** 2 for s in shifts) / (len(shifts) - 1)) ** 0.5
+    assert abs(mean) < 0.01 and 0.04 < sd < 0.06
+    assert continuous_runs(truth, seeds=2, sigma_b=0.0, rng=random.Random(3)) == [truth, truth]

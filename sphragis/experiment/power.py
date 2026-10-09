@@ -56,6 +56,30 @@ def _shift(cluster: Cluster, lift: float, rng: random.Random) -> Cluster:
     return Cluster(cluster.change_id, lifted, cluster.control)
 
 
+def shift_by(cluster: Cluster, delta: float) -> Cluster:
+    """A continuous score's alternative: every treatment outcome moved by `delta`, a location shift.
+
+    A lift (`_shift`) moves a binary failure to a success; a per-token log-probability has no
+    failures to move, so the effect is added, and the realised difference is `delta` itself.
+    """
+    return Cluster(cluster.change_id, tuple(v + delta for v in cluster.treatment), cluster.control)
+
+
+def continuous_runs(
+    truth: Sequence[Cluster], *, seeds: int, sigma_b: float, rng: random.Random
+) -> list[list[Cluster]]:
+    """`seed_runs` for a continuous score: each run shifts its treatment arm by N(0, sigma_b).
+
+    Binary churn redraws outcomes around an arm's success rate, which a continuous score does not
+    have, so a run's whole departure from the truth is its shift, and `sigma_b` is calibrated to
+    the pilot's per-run spread with nothing else added.
+    """
+    return [
+        [shift_by(cluster, shift) for cluster in truth]
+        for shift in (rng.gauss(0.0, sigma_b) if sigma_b > 0 else 0.0 for _ in range(seeds))
+    ]
+
+
 def _resolve_size(clusters: Sequence[Cluster], n_changes: int | None) -> int:
     if not clusters:
         raise ValueError("power analysis needs at least one pilot cluster")
