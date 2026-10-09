@@ -420,10 +420,6 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 - [ ] **Optional: a written "not human subjects research" determination** from hsro@rit.edu, to
   cite in the ethics section. The study contacts no one and reads only publicly posted reviews,
   so it is not human-subjects research under 45 CFR 46.102(e) (research log, 2026-10-08).
-- [ ] **GitHub's written confirmation** that its Acceptable Use Policies permit research on public
-  pull-request review threads, which its Privacy Statement counts as personal data. AJ sends the
-  request. Collection continues; the GitHub organizations stay out of every published figure until
-  GitHub answers, and a refusal is met by deleting what was collected.
 - [ ] **Removal on request.** `docs/protocol.md` promises it, and GitHub's Acceptable Use Policies
   (section 8) require it: a script that looks up the account's numeric id, computes the pseudonyms
   the scrub writes for it (the salted id, and on GitHub the salted login its @-mentions carry), and
@@ -791,6 +787,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-09** — GitHub is not held back: no written confirmation is sought, and the GitHub organizations are published as the registered replication family, open access, with the 2026-10-08 handling unchanged (research log).
 - **2026-10-07** — The contamination battery read against blind baselines: a bag of words separates the pilot windows better than any membership score, so the battery's gap cannot be read as exposure; proposed for Stage 1 as the battery's reading rule (research log).
 - **2026-10-07** — The rules-file comparator read on the development window: 22 distillations (Qwen3.6-27B) and 22 `ARMS=rules` evaluations at 05465f1; distilled own minus sibling carries no contrast as large as the SESOI on either organization (research log).
 - **2026-10-07** — A skip fails the suite unless the GPU stack or a GPU is absent; numpy joins `dev`, so the five script-test modules that CI had been skipping run there.

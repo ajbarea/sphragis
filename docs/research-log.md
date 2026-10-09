@@ -8437,6 +8437,10 @@ nonetheless common practice. The study does not settle the question by its own r
 - Until GitHub answers, the GitHub organizations stay out of every published figure, as Qt and
   Chromium do until theirs.
 
+> **Superseded on 2026-10-09.** No confirmation is sought from GitHub and the GitHub organizations
+> are not held out of published figures; see "GitHub is not held back" (2026-10-09). The handling
+> below is unchanged.
+
 Whatever the answer, the handling is the same. Gold and Krinke (MSR 2020, read from the authors'
 copy; extended in EMSE 27, 2022) call anonymising repository data "almost impossible" but hold that
 "anonymisation and pseudonymisation should still be used to lower the risk", and recommend an ethics
@@ -8628,3 +8632,21 @@ invisible to H1, whatever the adapter learned. Three ways forward, none chosen y
 **Next, a measurement for option 1:** the first ten admissible partitions of each organization
 planted at 0.75 and read at 1.0 (`partition_run.sbatch PLANT=0.75`). Whether greedy detects a 75%
 convention bounds what option 1 can claim. The choice among the three is AJ's.
+
+### GitHub is not held back: no confirmation is sought (2026-10-09)
+
+Decided by AJ, superseding the GitHub part of the 2026-10-08 terms entry. That entry held the GitHub
+organizations out of every published figure until GitHub confirmed in writing that its Acceptable
+Use Policies cover research on review threads. No law, RIT policy or the MSR call requires such a
+confirmation; the hold was the study's own caution over how the terms read, and the same entry
+notes that, read literally, section 7 covers almost no GitHub research while mining GitHub review
+threads is common practice. The only permissions the study waits on are Qt's and Chromium's, whose
+review UIs refuse automated access.
+
+- No confirmation is requested. The GitHub organizations are read and published as the registered
+  replication family, like any admitted organization.
+- The terms' stated condition is met: every publication using GitHub data is open access (arXiv,
+  and EMSE's open-access option for Stage 2).
+- The 2026-10-08 handling stands: pseudonymisation at ingestion, no review text published, removal
+  on request, and an ethics section in every paper. A takedown or removal request is met by
+  deleting what it covers from the corpus and every later release.

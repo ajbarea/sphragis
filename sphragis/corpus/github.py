@@ -433,10 +433,9 @@ class GitHubOrg:
     monorepos: tuple[str, ...] = ()
 
 
-# Candidates sized on 2026-10-01 (research log, "The confirmation pass"). Review threads count as
-# personal data under GitHub's Privacy Statement, so whether its Acceptable Use Policies permit
-# research on them waits on GitHub's confirmation; until then these organizations stay out of every
-# published figure (research log, 2026-10-08). Every publication using them is open access.
+# Candidates sized on 2026-10-01 (research log, "The confirmation pass"). Every publication using
+# them is open access, the condition GitHub's Acceptable Use Policies set on research; no further
+# confirmation is sought (research log, 2026-10-09).
 GITHUB_ORGS = {
     "apache": GitHubOrg("apache"),
     "llvm": GitHubOrg("llvm", monorepos=("llvm/llvm-project",)),

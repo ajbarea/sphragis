@@ -64,8 +64,8 @@ NoteDb route's `embedded_fetchers` already does.
 9. **Terms.** GitHub's Acceptable Use Policies allow research use of "public, non-personal
    information" when the publications are open access: every paper using this data is posted to
    arXiv and takes the publisher's open-access option (EMSE for the registered report's Stage 2).
-   Review threads count as personal data, so the organizations wait on GitHub's confirmation
-   before any published figure (corrected 2026-10-08, research log).
+   Review threads count as personal data, so they are pseudonymised at ingestion and no review
+   text is published; no confirmation from GitHub is sought (decided 2026-10-09, research log).
 
 ## Testing
 
