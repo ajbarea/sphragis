@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 593 artifacts under
+repository. This page is generated from those scripts: 617 artifacts under
 61 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -391,10 +391,12 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | artifact | |
 |---|---|
 | `partition-pilot-openstack-k-rp1.0.json` | `partition-pilot-openstack-k24.json` |
+| `partition-pilot-openstack-likelihood-total.json` | `partition-pilot-openstack-likelihood.json` |
 | `partition-pilot-openstack-rp1.0.json` | `partition-pilot-openstack-sensitivities-rp1.0.json` |
 | `partition-pilot-openstack-sensitivities.json` | `partition-pilot-openstack-stopping.json` |
 | `partition-pilot-openstack.json` | `partition-pilot-wikimedia-k-rp1.0.json` |
-| `partition-pilot-wikimedia-k16.json` | `partition-pilot-wikimedia-rp1.0.json` |
+| `partition-pilot-wikimedia-k16.json` | `partition-pilot-wikimedia-likelihood-total.json` |
+| `partition-pilot-wikimedia-likelihood.json` | `partition-pilot-wikimedia-rp1.0.json` |
 | `partition-pilot-wikimedia-sensitivities-rp1.0.json` | `partition-pilot-wikimedia-sensitivities.json` |
 | `partition-pilot-wikimedia.json` |  |
 
@@ -431,20 +433,22 @@ Two pseudo-organizations built from one organization's own projects.
 |---|---|
 | `rq1-partition-openstack-p10-s8-n1850-plant0.25-rp1.0.json` | `rq1-partition-openstack-p10-s8-n1850-plant0.25.json` |
 | `rq1-partition-openstack-p10-s8-n1850-plant0.5-rp1.0.json` | `rq1-partition-openstack-p10-s8-n1850-plant0.5.json` |
-| `rq1-partition-openstack-p10-s8-n1850-rp1.0.json` | `rq1-partition-openstack-p10-s8-n1850.json` |
-| `rq1-partition-openstack-p11-s9-n1850-plant0.25-rp1.0.json` | `rq1-partition-openstack-p11-s9-n1850-plant0.25.json` |
-| `rq1-partition-openstack-p11-s9-n1850-plant0.5-rp1.0.json` | `rq1-partition-openstack-p11-s9-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p10-s8-n1850-plant0.75.json` | `rq1-partition-openstack-p10-s8-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p10-s8-n1850.json` | `rq1-partition-openstack-p11-s9-n1850-plant0.25-rp1.0.json` |
+| `rq1-partition-openstack-p11-s9-n1850-plant0.25.json` | `rq1-partition-openstack-p11-s9-n1850-plant0.5-rp1.0.json` |
+| `rq1-partition-openstack-p11-s9-n1850-plant0.5.json` | `rq1-partition-openstack-p11-s9-n1850-plant0.75.json` |
 | `rq1-partition-openstack-p11-s9-n1850-rp1.0.json` | `rq1-partition-openstack-p11-s9-n1850.json` |
 | `rq1-partition-openstack-p12-s10-n1850-plant0.25-rp1.0.json` | `rq1-partition-openstack-p12-s10-n1850-plant0.25.json` |
 | `rq1-partition-openstack-p12-s10-n1850-plant0.5-rp1.0.json` | `rq1-partition-openstack-p12-s10-n1850-plant0.5.json` |
-| `rq1-partition-openstack-p12-s10-n1850-rp1.0.json` | `rq1-partition-openstack-p12-s10-n1850.json` |
-| `rq1-partition-openstack-p14-s11-n1850-rp1.0.json` | `rq1-partition-openstack-p14-s11-n1850.json` |
-| `rq1-partition-openstack-p15-s12-n1850-rp1.0.json` | `rq1-partition-openstack-p15-s12-n1850.json` |
-| `rq1-partition-openstack-p17-s13-n1850-rp1.0.json` | `rq1-partition-openstack-p17-s13-n1850.json` |
-| `rq1-partition-openstack-p18-s14-n1850-rp1.0.json` | `rq1-partition-openstack-p18-s14-n1850.json` |
-| `rq1-partition-openstack-p19-s15-n1850-rp1.0.json` | `rq1-partition-openstack-p19-s15-n1850.json` |
-| `rq1-partition-openstack-p2-n1850-plant0.25-rp1.0.json` | `rq1-partition-openstack-p2-n1850-plant0.25.json` |
-| `rq1-partition-openstack-p2-n1850-plant0.5-rp1.0.json` | `rq1-partition-openstack-p2-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p12-s10-n1850-plant0.75.json` | `rq1-partition-openstack-p12-s10-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p12-s10-n1850.json` | `rq1-partition-openstack-p14-s11-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p14-s11-n1850.json` | `rq1-partition-openstack-p15-s12-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p15-s12-n1850.json` | `rq1-partition-openstack-p17-s13-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p17-s13-n1850.json` | `rq1-partition-openstack-p18-s14-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p18-s14-n1850.json` | `rq1-partition-openstack-p19-s15-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p19-s15-n1850.json` | `rq1-partition-openstack-p2-n1850-plant0.25-rp1.0.json` |
+| `rq1-partition-openstack-p2-n1850-plant0.25.json` | `rq1-partition-openstack-p2-n1850-plant0.5-rp1.0.json` |
+| `rq1-partition-openstack-p2-n1850-plant0.5.json` | `rq1-partition-openstack-p2-n1850-plant0.75.json` |
 | `rq1-partition-openstack-p2-n1850-rp1.0.json` | `rq1-partition-openstack-p2-n1850-rp1.1.json` |
 | `rq1-partition-openstack-p2-n1850.json` | `rq1-partition-openstack-p21-s16-n1850-rp1.0.json` |
 | `rq1-partition-openstack-p21-s16-n1850.json` | `rq1-partition-openstack-p22-s17-n1850-rp1.0.json` |
@@ -456,37 +460,42 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-partition-openstack-p27-s22-n1850.json` | `rq1-partition-openstack-p28-s23-n1850-rp1.0.json` |
 | `rq1-partition-openstack-p28-s23-n1850.json` | `rq1-partition-openstack-p3-s2-n1850-plant0.25-rp1.0.json` |
 | `rq1-partition-openstack-p3-s2-n1850-plant0.25.json` | `rq1-partition-openstack-p3-s2-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-openstack-p3-s2-n1850-plant0.5.json` | `rq1-partition-openstack-p3-s2-n1850-rp1.0.json` |
-| `rq1-partition-openstack-p3-s2-n1850.json` | `rq1-partition-openstack-p30-s24-n1850-rp1.0.json` |
-| `rq1-partition-openstack-p30-s24-n1850.json` | `rq1-partition-openstack-p4-s3-n1850-plant0.25-rp1.0.json` |
-| `rq1-partition-openstack-p4-s3-n1850-plant0.25.json` | `rq1-partition-openstack-p4-s3-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-openstack-p4-s3-n1850-plant0.5.json` | `rq1-partition-openstack-p4-s3-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p3-s2-n1850-plant0.5.json` | `rq1-partition-openstack-p3-s2-n1850-plant0.75.json` |
+| `rq1-partition-openstack-p3-s2-n1850-rp1.0.json` | `rq1-partition-openstack-p3-s2-n1850.json` |
+| `rq1-partition-openstack-p30-s24-n1850-rp1.0.json` | `rq1-partition-openstack-p30-s24-n1850.json` |
+| `rq1-partition-openstack-p4-s3-n1850-plant0.25-rp1.0.json` | `rq1-partition-openstack-p4-s3-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p4-s3-n1850-plant0.5-rp1.0.json` | `rq1-partition-openstack-p4-s3-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p4-s3-n1850-plant0.75.json` | `rq1-partition-openstack-p4-s3-n1850-rp1.0.json` |
 | `rq1-partition-openstack-p4-s3-n1850.json` | `rq1-partition-openstack-p5-s4-n1850-plant0.25-rp1.0.json` |
 | `rq1-partition-openstack-p5-s4-n1850-plant0.25.json` | `rq1-partition-openstack-p5-s4-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-openstack-p5-s4-n1850-plant0.5.json` | `rq1-partition-openstack-p5-s4-n1850-rp1.0.json` |
-| `rq1-partition-openstack-p5-s4-n1850.json` | `rq1-partition-openstack-p7-s5-n1850-plant0.25-rp1.0.json` |
-| `rq1-partition-openstack-p7-s5-n1850-plant0.25.json` | `rq1-partition-openstack-p7-s5-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-openstack-p7-s5-n1850-plant0.5.json` | `rq1-partition-openstack-p7-s5-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p5-s4-n1850-plant0.5.json` | `rq1-partition-openstack-p5-s4-n1850-plant0.75.json` |
+| `rq1-partition-openstack-p5-s4-n1850-rp1.0.json` | `rq1-partition-openstack-p5-s4-n1850.json` |
+| `rq1-partition-openstack-p7-s5-n1850-plant0.25-rp1.0.json` | `rq1-partition-openstack-p7-s5-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p7-s5-n1850-plant0.5-rp1.0.json` | `rq1-partition-openstack-p7-s5-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p7-s5-n1850-plant0.75.json` | `rq1-partition-openstack-p7-s5-n1850-rp1.0.json` |
 | `rq1-partition-openstack-p7-s5-n1850.json` | `rq1-partition-openstack-p8-s6-n1850-plant0.25-rp1.0.json` |
 | `rq1-partition-openstack-p8-s6-n1850-plant0.25.json` | `rq1-partition-openstack-p8-s6-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-openstack-p8-s6-n1850-plant0.5.json` | `rq1-partition-openstack-p8-s6-n1850-rp1.0.json` |
-| `rq1-partition-openstack-p8-s6-n1850.json` | `rq1-partition-openstack-p9-s7-n1850-plant0.25-rp1.0.json` |
-| `rq1-partition-openstack-p9-s7-n1850-plant0.25.json` | `rq1-partition-openstack-p9-s7-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-openstack-p9-s7-n1850-plant0.5.json` | `rq1-partition-openstack-p9-s7-n1850-rp1.0.json` |
+| `rq1-partition-openstack-p8-s6-n1850-plant0.5.json` | `rq1-partition-openstack-p8-s6-n1850-plant0.75.json` |
+| `rq1-partition-openstack-p8-s6-n1850-rp1.0.json` | `rq1-partition-openstack-p8-s6-n1850.json` |
+| `rq1-partition-openstack-p9-s7-n1850-plant0.25-rp1.0.json` | `rq1-partition-openstack-p9-s7-n1850-plant0.25.json` |
+| `rq1-partition-openstack-p9-s7-n1850-plant0.5-rp1.0.json` | `rq1-partition-openstack-p9-s7-n1850-plant0.5.json` |
+| `rq1-partition-openstack-p9-s7-n1850-plant0.75.json` | `rq1-partition-openstack-p9-s7-n1850-rp1.0.json` |
 | `rq1-partition-openstack-p9-s7-n1850.json` | `rq1-partition-wikimedia-p1-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p1-n1850-plant0.5.json` | `rq1-partition-wikimedia-p1-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p1-n1850.json` | `rq1-partition-wikimedia-p10-s9-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p10-s9-n1850-plant0.5.json` | `rq1-partition-wikimedia-p10-s9-n1850-rp1.0.json` |
+| `rq1-partition-wikimedia-p1-n1850-plant0.5.json` | `rq1-partition-wikimedia-p1-n1850-plant0.75.json` |
+| `rq1-partition-wikimedia-p1-n1850-rp1.0.json` | `rq1-partition-wikimedia-p1-n1850.json` |
+| `rq1-partition-wikimedia-p10-s9-n1850-plant0.5-rp1.0.json` | `rq1-partition-wikimedia-p10-s9-n1850-plant0.5.json` |
+| `rq1-partition-wikimedia-p10-s9-n1850-plant0.75.json` | `rq1-partition-wikimedia-p10-s9-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p10-s9-n1850.json` | `rq1-partition-wikimedia-p11-s10-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p11-s10-n1850-plant0.5.json` | `rq1-partition-wikimedia-p11-s10-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p11-s10-n1850.json` | `rq1-partition-wikimedia-p12-s11-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p12-s11-n1850.json` | `rq1-partition-wikimedia-p13-s12-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p13-s12-n1850.json` | `rq1-partition-wikimedia-p16-s13-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p16-s13-n1850.json` | `rq1-partition-wikimedia-p17-s14-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p17-s14-n1850.json` | `rq1-partition-wikimedia-p18-s15-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p18-s15-n1850.json` | `rq1-partition-wikimedia-p19-s16-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p19-s16-n1850.json` | `rq1-partition-wikimedia-p2-s2-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p2-s2-n1850-plant0.5.json` | `rq1-partition-wikimedia-p2-s2-n1850-rp1.0.json` |
+| `rq1-partition-wikimedia-p11-s10-n1850-plant0.5.json` | `rq1-partition-wikimedia-p11-s10-n1850-plant0.75.json` |
+| `rq1-partition-wikimedia-p11-s10-n1850-rp1.0.json` | `rq1-partition-wikimedia-p11-s10-n1850.json` |
+| `rq1-partition-wikimedia-p12-s11-n1850-rp1.0.json` | `rq1-partition-wikimedia-p12-s11-n1850.json` |
+| `rq1-partition-wikimedia-p13-s12-n1850-rp1.0.json` | `rq1-partition-wikimedia-p13-s12-n1850.json` |
+| `rq1-partition-wikimedia-p16-s13-n1850-rp1.0.json` | `rq1-partition-wikimedia-p16-s13-n1850.json` |
+| `rq1-partition-wikimedia-p17-s14-n1850-rp1.0.json` | `rq1-partition-wikimedia-p17-s14-n1850.json` |
+| `rq1-partition-wikimedia-p18-s15-n1850-rp1.0.json` | `rq1-partition-wikimedia-p18-s15-n1850.json` |
+| `rq1-partition-wikimedia-p19-s16-n1850-rp1.0.json` | `rq1-partition-wikimedia-p19-s16-n1850.json` |
+| `rq1-partition-wikimedia-p2-s2-n1850-plant0.5-rp1.0.json` | `rq1-partition-wikimedia-p2-s2-n1850-plant0.5.json` |
+| `rq1-partition-wikimedia-p2-s2-n1850-plant0.75.json` | `rq1-partition-wikimedia-p2-s2-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p2-s2-n1850.json` | `rq1-partition-wikimedia-p20-s17-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p20-s17-n1850.json` | `rq1-partition-wikimedia-p21-s18-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p21-s18-n1850.json` | `rq1-partition-wikimedia-p22-s19-n1850-rp1.0.json` |
@@ -494,17 +503,20 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-partition-wikimedia-p25-s20-n1850.json` | `rq1-partition-wikimedia-p27-s21-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p27-s21-n1850.json` | `rq1-partition-wikimedia-p29-s22-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p29-s22-n1850.json` | `rq1-partition-wikimedia-p3-s3-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p3-s3-n1850-plant0.5.json` | `rq1-partition-wikimedia-p3-s3-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p3-s3-n1850.json` | `rq1-partition-wikimedia-p5-s4-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p5-s4-n1850-plant0.5.json` | `rq1-partition-wikimedia-p5-s4-n1850-rp1.0.json` |
+| `rq1-partition-wikimedia-p3-s3-n1850-plant0.5.json` | `rq1-partition-wikimedia-p3-s3-n1850-plant0.75.json` |
+| `rq1-partition-wikimedia-p3-s3-n1850-rp1.0.json` | `rq1-partition-wikimedia-p3-s3-n1850.json` |
+| `rq1-partition-wikimedia-p5-s4-n1850-plant0.5-rp1.0.json` | `rq1-partition-wikimedia-p5-s4-n1850-plant0.5.json` |
+| `rq1-partition-wikimedia-p5-s4-n1850-plant0.75.json` | `rq1-partition-wikimedia-p5-s4-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p5-s4-n1850.json` | `rq1-partition-wikimedia-p6-s5-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p6-s5-n1850-plant0.5.json` | `rq1-partition-wikimedia-p6-s5-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p6-s5-n1850.json` | `rq1-partition-wikimedia-p7-s6-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p7-s6-n1850-plant0.5.json` | `rq1-partition-wikimedia-p7-s6-n1850-rp1.0.json` |
+| `rq1-partition-wikimedia-p6-s5-n1850-plant0.5.json` | `rq1-partition-wikimedia-p6-s5-n1850-plant0.75.json` |
+| `rq1-partition-wikimedia-p6-s5-n1850-rp1.0.json` | `rq1-partition-wikimedia-p6-s5-n1850.json` |
+| `rq1-partition-wikimedia-p7-s6-n1850-plant0.5-rp1.0.json` | `rq1-partition-wikimedia-p7-s6-n1850-plant0.5.json` |
+| `rq1-partition-wikimedia-p7-s6-n1850-plant0.75.json` | `rq1-partition-wikimedia-p7-s6-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p7-s6-n1850.json` | `rq1-partition-wikimedia-p8-s7-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p8-s7-n1850-plant0.5.json` | `rq1-partition-wikimedia-p8-s7-n1850-rp1.0.json` |
-| `rq1-partition-wikimedia-p8-s7-n1850.json` | `rq1-partition-wikimedia-p9-s8-n1850-plant0.5-rp1.0.json` |
-| `rq1-partition-wikimedia-p9-s8-n1850-plant0.5.json` | `rq1-partition-wikimedia-p9-s8-n1850-rp1.0.json` |
+| `rq1-partition-wikimedia-p8-s7-n1850-plant0.5.json` | `rq1-partition-wikimedia-p8-s7-n1850-plant0.75.json` |
+| `rq1-partition-wikimedia-p8-s7-n1850-rp1.0.json` | `rq1-partition-wikimedia-p8-s7-n1850.json` |
+| `rq1-partition-wikimedia-p9-s8-n1850-plant0.5-rp1.0.json` | `rq1-partition-wikimedia-p9-s8-n1850-plant0.5.json` |
+| `rq1-partition-wikimedia-p9-s8-n1850-plant0.75.json` | `rq1-partition-wikimedia-p9-s8-n1850-rp1.0.json` |
 | `rq1-partition-wikimedia-p9-s8-n1850.json` | `rq1-placebo-openstack-s2.json` |
 | `rq1-placebo-openstack-s3.json` | `rq1-placebo-openstack-seeds.json` |
 | `rq1-placebo-openstack-v2-s2.json` | `rq1-placebo-openstack-v2-s3.json` |

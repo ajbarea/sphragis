@@ -17,3 +17,6 @@ sizing_bound_90 (sigma_run 0.0115) at 0.975, 1 cell(s), power 0.9500: detects +0
 sizing_bound_90 (sigma_run 0.0115) at 0.975, 2 cell(s), power 0.9747: detects +0.0251; null FP 0.013, bounded 0.987; reproducibility failure 0.026
 sizing_bound_90 (sigma_run 0.0115) at 0.975, 3 cell(s), power 0.9830: detects +0.0266; null FP 0.013, bounded 0.994; reproducibility failure 0.026
 sizing_bound_90 (sigma_run 0.0115) at 0.95, 1 cell(s), power 0.9500: detects +0.0216; null FP 0.026, bounded 0.969; reproducibility failure 0.026
+sizing_bound_90 (sigma_run 0.0115) at 0.95, 2 cell(s), power 0.9747: detects +0.0236; null FP 0.026, bounded 0.987; reproducibility failure 0.026
+sizing_bound_90 (sigma_run 0.0115) at 0.95, 3 cell(s), power 0.9830: detects +0.0242; null FP 0.026, bounded 0.991; reproducibility failure 0.026
+pilot_upper_99: spread 0.0157 at 429 changes -> sigma_run 0.0146 (realised 0.0157)
