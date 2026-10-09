@@ -12,8 +12,9 @@ differ by more than XI.
 
 On a continuous score (`--metric logprob_per_token`, research log 2026-10-09) the pool is the
 pilot's own runs averaged per change, the effect is a location shift (`power.shift_by`) and is its
-own detectable effect, and each run adds change-by-run noise at the pilot's measured sd before its
-shift (`power.continuous_runs`), the continuous counterpart of churn; SESOI and XI are the
+own detectable effect, and each run adds change-by-run noise, per example and shared by a change,
+at the sds measured on the pilot, before its shift (`power.continuous_runs`), the continuous
+counterpart of churn; SESOI and XI are the
 metric's own (`likelihood.metric_sesoi`).
 
 Every input is read from the artifact that fixed it, never typed: K from the pilot's sizing, the
@@ -176,9 +177,11 @@ def partition_pool(
     return pool, seeds
 
 
-def averaged_pool(pilot: dict, corpus: Path, org: str, metric: str) -> tuple[Pool, float]:
+def averaged_pool(
+    pilot: dict, corpus: Path, org: str, metric: str
+) -> tuple[Pool, tuple[float, float]]:
     """A continuous score's pool: each change averaged over the pilot's runs, with its project,
-    and the change-by-run sd the simulated runs add back (`power.averaged_truth`)."""
+    and the change-by-run noise the simulated runs add back (`power.averaged_truth`)."""
     project_of: dict[str, set[str]] = defaultdict(set)
     for row in refined_examples(corpus, org):
         project_of[row["change_id"]].add(row["project"])
@@ -186,14 +189,14 @@ def averaged_pool(pilot: dict, corpus: Path, org: str, metric: str) -> tuple[Poo
     for path in pilot["run_files"]:
         run = json.loads(Path(path).read_text())
         runs.append((run["results"], run["seeds"][0]))
-    truth, sigma_e = averaged_truth(runs, halves=halves(org), metric=metric)
+    truth, noise = averaged_truth(runs, halves=halves(org), metric=metric)
     pool: Pool = []
     for cluster in truth:
         projects = project_of.get(cluster.change_id, set())
         if len(projects) != 1:
             raise SystemExit(f"change {cluster.change_id} maps to projects {projects}")
         pool.append((cluster, next(iter(projects))))
-    return pool, sigma_e
+    return pool, noise
 
 
 def pools(
@@ -205,7 +208,7 @@ def pools(
     max_seed: int,
     metric: str = "exact_match",
     pilot: dict | None = None,
-) -> tuple[Pool, list[dict[str, int]], int, float]:
+) -> tuple[Pool, list[dict[str, int]], int, tuple[float, float]]:
     """The pilot's clusters, the first `count` admissible partitions and the last seed tried.
 
     The partitions are rebuilt from `corpus`, so they must reproduce the committed admissible list
@@ -215,9 +218,9 @@ def pools(
     # A binary score resamples the placebo run, its churn calibrated apart (--redraw); a continuous
     # one resamples the pilot's runs averaged, with their change-by-run sd as its churn.
     if metric == "exact_match" or pilot is None:
-        pool, sigma_e = pilot_pool(placebo, corpus, org, metric), 0.0
+        pool, noise = pilot_pool(placebo, corpus, org, metric), (0.0, 0.0)
     else:
-        pool, sigma_e = averaged_pool(pilot, corpus, org, metric)
+        pool, noise = averaged_pool(pilot, corpus, org, metric)
     partitions, seeds = partition_pool(
         corpus, org, Path(admissible["reference"]), admissible["size_floor"], count, max_seed
     )
@@ -227,25 +230,25 @@ def pools(
     missing = {p for _, p in pool} - set(partitions[0])
     if missing:
         raise SystemExit(f"pilot changes from projects no partition assigns: {sorted(missing)}")
-    return pool, partitions, seeds[-1], sigma_e
+    return pool, partitions, seeds[-1], noise
 
 
 _PARTITIONS: list[dict[str, int]] = []
 # Set once per worker: whether the score is continuous, the SESOI its readings compare to, and a
-# continuous score's change-by-run sd.
+# continuous score's change-by-run noise (shared by a change, per example).
 _CONTINUOUS = False
 _SESOI = SESOI
-_SIGMA_E = 0.0
+_NOISE = (0.0, 0.0)
 
 
 def _init(
     partitions: list[dict[str, int]],
     continuous: bool = False,
     sesoi: float = SESOI,
-    sigma_e: float = 0.0,
+    noise: tuple[float, float] = (0.0, 0.0),
 ) -> None:
-    global _PARTITIONS, _CONTINUOUS, _SESOI, _SIGMA_E
-    _PARTITIONS, _CONTINUOUS, _SESOI, _SIGMA_E = partitions, continuous, sesoi, sigma_e
+    global _PARTITIONS, _CONTINUOUS, _SESOI, _NOISE
+    _PARTITIONS, _CONTINUOUS, _SESOI, _NOISE = partitions, continuous, sesoi, noise
 
 
 def _run(
@@ -254,7 +257,7 @@ def _run(
     """One run: an admissible partition of the projects, scored once with its own shift."""
     clusters = [c for c, _ in truth]
     if _CONTINUOUS:
-        (scored,) = continuous_runs(clusters, seeds=1, sigma_b=sigma_run, sigma_e=_SIGMA_E, rng=rng)
+        (scored,) = continuous_runs(clusters, seeds=1, sigma_b=sigma_run, noise=_NOISE, rng=rng)
     else:
         (scored,) = seed_runs(clusters, seeds=1, sigma_b=sigma_run, redraw=redraw, rng=rng)
     run: list[list] = [[], []]
@@ -494,7 +497,7 @@ def main() -> None:
     placebo = json.loads(args.placebo.read_text())
     if not continuous and placebo.get("metric", "exact_match") != args.metric:
         raise SystemExit(f"the placebo is scored on {placebo.get('metric', 'exact_match')}")
-    pool, partitions, tried, sigma_e = pools(
+    pool, partitions, tried, noise = pools(
         args.placebo,
         args.corpus,
         args.org,
@@ -527,7 +530,7 @@ def main() -> None:
         "cell_power": cell_power,
         "metric": args.metric,
         "pool": "the pilot's runs, averaged per change" if continuous else "the placebo run",
-        "sigma_change_by_run": sigma_e,
+        "change_by_run_noise": {"shared_by_change": noise[0], "per_example": noise[1]},
         "sesoi": sesoi,
         "xi": sesoi,
         "runs": args.runs,
@@ -551,7 +554,7 @@ def main() -> None:
     first = partitions[0]
     pilot_halves = [[c for c, p in pool if first[p] == side] for side in (0, 1)]
     with ProcessPoolExecutor(
-        args.workers, initializer=_init, initargs=(partitions, continuous, sesoi, sigma_e)
+        args.workers, initializer=_init, initargs=(partitions, continuous, sesoi, noise)
     ) as executor:
         for label, target in targets.items():
             calibration = calibrate(executor, pool, args, target, pilot["changes"])

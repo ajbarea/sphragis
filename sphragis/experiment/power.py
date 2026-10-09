@@ -72,26 +72,32 @@ def continuous_runs(
     *,
     seeds: int,
     sigma_b: float,
-    sigma_e: float,
+    noise: tuple[float, float],
     rng: random.Random,
 ) -> list[list[Cluster]]:
     """`seed_runs` for a continuous score: change-by-run noise, then a run shift.
 
-    Each run moves each change's treatment arm by its own N(0, sigma_e), the change-by-run term
-    (`averaged_truth` estimates it from a pilot), the continuous counterpart of binary churn; and
-    the whole arm by one N(0, sigma_b), the run's shift. On the likelihood pilots nearly all the
-    run-to-run spread is change-by-run (research log, 2026-10-09), which shrinks as changes are
-    added, so a run shift alone would overstate the planned study's noise.
+    Each run moves every treatment outcome by N(0, sigma_example) of its own and by an
+    N(0, sigma_change) its change's examples share, `noise` = (sigma_change, sigma_example) as
+    `averaged_truth` measures them on a pilot: the continuous counterpart of binary churn. Then
+    the whole arm moves by one N(0, sigma_b), the run's shift. On the likelihood pilots nearly all
+    the run-to-run spread is per example (research log, 2026-10-09), so it shrinks as the study
+    grows, which a run shift alone would not.
     """
+    sigma_change, sigma_example = noise
+
+    def draw(sd: float) -> float:
+        return rng.gauss(0.0, sd) if sd > 0 else 0.0
+
     runs = []
     for _ in range(seeds):
-        shift = rng.gauss(0.0, sigma_b) if sigma_b > 0 else 0.0
-        runs.append(
-            [
-                shift_by(cluster, shift + (rng.gauss(0.0, sigma_e) if sigma_e > 0 else 0.0))
-                for cluster in truth
-            ]
-        )
+        shift = draw(sigma_b)
+        run = []
+        for cluster in truth:
+            common = shift + draw(sigma_change)
+            moved = tuple(v + common + draw(sigma_example) for v in cluster.treatment)
+            run.append(Cluster(cluster.change_id, moved, cluster.control))
+        runs.append(run)
     return runs
 
 
@@ -100,53 +106,57 @@ def averaged_truth(
     *,
     halves: tuple[str, str],
     metric: str,
-) -> tuple[list[Cluster], float]:
-    """Each change's outcomes averaged over a pilot's runs, and the change-by-run sd.
+) -> tuple[list[Cluster], tuple[float, float]]:
+    """Each change's outcomes averaged over a pilot's runs, and the change-by-run noise.
 
-    Every run scores every change, in one half or the other, so a change's own-minus-sibling is
-    seen once a run. Averaging over runs keeps one run's noise out of the truth a simulation
-    resamples; the spread of each change's contrast around its own mean, pooled over changes,
-    is the change-by-run sd that `continuous_runs` adds back once a simulated run.
+    Every run scores every example, in one half or the other, so an example's own-minus-sibling
+    is seen once a run. Averaging over runs keeps one run's noise out of the truth a simulation
+    resamples. The noise is each example's deviation from its own mean contrast, split into the
+    part its change's examples share (their mean cross-product within a run) and the rest, both
+    corrected for centering on R runs; `continuous_runs` adds it back once a simulated run.
     """
     own: dict[str, list[float]] = defaultdict(list)
     other: dict[str, list[float]] = defaultdict(list)
+    contrast: dict[str, list[float]] = defaultdict(list)
     change_of: dict[str, str] = {}
-    by_run: dict[str, list[float]] = defaultdict(list)
     for results, seed in runs:
-        contrasts: dict[str, list[float]] = defaultdict(list)
         for window, sibling in (halves, halves[::-1]):
             mine = {r["id"]: r for r in results[f"adapter:{window}|{window}|s{seed}"]}
             theirs = {r["id"]: r for r in results[f"adapter:{sibling}|{window}|s{seed}"]}
             if set(mine) != set(theirs):
                 raise ValueError(f"run s{seed}: {window}'s arms score different examples")
             for example, row in mine.items():
-                own[example].append(float(row[metric]))
-                other[example].append(float(theirs[example][metric]))
+                a, b = float(row[metric]), float(theirs[example][metric])
+                own[example].append(a)
+                other[example].append(b)
+                contrast[example].append(a - b)
                 change_of[example] = row["change_id"]
-                contrasts[row["change_id"]].append(
-                    float(row[metric]) - float(theirs[example][metric])
-                )
-        for change, values in contrasts.items():
-            by_run[change].append(fmean(values))
     counts = {len(values) for values in own.values()}
     if counts != {len(runs)}:
         raise ValueError(
             f"examples are scored by {sorted(counts)} runs, not every one of {len(runs)}"
         )
+    n_runs = len(runs)
     examples: dict[str, list[str]] = defaultdict(list)
     for example in sorted(own):
         examples[change_of[example]].append(example)
     truth = [
-        Cluster(
-            change,
-            tuple(fmean(own[e]) for e in ids),
-            tuple(fmean(other[e]) for e in ids),
-        )
+        Cluster(change, tuple(fmean(own[e]) for e in ids), tuple(fmean(other[e]) for e in ids))
         for change, ids in sorted(examples.items())
     ]
-    squares = sum((d - fmean(ds)) ** 2 for ds in by_run.values() for d in ds)
-    freedom = sum(len(ds) - 1 for ds in by_run.values())
-    return truth, (squares / freedom) ** 0.5 if freedom else 0.0
+    if n_runs < 2:
+        return truth, (0.0, 0.0)
+    residual = {e: [d - fmean(ds) for d in ds] for e, ds in contrast.items()}
+    correction = n_runs / (n_runs - 1)
+    total = fmean(v * v for vs in residual.values() for v in vs) * correction
+    cross, pairs = 0.0, 0
+    for ids in examples.values():
+        for r in range(n_runs):
+            values = [residual[e][r] for e in ids]
+            cross += sum(values) ** 2 - sum(v * v for v in values)
+            pairs += len(values) * (len(values) - 1)
+    shared = max(cross / pairs * correction, 0.0) if pairs else 0.0
+    return truth, (shared**0.5, max(total - shared, 0.0) ** 0.5)
 
 
 def _resolve_size(clusters: Sequence[Cluster], n_changes: int | None) -> int:
