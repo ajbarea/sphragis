@@ -211,7 +211,7 @@ independently (Owen's pigeonhole bootstrap). On one partition at three seeds and
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
 the registered runs its one-sided false-positive rate at the stricter level is 0.011 to 0.0125
 for OpenStack and 0.014 to 0.016 for Wikimedia, against a nominal 0.0125; Wikimedia's sits above
-nominal at every point, by up to two Monte Carlo errors, so $H_1$'s size at that level may reach
+nominal at every point, by up to two Monte Carlo errors, so H1's size at that level may reach
 0.016.
 
 ### Number of runs: fixed from the pilot, K = 24 for OpenStack
@@ -226,7 +226,7 @@ they agree, was simulated first and rejected: it ran above nominal where it stop
 ### Stated power: sensitivity, not power at an observed effect
 
 With two cells each is sized at power 0.9747. At that power, its projected test size and K
-runs, OpenStack's $H_1$ cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
+runs, OpenStack's H1 cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
 points at the two Holm levels and Wikimedia's +0.0268 and +0.0246, at the per-run spread K was
 sized on; these are the bounds a bounded reading is judged against, the 97.5% one only when H2 is
 confirmatory (Pass rule). Wikimedia's test size is a
