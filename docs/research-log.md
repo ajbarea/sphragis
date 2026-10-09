@@ -8591,3 +8591,40 @@ it and loses to Wikimedia's guide on OpenStack code. These remain reported, expl
 the rule fixed before the run reads only distilled own minus sibling. That a written guide can carry
 an organization-level difference the distilled files do not is the question the comparator was
 added to ask, and on Wikimedia it now has a development-window answer to test.
+
+### Check 5 fails at the registered decoder: plain greedy drops a half-rate convention (2026-10-09)
+
+`# research(2026-10)`. The planted partition runs rescored at penalty 1.0 (`rq1-partition-*-plant*-rp1.0.json`),
+read by `neutral.planted_convention`, the registered outcome-neutral test 5, beside their 1.1 originals.
+Emission is how often an adapter writes its own half's marker on its own half's test window, averaged
+over the arms:
+
+| planted run | emission at 1.1 | emission at 1.0 | check 5 at 1.1 | check 5 at 1.0 |
+|---|---|---|---|---|
+| OpenStack, planted in 50% | 0.800 | 0.393 | 10 of 10 | 0 of 10 |
+| OpenStack, planted in 25% | 0.578 | 0.017 | not registered | not registered |
+| Wikimedia, planted in 50% | 0.818 | 0.244 | 10 of 10 | 2 of 10 |
+
+At 1.1 the adapters wrote the marker more often than it was planted, and check 5 passed every run.
+At 1.0 they write it less often than it was planted, and check 5 fails on 18 of 20 runs. The penalty
+amplified the convention, as the calibration entry found (0.628 against 0.243 sampled), and plain
+greedy decoding keeps only an adapter's most likely output, so a convention it learned at half the
+rate is not that output on most examples. The registered positive control fails at the registered
+decoder, so Stage 1 cannot go out with both as they stand.
+
+**What the instrument can see.** Greedy exact match credits a convention only where an adapter
+adopts it as its most likely output. A convention a team applies in half its refinements is then
+invisible to H1, whatever the adapter learned. Three ways forward, none chosen yet:
+
+1. Keep plain greedy and plant the control at a majority rate, stating that H1 tests conventions an
+   organization applies in most of its refinements. The fraction must come from a measurement made
+   before it is registered, and the change from 0.5 is disclosed as made after this pilot.
+2. Keep the plant at 0.5 and change the estimand to expected exact match under sampling at
+   temperature 1, which follows the learned rate (0.243 sampled against 0.251 planted, calibration
+   entry). A larger change: sampling variance, more generations per example, every reading redone.
+3. Return to the checkpoint's 1.1. It passes check 5 only by distorting what an adapter learned,
+   which is the reason it was dropped.
+
+**Next, a measurement for option 1:** the first ten admissible partitions of each organization
+planted at 0.75 and read at 1.0 (`partition_run.sbatch PLANT=0.75`). Whether greedy detects a 75%
+convention bounds what option 1 can claim. The choice among the three is AJ's.
