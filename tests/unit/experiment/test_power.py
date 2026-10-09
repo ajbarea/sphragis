@@ -252,7 +252,7 @@ def test_continuous_runs_shift_each_run_whole_by_its_own_draw() -> None:
     from sphragis.experiment.power import continuous_runs
 
     truth = [Cluster(f"c{i}", (-1.0 - i / 10,), (-1.2,)) for i in range(5)]
-    runs = continuous_runs(truth, seeds=400, sigma_b=0.05, rng=random.Random(3))
+    runs = continuous_runs(truth, seeds=400, sigma_b=0.05, sigma_e=0.0, rng=random.Random(3))
     shifts = []
     for run in runs:
         moved = {c.treatment[0] - t.treatment[0] for c, t in zip(run, truth, strict=True)}
@@ -262,4 +262,48 @@ def test_continuous_runs_shift_each_run_whole_by_its_own_draw() -> None:
     mean = sum(shifts) / len(shifts)
     sd = (sum((s - mean) ** 2 for s in shifts) / (len(shifts) - 1)) ** 0.5
     assert abs(mean) < 0.01 and 0.04 < sd < 0.06
-    assert continuous_runs(truth, seeds=2, sigma_b=0.0, rng=random.Random(3)) == [truth, truth]
+    assert continuous_runs(truth, seeds=2, sigma_b=0.0, sigma_e=0.0, rng=random.Random(3)) == [
+        truth,
+        truth,
+    ]
+
+
+def test_change_by_run_noise_moves_each_change_on_its_own() -> None:
+    from sphragis.experiment.power import continuous_runs
+
+    truth = [Cluster(f"c{i}", (-1.0, -1.0), (-1.2, -1.2)) for i in range(300)]
+    (run,) = continuous_runs(truth, seeds=1, sigma_b=0.0, sigma_e=0.1, rng=random.Random(5))
+    moved = [c.treatment[0] - t.treatment[0] for c, t in zip(run, truth, strict=True)]
+    # One draw a change, shared by its examples; changes drawn independently.
+    assert all(c.treatment[0] == c.treatment[1] for c in run)
+    mean = sum(moved) / len(moved)
+    sd = (sum((m - mean) ** 2 for m in moved) / (len(moved) - 1)) ** 0.5
+    assert abs(mean) < 0.02 and 0.085 < sd < 0.115
+
+
+def test_averaged_truth_takes_each_examples_mean_and_the_change_by_run_sd() -> None:
+    """Two runs, the change in opposite halves: outcomes average, the contrast's spread pools."""
+    from sphragis.experiment.power import averaged_truth
+
+    def row(i: str, change: str, value: float) -> dict:
+        return {"id": i, "change_id": change, "lp": value}
+
+    def run(seed: int, x_own: float, y_own: float) -> tuple[dict, int]:
+        a, b = "o-a", "o-b"
+        return (
+            {
+                f"adapter:{a}|{a}|s{seed}": [row("x", "cx", x_own)],
+                f"adapter:{b}|{a}|s{seed}": [row("x", "cx", -1.0)],
+                f"adapter:{b}|{b}|s{seed}": [row("y", "cy", y_own)],
+                f"adapter:{a}|{b}|s{seed}": [row("y", "cy", -1.0)],
+            },
+            seed,
+        )
+
+    truth, sigma_e = averaged_truth(
+        [run(1, -0.8, -0.9), run(2, -0.6, -0.9)], halves=("o-a", "o-b"), metric="lp"
+    )
+    assert [c.change_id for c in truth] == ["cx", "cy"]
+    assert truth[0].treatment == pytest.approx((-0.7,)) and truth[0].control == (-1.0,)
+    # cx's contrasts 0.2 and 0.4 around 0.3, cy's 0.1 twice: squares 0.02 over 2 degrees of freedom.
+    assert sigma_e == pytest.approx(0.1)
