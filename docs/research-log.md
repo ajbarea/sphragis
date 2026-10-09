@@ -8636,7 +8636,7 @@ becomes the mean log-probability per token of the held-out reference under each 
 (`likelihood_score.py`, `logprob_per_token`), with greedy exact match kept as a registered
 secondary. Held-out log-likelihood is the log score, a strictly proper scoring rule (Gneiting and
 Raftery, JASA 2007), and comparing per-author language models by the perplexity they assign a text
-is the established attribution method (Huang, Chen and Grieve, PLOS ONE 2025, authorial language
+is the established attribution method (Huang, Murakami and Grieve, PLOS ONE 2025, authorial language
 models). It needs no decoder, so it cannot drop a convention learned at a minority rate the way
 greedy decoding does. Sampling-based exact match was rejected: greedy beats the average sample on
 most benchmarks and sampling adds variance that can reorder models (Song et al., NAACL 2025), and
