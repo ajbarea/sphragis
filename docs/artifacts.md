@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 617 artifacts under
+repository. This page is generated from those scripts: 621 artifacts under
 61 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -343,6 +343,7 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-wikimedia-p7-s6-n1850-plant0.5-rp1.0.json` | `likelihood-partition-wikimedia-p7-s6-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p8-s7-n1850-plant0.5-rp1.0.json` | `likelihood-partition-wikimedia-p8-s7-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p9-s8-n1850-plant0.5-rp1.0.json` | `likelihood-partition-wikimedia-p9-s8-n1850-rp1.0.json` |
+| `likelihood-placebo-openstack-v3-rp1.0.json` | `likelihood-placebo-wikimedia-rp1.0.json` |
 
 ## `scripts/likelihood_sesoi.py`
 
@@ -406,7 +407,8 @@ Operating characteristics of H1 over repeated partitions at the registered K, by
 
 | artifact | |
 |---|---|
-| `partition-sensitivity-openstack-stopping.json` | `partition-sensitivity-openstack.json` |
+| `partition-sensitivity-openstack-rp1.0.json` | `partition-sensitivity-openstack-stopping.json` |
+| `partition-sensitivity-openstack.json` | `partition-sensitivity-wikimedia-rp1.0.json` |
 | `partition-sensitivity-wikimedia.json` |  |
 
 ## `scripts/partition_variance.py`

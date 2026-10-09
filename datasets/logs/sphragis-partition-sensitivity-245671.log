@@ -21,3 +21,9 @@ sizing_bound_90 (sigma_run 0.0134) at 0.95, 2 cell(s), power 0.9747: detects +0.
 sizing_bound_90 (sigma_run 0.0134) at 0.95, 3 cell(s), power 0.9830: detects +0.0246; null FP 0.029, bounded 0.994; reproducibility failure 0.022
 pilot_upper_99: spread 0.0191 at 206 changes -> sigma_run 0.0173 (realised 0.0191)
 pilot_upper_99 (sigma_run 0.0173) at 0.975, 1 cell(s), power 0.9500: detects +0.0246; null FP 0.015, bounded 0.968; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0173) at 0.975, 2 cell(s), power 0.9747: detects +0.0270; null FP 0.015, bounded 0.987; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0173) at 0.975, 3 cell(s), power 0.9830: detects +0.0288; null FP 0.015, bounded 0.994; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0173) at 0.95, 1 cell(s), power 0.9500: detects +0.0227; null FP 0.029, bounded 0.967; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0173) at 0.95, 2 cell(s), power 0.9747: detects +0.0255; null FP 0.029, bounded 0.988; reproducibility failure 0.077
+pilot_upper_99 (sigma_run 0.0173) at 0.95, 3 cell(s), power 0.9830: detects +0.0269; null FP 0.029, bounded 0.994; reproducibility failure 0.077
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-openstack-rp1.0.json
