@@ -15,7 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -30,8 +30,10 @@ from transformers import (
 )
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
+from sphragis.experiment.likelihood import SCORING_MAX_LENGTH, target_span
 from sphragis.experiment.training import (
     MAX_SEQ_LENGTH,
+    build_supervised,
     decoding_kwargs,
     lr_multiplier,
     render_chat,
@@ -612,3 +614,29 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def reference_logprob(
+    model: Any,
+    tokenizer: Any,
+    row: Mapping[str, Any],
+    *,
+    prompt_builder: Callable[[Mapping[str, Any]], str],
+    device: str,
+) -> tuple[float, int]:
+    """The summed natural-log probability of the row's reference, and its token count.
+
+    The logits at position t predict token t + 1, so the target's T tokens, starting at
+    `start`, are predicted from positions start - 1 to start + T - 2; only those are kept.
+    """
+    item = build_supervised(
+        tokenizer, row, prompt_builder=prompt_builder, max_length=SCORING_MAX_LENGTH
+    )
+    start, target = target_span(item["labels"])
+    ids = torch.tensor([item["input_ids"]], device=device)
+    with torch.inference_mode():
+        logits = model(input_ids=ids, logits_to_keep=len(target) + 1).logits[0, :-1]
+    logprobs = torch.log_softmax(logits.float(), dim=-1)
+    picked = logprobs.gather(1, torch.tensor(target, device=logits.device).unsqueeze(1))
+    assert ids.shape[1] - start == len(target)
+    return float(picked.sum()), len(target)

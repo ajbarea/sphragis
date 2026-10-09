@@ -90,6 +90,9 @@ parser.add_argument(
     metavar="NAME=FILE",
     help="a registered sensitivity: the cell again without sensitivity_ids.py's NAME ids",
 )
+# The per-example score H1 is read on: greedy exact match, or the reference's mean log-probability
+# per token from `likelihood_score.py` (research log, 2026-10-09).
+parser.add_argument("--metric", choices=("exact_match", "logprob_per_token"), default="exact_match")
 parser.add_argument("--bootstrap-seed", type=int, default=TEST_BOOTSTRAP_SEED)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
@@ -216,9 +219,13 @@ def main() -> None:
         raise SystemExit("a test-window read needs --sensitivity: its registered bounds")
     planted = None
     if args.planted:
-        check = planted_convention(
-            json.loads(args.planted.read_text()), org=args.org, train_size=train_size
-        )
+        planted_run = json.loads(args.planted.read_text())
+        # Check 5 reads the planted run's verdict, which is on the metric the run was scored by.
+        if planted_run.get("metric", "exact_match") != args.metric:
+            raise SystemExit(
+                f"{args.planted} is scored on {planted_run.get('metric', 'exact_match')}"
+            )
+        check = planted_convention(planted_run, org=args.org, train_size=train_size)
         planted = {"file": str(args.planted), "passed": check.passed, **check.evidence}
         if not apparatus_holds([check]):
             raise SystemExit(f"{args.planted}: check 5 failed ({check.evidence}); H1 is not read")
@@ -298,6 +305,7 @@ def main() -> None:
         bounds=bounds,
         bootstrap_seed=args.bootstrap_seed,
         resamples=args.resamples,
+        metric=args.metric,
     )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"])
     # The registered sensitivities, beside the cell and binding nothing: the same runs, levels,
@@ -320,6 +328,7 @@ def main() -> None:
                 bounds=None,
                 bootstrap_seed=args.bootstrap_seed,
                 resamples=args.resamples,
+                metric=args.metric,
             )
         except ValueError as error:
             without[name] = {
@@ -342,6 +351,7 @@ def main() -> None:
         }
     head = {
         "run_files",
+        "metric",
         "decoder",
         "admissible",
         "k_source",
@@ -358,6 +368,7 @@ def main() -> None:
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
     report = {
         "run_files": [str(p) for p in args.runs],
+        "metric": args.metric,
         "decoder": json.loads(next(iter(decoders))),
         "admissible": str(args.admissible),
         "k_source": k_source,
