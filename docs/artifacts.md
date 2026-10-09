@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 514 artifacts under
+repository. This page is generated from those scripts: 516 artifacts under
 59 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -228,7 +228,8 @@ Where does greedy decoding's run-to-run variation come from?
 
 | artifact | |
 |---|---|
-| `determinism-sym-0-gh-a-003.json` | `determinism-sym-0-gh-a-081.json` |
+| `determinism-sym-0-gh-a-001-rp1.0.json` | `determinism-sym-0-gh-a-003.json` |
+| `determinism-sym-0-gh-a-081.json` | `determinism-sym-0-gh-a-082-rp1.0.json` |
 
 ## `scripts/dual_adapter_updates.py`
 
