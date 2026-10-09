@@ -1,0 +1,6 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   8%|▊         | 28/339 [00:00<00:01, 265.20it/s]Loading weights:  16%|█▌        | 55/339 [00:00<00:01, 246.08it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:00, 274.38it/s]Loading weights:  34%|███▍      | 116/339 [00:00<00:00, 263.54it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 278.11it/s]Loading weights:  52%|█████▏    | 176/339 [00:00<00:00, 269.27it/s]Loading weights:  61%|██████    | 207/339 [00:00<00:00, 279.44it/s]Loading weights:  70%|██████▉   | 236/339 [00:00<00:00, 274.93it/s]Loading weights:  79%|███████▉  | 268/339 [00:00<00:00, 286.68it/s]Loading weights:  88%|████████▊ | 297/339 [00:01<00:00, 280.94it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 288.77it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 280.44it/s]
+rules-distilled:openstack-a|openstack-a      EM=0.072
+rules-distilled:openstack-b|openstack-a      EM=0.064
+rules-distilled:openstack-a|openstack-b      EM=0.032
+rules-distilled:openstack-b|openstack-b      EM=0.036
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rules-halves-openstack-p8-rp1.0.json

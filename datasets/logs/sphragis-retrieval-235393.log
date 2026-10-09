@@ -1,0 +1,7 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  12%|█▏        | 39/339 [00:00<00:00, 375.07it/s]Loading weights:  23%|██▎       | 77/339 [00:00<00:00, 299.76it/s]Loading weights:  32%|███▏      | 108/339 [00:00<00:00, 300.07it/s]Loading weights:  41%|████      | 139/339 [00:00<00:00, 280.74it/s]Loading weights:  51%|█████     | 172/339 [00:00<00:00, 294.58it/s]Loading weights:  60%|█████▉    | 202/339 [00:00<00:00, 286.45it/s]Loading weights:  69%|██████▊   | 233/339 [00:00<00:00, 284.18it/s]Loading weights:  78%|███████▊  | 264/339 [00:00<00:00, 291.09it/s]Loading weights:  87%|████████▋ | 294/339 [00:01<00:00, 277.81it/s]Loading weights:  97%|█████████▋| 328/339 [00:01<00:00, 295.23it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 295.06it/s]
+base|wikimedia                               EM=0.039
+retrieval-k1:openstack-a|wikimedia           EM=0.177
+retrieval-k3:openstack-a|wikimedia           EM=0.211
+retrieval-k1:openstack-b|wikimedia           EM=0.158
+retrieval-k3:openstack-b|wikimedia           EM=0.211
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/retrieval-foreign-wikimedia-rp1.0.json

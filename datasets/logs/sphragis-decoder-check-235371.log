@@ -1,0 +1,36 @@
+wikimedia-a: {'source': 'train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-partition-wikimedia-p2-s2-n1850-plant0.5/wikimedia-a/refined', 'legacy_corpus': False, 'examples': 2624, 'dedup_removed': {'exact': 0, 'near_duplicate': 3, 'boilerplate': 2, 'shared_change_id': 0}, 'train_examples': 2066, 'held_out_examples': 303, 'held_out_changes': 207}
+wikimedia-b: {'source': 'train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-partition-wikimedia-p2-s2-n1850-plant0.5/wikimedia-b/refined', 'legacy_corpus': False, 'examples': 2813, 'dedup_removed': {'exact': 0, 'near_duplicate': 0, 'boilerplate': 5, 'shared_change_id': 0}, 'train_examples': 2111, 'held_out_examples': 405, 'held_out_changes': 220}
+equalized training sets: {'wikimedia-a': 1850, 'wikimedia-b': 1850}
+outcome-neutral leakage:wikimedia-a              pass
+outcome-neutral leakage:wikimedia-b->wikimedia-a pass
+outcome-neutral leakage:wikimedia-a->wikimedia-b pass
+outcome-neutral leakage:wikimedia-b              pass
+reusing /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-wikimedia-p2-s2-n1850-plant0.5/wikimedia-a-s2 from /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-wikimedia-p2-s2-n1850-plant0.5.json
+reusing /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-wikimedia-p2-s2-n1850-plant0.5/wikimedia-b-s2 from /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-wikimedia-p2-s2-n1850-plant0.5.json
+evaluating with base
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  10%|▉         | 33/339 [00:00<00:00, 329.63it/s]Loading weights:  19%|█▉        | 66/339 [00:00<00:00, 280.74it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:00, 299.79it/s]Loading weights:  39%|███▊      | 131/339 [00:00<00:00, 290.88it/s]Loading weights:  47%|████▋     | 161/339 [00:00<00:00, 283.70it/s]Loading weights:  57%|█████▋    | 192/339 [00:00<00:00, 290.95it/s]Loading weights:  65%|██████▌   | 222/339 [00:00<00:00, 276.49it/s]Loading weights:  76%|███████▌  | 256/339 [00:00<00:00, 294.51it/s]Loading weights:  84%|████████▍ | 286/339 [00:00<00:00, 287.87it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 286.14it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 292.74it/s]
+evaluating with /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-wikimedia-p2-s2-n1850-plant0.5/wikimedia-a-s2
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:16, 19.88it/s]Loading weights:   8%|▊         | 28/339 [00:00<00:01, 160.72it/s]Loading weights:  16%|█▌        | 54/339 [00:00<00:01, 195.93it/s]Loading weights:  26%|██▌       | 88/339 [00:00<00:01, 235.67it/s]Loading weights:  34%|███▎      | 114/339 [00:00<00:00, 242.14it/s]Loading weights:  44%|████▎     | 148/339 [00:00<00:00, 265.69it/s]Loading weights:  52%|█████▏    | 175/339 [00:00<00:00, 259.12it/s]Loading weights:  61%|██████▏   | 208/339 [00:00<00:00, 279.46it/s]Loading weights:  70%|██████▉   | 236/339 [00:00<00:00, 273.33it/s]Loading weights:  79%|███████▉  | 268/339 [00:01<00:00, 276.79it/s]Loading weights:  88%|████████▊ | 300/339 [00:01<00:00, 287.79it/s]Loading weights:  97%|█████████▋| 329/339 [00:01<00:00, 265.25it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 255.95it/s]
+evaluating with /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-wikimedia-p2-s2-n1850-plant0.5/wikimedia-b-s2
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 4/339 [00:00<00:09, 36.46it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:02, 152.84it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:01, 229.34it/s]Loading weights:  27%|██▋       | 90/339 [00:00<00:01, 231.21it/s]Loading weights:  37%|███▋      | 124/339 [00:00<00:00, 265.49it/s]Loading weights:  45%|████▍     | 151/339 [00:00<00:00, 253.97it/s]Loading weights:  54%|█████▍    | 184/339 [00:00<00:00, 272.12it/s]Loading weights:  63%|██████▎   | 212/339 [00:00<00:00, 267.62it/s]Loading weights:  72%|███████▏  | 244/339 [00:00<00:00, 282.07it/s]Loading weights:  81%|████████  | 273/339 [00:01<00:00, 278.85it/s]Loading weights:  90%|████████▉ | 304/339 [00:01<00:00, 278.18it/s]Loading weights:  99%|█████████▉| 336/339 [00:01<00:00, 290.07it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 262.61it/s]
+base|wikimedia-a             EM=0.030 normEM=0.135 sim=0.684
+base|wikimedia-b             EM=0.017 normEM=0.106 sim=0.672
+adapter:wikimedia-a|wikimedia-a|s2 EM=0.168 normEM=0.182 sim=0.774
+adapter:wikimedia-a|wikimedia-b|s2 EM=0.123 normEM=0.128 sim=0.747
+adapter:wikimedia-b|wikimedia-a|s2 EM=0.155 normEM=0.158 sim=0.774
+adapter:wikimedia-b|wikimedia-b|s2 EM=0.158 normEM=0.163 sim=0.750
+RQ1 wikimedia-a: matched - mismatched EM +0.013 [-0.017, +0.042] over 207 changes
+RQ1 wikimedia-b: matched - mismatched EM +0.035 [+0.010, +0.060] over 220 changes
+GATE (pilot scale, not confirmatory): mixed
+outcome-neutral positive_control:wikimedia-a|s2  pass
+outcome-neutral manipulation:wikimedia-a|s2      pass
+outcome-neutral positive_control:wikimedia-b|s2  pass
+outcome-neutral manipulation:wikimedia-b|s2      pass
+outcome-neutral leakage:wikimedia-a              pass
+outcome-neutral leakage:wikimedia-b->wikimedia-a pass
+outcome-neutral leakage:wikimedia-a->wikimedia-b pass
+outcome-neutral leakage:wikimedia-b              pass
+outcome-neutral non_degeneracy                   pass
+APPARATUS holds
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-wikimedia-p2-s2-n1850-plant0.5-rp1.0.json
+RQ1_PILOT_OK

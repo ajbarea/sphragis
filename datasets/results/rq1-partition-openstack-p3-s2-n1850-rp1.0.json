@@ -1,8 +1,8 @@
 {
   "provenance": {
-    "generated_at": "2026-10-08T11:13:50.843102+00:00",
+    "generated_at": "2026-10-08T13:49:55.746391+00:00",
     "git": {
-      "commit": "3264e08f327a9ada79026d6871310e6f8e8fb967",
+      "commit": "ddb3d1b7117b8684aac74ebd4c4a4316cc3a29ec",
       "branch": "HEAD"
     },
     "python": "3.13.15",
@@ -14,16 +14,16 @@
     },
     "slurm": {
       "cluster": "tigris",
-      "job_id": "232358",
+      "job_id": "235342",
       "account": "fl-mlm",
       "partition": "tigris",
-      "node": "gh-a-090"
+      "node": "gh-a-010"
     },
     "gpu": {
       "name": "NVIDIA GH200 480GB",
       "total_gb": 102.01,
-      "peak_allocated_gb": 31.97,
-      "peak_reserved_gb": 34.8,
+      "peak_allocated_gb": 31.96,
+      "peak_reserved_gb": 34.26,
       "cuda": "13.0"
     }
   },
@@ -77,10 +77,28 @@
   },
   "training": {
     "openstack-a-s2": {
-      "reused": "/home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-openstack-p3-s2-n1850/openstack-a-s2"
+      "items": 1849,
+      "refused": 1,
+      "steps": 232,
+      "applied_steps": 232,
+      "first_loss": 1.0861856234259903,
+      "last_loss": 0.4703889400261687,
+      "adapter_weight_norm": 13.01322273381456,
+      "final_epoch_mean_loss": 0.3110958706557571,
+      "reused_from": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p3-s2-n1850.json",
+      "adapter_sha256": "85c4cd2f9bc66aebaf5f4f2b884006840b87c0304f194bab943f27c265ecb5da"
     },
     "openstack-b-s2": {
-      "reused": "/home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-openstack-p3-s2-n1850/openstack-b-s2"
+      "items": 1846,
+      "refused": 4,
+      "steps": 232,
+      "applied_steps": 232,
+      "first_loss": 0.8807718881871551,
+      "last_loss": 0.10088090086355805,
+      "adapter_weight_norm": 13.120957226292957,
+      "final_epoch_mean_loss": 0.29999409341226524,
+      "reused_from": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p3-s2-n1850.json",
+      "adapter_sha256": "c345fbba3ed7c8265a86df80117f899808880aec1d1c5b3cdf7dd804de07a075"
     }
   },
   "verdict": {
@@ -143,6 +161,18 @@
         }
       },
       {
+        "name": "manipulation:openstack-a|s2",
+        "passed": true,
+        "evidence": {
+          "first_span_mean_loss": 0.5754916225522062,
+          "final_span_mean_loss": 0.3110958706557571,
+          "steps_per_span": 116,
+          "adapter_weight_norm": 13.01322273381456,
+          "reused_from": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p3-s2-n1850.json",
+          "adapter_sha256": "85c4cd2f9bc66aebaf5f4f2b884006840b87c0304f194bab943f27c265ecb5da"
+        }
+      },
+      {
         "name": "positive_control:openstack-b|s2",
         "passed": true,
         "evidence": {
@@ -153,6 +183,18 @@
             "clusters": 116.0,
             "resamples": 10000.0
           }
+        }
+      },
+      {
+        "name": "manipulation:openstack-b|s2",
+        "passed": true,
+        "evidence": {
+          "first_span_mean_loss": 0.5775118100490514,
+          "final_span_mean_loss": 0.29999409341226524,
+          "steps_per_span": 116,
+          "adapter_weight_norm": 13.120957226292957,
+          "reused_from": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p3-s2-n1850.json",
+          "adapter_sha256": "c345fbba3ed7c8265a86df80117f899808880aec1d1c5b3cdf7dd804de07a075"
         }
       },
       {

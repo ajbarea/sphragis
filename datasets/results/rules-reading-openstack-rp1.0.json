@@ -1,0 +1,200 @@
+{
+  "org": "openstack",
+  "foreign": "wikimedia",
+  "arms": "rules",
+  "partitions": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "halves_jobs": [
+    "datasets/results/rules-halves-openstack-p2-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p3-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p4-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p5-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p7-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p8-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p9-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p10-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p11-rp1.0.json",
+    "datasets/results/rules-halves-openstack-p12-rp1.0.json"
+  ],
+  "foreign_job": "datasets/results/rules-foreign-openstack-rp1.0.json",
+  "base_job": "datasets/results/retrieval-foreign-openstack-rp1.0.json",
+  "generator": "Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242|float32|max_new_tokens=256|temperature=0.0|repetition_penalty=1.0",
+  "bootstrap_seed": 7,
+  "resamples": 10000,
+  "families": {
+    "distilled": {
+      "examples": 501,
+      "dropped": 0,
+      "exact_match": {
+        "none": 0.06986027944111776,
+        "own": 0.04570858283433134,
+        "sibling": 0.048303393213572854
+      },
+      "own_minus_sibling": {
+        "estimate": -0.0027988324994775724,
+        "confidence": 0.95,
+        "low": -0.009245601899293658,
+        "high": 0.003054802058638849,
+        "per_run": [
+          -0.003706360593017693,
+          -0.016352391815783844,
+          -0.004239295989169067,
+          -0.0009301156359979874,
+          0.0076530612244897975,
+          0.006000191241155098,
+          0.0018726591760299637,
+          -0.010479425714651963,
+          -0.003401360544217689,
+          -0.004405286343612334
+        ],
+        "reading": "carries none as large as the SESOI"
+      },
+      "sibling_minus_foreign": {
+        "estimate": -0.007250452633965436,
+        "confidence": 0.95,
+        "low": -0.01644746282528916,
+        "high": 0.0014940714647756713,
+        "per_run": [
+          -0.004316116690578672,
+          0.005137413559563698,
+          -0.007454730072770352,
+          -0.007931121166415284,
+          -0.014210438273670127,
+          -0.007948460508701478,
+          -0.011764140977624123,
+          -0.003569253941802339,
+          -0.014406487232574192,
+          -0.006041191035081512
+        ]
+      },
+      "own_minus_none": {
+        "estimate": -0.02410714992570128,
+        "confidence": 0.95,
+        "low": -0.04010897720044658,
+        "high": -0.008893394981535987,
+        "per_run": [
+          -0.021783835485413676,
+          -0.023935980608825836,
+          -0.02806735488238281,
+          -0.022624434389140274,
+          -0.020767815322850453,
+          -0.015992541594951233,
+          -0.0240564678766926,
+          -0.02780092295859505,
+          -0.03149955634427684,
+          -0.02454258979388405
+        ]
+      },
+      "without_near_duplicate_shots": null,
+      "written_own_minus_written_foreign": {
+        "estimate": -0.02741617560403417,
+        "confidence": 0.95,
+        "low": -0.045458622974396165,
+        "high": -0.011966529656284475,
+        "per_run": [
+          -0.025561932089909135,
+          -0.02974620374991089,
+          -0.02704349297681503,
+          -0.0277526395173454,
+          -0.027693208430913354,
+          -0.02598489194874737,
+          -0.027249591856333428,
+          -0.027127932316369695,
+          -0.029256630188307205,
+          -0.026745232965690213
+        ]
+      },
+      "written_own_minus_none": {
+        "estimate": -0.023991434223641604,
+        "confidence": 0.95,
+        "low": -0.039560231848094755,
+        "high": -0.009611403084759402,
+        "per_run": [
+          -0.023744619799139166,
+          -0.022429956512440292,
+          -0.026459637840582164,
+          -0.02332830568124686,
+          -0.02331883573101372,
+          -0.024000764964620384,
+          -0.02432056083741477,
+          -0.023787014485322392,
+          -0.023982056590752244,
+          -0.02454258979388405
+        ]
+      },
+      "distilled_own_minus_written_own": {
+        "estimate": -0.00011571570205967709,
+        "confidence": 0.95,
+        "low": -0.008029506018779187,
+        "high": 0.008372756985584819,
+        "per_run": [
+          0.00196078431372549,
+          -0.0015060240963855435,
+          -0.0016077170418006444,
+          0.0007038712921065889,
+          0.002551020408163268,
+          0.008008223369669151,
+          0.00026409296072217245,
+          -0.004013908473272657,
+          -0.007517499753524599,
+          0.0
+        ]
+      }
+    }
+  },
+  "adapters": {
+    "runs": [
+      "datasets/results/rq1-partition-openstack-p2-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p3-s2-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p4-s3-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p5-s4-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p7-s5-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p8-s6-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p9-s7-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p10-s8-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p11-s9-n1850-rp1.0.json",
+      "datasets/results/rq1-partition-openstack-p12-s10-n1850-rp1.0.json"
+    ],
+    "lora_rank": 32,
+    "examples": 501,
+    "own_minus_sibling": {
+      "estimate": -0.00012182347349829902,
+      "confidence": 0.95,
+      "low": -0.0172572874874306,
+      "high": 0.016323276017490795,
+      "per_run": [
+        0.016403634624581526,
+        0.020710059171597628,
+        -0.006430868167202591,
+        -0.02963800904977376,
+        -0.001271328203412525,
+        0.018000573723465307,
+        -0.0037453183520599342,
+        -0.010775862068965525,
+        -0.0004436557231588256,
+        -0.00402746069005433
+      ],
+      "reading": "inconclusive"
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-08T19:11:59.724183+00:00",
+    "git": {
+      "commit": "ca58a6292004679aea4411486e988fff23dea853",
+      "branch": "measure/rescored-1.0"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

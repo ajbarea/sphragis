@@ -1,0 +1,138 @@
+{
+  "run_files": [
+    "datasets/results/rq1-partition-wikimedia-p1-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p2-s2-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p3-s3-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p5-s4-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p6-s5-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p7-s6-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p8-s7-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p9-s8-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p10-s9-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p11-s10-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p12-s11-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p13-s12-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p16-s13-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p17-s14-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p18-s15-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p19-s16-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p20-s17-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p21-s18-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p22-s19-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p25-s20-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p27-s21-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-wikimedia-p29-s22-n1850-rp1.0.json"
+  ],
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-wikimedia.json",
+  "k_source": "datasets/results/partition-pilot-wikimedia-rp1.0.json: sizing.runs",
+  "k_from": {
+    "file": "datasets/results/partition-pilot-wikimedia-rp1.0.json",
+    "org": "wikimedia",
+    "runs": 13
+  },
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "org": "wikimedia",
+  "bootstrap_seed": 7,
+  "estimate": 0.006238623589207091,
+  "per_run": [
+    0.014409336297237202,
+    0.004110474036986167,
+    0.0025976491706508897,
+    -0.007063052139268999,
+    0.019326623532230996,
+    0.01928059068313928,
+    0.020837047240904266,
+    -0.012729658792650922,
+    0.0023843757488617168,
+    0.005566809628562819,
+    0.004099434843148508,
+    -0.0002673071398934246,
+    0.008549783549783557
+  ],
+  "runs": 13,
+  "changes": 429,
+  "reproducibility": {
+    "runs": 13,
+    "variance_of_mean": 7.970067181506712e-06,
+    "critical_value": 1.3015888581350293e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [
+    0.00033291084406938953,
+    0.015733922434953362,
+    -0.0011901172662213133,
+    -0.001278316895945819,
+    -0.0012480387961774642,
+    0.024573758339510726,
+    0.017075946632993833,
+    -0.003083731830129527,
+    -0.0051188715731998735
+  ],
+  "intervals": {
+    "0.975": {
+      "low": -0.006668854498504754,
+      "high": 0.02000445162944301
+    },
+    "0.95": {
+      "low": -0.0052472872152539846,
+      "high": 0.018048718319480263
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.1464,
+  "bootstrap_se": 0.005934016669250138,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 711,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.010237102733880735,
+    "sd_upper": 0.012892861285475784,
+    "confidence": 0.9,
+    "formula": 12.770996854159893,
+    "runs": 13,
+    "clamped": null
+  },
+  "without": {},
+  "provenance": {
+    "generated_at": "2026-10-08T16:31:54.302619+00:00",
+    "git": {
+      "commit": "5a1ddd5ad1aca73198c5f90631dfbfae4240afe0",
+      "branch": "measure/rescored-1.0"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

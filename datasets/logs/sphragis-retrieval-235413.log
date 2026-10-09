@@ -1,0 +1,11 @@
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (45388 > 32768). Running this sequence through the model will result in indexing errors
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:01, 294.52it/s]Loading weights:  19%|█▉        | 64/339 [00:00<00:00, 310.69it/s]Loading weights:  28%|██▊       | 96/339 [00:00<00:00, 293.77it/s]Loading weights:  37%|███▋      | 126/339 [00:00<00:00, 273.24it/s]Loading weights:  47%|████▋     | 160/339 [00:00<00:00, 293.35it/s]Loading weights:  56%|█████▌    | 190/339 [00:00<00:00, 283.11it/s]Loading weights:  65%|██████▌   | 221/339 [00:00<00:00, 284.00it/s]Loading weights:  74%|███████▍  | 251/339 [00:00<00:00, 288.35it/s]Loading weights:  83%|████████▎ | 281/339 [00:00<00:00, 285.42it/s]Loading weights:  92%|█████████▏| 312/339 [00:01<00:00, 292.31it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 291.71it/s]
+retrieval-k1:wikimedia-a|wikimedia-a         EM=0.239
+retrieval-k3:wikimedia-a|wikimedia-a         EM=0.265
+retrieval-k1:wikimedia-b|wikimedia-a         EM=0.215
+retrieval-k3:wikimedia-b|wikimedia-a         EM=0.255
+retrieval-k1:wikimedia-a|wikimedia-b         EM=0.206
+retrieval-k3:wikimedia-a|wikimedia-b         EM=0.245
+retrieval-k1:wikimedia-b|wikimedia-b         EM=0.203
+retrieval-k3:wikimedia-b|wikimedia-b         EM=0.233
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/retrieval-halves-wikimedia-p9-rp1.0.json

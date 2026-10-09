@@ -1,0 +1,6 @@
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  10%|█         | 34/339 [00:00<00:00, 332.73it/s]Loading weights:  20%|██        | 68/339 [00:00<00:00, 292.69it/s]Loading weights:  29%|██▉       | 100/339 [00:00<00:00, 298.62it/s]Loading weights:  39%|███▊      | 131/339 [00:00<00:00, 288.61it/s]Loading weights:  47%|████▋     | 160/339 [00:00<00:00, 287.85it/s]Loading weights:  56%|█████▌    | 189/339 [00:00<00:00, 280.51it/s]Loading weights:  65%|██████▍   | 220/339 [00:00<00:00, 278.45it/s]Loading weights:  74%|███████▍  | 252/339 [00:00<00:00, 289.94it/s]Loading weights:  83%|████████▎ | 282/339 [00:00<00:00, 276.53it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 293.82it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 291.56it/s]
+rules-distilled:openstack-a|openstack-a      EM=0.030
+rules-distilled:openstack-b|openstack-a      EM=0.033
+rules-distilled:openstack-a|openstack-b      EM=0.073
+rules-distilled:openstack-b|openstack-b      EM=0.056
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rules-halves-openstack-p10-rp1.0.json

@@ -1,0 +1,189 @@
+{
+  "run_files": [
+    "datasets/results/rq1-partition-openstack-p2-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p3-s2-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p4-s3-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p5-s4-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p7-s5-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p8-s6-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p9-s7-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p10-s8-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p11-s9-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p12-s10-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p14-s11-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p15-s12-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p17-s13-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p18-s14-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p19-s15-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p21-s16-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p22-s17-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p23-s18-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p24-s19-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p25-s20-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p26-s21-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-openstack-p27-s22-n1850-rp1.0.json"
+  ],
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-openstack.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "org": "openstack",
+  "bootstrap_seed": 7,
+  "estimate": 0.0019877939175376017,
+  "per_run": [
+    0.016403634624581526,
+    0.020710059171597628,
+    -0.006430868167202591,
+    -0.02963800904977376,
+    -0.001271328203412525,
+    0.018000573723465307,
+    -0.0037453183520599342,
+    -0.010775862068965525,
+    -0.0004436557231588256,
+    -0.00402746069005433,
+    -0.006353474638827378,
+    -0.007585837606282841,
+    0.010559543648250236,
+    0.002165955874945419,
+    0.0036724834861480704,
+    0.01577242524916944,
+    0.01864406779661018,
+    0.017049378453038666,
+    -0.0009274064598656928,
+    0.003864734299516892,
+    -0.009629064159061729,
+    -0.00228310502283105
+  ],
+  "runs": 22,
+  "changes": 206,
+  "reproducibility": {
+    "runs": 22,
+    "variance_of_mean": 6.994369690011129e-06,
+    "critical_value": 1.3015888581350293e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": -0.012197823187845964,
+      "high": 0.016276482354972033
+    },
+    "0.95": {
+      "low": -0.010305080260583568,
+      "high": 0.014342709653753798
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.3707,
+  "bootstrap_se": 0.006225472158336311,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 501,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.012404681905645337,
+    "sd_upper": 0.01562276429742431,
+    "confidence": 0.9,
+    "formula": 18.75175580732847,
+    "runs": 19,
+    "clamped": null
+  },
+  "without": {
+    "ai_assisted": {
+      "file": "datasets/results/sensitivity-ids-openstack-dev.json",
+      "listed": 45,
+      "unsearched": 0,
+      "removed": 40,
+      "estimate": 0.0021990855401726227,
+      "examples": 461,
+      "intervals": {
+        "0.975": {
+          "low": -0.012480272504304973,
+          "high": 0.017256968823273704
+        },
+        "0.95": {
+          "low": -0.010584172763661774,
+          "high": 0.015299314391954534
+        }
+      },
+      "within_sesoi": {
+        "0.975": false,
+        "0.95": false
+      },
+      "meaningful": {
+        "0.975": false,
+        "0.95": false
+      },
+      "p_one_sided": 0.3624,
+      "bootstrap_se": 0.006607884759911717
+    },
+    "backport_only": {
+      "file": "datasets/results/sensitivity-ids-openstack-dev.json",
+      "listed": 0,
+      "removed": 0,
+      "estimate": 0.0019877939175376017,
+      "examples": 501,
+      "intervals": {
+        "0.975": {
+          "low": -0.012197823187845964,
+          "high": 0.016276482354972033
+        },
+        "0.95": {
+          "low": -0.010305080260583568,
+          "high": 0.014342709653753798
+        }
+      },
+      "within_sesoi": {
+        "0.975": false,
+        "0.95": false
+      },
+      "meaningful": {
+        "0.975": false,
+        "0.95": false
+      },
+      "p_one_sided": 0.3707,
+      "bootstrap_se": 0.006225472158336311
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-08T16:31:28.001039+00:00",
+    "git": {
+      "commit": "5a1ddd5ad1aca73198c5f90631dfbfae4240afe0",
+      "branch": "measure/rescored-1.0"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}
