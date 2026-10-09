@@ -8556,3 +8556,12 @@ refuses it; the partition-level planted runs, outcome-neutral test 5 for H1, are
 instead. The `-stopping` pilot and simulation were written by an earlier `partition_pilot.py` and
 are superseded by the fixed K. **Still running:** the H1 simulations on the 1.0 pilots and placebo
 runs (SPORC 21829169 and 21829170), and the determinism check at 1.0 on two nodes.
+
+### fp32 still reproduces across nodes without the penalty (2026-10-08)
+
+`# research(2026-10)`. `scripts/determinism_check.py`, `datasets/results/determinism-sym-0-gh-a-001-rp1.0.json` and
+`determinism-sym-0-gh-a-082-rp1.0.json`, the base model over the same 150 prompts at penalty 1.0 in two jobs on two
+nodes (TIGRIS 239444 and 243769, the second excluding the first's node rather than waiting on the
+node the 1.1 measurement used). fp32 differs on 0 of 150 predictions between the jobs; bf16 differs on
+3 to 5 between them and on at most 1 within one process. The fp32 registration holds
+under the registered decoder.
