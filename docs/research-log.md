@@ -8306,6 +8306,10 @@ examples. Generated from the artifacts:
 | distilled own minus written own | +0.0008 [-0.0075, +0.0082] | -0.0024 [-0.0070, +0.0012] |
 | adapters own minus sibling | +0.0082 [-0.0086, +0.0244] | +0.0022 [-0.0130, +0.0182] |
 
+> **Superseded on 2026-10-08 for the reported contrasts.** At the registered decoder (penalty 1.0)
+> the read contrast is unchanged, but the reported ones are not: see "The rules files against no
+> file and against each other, at penalty 1.0" below.
+
 **By the rule fixed before the run, distilled own minus sibling carries no contrast as large as
 the SESOI on either organization**: both intervals sit inside the SESOI band (0.01), and they are
 narrower than the retrieval arm's or the adapters'. Reported, not read: neither a distilled file
@@ -8569,6 +8573,65 @@ nodes (TIGRIS 239444 and 243769, the second excluding the first's node rather th
 node the 1.1 measurement used). fp32 differs on 0 of 150 predictions between the jobs; bf16 differs on
 3 to 5 between them and on at most 1 within one process. The fp32 registration holds
 under the registered decoder.
+
+### The rules files against no file and against each other, at penalty 1.0 (2026-10-08)
+
+`# research(2026-10)`. `rules-reading-openstack-rp1.0.json`, `rules-reading-wikimedia-rp1.0.json`. The
+read contrast, distilled own minus sibling, keeps its reading at penalty 1.0 (the rescoring entry
+above). The contrasts the 2026-10-07 read reported but did not read move, and three now lie wholly
+beyond the SESOI. Each is a 95% interval over the first ten admissible partitions:
+
+| contrast | OpenStack, 1.1 | OpenStack, 1.0 | Wikimedia, 1.1 | Wikimedia, 1.0 |
+|---|---|---|---|---|
+| distilled own minus none | -0.0105 [-0.0215, +0.0006] | -0.0241 [-0.0401, -0.0089] | -0.0013 [-0.0074, +0.0043] | -0.0107 [-0.0207, -0.0014] |
+| written own minus none | -0.0112 [-0.0230, +0.0013] | -0.0240 [-0.0396, -0.0096] | +0.0011 [-0.0051, +0.0073] | +0.0197 [+0.0059, +0.0345] |
+| written own minus written foreign | -0.0039 [-0.0147, +0.0065] | -0.0274 [-0.0455, -0.0120] | +0.0056 [+0.0012, +0.0116] | +0.0397 [+0.0247, +0.0564] |
+| distilled own minus written own | +0.0008 [-0.0075, +0.0082] | -0.0001 [-0.0080, +0.0084] | -0.0024 [-0.0070, +0.0012] | -0.0303 [-0.0452, -0.0167] |
+
+At the registered decoder a distilled file lowers exact match on both organizations, both intervals
+below zero. The written guides split: Wikimedia's raises exact match over no file and
+beats OpenStack's guide on Wikimedia code by about four times the SESOI, while OpenStack's lowers
+it and loses to Wikimedia's guide on OpenStack code. These remain reported, exploratory contrasts:
+the rule fixed before the run reads only distilled own minus sibling. That a written guide can carry
+an organization-level difference the distilled files do not is the question the comparator was
+added to ask, and on Wikimedia it now has a development-window answer to test.
+
+### Check 5 fails at the registered decoder: plain greedy drops a half-rate convention (2026-10-09)
+
+`# research(2026-10)`. The planted partition runs rescored at penalty 1.0 (`rq1-partition-*-plant*-rp1.0.json`),
+read by `neutral.planted_convention`, the registered outcome-neutral test 5, beside their 1.1 originals.
+Emission is how often an adapter writes its own half's marker on its own half's test window, averaged
+over the arms:
+
+| planted run | emission at 1.1 | emission at 1.0 | check 5 at 1.1 | check 5 at 1.0 |
+|---|---|---|---|---|
+| OpenStack, planted in 50% | 0.800 | 0.393 | 10 of 10 | 0 of 10 |
+| OpenStack, planted in 25% | 0.578 | 0.017 | not registered | not registered |
+| Wikimedia, planted in 50% | 0.818 | 0.244 | 10 of 10 | 2 of 10 |
+
+At 1.1 the adapters wrote the marker more often than it was planted, and check 5 passed every run.
+At 1.0 they write it less often than it was planted, and check 5 fails on 18 of 20 runs. The penalty
+amplified the convention, as the calibration entry found (0.628 against 0.243 sampled), and plain
+greedy decoding keeps only an adapter's most likely output, so a convention it learned at half the
+rate is not that output on most examples. The registered positive control fails at the registered
+decoder, so Stage 1 cannot go out with both as they stand.
+
+**What the instrument can see.** Greedy exact match credits a convention only where an adapter
+adopts it as its most likely output. A convention a team applies in half its refinements is then
+invisible to H1, whatever the adapter learned. Three ways forward, none chosen yet:
+
+1. Keep plain greedy and plant the control at a majority rate, stating that H1 tests conventions an
+   organization applies in most of its refinements. The fraction must come from a measurement made
+   before it is registered, and the change from 0.5 is disclosed as made after this pilot.
+2. Keep the plant at 0.5 and change the estimand to expected exact match under sampling at
+   temperature 1, which follows the learned rate (0.243 sampled against 0.251 planted, calibration
+   entry). A larger change: sampling variance, more generations per example, every reading redone.
+3. Return to the checkpoint's 1.1. It passes check 5 only by distorting what an adapter learned,
+   which is the reason it was dropped.
+
+**Next, a measurement for option 1:** the first ten admissible partitions of each organization
+planted at 0.75 and read at 1.0 (`partition_run.sbatch PLANT=0.75`). Whether greedy detects a 75%
+convention bounds what option 1 can claim. The choice among the three is AJ's.
 
 ### GitHub is not held back: no confirmation is sought (2026-10-09)
 
