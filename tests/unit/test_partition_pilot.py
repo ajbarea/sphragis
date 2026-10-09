@@ -308,6 +308,7 @@ def _with_likelihood(argv: list[str]) -> None:
         for rows in run["results"].values():
             for row in rows:
                 row["logprob_per_token"] = row["exact_match"] - 1.0
+                row["logprob"] = 10 * (row["exact_match"] - 1.0)
         Path(path).write_text(json.dumps(run))
 
 
@@ -321,19 +322,35 @@ def test_a_run_without_the_metric_is_refused(
         )
 
 
-def test_a_likelihood_read_reports_nothing_against_the_exact_match_sesoi(
+def test_an_unregistered_metric_reports_nothing_against_a_sesoi(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The estimate and intervals stand; verdicts, margins and K wait on a registered SESOI."""
     argv = _inputs(tmp_path, "openstack")
     _with_likelihood(argv)
     out = tmp_path / "o.json"
-    _main(monkeypatch, [*argv, "--metric", "logprob_per_token", "--out", str(out)])
+    _main(monkeypatch, [*argv, "--metric", "logprob", "--out", str(out)])
     report = json.loads(out.read_text())
-    assert report["metric"] == "logprob_per_token"
+    assert report["metric"] == "logprob" and report["sesoi"] is None
     assert report["intervals"] and report["estimate"] is not None
     assert report["verdicts"] is None and report["within_sesoi"] is None
     assert report["sizing"]["runs"] is None
+
+
+def test_the_per_token_likelihood_reads_its_registered_sesoi(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The SESOI comes from likelihood-sesoi.json, and every reading compares against it."""
+    registered = tmp_path / "likelihood-sesoi.json"
+    registered.write_text(json.dumps({"sesoi": 0.5}))
+    monkeypatch.setattr(partition_pilot, "LIKELIHOOD_SESOI", registered)
+    argv = _inputs(tmp_path, "openstack")
+    _with_likelihood(argv)
+    out = tmp_path / "o.json"
+    _main(monkeypatch, [*argv, "--metric", "logprob_per_token", "--out", str(out)])
+    report = json.loads(out.read_text())
+    assert report["sesoi"] == 0.5
+    assert report["verdicts"] is not None and report["sizing"]["runs"] is not None
 
 
 def test_k_is_not_sized_on_an_unregistered_metric(
@@ -349,7 +366,7 @@ def test_k_is_not_sized_on_an_unregistered_metric(
             [
                 *argv,
                 "--metric",
-                "logprob_per_token",
+                "logprob",
                 "--sizing",
                 str(sizing),
                 "--out",

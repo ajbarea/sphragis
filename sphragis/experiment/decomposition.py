@@ -508,18 +508,21 @@ def cell_verdict(low: float, high: float, *, bound: float | None) -> str:
     return "inconclusive"
 
 
-def meaningful(low: float) -> bool:
+def meaningful(low: float, sesoi: float = SESOI) -> bool:
     """Whether an interval's lower bound clears the SESOI: reported, never a verdict."""
-    return low > SESOI
+    return low > sesoi
 
 
-def within_sesoi(low: float, high: float) -> bool:
+def within_sesoi(low: float, high: float, sesoi: float = SESOI) -> bool:
     """Whether the interval sits inside the SESOI band: reported, never a verdict."""
-    return low > -SESOI and high < SESOI
+    return low > -sesoi and high < sesoi
 
 
 def read_intervals(
-    intervals: Mapping[float, tuple[float, float]], bounds: Mapping[float, Any]
+    intervals: Mapping[float, tuple[float, float]],
+    bounds: Mapping[float, Any],
+    *,
+    sesoi: float = SESOI,
 ) -> dict[str, dict[float, Any]]:
     """A cell's interval at each level, its verdict against that level's bound in `bounds` (keyed
     by `level_key`, absent for none), and the readings beside it."""
@@ -529,10 +532,10 @@ def read_intervals(
             c: cell_verdict(lo, hi, bound=bounds.get(level_key(c)))
             for c, (lo, hi) in intervals.items()
         },
-        "within_sesoi": {c: within_sesoi(lo, hi) for c, (lo, hi) in intervals.items()},
+        "within_sesoi": {c: within_sesoi(lo, hi, sesoi) for c, (lo, hi) in intervals.items()},
         # Readings beside the pass rule (registered-decisions.md): a supported cell whose lower
         # bound also clears the SESOI.
-        "meaningful": {c: meaningful(lo) for c, (lo, hi) in intervals.items()},
+        "meaningful": {c: meaningful(lo, sesoi) for c, (lo, hi) in intervals.items()},
     }
 
 

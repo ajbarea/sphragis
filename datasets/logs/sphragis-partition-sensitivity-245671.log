@@ -1,0 +1,22 @@
+pilot_lower_90: spread 0.0104 at 206 changes -> sigma_run 0.0072 (realised 0.0104)
+pilot_lower_90 (sigma_run 0.0072) at 0.975, 1 cell(s), power 0.9500: detects +0.0198; null FP 0.014, bounded 0.970; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0072) at 0.975, 2 cell(s), power 0.9747: detects +0.0215; null FP 0.014, bounded 0.986; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0072) at 0.975, 3 cell(s), power 0.9830: detects +0.0225; null FP 0.014, bounded 0.993; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0072) at 0.95, 1 cell(s), power 0.9500: detects +0.0185; null FP 0.028, bounded 0.970; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0072) at 0.95, 2 cell(s), power 0.9747: detects +0.0200; null FP 0.028, bounded 0.985; reproducibility failure 0.000
+pilot_lower_90 (sigma_run 0.0072) at 0.95, 3 cell(s), power 0.9830: detects +0.0215; null FP 0.028, bounded 0.995; reproducibility failure 0.000
+pilot_estimate: spread 0.0124 at 206 changes -> sigma_run 0.0096 (realised 0.0124)
+pilot_estimate (sigma_run 0.0096) at 0.975, 1 cell(s), power 0.9500: detects +0.0206; null FP 0.015, bounded 0.969; reproducibility failure 0.002
+pilot_estimate (sigma_run 0.0096) at 0.975, 2 cell(s), power 0.9747: detects +0.0227; null FP 0.015, bounded 0.989; reproducibility failure 0.002
+pilot_estimate (sigma_run 0.0096) at 0.975, 3 cell(s), power 0.9830: detects +0.0235; null FP 0.015, bounded 0.992; reproducibility failure 0.002
+pilot_estimate (sigma_run 0.0096) at 0.95, 1 cell(s), power 0.9500: detects +0.0192; null FP 0.027, bounded 0.969; reproducibility failure 0.002
+pilot_estimate (sigma_run 0.0096) at 0.95, 2 cell(s), power 0.9747: detects +0.0206; null FP 0.027, bounded 0.983; reproducibility failure 0.002
+pilot_estimate (sigma_run 0.0096) at 0.95, 3 cell(s), power 0.9830: detects +0.0220; null FP 0.027, bounded 0.992; reproducibility failure 0.002
+sizing_bound_90: spread 0.0156 at 206 changes -> sigma_run 0.0134 (realised 0.0156)
+sizing_bound_90 (sigma_run 0.0134) at 0.975, 1 cell(s), power 0.9500: detects +0.0225; null FP 0.014, bounded 0.970; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0134) at 0.975, 2 cell(s), power 0.9747: detects +0.0248; null FP 0.014, bounded 0.989; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0134) at 0.975, 3 cell(s), power 0.9830: detects +0.0262; null FP 0.014, bounded 0.994; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0134) at 0.95, 1 cell(s), power 0.9500: detects +0.0206; null FP 0.029, bounded 0.964; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0134) at 0.95, 2 cell(s), power 0.9747: detects +0.0229; null FP 0.029, bounded 0.987; reproducibility failure 0.022
+sizing_bound_90 (sigma_run 0.0134) at 0.95, 3 cell(s), power 0.9830: detects +0.0246; null FP 0.029, bounded 0.994; reproducibility failure 0.022
+pilot_upper_99: spread 0.0191 at 206 changes -> sigma_run 0.0173 (realised 0.0191)
