@@ -14,6 +14,7 @@ import pytest
 from sphragis.corpus.github import GITHUB_ORGS
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    REGISTERED_METRIC,
     REGISTERED_SENSITIVITIES,
     require_sensitivities,
     same_calibration,
@@ -403,6 +404,7 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "planted_convention": {"passed": True},
+        "metric": "logprob_per_token",
         # Both registered sensitivities, read as partition_pilot.py --without writes them.
         # Read at every level any test read uses here, so a fixture serves either gate.
         "without": {
@@ -418,12 +420,14 @@ def _replication_cell(
         },
         "runs": 24,
         "k_from": {
+            "metric": "logprob_per_token",
             "file": f"partition-pilot-{org}.json",
             "org": org,
             "runs": 24,
             "spread_targets": _CALIBRATION,
         },
         "sensitivity": {
+            "metric": "logprob_per_token",
             "org": org,
             "cells": 1,
             "runs": 24,
@@ -599,13 +603,28 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"levels": [0.975, 0.95]}}, _SIM, "read at levels"),
         ({"apache": _GOOD | {"estimate": float("nan")}}, _SIM, "estimate"),
         ({"apache": _GOOD | {"k_from": None}}, _SIM, "K are not from"),
+        # A score, a K or a bound made on another metric than the registered one.
+        ({"apache": {k: v for k, v in _GOOD.items() if k != "metric"}}, _SIM, "read is on exact"),
+        (
+            {"apache": _GOOD | {"k_from": {**_GOOD["k_from"], "metric": "exact_match"}}},
+            _SIM,
+            "k_from is on exact_match",
+        ),
+        (
+            {"apache": _GOOD | {"sensitivity": {**_GOOD["sensitivity"], "metric": "logprob"}}},
+            _SIM,
+            "sensitivity is on logprob, registered logprob_per_token",
+        ),
         (
             {"apache": _GOOD | {"k_from": {**_GOOD["k_from"], "org": "openstack"}}},
             _SIM,
             "K are not from its own k_from",
         ),
         (
-            {"apache": _GOOD | {"k_from": {"org": "apache", "runs": 16}}},
+            {
+                "apache": _GOOD
+                | {"k_from": {"org": "apache", "runs": 16, "metric": "logprob_per_token"}}
+            },
             _SIM,
             "k_from is at K = 16",
         ),
@@ -730,6 +749,7 @@ def test_a_read_waits_for_its_organizations_to_be_frozen(
         "levels": [REPLICATION_CONFIDENCE],
         "cells": 1,
         "spread_target": "sizing_bound_90",
+        "metric": REGISTERED_METRIC,
     }
 
 
@@ -1509,7 +1529,9 @@ def test_the_h1_test_gate_reports_its_registered_companions(admitted) -> None:
         powers=json.loads(json.dumps({"openstack": _power("openstack")})),
     )
     assert out["design"] == design(("openstack", "wikimedia"))
-    assert out["sesoi"] == decomposition.SESOI
+    # Read on the registered metric, against its own SESOI rather than exact match's.
+    assert out["metric"] == REGISTERED_METRIC
+    assert out["sesoi"] == decomposition.metric_sesoi(REGISTERED_METRIC) != decomposition.SESOI
     assert out["detectable"] == {"H1": {o: {0.95: 0.03} for o in reports}}
     assert out["cells"]["openstack"]["size"] == {
         "projected": 2_000,

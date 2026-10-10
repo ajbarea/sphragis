@@ -112,8 +112,7 @@ def test_a_continuous_pool_needs_the_pilot(tmp_path: Path) -> None:
 
 def test_each_metric_sets_its_workers_continuity_and_sesoi(monkeypatch: pytest.MonkeyPatch) -> None:
     partition_sensitivity = _module()
-    from sphragis.experiment.decomposition import SESOI
-    from sphragis.experiment.likelihood import metric_sesoi
+    from sphragis.experiment.decomposition import SESOI, metric_sesoi
 
     monkeypatch.chdir(ROOT)
     assert partition_sensitivity.worker_args([], "exact_match", (0.0, 0.0)) == (

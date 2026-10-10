@@ -283,6 +283,14 @@ False-positive rate of the registered pairs cluster bootstrap, under a true null
 |---|---|
 | `interval-calibration-change-averaged.json` | `interval-calibration.json` |
 
+## `scripts/k_coverage.py`
+
+An organization's K under the coverage rule, as the K source a test read takes (`--sizing`).
+
+| artifact | |
+|---|---|
+| `k-coverage-openstack-likelihood.json` | `k-coverage-wikimedia-likelihood.json` |
+
 ## `scripts/label_audit_agreement.py`
 
 Agreement on the label audit: two blind model raters, and a human's blind check of one.

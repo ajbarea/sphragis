@@ -14,29 +14,9 @@ evaluated on held-out data; `model.reference_logprob` runs the forward pass.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Sequence
-from pathlib import Path
 
-from sphragis.experiment.decomposition import SESOI
 from sphragis.experiment.training import IGNORE_INDEX
-
-#: Where the per-token log-probability's SESOI is registered (`likelihood_sesoi.py`).
-LIKELIHOOD_SESOI = Path("datasets/results/likelihood-sesoi.json")
-
-
-def metric_sesoi(metric: str) -> float | None:
-    """A metric's registered SESOI, or None where none is registered.
-
-    Exact match's is the cost-benefit constant; the per-token log-probability's is carried from it
-    by the positive control. Total log-probability, a sensitivity, has none.
-    """
-    if metric == "exact_match":
-        return SESOI
-    if metric == "logprob_per_token" and LIKELIHOOD_SESOI.is_file():
-        return float(json.loads(LIKELIHOOD_SESOI.read_text())["sesoi"])
-    return None
-
 
 #: Wide enough that no held-out example is refused for length: scoring reads one forward pass,
 #: so the training budget, which exists to keep a batch in memory, does not apply.

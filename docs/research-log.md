@@ -8790,3 +8790,24 @@ pilot's `sizing.runs` (10 on both), so a read at Wikimedia's K = 20 would be ref
 coverage rule has a registered K source; and the gate's `within_sesoi`, `meaningful` and
 `below_sesoi` readings use exact match's 0.01 on every metric, not likelihood's 0.0183 (the pass
 and bounded verdicts read the simulation's bounds and are unaffected).
+
+### The gate reads K from the coverage rule, and every SESOI reading from the registered metric (2026-10-10)
+
+`# research(2026-10)`. Closes the two items left "still to do" above.
+
+**K.** `scripts/k_coverage.py` applies the K coverage rule (`partitions.coverage_runs`, the grid
+`partitions.K_GRID`) to an organization's likelihood pilot and its simulations, and writes
+`k-coverage-<org>-likelihood.json`, which `partition_pilot.py --sizing` takes as the K source of
+a test read: OpenStack K = 10 (the reproducibility K, its null within nominal there), Wikimedia
+K = 20 (reproducibility K 10, coverage K 20). The rule refuses a grid point of another
+organization, metric, pilot calibration, projected size or null-study count, a K off the grid or
+repeated, and a gap below the first K that holds; K values above it are recorded and decide
+nothing. A test reproduces each committed artifact from the committed pilot and grid.
+
+**The registered metric.** `cells.REGISTERED_METRIC` is `logprob_per_token`, and a test read is
+refused unless the read, its K source and its bounds were all made on it. `h1_test_gate`, the
+replication read and `decomposition_gate` now take their SESOI from `metric_sesoi` (0.0183 nats
+per token on the registered metric), so `within_sesoi`, `meaningful` and `below_sesoi` no longer
+compare likelihood intervals with exact match's 0.01. `metric_sesoi` moved beside `SESOI` in
+`decomposition.py`, reads `likelihood-sesoi.json` from the repository root rather than the working
+directory, and raises when that artifact is missing instead of reporting the metric unregistered.

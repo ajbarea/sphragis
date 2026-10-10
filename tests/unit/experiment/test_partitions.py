@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import math
+import subprocess
+import sys
+from pathlib import Path
 from statistics import NormalDist, stdev
 
 import pytest
@@ -18,12 +21,16 @@ from sphragis.experiment.decomposition import SESOI
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.partitions import (
     BETA,
+    COVERAGE_NULL_TRIALS,
+    K_COVERAGE,
+    K_GRID,
     K_MAX,
     K_MIN,
     MAX_DROPPED_SHARE,
     XI,
     chi2_quantile,
     common_runs,
+    coverage_runs,
     h1_over_partitions,
     pilot_sizing,
     reproducibility,
@@ -314,13 +321,20 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         **cell,
         "window": "test",
         "planted_convention": {"passed": True},
+        "metric": "logprob_per_token",
         "without": {
             name: {"estimate": cell["estimate"], "intervals": cell["intervals"]}
             for name in ("ai_assisted", "backport_only")
         },
         "levels": [level],
-        "k_from": {"org": "apache", "runs": 4, "spread_targets": calibration},
+        "k_from": {
+            "org": "apache",
+            "runs": 4,
+            "spread_targets": calibration,
+            "metric": "logprob_per_token",
+        },
         "sensitivity": {
+            "metric": "logprob_per_token",
             "org": "apache",
             "cells": 1,
             "runs": 4,
@@ -399,3 +413,128 @@ def test_spread_targets_are_named_by_the_one_registered_list() -> None:
     pilot = {"per_run": [0.02, -0.01, 0.005], "runs_left_out": [0.0], "sizing": {"sd_upper": 1.0}}
     assert tuple(spread_targets(pilot)) == SPREAD_TARGETS
     assert REGISTERED_SPREAD_TARGET in SPREAD_TARGETS
+
+
+_COVERAGE_PILOT = {
+    "org": "wikimedia",
+    "window": "development",
+    "metric": "logprob_per_token",
+    "levels": [0.975, 0.95],
+    "per_run": [0.004, -0.003, 0.006, 0.001, -0.002, 0.005],
+    "runs_left_out": [],
+    "sizing": {"runs": 10, "sd_upper": 0.008},
+}
+
+
+def _grid_point(k: int, at_975: float, at_95: float, **fields: object) -> tuple[str, dict]:
+    """One simulation of the coverage grid: the null's one-sided rates at the sizing bound."""
+    rates = {"0.975": at_975, "0.95": at_95}
+    simulation = {
+        "org": "wikimedia",
+        "metric": "logprob_per_token",
+        "runs": k,
+        "null_trials": COVERAGE_NULL_TRIALS,
+        "planned_changes": 2_848,
+        "spread_targets": spread_targets(_COVERAGE_PILOT),
+        "by_target": {"sizing_bound_90": {"null_false_positive": rates}},
+    }
+    return f"k{k}.json", simulation | fields
+
+
+def test_k_rises_to_the_first_grid_point_whose_null_holds_at_every_level() -> None:
+    grid = [
+        _grid_point(10, 0.0195, 0.0325),
+        _grid_point(12, 0.0165, 0.03025),
+        # Within nominal at 95% but not at 97.5%: both levels must hold.
+        _grid_point(15, 0.0135, 0.0245),
+        _grid_point(20, 0.0095, 0.022),
+        # Above the first that holds, a K that does not hold decides nothing.
+        _grid_point(35, 0.013, 0.02175),
+    ]
+    k = coverage_runs(_COVERAGE_PILOT, grid, org="wikimedia", name="pilot")
+    assert (k["reproducibility_runs"], k["coverage_runs"], k["runs"]) == (10, 20, 20)
+    assert [row["runs"] for row in k["grid"]] == [10, 12, 15, 20, 35]
+    assert [row["within_nominal"] for row in k["grid"]] == [False, False, False, True, False]
+    # Nominal is the one-sided level, and a rate exactly at it holds.
+    exact = coverage_runs(
+        _COVERAGE_PILOT, [_grid_point(10, 0.0125, 0.025)], org="wikimedia", name="pilot"
+    )
+    assert exact["runs"] == 10
+
+
+def test_the_pilots_reproducibility_k_is_kept_when_it_is_the_larger() -> None:
+    pilot = _COVERAGE_PILOT | {"sizing": {"runs": 24, "sd_upper": 0.008}}
+    grid = [_grid_point(10, 0.001, 0.002)]
+    k = coverage_runs(pilot, grid, org="wikimedia", name="pilot")
+    assert (k["coverage_runs"], k["runs"]) == (10, 24)
+
+
+@pytest.mark.parametrize(
+    ("grid", "match"),
+    [
+        ([_grid_point(10, 0.02, 0.03), _grid_point(15, 0.01, 0.02)], "no simulation at K = 12"),
+        ([_grid_point(10, 0.02, 0.03)], "no simulation at K = 12"),
+        ([], "no simulation at K = 10"),
+        ([_grid_point(10, 0.001, 0.002, org="openstack")], "simulates openstack"),
+        ([_grid_point(10, 0.001, 0.002, metric="exact_match")], "is on exact_match"),
+        ([_grid_point(10, 0.001, 0.002, null_trials=1_000)], "1000 null studies"),
+        ([_grid_point(11, 0.001, 0.002)], "K = 11 is not a grid point"),
+        ([_grid_point(10, 0.02, 0.03), _grid_point(10, 0.001, 0.002)], "K = 10 is not a grid"),
+        (
+            [_grid_point(10, 0.001, 0.002, spread_targets={"sizing_bound_90": 0.009})],
+            "calibrated on another pilot",
+        ),
+        (
+            [_grid_point(10, 0.02, 0.03), _grid_point(12, 0.001, 0.002, planned_changes=2_000)],
+            "different projected sizes",
+        ),
+        (
+            [
+                _grid_point(
+                    10,
+                    0.001,
+                    0.002,
+                    by_target={"sizing_bound_90": {"null_false_positive": {"0.975": 0.001}}},
+                )
+            ],
+            "the pilot reads",
+        ),
+        ([_grid_point(k, 0.02, 0.03) for k in K_GRID], "no K in"),
+    ],
+)
+def test_a_grid_the_rule_cannot_read_is_refused(grid: list, match: str) -> None:
+    with pytest.raises(ValueError, match=match):
+        coverage_runs(_COVERAGE_PILOT, grid, org="wikimedia", name="pilot")
+
+
+def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
+    artifact = {"kind": K_COVERAGE, "org": "wikimedia", "runs": 20}
+    assert pilot_sizing(artifact, "k-coverage", org="wikimedia", require_org=True) == 20
+    with pytest.raises(ValueError, match="'openstack''s K, not wikimedia's"):
+        pilot_sizing(artifact | {"org": "openstack"}, "k-coverage", org="wikimedia")
+    with pytest.raises(ValueError, match="no runs"):
+        pilot_sizing(artifact | {"runs": 0}, "k-coverage", org="wikimedia")
+
+
+@pytest.mark.parametrize("org", ["openstack", "wikimedia"])
+def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid(
+    org: str, tmp_path: Path
+) -> None:
+    """`k_coverage.py` rerun on the committed pilot and grid reproduces the committed artifact."""
+    root = Path(__file__).resolve().parents[3]
+    results = root / "datasets/results"
+    committed = json.loads((results / f"k-coverage-{org}-likelihood.json").read_text())
+    grid = [Path(row["file"]) for row in committed["grid"]]
+    out = tmp_path / "k.json"
+    subprocess.run(
+        [sys.executable, str(root / "scripts/k_coverage.py"), "--pilot", committed["pilot"]]
+        + ["--org", org, "--grid", *map(str, grid), "--out", str(out)],
+        cwd=root,
+        check=True,
+        capture_output=True,
+    )
+    rerun = json.loads(out.read_text())
+    drop = {"provenance"}
+    assert {k: v for k, v in rerun.items() if k not in drop} == {
+        k: v for k, v in committed.items() if k not in drop
+    }

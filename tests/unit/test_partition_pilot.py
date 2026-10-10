@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 
 from sphragis.experiment import decomposition
-from sphragis.experiment.cells import REGISTERED_SENSITIVITIES
+from sphragis.experiment.cells import REGISTERED_METRIC, REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION
-from sphragis.experiment.partitions import spread_targets
+from sphragis.experiment.partitions import K_COVERAGE, spread_targets
 
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location(
@@ -183,7 +183,7 @@ def _replication_argv(
 ) -> list[str]:
     level = decomposition.REPLICATION_CONFIDENCE
     sensitivity = _sensitivity(tmp_path, [level], bound, simulated)
-    return [
+    argv = [
         *(_registered_without(tmp_path, "apache", ids) if window == "test" else []),
         *_inputs(tmp_path, "apache", window),
         *(
@@ -196,9 +196,10 @@ def _replication_argv(
         str(sensitivity),
         "--spread-target",
         "sizing_bound_90",
-        "--out",
-        str(tmp_path / "pilot.json"),
     ]
+    if window == "test":
+        argv = _registered_metric(argv)
+    return [*argv, "--out", str(tmp_path / "pilot.json")]
 
 
 @pytest.fixture
@@ -268,6 +269,7 @@ def test_a_test_window_is_read_only_under_what_was_fixed_before_it(
     argv = [*_inputs(tmp_path, org, "test"), *_planted(tmp_path, org), *extra]
     argv += [a for flag, args in given.items() if flag != drop for a in args]
     argv += ["--replication"] if org == "apache" else ["--h1-cells", "1"]
+    argv = _registered_metric(argv)
     with pytest.raises(SystemExit, match=match):
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
     assert not (tmp_path / "o.json").exists()
@@ -312,6 +314,19 @@ def _with_likelihood(argv: list[str]) -> None:
         Path(path).write_text(json.dumps(run))
 
 
+def _registered_metric(argv: list[str]) -> list[str]:
+    """A test read on the registered metric: its runs scored on it, and its planted run, K and
+    bounds made on it."""
+    _with_likelihood(argv)
+    for arg in argv:
+        path = Path(arg)
+        if path.name in ("planted.json", "sizing.json", "sensitivity.json") and path.is_file():
+            path.write_text(
+                json.dumps(json.loads(path.read_text()) | {"metric": REGISTERED_METRIC})
+            )
+    return [*argv, "--metric", REGISTERED_METRIC]
+
+
 def test_a_run_without_the_metric_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -343,9 +358,9 @@ def test_the_per_token_likelihood_reads_its_registered_sesoi(
     """The SESOI comes from likelihood-sesoi.json, and every reading compares against it."""
     registered = tmp_path / "likelihood-sesoi.json"
     registered.write_text(json.dumps({"sesoi": 0.5}))
-    import sphragis.experiment.likelihood as likelihood
+    import sphragis.experiment.decomposition as decomposition
 
-    monkeypatch.setattr(likelihood, "LIKELIHOOD_SESOI", registered)
+    monkeypatch.setattr(decomposition, "LIKELIHOOD_SESOI", registered)
     argv = _inputs(tmp_path, "openstack")
     _with_likelihood(argv)
     out = tmp_path / "o.json"
@@ -482,7 +497,7 @@ def _gerrit_test_argv(
     names: tuple[str, ...] = REGISTERED_SENSITIVITIES,
 ) -> list[str]:
     sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack", pilot=pilot)
-    return [
+    argv = [
         *_inputs(tmp_path, "openstack", "test"),
         *_planted(tmp_path, "openstack"),
         *_sizing(tmp_path, "openstack"),
@@ -490,9 +505,8 @@ def _gerrit_test_argv(
         "--sensitivity",
         str(sensitivity),
         *extra,
-        "--out",
-        str(tmp_path / "o.json"),
     ]
+    return [*_registered_metric(argv), "--out", str(tmp_path / "o.json")]
 
 
 def test_a_gerrit_test_read_takes_its_levels_cells_and_target_from_the_registration(
@@ -739,3 +753,38 @@ def test_an_unregistered_sensitivity_is_refused(
                 str(tmp_path / "o.json"),
             ],
         )
+
+
+def test_a_test_read_on_another_metric_than_the_registered_one_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _gerrit_test_argv(tmp_path)
+    argv[argv.index("--metric") + 1] = "exact_match"
+    with pytest.raises(SystemExit, match=r"\{'metric': 'exact_match'\} differ from the registered"):
+        _main(monkeypatch, argv)
+    assert not (tmp_path / "o.json").exists()
+
+
+def test_a_test_read_takes_its_k_from_the_coverage_artifact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    """The coverage rule's K, with the pilot's spread targets its simulation is checked against."""
+    argv = _gerrit_test_argv(tmp_path)
+    coverage = {
+        "kind": K_COVERAGE,
+        "org": "openstack",
+        "metric": REGISTERED_METRIC,
+        "runs": len(ADMISSIBLE),
+        "spread_targets": spread_targets(PILOT),
+    }
+    (tmp_path / "sizing.json").write_text(json.dumps(coverage))
+    _main(monkeypatch, argv)
+    report = json.loads((tmp_path / "o.json").read_text())
+    assert report["k_source"] == f"{tmp_path / 'sizing.json'}: runs"
+    assert report["k_from"]["runs"] == report["runs"] == len(ADMISSIBLE)
+    assert report["k_from"]["spread_targets"] == spread_targets(PILOT)
+    # A coverage artifact of another organization is no K for this one.
+    (tmp_path / "sizing.json").write_text(json.dumps(coverage | {"org": "wikimedia"}))
+    (tmp_path / "o.json").unlink()
+    with pytest.raises(SystemExit, match="'wikimedia''s K, not openstack's"):
+        _main(monkeypatch, argv)
