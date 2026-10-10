@@ -24,6 +24,13 @@ TEST_BOOTSTRAP_SEED = 7
 # was sized on ("Stated power", registered-decisions.md).
 SPREAD_TARGETS = ("pilot_lower_90", "pilot_estimate", "sizing_bound_90", "pilot_upper_99")
 REGISTERED_SPREAD_TARGET = "sizing_bound_90"
+# The score H1 and H2 are read on: the reference's mean log-probability per token, a strictly
+# proper score that sees a convention learned at a minority rate (research log 2026-10-09).
+REGISTERED_METRIC = "logprob_per_token"
+# The kind a K coverage artifact records (`k_coverage.py`): the only K source a test read takes,
+# since the coverage rule, not the pilot's reproducibility K alone, fixes K (research log
+# 2026-10-09).
+K_COVERAGE = "k_coverage"
 
 
 def level_key(confidence: Any) -> float:
@@ -235,6 +242,20 @@ def require_test_read(
         raise ValueError(f"{org}: K = {report['runs']!r} is not a whole number of runs")
     if report["window"] != "test":
         raise ValueError(f"{org}: read on the {report['window']} window, not the test window")
+    # The score, its K and its bounds in one metric's units, the registered one; reports that
+    # predate the field were read on exact match.
+    for name, source in (
+        ("the read", report),
+        ("k_from", report["k_from"]),
+        ("sensitivity", report["sensitivity"]),
+    ):
+        # A source that is not a record is refused below, with its own reason.
+        made_on = source.get("metric", "exact_match") if isinstance(source, Mapping) else None
+        if made_on is not None and made_on != expected["metric"]:
+            raise ValueError(f"{org}: {name} is on {made_on}, registered {expected['metric']}")
+    k_from = report["k_from"]
+    if isinstance(k_from, Mapping) and k_from.get("kind") != K_COVERAGE:
+        raise ValueError(f"{org}: K is from {k_from.get('file')!r}, not its K coverage artifact")
     planted = report["planted_convention"]
     if not (isinstance(planted, Mapping) and planted.get("passed") is True):
         raise ValueError(f"{org}: outcome-neutral check 5 did not pass, so H1 is not read")

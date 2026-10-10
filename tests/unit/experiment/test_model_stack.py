@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -84,6 +85,8 @@ class _FakeModel:
     def __init__(self) -> None:
         self.kwargs: dict[str, Any] = {}
         self.dtype: Any = torch.bfloat16
+        # As the checkpoint ships it: a 1.1 penalty decoding overrides, and two stop ids.
+        self.generation_config = SimpleNamespace(repetition_penalty=1.1, eos_token_id=[2, 3])
 
     def eval(self) -> None:
         pass
@@ -102,13 +105,24 @@ class _FakeModel:
         return torch.tensor([[1, 2, 3, 4, 5]])
 
 
+def _offline_loads(
+    monkeypatch: pytest.MonkeyPatch, tokenizer: _FakeTokenizer, fake: _FakeModel
+) -> None:
+    """Every Hub load the generator makes, answered by fakes: the tokenizer, a text-only config
+    (so it loads through the causal-LM class) and the model."""
+    monkeypatch.setattr(model_module, "_require_tokenizer", lambda *_: tokenizer)
+    monkeypatch.setattr(
+        model_module.AutoConfig, "from_pretrained", lambda *a, **k: SimpleNamespace()
+    )
+    monkeypatch.setattr(model_module.AutoModelForCausalLM, "from_pretrained", lambda *a, **k: fake)
+
+
 @pytest.fixture
 def wired(monkeypatch: pytest.MonkeyPatch) -> tuple[HFGenerator, _FakeTokenizer, _FakeModel]:
     """A generator over fakes, with the fakes returned: reaching through the generator's
     declared types to inspect them is not something a type checker can follow."""
     tokenizer, fake = _FakeTokenizer(), _FakeModel()
-    monkeypatch.setattr(model_module, "_require_tokenizer", lambda _: tokenizer)
-    monkeypatch.setattr(model_module.AutoModelForCausalLM, "from_pretrained", lambda *a, **k: fake)
+    _offline_loads(monkeypatch, tokenizer, fake)
     return HFGenerator(device="cpu"), tokenizer, fake
 
 
@@ -204,8 +218,7 @@ def test_the_precision_can_be_overridden_to_measure_what_it_replaced(
     """The determinism check compares bf16 against fp32; an unoverridable default would have it
     write fp32 under both labels and erase the measurement the registration rests on."""
     tokenizer, fake = _FakeTokenizer(), _FakeModel()
-    monkeypatch.setattr(model_module, "_require_tokenizer", lambda *_: tokenizer)
-    monkeypatch.setattr(model_module.AutoModelForCausalLM, "from_pretrained", lambda *a, **k: fake)
+    _offline_loads(monkeypatch, tokenizer, fake)
     generator = HFGenerator(device="cpu", dtype="bfloat16")
     assert fake.dtype is torch.bfloat16
     assert generator.computed_dtype == "bfloat16", "read back from the model, not the request"
@@ -282,14 +295,21 @@ def test_the_generator_loads_its_model_at_the_pinned_revision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     asked: dict = {}
+    configured: dict = {}
     monkeypatch.setattr(model_module, "_require_tokenizer", lambda _: _FakeTokenizer())
+    monkeypatch.setattr(
+        model_module.AutoConfig,
+        "from_pretrained",
+        lambda *a, **k: configured.update(k) or SimpleNamespace(),
+    )
     monkeypatch.setattr(
         model_module.AutoModelForCausalLM,
         "from_pretrained",
         lambda *a, **k: asked.update(k) or _FakeModel(),
     )
     HFGenerator(device="cpu")
-    assert asked["revision"] == model_module.MODEL_REVISIONS[model_module.MODEL_ID]
+    pinned = model_module.MODEL_REVISIONS[model_module.MODEL_ID]
+    assert asked["revision"] == configured["revision"] == pinned
 
 
 def test_every_hub_load_in_the_code_passes_a_revision() -> None:

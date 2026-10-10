@@ -1,0 +1,119 @@
+{
+  "kind": "k_coverage",
+  "org": "wikimedia",
+  "metric": "logprob_per_token",
+  "pilot": "datasets/results/partition-pilot-wikimedia-likelihood.json",
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": 10,
+  "coverage_runs": 20,
+  "runs": 20,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 10,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token.json",
+      "null_false_positive": {
+        "0.975": 0.0195,
+        "0.95": 0.0325
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 12,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k12-null.json",
+      "null_false_positive": {
+        "0.975": 0.0165,
+        "0.95": 0.03025
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 15,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k15-null.json",
+      "null_false_positive": {
+        "0.975": 0.0135,
+        "0.95": 0.0245
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 20,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20-null.json",
+      "null_false_positive": {
+        "0.975": 0.0095,
+        "0.95": 0.022
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 25,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k25-null.json",
+      "null_false_positive": {
+        "0.975": 0.0105,
+        "0.95": 0.0215
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 30,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k30-null.json",
+      "null_false_positive": {
+        "0.975": 0.01075,
+        "0.95": 0.02325
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 35,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k35-null.json",
+      "null_false_positive": {
+        "0.975": 0.013,
+        "0.95": 0.02175
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 40,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k40-null.json",
+      "null_false_positive": {
+        "0.975": 0.01,
+        "0.95": 0.02225
+      },
+      "within_nominal": true
+    }
+  ],
+  "spread_targets": {
+    "pilot_lower_90": 0.005332661743105112,
+    "pilot_estimate": 0.006332729149222406,
+    "sizing_bound_90": 0.007975596279716378,
+    "pilot_upper_99": 0.009729128391796769
+  },
+  "provenance": {
+    "generated_at": "2026-10-10T04:36:52.133548+00:00",
+    "git": {
+      "commit": "e5665da93264d0114f4e411761b5dd599697bce0",
+      "branch": "gate/k-coverage",
+      "uncommitted_code": [
+        "scripts/k_coverage.py",
+        "scripts/partition_pilot.py",
+        "scripts/partition_sensitivity.py",
+        "sphragis/experiment/cells.py",
+        "sphragis/experiment/decomposition.py",
+        "sphragis/experiment/likelihood.py",
+        "sphragis/experiment/partitions.py"
+      ],
+      "uncommitted_code_sha256": "1ec512fd81397540f3efd320930245b03bffe79de0f8fdf8a54425796fcf17c2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

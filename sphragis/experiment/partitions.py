@@ -18,10 +18,23 @@ from statistics import NormalDist, stdev, variance
 from typing import Any
 
 from sphragis.experiment.across import one_sided_p
-from sphragis.experiment.cells import SPREAD_TARGETS, by_level, is_count, level_key
+from sphragis.experiment.cells import (
+    K_COVERAGE,
+    REGISTERED_SPREAD_TARGET,
+    SPREAD_TARGETS,
+    by_level,
+    is_count,
+    level_key,
+    same_calibration,
+)
 from sphragis.experiment.decomposition import SESOI, project_clusters, read_intervals
 from sphragis.experiment.neutral import source_root, source_windows
-from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
+from sphragis.measure.stats import (
+    equal_halves,
+    one_sided_alpha,
+    partitioned_crossed_draws,
+    percentile_interval,
+)
 
 # Two independent aggregations agree within XI with probability about 1 - BETA (Ritzwoller and
 # Romano, arXiv:2311.14204). XI is the SESOI: a disagreement smaller than the smallest effect of
@@ -39,6 +52,12 @@ K_MIN = 10
 # 1.56, sacct; research log 2026-09-29), so 40 runs is about 58 GPU-hours an organization. The
 # admissible list is this long.
 K_MAX = 40
+# The K coverage rule (research log 2026-10-09, committed before the grid ran): the reproducibility
+# K sizes agreement between aggregations, not the interval's coverage, so K rises to the first of
+# these at which a simulated null, at the bound K was sized on, passes no more often than nominal
+# at every Holm level, each rate over this many null studies.
+K_GRID = (10, 12, 15, 20, 25, 30, 35, 40)
+COVERAGE_NULL_TRIALS = 4_000
 # Every run scores the organization's deduplicated held-out examples. Only the per-half
 # boilerplate stage can still remove one in one partition and not another; above this share of
 # examples missing from any run, the runs are refused rather than read on a shrunken set. A
@@ -179,8 +198,17 @@ def pilot_sizing(
     K, and a test-window reading's would be sized on confirmatory data; both are refused, as is
     another organization's pilot. A pilot written before readings recorded their window and
     organization is a development-window reading; with `require_org` (a test-window read) it must
-    name its organization, so it is regenerated first.
+    name its organization, so it is regenerated first. A K coverage artifact (`k_coverage.py`)
+    carries the K the coverage rule took from that pilot.
     """
+    if artifact.get("kind") == K_COVERAGE:
+        if "org" not in artifact:
+            raise ValueError(f"{name} does not name its organization")
+        if artifact["org"] != org:
+            raise ValueError(f"{name} is {artifact.get('org')!r}'s K, not {org}'s")
+        if not is_count(artifact.get("runs")):
+            raise ValueError(f"{name}: no runs to read K from, got {artifact.get('runs')!r}")
+        return artifact["runs"]
     if require_org and "org" not in artifact:
         raise ValueError(f"{name} does not name its organization; rerun it to size a test read")
     source = artifact.get("k_source", "all runs")
@@ -194,6 +222,84 @@ def pilot_sizing(
     if not is_count(runs):
         raise ValueError(f"{name}: no sizing.runs to read K from, got {runs!r}")
     return runs
+
+
+def coverage_runs(
+    pilot: Mapping[str, Any],
+    grid: Sequence[tuple[str, Mapping[str, Any]]],
+    *,
+    org: str,
+    name: str,
+) -> dict[str, Any]:
+    """K under the coverage rule: the larger of the pilot's K and the first grid K whose null holds.
+
+    `grid` pairs each simulation's file with its artifact, at most one per K in `K_GRID` and every
+    K up to the first that holds, each of `org` on the pilot's metric, calibrated on this pilot,
+    at one projected size and with `COVERAGE_NULL_TRIALS` null studies; anything else is refused,
+    as is a grid in which no K holds. The null's rates are read at `REGISTERED_SPREAD_TARGET` and
+    each pilot level.
+    """
+    reproducibility = pilot_sizing(pilot, name, org=org, require_org=True)
+    targets = spread_targets(pilot)
+    metric = pilot.get("metric", "exact_match")
+    levels = [level_key(c) for c in pilot["levels"]]
+    nominal = {c: one_sided_alpha(c) for c in levels}
+    rates: dict[int, dict[float, float]] = {}
+    files: dict[int, str] = {}
+    sizes = set()
+    for file, simulation in grid:
+        k = simulation.get("runs")
+        if simulation.get("org") != org:
+            raise ValueError(f"{file} simulates {simulation.get('org')}, not {org}")
+        if simulation.get("metric", "exact_match") != metric:
+            raise ValueError(
+                f"{file} is on {simulation.get('metric', 'exact_match')}, not {metric}"
+            )
+        if not same_calibration(simulation.get("spread_targets"), targets):
+            raise ValueError(f"{file} was calibrated on another pilot than {name}")
+        if simulation.get("null_trials") != COVERAGE_NULL_TRIALS:
+            raise ValueError(
+                f"{file}: {simulation.get('null_trials')} null studies, not {COVERAGE_NULL_TRIALS}"
+            )
+        if k not in K_GRID or k in rates:
+            raise ValueError(f"{file}: K = {k!r} is not a grid point not already read")
+        sizes.add(simulation.get("planned_changes"))
+        read = by_level(simulation["by_target"][REGISTERED_SPREAD_TARGET]["null_false_positive"])
+        if set(read) != set(levels):
+            raise ValueError(f"{file}: null rates at {sorted(read)}, the pilot reads {levels}")
+        rates[k], files[k] = read, file
+    if len(sizes) > 1:
+        raise ValueError(
+            f"the grid was simulated at different projected sizes: {sorted(sizes, key=str)}"
+        )
+    # The first K that holds, read in order; every K below it must have been simulated, since
+    # the rule takes the smallest, and those above it decide nothing.
+    holds = {k: all(read[c] <= nominal[c] for c in levels) for k, read in rates.items()}
+    coverage = None
+    for k in K_GRID:
+        if k not in rates:
+            raise ValueError(f"the grid has no simulation at K = {k}, below any K that holds")
+        if holds[k]:
+            coverage = k
+            break
+    if coverage is None:
+        raise ValueError(f"no K in {K_GRID} holds the null at nominal {nominal}")
+    return {
+        "reproducibility_runs": reproducibility,
+        "coverage_runs": coverage,
+        "runs": max(reproducibility, coverage),
+        "nominal": {str(c): a for c, a in nominal.items()},
+        "grid": [
+            {
+                "runs": k,
+                "file": files[k],
+                "null_false_positive": {str(c): r for c, r in rates[k].items()},
+                "within_nominal": holds[k],
+            }
+            for k in sorted(rates)
+        ],
+        "spread_targets": targets,
+    }
 
 
 def partition_run_windows(

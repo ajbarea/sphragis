@@ -15,8 +15,10 @@ cells are confirmatory is registered here, not passed in. Design of record:
 
 from __future__ import annotations
 
+import json
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
 from statistics import fmean
 from typing import Any
 
@@ -24,6 +26,7 @@ from sphragis.corpus.halves import suffix
 from sphragis.experiment.across import across_organizations, partial_conjunction
 from sphragis.experiment.cells import (
     MIN_RESAMPLES,
+    REGISTERED_METRIC,
     REGISTERED_SPREAD_TARGET,
     by_level,
     is_count,
@@ -52,6 +55,30 @@ from sphragis.measure.stats import (
 # contrast. It sets K through `partitions.XI`; beside each cell it is reported and decides no
 # verdict.
 SESOI = 0.01
+
+#: Where the per-token log-probability's SESOI is registered (`likelihood_sesoi.py`), carried from
+#: SESOI by the positive control (research log 2026-10-09).
+LIKELIHOOD_SESOI = Path(__file__).resolve().parents[2] / "datasets/results/likelihood-sesoi.json"
+
+
+def metric_sesoi(metric: str) -> float | None:
+    """A metric's registered SESOI, or None where none is registered.
+
+    Exact match's is the cost-benefit constant; the per-token log-probability's is carried from it
+    by the positive control, and its artifact must exist. Total log-probability, a sensitivity,
+    has none.
+    """
+    if metric == "exact_match":
+        return SESOI
+    if metric == "logprob_per_token":
+        if not LIKELIHOOD_SESOI.is_file():
+            raise FileNotFoundError(
+                f"{LIKELIHOOD_SESOI} registers {metric}'s SESOI and is missing "
+                "(scripts/likelihood_sesoi.py writes it)"
+            )
+        return float(json.loads(LIKELIHOOD_SESOI.read_text())["sesoi"])
+    return None
+
 
 # One-sided family-wise level across the confirmatory hypotheses, held by Holm's step-down.
 FAMILY_ALPHA = 0.025
@@ -178,7 +205,20 @@ def registered_read(org: str) -> dict[str, Any]:
 
 
 def _read_at(levels: list[float], *, cells: int) -> dict[str, Any]:
-    return {"levels": levels, "cells": cells, "spread_target": REGISTERED_SPREAD_TARGET}
+    return {
+        "levels": levels,
+        "cells": cells,
+        "spread_target": REGISTERED_SPREAD_TARGET,
+        "metric": REGISTERED_METRIC,
+    }
+
+
+def _sesoi_of(metric: str) -> float:
+    """The SESOI a reading on `metric` compares against, refused where none is registered."""
+    sesoi = metric_sesoi(metric)
+    if sesoi is None:
+        raise ValueError(f"{metric} has no registered SESOI")
+    return sesoi
 
 
 def _gerrit_read(spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -362,6 +402,7 @@ def h1_test_gate(
         _require_exactly(given, orgs, what=what)
     expected = _gerrit_read(spec)
     levels = expected["levels"]
+    sesoi = _sesoi_of(expected["metric"])
     intervals = {
         c: require_readable(reports, confidence=c, fields=_CELL_FIELDS + ("bootstrap_se",))
         for c in levels
@@ -375,7 +416,9 @@ def h1_test_gate(
         at = {c: intervals[c][org][level_key(c)] for c in levels}
         cells[org] = {
             "estimate": report["estimate"],
-            **read_intervals({c: (i["low"], i["high"]) for c, i in at.items()}, detectable[org]),
+            **read_intervals(
+                {c: (i["low"], i["high"]) for c, i in at.items()}, detectable[org], sesoi=sesoi
+            ),
             "p_one_sided": report["p_one_sided"],
             "size": _test_size(org, report, simulation, powers, detectable[org], expected["cells"]),
             # The registered sensitivities the report read (partition_pilot.py --without).
@@ -388,9 +431,10 @@ def h1_test_gate(
         "verdicts": verdicts,
         "passed_at": passed_at,
         "reading": reading(verdicts["H1"], None),
-        "below_sesoi": below_sesoi(per_hypothesis, passed_at),
+        "below_sesoi": below_sesoi(per_hypothesis, passed_at, sesoi=sesoi),
         "cells": cells,
-        "sesoi": SESOI,
+        "metric": expected["metric"],
+        "sesoi": sesoi,
         "detectable": {"H1": detectable},
         "holm_levels": levels,
         "below_projection": _below_projection(cells, powers),
@@ -439,7 +483,7 @@ def replication_gate(
             "interval": {"low": interval["low"], "high": interval["high"]},
             "bound": bound,
             "verdict": cell_verdict(interval["low"], interval["high"], bound=bound),
-            "meaningful": meaningful(interval["low"]),
+            "meaningful": meaningful(interval["low"], _sesoi_of(expected["metric"])),
             "p_one_sided": cell["p_one_sided"],
             "size": _test_size(org, cell, simulation, powers, bounds, expected["cells"]),
             # The registered sensitivities the report read (partition_pilot.py --without).
@@ -767,6 +811,8 @@ def holm_verdicts(per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]])
 def below_sesoi(
     per_hypothesis: Mapping[str, Mapping[str, Mapping[str, Any]]],
     passed_at: Mapping[str, float | None],
+    *,
+    sesoi: float = SESOI,
 ) -> list[str]:
     """Passing cells whose interval, at the level the hypothesis passed at, sits inside SESOI."""
     return sorted(
@@ -774,7 +820,7 @@ def below_sesoi(
         for name, cells in per_hypothesis.items()
         if passed_at[name] is not None
         for org, cell in cells.items()
-        if cell["intervals"][passed_at[name]]["high"] < SESOI
+        if cell["intervals"][passed_at[name]]["high"] < sesoi
     )
 
 
@@ -801,6 +847,7 @@ def decomposition_gate(
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
+    sesoi = _sesoi_of(metric)
     _require_registered_seeds(seeds)
     admitted = tuple(admitted)
     if ADMITTED_ORGANIZATIONS is not None and set(admitted) != set(ADMITTED_ORGANIZATIONS):
@@ -873,6 +920,7 @@ def decomposition_gate(
                 **read_intervals(
                     intervals,
                     bounds.get(name, {}).get(org, {}) if roles[name] == "confirmatory" else {},
+                    sesoi=sesoi,
                 ),
                 "clusters_per_half": [len(runs[0]) for runs in contrasts[name]],
                 "seeds": len(seeds),
@@ -909,10 +957,11 @@ def decomposition_gate(
         "verdicts": verdicts,
         "passed_at": passed_at,
         "reading": reading(verdicts["H1"], verdicts.get("H2")),
-        "below_sesoi": below_sesoi(tested, passed_at),
+        "below_sesoi": below_sesoi(tested, passed_at, sesoi=sesoi),
         "per_org": per_org,
         "joint": joint,
-        "sesoi": SESOI,
+        "metric": metric,
+        "sesoi": sesoi,
         "detectable": {n: {o: dict(b) for o, b in c.items()} for n, c in bounds.items()},
         "holm_levels": levels,
     }

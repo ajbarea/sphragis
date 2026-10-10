@@ -15,7 +15,7 @@ pilot's own runs averaged per change, the effect is a location shift (`power.shi
 own detectable effect, and each run adds change-by-run noise, per example and shared by a change,
 at the sds measured on the pilot, before its shift (`power.continuous_runs`), the continuous
 counterpart of churn; SESOI and XI are the
-metric's own (`likelihood.metric_sesoi`).
+metric's own (`decomposition.metric_sesoi`).
 
 Every input is read from the artifact that fixed it, never typed: K from the pilot's sizing (or
 `--runs`, recorded as the K source, for the K coverage rule's grid), the test window's size from
@@ -55,8 +55,7 @@ from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.windows import WINDOWS
-from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves
-from sphragis.experiment.likelihood import metric_sesoi
+from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves, metric_sesoi
 from sphragis.experiment.partitions import K_MAX, K_MIN, pilot_sizing, spread_targets
 from sphragis.experiment.power import (
     _null,

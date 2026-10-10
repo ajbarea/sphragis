@@ -1,0 +1,56 @@
+{
+  "kind": "k_coverage",
+  "org": "openstack",
+  "metric": "logprob_per_token",
+  "pilot": "datasets/results/partition-pilot-openstack-likelihood.json",
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": 10,
+  "coverage_runs": 10,
+  "runs": 10,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 10,
+      "file": "datasets/results/partition-sensitivity-openstack-rp1.0-logprob_per_token.json",
+      "null_false_positive": {
+        "0.975": 0.0085,
+        "0.95": 0.02075
+      },
+      "within_nominal": true
+    }
+  ],
+  "spread_targets": {
+    "pilot_lower_90": 0.004542859469156213,
+    "pilot_estimate": 0.005394810315569553,
+    "sizing_bound_90": 0.006794358019861835,
+    "pilot_upper_99": 0.008288180494188776
+  },
+  "provenance": {
+    "generated_at": "2026-10-10T04:36:52.276368+00:00",
+    "git": {
+      "commit": "e5665da93264d0114f4e411761b5dd599697bce0",
+      "branch": "gate/k-coverage",
+      "uncommitted_code": [
+        "scripts/k_coverage.py",
+        "scripts/partition_pilot.py",
+        "scripts/partition_sensitivity.py",
+        "sphragis/experiment/cells.py",
+        "sphragis/experiment/decomposition.py",
+        "sphragis/experiment/likelihood.py",
+        "sphragis/experiment/partitions.py"
+      ],
+      "uncommitted_code_sha256": "1ec512fd81397540f3efd320930245b03bffe79de0f8fdf8a54425796fcf17c2"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

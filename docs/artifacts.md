@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 632 artifacts under
-62 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 634 artifacts under
+63 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -282,6 +282,14 @@ False-positive rate of the registered pairs cluster bootstrap, under a true null
 | artifact | |
 |---|---|
 | `interval-calibration-change-averaged.json` | `interval-calibration.json` |
+
+## `scripts/k_coverage.py`
+
+An organization's K under the coverage rule, as the K source a test read takes (`--sizing`).
+
+| artifact | |
+|---|---|
+| `k-coverage-openstack-likelihood.json` | `k-coverage-wikimedia-likelihood.json` |
 
 ## `scripts/label_audit_agreement.py`
 

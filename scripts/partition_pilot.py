@@ -3,7 +3,8 @@
 Takes one single-seed `partition_run` result per admissible partition, in the admissible list's
 order, and checks each is the partition and seed that order assigns. Reads H1 with
 `h1_over_partitions` over the first K of them at the registered Holm levels, K read from the
-pilot artifact's `sizing.runs` given as `--sizing` (all runs, when omitted: the pilot itself);
+pilot artifact's `sizing.runs`, or the K coverage artifact's `runs` (`k_coverage.py`), given as
+`--sizing` (all runs, when omitted: the pilot itself);
 with `--sensitivity`, each level's bound is the detectable effect that simulation found at
 `--spread-target` for an H1 over `--h1-cells` organizations. With `--planted`, the organization's
 planted dev run must pass outcome-neutral check 5 (`neutral.planted_convention`) or the cell is
@@ -26,6 +27,7 @@ from pathlib import Path
 
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    K_COVERAGE,
     REGISTERED_SENSITIVITIES,
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
@@ -40,10 +42,10 @@ from sphragis.experiment.decomposition import (
     REPLICATION_FAMILY,
     SESOI,
     holm_levels,
+    metric_sesoi,
     registered_read,
     valid_bound,
 )
-from sphragis.experiment.likelihood import metric_sesoi
 from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
     eval_ids,
@@ -65,7 +67,9 @@ parser.add_argument("runs", type=Path, nargs="+", help="partition runs, in admis
 parser.add_argument("--admissible", type=Path, required=True)
 parser.add_argument("--org", default="openstack")
 parser.add_argument(
-    "--sizing", type=Path, help="the organization's pilot artifact: K is its sizing.runs"
+    "--sizing",
+    type=Path,
+    help="the organization's pilot (K is its sizing.runs) or its K coverage artifact (its runs)",
 )
 # A development read's Holm family size (2 when omitted); a test read takes the registered one.
 parser.add_argument("--hypotheses", type=int, help="the Holm family size")
@@ -210,6 +214,7 @@ def main() -> None:
             "cells": args.h1_cells,
             "spread_target": args.spread_target,
         }
+        chosen["metric"] = args.metric
         conflicts = {k: v for k, v in chosen.items() if v is not None and v != expected[k]}
         if conflicts:
             raise SystemExit(f"not read: {conflicts} differ from the registered {expected}")
@@ -262,12 +267,28 @@ def main() -> None:
             )
         except ValueError as error:
             raise SystemExit(str(error)) from error
-        k_source = f"{args.sizing}: sizing.runs"
-        k_from = {"file": str(args.sizing), "org": sizing_artifact.get("org"), "runs": runs_fixed}
+        coverage = sizing_artifact.get("kind") == K_COVERAGE
+        if window == "test" and not coverage:
+            raise SystemExit(
+                f"not read: {args.sizing} is not a K coverage artifact; a test read takes its K "
+                "from the coverage rule (k_coverage.py)"
+            )
+        k_source = f"{args.sizing}: {'runs' if coverage else 'sizing.runs'}"
+        k_from = {
+            "file": str(args.sizing),
+            "org": sizing_artifact.get("org"),
+            "runs": runs_fixed,
+            "metric": sizing_artifact.get("metric", "exact_match"),
+            "kind": sizing_artifact.get("kind", "pilot"),
+        }
         # Only a test read is checked against its simulation's calibration.
         if window == "test":
             try:
-                k_from["spread_targets"] = spread_targets(sizing_artifact)
+                k_from["spread_targets"] = (
+                    sizing_artifact["spread_targets"]
+                    if coverage
+                    else spread_targets(sizing_artifact)
+                )
             except (KeyError, TypeError, ValueError) as error:
                 raise SystemExit(
                     f"{args.sizing}: no per-run spread to calibrate on ({error})"
@@ -301,6 +322,7 @@ def main() -> None:
             "cells": args.h1_cells,
             "spread_targets": sensitivity.get("spread_targets"),
             "planned_changes": sensitivity.get("planned_changes"),
+            "metric": sensitivity.get("metric", "exact_match"),
         }
     # Each sensitivity's listing checked against this read before any draw is taken: its window,
     # and the corpus it was made from, which must hold every example any run scored (the runs

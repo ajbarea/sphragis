@@ -174,7 +174,7 @@ def _main(
     **fields: Any,
 ) -> tuple[dict, dict]:
     """`main()` on a continuous simulation, its pool rebuilt in memory rather than from a corpus."""
-    from sphragis.experiment.likelihood import metric_sesoi
+    from sphragis.experiment.decomposition import metric_sesoi
 
     monkeypatch.chdir(ROOT)
     sesoi = metric_sesoi("logprob_per_token")
