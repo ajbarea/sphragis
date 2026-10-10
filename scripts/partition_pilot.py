@@ -46,7 +46,12 @@ from sphragis.experiment.decomposition import (
     registered_read,
     valid_bound,
 )
-from sphragis.experiment.neutral import apparatus_holds, planted_convention
+from sphragis.experiment.neutral import (
+    apparatus_holds,
+    battery_holds,
+    planted_convention,
+    recorded_battery,
+)
 from sphragis.experiment.partitions import (
     eval_ids,
     h1_over_partitions,
@@ -177,8 +182,13 @@ def main() -> None:
     runs = []
     windows: set[str] = set()
     decoders: set[str] = set()
+    batteries = []
     for k, path in enumerate(args.runs, start=1):
         run = json.loads(path.read_text())
+        battery = recorded_battery(run, path)
+        batteries.append(
+            {"file": str(path), "recorded": battery is not None, "holds": battery_holds(battery)}
+        )
         try:
             windows |= partition_run_windows(
                 run, position=k, admissible=admissible, train_size=train_size
@@ -228,6 +238,11 @@ def main() -> None:
             )
     if window == "test":
         check_resamples(args, levels)
+        # Every outcome-neutral test failing halts the study, so no run whose battery did not
+        # hold, or that recorded none, enters a test read.
+        failed = [b["file"] for b in batteries if not b["holds"]]
+        if failed:
+            raise SystemExit(f"not read: outcome-neutral battery missing or failed in {failed}")
     # Check 5 is part of the halt rule, so a read of the sealed window cannot go without it.
     # A K, a bound or a test read rests on the SESOI, so none is taken on an unregistered metric.
     if sesoi is None and (args.sizing or args.sensitivity or window == "test"):
@@ -419,6 +434,7 @@ def main() -> None:
         "window",
         "sensitivity",
         "planted_convention",
+        "outcome_neutral_runs",
         "sizing",
         "without",
         "provenance",
@@ -437,6 +453,7 @@ def main() -> None:
         "window": window,
         "sensitivity": simulation,
         "planted_convention": planted,
+        "outcome_neutral_runs": batteries,
         **cell,
         "sizing": sizing,
         "without": without,

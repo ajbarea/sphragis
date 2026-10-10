@@ -236,3 +236,33 @@ def test_planted_convention_reads_adapter_arms_not_base_arms() -> None:
     run["results"]["adapter:openstack-a|openstack-a|s1"] = _rows(4, 0.0)
     check = _check(run)
     assert not check.passed and "degenerate" in check.evidence["reason"]
+
+
+def test_a_battery_holds_only_when_it_says_so_and_every_check_passed() -> None:
+    from sphragis.experiment.neutral import battery_holds
+
+    passed = {"name": "a", "passed": True}
+    assert battery_holds({"apparatus_holds": True, "checks": [passed]})
+    for battery in (
+        None,
+        {},
+        {"apparatus_holds": True, "checks": []},
+        {"apparatus_holds": False, "checks": [passed]},
+        {"apparatus_holds": True, "checks": [passed, {"name": "b", "passed": False}]},
+        {"apparatus_holds": "true", "checks": [passed]},
+    ):
+        assert not battery_holds(battery)
+
+
+def test_a_rescored_run_reads_the_battery_beside_it(tmp_path) -> None:
+    import json
+
+    from sphragis.experiment.neutral import recorded_battery
+
+    battery = {"apparatus_holds": True, "checks": []}
+    (tmp_path / "rq1.json").write_text(json.dumps({"outcome_neutral": battery}))
+    run = tmp_path / "likelihood.json"
+    assert recorded_battery({"scored_from": "/elsewhere/rq1.json"}, run) == battery
+    assert recorded_battery({"scored_from": "/elsewhere/absent.json"}, run) is None
+    assert recorded_battery({}, run) is None
+    assert recorded_battery({"outcome_neutral": battery, "scored_from": "x"}, run) == battery

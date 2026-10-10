@@ -48,7 +48,13 @@ def _source(org: str, root: str, window: str = "dev") -> str:
     return f"train -> {window} windows under /data/{root}/{org}-a/refined"
 
 
-def _inputs(tmp_path: Path, org: str, window: str = "dev") -> list[str]:
+#: The outcome-neutral battery a generation run records (`scripts/rq1_pilot.py`), one that held.
+HELD = {"apparatus_holds": True, "checks": [{"name": "positive_control", "passed": True}]}
+
+
+def _inputs(
+    tmp_path: Path, org: str, window: str = "dev", battery: dict | None = HELD
+) -> list[str]:
     admissible = tmp_path / "admissible.json"
     admissible.write_text(json.dumps({"admissible": ADMISSIBLE, "size_floor": TRAIN_SIZE}))
     runs = []
@@ -63,6 +69,7 @@ def _inputs(tmp_path: Path, org: str, window: str = "dev") -> list[str]:
                     "train_size": TRAIN_SIZE,
                     "corpora": {org: {"source": source}},
                     "results": _results(org, k),
+                    **({} if battery is None else {"outcome_neutral": battery}),
                 }
             )
         )
@@ -811,3 +818,67 @@ def test_a_test_read_takes_its_k_from_the_coverage_artifact(
     (tmp_path / "o.json").unlink()
     with pytest.raises(SystemExit, match="'wikimedia''s K, not openstack's"):
         _main(monkeypatch, argv)
+
+
+def _rewrite_run(tmp_path: Path, k: int, change) -> None:
+    path = tmp_path / f"run-{k}.json"
+    path.write_text(json.dumps(change(json.loads(path.read_text()))))
+
+
+FAILED = {"apparatus_holds": False, "checks": [{"name": "non_degeneracy", "passed": False}]}
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda run: run | {"outcome_neutral": FAILED},
+        lambda run: {k: v for k, v in run.items() if k != "outcome_neutral"},
+        # A recorded true over a failed check is not a battery that held.
+        lambda run: run | {"outcome_neutral": {**FAILED, "apparatus_holds": True}},
+    ],
+    ids=["failed", "missing", "contradicted"],
+)
+def test_a_test_read_refuses_a_run_whose_battery_did_not_hold(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None, change
+) -> None:
+    argv = _gerrit_test_argv(tmp_path)
+    _rewrite_run(tmp_path, 2, change)
+    with pytest.raises(SystemExit, match="outcome-neutral battery missing or failed"):
+        _main(monkeypatch, argv)
+    assert not (tmp_path / "o.json").exists()
+
+
+@pytest.mark.parametrize(("battery", "read"), [(HELD, True), (FAILED, False)])
+def test_a_rescored_run_carries_the_battery_of_the_run_it_scored(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None, battery: dict, read: bool
+) -> None:
+    """A likelihood run names its generation run by the cluster's path; the battery is read
+    from the file of that name beside it."""
+    argv = _gerrit_test_argv(tmp_path)
+    (tmp_path / "rq1-run-3.json").write_text(json.dumps({"outcome_neutral": battery}))
+    _rewrite_run(
+        tmp_path,
+        3,
+        lambda run: (
+            {k: v for k, v in run.items() if k != "outcome_neutral"}
+            | {"scored_from": "/cluster/results/rq1-run-3.json"}
+        ),
+    )
+    if read:
+        _main(monkeypatch, argv)
+        report = json.loads((tmp_path / "o.json").read_text())
+        assert all(b["holds"] for b in report["outcome_neutral_runs"])
+    else:
+        with pytest.raises(SystemExit, match="outcome-neutral battery"):
+            _main(monkeypatch, argv)
+
+
+def test_a_development_read_records_each_runs_battery_without_refusing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "pilot.json"
+    argv = [*_inputs(tmp_path, "openstack"), "--out", str(out)]
+    _rewrite_run(tmp_path, 1, lambda run: run | {"outcome_neutral": FAILED})
+    _main(monkeypatch, argv)
+    rows = json.loads(out.read_text())["outcome_neutral_runs"]
+    assert [row["holds"] for row in rows] == [False, True, True, True]

@@ -8851,3 +8851,15 @@ the bf16 determinism statement from the 1.0 rerun (2026-10-08 entry), stated as 
 counts left to that entry; and leakage from `window-report-openstack-v3.json`, the corpus v3 build
 the frozen manifests count and `neutral.py` and `project_windows.py` cite. The manuscript's leakage paragraph
 quoted the earlier `window-report-openstack.json` build and is repointed to v3.
+
+### A test read refuses a run whose outcome-neutral battery did not hold (2026-10-10)
+
+`# research(2026-10)`. The halt rule ("any outcome-neutral test failing halts the study") was
+enforced for check 5 alone: `partition_pilot.py` read the unplanted runs without looking at the
+battery each recorded. Registered-report guidance applies a registered exclusion rule by the
+procedure fixed at Stage 1, never case by case, so the gate now does it: every run a test read
+takes must carry a battery that held (`neutral.recorded_battery`, `neutral.battery_holds`), the
+likelihood rescorings through the generation run named in `scored_from`, and
+`cells.require_test_read` refuses a report that does not record one for every run file. A
+development read records each run's battery without refusing. All 46 unplanted development runs
+resolve a battery that held, so no reading changes.

@@ -12,6 +12,7 @@ pre-committed in the report rather than computed.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -244,3 +245,33 @@ def planted_convention(
 def apparatus_holds(checks: Sequence[Check]) -> bool:
     """True only if every outcome-neutral check passed. False halts the study: H1 is not read."""
     return bool(checks) and all(check.passed for check in checks)
+
+
+def recorded_battery(run: Mapping[str, Any], path: Path) -> Mapping[str, Any] | None:
+    """The outcome-neutral battery a stored run recorded, or None when it recorded none.
+
+    A likelihood rescoring (`scripts/likelihood_score.py`) reuses a generation run's adapters
+    and names that run in `scored_from`; the battery is the generation run's, read from beside
+    this file, since the recorded path is the cluster's.
+    """
+    if "outcome_neutral" in run:
+        return run["outcome_neutral"]
+    source = run.get("scored_from")
+    if not isinstance(source, str):
+        return None
+    origin = path.parent / Path(source).name
+    if not origin.is_file():
+        return None
+    return json.loads(origin.read_text()).get("outcome_neutral")
+
+
+def battery_holds(battery: Any) -> bool:
+    """Whether a recorded battery held: `apparatus_holds` true and every recorded check passed."""
+    if not isinstance(battery, Mapping) or battery.get("apparatus_holds") is not True:
+        return False
+    checks = battery.get("checks")
+    return (
+        isinstance(checks, list)
+        and bool(checks)
+        and all(isinstance(c, Mapping) and c.get("passed") is True for c in checks)
+    )

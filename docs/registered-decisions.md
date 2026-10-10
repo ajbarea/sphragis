@@ -95,7 +95,10 @@ reference's per-token log-probability (`cells.REGISTERED_METRIC`), and takes its
 organization's K coverage artifact (`--sizing`, written by `scripts/k_coverage.py` from its own
 development pilot), its bounds from the organization's own simulation at that K
 (`--sensitivity`), outcome-neutral check 5 (`--planted`), and 10,000 resamples at bootstrap seed
-7, the values every development reading used; it refuses to run without any of them. Its levels,
+7, the values every development reading used; it refuses to run without any of them. Every run it
+reads must carry an outcome-neutral battery that held, its own or, for a likelihood rescoring, the
+battery of the generation run it scored (`neutral.recorded_battery`); a run whose battery failed
+or is missing halts the read. Its levels,
 the cell count its bound is simulated for and the spread target it is read at come from the
 registration, never the command line: a Gerrit organization's from the design of the admitted
 organizations, frozen by one commit before any test window (the Holm levels of its confirmatory
