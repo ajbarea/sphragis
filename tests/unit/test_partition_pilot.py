@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 
 from sphragis.experiment import decomposition
-from sphragis.experiment.cells import REGISTERED_METRIC, REGISTERED_SENSITIVITIES
+from sphragis.experiment.cells import K_COVERAGE, REGISTERED_METRIC, REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION
-from sphragis.experiment.partitions import K_COVERAGE, spread_targets
+from sphragis.experiment.partitions import spread_targets
 
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location(
@@ -221,7 +221,7 @@ def test_a_replication_member_reads_its_test_window_through_the_gate(
     report = json.loads((tmp_path / "pilot.json").read_text())
     assert report["levels"] == [level] and report["window"] == "test"
     assert report["planted_convention"]["passed"] is True
-    assert report["sensitivity"]["org"] == "apache" and report["k_source"].endswith("sizing.runs")
+    assert report["sensitivity"]["org"] == "apache" and report["k_source"].endswith(": runs")
     simulations = {"apache": _simulation(tmp_path)}
     gate = decomposition.replication_gate({"apache": report}, simulations=simulations)
     assert gate["cells"]["apache"]["verdict"] == report["verdicts"][str(level)] == "supported"
@@ -315,15 +315,25 @@ def _with_likelihood(argv: list[str]) -> None:
 
 
 def _registered_metric(argv: list[str]) -> list[str]:
-    """A test read on the registered metric: its runs scored on it, and its planted run, K and
-    bounds made on it."""
+    """A test read as registered: its runs scored on the registered metric, its planted run and
+    bounds made on it, and its K from a coverage artifact over the pilot `--sizing` names."""
     _with_likelihood(argv)
     for arg in argv:
         path = Path(arg)
-        if path.name in ("planted.json", "sizing.json", "sensitivity.json") and path.is_file():
+        if path.name in ("planted.json", "sensitivity.json") and path.is_file():
             path.write_text(
                 json.dumps(json.loads(path.read_text()) | {"metric": REGISTERED_METRIC})
             )
+        if path.name == "sizing.json" and path.is_file():
+            pilot = json.loads(path.read_text())
+            coverage = {
+                "kind": K_COVERAGE,
+                "org": pilot.get("org"),
+                "metric": REGISTERED_METRIC,
+                "runs": pilot["sizing"]["runs"],
+                "spread_targets": spread_targets(pilot),
+            }
+            path.write_text(json.dumps(coverage))
     return [*argv, "--metric", REGISTERED_METRIC]
 
 
@@ -474,6 +484,19 @@ def test_a_test_read_refuses_a_pilot_that_does_not_name_its_organization(
     (tmp_path / "sizing.json").write_text(json.dumps(sizing))
     with pytest.raises(SystemExit, match="does not name its organization"):
         _main(monkeypatch, argv)
+
+
+def test_a_test_read_refuses_a_pilot_as_its_k_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    """The coverage rule fixes K, so the pilot's own sizing alone is no K for a test read."""
+    argv = _gerrit_test_argv(tmp_path)
+    pilot = {"org": "openstack", "window": "development", "k_source": "all runs", **PILOT}
+    pilot |= {"metric": REGISTERED_METRIC, "sizing": {**SIZING, "runs": len(ADMISSIBLE)}}
+    (tmp_path / "sizing.json").write_text(json.dumps(pilot))
+    with pytest.raises(SystemExit, match="is not a K coverage artifact"):
+        _main(monkeypatch, argv)
+    assert not (tmp_path / "o.json").exists()
 
 
 def test_every_half_must_be_built_from_the_runs_admissible_partition(

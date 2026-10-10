@@ -420,8 +420,9 @@ def _replication_cell(
         },
         "runs": 24,
         "k_from": {
+            "kind": "k_coverage",
             "metric": "logprob_per_token",
-            "file": f"partition-pilot-{org}.json",
+            "file": f"k-coverage-{org}-likelihood.json",
             "org": org,
             "runs": 24,
             "spread_targets": _CALIBRATION,
@@ -603,6 +604,12 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"levels": [0.975, 0.95]}}, _SIM, "read at levels"),
         ({"apache": _GOOD | {"estimate": float("nan")}}, _SIM, "estimate"),
         ({"apache": _GOOD | {"k_from": None}}, _SIM, "K are not from"),
+        # K from the pilot's own sizing, not from the coverage rule.
+        (
+            {"apache": _GOOD | {"k_from": {**_GOOD["k_from"], "kind": "pilot"}}},
+            _SIM,
+            "not its K coverage artifact",
+        ),
         # A score, a K or a bound made on another metric than the registered one.
         ({"apache": {k: v for k, v in _GOOD.items() if k != "metric"}}, _SIM, "read is on exact"),
         (
@@ -621,10 +628,7 @@ _SIM = {"apache": _sim(0.03)}
             "K are not from its own k_from",
         ),
         (
-            {
-                "apache": _GOOD
-                | {"k_from": {"org": "apache", "runs": 16, "metric": "logprob_per_token"}}
-            },
+            {"apache": _GOOD | {"k_from": {**_GOOD["k_from"], "runs": 16}}},
             _SIM,
             "k_from is at K = 16",
         ),

@@ -20,8 +20,8 @@ import argparse
 import json
 from pathlib import Path
 
-from sphragis.experiment.cells import REGISTERED_SPREAD_TARGET
-from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, K_COVERAGE, coverage_runs
+from sphragis.experiment.cells import K_COVERAGE, REGISTERED_SPREAD_TARGET
+from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, coverage_runs
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)

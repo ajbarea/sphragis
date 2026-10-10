@@ -329,6 +329,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         },
         "levels": [level],
         "k_from": {
+            "kind": "k_coverage",
             "org": "apache",
             "runs": 4,
             "spread_targets": calibration,

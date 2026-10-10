@@ -8798,8 +8798,9 @@ and bounded verdicts read the simulation's bounds and are unaffected).
 **K.** `scripts/k_coverage.py` applies the K coverage rule (`partitions.coverage_runs`, the grid
 `partitions.K_GRID`) to an organization's likelihood pilot and its simulations, and writes
 `k-coverage-<org>-likelihood.json`, which `partition_pilot.py --sizing` takes as the K source of
-a test read: OpenStack K = 10 (the reproducibility K, its null within nominal there), Wikimedia
-K = 20 (reproducibility K 10, coverage K 20). The rule refuses a grid point of another
+a test read, and the only one it takes: `partition_pilot.py` and `require_test_read` refuse a
+pilot's own sizing there. OpenStack K = 10 (the reproducibility K, its null within nominal
+there), Wikimedia K = 20 (reproducibility K 10, coverage K 20). The rule refuses a grid point of another
 organization, metric, pilot calibration, projected size or null-study count, a K off the grid or
 repeated, and a gap below the first K that holds; K values above it are recorded and decide
 nothing. A test reproduces each committed artifact from the committed pilot and grid.

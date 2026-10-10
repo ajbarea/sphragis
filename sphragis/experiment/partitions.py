@@ -19,6 +19,7 @@ from typing import Any
 
 from sphragis.experiment.across import one_sided_p
 from sphragis.experiment.cells import (
+    K_COVERAGE,
     REGISTERED_SPREAD_TARGET,
     SPREAD_TARGETS,
     by_level,
@@ -57,8 +58,6 @@ K_MAX = 40
 # at every Holm level, each rate over this many null studies.
 K_GRID = (10, 12, 15, 20, 25, 30, 35, 40)
 COVERAGE_NULL_TRIALS = 4_000
-# The kind a K coverage artifact records, which `pilot_sizing` reads K from.
-K_COVERAGE = "k_coverage"
 # Every run scores the organization's deduplicated held-out examples. Only the per-half
 # boilerplate stage can still remove one in one partition and not another; above this share of
 # examples missing from any run, the runs are refused rather than read on a shrunken set. A
@@ -203,7 +202,9 @@ def pilot_sizing(
     carries the K the coverage rule took from that pilot.
     """
     if artifact.get("kind") == K_COVERAGE:
-        if artifact.get("org") != org:
+        if "org" not in artifact:
+            raise ValueError(f"{name} does not name its organization")
+        if artifact["org"] != org:
             raise ValueError(f"{name} is {artifact.get('org')!r}'s K, not {org}'s")
         if not is_count(artifact.get("runs")):
             raise ValueError(f"{name}: no runs to read K from, got {artifact.get('runs')!r}")

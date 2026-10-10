@@ -27,6 +27,7 @@ from pathlib import Path
 
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    K_COVERAGE,
     REGISTERED_SENSITIVITIES,
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
@@ -47,7 +48,6 @@ from sphragis.experiment.decomposition import (
 )
 from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
-    K_COVERAGE,
     eval_ids,
     h1_over_partitions,
     partition_run_windows,
@@ -268,12 +268,18 @@ def main() -> None:
         except ValueError as error:
             raise SystemExit(str(error)) from error
         coverage = sizing_artifact.get("kind") == K_COVERAGE
+        if window == "test" and not coverage:
+            raise SystemExit(
+                f"not read: {args.sizing} is not a K coverage artifact; a test read takes its K "
+                "from the coverage rule (k_coverage.py)"
+            )
         k_source = f"{args.sizing}: {'runs' if coverage else 'sizing.runs'}"
         k_from = {
             "file": str(args.sizing),
             "org": sizing_artifact.get("org"),
             "runs": runs_fixed,
             "metric": sizing_artifact.get("metric", "exact_match"),
+            "kind": sizing_artifact.get("kind", "pilot"),
         }
         # Only a test read is checked against its simulation's calibration.
         if window == "test":
