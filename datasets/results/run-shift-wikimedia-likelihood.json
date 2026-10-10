@@ -11,16 +11,17 @@
   "from_change_noise": 2.7034130051508353e-05,
   "run_wide_variance": 1.4098507742045144e-05,
   "run_wide_share_of_shared": 0.022711389178300623,
+  "confidence": 0.9,
+  "run_mean_variance_upper": 6.524256969659481e-05,
+  "run_wide_variance_upper": 3.820843964508646e-05,
+  "run_wide_share_of_shared_upper": 0.06155025471860967,
+  "misplaced_on_run_mean_upper": 1.5637977774550193e-07,
   "worst_case_on_run_mean": 2.540684493677987e-06,
   "provenance": {
-    "generated_at": "2026-10-10T04:56:34.889072+00:00",
+    "generated_at": "2026-10-10T05:17:07.670116+00:00",
     "git": {
-      "commit": "12a4235f15555ad6927e1e8dc816c66de9255ca4",
-      "branch": "measure/likelihood-sims",
-      "uncommitted_code": [
-        "scripts/run_shift.py"
-      ],
-      "uncommitted_code_sha256": "fa5882369b92112201f41e4232f77ca277b23fb15eb97761b4ccdf36d285ba44"
+      "commit": "d0366dc078ad215c227d3efc87011bc01f53ede7",
+      "branch": "measure/likelihood-sims"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

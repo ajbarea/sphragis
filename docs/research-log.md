@@ -8767,18 +8767,22 @@ K = 35 exceeds the 97.5% nominal by 0.0005, inside one Monte Carlo standard erro
 effects are simulated again for Wikimedia at K = 20 (`RUNS=20`, TIGRIS 256458).
 
 **What the noise model can misplace, measured.** `averaged_truth` takes every within-change
-cross-product as noise shared by a change, so a shift the whole run shares in the contrast would
-be counted there and redrawn per change, where the simulation shrinks it with size, rather than
-per run, where sigma_run carries it. `scripts/run_shift.py` (`run-shift-<org>-likelihood.json`)
-measures how much there is: the variance of a run's mean residual over the pilot's 22 runs, less
-what the change noise implies (per_example²/N + shared²·Σn²/N²). On OpenStack the excess is
--2.4e-06, none beyond noise; on Wikimedia 1.4e-05, which inflates the shared variance by 2.3%.
-The misplaced part is therefore at most 2.3% of the shared term, against the worst case in which
-all of it were run-wide (4.7e-06 on a run's mean for OpenStack: a tenth of the run variance at the
-90% sizing bound at the pilot's 206 changes, and a larger share at the projected 2017, where
-change noise has shrunk and sigma_run has not). The OpenStack floor
-(simulated spread 0.0065 at sigma_run 0 against a pilot estimate of 0.0054) is therefore the
-spread partitions and change noise produce on their own, above the pilot's point estimate but
+cross-product as noise shared by a change. A shift favouring one half's adapter cancels between
+the halves in a real run, so redrawing it per change only widens the simulated interval, the
+conservative direction. A shift the whole run shares in the contrast is real run-to-run spread
+that the simulation would redraw per change and shrink with size, the anti-conservative direction.
+`scripts/run_shift.py` (`run-shift-<org>-likelihood.json`) measures the second: the variance of a
+run's mean residual over the pilot's 22 runs, less what the change noise implies
+(per_example²/N + shared²·Σn²/N²), with its one-sided 90% upper bound. On OpenStack the estimate
+is -2.4e-06, none beyond noise, and its upper bound 7.1% of the shared
+variance; on Wikimedia 1.4e-05, 2.3% of the shared variance, upper bound
+6.2%. At those upper bounds the variance moved onto a run's mean is
+3.3e-07 on OpenStack and 1.6e-07 on Wikimedia, against
+4.7e-06 and 2.5e-06 if all of the shared part were run-wide (for OpenStack
+that worst case is a tenth of the run variance at the 90% sizing bound at the pilot's 206 changes,
+and a larger share at the projected 2017). The misplacement is therefore negligible. The
+OpenStack floor (simulated spread 0.0065 at sigma_run 0 against a pilot estimate of 0.0054) is
+the spread partitions and change noise produce on their own, above the pilot's point estimate but
 inside its interval and below the sizing bound of 0.0068, not a misplaced run shift.
 
 **Still to do before a test read:** the gate takes K only from the
