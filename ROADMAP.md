@@ -421,8 +421,9 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   cite in the ethics section. The study contacts no one and reads only publicly posted reviews,
   so it is not human-subjects research under 45 CFR 46.102(e) (research log, 2026-10-08).
 - [ ] **GitHub's written confirmation** that its Acceptable Use Policies permit research on public
-  pull-request review threads, which its Privacy Statement counts as personal data. AJ sends the
-  request. Collection continues; the GitHub organizations stay out of every published figure until
+  pull-request review threads, which its Privacy Statement counts as personal data. Requested
+  2026-10-10 by email to GitHub's privacy team (its privacy form routes other questions there),
+  awaiting a reply. Collection continues; the GitHub organizations stay out of every published figure until
   GitHub answers, and a refusal is met by deleting what was collected.
 - [ ] **Removal on request.** `docs/protocol.md` promises it, and GitHub's Acceptable Use Policies
   (section 8) require it: a script that looks up the account's numeric id, computes the pseudonyms
