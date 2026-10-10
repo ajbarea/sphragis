@@ -825,6 +825,25 @@ def _rewrite_run(tmp_path: Path, k: int, change) -> None:
     path.write_text(json.dumps(change(json.loads(path.read_text()))))
 
 
+def _identity(tmp_path: Path, k: int) -> dict:
+    """The fields a rescoring copies from its run: the fixture run's own, else a stand-in."""
+    run = json.loads((tmp_path / f"run-{k}.json").read_text())
+    return {key: run.get(key, f"stand-in {key}") for key in SCORED_IDENTITY}
+
+
+def _rescore(tmp_path: Path, k: int, identity: dict) -> None:
+    """Run k as a likelihood rescoring: no battery of its own, its generation run named."""
+    _rewrite_run(
+        tmp_path,
+        k,
+        lambda run: (
+            {key: v for key, v in run.items() if key != "outcome_neutral"}
+            | identity
+            | {"scored_from": f"/cluster/results/rq1-run-{k}.json"}
+        ),
+    )
+
+
 FAILED = {"apparatus_holds": False, "checks": [{"name": "non_degeneracy", "passed": False}]}
 
 
@@ -855,17 +874,9 @@ def test_a_rescored_run_carries_the_battery_of_the_run_it_scored(
     """A likelihood run names its generation run by the cluster's path; the battery is read
     from the file of that name beside it."""
     argv = _gerrit_test_argv(tmp_path)
-    run = json.loads((tmp_path / "run-3.json").read_text())
-    identity = {key: run.get(key) for key in SCORED_IDENTITY}
+    identity = _identity(tmp_path, 3)
     (tmp_path / "rq1-run-3.json").write_text(json.dumps({**identity, "outcome_neutral": battery}))
-    _rewrite_run(
-        tmp_path,
-        3,
-        lambda run: (
-            {k: v for k, v in run.items() if k != "outcome_neutral"}
-            | {"scored_from": "/cluster/results/rq1-run-3.json"}
-        ),
-    )
+    _rescore(tmp_path, 3, identity)
     if read:
         _main(monkeypatch, argv)
         report = json.loads((tmp_path / "o.json").read_text())
@@ -891,17 +902,10 @@ def test_a_rescoring_borrows_no_battery_from_another_run_under_its_name(
 ) -> None:
     """A generation run rerun over the name a rescoring recorded is not the run it scored."""
     argv = _gerrit_test_argv(tmp_path)
-    run = json.loads((tmp_path / "run-3.json").read_text())
-    other = {key: run.get(key) for key in SCORED_IDENTITY} | {"seeds": [99]}
+    identity = _identity(tmp_path, 3)
+    other = identity | {"model_id": "another-model"}
     (tmp_path / "rq1-run-3.json").write_text(json.dumps({**other, "outcome_neutral": HELD}))
-    _rewrite_run(
-        tmp_path,
-        3,
-        lambda run: (
-            {k: v for k, v in run.items() if k != "outcome_neutral"}
-            | {"scored_from": "/cluster/results/rq1-run-3.json"}
-        ),
-    )
+    _rescore(tmp_path, 3, identity)
     with pytest.raises(SystemExit, match="outcome-neutral battery"):
         _main(monkeypatch, argv)
 

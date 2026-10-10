@@ -247,8 +247,18 @@ def apparatus_holds(checks: Sequence[Check]) -> bool:
     return bool(checks) and all(check.passed for check in checks)
 
 
-#: What a rescoring and the generation run it scored share, which identifies one as the other.
-SCORED_IDENTITY = ("model_id", "lora_rank", "seeds", "train_size", "corpora")
+#: The fields a likelihood rescoring copies from the generation run it scores
+#: (`scripts/likelihood_score.py`), which identify one as the other.
+SCORED_IDENTITY = (
+    "model_id",
+    "seeds",
+    "split_seed",
+    "equalize_train",
+    "train_size",
+    "lora_rank",
+    "bootstrap_seed",
+    "corpora",
+)
 
 
 def recorded_battery(run: Mapping[str, Any], path: Path) -> Mapping[str, Any] | None:
@@ -267,8 +277,13 @@ def recorded_battery(run: Mapping[str, Any], path: Path) -> Mapping[str, Any] | 
     origin = path.parent / Path(source).name
     if not origin.is_file():
         return None
-    scored = json.loads(origin.read_text())
-    if any(scored.get(key) != run.get(key) for key in SCORED_IDENTITY):
+    try:
+        scored = json.loads(origin.read_text())
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(scored, Mapping) or any(
+        key not in scored or key not in run or scored[key] != run[key] for key in SCORED_IDENTITY
+    ):
         return None
     return scored.get("outcome_neutral")
 

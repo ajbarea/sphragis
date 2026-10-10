@@ -601,6 +601,7 @@ _SIM = {"apache": _sim(0.03)}
             "outcome-neutral battery",
         ),
         ({"apache": _GOOD | {"outcome_neutral_runs": []}}, _SIM, "outcome-neutral battery"),
+        ({"apache": _GOOD | {"run_files": {"run-1.json": 1}}}, _SIM, "outcome-neutral battery"),
         (
             {"apache": _GOOD | {"run_files": ["run-1.json", "run-2.json"]}},
             _SIM,

@@ -792,6 +792,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-10** — A test read refuses any run whose outcome-neutral battery failed or is missing, a likelihood rescoring's through the generation run it scored, and a planted run is never one of H1's runs; all 46 unplanted development runs hold (research log).
 - **2026-10-07** — The contamination battery read against blind baselines: a bag of words separates the pilot windows better than any membership score, so the battery's gap cannot be read as exposure; proposed for Stage 1 as the battery's reading rule (research log).
 - **2026-10-07** — The rules-file comparator read on the development window: 22 distillations (Qwen3.6-27B) and 22 `ARMS=rules` evaluations at 05465f1; distilled own minus sibling carries no contrast as large as the SESOI on either organization (research log).
 - **2026-10-07** — A skip fails the suite unless the GPU stack or a GPU is absent; numpy joins `dev`, so the five script-test modules that CI had been skipping run there.
