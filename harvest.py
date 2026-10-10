@@ -337,6 +337,23 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.013",
         K_COVERAGE_WM,
         ["grid", "#runs=35", "null_false_positive", "0.975"],
+        {"exact": True},
+    ),
+    (
+        "rd_sesoi_exact_match",
+        "registered-decisions.md",
+        "0.01",
+        SESOI,
+        ["exact_match_sesoi"],
+        {"exact": True},
+    ),
+    (
+        "protocol_sesoi_exact_match",
+        "protocol.md",
+        "0.01",
+        SESOI,
+        ["exact_match_sesoi"],
+        {"exact": True},
     ),
     (
         "rd_sesoi",
@@ -768,11 +785,17 @@ def unclaimed() -> list[str]:
     found = []
     for page in sorted(p.name for p in DOCS.glob("*.md") if p.name not in UNASSERTED):
         text = (DOCS / page).read_text()
-        for match in re.finditer(r"[+-]?\d+\.\d{3,4}\b", text):
+        # Whole numbers only, and not an arXiv identifier, which is a citation.
+        for match in re.finditer(r"(?<![\d.])(?<!arXiv:)[+-]?\d+\.\d{3,}\b", text):
             literal = match.group()
             if (page, literal) in claimed:
                 continue
-            if any(literal.lstrip("+-") == other.lstrip("+-") for _, other in claimed):
+            # Signed and unsigned copies of one figure on the same page: a claim on another page
+            # says nothing about this one.
+            if any(
+                where == page and literal.lstrip("+-") == other.lstrip("+-")
+                for where, other in claimed
+            ):
                 continue
             found.append(f"{page}: {literal}")
     return found

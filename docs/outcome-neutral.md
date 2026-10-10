@@ -101,15 +101,15 @@ with each half's own comment marker planted in half of its training refinements 
 `pass` on both halves. Only the planted run is read: the unplanted runs are H1's own data, so a
 condition on them would depend on the outcome.
 
-The strengths below were measured on exact match. Planted on every refinement of one half, a
-convention returns +0.310 and +0.316 over the two
-sides, about fifteen times what the two real organizations differ by, so the contrast can see a house
+On exact match, planted on every refinement of one half, a convention returns +0.310 and +0.316
+over the two sides, about fifteen times what the two real organizations differ by, so the contrast can see a house
 style of that size. Its strength was measured before it was registered, on OpenStack's first ten admissible
 partitions under a rule fixed before the runs: planted in a quarter of the refinements it would
 have halted a working apparatus most of the time, and planted in half it passed every run
 (research log, 2026-10-01). At the registered decoder greedy exact match then missed the
-half-rate convention in most runs, and the check is read on the read's metric, the reference's
-log-probability, on which planted in half it passed every run on both organizations (research
+half-rate convention in most runs, so the check is read on the registered metric, the
+reference's log-probability: planted in half it passed every run on both organizations, and
+planted in a quarter every OpenStack run (research
 log, 2026-10-09). The check reads the strength from the run's
 corpus path rather than trusting it, and refuses a run planted at any other strength, in only
 one half, read on any other window, or from another organization or training size. A read of the
