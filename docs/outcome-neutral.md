@@ -41,7 +41,7 @@ most 0.13:
 | Min-K% | -0.130 |
 | Min-K%++ | -0.075 |
 | Gap-K% | -0.056 |
-| guided completion | +0.003 |
+| guided completion | +0.008 |
 
 Gap-K% exists to be robust to distribution shift, and it returns the *smallest* separation of
 the three, which is what the drift reading predicts rather than the memorization one. A
