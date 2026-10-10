@@ -126,8 +126,8 @@ measured gap is -0.075.
 
 ### Guided completion: reported as a null instrument
 
-It sits at its floor under both criteria the literature offers, at a gap of +0.008 at the registered
-decoder. Swapping
+It sits at its floor under both criteria the literature offers, at a gap of +0.008 at the
+registered decoder. Swapping
 criteria until one separates is what pre-registration exists to prevent.
 
 ### Contamination scored text: the hunk with three context lines either side

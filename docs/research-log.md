@@ -8849,5 +8849,5 @@ different artifacts. Each now reads the one its registered setting produced: gui
 the contamination table from `contamination-openstack-6mo-with_context-rp1.0.json` (penalty 1.0);
 the bf16 determinism statement from the 1.0 rerun (2026-10-08 entry), stated as status with the
 counts left to that entry; and leakage from `window-report-openstack-v3.json`, the corpus v3 build
-the frozen manifests, `neutral.py` and `project_windows.py` read. The manuscript's leakage paragraph
+the frozen manifests count and `neutral.py` and `project_windows.py` cite. The manuscript's leakage paragraph
 quoted the earlier `window-report-openstack.json` build and is repointed to v3.
