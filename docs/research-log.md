@@ -8822,6 +8822,7 @@ Detectable effect at one to three cells, in nats per token:
 
 | spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
 |---|---|---|---|---|---|
+| pilot lower 90 | 0.0000 | 0.0037 to 0.0041 | 0.0034 to 0.0038 | 0.0035 | 0.00725 |
 | pilot estimate | 0.0037 | 0.0050 to 0.0054 | 0.0046 to 0.0050 | 0.00575 | 0.01375 |
 | sizing bound 90 | 0.0062 | 0.0067 to 0.0073 | 0.0062 to 0.0067 | 0.0095 | 0.022 |
 | pilot upper 99 | 0.0085 | 0.0083 to 0.0091 | 0.0077 to 0.0084 | 0.01325 | 0.02475 |
@@ -8830,8 +8831,8 @@ Every detectable effect is below the SESOI (0.0183), and below its K = 10 value 
 point. At the 90% sizing bound the null reads false positives within nominal at both levels, as
 the coverage rule required. At the pilot's 99% upper spread the 97.5% rate, 0.01325, exceeds the
 nominal 0.0125 by 0.00075, inside one Monte Carlo standard error at 4,000 trials (0.0018).
-Reproducibility failure is 0 at every point, and the simulated null reads bounded in at least
-0.955 of trials.
+Reproducibility failure is 0 at every point. The simulated null reads bounded in at least
+0.9752 of trials at the registered two cells, and 0.94875 at worst (one cell, 97.5%, 90% lower spread).
 
 **The registration now quotes the registered metric.** `registered-decisions.md` ("Interval the
 gate reads", "Number of runs", "Stated power"), the interval paragraph of `outcome-neutral.md`, and

@@ -126,14 +126,15 @@ def test_min_max_refuse_what_is_not_a_set_of_numbers(
 
 @pytest.mark.parametrize(
     ("after", "expected"),
-    [("", 4), ("K = ", 2), ("within ", 1), ("K =", 0)],
+    [("", 3), ("K = ", 2), ("within ", 1), ("K =", 0), ("OpenStack K = ", 0)],
 )
 def test_after_counts_a_literal_only_where_its_prefix_precedes_it(
     after: str, expected: int
 ) -> None:
     """A small integer such as a K is counted where it is the K, not wherever the page uses
-    the number for another quantity, and the prefix must match exactly."""
-    page = "K = 10 here, within 10 to 40, at 10.33 points, and so **K = 10** there."
+    the number for another quantity or as the whole part of a decimal, and the prefix must match
+    exactly."""
+    page = "K = 10 here, within 10 to 40, at 10.33 points, K = 10.5, and so **K = 10** there."
     assert harvest.occurrences(page, "10", after) == expected
 
 

@@ -254,15 +254,16 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_fp_low",
         "registered-decisions.md",
-        "0.0073",
+        "0.00725",
         PARTITION_SENSITIVITY,
         ["by_target"],
-        {"reduce": "min:null_false_positive/0.975"},
+        # Also Wikimedia's lowest 95% rate (rd_partition_fp_95_low_wm).
+        {"reduce": "min:null_false_positive/0.975", "occurrences": 2},
     ),
     (
         "rd_partition_fp_high",
         "registered-decisions.md",
-        "0.0112",
+        "0.01125",
         PARTITION_SENSITIVITY,
         ["by_target"],
         {"reduce": "max:null_false_positive/0.975"},
@@ -273,15 +274,90 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        {"reduce": "one_sided", "occurrences": 2},
+        # With the replication family's one-sided 0.0125 and the K-grid sentence's nominal.
+        {"reduce": "one_sided", "occurrences": 3},
     ),
-    ("rd_partition_sd", "registered-decisions.md", "0.0054", PARTITION_PILOT, ["sizing", "sd"]),
+    (
+        "rd_partition_fp_nominal_95",
+        "registered-decisions.md",
+        "0.025",
+        PARTITION_SENSITIVITY,
+        ["levels", "1"],
+        {"reduce": "one_sided"},
+    ),
+    (
+        "rd_partition_fp_95_low",
+        "registered-decisions.md",
+        "0.01775",
+        PARTITION_SENSITIVITY,
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.95"},
+    ),
+    (
+        "rd_partition_fp_95_high",
+        "registered-decisions.md",
+        "0.02175",
+        PARTITION_SENSITIVITY,
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.95"},
+    ),
+    (
+        "rd_partition_fp_95_low_wm",
+        "registered-decisions.md",
+        "0.00725",
+        PARTITION_SENSITIVITY_WM,
+        ["by_target"],
+        {"reduce": "min:null_false_positive/0.95", "occurrences": 2},
+    ),
+    (
+        "rd_partition_fp_95_high_wm",
+        "registered-decisions.md",
+        "0.02475",
+        PARTITION_SENSITIVITY_WM,
+        ["by_target"],
+        {"reduce": "max:null_false_positive/0.95"},
+    ),
+    (
+        "rd_partition_floor",
+        "registered-decisions.md",
+        "0.0065",
+        PARTITION_SENSITIVITY,
+        ["by_target", "pilot_lower_90", "calibration", "spread"],
+    ),
+    (
+        "rd_grid_k15_wm",
+        "registered-decisions.md",
+        "0.0135",
+        K_COVERAGE_WM,
+        ["grid", "#runs=15", "null_false_positive", "0.975"],
+    ),
+    (
+        "rd_grid_k35_wm",
+        "registered-decisions.md",
+        "0.013",
+        K_COVERAGE_WM,
+        ["grid", "#runs=35", "null_false_positive", "0.975"],
+    ),
+    (
+        "rd_sesoi",
+        "registered-decisions.md",
+        "0.0183",
+        SESOI,
+        ["sesoi"],
+    ),
+    (
+        "rd_partition_sd",
+        "registered-decisions.md",
+        "0.0068",
+        PARTITION_PILOT,
+        ["sizing", "sd_upper"],
+    ),
     (
         "rd_partition_sd_wm",
         "registered-decisions.md",
-        "0.0063",
+        "0.0080",
         PARTITION_PILOT_WM,
-        ["sizing", "sd"],
+        ["sizing", "sd_upper"],
     ),
     (
         "rd_partition_k",
@@ -289,7 +365,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "10",
         K_COVERAGE_OS,
         ["runs"],
-        {"after": "K = ", "occurrences": 2},
+        {"after": "OpenStack K = ", "occurrences": 2},
     ),
     (
         "rd_partition_k_wm",
@@ -297,7 +373,7 @@ CLAIMS: list[tuple[Any, ...]] = [
         "20",
         K_COVERAGE_WM,
         ["runs"],
-        {"after": "K = ", "occurrences": 3},
+        {"after": "Wikimedia K = ", "occurrences": 2},
     ),
     (
         "rd_cell_power",
@@ -347,7 +423,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_fp_high_wm",
         "registered-decisions.md",
-        "0.0132",
+        "0.01325",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
         {"reduce": "max:null_false_positive/0.975"},
@@ -468,7 +544,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_partition_fp_low",
         "outcome-neutral.md",
-        "0.0073",
+        "0.00725",
         PARTITION_SENSITIVITY,
         ["by_target"],
         {"reduce": "min:null_false_positive/0.975"},
@@ -476,7 +552,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_partition_fp_high",
         "outcome-neutral.md",
-        "0.0112",
+        "0.01125",
         PARTITION_SENSITIVITY,
         ["by_target"],
         {"reduce": "max:null_false_positive/0.975"},
@@ -500,7 +576,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_partition_fp_high_wm",
         "outcome-neutral.md",
-        "0.0132",
+        "0.01325",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
         {"reduce": "max:null_false_positive/0.975"},
@@ -607,7 +683,10 @@ def occurrences(text: str, literal: str, after: str = "") -> int:
     # An unsigned literal must not match a signed number either: 0.000 occurs on its own as
     # the measured seed effect and again as +0.000, a bound of a different interval.
     before = r"(?<![0-9.,])" if literal[0] in "+-" else r"(?<![0-9.,+-])"
-    return len(re.findall(re.escape(after) + before + re.escape(literal) + r"(?![0-9])", text))
+    # Nor the whole-number part of a decimal: 10 inside 10.33. A sentence's closing period, with
+    # no digit after it, still ends the number.
+    pattern = re.escape(after) + before + re.escape(literal) + r"(?![0-9]|[.,][0-9])"
+    return len(re.findall(pattern, text))
 
 
 def rounds_to(value: float, literal: str) -> bool:

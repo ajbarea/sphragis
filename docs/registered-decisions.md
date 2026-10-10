@@ -146,8 +146,9 @@ interval. It answers a weaker question than either hypothesis and binds no verdi
 From the October 2026 practice sweep (research log, 2026-10-01), each reported for every cell and
 hypothesis the gate reads, on the same draws, at the same levels:
 
-- **Meaningful.** A supported cell is also *meaningful* when its lower bound clears the SESOI
-  (`SESOI` = 0.01), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
+- **Meaningful.** A supported cell is also *meaningful* when its lower bound clears its metric's
+  SESOI (`decomposition.metric_sesoi`: 0.0183 nats per token on the registered metric, 0.01 on
+  exact match), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
   AMPPS 2026). "Supported" says the effect is above zero; "meaningful" says it is above the
   smallest effect worth having.
 - **At least r of k.** Beside the every-organization rule, the largest r for which "at least r of
@@ -193,8 +194,8 @@ secondary, none binding a verdict:
   from each half's training-window review comments. It asks whether a declared rules file, the
   form coding agents take conventions in today, recovers what the adapters learn.
 - **Exact-match misses, read by people** (Stage 2): a blind audit of 100 non-matching
-  predictions per arm, judging whether each is a correct rewrite, so the contrast's reliance on
-  exact match is measured rather than assumed.
+  predictions per arm, judging whether each is a correct rewrite, so the secondary measure's
+  blindness to correct rewrites is measured rather than assumed.
 - **Renamed identifiers**: the base model's exact match with identifiers renamed against the
   original, post-cutoff against pre-cutoff, read descriptively as exposure through reused code.
 
@@ -224,23 +225,29 @@ own training seed; runs and changes are crossed rather than nested, so they are 
 independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
 0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122. Over
 the registered runs, simulated on the registered metric, its one-sided false-positive rate at the
-stricter level is 0.0073 to 0.0112 for OpenStack and 0.0035 to 0.0132 for Wikimedia, against a
-nominal 0.0125; Wikimedia's exceeds nominal only at the pilot's 99% upper spread, by less than one
-Monte Carlo error.
+stricter level is 0.00725 to 0.01125 for OpenStack and 0.0035 to 0.01325 for Wikimedia, against a
+nominal 0.0125, and at the 95% level 0.01775 to 0.02175 and 0.00725 to 0.02475, against 0.025.
+Only Wikimedia's stricter rate at the pilot's 99% upper spread exceeds nominal, by less than one
+Monte Carlo standard error at 4,000 null trials. OpenStack's two lowest spread points sit
+at the simulation's floor, the spread partitions and change noise give with no run shift
+(0.0065), so its range starts there.
 
-### Number of runs: K = 10 for OpenStack, K = 20 for Wikimedia
+### Number of runs: OpenStack K = 10, Wikimedia K = 20
 
 Decided by the partition study, the pilot and the simulated null. H1 is the mean over K admissible
 partitions, replacing five seeds on one registered partition, whose reading moved with the
 partition as much as with the seed. K is the larger of two numbers, each kept within 10 to 40.
 The reproducibility K is 2v(z / xi)^2, Ritzwoller and Romano's sizing rule, with v at the 90%
 upper bound of the development-window pilot's per-run variance and xi the SESOI: the likelihood
-pilots' per-run standard deviations, 0.0054 for OpenStack and 0.0063 for Wikimedia, put it below
-the floor on both. The coverage K is the smallest K on a fixed grid at which the simulated null,
-at that 90% bound, reads false positives no more often than nominal at both Holm levels
-(`partitions.coverage_runs`): OpenStack's null holds at the floor, Wikimedia's first at K = 20,
-so **K = 10** for OpenStack and **K = 20** for Wikimedia (`k-coverage-<org>-likelihood.json`, the only
-K source a test read accepts). A sequential rule, adding runs until they agree, was simulated
+pilots' per-run standard deviations at that bound, 0.0068 for OpenStack and 0.0080 for Wikimedia,
+put it below the floor on both. The coverage K is the smallest K on a fixed grid (10, 12, 15, 20,
+25, 30, 35, 40) at which the simulated null, at that 90% bound and 4,000 null trials, reads false
+positives no more often than nominal at both Holm levels (`partitions.coverage_runs`). The rule
+reads the grid in order and stops at the first K that holds, and does not re-read it: rates this
+close to nominal differ by less than a Monte Carlo standard error, so Wikimedia's K = 15 reads
+0.0135 and K = 35 reads 0.013 at the stricter level against 0.0125, both recorded in the artifact. OpenStack's null holds at the floor and
+Wikimedia's first at 20, so **OpenStack K = 10** and **Wikimedia K = 20**
+(`k-coverage-<org>-likelihood.json`, the only K source a test read accepts). A sequential rule, adding runs until they agree, was simulated
 first and rejected: it ran above nominal where it stopped early.
 
 ### Stated power: sensitivity, not power at an observed effect

@@ -142,7 +142,7 @@ The confirmatory contrast has not been run. What exists is a dev-window reading,
 window is the most censored window in the corpus, so it is a pre-registration estimate rather
 than an unbiased preview.
 
-H1 on the development window over the pilot's 22 admissible partitions an organization, one
+H1 on the development window over the pilot's 22 admissible partitions per organization, one
 training seed each, in nats per token (206 OpenStack changes, 429 Wikimedia):
 
 | organization | Holm level | H1 estimate | interval | verdict |
@@ -159,11 +159,11 @@ of the test window's projected changes, so these readings size the design rather
 its verdicts.
 
 Two comparators are read on the development window over the first ten admissible partitions of
-each organization, as exploratory readings that bind no verdict. A few-shot retrieval arm
+each organization, on exact match, as exploratory readings that bind no verdict. A few-shot retrieval arm
 (`retrieval-reading-*.json`) reads inconclusive on own half against sibling half for
 both organizations at both pool sizes. A rules-file arm, a distilled rules file and a written
 guide placed in the system turn (`rules-reading-*.json`), carries no own-minus-sibling
-contrast as large as the SESOI on either organization. The figures are in
+contrast as large as exact match's SESOI (0.01) on either organization. The figures are in
 the [artifact index](artifacts.md) and the [research log](log/index.md).
 
 ## What is on this site
