@@ -38,6 +38,7 @@ from sphragis.experiment.partitions import (
     sd_bound,
     spread_targets,
 )
+from sphragis.measure.stats import one_sided_alpha
 
 
 def test_reproducibility_is_ritzwoller_and_romanos_criterion() -> None:
@@ -455,11 +456,15 @@ def test_k_rises_to_the_first_grid_point_whose_null_holds_at_every_level() -> No
     assert (k["reproducibility_runs"], k["coverage_runs"], k["runs"]) == (10, 20, 20)
     assert [row["runs"] for row in k["grid"]] == [10, 12, 15, 20, 35]
     assert [row["within_nominal"] for row in k["grid"]] == [False, False, False, True, False]
-    # Nominal is the one-sided level, and a rate exactly at it holds.
+    # Nominal is the one-sided level: a rate exactly at it holds, the next float above does not.
+    at = {c: one_sided_alpha(c) for c in (0.975, 0.95)}
     exact = coverage_runs(
-        _COVERAGE_PILOT, [_grid_point(10, 0.0125, 0.025)], org="wikimedia", name="pilot"
+        _COVERAGE_PILOT, [_grid_point(10, at[0.975], at[0.95])], org="wikimedia", name="pilot"
     )
     assert exact["runs"] == 10
+    above = _grid_point(10, math.nextafter(at[0.975], 1.0), at[0.95])
+    with pytest.raises(ValueError, match="no simulation at K = 12"):
+        coverage_runs(_COVERAGE_PILOT, [above], org="wikimedia", name="pilot")
 
 
 def test_the_pilots_reproducibility_k_is_kept_when_it_is_the_larger() -> None:

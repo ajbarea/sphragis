@@ -90,8 +90,10 @@ it was set before any test data existed.
 
 ### Reading the test window: everything it is read under is fixed first (registered 2026-10-05)
 
-A test-window read (`scripts/partition_pilot.py`) takes its K from the organization's own
-development pilot (`--sizing`), its bounds from the organization's own simulation at that K
+A test-window read (`scripts/partition_pilot.py`) is read on the registered metric, the
+reference's per-token log-probability (`cells.REGISTERED_METRIC`), and takes its K from the
+organization's K coverage artifact (`--sizing`, written by `scripts/k_coverage.py` from its own
+development pilot), its bounds from the organization's own simulation at that K
 (`--sensitivity`), outcome-neutral check 5 (`--planted`), and 10,000 resamples at bootstrap seed
 7, the values every development reading used; it refuses to run without any of them. Its levels,
 the cell count its bound is simulated for and the spread target it is read at come from the
@@ -181,7 +183,8 @@ estimand or the levels.
 
 ### Comparators and audits beside the confirmatory test (registered 2026-10-04)
 
-Exploratory, each on the same examples and exact match as H1, none binding a verdict:
+Exploratory, each on the same examples as H1 and scored on exact match, H1's registered
+secondary, none binding a verdict:
 
 - **Retrieval**: the base model with the k most similar training-window refinements in its
   prompt, from the own half, the sibling half and the foreign organization, at k = 1 and k = 3.
@@ -202,6 +205,18 @@ Jaccard 0.8 that rate is 0.00% by construction, because dedup removes pairs at t
 across windows as well as within them, so registering there would be a test that cannot fail.
 
 ## Decided by the measurements their rules named in advance
+
+### Outcome: the reference's per-token log-probability, exact match secondary (registered 2026-10-09)
+
+Decided by outcome-neutral check 5, under rules fixed before any likelihood result was read. A
+convention planted in half of each half's training refinements was found on every planted run
+by the reference's mean log-probability per token, a strictly proper score, and on few by greedy
+exact match, which credits only an adapter's most likely output. Its SESOI is exact match's,
+carried by the adapters' gain over the base model on both (`likelihood-sesoi.json`); every
+reading against a SESOI uses the metric's own (`decomposition.metric_sesoi`). The interval,
+K and power figures in the sections below were measured on exact match and are rerun on the
+registered metric; K now follows the coverage rule (`partitions.coverage_runs`, research log
+2026-10-09).
 
 ### Interval the gate reads: the crossed run-by-change bootstrap
 

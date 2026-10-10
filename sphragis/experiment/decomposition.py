@@ -71,6 +71,11 @@ def metric_sesoi(metric: str) -> float | None:
     if metric == "exact_match":
         return SESOI
     if metric == "logprob_per_token":
+        if not LIKELIHOOD_SESOI.is_file():
+            raise FileNotFoundError(
+                f"{LIKELIHOOD_SESOI} registers {metric}'s SESOI and is missing "
+                "(scripts/likelihood_sesoi.py writes it)"
+            )
         return float(json.loads(LIKELIHOOD_SESOI.read_text())["sesoi"])
     return None
 

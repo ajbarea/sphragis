@@ -1636,3 +1636,53 @@ def test_a_test_read_without_its_registered_sensitivities_is_refused() -> None:
         )
     noted = {**report, "without": {**report["without"], "backport_only": {"unreadable": "x"}}}
     assert require_sensitivities(noted, org="apache")["backport_only"] == {"unreadable": "x"}
+
+
+def test_the_replication_gate_reads_meaningful_against_the_registered_metrics_sesoi(
+    frozen,
+) -> None:
+    """A lower bound between exact match's SESOI and the registered metric's is not meaningful."""
+    frozen("apache")
+    registered = decomposition.metric_sesoi(REGISTERED_METRIC)
+    assert registered is not None and registered > decomposition.SESOI
+    low = (decomposition.SESOI + registered) / 2
+    out = replication_gate(
+        {"apache": _replication_cell(low, 0.05, 0.0001)}, simulations={"apache": _sim(0.03)}
+    )
+    assert out["cells"]["apache"]["verdict"] == "supported"
+    assert not out["cells"]["apache"]["meaningful"]
+
+
+def test_the_development_gate_reads_each_metric_against_its_own_sesoi() -> None:
+    admitted = ("openstack", "qt")
+    results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
+    for rows in results.values():
+        for row in rows:
+            row["logprob_per_token"] = row["exact_match"] - 1.0
+
+    def gate(metric: str) -> dict[str, Any]:
+        return decomposition_gate(
+            results,
+            admitted=admitted,
+            seeds=SEEDS,
+            metric=metric,
+            bootstrap_seed=0,
+            resamples=1_000,
+            detectable=DETECTABLE,
+        )
+
+    assert gate("exact_match")["sesoi"] == decomposition.SESOI
+    on_likelihood = gate(REGISTERED_METRIC)
+    assert on_likelihood["metric"] == REGISTERED_METRIC
+    assert on_likelihood["sesoi"] == decomposition.metric_sesoi(REGISTERED_METRIC)
+    with pytest.raises(ValueError, match="logprob has no registered SESOI"):
+        gate("logprob")
+
+
+def test_a_missing_likelihood_sesoi_is_named_rather_than_read_as_unregistered(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(decomposition, "LIKELIHOOD_SESOI", tmp_path / "absent.json")
+    with pytest.raises(FileNotFoundError, match="absent.json registers logprob_per_token"):
+        decomposition.metric_sesoi("logprob_per_token")
+    assert decomposition.metric_sesoi("logprob") is None
