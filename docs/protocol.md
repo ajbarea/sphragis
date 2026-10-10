@@ -34,11 +34,12 @@ For a refinement from half `a` of organization `O`, three adapters are scored on
 example: `O_a`, trained on its own half; `O_b`, trained on the sibling half of the same
 organization; and `P_x`, trained on a half of a foreign organization `P`. `O_b` and `P_x` have
 not seen the evaluated projects, and they differ only in whether they come from the same house.
-With `EM` exact match, pooled over examples:
+With `LP` the mean log-probability per token an adapter assigns the reviewed revision, pooled over
+examples (greedy exact match is the registered secondary):
 
 ```text
-d_proj(O) = EM(O_a) - EM(O_b)      H1 (half-split):                       d_proj(O) > 0
-d_org(O)  = EM(O_b) - EM(P_x)      H2 (organization beyond its projects): d_org(O)  > 0
+d_proj(O) = LP(O_a) - LP(O_b)      H1 (half-split):                       d_proj(O) > 0
+d_org(O)  = LP(O_b) - LP(P_x)      H2 (organization beyond its projects): d_org(O)  > 0
 ```
 
 Each contrast is the mean of its two halves' contrasts within a run, then the mean over the
@@ -141,26 +142,28 @@ The confirmatory contrast has not been run. What exists is a dev-window reading,
 window is the most censored window in the corpus, so it is a pre-registration estimate rather
 than an unbiased preview.
 
-OpenStack's H1 cell over K = 24 admissible partitions, one training seed each, on the
-development window's 206 changes:
+H1 on the development window over the pilot's 22 admissible partitions per organization, one
+training seed each, in nats per token (206 OpenStack changes, 429 Wikimedia):
 
-| Holm level | H1 estimate | interval | verdict |
-|---|---|---|---|
-| 97.5% | +0.0049 | [-0.0088, +0.0185] | inconclusive |
-| 95% | +0.0049 | [-0.0073, +0.0166] | inconclusive |
+| organization | Holm level | H1 estimate | interval | verdict |
+|---|---|---|---|---|
+| OpenStack | 97.5% | +0.0231 | [+0.0081, +0.0402] | supported |
+| OpenStack | 95% | +0.0231 | [+0.0097, +0.0376] | supported |
+| Wikimedia | 97.5% | +0.0058 | [-0.0004, +0.0125] | inconclusive |
+| Wikimedia | 95% | +0.0058 | [+0.0003, +0.0117] | supported |
 
-The development window holds about a tenth of the test window's projected changes, so an inconclusive
-reading here says the design needs the test window, not that the effect is absent.
-
-Wikimedia's H1 cell, over K = 16 admissible partitions, also reads inconclusive at both levels
-(`partition-pilot-wikimedia-k16.json`).
+OpenStack's contrast is positive at both levels, with its lower bounds below the smallest effect
+of interest (SESOI, 0.0183 nats per token); Wikimedia's intervals lie inside the band of plus or
+minus the SESOI at both. The development window holds a fraction
+of the test window's projected changes, so these readings size the design rather than preview
+its verdicts.
 
 Two comparators are read on the development window over the first ten admissible partitions of
-each organization, as exploratory readings that bind no verdict. A few-shot retrieval arm
+each organization, on exact match, as exploratory readings that bind no verdict. A few-shot retrieval arm
 (`retrieval-reading-*.json`) reads inconclusive on own half against sibling half for
 both organizations at both pool sizes. A rules-file arm, a distilled rules file and a written
 guide placed in the system turn (`rules-reading-*.json`), carries no own-minus-sibling
-contrast as large as the smallest effect of interest on either organization. The figures are in
+contrast as large as exact match's SESOI (0.01) on either organization. The figures are in
 the [artifact index](artifacts.md) and the [research log](log/index.md).
 
 ## What is on this site

@@ -101,12 +101,16 @@ with each half's own comment marker planted in half of its training refinements 
 `pass` on both halves. Only the planted run is read: the unplanted runs are H1's own data, so a
 condition on them would depend on the outcome.
 
-Planted on every refinement of one half, a convention returns +0.310 and +0.316 over the two
-sides, about fifteen times what the two real organizations differ by, so the contrast can see a house
+On exact match, planted on every refinement of one half, a convention returns +0.310 and +0.316
+over the two sides, about fifteen times what the two real organizations differ by, so the contrast can see a house
 style of that size. Its strength was measured before it was registered, on OpenStack's first ten admissible
 partitions under a rule fixed before the runs: planted in a quarter of the refinements it would
 have halted a working apparatus most of the time, and planted in half it passed every run
-(research log, 2026-10-01). The check reads the strength from the run's
+(research log, 2026-09-30 and 2026-10-01). At the registered decoder greedy exact match then missed the
+half-rate convention in most runs, so the check is read on the registered metric, the
+reference's log-probability: planted in half it passed every run on both organizations, and
+planted in a quarter every OpenStack run (research
+log, 2026-10-09). The check reads the strength from the run's
 corpus path rather than trusting it, and refuses a run planted at any other strength, in only
 one half, read on any other window, or from another organization or training size. A read of the
 sealed window without it is refused. The planted run's adapter arms must not be degenerate; its base arms are left
@@ -128,10 +132,12 @@ condition is degenerate by construction, and the apparatus is what said so.
 One further check is not part of the halt rule and is reported beside it.
 
 **The interval's error rate is measured.** Simulated over each organization's registered K
-partitions at its projected test size, the crossed interval the gate reads has a one-sided
-false-positive rate at the stricter Holm level of 0.011 to 0.0125 for OpenStack and 0.014 to
-0.016 for Wikimedia against a nominal 0.0125, at every run-to-run spread from each pilot's 90%
-lower bound to its 99% upper bound.
+partitions at its projected test size, on the registered metric, the crossed interval the gate
+reads has a one-sided false-positive rate at the stricter Holm level of 0.00725 to 0.01125 for
+OpenStack and 0.0035 to 0.01325 for Wikimedia against a nominal 0.0125, at every run-to-run spread
+from each pilot's 90% lower bound to its 99% upper bound (for OpenStack the two lowest sit at the
+simulation's floor). Only Wikimedia's at the 99% bound exceeds nominal, by less than one Monte
+Carlo standard error.
 
 ## Reading the evidence yourself
 
