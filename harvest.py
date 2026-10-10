@@ -53,7 +53,7 @@ PILOT = f"{RESULTS}/pilot-outcomes.json"
 FP32_PILOT = f"{RESULTS}/rq1-pilot-fp32-pilot.json"
 UNEQUAL = f"{RESULTS}/rq1-pilot.json"
 WINDOW_V3 = f"{RESULTS}/window-report-openstack-v3.json"
-CONTAMINATION = f"{RESULTS}/contamination-openstack-6mo-with_context-gapk.json"
+CONTAMINATION = f"{RESULTS}/contamination-openstack-6mo-with_context-rp1.0.json"
 CALIBRATION = f"{RESULTS}/interval-calibration.json"
 CALIBRATION_AVERAGED = f"{RESULTS}/interval-calibration-change-averaged.json"
 INFORMATIVENESS = f"{RESULTS}/cluster-informativeness.json"
@@ -215,7 +215,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_guided",
         "registered-decisions.md",
-        "+0.003",
+        "+0.008",
         CONTAMINATION,
         ["report", "guided_completion", "gap"],
     ),
@@ -494,7 +494,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_guided",
         "outcome-neutral.md",
-        "+0.003",
+        "+0.008",
         CONTAMINATION,
         ["report", "guided_completion", "gap"],
     ),

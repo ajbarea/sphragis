@@ -126,7 +126,8 @@ measured gap is -0.075.
 
 ### Guided completion: reported as a null instrument
 
-It sits at its floor under both criteria the literature offers, at a gap of +0.003. Swapping
+It sits at its floor under both criteria the literature offers, at a gap of +0.008 at the registered
+decoder. Swapping
 criteria until one separates is what pre-registration exists to prevent.
 
 ### Contamination scored text: the hunk with three context lines either side
@@ -264,9 +265,10 @@ estimate is biased upward, so no power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 
-Decided by a determinism check across jobs and nodes. fp32 reproduces on every prediction
-across two jobs on different nodes, where bf16 differs on a handful and on up to two within
-one process, at no measurable cost in wall time.
+Decided by a determinism check across jobs and nodes, repeated at the registered decoder. fp32
+reproduces on every prediction across two jobs on different nodes, where bf16 differs between
+the jobs and within one process (research log, 2026-09-18 and 2026-10-08), at no measurable cost
+in wall time.
 
 ## Where these live in the code
 

@@ -8841,3 +8841,13 @@ likelihood pilots, these simulations (OpenStack at K = 10, Wikimedia at K = 20) 
 `k-coverage-<org>-likelihood.json` K sources; `harvest.py` asserts every figure against them. A
 claim's new `after` option counts a small integer such as a K only where its prefix precedes it,
 so "K = 10" is not satisfied by every other 10 on the page.
+
+### Registration figures follow the registered decoder and corpus v3 (2026-10-10)
+
+`# research(2026-10)`. Three figures on the registration pages and the Stage 1 manuscript came from
+different artifacts. Each now reads the one its registered setting produced: guided completion and
+the contamination table from `contamination-openstack-6mo-with_context-rp1.0.json` (penalty 1.0);
+the bf16 determinism statement from the 1.0 rerun (2026-10-08 entry), stated as status with the
+counts left to that entry; and leakage from `window-report-openstack-v3.json`, the corpus v3 build
+the frozen manifests, `neutral.py` and `project_windows.py` read. The manuscript's leakage paragraph
+quoted the earlier `window-report-openstack.json` build and is repointed to v3.
