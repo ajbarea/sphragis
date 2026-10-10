@@ -1,0 +1,5 @@
+pilot_lower_90: spread 0.0053 at 429 changes -> sigma_run 0.0000 (realised 0.0054)
+pilot_estimate: spread 0.0063 at 429 changes -> sigma_run 0.0038 (realised 0.0063)
+sizing_bound_90: spread 0.0080 at 429 changes -> sigma_run 0.0063 (realised 0.0080)
+pilot_upper_99: spread 0.0097 at 429 changes -> sigma_run 0.0085 (realised 0.0097)
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k35-null.json

@@ -8765,3 +8765,15 @@ K is 20**. OpenStack's null is within nominal at K = 10, so its K stays 10. The 
 K = 35 exceeds the 97.5% nominal by 0.0005, inside one Monte Carlo standard error at 4,000 trials
 (0.0018). The rule takes the smallest passing K and is not re-read on that excursion. The detectable
 effects are simulated again for Wikimedia at K = 20 (`RUNS=20`, TIGRIS 256458).
+
+**What the noise model overstates, and what the gate does not read yet.** `averaged_truth` takes
+every within-change cross-product as noise shared by a change, so a shift common to a whole run,
+or one favouring one half's adapter, is counted in it too and redrawn per change, which raises the
+estimate on synthetic runs that carry such a shift. The simulated runs therefore spread more
+than the pilot's, which is why OpenStack's pilot estimate is reached at sigma_run 0 with a spread
+of 0.0065 against 0.0054; the error widens the simulated interval, the conservative direction for
+the false-positive rates above. **Still to do before a test read:** the gate takes K only from the
+pilot's `sizing.runs` (10 on both), so a read at Wikimedia's K = 20 would be refused until the K
+coverage rule has a registered K source; and the gate's `within_sesoi`, `meaningful` and
+`below_sesoi` readings use exact match's 0.01 on every metric, not likelihood's 0.0183 (the pass
+and bounded verdicts read the simulation's bounds and are unaffected).

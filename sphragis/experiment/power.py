@@ -142,6 +142,8 @@ def averaged_truth(
                 contrast[example].append(a - b)
                 if change_of.setdefault(example, row["change_id"]) != row["change_id"]:
                     raise ValueError(f"example {example} belongs to two changes across runs")
+    if len(own) < 2:
+        raise ValueError(f"the spread across examples needs at least two examples, not {len(own)}")
     counts = {len(values) for values in own.values()}
     if counts != {len(runs)}:
         raise ValueError(

@@ -17,9 +17,10 @@ at the sds measured on the pilot, before its shift (`power.continuous_runs`), th
 counterpart of churn; SESOI and XI are the
 metric's own (`likelihood.metric_sesoi`).
 
-Every input is read from the artifact that fixed it, never typed: K from the pilot's sizing, the
-test window's size from the decomposition sensitivity's projection, N and the split criteria's
-reference from the admissible list. sigma_run is calibrated, not chosen: at each of four named
+Every input is read from the artifact that fixed it, never typed: K from the pilot's sizing (or
+`--runs`, recorded as the K source, for the K coverage rule's grid), the test window's size from
+the decomposition sensitivity's projection, N and the split criteria's reference from the
+admissible list. sigma_run is calibrated, not chosen: at each of four named
 points on the pilot's per-run spread (its 90% lower bound, its estimate, the 90% bound K was sized
 on, its 99% upper bound), the shift at which K null runs on the pilot's number of changes spread
 that much. The artifact records each input's source.
@@ -134,24 +135,31 @@ parser.add_argument("--out", type=Path, required=True)
 Pool = list[tuple[Cluster, str]]
 
 
-def pilot_pool(placebo: Path, corpus: Path, org: str, metric: str = "exact_match") -> Pool:
-    """The pilot's own-against-sibling clusters on both halves, each with its change's project."""
-    results = json.loads(placebo.read_text())["results"]
-    seed = json.loads(placebo.read_text())["seeds"][0]
+def with_projects(clusters: list[Cluster], corpus: Path, org: str) -> Pool:
+    """Each cluster with its change's project, which must be exactly one."""
     project_of: dict[str, set[str]] = defaultdict(set)
     for row in refined_examples(corpus, org):
         project_of[row["change_id"]].add(row["project"])
     pool: Pool = []
+    for cluster in clusters:
+        projects = project_of.get(cluster.change_id, set())
+        if len(projects) != 1:
+            raise SystemExit(f"change {cluster.change_id} maps to projects {projects}")
+        pool.append((cluster, next(iter(projects))))
+    return pool
+
+
+def pilot_pool(placebo: Path, corpus: Path, org: str, metric: str = "exact_match") -> Pool:
+    """The pilot's own-against-sibling clusters on both halves, each with its change's project."""
+    results = json.loads(placebo.read_text())["results"]
+    seed = json.loads(placebo.read_text())["seeds"][0]
+    clusters: list[Cluster] = []
     first, second = halves(org)
     for window, sibling in ((first, second), (second, first)):
         own = results[f"adapter:{window}|{window}|s{seed}"]
         other = results[f"adapter:{sibling}|{window}|s{seed}"]
-        for cluster in to_clusters(own, other, metric=metric):
-            projects = project_of.get(cluster.change_id, set())
-            if len(projects) != 1:
-                raise SystemExit(f"change {cluster.change_id} maps to projects {projects}")
-            pool.append((cluster, next(iter(projects))))
-    return pool
+        clusters.extend(to_clusters(own, other, metric=metric))
+    return with_projects(clusters, corpus, org)
 
 
 def partition_pool(
@@ -186,21 +194,12 @@ def averaged_pool(
 ) -> tuple[Pool, tuple[float, float], float]:
     """A continuous score's pool: each change averaged over the pilot's runs, with its project,
     and the change-by-run noise the simulated runs add back (`power.averaged_truth`)."""
-    project_of: dict[str, set[str]] = defaultdict(set)
-    for row in refined_examples(corpus, org):
-        project_of[row["change_id"]].add(row["project"])
     runs = []
     for path in pilot["run_files"]:
         run = json.loads(Path(path).read_text())
         runs.append((run["results"], run["seeds"][0]))
     truth, noise, shrink = averaged_truth(runs, halves=halves(org), metric=metric)
-    pool: Pool = []
-    for cluster in truth:
-        projects = project_of.get(cluster.change_id, set())
-        if len(projects) != 1:
-            raise SystemExit(f"change {cluster.change_id} maps to projects {projects}")
-        pool.append((cluster, next(iter(projects))))
-    return pool, noise, shrink
+    return with_projects(truth, corpus, org), noise, shrink
 
 
 def pools(
@@ -221,8 +220,10 @@ def pools(
     admissible = json.loads(admissible_path.read_text())
     # A binary score resamples the placebo run, its churn calibrated apart (--redraw); a continuous
     # one resamples the pilot's runs averaged, with their change-by-run sd as its churn.
-    if metric == "exact_match" or pilot is None:
+    if metric == "exact_match":
         pool, noise, shrink = pilot_pool(placebo, corpus, org, metric), (0.0, 0.0), None
+    elif pilot is None:
+        raise SystemExit(f"{metric} is simulated from the pilot's runs; no pilot was given")
     else:
         pool, noise, shrink = averaged_pool(pilot, corpus, org, metric)
     partitions, seeds = partition_pool(
@@ -253,6 +254,16 @@ def _init(
 ) -> None:
     global _PARTITIONS, _CONTINUOUS, _SESOI, _NOISE
     _PARTITIONS, _CONTINUOUS, _SESOI, _NOISE = partitions, continuous, sesoi, noise
+
+
+def worker_args(
+    partitions: list[dict[str, int]], metric: str, noise: tuple[float, float]
+) -> tuple[list[dict[str, int]], bool, float, tuple[float, float]]:
+    """`_init`'s arguments for a metric: whether it is continuous and its registered SESOI."""
+    sesoi = metric_sesoi(metric)
+    if sesoi is None:
+        raise SystemExit(f"{metric} has no registered SESOI")
+    return partitions, metric != "exact_match", sesoi, noise
 
 
 def _run(
@@ -348,9 +359,9 @@ CALIBRATION_SEED_OFFSET = 10_000
 # The lift bracket's top, as `decomposition_sensitivity.py` uses: ten times the detectable lifts
 # found so far (about 0.03); a target it cannot reach is refused rather than reported at the top.
 LIFT_CEILING = 0.3
-# A continuous score's bracket, in its own units: five times its SESOI (0.0183 nats per token),
-# so ten halvings resolve it to about 0.0001, below the shift that moves power by the Monte Carlo
-# error near 0.95.
+# A continuous score's bracket, in its own units: five times its SESOI (0.0183 nats per token)
+# rounded up to 0.1, so ten halvings resolve it to about 0.0001, below the shift that moves power
+# by the Monte Carlo error near 0.95.
 CONTINUOUS_CEILING = 0.1
 # Seed-by-change churn on exact match, calibrated against the two identical nulls marker-0 and
 # sym-0 (`crossed_coverage.py --calibrate`, research log 2026-09-23).
@@ -562,7 +573,7 @@ def main() -> None:
     first = partitions[0]
     pilot_halves = [[c for c, p in pool if first[p] == side] for side in (0, 1)]
     with ProcessPoolExecutor(
-        args.workers, initializer=_init, initargs=(partitions, continuous, sesoi, noise)
+        args.workers, initializer=_init, initargs=worker_args(partitions, args.metric, noise)
     ) as executor:
         for label, target in targets.items():
             calibration = calibrate(executor, pool, args, target, pilot["changes"])

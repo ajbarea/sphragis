@@ -350,8 +350,16 @@ def test_averaged_truth_recovers_known_noise_and_shrinks_by_its_share() -> None:
     assert shrink == pytest.approx(expected, abs=0.05)
 
 
-@pytest.mark.parametrize("problem", ["one run", "a repeated seed", "an example changing change"])
-def test_averaged_truth_refuses_runs_it_cannot_read(problem: str) -> None:
+@pytest.mark.parametrize(
+    ("problem", "message"),
+    [
+        ("one run", "at least two runs"),
+        ("a repeated seed", "repeat a seed"),
+        ("an example changing change", "two changes"),
+        ("a single example", "at least two examples"),
+    ],
+)
+def test_averaged_truth_refuses_runs_it_cannot_read(problem: str, message: str) -> None:
     from sphragis.experiment.power import averaged_truth
 
     first = _pilot_run(1, {"x": ("cx", "o-a", -0.8)})
@@ -359,7 +367,9 @@ def test_averaged_truth_refuses_runs_it_cannot_read(problem: str) -> None:
         runs = [first]
     elif problem == "a repeated seed":
         runs = [first, _pilot_run(1, {"x": ("cx", "o-b", -0.6)})]
-    else:
+    elif problem == "an example changing change":
         runs = [first, _pilot_run(2, {"x": ("cz", "o-b", -0.6)})]
-    with pytest.raises(ValueError):
+    else:
+        runs = [first, _pilot_run(2, {"x": ("cx", "o-b", -0.6)})]
+    with pytest.raises(ValueError, match=message):
         averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")
