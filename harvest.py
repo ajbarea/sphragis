@@ -785,7 +785,7 @@ def unclaimed() -> list[str]:
     found = []
     for page in sorted(p.name for p in DOCS.glob("*.md") if p.name not in UNASSERTED):
         text = (DOCS / page).read_text()
-        # Whole numbers only, and not an arXiv identifier, which is a citation.
+        # A match starts where a number starts, and is not an arXiv identifier, which is a citation.
         for match in re.finditer(r"(?<![\d.])(?<!arXiv:)[+-]?\d+\.\d{3,}\b", text):
             literal = match.group()
             if (page, literal) in claimed:

@@ -243,8 +243,8 @@ pilots' per-run standard deviations at that bound, 0.0068 for OpenStack and 0.00
 put it below the floor on both. The coverage K is the smallest K on a fixed grid (10, 12, 15, 20,
 25, 30, 35, 40) at which the simulated null, at that 90% bound and 4,000 null trials, reads false
 positives no more often than nominal at both Holm levels (`partitions.coverage_runs`). The rule
-reads the grid in order and stops at the first K that holds. Near nominal, neighbouring K differ
-by less than a Monte Carlo standard error, so the grid is not monotone: Wikimedia's K = 15 reads
+reads the grid in order and stops at the first K that holds. Near nominal a rate's Monte Carlo standard
+error exceeds its distance from nominal, so the grid is not monotone: Wikimedia's K = 15 reads
 0.0135 and K = 35 reads 0.013 at the stricter level against 0.0125, both recorded in the artifact,
 and neither changes the K the rule takes. OpenStack's null holds at the floor and Wikimedia's
 first at 20, so **OpenStack K = 10** and **Wikimedia K = 20**
