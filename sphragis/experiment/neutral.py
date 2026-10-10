@@ -247,12 +247,17 @@ def apparatus_holds(checks: Sequence[Check]) -> bool:
     return bool(checks) and all(check.passed for check in checks)
 
 
+#: What a rescoring and the generation run it scored share, which identifies one as the other.
+SCORED_IDENTITY = ("model_id", "lora_rank", "seeds", "train_size", "corpora")
+
+
 def recorded_battery(run: Mapping[str, Any], path: Path) -> Mapping[str, Any] | None:
     """The outcome-neutral battery a stored run recorded, or None when it recorded none.
 
     A likelihood rescoring (`scripts/likelihood_score.py`) reuses a generation run's adapters
     and names that run in `scored_from`; the battery is the generation run's, read from beside
-    this file, since the recorded path is the cluster's.
+    this file, since the recorded path is the cluster's, and only when that file is the run it
+    scored (`SCORED_IDENTITY`), so a rerun written over the name lends it nothing.
     """
     if "outcome_neutral" in run:
         return run["outcome_neutral"]
@@ -262,7 +267,10 @@ def recorded_battery(run: Mapping[str, Any], path: Path) -> Mapping[str, Any] | 
     origin = path.parent / Path(source).name
     if not origin.is_file():
         return None
-    return json.loads(origin.read_text()).get("outcome_neutral")
+    scored = json.loads(origin.read_text())
+    if any(scored.get(key) != run.get(key) for key in SCORED_IDENTITY):
+        return None
+    return scored.get("outcome_neutral")
 
 
 def battery_holds(battery: Any) -> bool:

@@ -315,6 +315,9 @@ def partition_run_windows(
         raise ValueError(f"halted at {run['halted']}; the apparatus failed, not read")
     sources = [c["source"] for c in run["corpora"].values()]
     names = {str(source_root(source)) for source in sources}
+    # A planted run is check 5's, read through --planted; its rewritten references are not H1's.
+    if any(re.search(r"-plant[0-9.]", name.rsplit("/", 1)[-1]) for name in names):
+        raise ValueError(f"run {position} is a planted run, which check 5 reads, not H1")
     roots = {re.search(r"/corpus-partition-[^/]*?-p(\d+)(?:-[^/]*)?$", name) for name in names}
     found = {int(root.group(1)) if root else None for root in roots}
     partition = found.pop() if len(found) == 1 else None

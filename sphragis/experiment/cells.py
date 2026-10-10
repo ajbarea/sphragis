@@ -242,11 +242,12 @@ def require_test_read(
         raise ValueError(f"{org}: the report has no {absent}")
     if not is_count(report["runs"]):
         raise ValueError(f"{org}: K = {report['runs']!r} is not a whole number of runs")
-    batteries = report["outcome_neutral_runs"]
-    read = {str(f) for f in report["run_files"]}
+    batteries, files = report["outcome_neutral_runs"], report["run_files"]
+    read = {str(f) for f in files} if isinstance(files, list) else None
     if (
-        not isinstance(batteries, list)
-        or {b.get("file") for b in batteries if isinstance(b, Mapping)} != read
+        read is None
+        or not isinstance(batteries, list)
+        or {str(b.get("file")) for b in batteries if isinstance(b, Mapping)} != read
         or not all(isinstance(b, Mapping) and b.get("holds") is True for b in batteries)
     ):
         raise ValueError(f"{org}: not every run read carries an outcome-neutral battery that held")

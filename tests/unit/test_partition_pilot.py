@@ -12,7 +12,7 @@ import pytest
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import K_COVERAGE, REGISTERED_METRIC, REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
-from sphragis.experiment.neutral import PLANT_FRACTION
+from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
 from sphragis.experiment.partitions import spread_targets
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -855,7 +855,9 @@ def test_a_rescored_run_carries_the_battery_of_the_run_it_scored(
     """A likelihood run names its generation run by the cluster's path; the battery is read
     from the file of that name beside it."""
     argv = _gerrit_test_argv(tmp_path)
-    (tmp_path / "rq1-run-3.json").write_text(json.dumps({"outcome_neutral": battery}))
+    run = json.loads((tmp_path / "run-3.json").read_text())
+    identity = {key: run.get(key) for key in SCORED_IDENTITY}
+    (tmp_path / "rq1-run-3.json").write_text(json.dumps({**identity, "outcome_neutral": battery}))
     _rewrite_run(
         tmp_path,
         3,
@@ -882,3 +884,48 @@ def test_a_development_read_records_each_runs_battery_without_refusing(
     _main(monkeypatch, argv)
     rows = json.loads(out.read_text())["outcome_neutral_runs"]
     assert [row["holds"] for row in rows] == [False, True, True, True]
+
+
+def test_a_rescoring_borrows_no_battery_from_another_run_under_its_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    """A generation run rerun over the name a rescoring recorded is not the run it scored."""
+    argv = _gerrit_test_argv(tmp_path)
+    run = json.loads((tmp_path / "run-3.json").read_text())
+    other = {key: run.get(key) for key in SCORED_IDENTITY} | {"seeds": [99]}
+    (tmp_path / "rq1-run-3.json").write_text(json.dumps({**other, "outcome_neutral": HELD}))
+    _rewrite_run(
+        tmp_path,
+        3,
+        lambda run: (
+            {k: v for k, v in run.items() if k != "outcome_neutral"}
+            | {"scored_from": "/cluster/results/rq1-run-3.json"}
+        ),
+    )
+    with pytest.raises(SystemExit, match="outcome-neutral battery"):
+        _main(monkeypatch, argv)
+
+
+def test_a_planted_run_is_not_read_as_one_of_h1s_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = [*_inputs(tmp_path, "openstack"), "--out", str(tmp_path / "pilot.json")]
+    _rewrite_run(
+        tmp_path,
+        2,
+        lambda run: (
+            run
+            | {
+                "corpora": {
+                    h: {
+                        "source": c["source"].replace(
+                            f"-p{ADMISSIBLE[1]}/", f"-p{ADMISSIBLE[1]}-plant0.5/"
+                        )
+                    }
+                    for h, c in run["corpora"].items()
+                }
+            }
+        ),
+    )
+    with pytest.raises(SystemExit, match="planted run"):
+        _main(monkeypatch, argv)
