@@ -214,40 +214,45 @@ by the reference's mean log-probability per token, a strictly proper score, and 
 exact match, which credits only an adapter's most likely output. Its SESOI is exact match's,
 carried by the adapters' gain over the base model on both (`likelihood-sesoi.json`); every
 reading against a SESOI uses the metric's own (`decomposition.metric_sesoi`). The interval,
-K and power figures in the sections below were measured on exact match and are rerun on the
-registered metric; K now follows the coverage rule (`partitions.coverage_runs`, research log
-2026-10-09).
+K and power figures in the sections below are measured on the registered metric; the exact-match
+figures they replace are in the research log.
 
 ### Interval the gate reads: the crossed run-by-change bootstrap
 
 Decided by the coverage study and the fixed-K simulation. A run is one admissible partition at its
 own training seed; runs and changes are crossed rather than nested, so they are resampled
 independently (Owen's pigeonhole bootstrap). On one partition at three seeds and a seed effect of
-0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122; over
-the registered runs its one-sided false-positive rate at the stricter level is 0.011 to 0.0125
-for OpenStack and 0.014 to 0.016 for Wikimedia, against a nominal 0.0125; Wikimedia's sits above
-nominal at every point, by up to two Monte Carlo errors, so H1's size at that level may reach
-0.016.
+0.02 the crossed interval covered at 0.073 two-sided where the median-seed rule reached 0.122. Over
+the registered runs, simulated on the registered metric, its one-sided false-positive rate at the
+stricter level is 0.0073 to 0.0112 for OpenStack and 0.0035 to 0.0132 for Wikimedia, against a
+nominal 0.0125; Wikimedia's exceeds nominal only at the pilot's 99% upper spread, by less than one
+Monte Carlo error.
 
-### Number of runs: fixed from the pilot, K = 24 for OpenStack
+### Number of runs: K = 10 for OpenStack, K = 20 for Wikimedia
 
-Decided by the partition study and two simulations. H1 is the mean over K admissible partitions,
-replacing five seeds on one registered partition, whose reading moved with the partition as much as
-with the seed. K = 2v(z / xi)^2, Ritzwoller and Romano's sizing rule, with v at the 90% upper bound
-of the development-window pilot's per-run variance and K kept within 10 to 40. OpenStack's pilot runs
-give a per-run standard deviation of 0.0140, so **K = 24**; Wikimedia's give 0.0112, so **K = 16**. A sequential rule, adding runs until
-they agree, was simulated first and rejected: it ran above nominal where it stopped early.
+Decided by the partition study, the pilot and the simulated null. H1 is the mean over K admissible
+partitions, replacing five seeds on one registered partition, whose reading moved with the
+partition as much as with the seed. K is the larger of two numbers, each kept within 10 to 40.
+The reproducibility K is 2v(z / xi)^2, Ritzwoller and Romano's sizing rule, with v at the 90%
+upper bound of the development-window pilot's per-run variance and xi the SESOI: the likelihood
+pilots' per-run standard deviations, 0.0054 for OpenStack and 0.0063 for Wikimedia, put it below
+the floor on both. The coverage K is the smallest K on a fixed grid at which the simulated null,
+at that 90% bound, reads false positives no more often than nominal at both Holm levels
+(`partitions.coverage_runs`): OpenStack's null holds at the floor, Wikimedia's first at K = 20,
+so **K = 10** for OpenStack and **K = 20** for Wikimedia (`k-coverage-<org>-likelihood.json`, the only
+K source a test read accepts). A sequential rule, adding runs until they agree, was simulated
+first and rejected: it ran above nominal where it stopped early.
 
 ### Stated power: sensitivity, not power at an observed effect
 
 With two cells each is sized at power 0.9747. At that power, its projected test size and K
-runs, OpenStack's H1 cell detects a half-split contrast of +0.0248 and +0.0234 exact-match
-points at the two Holm levels and Wikimedia's +0.0268 and +0.0246, at the per-run spread K was
-sized on; these are the bounds a bounded reading is judged against, the 97.5% one only when H2 is
-confirmatory (Pass rule). Wikimedia's test size is a
-lower bound if test-window arrivals hold at the training rate (checked at fetch), and its bounds
-are then conservative. Power from a pilot's own estimate is biased upward, so no
-power at an observed effect is stated.
+runs, OpenStack's H1 cell detects a half-split contrast of +0.0109 and +0.0103 nats per token at
+the two Holm levels and Wikimedia's +0.0071 and +0.0065, at the per-run spread K was sized on;
+these are the bounds a bounded reading is judged against, the 97.5% one only when H2 is
+confirmatory (Pass rule). Each is below the SESOI, so a bounded reading also excludes every
+effect of interest. Wikimedia's test size is a lower bound if test-window arrivals hold at the
+training rate (checked at fetch), and its bounds are then conservative. Power from a pilot's own
+estimate is biased upward, so no power at an observed effect is stated.
 
 ### Inference numerics: fp32, weights upcast exactly from bf16
 

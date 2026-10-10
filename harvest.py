@@ -58,13 +58,18 @@ CALIBRATION = f"{RESULTS}/interval-calibration.json"
 CALIBRATION_AVERAGED = f"{RESULTS}/interval-calibration-change-averaged.json"
 INFORMATIVENESS = f"{RESULTS}/cluster-informativeness.json"
 COVERAGE = f"{RESULTS}/crossed-coverage.json"
-PARTITION_PILOT = f"{RESULTS}/partition-pilot-openstack.json"
-PARTITION_PILOT_K24 = f"{RESULTS}/partition-pilot-openstack-k24.json"
-PARTITION_PILOT_WM = f"{RESULTS}/partition-pilot-wikimedia.json"
-K24_975 = ["intervals", "0.975"]
-K24_95 = ["intervals", "0.95"]
-PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack.json"
-PARTITION_SENSITIVITY_WM = f"{RESULTS}/partition-sensitivity-wikimedia.json"
+# The registered metric's pilots, simulations at each organization's K, and K sources.
+PARTITION_PILOT = f"{RESULTS}/partition-pilot-openstack-likelihood.json"
+PARTITION_PILOT_WM = f"{RESULTS}/partition-pilot-wikimedia-likelihood.json"
+AT_975 = ["intervals", "0.975"]
+AT_95 = ["intervals", "0.95"]
+PARTITION_SENSITIVITY = f"{RESULTS}/partition-sensitivity-openstack-rp1.0-logprob_per_token.json"
+PARTITION_SENSITIVITY_WM = (
+    f"{RESULTS}/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json"
+)
+K_COVERAGE_OS = f"{RESULTS}/k-coverage-openstack-likelihood.json"
+K_COVERAGE_WM = f"{RESULTS}/k-coverage-wikimedia-likelihood.json"
+SESOI = f"{RESULTS}/likelihood-sesoi.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
 
@@ -78,7 +83,9 @@ NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
 #: rate), `exact` (the literal must equal the value, not round to it), `text` (the value is
 #: a word rather than a number, and with `code` is counted only where the page sets it as
 #: inline code, because "pass" and "mixed" are also ordinary words on a page about a gate),
-#: `occurrences` (the literal is quoted more than once), or `reduce`, which with `min:a/b` or
+#: `occurrences` (the literal is quoted more than once), `after` (the literal is counted only
+#: where this text precedes it, for a small integer such as a K that the page also uses for
+#: other quantities), or `reduce`, which with `min:a/b` or
 #: `max:a/b` reads `a/b` under every entry at the path and takes the extreme.
 CLAIMS: list[tuple[Any, ...]] = [
     # ---- protocol.md: the corpus, and where the dev-window reading stands ----
@@ -101,12 +108,21 @@ CLAIMS: list[tuple[Any, ...]] = [
         ["hashes", "test"],
         {"text": True, "occurrences": 2},
     ),
-    ("dev_changes", "protocol.md", "206", PARTITION_PILOT_K24, ["changes"]),
-    ("dev_h1", "protocol.md", "+0.0049", PARTITION_PILOT_K24, ["estimate"], {"occurrences": 2}),
-    ("dev_h1_975_low", "protocol.md", "-0.0088", PARTITION_PILOT_K24, [*K24_975, "low"]),
-    ("dev_h1_975_high", "protocol.md", "+0.0185", PARTITION_PILOT_K24, [*K24_975, "high"]),
-    ("dev_h1_95_low", "protocol.md", "-0.0073", PARTITION_PILOT_K24, [*K24_95, "low"]),
-    ("dev_h1_95_high", "protocol.md", "+0.0166", PARTITION_PILOT_K24, [*K24_95, "high"]),
+    ("dev_runs", "protocol.md", "22", PARTITION_PILOT, ["runs"]),
+    ("dev_runs_wm", "protocol.md", "22", PARTITION_PILOT_WM, ["runs"]),
+    ("dev_changes", "protocol.md", "206", PARTITION_PILOT, ["changes"]),
+    ("dev_changes_wm", "protocol.md", "429", PARTITION_PILOT_WM, ["changes"]),
+    ("dev_sesoi", "protocol.md", "0.0183", SESOI, ["sesoi"]),
+    ("dev_h1", "protocol.md", "+0.0231", PARTITION_PILOT, ["estimate"], {"occurrences": 2}),
+    ("dev_h1_975_low", "protocol.md", "+0.0081", PARTITION_PILOT, [*AT_975, "low"]),
+    ("dev_h1_975_high", "protocol.md", "+0.0402", PARTITION_PILOT, [*AT_975, "high"]),
+    ("dev_h1_95_low", "protocol.md", "+0.0097", PARTITION_PILOT, [*AT_95, "low"]),
+    ("dev_h1_95_high", "protocol.md", "+0.0376", PARTITION_PILOT, [*AT_95, "high"]),
+    ("dev_h1_wm", "protocol.md", "+0.0058", PARTITION_PILOT_WM, ["estimate"], {"occurrences": 2}),
+    ("dev_h1_wm_975_low", "protocol.md", "-0.0004", PARTITION_PILOT_WM, [*AT_975, "low"]),
+    ("dev_h1_wm_975_high", "protocol.md", "+0.0125", PARTITION_PILOT_WM, [*AT_975, "high"]),
+    ("dev_h1_wm_95_low", "protocol.md", "+0.0003", PARTITION_PILOT_WM, [*AT_95, "low"]),
+    ("dev_h1_wm_95_high", "protocol.md", "+0.0117", PARTITION_PILOT_WM, [*AT_95, "high"]),
     # ---- registered-decisions.md ----
     (
         "rd_cluster_r_os",
@@ -238,7 +254,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_fp_low",
         "registered-decisions.md",
-        "0.011",
+        "0.0073",
         PARTITION_SENSITIVITY,
         ["by_target"],
         {"reduce": "min:null_false_positive/0.975"},
@@ -246,10 +262,10 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_fp_high",
         "registered-decisions.md",
-        "0.0125",
+        "0.0112",
         PARTITION_SENSITIVITY,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.975", "occurrences": 3},
+        {"reduce": "max:null_false_positive/0.975"},
     ),
     (
         "rd_partition_fp_nominal",
@@ -257,23 +273,31 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        {"reduce": "one_sided", "occurrences": 3},
+        {"reduce": "one_sided", "occurrences": 2},
     ),
-    ("rd_partition_sd", "registered-decisions.md", "0.0140", PARTITION_PILOT, ["sizing", "sd"]),
+    ("rd_partition_sd", "registered-decisions.md", "0.0054", PARTITION_PILOT, ["sizing", "sd"]),
     (
         "rd_partition_sd_wm",
         "registered-decisions.md",
-        "0.0112",
+        "0.0063",
         PARTITION_PILOT_WM,
         ["sizing", "sd"],
     ),
     (
         "rd_partition_k",
         "registered-decisions.md",
-        "24",
-        PARTITION_PILOT,
-        ["sizing", "runs"],
-        {"occurrences": 2},
+        "10",
+        K_COVERAGE_OS,
+        ["runs"],
+        {"after": "K = ", "occurrences": 2},
+    ),
+    (
+        "rd_partition_k_wm",
+        "registered-decisions.md",
+        "20",
+        K_COVERAGE_WM,
+        ["runs"],
+        {"after": "K = ", "occurrences": 3},
     ),
     (
         "rd_cell_power",
@@ -285,7 +309,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_mde_975",
         "registered-decisions.md",
-        "+0.0248",
+        "+0.0109",
         PARTITION_SENSITIVITY,
         [
             "by_target",
@@ -300,7 +324,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_mde_95",
         "registered-decisions.md",
-        "+0.0234",
+        "+0.0103",
         PARTITION_SENSITIVITY,
         [
             "by_target",
@@ -315,7 +339,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_fp_low_wm",
         "registered-decisions.md",
-        "0.014",
+        "0.0035",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
         {"reduce": "min:null_false_positive/0.975"},
@@ -323,15 +347,15 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_fp_high_wm",
         "registered-decisions.md",
-        "0.016",
+        "0.0132",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
+        {"reduce": "max:null_false_positive/0.975"},
     ),
     (
         "rd_partition_mde_975_wm",
         "registered-decisions.md",
-        "+0.0268",
+        "+0.0071",
         PARTITION_SENSITIVITY_WM,
         [
             "by_target",
@@ -346,7 +370,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_partition_mde_95_wm",
         "registered-decisions.md",
-        "+0.0246",
+        "+0.0065",
         PARTITION_SENSITIVITY_WM,
         [
             "by_target",
@@ -444,7 +468,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_partition_fp_low",
         "outcome-neutral.md",
-        "0.011",
+        "0.0073",
         PARTITION_SENSITIVITY,
         ["by_target"],
         {"reduce": "min:null_false_positive/0.975"},
@@ -452,10 +476,10 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_partition_fp_high",
         "outcome-neutral.md",
-        "0.0125",
+        "0.0112",
         PARTITION_SENSITIVITY,
         ["by_target"],
-        {"reduce": "max:null_false_positive/0.975", "occurrences": 2},
+        {"reduce": "max:null_false_positive/0.975"},
     ),
     (
         "on_partition_fp_nominal",
@@ -463,12 +487,12 @@ CLAIMS: list[tuple[Any, ...]] = [
         "0.0125",
         PARTITION_SENSITIVITY,
         ["levels", "0"],
-        {"reduce": "one_sided", "occurrences": 2},
+        {"reduce": "one_sided"},
     ),
     (
         "on_partition_fp_low_wm",
         "outcome-neutral.md",
-        "0.014",
+        "0.0035",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
         {"reduce": "min:null_false_positive/0.975"},
@@ -476,7 +500,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "on_partition_fp_high_wm",
         "outcome-neutral.md",
-        "0.016",
+        "0.0132",
         PARTITION_SENSITIVITY_WM,
         ["by_target"],
         {"reduce": "max:null_false_positive/0.975"},
@@ -572,7 +596,7 @@ def resolve(artifact: str, path: list[str], options: dict[str, Any]) -> tuple[An
     return data * options.get("scale", 1), None
 
 
-def occurrences(text: str, literal: str) -> int:
+def occurrences(text: str, literal: str, after: str = "") -> int:
     """How many times the literal appears in the page as a whole number, not a substring.
 
     A plain `in` test passes when the literal is a fragment of another number: "0.0" occurs
@@ -583,7 +607,7 @@ def occurrences(text: str, literal: str) -> int:
     # An unsigned literal must not match a signed number either: 0.000 occurs on its own as
     # the measured seed effect and again as +0.000, a bound of a different interval.
     before = r"(?<![0-9.,])" if literal[0] in "+-" else r"(?<![0-9.,+-])"
-    return len(re.findall(before + re.escape(literal) + r"(?![0-9])", text))
+    return len(re.findall(re.escape(after) + before + re.escape(literal) + r"(?![0-9])", text))
 
 
 def rounds_to(value: float, literal: str) -> bool:
@@ -617,7 +641,11 @@ def check_claims() -> tuple[list[str], list[str], list[str]]:
         if not file.exists():
             unbacked.append(f"{cid}: docs/{page} does not exist")
             continue
-        found = occurrences(file.read_text(), f"`{literal}`" if options.get("code") else literal)
+        found = occurrences(
+            file.read_text(),
+            f"`{literal}`" if options.get("code") else literal,
+            options.get("after", ""),
+        )
         expected = options.get("occurrences", 1)
         if found != expected:
             drifted.append(

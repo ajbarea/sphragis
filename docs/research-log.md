@@ -8812,3 +8812,31 @@ per token on the registered metric), so `within_sesoi`, `meaningful` and `below_
 compare likelihood intervals with exact match's 0.01. `metric_sesoi` moved beside `SESOI` in
 `decomposition.py`, reads `likelihood-sesoi.json` from the repository root rather than the working
 directory, and raises when that artifact is missing instead of reporting the metric unregistered.
+
+### Wikimedia at K = 20: detectable effects below the SESOI, the null within nominal at the sizing bound (2026-10-10)
+
+`# research(2026-10)`. `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json` (TIGRIS
+256458, pinned at 642f6d9, `RUNS=20`), the simulation the K coverage rule queued. Pool, noise
+and shrinkage as at K = 10; 1,000 trials and 4,000 null trials a point, 2,848 planned changes.
+Detectable effect at one to three cells, in nats per token:
+
+| spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| pilot estimate | 0.0037 | 0.0050 to 0.0054 | 0.0046 to 0.0050 | 0.00575 | 0.01375 |
+| sizing bound 90 | 0.0062 | 0.0067 to 0.0073 | 0.0062 to 0.0067 | 0.0095 | 0.022 |
+| pilot upper 99 | 0.0085 | 0.0083 to 0.0091 | 0.0077 to 0.0084 | 0.01325 | 0.02475 |
+
+Every detectable effect is below the SESOI (0.0183), and below its K = 10 value at every spread
+point. At the 90% sizing bound the null reads false positives within nominal at both levels, as
+the coverage rule required. At the pilot's 99% upper spread the 97.5% rate, 0.01325, exceeds the
+nominal 0.0125 by 0.00075, inside one Monte Carlo standard error at 4,000 trials (0.0018).
+Reproducibility failure is 0 at every point, and the simulated null reads bounded in at least
+0.955 of trials.
+
+**The registration now quotes the registered metric.** `registered-decisions.md` ("Interval the
+gate reads", "Number of runs", "Stated power"), the interval paragraph of `outcome-neutral.md`, and
+the estimand and development-window reading of `protocol.md` are rewritten on likelihood, from the
+likelihood pilots, these simulations (OpenStack at K = 10, Wikimedia at K = 20) and the
+`k-coverage-<org>-likelihood.json` K sources; `harvest.py` asserts every figure against them. A
+claim's new `after` option counts a small integer such as a K only where its prefix precedes it,
+so "K = 10" is not satisfied by every other 10 on the page.

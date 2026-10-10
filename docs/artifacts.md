@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 634 artifacts under
+repository. This page is generated from those scripts: 635 artifacts under
 63 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -418,10 +418,11 @@ Operating characteristics of H1 over repeated partitions at the registered K, by
 | `partition-sensitivity-openstack-rp1.0-logprob_per_token.json` | `partition-sensitivity-openstack-rp1.0.json` |
 | `partition-sensitivity-openstack-stopping.json` | `partition-sensitivity-openstack.json` |
 | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k12-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k15-null.json` |
-| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k25-null.json` |
-| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k30-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k35-null.json` |
-| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k40-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token.json` |
-| `partition-sensitivity-wikimedia-rp1.0.json` | `partition-sensitivity-wikimedia.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k25-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k30-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k35-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k40-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token.json` | `partition-sensitivity-wikimedia-rp1.0.json` |
+| `partition-sensitivity-wikimedia.json` |  |
 
 ## `scripts/partition_variance.py`
 

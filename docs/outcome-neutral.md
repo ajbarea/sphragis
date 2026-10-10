@@ -128,10 +128,10 @@ condition is degenerate by construction, and the apparatus is what said so.
 One further check is not part of the halt rule and is reported beside it.
 
 **The interval's error rate is measured.** Simulated over each organization's registered K
-partitions at its projected test size, the crossed interval the gate reads has a one-sided
-false-positive rate at the stricter Holm level of 0.011 to 0.0125 for OpenStack and 0.014 to
-0.016 for Wikimedia against a nominal 0.0125, at every run-to-run spread from each pilot's 90%
-lower bound to its 99% upper bound.
+partitions at its projected test size, on the registered metric, the crossed interval the gate
+reads has a one-sided false-positive rate at the stricter Holm level of 0.0073 to 0.0112 for
+OpenStack and 0.0035 to 0.0132 for Wikimedia against a nominal 0.0125, at every run-to-run spread
+from each pilot's 90% lower bound to its 99% upper bound.
 
 ## Reading the evidence yourself
 
