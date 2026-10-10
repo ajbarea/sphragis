@@ -8766,13 +8766,21 @@ K = 35 exceeds the 97.5% nominal by 0.0005, inside one Monte Carlo standard erro
 (0.0018). The rule takes the smallest passing K and is not re-read on that excursion. The detectable
 effects are simulated again for Wikimedia at K = 20 (`RUNS=20`, TIGRIS 256458).
 
-**What the noise model overstates, and what the gate does not read yet.** `averaged_truth` takes
-every within-change cross-product as noise shared by a change, so a shift common to a whole run,
-or one favouring one half's adapter, is counted in it too and redrawn per change, which raises the
-estimate on synthetic runs that carry such a shift. The simulated runs therefore spread more
-than the pilot's, which is why OpenStack's pilot estimate is reached at sigma_run 0 with a spread
-of 0.0065 against 0.0054; the error widens the simulated interval, the conservative direction for
-the false-positive rates above. **Still to do before a test read:** the gate takes K only from the
+**What the noise model can misplace.** `averaged_truth` takes every within-change cross-product
+as noise shared by a change, so a shift common to a whole run, or one favouring one half's adapter,
+is counted in it and redrawn per change. The bound on that, for OpenStack (501 examples in 206
+changes, shared sd 0.0162): even if all of the shared part were run-level, it would add at most
+shared² × Σn²/N² = 4.7e-6 to a run's variance, about a third of the excess at the pilot estimate
+(simulated spread 0.0065 at sigma_run 0 against a target of 0.0054) and a tenth of the variance at
+the 90% sizing bound. The rest is the spread partitions and change noise produce on their own,
+above the pilot's point estimate but inside its interval and below the sizing bound of 0.0068.
+The direction differs by point: where sigma_run is 0 the misplaced part only
+widens the simulated interval, which is conservative; where sigma_run is calibrated (the 90% and
+99% bounds) it lowers sigma_run at the pilot's size, and since change noise shrinks at the test
+size while sigma_run does not, the simulated test-size spread is slightly too narrow, the
+anti-conservative direction, by at most that tenth of the variance.
+
+**Still to do before a test read:** the gate takes K only from the
 pilot's `sizing.runs` (10 on both), so a read at Wikimedia's K = 20 would be refused until the K
 coverage rule has a registered K source; and the gate's `within_sesoi`, `meaningful` and
 `below_sesoi` readings use exact match's 0.01 on every metric, not likelihood's 0.0183 (the pass

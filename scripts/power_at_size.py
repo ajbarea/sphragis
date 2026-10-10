@@ -196,7 +196,9 @@ def main() -> None:
         recorded_noise = simulation["change_by_run_noise"]
         rebuilt = {"shared_by_change": noise[0], "per_example": noise[1], "shrink": shrink}
         expected = {**recorded_noise, "shrink": simulation["truth_shrinkage"]}
-        if any(not math.isclose(rebuilt[k], expected[k], rel_tol=1e-9) for k in expected):
+        if any(
+            not math.isclose(rebuilt[k], expected[k], rel_tol=1e-9, abs_tol=1e-12) for k in expected
+        ):
             raise SystemExit(f"{args.pilot} rebuilt noise {rebuilt}, the simulation had {expected}")
     initargs = worker_args(partitions, metric, noise)
     if initargs[2] != simulation.get("sesoi", initargs[2]):

@@ -22,10 +22,15 @@ cd "${SPHRAGIS_CHECKOUT:-$HOME/ajsoftworks/sphragis}"
 source sphragis/experiment/cluster-env.sh
 
 ORG="${ORG:-openstack}"
-claim_result OUT "$SPHRAGIS_RESULTS/power-at-size-$ORG$RESULT_SUFFIX.json"
+# SIMULATION: the partition-sensitivity file the report was read under, which names the result;
+# PILOT: the pilot it calibrated on, which a likelihood simulation's pool is rebuilt from.
+SIMULATION="${SIMULATION:?set SIMULATION to the simulation the report was read under}"
+SIMULATION_NAME="$(basename "$SIMULATION" .json)"
+claim_result OUT "$SPHRAGIS_RESULTS/power-at-size-${SIMULATION_NAME#partition-sensitivity-}$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/power_at_size.py \
   --report "${REPORT:?set REPORT to the test-window report of ORG}" \
-  --simulation "datasets/results/partition-sensitivity-$ORG.json" \
+  --simulation "$SIMULATION" \
+  --pilot "${PILOT:?set PILOT to the pilot the simulation calibrated on}" \
   --placebo "${PLACEBO:?set PLACEBO to the placebo run the simulation used}" \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \

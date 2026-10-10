@@ -156,3 +156,26 @@ def test_a_continuous_trial_shifts_by_its_lift_and_reads_against_its_sesoi() -> 
     assert null["absent"][0.975] and not null["supported"][0.975] and not null["disagree"]
     assert lifted["estimate"] == pytest.approx(0.05)
     assert lifted["supported"][0.975] and not lifted["absent"][0.975]
+
+
+def test_a_continuous_null_reads_absent_against_the_sesoi_its_workers_were_given() -> None:
+    """A noisy null whose interval is wider than exact match's SESOI and narrower than 0.5."""
+    partition_sensitivity = _module()
+    from sphragis.experiment.partitions import K_MAX
+    from sphragis.measure.stats import Cluster
+
+    projects = [f"p{i}" for i in range(4)]
+    pool = [(Cluster(f"c{i}", (-0.5,), (-0.5,)), projects[i % 4]) for i in range(40)]
+    sides = [(0, 0, 1, 1), (0, 1, 0, 1), (0, 1, 1, 0), (1, 0, 0, 1)]
+    partitions = [dict(zip(projects, sides[i % 4], strict=True)) for i in range(2 * K_MAX)]
+    job = (pool, 40, 0.0, 0.0, 0.0, 200, 3, [0.975], 10, False)
+    read = {}
+    try:
+        for sesoi in (0.5, 0.001):
+            partition_sensitivity._init(partitions, True, sesoi, (0.0, 0.2))
+            read[sesoi] = partition_sensitivity.trial(job)
+    finally:
+        partition_sensitivity._init([])
+    low = read[0.5]["estimate"] - (read[0.5]["high"][0.975] - read[0.5]["estimate"])
+    assert read[0.5]["high"][0.975] - low > 2 * 0.01
+    assert read[0.5]["absent"][0.975] and not read[0.001]["absent"][0.975]
