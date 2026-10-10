@@ -125,6 +125,10 @@ parser.add_argument("--max-seed", type=int, default=2_000, help="stop searching 
 # The per-example score simulated: exact match, binary, or the reference's mean log-probability
 # per token, continuous (research log, 2026-10-09). The pilot and placebo must be scored on it.
 parser.add_argument("--metric", choices=("exact_match", "logprob_per_token"), default="exact_match")
+# The coverage search over K (research log, 2026-10-09): K in place of the pilot's sizing, and the
+# null alone, without the detectable-effect bisection.
+parser.add_argument("--runs", type=int, help="K to simulate in place of the pilot's sizing")
+parser.add_argument("--null-only", action="store_true", help="the null's rates only, no bisection")
 parser.add_argument("--out", type=Path, required=True)
 
 Pool = list[tuple[Cluster, str]]
@@ -466,9 +470,11 @@ def main() -> None:
         raise SystemExit(f"{args.projection}: no test-window projection for {args.org}")
     # Whole changes, rounded down: a projection is not an observed count.
     try:
-        args.runs = pilot_sizing(pilot, str(args.pilot), org=args.org)
+        sized = pilot_sizing(pilot, str(args.pilot), org=args.org)
     except ValueError as error:
         raise SystemExit(str(error)) from error
+    k_source = f"{args.pilot}: sizing.runs" if args.runs is None else "--runs"
+    args.runs = sized if args.runs is None else args.runs
     args.size = int(projection["test"]["projected_changes"])
     if max(args.trials, args.null_trials) > CALIBRATION_SEED_OFFSET:
         raise SystemExit(f"trial seeds would reach the calibration's at {CALIBRATION_SEED_OFFSET}")
@@ -514,7 +520,7 @@ def main() -> None:
         "placebo": str(args.placebo),
         "org": args.org,
         "inputs": {
-            "runs": f"{args.pilot}: sizing.runs",
+            "runs": k_source,
             "levels": f"{args.pilot}: levels",
             "spread_targets": f"{args.pilot}: per_run and runs_left_out, chi-squared bounds",
             "calibration_changes": f"{args.pilot}: changes",
@@ -535,6 +541,7 @@ def main() -> None:
         "sesoi": sesoi,
         "xi": sesoi,
         "runs": args.runs,
+        "null_only": args.null_only,
         "levels": levels,
         "trials": args.trials,
         "null_trials": args.null_trials,
@@ -575,6 +582,9 @@ def main() -> None:
                 "reproducibility_failure": fmean(t["disagree"] for t in null),
                 "by_level": {},
             }
+            if args.null_only:
+                report["by_target"][label] = entry
+                continue
             # One set of trials per lift reads every level, and the bisections for every level
             # and cell count share it: their midpoints coincide until their paths part.
             at_lift: dict[float, list[dict]] = {}

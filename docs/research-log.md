@@ -8707,3 +8707,38 @@ development pilot, not a confirmatory read; the confirmatory cells read the seal
 **Still to do before Stage 1:** the H1 sensitivity simulation on likelihood (`partition_sensitivity.py`
 simulates exact match from the placebo run; it needs the metric), and the manuscript's H1 measure,
 SESOI, K and check 5 rewritten from these readings.
+
+### The H1 simulation on likelihood: detectable effects below the SESOI, and a null that runs hot at K = 10 (2026-10-09)
+
+`# research(2026-10)`. `partition-sensitivity-<org>-rp1.0-logprob_per_token.json` (TIGRIS 251070 and 251061,
+pinned at e6fc180), `scripts/partition_sensitivity.py --metric logprob_per_token`. The pool is each
+pilot's 22 runs averaged per example and shrunk toward the mean contrast by the share of its spread
+that is not noise (OpenStack 0.958, Wikimedia 0.701); each simulated run adds the change-by-run
+noise measured on its pilot (per example 0.1291 and 0.1320, shared by a change
+0.0162 and 0.0249) and a run shift calibrated to the pilot's per-run spread. A first
+version that put all run-to-run spread in the run shift, and one that kept 1/22 of the noise in the
+truth, were reviewed and replaced before these runs. K = 10 on both, the floor the SESOI sizes; planned
+changes 2017 and 2848. Detectable effect at one to three cells, in nats per token:
+
+| organization, spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| OpenStack, pilot estimate | 0.0000 | 0.0102 to 0.0112 | 0.0094 to 0.0104 | 0.0073 | 0.0177 |
+| OpenStack, sizing bound 90 | 0.0016 | 0.0103 to 0.0113 | 0.0094 to 0.0105 | 0.0085 | 0.0208 |
+| OpenStack, pilot upper 99 | 0.0050 | 0.0118 to 0.0131 | 0.0110 to 0.0121 | 0.0112 | 0.0217 |
+| Wikimedia, pilot estimate | 0.0040 | 0.0067 to 0.0075 | 0.0063 to 0.0070 | 0.0095 | 0.0185 |
+| Wikimedia, sizing bound 90 | 0.0064 | 0.0091 to 0.0102 | 0.0084 to 0.0096 | 0.0195 | 0.0325 |
+| Wikimedia, pilot upper 99 | 0.0085 | 0.0116 to 0.0132 | 0.0107 to 0.0122 | 0.0243 | 0.0390 |
+
+Every detectable effect is below the SESOI (0.0183), and every simulated null reads inside the SESOI band,
+so on likelihood the SESOI can serve as the equivalence bound, which on exact match it could not.
+**But Wikimedia's null runs hot at K = 10**: at the 90% sizing bound its one-sided false-positive rate
+exceeds the nominal 0.0125 and 0.025, and more so at the 99% point. OpenStack's stays at or below
+nominal. With ten runs and Wikimedia's run-level spread the crossed interval is too narrow; the K
+formula sizes reproducibility, not coverage.
+
+**K rule, fixed here before any further simulation is read:** each organization's K is the larger of
+the reproducibility K (`partitions.runs_needed` at the SESOI) and the smallest K in {10, 12, 15, 20,
+25, 30, 35, 40} at which the simulated null's one-sided false-positive rate at the 90% sizing bound
+is at or below nominal at both Holm levels, 4,000 null trials each
+(`partition_sensitivity.sbatch RUNS=<K> NULL_ONLY=1`). The detectable effects are then simulated
+again at that K.

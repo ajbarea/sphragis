@@ -34,6 +34,15 @@ case "$METRIC" in
   logprob_per_token) PILOT_TAG="-likelihood"; RESULT_SUFFIX="$RESULT_SUFFIX-$METRIC" ;;
   *) echo "METRIC must be exact_match or logprob_per_token, not $METRIC" >&2; exit 1 ;;
 esac
+# RUNS=<K> and NULL_ONLY=1: the coverage search over K, the null's rates at a K in place of the
+# pilot's sizing, each under a result name of its own.
+COVERAGE_ARGS=()
+if [ -n "${RUNS:-}" ]; then COVERAGE_ARGS+=(--runs "$RUNS"); RESULT_SUFFIX="$RESULT_SUFFIX-k$RUNS"; fi
+case "${NULL_ONLY:-0}" in
+  1) COVERAGE_ARGS+=(--null-only); RESULT_SUFFIX="$RESULT_SUFFIX-null" ;;
+  0) ;;
+  *) echo "NULL_ONLY must be 0 or 1, not $NULL_ONLY" >&2; exit 1 ;;
+esac
 # SMOKE=1: a few trials end to end before the full run, under a result name of its own.
 case "${SMOKE:-0}" in
   1) SMOKE_ARGS=(--trials 20 --null-trials 40 --calibration-trials 4 --steps 3); RESULT_SUFFIX="$RESULT_SUFFIX-smoke" ;;
@@ -48,5 +57,6 @@ uv run --no-sync python scripts/partition_sensitivity.py \
   --projection "datasets/results/project-windows-$ORG-v3.json" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --metric "$METRIC" ${SMOKE_ARGS[@]+"${SMOKE_ARGS[@]}"} \
+  ${COVERAGE_ARGS[@]+"${COVERAGE_ARGS[@]}"} \
   --workers "$(nproc)" \
   --out "$OUT"

@@ -1,0 +1,329 @@
+{
+  "placebo": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-placebo-wikimedia-rp1.0.json",
+  "org": "wikimedia",
+  "inputs": {
+    "runs": "datasets/results/partition-pilot-wikimedia-likelihood.json: sizing.runs",
+    "levels": "datasets/results/partition-pilot-wikimedia-likelihood.json: levels",
+    "spread_targets": "datasets/results/partition-pilot-wikimedia-likelihood.json: per_run and runs_left_out, chi-squared bounds",
+    "calibration_changes": "datasets/results/partition-pilot-wikimedia-likelihood.json: changes",
+    "planned_changes": "datasets/results/project-windows-wikimedia-v3.json: test.projected_changes, rounded down",
+    "size_floor": "datasets/results/admissible-partitions-wikimedia.json: size_floor",
+    "reference": "datasets/results/admissible-partitions-wikimedia.json: reference"
+  },
+  "planned_changes": 2848,
+  "pilot_changes": 429,
+  "projects": 73,
+  "family_alpha": 0.025,
+  "hypothesis_power": 0.95,
+  "cell_power": {
+    "1": 0.95,
+    "2": 0.9746794344808963,
+    "3": 0.9830475724915585
+  },
+  "metric": "logprob_per_token",
+  "pool": "the pilot's runs, averaged per change",
+  "change_by_run_noise": {
+    "shared_by_change": 0.0249152198611439,
+    "per_example": 0.13196529767941795
+  },
+  "truth_shrinkage": 0.7012336162204592,
+  "sesoi": 0.018336619495924602,
+  "xi": 0.018336619495924602,
+  "runs": 10,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 1000,
+  "null_trials": 4000,
+  "resamples": 10000,
+  "redraw": 0.0,
+  "seed": 43,
+  "size_floor": 1850,
+  "partitions_pooled": 400,
+  "partition_seeds_tried": 508,
+  "spread_targets": {
+    "pilot_lower_90": 0.00533266174310511,
+    "pilot_estimate": 0.006332729149222406,
+    "sizing_bound_90": 0.007975596279716378,
+    "pilot_upper_99": 0.00972912839179677
+  },
+  "calibration_changes": 429,
+  "calibration_trials": 100,
+  "by_target": {
+    "pilot_lower_90": {
+      "calibration": {
+        "target": 0.00533266174310511,
+        "sigma_run": 0.0020214843750000003,
+        "spread": 0.005327756788229545,
+        "floor": false,
+        "spread_at_zero": 0.005283925510984667
+      },
+      "null_false_positive": {
+        "0.975": 0.00425,
+        "0.95": 0.00925
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.005175781250000001,
+              "minimum_detectable_effect": 0.005175781250000001,
+              "null_reads_bounded": 0.952
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.0054687500000000005,
+              "minimum_detectable_effect": 0.0054687500000000005,
+              "null_reads_bounded": 0.971
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.005664062500000001,
+              "minimum_detectable_effect": 0.005664062500000001,
+              "null_reads_bounded": 0.9805
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00478515625,
+              "minimum_detectable_effect": 0.00478515625,
+              "null_reads_bounded": 0.9555
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.005078125000000001,
+              "minimum_detectable_effect": 0.005078125000000001,
+              "null_reads_bounded": 0.97375
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.0052734375,
+              "minimum_detectable_effect": 0.0052734375,
+              "null_reads_bounded": 0.982
+            }
+          }
+        }
+      },
+      "lifts_simulated": 17
+    },
+    "pilot_estimate": {
+      "calibration": {
+        "target": 0.006332729149222406,
+        "sigma_run": 0.004013671875,
+        "spread": 0.006339560585475683,
+        "floor": false,
+        "spread_at_zero": 0.005283925510984667
+      },
+      "null_false_positive": {
+        "0.975": 0.0095,
+        "0.95": 0.0185
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00673828125,
+              "minimum_detectable_effect": 0.00673828125,
+              "null_reads_bounded": 0.9505
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.0072265625,
+              "minimum_detectable_effect": 0.0072265625,
+              "null_reads_bounded": 0.97375
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.007519531249999999,
+              "minimum_detectable_effect": 0.007519531249999999,
+              "null_reads_bounded": 0.9835
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00625,
+              "minimum_detectable_effect": 0.00625,
+              "null_reads_bounded": 0.95575
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.00673828125,
+              "minimum_detectable_effect": 0.00673828125,
+              "null_reads_bounded": 0.97525
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.00703125,
+              "minimum_detectable_effect": 0.00703125,
+              "null_reads_bounded": 0.98425
+            }
+          }
+        }
+      },
+      "lifts_simulated": 22
+    },
+    "sizing_bound_90": {
+      "calibration": {
+        "target": 0.007975596279716378,
+        "sigma_run": 0.006357421875,
+        "spread": 0.007983667288449159,
+        "floor": false,
+        "spread_at_zero": 0.005283925510984667
+      },
+      "null_false_positive": {
+        "0.975": 0.0195,
+        "0.95": 0.0325
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00908203125,
+              "minimum_detectable_effect": 0.00908203125,
+              "null_reads_bounded": 0.95175
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.009863281250000001,
+              "minimum_detectable_effect": 0.009863281250000001,
+              "null_reads_bounded": 0.97525
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.010156250000000002,
+              "minimum_detectable_effect": 0.010156250000000002,
+              "null_reads_bounded": 0.98225
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.008398437500000001,
+              "minimum_detectable_effect": 0.008398437500000001,
+              "null_reads_bounded": 0.95275
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.009179687500000002,
+              "minimum_detectable_effect": 0.009179687500000002,
+              "null_reads_bounded": 0.975
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.0095703125,
+              "minimum_detectable_effect": 0.0095703125,
+              "null_reads_bounded": 0.98425
+            }
+          }
+        }
+      },
+      "lifts_simulated": 21
+    },
+    "pilot_upper_99": {
+      "calibration": {
+        "target": 0.00972912839179677,
+        "sigma_run": 0.008525390625,
+        "spread": 0.00973988312631232,
+        "floor": false,
+        "spread_at_zero": 0.005283925510984667
+      },
+      "null_false_positive": {
+        "0.975": 0.02425,
+        "0.95": 0.039
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.01162109375,
+              "minimum_detectable_effect": 0.01162109375,
+              "null_reads_bounded": 0.95625
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.012402343750000001,
+              "minimum_detectable_effect": 0.012402343750000001,
+              "null_reads_bounded": 0.973
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.013183593750000002,
+              "minimum_detectable_effect": 0.013183593750000002,
+              "null_reads_bounded": 0.985
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.0107421875,
+              "minimum_detectable_effect": 0.0107421875,
+              "null_reads_bounded": 0.958
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.01162109375,
+              "minimum_detectable_effect": 0.01162109375,
+              "null_reads_bounded": 0.97525
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.01220703125,
+              "minimum_detectable_effect": 0.01220703125,
+              "null_reads_bounded": 0.98525
+            }
+          }
+        }
+      },
+      "lifts_simulated": 25
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-10T01:30:17.191115+00:00",
+    "git": {
+      "commit": "e6fc180f66be7e414224f861f34e02777fc8431b",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}
