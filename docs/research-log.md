@@ -8742,3 +8742,26 @@ the reproducibility K (`partitions.runs_needed` at the SESOI) and the smallest K
 is at or below nominal at both Holm levels, 4,000 null trials each
 (`partition_sensitivity.sbatch RUNS=<K> NULL_ONLY=1`). The detectable effects are then simulated
 again at that K.
+
+### Wikimedia's K under the coverage rule: 20 (2026-10-09)
+
+`# research(2026-10)`. `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k<K>-null.json`
+(TIGRIS 255027 to 255033, pinned at 642f6d9), null only, 4,000 null trials per K, at the 90% sizing
+bound; K = 10 is the full simulation above. The rule fixed in the previous entry reads this grid.
+
+| K | null false positive, 97.5% | null false positive, 95% | within nominal |
+|---|---|---|---|
+| 10 | 0.0195 | 0.0325 | no |
+| 12 | 0.0165 | 0.03025 | no |
+| 15 | 0.0135 | 0.0245 | no |
+| 20 | 0.0095 | 0.022 | yes |
+| 25 | 0.0105 | 0.0215 | yes |
+| 30 | 0.01075 | 0.02325 | yes |
+| 35 | 0.013 | 0.02175 | no |
+| 40 | 0.01 | 0.02225 | yes |
+
+The smallest K within nominal at both levels is 20, and the reproducibility K is 10, so **Wikimedia's
+K is 20**. OpenStack's null is within nominal at K = 10, so its K stays 10. The grid is not monotone:
+K = 35 exceeds the 97.5% nominal by 0.0005, inside one Monte Carlo standard error at 4,000 trials
+(0.0018). The rule takes the smallest passing K and is not re-read on that excursion. The detectable
+effects are simulated again for Wikimedia at K = 20 (`RUNS=20`, TIGRIS 256458).
