@@ -5,8 +5,10 @@ own-minus-sibling contrast less its mean over runs) as noise shared by a change,
 whole run shares would be counted there and redrawn per change rather than per run. The mean
 residual over a run's examples has variance per_example²/N + shared²·Σn²/N² from change noise
 (N examples, n per change) plus that of any run-wide shift; the excess over the first two terms,
-over the pilot's runs, estimates the run-wide part, beside the worst case in which all of the
-shared part were run-wide.
+over the pilot's runs, estimates the run-wide part, with its one-sided upper bound at
+`SIZING_CONFIDENCE` (chi-squared over the runs), beside the worst case in which all of the shared
+part were run-wide. A shift favouring one half's adapter cancels in the run mean and is not
+measured here; redrawn per change, it only widens the simulated interval.
 
     R=datasets/results
     uv run --no-sync --no-active python scripts/run_shift.py --org openstack \\
@@ -24,6 +26,7 @@ from pathlib import Path
 from statistics import fmean, variance
 
 from sphragis.experiment.decomposition import halves
+from sphragis.experiment.partitions import SIZING_CONFIDENCE, sd_bound
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -53,7 +56,9 @@ def run_wide(
     squares = sum(n * n for n in Counter(change_of.values()).values())
     shared, per_example = noise
     observed = variance(run_mean)
+    upper = sd_bound(run_mean, SIZING_CONFIDENCE, upper=True) ** 2
     from_noise = per_example**2 / examples + shared**2 * squares / examples**2
+    weight = squares / examples**2
     return {
         "runs": len(seeds),
         "examples": examples,
@@ -63,8 +68,14 @@ def run_wide(
         "from_change_noise": from_noise,
         "run_wide_variance": observed - from_noise,
         "run_wide_share_of_shared": (observed - from_noise) / shared**2,
-        # The worst case: all of the shared part run-wide, its weight on a run's mean.
-        "worst_case_on_run_mean": shared**2 * squares / examples**2,
+        "confidence": SIZING_CONFIDENCE,
+        "run_mean_variance_upper": upper,
+        "run_wide_variance_upper": upper - from_noise,
+        "run_wide_share_of_shared_upper": (upper - from_noise) / shared**2,
+        # What a run-wide shift inside the shared term moves onto a run's mean, at the upper
+        # bound, against the worst case in which all of the shared part were run-wide.
+        "misplaced_on_run_mean_upper": max(upper - from_noise, 0.0) * weight,
+        "worst_case_on_run_mean": shared**2 * weight,
     }
 
 

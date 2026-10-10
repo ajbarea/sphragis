@@ -57,4 +57,8 @@ def test_the_run_wide_part_is_what_the_change_noise_does_not_explain(shift_sd: f
     assert read["sum_squared_change_sizes"] == 50 * (1 + 4 + 9)
     # Within Monte Carlo error of the shift's variance over 400 runs, and of zero without one.
     assert read["run_wide_variance"] == pytest.approx(shift_sd**2, abs=3e-5)
+    # The upper bound sits above the estimate, and what it moves onto a run's mean stays below
+    # the worst case in which all of the shared part were run-wide.
+    assert read["run_wide_variance_upper"] > read["run_wide_variance"]
+    assert 0.0 <= read["misplaced_on_run_mean_upper"] <= read["worst_case_on_run_mean"]
     assert read["run_wide_share_of_shared"] == pytest.approx(read["run_wide_variance"] / SHARED**2)
