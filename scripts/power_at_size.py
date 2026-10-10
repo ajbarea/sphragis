@@ -10,12 +10,14 @@ Stat. Med. 2019). Power is at the registered bound, never at an observed effect.
 Every input is read from an artifact: the realised size, levels, cell count and spread target
 from the test report (`require_test_read` fixed them); K, trials, resamples, churn, the run shift
 and each level's lift from the simulation the report was read under. The pilot clusters and the
-partitions are rebuilt from the corpus as the simulation built them (`partition_sensitivity.pools`).
+partitions are rebuilt from the corpus as the simulation built them (`partition_sensitivity.pools`):
+on a continuous metric from the pilot's runs, with the change-by-run noise the simulation recorded.
 
     uv run --no-sync --no-active python scripts/power_at_size.py \\
         --report datasets/results/partition-test-openstack.json \\
         --simulation datasets/results/partition-sensitivity-openstack.json \\
         --placebo datasets/results/rq1-placebo-openstack-v3.json \\
+        --pilot datasets/results/partition-pilot-openstack.json \\
         --corpus datasets/gerrit \\
         --admissible datasets/results/admissible-partitions-openstack.json \\
         --out datasets/results/power-at-size-openstack.json
@@ -35,7 +37,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 import partition_sensitivity  # noqa: E402
-from partition_sensitivity import Pool, _init, pools, trials_at  # noqa: E402
+from partition_sensitivity import Pool, _init, pools, trials_at, worker_args  # noqa: E402
 
 from sphragis.experiment.cells import by_level, is_count, level_key, same_calibration  # noqa: E402
 from sphragis.provenance import provenance_header  # noqa: E402
@@ -46,6 +48,7 @@ parser.add_argument(
     "--simulation", type=Path, required=True, help="the partition_sensitivity.py artifact it read"
 )
 parser.add_argument("--placebo", type=Path, required=True, help="the simulation's placebo run")
+parser.add_argument("--pilot", type=Path, required=True, help="the simulation's pilot artifact")
 parser.add_argument("--corpus", type=Path, required=True, help="the corpus root, for projects")
 parser.add_argument("--admissible", type=Path, required=True, help="the admissible list")
 parser.add_argument("--workers", type=int, default=6)
@@ -81,6 +84,15 @@ def registered_lifts(
             raise ValueError(f"the report's bound at {c} is not this simulation's")
         out[level_key(c)] = {"lift": at["lift"], "bound": at["minimum_detectable_effect"]}
     return target["calibration"]["sigma_run"], out
+
+
+def recorded_pilot(simulation: Mapping[str, Any]) -> str:
+    """The file name of the pilot the simulation calibrated on, from its recorded inputs."""
+    source = simulation.get("inputs", {}).get("calibration_changes", "")
+    path, sep, field = source.rpartition(": ")
+    if not sep or field != "changes":
+        raise ValueError(f"the simulation records no pilot ({source!r})")
+    return Path(path).name
 
 
 def simulation_seed(simulation: Mapping[str, Any]) -> int:
@@ -152,26 +164,48 @@ def main() -> None:
     if Path(simulation.get("placebo", "")).name != args.placebo.name:
         raise SystemExit(f"{args.simulation} was simulated on {simulation.get('placebo')}")
     try:
+        if recorded_pilot(simulation) != args.pilot.name:
+            raise ValueError(f"the simulation calibrated on {recorded_pilot(simulation)}")
         sigma_run, lifts = registered_lifts(report, simulation)
     except (KeyError, TypeError, ValueError) as error:
         raise SystemExit(f"{args.report}: {error}") from error
+    # Old artifacts predate the field and are exact match.
+    metric = simulation.get("metric", "exact_match")
+    if report.get("metric", "exact_match") != metric:
+        raise SystemExit(f"{args.report} is read on {report.get('metric')}, simulated on {metric}")
     org, changes = report["org"], report["changes"]
-    pool, partitions, tried = pools(
+    pool, partitions, tried, noise, shrink = pools(
         args.placebo,
         args.corpus,
         org,
         args.admissible,
         simulation["partitions_pooled"],
         simulation["partition_seeds_tried"],
+        metric,
+        json.loads(args.pilot.read_text()),
     )
-    # The rebuild must be the simulation's own: the same pilot changes and the same partitions.
+    # The rebuild must be the simulation's own: the same pilot changes and the same partitions,
+    # and on a continuous metric the same noise and shrinkage.
     if (len(pool), tried) != (simulation["pilot_changes"], simulation["partition_seeds_tried"]):
         raise SystemExit(
             f"{args.corpus} rebuilt {len(pool)} pilot changes and partitions to seed {tried}; "
             f"the simulation had {simulation['pilot_changes']} and "
             f"{simulation['partition_seeds_tried']}"
         )
-    with ProcessPoolExecutor(args.workers, initializer=_init, initargs=(partitions,)) as executor:
+    if metric != "exact_match":
+        recorded_noise = simulation["change_by_run_noise"]
+        rebuilt = {"shared_by_change": noise[0], "per_example": noise[1], "shrink": shrink}
+        expected = {**recorded_noise, "shrink": simulation["truth_shrinkage"]}
+        if any(
+            not math.isclose(rebuilt[k], expected[k], rel_tol=1e-9, abs_tol=1e-12) for k in expected
+        ):
+            raise SystemExit(f"{args.pilot} rebuilt noise {rebuilt}, the simulation had {expected}")
+    initargs = worker_args(partitions, metric, noise)
+    if initargs[2] != simulation.get("sesoi", initargs[2]):
+        raise SystemExit(
+            f"{metric}'s SESOI is {initargs[2]}, the simulation's {simulation['sesoi']}"
+        )
+    with ProcessPoolExecutor(args.workers, initializer=_init, initargs=initargs) as executor:
         by_level_ = power_at(
             executor,
             pool,
@@ -187,6 +221,7 @@ def main() -> None:
         )
     out = {
         "org": org,
+        "metric": metric,
         "report": str(args.report),
         "simulation": str(args.simulation),
         "changes": changes,

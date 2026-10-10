@@ -19,9 +19,11 @@ Two things the design of record asks for that the first version did not deliver:
 from __future__ import annotations
 
 import random
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from statistics import fmean, median
+from typing import Any
 
 from sphragis.measure.stats import (
     Cluster,
@@ -54,6 +56,128 @@ def _shift(cluster: Cluster, lift: float, rng: random.Random) -> Cluster:
         1.0 if value < 1.0 and rng.random() < lift else value for value in cluster.treatment
     )
     return Cluster(cluster.change_id, lifted, cluster.control)
+
+
+def shift_by(cluster: Cluster, delta: float) -> Cluster:
+    """A continuous score's alternative: every treatment outcome moved by `delta`, a location shift.
+
+    A lift (`_shift`) moves a binary failure to a success; a per-token log-probability has no
+    failures to move, so the effect is added, and the realised difference is `delta` itself.
+    """
+    return Cluster(cluster.change_id, tuple(v + delta for v in cluster.treatment), cluster.control)
+
+
+def continuous_runs(
+    truth: Sequence[Cluster],
+    *,
+    seeds: int,
+    sigma_b: float,
+    noise: tuple[float, float],
+    rng: random.Random,
+) -> list[list[Cluster]]:
+    """`seed_runs` for a continuous score: change-by-run noise, then a run shift.
+
+    Each run moves every treatment outcome by N(0, sigma_example) of its own and by an
+    N(0, sigma_change) its change's examples share, `noise` = (sigma_change, sigma_example) as
+    `averaged_truth` measures them on a pilot: the continuous counterpart of binary churn. Then
+    the whole arm moves by one N(0, sigma_b), the run's shift. On the likelihood pilots nearly all
+    the run-to-run spread is per example (research log, 2026-10-09), so it shrinks as the study
+    grows, which a run shift alone would not.
+    """
+    sigma_change, sigma_example = noise
+
+    def draw(sd: float) -> float:
+        return rng.gauss(0.0, sd) if sd > 0 else 0.0
+
+    runs = []
+    for _ in range(seeds):
+        shift = draw(sigma_b)
+        run = []
+        for cluster in truth:
+            common = shift + draw(sigma_change)
+            moved = tuple(v + common + draw(sigma_example) for v in cluster.treatment)
+            run.append(Cluster(cluster.change_id, moved, cluster.control))
+        runs.append(run)
+    return runs
+
+
+def averaged_truth(
+    runs: Sequence[tuple[Mapping[str, Sequence[Mapping[str, Any]]], int]],
+    *,
+    halves: tuple[str, str],
+    metric: str,
+) -> tuple[list[Cluster], tuple[float, float], float]:
+    """Each change's outcomes averaged over a pilot's runs, the change-by-run noise, the shrinkage.
+
+    Every run scores every example, in one half or the other, so an example's own-minus-sibling
+    is seen once a run. Averaging over runs keeps one run's noise out of the truth a simulation
+    resamples. The noise is each example's deviation from its own mean contrast, split into the
+    part its change's examples share (their mean cross-product within a run) and the rest, both
+    corrected for centering on R runs; `continuous_runs` adds it back once a simulated run.
+
+    An example's averaged contrast still carries 1/R of that noise, which a simulated run would
+    add to its own, so each is shrunk toward the mean contrast by the share of the examples'
+    spread that is not noise (empirical Bayes); the control arm is kept and the treatment arm
+    moved, and the factor is returned.
+    """
+    seeds = [seed for _, seed in runs]
+    if len(set(seeds)) != len(seeds):
+        raise ValueError(f"runs repeat a seed: {sorted(seeds)}")
+    if len(runs) < 2:
+        raise ValueError("change-by-run noise needs at least two runs")
+    own: dict[str, list[float]] = defaultdict(list)
+    other: dict[str, list[float]] = defaultdict(list)
+    contrast: dict[str, list[float]] = defaultdict(list)
+    change_of: dict[str, str] = {}
+    for results, seed in runs:
+        for window, sibling in (halves, halves[::-1]):
+            mine = {r["id"]: r for r in results[f"adapter:{window}|{window}|s{seed}"]}
+            theirs = {r["id"]: r for r in results[f"adapter:{sibling}|{window}|s{seed}"]}
+            if set(mine) != set(theirs):
+                raise ValueError(f"run s{seed}: {window}'s arms score different examples")
+            for example, row in mine.items():
+                a, b = float(row[metric]), float(theirs[example][metric])
+                own[example].append(a)
+                other[example].append(b)
+                contrast[example].append(a - b)
+                if change_of.setdefault(example, row["change_id"]) != row["change_id"]:
+                    raise ValueError(f"example {example} belongs to two changes across runs")
+    if len(own) < 2:
+        raise ValueError(f"the spread across examples needs at least two examples, not {len(own)}")
+    counts = {len(values) for values in own.values()}
+    if counts != {len(runs)}:
+        raise ValueError(
+            f"examples are scored by {sorted(counts)} runs, not every one of {len(runs)}"
+        )
+    n_runs = len(runs)
+    examples: dict[str, list[str]] = defaultdict(list)
+    for example in sorted(own):
+        examples[change_of[example]].append(example)
+    residual = {e: [d - fmean(ds) for d in ds] for e, ds in contrast.items()}
+    correction = n_runs / (n_runs - 1)
+    total = fmean(v * v for vs in residual.values() for v in vs) * correction
+    cross, pairs = 0.0, 0
+    for ids in examples.values():
+        for r in range(n_runs):
+            values = [residual[e][r] for e in ids]
+            cross += sum(values) ** 2 - sum(v * v for v in values)
+            pairs += len(values) * (len(values) - 1)
+    shared = max(cross / pairs * correction, 0.0) if pairs else 0.0
+    per_example = max(total - shared, 0.0)
+    means = {e: fmean(ds) for e, ds in contrast.items()}
+    centre = fmean(means.values())
+    spread = fmean((m - centre) ** 2 for m in means.values()) * len(means) / (len(means) - 1)
+    noise_of_mean = (shared + per_example) / n_runs
+    shrink = max(0.0, 1.0 - noise_of_mean / spread) if spread > 0 else 0.0
+
+    def treated(e: str) -> float:
+        return fmean(other[e]) + centre + shrink * (means[e] - centre)
+
+    truth = [
+        Cluster(change, tuple(treated(e) for e in ids), tuple(fmean(other[e]) for e in ids))
+        for change, ids in sorted(examples.items())
+    ]
+    return truth, (shared**0.5, per_example**0.5), shrink
 
 
 def _resolve_size(clusters: Sequence[Cluster], n_changes: int | None) -> int:

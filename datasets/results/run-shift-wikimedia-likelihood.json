@@ -1,0 +1,30 @@
+{
+  "org": "wikimedia",
+  "metric": "logprob_per_token",
+  "pilot": "datasets/results/partition-pilot-wikimedia-likelihood.json",
+  "simulation": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token.json",
+  "runs": 22,
+  "examples": 711,
+  "changes": 429,
+  "sum_squared_change_sizes": 2069,
+  "run_mean_variance": 4.11326377935535e-05,
+  "from_change_noise": 2.7034130051508353e-05,
+  "run_wide_variance": 1.4098507742045144e-05,
+  "run_wide_share_of_shared": 0.022711389178300623,
+  "confidence": 0.9,
+  "run_mean_variance_upper": 6.524256969659481e-05,
+  "run_wide_variance_upper": 3.820843964508646e-05,
+  "run_wide_share_of_shared_upper": 0.06155025471860967,
+  "misplaced_on_run_mean_upper": 1.5637977774550193e-07,
+  "worst_case_on_run_mean": 2.540684493677987e-06,
+  "provenance": {
+    "generated_at": "2026-10-10T05:17:07.670116+00:00",
+    "git": {
+      "commit": "d0366dc078ad215c227d3efc87011bc01f53ede7",
+      "branch": "measure/likelihood-sims"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  }
+}

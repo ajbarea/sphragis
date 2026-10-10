@@ -8707,3 +8707,86 @@ development pilot, not a confirmatory read; the confirmatory cells read the seal
 **Still to do before Stage 1:** the H1 sensitivity simulation on likelihood (`partition_sensitivity.py`
 simulates exact match from the placebo run; it needs the metric), and the manuscript's H1 measure,
 SESOI, K and check 5 rewritten from these readings.
+
+### The H1 simulation on likelihood: detectable effects below the SESOI, and a null that runs hot at K = 10 (2026-10-09)
+
+`# research(2026-10)`. `partition-sensitivity-<org>-rp1.0-logprob_per_token.json` (TIGRIS 251070 and 251061,
+pinned at e6fc180), `scripts/partition_sensitivity.py --metric logprob_per_token`. The pool is each
+pilot's 22 runs averaged per example and shrunk toward the mean contrast by the share of its spread
+that is not noise (OpenStack 0.958, Wikimedia 0.701); each simulated run adds the change-by-run
+noise measured on its pilot (per example 0.1291 and 0.1320, shared by a change
+0.0162 and 0.0249) and a run shift calibrated to the pilot's per-run spread. A first
+version that put all run-to-run spread in the run shift, and one that kept 1/22 of the noise in the
+truth, were reviewed and replaced before these runs. K = 10 on both, the floor the SESOI sizes; planned
+changes 2017 and 2848. Detectable effect at one to three cells, in nats per token:
+
+| organization, spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| OpenStack, pilot estimate | 0.0000 | 0.0102 to 0.0112 | 0.0094 to 0.0104 | 0.0073 | 0.0177 |
+| OpenStack, sizing bound 90 | 0.0016 | 0.0103 to 0.0113 | 0.0094 to 0.0105 | 0.0085 | 0.0208 |
+| OpenStack, pilot upper 99 | 0.0050 | 0.0118 to 0.0131 | 0.0110 to 0.0121 | 0.0112 | 0.0217 |
+| Wikimedia, pilot estimate | 0.0040 | 0.0067 to 0.0075 | 0.0063 to 0.0070 | 0.0095 | 0.0185 |
+| Wikimedia, sizing bound 90 | 0.0064 | 0.0091 to 0.0102 | 0.0084 to 0.0096 | 0.0195 | 0.0325 |
+| Wikimedia, pilot upper 99 | 0.0085 | 0.0116 to 0.0132 | 0.0107 to 0.0122 | 0.0243 | 0.0390 |
+
+Every detectable effect is below the SESOI (0.0183), and every simulated null reads inside the SESOI band,
+so on likelihood the SESOI can serve as the equivalence bound, which on exact match it could not.
+**But Wikimedia's null runs hot at K = 10**: at the 90% sizing bound its one-sided false-positive rate
+exceeds the nominal 0.0125 and 0.025, and more so at the 99% point. OpenStack's stays at or below
+nominal. With ten runs and Wikimedia's run-level spread the crossed interval is too narrow; the K
+formula sizes reproducibility, not coverage.
+
+**K rule, fixed here before any further simulation is read:** each organization's K is the larger of
+the reproducibility K (`partitions.runs_needed` at the SESOI) and the smallest K in {10, 12, 15, 20,
+25, 30, 35, 40} at which the simulated null's one-sided false-positive rate at the 90% sizing bound
+is at or below nominal at both Holm levels, 4,000 null trials each
+(`partition_sensitivity.sbatch RUNS=<K> NULL_ONLY=1`). The detectable effects are then simulated
+again at that K.
+
+### Wikimedia's K under the coverage rule: 20 (2026-10-09)
+
+`# research(2026-10)`. `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k<K>-null.json`
+(TIGRIS 255027 to 255033, pinned at 642f6d9), null only, 4,000 null trials per K, at the 90% sizing
+bound; K = 10 is the full simulation above. The rule fixed in the previous entry reads this grid.
+
+| K | null false positive, 97.5% | null false positive, 95% | within nominal |
+|---|---|---|---|
+| 10 | 0.0195 | 0.0325 | no |
+| 12 | 0.0165 | 0.03025 | no |
+| 15 | 0.0135 | 0.0245 | no |
+| 20 | 0.0095 | 0.022 | yes |
+| 25 | 0.0105 | 0.0215 | yes |
+| 30 | 0.01075 | 0.02325 | yes |
+| 35 | 0.013 | 0.02175 | no |
+| 40 | 0.01 | 0.02225 | yes |
+
+The smallest K within nominal at both levels is 20, and the reproducibility K is 10, so **Wikimedia's
+K is 20**. OpenStack's null is within nominal at K = 10, so its K stays 10. The grid is not monotone:
+K = 35 exceeds the 97.5% nominal by 0.0005, inside one Monte Carlo standard error at 4,000 trials
+(0.0018). The rule takes the smallest passing K and is not re-read on that excursion. The detectable
+effects are simulated again for Wikimedia at K = 20 (`RUNS=20`, TIGRIS 256458).
+
+**What the noise model can misplace, measured.** `averaged_truth` takes every within-change
+cross-product as noise shared by a change. A shift favouring one half's adapter cancels between
+the halves in a real run, so redrawing it per change only widens the simulated interval, the
+conservative direction. A shift the whole run shares in the contrast is real run-to-run spread
+that the simulation would redraw per change and shrink with size, the anti-conservative direction.
+`scripts/run_shift.py` (`run-shift-<org>-likelihood.json`) measures the second: the variance of a
+run's mean residual over the pilot's 22 runs, less what the change noise implies
+(per_example²/N + shared²·Σn²/N²), with its one-sided 90% upper bound. On OpenStack the estimate
+is -2.4e-06, none beyond noise, and its upper bound 7.1% of the shared
+variance; on Wikimedia 1.4e-05, 2.3% of the shared variance, upper bound
+6.2%. At those upper bounds the variance moved onto a run's mean is
+3.3e-07 on OpenStack and 1.6e-07 on Wikimedia, against
+4.7e-06 and 2.5e-06 if all of the shared part were run-wide (for OpenStack
+that worst case is a tenth of the run variance at the 90% sizing bound at the pilot's 206 changes,
+and a larger share at the projected 2017). The misplacement is therefore negligible. The
+OpenStack floor (simulated spread 0.0065 at sigma_run 0 against a pilot estimate of 0.0054) is
+the spread partitions and change noise produce on their own, above the pilot's point estimate but
+inside its interval and below the sizing bound of 0.0068, not a misplaced run shift.
+
+**Still to do before a test read:** the gate takes K only from the
+pilot's `sizing.runs` (10 on both), so a read at Wikimedia's K = 20 would be refused until the K
+coverage rule has a registered K source; and the gate's `within_sesoi`, `meaningful` and
+`below_sesoi` readings use exact match's 0.01 on every metric, not likelihood's 0.0183 (the pass
+and bounded verdicts read the simulation's bounds and are unaffected).

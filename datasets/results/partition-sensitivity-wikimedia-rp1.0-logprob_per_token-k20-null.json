@@ -1,0 +1,145 @@
+{
+  "placebo": "/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-placebo-wikimedia-rp1.0.json",
+  "org": "wikimedia",
+  "inputs": {
+    "runs": "--runs",
+    "levels": "datasets/results/partition-pilot-wikimedia-likelihood.json: levels",
+    "spread_targets": "datasets/results/partition-pilot-wikimedia-likelihood.json: per_run and runs_left_out, chi-squared bounds",
+    "calibration_changes": "datasets/results/partition-pilot-wikimedia-likelihood.json: changes",
+    "planned_changes": "datasets/results/project-windows-wikimedia-v3.json: test.projected_changes, rounded down",
+    "size_floor": "datasets/results/admissible-partitions-wikimedia.json: size_floor",
+    "reference": "datasets/results/admissible-partitions-wikimedia.json: reference"
+  },
+  "planned_changes": 2848,
+  "pilot_changes": 429,
+  "projects": 73,
+  "family_alpha": 0.025,
+  "hypothesis_power": 0.95,
+  "cell_power": {
+    "1": 0.95,
+    "2": 0.9746794344808963,
+    "3": 0.9830475724915585
+  },
+  "metric": "logprob_per_token",
+  "pool": "the pilot's runs, averaged per change",
+  "change_by_run_noise": {
+    "shared_by_change": 0.0249152198611439,
+    "per_example": 0.13196529767941795
+  },
+  "truth_shrinkage": 0.7012336162204592,
+  "sesoi": 0.018336619495924602,
+  "xi": 0.018336619495924602,
+  "runs": 20,
+  "null_only": true,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 1000,
+  "null_trials": 4000,
+  "resamples": 10000,
+  "redraw": 0.0,
+  "seed": 43,
+  "size_floor": 1850,
+  "partitions_pooled": 400,
+  "partition_seeds_tried": 508,
+  "spread_targets": {
+    "pilot_lower_90": 0.00533266174310511,
+    "pilot_estimate": 0.006332729149222406,
+    "sizing_bound_90": 0.007975596279716378,
+    "pilot_upper_99": 0.00972912839179677
+  },
+  "calibration_changes": 429,
+  "calibration_trials": 100,
+  "by_target": {
+    "pilot_lower_90": {
+      "calibration": {
+        "target": 0.00533266174310511,
+        "sigma_run": 0.0,
+        "spread": 0.005352652121037514,
+        "floor": true
+      },
+      "null_false_positive": {
+        "0.975": 0.0035,
+        "0.95": 0.00725
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {}
+    },
+    "pilot_estimate": {
+      "calibration": {
+        "target": 0.006332729149222406,
+        "sigma_run": 0.0037207031249999996,
+        "spread": 0.006337509781161805,
+        "floor": false,
+        "spread_at_zero": 0.005352652121037514
+      },
+      "null_false_positive": {
+        "0.975": 0.00575,
+        "0.95": 0.01375
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {}
+    },
+    "sizing_bound_90": {
+      "calibration": {
+        "target": 0.007975596279716378,
+        "sigma_run": 0.0062402343750000006,
+        "spread": 0.00798583875756712,
+        "floor": false,
+        "spread_at_zero": 0.005352652121037514
+      },
+      "null_false_positive": {
+        "0.975": 0.0095,
+        "0.95": 0.022
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {}
+    },
+    "pilot_upper_99": {
+      "calibration": {
+        "target": 0.00972912839179677,
+        "sigma_run": 0.008466796875000002,
+        "spread": 0.00973443111856382,
+        "floor": false,
+        "spread_at_zero": 0.005352652121037514
+      },
+      "null_false_positive": {
+        "0.975": 0.01325,
+        "0.95": 0.02475
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {}
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-10T02:58:11.886616+00:00",
+    "git": {
+      "commit": "642f6d9d24928b216c6c39de5e693e0120d6146b",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
+  }
+}

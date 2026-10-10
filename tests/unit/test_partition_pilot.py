@@ -343,7 +343,9 @@ def test_the_per_token_likelihood_reads_its_registered_sesoi(
     """The SESOI comes from likelihood-sesoi.json, and every reading compares against it."""
     registered = tmp_path / "likelihood-sesoi.json"
     registered.write_text(json.dumps({"sesoi": 0.5}))
-    monkeypatch.setattr(partition_pilot, "LIKELIHOOD_SESOI", registered)
+    import sphragis.experiment.likelihood as likelihood
+
+    monkeypatch.setattr(likelihood, "LIKELIHOOD_SESOI", registered)
     argv = _inputs(tmp_path, "openstack")
     _with_likelihood(argv)
     out = tmp_path / "o.json"

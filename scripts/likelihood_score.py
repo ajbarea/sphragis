@@ -44,7 +44,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--run", type=Path, required=True, help="the stored partition run")
 parser.add_argument("--adapters", type=Path, required=True, help="where its adapters are saved")
 parser.add_argument("--seeds", required=True, help="the stored run's, checked against it")
-parser.add_argument("--train-size", type=int, required=True, help="the stored run's, checked")
+parser.add_argument("--train-size", type=int, help="the stored run's, checked; none for a placebo")
 parser.add_argument("--out", type=Path, required=True)
 
 

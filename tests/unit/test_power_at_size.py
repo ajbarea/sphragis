@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import random
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -151,3 +152,96 @@ def test_the_trials_take_the_seed_the_simulation_ran_at() -> None:
     assert power_at_size.simulation_seed(_simulation()) == (
         partition_sensitivity.parser.get_default("seed")
     )
+
+
+def test_the_pilot_is_read_from_the_simulations_recorded_inputs() -> None:
+    simulation = _simulation(inputs={"calibration_changes": "datasets/results/pp.json: changes"})
+    assert power_at_size.recorded_pilot(simulation) == "pp.json"
+    with pytest.raises(ValueError, match="records no pilot"):
+        power_at_size.recorded_pilot(_simulation())
+
+
+_NOISE = {"shared_by_change": 0.02, "per_example": 0.13}
+
+
+def _main(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    report: dict | None = None,
+    rebuilt_noise: tuple[float, float] = (0.02, 0.13),
+    pilot: str = "pilot.json",
+    **fields: Any,
+) -> tuple[dict, dict]:
+    """`main()` on a continuous simulation, its pool rebuilt in memory rather than from a corpus."""
+    from sphragis.experiment.likelihood import metric_sesoi
+
+    monkeypatch.chdir(ROOT)
+    sesoi = metric_sesoi("logprob_per_token")
+    projects = [f"p{i}" for i in range(4)]
+    # Every outcome at 1.0: exact match's lift has no failure to move, so only a continuous
+    # shift can find the lift, and the power below says the workers ran continuous.
+    pool = [(Cluster(f"c{i}", (1.0,), (1.0,)), projects[i % 4]) for i in range(40)]
+    sides = [(0, 0, 1, 1), (0, 1, 0, 1), (0, 1, 1, 0), (1, 0, 0, 1)]
+    partitions = [dict(zip(projects, sides[i % 4], strict=True)) for i in range(2 * K_MAX)]
+    simulation = (
+        _simulation(
+            metric="logprob_per_token",
+            sesoi=sesoi,
+            redraw=0.0,
+            placebo="placebo.json",
+            inputs={"calibration_changes": "results/pilot.json: changes"},
+            pilot_changes=len(pool),
+            partitions_pooled=len(partitions),
+            partition_seeds_tried=50,
+            change_by_run_noise=_NOISE,
+            truth_shrinkage=0.7,
+            seed=3,
+        )
+        | fields
+    )
+    report = report or _report(metric="logprob_per_token")
+    report["sensitivity"]["file"] = "sim.json"
+    for name, artifact in (("report.json", report), ("sim.json", simulation), (pilot, {})):
+        (tmp_path / name).write_text(json.dumps(artifact))
+    called: dict = {}
+
+    def pools(*args: Any) -> tuple:
+        called["metric"], called["pilot"] = args[6], args[7]
+        return pool, partitions, 50, rebuilt_noise, 0.7
+
+    monkeypatch.setattr(power_at_size, "pools", pools)
+    monkeypatch.setattr(power_at_size, "ProcessPoolExecutor", ThreadPoolExecutor)
+    argv = ["power_at_size.py", "--report", str(tmp_path / "report.json")]
+    argv += ["--simulation", str(tmp_path / "sim.json"), "--placebo", "placebo.json"]
+    argv += ["--pilot", str(tmp_path / pilot), "--corpus", "c", "--admissible", "a.json"]
+    monkeypatch.setattr(sys, "argv", [*argv, "--out", str(tmp_path / "out.json"), "--workers", "2"])
+    try:
+        power_at_size.main()
+    finally:
+        partition_sensitivity._init([])
+    return json.loads((tmp_path / "out.json").read_text()), called
+
+
+def test_a_continuous_simulation_is_rerun_with_its_metric_pilot_and_sesoi(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out, called = _main(tmp_path, monkeypatch)
+    assert called == {"metric": "logprob_per_token", "pilot": {}}
+    assert out["metric"] == "logprob_per_token" and out["changes"] == 1_800
+    # Equal arms and no noise beyond the run shift: a lift of 0.05 is found, 0.04 nearly so.
+    assert out["by_level"]["0.975"]["power"] > 0.9
+    assert set(out["by_level"]) == {"0.975", "0.95"}
+
+
+def test_a_rebuild_with_other_noise_or_a_read_on_another_metric_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with pytest.raises(SystemExit, match="rebuilt noise"):
+        _main(tmp_path, monkeypatch, rebuilt_noise=(0.03, 0.13))
+    with pytest.raises(SystemExit, match="read on exact_match"):
+        _main(tmp_path, monkeypatch, report=_report(metric="exact_match"))
+    with pytest.raises(SystemExit, match="calibrated on pilot.json"):
+        _main(tmp_path, monkeypatch, pilot="other-pilot.json")
+    with pytest.raises(SystemExit, match="the simulation's 0.5"):
+        _main(tmp_path, monkeypatch, sesoi=0.5)

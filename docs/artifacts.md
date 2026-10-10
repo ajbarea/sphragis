@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 617 artifacts under
-61 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 632 artifacts under
+62 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -343,6 +343,7 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-wikimedia-p7-s6-n1850-plant0.5-rp1.0.json` | `likelihood-partition-wikimedia-p7-s6-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p8-s7-n1850-plant0.5-rp1.0.json` | `likelihood-partition-wikimedia-p8-s7-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p9-s8-n1850-plant0.5-rp1.0.json` | `likelihood-partition-wikimedia-p9-s8-n1850-rp1.0.json` |
+| `likelihood-placebo-openstack-v3-rp1.0.json` | `likelihood-placebo-wikimedia-rp1.0.json` |
 
 ## `scripts/likelihood_sesoi.py`
 
@@ -406,8 +407,13 @@ Operating characteristics of H1 over repeated partitions at the registered K, by
 
 | artifact | |
 |---|---|
+| `partition-sensitivity-openstack-rp1.0-logprob_per_token.json` | `partition-sensitivity-openstack-rp1.0.json` |
 | `partition-sensitivity-openstack-stopping.json` | `partition-sensitivity-openstack.json` |
-| `partition-sensitivity-wikimedia.json` |  |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k12-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k15-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k25-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k30-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k35-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k40-null.json` | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token.json` |
+| `partition-sensitivity-wikimedia-rp1.0.json` | `partition-sensitivity-wikimedia.json` |
 
 ## `scripts/partition_variance.py`
 
@@ -676,6 +682,14 @@ Distil the rules files the rules-file comparator prompts with, by the pinned dis
 | `rules-reviews-wikimedia-p3.json` | `rules-reviews-wikimedia-p5.json` |
 | `rules-reviews-wikimedia-p6.json` | `rules-reviews-wikimedia-p7.json` |
 | `rules-reviews-wikimedia-p8.json` | `rules-reviews-wikimedia-p9.json` |
+
+## `scripts/run_shift.py`
+
+How much run-wide shift a likelihood pilot carries beyond its change-by-run noise.
+
+| artifact | |
+|---|---|
+| `run-shift-openstack-likelihood.json` | `run-shift-wikimedia-likelihood.json` |
 
 ## `scripts/seed_effect.py`
 

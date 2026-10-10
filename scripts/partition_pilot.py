@@ -43,6 +43,7 @@ from sphragis.experiment.decomposition import (
     registered_read,
     valid_bound,
 )
+from sphragis.experiment.likelihood import metric_sesoi
 from sphragis.experiment.neutral import apparatus_holds, planted_convention
 from sphragis.experiment.partitions import (
     eval_ids,
@@ -96,19 +97,6 @@ parser.add_argument(
 parser.add_argument(
     "--metric", choices=("exact_match", "logprob_per_token", "logprob"), default="exact_match"
 )
-
-#: Where each metric's SESOI is registered. Exact match's is the cost-benefit constant; the
-#: per-token log-probability's is carried from it by `likelihood_sesoi.py`. On any other metric
-#: every reading that compares against a SESOI is reported as unregistered.
-LIKELIHOOD_SESOI = Path("datasets/results/likelihood-sesoi.json")
-
-
-def metric_sesoi(metric: str) -> float | None:
-    if metric == "exact_match":
-        return SESOI
-    if metric == "logprob_per_token" and LIKELIHOOD_SESOI.is_file():
-        return json.loads(LIKELIHOOD_SESOI.read_text())["sesoi"]
-    return None
 
 
 parser.add_argument("--bootstrap-seed", type=int, default=TEST_BOOTSTRAP_SEED)
