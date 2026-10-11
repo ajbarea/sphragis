@@ -236,3 +236,48 @@ def test_planted_convention_reads_adapter_arms_not_base_arms() -> None:
     run["results"]["adapter:openstack-a|openstack-a|s1"] = _rows(4, 0.0)
     check = _check(run)
     assert not check.passed and "degenerate" in check.evidence["reason"]
+
+
+def test_a_battery_holds_only_when_it_says_so_and_every_check_passed() -> None:
+    from sphragis.experiment.neutral import battery_holds
+
+    passed = {"name": "a", "passed": True}
+    assert battery_holds({"apparatus_holds": True, "checks": [passed]})
+    for battery in (
+        None,
+        {},
+        {"apparatus_holds": True, "checks": []},
+        {"apparatus_holds": False, "checks": [passed]},
+        {"apparatus_holds": True, "checks": [passed, {"name": "b", "passed": False}]},
+        {"apparatus_holds": "true", "checks": [passed]},
+    ):
+        assert not battery_holds(battery)
+
+
+def test_a_rescored_run_reads_the_battery_beside_it(tmp_path) -> None:
+    import json
+
+    from sphragis.experiment.neutral import SCORED_IDENTITY, recorded_battery
+
+    battery = {"apparatus_holds": True, "checks": []}
+    identity = {key: [key] for key in SCORED_IDENTITY}
+    (tmp_path / "rq1.json").write_text(json.dumps({**identity, "outcome_neutral": battery}))
+    run = tmp_path / "likelihood.json"
+    rescored = {**identity, "scored_from": "/elsewhere/rq1.json"}
+    assert recorded_battery(rescored, run) == battery
+    assert recorded_battery({**rescored, "seeds": [99]}, run) is None
+    # A field absent from both is not a match.
+    absent = {k: v for k, v in rescored.items() if k != "lora_rank"}
+    (tmp_path / "rq1-absent.json").write_text(
+        json.dumps(
+            {k: v for k, v in identity.items() if k != "lora_rank"} | {"outcome_neutral": battery}
+        )
+    )
+    assert recorded_battery({**absent, "scored_from": "/x/rq1-absent.json"}, run) is None
+    assert recorded_battery({"scored_from": "/elsewhere/absent.json"}, run) is None
+    assert recorded_battery({}, run) is None
+    assert recorded_battery({"outcome_neutral": battery, "scored_from": "x"}, run) == battery
+    (tmp_path / "broken.json").write_text("{not json")
+    assert recorded_battery({**identity, "scored_from": "/x/broken.json"}, run) is None
+    (tmp_path / "list.json").write_text("[]")
+    assert recorded_battery({**identity, "scored_from": "/x/list.json"}, run) is None

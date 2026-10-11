@@ -404,6 +404,8 @@ def _replication_cell(
         "bounds": {REPLICATION_CONFIDENCE: bound},
         "window": "test",
         "planted_convention": {"passed": True},
+        "run_files": ["run-1.json"],
+        "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
         # Both registered sensitivities, read as partition_pilot.py --without writes them.
         # Read at every level any test read uses here, so a fixture serves either gate.
@@ -593,6 +595,18 @@ _SIM = {"apache": _sim(0.03)}
         ({"apache": _GOOD | {"window": "development"}}, _SIM, "development window"),
         ({"apache": _GOOD | {"planted_convention": {"passed": False}}}, _SIM, "check 5"),
         ({"apache": _GOOD | {"planted_convention": None}}, _SIM, "check 5 did not pass"),
+        (
+            {"apache": _GOOD | {"outcome_neutral_runs": [{"file": "run-1.json", "holds": False}]}},
+            _SIM,
+            "outcome-neutral battery",
+        ),
+        ({"apache": _GOOD | {"outcome_neutral_runs": []}}, _SIM, "outcome-neutral battery"),
+        ({"apache": _GOOD | {"run_files": {"run-1.json": 1}}}, _SIM, "outcome-neutral battery"),
+        (
+            {"apache": _GOOD | {"run_files": ["run-1.json", "run-2.json"]}},
+            _SIM,
+            "outcome-neutral battery",
+        ),
         (
             {
                 "apache": _GOOD

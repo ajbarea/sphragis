@@ -12,6 +12,7 @@ pre-committed in the report rather than computed.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -244,3 +245,56 @@ def planted_convention(
 def apparatus_holds(checks: Sequence[Check]) -> bool:
     """True only if every outcome-neutral check passed. False halts the study: H1 is not read."""
     return bool(checks) and all(check.passed for check in checks)
+
+
+#: The fields a likelihood rescoring copies from the generation run it scores
+#: (`scripts/likelihood_score.py`), which identify one as the other.
+SCORED_IDENTITY = (
+    "model_id",
+    "seeds",
+    "split_seed",
+    "equalize_train",
+    "train_size",
+    "lora_rank",
+    "bootstrap_seed",
+    "corpora",
+)
+
+
+def recorded_battery(run: Mapping[str, Any], path: Path) -> Mapping[str, Any] | None:
+    """The outcome-neutral battery a stored run recorded, or None when it recorded none.
+
+    A likelihood rescoring (`scripts/likelihood_score.py`) reuses a generation run's adapters
+    and names that run in `scored_from`; the battery is the generation run's, read from beside
+    this file, since the recorded path is the cluster's, and only when that file is the run it
+    scored (`SCORED_IDENTITY`), so a rerun written over the name lends it nothing.
+    """
+    if "outcome_neutral" in run:
+        return run["outcome_neutral"]
+    source = run.get("scored_from")
+    if not isinstance(source, str):
+        return None
+    origin = path.parent / Path(source).name
+    if not origin.is_file():
+        return None
+    try:
+        scored = json.loads(origin.read_text())
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(scored, Mapping) or any(
+        key not in scored or key not in run or scored[key] != run[key] for key in SCORED_IDENTITY
+    ):
+        return None
+    return scored.get("outcome_neutral")
+
+
+def battery_holds(battery: Any) -> bool:
+    """Whether a recorded battery held: `apparatus_holds` true and every recorded check passed."""
+    if not isinstance(battery, Mapping) or battery.get("apparatus_holds") is not True:
+        return False
+    checks = battery.get("checks")
+    return (
+        isinstance(checks, list)
+        and bool(checks)
+        and all(isinstance(c, Mapping) and c.get("passed") is True for c in checks)
+    )

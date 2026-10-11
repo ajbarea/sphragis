@@ -33,7 +33,7 @@ from sphragis.experiment.model import (
     run_provenance,
     scorable,
 )
-from sphragis.experiment.neutral import source_root, source_windows
+from sphragis.experiment.neutral import SCORED_IDENTITY, source_root, source_windows
 from sphragis.experiment.runner import build_prompt
 from sphragis.experiment.walk import gate
 
@@ -141,15 +141,14 @@ def main() -> None:
     verdict = gate(
         results, orgs=orgs, seeds=run["seeds"], metric=METRIC, bootstrap_seed=run["bootstrap_seed"]
     )
-    copied = ("model_id", "seeds", "split_seed", "equalize_train", "train_size", "lora_rank")
-    copied += ("bootstrap_seed",)
     args.out.write_text(
         json.dumps(
             {
                 "provenance": run_provenance(),
                 "scored_from": str(args.run),
                 "metric": METRIC,
-                **{key: run.get(key) for key in copied},
+                # What identifies this file as the run it scored (`neutral.recorded_battery`).
+                **{key: run.get(key) for key in SCORED_IDENTITY if key != "corpora"},
                 "inference_dtype": sorted(dtypes),
                 # Likelihood reads no decoder; these are the stored run's, for the exact match
                 # its rows carry.
