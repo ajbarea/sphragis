@@ -20,7 +20,10 @@ from sphragis.experiment.cells import (
     same_calibration,
 )
 from sphragis.experiment.decomposition import (
+    FOREIGN_SOURCES,
+    H2_ORGANIZATION,
     H2_PAIR,
+    H2_POPULATION,
     MIN_RESAMPLES,
     ORGANIZATIONS,
     REPLICATION_CONFIDENCE,
@@ -28,17 +31,18 @@ from sphragis.experiment.decomposition import (
     SUMMED_CONFIDENCE,
     below_sesoi,
     cell_verdict,
-    cpp_supplement,
     decomposition_gate,
     design,
     detectable_effects,
     file_type_supplement,
+    foreign_arm,
     h1_test_gate,
     halves,
     holm_levels,
     holm_steps,
     holm_verdicts,
     is_cpp,
+    matched_clusters,
     matched_suffix,
     organization_clusters,
     project_clusters,
@@ -47,6 +51,7 @@ from sphragis.experiment.decomposition import (
     replication,
     replication_gate,
     row_path,
+    whole_hunk_supplement,
 )
 from sphragis.experiment.grid import EvalRun, run_id
 
@@ -61,25 +66,37 @@ Score = Callable[[str, str, int, int], float]
 def _results(
     score: Score, orgs: tuple[str, ...] = ORGS, n_changes: int = N_CHANGES
 ) -> dict[str, list[dict[str, Any]]]:
-    """Every adapter half scored on every half, two examples a change."""
+    """Every adapter half scored on every half, two examples a change, all from C++ files; and
+    every matched foreign arm (`foreign_arm`) scored on the window its sibling is matched for."""
     all_halves = [h for org in orgs for h in halves(org)]
+    sources = sorted(set(FOREIGN_SOURCES) | set(orgs))
+    arms = [(trained, window) for trained in all_halves for window in all_halves] + [
+        (foreign_arm(source, sibling), window)
+        for org in orgs
+        for window, sibling in (halves(org), halves(org)[::-1])
+        for source in sources
+        if source != org
+    ]
     return {
         run_id(EvalRun(f"adapter:{trained}", window, seed)): [
             {
                 "id": f"{window}:{c}:{e}",
                 "change_id": f"{window}-I{c}",
+                "path": f"src/f{c}.cc",
                 "exact_match": score(trained, window, seed, c),
             }
             for c in range(n_changes)
             for e in range(2)
         ]
-        for trained in all_halves
-        for window in all_halves
+        for trained, window in arms
         for seed in SEEDS
     }
 
 
 def _org(half: str) -> str:
+    """The organization an arm was trained on; a matched foreign arm's is its source."""
+    if half.startswith("foreign-"):
+        return half.split("-")[1]
     return half.rsplit("-", 1)[0]
 
 
@@ -351,6 +368,211 @@ def test_design_orders_by_registration_order_never_input_order() -> None:
 def test_design_refuses_a_replication_member() -> None:
     with pytest.raises(ValueError, match="unknown organization"):
         design(["openstack", "apache"])
+
+
+def test_the_foreign_sources_are_registered_in_order() -> None:
+    assert H2_ORGANIZATION == "qt"
+    assert FOREIGN_SOURCES == ("chromium", "fuchsia", "aosp")
+
+
+@pytest.mark.parametrize("source", FOREIGN_SOURCES)
+def test_without_the_pair_qt_is_read_against_its_foreign_source(source: str) -> None:
+    outcome = design(("openstack", "wikimedia", "qt"), source)
+    assert outcome["H2"] == (("qt", source),)
+    assert outcome["foreign_source"] == source
+    assert outcome["h2_population"] == "cpp"
+    assert outcome["exploratory_h2"] == (("openstack", "wikimedia"), ("wikimedia", "openstack"))
+
+
+def test_the_pair_reads_both_ways_with_no_single_source() -> None:
+    admitted = ("openstack", "qt", "chromium")
+    assert design(admitted) == design(admitted, "chromium")
+    # Each cell's foreign side is the other organization, so the design names no one source.
+    assert design(admitted)["foreign_source"] is None
+    assert design(admitted)["H2"] == (("qt", "chromium"), ("chromium", "qt"))
+    with pytest.raises(ValueError, match="H2 is that pair"):
+        design(admitted, "aosp")
+
+
+def test_no_h2_cell_has_no_source_or_population() -> None:
+    outcome = design(("openstack", "qt"))
+    assert outcome["H2"] == ()
+    assert outcome["foreign_source"] is None
+    assert outcome["h2_population"] is None
+
+
+@pytest.mark.parametrize(
+    ("admitted", "source", "match"),
+    [
+        (("openstack", "qt"), "lineageos", "unknown foreign source"),
+        (("openstack", "qt"), "qt", "unknown foreign source"),
+        (("openstack", "wikimedia"), "fuchsia", "needs qt admitted"),
+    ],
+)
+def test_design_refuses_a_foreign_source_it_cannot_read(
+    admitted: tuple[str, ...], source: str, match: str
+) -> None:
+    with pytest.raises(ValueError, match=match):
+        design(admitted, source)
+
+
+def test_a_matched_foreign_arm_is_named_by_its_source_and_sibling() -> None:
+    assert foreign_arm("aosp", "qt-b") == "foreign-aosp-for-qt-b"
+    with pytest.raises(ValueError, match="hyphen"):
+        foreign_arm("x-y", "qt-b")
+
+
+def test_matched_clusters_take_each_halfs_own_matched_arm() -> None:
+    def score(trained: str, window: str, seed: int, change: int) -> float:
+        if trained == foreign_arm("fuchsia", "qt-b"):
+            return 0.0
+        if trained == foreign_arm("fuchsia", "qt-a"):
+            return 0.5
+        return 1.0
+
+    results = _results(score, orgs=("openstack", "qt"))
+    first, second = matched_clusters(results, org="qt", source="fuchsia", seed=1)
+    assert {sum(c.control) for c in first} == {0.0}
+    assert {sum(c.control) for c in second} == {1.0}
+    with pytest.raises(ValueError, match="foreign"):
+        matched_clusters(results, org="qt", source="qt", seed=1)
+
+
+def test_h2_withdrawn_leaves_no_confirmatory_cell() -> None:
+    for admitted, source in (
+        (("openstack", "qt"), "aosp"),
+        (("openstack", "qt", "chromium"), None),
+    ):
+        outcome = design(admitted, source, h2_withdrawn=True)
+        assert outcome["H2"] == ()
+        assert outcome["foreign_source"] is None
+        assert ("qt", "openstack") in outcome["exploratory_h2"]
+
+
+def test_matched_clusters_refuse_a_missing_arm_a_shared_change_and_a_duplicate_id() -> None:
+    results = _results(_by_relation(0.75, 0.5, 0.25), orgs=("openstack", "qt"))
+    arm = run_id(EvalRun(f"adapter:{foreign_arm('fuchsia', 'qt-b')}", "qt-a", 1))
+    missing = {k: v for k, v in results.items() if k != arm}
+    with pytest.raises(ValueError, match="matched foreign arm"):
+        matched_clusters(missing, org="qt", source="fuchsia", seed=1)
+    shared = {k: [dict(r) for r in v] for k, v in results.items()}
+    for key, rows in shared.items():
+        if "|qt-b|" in key:
+            rows[0]["change_id"] = "qt-a-I0"
+    with pytest.raises(ValueError, match="both halves"):
+        matched_clusters(shared, org="qt", source="fuchsia", seed=1)
+    duplicated = dict(results)
+    duplicated[arm] = [*results[arm], results[arm][0]]
+    with pytest.raises(ValueError, match="repeats example ids"):
+        matched_clusters(duplicated, org="qt", source="fuchsia", seed=1)
+
+
+def _registered_source(monkeypatch: pytest.MonkeyPatch, source: str | None) -> None:
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", source)
+
+
+def test_qt_without_chromium_is_tested_on_both_hypotheses_against_its_registered_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
+    admitted = ("openstack", "qt")
+    outcome = _gate(_by_relation(0.75, 0.5, 0.25), admitted=admitted)
+    assert outcome["holm_levels"] == [0.975, 0.95]
+    assert outcome["verdicts"] == {"H1": "pass", "H2": "pass"}
+    assert outcome["per_org"]["H2"]["qt"]["foreign"] == "fuchsia"
+    assert outcome["per_org"]["H2"]["openstack"]["role"] == "exploratory"
+
+
+def test_the_registered_source_applies_only_with_qt_admitted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "aosp")
+    outcome = _gate(_by_relation(0.75, 0.5, 0.25), admitted=("openstack", "wikimedia"))
+    assert set(outcome["verdicts"]) == {"H1"}
+
+
+def test_a_registered_source_other_than_chromium_is_refused_with_the_pair(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
+    with pytest.raises(ValueError, match="H2 is that pair"):
+        _gate(_by_relation(0.75, 0.5, 0.25))
+    _registered_source(monkeypatch, "chromium")
+    assert _gate(_by_relation(0.75, 0.5, 0.25))["design"] == design(ORGS)
+
+
+def test_a_withdrawn_h2_is_read_as_h1_alone(monkeypatch: pytest.MonkeyPatch) -> None:
+    _registered_source(monkeypatch, "aosp")
+    monkeypatch.setattr(decomposition, "H2_WITHDRAWN", "foreign pool over check 4")
+    outcome = _gate(_by_relation(0.75, 0.5, 0.25), admitted=("openstack", "qt"))
+    assert set(outcome["verdicts"]) == {"H1"}
+    assert outcome["holm_levels"] == [0.95]
+
+
+def test_rows_of_organizations_h2_does_not_read_need_no_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
+    admitted = ("openstack", "qt")
+    results = _results(_by_relation(0.75, 0.5, 0.25), orgs=admitted)
+    for key, rows in results.items():
+        if "|openstack-" in key:
+            for row in rows:
+                del row["path"]
+    outcome = decomposition_gate(
+        results,
+        admitted=admitted,
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+        detectable=DETECTABLE,
+    )
+    assert outcome["verdicts"] == {"H1": "pass", "H2": "pass"}
+
+
+def test_a_mistyped_registered_source_is_refused_even_without_qt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "Fuchsia")
+    with pytest.raises(ValueError, match="registered FOREIGN_SOURCE"):
+        _gate(_by_relation(0.75, 0.5, 0.25), admitted=("openstack", "wikimedia"))
+
+
+def test_the_h1_test_gate_refuses_while_qts_registered_source_makes_h2_confirmatory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    _registered_source(monkeypatch, "fuchsia")
+    with pytest.raises(ValueError, match="H2 is confirmatory"):
+        h1_test_gate({}, simulations={})
+
+
+def test_a_whole_hunk_cell_keeps_its_estimate_when_its_cpp_share_cannot_be_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
+    admitted = ("openstack", "qt")
+    results = _results(_by_relation(0.75, 0.5, 0.25), orgs=admitted)
+    for key, rows in results.items():
+        if "|qt-a|" in key:
+            for row in rows:
+                del row["path"]
+    outcome = whole_hunk_supplement(
+        results, admitted=admitted, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+    )
+    qt = outcome["cells"]["qt"]
+    assert "estimate" in qt and "cpp_share" not in qt
+    assert "carries no path" in qt["cpp_share_error"]
+
+
+def test_the_frozen_source_sets_the_holm_levels_qt_is_read_at(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    _registered_source(monkeypatch, None)
+    assert registered_read("qt")["levels"] == [0.95]
+    _registered_source(monkeypatch, "aosp")
+    assert registered_read("qt")["levels"] == [0.975, 0.95]
 
 
 def test_replication_orders_members_and_reports_the_rest_as_not_collected() -> None:
@@ -1013,7 +1235,7 @@ def test_a_broken_exploratory_cell_does_not_withhold_the_verdicts() -> None:
 
 def test_a_broken_confirmatory_cell_is_still_refused() -> None:
     results = _results(_by_relation(0.75, 0.25, 0.25))
-    del results[run_id(EvalRun("adapter:chromium-b", "qt-a", 1))]
+    del results[run_id(EvalRun(f"adapter:{foreign_arm('chromium', 'qt-b')}", "qt-a", 1))]
     with pytest.raises(ValueError, match="not scored"):
         decomposition_gate(
             results,
@@ -1124,20 +1346,55 @@ def _with_paths(score: Score) -> dict[str, list[dict[str, Any]]]:
     return results
 
 
-def test_the_cpp_supplement_reads_only_cpp_examples() -> None:
-    def score(trained: str, window: str, seed: int, change: int) -> float:
-        if change % 2 == 1:
-            return 0.5 * (change % 4 == 1)
-        return 1.0 if _org(trained) == _org(window) else 0.0
+def _cpp_effect(trained: str, window: str, seed: int, change: int) -> float:
+    """Even changes (C++ in `_with_paths`) carry an organization effect; odd ones (Python) do not,
+    and score the same in every arm."""
+    if change % 2 == 1:
+        return 0.5 * (change % 4 == 1)
+    return 1.0 if _org(trained) == _org(window) else 0.0
 
-    outcome = cpp_supplement(
-        _with_paths(score), admitted=ORGS, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+
+def test_the_whole_hunk_supplement_reads_every_example_against_the_matched_arm() -> None:
+    outcome = whole_hunk_supplement(
+        _with_paths(_cpp_effect),
+        admitted=ORGS,
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
     )
     assert outcome["role"] == "supplementary"
     qt = outcome["cells"]["qt"]
-    assert qt["estimate"] == pytest.approx(1.0)
-    assert qt["clusters_per_half"] == [N_CHANGES, N_CHANGES]
+    assert qt["foreign"] == "chromium"
+    # Half the changes carry a full effect, half none: the whole-hunk contrast halves it.
+    assert qt["estimate"] == pytest.approx(0.5)
+    assert qt["clusters_per_half"] == [2 * N_CHANGES, 2 * N_CHANGES]
     assert qt["cpp_share"] == {"qt-a": 0.5, "qt-b": 0.5}
+
+
+def test_a_confirmatory_h2_cell_reads_only_cpp_examples_and_h1_reads_every_one() -> None:
+    outcome = decomposition_gate(
+        _with_paths(_cpp_effect),
+        admitted=ORGS,
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+        detectable=DETECTABLE,
+    )
+    qt_h2 = outcome["per_org"]["H2"]["qt"]
+    assert qt_h2["population"] == H2_POPULATION == "cpp"
+    assert qt_h2["estimate"] == pytest.approx(1.0)
+    assert qt_h2["clusters_per_half"] == [N_CHANGES, N_CHANGES]
+    qt_h1 = outcome["per_org"]["H1"]["qt"]
+    assert qt_h1["population"] == "all"
+    assert qt_h1["clusters_per_half"] == [2 * N_CHANGES, 2 * N_CHANGES]
+    # The joint reading shares one example set: Qt's C++ examples, with H1 restricted there.
+    joint = outcome["joint"]["qt"]
+    assert joint["population"] == "cpp"
+    assert joint["h1_on_cpp"]["estimate"] == pytest.approx(0.0)
+    assert joint["summed"]["estimate"] == pytest.approx(1.0)
+    # An exploratory cell stays on every example.
+    assert outcome["per_org"]["H2"]["openstack"]["population"] == "all"
+    assert outcome["joint"]["openstack"]["population"] == "all"
 
 
 def test_the_gate_reports_the_design_it_read_and_refuses_a_set_without_openstack() -> None:
@@ -1158,40 +1415,49 @@ def test_the_gate_reports_the_design_it_read_and_refuses_a_set_without_openstack
 
 
 @pytest.mark.parametrize(
-    ("admitted", "cells"),
+    ("admitted", "source", "cells"),
     [
-        (("openstack", "wikimedia", "qt"), set()),
-        (("openstack", "chromium"), set()),
-        (("openstack", "wikimedia", "qt", "chromium"), {"qt", "chromium"}),
+        (("openstack", "wikimedia", "qt"), None, set()),
+        (("openstack", "chromium"), None, set()),
+        (("openstack", "wikimedia", "qt"), "aosp", {"qt"}),
+        (("openstack", "wikimedia", "qt", "chromium"), None, {"qt", "chromium"}),
     ],
 )
-def test_the_cpp_supplement_reads_only_confirmatory_h2_cells(
-    admitted: tuple[str, ...], cells: set[str]
+def test_the_whole_hunk_supplement_reads_only_confirmatory_h2_cells(
+    admitted: tuple[str, ...], source: str | None, cells: set[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    _registered_source(monkeypatch, source)
+
     def score(trained: str, window: str, seed: int, change: int) -> float:
         return 1.0 if _org(trained) == _org(window) else 0.0
 
     results = _results(score, orgs=admitted, n_changes=2 * N_CHANGES)
-    for rows in results.values():
-        for row in rows:
-            row["path"] = "src/f.cc"
-    outcome = cpp_supplement(
-        results, admitted=admitted, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+    outcome = whole_hunk_supplement(
+        results,
+        admitted=admitted,
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
     )
-    assert outcome["design"] == design(admitted)
+    assert outcome["design"] == design(admitted, source)
     assert set(outcome["cells"]) == cells
     assert ("note" in outcome) is (not cells)
 
 
-def test_a_half_with_too_few_cpp_changes_is_reported_not_raised() -> None:
+def test_a_confirmatory_h2_cell_with_too_few_cpp_changes_is_refused() -> None:
     results = _results(_by_relation(0.5, 0.5, 0.25))
     for rows in results.values():
         for row in rows:
             row["path"] = "src/f.py"
-    outcome = cpp_supplement(
-        results, admitted=ORGS, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
-    )
-    assert "error" in outcome["cells"]["qt"]
+    with pytest.raises(ValueError, match="clusters"):
+        decomposition_gate(
+            results,
+            admitted=ORGS,
+            seeds=SEEDS,
+            bootstrap_seed=0,
+            resamples=MIN_RESAMPLES,
+            detectable=DETECTABLE,
+        )
 
 
 def test_detectable_effects_are_read_from_the_sensitivity_artifact() -> None:
@@ -1332,11 +1598,11 @@ def test_the_file_type_supplement_refuses_a_missing_artifact_few_resamples_and_s
         )
 
 
-def test_a_missing_results_cell_is_an_error_cell_in_the_cpp_supplement() -> None:
+def test_a_missing_results_cell_is_an_error_cell_in_the_whole_hunk_supplement() -> None:
     admitted = ("openstack", "qt", "chromium")
     results = _with_paths(_by_relation(0.75, 0.25, 0.25))
-    del results["adapter:chromium-b|qt-a|s1"]
-    outcome = cpp_supplement(
+    del results[run_id(EvalRun(f"adapter:{foreign_arm('chromium', 'qt-b')}", "qt-a", 1))]
+    outcome = whole_hunk_supplement(
         results, admitted=admitted, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
     )
     assert "no results" in outcome["cells"]["qt"]["error"]

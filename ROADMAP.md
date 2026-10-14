@@ -716,10 +716,10 @@ as the unit; the evidence says the codebase is.
 - [ ] **H2 as a Qt cell against a C++-matched foreign adapter** (planned 2026-10-14, research log):
   the confirmatory H2 estimand is the C++-restricted one; foreign source the first admitted of
   Chromium (permission), Fuchsia, AOSP before 2025-03-27, fixed before the first H2 development
-  contrast. Needs: `design()` with a foreign source that is not an evaluated organization; the
-  matched foreign sampler (C++ count of each run's sibling draw, filled to N); the gate reading the
-  restricted cell as confirmatory, with Qt's joint shares on its C++ examples; the foreign pool in
-  check 4; the identifier-renamed rereads; the source's pool sized by counts; Qt's development
+  contrast. Done: `registered_design()` with `FOREIGN_SOURCE` and `H2_WITHDRAWN`, and the gate
+  reading the restricted cell as confirmatory with Qt's joint shares on its C++ examples
+  (2026-10-14). Needs: the matched foreign sampler (C++ count of each run's sibling draw, filled
+  to N); the foreign pool in check 4; the identifier-renamed rereads; the source's pool sized by counts; Qt's development
   pilot and simulation once its terms arrive.
 - [ ] AJ's call: which git hosts feed the foreign draw (Fuchsia; Chromium before infra-dev
   answers), and whether IRB0000393 needs an amendment naming the source.

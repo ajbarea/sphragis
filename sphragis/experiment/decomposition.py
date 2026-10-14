@@ -4,9 +4,11 @@ Each organization is split into two halves of its own projects (`scripts/placebo
 and every adapter is trained on one half. On a refinement from half `a` of organization `O`:
 
 - the half-split contrast (H1) is own half against sibling half, `EM(O-a) - EM(O-b)`;
-- the organization beyond the evaluated projects (H2) is sibling half against the mean of a
-  foreign organization's halves, `EM(O-b) - mean EM(P-x)`. Neither adapter has seen the
-  evaluated projects.
+- the organization beyond the evaluated projects (H2) is sibling half against a foreign
+  adapter, `s(O-b) - s(P-x)`. A confirmatory H2 cell reads its organization's C++ examples
+  against one foreign adapter per evaluated half, matched to that sibling's C++ count
+  (`foreign_arm`); an exploratory cell reads every example against the mean of a foreign
+  organization's halves. Neither adapter has seen the evaluated projects.
 
 Each contrast weights the two halves equally and resamples changes within each half. Which
 cells are confirmatory is registered here, not passed in. Design of record:
@@ -17,7 +19,7 @@ from __future__ import annotations
 
 import json
 import math
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from statistics import fmean
 from typing import Any
@@ -90,24 +92,54 @@ SUMMED_CONFIDENCE = 0.95
 # Chromium only with written permission for automated access, Chromium's split qualifying too.
 ORGANIZATIONS = ("openstack", "wikimedia", "qt", "chromium")
 
-# The only language-matched pair, so the only confirmatory H2 cells.
+# The one language-matched pair of evaluated organizations: both ways when both are admitted.
 H2_PAIR = ("qt", "chromium")
 
+# Otherwise H2 is one cell on Qt, against the first of these sources whose host is admitted for
+# the foreign draw when the first H2 development contrast is read and whose pool covers every
+# matched draw (research log, 2026-10-14).
+H2_ORGANIZATION = "qt"
+FOREIGN_SOURCES = ("chromium", "fuchsia", "aosp")
 
-def design(admitted: Iterable[str]) -> dict[str, Any]:
+# Every confirmatory H2 cell reads its organization's C++ examples (`CPP_SUFFIXES`), its foreign
+# arm one adapter per evaluated half matched to that sibling's C++ count (`foreign_arm`).
+H2_POPULATION = "cpp"
+
+
+def design(
+    admitted: Iterable[str], foreign_source: str | None = None, *, h2_withdrawn: bool = False
+) -> dict[str, Any]:
     """The registered cells for whichever organizations are admitted.
 
     `admitted` must hold only names from `ORGANIZATIONS`, no duplicate, and always "openstack";
     input order does not matter, every result is ordered by `ORGANIZATIONS`. H1 is every admitted
-    organization. H2 is confirmatory only for `H2_PAIR`, when both are admitted. Every other
-    admitted organization gets one exploratory H2 cell instead, paired with the first other
-    admitted organization in registration order: computed and reported, never part of a verdict.
+    organization. H2 is confirmatory for `H2_PAIR`, both ways, when both are admitted; otherwise
+    for `H2_ORGANIZATION` against `foreign_source`, when Qt is admitted and a source is given;
+    `h2_withdrawn` (a foreign pool over check 4's threshold) leaves H2 with no confirmatory cell.
+    Every other admitted organization gets one exploratory H2 cell instead, paired with the first
+    other admitted organization in registration order: computed and reported, never part of a
+    verdict.
     """
     ordered = _registered(admitted, ORGANIZATIONS, role="admitted")
     admitted_set = set(ordered)
     if "openstack" not in admitted_set:
         raise ValueError("openstack must always be admitted")
-    h2 = (H2_PAIR, H2_PAIR[::-1]) if set(H2_PAIR) <= admitted_set else ()
+    if foreign_source is not None and foreign_source not in FOREIGN_SOURCES:
+        raise ValueError(f"unknown foreign source {foreign_source!r}; registered {FOREIGN_SOURCES}")
+    h2: tuple[tuple[str, str], ...]
+    if set(H2_PAIR) <= admitted_set:
+        if foreign_source not in (None, H2_PAIR[1]):
+            raise ValueError(f"with {H2_PAIR} both admitted, H2 is that pair, not {foreign_source}")
+        # Each cell's foreign side is the other organization; no single source to report.
+        h2, foreign_source = (H2_PAIR, H2_PAIR[::-1]), None
+    elif foreign_source is not None:
+        if H2_ORGANIZATION not in admitted_set:
+            raise ValueError(f"a foreign source needs {H2_ORGANIZATION} admitted")
+        h2 = ((H2_ORGANIZATION, foreign_source),)
+    else:
+        h2 = ()
+    if h2_withdrawn:
+        h2, foreign_source = (), None
     paired = {org for pair in h2 for org in pair}
     exploratory = []
     for org in ordered:
@@ -120,8 +152,18 @@ def design(admitted: Iterable[str]) -> dict[str, Any]:
         "admitted": ordered,
         "H1": ordered,
         "H2": h2,
+        "foreign_source": foreign_source,
+        "h2_population": H2_POPULATION if h2 else None,
         "exploratory_h2": tuple(exploratory),
     }
+
+
+def foreign_arm(source: str, sibling: str) -> str:
+    """The matched foreign adapter for an H2 cell: trained on `source`'s examples, as many C++
+    examples as `sibling`'s draw in the same run, filled to N from the source's other files."""
+    if "-" in source:
+        raise ValueError(f"a source name carries no hyphen, got {source!r}")
+    return f"foreign-{source}-for-{sibling}"
 
 
 def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -> tuple[str, ...]:
@@ -145,6 +187,15 @@ def valid_bound(bound: Any) -> bool:
 # The Gerrit organizations admitted, set once by the commit that freezes them before any test
 # window is read; None until then. A test read's Holm levels and cell count follow from them.
 ADMITTED_ORGANIZATIONS: tuple[str, ...] | None = None
+
+# Qt's foreign source, set by the commit that fixes it before the first H2 development contrast
+# is read, or None while no source qualifies. Every read takes it from here, never from a
+# caller, so no source can be chosen after a contrast is seen.
+FOREIGN_SOURCE: str | None = None
+
+# Why H2 was withdrawn from the confirmatory family after its source was fixed (a foreign pool
+# over check 4's threshold), set by the commit recording it; None while H2 stands.
+H2_WITHDRAWN: str | None = None
 
 
 # The GitHub replication family in registration order (registered-decisions.md, "GitHub
@@ -190,10 +241,11 @@ def confirmatory(spec: Mapping[str, Any]) -> dict[str, Any]:
 def registered_read(org: str) -> dict[str, Any]:
     """What `org`'s test-window read is registered at: its levels, cell count and spread target.
 
-    A Gerrit organization is read at the Holm levels of `design(ADMITTED_ORGANIZATIONS)`, its
-    bound from a simulation of that design's H1 cells; a GitHub member at
-    `REPLICATION_CONFIDENCE` alone, as one cell. Both take the bound at the registered spread
-    target. Refused before the organizations are frozen, and for one outside them.
+    A Gerrit organization is read at the Holm levels of
+    `registered_design(ADMITTED_ORGANIZATIONS)`, its bound from a simulation of that design's H1
+    cells; a GitHub member at `REPLICATION_CONFIDENCE` alone, as one cell. Both take the bound at
+    the registered spread target. Refused before the organizations are frozen, and for one
+    outside them.
     """
     if org in REPLICATION_FAMILY:
         if REPLICATION_MEMBERS is None or org not in REPLICATION_MEMBERS:
@@ -201,7 +253,20 @@ def registered_read(org: str) -> dict[str, Any]:
         return _read_at([REPLICATION_CONFIDENCE], cells=1)
     if ADMITTED_ORGANIZATIONS is None or org not in ADMITTED_ORGANIZATIONS:
         raise ValueError(f"{org} is not among the frozen admitted organizations")
-    return _gerrit_read(design(ADMITTED_ORGANIZATIONS))
+    return _gerrit_read(registered_design(ADMITTED_ORGANIZATIONS))
+
+
+def registered_design(admitted: Iterable[str]) -> dict[str, Any]:
+    """`design` for `admitted` with the registered `FOREIGN_SOURCE` and `H2_WITHDRAWN`: what every
+    read uses. The source applies only with Qt admitted; with the pair admitted, a source other
+    than Chromium is refused by `design`."""
+    admitted = tuple(admitted)
+    if FOREIGN_SOURCE is not None and FOREIGN_SOURCE not in FOREIGN_SOURCES:
+        raise ValueError(
+            f"registered FOREIGN_SOURCE {FOREIGN_SOURCE!r} is not in {FOREIGN_SOURCES}"
+        )
+    source = FOREIGN_SOURCE if H2_ORGANIZATION in admitted else None
+    return design(admitted, source, h2_withdrawn=H2_WITHDRAWN is not None)
 
 
 def _read_at(levels: list[float], *, cells: int) -> dict[str, Any]:
@@ -394,7 +459,7 @@ def h1_test_gate(
     """
     if ADMITTED_ORGANIZATIONS is None:
         raise ValueError("the admitted organizations are not frozen yet")
-    spec = design(ADMITTED_ORGANIZATIONS)
+    spec = registered_design(ADMITTED_ORGANIZATIONS)
     if "H2" in confirmatory(spec):
         raise ValueError("H2 is confirmatory, and its test read over partitions is not built")
     orgs = spec["H1"]
@@ -757,6 +822,58 @@ def organization_clusters(
     )
 
 
+def matched_clusters(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    *,
+    org: str,
+    source: str,
+    seed: int | None,
+    metric: str = "exact_match",
+    condition: str = "adapter",
+) -> list[list[Cluster]]:
+    """Sibling half against the foreign adapter matched to that sibling, one list per evaluated
+    half: the confirmatory H2 contrast (`foreign_arm`)."""
+    if source == org:
+        raise ValueError(f"the foreign source must be foreign to {org!r}")
+    first, second = halves(org)
+    sibling = {first: second, second: first}
+    return paired_clusters(
+        results,
+        org=org,
+        treatment=lambda w: run_id(EvalRun(f"{condition}:{sibling[w]}", w, seed)),
+        control=lambda w: run_id(
+            EvalRun(f"{condition}:{foreign_arm(source, sibling[w])}", w, seed)
+        ),
+        metric=metric,
+        missing=lambda key, w: _unscored(key, "the matched foreign arm or sibling", w),
+    )
+
+
+class Restricted(Mapping[str, Sequence[Mapping[str, Any]]]):
+    """`results` with each cell's rows filtered by `keep` when the cell is read, so only the
+    cells a contrast reads are ever filtered."""
+
+    def __init__(
+        self,
+        results: Mapping[str, Sequence[Mapping[str, Any]]],
+        keep: Callable[[Mapping[str, Any]], bool],
+    ) -> None:
+        self._results = results
+        self._keep = keep
+
+    def __getitem__(self, key: str) -> list[Mapping[str, Any]]:
+        return [row for row in self._results[key] if self._keep(row)]
+
+    def __contains__(self, key: object) -> bool:
+        return key in self._results
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._results)
+
+    def __len__(self) -> int:
+        return len(self._results)
+
+
 def _strata(per_seed: Sequence[list[list[Cluster]]]) -> list[list[list[Cluster]]]:
     """`[seed][half]` to the `[half][seed]` layout the stratified bootstrap reads."""
     return [[run[h] for run in per_seed] for h in range(len(per_seed[0]))]
@@ -824,6 +941,47 @@ def below_sesoi(
     )
 
 
+def _joint(
+    drawn: tuple[dict[str, float], dict[str, list[float]]],
+    *,
+    foreign: str,
+    role: str,
+    population: str,
+) -> dict[str, Any]:
+    """H1 and H2 read jointly on shared draws: the share of draws in each sign quadrant and the
+    summed contrast; on the C++ population also H1 restricted there, reported only."""
+    estimates, draws = drawn
+    pairs = list(zip(draws["H1"], draws["H2"], strict=True))
+    low, high = percentile_interval([a + b for a, b in pairs], SUMMED_CONFIDENCE)
+    joint: dict[str, Any] = {
+        "h2": {"foreign": foreign, "role": role},
+        "population": population,
+        "shares": {
+            f"H1{'>' if a else '<='}0,H2{'>' if b else '<='}0": sum(
+                1 for x, y in pairs if (x > 0) == a and (y > 0) == b
+            )
+            / len(pairs)
+            for a in (True, False)
+            for b in (True, False)
+        },
+        "summed": {
+            "estimate": estimates["H1"] + estimates["H2"],
+            "low": low,
+            "high": high,
+            "confidence": SUMMED_CONFIDENCE,
+        },
+    }
+    if population == H2_POPULATION:
+        h1_low, h1_high = percentile_interval(draws["H1"], SUMMED_CONFIDENCE)
+        joint["h1_on_cpp"] = {
+            "estimate": estimates["H1"],
+            "low": h1_low,
+            "high": h1_high,
+            "confidence": SUMMED_CONFIDENCE,
+        }
+    return joint
+
+
 def decomposition_gate(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
@@ -838,9 +996,14 @@ def decomposition_gate(
     """The registered verdicts, their reading, and every cell behind them.
 
     Within an organization all of its contrasts are bootstrapped on the same draws, so the
-    share of draws in which each is above zero, and their sum, are read jointly. `detectable`
-    holds each cell's registered bound by Holm level (`detectable_effects`); a confirmatory cell
-    without one at every level the design reads is refused, so no bound is chosen after the data.
+    share of draws in which each is above zero, and their sum, are read jointly. A confirmatory
+    H2 cell reads its organization's C++ examples against the matched foreign arm
+    (`matched_clusters`); its H1 verdict stays on every example, and its joint reading is taken on
+    the C++ examples, where both contrasts share one example set. The cells are
+    `registered_design(admitted)`, so Qt's foreign source is the registered one, never an argument.
+    `detectable` holds each cell's
+    registered bound by Holm level (`detectable_effects`); a confirmatory cell without one at
+    every level the design reads is refused, so no bound is chosen after the data.
     It reads single-partition development pilots (`scripts/decomposition_pilot.py`). The H2
     test-window read over partitions is not built yet; when it is, it goes through
     `require_test_read` as the H1 read does.
@@ -854,7 +1017,7 @@ def decomposition_gate(
         raise ValueError(
             f"admitted {sorted(admitted)} is not the frozen set {ADMITTED_ORGANIZATIONS}"
         )
-    cells = design(admitted)
+    cells = registered_design(admitted)
     hypotheses = confirmatory(cells)
     levels = holm_levels(len(hypotheses))
     bounds = {
@@ -873,47 +1036,70 @@ def decomposition_gate(
     h2_pairs = {org: (foreign, "confirmatory") for org, foreign in cells["H2"]}
     for org, foreign in cells["exploratory_h2"]:
         h2_pairs.setdefault(org, (foreign, "exploratory"))
+    cpp = Restricted(results, is_cpp)
 
     per_org: dict[str, dict[str, Any]] = {"H1": {}, "H2": {}}
     joint: dict[str, dict[str, Any]] = {}
     for org in sorted(h1_orgs | set(h2_pairs)):
-        contrasts: dict[str, list[list[list[Cluster]]]] = {}
+        # Each contrast is keyed once by the population it is read on; the contrasts of one
+        # population are bootstrapped together on the same draws.
+        by_population: dict[str, dict[str, list[list[list[Cluster]]]]] = {}
         roles: dict[str, str] = {}
         if org in h1_orgs:
-            contrasts["H1"] = _strata(
+            roles["H1"] = "confirmatory"
+            by_population.setdefault("all", {})["H1"] = _strata(
                 [project_clusters(results, org=org, seed=s, metric=metric) for s in seeds]
             )
-            roles["H1"] = "confirmatory"
         if org in h2_pairs:
             foreign, roles["H2"] = h2_pairs[org]
-            try:
-                contrasts["H2"] = _strata(
+            if roles["H2"] == "confirmatory":
+                on_cpp = by_population.setdefault(H2_POPULATION, {})
+                on_cpp["H2"] = _strata(
                     [
-                        organization_clusters(
-                            results, org=org, foreign=foreign, seed=s, metric=metric
-                        )
+                        matched_clusters(cpp, org=org, source=foreign, seed=s, metric=metric)
                         for s in seeds
                     ]
                 )
-            except ValueError as error:
-                if roles["H2"] == "confirmatory":
-                    raise
-                # An exploratory cell never decides a verdict, so it cannot withhold one either.
-                per_org["H2"][org] = {
-                    "role": "exploratory",
-                    "foreign": foreign,
-                    "error": str(error),
-                }
-        if not contrasts:
-            continue
-        estimates, draws = stratified_crossed_draws(
-            contrasts, seed=bootstrap_seed, resamples=resamples, estimator=estimator
-        )
-        for name, values in draws.items():
-            intervals = {c: percentile_interval(values, c) for c in levels}
+                # H1 on the same C++ examples, for the joint reading only; its verdict is on all.
+                on_cpp["H1"] = _strata(
+                    [project_clusters(cpp, org=org, seed=s, metric=metric) for s in seeds]
+                )
+            else:
+                try:
+                    by_population.setdefault("all", {})["H2"] = _strata(
+                        [
+                            organization_clusters(
+                                results, org=org, foreign=foreign, seed=s, metric=metric
+                            )
+                            for s in seeds
+                        ]
+                    )
+                except ValueError as error:
+                    # An exploratory cell never decides a verdict, so it cannot withhold one either.
+                    per_org["H2"][org] = {
+                        "role": "exploratory",
+                        "foreign": foreign,
+                        "error": str(error),
+                    }
+        verdict_population = {
+            name: H2_POPULATION if name == "H2" and role == "confirmatory" else "all"
+            for name, role in roles.items()
+        }
+        drawn = {
+            population: stratified_crossed_draws(
+                contrasts, seed=bootstrap_seed, resamples=resamples, estimator=estimator
+            )
+            for population, contrasts in by_population.items()
+        }
+        for name, population in verdict_population.items():
+            if name not in by_population.get(population, {}):
+                continue  # an exploratory H2 cell that could not be built, recorded above
+            estimates, draws = drawn[population]
+            intervals = {c: percentile_interval(draws[name], c) for c in levels}
             per_org[name][org] = {
                 "role": roles[name],
                 "foreign": h2_pairs[org][0] if name == "H2" else None,
+                "population": population,
                 "estimate": estimates[name],
                 # Bounds are registered per confirmatory cell; an exploratory cell shares its
                 # organization with no registered pair, so it can be supported, never bounded.
@@ -922,30 +1108,18 @@ def decomposition_gate(
                     bounds.get(name, {}).get(org, {}) if roles[name] == "confirmatory" else {},
                     sesoi=sesoi,
                 ),
-                "clusters_per_half": [len(runs[0]) for runs in contrasts[name]],
+                "clusters_per_half": [len(runs[0]) for runs in by_population[population][name]],
                 "seeds": len(seeds),
             }
-        if len(draws) == 2:
-            pairs = list(zip(draws["H1"], draws["H2"], strict=True))
-            summed = [a + b for a, b in pairs]
-            low, high = percentile_interval(summed, SUMMED_CONFIDENCE)
-            joint[org] = {
-                "h2": {"foreign": h2_pairs[org][0], "role": roles["H2"]},
-                "shares": {
-                    f"H1{'>' if a else '<='}0,H2{'>' if b else '<='}0": sum(
-                        1 for x, y in pairs if (x > 0) == a and (y > 0) == b
-                    )
-                    / len(pairs)
-                    for a in (True, False)
-                    for b in (True, False)
-                },
-                "summed": {
-                    "estimate": estimates["H1"] + estimates["H2"],
-                    "low": low,
-                    "high": high,
-                    "confidence": SUMMED_CONFIDENCE,
-                },
-            }
+        if "H2" in verdict_population:
+            population = verdict_population["H2"]
+            if set(by_population.get(population, {})) == {"H1", "H2"}:
+                joint[org] = _joint(
+                    drawn[population],
+                    foreign=h2_pairs[org][0],
+                    role=roles["H2"],
+                    population=population,
+                )
 
     tested = {
         name: {o: cell for o, cell in per_org[name].items() if cell["role"] == "confirmatory"}
@@ -990,7 +1164,7 @@ def is_cpp(row: Mapping[str, Any]) -> bool:
     return suffix(row_path(row)) in CPP_SUFFIXES
 
 
-def cpp_supplement(
+def whole_hunk_supplement(
     results: Mapping[str, Sequence[Mapping[str, Any]]],
     *,
     admitted: Iterable[str],
@@ -1000,17 +1174,17 @@ def cpp_supplement(
     resamples: int = 10_000,
     estimator: Estimator = paired_difference,
 ) -> dict[str, Any]:
-    """H2 restricted to C++ hunks: a supplementary estimand, reported and never tested.
+    """Each confirmatory H2 cell on every example, not only its C++ ones: reported, never tested.
 
-    "Both organizations write C++" is measured rather than assumed, so the organization contrast
-    is recomputed on the examples from C++ files alone. A restricted population estimates a
-    different quantity, so this carries no verdict; a half left with too few C++ changes is
-    reported with its error.
+    The registered H2 population is C++ (`H2_POPULATION`); the same matched contrast over the
+    whole hunk set is reported beside it, with the share of each evaluated half that is C++. A
+    restricted population estimates a different quantity, so this carries no verdict; a cell
+    that cannot be built is reported with its error.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
-    spec = design(admitted)
+    spec = registered_design(admitted)
     if not spec["H2"]:
         return {
             "design": spec,
@@ -1018,16 +1192,13 @@ def cpp_supplement(
             "cells": {},
             "note": "no confirmatory H2 cell among the admitted organizations",
         }
-    restricted = {key: [row for row in rows if is_cpp(row)] for key, rows in results.items()}
     cells: dict[str, Any] = {}
-    for org, foreign in spec["H2"]:
+    for org, source in spec["H2"]:
         cells[org] = {
-            "foreign": foreign,
+            "foreign": source,
             **_supplement_cell(
-                lambda org=org, foreign=foreign: [
-                    organization_clusters(
-                        restricted, org=org, foreign=foreign, seed=s, metric=metric
-                    )
+                lambda org=org, source=source: [
+                    matched_clusters(results, org=org, source=source, seed=s, metric=metric)
                     for s in seeds
                 ],
                 bootstrap_seed=bootstrap_seed,
@@ -1036,10 +1207,13 @@ def cpp_supplement(
             ),
         }
         if "error" not in cells[org]:
-            cells[org]["cpp_share"] = {
-                window: _share(results[_key(org, window, seeds[0])], is_cpp)
-                for window in halves(org)
-            }
+            try:
+                cells[org]["cpp_share"] = {
+                    window: _share(results[_key(org, window, seeds[0])], is_cpp)
+                    for window in halves(org)
+                }
+            except ValueError as error:
+                cells[org]["cpp_share_error"] = str(error)
     return {"design": spec, "role": "supplementary", "cells": cells}
 
 
@@ -1111,7 +1285,7 @@ def file_type_supplement(
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")
     _require_registered_seeds(seeds)
-    spec = design(admitted)
+    spec = registered_design(admitted)
     missing = [org for org in spec["H1"] if org not in split_criteria]
     if missing:
         raise ValueError(f"no split-criteria artifact for {missing}")
@@ -1122,7 +1296,7 @@ def file_type_supplement(
         def keep(row: Mapping[str, Any], wanted: str = suffixes[org]) -> bool:
             return suffix(row_path(row)) == wanted
 
-        restricted = {key: [r for r in rows if keep(r)] for key, rows in results.items()}
+        restricted = Restricted(results, keep)
         cells[org] = {
             "suffix": suffixes[org],
             **_supplement_cell(
