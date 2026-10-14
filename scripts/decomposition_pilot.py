@@ -20,13 +20,22 @@ import json
 import re
 from pathlib import Path
 
-from sphragis.experiment.decomposition import decomposition_gate, detectable_effects
+from sphragis.experiment.decomposition import (
+    FOREIGN_SOURCES,
+    decomposition_gate,
+    detectable_effects,
+)
 from sphragis.experiment.runs import merge
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("runs", type=Path, nargs="+", help="single-seed placebo result files")
 parser.add_argument("--admitted", action="append", required=True)
+parser.add_argument(
+    "--foreign-source",
+    choices=FOREIGN_SOURCES,
+    help="Qt's foreign source when Qt and Chromium are not both admitted (research log)",
+)
 parser.add_argument("--sensitivity", type=Path, required=True)
 parser.add_argument("--corpus-digest", help="as in scripts/seed_effect.py")
 parser.add_argument("--bootstrap-seed", type=int, default=7)
@@ -51,6 +60,7 @@ def main() -> None:
         seeds=seeds,
         bootstrap_seed=args.bootstrap_seed,
         detectable=detectable,
+        foreign_source=args.foreign_source,
     )
     for org, cell in outcome["per_org"]["H1"].items():
         for level, interval in cell["intervals"].items():
