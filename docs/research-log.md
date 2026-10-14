@@ -8925,8 +8925,11 @@ and on sub-month fetching past the host's 10,000-result cap (Plan A).
    Filtering foreign training data toward the target has precedent in Turhan et al.'s
    nearest-neighbour filter of cross-company data (EMSE 14(5), 2009,
    doi:10.1007/s10664-008-9103-7).
-4. **AOSP's projects** are chosen by language alone before any contrast: every project on the host
-   whose built examples in that span are mostly C/C++, counted without reading any score.
+4. **AOSP's projects** are chosen by language and volume alone, before any contrast: the projects
+   in AOSP's manifest whose tree at 2024-10-01 is mostly C/C++ files by count (read from git, no
+   review data), taken in descending order of their NoteDb change count until the pool covers
+   every matched draw. The ten projects fetched over REST on 2026-09-18 are too few for a draw in
+   this span (counted on held data, which enters no figure), so the list widens.
 5. **Qt's admission** needs its terms in writing, as before, and its cells' bounds simulated and
    committed before submission, which the gate already enforces by refusing a cell without one.
 6. **K and bounds** for the H2 cell come from its own development pilot and simulation, as for

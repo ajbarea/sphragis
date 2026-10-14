@@ -34,10 +34,12 @@ H1 (own half against sibling half) is read on every admitted organization, and p
 every one of its cells is supported, so a pass generalizes across the organizations rather than
 resting on one. Requiring every cell makes it an intersection-union test, which holds its level
 without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
-evaluated projects) is confirmatory only for Qt and Chromium, when both are admitted. The two
+evaluated projects) is confirmatory on Qt's C/C++ examples when Qt is admitted, against a foreign
+adapter trained on as many C/C++ examples as the sibling: from Chromium with permission (both ways
+when Chromium is admitted too), else from AOSP before 2025-03-27 (research log, 2026-10-14). The two
 hypotheses share one family-wise level under Holm's step-down: both are read on a two-sided
 97.5% interval, and if one passes, the other is read again on a 95% one. When H2 has no
-confirmatory cell (Qt and Chromium not both admitted), H1 is the whole family and carries the whole
+confirmatory cell (Qt not admitted, or no foreign source covering every matched draw), H1 is the whole family and carries the whole
 family-wise level: it is read on the 95% interval alone, against the bound simulated at that level.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
@@ -47,8 +49,8 @@ bounded only when every cell is.
 The admitted organizations are Gerrit hosts. H1 stays intersection-union however many are
 admitted, each cell sized at 0.95^(1/k); with two to four cells a between-organization variance is
 not estimable with useful precision, so heterogeneity is read beside the rule, not in it (below).
-With four cells (Qt and Chromium both admitted) every cell's simulation is rerun at four cells
-before the seal.
+When Qt or Chromium is admitted, every cell's simulation is rerun at the admitted number of
+cells before the seal.
 
 ### GitHub organizations: a registered replication on a second platform (2026-10-04)
 
