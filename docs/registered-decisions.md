@@ -145,7 +145,10 @@ model-less baseline was run on, so the two are directly comparable.
 
 Within an organization both contrasts are bootstrapped on the same draws, so their sum, how much
 an adapter from the evaluated half beats a foreign organization's, is reported with a 95%
-interval. It answers a weaker question than either hypothesis and binds no verdict.
+interval. It answers a weaker question than either hypothesis and binds no verdict. For an
+organization with a confirmatory H2 cell, the joint reading and the sum are taken on its C++
+examples, where both contrasts share one example set, with H1 restricted there reported beside
+them; H1's verdict stays on every example (research log, 2026-10-14).
 
 ### Readings beside the pass rule, each binding no verdict (registered 2026-10-02)
 

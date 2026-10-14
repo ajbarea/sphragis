@@ -26,10 +26,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
    (a) once AJ admits the source's host, its pool sized by counts (AOSP: projects listed by
-   language at `android-15.0.0_r1`); (b) done 2026-10-14: `design(admitted, foreign_source)`, `matched_clusters`, the gate's
-   C++ population and `whole_hunk_supplement`; (c) the matched
-   foreign sampler (each run's sibling C++ count by `CPP_SUFFIXES`, filled to N) and the two foreign adapters per
-   run in the partition jobs; (d) once Qt's terms arrive, its fetch, freeze, split check,
+   language at `android-15.0.0_r1`); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
+   `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
+   recorded by setting `H2_WITHDRAWN`; (c) the matched foreign sampler (each run's sibling C++
+   count by `CPP_SUFFIXES`, filled to N) and the two foreign adapters per run in the partition
+   jobs; the H2 development read needs H2 bounds in `detectable_effects`, which only the H2
+   simulation supplies; (d) once Qt's terms arrive, its fetch, freeze, split check,
    development pilot for K and both cells' simulation, then the H2 test read over partitions
    through `require_test_read`.
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count

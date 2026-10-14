@@ -384,10 +384,12 @@ def test_without_the_pair_qt_is_read_against_its_foreign_source(source: str) -> 
     assert outcome["exploratory_h2"] == (("openstack", "wikimedia"), ("wikimedia", "openstack"))
 
 
-def test_the_pair_reads_both_ways_with_chromium_as_qts_source() -> None:
+def test_the_pair_reads_both_ways_with_no_single_source() -> None:
     admitted = ("openstack", "qt", "chromium")
     assert design(admitted) == design(admitted, "chromium")
-    assert design(admitted)["foreign_source"] == "chromium"
+    # Each cell's foreign side is the other organization, so the design names no one source.
+    assert design(admitted)["foreign_source"] is None
+    assert design(admitted)["H2"] == (("qt", "chromium"), ("chromium", "qt"))
     with pytest.raises(ValueError, match="H2 is that pair"):
         design(admitted, "aosp")
 
@@ -436,47 +438,105 @@ def test_matched_clusters_take_each_halfs_own_matched_arm() -> None:
         matched_clusters(results, org="qt", source="qt", seed=1)
 
 
-def test_qt_without_chromium_is_tested_on_both_hypotheses_against_fuchsia() -> None:
+def test_h2_withdrawn_leaves_no_confirmatory_cell() -> None:
+    for admitted, source in (
+        (("openstack", "qt"), "aosp"),
+        (("openstack", "qt", "chromium"), None),
+    ):
+        outcome = design(admitted, source, h2_withdrawn=True)
+        assert outcome["H2"] == ()
+        assert outcome["foreign_source"] is None
+        assert ("qt", "openstack") in outcome["exploratory_h2"]
+
+
+def test_matched_clusters_refuse_a_missing_arm_a_shared_change_and_a_duplicate_id() -> None:
+    results = _results(_by_relation(0.75, 0.5, 0.25), orgs=("openstack", "qt"))
+    arm = run_id(EvalRun(f"adapter:{foreign_arm('fuchsia', 'qt-b')}", "qt-a", 1))
+    missing = {k: v for k, v in results.items() if k != arm}
+    with pytest.raises(ValueError, match="matched foreign arm"):
+        matched_clusters(missing, org="qt", source="fuchsia", seed=1)
+    shared = {k: [dict(r) for r in v] for k, v in results.items()}
+    for key, rows in shared.items():
+        if "|qt-b|" in key:
+            rows[0]["change_id"] = "qt-a-I0"
+    with pytest.raises(ValueError, match="both halves"):
+        matched_clusters(shared, org="qt", source="fuchsia", seed=1)
+    duplicated = dict(results)
+    duplicated[arm] = [*results[arm], results[arm][0]]
+    with pytest.raises(ValueError, match="repeats example ids"):
+        matched_clusters(duplicated, org="qt", source="fuchsia", seed=1)
+
+
+def _registered_source(monkeypatch: pytest.MonkeyPatch, source: str | None) -> None:
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", source)
+
+
+def test_qt_without_chromium_is_tested_on_both_hypotheses_against_its_registered_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
     admitted = ("openstack", "qt")
-    outcome = decomposition_gate(
-        _results(_by_relation(0.75, 0.5, 0.25), orgs=admitted),
-        admitted=admitted,
-        seeds=SEEDS,
-        bootstrap_seed=0,
-        resamples=MIN_RESAMPLES,
-        detectable=DETECTABLE,
-        foreign_source="fuchsia",
-    )
+    outcome = _gate(_by_relation(0.75, 0.5, 0.25), admitted=admitted)
     assert outcome["holm_levels"] == [0.975, 0.95]
     assert outcome["verdicts"] == {"H1": "pass", "H2": "pass"}
     assert outcome["per_org"]["H2"]["qt"]["foreign"] == "fuchsia"
     assert outcome["per_org"]["H2"]["openstack"]["role"] == "exploratory"
 
 
-def test_a_frozen_gate_refuses_another_foreign_source(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_registered_source_applies_only_with_qt_admitted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "aosp")
+    outcome = _gate(_by_relation(0.75, 0.5, 0.25), admitted=("openstack", "wikimedia"))
+    assert set(outcome["verdicts"]) == {"H1"}
+
+
+def test_a_registered_source_other_than_chromium_is_refused_with_the_pair(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
+    with pytest.raises(ValueError, match="H2 is that pair"):
+        _gate(_by_relation(0.75, 0.5, 0.25))
+    _registered_source(monkeypatch, "chromium")
+    assert _gate(_by_relation(0.75, 0.5, 0.25))["design"] == design(ORGS)
+
+
+def test_a_withdrawn_h2_is_read_as_h1_alone(monkeypatch: pytest.MonkeyPatch) -> None:
+    _registered_source(monkeypatch, "aosp")
+    monkeypatch.setattr(decomposition, "H2_WITHDRAWN", "foreign pool over check 4")
+    outcome = _gate(_by_relation(0.75, 0.5, 0.25), admitted=("openstack", "qt"))
+    assert set(outcome["verdicts"]) == {"H1"}
+    assert outcome["holm_levels"] == [0.95]
+
+
+def test_rows_of_organizations_h2_does_not_read_need_no_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
     admitted = ("openstack", "qt")
-    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", admitted)
-    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "fuchsia")
-    kwargs: dict[str, Any] = {
-        "admitted": admitted,
-        "seeds": SEEDS,
-        "bootstrap_seed": 0,
-        "resamples": MIN_RESAMPLES,
-        "detectable": DETECTABLE,
-    }
     results = _results(_by_relation(0.75, 0.5, 0.25), orgs=admitted)
-    with pytest.raises(ValueError, match="not the frozen 'fuchsia'"):
-        decomposition_gate(results, foreign_source="aosp", **kwargs)
-    assert decomposition_gate(results, foreign_source="fuchsia", **kwargs)["verdicts"]["H2"]
+    for key, rows in results.items():
+        if "|openstack-" in key:
+            for row in rows:
+                del row["path"]
+    outcome = decomposition_gate(
+        results,
+        admitted=admitted,
+        seeds=SEEDS,
+        bootstrap_seed=0,
+        resamples=MIN_RESAMPLES,
+        detectable=DETECTABLE,
+    )
+    assert outcome["verdicts"] == {"H1": "pass", "H2": "pass"}
 
 
 def test_the_frozen_source_sets_the_holm_levels_qt_is_read_at(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
-    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", None)
+    _registered_source(monkeypatch, None)
     assert registered_read("qt")["levels"] == [0.95]
-    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "aosp")
+    _registered_source(monkeypatch, "aosp")
     assert registered_read("qt")["levels"] == [0.975, 0.95]
 
 
@@ -1329,8 +1389,10 @@ def test_the_gate_reports_the_design_it_read_and_refuses_a_set_without_openstack
     ],
 )
 def test_the_whole_hunk_supplement_reads_only_confirmatory_h2_cells(
-    admitted: tuple[str, ...], source: str | None, cells: set[str]
+    admitted: tuple[str, ...], source: str | None, cells: set[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    _registered_source(monkeypatch, source)
+
     def score(trained: str, window: str, seed: int, change: int) -> float:
         return 1.0 if _org(trained) == _org(window) else 0.0
 
@@ -1341,7 +1403,6 @@ def test_the_whole_hunk_supplement_reads_only_confirmatory_h2_cells(
         seeds=SEEDS,
         bootstrap_seed=0,
         resamples=MIN_RESAMPLES,
-        foreign_source=source,
     )
     assert outcome["design"] == design(admitted, source)
     assert set(outcome["cells"]) == cells
