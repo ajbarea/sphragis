@@ -713,12 +713,15 @@ as the unit; the evidence says the codebase is.
   `partition-sensitivity-wikimedia.json`).
 - [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
 - [ ] **H2 as a Qt cell against a C++-matched foreign adapter** (planned 2026-10-14, research log):
-  the confirmatory H2 estimand is the C++-restricted one; foreign source Chromium with permission,
-  else AOSP before 2025-03-27 through NoteDb. Needs: `design()` with a foreign source that is not
-  an evaluated organization; the matched foreign sampler (C/C++ count of each run's sibling draw,
-  filled to N); the gate reading the restricted cell as confirmatory; AOSP's C/C++ projects listed
-  by language and sized by counts; Qt's development pilot and simulation once its terms arrive.
-- [ ] AJ's call: Chromium's git host for the foreign draw before infra-dev answers (default: no).
+  the confirmatory H2 estimand is the C++-restricted one; foreign source the first admitted of
+  Chromium (permission), Fuchsia, AOSP before 2025-03-27, fixed before the first H2 development
+  contrast. Needs: `design()` with a foreign source that is not an evaluated organization; the
+  matched foreign sampler (C++ count of each run's sibling draw, filled to N); the gate reading the
+  restricted cell as confirmatory, with Qt's joint shares on its C++ examples; the foreign pool in
+  check 4; the identifier-renamed rereads; the source's pool sized by counts; Qt's development
+  pilot and simulation once its terms arrive.
+- [ ] AJ's call: which git hosts feed the foreign draw (Fuchsia; Chromium before infra-dev
+  answers), and whether IRB0000393 needs an amendment naming the source.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research
   log, 2026-09-27).

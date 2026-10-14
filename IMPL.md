@@ -24,8 +24,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    `ADMITTED_ORGANIZATIONS`. Qt can be admitted until 2026-11-20 and Chromium only if its split is
    frozen by 2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
-   (a) AOSP's C/C++ projects listed by language and sized by counts over 2024-10-01 to
-   2025-03-26 through NoteDb; (b) `design()` with a foreign source that is not an evaluated
+   (a) once AJ admits the source's host, its pool sized by counts (AOSP: projects listed by
+   language at `android-15.0.0_r1`); (b) `design()` with a foreign source that is not an evaluated
    organization, and the gate reading the C++-restricted cell as confirmatory; (c) the matched
    foreign sampler (each run's sibling C/C++ count, filled to N) and the two foreign adapters per
    run in the partition jobs; (d) once Qt's terms arrive, its fetch, freeze, split check,
@@ -34,8 +34,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
-   GitHub Pro (Student Pack) for required checks on papers `main`; Chromium's git host for the
-   foreign draw before infra-dev answers.
+   GitHub Pro (Student Pack) for required checks on papers `main`; which git hosts feed the H2
+   foreign draw, and an IRB0000393 amendment naming it.
 
 ## Standing
 

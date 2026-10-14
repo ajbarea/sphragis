@@ -34,9 +34,9 @@ H1 (own half against sibling half) is read on every admitted organization, and p
 every one of its cells is supported, so a pass generalizes across the organizations rather than
 resting on one. Requiring every cell makes it an intersection-union test, which holds its level
 without adjustment across cells (Berger, Technometrics 1982). H2 (the organization beyond the
-evaluated projects) is confirmatory on Qt's C/C++ examples when Qt is admitted, against a foreign
-adapter trained on as many C/C++ examples as the sibling: from Chromium with permission (both ways
-when Chromium is admitted too), else from AOSP before 2025-03-27 (research log, 2026-10-14). The two
+evaluated projects) is confirmatory on Qt's C++ examples when Qt is admitted, against a foreign
+adapter trained on as many C++ examples as the sibling: the first admitted of Chromium (both ways
+when it is admitted too), Fuchsia and AOSP before 2025-03-27 (research log, 2026-10-14). The two
 hypotheses share one family-wise level under Holm's step-down: both are read on a two-sided
 97.5% interval, and if one passes, the other is read again on a 95% one. When H2 has no
 confirmatory cell (Qt not admitted, or no foreign source covering every matched draw), H1 is the whole family and carries the whole

@@ -8883,58 +8883,75 @@ of `REST_PERMITTED`, no Qt fetch runs, and held Qt data stays out of every confi
 Qt is admitted if the terms are agreed before the Stage 1 report is submitted (2026-11-20), with
 its host entry paced at those terms.
 
-### Planned before any H2 contrast is read: H2 as a Qt cell against a C++-matched foreign adapter (2026-10-14)
+### Planned before any adapter d_org on s is read: H2 as a Qt cell against a C++-matched foreign adapter (2026-10-14)
 
 `# research(2026-10)`. Decided in the research-question review of 2026-10-14 (AJ's full-auto
-grant; the Chromium question below stays his). The mock review panel ranked H2 resting on two
-pending permissions as the likeliest reason for a continuity acceptance (papers PR #85,
-`org-house-style/REVIEW-PANEL.md`, item 1), and the registered rule makes H2 exploratory with
-near certainty: Chromium's infra-dev list has sent only an automatic reply to the request of
-2026-09-23, and its freeze by 2026-10-23 is also blocked on cutting chromium/src below the project
-and on sub-month fetching past the host's 10,000-result cap (Plan A).
+grant; the host questions at the end stay his), and revised the same day after an independent
+review. The mock review panel ranked H2 resting on two pending permissions as the likeliest reason
+for a continuity acceptance (papers PR #85, `org-house-style/REVIEW-PANEL.md`, item 1), and the
+registered rule makes H2 exploratory with near certainty: Chromium's infra-dev list has sent only
+an automatic reply to the request of 2026-09-23, and its freeze by 2026-10-23 is also blocked on
+cutting chromium/src below the project and on sub-month fetching past the host's 10,000-result cap
+(Plan A).
+
+**What was already known.** No adapter d_org on s exists on any corpus: the decomposition pilots
+ran no H2 cell. Two related readings do, and both were in view when this was decided: the retrieval
+comparator's sibling-minus-foreign readings on OpenStack and Wikimedia (2026-10-06), and RQ2's
+source-attribution pilots on held Qt and AOSP client updates, which found no organization signal
+within C++ beyond content and project at 64 examples a client and one for AOSP, not Qt, at 128 and
+256 (2026-09-18 and Plan F). The second is why AOSP
+comes last in item 1.
 
 **Checked and rejected.**
 
 - *A language-matched pair inside the admitted hosts.* Wikimedia's registered halves hold 153 and
-  60 `.py` training examples of 2,094 and 2,095 (`split-criteria-wikimedia.json`), and
-  OpenStack's hold no PHP, so neither can train a foreign adapter at N = 1,850 in the other's
-  language. The confound is large where measured: Wikimedia's sibling-minus-foreign retrieval
-  reading against OpenStack is +0.0640 [+0.0434, +0.0853] at k = 1 (2026-10-06 entry).
+  60 `.py` training examples of 2,094 and 2,095 (`split-criteria-wikimedia.json`), and OpenStack's
+  hold no PHP, so neither can train a foreign adapter at N = 1,850 in the other's language.
+  Wikimedia's sibling-minus-foreign retrieval reading against OpenStack, +0.0640 [+0.0434,
+  +0.0853] at k = 1 (2026-10-06 entry), bounds the language confound from above, since it also
+  holds any organization effect.
 - *OpenDev's namespaces as organizations.* It reopens H1's registered OpenStack cell (splits, K,
   simulations), and the namespaces share a host, CI and foundation.
 - *Full Chromium by 2026-10-23.* Three blockers in nine days, at the scale the study chose to wait
   on (2026-10-08 entry).
 
-**Fixed now**, before any H2 contrast on any corpus is read:
+**Fixed now**, before any H2 development contrast is read:
 
-1. **Cells.** If Qt and Chromium are both admitted as evaluated organizations (rule unchanged), H2
-   is that pair, each cell's foreign arm matched as in 3. Otherwise, if Qt is admitted, H2 is one
-   confirmatory cell, Qt, against the first foreign C++ source here that qualifies: (a) a Chromium
-   training-window draw, if Chromium's maintainers grant permission before Qt's cells are
-   simulated; (b) AOSP, through the NoteDb git route its terms permit (2026-10-08 entry), changes
-   created 2024-10-01 to 2025-03-26, before `aosp-main` went read-only. A source qualifies when
-   its pool, after the registered filters and deduplication, covers every matched draw in 3.
-   Otherwise H2 has no confirmatory cell, as before.
-2. **Estimand.** The confirmatory H2 cell reads Qt's held-out examples from C/C++ files
-   (`CPP_SUFFIXES`), the estimand `cpp_supplement` computes today. The whole-hunk d_org is
-   reported beside it and decides nothing.
+1. **Cells and source.** If Qt and Chromium are both admitted as evaluated organizations (rule
+   unchanged), H2 is that pair, each cell matched as in 3. Otherwise, if Qt is admitted, H2 is one
+   confirmatory cell, Qt, against the first of these sources whose host is admitted for this use
+   when the first H2 development contrast is read, and whose pool covers every matched draw in 3:
+   (a) Chromium, with its maintainers' permission; (b) Fuchsia, from Qt's own training-window
+   months, live and never read by this study; (c) AOSP, changes created 2024-10-01 to 2025-03-26,
+   before `aosp-main` went read-only. Fuchsia's and Chromium's git hosts serve AOSP's robots.txt
+   line for line (read 2026-10-14). Otherwise H2 has no confirmatory cell, as before.
+2. **Estimand.** "C++" means `CPP_SUFFIXES` throughout (`.h` included, `.c` not). The confirmatory
+   H2 cell reads Qt's held-out C++ examples, the estimand `cpp_supplement` computes today; the
+   whole-hunk d_org is reported beside it and decides nothing. H1's Qt verdict stays on all of Qt's
+   examples. The joint shares, the total s(O_a) - s(P_x) and a restricted d_proj are read for Qt on
+   its C++ examples, reported only, since the joint bootstrap needs one example set.
 3. **Matched foreign arm.** For each run and each evaluated half, the foreign adapter trains on N
-   examples from the source: as many from C/C++ files as that run's sibling draw holds, the rest
-   from the source's other files, drawn with a stated seed. Sibling and foreign then match in total
-   and in-language examples, so neither wins by seeing more C++. Two foreign adapters per run.
-   Filtering foreign training data toward the target has precedent in Turhan et al.'s
-   nearest-neighbour filter of cross-company data (EMSE 14(5), 2009,
-   doi:10.1007/s10664-008-9103-7).
-4. **AOSP's projects** are chosen by language and volume alone, before any contrast: the projects
-   in AOSP's manifest whose tree at 2024-10-01 is mostly C/C++ files by count (read from git, no
-   review data), taken in descending order of their NoteDb change count until the pool covers
-   every matched draw. The ten projects fetched over REST on 2026-09-18 are too few for a draw in
-   this span (counted on held data, which enters no figure), so the list widens.
-5. **Qt's admission** needs its terms in writing, as before, and its cells' bounds simulated and
-   committed before submission, which the gate already enforces by refusing a cell without one.
-6. **K and bounds** for the H2 cell come from its own development pilot and simulation, as for
-   every cell. The H2 test-window read over partitions goes through `require_test_read`.
+   examples from the source: as many C++ examples as that run's sibling draw holds, the rest from
+   the source's other files, drawn with the run's training seed. Sibling and foreign then match in
+   total and in C++ examples. The pool has to cover the draws of all 40 admissible splits. It is
+   deduplicated against Qt like any organization, and the foreign pool against Qt's evaluated test
+   window joins check 4 at the sibling's threshold (2% at Jaccard 0.7). Filtering foreign training
+   data toward the target has precedent in Turhan et al.'s nearest-neighbour filter of
+   cross-company data (EMSE 14(5), 2009, doi:10.1007/s10664-008-9103-7).
+4. **AOSP's projects**, if AOSP is the source: the projects in its manifest at `android-15.0.0_r1`
+   whose tree at that tag is more than half C++ by code-file count (read from git, no review
+   data), taken in descending order of their NoteDb change count until the pool covers every
+   draw. The ten projects fetched over REST on 2026-09-18 are too few for a draw in this span
+   (counted on held data, which enters no figure).
+5. **Qt's admission** needs its terms in writing and its cells' bounds simulated and committed
+   before submission; the gate already refuses a cell without bounds. H1 then has three cells,
+   so every cell's simulation is rerun at three.
+6. **K and bounds** for the H2 cell come from its own development pilot and simulation. A cell
+   whose detectable effect is δ or more at K = 40 is read supported or inconclusive, never
+   bounded. The H2 test-window read over partitions goes through `require_test_read`.
+7. **Vocabulary.** Both hypotheses are reread on identifier-renamed references (panel item 5),
+   which matters most for H2: Qt's sibling knows Qt's API and no foreign adapter does.
 
-Open, AJ's call: whether Chromium's git host feeds the foreign draw before infra-dev answers. Its
-robots.txt matches AOSP's line for line (read 2026-10-14) and a draw is small, but the study's own
-request to its maintainers is still open. Until he decides, Chromium enters only with permission.
+Open, AJ's: which hosts are admitted for the foreign draw (Fuchsia's and Chromium's git hosts
+before infra-dev answers; AOSP's is in `GIT_PERMITTED`), and whether the pending HSRO protocol
+(IRB0000393) needs an amendment naming the source.
