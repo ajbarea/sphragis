@@ -702,7 +702,8 @@ as the unit; the evidence says the codebase is.
   `sim/wikimedia-sporc-21794712` were tagged by hand, 2026-10-04), with a test that fails on one
   reachable from neither.
 - [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
-  corpus to be frozen by 2026-10-23; otherwise each is registered as not collected.
+  corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's terms are
+  being agreed with its Gerrit administrators (2026-10-14, research log).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
