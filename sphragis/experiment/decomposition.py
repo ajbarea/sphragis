@@ -261,6 +261,10 @@ def registered_design(admitted: Iterable[str]) -> dict[str, Any]:
     read uses. The source applies only with Qt admitted; with the pair admitted, a source other
     than Chromium is refused by `design`."""
     admitted = tuple(admitted)
+    if FOREIGN_SOURCE is not None and FOREIGN_SOURCE not in FOREIGN_SOURCES:
+        raise ValueError(
+            f"registered FOREIGN_SOURCE {FOREIGN_SOURCE!r} is not in {FOREIGN_SOURCES}"
+        )
     source = FOREIGN_SOURCE if H2_ORGANIZATION in admitted else None
     return design(admitted, source, h2_withdrawn=H2_WITHDRAWN is not None)
 
@@ -1209,7 +1213,7 @@ def whole_hunk_supplement(
                     for window in halves(org)
                 }
             except ValueError as error:
-                cells[org] = {"foreign": source, "error": str(error)}
+                cells[org]["cpp_share_error"] = str(error)
     return {"design": spec, "role": "supplementary", "cells": cells}
 
 

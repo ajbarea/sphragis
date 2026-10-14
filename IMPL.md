@@ -29,7 +29,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    language at `android-15.0.0_r1`); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
-   recorded by setting `H2_WITHDRAWN`; (c) the matched foreign sampler (each run's sibling C++
+   recorded by setting `H2_WITHDRAWN`; a fixed source other than Chromium refuses every read
+   once Chromium is admitted, so admitting Chromium then resets it; (c) the matched foreign sampler (each run's sibling C++
    count by `CPP_SUFFIXES`, filled to N) and the two foreign adapters per run in the partition
    jobs; the H2 development read needs H2 bounds in `detectable_effects`, which only the H2
    simulation supplies; (d) once Qt's terms arrive, its fetch, freeze, split check,

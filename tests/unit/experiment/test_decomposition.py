@@ -530,6 +530,41 @@ def test_rows_of_organizations_h2_does_not_read_need_no_path(
     assert outcome["verdicts"] == {"H1": "pass", "H2": "pass"}
 
 
+def test_a_mistyped_registered_source_is_refused_even_without_qt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "Fuchsia")
+    with pytest.raises(ValueError, match="registered FOREIGN_SOURCE"):
+        _gate(_by_relation(0.75, 0.5, 0.25), admitted=("openstack", "wikimedia"))
+
+
+def test_the_h1_test_gate_refuses_while_qts_registered_source_makes_h2_confirmatory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(decomposition, "ADMITTED_ORGANIZATIONS", ("openstack", "qt"))
+    _registered_source(monkeypatch, "fuchsia")
+    with pytest.raises(ValueError, match="H2 is confirmatory"):
+        h1_test_gate({}, simulations={})
+
+
+def test_a_whole_hunk_cell_keeps_its_estimate_when_its_cpp_share_cannot_be_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, "fuchsia")
+    admitted = ("openstack", "qt")
+    results = _results(_by_relation(0.75, 0.5, 0.25), orgs=admitted)
+    for key, rows in results.items():
+        if "|qt-a|" in key:
+            for row in rows:
+                del row["path"]
+    outcome = whole_hunk_supplement(
+        results, admitted=admitted, seeds=SEEDS, bootstrap_seed=0, resamples=MIN_RESAMPLES
+    )
+    qt = outcome["cells"]["qt"]
+    assert "estimate" in qt and "cpp_share" not in qt
+    assert "carries no path" in qt["cpp_share_error"]
+
+
 def test_the_frozen_source_sets_the_holm_levels_qt_is_read_at(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
