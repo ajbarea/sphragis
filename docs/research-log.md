@@ -8978,4 +8978,4 @@ reading with its population; exploratory cells are unchanged. `whole_hunk_supple
 `cpp_supplement`: the same matched contrast over every example, reported only. An H2 development
 read also needs H2 bounds, which only the H2 simulation supplies, so none can run yet. The matched
 sampler and the partition jobs that train the foreign arms are the next step; no H2 contrast has
-been run. Checked by two independent reviews before merge; their findings are fixed here.
+been run.
