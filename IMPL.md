@@ -21,13 +21,22 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    pilot and simulation before its test window. At the freeze, one commit sets
    `REPLICATION_MEMBERS`; `replication_gate()` refuses to read the family before it.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
-   `ADMITTED_ORGANIZATIONS`. Qt can be admitted until 2026-11-20 and Chromium only if its split is
-   frozen by 2026-10-23, so it is not set earlier.
-3. If Qt and Chromium are both admitted, the H2 test read over partitions, through
-   `require_test_read`; `h1_test_gate` refuses to read H1 while H2 is confirmatory without it.
-4. If Qt and Chromium are both admitted, rerun every cell's simulation with `--cells 4`.
+   `ADMITTED_ORGANIZATIONS` and `FOREIGN_SOURCE`. Qt can be admitted until 2026-11-20, with its
+   cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
+   2026-10-23, so it is not set earlier.
+3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
+   (a) once AJ admits the source's host, its pool sized by counts (AOSP: projects listed by
+   language at `android-15.0.0_r1`); (b) `design()` with a foreign source that is not an evaluated
+   organization, and the gate reading the C++-restricted cell as confirmatory; (c) the matched
+   foreign sampler (each run's sibling C++ count by `CPP_SUFFIXES`, filled to N) and the two foreign adapters per
+   run in the partition jobs; (d) once Qt's terms arrive, its fetch, freeze, split check,
+   development pilot for K and both cells' simulation, then the H2 test read over partitions
+   through `require_test_read`.
+4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
+   (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
-   GitHub Pro (Student Pack) for required checks on papers `main`.
+   GitHub Pro (Student Pack) for required checks on papers `main`; which git hosts feed the H2
+   foreign draw, and an IRB0000393 amendment naming it.
 
 ## Standing
 

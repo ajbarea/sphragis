@@ -701,9 +701,11 @@ as the unit; the evidence says the codebase is.
   `provenance.git.commit` and tags any not on `main` (`sim/openstack-sporc-21794711` and
   `sim/wikimedia-sporc-21794712` were tagged by hand, 2026-10-04), with a test that fails on one
   reachable from neither.
-- [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
+- [ ] Qt admitted if permission arrives, and its cells' bounds are simulated and committed, before
+  2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's terms are
-  being agreed with its Gerrit administrators (2026-10-14, research log).
+  being agreed with its Gerrit administrators (2026-10-14, research log). Without Chromium, H2 is
+  Qt's cell against a C++-matched foreign adapter (2026-10-14).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
@@ -711,7 +713,16 @@ as the unit; the evidence says the codebase is.
 - [x] The sensitivity analysis for every other admitted organization (Wikimedia's:
   `partition-sensitivity-wikimedia.json`).
 - [x] Sibling-half leakage on the dev window: below the registered threshold in every half.
-- [ ] The C++-restricted estimand beside H2.
+- [ ] **H2 as a Qt cell against a C++-matched foreign adapter** (planned 2026-10-14, research log):
+  the confirmatory H2 estimand is the C++-restricted one; foreign source the first admitted of
+  Chromium (permission), Fuchsia, AOSP before 2025-03-27, fixed before the first H2 development
+  contrast. Needs: `design()` with a foreign source that is not an evaluated organization; the
+  matched foreign sampler (C++ count of each run's sibling draw, filled to N); the gate reading the
+  restricted cell as confirmatory, with Qt's joint shares on its C++ examples; the foreign pool in
+  check 4; the identifier-renamed rereads; the source's pool sized by counts; Qt's development
+  pilot and simulation once its terms arrive.
+- [ ] AJ's call: which git hosts feed the foreign draw (Fuchsia; Chromium before infra-dev
+  answers), and whether IRB0000393 needs an amendment naming the source.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research
   log, 2026-09-27).
