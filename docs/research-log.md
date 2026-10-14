@@ -8867,3 +8867,18 @@ rescoring borrows the battery only of the run it scored (`neutral.SCORED_IDENTIT
 seeds, training size, corpora), and a planted run, check 5's, is refused as one of H1's runs. A
 development read records each run's battery without refusing. All 46 unplanted development runs
 resolve a battery that held, so no reading changes.
+
+### Qt answers the permission request: details through gerrit-admin (2026-10-14)
+
+Qt answered QTQAINFRA-8064 on 2026-10-14: the ticket is In Progress, and its assignee
+wrote that the purpose "sounds reasonable" and asked for the details to go to Qt's Gerrit
+administrators by email. The request sent to them the same day asks for the inline comments and
+revisions of changes from October 2024 to October 2026, the pilot through test windows
+(`corpus/windows.py`), fetched by one client at 2 seconds between requests, with a pause on any
+5xx and the identifying User-Agent `cli.USER_AGENT`; no review text is published, and an author
+can ask to be removed.
+
+This is not yet permission in writing, so nothing changes in the design of record: Qt stays out
+of `REST_PERMITTED`, no Qt fetch runs, and held Qt data stays out of every confirmatory cell.
+Qt is admitted if the terms are agreed before the Stage 1 report is submitted (2026-11-20), with
+its host entry paced at those terms.
