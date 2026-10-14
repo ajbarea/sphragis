@@ -8959,3 +8959,17 @@ comes last in item 1.
 Open, AJ's: which hosts are admitted for the foreign draw (Fuchsia's and Chromium's git hosts
 before infra-dev answers; AOSP's is in `GIT_PERMITTED`), and whether the pending HSRO protocol
 (IRB0000393) needs an amendment naming the source.
+
+### The gate reads H2's confirmatory cell on C++ examples against the matched foreign arm (2026-10-14)
+
+`decomposition.design(admitted, foreign_source)` implements item 1 of the plan above: the pair both
+ways when Qt and Chromium are admitted, otherwise one Qt cell against `foreign_source`, one of
+`FOREIGN_SOURCES` in registration order, refused without Qt admitted; `FOREIGN_SOURCE` is frozen
+beside `ADMITTED_ORGANIZATIONS`. Every confirmatory H2 cell reads its organization's C++ examples
+(`H2_POPULATION`, `cpp_only`) against the arm `foreign_arm(source, sibling)` names, one per
+evaluated half (`matched_clusters`). `decomposition_gate` keeps H1's verdict on every example and
+takes the joint shares, the sum and H1 restricted to C++ on the C++ examples, labelling each cell
+and joint reading with its population; exploratory cells are unchanged. `whole_hunk_supplement`
+replaces `cpp_supplement`: the same matched contrast over every example, reported only.
+`decomposition_pilot.py --foreign-source` passes the source. The matched sampler and the partition
+jobs that train the foreign arms are the next step; no H2 contrast has been run.

@@ -26,8 +26,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
    (a) once AJ admits the source's host, its pool sized by counts (AOSP: projects listed by
-   language at `android-15.0.0_r1`); (b) `design()` with a foreign source that is not an evaluated
-   organization, and the gate reading the C++-restricted cell as confirmatory; (c) the matched
+   language at `android-15.0.0_r1`); (b) done 2026-10-14: `design(admitted, foreign_source)`, `matched_clusters`, the gate's
+   C++ population and `whole_hunk_supplement`; (c) the matched
    foreign sampler (each run's sibling C++ count by `CPP_SUFFIXES`, filled to N) and the two foreign adapters per
    run in the partition jobs; (d) once Qt's terms arrive, its fetch, freeze, split check,
    development pilot for K and both cells' simulation, then the H2 test read over partitions
