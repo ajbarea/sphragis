@@ -701,7 +701,8 @@ as the unit; the evidence says the codebase is.
   `provenance.git.commit` and tags any not on `main` (`sim/openstack-sporc-21794711` and
   `sim/wikimedia-sporc-21794712` were tagged by hand, 2026-10-04), with a test that fails on one
   reachable from neither.
-- [ ] Qt admitted if permission arrives before 2026-11-20; Chromium if it arrives in time for its
+- [ ] Qt admitted if permission arrives, and its cells' bounds are simulated and committed, before
+  2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's terms are
   being agreed with its Gerrit administrators (2026-10-14, research log). Without Chromium, H2 is
   Qt's cell against a C++-matched foreign adapter (2026-10-14).

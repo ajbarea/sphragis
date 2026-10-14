@@ -8915,7 +8915,7 @@ comes last in item 1.
 - *Full Chromium by 2026-10-23.* Three blockers in nine days, at the scale the study chose to wait
   on (2026-10-08 entry).
 
-**Fixed now**, before any H2 development contrast is read:
+**Fixed now**, before any adapter d_org on s is read:
 
 1. **Cells and source.** If Qt and Chromium are both admitted as evaluated organizations (rule
    unchanged), H2 is that pair, each cell matched as in 3. Otherwise, if Qt is admitted, H2 is one
@@ -8935,7 +8935,8 @@ comes last in item 1.
    the source's other files, drawn with the run's training seed. Sibling and foreign then match in
    total and in C++ examples. The pool has to cover the draws of all 40 admissible splits. It is
    deduplicated against Qt like any organization, and the foreign pool against Qt's evaluated test
-   window joins check 4 at the sibling's threshold (2% at Jaccard 0.7). Filtering foreign training
+   window joins check 4 at the sibling's threshold (2% at Jaccard 0.7); a pool over it leaves H2
+   exploratory and does not halt H1. Filtering foreign training
    data toward the target has precedent in Turhan et al.'s nearest-neighbour filter of
    cross-company data (EMSE 14(5), 2009, doi:10.1007/s10664-008-9103-7).
 4. **AOSP's projects**, if AOSP is the source: the projects in its manifest at `android-15.0.0_r1`
@@ -8948,9 +8949,12 @@ comes last in item 1.
    so every cell's simulation is rerun at three.
 6. **K and bounds** for the H2 cell come from its own development pilot and simulation. A cell
    whose detectable effect is δ or more at K = 40 is read supported or inconclusive, never
-   bounded. The H2 test-window read over partitions goes through `require_test_read`.
+   bounded. Qt's joint read on its C++ examples takes the larger of its H1 and H2 K, since every
+   run trains own and sibling adapters. The H2 test-window read over partitions goes through
+   `require_test_read`.
 7. **Vocabulary.** Both hypotheses are reread on identifier-renamed references (panel item 5),
-   which matters most for H2: Qt's sibling knows Qt's API and no foreign adapter does.
+   which matters most for H2: Qt's sibling knows Qt's API and no foreign adapter does. The
+   foreign source's reviewer overlap with Qt is reported beside the exposure analysis.
 
 Open, AJ's: which hosts are admitted for the foreign draw (Fuchsia's and Chromium's git hosts
 before infra-dev answers; AOSP's is in `GIT_PERMITTED`), and whether the pending HSRO protocol
