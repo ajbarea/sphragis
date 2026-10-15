@@ -771,6 +771,10 @@ fi
 echo "$@"
 """
 
+# A result a job reads before it claims its own, named from _JOB_DEFAULTS and the harness's RUN_TAG.
+_JOB_INPUTS = {"likelihood_score.sbatch": "rq1-partition-qt-p2-some-other-run-n1850-rp1.0.json"}
+_STAGED = "an input the job reads\n"
+
 # What each job needs from its environment to reach its claim; a fake uv never reads the values.
 _JOB_DEFAULTS = {
     "MODE": "pilot",
@@ -833,8 +837,19 @@ def _job_env(home: Path, checkout: Path, env: dict[str, str]) -> dict[str, str]:
 
 
 def _run_job(script_name: str, root: Path, **env: str) -> subprocess.CompletedProcess[str]:
-    """The real sbatch body, run to completion in a checkout of its own."""
+    """The real sbatch body, run to completion in a checkout of its own, with the result it reads
+    (`_JOB_INPUTS`) already in place."""
     home, checkout = _prepare(root)
+    if script_name in _JOB_INPUTS:
+        staged = _result_path(home, _JOB_INPUTS[script_name])
+        if not staged.exists():
+            staged.write_text(_STAGED)
+    return _run_prepared(script_name, home, checkout, env)
+
+
+def _run_prepared(
+    script_name: str, home: Path, checkout: Path, env: dict[str, str]
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["bash", str(checkout / "scripts" / script_name)],
         capture_output=True,
@@ -987,7 +1002,8 @@ def test_fdlora_legacy_corpus_only_enables_on_the_value_one(
 def _results(root: Path) -> dict[str, str]:
     results = root / "home" / "ajsoftworks" / "sphragis-data" / "results"
     found = sorted(results.glob("*.json")) + sorted(results.glob("*.npz"))
-    return {path.name: path.read_text() for path in found}
+    texts = {path.name: path.read_text() for path in found}
+    return {name: text for name, text in texts.items() if text != _STAGED}
 
 
 def _result_path(home: Path, name: str) -> Path:
@@ -1513,3 +1529,13 @@ def test_a_finished_job_leaves_no_claim_record_beside_its_result(tmp_path: Path)
     )
     results = home / "ajsoftworks" / "sphragis-data" / "results"
     assert sorted(results.glob("*.claim")) == []
+
+
+def test_the_likelihood_job_stops_without_the_decoder_checks_output(tmp_path: Path) -> None:
+    """Chained straight onto partition_run, it died after the queue wait on a missing file."""
+    home, checkout = _prepare(tmp_path)
+    result = _run_prepared("likelihood_score.sbatch", home, checkout, {})
+    assert result.returncode != 0
+    assert "run decoder_check.sbatch with the same variables first" in result.stderr
+    assert not _results(tmp_path), "a refused job must leave no claim"
+    assert not (tmp_path / "home" / "uv.calls").exists()
