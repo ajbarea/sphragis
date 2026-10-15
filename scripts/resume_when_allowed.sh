@@ -20,18 +20,32 @@ ORG=${1:?usage: resume_when_allowed.sh <org> <month> [cutoff]}
 MONTH=${2:?usage: resume_when_allowed.sh <org> <month> [cutoff]}
 CUTOFF=${3:-2024-10-01}
 
-case "$ORG" in
-  # robots.txt is Disallow: / on these review hosts (REST_PERMITTED in sphragis/corpus/cli.py).
-  qt|aosp|chromium) echo "refusing $ORG: its review host disallows automated clients"; exit 1 ;;
-  openstack) HOST=https://review.opendev.org ;;
-  *) echo "unknown org $ORG"; exit 1 ;;
-esac
+cd "$(dirname "$0")/.." || exit 1
+
+# The host and its permission come from GERRIT and REST_PERMITTED in sphragis/corpus/cli.py, so
+# this script cannot permit a host the transport refuses, or refuse one it admits. The probe
+# sends the transport's User-Agent, as the permitting hosts ask.
+LOOKUP=$(uv run --no-sync --no-active python - "$ORG" <<'PY'
+import sys
+from urllib.parse import urlsplit
+
+from sphragis.corpus.cli import GERRIT, REST_PERMITTED, USER_AGENT
+
+url = GERRIT.get(sys.argv[1])
+if url is None or urlsplit(url).hostname not in REST_PERMITTED:
+    print(f"refusing {sys.argv[1]}: its review host disallows automated clients")
+    sys.exit(1)
+print(url)
+print(USER_AGENT)
+PY
+) || { echo "$LOOKUP"; exit 1; }
+HOST=$(sed -n 1p <<<"$LOOKUP")
+UA=$(sed -n 2p <<<"$LOOKUP")
 
 PROBE_EVERY=${PROBE_EVERY:-1200}   # 20 minutes between probes
 AFTER_FAIL=${AFTER_FAIL:-3600}     # an hour after being let in and shut out again
 NEEDED=${NEEDED:-5}                # of 5 probe requests
 
-cd "$(dirname "$0")/.." || exit 1
 set -a; . ./.env; set +a
 
 attempt=0
@@ -39,7 +53,7 @@ while :; do
   attempt=$((attempt + 1))
   ok=0
   for _ in 1 2 3 4 5; do
-    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$HOST/config/server/version")
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -A "$UA" "$HOST/config/server/version")
     [[ "$code" == "200" ]] && ok=$((ok + 1))
     sleep 5
   done

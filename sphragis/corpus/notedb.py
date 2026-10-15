@@ -1,7 +1,8 @@
 """Gerrit review records read from NoteDb over git, in the shape the REST route stores.
 
-The review UIs of android-review, chromium-review and codereview.qt-project.org publish
-`Disallow: /` in robots.txt, so their REST APIs are closed to automated collection. The git
+The review UIs of android-review and chromium-review publish `Disallow: /` in robots.txt, so
+their REST APIs are closed to automated collection (codereview.qt-project.org does too, but its
+administrators granted REST access in writing; `cli.REST_PERMITTED`). The git
 hosts behind the first two (android.googlesource.com, chromium.googlesource.com) disallow only
 a few gitiles web views; the git fetch paths are allowed, but the route fetches from a host only
 with its maintainers' written permission (`GIT_PERMITTED`). Gerrit 3.x keeps every change's

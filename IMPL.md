@@ -33,7 +33,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    once Chromium is admitted, so admitting Chromium then resets it; (c) the matched foreign
    sampler is `holdout.matched_foreign_draw` (2026-10-14); the two foreign adapters per run in the
    partition jobs wait on a granted source; the H2 development read needs H2 bounds in
-   `detectable_effects`, which only the H2 simulation supplies; (d) once Qt's terms arrive, its fetch, freeze, split check,
+   `detectable_effects`, which only the H2 simulation supplies; (d) Qt's terms arrived 2026-10-15 and its host is in `REST_PERMITTED`: its fetch, freeze, split check,
    development pilot for K and both cells' simulation, then the H2 test read over partitions
    through `require_test_read`.
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
@@ -51,7 +51,8 @@ A test window below its projected size is read with `power_at_size.py` run on it
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before. Every googlesource git host waits on its
-maintainers' written permission; Qt's REST build cannot be rerun now that its review UI is closed.
+maintainers' written permission; Qt's REST API is open to the collector at the terms granted
+2026-10-15 (`REST_PERMITTED`).
 
 ## Cluster data root
 

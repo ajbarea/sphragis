@@ -89,10 +89,13 @@ GERRIT = {
 # The review hosts a REST client may call, each with the reason it may. robots.txt is
 # Disallow: / on android-review, chromium-review and codereview.qt-project.org, and Google's
 # terms bar automated access that ignores it, so those are fetched over git where a git host
-# serves NoteDb, or not at all until the host grants permission. A host absent here is refused.
+# serves NoteDb, or not at all until the host grants permission in writing, as Qt's did. A host
+# absent here is refused.
 class RestPermission(NamedTuple):
     reason: str
-    crawl_delay: float  # seconds between requests the host asks for; pacing never goes below it
+    # seconds between requests: the robots.txt Crawl-delay, or the interval a written grant sets
+    # in its place; pacing never goes below it
+    crawl_delay: float
     # robots.txt Disallow patterns for the host, matched as robots.txt does (prefix, `*`, `$`)
     disallow: tuple[str, ...] = ()
     # seconds the host asks a client to stay quiet after any 5xx
@@ -110,6 +113,18 @@ REST_PERMITTED = {
         " access; paced as OpenStack asks, one client at a time, quiet five minutes after a 5xx",
         2.0,
         error_pause=300.0,
+        single_client=True,
+    ),
+    "codereview.qt-project.org": RestPermission(
+        "robots.txt is Disallow: / with Crawl-Delay 3 (checked 2026-09-23); Qt's Gerrit"
+        " administrators granted the REST API by email on 2026-10-15 (QTQAINFRA-8064) at a 2 s"
+        " interval from one client with the identifying User-Agent, told the source IP address;"
+        " quiet fifteen minutes after a 5xx, since Qt's firewall once outlasted 25 minutes of"
+        " silence (pacing.Pacer)",
+        2.0,
+        # The grant supersedes robots.txt's Disallow: /, so no pattern is recorded.
+        disallow=(),
+        error_pause=900.0,
         single_client=True,
     ),
     "review.opendev.org": RestPermission(

@@ -704,8 +704,8 @@ as the unit; the evidence says the codebase is.
   reachable from neither.
 - [ ] Qt admitted if permission arrives, and its cells' bounds are simulated and committed, before
   2026-11-20; Chromium if it arrives in time for its
-  corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's terms are
-  being agreed with its Gerrit administrators (2026-10-14, research log). Without Chromium, H2 is
+  corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's REST
+  terms were granted in writing on 2026-10-15 (research log); admission still waits on its cells. Without Chromium, H2 is
   Qt's cell against a C++-matched foreign adapter (2026-10-14).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.

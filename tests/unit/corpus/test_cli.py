@@ -1242,14 +1242,13 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
     [
         "chromium-review.googlesource.com",
         "android-review.googlesource.com",
-        "codereview.qt-project.org",
         "gerrit.example.org",
     ],
 )
 def test_http_transport_refuses_a_host_without_recorded_rest_permission(
     monkeypatch: pytest.MonkeyPatch, host: str
 ) -> None:
-    """robots.txt is Disallow: / on the first three; an unknown host is refused by default."""
+    """robots.txt is Disallow: / on the first two; an unknown host is refused by default."""
     from sphragis.corpus import cli
 
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
@@ -1273,6 +1272,7 @@ def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
     assert set(cli.REST_PERMITTED) == {
+        "codereview.qt-project.org",
         "review.lineageos.org",
         "review.opendev.org",
         "gerrit.wikimedia.org",
@@ -1320,8 +1320,29 @@ def test_http_transport_paces_the_keep_alive_retry(monkeypatch: pytest.MonkeyPat
     assert slept == [2.0]
 
 
-@pytest.mark.parametrize("org", ["qt", "aosp", "chromium"])
-def test_the_resume_script_refuses_a_disallowed_host_before_any_request(org: str) -> None:
+def test_http_transport_admits_qt_paced_at_its_grant_and_claimed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from sphragis.corpus import cli
+
+    opened = _scripted_connections(monkeypatch, [_FakeResponse(200), _FakeResponse(200)])
+    now, slept = [0.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    transport = cli.http_transport(
+        clock=lambda: now[0], sleep=sleep, wall=lambda: now[0], lock_dir=tmp_path
+    )
+    assert transport("https://codereview.qt-project.org/changes/?q=status:merged")[0] == 200
+    assert transport("https://codereview.qt-project.org/changes/1/comments")[0] == 200
+    assert len(opened) == 1 and slept == [2.0]
+    assert (tmp_path / "codereview.qt-project.org.lock").exists()
+
+
+@pytest.mark.parametrize("org", ["aosp", "chromium", "nonesuch"])
+def test_the_resume_script_refuses_a_host_without_rest_permission(org: str) -> None:
     script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
     result = subprocess.run(
         ["bash", str(script), org, "2024-10"], capture_output=True, text=True, timeout=10
@@ -1575,6 +1596,17 @@ def test_lineageos_permission_pins_the_policy() -> None:
     assert permission.disallow == ()
     assert permission.crawl_delay >= 2.0
     assert permission.error_pause >= 300.0 and permission.single_client
+
+
+def test_qt_permission_pins_the_written_terms() -> None:
+    """Qt's Gerrit administrators granted 2 s from one client on 2026-10-15; robots.txt stays
+    Disallow: /, so the grant, not robots.txt, opens the host."""
+    from sphragis.corpus import cli
+
+    permission = cli.REST_PERMITTED["codereview.qt-project.org"]
+    assert permission.crawl_delay >= 2.0 and permission.single_client
+    assert permission.error_pause >= 900.0
+    assert "QTQAINFRA-8064" in permission.reason
 
 
 @pytest.mark.parametrize(
