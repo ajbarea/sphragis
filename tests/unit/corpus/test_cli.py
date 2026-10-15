@@ -1320,8 +1320,29 @@ def test_http_transport_paces_the_keep_alive_retry(monkeypatch: pytest.MonkeyPat
     assert slept == [2.0]
 
 
-@pytest.mark.parametrize("org", ["qt", "aosp", "chromium"])
-def test_the_resume_script_refuses_a_disallowed_host_before_any_request(org: str) -> None:
+def test_http_transport_admits_qt_paced_at_its_grant_and_claimed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from sphragis.corpus import cli
+
+    opened = _scripted_connections(monkeypatch, [_FakeResponse(200), _FakeResponse(200)])
+    now, slept = [0.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    transport = cli.http_transport(
+        clock=lambda: now[0], sleep=sleep, wall=lambda: now[0], lock_dir=tmp_path
+    )
+    assert transport("https://codereview.qt-project.org/changes/?q=status:merged")[0] == 200
+    assert transport("https://codereview.qt-project.org/changes/1/comments")[0] == 200
+    assert len(opened) == 1 and slept == [2.0]
+    assert (tmp_path / "codereview.qt-project.org.lock").exists()
+
+
+@pytest.mark.parametrize("org", ["aosp", "chromium", "nonesuch"])
+def test_the_resume_script_refuses_a_host_without_rest_permission(org: str) -> None:
     script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
     result = subprocess.run(
         ["bash", str(script), org, "2024-10"], capture_output=True, text=True, timeout=10

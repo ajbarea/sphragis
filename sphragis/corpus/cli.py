@@ -93,7 +93,9 @@ GERRIT = {
 # absent here is refused.
 class RestPermission(NamedTuple):
     reason: str
-    crawl_delay: float  # seconds between requests the host asks for; pacing never goes below it
+    # seconds between requests: the robots.txt Crawl-delay, or the interval a written grant sets
+    # in its place; pacing never goes below it
+    crawl_delay: float
     # robots.txt Disallow patterns for the host, matched as robots.txt does (prefix, `*`, `$`)
     disallow: tuple[str, ...] = ()
     # seconds the host asks a client to stay quiet after any 5xx
@@ -120,6 +122,8 @@ REST_PERMITTED = {
         " quiet fifteen minutes after a 5xx, since Qt's firewall once outlasted 25 minutes of"
         " silence (pacing.Pacer)",
         2.0,
+        # The grant supersedes robots.txt's Disallow: /, so no pattern is recorded.
+        disallow=(),
         error_pause=900.0,
         single_client=True,
     ),

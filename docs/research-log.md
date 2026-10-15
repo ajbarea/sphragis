@@ -9070,6 +9070,5 @@ is what opens the host.
 This is the permission the 2026-10-14 entry waited on, and it settles only the fetch. Qt is not
 yet admitted: `ADMITTED_ORGANIZATIONS` is set in one commit after 2026-11-20 (IMPL item 2), and
 before then Qt's fetch of the four windows, freeze, split check, development pilot for K and
-both cells' simulations must land (IMPL item 3d). Qt data held from before these terms stays
-out of every confirmatory cell; those cells read only the fetch made under them.
-
+both cells' simulations must land (IMPL item 3d). Qt's confirmatory test window is collected only
+after in-principle acceptance, so it can only come from a fetch made under these terms.

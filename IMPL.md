@@ -51,7 +51,8 @@ A test window below its projected size is read with `power_at_size.py` run on it
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
 and `make docs-index` *after* staging, never before. Every googlesource git host waits on its
-maintainers' written permission; Qt's REST build cannot be rerun now that its review UI is closed.
+maintainers' written permission; Qt's REST API is open to the collector at the terms granted
+2026-10-15 (`REST_PERMITTED`).
 
 ## Cluster data root
 
