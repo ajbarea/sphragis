@@ -721,6 +721,8 @@ as the unit; the evidence says the codebase is.
   (2026-10-14). Needs: the matched foreign sampler (C++ count of each run's sibling draw, filled
   to N); the foreign pool in check 4; the identifier-renamed rereads; the source's pool sized by counts; Qt's development
   pilot and simulation once its terms arrive.
+- [x] **Bounded is a one-sided equivalence test at the SESOI** (2026-10-14, research log): the
+  margin is δ, not each cell's detectable effect; the simulation stays required as power.
 - [ ] AJ's call: which git hosts feed the foreign draw (Fuchsia; Chromium before infra-dev
   answers), and whether IRB0000393 needs an amendment naming the source.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable

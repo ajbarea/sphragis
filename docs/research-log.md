@@ -8952,6 +8952,9 @@ comes last in item 1.
    bounded. Qt's joint read on its C++ examples takes the larger of its H1 and H2 K, since every
    run trains own and sibling adapters. The H2 test-window read over partitions goes through
    `require_test_read`.
+
+   > **Superseded later on 2026-10-14.** The second sentence of item 6 ("never bounded") gave way
+   > to the bounded reading at the SESOI (entry below); the rest of item 6 stands.
 7. **Vocabulary.** Both hypotheses are reread on identifier-renamed references (panel item 5),
    which matters most for H2: Qt's sibling knows Qt's API and no foreign adapter does. The
    foreign source's reviewer overlap with Qt is reported beside the exposure analysis.
@@ -8979,3 +8982,35 @@ reading with its population; exploratory cells are unchanged. `whole_hunk_supple
 read also needs H2 bounds, which only the H2 simulation supplies, so none can run yet. The matched
 sampler and the partition jobs that train the foreign arms are the next step; no H2 contrast has
 been run.
+
+### The bounded reading becomes a one-sided equivalence test at the SESOI (2026-10-14)
+
+`# research(2026-10)`. A cell read bounded when its upper bound fell below the effect its
+simulation says it detects at its Holm level: a margin set by the design's size, not by what
+matters. Equivalence bounds are set by the smallest effect size of interest (Lakens, Social
+Psychological and Personality Science 8(4), 2017; Lakens, Scheel and Isager, AMPPS 1(2), 2018,
+which also describes bounds at the smallest effect a study has the power to detect), and this
+study has a justified SESOI, δ (2026-09-30 and 2026-10-09 entries). So a cell now reads bounded
+when its upper bound at its Holm level lies below δ (`decomposition.cell_verdict`, `margin`):
+one-sided, since both hypotheses are directional, so a reversed effect still reads bounded. A
+cell's simulation stays required before a test read, as its power, not its margin; a cell
+without one is still never read bounded.
+
+Power of the new reading under a true null, from the registered simulations: the share of null
+studies whose interval lies inside ±δ (`null_reads_absent`; every such study reads bounded or, if
+its lower bound clears zero, supported, so the bounded share is at least this share less the
+false-positive rate) is 1.0 at both Holm levels and every spread target, for OpenStack at K = 10
+(`partition-sensitivity-openstack-rp1.0-logprob_per_token.json`) and Wikimedia at K = 20
+(`partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json`).
+
+Decided after the development pilots were read, and disclosed as such in the Stage 1 design
+history. On the 22-run likelihood pilots (`partition-pilot-<org>-likelihood.json`), OpenStack's
++0.0231 [+0.0081, +0.0402] at 97.5% is supported under either margin. Wikimedia's +0.0058
+[-0.0004, +0.0125] at 97.5% read inconclusive against its registered detectable effect, 0.0071,
+and would read bounded against δ, 0.0183; at 95%, the level H1 alone is read at, it is supported
+([+0.0003, +0.0117]) under either margin. That 97.5% cell is the only development verdict the
+change moves. The change makes a bounded reading reachable wherever the interval excludes δ,
+which is its purpose; the development window never stands for the test window. It supersedes
+the second sentence of item 6 of the H2 plan above: a cell whose detectable effect is δ or more now reads bounded when
+its interval excludes δ, which an equivalence test permits whatever its power. The Stage 1 design
+history states the change and its timing (papers PR #88, `org-house-style/sections/30-rq.tex`).

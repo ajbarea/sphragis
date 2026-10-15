@@ -27,9 +27,12 @@ that much. The artifact records each input's source.
 
 Reported per point: the calibration, the null's one-sided false-positive rate at each Holm level,
 the detectable effect by bisection on the lift at the per-cell power that gives H1
-`--hypothesis-power` over each count of cells in `--cells`, how often a null reads bounded
-below it, and the reproducibility failure rate. `partition-sensitivity-openstack-stopping.json` is
-the data-dependent stopping rule this design replaced, as its provenance's commit ran it.
+`--hypothesis-power` over each count of cells in `--cells`, how often a null's upper bound falls
+below it (the bounded reading before 2026-10-14; the registered margin is now the SESOI, whose
+null rate `null_reads_absent`, less the false-positive rate, bounds from below), and the
+reproducibility failure rate.
+`partition-sensitivity-openstack-stopping.json` is the data-dependent stopping rule this design
+replaced, as its provenance's commit ran it.
 
     uv run --no-sync --no-active python scripts/partition_sensitivity.py \\
         --placebo datasets/results/rq1-placebo-openstack-v3.json \\

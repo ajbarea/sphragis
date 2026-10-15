@@ -713,6 +713,16 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) 
     assert out["partial_conjunction"]["at_least"] == 2
 
 
+def test_the_replication_gate_reads_bounded_against_the_sesoi_not_the_simulated_bound(
+    frozen,
+) -> None:
+    frozen("llvm")
+    # Above the simulated bound, below the SESOI (0.0183 on the registered metric).
+    cells = {"llvm": _replication_cell(-0.004, 0.012, 0.3, bound=0.008, org="llvm")}
+    out = replication_gate(cells, simulations={"llvm": _sim(0.008, "llvm")})
+    assert out["cells"]["llvm"]["verdict"] == "bounded"
+
+
 def test_replication_gate_refuses_to_read_before_the_members_are_frozen(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1089,7 +1099,7 @@ def test_within_sesoi_is_reported_beside_the_verdict() -> None:
 
 
 @pytest.mark.parametrize(
-    ("low", "high", "bound", "expected"),
+    ("low", "high", "margin", "expected"),
     [
         (0.001, 0.05, 0.01, "supported"),
         (0.002, 0.008, 0.01, "supported"),
@@ -1106,8 +1116,8 @@ def test_within_sesoi_is_reported_beside_the_verdict() -> None:
         (0.001, 0.05, None, "supported"),
     ],
 )
-def test_cell_verdicts(low: float, high: float, bound: float | None, expected: str) -> None:
-    assert cell_verdict(low, high, bound=bound) == expected
+def test_cell_verdicts(low: float, high: float, margin: float | None, expected: str) -> None:
+    assert cell_verdict(low, high, margin=margin) == expected
 
 
 @pytest.mark.parametrize(
@@ -1186,7 +1196,9 @@ def _interval_cells(**by_level: tuple[float, float]) -> dict[str, Any]:
     return {
         "org0": {
             "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
-            "verdicts": {c: cell_verdict(lo, hi, bound=BOUND) for c, (lo, hi) in intervals.items()},
+            "verdicts": {
+                c: cell_verdict(lo, hi, margin=BOUND) for c, (lo, hi) in intervals.items()
+            },
         }
     }
 
@@ -1681,11 +1693,26 @@ def admitted(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
     return freeze
 
 
+def test_an_upper_bound_above_the_simulated_bound_and_below_the_sesoi_reads_bounded(
+    admitted,
+) -> None:
+    # Wikimedia's 97.5% development case: above its detectable effect (0.0071), below δ (0.0183).
+    admitted("openstack", "wikimedia")
+    reports = {
+        o: _gerrit_report(o, -0.0004, 0.0125, 0.06, bound=0.0071)
+        for o in ("openstack", "wikimedia")
+    }
+    sims = {o: _gerrit_sim(o, bound=0.0071) for o in reports}
+    assert h1_test_gate(reports, simulations=sims)["verdicts"] == {"H1": "bounded"}
+
+
 @pytest.mark.parametrize(
     ("openstack", "wikimedia", "verdict", "reading_"),
     [
         ((0.01, 0.05, 0.001), (0.02, 0.06, 0.0001), "pass", "within-half"),
-        ((-0.01, 0.02, 0.2), (-0.01, 0.01, 0.3), "bounded", "no within-half transfer"),
+        ((-0.01, 0.015, 0.2), (-0.01, 0.01, 0.3), "bounded", "no within-half transfer"),
+        # Below the simulated bound but not the SESOI: the margin is the SESOI.
+        ((-0.01, 0.02, 0.2), (-0.01, 0.01, 0.3), "inconclusive", "unresolved"),
         ((0.01, 0.05, 0.001), (-0.01, 0.05, 0.3), "inconclusive", "unresolved"),
     ],
 )
