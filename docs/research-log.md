@@ -9072,3 +9072,18 @@ yet admitted: `ADMITTED_ORGANIZATIONS` is set in one commit after 2026-11-20 (IM
 before then Qt's fetch of the four windows, freeze, split check, development pilot for K and
 both cells' simulations must land (IMPL item 3d). Qt's confirmatory test window is collected only
 after in-principle acceptance, so it can only come from a fetch made under these terms.
+
+### The label audit read on OpenStack's items alone (2026-10-15)
+
+The audit sampled OpenStack and Qt alike, and the Stage 1 text quoted agreement pooled over all
+383 items, so a published figure rested partly on Qt's review records, which came from a host whose
+permission is still pending. `scripts/label_audit_by_org.py` reads the committed agreement report
+again on one organization's items, with the same functions, seeds and item order, after
+recomputing the pooled pairs from the report's labels and refusing unless they reproduce it (they
+do, to 1e-12). On OpenStack's 191 items (`label-audit-v2-openstack.json`): rater A labels 82.7% valid,
+95% Wilson interval [76.7%, 87.4%]; rater B 84.8% [79.0%, 89.2%]; the human 85.7% of 77
+[76.2%, 91.8%]. The model raters agree on 86.4%, κ 0.533, AC1 0.853; the human agrees with A on
+80.5% (κ 0.249, AC1 0.792) and with B on 79.2% (κ 0.230, AC1 0.777); on those 77 checked
+items the model raters agree at κ 0.568. The pooled reading's conclusions hold on OpenStack alone:
+same-family model raters agree with each other more than with the human, so the model labels
+stand for the corpus's valid share, not for one example's label. The Stage 1 text now quotes these.

@@ -1,0 +1,282 @@
+{
+  "provenance": {
+    "generated_at": "2026-10-15T11:11:25.646797+00:00",
+    "git": {
+      "commit": "0efb4a4fa622605668047c29f6f684a6debf57d9",
+      "branch": "measure/label-audit-by-org",
+      "uncommitted_code": [
+        "scripts/label_audit_by_org.py"
+      ],
+      "uncommitted_code_sha256": "81666b4502f3cd80e52b15f9f38acdcb398ccf40a54dc5573f6ae9ac7e085562"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  },
+  "from": "datasets/results/label-audit-v2.json",
+  "org": "openstack",
+  "items": 191,
+  "pairs": {
+    "A~B": {
+      "items": 191,
+      "raw_agreement": 0.8638743455497382,
+      "kappa": 0.5333145381073205,
+      "kappa_95": [
+        0.3827245127803348,
+        0.667765265952577
+      ],
+      "ac1": 0.8532023308490158,
+      "ac1_95": [
+        0.7970349270538923,
+        0.9043354006157653
+      ],
+      "specific_agreement": {
+        "valid": 0.9375,
+        "non_actionable": 0.8888888888888888,
+        "unrelated_rewrite": 0.3333333333333333,
+        "partial": 0.4166666666666667,
+        "context_dependent": 0.47058823529411764
+      },
+      "confusion": {
+        "valid": {
+          "valid": 150,
+          "non_actionable": 1,
+          "unrelated_rewrite": 2,
+          "partial": 2,
+          "context_dependent": 3
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 4,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 2,
+          "partial": 0,
+          "context_dependent": 2
+        },
+        "partial": {
+          "valid": 8,
+          "non_actionable": 0,
+          "unrelated_rewrite": 3,
+          "partial": 5,
+          "context_dependent": 1
+        },
+        "context_dependent": {
+          "valid": 3,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 4
+        }
+      }
+    },
+    "human~A": {
+      "items": 77,
+      "raw_agreement": 0.8051948051948052,
+      "kappa": 0.2490247074122237,
+      "kappa_95": [
+        0.02436647173489338,
+        0.4638816362053958
+      ],
+      "ac1": 0.7917371019000609,
+      "ac1_95": [
+        0.6878498214902684,
+        0.8898844770183004
+      ],
+      "specific_agreement": {
+        "valid": 0.9090909090909091,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.4,
+        "partial": 0.2,
+        "context_dependent": 0.0
+      },
+      "confusion": {
+        "valid": {
+          "valid": 60,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 4,
+          "context_dependent": 1
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 3,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 1,
+          "context_dependent": 0
+        }
+      }
+    },
+    "human~B": {
+      "items": 77,
+      "raw_agreement": 0.7922077922077922,
+      "kappa": 0.22951844903064422,
+      "kappa_95": [
+        -0.023108030040438935,
+        0.46829880728185797
+      ],
+      "ac1": 0.7772000813798404,
+      "ac1_95": [
+        0.6727264327458363,
+        0.8768054753122083
+      ],
+      "specific_agreement": {
+        "valid": 0.8854961832061069,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.5,
+        "partial": 0.25,
+        "context_dependent": 0.2222222222222222
+      },
+      "confusion": {
+        "valid": {
+          "valid": 58,
+          "non_actionable": 1,
+          "unrelated_rewrite": 1,
+          "partial": 3,
+          "context_dependent": 3
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 3,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 3,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 1
+        }
+      }
+    },
+    "A~B on checked items": {
+      "items": 77,
+      "raw_agreement": 0.8831168831168831,
+      "kappa": 0.5676855895196505,
+      "kappa_95": [
+        0.30115511551155105,
+        0.7857142857142856
+      ],
+      "ac1": 0.8746665460957634,
+      "ac1_95": [
+        0.7881754200958254,
+        0.9455950540958269
+      ],
+      "specific_agreement": {
+        "valid": 0.9465648854961832,
+        "non_actionable": 0.6666666666666666,
+        "unrelated_rewrite": 0.4,
+        "partial": 0.6,
+        "context_dependent": 0.4
+      },
+      "confusion": {
+        "valid": {
+          "valid": 62,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 2
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 1
+        },
+        "partial": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 3,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 1
+        }
+      }
+    }
+  },
+  "valid_shares": {
+    "A": {
+      "n": 191,
+      "valid": 158,
+      "share": 0.8272251308900523,
+      "share_95": [
+        0.767299513901769,
+        0.8742477253592201
+      ]
+    },
+    "B": {
+      "n": 191,
+      "valid": 162,
+      "share": 0.8481675392670157,
+      "share_95": [
+        0.7904493146725555,
+        0.8921569479011369
+      ]
+    },
+    "human": {
+      "n": 77,
+      "valid": 66,
+      "share": 0.8571428571428571,
+      "share_95": [
+        0.7620272983402657,
+        0.9183166836008526
+      ]
+    }
+  }
+}
