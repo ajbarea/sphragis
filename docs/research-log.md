@@ -9072,3 +9072,27 @@ yet admitted: `ADMITTED_ORGANIZATIONS` is set in one commit after 2026-11-20 (IM
 before then Qt's fetch of the four windows, freeze, split check, development pilot for K and
 both cells' simulations must land (IMPL item 3d). Qt's confirmatory test window is collected only
 after in-principle acceptance, so it can only come from a fetch made under these terms.
+
+### The label audit read on OpenStack's items alone (2026-10-15)
+
+The audit sampled OpenStack and Qt alike, and the Stage 1 text quoted agreement pooled over all
+383 items, so a published figure rested partly on Qt's review records, fetched before Qt granted
+permission. `scripts/label_audit_by_org.py` reads the committed agreement report again on one
+organization's items through the same function as the pooled reading
+(`label_audit_agreement.readings`), so every pair is read: the five labels, valid against the
+rest, outside names, the model raters on the human's items, the human pairs without the answers
+reported as slips, and the halves of the human check. The report keys labels by example id in
+sorted neutral-id order and slips by neutral id; the ids are rebuilt from that order, and the
+whole pooled reading is recomputed from them and refused unless every pair reproduces the report
+(all do, to 1e-12). Valid shares are the report's own per-organization rates.
+
+On OpenStack's 191 items (`label-audit-v2-openstack.json`): rater A labels 82.7% valid,
+95% Wilson interval [76.7%, 87.4%]; rater B 84.8% [79.0%, 89.2%]; the human 85.7% of 77
+[76.2%, 91.8%]. The model raters agree on 86.4%, κ 0.533, AC1 0.853; the human agrees with A on
+80.5% (κ 0.249, AC1 0.792; without the slipped answers κ 0.312 on 71) and with
+B on 79.2% (κ 0.230, AC1 0.777; without them κ 0.191). On the 77 checked items the model
+raters agree at κ 0.568, and the human's agreement with A reads κ 0.278 on the first half of the
+check and 0.227 on the second. The pooled reading's conclusions hold on OpenStack alone:
+same-family model raters agree with each other more than with the human, so the model labels
+stand for the corpus's valid share, not for one example's label. The Stage 1 draft quotes these
+figures from papers branch `p4/panel-writing`.
