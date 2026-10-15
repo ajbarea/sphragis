@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 647 artifacts under
-63 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 649 artifacts under
+65 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -177,6 +177,14 @@ A repeatable data audit of a built and refined corpus, one artifact per organiza
 | `data-audit-aosp.json` | `data-audit-openstack.json` |
 | `data-audit-qt.json` |  |
 
+## `scripts/dataset_funnel.py`
+
+How each organization's corpus is filtered, step by step, from its build manifest.
+
+| artifact | |
+|---|---|
+| `dataset-funnel.json` |  |
+
 ## `scripts/decoder_read.py`
 
 Read the repetition-penalty check: what the checkpoint's penalty changed in stored results.
@@ -298,6 +306,14 @@ Agreement on the label audit: two blind model raters, and a human's blind check 
 | artifact | |
 |---|---|
 | `label-audit-v2-decision.json` | `label-audit-v2.json` |
+
+## `scripts/label_audit_by_org.py`
+
+The label audit read again on one organization's items, from the committed agreement report.
+
+| artifact | |
+|---|---|
+| `label-audit-v2-openstack.json` |  |
 
 ## `scripts/label_audit_open_rater.py`
 
