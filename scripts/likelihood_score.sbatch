@@ -45,9 +45,16 @@ case "${KIND:-partition}" in
 esac
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
 
+# The scored run is decoder_check.sbatch's output, not the stored run itself: chain
+# partition_run -> decoder_check -> likelihood_score, each afterok on the one before.
+RUN="$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json"
+if [ ! -s "$RUN" ]; then
+  echo "no $RUN: run decoder_check.sbatch with the same variables first" >&2
+  exit 1
+fi
 claim_result OUT "$SPHRAGIS_RESULTS/likelihood-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json"
 uv run --no-sync python scripts/likelihood_score.py \
-  --run "$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json" \
+  --run "$RUN" \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-$NAME$RESULT_SUFFIX" \
   --seeds "$SEEDS" ${TRAIN_SIZE:+--train-size "$TRAIN_SIZE"} \
   --out "$OUT"
