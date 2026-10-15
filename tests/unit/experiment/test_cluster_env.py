@@ -597,6 +597,9 @@ def test_a_run_tag_names_the_results(tmp_path: Path) -> None:
         ({"RUN_TAG": "", "SEEDS": "2"}, "[-s2]"),
         ({"SEEDS": "3", "TRAIN_SIZE": "1850", "PLANT": "0.25"}, "[-s3-n1850-plant0.25]"),
         ({"PLANT": ""}, "[]"),
+        ({"PLANT": "0.5", "PLANT_CONVENTION": "marker"}, "[-plant0.5]"),
+        ({"PLANT": "0.5", "PLANT_CONVENTION": "quotes"}, "[-plantquotes0.5]"),
+        ({"PLANT_CONVENTION": "quotes"}, "[]"),
     ],
 )
 def test_another_seed_or_training_size_never_takes_the_default_name(

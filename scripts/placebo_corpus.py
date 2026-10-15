@@ -35,7 +35,7 @@ from pathlib import Path
 
 from sphragis.corpus.halves import assign, project_counts
 from sphragis.corpus.load import built_dir, mark_derived, refined_dir, refined_month_files
-from sphragis.experiment.planted import append_marker, append_marker_other, plant
+from sphragis.experiment.planted import PLANT_CONVENTIONS, plant
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -68,6 +68,13 @@ parser.add_argument(
     default=None,
     help="plant each half's own comment marker in this fraction of its refinements, every "
     "window (outcome-neutral check 5, the symmetric planted convention)",
+)
+parser.add_argument(
+    "--plant-convention",
+    choices=sorted(PLANT_CONVENTIONS),
+    default="marker",
+    help="what --plant imposes: each half's comment marker (check 5), or each half's quote style "
+    "on Python refinements (the exchange rate's code-level convention)",
 )
 # The symmetric calibration's seed, so the plant is drawn as it was there.
 parser.add_argument("--plant-seed", type=int, default=11)
@@ -154,10 +161,15 @@ def main() -> None:
         # `symmetric_planted_corpora` draws them: the convention is the half's, so the
         # references it is scored on carry it too.
         planted = {}
-        for side, transform, offset in ((0, append_marker_other, 2), (1, append_marker, 1)):
+        transforms, applies = PLANT_CONVENTIONS[args.plant_convention]
+        for side, offset in ((0, 2), (1, 1)):
             rows = [row for halves in by_month.values() for row in halves.get(side, [])]
             marked, report = plant(
-                rows, fraction=args.plant, seed=args.plant_seed + offset, transform=transform
+                rows,
+                fraction=args.plant,
+                seed=args.plant_seed + offset,
+                transform=transforms[side],
+                applies=applies,
             )
             planted[names[side]] = report
             marked_rows = iter(marked)
@@ -188,7 +200,12 @@ def main() -> None:
         "dedup_org": dedup_removed,
         "plant": None
         if planted is None
-        else {"fraction": args.plant, "seed": args.plant_seed, "halves": planted},
+        else {
+            "convention": args.plant_convention,
+            "fraction": args.plant,
+            "seed": args.plant_seed,
+            "halves": planted,
+        },
         "train_window": args.train_window,
         "names": names,
         "projects": {

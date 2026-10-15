@@ -9096,3 +9096,31 @@ check and 0.227 on the second. The pooled reading's conclusions hold on OpenStac
 same-family model raters agree with each other more than with the human, so the model labels
 stand for the corpus's valid share, not for one example's label. The Stage 1 draft quotes these
 figures from papers branch `p4/panel-writing`.
+
+### Planned before any planted quote-style result is read: the exchange rate on a code-level convention (2026-10-15)
+
+`# research(2026-10)`. δ is carried from exact match to s at the rate of the adapters' gain over
+the base model on each scale (0.4372 / 0.2384 over 92 own-half development arms, 2026-10-09), and
+most of that gain is the adapter learning the task's output format, which says little about the
+rate for small differences between adapters (Stage 1 review panel, item 15). This measures the
+rate on a convention of the kind the study asks about, fixed here before any run:
+
+1. The convention: each half of a partition run writes its Python refinements in its own quote
+   style, half a single and half b double, on plain literals only (`planted.to_single`,
+   `to_double`: no literal touching another quote, no prefixed literal), in every window
+   (`placebo_corpus.py --plant-convention quotes`, jobs `PLANT_CONVENTION=quotes`, tagged
+   `-plantquotes<f>`). In PHP or shell the quotes differ in meaning, so only `.py` rows are
+   eligible, about a tenth of OpenStack's refinements on each side; Wikimedia has too few, so the
+   rate is read on OpenStack and stands for both organizations, as the registered rate does.
+2. The runs: OpenStack's first ten admissible splits at f = 1.0, and its first five at f = 0.5,
+   each scored by `likelihood_score.py`.
+3. The rate (`planted_exchange.py`): on each half's held-out examples the plant changed, own minus
+   sibling adapter in s and in exact match; the rate is the summed gain in s over the summed gain
+   in exact match across every half of the ten f = 1.0 runs, with a 95% percentile interval from
+   resampling runs. The five f = 0.5 runs give the same rate again, as a check that it does not
+   depend on the dose.
+4. The rule: if the f = 1.0 interval excludes the registered rate 1.834, δ is carried at the
+   planted rate, disclosed in the Stage 1 design history as a change made after the development
+   pilots were read, and every bound on δ is recomputed. If it includes 1.834, the registered
+   rate stands and the planted rate is reported beside it as a check. If exact match moves by
+   nothing, no rate is read and the registered rate stands.

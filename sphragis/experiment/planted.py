@@ -42,6 +42,30 @@ def flip_quotes(text: str) -> str:
     return SINGLE_QUOTED.sub(r'"\1"', text)
 
 
+# The two halves of the symmetric quote-style plant (`QUOTE_STYLES`). Stricter than
+# SINGLE_QUOTED, which `flip_quotes` keeps for the stored calibration: a literal touching another
+# quote is left alone, since `""` inside a triple-quoted docstring is not an empty literal, and a
+# prefixed literal (f'', b'', r'') is left alone by the word-character lookbehind.
+_QUOTED = {
+    quote: re.compile(rf"(?<![\\\w'\"]){quote}([^'\"\\\n]*){quote}(?!['\"])") for quote in "'\""
+}
+
+
+def to_double(text: str) -> str:
+    """Single-quoted plain literals become double-quoted: one half's quote style."""
+    return _QUOTED["'"].sub(r'"\1"', text)
+
+
+def to_single(text: str) -> str:
+    """Double-quoted plain literals become single-quoted: the other half's quote style."""
+    return _QUOTED['"'].sub(r"'\1'", text)
+
+
+def is_python(row: Mapping[str, Any]) -> bool:
+    """Quote style is a convention in Python; in PHP or shell the two quotes differ in meaning."""
+    return str(row.get("path") or "").endswith(".py")
+
+
 MARKER = "  # reviewed"
 # The other half's convention in the symmetric design. Same shape and length as MARKER so the
 # two are equally easy to learn and neither side is handed the simpler rule.
@@ -103,27 +127,31 @@ def plant(
     seed: int,
     field: str = "after",
     transform: Callable[[str], str] = flip_quotes,
-) -> tuple[list[dict[str, Any]], dict[str, float]]:
+    applies: Callable[[Mapping[str, Any]], bool] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Impose the convention on a fraction of rows, and report what was actually imposed.
 
     The realised rate is not the nominal one and must never be reported as if it were. The
     transform is a no-op on a refinement containing no single-quoted literal, so asking for
     half and getting a fifth is the normal case. Every number this calibration produces is
-    indexed by the realised rate.
+    indexed by the realised rate. A row `applies` refuses is never eligible. The ids of the rows
+    changed are reported, so a reader can take the planted examples apart.
     """
     if not 0.0 <= fraction <= 1.0:
         raise ValueError(f"fraction must lie in [0, 1], got {fraction}")
     rng = random.Random(seed)
     out: list[dict[str, Any]] = []
     eligible = changed = 0
+    changed_ids: list[str] = []
     for row in rows:
         copy = dict(row)
         text = str(copy.get(field, ""))
-        if would_change(text, transform):
+        if (applies is None or applies(row)) and would_change(text, transform):
             eligible += 1
             if rng.random() < fraction:
                 copy[field] = transform(text)
                 changed += 1
+                changed_ids.append(str(row.get("id")))
         out.append(copy)
     total = len(out)
     return out, {
@@ -133,6 +161,7 @@ def plant(
         "changed": float(changed),
         "realised_fraction": changed / total if total else 0.0,
         "realised_of_eligible": changed / eligible if eligible else 0.0,
+        "changed_ids": changed_ids,
     }
 
 
@@ -183,3 +212,18 @@ def symmetric_planted_corpora(
         right, fraction=fraction, seed=seed + 1, field=field, transform=transform_b
     )
     return planted_left, planted_right, {"a": report_a, "b": report_b}
+
+
+#: Each convention the symmetric plant can impose: the two halves' transforms, in side order,
+#: and which rows it may touch. `marker` is check 5's; `quotes` is a code-level convention, the
+#: realistic signal the exchange rate between exact match and s is read on (review panel item 15).
+PLANT_CONVENTIONS: dict[
+    str,
+    tuple[
+        tuple[Callable[[str], str], Callable[[str], str]],
+        Callable[[Mapping[str, Any]], bool] | None,
+    ],
+] = {
+    "marker": ((append_marker_other, append_marker), None),
+    "quotes": ((to_single, to_double), is_python),
+}
