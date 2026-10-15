@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 649 artifacts under
+repository. This page is generated from those scripts: 637 artifacts under
 65 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -121,6 +121,14 @@ Is a change's size informative about its outcome?
 |---|---|
 | `cluster-informativeness.json` |  |
 
+## `scripts/comment_count_probe.py`
+
+Whether a host's `total_comment_count` of 0 means a change has no comments, asked of the host.
+
+| artifact | |
+|---|---|
+| `comment-count-probe-qt.json` |  |
+
 ## `scripts/conjunctive_power.py`
 
 The power the RQ1 gate actually has, which is not the power that was computed.
@@ -176,14 +184,6 @@ A repeatable data audit of a built and refined corpus, one artifact per organiza
 |---|---|
 | `data-audit-aosp.json` | `data-audit-openstack.json` |
 | `data-audit-qt.json` |  |
-
-## `scripts/dataset_funnel.py`
-
-How each organization's corpus is filtered, step by step, from its build manifest.
-
-| artifact | |
-|---|---|
-| `dataset-funnel.json` |  |
 
 ## `scripts/decoder_read.py`
 
@@ -416,17 +416,11 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | artifact | |
 |---|---|
 | `partition-pilot-openstack-k-rp1.0.json` | `partition-pilot-openstack-k24.json` |
-| `partition-pilot-openstack-likelihood-split-changed.json` | `partition-pilot-openstack-likelihood-split-copied.json` |
-| `partition-pilot-openstack-likelihood-split-end.json` | `partition-pilot-openstack-likelihood-split-identifier.json` |
-| `partition-pilot-openstack-likelihood-split-other.json` | `partition-pilot-openstack-likelihood-split-other_changed.json` |
 | `partition-pilot-openstack-likelihood-total.json` | `partition-pilot-openstack-likelihood.json` |
 | `partition-pilot-openstack-rp1.0.json` | `partition-pilot-openstack-sensitivities-rp1.0.json` |
 | `partition-pilot-openstack-sensitivities.json` | `partition-pilot-openstack-stopping.json` |
 | `partition-pilot-openstack.json` | `partition-pilot-wikimedia-k-rp1.0.json` |
-| `partition-pilot-wikimedia-k16.json` | `partition-pilot-wikimedia-likelihood-split-changed.json` |
-| `partition-pilot-wikimedia-likelihood-split-copied.json` | `partition-pilot-wikimedia-likelihood-split-end.json` |
-| `partition-pilot-wikimedia-likelihood-split-identifier.json` | `partition-pilot-wikimedia-likelihood-split-other.json` |
-| `partition-pilot-wikimedia-likelihood-split-other_changed.json` | `partition-pilot-wikimedia-likelihood-total.json` |
+| `partition-pilot-wikimedia-k16.json` | `partition-pilot-wikimedia-likelihood-total.json` |
 | `partition-pilot-wikimedia-likelihood.json` | `partition-pilot-wikimedia-rp1.0.json` |
 | `partition-pilot-wikimedia-sensitivities-rp1.0.json` | `partition-pilot-wikimedia-sensitivities.json` |
 | `partition-pilot-wikimedia.json` |  |

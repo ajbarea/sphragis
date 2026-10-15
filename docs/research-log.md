@@ -9211,3 +9211,13 @@ Exploratory and development-window only: it decides nothing, and the test window
 the same way as a registered secondary reading. Rows a lexer may have misread (identifier class
 changing when each line is lexed alone, or error characters) were dropped from every arm and the
 reading repeated: no estimate changed sign and no interval's verdict moved.
+
+### Qt's comment count holds: a change it records at zero has no comments (2026-10-15)
+
+Qt's fetch under its 2026-10-15 grant finished the same day: the pilot, train and development
+months, 2024-10 to 2025-10, from the collector at the announced address, at 2 s, one client, with
+no stop. Its snapshots record 27,858 changes at `total_comment_count` 0 and 25,034 above it. Before Qt's
+build uses `--fewer-requests`, `scripts/comment_count_probe.py` asked Qt, over the same terms,
+for the comments of 60 changes drawn at zero (seed 20261015) and of 10 drawn above zero as a control the probe
+could fail on (`comment-count-probe-qt.json`, counts only): every change recorded at zero returned
+no comment, and every control returned at least one. Qt's build therefore runs with the flag.
