@@ -9152,3 +9152,16 @@ could not run there and its row reads not counted; the template rule, which foun
 in OpenStack's examples, carries the bot filter; Qt's bots comment inline under ordinary
 accounts, and there it is what removes them. Qt joins the funnel once its fetch under the
 2026-10-15 grant is built.
+
+### A REST build asks only what the host has not answered (2026-10-15)
+
+Building Qt's 13 months at its granted 2 s would take about 64 hours, measured on the held
+build's counts: a comments request for each of about 54,000 changes and a diff request for each
+of about 62,000 anchored comments. Two changes cut that without changing what is built
+(`cli.rest_fetchers_for`): a change whose `total_comment_count` is 0 (Gerrit counts every inline
+comment across its patch sets there; half of Qt's 2024-10 changes) is answered with no comments
+instead of asked, and each diff is requested once per change however many comments sit on that
+file and patch set. A change without the field is asked, and a failed request is not remembered.
+A test builds one change both ways and gets the same examples and drops. Before Qt's build
+relies on the count, a sample of Qt changes it reports at zero is asked for their comments over
+the same terms, and every answer must be empty.

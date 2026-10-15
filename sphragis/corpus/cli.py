@@ -839,6 +839,34 @@ def _load_drops(args: argparse.Namespace) -> dict[str, int]:
     return dict(sorted(total.items()))
 
 
+def rest_fetchers_for(
+    change: Mapping[str, Any], comments: CommentFetcher, diffs: DiffFetcher
+) -> tuple[CommentFetcher, DiffFetcher]:
+    """One REST change's fetchers, asking the host nothing it has already answered.
+
+    Gerrit's `total_comment_count` counts every inline comment across a change's patch sets, so
+    a change it reports at zero yields no example and no comment-level drop: its comments request
+    is answered with nothing instead of sent. A change without the field (an index that lacks the
+    data) is asked. Every comment on one file at one patch set asks for the same diff, so each is
+    requested once per change; a request that fails is not remembered, and is retried as before.
+    """
+    if change.get("total_comment_count") == 0:
+        comments = _no_comments
+    answered: dict[tuple[int, int, str, int], Mapping[str, Any]] = {}
+
+    def diff(number: int, patch_set: int, path: str, base: int) -> Mapping[str, Any]:
+        key = (number, patch_set, path, base)
+        if key not in answered:
+            answered[key] = diffs(number, patch_set, path, base)
+        return answered[key]
+
+    return comments, diff
+
+
+def _no_comments(number: int) -> Mapping[str, Sequence[Mapping[str, Any]]]:
+    return {}
+
+
 def _stage_build(args: argparse.Namespace) -> int:
     """Every snapshot for an organization into examples, one file per month."""
     salt = require_salt()
@@ -864,7 +892,7 @@ def _stage_build(args: argparse.Namespace) -> int:
                 scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport),
                 scrubbed_diff_fetcher(GERRIT[args.org], transport=transport),
             )
-        return rest
+        return rest_fetchers_for(change, *rest)
 
     out_dir = _examples_dir(args)
     out_dir.mkdir(parents=True, exist_ok=True)
