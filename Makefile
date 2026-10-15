@@ -141,15 +141,19 @@ pull-logs:                 ## Copy the cluster's job logs into datasets/logs, th
 	fi; \
 	echo "datasets/logs holds $$after job log(s), $$((after - before)) new"
 
+BACKUP_ROOTS = gerrit gerrit-control $(if $(wildcard datasets/gerrit-granted),gerrit-granted)
+
 backup-datasets:           ## Copy datasets/gerrit* to the cluster's data root, then verify every file
-	@# The raw REST snapshots cannot be refetched (collection stopped) and are untracked, so
+	@# The raw REST snapshots are untracked and those held from before a grant cannot be refetched, so
 	@# without this the only copy is this machine. The cluster is a second machine, not a
 	@# backup service: RC keeps no backups either, but the two copies do not fail together.
 	@# The checksum comparison is the check, not rsync's exit code.
-	rsync -a --checksum datasets/gerrit datasets/gerrit-control $(TIGRIS_HOST):ajsoftworks/sphragis-data/datasets-backup/
+	@# gerrit-granted holds what was fetched under a written grant (Qt's, 2026-10-15), apart from
+	@# the snapshots held from before it.
+	rsync -a --checksum $(BACKUP_ROOTS:%=datasets/%) $(TIGRIS_HOST):ajsoftworks/sphragis-data/datasets-backup/
 	@l=$$(mktemp) && r=$$(mktemp) && trap 'rm -f "$$l" "$$r"' EXIT; \
-	(cd datasets && find gerrit gerrit-control -type f -print0 | xargs -0 sha256sum) | LC_ALL=C sort -k2 >"$$l"; \
-	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'cd ajsoftworks/sphragis-data/datasets-backup && find gerrit gerrit-control -type f -print0 | xargs -0 sha256sum' | LC_ALL=C sort -k2 >"$$r"; \
+	(cd datasets && find $(BACKUP_ROOTS) -type f -print0 | xargs -0 sha256sum) | LC_ALL=C sort -k2 >"$$l"; \
+	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'cd ajsoftworks/sphragis-data/datasets-backup && find $(BACKUP_ROOTS) -type f -print0 | xargs -0 sha256sum' | LC_ALL=C sort -k2 >"$$r"; \
 	n=$$(wc -l <"$$l"); missing=$$(LC_ALL=C comm -23 "$$l" "$$r" | wc -l); \
 	if [ "$$n" -eq 0 ] || [ "$$missing" -ne 0 ]; then \
 	  echo "backup-datasets: $$missing of $$n file(s) differ or are missing on $(TIGRIS_HOST)" >&2; exit 1; \
