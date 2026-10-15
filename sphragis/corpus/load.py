@@ -52,9 +52,16 @@ def build_record(built: Path) -> Path:
     return built.with_name(built.name.removesuffix(".jsonl") + ".source.json")
 
 
-def write_build_record(built: Path, snapshot_sha256: str | None, *, complete: bool) -> None:
-    """What a month was built from and under which build rules; `complete` once it has landed."""
+def write_build_record(
+    built: Path, snapshot_sha256: str | None, *, complete: bool, fewer_requests: bool = False
+) -> None:
+    """What a month was built from and under which build rules; `complete` once it has landed.
+
+    A month built with `--fewer-requests` says so; a full build's record is as it always was.
+    """
     record = {"snapshot_sha256": snapshot_sha256, "build_rules": BUILD_RULES, "complete": complete}
+    if fewer_requests:
+        record["fewer_requests"] = True
     write_json_atomic(build_record(built), record)
 
 

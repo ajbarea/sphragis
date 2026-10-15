@@ -30,13 +30,9 @@ def _change(number: int, count: int | None) -> dict[str, Any]:
 
 def _build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *flags: str) -> tuple[list, dict, list]:
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
-    write_snapshot(
-        tmp_path,
-        "openstack",
-        "2024-10",
-        [_change(1, 0), _change(2, 2), _change(3, None)],
-        record={},
-    )
+    if not (tmp_path / "openstack" / "raw" / "2024-10.ndjson.gz").exists():
+        changes = [_change(1, 0), _change(2, 2), _change(3, None)]
+        write_snapshot(tmp_path, "openstack", "2024-10", changes, record={})
     asked: list[tuple] = []
     comments = {
         "f.py": [
@@ -102,3 +98,27 @@ def test_a_failed_diff_is_not_remembered() -> None:
         fetch(42, 2, "f.py", 1)
     assert fetch(42, 2, "f.py", 1) == DIFF == fetch(42, 2, "f.py", 1)
     assert len(calls) == 2
+
+
+def test_a_month_built_in_the_other_mode_is_rebuilt(tmp_path, monkeypatch, capsys) -> None:
+    _build(tmp_path, monkeypatch)
+    record = tmp_path / "openstack" / "examples" / "2024-10.source.json"
+    assert "fewer_requests" not in json.loads(record.read_text())
+    _, drops, _ = _build(tmp_path, monkeypatch, "--fewer-requests")
+    assert "built in the other request mode, rebuilding" in capsys.readouterr().out
+    assert json.loads(record.read_text())["fewer_requests"] is True
+    assert drops[cli.UNCOMMENTED] == 1 and "author_comment" in drops
+
+
+def test_the_diff_cache_keeps_changes_patch_sets_and_bases_apart() -> None:
+    asked: list[tuple] = []
+    fetch = cli.cached_diffs(lambda *key: asked.append(key) or {"key": key})
+    for key in ((1, 2, "f.py", 1), (2, 2, "f.py", 1), (1, 3, "f.py", 2), (1, 2, "g.py", 1)):
+        assert fetch(*key) == {"key": key}
+    assert fetch(1, 2, "f.py", 1) == {"key": (1, 2, "f.py", 1)}
+    assert len(asked) == 4
+
+
+def test_a_notedb_row_is_never_skipped_as_uncommented() -> None:
+    assert not cli.uncommented({"total_comment_count": 0, cli.NOTEDB_KEY: {}})
+    assert cli.uncommented({"total_comment_count": 0})
