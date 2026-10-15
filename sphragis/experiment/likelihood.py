@@ -9,7 +9,7 @@ adapter and the measurement.
 
 The reference is tokenized exactly as training tokenized it (`build_supervised`: the chat-
 rendered prompt, then the target and its end token), so the score is the training objective
-evaluated on held-out data; `model.reference_logprob` runs the forward pass.
+evaluated on held-out data; `model.reference_token_logprobs` runs the forward pass.
 """
 
 from __future__ import annotations
@@ -21,6 +21,20 @@ from sphragis.experiment.training import IGNORE_INDEX
 #: Wide enough that no held-out example is refused for length: scoring reads one forward pass,
 #: so the training budget, which exists to keep a batch in memory, does not apply.
 SCORING_MAX_LENGTH = 32_768
+
+#: The parts of the mean per token a reading can take (`tokens.split`), each a sum of token
+#: classes; identifier, other and end add up to it, and so do changed, copied and end.
+COMPONENTS: dict[str, tuple[str, ...]] = {
+    "identifier": ("identifier_changed", "identifier_copied"),
+    "other": ("other_changed", "other_copied"),
+    "changed": ("identifier_changed", "other_changed"),
+    "copied": ("identifier_copied", "other_copied"),
+    "other_changed": ("other_changed",),
+    "end": ("end",),
+}
+
+#: The per-example field each component is stored under, beside `logprob_per_token`.
+COMPONENT_METRICS = tuple(f"logprob_per_token:{name}" for name in COMPONENTS)
 
 
 def target_span(labels: Sequence[int]) -> tuple[int, list[int]]:

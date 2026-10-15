@@ -31,6 +31,7 @@ _ORCHESTRATION = (
     "runner.py",
     "runs.py",
     "slurm.py",
+    "tokens.py",
     "training.py",
     "walk.py",
 )

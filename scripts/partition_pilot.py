@@ -46,6 +46,7 @@ from sphragis.experiment.decomposition import (
     registered_read,
     valid_bound,
 )
+from sphragis.experiment.likelihood import COMPONENT_METRICS
 from sphragis.experiment.neutral import (
     apparatus_holds,
     battery_holds,
@@ -102,9 +103,12 @@ parser.add_argument(
     help="a registered sensitivity: the cell again without sensitivity_ids.py's NAME ids",
 )
 # The per-example score H1 is read on: greedy exact match, or the reference's mean log-probability
-# per token from `likelihood_score.py` (research log, 2026-10-09).
+# per token from `likelihood_score.py` (research log, 2026-10-09), or one token class's
+# contribution to it (`likelihood.COMPONENT_METRICS`), which has no SESOI and sizes nothing.
 parser.add_argument(
-    "--metric", choices=("exact_match", "logprob_per_token", "logprob"), default="exact_match"
+    "--metric",
+    choices=("exact_match", "logprob_per_token", "logprob", *COMPONENT_METRICS),
+    default="exact_match",
 )
 
 

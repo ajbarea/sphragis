@@ -5,7 +5,9 @@ generation: the reference's summed log-probability under the arm's model, its to
 their mean per token. The rows keep the stored run's exact match beside them, so a reader can
 take either metric, and the verdict is recomputed by the registered gate on the mean per token.
 The result has the stored run's shape, so `partition_pilot.py --metric` and check 5 read it as
-they read the run itself.
+they read the run itself. Each row also splits its log-probability by token class
+(`sphragis.experiment.tokens`): per cell its sum and count, and per component its contribution to
+the mean per token, so `--metric logprob_per_token:<component>` reads a part of the contrast.
 
 Held-out rows are rebuilt from the run's own corpus root and windows (`window_split`) and must
 be the stored arm's examples, keyed through the redaction the stored ids carry.
@@ -29,12 +31,13 @@ from sphragis.experiment.holdout import window_split
 from sphragis.experiment.model import (
     HFGenerator,
     load_tokenizer,
-    reference_logprob,
+    reference_token_logprobs,
     run_provenance,
-    scorable,
+    scored_target,
 )
 from sphragis.experiment.neutral import SCORED_IDENTITY, source_root, source_windows
 from sphragis.experiment.runner import build_prompt
+from sphragis.experiment.tokens import split, target_cells
 from sphragis.experiment.walk import gate
 
 #: The per-example field the verdict is read on: equal weight per example, as exact match has.
@@ -76,24 +79,34 @@ def adapter_checked(run: dict, adapters: Path, org: str, seed: int) -> str:
     return str(path)
 
 
-def score(generator: HFGenerator, rows: dict[str, dict], stored: list[dict]) -> list[dict]:
+def score(
+    generator: HFGenerator,
+    rows: dict[str, dict],
+    cells: dict[str, tuple[list[str], dict]],
+    stored: list[dict],
+) -> list[dict]:
+    """Each stored row's reference scored, with its tokens' log-probability split by `tokens`."""
     scored = []
     for row in stored:
-        total, tokens = reference_logprob(
+        key = redact_text(row["id"])
+        total, per_token = reference_token_logprobs(
             generator.model,
             generator.tokenizer,
-            rows[redact_text(row["id"])],
+            rows[key],
             prompt_builder=build_prompt,
             device=generator.device,
         )
+        classes, lexed = cells[key]
         scored.append(
             {
                 "id": row["id"],
                 "change_id": row["change_id"],
                 "exact_match": row["exact_match"],
                 "logprob": total,
-                "tokens": tokens,
-                METRIC: total / tokens,
+                "tokens": len(per_token),
+                METRIC: total / len(per_token),
+                **split(per_token, classes),
+                **lexed,
             }
         )
     return scored
@@ -109,9 +122,11 @@ def main() -> None:
     rows = {org: held_out_rows(run, org) for org in orgs}
     # Every row is tokenized before any model loads, so one that cannot be scored costs no GPU.
     tokenizer = load_tokenizer(run["model_id"])
+    cells: dict[str, dict[str, tuple[list[str], dict]]] = {org: {} for org in orgs}
     for org in orgs:
-        for row in rows[org].values():
-            scorable(tokenizer, row, prompt_builder=build_prompt)
+        for key, row in rows[org].items():
+            target = scored_target(tokenizer, row, prompt_builder=build_prompt)
+            cells[org][key] = target_cells(tokenizer, row, target)
     adapters = {
         (org, seed): adapter_checked(run, args.adapters, org, seed)
         for org in orgs
@@ -129,7 +144,7 @@ def main() -> None:
             arm = run_id(
                 EvalRun("base" if trained is None else f"adapter:{trained}", evaluated, seed)
             )
-            results[arm] = score(generator, rows[evaluated], run["results"][arm])
+            results[arm] = score(generator, rows[evaluated], cells[evaluated], run["results"][arm])
             mean = sum(r[METRIC] for r in results[arm]) / len(results[arm])
             print(f"{arm:<44} {METRIC} {mean:.4f}", flush=True)
         del generator

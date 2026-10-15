@@ -1,0 +1,236 @@
+{
+  "run_files": [
+    "datasets/results/likelihood-partition-openstack-p2-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p3-s2-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p4-s3-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p5-s4-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p7-s5-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p8-s6-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p9-s7-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p10-s8-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p11-s9-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p12-s10-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p14-s11-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p15-s12-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p17-s13-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p18-s14-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p19-s15-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p21-s16-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p22-s17-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p23-s18-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p24-s19-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p25-s20-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p26-s21-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-openstack-p27-s22-n1850-rp1.0.json"
+  ],
+  "metric": "logprob_per_token:end",
+  "sesoi": null,
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-openstack.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p3-s2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p4-s3-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p5-s4-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p7-s5-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p8-s6-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p9-s7-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p10-s8-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p11-s9-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p12-s10-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p14-s11-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p15-s12-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p17-s13-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p18-s14-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p19-s15-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p21-s16-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p22-s17-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p23-s18-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p24-s19-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p25-s20-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p26-s21-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p27-s22-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    }
+  ],
+  "org": "openstack",
+  "bootstrap_seed": 7,
+  "estimate": 0.0008056990848219459,
+  "per_run": [
+    0.0013989403822908743,
+    -0.0007661051276670135,
+    0.0007576546782693504,
+    0.0018435372130147256,
+    0.0009474281619852414,
+    0.0024230003487061454,
+    -5.1498000475694436e-05,
+    -0.00041137639262944586,
+    0.0011271523592420926,
+    0.0017478684052333153,
+    -0.00041973549813598436,
+    0.0009174031006329885,
+    0.002609670997213915,
+    0.0008050991338570015,
+    -0.00019990504491205997,
+    -0.0005245355799150138,
+    -0.0003491816745848889,
+    0.0026619848160576902,
+    0.003060495863654554,
+    -0.0008472795307574229,
+    0.0008482586286672679,
+    0.00014650262633516772
+  ],
+  "runs": 22,
+  "changes": 206,
+  "reproducibility": null,
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": -0.000319253531449388,
+      "high": 0.0022175815600333905
+    },
+    "0.95": {
+      "low": -0.00018383055093744533,
+      "high": 0.002017116660418944
+    }
+  },
+  "verdicts": null,
+  "within_sesoi": null,
+  "meaningful": null,
+  "p_one_sided": 0.056,
+  "bootstrap_se": 0.0005612330551250225,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 501,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.0012017118011291676,
+    "sd_upper": 0.001513465670887554,
+    "confidence": 0.9,
+    "runs": null
+  },
+  "without": {},
+  "provenance": {
+    "generated_at": "2026-10-15T17:04:52.617670+00:00",
+    "git": {
+      "commit": "0c4f7649fa135cc73a859a4997ef31a185a0fd41",
+      "branch": "measure/vocabulary-split"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0",
+      "pygments": "2.21.0"
+    }
+  }
+}

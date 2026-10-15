@@ -26,6 +26,8 @@ experiment = [
     "transformers>=5.10",
     "peft>=0.10",
     "accelerate>=1.0",
+    # Lexes reference hunks into token classes (sphragis/experiment/tokens.py).
+    "pygments>=2.21",
 ]
 
 [dependency-groups]
@@ -34,6 +36,8 @@ dev = [
     "pytest-cov>=6.0",
     # The analysis scripts import it, so their tests need it.
     "numpy>=2.5",
+    # tests/unit/experiment/test_tokens.py lexes with it, as sphragis/experiment/tokens.py does.
+    "pygments>=2.21",
     # tests/conftest.py reads the extra and this group with it.
     "packaging>=24",
     "ruff>=0.16.8",

@@ -355,3 +355,46 @@ def test_the_tokenizer_is_asked_for_the_pinned_revision(monkeypatch: pytest.Monk
     monkeypatch.setattr(model_module.AutoTokenizer, "from_pretrained", fake)
     model_module._require_tokenizer(model_module.MODEL_ID)
     assert asked["revision"] == model_module.MODEL_REVISIONS[model_module.MODEL_ID]
+
+
+class _CharTokenizer:
+    """One id per character, a chat frame that is plain text, and an end token."""
+
+    eos_token_id = 0
+
+    def apply_chat_template(self, messages, *, tokenize, add_generation_prompt):
+        return f"<{messages[-1]['content']}>"
+
+    def __call__(self, text, add_special_tokens=True, return_offsets_mapping=False):
+        return {"input_ids": [1 + ord(c) % 40 for c in text]}
+
+
+class _PositionModel:
+    """Logits that depend on the position, so a reordered or dropped token changes the sum."""
+
+    def __call__(self, input_ids, logits_to_keep):
+        n = input_ids.shape[1]
+        logits = torch.zeros(1, n, 41)
+        for position in range(n):
+            logits[0, position, (3 * position) % 41] = 2.0
+        return SimpleNamespace(logits=logits[:, -logits_to_keep:])
+
+
+def test_reference_token_logprobs_are_the_targets_in_order() -> None:
+    row = {"before": "a", "after": "xyz", "comments": ["c"]}
+    tokenizer = _CharTokenizer()
+    prompt = lambda r: r["before"]  # noqa: E731
+    target = model_module.scored_target(tokenizer, row, prompt_builder=prompt)
+    assert target == [*tokenizer("xyz")["input_ids"], 0]
+    total, per_token = model_module.reference_token_logprobs(
+        _PositionModel(), tokenizer, row, prompt_builder=prompt, device="cpu"
+    )
+    prompt_ids = tokenizer(model_module.render_chat(tokenizer, "a"))["input_ids"]
+    ids = torch.tensor([prompt_ids + target])
+    logits = _PositionModel()(ids, ids.shape[1]).logits[0]
+    expected = [
+        torch.log_softmax(logits[len(prompt_ids) - 1 + k], dim=-1)[t].item()
+        for k, t in enumerate(target)
+    ]
+    assert per_token == pytest.approx(expected)
+    assert total == pytest.approx(sum(expected), abs=1e-5)

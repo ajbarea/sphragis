@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 # The packages whose versions actually pin a run's behaviour.
-_TRACKED_PACKAGES = ("torch", "transformers", "peft", "datasets")
+_TRACKED_PACKAGES = ("torch", "transformers", "peft", "datasets", "pygments")
 
 
 def _git(*args: str) -> str | None:
