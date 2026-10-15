@@ -1,14 +1,14 @@
 {
   "provenance": {
-    "generated_at": "2026-10-15T11:34:10.267294+00:00",
+    "generated_at": "2026-10-15T15:34:52.835871+00:00",
     "git": {
-      "commit": "79309de0f66b26927a291cec6b7ce7f019b3560d",
+      "commit": "ea9b23de9a133815d109ed1a57ef20c1fe4234db",
       "branch": "measure/label-audit-by-org",
       "uncommitted_code": [
         "scripts/label_audit_agreement.py",
         "scripts/label_audit_by_org.py"
       ],
-      "uncommitted_code_sha256": "3de98ea317bf0d61777dd3fc1cb8789e02379411ec55a07e5444d0c110e6146f"
+      "uncommitted_code_sha256": "d68992124439aa3f2f14c28022f2552cc9069feecf45cbc97e45ed3c6ff4ccf4"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -104,6 +104,34 @@
         }
       }
     },
+    "A~B outside_names": {
+      "items": 191,
+      "raw_agreement": 0.9424083769633508,
+      "kappa": 0.8277162771627716,
+      "kappa_95": [
+        0.7189474595343199,
+        0.9170791004601894
+      ],
+      "ac1": 0.9135052798419135,
+      "ac1_95": [
+        0.8578222571440387,
+        0.9603281753037699
+      ],
+      "specific_agreement": {
+        "True": 0.8641975308641975,
+        "False": 0.9634551495016611
+      },
+      "confusion": {
+        "True": {
+          "True": 35,
+          "False": 7
+        },
+        "False": {
+          "True": 4,
+          "False": 145
+        }
+      }
+    },
     "human~A": {
       "items": 77,
       "raw_agreement": 0.8051948051948052,
@@ -162,6 +190,64 @@
         }
       }
     },
+    "human~A without slips": {
+      "items": 71,
+      "raw_agreement": 0.8732394366197183,
+      "kappa": 0.31216361679224935,
+      "kappa_95": [
+        -0.028985507246377648,
+        0.6151761517615176
+      ],
+      "ac1": 0.867127595976399,
+      "ac1_95": [
+        0.7751029458346531,
+        0.9422925503543217
+      ],
+      "specific_agreement": {
+        "valid": 0.9375,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.5,
+        "partial": 0.2857142857142857,
+        "context_dependent": 0.0
+      },
+      "confusion": {
+        "valid": {
+          "valid": 60,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 3,
+          "context_dependent": 0
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        }
+      }
+    },
     "human~A valid_vs_rest": {
       "items": 77,
       "raw_agreement": 0.8441558441558441,
@@ -187,6 +273,90 @@
         "False": {
           "True": 6,
           "False": 5
+        }
+      }
+    },
+    "human~A valid_vs_rest without slips": {
+      "items": 71,
+      "raw_agreement": 0.8873239436619719,
+      "kappa": 0.36607142857142894,
+      "kappa_95": [
+        -0.05073995771670177,
+        0.6995768688293371
+      ],
+      "ac1": 0.8629674306393247,
+      "ac1_95": [
+        0.7486725663716814,
+        0.9520540236353404
+      ],
+      "specific_agreement": {
+        "True": 0.9375,
+        "False": 0.42857142857142855
+      },
+      "confusion": {
+        "True": {
+          "True": 60,
+          "False": 4
+        },
+        "False": {
+          "True": 4,
+          "False": 3
+        }
+      }
+    },
+    "human~A outside_names": {
+      "items": 77,
+      "raw_agreement": 0.8441558441558441,
+      "kappa": 0.08695652173913002,
+      "kappa_95": [
+        -0.08450704225352068,
+        0.3601108033240994
+      ],
+      "ac1": 0.8132956152758132,
+      "ac1_95": [
+        0.6851393522005811,
+        0.9135640785781104
+      ],
+      "specific_agreement": {
+        "True": 0.14285714285714285,
+        "False": 0.9142857142857143
+      },
+      "confusion": {
+        "True": {
+          "True": 1,
+          "False": 2
+        },
+        "False": {
+          "True": 10,
+          "False": 64
+        }
+      }
+    },
+    "human~A outside_names without slips": {
+      "items": 70,
+      "raw_agreement": 0.9285714285714286,
+      "kappa": 0.25531914893617086,
+      "kappa_95": [
+        -0.04477611940298562,
+        0.6601941747572824
+      ],
+      "ac1": 0.9210734017363852,
+      "ac1_95": [
+        0.8352941176470589,
+        0.9850889338587709
+      ],
+      "specific_agreement": {
+        "True": 0.2857142857142857,
+        "False": 0.9624060150375939
+      },
+      "confusion": {
+        "True": {
+          "True": 1,
+          "False": 1
+        },
+        "False": {
+          "True": 4,
+          "False": 64
         }
       }
     },
@@ -248,6 +418,64 @@
         }
       }
     },
+    "human~B without slips": {
+      "items": 71,
+      "raw_agreement": 0.8309859154929577,
+      "kappa": 0.1908831908831907,
+      "kappa_95": [
+        -0.07035175879396983,
+        0.49466192170818496
+      ],
+      "ac1": 0.8216873773708306,
+      "ac1_95": [
+        0.7227991215465119,
+        0.9125593329057088
+      ],
+      "specific_agreement": {
+        "valid": 0.9047619047619048,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.5,
+        "partial": 0.2857142857142857,
+        "context_dependent": 0.0
+      },
+      "confusion": {
+        "valid": {
+          "valid": 57,
+          "non_actionable": 1,
+          "unrelated_rewrite": 1,
+          "partial": 3,
+          "context_dependent": 2
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        }
+      }
+    },
     "human~B valid_vs_rest": {
       "items": 77,
       "raw_agreement": 0.8051948051948052,
@@ -273,6 +501,90 @@
         "False": {
           "True": 7,
           "False": 4
+        }
+      }
+    },
+    "human~B valid_vs_rest without slips": {
+      "items": 71,
+      "raw_agreement": 0.8309859154929577,
+      "kappa": 0.1564356435643564,
+      "kappa_95": [
+        -0.11039558417663317,
+        0.4721189591078062
+      ],
+      "ac1": 0.7887428713116786,
+      "ac1_95": [
+        0.6422225169075719,
+        0.902761926500799
+      ],
+      "specific_agreement": {
+        "True": 0.9047619047619048,
+        "False": 0.25
+      },
+      "confusion": {
+        "True": {
+          "True": 57,
+          "False": 7
+        },
+        "False": {
+          "True": 5,
+          "False": 2
+        }
+      }
+    },
+    "human~B outside_names": {
+      "items": 77,
+      "raw_agreement": 0.8311688311688312,
+      "kappa": 0.07571560480147775,
+      "kappa_95": [
+        -0.08630705394190825,
+        0.3327556325823223
+      ],
+      "ac1": 0.7951499027934105,
+      "ac1_95": [
+        0.6560196560196561,
+        0.8978489529043874
+      ],
+      "specific_agreement": {
+        "True": 0.13333333333333333,
+        "False": 0.9064748201438849
+      },
+      "confusion": {
+        "True": {
+          "True": 1,
+          "False": 2
+        },
+        "False": {
+          "True": 11,
+          "False": 63
+        }
+      }
+    },
+    "human~B outside_names without slips": {
+      "items": 70,
+      "raw_agreement": 0.9,
+      "kappa": 0.18604651162790736,
+      "kappa_95": [
+        -0.05150214592274621,
+        0.5531914893617027
+      ],
+      "ac1": 0.8863240923326761,
+      "ac1_95": [
+        0.7850562947799385,
+        0.9552668015763127
+      ],
+      "specific_agreement": {
+        "True": 0.2222222222222222,
+        "False": 0.9465648854961832
+      },
+      "confusion": {
+        "True": {
+          "True": 1,
+          "False": 1
+        },
+        "False": {
+          "True": 6,
+          "False": 62
         }
       }
     },
@@ -331,6 +643,462 @@
           "unrelated_rewrite": 0,
           "partial": 0,
           "context_dependent": 1
+        }
+      }
+    },
+    "human~A first half": {
+      "items": 38,
+      "raw_agreement": 0.8421052631578947,
+      "kappa": 0.2784810126582277,
+      "kappa_95": [
+        -0.05069124423963198,
+        0.6431924882629104
+      ],
+      "ac1": 0.8330129085416094,
+      "ac1_95": [
+        0.6887275435167085,
+        0.9460227272727272
+      ],
+      "specific_agreement": {
+        "valid": 0.9253731343283582,
+        "non_actionable": null,
+        "unrelated_rewrite": 0.0,
+        "partial": 0.5,
+        "context_dependent": 0.0
+      },
+      "confusion": {
+        "valid": {
+          "valid": 31,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 2,
+          "context_dependent": 1
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        }
+      }
+    },
+    "human~A first half without slips": {
+      "items": 35,
+      "raw_agreement": 0.9142857142857143,
+      "kappa": 0.37125748502993977,
+      "kappa_95": [
+        -0.03550295857988209,
+        1.0
+      ],
+      "ac1": 0.9112801013941698,
+      "ac1_95": [
+        0.7903519092951118,
+        1.0
+      ],
+      "specific_agreement": {
+        "valid": 0.9538461538461539,
+        "non_actionable": null,
+        "unrelated_rewrite": 0.0,
+        "partial": 0.6666666666666666,
+        "context_dependent": 0.0
+      },
+      "confusion": {
+        "valid": {
+          "valid": 31,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        }
+      }
+    },
+    "human~A first half valid_vs_rest": {
+      "items": 38,
+      "raw_agreement": 0.868421052631579,
+      "kappa": 0.37086092715231805,
+      "kappa_95": [
+        -0.08571428571428563,
+        0.7865168539325846
+      ],
+      "ac1": 0.8336980306345734,
+      "ac1_95": [
+        0.6533198175367462,
+        0.9683991683991684
+      ],
+      "specific_agreement": {
+        "True": 0.9253731343283582,
+        "False": 0.4444444444444444
+      },
+      "confusion": {
+        "True": {
+          "True": 31,
+          "False": 3
+        },
+        "False": {
+          "True": 2,
+          "False": 2
+        }
+      }
+    },
+    "human~A first half valid_vs_rest without slips": {
+      "items": 35,
+      "raw_agreement": 0.9142857142857143,
+      "kappa": 0.3558282208588957,
+      "kappa_95": [
+        -0.07361963190184051,
+        1.0
+      ],
+      "ac1": 0.9011764705882354,
+      "ac1_95": [
+        0.7560975609756099,
+        1.0
+      ],
+      "specific_agreement": {
+        "True": 0.9538461538461539,
+        "False": 0.4
+      },
+      "confusion": {
+        "True": {
+          "True": 31,
+          "False": 1
+        },
+        "False": {
+          "True": 2,
+          "False": 1
+        }
+      }
+    },
+    "human~A first half outside_names": {
+      "items": 38,
+      "raw_agreement": 0.8157894736842105,
+      "kappa": -0.08130081300812994,
+      "kappa_95": [
+        -0.1546961325966849,
+        0.0
+      ],
+      "ac1": 0.7787941787941788,
+      "ac1_95": [
+        0.569811320754717,
+        0.9145747470962907
+      ],
+      "specific_agreement": {
+        "True": 0.0,
+        "False": 0.8985507246376812
+      },
+      "confusion": {
+        "True": {
+          "True": 0,
+          "False": 2
+        },
+        "False": {
+          "True": 5,
+          "False": 31
+        }
+      }
+    },
+    "human~A first half outside_names without slips": {
+      "items": 34,
+      "raw_agreement": 0.9117647058823529,
+      "kappa": -0.04081632653061289,
+      "kappa_95": [
+        -0.09174311926605527,
+        0.0
+      ],
+      "ac1": 0.9036372224846481,
+      "ac1_95": [
+        0.7474801061007957,
+        1.0
+      ],
+      "specific_agreement": {
+        "True": 0.0,
+        "False": 0.9538461538461539
+      },
+      "confusion": {
+        "True": {
+          "True": 0,
+          "False": 1
+        },
+        "False": {
+          "True": 2,
+          "False": 31
+        }
+      }
+    },
+    "human~A second half": {
+      "items": 39,
+      "raw_agreement": 0.7692307692307693,
+      "kappa": 0.2268722466960354,
+      "kappa_95": [
+        -0.058139534883721235,
+        0.510460251046025
+      ],
+      "ac1": 0.7507544825137582,
+      "ac1_95": [
+        0.5943913083851797,
+        0.8929214929214929
+      ],
+      "specific_agreement": {
+        "valid": 0.8923076923076924,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.6666666666666666,
+        "partial": 0.0,
+        "context_dependent": 0.0
+      },
+      "confusion": {
+        "valid": {
+          "valid": 29,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 2,
+          "context_dependent": 0
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 2,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 1,
+          "context_dependent": 0
+        }
+      }
+    },
+    "human~A second half without slips": {
+      "items": 36,
+      "raw_agreement": 0.8333333333333334,
+      "kappa": 0.27516778523489954,
+      "kappa_95": [
+        -0.06273062730627307,
+        0.6435643564356435
+      ],
+      "ac1": 0.8232044198895028,
+      "ac1_95": [
+        0.6701717855283706,
+        0.9429250891795481
+      ],
+      "specific_agreement": {
+        "valid": 0.9206349206349206,
+        "non_actionable": 0.0,
+        "unrelated_rewrite": 0.6666666666666666,
+        "partial": 0.0,
+        "context_dependent": 0.0
+      },
+      "confusion": {
+        "valid": {
+          "valid": 29,
+          "non_actionable": 1,
+          "unrelated_rewrite": 0,
+          "partial": 2,
+          "context_dependent": 0
+        },
+        "non_actionable": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "unrelated_rewrite": {
+          "valid": 0,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "partial": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 1,
+          "partial": 0,
+          "context_dependent": 0
+        },
+        "context_dependent": {
+          "valid": 1,
+          "non_actionable": 0,
+          "unrelated_rewrite": 0,
+          "partial": 0,
+          "context_dependent": 0
+        }
+      }
+    },
+    "human~A second half valid_vs_rest": {
+      "items": 39,
+      "raw_agreement": 0.8205128205128205,
+      "kappa": 0.35460992907801403,
+      "kappa_95": [
+        -0.08333333333333379,
+        0.7121771217712178
+      ],
+      "ac1": 0.7514792899408284,
+      "ac1_95": [
+        0.5229357798165138,
+        0.9080550098231828
+      ],
+      "specific_agreement": {
+        "True": 0.8923076923076924,
+        "False": 0.46153846153846156
+      },
+      "confusion": {
+        "True": {
+          "True": 29,
+          "False": 3
+        },
+        "False": {
+          "True": 4,
+          "False": 3
+        }
+      }
+    },
+    "human~A second half valid_vs_rest without slips": {
+      "items": 36,
+      "raw_agreement": 0.8611111111111112,
+      "kappa": 0.36619718309859167,
+      "kappa_95": [
+        -0.09090909090909076,
+        0.7857142857142857
+      ],
+      "ac1": 0.8222222222222223,
+      "ac1_95": [
+        0.6269430051813472,
+        0.9663079082826393
+      ],
+      "specific_agreement": {
+        "True": 0.9206349206349206,
+        "False": 0.4444444444444444
+      },
+      "confusion": {
+        "True": {
+          "True": 29,
+          "False": 3
+        },
+        "False": {
+          "True": 2,
+          "False": 2
+        }
+      }
+    },
+    "human~A second half outside_names": {
+      "items": 39,
+      "raw_agreement": 0.8717948717948718,
+      "kappa": 0.25287356321839083,
+      "kappa_95": [
+        0.0,
+        0.6548672566371679
+      ],
+      "ac1": 0.8467583497053045,
+      "ac1_95": [
+        0.6804733727810651,
+        0.972310969116081
+      ],
+      "specific_agreement": {
+        "True": 0.2857142857142857,
+        "False": 0.9295774647887324
+      },
+      "confusion": {
+        "True": {
+          "True": 1,
+          "False": 0
+        },
+        "False": {
+          "True": 5,
+          "False": 33
+        }
+      }
+    },
+    "human~A second half outside_names without slips": {
+      "items": 36,
+      "raw_agreement": 0.9444444444444444,
+      "kappa": 0.4782608695652173,
+      "kappa_95": [
+        0.0,
+        1.0
+      ],
+      "ac1": 0.9379310344827586,
+      "ac1_95": [
+        0.8315395414131961,
+        1.0
+      ],
+      "specific_agreement": {
+        "True": 0.5,
+        "False": 0.9705882352941176
+      },
+      "confusion": {
+        "True": {
+          "True": 1,
+          "False": 0
+        },
+        "False": {
+          "True": 2,
+          "False": 33
         }
       }
     }
