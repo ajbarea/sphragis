@@ -36,7 +36,7 @@ dev = [
     "pytest-cov>=6.0",
     # The analysis scripts import it, so their tests need it.
     "numpy>=2.5",
-    # sphragis/experiment/tokens.py, which partition_pilot.py imports.
+    # tests/unit/experiment/test_tokens.py lexes with it, as sphragis/experiment/tokens.py does.
     "pygments>=2.21",
     # tests/conftest.py reads the extra and this group with it.
     "packaging>=24",

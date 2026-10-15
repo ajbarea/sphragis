@@ -612,31 +612,19 @@ def main() -> int:
     return 1
 
 
-def scorable(
+def scored_target(
     tokenizer: Any, row: Mapping[str, Any], *, prompt_builder: Callable[[Mapping[str, Any]], str]
-) -> None:
-    """Refuse, before any model loads, a row `reference_logprob` would refuse mid-job."""
-    build_supervised(tokenizer, row, prompt_builder=prompt_builder, max_length=SCORING_MAX_LENGTH)
+) -> list[int]:
+    """The row's supervised target, refused before any model loads if scoring would refuse it."""
+    item = build_supervised(
+        tokenizer, row, prompt_builder=prompt_builder, max_length=SCORING_MAX_LENGTH
+    )
+    return target_span(item["labels"])[1]
 
 
 def load_tokenizer(model_id: str = MODEL_ID) -> PreTrainedTokenizerBase:
     """The pinned tokenizer alone, for checks that need no model."""
     return _require_tokenizer(model_id)
-
-
-def reference_logprob(
-    model: Any,
-    tokenizer: Any,
-    row: Mapping[str, Any],
-    *,
-    prompt_builder: Callable[[Mapping[str, Any]], str],
-    device: str,
-) -> tuple[float, int]:
-    """The summed natural-log probability of the row's reference, and its token count."""
-    total, per_token = reference_token_logprobs(
-        model, tokenizer, row, prompt_builder=prompt_builder, device=device
-    )
-    return total, len(per_token)
 
 
 def reference_token_logprobs(

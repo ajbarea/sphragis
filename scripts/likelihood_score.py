@@ -33,7 +33,7 @@ from sphragis.experiment.model import (
     load_tokenizer,
     reference_token_logprobs,
     run_provenance,
-    scorable,
+    scored_target,
 )
 from sphragis.experiment.neutral import SCORED_IDENTITY, source_root, source_windows
 from sphragis.experiment.runner import build_prompt
@@ -125,8 +125,8 @@ def main() -> None:
     cells: dict[str, dict[str, tuple[list[str], dict]]] = {org: {} for org in orgs}
     for org in orgs:
         for key, row in rows[org].items():
-            scorable(tokenizer, row, prompt_builder=build_prompt)
-            cells[org][key] = target_cells(tokenizer, row)
+            target = scored_target(tokenizer, row, prompt_builder=build_prompt)
+            cells[org][key] = target_cells(tokenizer, row, target)
     adapters = {
         (org, seed): adapter_checked(run, args.adapters, org, seed)
         for org in orgs
