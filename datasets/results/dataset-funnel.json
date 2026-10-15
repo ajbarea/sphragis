@@ -1,13 +1,9 @@
 {
   "provenance": {
-    "generated_at": "2026-10-15T15:32:57.740397+00:00",
+    "generated_at": "2026-10-15T15:40:33.852565+00:00",
     "git": {
-      "commit": "8b2cfb8c97ef7acd26447acb4468b9a87cf4970c",
-      "branch": "docs/dataset-funnel",
-      "uncommitted_code": [
-        "scripts/dataset_funnel.py"
-      ],
-      "uncommitted_code_sha256": "2ef16f3476df8b25ddef46f11717782998ad45a8b6c13c71652e1fee5f9a9018"
+      "commit": "1b6f98c10a8468a03f3ac77ef03ef50ed78d7aee",
+      "branch": "docs/dataset-funnel"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
