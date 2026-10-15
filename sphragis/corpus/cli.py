@@ -305,6 +305,13 @@ def build_parser() -> argparse.ArgumentParser:
         "every branch Gerrit accepts changes on",
     )
     parser.add_argument(
+        "--fewer-requests",
+        action="store_true",
+        help="build: skip a change whose snapshot records no comment (counted as "
+        f"{UNCOMMENTED}) and ask each diff once per change; for a host whose count a probe has "
+        "checked (research log, 2026-10-15)",
+    )
+    parser.add_argument(
         "--request-interval",
         type=float,
         default=1.0,
@@ -839,32 +846,34 @@ def _load_drops(args: argparse.Namespace) -> dict[str, int]:
     return dict(sorted(total.items()))
 
 
-def rest_fetchers_for(
-    change: Mapping[str, Any], comments: CommentFetcher, diffs: DiffFetcher
-) -> tuple[CommentFetcher, DiffFetcher]:
-    """One REST change's fetchers, asking the host nothing it has already answered.
+#: The drop a `--fewer-requests` build counts for a change its snapshot records no comment on.
+UNCOMMENTED = "uncommented_by_count"
 
-    Gerrit's `total_comment_count` counts every inline comment across a change's patch sets, so
-    a change it reports at zero yields no example and no comment-level drop: its comments request
-    is answered with nothing instead of sent. A change without the field (an index that lacks the
-    data) is asked. Every comment on one file at one patch set asks for the same diff, so each is
-    requested once per change; a request that fails is not remembered, and is retried as before.
+
+def uncommented(change: Mapping[str, Any]) -> bool:
+    """Whether the change's snapshot records no inline comment on any patch set.
+
+    Gerrit's `total_comment_count` counts every inline comment across a change's patch sets, as
+    of the fetch; a change without the field (an index that lacks the data) is not uncommented.
     """
-    if change.get("total_comment_count") == 0:
-        comments = _no_comments
-    answered: dict[tuple[int, int, str, int], Mapping[str, Any]] = {}
+    return change.get("total_comment_count") == 0
+
+
+def cached_diffs(diffs: DiffFetcher) -> DiffFetcher:
+    """One change's diff fetcher, asking once for each file at each patch-set pair.
+
+    Every comment on one file at one patch set asks for the same diff. A request that fails is
+    not remembered, so the next comment asks again, as without the cache.
+    """
+    answered: dict[tuple[int, str, int], Mapping[str, Any]] = {}
 
     def diff(number: int, patch_set: int, path: str, base: int) -> Mapping[str, Any]:
-        key = (number, patch_set, path, base)
+        key = (patch_set, path, base)
         if key not in answered:
             answered[key] = diffs(number, patch_set, path, base)
         return answered[key]
 
-    return comments, diff
-
-
-def _no_comments(number: int) -> Mapping[str, Sequence[Mapping[str, Any]]]:
-    return {}
+    return diff
 
 
 def _stage_build(args: argparse.Namespace) -> int:
@@ -892,7 +901,9 @@ def _stage_build(args: argparse.Namespace) -> int:
                 scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport),
                 scrubbed_diff_fetcher(GERRIT[args.org], transport=transport),
             )
-        return rest_fetchers_for(change, *rest)
+        if args.fewer_requests:
+            return rest[0], cached_diffs(rest[1])
+        return rest
 
     out_dir = _examples_dir(args)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -949,7 +960,13 @@ def _stage_build(args: argparse.Namespace) -> int:
             continue
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
+        if args.fewer_requests:
+            # Present even at zero, so the month's drops say how it was built.
+            month_drops[UNCOMMENTED] += 0
         for change in changes:
+            if args.fewer_requests and uncommented(change):
+                month_drops[UNCOMMENTED] += 1
+                continue
             built, dropped = build_from_change(args.org, change, *fetchers_for(change))
             rows.extend(built)
             month_drops.update(dropped)

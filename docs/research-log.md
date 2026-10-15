@@ -9155,13 +9155,20 @@ accounts, and there it is what removes them. Qt joins the funnel once its fetch 
 
 ### A REST build asks only what the host has not answered (2026-10-15)
 
-Building Qt's 13 months at its granted 2 s would take about 64 hours, measured on the held
-build's counts: a comments request for each of about 54,000 changes and a diff request for each
-of about 62,000 anchored comments. Two changes cut that without changing what is built
-(`cli.rest_fetchers_for`): a change whose `total_comment_count` is 0 (Gerrit counts every inline
-comment across its patch sets there; half of Qt's 2024-10 changes) is answered with no comments
-instead of asked, and each diff is requested once per change however many comments sit on that
-file and patch set. A change without the field is asked, and a failed request is not remembered.
-A test builds one change both ways and gets the same examples and drops. Before Qt's build
-relies on the count, a sample of Qt changes it reports at zero is asked for their comments over
-the same terms, and every answer must be empty.
+### A REST build can ask only what the host has not answered (2026-10-15)
+
+A REST build asks the host for each change's comments and, for each anchored comment, a diff, and
+under Qt's granted interval those requests set how long its build takes. `build --fewer-requests`
+asks less: a change whose snapshot records `total_comment_count` 0 (Gerrit counts every inline
+comment across a change's patch sets there) is not built and is counted as `uncommented_by_count`
+in the month's drops, and each diff is asked once per change however many comments sit on that
+file and patch set (a failed request is not remembered). The flag is off by default, so every
+build without it, OpenStack's and Wikimedia's included, is as before; a month built with it says
+so by carrying the `uncommented_by_count` key, even at zero.
+
+It is not identical to the full build. The count is the snapshot's, taken at fetch, while a full
+build reads comments live, so a comment posted between fetch and build on a change fetched at
+zero is not read; and a diff that would have failed on a later identical request is answered from
+the first. It is used only on a host for which a probe has asked the comments of a sample of
+changes recorded at zero, under that host's terms, and every answer was empty; the probe and its
+result are logged before the build.
