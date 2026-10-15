@@ -62,8 +62,10 @@ def _restyle(text: str, quote: str) -> str:
         tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
     except (tokenize.TokenError, SyntaxError):
         return text
+    # The tokenizer's rows are the lines readline gives, split on newlines alone; splitlines also
+    # splits on form feeds and line separators, which would shift every later edit.
     offsets = [0]
-    for line in text.splitlines(keepends=True):
+    for line in io.StringIO(text).readlines():
         offsets.append(offsets[-1] + len(line))
     edits, depth = [], 0
     for token in tokens:
@@ -184,10 +186,11 @@ def plant(
     for row in rows:
         copy = dict(row)
         text = str(copy.get(field, ""))
-        if (applies is None or applies(row)) and would_change(text, transform):
+        new = transform(text) if applies is None or applies(row) else text
+        if new != text:
             eligible += 1
             if rng.random() < fraction:
-                copy[field] = transform(text)
+                copy[field] = new
                 changed += 1
                 changed_ids.append(str(row.get("id")))
         out.append(copy)

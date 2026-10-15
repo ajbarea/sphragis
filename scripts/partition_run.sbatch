@@ -31,7 +31,6 @@ SEEDS="${SEEDS:?set SEEDS to the run's position in the admissible list}"
 PLANT="${PLANT:-}"
 # PLANT_CONVENTION=quotes plants each half's quote style on Python refinements instead, tagged
 # -plantquotes<fraction> (placebo_corpus.py --plant-convention).
-PLANT_CONVENTION="${PLANT_CONVENTION:-marker}"
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
 ROOT="$SPHRAGIS_DATA/corpus-partition-$ORG-p$PARTITION_SEED$RESULT_SUFFIX"
 
@@ -39,7 +38,7 @@ claim_result OUT "$SPHRAGIS_RESULTS/rq1-partition-$ORG-p$PARTITION_SEED$RESULT_S
 
 uv run --no-sync python scripts/placebo_corpus.py \
   --root "${CORPUS_WINDOWS:-$SPHRAGIS_DATA/corpus-windows}" --org "$ORG" --out-root "$ROOT" \
-  --dedup-org --partition-seed "$PARTITION_SEED" ${PLANT:+--plant "$PLANT" --plant-convention "$PLANT_CONVENTION"}
+  --dedup-org --partition-seed "$PARTITION_SEED" ${PLANT:+--plant "$PLANT" --plant-convention "${PLANT_CONVENTION:-marker}"}
 uv run --no-sync python scripts/rq1_pilot.py \
   --root "$ROOT" --org "$ORG-a" --org "$ORG-b" \
   --seeds "$SEEDS" \

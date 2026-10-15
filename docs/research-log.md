@@ -9125,4 +9125,7 @@ rate on a convention of the kind the study asks about, fixed here before any run
    planted rate, disclosed in the Stage 1 design history as a change made after the development
    pilots were read, and every bound on δ is recomputed. If it includes 1.834, the registered
    rate stands and the planted rate is reported beside it as a check. If exact match moves by
-   nothing, no rate is read and the registered rate stands.
+   nothing, no rate is read and the registered rate stands; if more than 1% of resamples move it
+   by nothing, no interval is read and the registered rate stands. A Python fragment the
+   tokenizer cannot read (a hunk cut inside a call or a string) is never planted, so the planted
+   examples lean toward whole statements, and each half's realised share is reported.

@@ -101,3 +101,24 @@ def test_undefined_resamples_are_counted(tmp_path, monkeypatch) -> None:
         str(out),
     )
     assert json.loads(out.read_text())["undefined_resamples"] == 0
+
+
+def test_too_many_resamples_without_a_rate_read_no_interval(tmp_path, monkeypatch) -> None:
+    runs = [
+        _run(tmp_path, "up", gain=0.02, em_gain=0.25),
+        _run(tmp_path, "down", gain=0.02, em_gain=0.0),
+    ]
+    out = tmp_path / "out.json"
+    _main(
+        monkeypatch,
+        *[a for r in runs for a in ("--run", r)],
+        "--resamples",
+        "200",
+        "--out",
+        str(out),
+    )
+    read = json.loads(out.read_text())
+    assert read["undefined_resamples"] > 2  # both draws "down" about a quarter of the time
+    assert read["rate_95"] is None
+    # Every run's gain in s, over the exact match only the "up" run moved.
+    assert read["rate"] == pytest.approx((0.08 * 4) / 2)

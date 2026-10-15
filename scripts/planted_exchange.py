@@ -47,11 +47,19 @@ METRICS = ("logprob_per_token", "exact_match")
 
 def half_contrast(run: dict, own: str, sibling: str, planted: set[str]) -> dict:
     """Own minus sibling on `own`'s held-out examples the plant changed, summed per metric."""
+    if len(run["seeds"]) != 1:
+        raise ValueError(f"a planted run is read at one training seed, not {run['seeds']}")
     (seed,) = run["seeds"]
+    # Both sides through the redaction, as every reader of stored ids compares them.
     arms = {
-        name: {r["id"]: r for r in run["results"][run_id(EvalRun(f"adapter:{name}", own, seed))]}
+        name: {
+            redact_text(r["id"]): r
+            for r in run["results"][run_id(EvalRun(f"adapter:{name}", own, seed))]
+        }
         for name in (own, sibling)
     }
+    if set(arms[own]) != set(arms[sibling]):
+        raise ValueError(f"the own and sibling arms on {own} scored different examples")
     ids = sorted(set(arms[own]) & planted)
     if not ids:
         raise ValueError(f"no planted held-out example on {own}")
@@ -64,17 +72,22 @@ def half_contrast(run: dict, own: str, sibling: str, planted: set[str]) -> dict:
     }
 
 
+_TAG = re.compile(
+    r"^corpus-partition-(?P<org>.+?)-p(?P<seed>\d+)-(?:[^/]*-)?plantquotes(?P<f>[0-9.]+)(?:-|$)"
+)
+
+
 def _matches(run: dict, manifest: dict) -> bool:
-    """Whether every half's corpus root is the manifest's partition, fraction and organization."""
-    plant = manifest["plant"]
-    root = (
-        f"corpus-partition-{manifest['source_org']}-p{manifest['partition_seed']}-"
-        f"(?:[^/]*-)?plantquotes{re.escape(str(plant['fraction']))}(?:-[^/]*)?$"
-    )
-    return all(
-        re.search(root, str(source_root(corpus["source"])).rsplit("/", 1)[-1])
-        for corpus in run["corpora"].values()
-    )
+    """Whether every half's corpus root is the manifest's organization, partition and fraction."""
+    for corpus in run["corpora"].values():
+        tag = _TAG.match(str(source_root(corpus["source"])).rsplit("/", 1)[-1])
+        if tag is None or (tag["org"], int(tag["seed"]), float(tag["f"])) != (
+            manifest["source_org"],
+            manifest["partition_seed"],
+            float(manifest["plant"]["fraction"]),
+        ):
+            return False
+    return True
 
 
 def read_run(likelihood: Path, manifest_path: Path) -> dict:
@@ -94,7 +107,6 @@ def read_run(likelihood: Path, manifest_path: Path) -> dict:
     halves = {}
     for own in names:
         (sibling,) = [n for n in names if n != own]
-        # Stored results carry ids through the redaction; the manifest names them as written.
         planted = {redact_text(i) for i in plant["halves"][own]["changed_ids"]}
         halves[own] = half_contrast(run, own, sibling, planted)
     return {"file": str(likelihood), "fraction": plant["fraction"], "halves": halves}
@@ -109,8 +121,17 @@ def rate(runs: list[dict]) -> float:
     return sum(h["logprob_per_token"] for h in halves) / em
 
 
+#: The share of resamples without a rate past which no interval is read (research log, 2026-10-15).
+MAX_UNDEFINED = 0.01
+
+
 def interval(runs: list[dict], *, resamples: int, seed: int) -> dict:
-    """The registered 95% percentile interval over runs resampled, and how many had no rate."""
+    """The registered 95% percentile interval over runs resampled, and how many had no rate.
+
+    A resample whose summed gain in exact match is not positive has no rate. Past `MAX_UNDEFINED`
+    of them the interval would describe only the resamples that kept a positive denominator, so
+    none is read and the count says why.
+    """
     rng = random.Random(seed)
     draws, undefined = [], 0
     for _ in range(resamples):
@@ -118,9 +139,11 @@ def interval(runs: list[dict], *, resamples: int, seed: int) -> dict:
             draws.append(rate([rng.choice(runs) for _ in runs]))
         except ValueError:
             undefined += 1
-    if undefined > resamples * 0.01:
-        raise ValueError(f"{undefined} of {resamples} resamples moved exact match by nothing")
-    return {"rate_95": list(percentile_interval(draws, 0.95)), "undefined_resamples": undefined}
+    readable = undefined <= resamples * MAX_UNDEFINED
+    return {
+        "rate_95": list(percentile_interval(draws, 0.95)) if readable else None,
+        "undefined_resamples": undefined,
+    }
 
 
 def main() -> None:
@@ -151,7 +174,10 @@ def main() -> None:
         )
         + "\n"
     )
-    print(f"rate {result['rate']:.4f} nats per token per unit exact match, {result['rate_95']}")
+    print(
+        f"rate {result['rate']:.4f} nats per token per unit exact match, 95% {result['rate_95']}, "
+        f"{result['undefined_resamples']} resamples without a rate"
+    )
 
 
 if __name__ == "__main__":

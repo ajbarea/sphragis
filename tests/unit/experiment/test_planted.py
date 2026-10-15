@@ -228,3 +228,9 @@ def test_the_quote_plant_touches_python_rows_only_and_names_what_it_changed() ->
 def test_a_plant_names_its_changed_ids_only_when_asked() -> None:
     _, report = plant([{"id": "a", "after": "x = 'v'"}], fraction=1.0, seed=0)
     assert "changed_ids" not in report
+
+
+@pytest.mark.parametrize("separator", ["\x0c", " "])
+def test_a_line_separator_the_tokenizer_does_not_split_on_leaves_offsets_true(separator) -> None:
+    text = f"x = 1  # a{separator}b\ny = 'v'\n"
+    assert to_double(text) == f'x = 1  # a{separator}b\ny = "v"\n'
