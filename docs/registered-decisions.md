@@ -40,7 +40,7 @@ when it is admitted too), Fuchsia and AOSP before 2025-03-27 (research log, 2026
 hypotheses share one family-wise level under Holm's step-down: both are read on a two-sided
 97.5% interval, and if one passes, the other is read again on a 95% one. When H2 has no
 confirmatory cell (Qt not admitted, or no foreign source covering every matched draw), H1 is the whole family and carries the whole
-family-wise level: it is read on the 95% interval alone, against the bound simulated at that level.
+family-wise level: it is read on the 95% interval alone, bounded against δ.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and **inconclusive**

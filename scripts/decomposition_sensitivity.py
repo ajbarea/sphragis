@@ -12,8 +12,8 @@ Two numbers per cell and level:
   gives joint power 0.928**k across k independent cells: about 0.80 at three, 0.74 at four);
 - the share of null studies whose upper bound falls below that effect (`null_reads_bounded`, the
   bounded reading before 2026-10-14), and the share whose interval sits inside the SESOI band
-  (`null_reads_absent`), a lower bound on how often a null reads bounded at the SESOI, the
-  registered margin since 2026-10-14.
+  (`null_reads_absent`), which less the false-positive rate bounds from below how often a null
+  reads bounded at the SESOI, the registered margin since 2026-10-14.
 
     uv run --no-sync --no-active python scripts/decomposition_sensitivity.py \\
         --placebo openstack=datasets/results/rq1-placebo-openstack.json \\

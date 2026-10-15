@@ -1693,6 +1693,19 @@ def admitted(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
     return freeze
 
 
+def test_an_upper_bound_above_the_simulated_bound_and_below_the_sesoi_reads_bounded(
+    admitted,
+) -> None:
+    # Wikimedia's 97.5% development case: above its detectable effect (0.0071), below δ (0.0183).
+    admitted("openstack", "wikimedia")
+    reports = {
+        o: _gerrit_report(o, -0.0004, 0.0125, 0.06, bound=0.0071)
+        for o in ("openstack", "wikimedia")
+    }
+    sims = {o: _gerrit_sim(o, bound=0.0071) for o in reports}
+    assert h1_test_gate(reports, simulations=sims)["verdicts"] == {"H1": "bounded"}
+
+
 @pytest.mark.parametrize(
     ("openstack", "wikimedia", "verdict", "reading_"),
     [
