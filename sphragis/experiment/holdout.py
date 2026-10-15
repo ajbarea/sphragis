@@ -102,11 +102,15 @@ def matched_foreign_draw(
     in-language examples (research log, 2026-10-14). Each stratum is shuffled by the run's seed
     and the sibling it is matched to, so the draw is reproducible and two siblings of one run get
     independent draws. Refused when the pool cannot cover the draw: a short pool is a source that
-    does not qualify, never a smaller arm.
+    does not qualify, never a smaller arm. Refused too when the pool repeats an example id, since
+    repeats would count as capacity and train twice. An `in_language` that raises propagates.
     """
     size = len(sibling_draw)
     if size == 0:
         raise ValueError("the sibling draw is empty")
+    ids = [row["id"] for row in foreign_pool]
+    if len(set(ids)) != len(ids):
+        raise ValueError("the foreign pool repeats example ids; deduplicate it before drawing")
     wanted = sum(1 for row in sibling_draw if in_language(row))
     strata = {
         True: [dict(r) for r in foreign_pool if in_language(r)],

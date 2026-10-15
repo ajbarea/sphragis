@@ -239,3 +239,29 @@ def test_a_pool_that_cannot_cover_the_draw_is_refused(
 def test_an_empty_sibling_draw_is_refused() -> None:
     with pytest.raises(ValueError, match="empty"):
         matched_foreign_draw([], _lang_rows("p", 3, 3), in_language=_cc, seed=1, sibling="qt-a")
+
+
+@pytest.mark.parametrize(("cpp", "other"), [(0, 6), (6, 0)])
+def test_a_matched_draw_with_one_empty_stratum_takes_only_the_other(cpp: int, other: int) -> None:
+    sibling = _lang_rows("s", cpp=cpp, other=other)
+    draw = matched_foreign_draw(
+        sibling, _lang_rows("p", 10, 10), in_language=_cc, seed=1, sibling="qt-a"
+    )
+    assert len(draw) == 6 and sum(map(_cc, draw)) == cpp
+
+
+def test_a_pool_of_exactly_the_needed_size_is_used_whole_and_left_unchanged() -> None:
+    pool = _lang_rows("p", cpp=4, other=2)
+    before = [dict(r) for r in pool]
+    draw = matched_foreign_draw(
+        _lang_rows("s", 4, 2), pool, in_language=_cc, seed=1, sibling="qt-a"
+    )
+    assert sorted(r["id"] for r in draw) == sorted(r["id"] for r in pool)
+    assert pool == before
+
+
+def test_a_pool_with_repeated_ids_is_refused() -> None:
+    pool = _lang_rows("p", cpp=3, other=3)
+    pool.append(dict(pool[0]))
+    with pytest.raises(ValueError, match="repeats example ids"):
+        matched_foreign_draw(_lang_rows("s", 2, 2), pool, in_language=_cc, seed=1, sibling="qt-a")
