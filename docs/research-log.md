@@ -9129,3 +9129,26 @@ rate on a convention of the kind the study asks about, fixed here before any run
    by nothing, no interval is read and the registered rate stands. A Python fragment the
    tokenizer cannot read (a hunk cut inside a call or a string) is never planted, so the planted
    examples lean toward whole statements, and each half's realised share is reported.
+
+### Wikimedia's corpus v3 frozen; the dataset's funnel published (2026-10-15)
+
+The 2026-10-01 entry calls the OpenStack and Wikimedia v3 corpora frozen, but only OpenStack's
+copy (`corpus-v3/openstack` on TIGRIS) carried the freeze manifest and splits; Wikimedia's held
+its raw, built and refined months alone. No result depends on it, since every partition job
+deduplicates the organization itself (`placebo_corpus.py --dedup-org`). The dedup, split, freeze
+and verify stages were run on a copy of `corpus-v3/wikimedia` at 2dad2a1: they keep 5,513 of 5,699
+refined examples (117 exact copies and 69 near duplicates removed), split as 582 pilot, 4,184
+train and 747 development, which is `window-report-wikimedia-v3.json` exactly, and verify passes.
+The manifest and splits were added to `corpus-v3/wikimedia` beside the files already there, byte
+for byte.
+
+`scripts/dataset_funnel.py` reads each frozen manifest and writes what every filtering rule
+removed, in pipeline order and in each row's unit (changes, comments, hunks or examples), over the
+months the build read, with each manifest's digest (`dataset-funnel.json`); the new docs page `dataset.md` states the
+rules and shows that table, regenerated from the artifact and held to it by a test. Wikimedia's
+build counted no comment from an account tagged as a bot (its bots post change-level messages),
+and OpenStack's months were collected before ingestion kept the tag (2026-09-23), so the rule
+could not run there and its row reads not counted; the template rule, which found no bot comment
+in OpenStack's examples, carries the bot filter; Qt's bots comment inline under ordinary
+accounts, and there it is what removes them. Qt joins the funnel once its fetch under the
+2026-10-15 grant is built.

@@ -13,6 +13,7 @@ copyright = "AJ Barea"
 nav = [
   { "Home" = "index.md" },
   { "Protocol" = "protocol.md" },
+  { "Dataset" = "dataset.md" },
   { "Registered decisions" = "registered-decisions.md" },
   { "Outcome-neutral tests" = "outcome-neutral.md" },
   { "Artifact index" = "artifacts.md" },
