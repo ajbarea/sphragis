@@ -632,10 +632,26 @@ def reference_logprob(
     prompt_builder: Callable[[Mapping[str, Any]], str],
     device: str,
 ) -> tuple[float, int]:
-    """The summed natural-log probability of the row's reference, and its token count.
+    """The summed natural-log probability of the row's reference, and its token count."""
+    total, per_token = reference_token_logprobs(
+        model, tokenizer, row, prompt_builder=prompt_builder, device=device
+    )
+    return total, len(per_token)
+
+
+def reference_token_logprobs(
+    model: Any,
+    tokenizer: Any,
+    row: Mapping[str, Any],
+    *,
+    prompt_builder: Callable[[Mapping[str, Any]], str],
+    device: str,
+) -> tuple[float, list[float]]:
+    """The summed natural-log probability of the row's reference, and each target token's.
 
     The logits at position t predict token t + 1, so the target's T tokens, starting at
     `start`, are predicted from positions start - 1 to start + T - 2; only those are kept.
+    The sum is taken on the device in fp32, as every stored score was.
     """
     item = build_supervised(
         tokenizer, row, prompt_builder=prompt_builder, max_length=SCORING_MAX_LENGTH
@@ -648,7 +664,7 @@ def reference_logprob(
     picked = logprobs.gather(1, torch.tensor(target, device=logits.device).unsqueeze(1))
     if ids.shape[1] - start != len(target):
         raise ValueError("the target is not the end of the item")
-    return float(picked.sum()), len(target)
+    return float(picked.sum()), picked.squeeze(1).tolist()
 
 
 if __name__ == "__main__":
