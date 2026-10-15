@@ -9020,6 +9020,7 @@ which is its purpose; the development window never stands for the test window. I
 the second sentence of item 6 of the H2 plan above: a cell whose detectable effect is δ or more now reads bounded when
 its interval excludes δ, which an equivalence test permits whatever its power. The Stage 1 design
 history states the change and its timing (papers PR #88, `org-house-style/sections/30-rq.tex`).
+
 ### Google's git hosts need their maintainers' written permission, as Qt's REST API does (2026-10-14)
 
 `# research(2026-10)`. The 2026-10-08 entry admitted android.googlesource.com on its own robots.txt,
