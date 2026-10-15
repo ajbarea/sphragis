@@ -37,7 +37,7 @@ def _corpus(tmp_path: Path, *, test: int = 0) -> Path:
             "rules": "r",
             "build_rules": "b",
             "built_drops": {"author_comment": 9, "comment_error": 1, "diff_error": 2},
-            "refine_counts": {"suggested_edit": 3, "applied_fix": 0},
+            "refine_counts": {"suggested_edit": 3, "applied_fix": 0, "successor_kind_unknown": 2},
             "deduped": {"exact": 1},
         },
     }
@@ -68,6 +68,7 @@ def test_a_counter_the_build_did_not_record_reads_as_not_counted() -> None:
                 "steps": [{"step": "S", "rows": [{"reason": "r", "unit": "u", "count": None}]}],
                 "windows": {"pilot": 0, "train": 0, "dev": 0},
                 "examples": 0,
+                "kept_unchecked": {"label": "k", "count": 0},
             }
         }
     }
@@ -80,6 +81,7 @@ def test_organizations_whose_rows_differ_are_refused() -> None:
         "steps": [{"step": "S", "rows": [{"reason": reason, "unit": "u", "count": 1}]}],
         "windows": {"pilot": 0, "train": 0, "dev": 0},
         "examples": 0,
+        "kept_unchecked": {"label": "k", "count": 0},
     }
     with pytest.raises(ValueError, match="do not share one layout"):
         funnel.table({"organizations": {"a": org("x"), "b": org("y")}})
@@ -93,3 +95,17 @@ def test_a_manifest_counting_the_test_window_is_refused(tmp_path) -> None:
 def test_a_page_without_one_pair_of_markers_is_refused() -> None:
     with pytest.raises(ValueError, match="exactly one pair"):
         funnel.with_table("no markers", {"organizations": {}})
+
+
+def test_a_partial_set_of_a_rows_counters_is_refused(tmp_path) -> None:
+    root = _corpus(tmp_path)
+    manifest = json.loads((root / "acme" / "manifest.json").read_text())
+    manifest["stats"]["built_drops"]["ill_posed_empty_before"] = 4
+    (root / "acme" / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="a partial sum is no count"):
+        funnel.funnel(root, "acme")
+
+
+def test_examples_kept_without_the_rebase_check_are_counted_apart(tmp_path) -> None:
+    read = funnel.funnel(_corpus(tmp_path), "acme")
+    assert read["kept_unchecked"]["count"] == 2

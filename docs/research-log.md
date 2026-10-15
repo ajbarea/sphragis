@@ -9147,7 +9147,8 @@ removed, in pipeline order and in each row's unit (changes, comments, hunks or e
 months the build read, with each manifest's digest (`dataset-funnel.json`); the new docs page `dataset.md` states the
 rules and shows that table, regenerated from the artifact and held to it by a test. Wikimedia's
 build counted no comment from an account tagged as a bot (its bots post change-level messages),
-and OpenStack's months were built before that counter existed, so its row reads not counted; the
-template rule carries the bot filter; Qt's bots comment inline under ordinary
+and OpenStack's months were collected before ingestion kept the tag (2026-09-23), so the rule
+could not run there and its row reads not counted; the template rule, which found no bot comment
+in OpenStack's examples, carries the bot filter; Qt's bots comment inline under ordinary
 accounts, and there it is what removes them. Qt joins the funnel once its fetch under the
 2026-10-15 grant is built.

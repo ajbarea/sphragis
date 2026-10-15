@@ -20,18 +20,26 @@ set changed nothing around its line.
 **Hunks.** A hunk is dropped when there is nothing on one side of the edit, or when it grew or
 shrank past the size rules, since neither is a refinement a model can be asked to make.
 
-**Bots.** Most bots on these hosts post change-level messages, which are not inline comments,
-and few accounts are tagged as bots. Some bots comment inline under an ordinary account, so a
-comment is also removed when its text matches a template read from the bot's own source (on Qt,
-its Sanity Bot, flake8 output and its security-review integration).
+**Bots.** A comment from an account the host tags as a bot is dropped when the comment is read.
+OpenStack's months were collected before that tag was kept at ingestion, so there the rule could
+not run; Wikimedia's build found no inline comment from a tagged account, since its bots post
+change-level messages. Some bots comment inline under an ordinary account, so a comment is also
+removed when its text matches a template read from the bot's own source (on Qt, its Sanity Bot,
+flake8 output and its security-review integration); applied to OpenStack's examples, it found
+none.
 
-**Examples.** An example is dropped when its target was written by the reviewer (Gerrit's
-suggested edit or its `Fix applied` reply, already in the prompt), or when only acknowledgements
-or a bot's template text are left once those comments are removed.
+**Examples.** An example is dropped when its next patch set only rebased the change rather than
+reworking it, or when its target was written by the reviewer (Gerrit's suggested edit or its
+`Fix applied` reply, already in the prompt), or when only acknowledgements or a bot's template
+text are left once those comments are removed. An example whose next patch set's kind was never
+recorded is kept without the rebase check and counted.
 
 **Duplicates.** Exact copies, MinHash near duplicates of the normalized before and after text, and
 shared boilerplate are removed across the whole organization, so the same pair is never in two
-windows.
+windows, and a change found under two numbers keeps one.
+
+**Fetch errors.** A change whose comments the host would not return, or a comment whose diff it
+would not return, is dropped and counted rather than stopping the build.
 
 **Windows.** Examples are split by when the change was created: pilot (2024-10), train (2024-11
 to 2025-08) and development (2025-09 to 2025-10). The test window (2025-11 to 2026-10) is defined
@@ -54,22 +62,23 @@ counted. Qt joins the table once its fetch under its 2026-10-15 grant is built.
 | on the commit message or the patch set as a whole | comments | 42,811 | 46,445 |
 | written by the change's author | comments | 18,362 | 23,990 |
 | from an account the host tags as a bot | comments | not counted | 0 |
-| an acknowledgement (Done, LGTM, Acknowledged) | comments | 2,047 | 3,357 |
+| an acknowledgement (Done, LGTM, thanks, ok and the like) | comments | 2,047 | 3,357 |
 | anchored to no line | comments | 86 | 250 |
 | on the last patch set, with no revision after it | comments | 2,695 | 1,856 |
-| outside any hunk the next patch set changed | comments | 9,086 | 13,244 |
 | its diff could not be fetched | comments | 13 | 0 |
+| outside any hunk the next patch set changed | comments | 9,086 | 13,244 |
 | **Hunks dropped as ill-posed** | | | |
 | nothing before or after the edit | hunks | 1,850 | 2,429 |
 | grown or shrunk past the size rules | hunks | 332 | 352 |
+| **Examples dropped at refinement** | | | |
+| next patch set only a rebase, not a rework | examples | 0 | 0 |
+| target written by the reviewer (suggested edit, applied fix) | examples | 465 | 1,473 |
 | **Comments removed at refinement** | | | |
 | a bot's template, matched to the bot's own source | comments | 0 | 1 |
 | an acknowledgement | comments | 127 | 0 |
-| **Examples dropped at refinement** | | | |
-| target written by the reviewer (suggested edit, applied fix) | examples | 465 | 1,473 |
-| nothing left but acknowledgements | examples | 13 | 0 |
-| nothing left but a bot's templates | examples | 0 | 0 |
-| revision not a rework of the change | examples | 0 | 0 |
+| **Examples left with no comment** | | | |
+| only acknowledgements were left | examples | 13 | 0 |
+| only a bot's templates were left | examples | 0 | 0 |
 | **Examples removed as duplicates** | | | |
 | exact copies | examples | 249 | 117 |
 | near duplicates (MinHash) | examples | 179 | 69 |
@@ -78,6 +87,7 @@ counted. Qt joins the table once its fetch under its 2026-10-15 grant is built.
 | **Examples kept, pilot window** | examples | 532 | 582 |
 | **Examples kept, train window** | examples | 4,006 | 4,184 |
 | **Examples kept, dev window** | examples | 515 | 747 |
+| Examples kept without the rebase check | examples | 0 | 0 |
 | **Examples kept in all** | examples | 5,053 | 5,513 |
 <!-- funnel:end -->
 

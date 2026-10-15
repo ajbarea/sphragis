@@ -16,6 +16,7 @@ test suite fails if the page and the artifact differ.
 
     uv run --no-sync --no-active python scripts/dataset_funnel.py \\
         --root R/corpus-v3 --org openstack --org wikimedia \\
+        --source 'tigris:$SPHRAGIS_DATA/corpus-v3' \\
         --out datasets/results/dataset-funnel.json --docs docs/dataset.md
 """
 
@@ -26,7 +27,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from sphragis.corpus.storage import iter_snapshot
+from sphragis.corpus.storage import read_snapshot_record, refused_snapshot, snapshot_path
 from sphragis.corpus.windows import WINDOWS
 from sphragis.provenance import provenance_header
 
@@ -45,27 +46,35 @@ parser.add_argument(
 #: The windows counted; the test window is sealed.
 COUNTED = ("pilot", "train", "dev")
 
-#: Each step's rows: (label, unit, the counters it sums), each counter read from `SOURCE[step]`.
-STEPS: tuple[tuple[str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
+#: Each step, the stats section its counters are kept in, and its rows: (label, unit, counters).
+#: In the order the code applies them: `build_from_change`, then `refine`, then dedup.
+STEPS: tuple[tuple[str, str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
     (
         "Changes lost before any comment was read",
+        "built_drops",
         (("their comments could not be fetched", "changes", ("comment_error",)),),
     ),
     (
         "Comments dropped",
+        "built_drops",
         (
             ("on the commit message or the patch set as a whole", "comments", ("metadata_file",)),
             ("written by the change's author", "comments", ("author_comment",)),
             ("from an account the host tags as a bot", "comments", ("service_user",)),
-            ("an acknowledgement (Done, LGTM, Acknowledged)", "comments", ("acknowledgement",)),
+            (
+                "an acknowledgement (Done, LGTM, thanks, ok and the like)",
+                "comments",
+                ("acknowledgement",),
+            ),
             ("anchored to no line", "comments", ("no_line_anchor",)),
             ("on the last patch set, with no revision after it", "comments", ("no_successor",)),
-            ("outside any hunk the next patch set changed", "comments", ("no_anchored_hunk",)),
             ("its diff could not be fetched", "comments", ("diff_error",)),
+            ("outside any hunk the next patch set changed", "comments", ("no_anchored_hunk",)),
         ),
     ),
     (
         "Hunks dropped as ill-posed",
+        "built_drops",
         (
             (
                 "nothing before or after the edit",
@@ -80,7 +89,20 @@ STEPS: tuple[tuple[str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
         ),
     ),
     (
+        "Examples dropped at refinement",
+        "refine_counts",
+        (
+            ("next patch set only a rebase, not a rework", "examples", ("not_rework_successor",)),
+            (
+                "target written by the reviewer (suggested edit, applied fix)",
+                "examples",
+                ("suggested_edit", "applied_fix"),
+            ),
+        ),
+    ),
+    (
         "Comments removed at refinement",
+        "refine_counts",
         (
             (
                 "a bot's template, matched to the bot's own source",
@@ -91,20 +113,16 @@ STEPS: tuple[tuple[str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
         ),
     ),
     (
-        "Examples dropped at refinement",
+        "Examples left with no comment",
+        "refine_counts",
         (
-            (
-                "target written by the reviewer (suggested edit, applied fix)",
-                "examples",
-                ("suggested_edit", "applied_fix"),
-            ),
-            ("nothing left but acknowledgements", "examples", ("acknowledgement_only",)),
-            ("nothing left but a bot's templates", "examples", ("automated_only",)),
-            ("revision not a rework of the change", "examples", ("not_rework_successor",)),
+            ("only acknowledgements were left", "examples", ("acknowledgement_only",)),
+            ("only a bot's templates were left", "examples", ("automated_only",)),
         ),
     ),
     (
         "Examples removed as duplicates",
+        "deduped",
         (
             ("exact copies", "examples", ("exact",)),
             ("near duplicates (MinHash)", "examples", ("near_duplicate",)),
@@ -114,21 +132,20 @@ STEPS: tuple[tuple[str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
     ),
 )
 
-#: Where in the manifest's stats each step's counters are kept.
-SOURCE = {
-    "Changes lost before any comment was read": "built_drops",
-    "Comments dropped": "built_drops",
-    "Hunks dropped as ill-posed": "built_drops",
-    "Comments removed at refinement": "refine_counts",
-    "Examples dropped at refinement": "refine_counts",
-    "Examples removed as duplicates": "deduped",
-}
+#: Kept, not dropped: examples whose next patch set's kind was never recorded, so the rebase
+#: check could not run on them.
+KEPT_UNCHECKED = (
+    "Examples kept without the rebase check",
+    "refine_counts",
+    "successor_kind_unknown",
+)
 
 
 def merged_changes(root: Path, org: str) -> tuple[int, list[str]]:
     """Merged changes in the months the build read (those with a drops record), and the months.
 
-    Read through `iter_snapshot`, which refuses a snapshot whose write did not finish.
+    Each count is the row count the snapshot's record holds, read once `refused_snapshot` has
+    passed the snapshot as a finished write.
     """
     months = sorted(
         p.name.removesuffix(".drops.json") for p in (root / org / "examples").glob("*.drops.json")
@@ -137,14 +154,23 @@ def merged_changes(root: Path, org: str) -> tuple[int, list[str]]:
         raise ValueError(f"{org} has no built month under {root}")
     total = 0
     for month in months:
-        total += sum(1 for _ in iter_snapshot(root / org / "raw" / f"{month}.ndjson.gz"))
+        path = snapshot_path(root, org, month)
+        refused = refused_snapshot(path)
+        record = read_snapshot_record(path)
+        if refused is not None or record is None or "rows" not in record:
+            raise ValueError(f"{path}: {refused or 'its record holds no row count'}")
+        total += int(record["rows"])
     return total, months
 
 
-def _count(stats: dict, step: str, keys: tuple[str, ...]) -> int | None:
-    """The summed counters, or None when the build recorded none of them."""
-    found = [stats[SOURCE[step]][k] for k in keys if k in stats[SOURCE[step]]]
-    return sum(found) if found else None
+def _count(stats: dict, section: str, keys: tuple[str, ...]) -> int | None:
+    """The summed counters; None when the build recorded none of them, refused when only some."""
+    if section not in stats:
+        raise ValueError(f"the manifest's stats hold no {section}")
+    found = [k for k in keys if k in stats[section]]
+    if found and len(found) != len(keys):
+        raise ValueError(f"{section} records {found} of {list(keys)}: a partial sum is no count")
+    return sum(stats[section][k] for k in keys) if found else None
 
 
 def funnel(root: Path, org: str) -> dict:
@@ -154,9 +180,9 @@ def funnel(root: Path, org: str) -> dict:
     if manifest["counts"].get("test"):
         raise ValueError(f"{org}'s manifest counts test-window examples; the seal is broken")
     changes, months = merged_changes(root, org)
+    label, section, key = KEPT_UNCHECKED
     return {
         "manifest_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        "build_rules": stats["build_rules"],
         "rules": stats["rules"],
         "months": months,
         "merged_changes": changes,
@@ -164,12 +190,13 @@ def funnel(root: Path, org: str) -> dict:
             {
                 "step": step,
                 "rows": [
-                    {"reason": label, "unit": unit, "count": _count(stats, step, keys)}
-                    for label, unit, keys in rows
+                    {"reason": reason, "unit": unit, "count": _count(stats, section, keys)}
+                    for reason, unit, keys in rows
                 ],
             }
-            for step, rows in STEPS
+            for step, section, rows in STEPS
         ],
+        "kept_unchecked": {"label": label, "count": _count(stats, section, (key,))},
         "windows": {window: manifest["counts"][window] for window in COUNTED},
         "examples": sum(manifest["counts"][window] for window in COUNTED),
     }
@@ -212,6 +239,11 @@ def table(artifact: dict) -> str:
             + " |"
         )
     lines.append(
+        f"| {by[orgs[0]]['kept_unchecked']['label']} | examples | "
+        + " | ".join(cell(by[o]["kept_unchecked"]["count"]) for o in orgs)
+        + " |"
+    )
+    lines.append(
         "| **Examples kept in all** | examples | "
         + " | ".join(cell(by[o]["examples"]) for o in orgs)
         + " |"
@@ -221,7 +253,7 @@ def table(artifact: dict) -> str:
 
 def with_table(page: str, artifact: dict) -> str:
     """The page with the text between the funnel markers replaced by the artifact's table."""
-    if page.count(BEGIN) != 1 or page.count(END) != 1:
+    if page.count(BEGIN) != 1 or page.count(END) != 1 or page.index(BEGIN) > page.index(END):
         raise ValueError("the page needs exactly one pair of funnel markers")
     head, rest = page.split(BEGIN)
     _, tail = rest.split(END)
