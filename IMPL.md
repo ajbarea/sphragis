@@ -30,9 +30,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; a fixed source other than Chromium refuses every read
-   once Chromium is admitted, so admitting Chromium then resets it; (c) the matched foreign sampler (each run's sibling C++
-   count by `CPP_SUFFIXES`, filled to N) and the two foreign adapters per run in the partition
-   jobs; the H2 development read needs H2 bounds in `detectable_effects`, which only the H2
+   once Chromium is admitted, so admitting Chromium then resets it; (c) the matched foreign sampler is `holdout.matched_foreign_draw`
+   (2026-10-14); the two foreign adapters per run in the partition jobs wait on a granted source; the H2 development read needs H2 bounds in `detectable_effects`, which only the H2
    simulation supplies; (d) once Qt's terms arrive, its fetch, freeze, split check,
    development pilot for K and both cells' simulation, then the H2 test read over partitions
    through `require_test_read`.
