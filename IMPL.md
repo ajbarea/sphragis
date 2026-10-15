@@ -39,9 +39,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
-   GitHub Pro (Student Pack) for required checks on papers `main`; sending the Fuchsia request
-   and the Chromium/AOSP follow-up (drafts in the rit account), and an IRB0000393 amendment naming
-   the source that grants.
+   GitHub Pro (Student Pack) for required checks on papers `main`; sending the Fuchsia request,
+   the Chromium follow-up and the AOSP request (drafts in the rit account), and an IRB0000393
+   amendment naming the source that grants.
 
 ## Standing
 

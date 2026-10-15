@@ -725,7 +725,8 @@ as the unit; the evidence says the codebase is.
 - [x] **Bounded is a one-sided equivalence test at the SESOI** (2026-10-14, research log): the
   margin is δ, not each cell's detectable effect; the simulation stays required as power.
 - [ ] Foreign-source hosts need written permission (2026-10-14): Fuchsia request and a narrowed
-  Chromium/AOSP follow-up drafted for AJ to send; the source is the first to grant. AJ: whether
+  Chromium follow-up and an AOSP request drafted for AJ to send; the source is the first of
+  Chromium, Fuchsia, AOSP that grants, in that order. AJ: whether
   IRB0000393 needs an amendment naming it.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research

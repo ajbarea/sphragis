@@ -8382,6 +8382,9 @@ the latter.
 
 ### The hosts' terms re-read: AOSP's git host is permitted, GitHub waits for GitHub's word, and the IRB determination is due now (2026-10-08)
 
+> **Superseded on 2026-10-14.** AOSP's git host, like every googlesource host, now waits for its
+> maintainers' written permission (entry of that date, "Google's git hosts need ...").
+
 `# research(2026-10)`. AJ asked for the open terms questions to be settled from current sources.
 Everything quoted here was read on 2026-10-08, and an independent review checked each quotation
 against its source.
@@ -8959,6 +8962,9 @@ comes last in item 1.
    which matters most for H2: Qt's sibling knows Qt's API and no foreign adapter does. The
    foreign source's reviewer overlap with Qt is reported beside the exposure analysis.
 
+> **Superseded on 2026-10-14.** No googlesource git host is in `GIT_PERMITTED` until its
+> maintainers grant permission in writing (entry of that date).
+
 Open, AJ's: which hosts are admitted for the foreign draw (Fuchsia's and Chromium's git hosts
 before infra-dev answers; AOSP's is in `GIT_PERMITTED`), and whether the pending HSRO protocol
 (IRB0000393) needs an amendment naming the source.
@@ -9017,18 +9023,21 @@ history states the change and its timing (papers PR #88, `org-house-style/sectio
 ### Google's git hosts need their maintainers' written permission, as Qt's REST API does (2026-10-14)
 
 `# research(2026-10)`. The 2026-10-08 entry admitted android.googlesource.com on its own robots.txt,
-which leaves git fetching open (RFC 9309 scopes a robots.txt to the authority that serves it), and
-set aside the reading that the review site's `Disallow: /` expresses the operator's wish about the
-records themselves. That reading is the stronger one: RFC 9309 also says its rules "are not a form
-of access authorization", and web-research ethics treats robots.txt as the operator's preference,
-with consent as the deciding question once a researcher has asked (Gold and Krinke, EMSE 27, 2022,
-on ethics review before mining). The study asked Chromium's and AOSP's maintainers on 2026-09-23
-and has had only an automatic reply. So every googlesource git host is refused until its
+which leaves git fetching open (RFC 9309 ties a robots.txt to the scheme and authority it is
+served from, sections 2.3 and 2.3.1.2), and set aside the reading that the review site's
+`Disallow: /` expresses the operator's wish about the records themselves. That reading is the
+stronger one: RFC 9309 says its rules "are not a form of access authorization" (section 1), so
+compliance with a robots.txt does not settle whether collection is wanted, and Gold and Krinke
+(EMSE 27, 2022, section 4.2.5) extend a mining study's compliance to a platform's terms and
+conditions, citing a platform's demand that researchers stop collecting data it had not
+permitted. The study asked Chromium's infra-dev list on 2026-09-23, mentioning the AOSP data
+already held, and has had only an automatic reply; AOSP's own maintainers were not asked. So every googlesource git host is refused until its
 maintainers grant permission in writing: `GIT_PERMITTED` refuses android, chromium and fuchsia
 (fuchsia added), and every host's pacing floor now applies whether or not it is permitted.
 
 This sets what "admitted for this use" means in item 1 of the H2 plan above: H2's foreign source is
 the first of Chromium, Fuchsia and AOSP whose maintainers grant written permission before the first
-H2 development contrast. Drafts to Fuchsia's discuss list and a narrowed follow-up to Chromium's
-infra-dev list (about 2,000 changes over git, and the AOSP data already held) are with AJ. Data
+H2 development contrast, in that order whatever order they answer in. Drafts to Fuchsia's discuss
+list, to AOSP's android-contrib list, and a narrowed follow-up to Chromium's infra-dev list (about
+2,000 changes over git each) are with AJ. Data
 already held from these hosts stays out of every figure until then and is deleted on refusal.

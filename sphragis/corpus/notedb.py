@@ -76,13 +76,14 @@ class GitPermission(NamedTuple):
 
 
 # Mirrors `cli.REST_PERMITTED`: one entry per git host this route may fetch from, so granting
-# permission later is a one-line change to an entry already here, not a new host to wire up.
+# permission to android or chromium is a one-line change here; fuchsia also needs its entry in
+# `GIT_HOSTS` and its review host before it can be fetched.
 # These git hosts leave fetching open in robots.txt, but each project's review site disallows
 # all crawling, the operator's stated preference about the same review records; so each is
 # refused until its maintainers grant permission in writing (research log, 2026-10-14).
 GIT_PERMITTED = {
     "android.googlesource.com": GitPermission(
-        False, "waits for written permission (requested 2026-09-23; research log 2026-10-14)", 1.0
+        False, "waits for written permission (request drafted; research log 2026-10-14)", 1.0
     ),
     "chromium.googlesource.com": GitPermission(
         False, "waits for written permission (requested 2026-09-23; research log 2026-10-14)", 1.0
