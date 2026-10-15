@@ -31,12 +31,13 @@ case "${KIND:-partition}" in
     SEEDS="${SEEDS:?set SEEDS of the stored run}"
     # A planted run (partition_run.sbatch's PLANT) is named and stored with its fraction.
     PLANT="${PLANT:-}"
+    # PLANT_CONVENTION=quotes names a quote-style plant (-plantquotes<f>; tag_result_suffix).
     PLACEBO_ROOT=""
     NAME="partition-$ORG-p$PARTITION_SEED"
     ;;
   placebo)
     PLACEBO_ROOT="${PLACEBO_ROOT:?set PLACEBO_ROOT to the corpus root the stored run read}"
-    if [ "${SEEDS:-1}" != 1 ] || [ -n "${TRAIN_SIZE:-}${PLANT:-}" ]; then
+    if [ "${SEEDS:-1}" != 1 ] || [ -n "${TRAIN_SIZE:-}${PLANT:-}${PLANT_CONVENTION:-}" ]; then
       echo "KIND=placebo rescores a single-seed run without a size or plant" >&2
       exit 1
     fi

@@ -5,10 +5,14 @@ from __future__ import annotations
 import pytest
 
 from sphragis.experiment.planted import (
+    PLANT_CONVENTIONS,
     flip_quotes,
     halves,
+    is_python,
     plant,
     planted_corpora,
+    to_double,
+    to_single,
     would_change,
 )
 
@@ -179,3 +183,54 @@ def test_the_two_halves_are_still_split_by_change() -> None:
 
     left, right, _ = symmetric_planted_corpora(_rows(40), fraction=0.5, seed=0)
     assert {r["change_id"] for r in left}.isdisjoint({r["change_id"] for r in right})
+
+
+def test_the_quote_styles_are_mirror_images() -> None:
+    assert to_double("x = 'a' + \"b\"") == 'x = "a" + "b"'
+    assert to_single("x = 'a' + \"b\"") == "x = 'a' + 'b'"
+
+
+@pytest.mark.parametrize(
+    "hard",
+    [
+        '    """Doc."""',
+        "    '''Doc.'''",
+        "f'{x}'",
+        'b"raw"',
+        "it's",
+        "x = 'say \"hi\"'",
+        "LOG.error(\"Instance '%s' not found\", x)",
+        "x = f\"{d['k']}\"",
+        "x = ('unterminated",
+    ],
+)
+def test_a_literal_the_quote_styles_half_understand_is_left_alone(hard: str) -> None:
+    assert to_double(hard) == hard
+    assert to_single(hard) == hard
+
+
+def test_the_quote_plant_touches_python_rows_only_and_names_what_it_changed() -> None:
+    rows = [
+        {"id": "a", "path": "m.py", "after": "x = 'v'"},
+        {"id": "b", "path": "m.php", "after": "$x = 'v';"},
+        {"id": "c", "path": "m.py", "after": "x = 1"},
+    ]
+    transforms, applies = PLANT_CONVENTIONS["quotes"]
+    out, report = plant(
+        rows, fraction=1.0, seed=0, transform=transforms[1], applies=applies, record_ids=True
+    )
+    assert [r["after"] for r in out] == ['x = "v"', "$x = 'v';", "x = 1"]
+    assert (report["eligible"], report["changed"], report["changed_ids"]) == (1.0, 1.0, ["a"])
+    assert is_python({"path": "a/b.py"})
+    assert not is_python({"path": None})
+
+
+def test_a_plant_names_its_changed_ids_only_when_asked() -> None:
+    _, report = plant([{"id": "a", "after": "x = 'v'"}], fraction=1.0, seed=0)
+    assert "changed_ids" not in report
+
+
+@pytest.mark.parametrize("separator", ["\x0c", " "])
+def test_a_line_separator_the_tokenizer_does_not_split_on_leaves_offsets_true(separator) -> None:
+    text = f"x = 1  # a{separator}b\ny = 'v'\n"
+    assert to_double(text) == f'x = 1  # a{separator}b\ny = "v"\n'

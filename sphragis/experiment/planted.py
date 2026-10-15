@@ -21,8 +21,10 @@ behaviour.
 
 from __future__ import annotations
 
+import io
 import random
 import re
+import tokenize
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
@@ -40,6 +42,67 @@ SINGLE_QUOTED = re.compile(r"(?<![\\\w])'([^'\"\\\n]*)'")
 def flip_quotes(text: str) -> str:
     """Single-quoted Python string literals become double-quoted. Semantics unchanged."""
     return SINGLE_QUOTED.sub(r'"\1"', text)
+
+
+# The two halves of the symmetric quote-style plant (`PLANT_CONVENTIONS`). Literals are found by
+# Python's own tokenizer, not a pattern: a pattern rewrites the quotes of a pair nested inside a
+# literal of the other kind (`"Instance '%s'"`), and inside an f-string's braces it nests same-kind
+# quotes, which is a syntax error before 3.12. Only a plain single-line literal whose text holds no
+# quote or backslash is restyled; prefixed literals and anything inside an f- or t-string are left
+# alone, and a fragment that does not tokenize is not restyled at all. `flip_quotes` keeps its
+# pattern for the stored calibration.
+_OPEN = {getattr(tokenize, n) for n in ("FSTRING_START", "TSTRING_START") if hasattr(tokenize, n)}
+_CLOSE = {getattr(tokenize, n) for n in ("FSTRING_END", "TSTRING_END") if hasattr(tokenize, n)}
+
+
+def _restyle(text: str, quote: str) -> str:
+    """Every plain literal quoted the other way rewritten with `quote`, or the text unchanged."""
+    other = "'" if quote == '"' else '"'
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (tokenize.TokenError, SyntaxError):
+        return text
+    # The tokenizer's rows are the lines readline gives, split on newlines alone; splitlines also
+    # splits on form feeds and line separators, which would shift every later edit.
+    offsets = [0]
+    for line in io.StringIO(text).readlines():
+        offsets.append(offsets[-1] + len(line))
+    edits, depth = [], 0
+    for token in tokens:
+        if token.type in _OPEN:
+            depth += 1
+        elif token.type in _CLOSE:
+            depth -= 1
+        elif token.type == tokenize.STRING and depth == 0:
+            literal = token.string
+            inner = literal[1:-1]
+            if (
+                len(literal) >= 2
+                and literal[0] == other == literal[-1]
+                and not any(c in inner for c in "'\"\\\n")
+            ):
+                (row, col), (end_row, end_col) = token.start, token.end
+                edits.append(
+                    (offsets[row - 1] + col, offsets[end_row - 1] + end_col, quote + inner + quote)
+                )
+    for start, end, new in reversed(edits):
+        text = text[:start] + new + text[end:]
+    return text
+
+
+def to_double(text: str) -> str:
+    """Single-quoted plain literals become double-quoted: one half's quote style."""
+    return _restyle(text, '"')
+
+
+def to_single(text: str) -> str:
+    """Double-quoted plain literals become single-quoted: the other half's quote style."""
+    return _restyle(text, "'")
+
+
+def is_python(row: Mapping[str, Any]) -> bool:
+    """Quote style is a convention in Python; in PHP or shell the two quotes differ in meaning."""
+    return str(row.get("path") or "").endswith(".py")
 
 
 MARKER = "  # reviewed"
@@ -103,27 +166,33 @@ def plant(
     seed: int,
     field: str = "after",
     transform: Callable[[str], str] = flip_quotes,
-) -> tuple[list[dict[str, Any]], dict[str, float]]:
+    applies: Callable[[Mapping[str, Any]], bool] | None = None,
+    record_ids: bool = False,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Impose the convention on a fraction of rows, and report what was actually imposed.
 
     The realised rate is not the nominal one and must never be reported as if it were. The
     transform is a no-op on a refinement containing no single-quoted literal, so asking for
     half and getting a fifth is the normal case. Every number this calibration produces is
-    indexed by the realised rate.
+    indexed by the realised rate. A row `applies` refuses is never eligible. With `record_ids`, the
+    ids of the rows changed are reported, so a reader can take the planted examples apart.
     """
     if not 0.0 <= fraction <= 1.0:
         raise ValueError(f"fraction must lie in [0, 1], got {fraction}")
     rng = random.Random(seed)
     out: list[dict[str, Any]] = []
     eligible = changed = 0
+    changed_ids: list[str] = []
     for row in rows:
         copy = dict(row)
         text = str(copy.get(field, ""))
-        if would_change(text, transform):
+        new = transform(text) if applies is None or applies(row) else text
+        if new != text:
             eligible += 1
             if rng.random() < fraction:
-                copy[field] = transform(text)
+                copy[field] = new
                 changed += 1
+                changed_ids.append(str(row.get("id")))
         out.append(copy)
     total = len(out)
     return out, {
@@ -133,6 +202,7 @@ def plant(
         "changed": float(changed),
         "realised_fraction": changed / total if total else 0.0,
         "realised_of_eligible": changed / eligible if eligible else 0.0,
+        **({"changed_ids": changed_ids} if record_ids else {}),
     }
 
 
@@ -183,3 +253,18 @@ def symmetric_planted_corpora(
         right, fraction=fraction, seed=seed + 1, field=field, transform=transform_b
     )
     return planted_left, planted_right, {"a": report_a, "b": report_b}
+
+
+#: Each convention the symmetric plant can impose: the two halves' transforms, in side order,
+#: and which rows it may touch. `marker` is check 5's; `quotes` is a code-level convention, the
+#: realistic signal the exchange rate between exact match and s is read on (review panel item 15).
+PLANT_CONVENTIONS: dict[
+    str,
+    tuple[
+        tuple[Callable[[str], str], Callable[[str], str]],
+        Callable[[Mapping[str, Any]], bool] | None,
+    ],
+] = {
+    "marker": ((append_marker_other, append_marker), None),
+    "quotes": ((to_single, to_double), is_python),
+}

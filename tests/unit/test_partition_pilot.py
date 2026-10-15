@@ -910,8 +910,9 @@ def test_a_rescoring_borrows_no_battery_from_another_run_under_its_name(
         _main(monkeypatch, argv)
 
 
+@pytest.mark.parametrize("tag", ["plant0.5", "plantquotes1.0"])
 def test_a_planted_run_is_not_read_as_one_of_h1s_runs(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tag: str
 ) -> None:
     argv = [*_inputs(tmp_path, "openstack"), "--out", str(tmp_path / "pilot.json")]
     _rewrite_run(
@@ -923,7 +924,7 @@ def test_a_planted_run_is_not_read_as_one_of_h1s_runs(
                 "corpora": {
                     h: {
                         "source": c["source"].replace(
-                            f"-p{ADMISSIBLE[1]}/", f"-p{ADMISSIBLE[1]}-plant0.5/"
+                            f"-p{ADMISSIBLE[1]}/", f"-p{ADMISSIBLE[1]}-{tag}/"
                         )
                     }
                     for h, c in run["corpora"].items()
