@@ -1,19 +1,23 @@
 {
   "provenance": {
-    "generated_at": "2026-10-15T13:33:39.514126+00:00",
+    "generated_at": "2026-10-15T15:32:57.740397+00:00",
     "git": {
-      "commit": "54bb46158bb8537a80d3f692d704273ecab98076",
+      "commit": "8b2cfb8c97ef7acd26447acb4468b9a87cf4970c",
       "branch": "docs/dataset-funnel",
       "uncommitted_code": [
         "scripts/dataset_funnel.py"
       ],
-      "uncommitted_code_sha256": "94ac46e60f8ed8f48963362b6f34040d51933310a1ca0f32cb76ce802dfd6733"
+      "uncommitted_code_sha256": "2ef16f3476df8b25ddef46f11717782998ad45a8b6c13c71652e1fee5f9a9018"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0"
+    }
   },
-  "root": "/tmp/claude-1001/-home-ajbar-ajsoftworks/a2bc2a73-2e9d-4328-b6f5-0a3fb0fa5d59/scratchpad/v3",
+  "source": "tigris:$SPHRAGIS_DATA/corpus-v3",
   "windows": {
     "pilot": [
       "2024-10-01",
@@ -30,43 +34,78 @@
   },
   "organizations": {
     "openstack": {
+      "manifest_sha256": "ba47062c5a2003de7bcf165acda9f0cdb6530df69079a842c485f6ce80caeb20",
+      "build_rules": "3d29d529390c1eea",
       "rules": "c2ddb5b5f6e99182",
+      "months": [
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
       "merged_changes": 25191,
       "steps": [
         {
-          "step": "Inline comments dropped",
+          "step": "Changes lost before any comment was read",
           "rows": [
             {
-              "reason": "on a file that is not code",
+              "reason": "their comments could not be fetched",
+              "unit": "changes",
+              "count": 8
+            }
+          ]
+        },
+        {
+          "step": "Comments dropped",
+          "rows": [
+            {
+              "reason": "on the commit message or the patch set as a whole",
+              "unit": "comments",
               "count": 42811
             },
             {
               "reason": "written by the change's author",
+              "unit": "comments",
               "count": 18362
             },
             {
               "reason": "from an account the host tags as a bot",
-              "count": 0
+              "unit": "comments",
+              "count": null
             },
             {
               "reason": "an acknowledgement (Done, LGTM, Acknowledged)",
+              "unit": "comments",
               "count": 2047
             },
             {
               "reason": "anchored to no line",
+              "unit": "comments",
               "count": 86
             },
             {
               "reason": "on the last patch set, with no revision after it",
+              "unit": "comments",
               "count": 2695
             },
             {
               "reason": "outside any hunk the next patch set changed",
+              "unit": "comments",
               "count": 9086
             },
             {
-              "reason": "lost to a fetch error",
-              "count": 21
+              "reason": "its diff could not be fetched",
+              "unit": "comments",
+              "count": 13
             }
           ]
         },
@@ -75,10 +114,12 @@
           "rows": [
             {
               "reason": "nothing before or after the edit",
+              "unit": "hunks",
               "count": 1850
             },
             {
               "reason": "grown or shrunk past the size rules",
+              "unit": "hunks",
               "count": 332
             }
           ]
@@ -88,10 +129,12 @@
           "rows": [
             {
               "reason": "a bot's template, matched to the bot's own source",
+              "unit": "comments",
               "count": 0
             },
             {
-              "reason": "an acknowledgement inside a kept example",
+              "reason": "an acknowledgement",
+              "unit": "comments",
               "count": 127
             }
           ]
@@ -101,26 +144,22 @@
           "rows": [
             {
               "reason": "target written by the reviewer (suggested edit, applied fix)",
+              "unit": "examples",
               "count": 465
             },
             {
-              "reason": "only acknowledgements left",
+              "reason": "nothing left but acknowledgements",
+              "unit": "examples",
               "count": 13
             },
             {
-              "reason": "only a bot's template left",
+              "reason": "nothing left but a bot's templates",
+              "unit": "examples",
               "count": 0
             },
             {
               "reason": "revision not a rework of the change",
-              "count": 0
-            },
-            {
-              "reason": "revision of unknown kind",
-              "count": 0
-            },
-            {
-              "reason": "an address left in the text",
+              "unit": "examples",
               "count": 0
             }
           ]
@@ -130,18 +169,22 @@
           "rows": [
             {
               "reason": "exact copies",
+              "unit": "examples",
               "count": 249
             },
             {
               "reason": "near duplicates (MinHash)",
+              "unit": "examples",
               "count": 179
             },
             {
               "reason": "shared boilerplate",
+              "unit": "examples",
               "count": 0
             },
             {
               "reason": "one change in two places",
+              "unit": "examples",
               "count": 0
             }
           ]
@@ -155,42 +198,77 @@
       "examples": 5053
     },
     "wikimedia": {
+      "manifest_sha256": "335596f16536f7d5c75ca0a6d607f1632169f6440cf79fdb04ca02f73344266a",
+      "build_rules": "3d29d529390c1eea",
       "rules": "c2ddb5b5f6e99182",
+      "months": [
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
       "merged_changes": 114857,
       "steps": [
         {
-          "step": "Inline comments dropped",
+          "step": "Changes lost before any comment was read",
           "rows": [
             {
-              "reason": "on a file that is not code",
+              "reason": "their comments could not be fetched",
+              "unit": "changes",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Comments dropped",
+          "rows": [
+            {
+              "reason": "on the commit message or the patch set as a whole",
+              "unit": "comments",
               "count": 46445
             },
             {
               "reason": "written by the change's author",
+              "unit": "comments",
               "count": 23990
             },
             {
               "reason": "from an account the host tags as a bot",
+              "unit": "comments",
               "count": 0
             },
             {
               "reason": "an acknowledgement (Done, LGTM, Acknowledged)",
+              "unit": "comments",
               "count": 3357
             },
             {
               "reason": "anchored to no line",
+              "unit": "comments",
               "count": 250
             },
             {
               "reason": "on the last patch set, with no revision after it",
+              "unit": "comments",
               "count": 1856
             },
             {
               "reason": "outside any hunk the next patch set changed",
+              "unit": "comments",
               "count": 13244
             },
             {
-              "reason": "lost to a fetch error",
+              "reason": "its diff could not be fetched",
+              "unit": "comments",
               "count": 0
             }
           ]
@@ -200,10 +278,12 @@
           "rows": [
             {
               "reason": "nothing before or after the edit",
+              "unit": "hunks",
               "count": 2429
             },
             {
               "reason": "grown or shrunk past the size rules",
+              "unit": "hunks",
               "count": 352
             }
           ]
@@ -213,10 +293,12 @@
           "rows": [
             {
               "reason": "a bot's template, matched to the bot's own source",
+              "unit": "comments",
               "count": 1
             },
             {
-              "reason": "an acknowledgement inside a kept example",
+              "reason": "an acknowledgement",
+              "unit": "comments",
               "count": 0
             }
           ]
@@ -226,26 +308,22 @@
           "rows": [
             {
               "reason": "target written by the reviewer (suggested edit, applied fix)",
+              "unit": "examples",
               "count": 1473
             },
             {
-              "reason": "only acknowledgements left",
+              "reason": "nothing left but acknowledgements",
+              "unit": "examples",
               "count": 0
             },
             {
-              "reason": "only a bot's template left",
+              "reason": "nothing left but a bot's templates",
+              "unit": "examples",
               "count": 0
             },
             {
               "reason": "revision not a rework of the change",
-              "count": 0
-            },
-            {
-              "reason": "revision of unknown kind",
-              "count": 0
-            },
-            {
-              "reason": "an address left in the text",
+              "unit": "examples",
               "count": 0
             }
           ]
@@ -255,18 +333,22 @@
           "rows": [
             {
               "reason": "exact copies",
+              "unit": "examples",
               "count": 117
             },
             {
               "reason": "near duplicates (MinHash)",
+              "unit": "examples",
               "count": 69
             },
             {
               "reason": "shared boilerplate",
+              "unit": "examples",
               "count": 0
             },
             {
               "reason": "one change in two places",
+              "unit": "examples",
               "count": 0
             }
           ]

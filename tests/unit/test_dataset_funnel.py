@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import gzip
 import importlib.util
 import json
 from pathlib import Path
 
 import pytest
+
+from sphragis.corpus.storage import write_snapshot
 
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location("funnel", ROOT / "scripts" / "dataset_funnel.py")
@@ -25,15 +26,18 @@ def test_the_dataset_page_shows_the_committed_funnel() -> None:
 def _corpus(tmp_path: Path, *, test: int = 0) -> Path:
     org = tmp_path / "acme"
     (org / "raw").mkdir(parents=True)
-    for month, rows in (("2024-09", 5), ("2024-10", 3), ("2025-10", 2), ("2025-11", 7)):
-        with gzip.open(org / "raw" / f"{month}.ndjson.gz", "wt") as out:
-            out.writelines("{}\n" for _ in range(rows))
+    (org / "examples").mkdir()
+    for month, rows in (("2024-09", 5), ("2024-10", 3), ("2025-10", 2)):
+        write_snapshot(tmp_path, "acme", month, [{"n": i} for i in range(rows)], record={})
+    for month in ("2024-10", "2025-10"):  # the months the build read
+        (org / "examples" / f"{month}.drops.json").write_text("{}")
     manifest = {
         "counts": {"pilot": 1, "train": 4, "dev": 2, "test": test},
         "stats": {
             "rules": "r",
+            "build_rules": "b",
             "built_drops": {"author_comment": 9, "comment_error": 1, "diff_error": 2},
-            "refine_counts": {"suggested_edit": 3},
+            "refine_counts": {"suggested_edit": 3, "applied_fix": 0},
             "deduped": {"exact": 1},
         },
     }
@@ -41,13 +45,44 @@ def _corpus(tmp_path: Path, *, test: int = 0) -> Path:
     return tmp_path
 
 
-def test_the_funnel_counts_the_counted_windows_and_sums_each_rows_counters(tmp_path) -> None:
+def test_the_funnel_counts_the_months_the_build_read_and_sums_each_rows_counters(tmp_path) -> None:
     read = funnel.funnel(_corpus(tmp_path), "acme")
-    assert read["merged_changes"] == 5  # 2024-10 and 2025-10; neither 2024-09 nor the test window
-    rows = {r["reason"]: r["count"] for step in read["steps"] for r in step["rows"]}
-    assert rows["lost to a fetch error"] == 3
-    assert rows["written by the change's author"] == 9
+    assert (read["merged_changes"], read["months"]) == (5, ["2024-10", "2025-10"])
+    rows = {r["reason"]: r for step in read["steps"] for r in step["rows"]}
+    assert rows["their comments could not be fetched"] == {
+        "reason": "their comments could not be fetched",
+        "unit": "changes",
+        "count": 1,
+    }
+    assert rows["its diff could not be fetched"]["count"] == 2
+    assert rows["target written by the reviewer (suggested edit, applied fix)"]["count"] == 3
+    assert rows["from an account the host tags as a bot"]["count"] is None
     assert (read["windows"], read["examples"]) == ({"pilot": 1, "train": 4, "dev": 2}, 7)
+
+
+def test_a_counter_the_build_did_not_record_reads_as_not_counted() -> None:
+    artifact = {
+        "organizations": {
+            "acme": {
+                "merged_changes": 1,
+                "steps": [{"step": "S", "rows": [{"reason": "r", "unit": "u", "count": None}]}],
+                "windows": {"pilot": 0, "train": 0, "dev": 0},
+                "examples": 0,
+            }
+        }
+    }
+    assert "| r | u | not counted |" in funnel.table(artifact)
+
+
+def test_organizations_whose_rows_differ_are_refused() -> None:
+    org = lambda reason: {  # noqa: E731
+        "merged_changes": 1,
+        "steps": [{"step": "S", "rows": [{"reason": reason, "unit": "u", "count": 1}]}],
+        "windows": {"pilot": 0, "train": 0, "dev": 0},
+        "examples": 0,
+    }
+    with pytest.raises(ValueError, match="do not share one layout"):
+        funnel.table({"organizations": {"a": org("x"), "b": org("y")}})
 
 
 def test_a_manifest_counting_the_test_window_is_refused(tmp_path) -> None:

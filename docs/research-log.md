@@ -9143,9 +9143,11 @@ The manifest and splits were added to `corpus-v3/wikimedia` beside the files alr
 for byte.
 
 `scripts/dataset_funnel.py` reads each frozen manifest and writes what every filtering rule
-removed, in pipeline order (`dataset-funnel.json`); the new docs page `dataset.md` states the
-rules and shows that table, regenerated from the artifact and held to it by a test. On these two
-hosts no inline comment comes from an account tagged as a bot (their bots post change-level
-messages), so the template rule carries the bot filter; Qt's bots comment inline under ordinary
+removed, in pipeline order and in each row's unit (changes, comments, hunks or examples), over the
+months the build read, with each manifest's digest (`dataset-funnel.json`); the new docs page `dataset.md` states the
+rules and shows that table, regenerated from the artifact and held to it by a test. Wikimedia's
+build counted no comment from an account tagged as a bot (its bots post change-level messages),
+and OpenStack's months were built before that counter existed, so its row reads not counted; the
+template rule carries the bot filter; Qt's bots comment inline under ordinary
 accounts, and there it is what removes them. Qt joins the funnel once its fetch under the
 2026-10-15 grant is built.

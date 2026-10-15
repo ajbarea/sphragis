@@ -11,8 +11,8 @@ such a pair, so most of it is removed, by rules fixed before any outcome was rea
 release. Each host is read at the pace its robots.txt or written terms set, by one client, and
 every account is replaced by a salted pseudonym as the data arrives.
 
-**Comments.** A comment is dropped when it sits on a file that is not code, when the change's own
-author wrote it (it can describe the edit it precedes), when a bot account wrote it (bots enforce
+**Comments.** A comment is dropped when it sits on the commit message or on the patch set as a
+whole (Gerrit's pseudo-files, not code anyone revised), when the change's own author wrote it (it can describe the edit it precedes), when a bot account wrote it (bots enforce
 written rules, not tacit ones), when its whole text is an acknowledgement such as `Done` or
 `LGTM`, when it has no line anchor, when no later patch set answered it, or when the next patch
 set changed nothing around its line.
@@ -39,45 +39,46 @@ and hashed now and fetched only after in-principle acceptance, so it is not coun
 
 ## What each rule removed
 
-Counts from each organization's frozen build (`datasets/results/dataset-funnel.json`). Comment
-rows count comments, hunk rows count hunks, and the rest count examples. Qt joins the table once
-its fetch under its 2026-10-15 grant is built.
+Counts from each organization's frozen build (`datasets/results/dataset-funnel.json`), each row
+in its own unit. A comment removed at refinement may belong to an example then dropped for having
+nothing else left, so those two steps overlap. A counter a build did not record reads as not
+counted. Qt joins the table once its fetch under its 2026-10-15 grant is built.
 
 <!-- funnel:begin (scripts/dataset_funnel.py) -->
-| | OpenStack | Wikimedia |
-|---|---:|---:|
-| **Merged changes fetched** | 25,191 | 114,857 |
-| **Inline comments dropped** | | |
-| on a file that is not code | 42,811 | 46,445 |
-| written by the change's author | 18,362 | 23,990 |
-| from an account the host tags as a bot | 0 | 0 |
-| an acknowledgement (Done, LGTM, Acknowledged) | 2,047 | 3,357 |
-| anchored to no line | 86 | 250 |
-| on the last patch set, with no revision after it | 2,695 | 1,856 |
-| outside any hunk the next patch set changed | 9,086 | 13,244 |
-| lost to a fetch error | 21 | 0 |
-| **Hunks dropped as ill-posed** | | |
-| nothing before or after the edit | 1,850 | 2,429 |
-| grown or shrunk past the size rules | 332 | 352 |
-| **Comments removed at refinement** | | |
-| a bot's template, matched to the bot's own source | 0 | 1 |
-| an acknowledgement inside a kept example | 127 | 0 |
-| **Examples dropped at refinement** | | |
-| target written by the reviewer (suggested edit, applied fix) | 465 | 1,473 |
-| only acknowledgements left | 13 | 0 |
-| only a bot's template left | 0 | 0 |
-| revision not a rework of the change | 0 | 0 |
-| revision of unknown kind | 0 | 0 |
-| an address left in the text | 0 | 0 |
-| **Examples removed as duplicates** | | |
-| exact copies | 249 | 117 |
-| near duplicates (MinHash) | 179 | 69 |
-| shared boilerplate | 0 | 0 |
-| one change in two places | 0 | 0 |
-| **Examples kept, pilot window** | 532 | 582 |
-| **Examples kept, train window** | 4,006 | 4,184 |
-| **Examples kept, dev window** | 515 | 747 |
-| **Examples kept in all** | 5,053 | 5,513 |
+| | Unit | OpenStack | Wikimedia |
+|---|---|---:|---:|
+| **Merged changes fetched** | changes | 25,191 | 114,857 |
+| **Changes lost before any comment was read** | | | |
+| their comments could not be fetched | changes | 8 | 0 |
+| **Comments dropped** | | | |
+| on the commit message or the patch set as a whole | comments | 42,811 | 46,445 |
+| written by the change's author | comments | 18,362 | 23,990 |
+| from an account the host tags as a bot | comments | not counted | 0 |
+| an acknowledgement (Done, LGTM, Acknowledged) | comments | 2,047 | 3,357 |
+| anchored to no line | comments | 86 | 250 |
+| on the last patch set, with no revision after it | comments | 2,695 | 1,856 |
+| outside any hunk the next patch set changed | comments | 9,086 | 13,244 |
+| its diff could not be fetched | comments | 13 | 0 |
+| **Hunks dropped as ill-posed** | | | |
+| nothing before or after the edit | hunks | 1,850 | 2,429 |
+| grown or shrunk past the size rules | hunks | 332 | 352 |
+| **Comments removed at refinement** | | | |
+| a bot's template, matched to the bot's own source | comments | 0 | 1 |
+| an acknowledgement | comments | 127 | 0 |
+| **Examples dropped at refinement** | | | |
+| target written by the reviewer (suggested edit, applied fix) | examples | 465 | 1,473 |
+| nothing left but acknowledgements | examples | 13 | 0 |
+| nothing left but a bot's templates | examples | 0 | 0 |
+| revision not a rework of the change | examples | 0 | 0 |
+| **Examples removed as duplicates** | | | |
+| exact copies | examples | 249 | 117 |
+| near duplicates (MinHash) | examples | 179 | 69 |
+| shared boilerplate | examples | 0 | 0 |
+| one change in two places | examples | 0 | 0 |
+| **Examples kept, pilot window** | examples | 532 | 582 |
+| **Examples kept, train window** | examples | 4,006 | 4,184 |
+| **Examples kept, dev window** | examples | 515 | 747 |
+| **Examples kept in all** | examples | 5,053 | 5,513 |
 <!-- funnel:end -->
 
 ## What the rules cannot see
