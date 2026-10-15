@@ -43,8 +43,9 @@ confirmatory cell (Qt not admitted, or no foreign source covering every matched 
 family-wise level: it is read on the 95% interval alone, against the bound simulated at that level.
 
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
-below the cell's registered detectable effect, and **inconclusive** otherwise. A hypothesis is
-bounded only when every cell is.
+below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and **inconclusive**
+otherwise. A cell is read bounded only once its sensitivity simulation, its power, is registered.
+A hypothesis is bounded only when every cell is.
 
 The admitted organizations are Gerrit hosts. H1 stays intersection-union however many are
 admitted, each cell sized at 0.95^(1/k); with two to four cells a between-organization variance is
@@ -264,10 +265,9 @@ first and rejected: it ran above nominal where it stopped early.
 
 With two cells each is sized at power 0.9747. At that power, its projected test size and K
 runs, OpenStack's H1 cell detects a half-split contrast of +0.0109 and +0.0103 nats per token at
-the two Holm levels and Wikimedia's +0.0071 and +0.0065, at the per-run spread K was sized on;
-these are the bounds a bounded reading is judged against, the 97.5% one only when H2 is
-confirmatory (Pass rule). Each is below the SESOI, so a bounded reading also excludes every
-effect of interest. Wikimedia's test size is a lower bound if test-window arrivals hold at the
+the two Holm levels and Wikimedia's +0.0071 and +0.0065, at the per-run spread K was sized on.
+Each is below the SESOI, the margin a bounded reading is judged against (Pass rule), and under a
+true null every simulated interval lies inside the SESOI band at both levels. Wikimedia's test size is a lower bound if test-window arrivals hold at the
 training rate (checked at fetch), and its bounds are then conservative. Power from a pilot's own
 estimate is biased upward, so no power at an observed effect is stated.
 

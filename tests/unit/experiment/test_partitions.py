@@ -293,7 +293,9 @@ def test_a_cell_carries_the_inputs_of_the_readings_beside_the_pass_rule() -> Non
     ("wins", "every_run", "bound", "verdict"),
     [
         ({"org-a": set(range(0, 24, 2)), "org-b": set(range(24, 48, 2))}, True, 0.4, "supported"),
-        ({"org-a": {0}, "org-b": set()}, False, 0.4, "bounded"),
+        ({"org-a": set(), "org-b": set()}, True, 0.4, "bounded"),
+        # Inside the registered bound but not the SESOI: the margin is the SESOI.
+        ({"org-a": {0}, "org-b": set()}, False, 0.4, "inconclusive"),
         ({"org-a": {0}, "org-b": set()}, False, 0.01, "inconclusive"),
     ],
 )

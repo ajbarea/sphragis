@@ -1089,7 +1089,7 @@ def test_within_sesoi_is_reported_beside_the_verdict() -> None:
 
 
 @pytest.mark.parametrize(
-    ("low", "high", "bound", "expected"),
+    ("low", "high", "margin", "expected"),
     [
         (0.001, 0.05, 0.01, "supported"),
         (0.002, 0.008, 0.01, "supported"),
@@ -1106,8 +1106,8 @@ def test_within_sesoi_is_reported_beside_the_verdict() -> None:
         (0.001, 0.05, None, "supported"),
     ],
 )
-def test_cell_verdicts(low: float, high: float, bound: float | None, expected: str) -> None:
-    assert cell_verdict(low, high, bound=bound) == expected
+def test_cell_verdicts(low: float, high: float, margin: float | None, expected: str) -> None:
+    assert cell_verdict(low, high, margin=margin) == expected
 
 
 @pytest.mark.parametrize(
@@ -1186,7 +1186,9 @@ def _interval_cells(**by_level: tuple[float, float]) -> dict[str, Any]:
     return {
         "org0": {
             "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
-            "verdicts": {c: cell_verdict(lo, hi, bound=BOUND) for c, (lo, hi) in intervals.items()},
+            "verdicts": {
+                c: cell_verdict(lo, hi, margin=BOUND) for c, (lo, hi) in intervals.items()
+            },
         }
     }
 
@@ -1685,7 +1687,9 @@ def admitted(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
     ("openstack", "wikimedia", "verdict", "reading_"),
     [
         ((0.01, 0.05, 0.001), (0.02, 0.06, 0.0001), "pass", "within-half"),
-        ((-0.01, 0.02, 0.2), (-0.01, 0.01, 0.3), "bounded", "no within-half transfer"),
+        ((-0.01, 0.015, 0.2), (-0.01, 0.01, 0.3), "bounded", "no within-half transfer"),
+        # Below the simulated bound but not the SESOI: the margin is the SESOI.
+        ((-0.01, 0.02, 0.2), (-0.01, 0.01, 0.3), "inconclusive", "unresolved"),
         ((0.01, 0.05, 0.001), (-0.01, 0.05, 0.3), "inconclusive", "unresolved"),
     ],
 )

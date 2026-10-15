@@ -547,7 +547,11 @@ def replication_gate(
             "estimate": cell["estimate"],
             "interval": {"low": interval["low"], "high": interval["high"]},
             "bound": bound,
-            "verdict": cell_verdict(interval["low"], interval["high"], bound=bound),
+            "verdict": cell_verdict(
+                interval["low"],
+                interval["high"],
+                margin=_sesoi_of(expected["metric"]) if valid_bound(bound) else None,
+            ),
             "meaningful": meaningful(interval["low"], _sesoi_of(expected["metric"])),
             "p_one_sided": cell["p_one_sided"],
             "size": _test_size(org, cell, simulation, powers, bounds, expected["cells"]),
@@ -603,16 +607,17 @@ def holm_levels(hypotheses: int) -> list[float]:
     return [1.0 - 2.0 * FAMILY_ALPHA / k for k in range(hypotheses, 0, -1)]
 
 
-def cell_verdict(low: float, high: float, *, bound: float | None) -> str:
-    """Supported above zero, bounded below the cell's detectable effect, or inconclusive.
+def cell_verdict(low: float, high: float, *, margin: float | None) -> str:
+    """Supported above zero, bounded below the equivalence margin, or inconclusive.
 
-    `bound` is the effect the sensitivity analysis says this cell detects at its Holm level,
-    registered before any test data (`detectable_effects`). Bounded reads "no effect as large as
-    this design detects"; a cell without a registered bound can be supported but never bounded.
+    Bounded is a one-sided equivalence test at `margin`, the SESOI (Lakens, Scheel and Isager,
+    2018): its upper bound excludes every effect as large as the smallest of interest. `margin` is
+    None for a cell without a registered sensitivity analysis, which can be supported but never
+    bounded; the analysis is the power justification, not the margin (research log, 2026-10-14).
     """
     if low > 0.0:
         return "supported"
-    if bound is not None and high < bound:
+    if margin is not None and high < margin:
         return "bounded"
     return "inconclusive"
 
@@ -633,12 +638,13 @@ def read_intervals(
     *,
     sesoi: float = SESOI,
 ) -> dict[str, dict[float, Any]]:
-    """A cell's interval at each level, its verdict against that level's bound in `bounds` (keyed
-    by `level_key`, absent for none), and the readings beside it."""
+    """A cell's interval at each level, its verdict, and the readings beside it. A level with a
+    registered bound in `bounds` (keyed by `level_key`) is read bounded against the SESOI; a level
+    without one is never read bounded."""
     return {
         "intervals": {c: {"low": lo, "high": hi} for c, (lo, hi) in intervals.items()},
         "verdicts": {
-            c: cell_verdict(lo, hi, bound=bounds.get(level_key(c)))
+            c: cell_verdict(lo, hi, margin=sesoi if valid_bound(bounds.get(level_key(c))) else None)
             for c, (lo, hi) in intervals.items()
         },
         "within_sesoi": {c: within_sesoi(lo, hi, sesoi) for c, (lo, hi) in intervals.items()},

@@ -8979,3 +8979,31 @@ reading with its population; exploratory cells are unchanged. `whole_hunk_supple
 read also needs H2 bounds, which only the H2 simulation supplies, so none can run yet. The matched
 sampler and the partition jobs that train the foreign arms are the next step; no H2 contrast has
 been run.
+
+### The bounded reading becomes a one-sided equivalence test at the SESOI (2026-10-14)
+
+`# research(2026-10)`. A cell read bounded when its upper bound fell below the effect its
+simulation says it detects at its Holm level: a margin set by the design's size, not by what
+matters. Equivalence bounds are set by the smallest effect size of interest (Lakens, Social
+Psychological and Personality Science 8(4), 2017; Lakens, Scheel and Isager, AMPPS 1(2), 2018,
+which lists the effect a study can detect as one subjective option among several), and this
+study has a justified SESOI, δ (2026-09-30 and 2026-10-09 entries). So a cell now reads bounded
+when its upper bound at its Holm level lies below δ (`decomposition.cell_verdict`, `margin`):
+one-sided, since both hypotheses are directional, so a reversed effect still reads bounded. A
+cell's simulation stays required before a test read, as its power, not its margin; a cell
+without one is still never read bounded.
+
+Power of the new reading under a true null, from the registered simulations: the share of null
+studies whose interval lies inside ±δ (`null_reads_absent`, stricter than the one-sided reading)
+is 1.0 at both Holm levels and every spread target, for OpenStack at K = 10
+(`partition-sensitivity-openstack-rp1.0-logprob_per_token.json`) and Wikimedia at K = 20
+(`partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json`).
+
+Decided after the development pilots were read, and disclosed as such in the Stage 1 design
+history. On the 22-run likelihood pilots (`partition-pilot-<org>-likelihood.json`), OpenStack's
++0.0231 [+0.0081, +0.0402] at 97.5% is supported under either margin. Wikimedia's +0.0058
+[-0.0004, +0.0125] at 97.5% read inconclusive against its registered detectable effect, 0.0071,
+and reads bounded against δ, 0.0183. The change makes a bounded reading reachable wherever the
+interval excludes δ, which is its purpose; the development window never stands for the test
+window. It makes item 6 of the H2 plan above ("never read bounded" at δ or more) redundant: a
+cell that cannot exclude δ reads inconclusive.
