@@ -1,0 +1,283 @@
+{
+  "provenance": {
+    "generated_at": "2026-10-15T13:33:39.514126+00:00",
+    "git": {
+      "commit": "54bb46158bb8537a80d3f692d704273ecab98076",
+      "branch": "docs/dataset-funnel",
+      "uncommitted_code": [
+        "scripts/dataset_funnel.py"
+      ],
+      "uncommitted_code_sha256": "94ac46e60f8ed8f48963362b6f34040d51933310a1ca0f32cb76ce802dfd6733"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {}
+  },
+  "root": "/tmp/claude-1001/-home-ajbar-ajsoftworks/a2bc2a73-2e9d-4328-b6f5-0a3fb0fa5d59/scratchpad/v3",
+  "windows": {
+    "pilot": [
+      "2024-10-01",
+      "2024-11-01"
+    ],
+    "train": [
+      "2024-11-01",
+      "2025-09-01"
+    ],
+    "dev": [
+      "2025-09-01",
+      "2025-11-01"
+    ]
+  },
+  "organizations": {
+    "openstack": {
+      "rules": "c2ddb5b5f6e99182",
+      "merged_changes": 25191,
+      "steps": [
+        {
+          "step": "Inline comments dropped",
+          "rows": [
+            {
+              "reason": "on a file that is not code",
+              "count": 42811
+            },
+            {
+              "reason": "written by the change's author",
+              "count": 18362
+            },
+            {
+              "reason": "from an account the host tags as a bot",
+              "count": 0
+            },
+            {
+              "reason": "an acknowledgement (Done, LGTM, Acknowledged)",
+              "count": 2047
+            },
+            {
+              "reason": "anchored to no line",
+              "count": 86
+            },
+            {
+              "reason": "on the last patch set, with no revision after it",
+              "count": 2695
+            },
+            {
+              "reason": "outside any hunk the next patch set changed",
+              "count": 9086
+            },
+            {
+              "reason": "lost to a fetch error",
+              "count": 21
+            }
+          ]
+        },
+        {
+          "step": "Hunks dropped as ill-posed",
+          "rows": [
+            {
+              "reason": "nothing before or after the edit",
+              "count": 1850
+            },
+            {
+              "reason": "grown or shrunk past the size rules",
+              "count": 332
+            }
+          ]
+        },
+        {
+          "step": "Comments removed at refinement",
+          "rows": [
+            {
+              "reason": "a bot's template, matched to the bot's own source",
+              "count": 0
+            },
+            {
+              "reason": "an acknowledgement inside a kept example",
+              "count": 127
+            }
+          ]
+        },
+        {
+          "step": "Examples dropped at refinement",
+          "rows": [
+            {
+              "reason": "target written by the reviewer (suggested edit, applied fix)",
+              "count": 465
+            },
+            {
+              "reason": "only acknowledgements left",
+              "count": 13
+            },
+            {
+              "reason": "only a bot's template left",
+              "count": 0
+            },
+            {
+              "reason": "revision not a rework of the change",
+              "count": 0
+            },
+            {
+              "reason": "revision of unknown kind",
+              "count": 0
+            },
+            {
+              "reason": "an address left in the text",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Examples removed as duplicates",
+          "rows": [
+            {
+              "reason": "exact copies",
+              "count": 249
+            },
+            {
+              "reason": "near duplicates (MinHash)",
+              "count": 179
+            },
+            {
+              "reason": "shared boilerplate",
+              "count": 0
+            },
+            {
+              "reason": "one change in two places",
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "windows": {
+        "pilot": 532,
+        "train": 4006,
+        "dev": 515
+      },
+      "examples": 5053
+    },
+    "wikimedia": {
+      "rules": "c2ddb5b5f6e99182",
+      "merged_changes": 114857,
+      "steps": [
+        {
+          "step": "Inline comments dropped",
+          "rows": [
+            {
+              "reason": "on a file that is not code",
+              "count": 46445
+            },
+            {
+              "reason": "written by the change's author",
+              "count": 23990
+            },
+            {
+              "reason": "from an account the host tags as a bot",
+              "count": 0
+            },
+            {
+              "reason": "an acknowledgement (Done, LGTM, Acknowledged)",
+              "count": 3357
+            },
+            {
+              "reason": "anchored to no line",
+              "count": 250
+            },
+            {
+              "reason": "on the last patch set, with no revision after it",
+              "count": 1856
+            },
+            {
+              "reason": "outside any hunk the next patch set changed",
+              "count": 13244
+            },
+            {
+              "reason": "lost to a fetch error",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Hunks dropped as ill-posed",
+          "rows": [
+            {
+              "reason": "nothing before or after the edit",
+              "count": 2429
+            },
+            {
+              "reason": "grown or shrunk past the size rules",
+              "count": 352
+            }
+          ]
+        },
+        {
+          "step": "Comments removed at refinement",
+          "rows": [
+            {
+              "reason": "a bot's template, matched to the bot's own source",
+              "count": 1
+            },
+            {
+              "reason": "an acknowledgement inside a kept example",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Examples dropped at refinement",
+          "rows": [
+            {
+              "reason": "target written by the reviewer (suggested edit, applied fix)",
+              "count": 1473
+            },
+            {
+              "reason": "only acknowledgements left",
+              "count": 0
+            },
+            {
+              "reason": "only a bot's template left",
+              "count": 0
+            },
+            {
+              "reason": "revision not a rework of the change",
+              "count": 0
+            },
+            {
+              "reason": "revision of unknown kind",
+              "count": 0
+            },
+            {
+              "reason": "an address left in the text",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Examples removed as duplicates",
+          "rows": [
+            {
+              "reason": "exact copies",
+              "count": 117
+            },
+            {
+              "reason": "near duplicates (MinHash)",
+              "count": 69
+            },
+            {
+              "reason": "shared boilerplate",
+              "count": 0
+            },
+            {
+              "reason": "one change in two places",
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "windows": {
+        "pilot": 582,
+        "train": 4184,
+        "dev": 747
+      },
+      "examples": 5513
+    }
+  }
+}

@@ -177,6 +177,14 @@ A repeatable data audit of a built and refined corpus, one artifact per organiza
 | `data-audit-aosp.json` | `data-audit-openstack.json` |
 | `data-audit-qt.json` |  |
 
+## `scripts/dataset_funnel.py`
+
+How each organization's corpus is filtered, step by step, from its build manifest.
+
+| artifact | |
+|---|---|
+| `dataset-funnel.json` |  |
+
 ## `scripts/decoder_read.py`
 
 Read the repetition-penalty check: what the checkpoint's penalty changed in stored results.
