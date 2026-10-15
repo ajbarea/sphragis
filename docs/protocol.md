@@ -78,7 +78,8 @@ The pass rule is fixed in advance, in code, in
 organizations have a learnable house style, which is a generality claim, and a rule passing on
 one organization does not support it. H1 and H2 share one family-wise level under Holm, read on
 97.5% and 95% intervals. A cell is supported when its lower bound is strictly above zero, bounded when its
-upper bound is below the effect the design detects, and inconclusive otherwise. The interval is
+upper bound is below the SESOI δ (a one-sided equivalence test, read once the cell's sensitivity
+simulation is registered), and inconclusive otherwise. The interval is
 the crossed run-by-change bootstrap over K admissible partitions, and the estimand is pooled.
 Each of those was chosen before the run that would have been decided by it, and each is
 recorded with the evidence that chose it on [Registered decisions](registered-decisions.md).

@@ -45,6 +45,7 @@ family-wise level: it is read on the 95% interval alone, against the bound simul
 A cell is **supported** when its lower bound is above zero, **bounded** when its upper bound is
 below the SESOI δ (a one-sided equivalence test; research log, 2026-10-14), and **inconclusive**
 otherwise. A cell is read bounded only once its sensitivity simulation, its power, is registered.
+The margin moved to δ after the development pilots were read (research log, 2026-10-14).
 A hypothesis is bounded only when every cell is.
 
 The admitted organizations are Gerrit hosts. H1 stays intersection-union however many are

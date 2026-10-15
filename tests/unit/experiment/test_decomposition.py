@@ -713,6 +713,16 @@ def test_replication_gate_reads_each_member_and_the_partial_conjunction(frozen) 
     assert out["partial_conjunction"]["at_least"] == 2
 
 
+def test_the_replication_gate_reads_bounded_against_the_sesoi_not_the_simulated_bound(
+    frozen,
+) -> None:
+    frozen("llvm")
+    # Above the simulated bound, below the SESOI (0.0183 on the registered metric).
+    cells = {"llvm": _replication_cell(-0.004, 0.012, 0.3, bound=0.008, org="llvm")}
+    out = replication_gate(cells, simulations={"llvm": _sim(0.008, "llvm")})
+    assert out["cells"]["llvm"]["verdict"] == "bounded"
+
+
 def test_replication_gate_refuses_to_read_before_the_members_are_frozen(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

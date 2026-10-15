@@ -10,9 +10,10 @@ Two numbers per cell and level:
 
 - the realised exact-match difference detected with marginal power `--target` (0.928 per cell
   gives joint power 0.928**k across k independent cells: about 0.80 at three, 0.74 at four);
-- the share of null studies whose upper bound falls below that effect (`null_reads_bounded`), the
-  registered negative reading, and the share whose interval sits inside the SESOI band
-  (`null_reads_absent`), which says absence at the SESOI is out of reach at this design's size.
+- the share of null studies whose upper bound falls below that effect (`null_reads_bounded`, the
+  bounded reading before 2026-10-14), and the share whose interval sits inside the SESOI band
+  (`null_reads_absent`), a lower bound on how often a null reads bounded at the SESOI, the
+  registered margin since 2026-10-14.
 
     uv run --no-sync --no-active python scripts/decomposition_sensitivity.py \\
         --placebo openstack=datasets/results/rq1-placebo-openstack.json \\
@@ -143,7 +144,7 @@ def main() -> None:
                     "lift": high,
                     "minimum_detectable_effect": effect,
                     # How often a null's upper bound falls below the effect found here: the
-                    # registered negative reading, "bounded" in `decomposition.cell_verdict`.
+                    # bounded reading before 2026-10-14, whose margin is now the SESOI.
                     "null_reads_bounded": fmean(t.high[level] < effect for t in null),
                 }
                 print(

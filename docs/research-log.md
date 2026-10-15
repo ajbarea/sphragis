@@ -8986,7 +8986,7 @@ been run.
 simulation says it detects at its Holm level: a margin set by the design's size, not by what
 matters. Equivalence bounds are set by the smallest effect size of interest (Lakens, Social
 Psychological and Personality Science 8(4), 2017; Lakens, Scheel and Isager, AMPPS 1(2), 2018,
-which lists the effect a study can detect as one subjective option among several), and this
+which also describes bounds at the smallest effect a study has the power to detect), and this
 study has a justified SESOI, δ (2026-09-30 and 2026-10-09 entries). So a cell now reads bounded
 when its upper bound at its Holm level lies below δ (`decomposition.cell_verdict`, `margin`):
 one-sided, since both hypotheses are directional, so a reversed effect still reads bounded. A
@@ -9003,7 +9003,10 @@ Decided after the development pilots were read, and disclosed as such in the Sta
 history. On the 22-run likelihood pilots (`partition-pilot-<org>-likelihood.json`), OpenStack's
 +0.0231 [+0.0081, +0.0402] at 97.5% is supported under either margin. Wikimedia's +0.0058
 [-0.0004, +0.0125] at 97.5% read inconclusive against its registered detectable effect, 0.0071,
-and reads bounded against δ, 0.0183. The change makes a bounded reading reachable wherever the
-interval excludes δ, which is its purpose; the development window never stands for the test
-window. It makes item 6 of the H2 plan above ("never read bounded" at δ or more) redundant: a
-cell that cannot exclude δ reads inconclusive.
+and reads bounded against δ, 0.0183; at 95%, the level H1 alone is read at, it is supported
+([+0.0003, +0.0117]) under either margin. That 97.5% cell is the only development verdict the
+change moves. The change makes a bounded reading reachable wherever the interval excludes δ,
+which is its purpose; the development window never stands for the test window. It supersedes
+item 6 of the H2 plan above: a cell whose detectable effect is δ or more now reads bounded when
+its interval excludes δ, which an equivalence test permits whatever its power. The Stage 1 design
+history states the change and its timing (papers, `org-house-style`).
