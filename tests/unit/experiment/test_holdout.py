@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
@@ -10,6 +11,7 @@ import pytest
 from sphragis.experiment.holdout import (
     equalize_training,
     holdout_by_change,
+    matched_foreign_draw,
     split_by_window,
     verbatim_overlap,
 )
@@ -180,3 +182,86 @@ def test_a_reader_that_must_not_hold_sealed_rows_refuses_a_corpus_that_does(tmp_
     window_split(tmp_path, "o")
     with pytest.raises(ValueError, match="holds test-window examples"):
         window_split(tmp_path, "o", refuse_sealed_rows=True)
+
+
+# The matched foreign draw (H2's foreign arm)
+
+
+def _lang_rows(prefix: str, cpp: int, other: int) -> list[dict[str, Any]]:
+    return [{"id": f"{prefix}:c{i}", "path": f"f{i}.cc"} for i in range(cpp)] + [
+        {"id": f"{prefix}:o{i}", "path": f"f{i}.py"} for i in range(other)
+    ]
+
+
+def _cc(row: Mapping[str, Any]) -> bool:
+    return str(row["path"]).endswith(".cc")
+
+
+def test_a_matched_draw_matches_the_siblings_size_and_in_language_count() -> None:
+    sibling = _lang_rows("qt-b", cpp=6, other=4)
+    pool = _lang_rows("aosp", cpp=20, other=20)
+    draw = matched_foreign_draw(sibling, pool, in_language=_cc, seed=3, sibling="qt-b")
+    assert len(draw) == len(sibling)
+    assert sum(map(_cc, draw)) == 6
+    ids = [r["id"] for r in draw]
+    assert len(set(ids)) == len(ids) and set(ids) <= {r["id"] for r in pool}
+
+
+def test_a_matched_draw_is_reproducible_and_independent_per_sibling() -> None:
+    sibling = _lang_rows("s", cpp=5, other=5)
+    pool = _lang_rows("aosp", cpp=40, other=40)
+
+    def ids(seed: int, name: str) -> list[str]:
+        draw = matched_foreign_draw(sibling, pool, in_language=_cc, seed=seed, sibling=name)
+        return [r["id"] for r in draw]
+
+    assert ids(1, "qt-a") == ids(1, "qt-a")
+    assert ids(1, "qt-a") != ids(1, "qt-b")
+    assert ids(1, "qt-a") != ids(2, "qt-a")
+
+
+@pytest.mark.parametrize(
+    ("pool", "match"),
+    [
+        (_lang_rows("p", cpp=5, other=10), "5 in-language"),
+        (_lang_rows("p", cpp=10, other=3), "3 other"),
+    ],
+)
+def test_a_pool_that_cannot_cover_the_draw_is_refused(
+    pool: list[dict[str, Any]], match: str
+) -> None:
+    with pytest.raises(ValueError, match=match):
+        matched_foreign_draw(
+            _lang_rows("s", cpp=6, other=4), pool, in_language=_cc, seed=1, sibling="qt-a"
+        )
+
+
+def test_an_empty_sibling_draw_is_refused() -> None:
+    with pytest.raises(ValueError, match="empty"):
+        matched_foreign_draw([], _lang_rows("p", 3, 3), in_language=_cc, seed=1, sibling="qt-a")
+
+
+@pytest.mark.parametrize(("cpp", "other"), [(0, 6), (6, 0)])
+def test_a_matched_draw_with_one_empty_stratum_takes_only_the_other(cpp: int, other: int) -> None:
+    sibling = _lang_rows("s", cpp=cpp, other=other)
+    draw = matched_foreign_draw(
+        sibling, _lang_rows("p", 10, 10), in_language=_cc, seed=1, sibling="qt-a"
+    )
+    assert len(draw) == 6 and sum(map(_cc, draw)) == cpp
+
+
+def test_a_pool_of_exactly_the_needed_size_is_used_whole_and_left_unchanged() -> None:
+    pool = _lang_rows("p", cpp=4, other=2)
+    before = [dict(r) for r in pool]
+    draw = matched_foreign_draw(
+        _lang_rows("s", 4, 2), pool, in_language=_cc, seed=1, sibling="qt-a"
+    )
+    assert sorted(r["id"] for r in draw) == sorted(r["id"] for r in pool)
+    assert pool == before
+
+
+def test_a_pool_with_repeated_ids_is_refused() -> None:
+    pool = _lang_rows("p", cpp=3, other=3)
+    pool.append(dict(pool[0]))
+    with pytest.raises(ValueError, match="repeats example ids"):
+        matched_foreign_draw(_lang_rows("s", 2, 2), pool, in_language=_cc, seed=1, sibling="qt-a")

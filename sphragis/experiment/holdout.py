@@ -9,7 +9,7 @@ example again, which is how a leaked 0.512 was nearly reported.
 from __future__ import annotations
 
 import random
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -85,6 +85,49 @@ def equalize_training(
         random.Random(f"equalize/{seed}/{org}").shuffle(rows)
         out[org] = rows[:size]
     return out
+
+
+def matched_foreign_draw(
+    sibling_draw: Sequence[Mapping[str, Any]],
+    foreign_pool: Sequence[Mapping[str, Any]],
+    *,
+    in_language: Callable[[Mapping[str, Any]], bool],
+    seed: int,
+    sibling: str,
+) -> list[dict[str, Any]]:
+    """A foreign training set matched to one sibling draw, for H2's foreign arm.
+
+    The draw holds as many `in_language` rows as `sibling_draw` does and fills the rest of its
+    size from the pool's other rows, so the sibling and foreign adapters match in total and in
+    in-language examples (research log, 2026-10-14). Each stratum is shuffled by the run's seed
+    and the sibling it is matched to, so the draw is reproducible and two siblings of one run get
+    independent draws. Refused when the pool cannot cover the draw: a short pool is a source that
+    does not qualify, never a smaller arm. Refused too when the pool repeats an example id, since
+    repeats would count as capacity and train twice. An `in_language` that raises propagates.
+    """
+    size = len(sibling_draw)
+    if size == 0:
+        raise ValueError("the sibling draw is empty")
+    ids = [row["id"] for row in foreign_pool]
+    if len(set(ids)) != len(ids):
+        raise ValueError("the foreign pool repeats example ids; deduplicate it before drawing")
+    wanted = sum(1 for row in sibling_draw if in_language(row))
+    strata = {
+        True: [dict(r) for r in foreign_pool if in_language(r)],
+        False: [dict(r) for r in foreign_pool if not in_language(r)],
+    }
+    need = {True: wanted, False: size - wanted}
+    for stratum, rows in strata.items():
+        if len(rows) < need[stratum]:
+            kind = "in-language" if stratum else "other"
+            raise ValueError(
+                f"the foreign pool holds {len(rows)} {kind} rows, the draw for {sibling} "
+                f"needs {need[stratum]}"
+            )
+        random.Random(f"matched/{seed}/{sibling}/{stratum}").shuffle(rows)
+    draw = strata[True][: need[True]] + strata[False][: need[False]]
+    random.Random(f"matched/{seed}/{sibling}/order").shuffle(draw)
+    return draw
 
 
 SEALED_WINDOWS = ("test",)

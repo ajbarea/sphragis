@@ -9042,3 +9042,15 @@ H2 development contrast, in that order whatever order they answer in. Drafts to 
 list, to AOSP's android-contrib list, and a narrowed follow-up to Chromium's infra-dev list (about
 2,000 changes over git each) are with AJ. Data
 already held from these hosts stays out of every figure until then and is deleted on refusal.
+
+### The matched foreign draw implemented (2026-10-14)
+
+`holdout.matched_foreign_draw` builds item 3 of the H2 plan: for one run's sibling draw it takes as
+many in-language rows from the foreign pool as the sibling holds and fills the rest from the
+pool's other rows, each stratum shuffled by the run's training seed and the sibling it is matched
+to (a refinement of item 3's "the run's training seed", so a run's two foreign adapters get
+independent draws). A pool that repeats an example id is refused, since repeats would count as
+capacity. A pool that cannot cover a draw is
+refused, never trained smaller, since that is a source that does not qualify. The partition jobs
+call it once a source's maintainers grant permission and its pool is built; no foreign draw has
+been made.
