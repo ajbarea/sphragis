@@ -9170,3 +9170,40 @@ zero is not read; and a diff that would have failed on a later identical request
 the first. It is used only on a host for which a probe has asked the comments of a sample of
 changes recorded at zero, under that host's terms, and every answer was empty; the probe and its
 result are logged before the build.
+
+### s split by token class: OpenStack's development contrast is not vocabulary alone, and it sits in the edit (2026-10-15)
+
+`# research(2026-10)`. Review panel item 5 asked whether s measures an organization's vocabulary
+rather than its conventions, since a sibling adapter has seen the organization's names and a
+foreign one has not. `likelihood_score.py` now classes each target token as identifier or other
+(Pygments' `Token.Name`; a token touching a name counts as one, so *other* is conservative) and as
+changed or copied (words and symbols aligned with the reviewed hunk), and stores each class's
+contribution to the mean per token (`sphragis/experiment/tokens.py`). The contributions add back
+to s: identifier, other and end, or changed, copied and end. All 44 development runs the
+likelihood pilots read were rescored (PR #136, jobs pinned at e3b6035); every one of their 79,992
+rows reproduces its stored log-probability exactly, the parts add back within fp32 rounding, and
+the whole-s pilots reproduce `partition-pilot-<org>-likelihood.json` exactly. This replaces the
+Stage 1 draft's plan to reread both hypotheses on identifier-renamed references: renaming moves
+every arm off the distribution it was trained on and removes naming conventions, which are house
+style too.
+
+Development H1 own minus sibling, all 22 runs per organization, at the pilot's settings
+(`partition-pilot-<org>-likelihood-split-<component>.json`, 95% crossed intervals; whole s:
+OpenStack +0.0231 [+0.0097, +0.0376], Wikimedia +0.0058 [+0.0003, +0.0117]):
+
+| Part of s | OpenStack | Wikimedia |
+|---|---|---|
+| identifier | +0.0124 [+0.0041, +0.0226] | +0.0013 [-0.0018, +0.0045] |
+| other (not a name) | +0.0099 [+0.0013, +0.0202] | +0.0043 [-0.0002, +0.0094] |
+| end token | +0.0008 [-0.0002, +0.0020] | +0.0001 [-0.0010, +0.0011] |
+| changed by the revision | +0.0213 [+0.0094, +0.0352] | +0.0063 [+0.0017, +0.0113] |
+| copied from the reviewed hunk | +0.0009 [-0.0023, +0.0037] | -0.0007 [-0.0030, +0.0015] |
+| other and changed | +0.0091 [+0.0015, +0.0190] | +0.0045 [+0.0005, +0.0089] |
+
+On OpenStack the part outside names carries 43% of the contrast, and its interval excludes
+zero at 95%; so does Wikimedia's changed part. Almost all of each organization's contrast is in
+tokens the revision changed; the copied code carries none. Exploratory and development-window
+only: it decides nothing, and the test window will be read the same way as a registered secondary
+reading. Rows whose identifier class changes when each line is lexed alone (`line_disagreement`
+above zero, a hunk lexed from inside a string; about one row in eighty) were dropped from every arm
+and the reading repeated: no estimate changed sign and no verdict moved.
