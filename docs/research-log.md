@@ -9153,8 +9153,6 @@ in OpenStack's examples, carries the bot filter; Qt's bots comment inline under 
 accounts, and there it is what removes them. Qt joins the funnel once its fetch under the
 2026-10-15 grant is built.
 
-### A REST build asks only what the host has not answered (2026-10-15)
-
 ### A REST build can ask only what the host has not answered (2026-10-15)
 
 A REST build asks the host for each change's comments and, for each anchored comment, a diff, and
