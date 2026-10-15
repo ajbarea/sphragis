@@ -25,6 +25,7 @@ from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, githu
 from sphragis.corpus.github_api import GitHubAPI
 from sphragis.corpus.load import (
     build_record,
+    raw_digest,
     refined_dir,
     refined_examples,
     write_build_record,
@@ -308,8 +309,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--fewer-requests",
         action="store_true",
         help="build: skip a change whose snapshot records no comment (counted as "
-        f"{UNCOMMENTED}) and ask each diff once per change; for a host whose count a probe has "
-        "checked (research log, 2026-10-15)",
+        f"{UNCOMMENTED}) and ask each diff once per change; needs --count-probe",
+    )
+    parser.add_argument(
+        "--count-probe",
+        type=Path,
+        help="build --fewer-requests: the organization's comment_count_probe.py result, which "
+        "must hold",
     )
     parser.add_argument(
         "--request-interval",
@@ -887,8 +893,42 @@ def cached_diffs(diffs: DiffFetcher) -> DiffFetcher:
     return diff
 
 
+#: The 95% upper bound on the share of skipped rows that carry comments a probe must reach: about
+#: 300 empty answers (research log, 2026-10-15).
+COUNT_PROBE_BOUND = 0.01
+
+
+def require_count_probe(args: argparse.Namespace) -> None:
+    """Refuse `--fewer-requests` unless the organization's comment-count probe holds, bounds the
+    skipped share's comments tightly enough, and asked the raw snapshots this build reads."""
+    if args.count_probe is not None and not args.fewer_requests:
+        raise SystemExit("--count-probe is read only with --fewer-requests")
+    if not args.fewer_requests:
+        return
+    if args.count_probe is None or not args.count_probe.is_file():
+        raise SystemExit("--fewer-requests needs --count-probe: a comment_count_probe.py result")
+    try:
+        probe = json.loads(args.count_probe.read_text())
+    except (ValueError, OSError) as error:
+        raise SystemExit(f"{args.count_probe}: {error}") from error
+    if (
+        not isinstance(probe, dict)
+        or probe.get("org") != args.org
+        or probe.get("holds") is not True
+    ):
+        raise SystemExit(f"{args.count_probe} does not hold for {args.org}")
+    bound = probe.get("upper_95_share_with_comments")
+    if not isinstance(bound, float) or bound > COUNT_PROBE_BOUND:
+        raise SystemExit(
+            f"{args.count_probe} bounds the skipped share at {bound}, not {COUNT_PROBE_BOUND}"
+        )
+    if probe.get("raw_digest") != raw_digest(Path(args.root), args.org):
+        raise SystemExit(f"{args.count_probe} asked other raw snapshots than {args.root}'s")
+
+
 def _stage_build(args: argparse.Namespace) -> int:
     """Every snapshot for an organization into examples, one file per month."""
+    require_count_probe(args)
     salt = require_salt()
     raw = Path(args.root) / args.org / "raw"
     snapshots = sorted(raw.glob("*.ndjson.gz"))
