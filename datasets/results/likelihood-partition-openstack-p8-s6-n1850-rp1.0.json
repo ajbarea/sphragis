@@ -1,8 +1,8 @@
 {
   "provenance": {
-    "generated_at": "2026-10-15T12:03:23.466973+00:00",
+    "generated_at": "2026-10-15T16:04:42.722343+00:00",
     "git": {
-      "commit": "e3b603596d6bb1df7804b8e39b3550735375eafc",
+      "commit": "0c4f7649fa135cc73a859a4997ef31a185a0fd41",
       "branch": "HEAD"
     },
     "python": "3.13.15",
@@ -10,20 +10,21 @@
     "packages": {
       "torch": "2.14.0+cu130",
       "transformers": "5.17.0",
-      "peft": "0.20.0"
+      "peft": "0.20.0",
+      "pygments": "2.21.0"
     },
     "slurm": {
       "cluster": "tigris",
-      "job_id": "290684",
+      "job_id": "291490",
       "account": "fl-mlm",
       "partition": "tigris",
-      "node": "gh-a-053"
+      "node": "gh-a-111"
     },
     "gpu": {
       "name": "NVIDIA GH200 480GB",
       "total_gb": 102.01,
-      "peak_allocated_gb": 31.96,
-      "peak_reserved_gb": 34.26,
+      "peak_allocated_gb": 31.97,
+      "peak_reserved_gb": 34.53,
       "cuda": "13.0"
     }
   },
@@ -198,24 +199,24 @@
             "tokens": 4
           },
           "identifier_copied": {
-            "logprob": -5.743220951191006,
-            "tokens": 8
+            "logprob": -0.009445812336025483,
+            "tokens": 7
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.7136063775942603,
-            "tokens": 8
+            "logprob": -7.447381516449241,
+            "tokens": 9
           },
           "end": {
             "logprob": -8.856858039507642e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.27354778498302257,
-        "logprob_per_token:other": -0.08160030369496478,
+        "logprob_per_token:identifier": -0.0005108736089758688,
+        "logprob_per_token:other": -0.35463721506901147,
         "logprob_per_token:changed": -6.107302154608381e-05,
         "logprob_per_token:copied": -0.35508701565644124,
         "logprob_per_token:other_changed": 0.0,
@@ -233,31 +234,31 @@
         "logprob_per_token": -0.07487607002258301,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.00037212090683169663,
-            "tokens": 2
+            "logprob": -6.007967749610543e-05,
+            "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.13132297814297544,
-            "tokens": 17
+            "logprob": -0.11677196981361249,
+            "tokens": 14
           },
           "other_changed": {
-            "logprob": 0.0,
-            "tokens": 0
+            "logprob": -0.0003120412293355912,
+            "tokens": 1
           },
           "other_copied": {
-            "logprob": -1.8899392713096859,
-            "tokens": 7
+            "logprob": -1.9044902796390488,
+            "tokens": 10
           },
           "end": {
             "logprob": -1.966933996300213e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.004877596261103968,
-        "logprob_per_token:other": -0.06999775078924762,
+        "logprob_per_token:identifier": -0.0043271129441151334,
+        "logprob_per_token:other": -0.07054823410623647,
         "logprob_per_token:changed": -1.3782255808581357e-05,
         "logprob_per_token:copied": -0.074861564794543,
-        "logprob_per_token:other_changed": 0.0,
+        "logprob_per_token:other_changed": -1.1557082567984859e-05,
         "logprob_per_token:end": -7.284940727037826e-07,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -276,24 +277,24 @@
             "tokens": 17
           },
           "identifier_copied": {
-            "logprob": -0.3310166605787117,
-            "tokens": 17
+            "logprob": -0.005903097693476411,
+            "tokens": 13
           },
           "other_changed": {
             "logprob": -22.13321079793718,
             "tokens": 28
           },
           "other_copied": {
-            "logprob": -1.2617883832672305,
-            "tokens": 9
+            "logprob": -1.5869019461524658,
+            "tokens": 13
           },
           "end": {
             "logprob": -3.0278701160568744e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.029936210117081745,
-        "logprob_per_token:other": -0.3249305441833946,
+        "logprob_per_token:identifier": -0.025420743965897923,
+        "logprob_per_token:other": -0.32944601033457843,
         "logprob_per_token:changed": -0.33274446202483826,
         "logprob_per_token:copied": -0.022122292275638087,
         "logprob_per_token:other_changed": -0.30740570552690527,
@@ -549,24 +550,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -8.725751729343756e-05,
-            "tokens": 2
+            "logprob": -8.582700684200972e-05,
+            "tokens": 1
           },
           "other_changed": {
             "logprob": -2.1107438104195353,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -1.8269356894159046,
-            "tokens": 5
+            "logprob": -1.826937119926356,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.2723812162876129,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -7.932501572130688e-06,
-        "logprob_per_token:other": -0.3579708636214036,
+        "logprob_per_token:identifier": -7.80245516745543e-06,
+        "logprob_per_token:other": -0.3579709936678083,
         "logprob_per_token:changed": -0.19188580094723048,
         "logprob_per_token:copied": -0.16609299517574527,
         "logprob_per_token:other_changed": -0.19188580094723048,
@@ -588,24 +589,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.49474772352186847,
-            "tokens": 11
+            "logprob": -0.49421714456912014,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": -3.1007401047354506,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -3.859422139553317,
-            "tokens": 10
+            "logprob": -3.859952718506065,
+            "tokens": 11
           },
           "end": {
             "logprob": -0.000704278820194304,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.019789908940874738,
-        "logprob_per_token:other": -0.2784064897715507,
+        "logprob_per_token:identifier": -0.019768685782764805,
+        "logprob_per_token:other": -0.2784277129296606,
         "logprob_per_token:changed": -0.12402960418941802,
         "logprob_per_token:copied": -0.1741667945230074,
         "logprob_per_token:other_changed": -0.12402960418941802,
@@ -627,24 +628,24 @@
             "tokens": 6
           },
           "identifier_copied": {
-            "logprob": -0.005053677899468312,
-            "tokens": 4
+            "logprob": -0.0047920468387019355,
+            "tokens": 2
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.556296913804431,
-            "tokens": 10
+            "logprob": -1.5565585448651973,
+            "tokens": 12
           },
           "end": {
             "logprob": -1.0490362910786644e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0012679488803379563,
-        "logprob_per_token:other": -0.07410937684783005,
+        "logprob_per_token:identifier": -0.0012554902583967003,
+        "logprob_per_token:other": -0.0741218354697713,
         "logprob_per_token:changed": -0.001027297551791846,
         "logprob_per_token:copied": -0.07435002817637615,
         "logprob_per_token:other_changed": 0.0,
@@ -705,24 +706,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.012636120431125164,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.9399594087153673,
-            "tokens": 2
+            "logprob": -1.9525955291464925,
+            "tokens": 3
           },
           "end": {
             "logprob": -0.016142386943101883,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.1155380593843347,
-        "logprob_per_token:other": -0.27713705838790964,
+        "logprob_per_token:identifier": -0.1137328993227454,
+        "logprob_per_token:other": -0.2789422184494989,
         "logprob_per_token:changed": -0.1137328993227454,
         "logprob_per_token:copied": -0.2789422184494989,
         "logprob_per_token:other_changed": 0.0,
@@ -1095,24 +1096,24 @@
             "tokens": 5
           },
           "identifier_copied": {
-            "logprob": -0.27844380181250017,
-            "tokens": 10
+            "logprob": -0.16776741635021608,
+            "tokens": 9
           },
           "other_changed": {
             "logprob": -14.254340036364738,
             "tokens": 4
           },
           "other_copied": {
-            "logprob": -5.412251263856888,
-            "tokens": 2
+            "logprob": -5.522927649319172,
+            "tokens": 3
           },
           "end": {
             "logprob": -0.0005460678366944194,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.04007163664007087,
-        "logprob_per_token:other": -0.893935968191892,
+        "logprob_per_token:identifier": -0.035040891846330684,
+        "logprob_per_token:other": -0.8989667129856322,
         "logprob_per_token:changed": -0.6753396473015362,
         "logprob_per_token:copied": -0.2586679575304267,
         "logprob_per_token:other_changed": -0.647924547107488,
@@ -1134,24 +1135,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.07709365208575036,
-            "tokens": 5
+            "logprob": -0.07687302003614604,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": -8.776472330093384,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -2.7855649224093213,
-            "tokens": 14
+            "logprob": -2.7857855544589256,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.00037543877260759473,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.4091799749940401,
-        "logprob_per_token:other": -0.4624814901001082,
+        "logprob_per_token:identifier": -0.4091711497120559,
+        "logprob_per_token:other": -0.4624903153820924,
         "logprob_per_token:changed": -0.7571551221143454,
         "logprob_per_token:copied": -0.11450634297980286,
         "logprob_per_token:other_changed": -0.35105889320373534,
@@ -1988,31 +1989,31 @@
         "logprob_per_token": -0.38204143893334175,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.00011848780769696532,
-            "tokens": 4
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.0007896925088743956,
-            "tokens": 10
+            "logprob": -0.0005306842793970645,
+            "tokens": 9
           },
           "other_changed": {
-            "logprob": -2.147858487223232,
-            "tokens": 6
+            "logprob": -2.1479769750309288,
+            "tokens": 10
           },
           "other_copied": {
-            "logprob": -4.428670350350501,
-            "tokens": 10
+            "logprob": -4.428929358579978,
+            "tokens": 11
           },
           "end": {
             "logprob": -5.265847682952881,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -2.9296139244237446e-05,
-        "logprob_per_token:other": -0.21214609153463654,
+        "logprob_per_token:identifier": -1.7118847722485953e-05,
+        "logprob_per_token:other": -0.2121582688261583,
         "logprob_per_token:changed": -0.06928957983970738,
         "logprob_per_token:copied": -0.1428858078341734,
-        "logprob_per_token:other_changed": -0.06928575765236232,
+        "logprob_per_token:other_changed": -0.06928957983970738,
         "logprob_per_token:end": -0.1698660542888026,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -2031,24 +2032,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.017912605925893388,
-            "tokens": 84
+            "logprob": -0.005625993075945246,
+            "tokens": 67
           },
           "other_changed": {
             "logprob": -3.718483481450221,
             "tokens": 34
           },
           "other_copied": {
-            "logprob": -2.064217791040079,
-            "tokens": 80
+            "logprob": -2.076504403890027,
+            "tokens": 97
           },
           "end": {
             "logprob": -3.576214658096433e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -9.00130951049919e-05,
-        "logprob_per_token:other": -0.029058800364272865,
+        "logprob_per_token:identifier": -2.8271321989674602e-05,
+        "logprob_per_token:other": -0.02912054213738818,
         "logprob_per_token:changed": -0.018685846640453373,
         "logprob_per_token:copied": -0.010462966818924484,
         "logprob_per_token:other_changed": -0.018685846640453373,
@@ -2105,31 +2106,31 @@
         "logprob_per_token": -0.34183255557356207,
         "cells": {
           "identifier_changed": {
-            "logprob": -7.493265831213648,
-            "tokens": 11
+            "logprob": -1.6760211152250122,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -7.271955109819771,
-            "tokens": 15
+            "logprob": -7.2408107199370875,
+            "tokens": 14
           },
           "other_changed": {
-            "logprob": -1.332341601223277,
-            "tokens": 12
+            "logprob": -7.149586317211913,
+            "tokens": 15
           },
           "other_copied": {
-            "logprob": -3.7285274027633477,
-            "tokens": 19
+            "logprob": -3.7596717926460315,
+            "tokens": 20
           },
           "end": {
             "logprob": -0.00019798702851403505,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.2545727748454038,
-        "logprob_per_token:other": -0.08725636213770042,
+        "logprob_per_token:identifier": -0.15373847991658793,
+        "logprob_per_token:other": -0.1880906570665163,
         "logprob_per_token:changed": -0.15216564538684355,
         "logprob_per_token:copied": -0.18966349159626067,
-        "logprob_per_token:other_changed": -0.022971406917642705,
+        "logprob_per_token:other_changed": -0.12326872960710195,
         "logprob_per_token:end": -3.413569457138535e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -2651,16 +2652,16 @@
         "logprob_per_token": -0.8861036629512392,
         "cells": {
           "identifier_changed": {
-            "logprob": -2.4437606043647975e-05,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -9.655626797666628e-05,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -23.96683866562671,
-            "tokens": 10
+            "logprob": -23.966863103232754,
+            "tokens": 11
           },
           "other_copied": {
             "logprob": -1.730005720823442,
@@ -2671,11 +2672,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -4.172202552424629e-06,
-        "logprob_per_token:other": -0.8860980822913845,
+        "logprob_per_token:identifier": -3.3295264819540097e-06,
+        "logprob_per_token:other": -0.886098924967455,
         "logprob_per_token:changed": -0.826443555283888,
         "logprob_per_token:copied": -0.05965869921004892,
-        "logprob_per_token:other_changed": -0.8264427126078175,
+        "logprob_per_token:other_changed": -0.826443555283888,
         "logprob_per_token:end": -1.3606033211670303e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -2729,16 +2730,16 @@
         "logprob_per_token": -0.10135366414722644,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.002120985882356763,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.00044873086608276935,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": 0.0,
-            "tokens": 0
+            "logprob": -0.002120985882356763,
+            "tokens": 1
           },
           "other_copied": {
             "logprob": -1.9231364695611433,
@@ -2749,11 +2750,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00013524824991787012,
-        "logprob_per_token:other": -0.10121770892427069,
+        "logprob_per_token:identifier": -2.361741400435628e-05,
+        "logprob_per_token:other": -0.10132933976018421,
         "logprob_per_token:changed": -0.00011163083591351384,
         "logprob_per_token:copied": -0.10124132633827505,
-        "logprob_per_token:other_changed": 0.0,
+        "logprob_per_token:other_changed": -0.00011163083591351384,
         "logprob_per_token:end": -7.08976777356216e-07,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -2928,24 +2929,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.0004946731723975972,
-            "tokens": 11
+            "logprob": -0.00022899096893524984,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -2.902861773967743,
-            "tokens": 2
+            "logprob": -2.9031274561712053,
+            "tokens": 3
           },
           "end": {
             "logprob": -0.016383176669478416,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -3.53337980283998e-05,
-        "logprob_per_token:other": -0.2073472695691245,
+        "logprob_per_token:identifier": -1.6356497781089274e-05,
+        "logprob_per_token:other": -0.2073662468693718,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.2073826033671529,
         "logprob_per_token:other_changed": 0.0,
@@ -3357,24 +3358,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.03878173439238708,
-            "tokens": 8
+            "logprob": -0.036589932356037025,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": -7.746581510189571,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -2.3808812491541858,
-            "tokens": 11
+            "logprob": -2.383073051190536,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.0030732564628124237,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.056696620178688414,
-        "logprob_per_token:other": -0.38951779843629836,
+        "logprob_per_token:identifier": -0.05661232010036726,
+        "logprob_per_token:other": -0.3896020985146195,
         "logprob_per_token:changed": -0.35315045770934933,
         "logprob_per_token:copied": -0.09306396090563741,
         "logprob_per_token:other_changed": -0.2979454426995989,
@@ -4367,34 +4368,34 @@
         "logprob_per_token": -0.19368792594747342,
         "cells": {
           "identifier_changed": {
-            "logprob": -2.4591032695025206,
-            "tokens": 5
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.767603962100111,
-            "tokens": 29
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
-            "logprob": -1.51905357837677,
-            "tokens": 1
+            "logprob": -3.9781568478792906,
+            "tokens": 6
           },
           "other_copied": {
-            "logprob": -4.357556778020239,
-            "tokens": 11
+            "logprob": -5.12516074012035,
+            "tokens": 40
           },
           "end": {
             "logprob": -1.5735502529423684e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.06865334535324748,
-        "logprob_per_token:other": -0.12503426290206401,
+        "logprob_per_token:identifier": 0.0,
+        "logprob_per_token:other": -0.1936876082553115,
         "logprob_per_token:changed": -0.0846416350612615,
         "logprob_per_token:copied": -0.10904597319405,
-        "logprob_per_token:other_changed": -0.0323202889016334,
+        "logprob_per_token:other_changed": -0.0846416350612615,
         "logprob_per_token:end": -3.3479792615795073e-07,
-        "lexer": "POVRay",
-        "lex_error_chars": 4,
+        "lexer": "reStructuredText",
+        "lex_error_chars": 0,
         "line_disagreement": 0.0
       },
       {
@@ -4601,16 +4602,16 @@
         "logprob_per_token": -1.0509300231933594,
         "cells": {
           "identifier_changed": {
-            "logprob": -22.663240908175794,
-            "tokens": 3
+            "logprob": -22.663187980651855,
+            "tokens": 2
           },
           "identifier_copied": {
             "logprob": -0.0006394484701033321,
             "tokens": 9
           },
           "other_changed": {
-            "logprob": -5.036405954113434,
-            "tokens": 7
+            "logprob": -5.0364588816373725,
+            "tokens": 8
           },
           "other_copied": {
             "logprob": -11.183876098610199,
@@ -4621,11 +4622,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6125373069363756,
-        "logprob_per_token:other": -0.43838600142496303,
+        "logprob_per_token:identifier": -0.6125358764627556,
+        "logprob_per_token:other": -0.43838743189858304,
         "logprob_per_token:changed": -0.7486391043861953,
         "logprob_per_token:copied": -0.30228420397514333,
-        "logprob_per_token:other_changed": -0.13611907984090363,
+        "logprob_per_token:other_changed": -0.13612051031452357,
         "logprob_per_token:end": -6.684559126812461e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -4644,24 +4645,24 @@
             "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.6840105404394308,
-            "tokens": 10
+            "logprob": -0.6761373247268239,
+            "tokens": 9
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.7401316155119275,
-            "tokens": 2
+            "logprob": -1.7480048312245344,
+            "tokens": 3
           },
           "end": {
             "logprob": -3.3378546504536644e-06,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.048860101083489225,
-        "logprob_per_token:other": -0.1242951153937091,
+        "logprob_per_token:identifier": -0.048297728532588735,
+        "logprob_per_token:other": -0.1248574879446096,
         "logprob_per_token:changed": -2.205337815602044e-06,
         "logprob_per_token:copied": -0.17315301113938272,
         "logprob_per_token:other_changed": 0.0,
@@ -4718,31 +4719,31 @@
         "logprob_per_token": -0.9887171206266984,
         "cells": {
           "identifier_changed": {
-            "logprob": -6.005936391700061,
-            "tokens": 11
+            "logprob": -6.0057484163164645,
+            "tokens": 10
           },
           "identifier_copied": {
-            "logprob": -16.40646461364645,
-            "tokens": 8
+            "logprob": -5.043894804686488,
+            "tokens": 7
           },
           "other_changed": {
-            "logprob": -14.202031119612002,
-            "tokens": 8
+            "logprob": -14.202219094995598,
+            "tokens": 9
           },
           "other_copied": {
-            "logprob": -8.863685055152189,
-            "tokens": 18
+            "logprob": -20.22625486411215,
+            "tokens": 19
           },
           "end": {
             "logprob": -0.0028691815678030252,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.48722610881188066,
-        "logprob_per_token:other": -0.5014286124948737,
+        "logprob_per_token:identifier": -0.2402096352391946,
+        "logprob_per_token:other": -0.7484450860675598,
         "logprob_per_token:changed": -0.43930364155026225,
         "logprob_per_token:copied": -0.5493510797564921,
-        "logprob_per_token:other_changed": -0.308739806948087,
+        "logprob_per_token:other_changed": -0.30874389336946956,
         "logprob_per_token:end": -6.237351234354402e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -4757,31 +4758,31 @@
         "logprob_per_token": -1.3783616690800107,
         "cells": {
           "identifier_changed": {
-            "logprob": -6.966247710150412,
-            "tokens": 10
+            "logprob": -6.966188464887011,
+            "tokens": 9
           },
           "identifier_copied": {
-            "logprob": -9.063579315272477,
-            "tokens": 10
+            "logprob": -6.894611293402818,
+            "tokens": 8
           },
           "other_changed": {
-            "logprob": -88.12066497026882,
-            "tokens": 34
+            "logprob": -88.12072421553222,
+            "tokens": 35
           },
           "other_copied": {
-            "logprob": -15.535386784416005,
-            "tokens": 32
+            "logprob": -17.704354806285664,
+            "tokens": 34
           },
           "end": {
             "logprob": -0.23158937692642212,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.1842508853496884,
-        "logprob_per_token:other": -1.1914488707435038,
+        "logprob_per_token:identifier": -0.15931953745160723,
+        "logprob_per_token:other": -1.2163802186415849,
         "logprob_per_token:changed": -1.0929530193151635,
         "logprob_per_token:copied": -0.28274673677802853,
-        "logprob_per_token:other_changed": -1.012881206554814,
+        "logprob_per_token:other_changed": -1.012881887534853,
         "logprob_per_token:end": -0.0026619468612232426,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -4800,24 +4801,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.001226812329605309,
-            "tokens": 6
+            "logprob": -0.0001742716026456037,
+            "tokens": 5
           },
           "other_changed": {
             "logprob": -9.219200281600934,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -2.696799471420718,
-            "tokens": 9
+            "logprob": -2.6978520121476777,
+            "tokens": 10
           },
           "end": {
             "logprob": -0.0004676678800024092,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0005548941737970381,
-        "logprob_per_token:other": -0.5957999876510826,
+        "logprob_per_token:identifier": -0.0005022671374490528,
+        "logprob_per_token:other": -0.5958526146874306,
         "logprob_per_token:changed": -0.46145356763736345,
         "logprob_per_token:copied": -0.13490131418751616,
         "logprob_per_token:other_changed": -0.46096001408004666,
@@ -4839,24 +4840,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.0011613903220677457,
-            "tokens": 6
+            "logprob": -0.00012575961909533362,
+            "tokens": 5
           },
           "other_changed": {
             "logprob": -9.169176072929986,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -3.405958149216417,
-            "tokens": 9
+            "logprob": -3.4069937799193895,
+            "tokens": 10
           },
           "end": {
             "logprob": -0.0004544417606666684,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00043529293559458894,
-        "logprob_per_token:other": -0.6287567111073201,
+        "logprob_per_token:identifier": -0.00038351140044596833,
+        "logprob_per_token:other": -0.6288084926424687,
         "logprob_per_token:changed": -0.45883602706599047,
         "logprob_per_token:copied": -0.17035597697692423,
         "logprob_per_token:other_changed": -0.45845880364649927,
@@ -4956,24 +4957,24 @@
             "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -5.461767092347145,
-            "tokens": 2
+            "logprob": -0.24547375738620758,
+            "tokens": 1
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -3.678408403880894,
-            "tokens": 3
+            "logprob": -8.894701738841832,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.0005270045949146152,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -1.2252634444407053,
-        "logprob_per_token:other": -0.5254869148401278,
+        "logprob_per_token:identifier": -0.48007868230342865,
+        "logprob_per_token:other": -1.2706716769774045,
         "logprob_per_token:changed": -0.4450110026768276,
         "logprob_per_token:copied": -1.3057393566040056,
         "logprob_per_token:other_changed": 0.0,
@@ -5108,31 +5109,31 @@
         "logprob_per_token": -2.5055056485262783,
         "cells": {
           "identifier_changed": {
-            "logprob": -59.2259474627208,
-            "tokens": 12
+            "logprob": -59.13915376365185,
+            "tokens": 10
           },
           "identifier_copied": {
-            "logprob": -6.322680144570768,
-            "tokens": 6
+            "logprob": -6.283726707100868,
+            "tokens": 4
           },
           "other_changed": {
-            "logprob": -56.4532846159309,
-            "tokens": 23
+            "logprob": -56.540078314999846,
+            "tokens": 25
           },
           "other_copied": {
-            "logprob": -7.7305587602895685,
-            "tokens": 13
+            "logprob": -7.769512197759468,
+            "tokens": 15
           },
           "end": {
             "logprob": -8.070341110229492,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -1.191793229223483,
-        "logprob_per_token:other": -1.1669789704767357,
+        "logprob_per_token:identifier": -1.1895069176500495,
+        "logprob_per_token:other": -1.1692652820501694,
         "logprob_per_token:changed": -2.1032587650663945,
         "logprob_per_token:copied": -0.2555134346338243,
-        "logprob_per_token:other_changed": -1.026423356653289,
+        "logprob_per_token:other_changed": -1.0280014239090882,
         "logprob_per_token:end": -0.14673347473144532,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -5229,24 +5230,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.5220638233745376,
-            "tokens": 9
+            "logprob": -0.5219086214142408,
+            "tokens": 6
           },
           "other_changed": {
             "logprob": -0.005671125371009111,
             "tokens": 1
           },
           "other_copied": {
-            "logprob": -1.267712758289349,
-            "tokens": 13
+            "logprob": -1.2678679602496459,
+            "tokens": 16
           },
           "end": {
             "logprob": -0.15648068487644196,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0217526593072724,
-        "logprob_per_token:other": -0.05305766181918159,
+        "logprob_per_token:identifier": -0.021746192558926698,
+        "logprob_per_token:other": -0.05306412856752729,
         "logprob_per_token:changed": -0.00023629689045871297,
         "logprob_per_token:copied": -0.07457402423599528,
         "logprob_per_token:other_changed": -0.00023629689045871297,
@@ -5420,31 +5421,31 @@
         "logprob_per_token": -1.6448745727539062,
         "cells": {
           "identifier_changed": {
-            "logprob": -24.51773516814501,
-            "tokens": 9
+            "logprob": -22.17519013564379,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.01656204607570544,
-            "tokens": 4
+            "logprob": -0.011093399079982191,
+            "tokens": 3
           },
           "other_changed": {
-            "logprob": -3.880631446838379,
-            "tokens": 1
+            "logprob": -6.2231764793396,
+            "tokens": 2
           },
           "other_copied": {
-            "logprob": -4.4018047753488645,
-            "tokens": 5
+            "logprob": -4.407273422344588,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.0807577446103096,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -1.2267148607110356,
-        "logprob_per_token:other": -0.4141218111093622,
+        "logprob_per_token:identifier": -1.1093141767361885,
+        "logprob_per_token:other": -0.5315224950842093,
         "logprob_per_token:changed": -1.4199183307491694,
         "logprob_per_token:copied": -0.22091834107122849,
-        "logprob_per_token:other_changed": -0.19403157234191895,
+        "logprob_per_token:other_changed": -0.31115882396697997,
         "logprob_per_token:end": -0.00403788723051548,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -5771,16 +5772,16 @@
         "logprob_per_token": -1.7966784068516322,
         "cells": {
           "identifier_changed": {
-            "logprob": -1.328019142150879,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.022439656109781936,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -9.152153968811035,
-            "tokens": 1
+            "logprob": -10.480173110961914,
+            "tokens": 2
           },
           "other_copied": {
             "logprob": -2.0411200523376465,
@@ -5791,11 +5792,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.19292268546580868,
-        "logprob_per_token:other": -1.599039145878383,
+        "logprob_per_token:identifier": -0.0032056651585402767,
+        "logprob_per_token:other": -1.7887561661856515,
         "logprob_per_token:changed": -1.4971675872802734,
         "logprob_per_token:copied": -0.29479424406391835,
-        "logprob_per_token:other_changed": -1.307450566973005,
+        "logprob_per_token:other_changed": -1.4971675872802734,
         "logprob_per_token:end": -0.004716620381389346,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -6087,24 +6088,24 @@
             "tokens": 7
           },
           "identifier_copied": {
-            "logprob": -0.02216215431690216,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": -5.710892990231514,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -5.438014978077263,
-            "tokens": 5
+            "logprob": -5.460177132394165,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.22471444308757782,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -1.2199787384670344,
-        "logprob_per_token:other": -0.6968067480192985,
+        "logprob_per_token:identifier": -1.218593603822228,
+        "logprob_per_token:other": -0.6981918826641049,
         "logprob_per_token:changed": -1.5755244157116977,
         "logprob_per_token:copied": -0.3412610707746353,
         "logprob_per_token:other_changed": -0.3569308118894696,
@@ -6200,16 +6201,16 @@
         "logprob_per_token": -1.0570472717285155,
         "cells": {
           "identifier_changed": {
-            "logprob": -17.482369670291746,
-            "tokens": 12
+            "logprob": -17.461564570312703,
+            "tokens": 11
           },
           "identifier_copied": {
             "logprob": -0.009687622992942124,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -8.930140388620202,
-            "tokens": 4
+            "logprob": -8.950945488599245,
+            "tokens": 5
           },
           "other_copied": {
             "logprob": -0.00395654656813349,
@@ -6220,11 +6221,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6996822917313875,
-        "logprob_per_token:other": -0.35736387740753345,
+        "logprob_per_token:identifier": -0.6988500877322258,
+        "logprob_per_token:other": -0.3581960814066952,
         "logprob_per_token:changed": -1.056500402356478,
         "logprob_per_token:copied": -0.0005457667824430246,
-        "logprob_per_token:other_changed": -0.3572056155448081,
+        "logprob_per_token:other_changed": -0.3580378195439698,
         "logprob_per_token:end": -1.1062469275202603e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -7881,24 +7882,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -2.685223408816796,
-            "tokens": 19
+            "logprob": -2.6849797601192904,
+            "tokens": 17
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -2.0776120803056983,
-            "tokens": 5
+            "logprob": -2.077855729003204,
+            "tokens": 7
           },
           "end": {
             "logprob": -0.17508099973201752,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.12579127748912283,
-        "logprob_per_token:other": -0.07694859556687772,
+        "logprob_per_token:identifier": -0.1257822534632893,
+        "logprob_per_token:other": -0.07695761959271126,
         "logprob_per_token:changed": -0.02633855864405632,
         "logprob_per_token:copied": -0.17640131441194423,
         "logprob_per_token:other_changed": 0.0,
@@ -7959,24 +7960,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -6.485395781216226,
-            "tokens": 27
+            "logprob": -6.485310073411398,
+            "tokens": 26
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.6090575646926482,
-            "tokens": 10
+            "logprob": -1.6091432724974766,
+            "tokens": 11
           },
           "end": {
             "logprob": -2.2649508537142538e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.18106300624751057,
-        "logprob_per_token:other": -0.0402264391173162,
+        "logprob_per_token:identifier": -0.18106086355238987,
+        "logprob_per_token:other": -0.040228581812436916,
         "logprob_per_token:changed": -0.01892811171710491,
         "logprob_per_token:copied": -0.20236133364772185,
         "logprob_per_token:other_changed": 0.0,
@@ -8154,24 +8155,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.07498590808972949,
-            "tokens": 4
+            "logprob": -0.0746425250908942,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -2.1355623962654136,
-            "tokens": 11
+            "logprob": -2.135905779264249,
+            "tokens": 12
           },
           "end": {
             "logprob": -0.00022313489171210676,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.940932837300756,
-        "logprob_per_token:other": -0.11864235534807853,
+        "logprob_per_token:identifier": -0.9409137604674874,
+        "logprob_per_token:other": -0.11866143218134716,
         "logprob_per_token:changed": -0.9367669535179933,
         "logprob_per_token:copied": -0.12280823913084128,
         "logprob_per_token:other_changed": 0.0,
@@ -8232,24 +8233,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.3002820015931249,
-            "tokens": 12
+            "logprob": -0.09901090977245275,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -15.875634961448668,
-            "tokens": 7
+            "logprob": -16.07690605326934,
+            "tokens": 9
           },
           "end": {
             "logprob": -0.005212052259594202,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.02533005866546683,
-        "logprob_per_token:other": -0.6902449983238551,
+        "logprob_per_token:identifier": -0.01657914162978543,
+        "logprob_per_token:other": -0.6989959153595365,
         "logprob_per_token:changed": -0.012274319465765748,
         "logprob_per_token:copied": -0.7033007375235563,
         "logprob_per_token:other_changed": 0.0,
@@ -8427,24 +8428,24 @@
             "tokens": 4
           },
           "identifier_copied": {
-            "logprob": -0.07965762271794574,
-            "tokens": 6
+            "logprob": -0.007823356536391657,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.2513663088141058,
-            "tokens": 12
+            "logprob": -1.32320057499566,
+            "tokens": 15
           },
           "end": {
             "logprob": -1.07287787614041e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.003497150769871753,
-        "logprob_per_token:other": -0.0544072308180046,
+        "logprob_per_token:identifier": -0.0003739218054563579,
+        "logprob_per_token:other": -0.057530459782419996,
         "logprob_per_token:changed": -3.377586909150325e-05,
         "logprob_per_token:copied": -0.05787060571878485,
         "logprob_per_token:other_changed": 0.0,
@@ -9246,24 +9247,24 @@
             "tokens": 15
           },
           "identifier_copied": {
-            "logprob": -0.007096808293908907,
-            "tokens": 4
+            "logprob": -0.007082264866085097,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": -21.16104129847008,
             "tokens": 7
           },
           "other_copied": {
-            "logprob": -10.909999776301902,
-            "tokens": 17
+            "logprob": -10.910014319729726,
+            "tokens": 18
           },
           "end": {
             "logprob": -0.00011538793478393927,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0003427240561961753,
-        "logprob_per_token:other": -0.7288872971539088,
+        "logprob_per_token:identifier": -0.0003423935237456342,
+        "logprob_per_token:other": -0.7288876276863593,
         "logprob_per_token:changed": -0.4811141897420183,
         "logprob_per_token:copied": -0.2481158314680866,
         "logprob_per_token:other_changed": -0.48093275678341096,
@@ -9359,31 +9360,31 @@
         "logprob_per_token": -0.2916736602783203,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.005667542863534436,
-            "tokens": 6
-          },
-          "identifier_copied": {
-            "logprob": -0.00143964330527524,
+            "logprob": -0.00013148219966296892,
             "tokens": 4
           },
+          "identifier_copied": {
+            "logprob": -0.0006138639673736179,
+            "tokens": 3
+          },
           "other_changed": {
-            "logprob": -2.4052441439125687,
-            "tokens": 6
+            "logprob": -2.41078020457644,
+            "tokens": 8
           },
           "other_copied": {
-            "logprob": -5.75440996117959,
-            "tokens": 11
+            "logprob": -5.755235740517492,
+            "tokens": 12
           },
           "end": {
             "logprob": -0.00010144196130568162,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00025382807745748844,
-        "logprob_per_token:other": -0.2914162180390057,
+        "logprob_per_token:identifier": -2.6619505965592388e-05,
+        "logprob_per_token:other": -0.2916434266104976,
         "logprob_per_token:changed": -0.08610398881343226,
         "logprob_per_token:copied": -0.2055660573030309,
-        "logprob_per_token:other_changed": -0.08590157656830602,
+        "logprob_per_token:other_changed": -0.08609929302058715,
         "logprob_per_token:end": -3.622927189488629e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -9437,31 +9438,31 @@
         "logprob_per_token": -1.1598238537658998,
         "cells": {
           "identifier_changed": {
-            "logprob": -122.47198767399595,
-            "tokens": 90
-          },
-          "identifier_copied": {
-            "logprob": -3.6487656309473095,
-            "tokens": 5
-          },
-          "other_changed": {
-            "logprob": -95.9283759726095,
+            "logprob": -119.01338288465695,
             "tokens": 87
           },
+          "identifier_copied": {
+            "logprob": -3.628635717483121,
+            "tokens": 4
+          },
+          "other_changed": {
+            "logprob": -99.38698076194851,
+            "tokens": 90
+          },
           "other_copied": {
-            "logprob": -8.754475544730667,
-            "tokens": 16
+            "logprob": -8.774605458194856,
+            "tokens": 17
           },
           "end": {
             "logprob": -0.0013402060139924288,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6337726296730817,
-        "logprob_per_token:other": -0.5260444799866341,
+        "logprob_per_token:identifier": -0.6162915507645229,
+        "logprob_per_token:other": -0.5435255588951928,
         "logprob_per_token:changed": -1.0974892645558063,
         "logprob_per_token:copied": -0.06232784510390943,
-        "logprob_per_token:other_changed": -0.4820521405658769,
+        "logprob_per_token:other_changed": -0.4994320641303945,
         "logprob_per_token:end": -6.734703587901652e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -9519,24 +9520,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.05998190296179473,
-            "tokens": 7
+            "logprob": -0.003506816825165515,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -3.3891709900328806,
-            "tokens": 7
+            "logprob": -3.44564607616951,
+            "tokens": 10
           },
           "end": {
             "logprob": -0.00020990552729927003,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0039987935307863156,
-        "logprob_per_token:other": -0.2259447326688587,
+        "logprob_per_token:identifier": -0.00023378778834436768,
+        "logprob_per_token:other": -0.22970973841130066,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.22994352619964503,
         "logprob_per_token:other_changed": 0.0,
@@ -9792,24 +9793,24 @@
             "tokens": 9
           },
           "identifier_copied": {
-            "logprob": -0.06578940914187115,
-            "tokens": 13
+            "logprob": -0.06572050773229421,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.8133933621674032,
-            "tokens": 9
+            "logprob": -1.8134622635769801,
+            "tokens": 12
           },
           "end": {
             "logprob": -3.58813522325363e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.004020612389183498,
-        "logprob_per_token:other": -0.05666854256773135,
+        "logprob_per_token:identifier": -0.004018459220134218,
+        "logprob_per_token:other": -0.05667069573678063,
         "logprob_per_token:changed": -0.0019646933535000244,
         "logprob_per_token:copied": -0.058724461603414824,
         "logprob_per_token:other_changed": 0.0,
@@ -12485,24 +12486,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.002074115676805377,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.864844753285979,
-            "tokens": 7
+            "logprob": -1.8669188689627845,
+            "tokens": 8
           },
           "end": {
             "logprob": -1.6331539882230572e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00024226915657739786,
-        "logprob_per_token:other": -0.15540372944049827,
+        "logprob_per_token:identifier": -6.942618351028311e-05,
+        "logprob_per_token:other": -0.15557657241356537,
         "logprob_per_token:changed": -6.942618351028311e-05,
         "logprob_per_token:copied": -0.15557657241356537,
         "logprob_per_token:other_changed": 0.0,
@@ -12676,31 +12677,31 @@
         "logprob_per_token": -1.9354373707490808,
         "cells": {
           "identifier_changed": {
-            "logprob": -198.76831571938237,
-            "tokens": 81
+            "logprob": -188.22951863362687,
+            "tokens": 69
           },
           "identifier_copied": {
-            "logprob": -0.08190452307462692,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
-            "logprob": -179.0805984462022,
-            "tokens": 109
+            "logprob": -189.6193955319577,
+            "tokens": 121
           },
           "other_copied": {
-            "logprob": -14.696760374123187,
-            "tokens": 12
+            "logprob": -14.778664897197814,
+            "tokens": 13
           },
           "end": {
             "logprob": -2.2016303539276123,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.9747559815806716,
-        "logprob_per_token:other": -0.9498890138251245,
+        "logprob_per_token:identifier": -0.9226937187922886,
+        "logprob_per_token:other": -1.0019512766135075,
         "logprob_per_token:changed": -1.8522005596352185,
         "logprob_per_token:copied": -0.07244443577057752,
-        "logprob_per_token:other_changed": -0.8778460708147167,
+        "logprob_per_token:other_changed": -0.9295068408429299,
         "logprob_per_token:end": -0.010792305656507904,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -12758,24 +12759,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.006684442982077599,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": -0.09360307455062866,
             "tokens": 1
           },
           "other_copied": {
-            "logprob": -2.781693701632321,
-            "tokens": 3
+            "logprob": -2.7883781446143985,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.0032782405614852905,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0011140738303462665,
-        "logprob_per_token:other": -0.4792161293638249,
+        "logprob_per_token:identifier": 0.0,
+        "logprob_per_token:other": -0.4803302031941712,
         "logprob_per_token:changed": -0.015600512425104776,
         "logprob_per_token:copied": -0.4647296907690664,
         "logprob_per_token:other_changed": -0.015600512425104776,
@@ -14197,31 +14198,31 @@
         "logprob_per_token": -0.4791581124970407,
         "cells": {
           "identifier_changed": {
-            "logprob": -5.01707708109825,
-            "tokens": 9
+            "logprob": -5.01445826651252,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.019331983303231937,
-            "tokens": 17
+            "logprob": -0.001831711282534343,
+            "tokens": 16
           },
           "other_changed": {
-            "logprob": -5.341180150171567,
-            "tokens": 3
+            "logprob": -5.343798964757298,
+            "tokens": 4
           },
           "other_copied": {
-            "logprob": -5.434445649385452,
-            "tokens": 3
+            "logprob": -5.45194592140615,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.00018344627460464835,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.1526184564970146,
-        "logprob_per_token:other": -0.3265341151380915,
+        "logprob_per_token:identifier": -0.15200878720591074,
+        "logprob_per_token:other": -0.3271437844291954,
         "logprob_per_token:changed": -0.31388658276575204,
         "logprob_per_token:copied": -0.16526598886935406,
-        "logprob_per_token:other_changed": -0.16185394394459296,
+        "logprob_per_token:other_changed": -0.16193330196234235,
         "logprob_per_token:end": -5.558978018322677e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -14236,31 +14237,31 @@
         "logprob_per_token": -0.3879823965184829,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.014299866125497829,
-            "tokens": 9
+            "logprob": -0.01425719010933335,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.0017255142867043105,
-            "tokens": 18
+            "logprob": -0.00033018980877841386,
+            "tokens": 17
           },
           "other_changed": {
-            "logprob": -3.0742430380705628,
-            "tokens": 3
+            "logprob": -3.0742857140867272,
+            "tokens": 4
           },
           "other_copied": {
-            "logprob": -10.101052790880203,
-            "tokens": 3
+            "logprob": -10.10244811535813,
+            "tokens": 4
           },
           "end": {
             "logprob": -8.070142939686775e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0004713347180059453,
-        "logprob_per_token:other": -0.38750870085149314,
+        "logprob_per_token:identifier": -0.00042904058582681663,
+        "logprob_per_token:other": -0.38755099498367224,
         "logprob_per_token:changed": -0.09083949718223708,
         "logprob_per_token:copied": -0.297140538387262,
-        "logprob_per_token:other_changed": -0.09041891288442831,
+        "logprob_per_token:other_changed": -0.09042016806137433,
         "logprob_per_token:end": -2.3735714528490517e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -14279,24 +14280,24 @@
             "tokens": 7
           },
           "identifier_copied": {
-            "logprob": -0.029035793997366,
-            "tokens": 16
+            "logprob": -0.028930060945469904,
+            "tokens": 15
           },
           "other_changed": {
             "logprob": -13.18155326572014,
             "tokens": 4
           },
           "other_copied": {
-            "logprob": -2.1856577289290726,
-            "tokens": 2
+            "logprob": -2.1857634619809687,
+            "tokens": 3
           },
           "end": {
             "logprob": -3.266281055402942e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.002277507568464898,
-        "logprob_per_token:other": -0.5122403664883071,
+        "logprob_per_token:identifier": -0.002273983133401695,
+        "logprob_per_token:other": -0.5122438909233703,
         "logprob_per_token:changed": -0.4406947566258907,
         "logprob_per_token:copied": -0.07382311743088128,
         "logprob_per_token:other_changed": -0.439385108857338,
@@ -14318,24 +14319,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -1.8196792654644014,
-            "tokens": 8
+            "logprob": -1.7807844035278322,
+            "tokens": 7
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -4.299771407619119,
-            "tokens": 4
+            "logprob": -4.338666269555688,
+            "tokens": 5
           },
           "end": {
             "logprob": -8.999896090244874e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.13997532811264626,
-        "logprob_per_token:other": -0.3307516467399322,
+        "logprob_per_token:identifier": -0.1369834156559871,
+        "logprob_per_token:other": -0.3337435591965914,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.4707269748525785,
         "logprob_per_token:other_changed": 0.0,
@@ -14825,24 +14826,24 @@
             "tokens": 6
           },
           "identifier_copied": {
-            "logprob": -0.7413888756755114,
-            "tokens": 20
+            "logprob": -0.18204750741006137,
+            "tokens": 18
           },
           "other_changed": {
             "logprob": -49.645504127548065,
             "tokens": 50
           },
           "other_copied": {
-            "logprob": -2.652736327186517,
-            "tokens": 21
+            "logprob": -3.212077695451967,
+            "tokens": 23
           },
           "end": {
             "logprob": -0.0027246277313679457,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00877516432227803,
-        "logprob_per_token:other": -0.5336555148442305,
+        "logprob_per_token:identifier": -0.003067599339977519,
+        "logprob_per_token:other": -0.539363079826531,
         "logprob_per_token:changed": -0.5077967485250592,
         "logprob_per_token:copied": -0.03463393064144927,
         "logprob_per_token:other_changed": -0.5065867768117149,
@@ -14864,24 +14865,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.07145274547666958,
-            "tokens": 20
+            "logprob": -0.06231396669328859,
+            "tokens": 19
           },
           "other_changed": {
             "logprob": -65.28007918553703,
             "tokens": 44
           },
           "other_copied": {
-            "logprob": -9.232626808176747,
-            "tokens": 22
+            "logprob": -9.241765586960128,
+            "tokens": 23
           },
           "end": {
             "logprob": -0.00014578233822248876,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0008212959250191906,
-        "logprob_per_token:other": -0.8564678849852159,
+        "logprob_per_token:identifier": -0.0007162524907274551,
+        "logprob_per_token:other": -0.8565729284195076,
         "logprob_per_token:changed": -0.7503457377647935,
         "logprob_per_token:copied": -0.10694344314544156,
         "logprob_per_token:other_changed": -0.7503457377647935,
@@ -16537,31 +16538,31 @@
         "logprob_per_token": -1.4586039524452359,
         "cells": {
           "identifier_changed": {
-            "logprob": -22.650620565620784,
-            "tokens": 14
+            "logprob": -10.802003011909846,
+            "tokens": 13
           },
           "identifier_copied": {
-            "logprob": -0.8541329776926432,
-            "tokens": 4
+            "logprob": -0.05222013351158239,
+            "tokens": 3
           },
           "other_changed": {
-            "logprob": -31.820032604202424,
-            "tokens": 17
+            "logprob": -43.66865015791336,
+            "tokens": 18
           },
           "other_copied": {
-            "logprob": -13.912102509274973,
-            "tokens": 15
+            "logprob": -14.714015353456034,
+            "tokens": 16
           },
           "end": {
             "logprob": -5.151914596557617,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.46087752045712604,
-        "logprob_per_token:other": -0.8967085316368117,
+        "logprob_per_token:identifier": -0.2128279048121849,
+        "logprob_per_token:other": -1.144758147281753,
         "logprob_per_token:changed": -1.06805202293771,
         "logprob_per_token:copied": -0.2895340291562278,
-        "logprob_per_token:other_changed": -0.6239222079255378,
+        "logprob_per_token:other_changed": -0.8562480423120267,
         "logprob_per_token:end": -0.10101793326583564,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -18370,16 +18371,16 @@
         "logprob_per_token": -0.8736322191026475,
         "cells": {
           "identifier_changed": {
-            "logprob": -1.3259634401474614,
-            "tokens": 5
+            "logprob": -0.42286578079801984,
+            "tokens": 3
           },
           "identifier_copied": {
             "logprob": -0.0187790183153993,
             "tokens": 8
           },
           "other_changed": {
-            "logprob": -46.81179373210762,
-            "tokens": 18
+            "logprob": -47.71489139145706,
+            "tokens": 20
           },
           "other_copied": {
             "logprob": -6.880604754282103,
@@ -18390,11 +18391,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.021345118388299375,
-        "logprob_per_token:other": -0.8522602934347575,
+        "logprob_per_token:identifier": -0.007010234906562209,
+        "logprob_per_token:other": -0.8665951769164947,
         "logprob_per_token:changed": -0.7640913836865886,
         "logprob_per_token:copied": -0.1095140281364683,
-        "logprob_per_token:other_changed": -0.7430443449540891,
+        "logprob_per_token:other_changed": -0.7573792284358263,
         "logprob_per_token:end": -2.6841012258378285e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -19076,24 +19077,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.0039546885400341125,
-            "tokens": 4
+            "logprob": -0.0004650910723285051,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -10.585967183113098,
-            "tokens": 3
+            "logprob": -10.589456780580804,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.00188137823715806,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0004943360675042641,
-        "logprob_per_token:other": -1.3232458978891373,
+        "logprob_per_token:identifier": -5.813638404106314e-05,
+        "logprob_per_token:other": -1.3236820975726005,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -1.3237402339566415,
         "logprob_per_token:other_changed": 0.0,
@@ -19741,24 +19742,24 @@
             "tokens": 4
           },
           "identifier_copied": {
-            "logprob": -1.1216412222129293,
-            "tokens": 8
+            "logprob": -0.14579040167154744,
+            "tokens": 7
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.1812947946600616,
-            "tokens": 8
+            "logprob": -1.1571456152014434,
+            "tokens": 9
           },
           "end": {
             "logprob": -5.686121585313231e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0560065581923395,
-        "logprob_per_token:other": -0.008633085460002934,
+        "logprob_per_token:identifier": -0.00953747149989275,
+        "logprob_per_token:other": -0.05510217215244969,
         "logprob_per_token:changed": -0.0025950714202952526,
         "logprob_per_token:copied": -0.062044572232047186,
         "logprob_per_token:other_changed": 0.0,
@@ -19776,31 +19777,31 @@
         "logprob_per_token": -0.022644078290020977,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.07859821291640401,
-            "tokens": 2
+            "logprob": -0.004567903000861406,
+            "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.15466164448298514,
-            "tokens": 17
+            "logprob": -0.1095653580268845,
+            "tokens": 14
           },
           "other_changed": {
-            "logprob": 0.0,
-            "tokens": 0
+            "logprob": -0.0740303099155426,
+            "tokens": 1
           },
           "other_copied": {
-            "logprob": -0.3780544221808668,
-            "tokens": 7
+            "logprob": -0.42315070863696747,
+            "tokens": 10
           },
           "end": {
             "logprob": -7.581423415103927e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.008639253977755154,
-        "logprob_per_token:other": -0.014002015636328401,
+        "logprob_per_token:identifier": -0.004227157815842441,
+        "logprob_per_token:other": -0.018414111798241112,
         "logprob_per_token:changed": -0.002911044922829778,
         "logprob_per_token:copied": -0.019730224691253778,
-        "logprob_per_token:other_changed": 0.0,
+        "logprob_per_token:other_changed": -0.0027418633302052817,
         "logprob_per_token:end": -2.8079345981866397e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -19819,24 +19820,24 @@
             "tokens": 17
           },
           "identifier_copied": {
-            "logprob": -1.4858909905779,
-            "tokens": 17
+            "logprob": -0.44079072958629695,
+            "tokens": 13
           },
           "other_changed": {
             "logprob": -13.442413154682072,
             "tokens": 28
           },
           "other_copied": {
-            "logprob": -0.028940837758455018,
-            "tokens": 9
+            "logprob": -1.0740410987500582,
+            "tokens": 13
           },
           "end": {
             "logprob": -5.376194530981593e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.04281448268511667,
-        "logprob_per_token:other": -0.1871021387838962,
+        "logprob_per_token:identifier": -0.028299201282455517,
+        "logprob_per_token:other": -0.20161742018655737,
         "logprob_per_token:changed": -0.20887729051989684,
         "logprob_per_token:copied": -0.021039330949116045,
         "logprob_per_token:other_changed": -0.18670018270391767,
@@ -20092,24 +20093,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.006983840779867023,
-            "tokens": 2
+            "logprob": -0.006225242279469967,
+            "tokens": 1
           },
           "other_changed": {
             "logprob": -1.2778012371854857,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -0.004852236717852065,
-            "tokens": 5
+            "logprob": -0.005610835218249122,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.0010319390567019582,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0006348946163515476,
-        "logprob_per_token:other": -0.11660486126393979,
+        "logprob_per_token:identifier": -0.0005659311163154515,
+        "logprob_per_token:other": -0.11667382476397589,
         "logprob_per_token:changed": -0.11616374883504416,
         "logprob_per_token:copied": -0.0010760070452471898,
         "logprob_per_token:other_changed": -0.11616374883504416,
@@ -20131,24 +20132,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.7999552271794528,
-            "tokens": 11
+            "logprob": -0.7882409847807139,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": -1.892243534734007,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -0.795323982136324,
-            "tokens": 10
+            "logprob": -0.8070382245350629,
+            "tokens": 11
           },
           "end": {
             "logprob": -0.0008573431987315416,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.03199820908717811,
-        "logprob_per_token:other": -0.10750270067481324,
+        "logprob_per_token:identifier": -0.031529639391228555,
+        "logprob_per_token:other": -0.10797127037076279,
         "logprob_per_token:changed": -0.07568974138936028,
         "logprob_per_token:copied": -0.06381116837263107,
         "logprob_per_token:other_changed": -0.07568974138936028,
@@ -20170,24 +20171,24 @@
             "tokens": 6
           },
           "identifier_copied": {
-            "logprob": -0.10958079935517162,
-            "tokens": 4
+            "logprob": -0.08971861051395535,
+            "tokens": 2
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.06278303404906183,
-            "tokens": 10
+            "logprob": -0.08264522289027809,
+            "tokens": 12
           },
           "end": {
             "logprob": -6.23445157543756e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.008317236145514818,
-        "logprob_per_token:other": -0.002989668288050563,
+        "logprob_per_token:identifier": -0.007371417629266424,
+        "logprob_per_token:other": -0.003935486804298957,
         "logprob_per_token:changed": -0.0030991028428875972,
         "logprob_per_token:copied": -0.008207801590677783,
         "logprob_per_token:other_changed": 0.0,
@@ -20248,24 +20249,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.0347432978451252,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.03951280005276203,
-            "tokens": 2
+            "logprob": -0.07425609789788723,
+            "tokens": 3
           },
           "end": {
             "logprob": -0.0002217047003796324,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.022089989733233648,
-        "logprob_per_token:other": -0.005644685721823147,
+        "logprob_per_token:identifier": -0.017126661469644335,
+        "logprob_per_token:other": -0.010608013985412461,
         "logprob_per_token:changed": -0.017126661469644335,
         "logprob_per_token:copied": -0.010608013985412461,
         "logprob_per_token:other_changed": 0.0,
@@ -20638,24 +20639,24 @@
             "tokens": 5
           },
           "identifier_copied": {
-            "logprob": -4.202485944551881,
-            "tokens": 10
+            "logprob": -1.9740318315452896,
+            "tokens": 9
           },
           "other_changed": {
             "logprob": -5.932710565626621,
             "tokens": 4
           },
           "other_copied": {
-            "logprob": -0.16736765950918198,
-            "tokens": 2
+            "logprob": -2.3958217725157738,
+            "tokens": 3
           },
           "end": {
             "logprob": -9.727005090098828e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.19590148989862594,
-        "logprob_per_token:other": -0.2772762829607183,
+        "logprob_per_token:identifier": -0.09460812112559903,
+        "logprob_per_token:other": -0.37856965173374524,
         "logprob_per_token:changed": -0.2745480635838414,
         "logprob_per_token:copied": -0.19862970927550289,
         "logprob_per_token:other_changed": -0.2696686620739373,
@@ -20677,24 +20678,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -1.0459537288406864,
-            "tokens": 5
+            "logprob": -1.0413520062575117,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": -4.354125738143921,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.8426433270360576,
-            "tokens": 14
+            "logprob": -0.8472450496192323,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.00039057256071828306,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.26924892159644515,
-        "logprob_per_token:other": -0.20787076260719914,
+        "logprob_per_token:identifier": -0.26906485269311814,
+        "logprob_per_token:other": -0.20805483151052612,
         "logprob_per_token:changed": -0.4015758019685745,
         "logprob_per_token:copied": -0.07554388223506976,
         "logprob_per_token:other_changed": -0.17416502952575683,
@@ -21531,31 +21532,31 @@
         "logprob_per_token": -0.15410506340765184,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.02119016800133977,
-            "tokens": 4
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.13153116039029555,
-            "tokens": 10
+            "logprob": -0.12552688789583044,
+            "tokens": 9
           },
           "other_changed": {
-            "logprob": -3.14110600289132,
-            "tokens": 6
+            "logprob": -3.1622961708926596,
+            "tokens": 10
           },
           "other_copied": {
-            "logprob": -0.9568341992326168,
-            "tokens": 10
+            "logprob": -0.9628384717270819,
+            "tokens": 11
           },
           "end": {
             "logprob": -0.5265953540802002,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.004926494464246301,
-        "logprob_per_token:other": -0.1321916194233528,
+        "logprob_per_token:identifier": -0.004049254448252595,
+        "logprob_per_token:other": -0.1330688594393465,
         "logprob_per_token:changed": -0.10200955389976321,
         "logprob_per_token:copied": -0.03510855998783588,
-        "logprob_per_token:other_changed": -0.10132600009326838,
+        "logprob_per_token:other_changed": -0.10200955389976321,
         "logprob_per_token:end": -0.01698694690581291,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -21574,24 +21575,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.964747135896971,
-            "tokens": 84
+            "logprob": -0.8459275680200449,
+            "tokens": 67
           },
           "other_changed": {
             "logprob": -2.305965005987673,
             "tokens": 34
           },
           "other_copied": {
-            "logprob": -0.2643934643315333,
-            "tokens": 80
+            "logprob": -0.3832130322084595,
+            "tokens": 97
           },
           "end": {
             "logprob": -0.00015436411194968969,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.004847975557271211,
-        "logprob_per_token:other": -0.01291637422270958,
+        "logprob_per_token:identifier": -0.004250892301608265,
+        "logprob_per_token:other": -0.013513457478372525,
         "logprob_per_token:changed": -0.011587763849184286,
         "logprob_per_token:copied": -0.006176585930796504,
         "logprob_per_token:other_changed": -0.011587763849184286,
@@ -21648,31 +21649,31 @@
         "logprob_per_token": -0.19171649012072334,
         "cells": {
           "identifier_changed": {
-            "logprob": -6.794693558244035,
-            "tokens": 11
+            "logprob": -3.8711533087771386,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -3.4737194596364134,
-            "tokens": 15
+            "logprob": -3.4417707926168077,
+            "tokens": 14
           },
           "other_changed": {
-            "logprob": -0.19724539365142846,
-            "tokens": 12
+            "logprob": -3.1207856431183245,
+            "tokens": 15
           },
           "other_copied": {
-            "logprob": -0.653782094917915,
-            "tokens": 19
+            "logprob": -0.6857307619375206,
+            "tokens": 20
           },
           "end": {
             "logprob": -0.00011586471373448148,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.17704160375655945,
-        "logprob_per_token:other": -0.014672887733954197,
+        "logprob_per_token:identifier": -0.12608489829989564,
+        "logprob_per_token:other": -0.06562959319061802,
         "logprob_per_token:changed": -0.12055067158440454,
         "logprob_per_token:copied": -0.07116381990610911,
-        "logprob_per_token:other_changed": -0.0034007826491625594,
+        "logprob_per_token:other_changed": -0.053806649019281456,
         "logprob_per_token:end": -1.9976674781807153e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -22194,16 +22195,16 @@
         "logprob_per_token": -0.6574076290788322,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.005810276139527559,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.004468109051231295,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -18.211864037672058,
-            "tokens": 10
+            "logprob": -18.217674313811585,
+            "tokens": 11
           },
           "other_copied": {
             "logprob": -0.8425830480409786,
@@ -22214,11 +22215,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00035442707554340875,
-        "logprob_per_token:other": -0.657049899507346,
+        "logprob_per_token:identifier": -0.0001540727259045274,
+        "logprob_per_token:other": -0.657250253856985,
         "logprob_per_token:changed": -0.628195665993503,
         "logprob_per_token:copied": -0.029208660589386547,
-        "logprob_per_token:other_changed": -0.627995311643864,
+        "logprob_per_token:other_changed": -0.628195665993503,
         "logprob_per_token:end": -3.308926634731349e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -22272,16 +22273,16 @@
         "logprob_per_token": -0.0033038505598118433,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.004039106424897909,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.00337203755043447,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": 0.0,
-            "tokens": 0
+            "logprob": -0.004039106424897909,
+            "tokens": 1
           },
           "other_copied": {
             "logprob": -0.05528918278287165,
@@ -22292,11 +22293,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00039006020922801996,
-        "logprob_per_token:other": -0.002909956988572192,
+        "logprob_per_token:identifier": -0.00017747566054918264,
+        "logprob_per_token:other": -0.003122541537251029,
         "logprob_per_token:changed": -0.00021258454867883732,
         "logprob_per_token:copied": -0.0030874326491213745,
-        "logprob_per_token:other_changed": 0.0,
+        "logprob_per_token:other_changed": -0.00021258454867883732,
         "logprob_per_token:end": -3.833380010052535e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -22471,24 +22472,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.041750064291591116,
-            "tokens": 11
+            "logprob": -0.026589611717099615,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.5284915950614959,
-            "tokens": 2
+            "logprob": -0.5436520476359874,
+            "tokens": 3
           },
           "end": {
             "logprob": -0.0004198861715849489,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0029821474493993655,
-        "logprob_per_token:other": -0.03774939964724971,
+        "logprob_per_token:identifier": -0.0018992579797928297,
+        "logprob_per_token:other": -0.038832289116856246,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.04073154709664907,
         "logprob_per_token:other_changed": 0.0,
@@ -22900,24 +22901,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.18125779245747253,
-            "tokens": 8
+            "logprob": -0.060324129182845354,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": -1.9234115332365036,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -1.0257911998778582,
-            "tokens": 11
+            "logprob": -1.1467248631524853,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.000695344409905374,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.08162783246370964,
-        "logprob_per_token:other": -0.11343087435055238,
+        "logprob_per_token:identifier": -0.07697653772237782,
+        "logprob_per_token:other": -0.1180821690918842,
         "logprob_per_token:changed": -0.14863374557059544,
         "logprob_per_token:copied": -0.04642496124366657,
         "logprob_per_token:other_changed": -0.07397736666294244,
@@ -23910,34 +23911,34 @@
         "logprob_per_token": -0.1269346095146017,
         "cells": {
           "identifier_changed": {
-            "logprob": -3.661441922187805,
-            "tokens": 5
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -1.2300081593848518,
-            "tokens": 29
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
-            "logprob": -0.07387565076351166,
-            "tokens": 1
+            "logprob": -3.735317572951317,
+            "tokens": 6
           },
           "other_copied": {
-            "logprob": -0.9999847463514016,
-            "tokens": 11
+            "logprob": -2.2299929057362533,
+            "tokens": 40
           },
           "end": {
             "logprob": -0.0006160030607134104,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.1040734059909076,
-        "logprob_per_token:other": -0.02284809355563645,
+        "logprob_per_token:identifier": 0.0,
+        "logprob_per_token:other": -0.12692149954654405,
         "logprob_per_token:changed": -0.07947484197768759,
         "logprob_per_token:copied": -0.04744665756885645,
-        "logprob_per_token:other_changed": -0.0015718223566704608,
+        "logprob_per_token:other_changed": -0.07947484197768759,
         "logprob_per_token:end": -1.3106448100285326e-05,
-        "lexer": "POVRay",
-        "lex_error_chars": 4,
+        "lexer": "reStructuredText",
+        "lex_error_chars": 0,
         "line_disagreement": 0.0
       },
       {
@@ -24144,16 +24145,16 @@
         "logprob_per_token": -0.7664139721844647,
         "cells": {
           "identifier_changed": {
-            "logprob": -17.49055348150432,
-            "tokens": 3
+            "logprob": -17.471018195152283,
+            "tokens": 2
           },
           "identifier_copied": {
             "logprob": -0.032627445387333864,
             "tokens": 9
           },
           "other_changed": {
-            "logprob": -6.077207960508531,
-            "tokens": 7
+            "logprob": -6.096743246860569,
+            "tokens": 8
           },
           "other_copied": {
             "logprob": -4.75597793381894,
@@ -24164,11 +24165,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.47359948451058526,
-        "logprob_per_token:other": -0.2927888079547965,
+        "logprob_per_token:identifier": -0.47307150379836804,
+        "logprob_per_token:other": -0.2933167886670138,
         "logprob_per_token:changed": -0.6369665254598068,
         "logprob_per_token:copied": -0.12942176700557498,
-        "logprob_per_token:other_changed": -0.16424886379752787,
+        "logprob_per_token:other_changed": -0.1647768445097451,
         "logprob_per_token:end": -2.567579095075662e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -24187,24 +24188,24 @@
             "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.026657321097445674,
-            "tokens": 10
+            "logprob": -0.02414670896541793,
+            "tokens": 9
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.0010008637618739158,
-            "tokens": 2
+            "logprob": -0.003511475893901661,
+            "tokens": 3
           },
           "end": {
             "logprob": -9.941560711013153e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0019871859829956,
-        "logprob_per_token:other": -7.14902687052797e-05,
+        "logprob_per_token:identifier": -0.0018078565449936182,
+        "logprob_per_token:other": -0.0002508197067072615,
         "logprob_per_token:changed": -8.30916188923376e-05,
         "logprob_per_token:copied": -0.001975584632808542,
         "logprob_per_token:other_changed": 0.0,
@@ -24261,31 +24262,31 @@
         "logprob_per_token": -0.3334739933843198,
         "cells": {
           "identifier_changed": {
-            "logprob": -3.2577898083491164,
-            "tokens": 11
+            "logprob": -3.2568041950235056,
+            "tokens": 10
           },
           "identifier_copied": {
-            "logprob": -3.931918745569419,
-            "tokens": 8
+            "logprob": -2.0221798472921364,
+            "tokens": 7
           },
           "other_changed": {
-            "logprob": -3.8403639644384384,
-            "tokens": 8
+            "logprob": -3.841349577764049,
+            "tokens": 9
           },
           "other_copied": {
-            "logprob": -4.30893516425931,
-            "tokens": 18
+            "logprob": -6.218674062536593,
+            "tokens": 19
           },
           "end": {
             "logprob": -0.0007955246837809682,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.1562980120417073,
-        "logprob_per_token:other": -0.1771586767108206,
+        "logprob_per_token:identifier": -0.11476052265903569,
+        "logprob_per_token:other": -0.2186961660934922,
         "logprob_per_token:changed": -0.15430769071277292,
         "logprob_per_token:copied": -0.17914899803975498,
-        "logprob_per_token:other_changed": -0.08348617313996605,
+        "logprob_per_token:other_changed": -0.08350759951660977,
         "logprob_per_token:end": -1.7294014864803657e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -24300,31 +24301,31 @@
         "logprob_per_token": -1.0438220144688397,
         "cells": {
           "identifier_changed": {
-            "logprob": -5.89135110787538,
-            "tokens": 10
+            "logprob": -5.890100550273928,
+            "tokens": 9
           },
           "identifier_copied": {
-            "logprob": -2.219898432842456,
-            "tokens": 10
+            "logprob": -0.9554743323242292,
+            "tokens": 8
           },
           "other_changed": {
-            "logprob": -73.2283352760387,
-            "tokens": 34
+            "logprob": -73.22958583364016,
+            "tokens": 35
           },
           "other_copied": {
-            "logprob": -9.364300571322019,
-            "tokens": 32
+            "logprob": -10.628724671840246,
+            "tokens": 34
           },
           "end": {
             "logprob": -0.10862527042627335,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.09323275334158432,
-        "logprob_per_token:other": -0.9493406419236865,
+        "logprob_per_token:identifier": -0.07868476876549606,
+        "logprob_per_token:other": -0.9638886264997748,
         "logprob_per_token:changed": -0.9094216825737251,
         "logprob_per_token:copied": -0.1331517126915457,
-        "logprob_per_token:other_changed": -0.8417050031728587,
+        "logprob_per_token:other_changed": -0.8417193773981627,
         "logprob_per_token:end": -0.001248566326738774,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -24343,24 +24344,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.015651246261768392,
-            "tokens": 6
+            "logprob": -0.014217471549272886,
+            "tokens": 5
           },
           "other_changed": {
             "logprob": -4.046983134932816,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.17150610694034185,
-            "tokens": 9
+            "logprob": -0.17293988165283736,
+            "tokens": 10
           },
           "end": {
             "logprob": -0.0001209901092806831,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.001170717410695943,
-        "logprob_per_token:other": -0.2109244620936579,
+        "logprob_per_token:identifier": -0.0010990286750711675,
+        "logprob_per_token:other": -0.21099615082928266,
         "logprob_per_token:changed": -0.2027373118442483,
         "logprob_per_token:copied": -0.009357867660105513,
         "logprob_per_token:other_changed": -0.2023491567466408,
@@ -24382,24 +24383,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.011617287455010228,
-            "tokens": 6
+            "logprob": -0.008643864348414354,
+            "tokens": 5
           },
           "other_changed": {
             "logprob": -3.694325441028923,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.18915357257037613,
-            "tokens": 9
+            "logprob": -0.192126995676972,
+            "tokens": 10
           },
           "end": {
             "logprob": -0.00010334911348763853,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0012185096005850938,
-        "logprob_per_token:other": -0.19417395067996496,
+        "logprob_per_token:identifier": -0.0010698384452553001,
+        "logprob_per_token:other": -0.19432262183529475,
         "logprob_per_token:changed": -0.18535391727928072,
         "logprob_per_token:copied": -0.010038543001269318,
         "logprob_per_token:other_changed": -0.18471627205144614,
@@ -24499,24 +24500,24 @@
             "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.027247362304478884,
-            "tokens": 2
+            "logprob": -0.0040494357235729694,
+            "tokens": 1
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.09034798480570316,
-            "tokens": 3
+            "logprob": -0.11354591138660908,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.0004151197790633887,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.07667397501479302,
-        "logprob_per_token:other": -0.012906854972243309,
+        "logprob_per_token:identifier": -0.07335998550323504,
+        "logprob_per_token:other": -0.016220844483801296,
         "logprob_per_token:changed": -0.07278149468558175,
         "logprob_per_token:copied": -0.01679933530145458,
         "logprob_per_token:other_changed": 0.0,
@@ -24651,31 +24652,31 @@
         "logprob_per_token": -2.1045118852095173,
         "cells": {
           "identifier_changed": {
-            "logprob": -50.09420645842329,
-            "tokens": 12
+            "logprob": -50.07226526737213,
+            "tokens": 10
           },
           "identifier_copied": {
-            "logprob": -7.193011018447578,
-            "tokens": 6
+            "logprob": -7.158878907561302,
+            "tokens": 4
           },
           "other_changed": {
-            "logprob": -54.10821010313521,
-            "tokens": 23
+            "logprob": -54.13015129418636,
+            "tokens": 25
           },
           "other_copied": {
-            "logprob": -4.288591917109443,
-            "tokens": 13
+            "logprob": -4.322724027995719,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.0641326978802681,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -1.041585772306743,
-        "logprob_per_token:other": -1.0617600367317208,
+        "logprob_per_token:identifier": -1.0405662577260624,
+        "logprob_per_token:other": -1.0627795513124014,
         "logprob_per_token:changed": -1.8945893920283363,
         "logprob_per_token:copied": -0.20875641701012765,
-        "logprob_per_token:other_changed": -0.9837856382388219,
+        "logprob_per_token:other_changed": -0.9841845689852066,
         "logprob_per_token:end": -0.001166049052368511,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -24772,24 +24773,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.6258220858144341,
-            "tokens": 9
+            "logprob": -0.6107483045198023,
+            "tokens": 6
           },
           "other_changed": {
             "logprob": -0.0009367844904772937,
             "tokens": 1
           },
           "other_copied": {
-            "logprob": -0.1298363598616561,
-            "tokens": 13
+            "logprob": -0.14491014115628786,
+            "tokens": 16
           },
           "end": {
             "logprob": -0.005930447019636631,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.026075920242268086,
-        "logprob_per_token:other": -0.005448881014672224,
+        "logprob_per_token:identifier": -0.02544784602165843,
+        "logprob_per_token:other": -0.006076955235281882,
         "logprob_per_token:changed": -3.9032687103220574e-05,
         "logprob_per_token:copied": -0.03148576856983709,
         "logprob_per_token:other_changed": -3.9032687103220574e-05,
@@ -24963,31 +24964,31 @@
         "logprob_per_token": -1.0537904739379882,
         "cells": {
           "identifier_changed": {
-            "logprob": -19.782121433730936,
-            "tokens": 9
+            "logprob": -14.38017202806077,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.09014951577410102,
-            "tokens": 4
+            "logprob": -0.027680171187967062,
+            "tokens": 3
           },
           "other_changed": {
-            "logprob": -0.814723014831543,
-            "tokens": 1
+            "logprob": -6.216672420501709,
+            "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.38632437912747264,
-            "tokens": 5
+            "logprob": -0.4487937237136066,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.0024906350299715996,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.9936135474752519,
-        "logprob_per_token:other": -0.06005236969795078,
+        "logprob_per_token:identifier": -0.7203926099624368,
+        "logprob_per_token:other": -0.33327330721076576,
         "logprob_per_token:changed": -1.0298422224281238,
         "logprob_per_token:copied": -0.023823694745078682,
-        "logprob_per_token:other_changed": -0.040736150741577146,
+        "logprob_per_token:other_changed": -0.31083362102508544,
         "logprob_per_token:end": -0.00012453175149858,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -25314,16 +25315,16 @@
         "logprob_per_token": -0.5417183467320034,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.008003782480955124,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.013869590853573754,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -3.402437686920166,
-            "tokens": 1
+            "logprob": -3.410441469401121,
+            "tokens": 2
           },
           "other_copied": {
             "logprob": -0.3675863444805145,
@@ -25334,11 +25335,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.003124767619218411,
-        "logprob_per_token:other": -0.5385748616286686,
+        "logprob_per_token:identifier": -0.0019813701219391078,
+        "logprob_per_token:other": -0.539718259125948,
         "logprob_per_token:changed": -0.4872059242001602,
         "logprob_per_token:copied": -0.054493705047726895,
-        "logprob_per_token:other_changed": -0.48606252670288086,
+        "logprob_per_token:other_changed": -0.4872059242001602,
         "logprob_per_token:end": -1.873165976056563e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -25630,24 +25631,24 @@
             "tokens": 7
           },
           "identifier_copied": {
-            "logprob": -0.19555214047431946,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": -3.7487085461616516,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.9987788535654545,
-            "tokens": 5
+            "logprob": -1.194330994039774,
+            "tokens": 6
           },
           "end": {
             "logprob": -8.105902816168964e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6085835124940786,
-        "logprob_per_token:other": -0.29671796248294413,
+        "logprob_per_token:identifier": -0.5963615037144336,
+        "logprob_per_token:other": -0.3089399712625891,
         "logprob_per_token:changed": -0.8306557878495369,
         "logprob_per_token:copied": -0.07464568712748587,
         "logprob_per_token:other_changed": -0.23429428413510323,
@@ -25743,16 +25744,16 @@
         "logprob_per_token": -0.869605712890625,
         "cells": {
           "identifier_changed": {
-            "logprob": -15.493710065915366,
-            "tokens": 12
+            "logprob": -15.36579791708209,
+            "tokens": 11
           },
           "identifier_copied": {
             "logprob": -0.0304271959757898,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -6.150298433145508,
-            "tokens": 4
+            "logprob": -6.278210581978783,
+            "tokens": 5
           },
           "other_copied": {
             "logprob": -0.06543678476009518,
@@ -25763,11 +25764,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6209654904756462,
-        "logprob_per_token:other": -0.24862940871622413,
+        "logprob_per_token:identifier": -0.6158490045223153,
+        "logprob_per_token:other": -0.2537458946695551,
         "logprob_per_token:changed": -0.865760339962435,
         "logprob_per_token:copied": -0.003834559229435399,
-        "logprob_per_token:other_changed": -0.24601193732582033,
+        "logprob_per_token:other_changed": -0.2511284232791513,
         "logprob_per_token:end": -1.0746465995907784e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -27424,24 +27425,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.13550789607688785,
-            "tokens": 19
+            "logprob": -0.11908275680616498,
+            "tokens": 17
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.04703090479597449,
-            "tokens": 5
+            "logprob": -0.06345604406669736,
+            "tokens": 7
           },
           "end": {
             "logprob": -0.11228570342063904,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0804700724332145,
-        "logprob_per_token:other": -0.0017418853628138702,
+        "logprob_per_token:identifier": -0.07986173394170624,
+        "logprob_per_token:other": -0.0023502238543221246,
         "logprob_per_token:changed": -0.07545126146740383,
         "logprob_per_token:copied": -0.006760696328624531,
         "logprob_per_token:other_changed": 0.0,
@@ -27502,24 +27503,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -3.4312129433383234,
-            "tokens": 27
+            "logprob": -3.418952278152574,
+            "tokens": 26
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.7530411508778343,
-            "tokens": 10
+            "logprob": -1.7653018160635838,
+            "tokens": 11
           },
           "end": {
             "logprob": -0.0015375708462670445,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.08883925164846004,
-        "logprob_per_token:other": -0.04382602877194586,
+        "logprob_per_token:identifier": -0.08853273501881631,
+        "logprob_per_token:other": -0.0441325454015896,
         "logprob_per_token:changed": -0.0030589280650019646,
         "logprob_per_token:copied": -0.12960635235540394,
         "logprob_per_token:other_changed": 0.0,
@@ -27697,24 +27698,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.3968672724440694,
-            "tokens": 4
+            "logprob": -0.39178188191726804,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -6.706761387584265,
-            "tokens": 11
+            "logprob": -6.711846778111067,
+            "tokens": 12
           },
           "end": {
             "logprob": -0.0001234931987710297,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6305944586897062,
-        "logprob_per_token:other": -0.3725978548657925,
+        "logprob_per_token:identifier": -0.6303119369937727,
+        "logprob_per_token:other": -0.3728803765617259,
         "logprob_per_token:changed": -0.6085462768872579,
         "logprob_per_token:copied": -0.39464603666824083,
         "logprob_per_token:other_changed": 0.0,
@@ -27775,24 +27776,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.849804218421923,
-            "tokens": 12
+            "logprob": -0.8117221598804463,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -2.549999300041236,
-            "tokens": 7
+            "logprob": -2.5880813585827127,
+            "tokens": 9
           },
           "end": {
             "logprob": -0.00024828212917782366,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.049827606351992355,
-        "logprob_per_token:other": -0.11086953478440156,
+        "logprob_per_token:identifier": -0.048171864676275974,
+        "logprob_per_token:other": -0.11252527646011794,
         "logprob_per_token:changed": -0.012879596855387006,
         "logprob_per_token:copied": -0.1478175442810069,
         "logprob_per_token:other_changed": 0.0,
@@ -27970,24 +27971,24 @@
             "tokens": 4
           },
           "identifier_copied": {
-            "logprob": -0.06750768097117543,
-            "tokens": 6
+            "logprob": -0.015426873927935958,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.04639516671340971,
-            "tokens": 12
+            "logprob": -0.09847597375664918,
+            "tokens": 15
           },
           "end": {
             "logprob": -3.242440288886428e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0038103145375118956,
-        "logprob_per_token:other": -0.002017181161452596,
+        "logprob_per_token:identifier": -0.0015459316225884402,
+        "logprob_per_token:other": -0.004281564076376051,
         "logprob_per_token:changed": -0.0008751979735477463,
         "logprob_per_token:copied": -0.004952297725416745,
         "logprob_per_token:other_changed": 0.0,
@@ -28789,24 +28790,24 @@
             "tokens": 15
           },
           "identifier_copied": {
-            "logprob": -1.5731923451821785,
-            "tokens": 4
+            "logprob": -1.565443325060187,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": -11.141332280822098,
             "tokens": 7
           },
           "other_copied": {
-            "logprob": -3.57616702321684,
-            "tokens": 17
+            "logprob": -3.5839160433388315,
+            "tokens": 18
           },
           "end": {
             "logprob": -0.0003800861886702478,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.039554882803382825,
-        "logprob_per_token:other": -0.3344886205463395,
+        "logprob_per_token:identifier": -0.0393787687097012,
+        "logprob_per_token:other": -0.3346647346400211,
         "logprob_per_token:changed": -0.257012608613381,
         "logprob_per_token:copied": -0.11703089473634133,
         "logprob_per_token:other_changed": -0.2532120972914113,
@@ -28902,31 +28903,31 @@
         "logprob_per_token": -0.06228482723236084,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.06356266495004093,
-            "tokens": 6
-          },
-          "identifier_copied": {
-            "logprob": -0.03781291462655645,
+            "logprob": -0.013418506646303285,
             "tokens": 4
           },
+          "identifier_copied": {
+            "logprob": -0.005911126660066657,
+            "tokens": 3
+          },
           "other_changed": {
-            "logprob": -0.7903640046715736,
-            "tokens": 6
+            "logprob": -0.8405081629753113,
+            "tokens": 8
           },
           "other_copied": {
-            "logprob": -0.8521356876881327,
-            "tokens": 11
+            "logprob": -0.8840374756546225,
+            "tokens": 12
           },
           "end": {
             "logprob": -0.00010001159535022452,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0036205564134499063,
-        "logprob_per_token:other": -0.05866070329856094,
+        "logprob_per_token:identifier": -0.0006903440466560694,
+        "logprob_per_token:other": -0.06159091566535478,
         "logprob_per_token:changed": -0.030497381057914805,
         "logprob_per_token:copied": -0.03178387865409604,
-        "logprob_per_token:other_changed": -0.02822728588112763,
+        "logprob_per_token:other_changed": -0.030018148677689687,
         "logprob_per_token:end": -3.5718426910794473e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -28980,31 +28981,31 @@
         "logprob_per_token": -1.1402387762788553,
         "cells": {
           "identifier_changed": {
-            "logprob": -124.32962454159497,
-            "tokens": 90
-          },
-          "identifier_copied": {
-            "logprob": -1.945168794831261,
-            "tokens": 5
-          },
-          "other_changed": {
-            "logprob": -94.06560440108296,
+            "logprob": -120.18950099966241,
             "tokens": 87
           },
+          "identifier_copied": {
+            "logprob": -1.916988126700744,
+            "tokens": 4
+          },
+          "other_changed": {
+            "logprob": -98.20572794301552,
+            "tokens": 90
+          },
           "other_copied": {
-            "logprob": -6.560281698999461,
-            "tokens": 16
+            "logprob": -6.588462367129978,
+            "tokens": 17
           },
           "end": {
             "logprob": -0.006838962901383638,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6345467001830464,
-        "logprob_per_token:other": -0.5056577190958916,
+        "logprob_per_token:identifier": -0.6136004478711716,
+        "logprob_per_token:other": -0.5266039714077663,
         "logprob_per_token:changed": -1.097463462023507,
         "logprob_per_token:copied": -0.04274095725543076,
-        "logprob_per_token:other_changed": -0.47269147940242695,
+        "logprob_per_token:other_changed": -0.4934961203166609,
         "logprob_per_token:end": -3.436664774564642e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -29062,24 +29063,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.05366591906931717,
-            "tokens": 7
+            "logprob": -0.014257411123253405,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.01264941223371352,
-            "tokens": 7
+            "logprob": -0.052057920179777284,
+            "tokens": 10
           },
           "end": {
             "logprob": -0.00014375607133843005,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.003577727937954478,
-        "logprob_per_token:other": -0.0008432941489142346,
+        "logprob_per_token:identifier": -0.0009504940748835604,
+        "logprob_per_token:other": -0.003470528011985152,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.004421022086868713,
         "logprob_per_token:other_changed": 0.0,
@@ -29335,24 +29336,24 @@
             "tokens": 9
           },
           "identifier_copied": {
-            "logprob": -0.5668840634898515,
-            "tokens": 13
+            "logprob": -0.564859395250096,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.012318810662691249,
-            "tokens": 9
+            "logprob": -0.014343478902446805,
+            "tokens": 12
           },
           "end": {
             "logprob": -0.00013731967192143202,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.019491627441993842,
-        "logprob_per_token:other": -0.0003849628332091015,
+        "logprob_per_token:identifier": -0.01942835655950148,
+        "logprob_per_token:other": -0.00044823371570146264,
         "logprob_per_token:changed": -0.001776500457935981,
         "logprob_per_token:copied": -0.018100089817266962,
         "logprob_per_token:other_changed": 0.0,
@@ -32028,24 +32029,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.008699730969965458,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.0103864436675849,
-            "tokens": 7
+            "logprob": -0.019086174637550357,
+            "tokens": 8
           },
           "end": {
             "logprob": -4.3748852476710454e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0008814350367174484,
-        "logprob_per_token:other": -0.0008655369722987416,
+        "logprob_per_token:identifier": -0.00015645745588699356,
+        "logprob_per_token:other": -0.0015905145531291964,
         "logprob_per_token:changed": -0.00015645745588699356,
         "logprob_per_token:copied": -0.0015905145531291964,
         "logprob_per_token:other_changed": 0.0,
@@ -32219,31 +32220,31 @@
         "logprob_per_token": -1.901026258281633,
         "cells": {
           "identifier_changed": {
-            "logprob": -196.41594659653492,
-            "tokens": 81
+            "logprob": -187.09340596226684,
+            "tokens": 69
           },
           "identifier_copied": {
-            "logprob": -0.29143479466438293,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
-            "logprob": -181.978421906495,
-            "tokens": 109
+            "logprob": -191.30096254076307,
+            "tokens": 121
           },
           "other_copied": {
-            "logprob": -9.09509447120763,
-            "tokens": 12
+            "logprob": -9.386529265872014,
+            "tokens": 13
           },
           "end": {
             "logprob": -0.02846527099609375,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.9642518695647024,
-        "logprob_per_token:other": -0.9366348842044246,
+        "logprob_per_token:identifier": -0.9171245390307198,
+        "logprob_per_token:other": -0.9837622147384073,
         "logprob_per_token:changed": -1.8548743554070093,
         "logprob_per_token:copied": -0.046012398362117714,
-        "logprob_per_token:other_changed": -0.8920510877769362,
+        "logprob_per_token:other_changed": -0.9377498163762895,
         "logprob_per_token:end": -0.00013953564213771446,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -32301,24 +32302,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.041234202682971954,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": -0.0004114258335903287,
             "tokens": 1
           },
           "other_copied": {
-            "logprob": -0.008554692845791578,
-            "tokens": 3
+            "logprob": -0.04978889552876353,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.0005314130103215575,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.006872367113828659,
-        "logprob_per_token:other": -0.0014943531132303178,
+        "logprob_per_token:identifier": 0.0,
+        "logprob_per_token:other": -0.008366720227058977,
         "logprob_per_token:changed": -6.857097226505478e-05,
         "logprob_per_token:copied": -0.008298149254793922,
         "logprob_per_token:other_changed": -6.857097226505478e-05,
@@ -33740,31 +33741,31 @@
         "logprob_per_token": -0.2063799915891705,
         "cells": {
           "identifier_changed": {
-            "logprob": -3.965976070263423,
-            "tokens": 9
+            "logprob": -3.95436374808196,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.14901115254087927,
-            "tokens": 17
+            "logprob": -0.036746549164490716,
+            "tokens": 16
           },
           "other_changed": {
-            "logprob": -2.008173579990398,
-            "tokens": 3
+            "logprob": -2.0197859021718614,
+            "tokens": 4
           },
           "other_copied": {
-            "logprob": -0.6873178547248244,
-            "tokens": 3
+            "logprob": -0.799582458101213,
+            "tokens": 4
           },
           "end": {
             "logprob": -6.151010165922344e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.12469658250922128,
-        "logprob_per_token:other": -0.08168155862773402,
+        "logprob_per_token:identifier": -0.12094273628019547,
+        "logprob_per_token:other": -0.08543540485675982,
         "logprob_per_token:changed": -0.18103483788647942,
         "logprob_per_token:copied": -0.02534330325047587,
-        "logprob_per_token:other_changed": -0.060853744848193884,
+        "logprob_per_token:other_changed": -0.061205633399147315,
         "logprob_per_token:end": -1.8639424745219224e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -33779,31 +33780,31 @@
         "logprob_per_token": -0.0742784528171315,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.05493514521629095,
-            "tokens": 9
+            "logprob": -0.05379627240006357,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.0077858036088400695,
-            "tokens": 18
+            "logprob": -0.00555752470927473,
+            "tokens": 17
           },
           "other_changed": {
-            "logprob": -1.3323660505266162,
-            "tokens": 3
+            "logprob": -1.3335049233428435,
+            "tokens": 4
           },
           "other_copied": {
-            "logprob": -1.1303456854075193,
-            "tokens": 3
+            "logprob": -1.1325739643070847,
+            "tokens": 4
           },
           "end": {
             "logprob": -3.4450891689630225e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0018447337889744416,
-        "logprob_per_token:other": -0.07243269811570986,
+        "logprob_per_token:identifier": -0.0017456999149805382,
+        "logprob_per_token:other": -0.07253173198970377,
         "logprob_per_token:changed": -0.04080297634537962,
         "logprob_per_token:copied": -0.033474455559304686,
-        "logprob_per_token:other_changed": -0.03918723678019459,
+        "logprob_per_token:other_changed": -0.0392207330394954,
         "logprob_per_token:end": -1.013261520283242e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -33822,24 +33823,24 @@
             "tokens": 7
           },
           "identifier_copied": {
-            "logprob": -0.02417289455388527,
-            "tokens": 16
+            "logprob": -0.019888880559847166,
+            "tokens": 15
           },
           "other_changed": {
             "logprob": -1.5477705848170444,
             "tokens": 4
           },
           "other_copied": {
-            "logprob": -0.019505800679326057,
-            "tokens": 2
+            "logprob": -0.023789814673364162,
+            "tokens": 3
           },
           "end": {
             "logprob": -6.83045873302035e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.03845142161270208,
-        "logprob_per_token:other": -0.05224254618321235,
+        "logprob_per_token:identifier": -0.038308621146234144,
+        "logprob_per_token:other": -0.05238534664968029,
         "logprob_per_token:changed": -0.08923801128814073,
         "logprob_per_token:copied": -0.0014559565077737109,
         "logprob_per_token:other_changed": -0.051592352827234816,
@@ -33861,24 +33862,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -2.894378894183319,
-            "tokens": 8
+            "logprob": -2.8931163115776144,
+            "tokens": 7
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.8866772223263979,
-            "tokens": 4
+            "logprob": -0.8879398049321026,
+            "tokens": 5
           },
           "end": {
             "logprob": -7.188061863416806e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.22264453032179377,
-        "logprob_per_token:other": -0.06820594017895368,
+        "logprob_per_token:identifier": -0.2225474085828934,
+        "logprob_per_token:other": -0.06830306191785404,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.29085047050074747,
         "logprob_per_token:other_changed": 0.0,
@@ -34368,24 +34369,24 @@
             "tokens": 6
           },
           "identifier_copied": {
-            "logprob": -0.2442226396779006,
-            "tokens": 20
+            "logprob": -0.04951224344767979,
+            "tokens": 18
           },
           "other_changed": {
             "logprob": -28.115162205082015,
             "tokens": 50
           },
           "other_copied": {
-            "logprob": -2.1351615866151405,
-            "tokens": 21
+            "logprob": -2.3298719828453613,
+            "tokens": 23
           },
           "end": {
             "logprob": -0.0032526941504329443,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0048868639783273575,
-        "logprob_per_token:other": -0.30867677338466487,
+        "logprob_per_token:identifier": -0.002900023200467962,
+        "logprob_per_token:other": -0.31066361416252425,
         "logprob_per_token:changed": -0.28928420648245096,
         "logprob_per_token:copied": -0.024279430880541235,
         "logprob_per_token:other_changed": -0.28688941025593895,
@@ -34407,24 +34408,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.35744190071363846,
-            "tokens": 20
+            "logprob": -0.2750433519913713,
+            "tokens": 19
           },
           "other_changed": {
             "logprob": -50.6980578186849,
             "tokens": 44
           },
           "other_copied": {
-            "logprob": -6.069388783897011,
-            "tokens": 22
+            "logprob": -6.1517873326192785,
+            "tokens": 23
           },
           "end": {
             "logprob": -0.0003251500893384218,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.004108527594409638,
-        "logprob_per_token:other": -0.6524993862365737,
+        "logprob_per_token:identifier": -0.0031614178389812795,
+        "logprob_per_token:other": -0.6534464959920021,
         "logprob_per_token:changed": -0.5827362967664931,
         "logprob_per_token:copied": -0.07387161706449023,
         "logprob_per_token:other_changed": -0.5827362967664931,
@@ -36080,31 +36081,31 @@
         "logprob_per_token": -0.8206838719985065,
         "cells": {
           "identifier_changed": {
-            "logprob": -8.870779660529138,
-            "tokens": 14
+            "logprob": -6.562214282340051,
+            "tokens": 13
           },
           "identifier_copied": {
-            "logprob": -3.7275293823331594,
-            "tokens": 4
+            "logprob": -0.06378302536904812,
+            "tokens": 3
           },
           "other_changed": {
-            "logprob": -17.667193194210995,
-            "tokens": 17
+            "logprob": -19.975758572400082,
+            "tokens": 18
           },
           "other_copied": {
-            "logprob": -11.55408858670853,
-            "tokens": 15
+            "logprob": -15.217834943672642,
+            "tokens": 16
           },
           "end": {
             "logprob": -0.035286951810121536,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.24702566750710386,
-        "logprob_per_token:other": -0.5729663094297947,
+        "logprob_per_token:identifier": -0.1299215158374333,
+        "logprob_per_token:other": -0.6900704610994651,
         "logprob_per_token:changed": -0.5203524089164732,
         "logprob_per_token:copied": -0.2996395680204253,
-        "logprob_per_token:other_changed": -0.34641555282766656,
+        "logprob_per_token:other_changed": -0.3916815406352957,
         "logprob_per_token:end": -0.000691901015884736,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -37913,16 +37914,16 @@
         "logprob_per_token": -0.44986485678052146,
         "cells": {
           "identifier_changed": {
-            "logprob": -1.1159303433378227,
-            "tokens": 5
+            "logprob": -0.9292421101708896,
+            "tokens": 3
           },
           "identifier_copied": {
             "logprob": -0.046765869214141276,
             "tokens": 8
           },
           "other_changed": {
-            "logprob": -23.063252550709876,
-            "tokens": 18
+            "logprob": -23.24994078387681,
+            "tokens": 20
           },
           "other_copied": {
             "logprob": -4.115472000481532,
@@ -37933,11 +37934,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.018455495437332763,
-        "logprob_per_token:other": -0.4314083262093874,
+        "logprob_per_token:identifier": -0.015492190148968745,
+        "logprob_per_token:other": -0.43437163149775143,
         "logprob_per_token:changed": -0.383796553873773,
         "logprob_per_token:copied": -0.06606726777294719,
-        "logprob_per_token:other_changed": -0.3660833738207917,
+        "logprob_per_token:other_changed": -0.36904667910915573,
         "logprob_per_token:end": -1.0066243472494304e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -38619,24 +38620,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -3.1433053365908563,
-            "tokens": 4
+            "logprob": -3.1261760010384023,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -2.2522016391158104,
-            "tokens": 3
+            "logprob": -2.2693309746682644,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.00024291902082040906,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.39291316707385704,
-        "logprob_per_token:other": -0.2815252048894763,
+        "logprob_per_token:identifier": -0.3907720001298003,
+        "logprob_per_token:other": -0.28366637183353305,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.6744383719633333,
         "logprob_per_token:other_changed": 0.0,
@@ -39284,24 +39285,24 @@
             "tokens": 4
           },
           "identifier_copied": {
-            "logprob": -1.872176022894564,
-            "tokens": 8
+            "logprob": -0.6331854776217369,
+            "tokens": 7
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.22229477891232818,
-            "tokens": 8
+            "logprob": -1.4612853241851553,
+            "tokens": 9
           },
           "end": {
             "logprob": -6.12716976320371e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.09091521301403797,
-        "logprob_per_token:other": -0.010585465662491819,
+        "logprob_per_token:identifier": -0.03191566323914144,
+        "logprob_per_token:other": -0.06958501543738835,
         "logprob_per_token:changed": -0.0017639738285825366,
         "logprob_per_token:copied": -0.09973670484794725,
         "logprob_per_token:other_changed": 0.0,
@@ -39319,31 +39320,31 @@
         "logprob_per_token": -0.01585773847721241,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.1378822047263384,
-            "tokens": 2
+            "logprob": -0.00862598605453968,
+            "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.1804263741869363,
-            "tokens": 17
+            "logprob": -0.15845083502790658,
+            "tokens": 14
           },
           "other_changed": {
-            "logprob": 0.0,
-            "tokens": 0
+            "logprob": -0.1292562186717987,
+            "tokens": 1
           },
           "other_copied": {
-            "logprob": -0.10982184889144264,
-            "tokens": 7
+            "logprob": -0.13179738805047236,
+            "tokens": 10
           },
           "end": {
             "logprob": -2.8490614567999728e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.011789206626417581,
-        "logprob_per_token:other": -0.004067475884868246,
+        "logprob_per_token:identifier": -0.006188030410460972,
+        "logprob_per_token:other": -0.009668652100824855,
         "logprob_per_token:changed": -0.005106748323197718,
         "logprob_per_token:copied": -0.010749934188088109,
-        "logprob_per_token:other_changed": 0.0,
+        "logprob_per_token:other_changed": -0.004787267358214767,
         "logprob_per_token:end": -1.055207946962953e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -39362,24 +39363,24 @@
             "tokens": 17
           },
           "identifier_copied": {
-            "logprob": -0.5188381560201378,
-            "tokens": 17
+            "logprob": -0.22810990922698693,
+            "tokens": 13
           },
           "other_changed": {
             "logprob": -9.982984913903238,
             "tokens": 28
           },
           "other_copied": {
-            "logprob": -0.02233913164468504,
-            "tokens": 9
+            "logprob": -0.31306737843783594,
+            "tokens": 13
           },
           "end": {
             "logprob": -2.5033637939486653e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.022115883673677672,
-        "logprob_per_token:other": -0.13896283396594336,
+        "logprob_per_token:identifier": -0.01807799135710613,
+        "logprob_per_token:other": -0.14300072628251492,
         "logprob_per_token:changed": -0.15356236642205406,
         "logprob_per_token:copied": -0.0075163512175669845,
         "logprob_per_token:other_changed": -0.13865256824865607,
@@ -39635,24 +39636,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.005056828260421753,
-            "tokens": 2
+            "logprob": -0.0030820509418845177,
+            "tokens": 1
           },
           "other_changed": {
             "logprob": -1.0983521023299545,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -0.01037830657151062,
-            "tokens": 5
+            "logprob": -0.012353083890047856,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.0011257746955379844,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00045971166003834117,
-        "logprob_per_token:other": -0.10079367353649683,
+        "logprob_per_token:identifier": -0.0002801864492622289,
+        "logprob_per_token:other": -0.10097319874727294,
         "logprob_per_token:changed": -0.09985019112090496,
         "logprob_per_token:copied": -0.0014031940756302158,
         "logprob_per_token:other_changed": -0.09985019112090496,
@@ -39674,24 +39675,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -1.4310026154853404,
-            "tokens": 11
+            "logprob": -1.4155226084403694,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": -2.131421025376767,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -0.5347364699991886,
-            "tokens": 10
+            "logprob": -0.5502164770441595,
+            "tokens": 11
           },
           "end": {
             "logprob": -0.00015114595589693636,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.05724010461941362,
-        "logprob_per_token:other": -0.10664629981503822,
+        "logprob_per_token:identifier": -0.056620904337614776,
+        "logprob_per_token:other": -0.10726550009683705,
         "logprob_per_token:changed": -0.08525684101507068,
         "logprob_per_token:copied": -0.07862956341938115,
         "logprob_per_token:other_changed": -0.08525684101507068,
@@ -39713,24 +39714,24 @@
             "tokens": 6
           },
           "identifier_copied": {
-            "logprob": -0.04914071736857295,
-            "tokens": 4
+            "logprob": -0.022527932422235608,
+            "tokens": 2
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.03868058550324349,
-            "tokens": 10
+            "logprob": -0.06529337044958083,
+            "tokens": 12
           },
           "end": {
             "logprob": -1.764281842042692e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.007695237167700682,
-        "logprob_per_token:other": -0.0018419326430115948,
+        "logprob_per_token:identifier": -0.00642796169406557,
+        "logprob_per_token:other": -0.003109208116646706,
         "logprob_per_token:changed": -0.0053552030072924455,
         "logprob_per_token:copied": -0.00418196680341983,
         "logprob_per_token:other_changed": 0.0,
@@ -39791,24 +39792,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.05957435443997383,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.04779794439673424,
-            "tokens": 2
+            "logprob": -0.10737229883670807,
+            "tokens": 3
           },
           "end": {
             "logprob": -9.357491217087954e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.018701599952432195,
-        "logprob_per_token:other": -0.006828277770962034,
+        "logprob_per_token:identifier": -0.01019097788957879,
+        "logprob_per_token:other": -0.015338899833815438,
         "logprob_per_token:changed": -0.01019097788957879,
         "logprob_per_token:copied": -0.015338899833815438,
         "logprob_per_token:other_changed": 0.0,
@@ -40181,24 +40182,24 @@
             "tokens": 5
           },
           "identifier_copied": {
-            "logprob": -2.476956657890696,
-            "tokens": 10
+            "logprob": -0.8542674107593484,
+            "tokens": 9
           },
           "other_changed": {
             "logprob": -4.092635713517666,
             "tokens": 4
           },
           "other_copied": {
-            "logprob": -0.1581912264227867,
-            "tokens": 2
+            "logprob": -1.7808804735541344,
+            "tokens": 3
           },
           "end": {
             "logprob": -7.319182623177767e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.11837057370576076,
-        "logprob_per_token:other": -0.19321940636092966,
+        "logprob_per_token:identifier": -0.04461197156342678,
+        "logprob_per_token:other": -0.26697800850326364,
         "logprob_per_token:changed": -0.19181053077971394,
         "logprob_per_token:copied": -0.1197794492869765,
         "logprob_per_token:other_changed": -0.18602889606898482,
@@ -40220,24 +40221,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -1.271387378568761,
-            "tokens": 5
+            "logprob": -1.2666796966223046,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": -2.20140939950943,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -1.1586046956545033,
-            "tokens": 14
+            "logprob": -1.1633123776009597,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.00011181206355104223,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.2545860161958262,
-        "logprob_per_token:other": -0.13440056380655732,
+        "logprob_per_token:identifier": -0.254397708917968,
+        "logprob_per_token:other": -0.13458887108441558,
         "logprob_per_token:changed": -0.291786897033453,
         "logprob_per_token:copied": -0.09719968296893057,
         "logprob_per_token:other_changed": -0.0880563759803772,
@@ -41074,31 +41075,31 @@
         "logprob_per_token": -0.24827223439370433,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.06025700754253194,
-            "tokens": 4
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.3742051712979446,
-            "tokens": 10
+            "logprob": -0.1848288766850601,
+            "tokens": 9
           },
           "other_changed": {
-            "logprob": -6.050016054607113,
-            "tokens": 6
+            "logprob": -6.110273062149645,
+            "tokens": 10
           },
           "other_copied": {
-            "logprob": -0.8860261824374902,
-            "tokens": 10
+            "logprob": -1.0754024770503747,
+            "tokens": 11
           },
           "end": {
             "logprob": -0.3259349763393402,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.014014908994854082,
-        "logprob_per_token:other": -0.22374329796918074,
+        "logprob_per_token:identifier": -0.005962221828550326,
+        "logprob_per_token:other": -0.2317959851354845,
         "logprob_per_token:changed": -0.19710558264998854,
         "logprob_per_token:copied": -0.04065262431404629,
-        "logprob_per_token:other_changed": -0.19516180821313267,
+        "logprob_per_token:other_changed": -0.19710558264998854,
         "logprob_per_token:end": -0.010514031494817427,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -41117,24 +41118,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -1.4491186302818164,
-            "tokens": 84
+            "logprob": -1.3345926434646458,
+            "tokens": 67
           },
           "other_changed": {
             "logprob": -3.7386582696344703,
             "tokens": 34
           },
           "other_copied": {
-            "logprob": -0.1482783695892067,
-            "tokens": 80
+            "logprob": -0.26280435640637734,
+            "tokens": 97
           },
           "end": {
             "logprob": -4.5060096454108134e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.007282003167245308,
-        "logprob_per_token:other": -0.019532344920721995,
+        "logprob_per_token:identifier": -0.00670649569580224,
+        "logprob_per_token:other": -0.020107852392165063,
         "logprob_per_token:changed": -0.018787227485600355,
         "logprob_per_token:copied": -0.00802712060236695,
         "logprob_per_token:other_changed": -0.018787227485600355,
@@ -41191,31 +41192,31 @@
         "logprob_per_token": -0.2059839840593009,
         "cells": {
           "identifier_changed": {
-            "logprob": -8.408329249359667,
-            "tokens": 11
+            "logprob": -5.393706985749304,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -3.0096444407517993,
-            "tokens": 15
+            "logprob": -2.9501350069458567,
+            "tokens": 14
           },
           "other_changed": {
-            "logprob": -0.2612334090681543,
-            "tokens": 12
+            "logprob": -3.2758556726785173,
+            "tokens": 15
           },
           "other_copied": {
-            "logprob": -0.2678092844080311,
-            "tokens": 19
+            "logprob": -0.3273187182139736,
+            "tokens": 20
           },
           "end": {
             "logprob": -5.4834770708112046e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.19686161534674942,
-        "logprob_per_token:other": -0.009121425749589403,
+        "logprob_per_token:identifier": -0.14385934470164072,
+        "logprob_per_token:other": -0.06212369639469812,
         "logprob_per_token:changed": -0.14947521824875554,
         "logprob_per_token:copied": -0.05650782284758328,
-        "logprob_per_token:other_changed": -0.004504024294278522,
+        "logprob_per_token:other_changed": -0.05648027021859513,
         "logprob_per_token:end": -9.454270811743456e-07,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -41737,16 +41738,16 @@
         "logprob_per_token": -0.8151585151409281,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.0016132686287164688,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.0024144487106241286,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -23.135316957545,
-            "tokens": 10
+            "logprob": -23.136930226173718,
+            "tokens": 11
           },
           "other_copied": {
             "logprob": -0.5001802883271012,
@@ -41757,11 +41758,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00013888680480484818,
-        "logprob_per_token:other": -0.8150171464093828,
+        "logprob_per_token:identifier": -8.325685209048719e-05,
+        "logprob_per_token:other": -0.8150727763620972,
         "logprob_per_token:changed": -0.7978251802128868,
         "logprob_per_token:copied": -0.017330853001300873,
-        "logprob_per_token:other_changed": -0.7977695502601725,
+        "logprob_per_token:other_changed": -0.7978251802128868,
         "logprob_per_token:end": -2.5115248341723506e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -41815,16 +41816,16 @@
         "logprob_per_token": -0.007634853846148441,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.002801305614411831,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.004250926009262912,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": 0.0,
-            "tokens": 0
+            "logprob": -0.002801305614411831,
+            "tokens": 1
           },
           "other_copied": {
             "logprob": -0.1379708880194812,
@@ -41835,11 +41836,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0003711700854565654,
-        "logprob_per_token:other": -0.007261625685235853,
+        "logprob_per_token:identifier": -0.00022373294785594275,
+        "logprob_per_token:other": -0.007409062822836476,
         "logprob_per_token:changed": -0.00014743713760062267,
         "logprob_per_token:copied": -0.007485358633091796,
-        "logprob_per_token:other_changed": 0.0,
+        "logprob_per_token:other_changed": -0.00014743713760062267,
         "logprob_per_token:end": -2.0578885787950926e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -42014,24 +42015,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.03184354630661801,
-            "tokens": 11
+            "logprob": -0.024138294154681716,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.27274937042966485,
-            "tokens": 2
+            "logprob": -0.28045462258160114,
+            "tokens": 3
           },
           "end": {
             "logprob": -0.00010549465514486656,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0022745390219012862,
-        "logprob_per_token:other": -0.019482097887833203,
+        "logprob_per_token:identifier": -0.0017241638681915511,
+        "logprob_per_token:other": -0.020032473041542938,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.02175663690973449,
         "logprob_per_token:other_changed": 0.0,
@@ -42443,24 +42444,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.3048767760337796,
-            "tokens": 8
+            "logprob": -0.18629272188991308,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": -5.111419545952231,
             "tokens": 3
           },
           "other_copied": {
-            "logprob": -0.6821388807147741,
-            "tokens": 11
+            "logprob": -0.8007229348586407,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.000964295701123774,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.14821894291694312,
-        "logprob_per_token:other": -0.22282917025642326,
+        "logprob_per_token:identifier": -0.14365801775756365,
+        "logprob_per_token:other": -0.22739009541580274,
         "logprob_per_token:changed": -0.33308597252919125,
         "logprob_per_token:copied": -0.03796214064417514,
         "logprob_per_token:other_changed": -0.19659305945970118,
@@ -43453,34 +43454,34 @@
         "logprob_per_token": -0.072524608449733,
         "cells": {
           "identifier_changed": {
-            "logprob": -2.0984489917755127,
-            "tokens": 5
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.5212617550782852,
-            "tokens": 29
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
-            "logprob": -0.045186806470155716,
-            "tokens": 1
+            "logprob": -2.1436357982456684,
+            "tokens": 6
           },
           "other_copied": {
-            "logprob": -0.7435758492301829,
-            "tokens": 11
+            "logprob": -1.2648376043084681,
+            "tokens": 40
           },
           "end": {
             "logprob": -0.0001829695247579366,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.05573852652880421,
-        "logprob_per_token:other": -0.01678218416383699,
+        "logprob_per_token:identifier": 0.0,
+        "logprob_per_token:other": -0.0725207106926412,
         "logprob_per_token:changed": -0.04560927230309933,
         "logprob_per_token:copied": -0.026911438389541874,
-        "logprob_per_token:other_changed": -0.0009614214142586322,
+        "logprob_per_token:other_changed": -0.04560927230309933,
         "logprob_per_token:end": -3.892968611870992e-06,
-        "lexer": "POVRay",
-        "lex_error_chars": 4,
+        "lexer": "reStructuredText",
+        "lex_error_chars": 0,
         "line_disagreement": 0.0
       },
       {
@@ -43687,16 +43688,16 @@
         "logprob_per_token": -0.8010278650232263,
         "cells": {
           "identifier_changed": {
-            "logprob": -18.779985670000315,
-            "tokens": 3
+            "logprob": -18.722254753112793,
+            "tokens": 2
           },
           "identifier_copied": {
             "logprob": -0.009182238200992288,
             "tokens": 9
           },
           "other_changed": {
-            "logprob": -4.225151361970347,
-            "tokens": 7
+            "logprob": -4.282882278857869,
+            "tokens": 8
           },
           "other_copied": {
             "logprob": -6.623646187086706,
@@ -43707,11 +43708,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.5078153488703055,
-        "logprob_per_token:other": -0.29321074456910956,
+        "logprob_per_token:identifier": -0.5062550538192915,
+        "logprob_per_token:other": -0.29477103962012363,
         "logprob_per_token:changed": -0.6217604603235314,
         "logprob_per_token:copied": -0.17926563311588373,
-        "logprob_per_token:other_changed": -0.11419328005325263,
+        "logprob_per_token:other_changed": -0.11575357510426673,
         "logprob_per_token:end": -1.7461985604510315e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -43730,24 +43731,24 @@
             "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.0109029445447959,
-            "tokens": 10
+            "logprob": -0.01039214403135702,
+            "tokens": 9
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.0013421845505945385,
-            "tokens": 2
+            "logprob": -0.001852985064033419,
+            "tokens": 3
           },
           "end": {
             "logprob": -9.775113539944869e-06,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0008993792954632747,
-        "logprob_per_token:other": -9.587032504246704e-05,
+        "logprob_per_token:identifier": -0.0008628935445033546,
+        "logprob_per_token:other": -0.00013235607600238706,
         "logprob_per_token:changed": -0.00012059754226356745,
         "logprob_per_token:copied": -0.0008746520782421742,
         "logprob_per_token:other_changed": 0.0,
@@ -43804,31 +43805,31 @@
         "logprob_per_token": -0.3327201967654021,
         "cells": {
           "identifier_changed": {
-            "logprob": -3.9876930163491124,
-            "tokens": 11
+            "logprob": -3.987320556702798,
+            "tokens": 10
           },
           "identifier_copied": {
-            "logprob": -4.211655203733244,
-            "tokens": 8
+            "logprob": -1.0209074658487225,
+            "tokens": 7
           },
           "other_changed": {
-            "logprob": -3.8158763614483178,
-            "tokens": 8
+            "logprob": -3.816248821094632,
+            "tokens": 9
           },
           "other_copied": {
-            "logprob": -3.2890949689553963,
-            "tokens": 18
+            "logprob": -6.479842706839918,
+            "tokens": 19
           },
           "end": {
             "logprob": -0.0008091036579571664,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.17824670043657295,
-        "logprob_per_token:other": -0.15445589848703725,
+        "logprob_per_token:identifier": -0.10887452222938088,
+        "logprob_per_token:other": -0.22382807669422936,
         "logprob_per_token:changed": -0.1696428125608137,
         "logprob_per_token:copied": -0.16305978636279653,
-        "logprob_per_token:other_changed": -0.08295383394452864,
+        "logprob_per_token:other_changed": -0.08296193089336157,
         "logprob_per_token:end": -1.7589209955590576e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -43843,31 +43844,31 @@
         "logprob_per_token": -1.0414158612832256,
         "cells": {
           "identifier_changed": {
-            "logprob": -7.136277225081358,
-            "tokens": 10
+            "logprob": -7.135771190494779,
+            "tokens": 9
           },
           "identifier_copied": {
-            "logprob": -2.424674365494866,
-            "tokens": 10
+            "logprob": -0.7056711947661825,
+            "tokens": 8
           },
           "other_changed": {
-            "logprob": -71.32964577393795,
-            "tokens": 34
+            "logprob": -71.33015180852453,
+            "tokens": 35
           },
           "other_copied": {
-            "logprob": -9.554335862154403,
-            "tokens": 32
+            "logprob": -11.273339032883086,
+            "tokens": 34
           },
           "end": {
             "logprob": -0.15825055539608002,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.10989599529397959,
-        "logprob_per_token:other": -0.9297009383458892,
+        "logprob_per_token:identifier": -0.09013152166966623,
+        "logprob_per_token:other": -0.9494654119702025,
         "logprob_per_token:changed": -0.901907160908268,
         "logprob_per_token:copied": -0.1376897727316008,
-        "logprob_per_token:other_changed": -0.8198809859073328,
+        "logprob_per_token:other_changed": -0.8198868023968338,
         "logprob_per_token:end": -0.001818971901104368,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -43886,24 +43887,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.008991591535959742,
-            "tokens": 6
+            "logprob": -0.007991210926775238,
+            "tokens": 5
           },
           "other_changed": {
             "logprob": -4.0465555667178705,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.2447829357070077,
-            "tokens": 9
+            "logprob": -0.2457833163161922,
+            "tokens": 10
           },
           "end": {
             "logprob": -3.93382906622719e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0012077896065420645,
-        "logprob_per_token:other": -0.21456692512124392,
+        "logprob_per_token:identifier": -0.0011577705760828394,
+        "logprob_per_token:other": -0.21461694415170313,
         "logprob_per_token:changed": -0.2030859883656376,
         "logprob_per_token:copied": -0.012688726362148373,
         "logprob_per_token:other_changed": -0.20232777833589352,
@@ -43925,24 +43926,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.007540863631220418,
-            "tokens": 6
+            "logprob": -0.005536938011573511,
+            "tokens": 5
           },
           "other_changed": {
             "logprob": -3.6565303213428706,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.3122500919646427,
-            "tokens": 9
+            "logprob": -0.3142540175842896,
+            "tokens": 10
           },
           "end": {
             "logprob": -3.862306402879767e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0012310297132898996,
-        "logprob_per_token:other": -0.19843902066537566,
+        "logprob_per_token:identifier": -0.0011308334323075543,
+        "logprob_per_token:other": -0.198539216946358,
         "logprob_per_token:changed": -0.18368050259887242,
         "logprob_per_token:copied": -0.015989547779793157,
         "logprob_per_token:other_changed": -0.18282651606714354,
@@ -44042,24 +44043,24 @@
             "tokens": 1
           },
           "identifier_copied": {
-            "logprob": -0.06609110161662102,
-            "tokens": 2
+            "logprob": -0.026114877313375473,
+            "tokens": 1
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.18076594173908234,
-            "tokens": 3
+            "logprob": -0.22074216604232788,
+            "tokens": 4
           },
           "end": {
             "logprob": -3.862306402879767e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.02258387261203357,
-        "logprob_per_token:other": -0.025823705962726047,
+        "logprob_per_token:identifier": -0.016872983425855637,
+        "logprob_per_token:other": -0.031534595148903985,
         "logprob_per_token:changed": -0.013142286666801997,
         "logprob_per_token:copied": -0.03526529190795762,
         "logprob_per_token:other_changed": 0.0,
@@ -44194,31 +44195,31 @@
         "logprob_per_token": -2.126833135431463,
         "cells": {
           "identifier_changed": {
-            "logprob": -57.33160827122629,
-            "tokens": 12
+            "logprob": -57.26776697486639,
+            "tokens": 10
           },
           "identifier_copied": {
-            "logprob": -5.543471546843648,
-            "tokens": 6
+            "logprob": -5.4891111478209496,
+            "tokens": 4
           },
           "other_changed": {
-            "logprob": -49.78156166477129,
-            "tokens": 23
+            "logprob": -49.845402961131185,
+            "tokens": 25
           },
           "other_copied": {
-            "logprob": -4.217298234128975,
-            "tokens": 13
+            "logprob": -4.271658633151674,
+            "tokens": 15
           },
           "end": {
             "logprob": -0.10187696665525436,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -1.1431832694194533,
-        "logprob_per_token:other": -0.9817974527072775,
+        "logprob_per_token:identifier": -1.1410341476852244,
+        "logprob_per_token:other": -0.9839465744415066,
         "logprob_per_token:changed": -1.9475121806545013,
         "logprob_per_token:copied": -0.1774685414722295,
-        "logprob_per_token:other_changed": -0.9051193029958416,
+        "logprob_per_token:other_changed": -0.9062800538387489,
         "logprob_per_token:end": -0.0018523084846409884,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -44315,24 +44316,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -1.6240834284981247,
-            "tokens": 9
+            "logprob": -1.6046239466813859,
+            "tokens": 6
           },
           "other_changed": {
             "logprob": -0.0034006168134510517,
             "tokens": 1
           },
           "other_copied": {
-            "logprob": -0.21196197120298166,
-            "tokens": 13
+            "logprob": -0.2314214530197205,
+            "tokens": 16
           },
           "end": {
             "logprob": -0.0020140379201620817,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.06767014285408852,
-        "logprob_per_token:other": -0.008973441167351362,
+        "logprob_per_token:identifier": -0.06685933111172442,
+        "logprob_per_token:other": -0.009784252909715482,
         "logprob_per_token:changed": -0.00014169236722712716,
         "logprob_per_token:copied": -0.07650189165421277,
         "logprob_per_token:other_changed": -0.00014169236722712716,
@@ -44506,31 +44507,31 @@
         "logprob_per_token": -1.140108013153076,
         "cells": {
           "identifier_changed": {
-            "logprob": -21.679458394326502,
-            "tokens": 9
+            "logprob": -15.556901231087977,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.1175974141806364,
-            "tokens": 4
+            "logprob": -0.056791385635733604,
+            "tokens": 3
           },
           "other_changed": {
-            "logprob": -0.6968863606452942,
-            "tokens": 1
+            "logprob": -6.81944352388382,
+            "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.30769346351735294,
-            "tokens": 5
+            "logprob": -0.36849949206225574,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.0005253365379758179,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -1.089852790425357,
-        "logprob_per_token:other": -0.05022899120813236,
+        "logprob_per_token:identifier": -0.7806846308361856,
+        "logprob_per_token:other": -0.3593971507973038,
         "logprob_per_token:changed": -1.1188172377485899,
         "logprob_per_token:copied": -0.021264543884899467,
-        "logprob_per_token:other_changed": -0.03484431803226471,
+        "logprob_per_token:other_changed": -0.34097217619419096,
         "logprob_per_token:end": -2.6266826898790897e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -44857,16 +44858,16 @@
         "logprob_per_token": -0.6859361784798759,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.05427389591932297,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "identifier_copied": {
             "logprob": -0.05334341624984518,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -3.9533302783966064,
-            "tokens": 1
+            "logprob": -4.007604174315929,
+            "tokens": 2
           },
           "other_copied": {
             "logprob": -0.7404730319976807,
@@ -44877,11 +44878,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.015373901738452591,
-        "logprob_per_token:other": -0.6705433300563267,
+        "logprob_per_token:identifier": -0.007620488035692168,
+        "logprob_per_token:other": -0.6782967437590871,
         "logprob_per_token:changed": -0.5725148820451328,
         "logprob_per_token:copied": -0.11340234974964655,
-        "logprob_per_token:other_changed": -0.5647614683423724,
+        "logprob_per_token:other_changed": -0.5725148820451328,
         "logprob_per_token:end": -1.895301933732948e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -45173,24 +45174,24 @@
             "tokens": 7
           },
           "identifier_copied": {
-            "logprob": -0.14774735271930695,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": -3.434057354927063,
             "tokens": 2
           },
           "other_copied": {
-            "logprob": -0.4034327119588852,
-            "tokens": 5
+            "logprob": -0.5511800646781921,
+            "tokens": 6
           },
           "end": {
             "logprob": -0.00019488819816615433,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6653708218364045,
-        "logprob_per_token:other": -0.23984312918037176,
+        "logprob_per_token:identifier": -0.6561366122914478,
+        "logprob_per_token:other": -0.24907733872532845,
         "logprob_per_token:changed": -0.8707651969743893,
         "logprob_per_token:copied": -0.03444875404238701,
         "logprob_per_token:other_changed": -0.21462858468294144,
@@ -45286,16 +45287,16 @@
         "logprob_per_token": -0.7761463928222656,
         "cells": {
           "identifier_changed": {
-            "logprob": -15.082062564630178,
-            "tokens": 12
+            "logprob": -14.810418091554311,
+            "tokens": 11
           },
           "identifier_copied": {
             "logprob": -0.046662325112265535,
             "tokens": 3
           },
           "other_changed": {
-            "logprob": -4.209431844996288,
-            "tokens": 4
+            "logprob": -4.481076318072155,
+            "tokens": 5
           },
           "other_copied": {
             "logprob": -0.06545437517343089,
@@ -45306,11 +45307,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6051489955896977,
-        "logprob_per_token:other": -0.17099544880678877,
+        "logprob_per_token:identifier": -0.5942832166666631,
+        "logprob_per_token:other": -0.18186122772982344,
         "logprob_per_token:changed": -0.7716597763850587,
         "logprob_per_token:copied": -0.004484668011427857,
-        "logprob_per_token:other_changed": -0.16837727379985154,
+        "logprob_per_token:other_changed": -0.1792430527228862,
         "logprob_per_token:end": -1.988361473195255e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -46967,24 +46968,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.07967517687939107,
-            "tokens": 19
+            "logprob": -0.07325489586219192,
+            "tokens": 17
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.06710332959482912,
-            "tokens": 5
+            "logprob": -0.07352361061202828,
+            "tokens": 7
           },
           "end": {
             "logprob": -0.06215594708919525,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.19348370731394324,
-        "logprob_per_token:other": -0.0024853085035121897,
+        "logprob_per_token:identifier": -0.19324591912812106,
+        "logprob_per_token:other": -0.0027230966893343807,
         "logprob_per_token:changed": -0.19053277483692876,
         "logprob_per_token:copied": -0.005436240980526674,
         "logprob_per_token:other_changed": 0.0,
@@ -47045,24 +47046,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -2.9682796844572295,
-            "tokens": 27
+            "logprob": -2.9663335803488735,
+            "tokens": 26
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.9881813792671892,
-            "tokens": 10
+            "logprob": -1.9901274833755451,
+            "tokens": 11
           },
           "end": {
             "logprob": -9.846202738117427e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0755570875488047,
-        "logprob_per_token:other": -0.04970453448167973,
+        "logprob_per_token:identifier": -0.0755084349460958,
+        "logprob_per_token:other": -0.049753187084388625,
         "logprob_per_token:changed": -0.001350095437373966,
         "logprob_per_token:copied": -0.12391152659311047,
         "logprob_per_token:other_changed": 0.0,
@@ -47240,24 +47241,24 @@
             "tokens": 2
           },
           "identifier_copied": {
-            "logprob": -0.6642183967633173,
-            "tokens": 4
+            "logprob": -0.6541384876472875,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -3.994449968682602,
-            "tokens": 11
+            "logprob": -4.004529877798632,
+            "tokens": 12
           },
           "end": {
             "logprob": -5.0424259825376794e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.6586619017891482,
-        "logprob_per_token:other": -0.22191388714903346,
+        "logprob_per_token:identifier": -0.6581019068382576,
+        "logprob_per_token:other": -0.222473882099924,
         "logprob_per_token:changed": -0.6217608797467418,
         "logprob_per_token:copied": -0.25881490919143996,
         "logprob_per_token:other_changed": 0.0,
@@ -47318,24 +47319,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -1.6462036175944377,
-            "tokens": 12
+            "logprob": -1.604805965005653,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.7805694252019748,
-            "tokens": 7
+            "logprob": -1.8219670777907595,
+            "tokens": 9
           },
           "end": {
             "logprob": -7.295342220459133e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.09033362683555385,
-        "logprob_per_token:other": -0.07741606196530325,
+        "logprob_per_token:identifier": -0.08853372889691104,
+        "logprob_per_token:other": -0.07921595990394606,
         "logprob_per_token:changed": -0.018759556505360903,
         "logprob_per_token:copied": -0.1489901322954962,
         "logprob_per_token:other_changed": 0.0,
@@ -47513,24 +47514,24 @@
             "tokens": 4
           },
           "identifier_copied": {
-            "logprob": -0.14347842143615708,
-            "tokens": 6
+            "logprob": -0.020357107277959585,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.028797111639050854,
-            "tokens": 12
+            "logprob": -0.15191842579724835,
+            "tokens": 15
           },
           "end": {
             "logprob": -3.9934315282152966e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.007776816313549795,
-        "logprob_per_token:other": -0.0012520483321326458,
+        "logprob_per_token:identifier": -0.002423715697975991,
+        "logprob_per_token:other": -0.00660514894770645,
         "logprob_per_token:changed": -0.0015386240771951398,
         "logprob_per_token:copied": -0.007490240568487301,
         "logprob_per_token:other_changed": 0.0,
@@ -48332,24 +48333,24 @@
             "tokens": 15
           },
           "identifier_copied": {
-            "logprob": -0.2060507573914947,
-            "tokens": 4
+            "logprob": -0.20476364887144882,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": -12.41338290926069,
             "tokens": 7
           },
           "other_copied": {
-            "logprob": -2.371150725753978,
-            "tokens": 17
+            "logprob": -2.3724378342740238,
+            "tokens": 18
           },
           "end": {
             "logprob": -8.165503095369786e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.015704264861845084,
-        "logprob_per_token:other": -0.33601212806851516,
+        "logprob_per_token:identifier": -0.015675012395480404,
+        "logprob_per_token:other": -0.33604138053487986,
         "logprob_per_token:changed": -0.2931436319497813,
         "logprob_per_token:copied": -0.058572760980578925,
         "logprob_per_token:other_changed": -0.28212233884683385,
@@ -48445,31 +48446,31 @@
         "logprob_per_token": -0.04268174086298261,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.03436488811712479,
-            "tokens": 6
-          },
-          "identifier_copied": {
-            "logprob": -0.04317116680613253,
+            "logprob": -0.012355842765828129,
             "tokens": 4
           },
+          "identifier_copied": {
+            "logprob": -0.02467311489454005,
+            "tokens": 3
+          },
           "other_changed": {
-            "logprob": -0.5592473559081554,
-            "tokens": 6
+            "logprob": -0.5812564012594521,
+            "tokens": 8
           },
           "other_copied": {
-            "logprob": -0.5582707166831824,
-            "tokens": 11
+            "logprob": -0.5767687685947749,
+            "tokens": 12
           },
           "end": {
             "logprob": -3.45700973412022e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0027691448186877615,
-        "logprob_per_token:other": -0.039911359735404925,
+        "logprob_per_token:identifier": -0.0013224627735845778,
+        "logprob_per_token:other": -0.04135804178050811,
         "logprob_per_token:changed": -0.021200437286617153,
         "logprob_per_token:copied": -0.021480067267475533,
-        "logprob_per_token:other_changed": -0.019973119853862693,
+        "logprob_per_token:other_changed": -0.020759157187837576,
         "logprob_per_token:end": -1.2346463336143643e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -48523,31 +48524,31 @@
         "logprob_per_token": -1.079254073713293,
         "cells": {
           "identifier_changed": {
-            "logprob": -119.6226729735763,
-            "tokens": 90
-          },
-          "identifier_copied": {
-            "logprob": -3.8430323071952444,
-            "tokens": 5
-          },
-          "other_changed": {
-            "logprob": -81.68419707601424,
+            "logprob": -116.18107510541176,
             "tokens": 87
           },
+          "identifier_copied": {
+            "logprob": -3.746369130181847,
+            "tokens": 4
+          },
+          "other_changed": {
+            "logprob": -85.12579494417878,
+            "tokens": 90
+          },
           "other_copied": {
-            "logprob": -9.621292893309146,
-            "tokens": 16
+            "logprob": -9.717956070322543,
+            "tokens": 17
           },
           "end": {
             "logprob": -0.000362807244528085,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.620430679802872,
-        "logprob_per_token:other": -0.4588215576347909,
+        "logprob_per_token:identifier": -0.6026504735456966,
+        "logprob_per_token:other": -0.47660176389196646,
         "logprob_per_token:changed": -1.0115923118069876,
         "logprob_per_token:copied": -0.06765992563067533,
-        "logprob_per_token:other_changed": -0.41047335214077507,
+        "logprob_per_token:other_changed": -0.42776781378984313,
         "logprob_per_token:end": -1.823151982553191e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -48605,24 +48606,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.08140286753769033,
-            "tokens": 7
+            "logprob": -0.007762769964756444,
+            "tokens": 4
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.038630264994935715,
-            "tokens": 7
+            "logprob": -0.1122703625678696,
+            "tokens": 10
           },
           "end": {
             "logprob": -6.317892984952778e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.005426857835846022,
-        "logprob_per_token:other": -0.0025753509996623808,
+        "logprob_per_token:identifier": -0.0005175179976504296,
+        "logprob_per_token:other": -0.0074846908378579735,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.008002208835508402,
         "logprob_per_token:other_changed": 0.0,
@@ -48878,24 +48879,24 @@
             "tokens": 9
           },
           "identifier_copied": {
-            "logprob": -0.6072858456200265,
-            "tokens": 13
+            "logprob": -0.6024896507906305,
+            "tokens": 10
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.018732755168457516,
-            "tokens": 9
+            "logprob": -0.023528949997853488,
+            "tokens": 12
           },
           "end": {
             "logprob": -5.638440416078083e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.019229362003244432,
-        "logprob_per_token:other": -0.0005853985990142974,
+        "logprob_per_token:identifier": -0.019079480914825808,
+        "logprob_per_token:other": -0.0007352796874329215,
         "logprob_per_token:changed": -0.00025167932761860357,
         "logprob_per_token:copied": -0.019563081274640126,
         "logprob_per_token:other_changed": 0.0,
@@ -51571,24 +51572,24 @@
             "tokens": 3
           },
           "identifier_copied": {
-            "logprob": -0.005844409111887217,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.047071081644332935,
-            "tokens": 7
+            "logprob": -0.05291549075622015,
+            "tokens": 8
           },
           "end": {
             "logprob": -4.7801782784517854e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.000743245788423034,
-        "logprob_per_token:other": -0.003922590137027744,
+        "logprob_per_token:identifier": -0.000256211695765766,
+        "logprob_per_token:other": -0.004409624229685012,
         "logprob_per_token:changed": -0.000256211695765766,
         "logprob_per_token:copied": -0.004409624229685012,
         "logprob_per_token:other_changed": 0.0,
@@ -51762,31 +51763,31 @@
         "logprob_per_token": -1.9209849039713542,
         "cells": {
           "identifier_changed": {
-            "logprob": -189.54359513403324,
-            "tokens": 81
+            "logprob": -178.00674284649722,
+            "tokens": 69
           },
           "identifier_copied": {
-            "logprob": -0.42501890659332275,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
-            "logprob": -191.91179599318093,
-            "tokens": 109
+            "logprob": -203.44864828071695,
+            "tokens": 121
           },
           "other_copied": {
-            "logprob": -9.984512076094688,
-            "tokens": 12
+            "logprob": -10.409530982688011,
+            "tokens": 13
           },
           "end": {
             "logprob": -0.015992114320397377,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.9312186962775811,
-        "logprob_per_token:other": -0.9896877846533119,
+        "logprob_per_token:identifier": -0.8725820727769471,
+        "logprob_per_token:other": -1.048324408153946,
         "logprob_per_token:changed": -1.8698793682706576,
         "logprob_per_token:copied": -0.05102711266023535,
-        "logprob_per_token:other_changed": -0.9407440980057888,
+        "logprob_per_token:other_changed": -0.9972972954937106,
         "logprob_per_token:end": -7.839271725684989e-05,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -51844,24 +51845,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.016125613823533058,
-            "tokens": 1
+            "logprob": 0.0,
+            "tokens": 0
           },
           "other_changed": {
             "logprob": -0.006763778161257505,
             "tokens": 1
           },
           "other_copied": {
-            "logprob": -0.012169257854111493,
-            "tokens": 3
+            "logprob": -0.02829487167764455,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.000510204816237092,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.0026876023039221764,
-        "logprob_per_token:other": -0.0031555060025615,
+        "logprob_per_token:identifier": 0.0,
+        "logprob_per_token:other": -0.005843108306483676,
         "logprob_per_token:changed": -0.0011272963602095842,
         "logprob_per_token:copied": -0.0047158119462740915,
         "logprob_per_token:other_changed": -0.0011272963602095842,
@@ -53283,31 +53284,31 @@
         "logprob_per_token": -0.12821807283343692,
         "cells": {
           "identifier_changed": {
-            "logprob": -3.189995851716958,
-            "tokens": 9
+            "logprob": -3.1812750858953223,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.045384241979263606,
-            "tokens": 17
+            "logprob": -0.03509004298939544,
+            "tokens": 16
           },
           "other_changed": {
-            "logprob": -0.4604651003028266,
-            "tokens": 3
+            "logprob": -0.46918586612446234,
+            "tokens": 4
           },
           "other_copied": {
-            "logprob": -0.535303171724081,
-            "tokens": 3
+            "logprob": -0.5455973707139492,
+            "tokens": 4
           },
           "end": {
             "logprob": -4.7801782784517854e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.09804182102109762,
-        "logprob_per_token:other": -0.030174796122027503,
+        "logprob_per_token:identifier": -0.09746560996620357,
+        "logprob_per_token:other": -0.03075100717692156,
         "logprob_per_token:changed": -0.11062002884908438,
         "logprob_per_token:copied": -0.017596588294040746,
-        "logprob_per_token:other_changed": -0.013953487887964442,
+        "logprob_per_token:other_changed": -0.0142177535189231,
         "logprob_per_token:end": -1.4485388722581167e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -53322,31 +53323,31 @@
         "logprob_per_token": -0.037902235984802246,
         "cells": {
           "identifier_changed": {
-            "logprob": -0.25463242948501374,
-            "tokens": 9
+            "logprob": -0.2542940515592136,
+            "tokens": 8
           },
           "identifier_copied": {
-            "logprob": -0.012358694595377528,
-            "tokens": 18
+            "logprob": -0.007246144373993957,
+            "tokens": 17
           },
           "other_changed": {
-            "logprob": -0.15371710673207417,
-            "tokens": 3
+            "logprob": -0.15405548465787433,
+            "tokens": 4
           },
           "other_copied": {
-            "logprob": -0.867941215634346,
-            "tokens": 3
+            "logprob": -0.8730537658557296,
+            "tokens": 4
           },
           "end": {
             "logprob": -2.6464111215318553e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.007852680120011508,
-        "logprob_per_token:other": -0.03004877418724765,
+        "logprob_per_token:identifier": -0.007692358703917869,
+        "logprob_per_token:other": -0.030209095603341292,
         "logprob_per_token:changed": -0.012010280476973174,
         "logprob_per_token:copied": -0.025891173830285986,
-        "logprob_per_token:other_changed": -0.00452109137447277,
+        "logprob_per_token:other_changed": -0.004531043666408069,
         "logprob_per_token:end": -7.783562122152515e-07,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -53365,24 +53366,24 @@
             "tokens": 7
           },
           "identifier_copied": {
-            "logprob": -0.0266466908806251,
-            "tokens": 16
+            "logprob": -0.023013600585727545,
+            "tokens": 15
           },
           "other_changed": {
             "logprob": -1.095912094693631,
             "tokens": 4
           },
           "other_copied": {
-            "logprob": -0.020091934129595757,
-            "tokens": 2
+            "logprob": -0.023725024424493313,
+            "tokens": 3
           },
           "end": {
             "logprob": -9.60780744208023e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.09895225185858483,
-        "logprob_per_token:other": -0.037200134294107554,
+        "logprob_per_token:identifier": -0.09883114884875492,
+        "logprob_per_token:other": -0.03732123730393747,
         "logprob_per_token:changed": -0.13459443198568502,
         "logprob_per_token:copied": -0.001557954167007362,
         "logprob_per_token:other_changed": -0.036530403156454366,
@@ -53404,24 +53405,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -1.9129018727107905,
-            "tokens": 8
+            "logprob": -1.9098214855766855,
+            "tokens": 7
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -0.4322709832340479,
-            "tokens": 4
+            "logprob": -0.43535137036815286,
+            "tokens": 5
           },
           "end": {
             "logprob": -4.053033626405522e-05,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.14714629790083003,
-        "logprob_per_token:other": -0.03325161409492676,
+        "logprob_per_token:identifier": -0.14690934504436043,
+        "logprob_per_token:other": -0.033488566951396376,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.1803979119957568,
         "logprob_per_token:other_changed": 0.0,
@@ -53911,24 +53912,24 @@
             "tokens": 6
           },
           "identifier_copied": {
-            "logprob": -0.14018291565480467,
-            "tokens": 20
+            "logprob": -0.0675022206723952,
+            "tokens": 18
           },
           "other_changed": {
             "logprob": -29.44243210521745,
             "tokens": 50
           },
           "other_copied": {
-            "logprob": -2.2314930578140775,
-            "tokens": 21
+            "logprob": -2.304173752796487,
+            "tokens": 23
           },
           "end": {
             "logprob": -0.0005981324939057231,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.00551899687601393,
-        "logprob_per_token:other": -0.32320331799011764,
+        "logprob_per_token:identifier": -0.004777357131295465,
+        "logprob_per_token:other": -0.32394495773483606,
         "logprob_per_token:changed": -0.3045215396266532,
         "logprob_per_token:copied": -0.02420077523947839,
         "logprob_per_token:other_changed": -0.3004329806654842,
@@ -53950,24 +53951,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -0.18902140422869707,
-            "tokens": 20
+            "logprob": -0.17542721084464574,
+            "tokens": 19
           },
           "other_changed": {
             "logprob": -47.26143410248915,
             "tokens": 44
           },
           "other_copied": {
-            "logprob": -7.00160256341951,
-            "tokens": 22
+            "logprob": -7.015196756803562,
+            "tokens": 23
           },
           "end": {
             "logprob": -0.00014554394874721766,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.002172659818720656,
-        "logprob_per_token:other": -0.6237130651253868,
+        "logprob_per_token:identifier": -0.00201640472235225,
+        "logprob_per_token:other": -0.6238693202217552,
         "logprob_per_token:changed": -0.5432348747412545,
         "logprob_per_token:copied": -0.08265085020285295,
         "logprob_per_token:other_changed": -0.5432348747412545,
@@ -55623,31 +55624,31 @@
         "logprob_per_token": -0.8187161613913143,
         "cells": {
           "identifier_changed": {
-            "logprob": -6.3219451268523414,
-            "tokens": 14
+            "logprob": -5.581251200041123,
+            "tokens": 13
           },
           "identifier_copied": {
-            "logprob": -2.6838373572099954,
-            "tokens": 4
+            "logprob": -0.047822895692661405,
+            "tokens": 3
           },
           "other_changed": {
-            "logprob": -19.563884363829857,
-            "tokens": 17
+            "logprob": -20.304578290641075,
+            "tokens": 18
           },
           "other_copied": {
-            "logprob": -13.090333480446134,
-            "tokens": 15
+            "logprob": -15.726347941963468,
+            "tokens": 16
           },
           "end": {
             "logprob": -0.09452582150697708,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.17658397027573208,
-        "logprob_per_token:other": -0.6402787812603136,
+        "logprob_per_token:identifier": -0.11037400187713303,
+        "logprob_per_token:other": -0.7064887496589126,
         "logprob_per_token:changed": -0.5075652841310235,
         "logprob_per_token:copied": -0.3092974674050221,
-        "logprob_per_token:other_changed": -0.3836055757613697,
+        "logprob_per_token:other_changed": -0.39812898609100145,
         "logprob_per_token:end": -0.0018534474805289624,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -57456,16 +57457,16 @@
         "logprob_per_token": -0.47918053278847345,
         "cells": {
           "identifier_changed": {
-            "logprob": -1.7200727255549282,
-            "tokens": 5
+            "logprob": -1.3371773005928844,
+            "tokens": 3
           },
           "identifier_copied": {
             "logprob": -0.02910181682818802,
             "tokens": 8
           },
           "other_changed": {
-            "logprob": -24.876287654864427,
-            "tokens": 18
+            "logprob": -25.25918307982647,
+            "tokens": 20
           },
           "other_copied": {
             "logprob": -3.5628300226417196,
@@ -57476,11 +57477,11 @@
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.02776467527592248,
-        "logprob_per_token:other": -0.4514145663096214,
+        "logprob_per_token:identifier": -0.0216869701177948,
+        "logprob_per_token:other": -0.45749227146774907,
         "logprob_per_token:changed": -0.4221644504828469,
         "logprob_per_token:copied": -0.05701479110269694,
-        "logprob_per_token:other_changed": -0.39486170880737187,
+        "logprob_per_token:other_changed": -0.40093941396549954,
         "logprob_per_token:end": -1.3226003613367322e-06,
         "lexer": "Python",
         "lex_error_chars": 0,
@@ -58162,24 +58163,24 @@
             "tokens": 0
           },
           "identifier_copied": {
-            "logprob": -1.3419226815458387,
-            "tokens": 4
+            "logprob": -1.3270586298312992,
+            "tokens": 3
           },
           "other_changed": {
             "logprob": 0.0,
             "tokens": 0
           },
           "other_copied": {
-            "logprob": -1.0788965672254562,
-            "tokens": 3
+            "logprob": -1.0937606189399958,
+            "tokens": 4
           },
           "end": {
             "logprob": -0.00023862851958256215,
             "tokens": 1
           }
         },
-        "logprob_per_token:identifier": -0.16774033519322984,
-        "logprob_per_token:other": -0.13486207090318203,
+        "logprob_per_token:identifier": -0.1658823287289124,
+        "logprob_per_token:other": -0.13672007736749947,
         "logprob_per_token:changed": 0.0,
         "logprob_per_token:copied": -0.30260240609641187,
         "logprob_per_token:other_changed": 0.0,
