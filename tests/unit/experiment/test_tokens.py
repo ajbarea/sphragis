@@ -149,3 +149,44 @@ def test_the_components_add_back_to_the_mean_per_token_both_ways() -> None:
 def test_a_count_mismatch_is_refused() -> None:
     with pytest.raises(ValueError, match="2 log-probabilities for 1 tokens"):
         split([-1.0, -2.0], ["end"])
+
+
+def test_suffixes_pygments_misreads_take_their_registered_language() -> None:
+    assert lexer_for("api-ref/source/servers.inc").name == "reStructuredText"
+    assert lexer_for("tools/check.pl").name == "Perl"
+    assert lexer_for("sql/patch.sql").name == "SQL"
+    assert lexer_for("skins/Foo.tpl").name == "Text only"
+
+
+def test_a_language_outside_the_lexed_set_is_read_as_text() -> None:
+    assert lexer_for("scene.pov").name == "Text only"
+
+
+def test_builtins_are_not_the_codes_own_names() -> None:
+    classes, _ = char_classes("self.x = len(a)\n", "self.x = len(b)\n", "m.py")
+    after = "self.x = len(b)\n"
+    assert classes[after.index("self")] == "other_copied"
+    assert classes[after.index("len")] == "other_copied"
+    assert classes[after.index("x")] == "identifier_copied"
+
+
+def test_an_inserted_line_is_changed_whole_and_its_neighbours_copied() -> None:
+    before = "def f(x):\n    return x\n"
+    after = "def f(x):\n    y = compute(x)\n    return x\n"
+    classes, _ = char_classes(before, after, "m.py")
+    inserted = range(after.index("    y"), after.index("    return"))
+    assert all(classes[i].endswith("changed") for i in inserted)
+    assert all(c.endswith("copied") for i, c in enumerate(classes) if i not in inserted)
+
+
+def test_a_row_its_lexer_cannot_tile_is_read_as_text(monkeypatch) -> None:
+    class Shifted(Lexer):
+        name = "shifted"
+
+        def get_tokens_unprocessed(self, text):
+            yield 1, Name, text
+
+    monkeypatch.setattr("sphragis.experiment.tokens.lexer_for", lambda path: Shifted())
+    classes, lexed = char_classes("a b", "a c", "m.py")
+    assert lexed["lexer"] == "text, shifted could not tile it"
+    assert classes == ["other_copied", "other_copied", "other_changed"]
