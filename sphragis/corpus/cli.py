@@ -18,7 +18,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import IO, Any, NamedTuple
 
-from sphragis.corpus.build import CommentFetcher, DiffFetcher, build_from_change
+from sphragis.corpus.build import DROP_REASONS, CommentFetcher, DiffFetcher, build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
 from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, github_fetchers
@@ -303,6 +303,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="with --via git: restrict enumeration to this branch (repeatable); default is "
         "every branch Gerrit accepts changes on",
+    )
+    parser.add_argument(
+        "--fewer-requests",
+        action="store_true",
+        help="build: skip a change whose snapshot records no comment (counted as "
+        f"{UNCOMMENTED}) and ask each diff once per change; for a host whose count a probe has "
+        "checked (research log, 2026-10-15)",
     )
     parser.add_argument(
         "--request-interval",
@@ -747,6 +754,14 @@ def built_from_current_snapshot(target: Path, snapshot: Path) -> bool | None:
     return recorded.get("snapshot_sha256") == snapshot_digest(snapshot)
 
 
+def built_with_fewer_requests(target: Path) -> bool:
+    """Whether a month's build record says it was built with `--fewer-requests`."""
+    try:
+        return bool(json.loads(source_path(target).read_text()).get("fewer_requests"))
+    except (ValueError, OSError, AttributeError):
+        return False
+
+
 def built_under_current_rules(target: Path) -> bool | None:
     """Whether a month was built under the build rules now in the code; None if unrecorded."""
     try:
@@ -839,6 +854,39 @@ def _load_drops(args: argparse.Namespace) -> dict[str, int]:
     return dict(sorted(total.items()))
 
 
+#: The drop a `--fewer-requests` build counts for a change its snapshot records no comment on.
+UNCOMMENTED = "uncommented_by_count"
+
+
+def uncommented(change: Mapping[str, Any]) -> bool:
+    """Whether the change's snapshot records no inline comment on any patch set.
+
+    Gerrit's `total_comment_count` counts every inline comment across a change's patch sets, as
+    of the fetch; a change without the field (an index that lacks the data) is not uncommented,
+    and neither is a NoteDb or GitHub row. Like `comment_error`, the drop it counts is a change.
+    """
+    if NOTEDB_KEY in change or GITHUB_KEY in change:
+        return False  # those rows carry their comments; skipping them saves no request
+    return change.get("total_comment_count") == 0
+
+
+def cached_diffs(diffs: DiffFetcher) -> DiffFetcher:
+    """One change's diff fetcher, asking once for each file at each patch-set pair.
+
+    Every comment on one file at one patch set asks for the same diff. A request that fails is
+    not remembered, so the next comment asks again, as without the cache.
+    """
+    answered: dict[tuple[int, int, str, int], Mapping[str, Any]] = {}
+
+    def diff(number: int, patch_set: int, path: str, base: int) -> Mapping[str, Any]:
+        key = (number, patch_set, path, base)
+        if key not in answered:
+            answered[key] = diffs(number, patch_set, path, base)
+        return answered[key]
+
+    return diff
+
+
 def _stage_build(args: argparse.Namespace) -> int:
     """Every snapshot for an organization into examples, one file per month."""
     salt = require_salt()
@@ -864,6 +912,8 @@ def _stage_build(args: argparse.Namespace) -> int:
                 scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport),
                 scrubbed_diff_fetcher(GERRIT[args.org], transport=transport),
             )
+        if args.fewer_requests:
+            return rest[0], cached_diffs(rest[1])
         return rest
 
     out_dir = _examples_dir(args)
@@ -889,6 +939,9 @@ def _stage_build(args: argparse.Namespace) -> int:
         elif matches is True and built_under_current_rules(target) is False:
             # Refining it again would stamp the old build's output as current.
             print(f"{args.org} {month}: built under other build rules, rebuilding")
+            matches = False
+        elif matches is True and built_with_fewer_requests(target) != args.fewer_requests:
+            print(f"{args.org} {month}: built in the other request mode, rebuilding")
             matches = False
         elif matches is True and built_under_current_rules(target) is None:
             print(
@@ -921,7 +974,14 @@ def _stage_build(args: argparse.Namespace) -> int:
             continue
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
+        if args.fewer_requests:
+            # Every reason present, as a built change leaves them, and this one even at zero, so
+            # the month's drops say how it was built whatever was skipped.
+            month_drops.update(dict.fromkeys((*DROP_REASONS, UNCOMMENTED), 0))
         for change in changes:
+            if args.fewer_requests and uncommented(change):
+                month_drops[UNCOMMENTED] += 1
+                continue
             built, dropped = build_from_change(args.org, change, *fetchers_for(change))
             rows.extend(built)
             month_drops.update(dropped)
@@ -936,9 +996,9 @@ def _stage_build(args: argparse.Namespace) -> int:
         # matches, and the next run certifies it as finished and counts its truncated tail as
         # an example.
         digest = snapshot_digest(snapshot)
-        write_build_record(target, digest, complete=False)
+        write_build_record(target, digest, complete=False, fewer_requests=args.fewer_requests)
         write_atomic(target, "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows).encode())
-        write_build_record(target, digest, complete=True)
+        write_build_record(target, digest, complete=True, fewer_requests=args.fewer_requests)
         drops.update(month_drops)
         current.add(month)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
