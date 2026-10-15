@@ -1242,14 +1242,13 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
     [
         "chromium-review.googlesource.com",
         "android-review.googlesource.com",
-        "codereview.qt-project.org",
         "gerrit.example.org",
     ],
 )
 def test_http_transport_refuses_a_host_without_recorded_rest_permission(
     monkeypatch: pytest.MonkeyPatch, host: str
 ) -> None:
-    """robots.txt is Disallow: / on the first three; an unknown host is refused by default."""
+    """robots.txt is Disallow: / on the first two; an unknown host is refused by default."""
     from sphragis.corpus import cli
 
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
@@ -1273,6 +1272,7 @@ def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
     assert set(cli.REST_PERMITTED) == {
+        "codereview.qt-project.org",
         "review.lineageos.org",
         "review.opendev.org",
         "gerrit.wikimedia.org",
@@ -1575,6 +1575,17 @@ def test_lineageos_permission_pins_the_policy() -> None:
     assert permission.disallow == ()
     assert permission.crawl_delay >= 2.0
     assert permission.error_pause >= 300.0 and permission.single_client
+
+
+def test_qt_permission_pins_the_written_terms() -> None:
+    """Qt's Gerrit administrators granted 2 s from one client on 2026-10-15; robots.txt stays
+    Disallow: /, so the grant, not robots.txt, opens the host."""
+    from sphragis.corpus import cli
+
+    permission = cli.REST_PERMITTED["codereview.qt-project.org"]
+    assert permission.crawl_delay >= 2.0 and permission.single_client
+    assert permission.error_pause >= 900.0
+    assert "QTQAINFRA-8064" in permission.reason
 
 
 @pytest.mark.parametrize(

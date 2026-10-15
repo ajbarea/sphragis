@@ -9054,3 +9054,22 @@ capacity. A pool that cannot cover a draw is
 refused, never trained smaller, since that is a source that does not qualify. The partition jobs
 call it once a source's maintainers grant permission and its pool is built; no foreign draw has
 been made.
+
+### Qt grants the REST API in writing; its host joins `REST_PERMITTED` (2026-10-15)
+
+Qt's Gerrit administrators answered the 2026-10-14 request by email on 2026-10-15
+(QTQAINFRA-8064): requests at a 2-second interval are fine, an identifying User-Agent works for
+them, and they asked for the address the requests come from, which was sent the same day (the
+collector's own address; a change is announced before collection resumes). If their automated
+systems block the client, they unblock it on request. codereview.qt-project.org is now in
+`REST_PERMITTED` at those terms: 2 s between requests and one client machine-wide. The 15-minute
+quiet period after any 5xx is ours, as long as Wikimedia's, since Qt's firewall once outlasted
+25 minutes of silence (`pacing.Pacer`). robots.txt still reads `Disallow: /`; the written grant
+is what opens the host.
+
+This is the permission the 2026-10-14 entry waited on, and it settles only the fetch. Qt is not
+yet admitted: `ADMITTED_ORGANIZATIONS` is set in one commit after 2026-11-20 (IMPL item 2), and
+before then Qt's fetch of the four windows, freeze, split check, development pilot for K and
+both cells' simulations must land (IMPL item 3d). Qt data held from before these terms stays
+out of every confirmatory cell; those cells read only the fetch made under them.
+
