@@ -3,7 +3,8 @@
 The review UIs of android-review, chromium-review and codereview.qt-project.org publish
 `Disallow: /` in robots.txt, so their REST APIs are closed to automated collection. The git
 hosts behind the first two (android.googlesource.com, chromium.googlesource.com) disallow only
-a few gitiles web views; the git fetch paths are allowed. Gerrit 3.x keeps every change's
+a few gitiles web views; the git fetch paths are allowed, but the route fetches from a host only
+with its maintainers' written permission (`GIT_PERMITTED`). Gerrit 3.x keeps every change's
 review record in the project repository itself, as NoteDb:
 
 - `refs/changes/NN/<change>/meta` is a chain of commits whose footers carry the change's
@@ -75,17 +76,20 @@ class GitPermission(NamedTuple):
 
 
 # Mirrors `cli.REST_PERMITTED`: one entry per git host this route may fetch from, so granting
-# Chromium permission later is a one-line change to an entry already here, not a new host to
-# wire up. android.googlesource.com serves no robots.txt path relevant to a git fetch and
-# answered a workstation address (checked 2026-09-18). chromium.googlesource.com is the same
-# kind of host, but bulk Chromium collection has not been granted permission (checked
-# 2026-09-22): it stays listed and refused until that changes.
+# permission to android or chromium is a one-line change here; fuchsia also needs its entry in
+# `GIT_HOSTS` and its review host before it can be fetched.
+# These git hosts leave fetching open in robots.txt, but each project's review site disallows
+# all crawling, the operator's stated preference about the same review records; so each is
+# refused until its maintainers grant permission in writing (research log, 2026-10-14).
 GIT_PERMITTED = {
     "android.googlesource.com": GitPermission(
-        True, "no robots.txt restriction reaches a git fetch (checked 2026-09-18)", 1.0
+        False, "waits for written permission (request drafted; research log 2026-10-14)", 1.0
     ),
     "chromium.googlesource.com": GitPermission(
-        False, "bulk Chromium collection waits for the host's permission (checked 2026-09-22)", 1.0
+        False, "waits for written permission (requested 2026-09-23; research log 2026-10-14)", 1.0
+    ),
+    "fuchsia.googlesource.com": GitPermission(
+        False, "waits for written permission (research log, 2026-10-14)", 1.0
     ),
 }
 

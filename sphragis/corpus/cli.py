@@ -571,7 +571,7 @@ def _git_pacer(min_interval: float) -> Pacer:
     """
     return Pacer(
         min_interval,
-        host_intervals={host: p.min_interval for host, p in GIT_PERMITTED.items() if p.permitted},
+        host_intervals={host: p.min_interval for host, p in GIT_PERMITTED.items()},
     )
 
 

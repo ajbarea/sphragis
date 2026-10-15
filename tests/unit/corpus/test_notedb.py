@@ -976,9 +976,9 @@ def test_git_permitted_states_a_reason_and_a_positive_floor_for_every_host() -> 
         assert permission.min_interval > 0
 
 
-def test_android_is_permitted_and_chromium_is_not_yet() -> None:
-    assert notedb.GIT_PERMITTED["android.googlesource.com"].permitted is True
-    assert notedb.GIT_PERMITTED["chromium.googlesource.com"].permitted is False
+def test_no_git_host_is_permitted_without_its_maintainers_written_permission() -> None:
+    for host in ("android", "chromium", "fuchsia"):
+        assert notedb.GIT_PERMITTED[f"{host}.googlesource.com"].permitted is False
 
 
 def _forbid_network_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -2150,9 +2150,10 @@ def test_the_git_pacer_is_actually_what_the_cli_fetch_stage_uses(
     )
     pacer = captured["pacer"]
     assert isinstance(pacer, Pacer)
-    assert pacer.interval("android.googlesource.com") >= 1.0, (
-        "the CLI's own Pacer must still carry android's GIT_PERMITTED floor"
-    )
+    for host, permission in notedb.GIT_PERMITTED.items():
+        assert pacer.interval(host) >= permission.min_interval, (
+            f"the CLI's own Pacer must carry {host}'s GIT_PERMITTED floor, permitted or not"
+        )
 
 
 def test_repo_open_actually_calls_the_lazy_fetch_probe(

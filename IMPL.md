@@ -39,8 +39,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
-   GitHub Pro (Student Pack) for required checks on papers `main`; which git hosts feed the H2
-   foreign draw, and an IRB0000393 amendment naming it.
+   GitHub Pro (Student Pack) for required checks on papers `main`; sending the Fuchsia request,
+   the Chromium follow-up and the AOSP request (drafts in the rit account), and an IRB0000393
+   amendment naming the source that grants.
 
 ## Standing
 
@@ -49,8 +50,8 @@ A test window below its projected size is read with `power_at_size.py` run on it
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
-and `make docs-index` *after* staging, never before. Chromium's bulk collection waits on its
-infra-dev list's answer; Qt's REST build cannot be rerun now that its review UI is closed.
+and `make docs-index` *after* staging, never before. Every googlesource git host waits on its
+maintainers' written permission; Qt's REST build cannot be rerun now that its review UI is closed.
 
 ## Cluster data root
 
