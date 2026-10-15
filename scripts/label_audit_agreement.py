@@ -126,7 +126,8 @@ def _valid_rates(labels: dict[str, str], cell_of: dict[str, tuple[str, str]]) ->
     by: dict[str, Counter[str]] = {}
     for item, label in labels.items():
         org, half = cell_of[item]
-        for unit in (org, half):
+        # Deduplicated, so a caller whose unit is the organization alone counts it once.
+        for unit in dict.fromkeys((org, half)):
             by.setdefault(unit, Counter())[label] += 1
     rates = {}
     for unit, counts in sorted(by.items()):

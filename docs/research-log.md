@@ -9078,11 +9078,13 @@ after in-principle acceptance, so it can only come from a fetch made under these
 The audit sampled OpenStack and Qt alike, and the Stage 1 text quoted agreement pooled over all
 383 items, so a published figure rested partly on Qt's review records, which came from a host whose
 permission is still pending. `scripts/label_audit_by_org.py` reads the committed agreement report
-again on one organization's items, with the same functions, seeds and item order, after
-recomputing the pooled pairs from the report's labels and refusing unless they reproduce it (they
-do, to 1e-12). On OpenStack's 191 items (`label-audit-v2-openstack.json`): rater A labels 82.7% valid,
+again on one organization's items, with the same functions, seeds and item order: the locked-label
+pairs on the five labels and on valid against the rest, and the model raters on the human's items.
+It first recomputes those pairs on every item from the report's labels and refuses unless they
+reproduce the report (they do, to 1e-12). Slips and the halves of the human check are not reread:
+the report keys them by neutral item id, and the key stays with the uncommitted sheet. On OpenStack's 191 items (`label-audit-v2-openstack.json`): rater A labels 82.7% valid,
 95% Wilson interval [76.7%, 87.4%]; rater B 84.8% [79.0%, 89.2%]; the human 85.7% of 77
-[76.2%, 91.8%]. The model raters agree on 86.4%, κ 0.533, AC1 0.853; the human agrees with A on
+[76.2%, 91.8%]. The model raters agree on 86.4%, κ 0.533, AC1 0.853 (valid against the rest, κ 0.615); the human agrees with A on
 80.5% (κ 0.249, AC1 0.792) and with B on 79.2% (κ 0.230, AC1 0.777); on those 77 checked
 items the model raters agree at κ 0.568. The pooled reading's conclusions hold on OpenStack alone:
 same-family model raters agree with each other more than with the human, so the model labels

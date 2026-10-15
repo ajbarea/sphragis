@@ -1,13 +1,14 @@
 {
   "provenance": {
-    "generated_at": "2026-10-15T11:11:25.646797+00:00",
+    "generated_at": "2026-10-15T11:34:10.267294+00:00",
     "git": {
-      "commit": "0efb4a4fa622605668047c29f6f684a6debf57d9",
+      "commit": "79309de0f66b26927a291cec6b7ce7f019b3560d",
       "branch": "measure/label-audit-by-org",
       "uncommitted_code": [
+        "scripts/label_audit_agreement.py",
         "scripts/label_audit_by_org.py"
       ],
-      "uncommitted_code_sha256": "81666b4502f3cd80e52b15f9f38acdcb398ccf40a54dc5573f6ae9ac7e085562"
+      "uncommitted_code_sha256": "3de98ea317bf0d61777dd3fc1cb8789e02379411ec55a07e5444d0c110e6146f"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
@@ -75,6 +76,34 @@
         }
       }
     },
+    "A~B valid_vs_rest": {
+      "items": 191,
+      "raw_agreement": 0.8952879581151832,
+      "kappa": 0.6152296535052377,
+      "kappa_95": [
+        0.45259658374412476,
+        0.760394265232975
+      ],
+      "ac1": 0.8561801137005385,
+      "ac1_95": [
+        0.7863740671461905,
+        0.9162066318136951
+      ],
+      "specific_agreement": {
+        "True": 0.9375,
+        "False": 0.6774193548387096
+      },
+      "confusion": {
+        "True": {
+          "True": 150,
+          "False": 8
+        },
+        "False": {
+          "True": 12,
+          "False": 21
+        }
+      }
+    },
     "human~A": {
       "items": 77,
       "raw_agreement": 0.8051948051948052,
@@ -133,6 +162,34 @@
         }
       }
     },
+    "human~A valid_vs_rest": {
+      "items": 77,
+      "raw_agreement": 0.8441558441558441,
+      "kappa": 0.36363636363636354,
+      "kappa_95": [
+        0.05068493150684961,
+        0.6302521008403359
+      ],
+      "ac1": 0.7936117936117936,
+      "ac1_95": [
+        0.6528651085538024,
+        0.9042487046632124
+      ],
+      "specific_agreement": {
+        "True": 0.9090909090909091,
+        "False": 0.45454545454545453
+      },
+      "confusion": {
+        "True": {
+          "True": 60,
+          "False": 6
+        },
+        "False": {
+          "True": 6,
+          "False": 5
+        }
+      }
+    },
     "human~B": {
       "items": 77,
       "raw_agreement": 0.7922077922077922,
@@ -188,6 +245,34 @@
           "unrelated_rewrite": 0,
           "partial": 0,
           "context_dependent": 1
+        }
+      }
+    },
+    "human~B valid_vs_rest": {
+      "items": 77,
+      "raw_agreement": 0.8051948051948052,
+      "kappa": 0.23357664233576658,
+      "kappa_95": [
+        -0.04761904761904773,
+        0.5053533190578158
+      ],
+      "ac1": 0.7388355002826457,
+      "ac1_95": [
+        0.5836814942246253,
+        0.8624078624078624
+      ],
+      "specific_agreement": {
+        "True": 0.8854961832061069,
+        "False": 0.34782608695652173
+      },
+      "confusion": {
+        "True": {
+          "True": 58,
+          "False": 8
+        },
+        "False": {
+          "True": 7,
+          "False": 4
         }
       }
     },
@@ -258,7 +343,14 @@
       "share_95": [
         0.767299513901769,
         0.8742477253592201
-      ]
+      ],
+      "counts": {
+        "valid": 158,
+        "partial": 17,
+        "context_dependent": 7,
+        "unrelated_rewrite": 5,
+        "non_actionable": 4
+      }
     },
     "B": {
       "n": 191,
@@ -267,7 +359,14 @@
       "share_95": [
         0.7904493146725555,
         0.8921569479011369
-      ]
+      ],
+      "counts": {
+        "valid": 162,
+        "partial": 7,
+        "context_dependent": 10,
+        "unrelated_rewrite": 7,
+        "non_actionable": 5
+      }
     },
     "human": {
       "n": 77,
@@ -276,7 +375,13 @@
       "share_95": [
         0.7620272983402657,
         0.9183166836008526
-      ]
+      ],
+      "counts": {
+        "valid": 66,
+        "context_dependent": 5,
+        "partial": 4,
+        "unrelated_rewrite": 2
+      }
     }
   }
 }
