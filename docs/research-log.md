@@ -9014,3 +9014,21 @@ which is its purpose; the development window never stands for the test window. I
 the second sentence of item 6 of the H2 plan above: a cell whose detectable effect is δ or more now reads bounded when
 its interval excludes δ, which an equivalence test permits whatever its power. The Stage 1 design
 history states the change and its timing (papers PR #88, `org-house-style/sections/30-rq.tex`).
+### Google's git hosts need their maintainers' written permission, as Qt's REST API does (2026-10-14)
+
+`# research(2026-10)`. The 2026-10-08 entry admitted android.googlesource.com on its own robots.txt,
+which leaves git fetching open (RFC 9309 scopes a robots.txt to the authority that serves it), and
+set aside the reading that the review site's `Disallow: /` expresses the operator's wish about the
+records themselves. That reading is the stronger one: RFC 9309 also says its rules "are not a form
+of access authorization", and web-research ethics treats robots.txt as the operator's preference,
+with consent as the deciding question once a researcher has asked (Gold and Krinke, EMSE 27, 2022,
+on ethics review before mining). The study asked Chromium's and AOSP's maintainers on 2026-09-23
+and has had only an automatic reply. So every googlesource git host is refused until its
+maintainers grant permission in writing: `GIT_PERMITTED` refuses android, chromium and fuchsia
+(fuchsia added), and every host's pacing floor now applies whether or not it is permitted.
+
+This sets what "admitted for this use" means in item 1 of the H2 plan above: H2's foreign source is
+the first of Chromium, Fuchsia and AOSP whose maintainers grant written permission before the first
+H2 development contrast. Drafts to Fuchsia's discuss list and a narrowed follow-up to Chromium's
+infra-dev list (about 2,000 changes over git, and the AOSP data already held) are with AJ. Data
+already held from these hosts stays out of every figure until then and is deleted on refusal.

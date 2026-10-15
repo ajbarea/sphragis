@@ -976,9 +976,9 @@ def test_git_permitted_states_a_reason_and_a_positive_floor_for_every_host() -> 
         assert permission.min_interval > 0
 
 
-def test_android_is_permitted_and_chromium_is_not_yet() -> None:
-    assert notedb.GIT_PERMITTED["android.googlesource.com"].permitted is True
-    assert notedb.GIT_PERMITTED["chromium.googlesource.com"].permitted is False
+def test_no_git_host_is_permitted_without_its_maintainers_written_permission() -> None:
+    for host in ("android", "chromium", "fuchsia"):
+        assert notedb.GIT_PERMITTED[f"{host}.googlesource.com"].permitted is False
 
 
 def _forbid_network_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:

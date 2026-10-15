@@ -414,8 +414,9 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   research log). Every RQ2 number so far rests on AOSP and Qt corpora fetched over REST before the
   robots.txt stop; they stay as internal pilots. The publishable corpora are OpenStack and Wikimedia
   among the Gerrit hosts (LineageOS is too small for a cell, 2026-09-30) and the GitHub
-  organizations (2026-10-04); Qt only with permission. AOSP's git host is permitted (terms re-read
-  2026-10-08), so AOSP may enter again through the NoteDb route once its data audit shows how
+  organizations (2026-10-04); Qt only with permission. AOSP's git host needs its maintainers'
+  written permission (2026-10-14), so AOSP may enter again through the NoteDb route once it is
+  granted and its data audit shows how
   Android's 2025 move to internal development changed its public review stream in the windows.
 - [ ] **Optional: a written "not human subjects research" determination** from hsro@rit.edu, to
   cite in the ethics section. The study contacts no one and reads only publicly posted reviews,
@@ -723,8 +724,9 @@ as the unit; the evidence says the codebase is.
   pilot and simulation once its terms arrive.
 - [x] **Bounded is a one-sided equivalence test at the SESOI** (2026-10-14, research log): the
   margin is δ, not each cell's detectable effect; the simulation stays required as power.
-- [ ] AJ's call: which git hosts feed the foreign draw (Fuchsia; Chromium before infra-dev
-  answers), and whether IRB0000393 needs an amendment naming the source.
+- [ ] Foreign-source hosts need written permission (2026-10-14): Fuchsia request and a narrowed
+  Chromium/AOSP follow-up drafted for AJ to send; the source is the first to grant. AJ: whether
+  IRB0000393 needs an amendment naming it.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research
   log, 2026-09-27).
