@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from sphragis.corpus import cli
+from sphragis.corpus.load import raw_digest
 from sphragis.corpus.storage import write_snapshot
 
 DIFF = {"content": [{"a": ["x=1"], "b": ["x = 1"]}]}
@@ -26,6 +27,15 @@ def _change(number: int, count: int | None) -> dict[str, Any]:
     if count is not None:
         change["total_comment_count"] = count
     return change
+
+
+def _holding(root: Path) -> dict:
+    return {
+        "org": "openstack",
+        "holds": True,
+        "upper_95_share_with_comments": 0.009,
+        "raw_digest": raw_digest(root, "openstack"),
+    }
 
 
 def _build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *flags: str) -> tuple[list, dict, list]:
@@ -56,7 +66,7 @@ def _build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *flags: str) -> tupl
     monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda base, transport: fetch_diff)
     if "--fewer-requests" in flags:
         probe = tmp_path / "probe.json"
-        probe.write_text(json.dumps({"org": "openstack", "holds": True}))
+        probe.write_text(json.dumps(_holding(tmp_path)))
         flags = (*flags, "--count-probe", str(probe))
     assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path), *flags]) == 0
     examples = tmp_path / "openstack" / "examples"
@@ -129,18 +139,48 @@ def test_a_notedb_row_is_never_skipped_as_uncommented() -> None:
 
 
 @pytest.mark.parametrize(
-    ("probe", "message"),
+    ("change", "message"),
     [
-        (None, "needs --count-probe"),
-        ({"org": "openstack", "holds": False}, "does not hold for openstack"),
-        ({"org": "qt", "holds": True}, "does not hold for openstack"),
+        ({"holds": False}, "does not hold for openstack"),
+        ({"org": "qt"}, "does not hold for openstack"),
+        ({"upper_95_share_with_comments": 0.05}, "bounds the skipped share at 0.05"),
+        ({"upper_95_share_with_comments": None}, "bounds the skipped share at None"),
+        ({"raw_digest": "other"}, "asked other raw snapshots"),
     ],
 )
-def test_fewer_requests_waits_on_a_probe_that_holds(tmp_path, monkeypatch, probe, message) -> None:
-    flags = ["--fewer-requests"]
-    if probe is not None:
-        path = tmp_path / "probe.json"
-        path.write_text(json.dumps(probe))
-        flags += ["--count-probe", str(path)]
+def test_fewer_requests_waits_on_a_tight_probe_of_these_snapshots(
+    tmp_path, monkeypatch, change, message
+) -> None:
+    write_snapshot(tmp_path, "openstack", "2024-10", [_change(1, 0)], record={})
+    path = tmp_path / "probe.json"
+    path.write_text(json.dumps(_holding(tmp_path) | change))
+    with pytest.raises(SystemExit, match=message):
+        cli.main(
+            [
+                "build",
+                "--org",
+                "openstack",
+                "--root",
+                str(tmp_path),
+                "--fewer-requests",
+                "--count-probe",
+                str(path),
+            ]
+        )
+
+
+@pytest.mark.parametrize(
+    ("flags", "content", "message"),
+    [
+        (["--fewer-requests"], None, "needs --count-probe"),
+        (["--fewer-requests"], "{not json", "probe.json"),
+        (["--fewer-requests"], "[]", "does not hold"),
+        ([], "{}", "read only with --fewer-requests"),
+    ],
+)
+def test_the_probe_gate_refuses_cleanly(tmp_path, flags, content, message) -> None:
+    if content is not None:
+        (tmp_path / "probe.json").write_text(content)
+        flags = [*flags, "--count-probe", str(tmp_path / "probe.json")]
     with pytest.raises(SystemExit, match=message):
         cli.main(["build", "--org", "openstack", "--root", str(tmp_path), *flags])

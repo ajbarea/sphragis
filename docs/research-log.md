@@ -9222,11 +9222,15 @@ empty answers bound the share of zero-count changes that carry comments only at 
 one-sided), too loose for a skip applied to about half of Qt's changes, and the script that wrote
 that result was edited after it ran, so the result is not kept.
 
-`scripts/comment_count_probe.py` now draws 25 zero-count and 3 control changes from every month
-with a seed, each change once under its latest month, using the build's own `cli.uncommented`,
-records a failed request rather than stopping, and writes the 95% upper bound beside the result.
-`build --fewer-requests` refuses to run without `--count-probe`, an organization's probe that
-holds. Qt's build started at 13bd2a4 with the flag, before that refusal existed; the stratified
+`scripts/comment_count_probe.py` now samples the rows the build skips: every month's rows the
+build's own `cli.uncommented` reads as uncommented, a change recorded at zero in one month and with
+comments later included as its zero row, 300 of them spread over the months in proportion to each
+month's zero rows, and three rows above zero from every month as a control. It records a failed
+request rather than stopping, resumes from the answers it has kept, and writes the 95% upper bound
+on the share of skipped rows that carry comments (about 1% for 300 empty answers) and the digest
+of the raw snapshots it asked from. `build --fewer-requests` refuses to run without `--count-probe`:
+a probe for that organization that holds, bounds the share at 1% or less, and asked the snapshots
+the build reads. Qt's build started at 13bd2a4 with the flag, before that refusal existed; the
 probe runs from committed code once the build releases Qt's single-client claim. If it does not
 hold, Qt is built again without the flag, which the build's mode check makes a rebuild of every
 month.
