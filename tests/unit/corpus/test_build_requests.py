@@ -54,6 +54,10 @@ def _build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *flags: str) -> tupl
         cli, "scrubbed_comment_fetcher", lambda base, salt, transport: fetch_comments
     )
     monkeypatch.setattr(cli, "scrubbed_diff_fetcher", lambda base, transport: fetch_diff)
+    if "--fewer-requests" in flags:
+        probe = tmp_path / "probe.json"
+        probe.write_text(json.dumps({"org": "openstack", "holds": True}))
+        flags = (*flags, "--count-probe", str(probe))
     assert cli.main(["build", "--org", "openstack", "--root", str(tmp_path), *flags]) == 0
     examples = tmp_path / "openstack" / "examples"
     rows = [json.loads(line) for line in (examples / "2024-10.jsonl").read_text().splitlines()]
@@ -122,3 +126,21 @@ def test_the_diff_cache_keeps_changes_patch_sets_and_bases_apart() -> None:
 def test_a_notedb_row_is_never_skipped_as_uncommented() -> None:
     assert not cli.uncommented({"total_comment_count": 0, cli.NOTEDB_KEY: {}})
     assert cli.uncommented({"total_comment_count": 0})
+
+
+@pytest.mark.parametrize(
+    ("probe", "message"),
+    [
+        (None, "needs --count-probe"),
+        ({"org": "openstack", "holds": False}, "does not hold for openstack"),
+        ({"org": "qt", "holds": True}, "does not hold for openstack"),
+    ],
+)
+def test_fewer_requests_waits_on_a_probe_that_holds(tmp_path, monkeypatch, probe, message) -> None:
+    flags = ["--fewer-requests"]
+    if probe is not None:
+        path = tmp_path / "probe.json"
+        path.write_text(json.dumps(probe))
+        flags += ["--count-probe", str(path)]
+    with pytest.raises(SystemExit, match=message):
+        cli.main(["build", "--org", "openstack", "--root", str(tmp_path), *flags])
