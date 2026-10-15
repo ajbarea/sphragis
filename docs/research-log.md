@@ -9107,10 +9107,12 @@ rate on a convention of the kind the study asks about, fixed here before any run
 
 1. The convention: each half of a partition run writes its Python refinements in its own quote
    style, half a single and half b double, on plain literals only (`planted.to_single`,
-   `to_double`: no literal touching another quote, no prefixed literal), in every window
+   `to_double`: literals found by Python's tokenizer, single-line, holding no quote or backslash,
+   never prefixed or inside an f-string; a fragment that does not tokenize is left alone), in
+   every window
    (`placebo_corpus.py --plant-convention quotes`, jobs `PLANT_CONVENTION=quotes`, tagged
    `-plantquotes<f>`). In PHP or shell the quotes differ in meaning, so only `.py` rows are
-   eligible, about a tenth of OpenStack's refinements on each side; Wikimedia has too few, so the
+   eligible, about one in twelve of OpenStack's refinements on each side; Wikimedia has too few, so the
    rate is read on OpenStack and stands for both organizations, as the registered rate does.
 2. The runs: OpenStack's first ten admissible splits at f = 1.0, and its first five at f = 0.5,
    each scored by `likelihood_score.py`.

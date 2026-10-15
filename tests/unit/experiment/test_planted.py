@@ -191,7 +191,18 @@ def test_the_quote_styles_are_mirror_images() -> None:
 
 
 @pytest.mark.parametrize(
-    "hard", ['    """Doc."""', "    '''Doc.'''", "f'{x}'", 'b"raw"', "it's", "x = 'say \"hi\"'"]
+    "hard",
+    [
+        '    """Doc."""',
+        "    '''Doc.'''",
+        "f'{x}'",
+        'b"raw"',
+        "it's",
+        "x = 'say \"hi\"'",
+        "LOG.error(\"Instance '%s' not found\", x)",
+        "x = f\"{d['k']}\"",
+        "x = ('unterminated",
+    ],
 )
 def test_a_literal_the_quote_styles_half_understand_is_left_alone(hard: str) -> None:
     assert to_double(hard) == hard
@@ -205,8 +216,15 @@ def test_the_quote_plant_touches_python_rows_only_and_names_what_it_changed() ->
         {"id": "c", "path": "m.py", "after": "x = 1"},
     ]
     transforms, applies = PLANT_CONVENTIONS["quotes"]
-    out, report = plant(rows, fraction=1.0, seed=0, transform=transforms[1], applies=applies)
+    out, report = plant(
+        rows, fraction=1.0, seed=0, transform=transforms[1], applies=applies, record_ids=True
+    )
     assert [r["after"] for r in out] == ['x = "v"', "$x = 'v';", "x = 1"]
     assert (report["eligible"], report["changed"], report["changed_ids"]) == (1.0, 1.0, ["a"])
     assert is_python({"path": "a/b.py"})
     assert not is_python({"path": None})
+
+
+def test_a_plant_names_its_changed_ids_only_when_asked() -> None:
+    _, report = plant([{"id": "a", "after": "x = 'v'"}], fraction=1.0, seed=0)
+    assert "changed_ids" not in report

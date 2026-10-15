@@ -170,6 +170,7 @@ def main() -> None:
                 seed=args.plant_seed + offset,
                 transform=transforms[side],
                 applies=applies,
+                record_ids=True,
             )
             planted[names[side]] = report
             marked_rows = iter(marked)

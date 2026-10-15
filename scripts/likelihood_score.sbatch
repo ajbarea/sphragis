@@ -30,6 +30,8 @@ case "${KIND:-partition}" in
     TRAIN_SIZE="${TRAIN_SIZE:?set TRAIN_SIZE of the stored run}"
     SEEDS="${SEEDS:?set SEEDS of the stored run}"
     PLANT="${PLANT:-}"
+    # PLANT_CONVENTION=quotes names a quote-style plant (-plantquotes<f>); marker by default.
+    PLANT_CONVENTION="${PLANT_CONVENTION:-marker}"
     NAME="partition-$ORG-p$PARTITION_SEED"
     ;;
   placebo)

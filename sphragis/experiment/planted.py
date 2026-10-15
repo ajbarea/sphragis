@@ -21,8 +21,10 @@ behaviour.
 
 from __future__ import annotations
 
+import io
 import random
 import re
+import tokenize
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
@@ -42,23 +44,58 @@ def flip_quotes(text: str) -> str:
     return SINGLE_QUOTED.sub(r'"\1"', text)
 
 
-# The two halves of the symmetric quote-style plant (`QUOTE_STYLES`). Stricter than
-# SINGLE_QUOTED, which `flip_quotes` keeps for the stored calibration: a literal touching another
-# quote is left alone, since `""` inside a triple-quoted docstring is not an empty literal, and a
-# prefixed literal (f'', b'', r'') is left alone by the word-character lookbehind.
-_QUOTED = {
-    quote: re.compile(rf"(?<![\\\w'\"]){quote}([^'\"\\\n]*){quote}(?!['\"])") for quote in "'\""
-}
+# The two halves of the symmetric quote-style plant (`PLANT_CONVENTIONS`). Literals are found by
+# Python's own tokenizer, not a pattern: a pattern rewrites the quotes of a pair nested inside a
+# literal of the other kind (`"Instance '%s'"`), and inside an f-string's braces it nests same-kind
+# quotes, which is a syntax error before 3.12. Only a plain single-line literal whose text holds no
+# quote or backslash is restyled; prefixed literals and anything inside an f- or t-string are left
+# alone, and a fragment that does not tokenize is not restyled at all. `flip_quotes` keeps its
+# pattern for the stored calibration.
+_OPEN = {getattr(tokenize, n) for n in ("FSTRING_START", "TSTRING_START") if hasattr(tokenize, n)}
+_CLOSE = {getattr(tokenize, n) for n in ("FSTRING_END", "TSTRING_END") if hasattr(tokenize, n)}
+
+
+def _restyle(text: str, quote: str) -> str:
+    """Every plain literal quoted the other way rewritten with `quote`, or the text unchanged."""
+    other = "'" if quote == '"' else '"'
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (tokenize.TokenError, SyntaxError):
+        return text
+    offsets = [0]
+    for line in text.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+    edits, depth = [], 0
+    for token in tokens:
+        if token.type in _OPEN:
+            depth += 1
+        elif token.type in _CLOSE:
+            depth -= 1
+        elif token.type == tokenize.STRING and depth == 0:
+            literal = token.string
+            inner = literal[1:-1]
+            if (
+                len(literal) >= 2
+                and literal[0] == other == literal[-1]
+                and not any(c in inner for c in "'\"\\\n")
+            ):
+                (row, col), (end_row, end_col) = token.start, token.end
+                edits.append(
+                    (offsets[row - 1] + col, offsets[end_row - 1] + end_col, quote + inner + quote)
+                )
+    for start, end, new in reversed(edits):
+        text = text[:start] + new + text[end:]
+    return text
 
 
 def to_double(text: str) -> str:
     """Single-quoted plain literals become double-quoted: one half's quote style."""
-    return _QUOTED["'"].sub(r'"\1"', text)
+    return _restyle(text, '"')
 
 
 def to_single(text: str) -> str:
     """Double-quoted plain literals become single-quoted: the other half's quote style."""
-    return _QUOTED['"'].sub(r"'\1'", text)
+    return _restyle(text, "'")
 
 
 def is_python(row: Mapping[str, Any]) -> bool:
@@ -128,14 +165,15 @@ def plant(
     field: str = "after",
     transform: Callable[[str], str] = flip_quotes,
     applies: Callable[[Mapping[str, Any]], bool] | None = None,
+    record_ids: bool = False,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Impose the convention on a fraction of rows, and report what was actually imposed.
 
     The realised rate is not the nominal one and must never be reported as if it were. The
     transform is a no-op on a refinement containing no single-quoted literal, so asking for
     half and getting a fifth is the normal case. Every number this calibration produces is
-    indexed by the realised rate. A row `applies` refuses is never eligible. The ids of the rows
-    changed are reported, so a reader can take the planted examples apart.
+    indexed by the realised rate. A row `applies` refuses is never eligible. With `record_ids`, the
+    ids of the rows changed are reported, so a reader can take the planted examples apart.
     """
     if not 0.0 <= fraction <= 1.0:
         raise ValueError(f"fraction must lie in [0, 1], got {fraction}")
@@ -161,7 +199,7 @@ def plant(
         "changed": float(changed),
         "realised_fraction": changed / total if total else 0.0,
         "realised_of_eligible": changed / eligible if eligible else 0.0,
-        "changed_ids": changed_ids,
+        **({"changed_ids": changed_ids} if record_ids else {}),
     }
 
 
