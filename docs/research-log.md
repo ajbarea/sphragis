@@ -9234,3 +9234,52 @@ the build reads. Qt's build started at 13bd2a4 with the flag, before that refusa
 probe runs from committed code once the build releases Qt's single-client claim. If it does not
 hold, Qt is built again without the flag, which the build's mode check makes a rebuild of every
 month.
+
+### Chromium grants the REST API: its pool becomes H2's foreign source (2026-10-16)
+
+`# research(2026-10)`. Chromium's infra-dev list answered the narrowed request of 2026-10-15, about
+2,000 merged changes with their inline review comments created 2024-11 to 2025-08 from one client
+at no more than one request a second, on 2026-10-15 (18:28 PDT), from a Chrome Infra address: "There
+are no concerns with hitting Gerrit's REST API at such a rate." The thread is titled for
+chromium-review and android-review, and AJ reads the answer as covering both. The request named
+NoteDb over git; the answer names the REST API, which is the route used here. That scope is a
+foreign pool, not Chromium as an evaluated organization, whose full corpus stays blocked as on
+2026-10-14 (chromium/src's 18,509 merged changes a month against the host's 10,000-result cap).
+
+By item 1 of the H2 plan (2026-10-14), H2's foreign source is the first of Chromium, Fuchsia and AOSP
+whose maintainers grant written permission before the first H2 development contrast, so it is
+Chromium, provided its pool covers every matched draw (item 3); `decomposition.FOREIGN_SOURCE` is
+set by the commit that checks that coverage, not here. AOSP's held data stays out of every figure,
+since the source is Chromium's.
+
+**The pool, fixed before any of its yield is read:**
+
+1. *Host and route.* chromium-review.googlesource.com over REST (`cli.REST_PERMITTED`, 1 s between
+   requests, one client, five minutes quiet after a 5xx), into `datasets/gerrit-granted`, beside
+   Qt's. The grant's scope is in code (`cli.GrantScope`): the transport answers only listings that
+   name v8/v8 and nothing wider, `fetch` refuses other projects, other months and an earlier
+   cutoff, `build` refuses REST reads without a cap of 170 or less and any month outside the grant,
+   and `resume_when_allowed.sh` refuses the host, since it builds uncapped. The git route stays
+   refused (`notedb.GIT_PERMITTED`): `fetch_chromium.sh` fetches whole projects through 2025-10.
+2. *Project.* v8/v8 alone: of the five C++ projects that cleared the 2026-09-22 selection rule, the
+   one with the largest projected C++ yield after chromium/src (2,387 examples over the ten training
+   months if every human change were read, C++ 0.791 of files), reviewed on chromium-review. chromium/src is outside the grant's scale and
+   the cap above.
+3. *Months.* 2024-11 to 2025-08, cutoff 2024-11-01, each fetched whole (its query pages list changes
+   with their comment counts).
+4. *Reads.* `build --fewer-requests --read-cap 170`: each month reads at most 170 commented changes,
+   drawn in the order of `sha256("20261016:<number>")` (`cli.READ_CAP_SEED`); the rest are counted as
+   `over_read_cap`, a row of the dataset funnel. Not the lowest numbers: a month lists the changes
+   last updated in it, so its lowest numbers are the oldest, longest-open ones; on Qt's granted
+   snapshots, the 170 lowest commented numbers of each month from 2024-12 to 2025-10 had median
+   days open of 15 to 66 against 0.4 to 1.9 for all commented changes (independent review). V8's
+   listing carries `total_comment_count` (one in-scope request, 2026-10-16), so the comment-count
+   probe can run: with its 300 zero-count rows and 30 controls (`comment_count_probe.py`, required
+   by `--fewer-requests`), the study reads at most 2,030 changes, the grant's "about 2,000"; a
+   control the cap also draws is read once, so the count can be lower. The cap holds per month and
+   per build mode: a rebuild in the other mode draws from another candidate set, so the pool is
+   built once, with `--fewer-requests`.
+5. *Then.* refine, dedup, split as for any organization; the pool is deduplicated against Qt, and
+   check 4 compares it with Qt's evaluated test window at 2% at Jaccard 0.7. If the pool cannot
+   cover every matched draw, the source falls to Fuchsia, as item 1 says, and is not widened past
+   the grant.

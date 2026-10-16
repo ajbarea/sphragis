@@ -109,3 +109,32 @@ def test_a_partial_set_of_a_rows_counters_is_refused(tmp_path) -> None:
 def test_examples_kept_without_the_rebase_check_are_counted_apart(tmp_path) -> None:
     read = funnel.funnel(_corpus(tmp_path), "acme")
     assert read["kept_unchecked"]["count"] == 2
+
+
+def test_a_build_counter_no_row_reads_is_refused(tmp_path) -> None:
+    root = _corpus(tmp_path)
+    path = root / "acme" / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["stats"]["built_drops"]["a_new_reason"] = 7
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="a_new_reason"):
+        funnel.funnel(root, "acme")
+
+
+def test_a_mode_counter_reads_zero_when_absent_and_its_count_when_written(tmp_path) -> None:
+    root = _corpus(tmp_path)
+    rows = {
+        r["reason"]: r["count"] for s in funnel.funnel(root, "acme")["steps"] for r in s["rows"]
+    }
+    assert rows["their listing records no comment"] == 0 == rows["past a grant's monthly read cap"]
+    path = root / "acme" / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["stats"]["built_drops"].update(uncommented_by_count=40, over_read_cap=12)
+    path.write_text(json.dumps(manifest))
+    rows = {
+        r["reason"]: r["count"] for s in funnel.funnel(root, "acme")["steps"] for r in s["rows"]
+    }
+    assert (rows["their listing records no comment"], rows["past a grant's monthly read cap"]) == (
+        40,
+        12,
+    )

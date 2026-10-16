@@ -53,15 +53,23 @@ def build_record(built: Path) -> Path:
 
 
 def write_build_record(
-    built: Path, snapshot_sha256: str | None, *, complete: bool, fewer_requests: bool = False
+    built: Path,
+    snapshot_sha256: str | None,
+    *,
+    complete: bool,
+    fewer_requests: bool = False,
+    read_cap: int | None = None,
 ) -> None:
     """What a month was built from and under which build rules; `complete` once it has landed.
 
-    A month built with `--fewer-requests` says so; a full build's record is as it always was.
+    A month built with `--fewer-requests`, or under `--read-cap`, says so; a full build's record
+    is as it always was.
     """
     record = {"snapshot_sha256": snapshot_sha256, "build_rules": BUILD_RULES, "complete": complete}
     if fewer_requests:
         record["fewer_requests"] = True
+    if read_cap is not None:
+        record["read_cap"] = read_cap
     write_json_atomic(build_record(built), record)
 
 

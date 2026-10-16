@@ -1240,8 +1240,8 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
 @pytest.mark.parametrize(
     "host",
     [
-        "chromium-review.googlesource.com",
         "android-review.googlesource.com",
+        "fuchsia-review.googlesource.com",
         "gerrit.example.org",
     ],
 )
@@ -1258,13 +1258,13 @@ def test_http_transport_refuses_a_host_without_recorded_rest_permission(
     assert opened == [], "refused before any connection opened"
 
 
-def test_a_rest_fetch_of_chromium_opens_no_connection(
+def test_a_rest_fetch_of_aosp_opens_no_connection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)] * 5)
     with pytest.raises(SystemExit, match="--via git"):
-        main(["fetch", "--org", "chromium", "--month", "2025-10", "--root", str(tmp_path)])
+        main(["fetch", "--org", "aosp", "--month", "2025-10", "--root", str(tmp_path)])
     assert opened == []
 
 
@@ -1272,6 +1272,7 @@ def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
     assert set(cli.REST_PERMITTED) == {
+        "chromium-review.googlesource.com",
         "codereview.qt-project.org",
         "review.lineageos.org",
         "review.opendev.org",
@@ -1341,7 +1342,7 @@ def test_http_transport_admits_qt_paced_at_its_grant_and_claimed(
     assert (tmp_path / "codereview.qt-project.org.lock").exists()
 
 
-@pytest.mark.parametrize("org", ["aosp", "chromium", "nonesuch"])
+@pytest.mark.parametrize("org", ["aosp", "nonesuch"])
 def test_the_resume_script_refuses_a_host_without_rest_permission(org: str) -> None:
     script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
     result = subprocess.run(
@@ -1946,3 +1947,12 @@ def test_a_finished_github_month_leaves_no_checkpoint(
         == 0
     )
     assert not (tmp_path / "apache" / "raw" / "2024-10.partial.jsonl").exists()
+
+
+def test_the_resume_script_refuses_a_host_granted_for_a_scoped_pool() -> None:
+    script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
+    result = subprocess.run(
+        ["bash", str(script), "chromium", "2024-11"], capture_output=True, text=True, timeout=30
+    )
+    assert result.returncode == 1
+    assert "granted for a scoped pool" in result.stdout
