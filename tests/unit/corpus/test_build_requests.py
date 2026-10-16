@@ -184,3 +184,36 @@ def test_the_probe_gate_refuses_cleanly(tmp_path, flags, content, message) -> No
         flags = [*flags, "--count-probe", str(tmp_path / "probe.json")]
     with pytest.raises(SystemExit, match=message):
         cli.main(["build", "--org", "openstack", "--root", str(tmp_path), *flags])
+
+
+def test_a_read_cap_reads_the_lowest_commented_numbers_and_counts_the_rest(
+    tmp_path, monkeypatch
+) -> None:
+    rows, drops, asked = _build(tmp_path, monkeypatch, "--fewer-requests", "--read-cap", "1")
+    assert [a[1] for a in asked if a[0] == "comments"] == [2]
+    assert drops[cli.UNCOMMENTED] == 1 and drops[cli.OVER_READ_CAP] == 1
+    assert len(rows) == 1
+    record = tmp_path / "openstack" / "examples" / "2024-10.source.json"
+    assert json.loads(record.read_text())["read_cap"] == 1
+
+
+def test_the_cap_orders_by_change_number_not_by_snapshot_order() -> None:
+    changes = [_change(9, 4), _change(5, 0), _change(7, None), _change(3, 1)]
+    assert cli.capped_numbers(changes, 2) == {3, 7}
+    assert cli.capped_numbers(changes, None) is None
+
+
+def test_a_month_built_under_another_cap_is_rebuilt(tmp_path, monkeypatch, capsys) -> None:
+    _build(tmp_path, monkeypatch, "--fewer-requests", "--read-cap", "1")
+    _, drops, asked = _build(tmp_path, monkeypatch, "--fewer-requests", "--read-cap", "2")
+    assert "built under another read cap, rebuilding" in capsys.readouterr().out
+    assert drops[cli.OVER_READ_CAP] == 0
+    _, drops, _ = _build(tmp_path, monkeypatch, "--fewer-requests")
+    assert cli.OVER_READ_CAP not in drops
+
+
+@pytest.mark.parametrize("flags", [("--read-cap", "5"), ("--fewer-requests", "--read-cap", "0")])
+def test_a_read_cap_needs_fewer_requests_and_a_positive_count(tmp_path, flags) -> None:
+    args = cli.build_parser().parse_args(["build", "--root", str(tmp_path), *flags])
+    with pytest.raises(SystemExit, match="--read-cap is a positive count"):
+        cli.require_count_probe(args)

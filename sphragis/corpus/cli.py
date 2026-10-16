@@ -131,6 +131,18 @@ REST_PERMITTED = {
     "review.opendev.org": RestPermission(
         "robots.txt disallows no path and asks Crawl-delay 2 (checked 2026-09-23)", 2.0
     ),
+    "chromium-review.googlesource.com": RestPermission(
+        "robots.txt is Disallow: / (checked 2026-09-23); Chromium's infra-dev list (Chrome"
+        " Infra) answered on 2026-10-15 that it has no concerns with the Gerrit REST API at the"
+        " requested rate, for about 2,000 merged changes with their inline comments created"
+        " 2024-11 to 2025-08, from one client at no more than one request a second (research"
+        " log, 2026-10-16); quiet five minutes after a 5xx, as for LineageOS",
+        1.0,
+        # The grant supersedes robots.txt's Disallow: /, so no pattern is recorded.
+        disallow=(),
+        error_pause=300.0,
+        single_client=True,
+    ),
     "gerrit.wikimedia.org": RestPermission(
         "robots.txt disallows the UI, gitiles, /r/a/, /r/q/ and patch and archive downloads, not"
         " the changes REST endpoints, and asks Crawl-delay 1 (checked 2026-09-26); the Wikitech"
@@ -310,6 +322,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="build: skip a change whose snapshot records no comment (counted as "
         f"{UNCOMMENTED}) and ask each diff once per change; needs --count-probe",
+    )
+    parser.add_argument(
+        "--read-cap",
+        type=int,
+        help="build --fewer-requests: read at most this many commented changes a month, the "
+        f"lowest change numbers first (the rest counted as {OVER_READ_CAP}); a grant's budget",
     )
     parser.add_argument(
         "--count-probe",
@@ -760,6 +778,23 @@ def built_from_current_snapshot(target: Path, snapshot: Path) -> bool | None:
     return recorded.get("snapshot_sha256") == snapshot_digest(snapshot)
 
 
+def built_read_cap(target: Path) -> int | None:
+    """The per-month read cap a month's build record names, None for an uncapped build."""
+    try:
+        cap = json.loads(source_path(target).read_text()).get("read_cap")
+    except (ValueError, OSError, AttributeError):
+        return None
+    return cap if isinstance(cap, int) else None
+
+
+def capped_numbers(changes: list[dict[str, Any]], cap: int | None) -> set[int] | None:
+    """The change numbers a capped build reads: the `cap` lowest among commented changes."""
+    if cap is None:
+        return None
+    numbers = sorted(int(c["_number"]) for c in changes if not uncommented(c))
+    return set(numbers[:cap])
+
+
 def built_with_fewer_requests(target: Path) -> bool:
     """Whether a month's build record says it was built with `--fewer-requests`."""
     try:
@@ -862,6 +897,8 @@ def _load_drops(args: argparse.Namespace) -> dict[str, int]:
 
 #: The drop a `--fewer-requests` build counts for a change its snapshot records no comment on.
 UNCOMMENTED = "uncommented_by_count"
+#: The drop a `--read-cap` build counts for a commented change past the month's cap.
+OVER_READ_CAP = "over_read_cap"
 
 
 def uncommented(change: Mapping[str, Any]) -> bool:
@@ -903,6 +940,8 @@ def require_count_probe(args: argparse.Namespace) -> None:
     skipped share's comments tightly enough, and asked the raw snapshots this build reads."""
     if args.count_probe is not None and not args.fewer_requests:
         raise SystemExit("--count-probe is read only with --fewer-requests")
+    if args.read_cap is not None and (not args.fewer_requests or args.read_cap < 1):
+        raise SystemExit("--read-cap is a positive count, read only with --fewer-requests")
     if not args.fewer_requests:
         return
     if args.count_probe is None or not args.count_probe.is_file():
@@ -983,6 +1022,9 @@ def _stage_build(args: argparse.Namespace) -> int:
         elif matches is True and built_with_fewer_requests(target) != args.fewer_requests:
             print(f"{args.org} {month}: built in the other request mode, rebuilding")
             matches = False
+        elif matches is True and built_read_cap(target) != args.read_cap:
+            print(f"{args.org} {month}: built under another read cap, rebuilding")
+            matches = False
         elif matches is True and built_under_current_rules(target) is None:
             print(
                 f"{args.org} {month}: no build rules recorded; the loader refuses it until it "
@@ -1018,9 +1060,15 @@ def _stage_build(args: argparse.Namespace) -> int:
             # Every reason present, as a built change leaves them, and this one even at zero, so
             # the month's drops say how it was built whatever was skipped.
             month_drops.update(dict.fromkeys((*DROP_REASONS, UNCOMMENTED), 0))
+        if args.read_cap is not None:
+            month_drops[OVER_READ_CAP] = 0
+        reads = capped_numbers(changes, args.read_cap)
         for change in changes:
             if args.fewer_requests and uncommented(change):
                 month_drops[UNCOMMENTED] += 1
+                continue
+            if reads is not None and int(change["_number"]) not in reads:
+                month_drops[OVER_READ_CAP] += 1
                 continue
             built, dropped = build_from_change(args.org, change, *fetchers_for(change))
             rows.extend(built)
@@ -1036,9 +1084,21 @@ def _stage_build(args: argparse.Namespace) -> int:
         # matches, and the next run certifies it as finished and counts its truncated tail as
         # an example.
         digest = snapshot_digest(snapshot)
-        write_build_record(target, digest, complete=False, fewer_requests=args.fewer_requests)
+        write_build_record(
+            target,
+            digest,
+            complete=False,
+            fewer_requests=args.fewer_requests,
+            read_cap=args.read_cap,
+        )
         write_atomic(target, "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows).encode())
-        write_build_record(target, digest, complete=True, fewer_requests=args.fewer_requests)
+        write_build_record(
+            target,
+            digest,
+            complete=True,
+            fewer_requests=args.fewer_requests,
+            read_cap=args.read_cap,
+        )
         drops.update(month_drops)
         current.add(month)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")

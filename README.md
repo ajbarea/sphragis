@@ -120,9 +120,10 @@ dedup and split from the refined examples and compares each window with its froz
 byte, which catches a change to code the rule digests do not cover.
 
 AOSP is fetched from its git host instead, because its review UI forbids crawlers in
-robots.txt while the git host does not; Chromium's git host is the same kind of host, but
-bulk Chromium collection has not yet been granted permission (`sphragis.corpus.notedb.
-GIT_PERMITTED`), so it stays refused until that changes. Gerrit keeps each change's review
+robots.txt while the git host does not. Chromium's infra-dev list granted the REST API on
+2026-10-15 for a pool of about 2,000 merged changes, so Chromium is fetched over REST within that
+scope (`cli.REST_PERMITTED`, `build --read-cap`), and its git host stays refused for bulk
+collection (`sphragis.corpus.notedb.GIT_PERMITTED`). Gerrit keeps each change's review
 record in the repository (NoteDb), and `--via git` reads it, one repository per `--project`,
 into the same snapshot shape; `build` then needs no network for those rows:
 

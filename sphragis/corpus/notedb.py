@@ -87,7 +87,11 @@ GIT_PERMITTED = {
         False, "waits for written permission (request drafted; research log 2026-10-14)", 1.0
     ),
     "chromium.googlesource.com": GitPermission(
-        False, "waits for written permission (requested 2026-09-23; research log 2026-10-14)", 1.0
+        False,
+        "Chromium's grant (2026-10-15) is used over REST within its scope"
+        " (`cli.REST_PERMITTED`); fetch_chromium.sh's whole-project months exceed it"
+        " (research log, 2026-10-16)",
+        1.0,
     ),
     "fuchsia.googlesource.com": GitPermission(
         False, "waits for written permission (research log, 2026-10-14)", 1.0

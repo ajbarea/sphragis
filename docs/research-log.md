@@ -9234,3 +9234,40 @@ the build reads. Qt's build started at 13bd2a4 with the flag, before that refusa
 probe runs from committed code once the build releases Qt's single-client claim. If it does not
 hold, Qt is built again without the flag, which the build's mode check makes a rebuild of every
 month.
+
+### Chromium grants the REST API: its pool becomes H2's foreign source (2026-10-16)
+
+`# research(2026-10)`. Chromium's infra-dev list answered the narrowed request of 2026-10-15, about
+2,000 merged changes with their inline review comments created 2024-11 to 2025-08 from one client
+at no more than one request a second, on 2026-10-15 (18:28 PDT), from a Chrome Infra address: "There
+are no concerns with hitting Gerrit's REST API at such a rate." The thread is titled for
+chromium-review and android-review, and AJ reads the answer as covering both. That scope is a
+foreign pool, not Chromium as an evaluated organization, whose full corpus stays blocked as on
+2026-10-14 (chromium/src's 18,509 merged changes a month against the host's 10,000-result cap).
+
+By item 1 of the H2 plan (2026-10-14), H2's foreign source is the first of Chromium, Fuchsia and AOSP
+whose maintainers grant written permission before the first H2 development contrast, so it is
+Chromium, provided its pool covers every matched draw (item 3); `decomposition.FOREIGN_SOURCE` is
+set by the commit that checks that coverage, not here. AOSP's held data stays out of every figure,
+since the source is Chromium's.
+
+**The pool, fixed before any of its yield is read:**
+
+1. *Host and route.* chromium-review.googlesource.com over REST (`cli.REST_PERMITTED`, 1 s between
+   requests, one client, five minutes quiet after a 5xx), into `datasets/gerrit-granted`, beside
+   Qt's. The git route stays refused (`notedb.GIT_PERMITTED`): `fetch_chromium.sh` fetches whole
+   projects through 2025-10, past the grant.
+2. *Project.* v8/v8 alone: of the five C++ projects that cleared the 2026-09-22 selection rule, the
+   one with the largest projected C++ yield after chromium/src (2,387 examples over twelve months,
+   C++ 0.791 of files), reviewed on chromium-review. chromium/src is outside the grant's scale and
+   the cap above.
+3. *Months.* 2024-11 to 2025-08, cutoff 2024-11-01, each fetched whole (its query pages list changes
+   with their comment counts).
+4. *Reads.* `build --fewer-requests --read-cap 170`: each month reads at most 170 commented changes,
+   the lowest change numbers first; the rest are counted as `over_read_cap`. With the comment-count
+   probe's 300 zero-count rows and 30 controls (`comment_count_probe.py`, required by
+   `--fewer-requests`), the study reads about 2,030 changes, the grant's "about 2,000".
+5. *Then.* refine, dedup, split as for any organization; the pool is deduplicated against Qt, and
+   check 4 compares it with Qt's evaluated test window at 2% at Jaccard 0.7. If the pool cannot
+   cover every matched draw, the source falls to Fuchsia, as item 1 says, and is not widened past
+   the grant.
