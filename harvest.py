@@ -112,7 +112,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     ("dev_runs_wm", "protocol.md", "22", PARTITION_PILOT_WM, ["runs"]),
     ("dev_changes", "protocol.md", "206", PARTITION_PILOT, ["changes"]),
     ("dev_changes_wm", "protocol.md", "429", PARTITION_PILOT_WM, ["changes"]),
-    ("dev_sesoi", "protocol.md", "0.0183", SESOI, ["sesoi"]),
+    ("dev_sesoi", "protocol.md", "0.0161", SESOI, ["sesoi"]),
     ("dev_h1", "protocol.md", "+0.0231", PARTITION_PILOT, ["estimate"], {"occurrences": 2}),
     ("dev_h1_975_low", "protocol.md", "+0.0081", PARTITION_PILOT, [*AT_975, "low"]),
     ("dev_h1_975_high", "protocol.md", "+0.0402", PARTITION_PILOT, [*AT_975, "high"]),
@@ -358,7 +358,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     (
         "rd_sesoi",
         "registered-decisions.md",
-        "0.0183",
+        "0.0161",
         SESOI,
         ["sesoi"],
     ),

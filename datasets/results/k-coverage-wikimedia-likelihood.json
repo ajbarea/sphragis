@@ -87,33 +87,25 @@
     }
   ],
   "spread_targets": {
-    "pilot_lower_90": 0.005332661743105112,
-    "pilot_estimate": 0.006332729149222406,
-    "sizing_bound_90": 0.007975596279716378,
-    "pilot_upper_99": 0.009729128391796769
+    "pilot_lower_90": 0.005332661742551202,
+    "pilot_estimate": 0.006332729148564618,
+    "sizing_bound_90": 0.007975596278887944,
+    "pilot_upper_99": 0.009729128390786192
   },
   "provenance": {
-    "generated_at": "2026-10-10T04:36:52.133548+00:00",
+    "generated_at": "2026-10-16T04:04:19.980304+00:00",
     "git": {
-      "commit": "e5665da93264d0114f4e411761b5dd599697bce0",
-      "branch": "gate/k-coverage",
+      "commit": "46e21271491f0b79494889b7c4f80be4b8e13892",
+      "branch": "measure/planted-exchange-quotes",
       "uncommitted_code": [
-        "scripts/k_coverage.py",
-        "scripts/partition_pilot.py",
-        "scripts/partition_sensitivity.py",
-        "sphragis/experiment/cells.py",
-        "sphragis/experiment/decomposition.py",
-        "sphragis/experiment/likelihood.py",
-        "sphragis/experiment/partitions.py"
+        "scripts/likelihood_sesoi.py"
       ],
-      "uncommitted_code_sha256": "1ec512fd81397540f3efd320930245b03bffe79de0f8fdf8a54425796fcf17c2"
+      "uncommitted_code_sha256": "e21378cf4eed8739c87e04a85eb99d8d6a4ed6b54ad9e35a82a79202b76944d2"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
-      "torch": "2.14.0+cu130",
-      "transformers": "5.17.0",
-      "peft": "0.20.0"
+      "pygments": "2.21.0"
     }
   }
 }

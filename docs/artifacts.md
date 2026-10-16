@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 649 artifacts under
-65 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 651 artifacts under
+66 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -569,6 +569,14 @@ Two pseudo-organizations built from one organization's own projects.
 | `rq1-placebo-qt-s2.json` | `rq1-placebo-qt-s3.json` |
 | `rq1-placebo-qt-seeds.json` | `rq1-placebo-qt.json` |
 | `rq1-placebo-wikimedia-rp1.0.json` | `rq1-placebo-wikimedia.json` |
+
+## `scripts/planted_exchange.py`
+
+The exchange rate between exact match and s, read on a planted code-level convention.
+
+| artifact | |
+|---|---|
+| `planted-exchange-openstack-quotes0.5.json` | `planted-exchange-openstack-quotes1.0.json` |
 
 ## `scripts/power_rq1.py`
 

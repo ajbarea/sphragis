@@ -158,8 +158,8 @@ From the October 2026 practice sweep (research log, 2026-10-01), each reported f
 hypothesis the gate reads, on the same draws, at the same levels:
 
 - **Meaningful.** A supported cell is also *meaningful* when its lower bound clears its metric's
-  SESOI (`decomposition.metric_sesoi`: 0.0183 nats per token on the registered metric, 0.01 on
-  exact match), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
+  SESOI (`decomposition.metric_sesoi`: 0.0161 nats per token on the registered metric, carried
+  from 0.01 on exact match at the planted quote-style rate, research log 2026-10-16), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
   AMPPS 2026). "Supported" says the effect is above zero; "meaningful" says it is above the
   smallest effect worth having.
 - **At least r of k.** Beside the every-organization rule, the largest r for which "at least r of

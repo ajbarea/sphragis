@@ -24,7 +24,7 @@
     "datasets/results/likelihood-partition-openstack-p27-s22-n1850-rp1.0.json"
   ],
   "metric": "logprob_per_token",
-  "sesoi": 0.018336619495924602,
+  "sesoi": 0.016142401360357633,
   "decoder": {
     "inference_dtype": [
       "float32"
@@ -44,6 +44,118 @@
   "window": "development",
   "sensitivity": null,
   "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p3-s2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p4-s3-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p5-s4-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p7-s5-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p8-s6-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p9-s7-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p10-s8-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p11-s9-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p12-s10-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p14-s11-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p15-s12-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p17-s13-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p18-s14-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p19-s15-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p21-s16-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p22-s17-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p23-s18-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p24-s19-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p25-s20-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p26-s21-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-openstack-p27-s22-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    }
+  ],
   "org": "openstack",
   "bootstrap_seed": 7,
   "estimate": 0.02305021727715797,
@@ -76,7 +188,7 @@
   "reproducibility": {
     "runs": 22,
     "variance_of_mean": 1.3229081064079845e-06,
-    "critical_value": 4.3763532323583204e-05,
+    "critical_value": 3.391642782621208e-05,
     "holds": true
   },
   "runs_computed": 22,
@@ -117,19 +229,25 @@
     "sd": 0.005394810315569553,
     "sd_upper": 0.006794358019861835,
     "confidence": 0.9,
-    "formula": 1.0548348922279396,
+    "formula": 1.361089709641646,
     "runs": 10,
     "clamped": "min"
   },
   "without": {},
   "provenance": {
-    "generated_at": "2026-10-09T15:33:29.674923+00:00",
+    "generated_at": "2026-10-16T04:03:41.285475+00:00",
     "git": {
-      "commit": "74e8195e6ce02d7c66d879a18bc48391dba5354c",
-      "branch": "measure/likelihood"
+      "commit": "46e21271491f0b79494889b7c4f80be4b8e13892",
+      "branch": "measure/planted-exchange-quotes",
+      "uncommitted_code": [
+        "scripts/likelihood_sesoi.py"
+      ],
+      "uncommitted_code_sha256": "e21378cf4eed8739c87e04a85eb99d8d6a4ed6b54ad9e35a82a79202b76944d2"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "packages": {
+      "pygments": "2.21.0"
+    }
   }
 }

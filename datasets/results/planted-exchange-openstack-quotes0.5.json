@@ -1,0 +1,105 @@
+{
+  "provenance": {
+    "generated_at": "2026-10-16T01:31:36.136530+00:00",
+    "git": {
+      "commit": "46e21271491f0b79494889b7c4f80be4b8e13892",
+      "branch": "measure/planted-exchange-quotes"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  },
+  "fraction": 0.5,
+  "rate": 2.3578781342752966,
+  "rate_95": [
+    1.790590621214528,
+    4.619775801127237
+  ],
+  "undefined_resamples": 1,
+  "resamples": 10000,
+  "seed": 7,
+  "runs": [
+    {
+      "file": "/home/ajbar/ajsoftworks/sphragis-data-local/planted-quotes/likelihood/likelihood-partition-openstack-p2-n1850-plantquotes0.5-rp1.0.json",
+      "fraction": 0.5,
+      "halves": {
+        "openstack-a": {
+          "examples": 23,
+          "logprob_per_token": 5.145133281162456,
+          "exact_match": 2.0
+        },
+        "openstack-b": {
+          "examples": 9,
+          "logprob_per_token": 0.711543315192056,
+          "exact_match": 0.0
+        }
+      }
+    },
+    {
+      "file": "/home/ajbar/ajsoftworks/sphragis-data-local/planted-quotes/likelihood/likelihood-partition-openstack-p3-s2-n1850-plantquotes0.5-rp1.0.json",
+      "fraction": 0.5,
+      "halves": {
+        "openstack-a": {
+          "examples": 13,
+          "logprob_per_token": 3.320888730389566,
+          "exact_match": 2.0
+        },
+        "openstack-b": {
+          "examples": 2,
+          "logprob_per_token": 0.26204099125332303,
+          "exact_match": 0.0
+        }
+      }
+    },
+    {
+      "file": "/home/ajbar/ajsoftworks/sphragis-data-local/planted-quotes/likelihood/likelihood-partition-openstack-p4-s3-n1850-plantquotes0.5-rp1.0.json",
+      "fraction": 0.5,
+      "halves": {
+        "openstack-a": {
+          "examples": 10,
+          "logprob_per_token": 2.175851447924344,
+          "exact_match": 0.0
+        },
+        "openstack-b": {
+          "examples": 9,
+          "logprob_per_token": 1.7652445182277507,
+          "exact_match": 0.0
+        }
+      }
+    },
+    {
+      "file": "/home/ajbar/ajsoftworks/sphragis-data-local/planted-quotes/likelihood/likelihood-partition-openstack-p5-s4-n1850-plantquotes0.5-rp1.0.json",
+      "fraction": 0.5,
+      "halves": {
+        "openstack-a": {
+          "examples": 23,
+          "logprob_per_token": 4.550626735909625,
+          "exact_match": 3.0
+        },
+        "openstack-b": {
+          "examples": 7,
+          "logprob_per_token": 0.8682877749157618,
+          "exact_match": 0.0
+        }
+      }
+    },
+    {
+      "file": "/home/ajbar/ajsoftworks/sphragis-data-local/planted-quotes/likelihood/likelihood-partition-openstack-p7-s5-n1850-plantquotes0.5-rp1.0.json",
+      "fraction": 0.5,
+      "halves": {
+        "openstack-a": {
+          "examples": 19,
+          "logprob_per_token": 4.9778794252923095,
+          "exact_match": 4.0
+        },
+        "openstack-b": {
+          "examples": 10,
+          "logprob_per_token": 2.159163256761069,
+          "exact_match": 0.0
+        }
+      }
+    }
+  ]
+}
