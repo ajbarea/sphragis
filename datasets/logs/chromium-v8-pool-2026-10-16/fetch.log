@@ -1,0 +1,20 @@
+chromium 2024-11: fetched 875 in 9 pages, kept 809, dropped 66 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2024-11.ndjson.gz
+chromium 2024-12: fetched 711 in 8 pages, kept 699, dropped 12 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2024-12.ndjson.gz
+chromium 2025-01: fetched 731 in 8 pages, kept 726, dropped 5 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-01.ndjson.gz
+chromium 2025-02: fetched 843 in 9 pages, kept 842, dropped 1 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-02.ndjson.gz
+chromium 2025-03: fetched 875 in 9 pages, kept 869, dropped 6 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-03.ndjson.gz
+chromium 2025-04: fetched 625 in 7 pages, kept 622, dropped 3 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-04.ndjson.gz
+chromium 2025-05: fetched 944 in 10 pages, kept 943, dropped 1 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-05.ndjson.gz
+chromium 2025-06: fetched 870 in 9 pages, kept 868, dropped 2 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-06.ndjson.gz
+chromium 2025-07: fetched 902 in 10 pages, kept 899, dropped 3 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-07.ndjson.gz
+chromium 2025-08: fetched 610 in 7 pages, kept 608, dropped 2 created before 2024-11-01
+wrote /home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted/chromium/raw/2025-08.ndjson.gz
