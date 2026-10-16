@@ -128,9 +128,13 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] **Chromium approved as a third organization and scoped** (2026-09-22): a C++ organization
   with several projects, the pairing for Qt that controls language. In `GERRIT`; fetch now refuses
   a query the host truncated. Selection rule, feasibility and split outcome are in the research log.
-- [ ] **Collect Chromium's V8 pool** under its grant (v8/v8, 2024-11 to 2025-08, 170 commented
-  changes a month, research log 2026-10-16), as Qt's foreign source; Chromium as an evaluated
-  organization stays blocked on chromium/src's scale and is beyond the grant.
+- [x] **Collect Chromium's V8 pool** under its grant (2026-10-16): 1,700 changes read, 659
+  examples after dedup, below one matched draw (N = 1,850), so the source falls to Fuchsia if it
+  grants first, otherwise AOSP (research log). Chromium as an evaluated organization stays
+  blocked on chromium/src's scale and is beyond the grant.
+- [ ] **AOSP's pool** by item 4 of the H2 plan (C++-majority projects at `android-15.0.0_r1`, created
+  2024-10-01 to 2025-03-26, in descending change count until every matched draw is covered),
+  unless Fuchsia grants first.
 
 ## Plan B — measurement
 

@@ -9283,3 +9283,34 @@ since the source is Chromium's.
    check 4 compares it with Qt's evaluated test window at 2% at Jaccard 0.7. If the pool cannot
    cover every matched draw, the source falls to Fuchsia, as item 1 says, and is not widened past
    the grant.
+
+### Chromium's V8 pool, read within its grant, cannot cover a matched draw (2026-10-16)
+
+`# research(2026-10)`. The pool fixed in the entry above, collected at 64a059c
+(`datasets/logs/chromium-v8-pool-2026-10-16/`, raw snapshots in `datasets/gerrit-granted/chromium`,
+backed up):
+
+| stage | v8/v8, 2024-11 to 2025-08 |
+|---|---|
+| merged changes listed, created from 2024-11-01 | 7,885 |
+| skipped: the listing records no comment (`uncommented_by_count`) | 3,683 |
+| skipped: past the 170-a-month cap (`over_read_cap`) | 2,502 |
+| changes read | 1,700 |
+| examples built | 756 |
+| after refinement (71 the reviewer's own suggested edit) | 685 |
+| after deduplication (13 exact, 13 near copies) | 659 |
+
+The comment-count probe held (`comment-count-probe-chromium.json`: none of 300 zero-count rows
+carried a comment, every control did, upper 95% bound 0.0099), so the 1,700 reads plus its 330
+are the grant's "about 2,000". V8's inline comments are mostly not a reviewer's on code a later
+patch set changed: of the comments the build read, 4,441 sat on the commit message or patch set,
+2,818 were the author's own and 1,242 lay outside any hunk the next patch set changed.
+
+A matched foreign draw is N = 1,850 examples, so 659 cannot cover one, and at this yield the
+whole 2,000 changes would give about 780. By item 5 of the pool rule the pool is not widened past
+the grant, and by item 1 of the H2 plan the source falls to the next of Fuchsia and AOSP whose
+maintainers grant written permission before the first H2 development contrast, in that order.
+Fuchsia has not answered. AJ reads Chromium's infra-dev answer as covering android-review (entry
+above), so AOSP is the source unless Fuchsia grants first, with its projects and window as item 4
+of the H2 plan fixes them. The V8 pool stays held, enters no figure, and is reported as the source
+tried first.
