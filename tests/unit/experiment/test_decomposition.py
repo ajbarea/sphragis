@@ -717,7 +717,7 @@ def test_the_replication_gate_reads_bounded_against_the_sesoi_not_the_simulated_
     frozen,
 ) -> None:
     frozen("llvm")
-    # Above the simulated bound, below the SESOI (0.0183 on the registered metric).
+    # Above the simulated bound, below the SESOI (0.0161 on the registered metric).
     cells = {"llvm": _replication_cell(-0.004, 0.012, 0.3, bound=0.008, org="llvm")}
     out = replication_gate(cells, simulations={"llvm": _sim(0.008, "llvm")})
     assert out["cells"]["llvm"]["verdict"] == "bounded"
@@ -1696,7 +1696,7 @@ def admitted(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
 def test_an_upper_bound_above_the_simulated_bound_and_below_the_sesoi_reads_bounded(
     admitted,
 ) -> None:
-    # Wikimedia's 97.5% development case: above its detectable effect (0.0071), below δ (0.0183).
+    # Wikimedia's 97.5% development case: above its detectable effect (0.0071), below δ (0.0161).
     admitted("openstack", "wikimedia")
     reports = {
         o: _gerrit_report(o, -0.0004, 0.0125, 0.06, bound=0.0071)
