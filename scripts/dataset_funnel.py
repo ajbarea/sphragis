@@ -189,11 +189,11 @@ def unplaced_drops(stats: dict) -> list[str]:
 
 
 def _count(stats: dict, section: str, keys: tuple[str, ...]) -> int | None:
-    if all(k in MODE_COUNTERS for k in keys) and not any(k in stats[section] for k in keys):
-        return 0
     """The summed counters; None when the build recorded none of them, refused when only some."""
     if section not in stats:
         raise ValueError(f"the manifest's stats hold no {section}")
+    if all(k in MODE_COUNTERS for k in keys) and not any(k in stats[section] for k in keys):
+        return 0
     found = [k for k in keys if k in stats[section]]
     if found and len(found) != len(keys):
         raise ValueError(f"{section} records {found} of {list(keys)}: a partial sum is no count")

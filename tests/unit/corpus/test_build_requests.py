@@ -270,6 +270,7 @@ def test_a_fetch_past_chromiums_grant_is_refused_before_any_request(
         ("message:Assisted-by after:2024-10-01", True),
         ("project:v8/v8 OR is:open", True),
         ("project:v8/v8 -is:wip", True),
+        ("parentproject:v8/v8", True),
     ],
 )
 def test_a_scoped_host_answers_only_listings_of_its_granted_projects(query, refused) -> None:
@@ -280,6 +281,8 @@ def test_a_scoped_host_answers_only_listings_of_its_granted_projects(query, refu
     why = cli.out_of_scope_listing(f"/changes/?q={quote(query)}&n=100", scope)
     assert (why is not None) is refused
     assert cli.out_of_scope_listing("/changes/123/comments", scope) is None
+    twice = "/changes/?q=project%3Av8%2Fv8&q=status%3Amerged"
+    assert cli.out_of_scope_listing(twice, scope) == "a listing with more than one query"
 
 
 def test_a_month_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys) -> None:

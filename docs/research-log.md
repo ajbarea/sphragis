@@ -9276,7 +9276,9 @@ since the source is Chromium's.
    listing carries `total_comment_count` (one in-scope request, 2026-10-16), so the comment-count
    probe can run: with its 300 zero-count rows and 30 controls (`comment_count_probe.py`, required
    by `--fewer-requests`), the study reads at most 2,030 changes, the grant's "about 2,000"; a
-   control the cap also draws is read once, so the count can be lower.
+   control the cap also draws is read once, so the count can be lower. The cap holds per month and
+   per build mode: a rebuild in the other mode draws from another candidate set, so the pool is
+   built once, with `--fewer-requests`.
 5. *Then.* refine, dedup, split as for any organization; the pool is deduplicated against Qt, and
    check 4 compares it with Qt's evaluated test window at 2% at Jaccard 0.7. If the pool cannot
    cover every matched draw, the source falls to Fuchsia, as item 1 says, and is not widened past

@@ -197,7 +197,12 @@ def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
     path, _, query = target.partition("?")
     if not path.rstrip("/").endswith("/changes"):
         return None
-    q = urllib.parse.parse_qs(query).get("q", [""])[0]
+    asked = urllib.parse.parse_qs(query).get("q", [""])
+    if len(asked) != 1:
+        return "a listing with more than one query"
+    q = asked[0]
+    if re.search(r"\w(?=project:)", q):
+        return "a listing by a project operator other than project:"
     named = re.findall(r"project:([^\s()]+)", q)
     if not named:
         return "a listing that names no project"
