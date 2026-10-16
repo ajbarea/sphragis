@@ -190,17 +190,32 @@ def test_a_read_cap_reads_the_lowest_commented_numbers_and_counts_the_rest(
     tmp_path, monkeypatch
 ) -> None:
     rows, drops, asked = _build(tmp_path, monkeypatch, "--fewer-requests", "--read-cap", "1")
-    assert [a[1] for a in asked if a[0] == "comments"] == [2]
+    chosen = cli.capped_numbers([_change(2, 2), _change(3, None)], 1, skip_uncommented=True)
+    assert chosen is not None
+    assert [a[1] for a in asked if a[0] == "comments"] == sorted(chosen)
     assert drops[cli.UNCOMMENTED] == 1 and drops[cli.OVER_READ_CAP] == 1
     assert len(rows) == 1
     record = tmp_path / "openstack" / "examples" / "2024-10.source.json"
     assert json.loads(record.read_text())["read_cap"] == 1
 
 
-def test_the_cap_orders_by_change_number_not_by_snapshot_order() -> None:
-    changes = [_change(9, 4), _change(5, 0), _change(7, None), _change(3, 1)]
-    assert cli.capped_numbers(changes, 2) == {3, 7}
-    assert cli.capped_numbers(changes, None) is None
+def test_the_cap_draws_in_a_seeded_order_not_by_snapshot_order_or_age() -> None:
+    changes = [_change(n, 1) for n in range(100, 400)] + [_change(5, 0)]
+    picked = cli.capped_numbers(changes, 30, skip_uncommented=True)
+    assert picked is not None
+    assert picked == cli.capped_numbers(changes[::-1], 30, skip_uncommented=True)
+    assert len(picked) == 30 and 5 not in picked
+    # Not the lowest numbers, which in a month's listing are the changes longest open.
+    assert picked != set(range(100, 130))
+    assert cli.capped_numbers(changes, None, skip_uncommented=True) is None
+    # Without --fewer-requests the uncommented change is a candidate too.
+    every = cli.capped_numbers(changes, 301, skip_uncommented=False)
+    assert every is not None and 5 in every
+
+
+def test_a_duplicated_number_takes_one_slot() -> None:
+    changes = [_change(1, 1), _change(1, 1), _change(2, 1)]
+    assert cli.capped_numbers(changes, 2, skip_uncommented=True) == {1, 2}
 
 
 def test_a_month_built_under_another_cap_is_rebuilt(tmp_path, monkeypatch, capsys) -> None:
@@ -212,8 +227,65 @@ def test_a_month_built_under_another_cap_is_rebuilt(tmp_path, monkeypatch, capsy
     assert cli.OVER_READ_CAP not in drops
 
 
-@pytest.mark.parametrize("flags", [("--read-cap", "5"), ("--fewer-requests", "--read-cap", "0")])
-def test_a_read_cap_needs_fewer_requests_and_a_positive_count(tmp_path, flags) -> None:
-    args = cli.build_parser().parse_args(["build", "--root", str(tmp_path), *flags])
+def test_a_read_cap_is_a_positive_count(tmp_path) -> None:
+    args = cli.build_parser().parse_args(["build", "--root", str(tmp_path), "--read-cap", "0"])
     with pytest.raises(SystemExit, match="--read-cap is a positive count"):
         cli.require_count_probe(args)
+
+
+@pytest.mark.parametrize("flags", [(), ("--read-cap", "171")])
+def test_a_scoped_host_is_read_only_under_its_grants_cap(tmp_path, monkeypatch, flags) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    write_snapshot(tmp_path, "chromium", "2024-11", [_change(1, 1)], record={})
+    monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
+    with pytest.raises(SystemExit, match="reads at most 170 changes a month"):
+        cli.main(["build", "--org", "chromium", "--root", str(tmp_path), *flags])
+
+
+@pytest.mark.parametrize(
+    ("flags", "message"),
+    [
+        (("--month", "2024-11", "--cutoff", "2024-11-01"), "--project v8/v8 only"),
+        (("--project", "chromium/src", "--month", "2024-11", "--cutoff", "2024-11-01"), "only"),
+        (("--project", "v8/v8", "--month", "2024-10", "--cutoff", "2024-11-01"), "not 2024-10"),
+        (("--project", "v8/v8", "--month", "2025-09", "--cutoff", "2024-11-01"), "not 2025-09"),
+        (("--project", "v8/v8", "--month", "2024-11"), "--cutoff 2024-11-01"),
+    ],
+)
+def test_a_fetch_past_chromiums_grant_is_refused_before_any_request(
+    tmp_path, monkeypatch, flags, message
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
+    with pytest.raises(SystemExit, match=message):
+        cli.main(["fetch", "--org", "chromium", "--root", str(tmp_path), *flags])
+
+
+@pytest.mark.parametrize(
+    ("query", "refused"),
+    [
+        ("status:merged after:2024-11-01 before:2024-12-01 (project:v8/v8)", False),
+        ('((status:merged (project:v8/v8))) before:"2024-11-30 +0000"', False),
+        ("status:merged project:chromium/src", True),
+        ("message:Assisted-by after:2024-10-01", True),
+        ("project:v8/v8 OR is:open", True),
+        ("project:v8/v8 -is:wip", True),
+    ],
+)
+def test_a_scoped_host_answers_only_listings_of_its_granted_projects(query, refused) -> None:
+    from urllib.parse import quote
+
+    scope = cli.REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert scope is not None
+    why = cli.out_of_scope_listing(f"/changes/?q={quote(query)}&n=100", scope)
+    assert (why is not None) is refused
+    assert cli.out_of_scope_listing("/changes/123/comments", scope) is None
+
+
+def test_a_month_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    write_snapshot(tmp_path, "chromium", "2025-09", [_change(1, 1)], record={})
+    monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
+    cli.main(["build", "--org", "chromium", "--root", str(tmp_path), "--read-cap", "170"])
+    assert "2025-09: outside the host's grant; not built" in capsys.readouterr().out
+    assert not (tmp_path / "chromium" / "examples" / "2025-09.jsonl").exists()

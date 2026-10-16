@@ -1947,3 +1947,12 @@ def test_a_finished_github_month_leaves_no_checkpoint(
         == 0
     )
     assert not (tmp_path / "apache" / "raw" / "2024-10.partial.jsonl").exists()
+
+
+def test_the_resume_script_refuses_a_host_granted_for_a_scoped_pool() -> None:
+    script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
+    result = subprocess.run(
+        ["bash", str(script), "chromium", "2024-11"], capture_output=True, text=True, timeout=30
+    )
+    assert result.returncode == 1
+    assert "granted for a scoped pool" in result.stdout

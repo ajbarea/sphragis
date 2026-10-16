@@ -50,6 +50,14 @@ COUNTED = ("pilot", "train", "dev")
 #: In the order the code applies them: `build_from_change`, then `refine`, then dedup.
 STEPS: tuple[tuple[str, str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
     (
+        "Changes the build did not read",
+        "built_drops",
+        (
+            ("their listing records no comment", "changes", ("uncommented_by_count",)),
+            ("past a grant's monthly read cap", "changes", ("over_read_cap",)),
+        ),
+    ),
+    (
         "Changes lost before any comment was read",
         "built_drops",
         (("their comments could not be fetched", "changes", ("comment_error",)),),
@@ -163,7 +171,26 @@ def merged_changes(root: Path, org: str) -> tuple[int, list[str]]:
     return total, months
 
 
+#: Counters only a build mode writes (`build --fewer-requests`, `--read-cap`): absent, the mode
+#: was off and skipped nothing, so they read as zero rather than as not counted.
+MODE_COUNTERS = ("uncommented_by_count", "over_read_cap")
+
+
+def unplaced_drops(stats: dict) -> list[str]:
+    """Build counters no row reads: a new one would otherwise vanish from the funnel unseen."""
+    placed = {
+        k
+        for _, section, rows in STEPS
+        if section == "built_drops"
+        for *_, keys in rows
+        for k in keys
+    }
+    return sorted(set(stats.get("built_drops", {})) - placed)
+
+
 def _count(stats: dict, section: str, keys: tuple[str, ...]) -> int | None:
+    if all(k in MODE_COUNTERS for k in keys) and not any(k in stats[section] for k in keys):
+        return 0
     """The summed counters; None when the build recorded none of them, refused when only some."""
     if section not in stats:
         raise ValueError(f"the manifest's stats hold no {section}")
@@ -179,6 +206,8 @@ def funnel(root: Path, org: str) -> dict:
     stats = manifest["stats"]
     if manifest["counts"].get("test"):
         raise ValueError(f"{org}'s manifest counts test-window examples; the seal is broken")
+    if unplaced := unplaced_drops(stats):
+        raise ValueError(f"{org}'s build counts {unplaced}, which no funnel row reads")
     changes, months = merged_changes(root, org)
     label, section, key = KEPT_UNCHECKED
     return {

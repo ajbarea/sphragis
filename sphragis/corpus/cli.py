@@ -92,6 +92,17 @@ GERRIT = {
 # terms bar automated access that ignores it, so those are fetched over git where a git host
 # serves NoteDb, or not at all until the host grants permission in writing, as Qt's did. A host
 # absent here is refused.
+class GrantScope(NamedTuple):
+    """What a written grant covers, enforced wherever the host is read: the projects a listing may
+    name, the created dates a fetch may keep (`created_before` exclusive, as `before:` reads), and
+    the commented changes a build may read a month."""
+
+    projects: tuple[str, ...]
+    created_from: str
+    created_before: str
+    read_cap: int
+
+
 class RestPermission(NamedTuple):
     reason: str
     # seconds between requests: the robots.txt Crawl-delay, or the interval a written grant sets
@@ -105,6 +116,8 @@ class RestPermission(NamedTuple):
     single_client: bool = False
     # seconds of silence the host asks for between one response and the next request
     idle_gap: float = 0.0
+    # a grant that covers part of the host; None where the whole host may be read
+    scope: GrantScope | None = None
 
 
 REST_PERMITTED = {
@@ -142,6 +155,9 @@ REST_PERMITTED = {
         disallow=(),
         error_pause=300.0,
         single_client=True,
+        # The pool fixed in the research log (2026-10-16): with the comment-count probe's 330
+        # reads, at most 170 x 10 + 330 = 2,030 changes.
+        scope=GrantScope(("v8/v8",), "2024-11-01", "2025-09-01", 170),
     ),
     "gerrit.wikimedia.org": RestPermission(
         "robots.txt disallows the UI, gitiles, /r/a/, /r/q/ and patch and archive downloads, not"
@@ -166,6 +182,29 @@ REST_PERMITTED = {
 
 
 LOCK_DIR = Path.home() / ".cache" / "sphragis" / "hosts"
+
+
+def grant_scope(org: str) -> GrantScope | None:
+    """The scope of the grant `org`'s REST host is read under, None for a whole-host permission."""
+    url = GERRIT.get(org)
+    permission = REST_PERMITTED.get(urllib.parse.urlsplit(url).hostname or "") if url else None
+    return permission.scope if permission else None
+
+
+def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
+    """Why a `/changes/?q=` listing on a scoped host is refused, None if it names only granted
+    projects. Requests about one change (its comments, a diff) carry no project and pass."""
+    path, _, query = target.partition("?")
+    if not path.rstrip("/").endswith("/changes"):
+        return None
+    q = urllib.parse.parse_qs(query).get("q", [""])[0]
+    named = re.findall(r"project:([^\s()]+)", q)
+    if not named:
+        return "a listing that names no project"
+    if re.search(r"\b(OR|NOT)\b|(^|[\s(])-", q):
+        return "a listing whose OR, NOT or negation could reach past its projects"
+    outside = sorted(set(named) - set(scope.projects))
+    return f"a listing of {outside}" if outside else None
 
 
 class HostClaim:
@@ -326,8 +365,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--read-cap",
         type=int,
-        help="build --fewer-requests: read at most this many commented changes a month, the "
-        f"lowest change numbers first (the rest counted as {OVER_READ_CAP}); a grant's budget",
+        help="build: read at most this many changes a month (with --fewer-requests, of those with "
+        f"comments), in a seeded order (the rest counted as {OVER_READ_CAP}); a grant's budget",
     )
     parser.add_argument(
         "--count-probe",
@@ -407,6 +446,12 @@ def http_transport(
         permission = REST_PERMITTED[host]
         if robots_disallows(target, permission.disallow):
             raise SystemExit(f"refusing {host}{target}: the host's robots.txt disallows the path")
+        if permission.scope is not None:
+            why = out_of_scope_listing(target, permission.scope)
+            if why:
+                raise SystemExit(
+                    f"refusing {host}: {why}, outside its grant ({permission.scope.projects})"
+                )
         claim = claim_host(host, lock_dir) if permission.single_client else None
 
         def quiet(seconds: float) -> None:
@@ -532,6 +577,20 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
     if args.org not in GERRIT:
         raise SystemExit(f"{args.org} has no REST host here; fetch it with --via git")
     refuse_mixed_routes(Path(args.root), args.org, "rest", allow=args.allow_mixed_routes)
+    scope = grant_scope(args.org)
+    if scope is not None:
+        if not args.project or set(args.project) - set(scope.projects):
+            raise SystemExit(f"{args.org}'s grant covers --project {' '.join(scope.projects)} only")
+        if not scope.created_from[:7] <= args.month < scope.created_before[:7]:
+            raise SystemExit(
+                f"{args.org}'s grant covers months {scope.created_from[:7]} to before "
+                f"{scope.created_before[:7]}, not {args.month}"
+            )
+        if args.cutoff < scope.created_from:
+            raise SystemExit(
+                f"{args.org}'s grant keeps changes created from {scope.created_from}: "
+                f"pass --cutoff {scope.created_from}"
+            )
     year, month = args.month.split("-")
     following = (
         f"{int(year) + (month == '12')}-{'01' if month == '12' else f'{int(month) + 1:02d}'}"
@@ -787,12 +846,24 @@ def built_read_cap(target: Path) -> int | None:
     return cap if isinstance(cap, int) else None
 
 
-def capped_numbers(changes: list[dict[str, Any]], cap: int | None) -> set[int] | None:
-    """The change numbers a capped build reads: the `cap` lowest among commented changes."""
+#: Fixed before any capped month was read (research log, 2026-10-16), so the draw reproduces.
+READ_CAP_SEED = 20261016
+
+
+def capped_numbers(
+    changes: list[dict[str, Any]], cap: int | None, *, skip_uncommented: bool
+) -> set[int] | None:
+    """The change numbers a capped build reads: `cap` of the changes it would otherwise read, in a
+    seeded hash order of their numbers. Not the lowest numbers: a month lists the changes last
+    updated in it, so its lowest numbers are the ones longest open."""
     if cap is None:
         return None
-    numbers = sorted(int(c["_number"]) for c in changes if not uncommented(c))
-    return set(numbers[:cap])
+    numbers = {int(c["_number"]) for c in changes if not (skip_uncommented and uncommented(c))}
+
+    def rank(n: int) -> str:
+        return hashlib.sha256(f"{READ_CAP_SEED}:{n}".encode()).hexdigest()
+
+    return set(sorted(numbers, key=rank)[:cap])
 
 
 def built_with_fewer_requests(target: Path) -> bool:
@@ -940,8 +1011,8 @@ def require_count_probe(args: argparse.Namespace) -> None:
     skipped share's comments tightly enough, and asked the raw snapshots this build reads."""
     if args.count_probe is not None and not args.fewer_requests:
         raise SystemExit("--count-probe is read only with --fewer-requests")
-    if args.read_cap is not None and (not args.fewer_requests or args.read_cap < 1):
-        raise SystemExit("--read-cap is a positive count, read only with --fewer-requests")
+    if args.read_cap is not None and args.read_cap < 1:
+        raise SystemExit("--read-cap is a positive count")
     if not args.fewer_requests:
         return
     if args.count_probe is None or not args.count_probe.is_file():
@@ -965,9 +1036,20 @@ def require_count_probe(args: argparse.Namespace) -> None:
         raise SystemExit(f"{args.count_probe} asked other raw snapshots than {args.root}'s")
 
 
+def require_grant_cap(args: argparse.Namespace) -> None:
+    """Refuse REST reads of a scoped host past its grant's monthly cap."""
+    scope = grant_scope(args.org)
+    if scope is not None and (args.read_cap is None or args.read_cap > scope.read_cap):
+        raise SystemExit(
+            f"{args.org}'s grant reads at most {scope.read_cap} changes a month: "
+            f"pass --read-cap {scope.read_cap} or less"
+        )
+
+
 def _stage_build(args: argparse.Namespace) -> int:
     """Every snapshot for an organization into examples, one file per month."""
     require_count_probe(args)
+    scope = grant_scope(args.org)
     salt = require_salt()
     raw = Path(args.root) / args.org / "raw"
     snapshots = sorted(raw.glob("*.ndjson.gz"))
@@ -986,6 +1068,7 @@ def _stage_build(args: argparse.Namespace) -> int:
         if rest is None:
             if args.org not in GERRIT:
                 raise SystemExit(f"{args.org} has no REST host, and a row carries no NoteDb data")
+            require_grant_cap(args)
             transport = http_transport(min_interval=args.request_interval)
             rest = (
                 scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport),
@@ -1054,6 +1137,14 @@ def _stage_build(args: argparse.Namespace) -> int:
             print(f"{args.org} {month}: {error}")
             refused.append(month)
             continue
+        outside = scope is not None and not (
+            scope.created_from[:7] <= month < scope.created_before[:7]
+        )
+        if outside and any(NOTEDB_KEY not in c and GITHUB_KEY not in c for c in changes):
+            # Its rows would be read from the host, past what the grant covers.
+            print(f"{args.org} {month}: outside the host's grant; not built")
+            refused.append(month)
+            continue
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
         if args.fewer_requests:
@@ -1062,7 +1153,7 @@ def _stage_build(args: argparse.Namespace) -> int:
             month_drops.update(dict.fromkeys((*DROP_REASONS, UNCOMMENTED), 0))
         if args.read_cap is not None:
             month_drops[OVER_READ_CAP] = 0
-        reads = capped_numbers(changes, args.read_cap)
+        reads = capped_numbers(changes, args.read_cap, skip_uncommented=args.fewer_requests)
         for change in changes:
             if args.fewer_requests and uncommented(change):
                 month_drops[UNCOMMENTED] += 1

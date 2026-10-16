@@ -117,8 +117,9 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   its span until theirs is built); LLVM's projects defined as its top-level directories before
   its split is read; open access for every resulting publication (GitHub's terms: EMSE's open-access
   option for Stage 2, plus arXiv); Stage 1's replication-family paragraph.
-- [ ] Chromium through the NoteDb route, once Chromium's infra-dev list answers the permission
-  request, with its projects scoped by the component mapping stage.
+- [x] Chromium's infra-dev list granted the REST API on 2026-10-15 for a pool of about 2,000
+  changes; the scope is in code (`cli.GrantScope`), and the git route stays refused (research log,
+  2026-10-16).
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to
   merge, not creation to last update.
 - [x] State the dev window's censoring wherever dev numbers appear; they are pre-registration
@@ -127,10 +128,9 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] **Chromium approved as a third organization and scoped** (2026-09-22): a C++ organization
   with several projects, the pairing for Qt that controls language. In `GERRIT`; fetch now refuses
   a query the host truncated. Selection rule, feasibility and split outcome are in the research log.
-- [ ] **Collect Chromium** over train and dev with `scripts/fetch_chromium.sh`, frozen by
-  2026-10-23. Blocked on the cut of chromium/src below the project (no project-level set meets the
-  split criteria), on the permission bulk Chromium collection waits for (the terms permit the git
-  host, research log 2026-10-08), and then on sub-month fetching for chromium/src.
+- [ ] **Collect Chromium's V8 pool** under its grant (v8/v8, 2024-11 to 2025-08, 170 commented
+  changes a month, research log 2026-10-16), as Qt's foreign source; Chromium as an evaluated
+  organization stays blocked on chromium/src's scale and is beyond the grant.
 
 ## Plan B — measurement
 
@@ -705,8 +705,9 @@ as the unit; the evidence says the codebase is.
 - [ ] Qt admitted if permission arrives, and its cells' bounds are simulated and committed, before
   2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's REST
-  terms were granted in writing on 2026-10-15 (research log); admission still waits on its cells. Without Chromium, H2 is
-  Qt's cell against a C++-matched foreign adapter (2026-10-14).
+  terms were granted in writing on 2026-10-15 (research log); admission still waits on its cells.
+  Chromium's grant covers a pool, not an evaluated corpus, so H2 is Qt's cell against a C++-matched
+  foreign adapter on V8 (2026-10-16).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
@@ -724,9 +725,8 @@ as the unit; the evidence says the codebase is.
   pilot and simulation once its terms arrive.
 - [x] **Bounded is a one-sided equivalence test at the SESOI** (2026-10-14, research log): the
   margin is δ, not each cell's detectable effect; the simulation stays required as power.
-- [ ] Foreign-source hosts need written permission (2026-10-14): Fuchsia request and a narrowed
-  Chromium follow-up and an AOSP request drafted for AJ to send; the source is the first of
-  Chromium, Fuchsia, AOSP that grants, in that order. AJ: whether
+- [x] Foreign-source hosts need written permission (2026-10-14): Chromium granted first
+  (2026-10-15), so the source is its V8 pool once it covers every matched draw. Open, AJ's: whether
   IRB0000393 needs an amendment naming it.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research
