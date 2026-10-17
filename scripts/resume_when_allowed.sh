@@ -29,7 +29,7 @@ LOOKUP=$(uv run --no-sync --no-active python - "$ORG" <<'PY'
 import sys
 from urllib.parse import urlsplit
 
-from sphragis.corpus.cli import GERRIT, REST_PERMITTED, USER_AGENT
+from sphragis.corpus.cli import GERRIT, REST_PERMITTED, USER_AGENT, unheld_grant
 
 url = GERRIT.get(sys.argv[1])
 if url is None or urlsplit(url).hostname not in REST_PERMITTED:
@@ -38,6 +38,10 @@ if url is None or urlsplit(url).hostname not in REST_PERMITTED:
 # This script resumes a full build; a host granted for part of itself is built only under its cap.
 if REST_PERMITTED[urlsplit(url).hostname].scope is not None:
     print(f"refusing {sys.argv[1]}: its host is granted for a scoped pool, built only by hand")
+    sys.exit(1)
+# The probes below reach the host too, so a grant this machine does not hold stops them here.
+if refusal := unheld_grant(urlsplit(url).hostname):
+    print(refusal)
     sys.exit(1)
 print(url)
 print(USER_AGENT)
