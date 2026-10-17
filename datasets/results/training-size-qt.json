@@ -1,0 +1,26 @@
+{
+  "org": "qt",
+  "root": "/home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted",
+  "splits": 300,
+  "percentile": 0.05,
+  "round_to": 50,
+  "smaller_half": {
+    "min": 2822,
+    "at_percentile": 2949,
+    "median": 3523,
+    "max": 3746
+  },
+  "training_size": 2900,
+  "provenance": {
+    "generated_at": "2026-10-17T05:10:34.172385+00:00",
+    "git": {
+      "commit": "64a059cce24fc912c107134c10dd24827a86a6c5",
+      "branch": "HEAD"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

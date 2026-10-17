@@ -9314,3 +9314,28 @@ Fuchsia has not answered. AJ reads Chromium's infra-dev answer as covering andro
 above), so AOSP is the source unless Fuchsia grants first, with its projects and window as item 4
 of the H2 plan fixes them. The V8 pool stays held, enters no figure, and is reported as the source
 tried first.
+
+### Qt's corpus under its grant: the count probe holds, the split qualifies, 40 partitions are admissible (2026-10-17)
+
+`# research(2026-10)`. Qt's months 2024-10 to 2025-10, fetched under the 2026-10-15 grant from the
+announced address, were built with `build --fewer-requests` (started at 13bd2a4, before the probe
+gate existed), then refined, deduplicated, split, frozen and verified (2026-10-16, 23:34), and
+backed up. The probe the 2026-10-15 entry made a precondition then ran from committed code
+(`comment-count-probe-qt.json`, from 8.47.98.37): none of the 300 zero-count rows it asked carried
+a comment and every control did, so the share of skipped changes with comments is bounded at
+0.0099, under `COUNT_PROBE_BOUND`, and the build stands without a rebuild.
+
+The frozen corpus (`datasets/gerrit-granted/qt`, copied to TIGRIS as `corpus-v3/qt`, manifest
+sha256 090d39a0…) holds 1,147 pilot, 7,493 train and 809 dev examples, the test window sealed; its
+column joins the dataset funnel (`dataset-funnel.json`, `docs/dataset.md`), whose new first step
+counts the 27,858 changes the build skipped because their listing records no comment.
+
+The registered split qualifies (`split-criteria-qt.json`, against OpenStack's corpus v3): 37 and 36
+projects, 3,798 and 3,705 training examples, the largest project at 0.498 and 0.440 of its half,
+and a file-suffix total variation of 0.278 against OpenStack's ceiling of 0.319. `training_size.py`
+reads Qt's own N as 2,900; every run trains at OpenStack's 1,850, the size floor
+`admissible_partitions.py` takes. 40 partition seeds are admissible of the first 81
+(`admissible-partitions-qt.json`), so K up to 40 is available. The development pilot follows: the
+first 22 admissible seeds, run k at training seed k, each scored by `likelihood_score.py` after its
+decoder check, as OpenStack's and Wikimedia's were. Qt is permitted, not admitted: its cells'
+bounds are simulated and committed before submission, as the gate requires.

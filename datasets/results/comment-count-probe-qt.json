@@ -1,0 +1,1780 @@
+{
+  "provenance": {
+    "generated_at": "2026-10-17T05:13:03.405026+00:00",
+    "git": {
+      "commit": "64a059cce24fc912c107134c10dd24827a86a6c5",
+      "branch": "HEAD"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  },
+  "org": "qt",
+  "raw_digest": "a5e29bdaa1054ce75662fff1f0ba0712c7da8eed2b5f3dee686d517bc46f20fd",
+  "seed": 20261015,
+  "asked": {
+    "zero": 300,
+    "control_per_month": 3
+  },
+  "recorded": {
+    "2024-10": {
+      "zero": 1706,
+      "above_zero": 1630
+    },
+    "2024-11": {
+      "zero": 1927,
+      "above_zero": 1793
+    },
+    "2024-12": {
+      "zero": 1824,
+      "above_zero": 1757
+    },
+    "2025-01": {
+      "zero": 2566,
+      "above_zero": 2255
+    },
+    "2025-02": {
+      "zero": 2147,
+      "above_zero": 1623
+    },
+    "2025-03": {
+      "zero": 2479,
+      "above_zero": 2272
+    },
+    "2025-04": {
+      "zero": 2025,
+      "above_zero": 1660
+    },
+    "2025-05": {
+      "zero": 1579,
+      "above_zero": 1712
+    },
+    "2025-06": {
+      "zero": 2774,
+      "above_zero": 1993
+    },
+    "2025-07": {
+      "zero": 2498,
+      "above_zero": 2104
+    },
+    "2025-08": {
+      "zero": 2084,
+      "above_zero": 2097
+    },
+    "2025-09": {
+      "zero": 2438,
+      "above_zero": 2258
+    },
+    "2025-10": {
+      "zero": 1811,
+      "above_zero": 1880
+    }
+  },
+  "skipped_months": {},
+  "shortfall": {},
+  "answers": [
+    {
+      "group": "zero@2024-10",
+      "change": 596533,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 596438,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 598204,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 598475,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 594840,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 601192,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 601224,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 595058,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 595001,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 599316,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 596413,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 598748,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 601237,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 598096,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 597885,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 599079,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 599639,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-10",
+      "change": 599912,
+      "comments": 0
+    },
+    {
+      "group": "control@2024-10",
+      "change": 601252,
+      "comments": 3
+    },
+    {
+      "group": "control@2024-10",
+      "change": 599330,
+      "comments": 5
+    },
+    {
+      "group": "control@2024-10",
+      "change": 599548,
+      "comments": 1
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 605341,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 607381,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 603403,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 606726,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 602501,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 606465,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 604152,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 605613,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 606883,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 607427,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 601307,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 602508,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 604570,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 602098,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 601331,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 605362,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 602698,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 601368,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 603139,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 605546,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-11",
+      "change": 607607,
+      "comments": 0
+    },
+    {
+      "group": "control@2024-11",
+      "change": 602280,
+      "comments": 7
+    },
+    {
+      "group": "control@2024-11",
+      "change": 602570,
+      "comments": 18
+    },
+    {
+      "group": "control@2024-11",
+      "change": 605267,
+      "comments": 25
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 610672,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 609258,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 613888,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 606761,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 607605,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 612684,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 613498,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 613403,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 596397,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 611640,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 611036,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 610955,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 609218,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 614236,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 605204,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 612406,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 612078,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 612468,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 611065,
+      "comments": 0
+    },
+    {
+      "group": "zero@2024-12",
+      "change": 611422,
+      "comments": 0
+    },
+    {
+      "group": "control@2024-12",
+      "change": 605040,
+      "comments": 6
+    },
+    {
+      "group": "control@2024-12",
+      "change": 607360,
+      "comments": 2
+    },
+    {
+      "group": "control@2024-12",
+      "change": 613595,
+      "comments": 2
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 614660,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 615951,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 620260,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 614295,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 618806,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 620571,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 616115,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 619219,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 611750,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 619183,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 620608,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 615915,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 621014,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 616740,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 616517,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 617998,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 615267,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 615249,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 614888,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 617096,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 614053,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 614055,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 618053,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 619787,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 617671,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 616454,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 618373,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-01",
+      "change": 621619,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-01",
+      "change": 619982,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-01",
+      "change": 620303,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-01",
+      "change": 601206,
+      "comments": 4
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 625350,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 623935,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 621908,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 625432,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 623143,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 624352,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 627476,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 627005,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 628030,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 626440,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 624611,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 624356,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 623729,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 626724,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 619119,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 626776,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 623005,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 626441,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 627484,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 622809,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 623782,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 622834,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-02",
+      "change": 626503,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-02",
+      "change": 623318,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-02",
+      "change": 623290,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-02",
+      "change": 626334,
+      "comments": 9
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 628371,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 628240,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 628908,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 635613,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 628975,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 627454,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 630264,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 635410,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 634577,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 630178,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 631490,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 632668,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 631819,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 629430,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 628853,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 629806,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 631459,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 635776,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 629436,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 635404,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 631051,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 631612,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 633002,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 636142,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 631787,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 635473,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-03",
+      "change": 634236,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-03",
+      "change": 624685,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-03",
+      "change": 630277,
+      "comments": 3
+    },
+    {
+      "group": "control@2025-03",
+      "change": 632095,
+      "comments": 2
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 641237,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 637730,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 641347,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 639924,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 637529,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 637333,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 641406,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 639745,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 642019,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 635997,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 636461,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 636451,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 639449,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 636674,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 640997,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 641634,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 638135,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 635276,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 636721,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 641515,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 636472,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-04",
+      "change": 639132,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-04",
+      "change": 624743,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-04",
+      "change": 635248,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-04",
+      "change": 642665,
+      "comments": 2
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 647007,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 646230,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 648348,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 645133,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 645498,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 643322,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 642999,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 647299,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 643919,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 643893,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 647630,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 647973,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 646424,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 645554,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 643660,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 645735,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-05",
+      "change": 646138,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-05",
+      "change": 621536,
+      "comments": 69
+    },
+    {
+      "group": "control@2025-05",
+      "change": 646999,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-05",
+      "change": 644860,
+      "comments": 1
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 652831,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 650403,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 649685,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 655273,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 649288,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 656331,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 656720,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 649892,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 653724,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 649729,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 652038,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 651401,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 654949,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 650263,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 653389,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 649787,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 651140,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 650430,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 649449,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 649831,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 652522,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 657105,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 654538,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 651095,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 650292,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 656062,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 657411,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 655641,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 650427,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-06",
+      "change": 652037,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-06",
+      "change": 650419,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-06",
+      "change": 646896,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-06",
+      "change": 638383,
+      "comments": 2
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 658533,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 663704,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 663144,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 664126,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 659308,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 658801,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 664345,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 657918,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 653775,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 663642,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 659584,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 662725,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 660282,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 653729,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 657716,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 662033,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 657272,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 660317,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 663749,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 658681,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 659682,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 657771,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 663072,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 659229,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 659118,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 664297,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-07",
+      "change": 662724,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-07",
+      "change": 664307,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-07",
+      "change": 662732,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-07",
+      "change": 655826,
+      "comments": 1
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 667961,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 669658,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 668613,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 670082,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 665752,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 668457,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 670657,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 669045,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 670919,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 666611,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 669486,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 666001,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 667033,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 670702,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 667661,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 666238,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 665675,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 669490,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 667528,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 665837,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 669287,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-08",
+      "change": 667668,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-08",
+      "change": 666440,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-08",
+      "change": 671050,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-08",
+      "change": 666343,
+      "comments": 1
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 675467,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 673403,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 676232,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 675547,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 672160,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 680582,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 673889,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 672013,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 673779,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 676989,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 672784,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 660881,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 676333,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 680458,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 676629,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 676749,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 674258,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 676633,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 673736,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 680759,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 672605,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 678069,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 678382,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 678401,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 672943,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-09",
+      "change": 674717,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-09",
+      "change": 678063,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-09",
+      "change": 674736,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-09",
+      "change": 676137,
+      "comments": 7
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 681454,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 682387,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 682787,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 685561,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 684114,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 686510,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 680940,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 684898,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 680653,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 686812,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 682330,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 683831,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 686048,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 683644,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 682283,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 687891,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 684304,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 684901,
+      "comments": 0
+    },
+    {
+      "group": "zero@2025-10",
+      "change": 682570,
+      "comments": 0
+    },
+    {
+      "group": "control@2025-10",
+      "change": 687173,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-10",
+      "change": 686629,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-10",
+      "change": 683890,
+      "comments": 11
+    }
+  ],
+  "answered_zero": 300,
+  "failed": [],
+  "zero_with_comments": [],
+  "control_without_comments": [],
+  "upper_95_share_with_comments": 0.00993608194445772,
+  "holds": true
+}
