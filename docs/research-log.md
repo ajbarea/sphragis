@@ -9339,3 +9339,53 @@ reads Qt's own N as 2,900; every run trains at OpenStack's 1,850, the size floor
 first 22 admissible seeds, run k at training seed k, each scored by `likelihood_score.py` after its
 decoder check, as OpenStack's and Wikimedia's were. Qt is permitted, not admitted: its cells'
 bounds are simulated and committed before submission, as the gate requires.
+
+### The dataset's own record lists example ids, never review text (2026-10-17)
+
+`# research(2026-10)`. With Qt and Chromium granted, this fixes what the dataset's Zenodo record
+may hold. The ROADMAP's Zenodo item had left it waiting on the licence per host, the
+withdrawn-changes decision and a takedown contact.
+
+Each grant answered a request that promised the review text stays unpublished:
+
+- Qt (request to gerrit-admin 2026-10-14, granted 2026-10-15): "No review text is published, and
+  any author can ask to be removed."
+- Chromium (infra-dev, 2026-09-23): "no raw data is redistributed"; the narrowed request granted
+  2026-10-15: "no review text is published, and anyone can have their reviews removed on request."
+- `docs/protocol.md` registers the same promise for every host.
+
+A record carrying review text would sit outside both grants and the protocol, and Zenodo's
+request-access gate does not change that: an approved request still hands the text over. Zenodo's
+Terms of Use (v1.3, read 2026-10-17) make the uploader "exclusively responsible" for the content
+and require it to be "suitable for open dissemination", in compliance with privacy and data
+protection law. Gold and Krinke (EMSE 27, 2022, section 4.2.5, read from the authors' copy) add
+that a withdrawal "may require the withdrawal and deletion from datasets derived from the original
+data". A copy of the text on Zenodo would be one more derived dataset to chase.
+
+The record holds, per admitted organization:
+
+- every example's id (`org:change_id:path:patch_set:start`, as `build.py` writes it), with its
+  window and its half in each registered partition;
+- the corpus manifest, whose window hashes are taken over exactly those ids, and the build-rules
+  version, so a rebuild can check that it reproduced the same corpus;
+- no account pseudonyms, since a pseudonym links one person's comments across the corpus.
+
+The code that rebuilds the corpus from the hosts is the software record (`v0.1.0`); a rebuild checks
+itself against the listed ids through the manifest's window hashes. The grants in
+`cli.REST_PERMITTED` are AJ's, not a reuser's: a clone lists Qt as permitted, so the code does not
+stop a third party from fetching it. The record's description therefore says that rebuilding a host
+whose robots.txt disallows its review UI (Qt, and AOSP if it enters) needs that host's own
+permission.
+
+What this settles:
+
+- **Licence.** The record carries ids, counts and hashes, not host content, so one licence covers
+  it: CC BY 4.0.
+- **Withdrawn changes, in the release.** A change its host now answers 404 for does not rebuild,
+  so it leaves every rebuilt copy without a purge. Whether the raw snapshots keep its metadata
+  stays AJ's call (ROADMAP).
+- **Takedown.** The contact is the address `docs/protocol.md` already gives. A removal drops the
+  author's example ids from the next version.
+- **Timing.** One record at Stage 2, all windows together, since the test ids stay sealed until
+  then. Stage 1's availability statement cites the software record.
+- **GitHub organizations.** Their ids wait on GitHub's answer, as their figures do.
