@@ -1,16 +1,14 @@
 {
   "provenance": {
-    "generated_at": "2026-10-15T16:04:22.282866+00:00",
+    "generated_at": "2026-10-17T05:21:27.049060+00:00",
     "git": {
-      "commit": "2d2e7026a001e0cd576ab4a1c15ed6c63a2ae42a",
-      "branch": "docs/dataset-funnel"
+      "commit": "64a059cce24fc912c107134c10dd24827a86a6c5",
+      "branch": "corpus/qt-admission"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
-      "torch": "2.14.0+cu130",
-      "transformers": "5.17.0",
-      "peft": "0.20.0"
+      "pygments": "2.21.0"
     }
   },
   "source": "tigris:$SPHRAGIS_DATA/corpus-v3",
@@ -49,6 +47,21 @@
       ],
       "merged_changes": 25191,
       "steps": [
+        {
+          "step": "Changes the build did not read",
+          "rows": [
+            {
+              "reason": "their listing records no comment",
+              "unit": "changes",
+              "count": 0
+            },
+            {
+              "reason": "past a grant's monthly read cap",
+              "unit": "changes",
+              "count": 0
+            }
+          ]
+        },
         {
           "step": "Changes lost before any comment was read",
           "rows": [
@@ -222,6 +235,21 @@
       "merged_changes": 114857,
       "steps": [
         {
+          "step": "Changes the build did not read",
+          "rows": [
+            {
+              "reason": "their listing records no comment",
+              "unit": "changes",
+              "count": 0
+            },
+            {
+              "reason": "past a grant's monthly read cap",
+              "unit": "changes",
+              "count": 0
+            }
+          ]
+        },
+        {
           "step": "Changes lost before any comment was read",
           "rows": [
             {
@@ -372,6 +400,193 @@
         "dev": 747
       },
       "examples": 5513
+    },
+    "qt": {
+      "manifest_sha256": "090d39a04d9b42278c2685bbd39123a9a19fb9f664ce4a7ffd75d88193edb333",
+      "rules": "c2ddb5b5f6e99182",
+      "months": [
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10"
+      ],
+      "merged_changes": 52892,
+      "steps": [
+        {
+          "step": "Changes the build did not read",
+          "rows": [
+            {
+              "reason": "their listing records no comment",
+              "unit": "changes",
+              "count": 27858
+            },
+            {
+              "reason": "past a grant's monthly read cap",
+              "unit": "changes",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Changes lost before any comment was read",
+          "rows": [
+            {
+              "reason": "their comments could not be fetched",
+              "unit": "changes",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Comments dropped",
+          "rows": [
+            {
+              "reason": "on the commit message or the patch set as a whole",
+              "unit": "comments",
+              "count": 57789
+            },
+            {
+              "reason": "written by the change's author",
+              "unit": "comments",
+              "count": 31422
+            },
+            {
+              "reason": "from an account the host tags as a bot",
+              "unit": "comments",
+              "count": 39068
+            },
+            {
+              "reason": "an acknowledgement (Done, LGTM, thanks, ok and the like)",
+              "unit": "comments",
+              "count": 2352
+            },
+            {
+              "reason": "anchored to no line",
+              "unit": "comments",
+              "count": 167
+            },
+            {
+              "reason": "on the last patch set, with no revision after it",
+              "unit": "comments",
+              "count": 525
+            },
+            {
+              "reason": "its diff could not be fetched",
+              "unit": "comments",
+              "count": 0
+            },
+            {
+              "reason": "outside any hunk the next patch set changed",
+              "unit": "comments",
+              "count": 18438
+            }
+          ]
+        },
+        {
+          "step": "Hunks dropped as ill-posed",
+          "rows": [
+            {
+              "reason": "nothing before or after the edit",
+              "unit": "hunks",
+              "count": 2822
+            },
+            {
+              "reason": "grown or shrunk past the size rules",
+              "unit": "hunks",
+              "count": 344
+            }
+          ]
+        },
+        {
+          "step": "Examples dropped at refinement",
+          "rows": [
+            {
+              "reason": "next patch set only a rebase, not a rework",
+              "unit": "examples",
+              "count": 0
+            },
+            {
+              "reason": "target written by the reviewer (suggested edit, applied fix)",
+              "unit": "examples",
+              "count": 172
+            }
+          ]
+        },
+        {
+          "step": "Comments removed at refinement",
+          "rows": [
+            {
+              "reason": "a bot's template, matched to the bot's own source",
+              "unit": "comments",
+              "count": 392
+            },
+            {
+              "reason": "an acknowledgement",
+              "unit": "comments",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "step": "Examples left with no comment",
+          "rows": [
+            {
+              "reason": "only acknowledgements were left",
+              "unit": "examples",
+              "count": 0
+            },
+            {
+              "reason": "only a bot's templates were left",
+              "unit": "examples",
+              "count": 264
+            }
+          ]
+        },
+        {
+          "step": "Examples removed as duplicates",
+          "rows": [
+            {
+              "reason": "exact copies",
+              "unit": "examples",
+              "count": 311
+            },
+            {
+              "reason": "near duplicates (MinHash)",
+              "unit": "examples",
+              "count": 211
+            },
+            {
+              "reason": "shared boilerplate",
+              "unit": "examples",
+              "count": 0
+            },
+            {
+              "reason": "one change in two places",
+              "unit": "examples",
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "kept_unchecked": {
+        "label": "Examples kept without the rebase check",
+        "count": 0
+      },
+      "windows": {
+        "pilot": 1147,
+        "train": 7493,
+        "dev": 809
+      },
+      "examples": 9449
     }
   }
 }
