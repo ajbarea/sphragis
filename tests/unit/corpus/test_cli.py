@@ -1669,7 +1669,7 @@ def test_an_unreadable_grants_file_stops_the_process(
     else:
         monkeypatch.setenv("SPHRAGIS_GRANTS", "")
         monkeypatch.chdir(tmp_path)
-    with pytest.raises(SystemExit, match="cannot be read") as refused:
+    with pytest.raises(SystemExit, match="cannot be read|set but empty") as refused:
         cli.http_transport()("https://w/changes/1/comments")
     assert not isinstance(refused.value, Exception)
     assert opened == []

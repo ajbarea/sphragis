@@ -2,7 +2,8 @@
 
 A host that opens only by written grant (Qt's and Chromium's review hosts over REST) granted one
 collector, at its stated address and with its User-Agent, not every clone of this repository.
-Every route such a grant opens asks `holds_grant` before contacting the host.
+The REST route asks `holds_grant` before contacting such a host; the git route will, with its
+first grant.
 """
 
 from __future__ import annotations
@@ -25,6 +26,8 @@ def holds_grant(host: str) -> bool:
     """Whether `grants_file()` lists `host`, for any route a written grant opens. A file that
     exists but cannot be read stops the process rather than reading as no grants: `build` counts
     an exception per change, so it would record every refusal as an empty month."""
+    if os.environ.get("SPHRAGIS_GRANTS") == "":
+        raise SystemExit("refusing every written grant: SPHRAGIS_GRANTS is set but empty")
     path = grants_file()
     try:
         lines = path.read_text().splitlines()
