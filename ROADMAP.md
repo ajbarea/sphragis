@@ -90,7 +90,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
   (deleted or made private after the snapshot listed them) are counted `comment_error` and never
   built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
-  release, or keep raw internal for reproducibility and exclude it from every release. Ground the
+  release, or keep raw internal for reproducibility. A release lists example ids only, so a
+  withdrawn change already leaves every rebuilt copy (research log, 2026-10-17). Ground the
   choice in MSR ethics guidance (Gold and Krinke, "Ethics in the mining of software repositories", EMSE 27, 2022, doi:10.1007/s10664-021-10057-7) before deciding.
   The same rewrite would also re-scrub the raw snapshots' Gerrit account numbers (next item), so
   the two are one decision about rewriting raw snapshots.
@@ -698,8 +699,9 @@ as the unit; the evidence says the codebase is.
   this repo (webhook verified 2026-10-02, AJ's ORCID linked): publish GitHub release `v0.1.0` from the
   commit the Stage 1 report describes, read the minted DOI off Zenodo, and cite it in the report's
   data and code availability statement. A Zenodo record is permanent, so the release is cut once,
-  from the final commit. The dataset gets its own record later, after the licence per host, the
-  withdrawn-changes decision and a takedown contact are settled; the test months never before Stage 2.
+  from the final commit. The dataset gets its own record at Stage 2: example ids per window and
+  partition, the manifests and the build-rules version, under CC BY 4.0, and never review text,
+  which every host grant and `docs/protocol.md` keep unpublished (research log, 2026-10-17).
 - [ ] **Every artifact's provenance commit reachable from a clone**, checked before the Zenodo
   release: squash merges leave the commit a result was produced at only in GitHub's pull-request
   refs, so a clone of `main` cannot check it out. A script lists each committed artifact's
