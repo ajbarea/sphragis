@@ -23,6 +23,7 @@ from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fet
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
 from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, github_fetchers
 from sphragis.corpus.github_api import GitHubAPI
+from sphragis.corpus.grants import grants_file, holds_grant
 from sphragis.corpus.load import (
     build_record,
     raw_digest,
@@ -189,29 +190,11 @@ REST_PERMITTED = {
 LOCK_DIR = Path.home() / ".cache" / "sphragis" / "hosts"
 
 
-def grants_file() -> Path:
-    """The machine-local list of the written grants this machine holds: one host a line, `#`
-    starts a comment. A grant names the study's collector (its address, its User-Agent), not every
-    clone of this repository, so a clone holds none until its own operator is granted one.
-    `SPHRAGIS_GRANTS` names another path."""
-    if path := os.environ.get("SPHRAGIS_GRANTS"):
-        return Path(path)
-    return (
-        Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "sphragis" / "grants"
-    )
-
-
 def unheld_grant(host: str) -> str | None:
-    """Why `host` may not be read from this machine although `REST_PERMITTED` lists it, None if
-    it may: its permission is a written grant and `grants_file()` does not list it."""
+    """Why the REST route may not read `host` from this machine although `REST_PERMITTED` lists
+    it, None if it may: its permission is a written grant that `holds_grant` does not find."""
     permission = REST_PERMITTED.get(host)
-    if permission is None or not permission.written_grant:
-        return None
-    try:
-        lines = grants_file().read_text().splitlines()
-    except FileNotFoundError:
-        lines = []
-    if host in {line.split("#", 1)[0].strip().lower() for line in lines}:
+    if permission is None or not permission.written_grant or holds_grant(host):
         return None
     return (
         f"refusing {host}: its permission is a written grant to this study's collector, not to"

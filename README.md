@@ -125,7 +125,7 @@ robots.txt while the git host does not. Chromium's infra-dev list granted the RE
 scope (`cli.REST_PERMITTED`, `build --read-cap`), and its git host stays refused for bulk
 collection (`sphragis.corpus.notedb.GIT_PERMITTED`). Qt's and Chromium's grants name this study's
 collector, not every clone, so their hosts are read only on a machine that lists them in
-`~/.config/sphragis/grants` (one host a line; `cli.grants_file`). Gerrit keeps each change's review
+`~/.config/sphragis/grants` (one host a line; `sphragis.corpus.grants`). Gerrit keeps each change's review
 record in the repository (NoteDb), and `--via git` reads it, one repository per `--project`,
 into the same snapshot shape; `build` then needs no network for those rows:
 
