@@ -266,6 +266,15 @@ def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
 
 
 @pytest.fixture(autouse=True)
+def _no_held_grants(
+    monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory
+) -> None:
+    """Point the written-grants file at a path that does not exist, so a test reads a granted
+    host only when it writes that file itself, whatever grants the machine running it holds."""
+    monkeypatch.setenv("SPHRAGIS_GRANTS", str(tmp_path_factory.mktemp("grants") / "grants"))
+
+
+@pytest.fixture(autouse=True)
 def _no_network_attempt() -> Iterator[None]:
     """Fail the test that tried, even when its code caught the refusal."""
     before = len(_VIOLATIONS)

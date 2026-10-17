@@ -123,7 +123,9 @@ AOSP is fetched from its git host instead, because its review UI forbids crawler
 robots.txt while the git host does not. Chromium's infra-dev list granted the REST API on
 2026-10-15 for a pool of about 2,000 merged changes, so Chromium is fetched over REST within that
 scope (`cli.REST_PERMITTED`, `build --read-cap`), and its git host stays refused for bulk
-collection (`sphragis.corpus.notedb.GIT_PERMITTED`). Gerrit keeps each change's review
+collection (`sphragis.corpus.notedb.GIT_PERMITTED`). Qt's and Chromium's grants name this study's
+collector, not every clone, so their hosts are read only on a machine that lists them in
+`~/.config/sphragis/grants` (one host a line; `sphragis.corpus.grants`). Gerrit keeps each change's review
 record in the repository (NoteDb), and `--via git` reads it, one repository per `--project`,
 into the same snapshot shape; `build` then needs no network for those rows:
 

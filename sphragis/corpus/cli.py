@@ -23,6 +23,7 @@ from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fet
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
 from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, github_fetchers
 from sphragis.corpus.github_api import GitHubAPI
+from sphragis.corpus.grants import grants_file, holds_grant
 from sphragis.corpus.load import (
     build_record,
     raw_digest,
@@ -118,6 +119,9 @@ class RestPermission(NamedTuple):
     idle_gap: float = 0.0
     # a grant that covers part of the host; None where the whole host may be read
     scope: GrantScope | None = None
+    # the permission is a written grant to this study's collector, not a public policy, so it
+    # holds only on a machine that lists the host in `grants_file()`
+    written_grant: bool = False
 
 
 REST_PERMITTED = {
@@ -140,6 +144,7 @@ REST_PERMITTED = {
         disallow=(),
         error_pause=900.0,
         single_client=True,
+        written_grant=True,
     ),
     "review.opendev.org": RestPermission(
         "robots.txt disallows no path and asks Crawl-delay 2 (checked 2026-09-23)", 2.0
@@ -158,6 +163,7 @@ REST_PERMITTED = {
         # The pool fixed in the research log (2026-10-16): with the comment-count probe's 330
         # reads, at most 170 x 10 + 330 = 2,030 changes.
         scope=GrantScope(("v8/v8",), "2024-11-01", "2025-09-01", 170),
+        written_grant=True,
     ),
     "gerrit.wikimedia.org": RestPermission(
         "robots.txt disallows the UI, gitiles, /r/a/, /r/q/ and patch and archive downloads, not"
@@ -182,6 +188,18 @@ REST_PERMITTED = {
 
 
 LOCK_DIR = Path.home() / ".cache" / "sphragis" / "hosts"
+
+
+def unheld_grant(host: str) -> str | None:
+    """Why the REST route may not read `host` from this machine although `REST_PERMITTED` lists
+    it, None if it may: its permission is a written grant that `holds_grant` does not find."""
+    permission = REST_PERMITTED.get(host)
+    if permission is None or not permission.written_grant or holds_grant(host):
+        return None
+    return (
+        f"refusing {host}: its permission is a written grant to this study's collector, not to"
+        f" every clone of the code; the machine that holds it lists {host} in {grants_file()}"
+    )
 
 
 def grant_scope(org: str) -> GrantScope | None:
@@ -449,6 +467,9 @@ def http_transport(
             )
         target = parts.path + (f"?{parts.query}" if parts.query else "")
         permission = REST_PERMITTED[host]
+        refusal = unheld_grant(host)
+        if refusal:
+            raise SystemExit(refusal)
         if robots_disallows(target, permission.disallow):
             raise SystemExit(f"refusing {host}{target}: the host's robots.txt disallows the path")
         if permission.scope is not None:

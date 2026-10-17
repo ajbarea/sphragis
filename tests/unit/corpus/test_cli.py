@@ -1326,6 +1326,7 @@ def test_http_transport_admits_qt_paced_at_its_grant_and_claimed(
 ) -> None:
     from sphragis.corpus import cli
 
+    Path(os.environ["SPHRAGIS_GRANTS"]).write_text("codereview.qt-project.org\n")
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200), _FakeResponse(200)])
     now, slept = [0.0], []
 
@@ -1608,6 +1609,116 @@ def test_qt_permission_pins_the_written_terms() -> None:
     assert permission.crawl_delay >= 2.0 and permission.single_client
     assert permission.error_pause >= 900.0
     assert "QTQAINFRA-8064" in permission.reason
+
+
+def test_written_grants_are_qt_and_chromium_alone() -> None:
+    """The other hosts open themselves to any polite client in robots.txt or a published policy;
+    Qt's and Chromium's administrators answered one collector's request by email."""
+    from sphragis.corpus import cli
+
+    granted = {host for host, p in cli.REST_PERMITTED.items() if p.written_grant}
+    assert granted == {"codereview.qt-project.org", "chromium-review.googlesource.com"}
+
+
+def _granted_placeholder(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
+    from sphragis.corpus import cli
+
+    instances = _scripted_connections(monkeypatch, [_FakeResponse(200)])
+    monkeypatch.setitem(
+        cli.REST_PERMITTED, "w", cli.RestPermission("test placeholder", 0.0, written_grant=True)
+    )
+    return instances
+
+
+def test_a_written_grant_is_refused_on_a_machine_that_does_not_hold_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from sphragis.corpus import cli
+
+    opened = _granted_placeholder(monkeypatch)
+    with pytest.raises(SystemExit, match="written grant to this study's collector"):
+        cli.http_transport()("https://w/changes/1/comments")
+    assert opened == []
+
+
+def test_a_written_grant_is_read_on_the_machine_that_lists_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from sphragis.corpus import cli
+
+    opened = _granted_placeholder(monkeypatch)
+    Path(os.environ["SPHRAGIS_GRANTS"]).write_text("# held by the study's collector\n  W  # x\n")
+    assert cli.http_transport()("https://w/changes/1/comments")[0] == 200
+    assert len(opened) == 1
+
+
+@pytest.mark.parametrize("unreadable", ["directory", "not utf-8", "set but empty"])
+def test_an_unreadable_grants_file_stops_the_process(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, unreadable: str
+) -> None:
+    """`build` counts an exception per change, so an OSError here would write empty months; the
+    refusal is a SystemExit, which no per-change handler catches."""
+    from sphragis.corpus import cli
+
+    opened = _granted_placeholder(monkeypatch)
+    if unreadable == "directory":
+        monkeypatch.setenv("SPHRAGIS_GRANTS", str(tmp_path))
+    elif unreadable == "not utf-8":
+        (tmp_path / "grants").write_bytes(b"w\n\xff\xfe\n")
+        monkeypatch.setenv("SPHRAGIS_GRANTS", str(tmp_path / "grants"))
+    else:
+        monkeypatch.setenv("SPHRAGIS_GRANTS", "")
+        monkeypatch.chdir(tmp_path)
+    with pytest.raises(SystemExit, match="cannot be read|set but empty") as refused:
+        cli.http_transport()("https://w/changes/1/comments")
+    assert not isinstance(refused.value, Exception)
+    assert opened == []
+
+
+def test_the_grants_file_defaults_to_the_xdg_config_directory_then_home(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from sphragis.corpus import cli
+
+    monkeypatch.delenv("SPHRAGIS_GRANTS")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    assert cli.grants_file() == tmp_path / "xdg" / "sphragis" / "grants"
+    monkeypatch.setenv("XDG_CONFIG_HOME", "")
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    assert cli.grants_file() == tmp_path / "home" / ".config" / "sphragis" / "grants"
+
+
+def test_the_resume_script_refuses_a_grant_this_machine_does_not_hold(tmp_path: Path) -> None:
+    """Qt passes the permission and scope checks, so only the held-grant check stands between the
+    script and its curl probes. Stubs on PATH record a curl call instead of sending it, and a
+    `sleep` (the probe loop's wait) ends the script so a regression fails at once."""
+    stub = tmp_path / "bin"
+    stub.mkdir()
+    called = tmp_path / "curl-called"
+    (stub / "curl").write_text(f"#!/bin/sh\ntouch {called}\nexit 1\n")
+    (stub / "sleep").write_text("#!/bin/sh\nkill -TERM $PPID\nexit 1\n")
+    for name in ("curl", "sleep"):
+        (stub / name).chmod(0o755)
+    script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
+    result = subprocess.run(
+        ["bash", str(script), "qt", "2024-10"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        env={**os.environ, "PATH": f"{stub}:{os.environ['PATH']}"},
+    )
+    assert result.returncode == 1
+    assert "written grant to this study's collector" in result.stdout
+    assert not called.exists()
+
+
+def test_no_git_host_is_permitted_before_the_git_route_checks_held_grants() -> None:
+    """A git host opens only by written grant, and `notedb._network` does not ask
+    `grants.holds_grant` yet: that lands with the first grant, since any edit to notedb.py changes
+    `FETCH_RULES` and so stales every git-route month. Permitting a host without it fails here."""
+    from sphragis.corpus.notedb import GIT_PERMITTED
+
+    assert not any(permission.permitted for permission in GIT_PERMITTED.values())
 
 
 @pytest.mark.parametrize(
