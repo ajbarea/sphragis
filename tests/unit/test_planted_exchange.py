@@ -77,10 +77,16 @@ def test_a_marker_plant_is_refused(tmp_path, monkeypatch) -> None:
         _main(monkeypatch, "--run", run, "--out", str(tmp_path / "o"))
 
 
-def test_a_plant_that_moves_no_exact_match_is_refused(tmp_path, monkeypatch) -> None:
+def test_a_plant_that_moves_no_exact_match_is_recorded_without_a_rate(
+    tmp_path, monkeypatch
+) -> None:
+    """The registered outcome "no rate", for `likelihood_sesoi.py` to keep the control's rate."""
     run = _run(tmp_path, "r", gain=0.02, em_gain=0.0)
-    with pytest.raises(SystemExit, match="moved exact match by nothing"):
-        _main(monkeypatch, "--run", run, "--out", str(tmp_path / "o"))
+    out = tmp_path / "o.json"
+    _main(monkeypatch, "--run", run, "--resamples", "20", "--out", str(out))
+    read = json.loads(out.read_text())
+    assert read["rate"] is None and read["rate_95"] is None
+    assert read["undefined_resamples"] == 20
 
 
 def test_a_manifest_from_another_partition_is_refused(tmp_path, monkeypatch) -> None:

@@ -23,12 +23,12 @@
   "metric": "logprob_per_token",
   "pool": "the pilot's runs, averaged per change",
   "change_by_run_noise": {
-    "shared_by_change": 0.0249152198611439,
-    "per_example": 0.13196529767941795
+    "shared_by_change": 0.024915219836409676,
+    "per_example": 0.1319652976832677
   },
-  "truth_shrinkage": 0.7012336162204592,
-  "sesoi": 0.018336619495924602,
-  "xi": 0.018336619495924602,
+  "truth_shrinkage": 0.7012336162127348,
+  "sesoi": 0.016142401360357633,
+  "xi": 0.016142401360357633,
   "runs": 20,
   "null_only": false,
   "levels": [
@@ -44,19 +44,19 @@
   "partitions_pooled": 400,
   "partition_seeds_tried": 508,
   "spread_targets": {
-    "pilot_lower_90": 0.00533266174310511,
-    "pilot_estimate": 0.006332729149222406,
-    "sizing_bound_90": 0.007975596279716378,
-    "pilot_upper_99": 0.00972912839179677
+    "pilot_lower_90": 0.0053326617425512,
+    "pilot_estimate": 0.006332729148564618,
+    "sizing_bound_90": 0.007975596278887944,
+    "pilot_upper_99": 0.009729128390786195
   },
   "calibration_changes": 429,
   "calibration_trials": 100,
   "by_target": {
     "pilot_lower_90": {
       "calibration": {
-        "target": 0.00533266174310511,
+        "target": 0.0053326617425512,
         "sigma_run": 0.0,
-        "spread": 0.005352652121037514,
+        "spread": 0.005352652120707018,
         "floor": true
       },
       "null_false_positive": {
@@ -118,11 +118,11 @@
     },
     "pilot_estimate": {
       "calibration": {
-        "target": 0.006332729149222406,
+        "target": 0.006332729148564618,
         "sigma_run": 0.0037207031249999996,
-        "spread": 0.006337509781161805,
+        "spread": 0.006337509780818204,
         "floor": false,
-        "spread_at_zero": 0.005352652121037514
+        "spread_at_zero": 0.005352652120707018
       },
       "null_false_positive": {
         "0.975": 0.00575,
@@ -183,11 +183,11 @@
     },
     "sizing_bound_90": {
       "calibration": {
-        "target": 0.007975596279716378,
+        "target": 0.007975596278887944,
         "sigma_run": 0.0062402343750000006,
-        "spread": 0.00798583875756712,
+        "spread": 0.007985838757276167,
         "floor": false,
-        "spread_at_zero": 0.005352652121037514
+        "spread_at_zero": 0.005352652120707018
       },
       "null_false_positive": {
         "0.975": 0.0095,
@@ -248,11 +248,11 @@
     },
     "pilot_upper_99": {
       "calibration": {
-        "target": 0.00972912839179677,
+        "target": 0.009729128390786195,
         "sigma_run": 0.008466796875000002,
-        "spread": 0.00973443111856382,
+        "spread": 0.009734431118311756,
         "floor": false,
-        "spread_at_zero": 0.005352652121037514
+        "spread_at_zero": 0.005352652120707018
       },
       "null_false_positive": {
         "0.975": 0.01325,
@@ -313,17 +313,18 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-10T10:58:51.231368+00:00",
+    "generated_at": "2026-10-17T11:34:36.094769+00:00",
     "git": {
-      "commit": "642f6d9d24928b216c6c39de5e693e0120d6146b",
+      "commit": "27eb4f388471f400fc66d2c9b2587fc8ce4107d7",
       "branch": "HEAD"
     },
     "python": "3.13.15",
-    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "platform": "Linux-6.18.55-1.el9.aarch64-aarch64-with-glibc2.34",
     "packages": {
       "torch": "2.14.0+cu130",
       "transformers": "5.17.0",
-      "peft": "0.20.0"
+      "peft": "0.20.0",
+      "pygments": "2.21.0"
     }
   }
 }

@@ -59,7 +59,7 @@ from sphragis.measure.stats import (
 SESOI = 0.01
 
 #: Where the per-token log-probability's SESOI is registered (`likelihood_sesoi.py`), carried from
-#: SESOI by the positive control (research log 2026-10-09).
+#: SESOI at the exchange rate the registered rule picks (research log 2026-10-15, 2026-10-16).
 LIKELIHOOD_SESOI = Path(__file__).resolve().parents[2] / "datasets/results/likelihood-sesoi.json"
 
 
@@ -67,8 +67,8 @@ def metric_sesoi(metric: str) -> float | None:
     """A metric's registered SESOI, or None where none is registered.
 
     Exact match's is the cost-benefit constant; the per-token log-probability's is carried from it
-    by the positive control, and its artifact must exist. Total log-probability, a sensitivity,
-    has none.
+    at the registered exchange rate, and its artifact must exist. Total log-probability, a
+    sensitivity, has none.
     """
     if metric == "exact_match":
         return SESOI

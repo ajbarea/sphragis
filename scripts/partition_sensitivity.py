@@ -361,7 +361,7 @@ CALIBRATION_SEED_OFFSET = 10_000
 # The lift bracket's top, as `decomposition_sensitivity.py` uses: ten times the detectable lifts
 # found so far (about 0.03); a target it cannot reach is refused rather than reported at the top.
 LIFT_CEILING = 0.3
-# A continuous score's bracket, in its own units: five times its SESOI (0.0183 nats per token)
+# A continuous score's bracket, in its own units: five times its SESOI (`likelihood-sesoi.json`)
 # rounded up to 0.1, so ten halvings resolve it to about 0.0001, below the shift that moves power
 # by the Monte Carlo error near 0.95.
 CONTINUOUS_CEILING = 0.1

@@ -154,7 +154,7 @@ training seed each, in nats per token (206 OpenStack changes, 429 Wikimedia):
 | Wikimedia | 95% | +0.0058 | [+0.0003, +0.0117] | supported |
 
 OpenStack's contrast is positive at both levels, with its lower bounds below the smallest effect
-of interest (SESOI, 0.0183 nats per token); Wikimedia's intervals lie inside the band of plus or
+of interest (SESOI, 0.0161 nats per token); Wikimedia's intervals lie inside the band of plus or
 minus the SESOI at both. The development window holds a fraction
 of the test window's projected changes, so these readings size the design rather than preview
 its verdicts.

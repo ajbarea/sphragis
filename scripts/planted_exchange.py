@@ -156,9 +156,17 @@ def main() -> None:
         fractions = {run["fraction"] for run in runs}
         if len(fractions) != 1:
             raise ValueError(f"the runs plant at {sorted(fractions)}, one rate needs one fraction")
-        result = {"rate": rate(runs), **interval(runs, resamples=args.resamples, seed=args.seed)}
     except ValueError as error:
         raise SystemExit(str(error)) from error
+    # A plant that moves exact match by nothing reads no rate, and is recorded as such: the
+    # registered rule then keeps the positive control's rate (`likelihood_sesoi.chosen_rate`).
+    try:
+        point = rate(runs)
+    except ValueError:
+        point = None
+    result = {"rate": point, **interval(runs, resamples=args.resamples, seed=args.seed)}
+    if point is None:
+        result["rate_95"] = None
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
         json.dumps(
@@ -175,7 +183,7 @@ def main() -> None:
         + "\n"
     )
     print(
-        f"rate {result['rate']:.4f} nats per token per unit exact match, 95% {result['rate_95']}, "
+        f"rate {result['rate']} nats per token per unit exact match, 95% {result['rate_95']}, "
         f"{result['undefined_resamples']} resamples without a rate"
     )
 

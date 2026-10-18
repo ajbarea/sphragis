@@ -9389,3 +9389,68 @@ What this settles:
 - **Timing.** One record at Stage 2, all windows together, since the test ids stay sealed until
   then. Stage 1's availability statement cites the software record.
 - **GitHub organizations.** Their ids wait on GitHub's answer, as their figures do.
+
+### The planted quote-style rate excludes the registered one: δ is carried at 1.614 (2026-10-16)
+
+`# research(2026-10)`. The runs of the 2026-10-15 plan, read once each by `planted_exchange.py`
+(`planted-exchange-openstack-quotes1.0.json`, `-quotes0.5.json`):
+
+| dose | runs | planted held-out examples | own minus sibling, summed s | summed exact match | rate (nats per token per exact refinement) | 95% |
+|---|---|---|---|---|---|---|
+| f = 1.0 | 10 | 486 | 151.74 | 94 | 1.614 | [1.479, 1.756] |
+| f = 0.5 | 5 | 125 | 25.94 | 11 | 2.358 | [1.791, 4.620] |
+
+No f = 1.0 resample moved exact match by nothing; one of the 10,000 at f = 0.5 did, below the 1%
+past which no interval is read. The f = 1.0 interval excludes the registered rate 1.834, so the
+rule applies as written: δ is carried at the planted rate, 0.01 × 1.614 = 0.0161 nats per token
+in place of 0.0183, a change made after the development pilots were read and disclosed as one in
+the Stage 1 design history. `likelihood_sesoi.py` now applies the rule itself and records both
+rates (`likelihood-sesoi.json`: `rate_source` planted, `positive_control_rate` 1.8337, which
+reproduces the registered value).
+
+The dose check does not reproduce the rate: the f = 0.5 interval lies wholly above 1.756, and it
+contains the registered rate 1.834 that the f = 1.0 interval excludes. It rests
+on 11 exact refinements against the f = 1.0 reading's 94, and a ratio of sums whose denominator is
+that small is skewed upward, which fits its long upper tail, but the check was registered to show
+the rate does not depend on the dose and it does not show that. It is reported as a failed check,
+not explained away: it says the rate at small differences between adapters, which is what δ
+measures, may be higher than the f = 1.0 reading. A higher rate means a larger δ in s, so the
+f = 1.0 rate is the smaller margin of the two. It is the stricter one for a bounded reading (a
+reading bounded below it is bounded below the other) and for the check that detectable effects lie
+below δ; for a meaningful reading, whose lower bound must clear δ, the smaller δ is the easier bar.
+
+Every bound on δ is recomputed: the two development pilots on the registered metric
+(`partition-pilot-{openstack,wikimedia}-likelihood.json`, rebuilt by their recorded inputs; at the
+old SESOI they reproduce the committed files to 1e-12, Wikimedia's drift being the fp32 rescoring
+of 2026-10-15), whose verdicts and `within_sesoi` readings do not change and whose sizing still
+clamps K at 10; K coverage, which reads no SESOI and keeps K = 10 and K = 20; and the two full
+simulations at those K, rerun at the new SESOI, whose results follow in this entry's PR. The
+simulations K coverage reads besides those two (Wikimedia's at K = 10 and the null grid,
+`-k12-null` to `-k40-null`) keep the 0.0183 they were run at; the rule reads only their null
+false-positive rates, which do not depend on δ, so they are not rerun.
+
+The two full simulations at the new δ (`partition-sensitivity-openstack-rp1.0-logprob_per_token.json`,
+TIGRIS 293410, K = 10; `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json`, TIGRIS
+293411, K = 20; both pinned at 27eb4f3, the commit above before its rebase onto main, whose code
+differs from the rebased commit only in files neither simulation imports; 1,000 trials and 4,000
+null trials a point) reproduce
+every detectable effect, null false-positive rate and bounded-null share of their 2026-10-10 runs
+exactly, since none of them reads δ. The one reading δ moves is the share of null studies whose
+interval lies inside ±δ, in nats per token:
+
+| organization | spread point | sigma_run | detectable, 97.5% | detectable, 95% | null inside ±δ, 97.5% | null inside ±δ, 95% |
+|---|---|---|---|---|---|---|
+| OpenStack | pilot lower 90 | 0.0000 | 0.0102 to 0.0112 | 0.0094 to 0.0104 | 1 | 1 |
+| OpenStack | pilot estimate | 0.0000 | 0.0102 to 0.0112 | 0.0094 to 0.0104 | 1 | 1 |
+| OpenStack | sizing bound 90 | 0.0016 | 0.0103 to 0.0113 | 0.0094 to 0.0105 | 1 | 1 |
+| OpenStack | pilot upper 99 | 0.0050 | 0.0118 to 0.0131 | 0.0110 to 0.0121 | 0.999 | 0.9995 |
+| Wikimedia | pilot lower 90 | 0.0000 | 0.0037 to 0.0041 | 0.0034 to 0.0038 | 1 | 1 |
+| Wikimedia | pilot estimate | 0.0037 | 0.0050 to 0.0054 | 0.0046 to 0.0050 | 1 | 1 |
+| Wikimedia | sizing bound 90 | 0.0062 | 0.0067 to 0.0073 | 0.0062 to 0.0067 | 1 | 1 |
+| Wikimedia | pilot upper 99 | 0.0085 | 0.0083 to 0.0091 | 0.0077 to 0.0084 | 1 | 1 |
+
+Every detectable effect lies below δ = 0.0161 at every spread point, one to three cells and both
+levels, so δ still serves as the equivalence margin. The share inside ±δ falls below 1 at one
+point only, OpenStack's 99% upper spread (0.999 and 0.9995, from 1.0), which leaves the
+2026-10-14 entry's statement that it is 1.0 everywhere true of Wikimedia and of OpenStack's other
+three points.

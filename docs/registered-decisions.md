@@ -158,8 +158,8 @@ From the October 2026 practice sweep (research log, 2026-10-01), each reported f
 hypothesis the gate reads, on the same draws, at the same levels:
 
 - **Meaningful.** A supported cell is also *meaningful* when its lower bound clears its metric's
-  SESOI (`decomposition.metric_sesoi`: 0.0183 nats per token on the registered metric, 0.01 on
-  exact match), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
+  SESOI (`decomposition.metric_sesoi`: 0.0161 nats per token on the registered metric, carried
+  from 0.01 on exact match at the planted quote-style rate, research log 2026-10-16), the counterpart of `below_sesoi` (three-sided testing: Isager and Fitzgerald,
   AMPPS 2026). "Supported" says the effect is above zero; "meaningful" says it is above the
   smallest effect worth having.
 - **At least r of k.** Beside the every-organization rule, the largest r for which "at least r of
@@ -224,7 +224,8 @@ Decided by outcome-neutral check 5, under rules fixed before any likelihood resu
 convention planted in half of each half's training refinements was found on every planted run
 by the reference's mean log-probability per token, a strictly proper score, and on few by greedy
 exact match, which credits only an adapter's most likely output. Its SESOI is exact match's,
-carried by the adapters' gain over the base model on both (`likelihood-sesoi.json`); every
+carried at the exchange rate the registered rule picks, the planted quote-style rate since
+2026-10-16 (`likelihood-sesoi.json`); every
 reading against a SESOI uses the metric's own (`decomposition.metric_sesoi`). The interval,
 K and power figures in the sections below are measured on the registered metric; the exact-match
 figures they replace are in the research log.

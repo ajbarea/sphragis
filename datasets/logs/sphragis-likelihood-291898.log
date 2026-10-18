@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/home/ajb6289/ajsoftworks/sphragis-pinned/011977c/scripts/likelihood_score.py", line 187, in <module>
+    main()
+    ~~~~^^
+  File "/home/ajb6289/ajsoftworks/sphragis-pinned/011977c/scripts/likelihood_score.py", line 117, in main
+    run = json.loads(args.run.read_text())
+                     ~~~~~~~~~~~~~~~~~~^^
+  File "/home/ajb6289/.local/share/uv/python/cpython-3.13.15-linux-aarch64-gnu/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ajb6289/.local/share/uv/python/cpython-3.13.15-linux-aarch64-gnu/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ajb6289/.local/share/uv/python/cpython-3.13.15-linux-aarch64-gnu/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-openstack-p2-n1850-plantquotes1.0-rp1.0.json'
