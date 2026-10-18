@@ -977,8 +977,78 @@ def test_git_permitted_states_a_reason_and_a_positive_floor_for_every_host() -> 
 
 
 def test_no_git_host_is_permitted_without_its_maintainers_written_permission() -> None:
-    for host in ("android", "chromium", "fuchsia"):
+    for host in ("chromium", "fuchsia"):
         assert notedb.GIT_PERMITTED[f"{host}.googlesource.com"].permitted is False
+    android = notedb.GIT_PERMITTED["android.googlesource.com"]
+    assert android.written_grant is True
+    assert android.refs == (notedb.AOSP_CENSUS_TAG,)
+
+
+def test_every_permitted_git_host_is_a_scoped_written_grant() -> None:
+    """A git host opens only by a written grant, which `holds_grant` checks, and only for the refs
+    the grant's use names: none is open to the NoteDb route's change refs."""
+    for permission in notedb.GIT_PERMITTED.values():
+        if permission.permitted:
+            assert permission.written_grant
+            assert permission.refs
+            assert not any(ref.startswith("refs/changes/") for ref in permission.refs)
+
+
+def _hold_grant(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, host: str) -> None:
+    grants = tmp_path / "grants"
+    grants.write_text(f"{host}\n")
+    monkeypatch.setenv("SPHRAGIS_GRANTS", str(grants))
+
+
+TAG_REFSPEC = f"+{notedb.AOSP_CENSUS_TAG}:{notedb.AOSP_CENSUS_TAG}"
+
+
+def test_a_scoped_grant_allows_a_fetch_of_its_own_refs_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _hold_grant(monkeypatch, tmp_path, "android.googlesource.com")
+    allowed = notedb.refused_by_permission
+    host = "android.googlesource.com"
+    assert allowed(host, ["fetch", "--stdin", "origin"], f"{TAG_REFSPEC}\n".encode()) is None
+    assert allowed(host, ["fetch"], f"{notedb.AOSP_CENSUS_TAG}\n".encode()) is None
+    for refused in (
+        b"+refs/changes/01/1/meta:refs/changes/01/1/meta\n",
+        b"+refs/heads/main:refs/heads/main\n",
+        b"+refs/tags/*:refs/tags/*\n",
+        b"0123456789abcdef0123456789abcdef01234567\n",
+        f"{TAG_REFSPEC}\n+refs/heads/main:refs/heads/main\n".encode(),
+        b"",
+    ):
+        assert "outside its scope" in (allowed(host, ["fetch"], refused) or "")
+    assert "outside its scope" in (allowed(host, ["ls-remote", "origin"], None) or "")
+
+
+def test_a_scoped_grant_not_held_on_this_machine_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The autouse fixture points the grants file at nothing: the tag itself is refused."""
+    repo = notedb.Repo.open(
+        tmp_path / "a.git", "https://android.googlesource.com/platform/manifest", Pacer(0)
+    )
+    _forbid_network_subprocess(monkeypatch)
+    with pytest.raises(notedb.GitError, match="written grant"):
+        repo.fetch("census", [TAG_REFSPEC], "--depth=1")
+
+
+def test_a_held_scoped_grant_refuses_the_notedb_route_before_the_network(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _hold_grant(monkeypatch, tmp_path, "android.googlesource.com")
+    repo = notedb.Repo.open(
+        tmp_path / "a.git", "https://android.googlesource.com/platform/build", Pacer(0)
+    )
+    _forbid_network_subprocess(monkeypatch)
+    with pytest.raises(notedb.GitError, match="outside its scope"):
+        repo.fetch_refs("meta", ["refs/changes/01/1/meta"])
+    with pytest.raises(notedb.GitError, match="outside its scope"):
+        repo.list_remote("tips", "refs/heads/*")
+    with pytest.raises(notedb.GitError, match="outside its scope"):
+        repo.fetch_objects("blobs", ["0123456789abcdef0123456789abcdef01234567"])
 
 
 def _forbid_network_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -119,15 +119,17 @@ anything is committed. `freeze` is the single stage that writes windows to disk,
 dedup and split from the refined examples and compares each window with its frozen file byte for
 byte, which catches a change to code the rule digests do not cover.
 
-AOSP is fetched from its git host instead, because its review UI forbids crawlers in
-robots.txt while the git host does not. Chromium's infra-dev list granted the REST API on
-2026-10-15 for a pool of about 2,000 merged changes, so Chromium is fetched over REST within that
-scope (`cli.REST_PERMITTED`, `build --read-cap`), and its git host stays refused for bulk
-collection (`sphragis.corpus.notedb.GIT_PERMITTED`). Qt's and Chromium's grants name this study's
+Chromium's infra-dev list granted the REST API on 2026-10-15 for a pool of about 2,000 merged
+changes, so Chromium is fetched over REST within that scope (`cli.REST_PERMITTED`,
+`build --read-cap`), and its git host stays refused for bulk collection
+(`sphragis.corpus.notedb.GIT_PERMITTED`). AJ reads that answer as covering AOSP at the same rate:
+AOSP's git host is open only for the release tag whose trees `scripts/aosp_census.py` reads, and
+its pool is fetched over REST once its scope is committed. These grants name this study's
 collector, not every clone, so their hosts are read only on a machine that lists them in
-`~/.config/sphragis/grants` (one host a line; `sphragis.corpus.grants`). Gerrit keeps each change's review
-record in the repository (NoteDb), and `--via git` reads it, one repository per `--project`,
-into the same snapshot shape; `build` then needs no network for those rows:
+`~/.config/sphragis/grants` (one host a line; `sphragis.corpus.grants`). Gerrit keeps each
+change's review record in the repository (NoteDb), and `--via git` reads it, one repository per
+`--project`, into the same snapshot shape, from a host whose permission covers change refs (none
+does yet); `build` then needs no network for those rows:
 
 ```bash
 uv run python -m sphragis.corpus fetch --via git --org aosp --month 2024-11 \

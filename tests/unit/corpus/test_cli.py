@@ -1712,13 +1712,16 @@ def test_the_resume_script_refuses_a_grant_this_machine_does_not_hold(tmp_path: 
     assert not called.exists()
 
 
-def test_no_git_host_is_permitted_before_the_git_route_checks_held_grants() -> None:
-    """A git host opens only by written grant, and `notedb._network` does not ask
-    `grants.holds_grant` yet: that lands with the first grant, since any edit to notedb.py changes
-    `FETCH_RULES` and so stales every git-route month. Permitting a host without it fails here."""
-    from sphragis.corpus.notedb import GIT_PERMITTED
+def test_the_git_route_asks_for_a_held_grant_before_a_permitted_host() -> None:
+    """A git host opens only by written grant, and `notedb.refused_by_permission`, which every
+    network command passes through, asks `grants.holds_grant` for it."""
+    import inspect
 
-    assert not any(permission.permitted for permission in GIT_PERMITTED.values())
+    from sphragis.corpus import notedb
+
+    assert all(p.written_grant for p in notedb.GIT_PERMITTED.values() if p.permitted)
+    assert "holds_grant(host)" in inspect.getsource(notedb.refused_by_permission)
+    assert "refused_by_permission(" in inspect.getsource(notedb.Repo._network)
 
 
 @pytest.mark.parametrize(

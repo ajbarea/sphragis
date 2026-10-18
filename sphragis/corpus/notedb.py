@@ -58,6 +58,7 @@ from urllib.parse import quote, urlsplit
 from sphragis.corpus import gerrit_diff
 from sphragis.corpus.build import CommentFetcher, DiffFetcher
 from sphragis.corpus.examples import REWORK, is_code_file
+from sphragis.corpus.grants import grants_file, holds_grant
 from sphragis.corpus.pacing import Pacer
 from sphragis.corpus.rules import FETCH_RULES
 from sphragis.corpus.scrub import scrub
@@ -74,7 +75,17 @@ class GitPermission(NamedTuple):
     permitted: bool
     reason: str
     min_interval: float  # seconds between requests to this host; pacing never goes below it
+    # the only refs a fetch may name where the permission covers part of the host, None where it
+    # covers every ref; such a host also refuses `ls-remote`, which lists every ref
+    refs: tuple[str, ...] | None = None
+    # the permission is a written grant to this study's collector, held only on a machine whose
+    # `grants.grants_file()` lists the host
+    written_grant: bool = False
 
+
+#: The AOSP release whose manifest and trees H2's project census reads (research log, 2026-10-14,
+#: item 4 of the H2 plan).
+AOSP_CENSUS_TAG = "refs/tags/android-15.0.0_r1"
 
 # Mirrors `cli.REST_PERMITTED`: one entry per git host this route may fetch from, so granting
 # permission to android or chromium is a one-line change here; fuchsia also needs its entry in
@@ -84,7 +95,14 @@ class GitPermission(NamedTuple):
 # refused until its maintainers grant permission in writing (research log, 2026-10-14).
 GIT_PERMITTED = {
     "android.googlesource.com": GitPermission(
-        False, "waits for written permission (request drafted; research log 2026-10-14)", 1.0
+        True,
+        "Chrome Infra answered on infra-dev on 2026-10-15, in a thread titled for chromium-review"
+        " and android-review, that it has no concerns at one client and no more than one request"
+        " a second; AJ reads the answer as covering AOSP (research log, 2026-10-18); scoped to"
+        " the release tag H2's project census reads, so no review record is fetched here",
+        1.0,
+        refs=(AOSP_CENSUS_TAG,),
+        written_grant=True,
     ),
     "chromium.googlesource.com": GitPermission(
         False,
@@ -223,6 +241,32 @@ NO_HEAD = "refs/sphragis/no-head"
 #: holds that tree, so the log fails on a lazy fetch once HEAD resolves (reading every branch
 #: brings in the one HEAD names). A mailmap would also rewrite the identities a log reports.
 _NO_MAILMAP = ("-c", "log.mailmap=false", "-c", "mailmap.blob=", "-c", "mailmap.file=")
+
+
+def refused_by_permission(host: str, args: Sequence[str], stdin: bytes | None) -> str | None:
+    """Why `GIT_PERMITTED` refuses this network command to `host`, None if it allows it.
+
+    A scoped permission allows only a `fetch` whose refspecs (read from stdin, as `Repo.fetch`
+    passes them) all take their source from its `refs`; an object id, a wildcard or any other
+    ref is refused, and so is every other command.
+    """
+    permission = GIT_PERMITTED.get(host)
+    if permission is None or not permission.permitted:
+        return permission.reason if permission else "not recorded in GIT_PERMITTED"
+    if permission.written_grant and not holds_grant(host):
+        return (
+            f"its permission is a written grant to this study's collector, and {grants_file()}"
+            " does not list it on this machine"
+        )
+    if permission.refs is None:
+        return None
+    if not args or args[0] != "fetch":
+        return f"{args[0] if args else 'a command'} is outside its scope ({permission.refs})"
+    sources = [line.lstrip("+").partition(":")[0] for line in (stdin or b"").decode().split()]
+    outside = sorted({source for source in sources if source not in permission.refs})
+    if not sources or outside:
+        return f"refs {outside or ['none']} are outside its scope ({permission.refs})"
+    return None
 
 
 class GitError(RuntimeError):
@@ -525,10 +569,10 @@ class Repo:
         return self._run(list(args), stdin=stdin).stdout
 
     def _network(self, purpose: str, args: Sequence[str], stdin: bytes | None, items: int) -> bytes:
-        permission = GIT_PERMITTED.get(self.host)
-        if not _is_local_url(self.url) and (permission is None or not permission.permitted):
-            reason = permission.reason if permission else "not recorded in GIT_PERMITTED"
-            raise GitError(f"refusing to contact {self.host} over the network: {reason}")
+        if not _is_local_url(self.url):
+            refused = refused_by_permission(self.host, args, stdin)
+            if refused is not None:
+                raise GitError(f"refusing to contact {self.host} over the network: {refused}")
         for attempt in range(len(RETRY_WAITS) + 1):
             done = self._attempt(purpose, args, stdin, items, attempt)
             if done.returncode == 0:

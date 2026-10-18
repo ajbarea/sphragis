@@ -1,9 +1,9 @@
 """The written grants this machine holds, read from a machine-local file.
 
-A host that opens only by written grant (Qt's and Chromium's review hosts over REST) granted one
-collector, at its stated address and with its User-Agent, not every clone of this repository.
-The REST route asks `holds_grant` before contacting such a host; the git route will, with its
-first grant.
+A host that opens only by written grant (Qt's and Chromium's review hosts over REST, AOSP's git
+host for its release tag) granted one collector, at its stated address and with its User-Agent,
+not every clone of this repository. The REST route and the git route
+(`notedb.refused_by_permission`) ask `holds_grant` before contacting such a host.
 """
 
 from __future__ import annotations

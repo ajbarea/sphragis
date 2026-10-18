@@ -143,7 +143,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   blocked on chromium/src's scale and is beyond the grant.
 - [ ] **AOSP's pool** by item 4 of the H2 plan (C++-majority projects at `android-15.0.0_r1`, created
   2024-10-01 to 2025-03-26, in descending change count until every matched draw is covered),
-  unless Fuchsia grants first.
+  unless Fuchsia grants first. Admitted 2026-10-18 on AJ's reading of Chrome Infra's answer; the
+  census and the coverage need are fixed (research log); census, scope, listings and fetch next.
 
 ## Plan B — measurement
 

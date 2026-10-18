@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 682 artifacts under
-67 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 683 artifacts under
+68 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -84,6 +84,14 @@ How many of an organization's examples come from a change whose commit names an 
 | artifact |
 |---|
 | `ai-trailers.json` |
+
+## `scripts/aosp_census.py`
+
+AOSP's projects by language at its release tag, for H2's foreign pool (item 4 of the H2 plan).
+
+| artifact |
+|---|
+| `code-files-linguist.json` |
 
 ## `scripts/backport_share.py`
 
