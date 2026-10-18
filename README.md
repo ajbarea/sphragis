@@ -226,7 +226,7 @@ that its change could alter; `make deploy FORCE=1` overrides.
 | `data-audit` | audits a built and refined corpus: drops, bots, successor kinds, the unregistered-bot queue (`ORGS=` names the organizations) |
 | `redact`, `redact-check` | take third-party addresses out of the result artifacts, or report them; run `redact` before committing a fresh result |
 | `docs-index`, `docs-harvest` | regenerate `docs/artifacts.md` (after staging a result), or assert every figure on the site |
-| `pull-logs`, `backup-datasets` | copy the cluster's job logs into `datasets/logs`, or the raw snapshots to the cluster's data root |
+| `pull-logs`, `backup-datasets`, `backup-github` | copy the cluster's job logs into `datasets/logs`, or the raw snapshots (Gerrit, or the GitHub family's corpus) to the cluster's data root |
 | `submit-pinned` | `submit` from a worktree pinned at this pushed commit, so a deploy cannot change what queued jobs run |
 | `clean` | removes caches and build artifacts |
 
