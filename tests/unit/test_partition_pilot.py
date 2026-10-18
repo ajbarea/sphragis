@@ -939,7 +939,9 @@ def test_a_planted_run_is_not_read_as_one_of_h1s_runs(
 ARMS = {"foreign-aosp-for-qt-b": "qt-a", "foreign-aosp-for-qt-a": "qt-b"}
 
 
-def _h2_inputs(tmp_path: Path, foreign: dict | None = ARMS) -> list[str]:
+def _h2_inputs(
+    tmp_path: Path, foreign: dict | None = ARMS, pool_sha: str = "p1", first_pool: str = "p1"
+) -> list[str]:
     """Qt's runs with their matched foreign arms: the sibling wins every C++ example, the foreign
     arm every Python one, so H2 on C++ reads +1 and the whole hunk would read 0."""
     argv = _inputs(tmp_path, "qt")
@@ -959,7 +961,9 @@ def _h2_inputs(tmp_path: Path, foreign: dict | None = ARMS) -> list[str]:
                     }
                     for i in range(first, first + N)
                 ]
-        Path(path).write_text(json.dumps({**run, "results": results, "foreign": foreign}))
+        pool = {"source": "aosp", "pool_sha256": pool_sha if k > 1 else first_pool}
+        record = {**run, "results": results, "foreign": foreign, "foreign_pool": pool}
+        Path(path).write_text(json.dumps(record))
     return argv
 
 
@@ -997,3 +1001,25 @@ def test_h2_is_qts_cell_and_needs_its_source(tmp_path, monkeypatch) -> None:
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "out.json")])
     with pytest.raises(SystemExit, match="H2 needs it"):
         _main(monkeypatch, [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--out", "x.json"])
+
+
+def test_an_h2_read_takes_no_k_sized_for_h1(tmp_path, monkeypatch) -> None:
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    with pytest.raises(SystemExit, match=r"sizes the cell \('H1', None\), not \('H2', 'aosp'\)"):
+        _main(monkeypatch, [*argv, *_sizing(tmp_path, "qt"), "--out", str(tmp_path / "o.json")])
+    h2_sizing = _sizing(tmp_path, "qt", hypothesis="H2", foreign_source="aosp")
+    _main(
+        monkeypatch, [*argv, *h2_sizing, "--resamples", "2000", "--out", str(tmp_path / "o.json")]
+    )
+
+
+def test_an_h2_cells_runs_must_share_one_pool(tmp_path, monkeypatch) -> None:
+    argv = [
+        *_h2_inputs(tmp_path, first_pool="p0"),
+        "--hypothesis",
+        "H2",
+        "--foreign-source",
+        "aosp",
+    ]
+    with pytest.raises(SystemExit, match="one recorded pool"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])

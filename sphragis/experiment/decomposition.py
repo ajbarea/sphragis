@@ -25,6 +25,7 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.halves import suffix
+from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.across import across_organizations, partial_conjunction
 from sphragis.experiment.cells import (
     MIN_RESAMPLES,
@@ -100,6 +101,15 @@ H2_PAIR = ("qt", "chromium")
 # matched draw (research log, 2026-10-14).
 H2_ORGANIZATION = "qt"
 FOREIGN_SOURCES = ("chromium", "fuchsia", "aosp")
+#: Each source's pool by created date, `created_from` inclusive and `created_before` exclusive, as
+#: item 1 of the H2 plan and each pool's rule fix them: Chromium's V8 pool (2026-10-16) and AOSP's
+#: changes before aosp-main went read-only (`cli.REST_PERMITTED` scopes them the same), and
+#: Fuchsia over Qt's own training-window months.
+FOREIGN_SPANS = {
+    "chromium": ("2024-11-01", "2025-09-01"),
+    "fuchsia": WINDOWS["train"],
+    "aosp": ("2024-10-01", "2025-03-27"),
+}
 
 # Every confirmatory H2 cell reads its organization's C++ examples (`CPP_SUFFIXES`), its foreign
 # arm one adapter per evaluated half matched to that sibling's C++ count (`foreign_arm`).

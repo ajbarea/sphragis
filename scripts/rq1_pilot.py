@@ -9,6 +9,7 @@ test windows stay sealed.
 
 import argparse
 import gc
+import hashlib
 import json
 from pathlib import Path
 
@@ -16,11 +17,18 @@ import torch
 
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
-from sphragis.experiment.decomposition import FOREIGN_SOURCES, halves, is_cpp, matched_foreign_arms
+from sphragis.experiment.decomposition import (
+    FOREIGN_SOURCES,
+    FOREIGN_SPANS,
+    halves,
+    is_cpp,
+    matched_foreign_arms,
+)
 from sphragis.experiment.holdout import (
     equalize_training,
     foreign_pool,
     holdout_by_change,
+    pool_digest,
     verbatim_overlap,
     window_split,
 )
@@ -46,7 +54,7 @@ from sphragis.experiment.neutral import (
     positive_control,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids
-from sphragis.experiment.runs import reused_adapter, trained_keys
+from sphragis.experiment.runs import reused_adapter, stored_foreign_pool, trained_keys
 from sphragis.experiment.training import supervised
 from sphragis.experiment.walk import gate, walk
 
@@ -192,7 +200,9 @@ if args.foreign_pool:
     if args.train_size is None or len(seeds) != 1:
         raise SystemExit("foreign arms need --train-size and one seed, the partition run's own")
     try:
-        pool, pool_removed = foreign_pool(args.foreign_pool, args.foreign_source)
+        pool, pool_removed = foreign_pool(
+            args.foreign_pool, args.foreign_source, FOREIGN_SPANS[args.foreign_source]
+        )
         drawn, foreign = matched_foreign_arms(
             train_rows,
             pool,
@@ -203,9 +213,15 @@ if args.foreign_pool:
     except ValueError as error:
         raise SystemExit(f"foreign arms: {error}") from error
     train_rows.update(drawn)
+    # A draw that copies one of its half's held-out pairs is refused, as an own half's is above.
+    for arm, evaluated in foreign.items():
+        copied = verbatim_overlap(train_rows[arm], held_out[evaluated])
+        if copied:
+            raise SystemExit(f"{arm}: {len(copied)} of {evaluated}'s held-out pairs in its draw")
     foreign_record = {
         "source": args.foreign_source,
         "pool": str(args.foreign_pool),
+        "pool_sha256": pool_digest(pool),
         "pool_examples": len(pool),
         "pool_dedup_removed": pool_removed,
         "arms": {
@@ -218,6 +234,13 @@ if args.foreign_pool:
         },
     }
     print(f"foreign arms: {foreign_record['arms']}", flush=True)
+    # An arm reused from a stored run was trained on that run's draw, so the pool must be its.
+    if args.reuse_from and set(foreign) & {
+        k.rsplit("-s", 1)[0] for k in trained_keys(args.reuse_from)
+    }:
+        stored_pool = stored_foreign_pool(args.reuse_from)
+        if stored_pool is None or stored_pool["pool_sha256"] != foreign_record["pool_sha256"]:
+            raise SystemExit(f"{args.reuse_from} drew its foreign arms from another pool")
 
 
 # Before any model loads, and so inside the dry run: the arms are paired by example id, so a
@@ -274,7 +297,10 @@ if not all(check.passed for check in leakage):
         )
         + "\n"
     )
-    raise SystemExit("APPARATUS FAILS at test 4, before training: H1 would not be read")
+    # A foreign arm's draw failing alone leaves H1 as it was; H2 is what is not read then.
+    failed = [c for c in leakage if not c.passed]
+    unread = "H2" if all(c.name.startswith("leakage:foreign-") for c in failed) else "H1"
+    raise SystemExit(f"APPARATUS FAILS at test 4, before training: {unread} would not be read")
 
 if args.dry_run:
     # Everything above is CPU: loading, dedup, the split and the leakage check. Stopping here
@@ -300,6 +326,9 @@ class InProcessTrainer:
         # trained: an H2 run reuses its H1 run's halves and trains only their matched arms.
         if args.reuse_from and (org not in foreign or f"{org}-s{seed}" in stored_training):
             return self.reuse(org, seed, target)
+        if org in foreign and target.exists():
+            # Another result may have scored the adapter there; retraining would change it.
+            raise SystemExit(f"{target} already holds a foreign arm; reuse it or remove it first")
         model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
             tok.pad_token = tok.eos_token
@@ -311,7 +340,10 @@ class InProcessTrainer:
         assert report.skipped_steps == 0, f"{org} s{seed}: {report.skipped_steps} steps skipped"
         self.losses[f"{org}-s{seed}"] = list(report.losses)
         model.save_pretrained(target)
+        weights = hashlib.sha256((target / "adapter_model.safetensors").read_bytes()).hexdigest()
         self.reports[f"{org}-s{seed}"] = {
+            # Recorded so a later rescoring can check it reads these weights (`adapter_checked`).
+            "adapter_sha256": weights,
             "items": len(items),
             "refused": refused,
             "steps": report.steps,

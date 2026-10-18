@@ -116,6 +116,11 @@ def trained_keys(stored: Path) -> set[str]:
     return set(json.loads(stored.read_text())["training"])
 
 
+def stored_foreign_pool(stored: Path) -> dict[str, Any] | None:
+    """The foreign pool a stored run drew its H2 arms from, None for a run without arms."""
+    return json.loads(stored.read_text()).get("foreign_pool")
+
+
 def reused_adapter(
     stored: Path, key: str, adapter: Path, *, train_size: int, rank: int
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -141,6 +146,9 @@ def reused_adapter(
     if len(matches) != 1:
         raise ValueError(f"{stored} records {len(matches)} {label} checks, not one")
     weights = hashlib.sha256((adapter / "adapter_model.safetensors").read_bytes()).hexdigest()
+    recorded = run["training"][key].get("adapter_sha256")
+    if recorded is not None and recorded != weights:
+        raise ValueError(f"{adapter} is not the {key} adapter {stored} recorded")
     reused = {"reused_from": str(stored), "adapter_sha256": weights}
     check = matches[0]
     return {**run["training"][key], **reused}, {

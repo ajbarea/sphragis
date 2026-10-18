@@ -9608,3 +9608,17 @@ adapter against the arm matched to that sibling, on the half's C++ examples only
 run that does not carry both arms for the source, any organization but Qt, the test window,
 and the inputs only H1 has registered (`--replication`, `--without`, `--planted`,
 `--sensitivity`). H2's bounds come from its own simulation, which reads this pilot and follows.
+
+**Guards added after review.** A pool is read only inside its source's registered span
+(`decomposition.FOREIGN_SPANS`: AOSP 2024-10-01 to before 2025-03-27, Chromium's V8 months, Fuchsia
+over Qt's training window) and is identified by the digest of its example ids; an H2 cell's runs
+must all record one pool, and an arm reused from a stored run only from that run's pool. A draw
+that copies one of its half's held-out pairs verbatim is refused, as an own half's is; the pool is
+deduplicated against Qt once, when it is built. A K is read only for the cell it was sized for
+(`partitions.pilot_sizing`'s `cell`), so H1's pilot or coverage artifact never sets H2's K. A
+freshly trained adapter records its weights' digest, a reused one is refused when its weights
+differ from the recorded ones, and a foreign arm is never trained over a saved one. The SESOI's
+positive control reads only the OpenStack and Wikimedia runs that fixed it
+(`likelihood_sesoi.CONTROL_ORGS`): Qt's runs, committed since, and any H2 run would otherwise move
+a rate already used, and a test now checks the committed SESOI's 46 files are what it reads. A run
+past K is held to the cell's floor of ten changes a half.

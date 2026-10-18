@@ -2026,3 +2026,15 @@ def test_foreign_arms_need_the_organizations_two_halves() -> None:
         decomposition.matched_foreign_arms(
             {"qt-a": [], "openstack-b": []}, [], org="qt", source="aosp", seed=1
         )
+
+
+def test_each_foreign_sources_span_is_the_one_its_pool_was_registered_over() -> None:
+    from sphragis.corpus.cli import REST_PERMITTED
+    from sphragis.corpus.windows import WINDOWS
+
+    assert set(decomposition.FOREIGN_SPANS) == set(decomposition.FOREIGN_SOURCES)
+    v8 = REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert v8 is not None
+    assert decomposition.FOREIGN_SPANS["chromium"] == (v8.created_from, v8.created_before)
+    assert decomposition.FOREIGN_SPANS["fuchsia"] == WINDOWS["train"]
+    assert decomposition.FOREIGN_SPANS["aosp"] == ("2024-10-01", "2025-03-27")

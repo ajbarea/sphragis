@@ -203,6 +203,7 @@ def main() -> None:
     if len(args.runs) > len(admissible):
         raise SystemExit(f"{len(args.runs)} runs, more than the {len(admissible)} admissible")
     runs = []
+    pools: set[str | None] = set()
     windows: set[str] = set()
     decoders: set[str] = set()
     batteries = []
@@ -231,10 +232,13 @@ def main() -> None:
             }
             if run.get("foreign") != arms:
                 raise SystemExit(f"{path}: carries foreign arms {run.get('foreign')}, not {arms}")
+            pools.add((run.get("foreign_pool") or {}).get("pool_sha256"))
         runs.append((run["results"], k))
         decoders.add(json.dumps(decoder(run), sort_keys=True))
     if len(decoders) != 1:
         raise SystemExit(f"runs decoded differently, not one study: {sorted(decoders)}")
+    if h2 and (len(pools) != 1 or None in pools):
+        raise SystemExit("an H2 cell's runs must all draw their arms from one recorded pool")
     if windows == {"train -> test"}:
         window = "test"
     elif windows == {"train -> dev"}:
@@ -311,7 +315,11 @@ def main() -> None:
         sizing_artifact = json.loads(args.sizing.read_text())
         try:
             runs_fixed = pilot_sizing(
-                sizing_artifact, str(args.sizing), org=args.org, require_org=window == "test"
+                sizing_artifact,
+                str(args.sizing),
+                org=args.org,
+                require_org=window == "test",
+                cell=(args.hypothesis, args.foreign_source),
             )
         except ValueError as error:
             raise SystemExit(str(error)) from error

@@ -37,6 +37,7 @@ from sphragis.experiment.decomposition import (
 )
 from sphragis.experiment.neutral import source_root, source_windows
 from sphragis.measure.stats import (
+    MIN_CLUSTERS,
     equal_halves,
     one_sided_alpha,
     partitioned_crossed_draws,
@@ -211,7 +212,12 @@ def runs_needed(
 
 
 def pilot_sizing(
-    artifact: Mapping[str, Any], name: str, *, org: str, require_org: bool = False
+    artifact: Mapping[str, Any],
+    name: str,
+    *,
+    org: str,
+    require_org: bool = False,
+    cell: tuple[str, str | None] = ("H1", None),
 ) -> int:
     """The K an organization's pilot sized: `sizing.runs` of a reading over all its runs.
 
@@ -221,8 +227,12 @@ def pilot_sizing(
     another organization's pilot. A pilot written before readings recorded their window and
     organization is a development-window reading; with `require_org` (a test-window read) it must
     name its organization, so it is regenerated first. A K coverage artifact (`k_coverage.py`)
-    carries the K the coverage rule took from that pilot.
+    carries the K the coverage rule took from that pilot. Either sizes only the `cell` it was made
+    for, H1's or H2's against a foreign source (item 6 of the H2 plan: H2's K is its own).
     """
+    made_for = (artifact.get("hypothesis", "H1"), artifact.get("foreign_source"))
+    if made_for != tuple(cell):
+        raise ValueError(f"{name} sizes the cell {made_for}, not {tuple(cell)}")
     if artifact.get("kind") == K_COVERAGE:
         if "org" not in artifact:
             raise ValueError(f"{name} does not name its organization")
@@ -440,10 +450,11 @@ def h1_over_partitions(
     k = runs_fixed
     clusters, examples = common_runs(runs[:k], org=org, metric=metric, contrast=contrast)
     per_run = [equal_halves(run) for run in clusters]
-    left_out = [
-        equal_halves(common_runs([run], org=org, metric=metric, contrast=contrast)[0][0])
-        for run in runs[k:]
-    ]
+    past = [common_runs([run], org=org, metric=metric, contrast=contrast)[0][0] for run in runs[k:]]
+    # Held to the floor the cell's own runs meet: a near-empty half would halve a run's contrast.
+    if any(len(half) < MIN_CLUSTERS for run in past for half in run):
+        raise ValueError(f"a run past K has a half with fewer than {MIN_CLUSTERS} changes")
+    left_out = [equal_halves(run) for run in past]
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
     intervals = {c: percentile_interval(draws, c) for c in levels}
     registered = by_level(bounds) if bounds else {}
@@ -465,4 +476,7 @@ def h1_over_partitions(
         # The bounds the verdicts were read under, so a gate can check them against its own.
         "bounds": {c: registered.get(level_key(c)) for c in levels},
         **examples,
+        # The examples the cell's contrast reads in its first run: all of them for H1, the C++
+        # ones for H2 (`h2_contrast`).
+        "cell_examples": sum(len(c.treatment) for half in clusters[0] for c in half),
     }

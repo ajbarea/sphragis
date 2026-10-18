@@ -23,6 +23,13 @@ The registered H1 reading runs in six steps, per organization.
 | 5 | `partition_sensitivity.sbatch` | Simulates H1 at a given K on the registered metric (`METRIC=logprob_per_token`, `partition_sensitivity.py`, CPU only): coverage, detectable effect and reproducibility. The grid's K = 10 point is this full simulation; every other K on the grid runs with `RUNS=<K> NULL_ONLY=1`, the null alone. |
 | 6 | `k_coverage.py` | Applies the K coverage rule to the pilot and the grid's null simulations and writes `k-coverage-<org>-likelihood.json`, the only K source a test read takes (`partition_pilot.py --sizing`). The full simulation is then run at that K, and its bounds feed `partition_pilot.py --sensitivity`. |
 
+H2's cell on Qt adds one job between steps 2 and 3, and reads its own steps 4 to 6: `foreign_arms.sbatch` reuses a
+decoder-checked partition run's halves, trains each evaluated half's matched foreign arm on the
+source's pool (`FOREIGN_SOURCE`, `FOREIGN_POOL`), and generates every arm again;
+`likelihood_score.sbatch` with `FOREIGN_SOURCE` scores it; `partition_pilot.py --hypothesis H2
+--foreign-source <source>` reads the development cell (sibling against matched foreign, on C++
+examples); and `partition_sensitivity.sbatch` with `FOREIGN_SOURCE` simulates it from that pilot.
+
 A test-window read takes its K, bounds and planted run from these artifacts, as
 [Registered decisions](registered-decisions.md) describes. `reading.py` prints a result's
 readings with their labels, and `power_at_size.sbatch` reads a test window that falls below its
@@ -81,6 +88,7 @@ These predate the H1 and H2 decomposition and stay as the record the registered 
 | `estimands.py` | What the estimand choice costs, on a run that has already happened. |
 | `decoding_check.sbatch` | Re-evaluates a saved calibration adapter at a chosen temperature and repetition penalty, to test whether the decoder amplifies a planted convention. |
 | `decoder_check.sbatch` | Rescores a stored H1 partition run at an explicit repetition penalty, its adapters reused, so the decoder is the only change. |
+| `foreign_arms.sbatch` | Adds H2's two matched foreign arms to a decoder-checked partition run, reusing its halves' adapters. |
 | `determinism_check.sbatch` | Four passes of the base model over the same prompts, to locate run-to-run variation in greedy decoding. |
 | `prompt_format_probe.sbatch` | Measures how much of the pilot's base-model floor is the prompt format. |
 | `contamination_battery.sbatch` | The contamination battery, run on the windows `contamination_windows.py` assembles. |

@@ -8,6 +8,7 @@ example again, which is how a leaked 0.512 was nearly reported.
 
 from __future__ import annotations
 
+import hashlib
 import random
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -130,11 +131,15 @@ def matched_foreign_draw(
     return draw
 
 
-def foreign_pool(root: Path, source: str) -> tuple[list[dict[str, Any]], dict[str, int]]:
+def foreign_pool(
+    root: Path, source: str, span: tuple[str, str]
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """A foreign source's pool: its refined examples under `root`, deduplicated as one corpus.
 
-    Refused when empty, or when any row was created in the sealed test window or after it: a
-    foreign arm trains on its draw, and the window is read only after acceptance.
+    Refused when empty, when any row was created in the sealed test window or after it (a foreign
+    arm trains on its draw, and the window is read only after acceptance), or when any row lies
+    outside `span`, the created dates the source's pool was registered over (`created_from`
+    inclusive, `created_before` exclusive).
     """
     pool, removed = run_dedup(refined_examples(root, source))
     if not pool:
@@ -142,7 +147,15 @@ def foreign_pool(root: Path, source: str) -> tuple[list[dict[str, Any]], dict[st
     late = sum(1 for row in pool if row["created"][:10] >= TEST_WINDOW_START)
     if late:
         raise ValueError(f"{source}'s pool holds {late} rows from the sealed window on")
+    outside = sum(1 for row in pool if not span[0] <= row["created"][:10] < span[1])
+    if outside:
+        raise ValueError(f"{source}'s pool holds {outside} rows outside its span {span}")
     return pool, removed
+
+
+def pool_digest(pool: Sequence[Mapping[str, Any]]) -> str:
+    """One pool's identity: the sha256 of its sorted example ids."""
+    return hashlib.sha256("\n".join(sorted(str(row["id"]) for row in pool)).encode()).hexdigest()
 
 
 SEALED_WINDOWS = ("test",)

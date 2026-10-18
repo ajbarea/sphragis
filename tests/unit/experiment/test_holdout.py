@@ -280,16 +280,31 @@ def _pool_row(i: int, created: str) -> dict[str, Any]:
     }
 
 
-def test_a_foreign_pool_reaching_the_sealed_window_is_refused(monkeypatch, tmp_path) -> None:
+def test_a_foreign_pool_outside_its_span_or_reaching_the_sealed_window_is_refused(
+    monkeypatch, tmp_path
+) -> None:
     from sphragis.experiment import holdout
 
+    span = ("2024-10-01", "2025-03-27")
     rows = [_pool_row(1, "2024-11-02"), _pool_row(2, holdout.TEST_WINDOW_START)]
     monkeypatch.setattr(holdout, "refined_examples", lambda root, org: list(rows))
     with pytest.raises(ValueError, match="1 rows from the sealed window"):
-        holdout.foreign_pool(tmp_path, "aosp")
+        holdout.foreign_pool(tmp_path, "aosp", span)
     monkeypatch.setattr(holdout, "refined_examples", lambda root, org: [])
     with pytest.raises(ValueError, match="no refined examples"):
-        holdout.foreign_pool(tmp_path, "aosp")
+        holdout.foreign_pool(tmp_path, "aosp", span)
+    for created in ("2024-09-30", "2025-03-27"):
+        late = [_pool_row(1, "2024-11-02"), _pool_row(3, created)]
+        monkeypatch.setattr(holdout, "refined_examples", lambda root, org, late=late: list(late))
+        with pytest.raises(ValueError, match="1 rows outside its span"):
+            holdout.foreign_pool(tmp_path, "aosp", span)
     monkeypatch.setattr(holdout, "refined_examples", lambda root, org: rows[:1])
-    pool, removed = holdout.foreign_pool(tmp_path, "aosp")
+    pool, removed = holdout.foreign_pool(tmp_path, "aosp", span)
     assert [r["id"] for r in pool] == [rows[0]["id"]] and isinstance(removed, dict)
+
+
+def test_a_pools_digest_is_its_ids_whatever_their_order() -> None:
+    from sphragis.experiment.holdout import pool_digest
+
+    rows = [{"id": "b"}, {"id": "a"}]
+    assert pool_digest(rows) == pool_digest(rows[::-1]) != pool_digest(rows[:1])
