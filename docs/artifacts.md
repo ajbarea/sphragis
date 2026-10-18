@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 702 artifacts under
-71 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 688 artifacts under
+67 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -51,10 +51,6 @@ The ordered list of admissible partitions H1's runs are drawn from, fixed before
 
 | artifact |
 |---|
-| `admissible-partitions-apache.json` |
-| `admissible-partitions-dotnet.json` |
-| `admissible-partitions-grafana-refused.json` |
-| `admissible-partitions-llvm-refused.json` |
 | `admissible-partitions-openstack.json` |
 | `admissible-partitions-qt.json` |
 | `admissible-partitions-wikimedia.json` |
@@ -87,17 +83,7 @@ How many of an organization's examples come from a change whose commit names an 
 
 | artifact |
 |---|
-| `ai-trailers-qt.json` |
 | `ai-trailers.json` |
-
-## `scripts/aosp_census.py`
-
-AOSP's projects by language at its release tag, for H2's foreign pool (item 4 of the H2 plan).
-
-| artifact |
-|---|
-| `aosp-census.json` |
-| `code-files-linguist.json` |
 
 ## `scripts/backport_share.py`
 
@@ -168,7 +154,6 @@ Whether a host's `total_comment_count` of 0 means a row has no comments, asked o
 
 | artifact |
 |---|
-| `comment-count-probe-aosp.json` |
 | `comment-count-probe-chromium.json` |
 | `comment-count-probe-qt.json` |
 
@@ -315,22 +300,6 @@ The adapter-instance cut: two adapters per client, and only one of them leaves.
 | artifact |
 |---|
 | `client-updates-dual-cpp-rebuilt-c128-t2.json` |
-
-## `scripts/foreign_need.py`
-
-What a foreign pool must hold to cover H2's matched arm over an organization's admissible list.
-
-| artifact |
-|---|
-| `foreign-need-qt.json` |
-
-## `scripts/foreign_pool_coverage.py`
-
-Whether a built foreign pool covers every matched draw an H2 run can make from it.
-
-| artifact |
-|---|
-| `foreign-pool-coverage-aosp.json` |
 
 ## `scripts/github_conversion.py`
 
@@ -587,6 +556,12 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | `partition-pilot-openstack-sensitivities.json` |
 | `partition-pilot-openstack-stopping.json` |
 | `partition-pilot-openstack.json` |
+| `partition-pilot-qt-likelihood-split-changed.json` |
+| `partition-pilot-qt-likelihood-split-copied.json` |
+| `partition-pilot-qt-likelihood-split-end.json` |
+| `partition-pilot-qt-likelihood-split-identifier.json` |
+| `partition-pilot-qt-likelihood-split-other.json` |
+| `partition-pilot-qt-likelihood-split-other_changed.json` |
 | `partition-pilot-qt-likelihood.json` |
 | `partition-pilot-qt-rp1.0.json` |
 | `partition-pilot-wikimedia-k-rp1.0.json` |
@@ -606,7 +581,7 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 
 ## `scripts/partition_sensitivity.py`
 
-Operating characteristics of a cell over repeated partitions at the registered K, by simulation.
+Operating characteristics of H1 over repeated partitions at the registered K, by simulation.
 
 | artifact |
 |---|
@@ -859,14 +834,6 @@ The exchange rate between exact match and s, read on a planted code-level conven
 |---|
 | `planted-exchange-openstack-quotes0.5.json` |
 | `planted-exchange-openstack-quotes1.0.json` |
-
-## `scripts/pool_order.py`
-
-A foreign pool's projects in the order item 4 of the H2 plan takes them, from listing snapshots.
-
-| artifact |
-|---|
-| `pool-order-aosp.json` |
 
 ## `scripts/power_rq1.py`
 
@@ -1130,7 +1097,6 @@ The examples each registered sensitivity of H1 removes, by id, for one organizat
 | artifact |
 |---|
 | `sensitivity-ids-openstack-dev.json` |
-| `sensitivity-ids-qt-dev.json` |
 | `sensitivity-ids-wikimedia-dev.json` |
 
 ## `scripts/separability.py`
@@ -1166,10 +1132,6 @@ Whether an organization's registered split qualifies for a confirmatory H1 cell.
 
 | artifact |
 |---|
-| `split-criteria-apache.json` |
-| `split-criteria-dotnet.json` |
-| `split-criteria-grafana.json` |
-| `split-criteria-llvm.json` |
 | `split-criteria-openstack-v2.json` |
 | `split-criteria-openstack.json` |
 | `split-criteria-qt.json` |
@@ -1191,10 +1153,6 @@ The fixed training size N every adapter trains at, derived from the organization
 
 | artifact |
 |---|
-| `training-size-apache.json` |
-| `training-size-dotnet.json` |
-| `training-size-grafana.json` |
-| `training-size-llvm.json` |
 | `training-size-openstack.json` |
 | `training-size-qt.json` |
 | `training-size-wikimedia.json` |
