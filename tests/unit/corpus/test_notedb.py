@@ -1015,9 +1015,13 @@ def test_a_scoped_grant_allows_a_fetch_of_its_own_refs_only(
     allowed = notedb.refused_by_permission
     host = "android.googlesource.com"
     tag = f"{TAG_REFSPEC}\n".encode()
-    assert allowed(host, [*FETCH, *STDIN], tag) is None
-    assert allowed(host, [*FETCH, *STDIN], f"{notedb.AOSP_CENSUS_TAG}\n".encode()) is None
+    assert allowed(host, [*FETCH, "--depth=1", *STDIN], tag) is None
+    shallow = [*FETCH, "--depth=1", *STDIN]
+    assert allowed(host, shallow, f"{notedb.AOSP_CENSUS_TAG}\n".encode()) is None
     assert allowed(host, [*FETCH, "--depth=1", "--filter=blob:none", *STDIN], tag) is None
+    # Without --depth=1 the whole history would come, blobs and all.
+    assert "arguments" in (allowed(host, [*FETCH, *STDIN], tag) or "")
+    assert "arguments" in (allowed(host, [*FETCH, "--filter=blob:none", *STDIN], tag) or "")
     for refused in (
         b"+refs/changes/01/1/meta:refs/changes/01/1/meta\n",
         b"+refs/heads/main:refs/heads/main\n",
@@ -1028,18 +1032,21 @@ def test_a_scoped_grant_allows_a_fetch_of_its_own_refs_only(
         f"{notedb.AOSP_CENSUS_TAG}\u3000{notedb.AOSP_CENSUS_TAG}\n".encode(),
         f"^{notedb.AOSP_CENSUS_TAG}\n".encode(),
         b"",
+        b"\n" + tag,
+        tag + b"\n",
+        b"\xff\n",
     ):
-        assert "outside its scope" in (allowed(host, [*FETCH, *STDIN], refused) or ""), refused
+        assert "outside its scope" in (allowed(host, shallow, refused) or ""), refused
     assert "outside its scope" in (allowed(host, ["ls-remote", "origin"], None) or "")
     for widening in (
         ["--tags"],
         ["--all"],
         ["--mirror"],
         ["--depth=100"],
-        ["--depth=1", "--depth=1"],
+        ["--depth=1"],
         ["--stdin", "origin"],
     ):
-        args = [*FETCH, *widening, *STDIN]
+        args = [*FETCH, "--depth=1", *widening, *STDIN]
         assert "arguments" in (allowed(host, args, tag) or ""), widening
     for reordered in ([*FETCH, "origin", "--stdin"], [*FETCH, *STDIN, "origin"], ["fetch", *STDIN]):
         assert "arguments" in (allowed(host, reordered, tag) or ""), reordered

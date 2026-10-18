@@ -123,7 +123,9 @@ def test_the_cut_to_n_is_seeded_as_the_partition_runs_seed_it() -> None:
     assert "--split-seed" not in (ROOT / "scripts" / "partition_run.sbatch").read_text()
 
 
-def _stored(tmp_path: Path, name: str, seed: int, train: int, plant: str = "") -> Path:
+def _stored(
+    tmp_path: Path, name: str, seed: int, train: int, plant: str = "", size: int = 6
+) -> Path:
     root = f"/data/corpus-partition-qt-p{seed}-s2-n1850{plant}"
     corpora = {
         h: {
@@ -134,7 +136,7 @@ def _stored(tmp_path: Path, name: str, seed: int, train: int, plant: str = "") -
         for h in ("qt-a", "qt-b")
     }
     path = tmp_path / name
-    path.write_text(json.dumps({"corpora": corpora}))
+    path.write_text(json.dumps({"corpora": corpora, "split_seed": 0, "train_size": size}))
     return path
 
 
@@ -158,6 +160,7 @@ def test_a_rebuilt_partition_is_checked_against_its_stored_run(tmp_path, monkeyp
         (_stored(tmp_path, "short.json", 4, train=9), "train_examples 9 recorded, 10 rebuilt"),
         (_stored(tmp_path, "other.json", 7, train=10), "partition 7, not one read here"),
         (_stored(tmp_path, "planted.json", 4, 10, "-plant0.5"), "not one unplanted"),
+        (_stored(tmp_path, "bigger.json", 4, 10, size=7), "seed and size"),
     ):
         with pytest.raises(SystemExit, match=message):
             run(stored)

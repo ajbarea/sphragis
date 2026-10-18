@@ -9530,8 +9530,9 @@ The reading is recorded here as his, beside the words it rests on.
 (`grants.holds_grant`, so only on the collector that holds it) scoped to one ref,
 `refs/tags/android-15.0.0_r1` (`AOSP_CENSUS_TAG`): `refused_by_permission`, which every network
 command of the git route passes through, refuses `ls-remote`, object ids, change and branch refs,
-and any fetch other than `Repo.fetch`'s own arguments around at most a depth-1, blob-less read
-(`--tags`, `--all`, a refspec on the command line), so the NoteDb route itself stays closed and
+and any fetch other than `Repo.fetch`'s own arguments around a depth-1 read, blob-less or not
+(`--tags`, `--all`, a refspec on the command line, more history), and any refspec line that is
+empty (git reads it as HEAD) or holds whitespace, so the NoteDb route itself stays closed and
 reads no review record. The host is one client at a time machine-wide: the git route now takes
 the REST route's host lock (`hosts.claim_host`, moved out of `cli`), and a failed request holds
 every later process quiet for five minutes. Pacing is the git route's: one git operation at a

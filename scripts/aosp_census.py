@@ -133,6 +133,9 @@ def manifest_projects(xml: bytes) -> tuple[list[dict[str, Any]], str | None]:
                 "groups": node.get("groups") or "",
             }
         )
+    names = [p["name"] for p in projects]
+    if len(set(names)) != len(names):
+        raise SystemExit("the manifest lists a project twice; the census would count it twice")
     return projects, remote
 
 

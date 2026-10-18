@@ -253,18 +253,20 @@ _NO_MAILMAP = ("-c", "log.mailmap=false", "-c", "mailmap.blob=", "-c", "mailmap.
 
 
 #: What a scoped permission's fetch may carry: `Repo.fetch`'s own arguments, in its order, around
-#: at most a shallow, blob-less read of trees. Anything else (`--tags`, `--all`, `--mirror`, a
-#: refspec on the command line, a deeper history) could widen what is fetched.
+#: a depth-1 read, blob-less or not (the manifest's one file is read). Anything else (`--tags`,
+#: `--all`, `--mirror`, a refspec on the command line, more history) could widen what is fetched.
 SCOPED_FETCH = (("fetch", "--quiet", "--no-tags", "--no-write-fetch-head"), ("--stdin", "origin"))
+SCOPED_FETCH_REQUIRED = ("--depth=1",)
 SCOPED_FETCH_OPTIONS = ("--depth=1", "--filter=blob:none")
 
 
 def refused_by_permission(host: str, args: Sequence[str], stdin: bytes | None) -> str | None:
     """Why `GIT_PERMITTED` refuses this network command to `host`, None if it allows it.
 
-    A scoped permission allows only a `fetch` whose arguments are all `SCOPED_FETCH_ARGS` and
-    whose refspecs (read from stdin, as `Repo.fetch` passes them) all take their source from its
-    `refs`; an object id, a wildcard or any other ref is refused, and so is every other command.
+    A scoped permission allows only a `fetch` of `SCOPED_FETCH`'s arguments around
+    `SCOPED_FETCH_REQUIRED` and at most `SCOPED_FETCH_OPTIONS`, whose refspecs (read from stdin,
+    as `Repo.fetch` passes them) all take their source from its `refs`; an object id, a wildcard
+    or any other ref is refused, and so is every other command.
     """
     permission = GIT_PERMITTED.get(host)
     if permission is None or not permission.permitted:
@@ -282,12 +284,18 @@ def refused_by_permission(host: str, args: Sequence[str], stdin: bytes | None) -
         or tuple(args[len(args) - len(tail) :]) != tail
         or len(set(options)) != len(options)
         or not set(options) <= set(SCOPED_FETCH_OPTIONS)
+        or not set(SCOPED_FETCH_REQUIRED) <= set(options)
     ):
         return f"fetch arguments {list(args[1:])} are outside its scope ({permission.refs})"
-    # Split as git reads `--stdin`: one refspec a line, and a line holding whitespace is refused.
-    lines = [line for line in (stdin or b"").decode().split("\n") if line]
-    if any(part != part.strip() or " " in part or "\t" in part for part in lines) or any(
-        not line.isprintable() for line in lines
+    # Split as git reads `--stdin`: one refspec a line. An empty line is a refspec git reads as
+    # HEAD, and a line holding whitespace or text that is not UTF-8 is refused too.
+    try:
+        text = (stdin or b"").decode()
+    except UnicodeDecodeError:
+        return f"refspecs that are not UTF-8 are outside its scope ({permission.refs})"
+    lines = text.removesuffix("\n").split("\n")
+    if any(not line or line != line.strip() or not line.isprintable() for line in lines) or any(
+        " " in line or "\t" in line for line in lines
     ):
         return f"refspecs {lines} are outside its scope ({permission.refs})"
     sources = [line.lstrip("+").partition(":")[0] for line in lines]
@@ -614,8 +622,10 @@ class Repo:
                 return done.stdout
             stderr = done.stderr.decode(errors="replace")
             if attempt == len(RETRY_WAITS) or not _TRANSIENT.search(stderr):
-                if claim is not None and GIT_PERMITTED[self.host].error_pause:
-                    claim.hold_until(time.time() + GIT_PERMITTED[self.host].error_pause)
+                # A missing ref is the host's answer about a repository, not a sign of strain.
+                pause = GIT_PERMITTED[self.host].error_pause if claim is not None else 0.0
+                if claim is not None and pause and not _MISSING_REF.search(stderr):
+                    claim.hold_until(time.time() + pause)
                 raise GitError(stderr.strip()[-2000:])
             _sleep(RETRY_WAITS[attempt])
         raise AssertionError("unreachable")

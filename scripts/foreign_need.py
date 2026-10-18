@@ -88,13 +88,18 @@ def partition_draws(seed: int, *, partitions: Path, org: str, source_root: str, 
     return out
 
 
-def against_runs(draws: dict[str, dict], runs: list[Path], *, org: str) -> list[str]:
-    """The stored runs each rebuilt partition is checked against: each half's training and
-    held-out counts as the run recorded them (`rq1_pilot.py`'s `corpora`). Refused on any
-    difference, or a run of no partition read here."""
+def against_runs(draws: dict[str, dict], runs: list[Path], *, org: str, size: int) -> list[str]:
+    """The stored runs each rebuilt partition is checked against: the split seed and size that
+    cut each draw, and each half's training and held-out counts as the run recorded them
+    (`rq1_pilot.py`'s `corpora`). Refused on any difference, or a run of no partition read here."""
     checked = []
     for path in runs:
         run = json.loads(path.read_text())
+        drew = (run.get("split_seed", SPLIT_SEED), run.get("train_size"))
+        if drew != (SPLIT_SEED, size):
+            raise ValueError(
+                f"{path} cut its draws at seed and size {drew}, not {(SPLIT_SEED, size)}"
+            )
         sources = {h: c["source"] for h, c in run["corpora"].items()}
         seeds = {m.group(1) for s in sources.values() if (m := PARTITION.search(s))}
         if len(seeds) != 1 or any("-plant" in s for s in sources.values()):
@@ -103,6 +108,8 @@ def against_runs(draws: dict[str, dict], runs: list[Path], *, org: str) -> list[
         if seed not in draws:
             raise ValueError(f"{path} is a run of partition {seed}, not one read here")
         for half, recorded in run["corpora"].items():
+            if half not in draws[seed]:
+                raise ValueError(f"{path} names a half {half!r} the partition does not have")
             mine = draws[seed][half]
             for key in ("train_examples", "held_out_examples"):
                 if recorded[key] != mine[key]:
@@ -132,7 +139,7 @@ def main() -> None:
             counted = list(pool.map(read, seeds))
     draws = {str(seed): halves for seed, halves in zip(seeds, counted, strict=True)}
     try:
-        checked = against_runs(draws, args.runs, org=org)
+        checked = against_runs(draws, args.runs, org=org, size=size)
     except ValueError as error:
         raise SystemExit(str(error)) from error
     need = {}

@@ -265,3 +265,10 @@ def test_a_host_that_sends_blobs_to_a_blobless_fetch_is_refused(
     with pytest.raises(notedb.GitError, match="sent blobs"):
         census.fetch_tag(tmp_path, "platform/x", Pacer(0), tmp_path / "l", blobless=True)
     assert sent.fetched
+
+
+def test_a_manifest_listing_a_project_twice_is_refused() -> None:
+    xml = b"""<manifest><default revision="refs/tags/android-15.0.0_r1" remote="aosp" />
+      <project name="platform/a" path="a" /><project name="platform/a" path="b" /></manifest>"""
+    with pytest.raises(SystemExit, match="twice"):
+        census.manifest_projects(xml)
