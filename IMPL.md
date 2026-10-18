@@ -8,12 +8,12 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **Qt's fetch at its granted terms** (IMPL 3d): pilot, train and dev windows (2024-10 to 2025-10)
-  over the REST API at 2 s, one client, from the WSL collector only (the address given to Qt's
-  admins; the script stops if it changes), into `datasets/gerrit-granted/qt`, apart from the
-  snapshots held from before the grant (`sphragis-data-local/qt/collect-qt.sh`, progress in its
-  `status.log`). Then `make backup-datasets`, build through freeze, the split check, the
-  development pilot for K and both cells' simulations.
+- **Qt's simulations** (IMPL 3d): the development pilot is read (research log, 2026-10-18; H1
+  supported on likelihood, K 10). On TIGRIS: the full simulation at the pilot's K and the null at
+  every other K in `K_GRID` (`partition_sensitivity.sbatch`, `METRIC=logprob_per_token`, no
+  placebo), then `k_coverage.py` for Qt's K, its cell's bounds into the gate, and Qt's planted
+  check 5 run. Qt's generation runs stay off the repository (their predictions can repeat review
+  text); the likelihood rescorings are committed.
 - **The GitHub replication family's collection**: pilot, train and dev windows (2024-10 to
   2025-10) for Apache, then LLVM, .NET, Grafana, one organization at a time, from the
   `data/github-collect` worktree into `~/ajsoftworks/sphragis-data-local/github/` (`collect.sh`,
@@ -48,6 +48,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    GitHub Pro (Student Pack) for required checks on papers `main`; sending the Fuchsia request,
    the Chromium follow-up and the AOSP request (drafts in the rit account), and an IRB0000393
    amendment naming the source that grants.
+   Also whether a published generation run keeps its `prediction` field: a prediction can repeat
+   the example's review comment word for word, which the protocol's "no review text is
+   published" excludes; Qt's generation runs are held back meanwhile (research log, 2026-10-18).
 
 ## Standing
 

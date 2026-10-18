@@ -1,0 +1,36 @@
+qt-a: {'source': 'train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-partition-qt-p20-s9-n1850/qt-a/refined', 'legacy_corpus': False, 'examples': 5691, 'dedup_removed': {'exact': 0, 'near_duplicate': 0, 'boilerplate': 0, 'shared_change_id': 0}, 'train_examples': 4537, 'held_out_examples': 484, 'held_out_changes': 240}
+qt-b: {'source': 'train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-partition-qt-p20-s9-n1850/qt-b/refined', 'legacy_corpus': False, 'examples': 3741, 'dedup_removed': {'exact': 0, 'near_duplicate': 0, 'boilerplate': 0, 'shared_change_id': 0}, 'train_examples': 2956, 'held_out_examples': 316, 'held_out_changes': 163}
+equalized training sets: {'qt-a': 1850, 'qt-b': 1850}
+outcome-neutral leakage:qt-a                     pass
+outcome-neutral leakage:qt-b->qt-a               pass
+outcome-neutral leakage:qt-a->qt-b               pass
+outcome-neutral leakage:qt-b                     pass
+reusing /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-qt-p20-s9-n1850/qt-a-s9 from /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-qt-p20-s9-n1850.json
+reusing /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-qt-p20-s9-n1850/qt-b-s9 from /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-qt-p20-s9-n1850.json
+evaluating with base
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   9%|▉         | 30/339 [00:00<00:01, 267.12it/s]Loading weights:  17%|█▋        | 57/339 [00:00<00:01, 244.32it/s]Loading weights:  24%|██▍       | 82/339 [00:00<00:01, 227.42it/s]Loading weights:  31%|███       | 105/339 [00:00<00:01, 224.04it/s]Loading weights:  40%|████      | 136/339 [00:00<00:00, 245.73it/s]Loading weights:  47%|████▋     | 161/339 [00:00<00:00, 245.26it/s]Loading weights:  55%|█████▍    | 186/339 [00:00<00:00, 245.54it/s]Loading weights:  65%|██████▍   | 220/339 [00:00<00:00, 269.83it/s]Loading weights:  73%|███████▎  | 248/339 [00:00<00:00, 260.54it/s]Loading weights:  83%|████████▎ | 280/339 [00:01<00:00, 271.87it/s]Loading weights:  91%|█████████ | 308/339 [00:01<00:00, 263.50it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 259.69it/s]
+evaluating with /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-qt-p20-s9-n1850/qt-a-s9
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:17, 19.71it/s]Loading weights:   8%|▊         | 28/339 [00:00<00:02, 154.41it/s]Loading weights:  15%|█▌        | 52/339 [00:00<00:01, 188.63it/s]Loading weights:  23%|██▎       | 78/339 [00:00<00:01, 213.10it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:00, 248.96it/s]Loading weights:  40%|████      | 137/339 [00:00<00:00, 247.44it/s]Loading weights:  48%|████▊     | 162/339 [00:00<00:00, 246.96it/s]Loading weights:  58%|█████▊    | 196/339 [00:00<00:00, 270.19it/s]Loading weights:  66%|██████▌   | 223/339 [00:00<00:00, 259.94it/s]Loading weights:  76%|███████▌  | 256/339 [00:01<00:00, 274.30it/s]Loading weights:  84%|████████▍ | 284/339 [00:01<00:00, 265.37it/s]Loading weights:  93%|█████████▎| 316/339 [00:01<00:00, 277.26it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 250.33it/s]
+evaluating with /home/ajb6289/ajsoftworks/sphragis-data/adapters/sphragis-adapters-partition-qt-p20-s9-n1850/qt-b-s9
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:   1%|          | 2/339 [00:00<00:20, 16.16it/s]Loading weights:   5%|▌         | 18/339 [00:00<00:03, 88.10it/s]Loading weights:  12%|█▏        | 42/339 [00:00<00:02, 142.16it/s]Loading weights:  19%|█▉        | 66/339 [00:00<00:01, 166.92it/s]Loading weights:  26%|██▋       | 89/339 [00:00<00:01, 186.72it/s]Loading weights:  33%|███▎      | 113/339 [00:00<00:01, 194.24it/s]Loading weights:  40%|████      | 137/339 [00:00<00:01, 199.08it/s]Loading weights:  47%|████▋     | 160/339 [00:00<00:00, 205.12it/s]Loading weights:  54%|█████▎    | 182/339 [00:01<00:00, 209.36it/s]Loading weights:  60%|██████    | 204/339 [00:01<00:00, 196.40it/s]Loading weights:  66%|██████▌   | 224/339 [00:01<00:00, 195.98it/s]Loading weights:  73%|███████▎  | 246/339 [00:01<00:00, 196.28it/s]Loading weights:  79%|███████▉  | 269/339 [00:01<00:00, 203.66it/s]Loading weights:  86%|████████▋ | 293/339 [00:01<00:00, 204.45it/s]Loading weights:  94%|█████████▎| 317/339 [00:01<00:00, 208.02it/s]Loading weights: 100%|██████████| 339/339 [00:01<00:00, 191.86it/s]
+base|qt-a                    EM=0.083 normEM=0.202 sim=0.738
+base|qt-b                    EM=0.070 normEM=0.263 sim=0.695
+adapter:qt-a|qt-a|s9         EM=0.357 normEM=0.372 sim=0.835
+adapter:qt-a|qt-b|s9         EM=0.339 normEM=0.386 sim=0.815
+adapter:qt-b|qt-a|s9         EM=0.333 normEM=0.353 sim=0.832
+adapter:qt-b|qt-b|s9         EM=0.326 normEM=0.377 sim=0.820
+RQ1 qt-a: matched - mismatched EM +0.025 [-0.006, +0.057] over 240 changes
+RQ1 qt-b: matched - mismatched EM -0.013 [-0.051, +0.027] over 163 changes
+GATE (pilot scale, not confirmatory): fail
+outcome-neutral positive_control:qt-a|s9         pass
+outcome-neutral manipulation:qt-a|s9             pass
+outcome-neutral positive_control:qt-b|s9         pass
+outcome-neutral manipulation:qt-b|s9             pass
+outcome-neutral leakage:qt-a                     pass
+outcome-neutral leakage:qt-b->qt-a               pass
+outcome-neutral leakage:qt-a->qt-b               pass
+outcome-neutral leakage:qt-b                     pass
+outcome-neutral non_degeneracy                   pass
+APPARATUS holds
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/rq1-partition-qt-p20-s9-n1850-rp1.0.json
+RQ1_PILOT_OK

@@ -31,7 +31,7 @@ uv run --no-sync python scripts/power_at_size.py \
   --report "${REPORT:?set REPORT to the test-window report of ORG}" \
   --simulation "$SIMULATION" \
   --pilot "${PILOT:?set PILOT to the pilot the simulation calibrated on}" \
-  --placebo "${PLACEBO:?set PLACEBO to the placebo run the simulation used}" \
+  ${PLACEBO:+--placebo "$PLACEBO"} \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --workers "$(nproc)" \

@@ -80,7 +80,9 @@ from sphragis.measure.stats import (
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--placebo", type=Path, required=True, help="a single-seed placebo run")
+# Exact match resamples a placebo run; a continuous metric resamples the pilot's runs and reads no
+# placebo, so an organization admitted after its placebo was run needs none.
+parser.add_argument("--placebo", type=Path, help="a single-seed placebo run (exact match only)")
 parser.add_argument("--corpus", type=Path, required=True, help="the corpus root, for projects")
 parser.add_argument("--org", required=True)
 parser.add_argument(
@@ -205,7 +207,7 @@ def averaged_pool(
 
 
 def pools(
-    placebo: Path,
+    placebo: Path | None,
     corpus: Path,
     org: str,
     admissible_path: Path,
@@ -223,6 +225,8 @@ def pools(
     # A binary score resamples the placebo run, its churn calibrated apart (--redraw); a continuous
     # one resamples the pilot's runs averaged, with their change-by-run sd as its churn.
     if metric == "exact_match":
+        if placebo is None:
+            raise SystemExit("exact match is simulated from a placebo run; no placebo was given")
         pool, noise, shrink = pilot_pool(placebo, corpus, org, metric), (0.0, 0.0), None
     elif pilot is None:
         raise SystemExit(f"{metric} is simulated from the pilot's runs; no pilot was given")
@@ -472,11 +476,12 @@ def main() -> None:
     pilot_decoder = pilot.get("decoder") or decoder(
         json.loads(Path(pilot["run_files"][0]).read_text())
     )
-    placebo_decoder = decoder(json.loads(args.placebo.read_text()))
-    if json.dumps(pilot_decoder, sort_keys=True) != json.dumps(placebo_decoder, sort_keys=True):
-        raise SystemExit(
-            f"{args.pilot} decoded as {pilot_decoder}, {args.placebo} as {placebo_decoder}"
-        )
+    if args.placebo is not None:
+        placebo_decoder = decoder(json.loads(args.placebo.read_text()))
+        if json.dumps(pilot_decoder, sort_keys=True) != json.dumps(placebo_decoder, sort_keys=True):
+            raise SystemExit(
+                f"{args.pilot} decoded as {pilot_decoder}, {args.placebo} as {placebo_decoder}"
+            )
     admissible = json.loads(args.admissible.read_text())
     projection = json.loads(args.projection.read_text())
     if projection["org"] != args.org or projection["test"] is None:
@@ -513,9 +518,12 @@ def main() -> None:
         raise SystemExit(
             f"the pilot read against SESOI {pilot['sesoi']}, the registry says {sesoi}"
         )
-    placebo = json.loads(args.placebo.read_text())
-    if not continuous and placebo.get("metric", "exact_match") != args.metric:
-        raise SystemExit(f"the placebo is scored on {placebo.get('metric', 'exact_match')}")
+    if not continuous:
+        if args.placebo is None:
+            raise SystemExit("exact match is simulated from a placebo run; no placebo was given")
+        placebo = json.loads(args.placebo.read_text())
+        if placebo.get("metric", "exact_match") != args.metric:
+            raise SystemExit(f"the placebo is scored on {placebo.get('metric', 'exact_match')}")
     pool, partitions, tried, noise, shrink = pools(
         args.placebo,
         args.corpus,
@@ -530,7 +538,7 @@ def main() -> None:
     # simulation reads at the levels the reading does.
     levels = pilot["levels"]
     report: dict = {
-        "placebo": str(args.placebo),
+        "placebo": None if args.placebo is None else str(args.placebo),
         "org": args.org,
         "inputs": {
             "runs": k_source,

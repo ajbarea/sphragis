@@ -87,6 +87,14 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
   the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
   older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).
+- [ ] **AJ's call: predictions in published generation runs.** A run's `prediction` field is model
+  text, and a prediction can repeat its example's review comment word for word, which
+  `docs/protocol.md` ("no review text is published") and the written grants exclude. Qt's
+  generation runs are held off the repository (`.gitignore`, guarded by
+  `tests/unit/test_published_review_text.py`); OpenStack's and Wikimedia's are committed with
+  their predictions, and so are thirteen Qt runs from the records held before its grant (the
+  test's `BEFORE_THE_RULE`). Open: strip `prediction` from every published run (the scores and ids stay),
+  or keep them; history keeps what is already pushed either way (research log, 2026-10-18).
 - [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
   (deleted or made private after the snapshot listed them) are counted `comment_error` and never
   built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
@@ -346,6 +354,17 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   only shared suffix is Python and Qt stops writing it mid-window.
 - [x] **The code side is at chance too** (0.511 and 0.513), read as convention shapes rather than
   identifiers, so the medium the study trains on is not visibly moving within its year.
+
+- [ ] **Relation chains as a dependence unit, before Stage 1.** Gerrit relation chains (Belhouchette
+  et al., ESEM 2026, arXiv 2607.20189; papers related-work intake, 2026-10-18) put 5% to 49% of a
+  project's changes in parent-linked sequences, and 97.3% in operations/puppet, one of Wikimedia's
+  two largest repositories here. A chain stays inside one half, so it cannot leak across own and
+  sibling, but its refinements are dependent beyond the change-id cluster the crossed bootstrap
+  resamples. On the development pilots: the share of eligible refinements in a chain, and whether
+  clustering over chains moves the interval; report it, and register chain clustering if it does.
+  The raw snapshots hold each change's `submission_id` (changes submitted together) but no commit
+  parents, so the paper's parent-link chain needs either that proxy, stated as one, or the
+  revisions' commit records fetched within each host's terms.
 
 ## Plan F — RQ2 positioning
 

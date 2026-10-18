@@ -94,6 +94,40 @@ def test_a_likelihood_simulation_refuses_inputs_it_cannot_read(
     assert not (tmp_path / "o.json").exists()
 
 
+def test_a_likelihood_simulation_reads_no_placebo(tmp_path: Path) -> None:
+    """Past every placebo check without one: the next input it fails on is the corpus."""
+    results = ROOT / "datasets/results"
+    argv = ["--corpus", str(tmp_path / "no-corpus"), "--org", "wikimedia"]
+    argv += ["--pilot", str(results / "partition-pilot-wikimedia-likelihood.json")]
+    argv += ["--projection", str(results / "project-windows-wikimedia-v3.json")]
+    argv += ["--admissible", str(results / "admissible-partitions-wikimedia.json")]
+    argv += ["--metric", "logprob_per_token", "--out", str(tmp_path / "o.json")]
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), *argv], cwd=ROOT, capture_output=True, text=True, check=False
+    )
+    assert result.returncode != 0
+    assert "placebo" not in result.stderr
+    assert "corpus not current" in result.stderr
+    assert not (tmp_path / "o.json").exists()
+
+
+def test_exact_match_without_a_placebo_is_refused(tmp_path: Path) -> None:
+    pilot = json.loads((ROOT / "datasets/results/partition-pilot-wikimedia-rp1.0.json").read_text())
+    (tmp_path / "pilot.json").write_text(json.dumps(pilot))
+    argv = ["--corpus", "c", "--org", "wikimedia", "--pilot", "pilot.json"]
+    argv += ["--projection", str(ROOT / "datasets/results/project-windows-wikimedia-v3.json")]
+    argv += ["--admissible", str(ROOT / "datasets/results/admissible-partitions-wikimedia.json")]
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), *argv, "--out", "o.json"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "no placebo was given" in result.stderr
+
+
 def test_a_continuous_pool_needs_the_pilot(tmp_path: Path) -> None:
     partition_sensitivity = _module()
     (tmp_path / "a.json").write_text("{}")
