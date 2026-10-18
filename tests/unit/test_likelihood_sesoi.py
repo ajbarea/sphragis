@@ -77,7 +77,7 @@ def test_a_plant_without_a_rate_keeps_the_control_rate(tmp_path, monkeypatch) ->
     _results(
         tmp_path,
         {"fraction": 1.0, "rate": None, "rate_95": None},
-        {"fraction": 0.5, "rate": 2.0, "rate_95": [1.5, 2.5]},
+        {"fraction": 0.5, "rate": 3.0, "rate_95": [2.8, 3.2]},
     )
     read = _sesoi(tmp_path, monkeypatch)
     assert read["rate_source"] == "positive_control"
@@ -94,3 +94,18 @@ def test_a_planted_artifact_at_another_dose_is_refused(tmp_path, monkeypatch) ->
     )
     with pytest.raises(SystemExit, match="the rule reads f = 1.0"):
         _sesoi(tmp_path, monkeypatch)
+
+
+def test_a_planted_interval_excluding_the_control_carries_the_planted_rate(
+    tmp_path, monkeypatch
+) -> None:
+    _results(
+        tmp_path,
+        {"fraction": 1.0, "rate": 1.5, "rate_95": [1.4, 1.6]},
+        {"fraction": 0.5, "rate": 3.0, "rate_95": [2.8, 3.2]},
+    )
+    read = _sesoi(tmp_path, monkeypatch)
+    assert read["rate_source"] == "planted"
+    assert read["sesoi"] == pytest.approx(0.015)
+    assert read["positive_control_rate"] == pytest.approx(2.0)
+    assert read["dose_check"]["holds_primary_rate"] is False
