@@ -1,4 +1,4 @@
-"""The SESOI in log-probability per token, carried from exact match by the positive control.
+"""The SESOI in log-probability per token, carried from exact match by the registered rate rule.
 
 No published threshold exists for a likelihood gain, so the SESOI keeps its cost-benefit meaning,
 one more exact refinement per hundred review comments (`decomposition.SESOI`), converted by the
@@ -31,11 +31,15 @@ from sphragis.provenance import provenance_header
 RESULTS = Path("datasets/results")
 PLANTED = RESULTS / "planted-exchange-openstack-quotes1.0.json"
 DOSE_CHECK = RESULTS / "planted-exchange-openstack-quotes0.5.json"
+#: The doses the rule names: the rate at f = 1.0, the dose check at f = 0.5 (research log, 2026-10-15).
+PLANTED_FRACTION, DOSE_FRACTION = 1.0, 0.5
 
 
-def planted_reading(path: Path) -> dict:
+def planted_reading(path: Path, fraction: float) -> dict:
     """A planted exchange artifact's rate and interval, either None when it read none."""
     art = json.loads(path.read_text())
+    if art["fraction"] != fraction:
+        raise SystemExit(f"{path} plants at f = {art['fraction']}, the rule reads f = {fraction}")
     return {
         "file": str(path),
         "fraction": art["fraction"],
@@ -88,12 +92,14 @@ def main() -> None:
     gains = [gain for path in files for gain in own_half_gains(path)]
     logprob, exact = fmean(g[0] for g in gains), fmean(g[1] for g in gains)
     control = logprob / exact
-    planted = planted_reading(args.planted)
-    dose = planted_reading(args.dose_check)
+    planted = planted_reading(args.planted, PLANTED_FRACTION)
+    dose = planted_reading(args.dose_check, DOSE_FRACTION)
     rate, source = chosen_rate(control, planted)
     dose_interval = dose["rate_95"]
     dose["holds_primary_rate"] = (
-        None if dose_interval is None else dose_interval[0] <= planted["rate"] <= dose_interval[1]
+        None
+        if dose_interval is None or planted["rate"] is None
+        else dose_interval[0] <= planted["rate"] <= dose_interval[1]
     )
     report = {
         "sesoi": SESOI * rate,
@@ -112,7 +118,7 @@ def main() -> None:
     print(
         f"SESOI {report['sesoi']:.6f} nats per token at the {source} rate {rate:.4f} "
         f"(positive control {control:.4f} over {len(gains)} arms in {len(files)} runs; "
-        f"planted {planted['rate']:.4f}, 95% {planted['rate_95']})"
+        f"planted {planted['rate']}, 95% {planted['rate_95']})"
     )
 
 

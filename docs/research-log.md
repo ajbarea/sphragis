@@ -9408,25 +9408,32 @@ the Stage 1 design history. `likelihood_sesoi.py` now applies the rule itself an
 rates (`likelihood-sesoi.json`: `rate_source` planted, `positive_control_rate` 1.8337, which
 reproduces the registered value).
 
-The dose check does not reproduce the rate: the f = 0.5 interval lies wholly above 1.756. It rests
+The dose check does not reproduce the rate: the f = 0.5 interval lies wholly above 1.756, and it
+contains the registered rate 1.834 that the f = 1.0 interval excludes. It rests
 on 11 exact refinements against the f = 1.0 reading's 94, and a ratio of sums whose denominator is
 that small is skewed upward, which fits its long upper tail, but the check was registered to show
 the rate does not depend on the dose and it does not show that. It is reported as a failed check,
 not explained away: it says the rate at small differences between adapters, which is what δ
 measures, may be higher than the f = 1.0 reading. A higher rate means a larger δ in s, so the
-f = 1.0 rate is the smaller margin of the two: a reading bounded below it is bounded below the
-other, and the detectable effects below are compared against the stricter δ.
+f = 1.0 rate is the smaller margin of the two. It is the stricter one for a bounded reading (a
+reading bounded below it is bounded below the other) and for the check that detectable effects lie
+below δ; for a meaningful reading, whose lower bound must clear δ, the smaller δ is the easier bar.
 
 Every bound on δ is recomputed: the two development pilots on the registered metric
 (`partition-pilot-{openstack,wikimedia}-likelihood.json`, rebuilt by their recorded inputs; at the
 old SESOI they reproduce the committed files to 1e-12, Wikimedia's drift being the fp32 rescoring
 of 2026-10-15), whose verdicts and `within_sesoi` readings do not change and whose sizing still
 clamps K at 10; K coverage, which reads no SESOI and keeps K = 10 and K = 20; and the two full
-simulations at those K, rerun at the new SESOI, whose results follow in this entry's PR.
+simulations at those K, rerun at the new SESOI, whose results follow in this entry's PR. The
+simulations K coverage reads besides those two (Wikimedia's at K = 10 and the null grid,
+`-k12-null` to `-k40-null`) keep the 0.0183 they were run at; the rule reads only their null
+false-positive rates, which do not depend on δ, so they are not rerun.
 
 The two full simulations at the new δ (`partition-sensitivity-openstack-rp1.0-logprob_per_token.json`,
 TIGRIS 293410, K = 10; `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json`, TIGRIS
-293411, K = 20; both pinned at 27eb4f3, 1,000 trials and 4,000 null trials a point) reproduce
+293411, K = 20; both pinned at 27eb4f3, the commit above before its rebase onto main, whose code
+differs from the rebased commit only in files neither simulation imports; 1,000 trials and 4,000
+null trials a point) reproduce
 every detectable effect, null false-positive rate and bounded-null share of their 2026-10-10 runs
 exactly, since none of them reads δ. The one reading δ moves is the share of null studies whose
 interval lies inside ±δ, in nats per token:

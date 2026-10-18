@@ -224,7 +224,8 @@ Decided by outcome-neutral check 5, under rules fixed before any likelihood resu
 convention planted in half of each half's training refinements was found on every planted run
 by the reference's mean log-probability per token, a strictly proper score, and on few by greedy
 exact match, which credits only an adapter's most likely output. Its SESOI is exact match's,
-carried by the adapters' gain over the base model on both (`likelihood-sesoi.json`); every
+carried at the exchange rate the registered rule picks, the planted quote-style rate since
+2026-10-16 (`likelihood-sesoi.json`); every
 reading against a SESOI uses the metric's own (`decomposition.metric_sesoi`). The interval,
 K and power figures in the sections below are measured on the registered metric; the exact-match
 figures they replace are in the research log.
