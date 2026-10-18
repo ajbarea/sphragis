@@ -36,3 +36,14 @@ def holds_grant(host: str) -> bool:
     except (OSError, UnicodeDecodeError) as error:
         raise SystemExit(f"refusing every written grant: {path} cannot be read ({error})") from None
     return host.lower() in {line.split("#", 1)[0].strip().lower() for line in lines}
+
+
+def unheld(host: str, written_grant: bool) -> str | None:
+    """Why a host whose permission is `written_grant` may not be read from this machine, None if
+    it may: the grant names one collector, and this machine's `grants_file()` does not list it."""
+    if not written_grant or holds_grant(host):
+        return None
+    return (
+        "its permission is a written grant to this study's collector, not to every clone of the"
+        f" code; the machine that holds it lists {host} in {grants_file()}"
+    )

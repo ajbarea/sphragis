@@ -85,9 +85,13 @@ def test_the_manifest_gives_each_project_its_default_revision_and_remote() -> No
     assert projects[2]["remote"] == "mirror"
 
 
-@pytest.mark.parametrize("node", ["include", "remove-project", "extend-project"])
+@pytest.mark.parametrize(
+    "node",
+    ["include", "remove-project", "extend-project", "submanifest", 'project name="y"><project'],
+)
 def test_a_manifest_that_reaches_other_files_is_refused(node: str) -> None:
-    xml = f'<manifest><default revision="r" /><{node} name="x" /></manifest>'.encode()
+    nested = "</project>" if node.startswith("project") else ""
+    xml = (f'<manifest><default revision="r" /><{node} name="x" />{nested}</manifest>').encode()
     with pytest.raises(SystemExit, match="read those first"):
         census.manifest_projects(xml)
 
@@ -131,27 +135,24 @@ class _Manifest:
         return self.xml if args[0] == "show" else b"0" * 40 + b"\n"
 
 
-def test_a_project_off_the_tag_or_named_outside_its_directory_is_not_read(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    xml = b"""<manifest>
-      <default revision="refs/tags/android-15.0.0_r1" remote="aosp" />
-      <project name="../escape" />
-      <project name="platform/off" revision="main" />
-      <project name="platform/elsewhere" remote="mirror" />
-      <project name="platform/read" />
-    </manifest>"""
+def _census(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, xml: bytes, fail) -> Path:
+    """`run_census` over a manifest with no network: `fail(project)` raises for a project or
+    returns the paths of its tree."""
     fetched: list[str] = []
+
+    class Tree:
+        def __init__(self, paths: list[str]) -> None:
+            self.paths = paths
 
     def fetch_tag(scratch, project, pacer, ledger, *, blobless):
         fetched.append(project)
-        if not blobless:
-            return _Manifest(xml)
-        raise notedb.GitError("no network in a unit test")
+        return _Manifest(xml) if not blobless else Tree(fail(project))
 
     monkeypatch.setattr(census, "fetch_tag", fetch_tag)
+    monkeypatch.setattr(census, "blobs", lambda repo: repo.paths)
     code_files = tmp_path / "code.json"
-    code_files.write_text(json.dumps({"source": {}, **census.code_files(LANGUAGES)}))
+    if not code_files.exists():
+        code_files.write_text(json.dumps({"source": {}, **census.code_files(LANGUAGES)}))
     out = tmp_path / "census.json"
     args = census.parser.parse_args(
         [
@@ -167,10 +168,100 @@ def test_a_project_off_the_tag_or_named_outside_its_directory_is_not_read(
         ]
     )
     census.run_census(args)
-    rows = {r["name"]: r for r in json.loads(out.read_text())["rows"]}
-    assert fetched == [census.MANIFEST_PROJECT, "platform/read"]
+    return out
+
+
+MANIFEST = b"""<manifest>
+  <default revision="refs/tags/android-15.0.0_r1" remote="aosp" />
+  <project name="../escape" />
+  <project name="platform/off" revision="main" />
+  <project name="platform/elsewhere" remote="mirror" />
+  <project name="platform/gone" />
+  <project name="platform/read" />
+</manifest>"""
+
+
+def _tree(project: str) -> list[str]:
+    if project == "platform/gone":
+        raise notedb.GitError("fatal: couldn't find remote ref refs/tags/android-15.0.0_r1")
+    return ["a.cpp", "b.h", "c.java"]
+
+
+def test_a_project_off_the_tag_named_outside_its_directory_or_tagless_is_not_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = _census(tmp_path, monkeypatch, MANIFEST, _tree)
+    report = json.loads(out.read_text())
+    rows = {r["name"]: r for r in report["rows"]}
     assert "outside its own repository" in rows["../escape"]["not_read"]
     assert "revision" in rows["platform/off"]["not_read"]
     assert "remote" in rows["platform/elsewhere"]["not_read"]
-    assert "no network" in rows["platform/read"]["not_read"]
+    assert "holds no" in rows["platform/gone"]["not_read"]
+    assert rows["platform/read"]["cpp_majority"] is True
+    assert report["cpp_majority"] == ["platform/read"]
     assert (tmp_path / "s" / "progress.jsonl").is_file()
+
+
+def test_a_failed_fetch_stops_the_census_and_is_asked_again_on_resume(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def flaky(project: str) -> list[str]:
+        if project == "platform/read":
+            raise notedb.GitError("fatal: unable to access: The requested URL returned error: 429")
+        return _tree(project)
+
+    with pytest.raises(SystemExit, match="census stopped"):
+        _census(tmp_path, monkeypatch, MANIFEST, flaky)
+    assert not (tmp_path / "census.json").exists()
+    progress = (tmp_path / "s" / "progress.jsonl").read_text()
+    assert "platform/read" not in progress and "platform/gone" in progress
+    out = _census(tmp_path, monkeypatch, MANIFEST, _tree)
+    assert json.loads(out.read_text())["cpp_majority"] == ["platform/read"]
+
+
+def test_progress_counted_under_another_definition_is_not_resumed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _census(tmp_path, monkeypatch, MANIFEST, _tree)
+    (tmp_path / "code.json").write_text(
+        json.dumps({"source": {"release": "other"}, "suffixes": [], "filenames": []})
+    )
+    with pytest.raises(SystemExit, match="was counted under"):
+        _census(tmp_path, monkeypatch, MANIFEST, _tree)
+
+
+def test_a_census_that_reads_nothing_or_another_tag_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    nothing = b"""<manifest><default revision="refs/tags/android-15.0.0_r1" remote="aosp" />
+      <project name="platform/off" revision="main" /></manifest>"""
+    with pytest.raises(SystemExit, match="no project was read"):
+        _census(tmp_path, monkeypatch, nothing, _tree)
+    other = MANIFEST.replace(b"android-15.0.0_r1", b"android-14.0.0_r1")
+    with pytest.raises(SystemExit, match="default revision"):
+        census.manifest_projects(other)
+
+
+def test_a_dotted_extension_matches_the_end_of_the_name() -> None:
+    rule = {"suffixes": [".cpp", ".h", ".h.in"], "filenames": []}
+    counted = census.classify(["config.h.in", "a.cpp", "notes.in"], rule)
+    assert (counted["code_files"], counted["cpp_files"]) == (2, 1)
+
+
+def test_a_host_that_sends_blobs_to_a_blobless_fetch_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Sent:
+        fetched = False
+
+        def fetch(self, *args: object) -> None:
+            self.fetched = True
+
+        def git(self, *args: str) -> bytes:
+            return b"commit\ntree\nblob\n"
+
+    sent = Sent()
+    monkeypatch.setattr(census.Repo, "open", staticmethod(lambda *a: sent))
+    with pytest.raises(notedb.GitError, match="sent blobs"):
+        census.fetch_tag(tmp_path, "platform/x", Pacer(0), tmp_path / "l", blobless=True)
+    assert sent.fetched

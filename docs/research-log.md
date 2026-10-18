@@ -9530,7 +9530,14 @@ The reading is recorded here as his, beside the words it rests on.
 (`grants.holds_grant`, so only on the collector that holds it) scoped to one ref,
 `refs/tags/android-15.0.0_r1` (`AOSP_CENSUS_TAG`): `refused_by_permission`, which every network
 command of the git route passes through, refuses `ls-remote`, object ids, change and branch refs,
-so the NoteDb route itself stays closed and reads no review record. The git route never asked for
+and any fetch other than `Repo.fetch`'s own arguments around at most a depth-1, blob-less read
+(`--tags`, `--all`, a refspec on the command line), so the NoteDb route itself stays closed and
+reads no review record. The host is one client at a time machine-wide: the git route now takes
+the REST route's host lock (`hosts.claim_host`, moved out of `cli`), and a failed request holds
+every later process quiet for five minutes. Pacing is the git route's: one git operation at a
+time, the next waiting out every HTTP request the last one made (`Pacer.charge`), so requests
+average no more than one a second; the two or three requests of one fetch go back to back. The
+written-grant check is one function for both routes (`grants.unheld`). The git route never asked for
 a held grant before; it now does for every host, and since `notedb.py` is a `FETCH_RULES` source
 its pin moves with this commit (no git-route month records the digest yet). android-review's
 REST permission, scoped to the projects the census names and the window item 4 fixes, comes in
@@ -9539,8 +9546,12 @@ the commit that records the census, before any of its changes is listed.
 **The census, fixed now** (`scripts/aosp_census.py`, before any tree is read):
 
 1. *Projects.* Every `<project>` in `default.xml` at the tag, in `platform/manifest`. One whose
-   revision or remote is not the manifest default's is recorded and not read; a manifest that
-   includes, removes or extends projects is refused until those files are read too.
+   revision or remote is not the manifest default's, or whose name could leave its scratch
+   directory, is recorded and not read, and so is one the host holds no tag for; a manifest whose
+   default revision is not the tag, or that includes, removes, extends or nests projects, is
+   refused. Any other fetch failure stops the run, since the host may be refusing the client,
+   and the next run asks that project again; no census is written that read no project, and a
+   project the host sent blobs to is refused.
 2. *Files.* Each project's tree at the tag, read by a depth-1, blob-less fetch (trees only, no
    file contents) paced at one request a second and ledgered per request
    (`datasets/logs/aosp-census/ledger.jsonl`). Symlinks and submodule entries are not files.
@@ -9552,7 +9563,8 @@ the commit that records the census, before any of its changes is listed.
    the 60 suffixes both kinds list, the exception drops the 28 another type holds as primary:
    `.md` is Markdown's and not GCC's machine descriptions, `.sql` is SQL's; `.rs` stays code,
    since XML lists it but not first. 938 suffixes and 178 file names; every suffix in
-   `CPP_SUFFIXES` is among them, which the script checks.
+   `CPP_SUFFIXES` is among them, which the script checks. A suffix of more than one dot (17 of
+   them, `.h.in`, `.cmake.in`) is matched on the end of the file name, as Linguist matches it.
 4. *C++-majority.* C++ files (`CPP_SUFFIXES`, the H2 estimand's definition, `.h` included and `.c`
    not) more than half a project's code files. A C project's headers therefore count toward C++,
    as they do in the estimand.
@@ -9566,4 +9578,6 @@ the commit that records the census, before any of its changes is listed.
 **What the pool must cover.** `scripts/foreign_need.py` reads each of Qt's 40 admissible
 partitions as `partition_run.sbatch` trains it (the placebo corpus at that seed, each half cut to
 N = 1,850 at `rq1_pilot.py`'s split seed) and records, per half, the C++ and other examples of
-its draw; the pool needs the largest of each over all 80 draws (`foreign-need-qt.json`).
+its draw; the pool needs the largest of each over all 80 draws (`foreign-need-qt.json`). Each
+rebuilt partition the 22 development runs trained on is checked against them: every half's
+training and held-out counts must equal the run's recorded ones (`--runs`).

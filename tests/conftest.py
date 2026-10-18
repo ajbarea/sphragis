@@ -266,6 +266,16 @@ def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
 
 
 @pytest.fixture(autouse=True)
+def _release_host_claims() -> Iterator[None]:
+    """A host claim is process-wide (`hosts.claim_host`), so each test gives back what it took."""
+    yield
+    from sphragis.corpus import hosts
+
+    for directory, host in list(hosts._CLAIMS):
+        hosts.release_host(host, directory)
+
+
+@pytest.fixture(autouse=True)
 def _no_held_grants(
     monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory
 ) -> None:

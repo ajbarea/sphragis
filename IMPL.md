@@ -51,8 +51,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
-   GitHub Pro (Student Pack) for required checks on papers `main`; sending the Fuchsia request
-   (draft in the rit account), and an IRB0000393 amendment naming AOSP as H2's foreign source.
+   GitHub Pro (Student Pack) for required checks on papers `main`. Fuchsia's discuss list was
+   asked on 2026-10-15 and has not answered; by item 1 of the H2 plan a grant before the first H2
+   development contrast would make Fuchsia the source in AOSP's place.
    Also whether a published generation run keeps its `prediction` field: a prediction can repeat
    the example's review comment word for word, which the protocol's "no review text is
    published" excludes; Qt's generation runs are held back meanwhile (research log, 2026-10-18).

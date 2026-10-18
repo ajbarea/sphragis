@@ -1003,24 +1003,78 @@ def _hold_grant(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, host: str) -> N
 TAG_REFSPEC = f"+{notedb.AOSP_CENSUS_TAG}:{notedb.AOSP_CENSUS_TAG}"
 
 
+#: `Repo.fetch`'s arguments around a census fetch's options, in its order.
+FETCH = ["fetch", "--quiet", "--no-tags", "--no-write-fetch-head"]
+STDIN = ["--stdin", "origin"]
+
+
 def test_a_scoped_grant_allows_a_fetch_of_its_own_refs_only(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _hold_grant(monkeypatch, tmp_path, "android.googlesource.com")
     allowed = notedb.refused_by_permission
     host = "android.googlesource.com"
-    assert allowed(host, ["fetch", "--stdin", "origin"], f"{TAG_REFSPEC}\n".encode()) is None
-    assert allowed(host, ["fetch"], f"{notedb.AOSP_CENSUS_TAG}\n".encode()) is None
+    tag = f"{TAG_REFSPEC}\n".encode()
+    assert allowed(host, [*FETCH, *STDIN], tag) is None
+    assert allowed(host, [*FETCH, *STDIN], f"{notedb.AOSP_CENSUS_TAG}\n".encode()) is None
+    assert allowed(host, [*FETCH, "--depth=1", "--filter=blob:none", *STDIN], tag) is None
     for refused in (
         b"+refs/changes/01/1/meta:refs/changes/01/1/meta\n",
         b"+refs/heads/main:refs/heads/main\n",
         b"+refs/tags/*:refs/tags/*\n",
         b"0123456789abcdef0123456789abcdef01234567\n",
         f"{TAG_REFSPEC}\n+refs/heads/main:refs/heads/main\n".encode(),
+        f"{TAG_REFSPEC} +refs/heads/main:refs/heads/main\n".encode(),
+        f"{notedb.AOSP_CENSUS_TAG}\u3000{notedb.AOSP_CENSUS_TAG}\n".encode(),
+        f"^{notedb.AOSP_CENSUS_TAG}\n".encode(),
         b"",
     ):
-        assert "outside its scope" in (allowed(host, ["fetch"], refused) or "")
+        assert "outside its scope" in (allowed(host, [*FETCH, *STDIN], refused) or ""), refused
     assert "outside its scope" in (allowed(host, ["ls-remote", "origin"], None) or "")
+    for widening in (
+        ["--tags"],
+        ["--all"],
+        ["--mirror"],
+        ["--depth=100"],
+        ["--depth=1", "--depth=1"],
+        ["--stdin", "origin"],
+    ):
+        args = [*FETCH, *widening, *STDIN]
+        assert "arguments" in (allowed(host, args, tag) or ""), widening
+    for reordered in ([*FETCH, "origin", "--stdin"], [*FETCH, *STDIN, "origin"], ["fetch", *STDIN]):
+        assert "arguments" in (allowed(host, reordered, tag) or ""), reordered
+
+
+def test_a_single_client_git_host_is_refused_while_another_process_holds_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sphragis.corpus import hosts
+
+    _hold_grant(monkeypatch, tmp_path, "android.googlesource.com")
+    monkeypatch.setattr(hosts, "LOCK_DIR", tmp_path / "locks")
+    (tmp_path / "locks").mkdir()
+    lock = tmp_path / "locks" / "android.googlesource.com.lock"
+    holder = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            f"import fcntl,time; f=open({str(lock)!r},'a+'); fcntl.flock(f, fcntl.LOCK_EX);"
+            " print('held', flush=True); time.sleep(30)",
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert holder.stdout is not None and holder.stdout.readline().strip() == "held"
+        repo = notedb.Repo.open(
+            tmp_path / "a.git", "https://android.googlesource.com/platform/manifest", Pacer(0)
+        )
+        _forbid_network_subprocess(monkeypatch)
+        with pytest.raises(SystemExit, match="another process"):
+            repo.fetch("census", [TAG_REFSPEC], "--depth=1")
+    finally:
+        holder.kill()
+        holder.wait()
 
 
 def test_a_scoped_grant_not_held_on_this_machine_is_refused(

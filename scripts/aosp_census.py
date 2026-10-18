@@ -10,10 +10,13 @@ SQL's `.sql`), or whose name Linguist lists as a programming language's filename
 `CMakeLists.txt`). A project is C++-majority when C++ files are more than half its code files.
 Symlinks and submodule entries are not files. Reads trees only, over git, never a blob or a
 review record: each project is a depth-1, blob-less fetch of the tag, the only ref
-`GIT_PERMITTED` opens on the host, paced at its one request a second and ledgered. A project
-whose name could leave its scratch directory, or whose manifest revision or remote is not the
-default's, is recorded and not read. Resumes from `--progress`. `code-files` reads YAML with
-PyYAML, which the experiment extra's tree installs.
+`GIT_PERMITTED` opens on the host (the manifest repository, whose `default.xml` is read, is
+fetched whole), paced at the host's floor and ledgered. A project whose name could leave its
+scratch directory, or whose manifest revision or remote is not the default's, is recorded and
+not read, as is one the host holds no tag for; any other fetch failure stops the run, and the
+next run asks that project again. Resumes from `--progress`, refusing rows counted under another
+tag, manifest or code-file definition. `code-files` reads YAML with PyYAML, which the
+experiment extra's tree installs.
 
     uv run --no-sync --no-active python scripts/aosp_census.py code-files \\
         --languages <linguist>/lib/linguist/languages.yml --tag v9.7.0 \\
@@ -30,6 +33,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import sys
 import xml.etree.ElementTree as ET
@@ -48,6 +52,8 @@ MANIFEST_PROJECT = "platform/manifest"
 REFSPEC = f"+{AOSP_CENSUS_TAG}:{AOSP_CENSUS_TAG}"
 SYMLINK, GITLINK = "120000", "160000"
 LINGUIST = "https://github.com/github-linguist/linguist"
+#: git's answer when a project has no such tag: the one fetch failure that is about the project.
+MISSING_TAG = re.compile(r"couldn't find remote ref")
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
 sub = parser.add_subparsers(dest="command", required=True)
@@ -57,7 +63,9 @@ code.add_argument("--tag", required=True, help="the Linguist release it was read
 code.add_argument("--out", type=Path, required=True)
 census = sub.add_parser("census")
 census.add_argument("--code-files", type=Path, required=True)
-census.add_argument("--scratch", type=Path, required=True, help="scratch repositories, emptied")
+census.add_argument(
+    "--scratch", type=Path, required=True, help="scratch repositories, each removed once read"
+)
 census.add_argument("--ledger", type=Path, required=True)
 census.add_argument("--progress", type=Path, help="one line a project read; default in --scratch")
 census.add_argument("--out", type=Path, required=True)
@@ -77,9 +85,18 @@ def code_files(languages: dict[str, Any]) -> dict[str, list[str]]:
 
 
 def classify(paths: list[str], definition: dict[str, list[str]]) -> dict[str, Any]:
-    """A tree's file counts: all files, code files and C++ files, and whether C++ is a majority."""
+    """A tree's file counts: all files, code files and C++ files, and whether C++ is a majority.
+
+    A listed extension of more than one dot (`.h.in`, `.cmake.in`) is matched on the file name's
+    end, as Linguist matches it; every other on the file's last suffix (`halves.suffix`)."""
     suffixes, names = set(definition["suffixes"]), set(definition["filenames"])
-    coded = [p for p in paths if suffix(p) in suffixes or PurePosixPath(p).name in names]
+    dotted = tuple(e for e in suffixes if e.count(".") > 1)
+
+    def is_code(path: str) -> bool:
+        name = PurePosixPath(path).name
+        return suffix(path) in suffixes or name in names or name.lower().endswith(dotted)
+
+    coded = [p for p in paths if is_code(p)]
     cpp = sum(1 for p in coded if suffix(p) in CPP_SUFFIXES)
     return {
         "files": len(paths),
@@ -92,13 +109,19 @@ def classify(paths: list[str], definition: dict[str, list[str]]) -> dict[str, An
 
 def manifest_projects(xml: bytes) -> tuple[list[dict[str, Any]], str | None]:
     """The manifest's projects, each with its revision and remote, its default's where it names
-    none, and the default's remote."""
+    none, and the default's remote. A default revision other than the tag is refused: the census
+    reads that tag's trees alone."""
     root = ET.fromstring(xml)
-    if any(root.findall(tag) for tag in ("include", "remove-project", "extend-project")):
-        raise SystemExit("the manifest includes, removes or extends projects; read those first")
+    reaching = ("include", "remove-project", "extend-project", "submanifest", ".//project/project")
+    if any(root.findall(tag) for tag in reaching):
+        raise SystemExit(
+            "the manifest includes, removes, extends or nests projects; read those first"
+        )
     default = root.find("default")
     revision = default.get("revision") if default is not None else None
     remote = default.get("remote") if default is not None else None
+    if revision != AOSP_CENSUS_TAG:
+        raise SystemExit(f"the manifest's default revision is {revision!r}, not {AOSP_CENSUS_TAG}")
     projects = []
     for node in root.findall("project"):
         projects.append(
@@ -130,9 +153,15 @@ def blobs(repo: Repo) -> list[str]:
 
 
 def fetch_tag(scratch: Path, project: str, pacer: Pacer, ledger: Path, *, blobless: bool) -> Repo:
+    """The tag fetched at depth 1: the manifest repository whole (its `default.xml` is read),
+    every other project's trees only, refused if the host sent a blob anyway."""
     repo = Repo.open(scratch / f"{project}.git", f"{HOST}/{project}", pacer, ledger)
     options = ("--depth=1", "--filter=blob:none") if blobless else ("--depth=1",)
     repo.fetch("census tree" if blobless else "census manifest", [REFSPEC], *options)
+    if blobless:
+        kinds = repo.git("cat-file", "--batch-all-objects", "--batch-check=%(objecttype)").split()
+        if b"blob" in kinds:
+            raise GitError(f"{project}: the host sent blobs to a blob-less fetch")
     return repo
 
 
@@ -146,16 +175,24 @@ def run_census(args: argparse.Namespace) -> None:
     xml = manifest.git("show", f"{AOSP_CENSUS_TAG}:default.xml")
     manifest_commit = manifest.git("rev-parse", f"{AOSP_CENSUS_TAG}^{{commit}}").decode().strip()
     projects, remote = manifest_projects(xml)
+    # What a progress row was counted under; a row counted under another is never resumed from.
+    under = {
+        "tag": AOSP_CENSUS_TAG,
+        "manifest_commit": manifest_commit,
+        "code_files_sha256": hashlib.sha256(args.code_files.read_bytes()).hexdigest(),
+    }
     done = {}
     if progress.exists():
         for line in progress.read_text().splitlines():
             row = json.loads(line)
+            if row.get("under") != under:
+                raise SystemExit(f"{progress} was counted under {row.get('under')}, not {under}")
             done[row["name"]] = row
     for number, project in enumerate(projects, 1):
         name = project["name"]
         if name in done:
             continue
-        row: dict[str, Any] = dict(project)
+        row: dict[str, Any] = {**project, "under": under}
         if not valid_project_name(name):
             row["not_read"] = "its name could resolve outside its own repository"
         elif project["revision"] != AOSP_CENSUS_TAG:
@@ -167,7 +204,15 @@ def run_census(args: argparse.Namespace) -> None:
                 repo = fetch_tag(args.scratch, name, pacer, args.ledger, blobless=True)
                 row.update(classify(blobs(repo), definition))
             except GitError as error:
-                row["not_read"] = str(error)[-300:]
+                shutil.rmtree(args.scratch / f"{name}.git", ignore_errors=True)
+                if not MISSING_TAG.search(str(error)):
+                    # Not an answer about the project, and the host may be refusing the client:
+                    # the run stops here, and a later one asks this project again.
+                    raise SystemExit(
+                        f"{number}/{len(projects)} {name}: fetch failed, census stopped; rerun "
+                        f"later to resume: {str(error)[-300:]}"
+                    ) from error
+                row["not_read"] = f"the host holds no {AOSP_CENSUS_TAG} for it"
             shutil.rmtree(args.scratch / f"{name}.git", ignore_errors=True)
         with progress.open("a") as handle:
             handle.write(json.dumps(row) + "\n")
@@ -175,6 +220,8 @@ def run_census(args: argparse.Namespace) -> None:
         print(f"{number}/{len(projects)} {name}: {row.get('cpp_share', row.get('not_read'))}")
         sys.stdout.flush()
     rows = [done[p["name"]] for p in projects]
+    if all("not_read" in r for r in rows):
+        raise SystemExit("no project was read; no census is written")
     majority = [r for r in rows if r.get("cpp_majority")]
     report = {
         "host": HOST,
