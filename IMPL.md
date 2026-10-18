@@ -71,7 +71,8 @@ TIGRIS/SPORC jobs now read and write under `$SPHRAGIS_DATA` (default
 `corpus-windows*` (what was `$HOME/corpus*`), and `hf-cache/hub` (`HF_HUB_CACHE`). `$HOME` itself
 now holds only system files and `~/ajsoftworks`. `datasets-backup/` holds the second copy of `datasets/gerrit` and `datasets/gerrit-control`: the
 raw REST snapshots are untracked and cannot be refetched, so `make backup-datasets` after every
-fetch, which copies and then compares every file by sha256. RC keeps no backups; the adapters
+fetch, which copies and then compares every file by sha256; `make backup-github` does the same for
+the GitHub family's corpus (`datasets-backup/gerrit-github`). RC keeps no backups; the adapters
 are not copied anywhere, since they regenerate from the corpus and a pinned commit.
 
 Pinned worktrees are created under
