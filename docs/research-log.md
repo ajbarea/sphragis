@@ -9512,3 +9512,23 @@ moved under collected months (a code change in #101, restored in #102, was the f
 collected months record, and `FETCH_RULES` to the code the git route's first fetch will record; a
 deliberate rules change updates its pin in the same commit as the rebuild it implies.
 `RULES_VERSION` stays unpinned, since a label change is re-refined from disk.
+
+### s split by token class on Qt: its development contrast is not vocabulary alone either (2026-10-18)
+
+`# research(2026-10)`. The split of 2026-10-15 read on Qt's 22 development runs, at the pilot's
+settings (`partition-pilot-qt-likelihood-split-<component>.json`, 95% crossed intervals; whole s
++0.0101 [+0.0042, +0.0172]). The parts add back to the whole within 1e-9:
+
+| Part of s | Qt |
+|---|---|
+| identifier | +0.0045 [-0.0000, +0.0104] |
+| other (not a name) | +0.0056 [+0.0019, +0.0093] |
+| end token | +0.0001 [-0.0004, +0.0006] |
+| changed by the revision | +0.0062 [+0.0023, +0.0104] |
+| copied from the reviewed hunk | +0.0038 [-0.0003, +0.0097] |
+| other and changed | +0.0044 [+0.0017, +0.0073] |
+
+The part outside names carries 55% of Qt's contrast and its interval excludes zero, as do the
+changed part and the other-and-changed part; the identifier part's lower bound sits just below
+zero (-0.00005). Unlike OpenStack and Wikimedia, Qt's copied part is not near zero: +0.0038, its
+interval just holding zero. Exploratory and development-window only, as on the other two.
