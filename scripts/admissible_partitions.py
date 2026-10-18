@@ -119,6 +119,9 @@ def main() -> None:
         "dedup_org": removed,
         "excluded_projects": excluded_projects(rows, WINDOWS["train"]),
     }
+    if short:
+        # Why there is no list: the search reached its bound before `--count` admissible seeds.
+        report["refused"] = {"count": args.count, "max_seed": args.max_seed, "last_seed": last}
     report["provenance"] = provenance_header()
     # A short search never takes the list's name, so nothing reads it as the organization's list.
     out = args.out.with_name(args.out.stem + "-refused.json") if short else args.out
