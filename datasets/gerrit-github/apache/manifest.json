@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-10-18T11:56:08.147598+00:00",
+  "git": {
+    "commit": "f4a9d5465c9255f5d008a4fdc7cb31bbc9d0ee7b",
+    "branch": "fix/github-rules-pin"
+  },
+  "python": "3.14.4",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "packages": {
+    "pygments": "2.21.0"
+  },
+  "org": "apache",
+  "counts": {
+    "pilot": 3017,
+    "train": 28988,
+    "dev": 3699,
+    "test": 0
+  },
+  "hashes": {
+    "pilot": "996e6e4060824e67d35bfaddfeb69d78d8e7cb70bc08eb10d2f9efb94cbef11c",
+    "train": "d5218c7157306f1686b84122f8567d451b249511d26ef8be8a80c62c34727567",
+    "dev": "a6b6b8e4012651cc2a93ac56cc821d35cd2d903e29b6ef5a92702c1ab5511316",
+    "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stats": {
+    "built_drops": {
+      "acknowledgement": 1694,
+      "author_comment": 86348,
+      "comment_error": 0,
+      "diff_error": 0,
+      "ill_posed_contraction": 2073,
+      "ill_posed_empty_after": 13713,
+      "ill_posed_empty_before": 2063,
+      "ill_posed_expansion": 1106,
+      "metadata_file": 0,
+      "no_anchored_hunk": 52386,
+      "no_line_anchor": 5306,
+      "no_successor": 11169,
+      "service_user": 5174
+    },
+    "refine_counts": {
+      "automated_comment": 12,
+      "acknowledgement_comment": 0,
+      "automated_only": 10,
+      "acknowledgement_only": 0,
+      "not_rework_successor": 0,
+      "suggested_edit": 12601,
+      "applied_fix": 0,
+      "successor_kind_unknown": 49905,
+      "address_residue": 0
+    },
+    "deduped": {
+      "exact": 1015,
+      "near_duplicate": 573,
+      "boilerplate": 2,
+      "shared_change_id": 0
+    },
+    "unassigned_changes": 0,
+    "build_rules": "3d29d529390c1eea",
+    "rules": "c2ddb5b5f6e99182"
+  }
+}

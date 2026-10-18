@@ -1,0 +1,26 @@
+{
+  "org": "apache",
+  "root": "/home/ajbar/ajsoftworks/sphragis-data-local/github/gerrit",
+  "splits": 300,
+  "percentile": 0.05,
+  "round_to": 50,
+  "smaller_half": {
+    "min": 13355,
+    "at_percentile": 13812,
+    "median": 14408,
+    "max": 14494
+  },
+  "training_size": 13800,
+  "provenance": {
+    "generated_at": "2026-10-18T18:02:52.468893+00:00",
+    "git": {
+      "commit": "cbfbc756d33ef6ef211ec2142f8d12b6305239ea",
+      "branch": "corpus/github-family-split"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
