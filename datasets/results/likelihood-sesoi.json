@@ -79,14 +79,10 @@
     "datasets/results/likelihood-partition-wikimedia-p9-s8-n1850-rp1.0.json"
   ],
   "provenance": {
-    "generated_at": "2026-10-16T04:02:38.754749+00:00",
+    "generated_at": "2026-10-18T04:49:39.863883+00:00",
     "git": {
-      "commit": "46e21271491f0b79494889b7c4f80be4b8e13892",
-      "branch": "measure/planted-exchange-quotes",
-      "uncommitted_code": [
-        "scripts/likelihood_sesoi.py"
-      ],
-      "uncommitted_code_sha256": "e21378cf4eed8739c87e04a85eb99d8d6a4ed6b54ad9e35a82a79202b76944d2"
+      "commit": "255c7ea59bdd5dd13c7c39b973b627956d509b18",
+      "branch": "measure/planted-exchange-quotes"
     },
     "python": "3.14.4",
     "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",

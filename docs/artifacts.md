@@ -474,7 +474,7 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 
 ## `scripts/likelihood_sesoi.py`
 
-The SESOI in log-probability per token, carried from exact match by the positive control.
+The SESOI in log-probability per token, carried from exact match by the registered rate rule.
 
 | artifact |
 |---|
