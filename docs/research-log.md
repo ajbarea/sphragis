@@ -9500,13 +9500,14 @@ OpenStack and Wikimedia keep their predictions is AJ's decision (ROADMAP).
 ### The GitHub route's digest restored; network-bound digests pinned (2026-10-18)
 
 `# research(2026-10)`. A comment edit to `sphragis/corpus/github.py` in #107 (2026-10-08) moved
-`GITHUB_RULES` from 56b5374b852d17d7, the digest every GitHub month was fetched under, to
-f89b7378b3675611, so the loader on `main` refused all of Apache's, LLVM's and .NET's months as
-"fetched under other GitHub route rules". The collector runs an older checkout and never saw it.
-`github.py` is restored to its 6804898 bytes, which brings the digest back; the comment's reading of
-GitHub's Acceptable Use Policies is the older one, and the 2026-10-08 entry above stays the
-current word. The loader then reads every Apache, LLVM and .NET month. It is the second time an edit to the route file staled the family (#102 was the first),
-so `tests/unit/corpus/test_rule_pins.py` now pins `BUILD_RULES`, `FETCH_RULES` and `GITHUB_RULES`
-to the digests the collected corpora carry; a deliberate rules change updates its pin in the same
-commit as the rebuild it implies. `RULES_VERSION` stays unpinned, since a label change is re-refined
-from disk.
+`GITHUB_RULES` from 56b5374b852d17d7, the digest every GitHub month records, to f89b7378b3675611,
+so the loader on `main` refused all of Apache's, LLVM's and .NET's months as "fetched under other
+GitHub route rules". The collector runs an older checkout and never saw it. `github.py` is
+restored to its 6804898 bytes, which brings the digest back; the comment's reading of GitHub's
+Acceptable Use Policies is the older one, and the 2026-10-08 entry above stays the current word.
+The loader then reads every Apache, LLVM and .NET month. It is the second time the route's digest
+moved under collected months (a code change in #101, restored in #102, was the first), so
+`tests/unit/corpus/test_rule_pins.py` pins `BUILD_RULES` and `GITHUB_RULES` to the digests the
+collected months record, and `FETCH_RULES` to the code the git route's first fetch will record; a
+deliberate rules change updates its pin in the same commit as the rebuild it implies.
+`RULES_VERSION` stays unpinned, since a label change is re-refined from disk.
