@@ -477,9 +477,7 @@ def main() -> None:
     )
     if args.placebo is not None:
         placebo_decoder = decoder(json.loads(args.placebo.read_text()))
-        if json.dumps(pilot_decoder, sort_keys=True) != json.dumps(
-            placebo_decoder, sort_keys=True
-        ):
+        if json.dumps(pilot_decoder, sort_keys=True) != json.dumps(placebo_decoder, sort_keys=True):
             raise SystemExit(
                 f"{args.pilot} decoded as {pilot_decoder}, {args.placebo} as {placebo_decoder}"
             )

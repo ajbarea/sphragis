@@ -87,6 +87,12 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
   the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
   older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).
+- [ ] **AJ's call: predictions in published generation runs.** A run's `prediction` field is model
+  text, and a prediction can repeat its example's review comment word for word, which
+  `docs/protocol.md` ("no review text is published") and the written grants exclude. Qt's
+  generation runs are held off the repository; OpenStack's and Wikimedia's are committed with
+  their predictions. Open: strip `prediction` from every published run (the scores and ids stay),
+  or keep them; history keeps what is already pushed either way (research log, 2026-10-18).
 - [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
   (deleted or made private after the snapshot listed them) are counted `comment_error` and never
   built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any

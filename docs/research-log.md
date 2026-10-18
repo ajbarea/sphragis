@@ -9454,3 +9454,38 @@ levels, so δ still serves as the equivalence margin. The share inside ±δ fall
 point only, OpenStack's 99% upper spread (0.999 and 0.9995, from 1.0), which leaves the
 2026-10-14 entry's statement that it is 1.0 everywhere true of Wikimedia and of OpenStack's other
 three points.
+
+### Qt's development pilot on its granted corpus: H1 supported on likelihood, K = 10 (2026-10-18)
+
+`# research(2026-10)`. Qt's 22 development runs, the k-th on the k-th admissible partition at
+training seed k and N = 1,850, each chained `partition_run` -> `decoder_check` ->
+`likelihood_score` at the registered decoder (TIGRIS 298699 to 298764, pinned at faa8e8d), read
+by `partition_pilot.py` in admissible order (`partition-pilot-qt-likelihood.json`,
+`partition-pilot-qt-rp1.0.json`):
+
+| metric | runs | estimate | 97.5% | verdict | 95% | verdict | changes (examples) | K sized |
+|---|---|---|---|---|---|---|---|---|
+| likelihood, nats per token (registered) | 22 | +0.0101 | [+0.0032, +0.0183] | supported | [+0.0042, +0.0172] | supported | 403 (800) | 10 |
+| exact match (secondary) | 22 | +0.0028 | [-0.0089, +0.0141] | inconclusive | [-0.0076, +0.0127] | inconclusive | 403 (800) | 13 |
+
+Every run's outcome-neutral battery was recorded and held, and the aggregation is reproducible.
+"Supported" is read here without bounds. Qt's simulation sets its detectable effects and its K
+under the coverage rule, and follows in this entry's PR. As for the other organizations, the
+development window does not stand for the test window.
+
+**Test window.** `window-report-qt-v3.json` reads the granted corpus; the committed
+`window-report-qt.json` (2026-09-23) read the held corpus from before the grant and stays as that
+record. `project-windows-qt-v3.json`: 2,951 training changes over 10 months, 0.968 captured, 304.7 a month; the development window predicted at 430 against 409 observed (+5.1%, inside the 15% tolerance, so the check holds); the test window projected at 3,589 changes over 12 months at a 2027-01 fetch.
+
+**A continuous simulation reads no placebo.** `partition_sensitivity.py` resamples the pilot's
+runs on a continuous metric and read the placebo run only to check its decoder. `--placebo` is now
+required only for exact match (still checked when given), so Qt needs no placebo run on its
+granted corpus, and the committed Qt placebo, from the held corpus, is not read.
+
+**Qt's generation runs are not committed.** Their `prediction` fields are model text, and a
+prediction can repeat the example's review comment word for word, which the grant ("no review
+text is published") and `docs/protocol.md` exclude. The likelihood rescorings, which carry ids and
+scores only, are committed and are the runs the pilot reads; the generation runs stay on the
+cluster and the collector machine. The pilot's battery check reads them through `scored_from`, so
+it reproduces only where they are held. Whether the generation runs already committed for
+OpenStack and Wikimedia keep their predictions is AJ's decision (ROADMAP).
