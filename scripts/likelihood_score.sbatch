@@ -23,7 +23,7 @@ source sphragis/experiment/cluster-env.sh
 ORG="${ORG:?set ORG to the organization}"
 repetition_penalty
 # KIND=partition (default): an H1 partition run, named as partition_run.sbatch names it.
-# KIND=placebo: a placebo_gate.sbatch run, which the H1 simulation reads, under its RUN_TAG.
+# KIND=placebo: a placebo_gate.sbatch run (the continuous H1 simulation reads none), under its RUN_TAG.
 case "${KIND:-partition}" in
   partition)
     PARTITION_SEED="${PARTITION_SEED:?set PARTITION_SEED of the stored run}"

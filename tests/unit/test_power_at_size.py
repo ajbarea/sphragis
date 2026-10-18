@@ -171,6 +171,7 @@ def _main(
     report: dict | None = None,
     rebuilt_noise: tuple[float, float] = (0.02, 0.13),
     pilot: str = "pilot.json",
+    placebo_arg: str | None = "placebo.json",
     **fields: Any,
 ) -> tuple[dict, dict]:
     """`main()` on a continuous simulation, its pool rebuilt in memory rather than from a corpus."""
@@ -213,7 +214,8 @@ def _main(
     monkeypatch.setattr(power_at_size, "pools", pools)
     monkeypatch.setattr(power_at_size, "ProcessPoolExecutor", ThreadPoolExecutor)
     argv = ["power_at_size.py", "--report", str(tmp_path / "report.json")]
-    argv += ["--simulation", str(tmp_path / "sim.json"), "--placebo", "placebo.json"]
+    argv += ["--simulation", str(tmp_path / "sim.json")]
+    argv += [] if placebo_arg is None else ["--placebo", placebo_arg]
     argv += ["--pilot", str(tmp_path / pilot), "--corpus", "c", "--admissible", "a.json"]
     monkeypatch.setattr(sys, "argv", [*argv, "--out", str(tmp_path / "out.json"), "--workers", "2"])
     try:
@@ -245,3 +247,19 @@ def test_a_rebuild_with_other_noise_or_a_read_on_another_metric_is_refused(
         _main(tmp_path, monkeypatch, pilot="other-pilot.json")
     with pytest.raises(SystemExit, match="the simulation's 0.5"):
         _main(tmp_path, monkeypatch, sesoi=0.5)
+
+
+def test_a_simulation_without_a_placebo_is_rerun_without_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A continuous simulation reads no placebo, so its power at size takes none either."""
+    out, _ = _main(tmp_path, monkeypatch, placebo_arg=None, placebo=None)
+    assert out["metric"] == "logprob_per_token"
+
+
+@pytest.mark.parametrize(("given", "recorded"), [("placebo.json", None), (None, "placebo.json")])
+def test_a_placebo_the_simulation_did_not_run_on_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, given: str | None, recorded: str | None
+) -> None:
+    with pytest.raises(SystemExit, match="was simulated on"):
+        _main(tmp_path, monkeypatch, placebo_arg=given, placebo=recorded)

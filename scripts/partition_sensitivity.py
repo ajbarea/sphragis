@@ -225,7 +225,8 @@ def pools(
     # A binary score resamples the placebo run, its churn calibrated apart (--redraw); a continuous
     # one resamples the pilot's runs averaged, with their change-by-run sd as its churn.
     if metric == "exact_match":
-        assert placebo is not None, "main refuses exact match without a placebo"
+        if placebo is None:
+            raise SystemExit("exact match is simulated from a placebo run; no placebo was given")
         pool, noise, shrink = pilot_pool(placebo, corpus, org, metric), (0.0, 0.0), None
     elif pilot is None:
         raise SystemExit(f"{metric} is simulated from the pilot's runs; no pilot was given")

@@ -90,8 +90,10 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [ ] **AJ's call: predictions in published generation runs.** A run's `prediction` field is model
   text, and a prediction can repeat its example's review comment word for word, which
   `docs/protocol.md` ("no review text is published") and the written grants exclude. Qt's
-  generation runs are held off the repository; OpenStack's and Wikimedia's are committed with
-  their predictions. Open: strip `prediction` from every published run (the scores and ids stay),
+  generation runs are held off the repository (`.gitignore`, guarded by
+  `tests/unit/test_published_review_text.py`); OpenStack's and Wikimedia's are committed with
+  their predictions, and so are thirteen Qt runs from the records held before its grant (the
+  test's `BEFORE_THE_RULE`). Open: strip `prediction` from every published run (the scores and ids stay),
   or keep them; history keeps what is already pushed either way (research log, 2026-10-18).
 - [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
   (deleted or made private after the snapshot listed them) are counted `comment_error` and never

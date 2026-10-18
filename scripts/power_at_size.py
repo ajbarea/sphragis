@@ -47,7 +47,11 @@ parser.add_argument("--report", type=Path, required=True, help="partition_pilot.
 parser.add_argument(
     "--simulation", type=Path, required=True, help="the partition_sensitivity.py artifact it read"
 )
-parser.add_argument("--placebo", type=Path, required=True, help="the simulation's placebo run")
+parser.add_argument(
+    "--placebo",
+    type=Path,
+    help="the simulation's placebo run (exact match; a continuous one has none)",
+)
 parser.add_argument("--pilot", type=Path, required=True, help="the simulation's pilot artifact")
 parser.add_argument("--corpus", type=Path, required=True, help="the corpus root, for projects")
 parser.add_argument("--admissible", type=Path, required=True, help="the admissible list")
@@ -161,8 +165,10 @@ def main() -> None:
             f"{recorded.get('planned_changes')} projected; only a window below it needs this"
         )
     # By name: the simulation records the path it ran on, which differs between machines.
-    if Path(simulation.get("placebo", "")).name != args.placebo.name:
-        raise SystemExit(f"{args.simulation} was simulated on {simulation.get('placebo')}")
+    recorded_placebo = simulation.get("placebo")
+    given = None if args.placebo is None else args.placebo.name
+    if (None if recorded_placebo is None else Path(recorded_placebo).name) != given:
+        raise SystemExit(f"{args.simulation} was simulated on {recorded_placebo}, not {given}")
     try:
         if recorded_pilot(simulation) != args.pilot.name:
             raise ValueError(f"the simulation calibrated on {recorded_pilot(simulation)}")
