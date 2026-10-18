@@ -127,20 +127,23 @@ def main() -> None:
         for key, row in rows[org].items():
             target = scored_target(tokenizer, row, prompt_builder=build_prompt)
             cells[org][key] = target_cells(tokenizer, row, target)
+    # H2's matched foreign arms, each scored on its one half (`walk`'s `foreign`).
+    foreign: dict[str, str] = run.get("foreign") or {}
     adapters = {
-        (org, seed): adapter_checked(run, args.adapters, org, seed)
-        for org in orgs
+        (trained, seed): adapter_checked(run, args.adapters, trained, seed)
+        for trained in [*orgs, *foreign]
         for seed in run["seeds"]
     }
-    # One model load an arm's model: the base, then each adapter, each scored on every half.
+    # One model load an arm's model: the base, then each adapter, each scored on every half it
+    # was scored on in the stored run.
     models: list[tuple[str | None, str | None, int | None]] = [(None, None, None)]
-    models += [(org, adapters[org, seed], seed) for org in orgs for seed in run["seeds"]]
+    models += [(t, adapters[t, seed], seed) for t in [*orgs, *foreign] for seed in run["seeds"]]
     results: dict[str, list[dict]] = {}
     dtypes: set[str] = set()
     for trained, adapter, seed in models:
         generator = HFGenerator(model_id=run["model_id"], adapter_path=adapter)
         dtypes.add(generator.computed_dtype)
-        for evaluated in orgs:
+        for evaluated in [foreign[trained]] if trained in foreign else orgs:
             arm = run_id(
                 EvalRun("base" if trained is None else f"adapter:{trained}", evaluated, seed)
             )
@@ -170,6 +173,9 @@ def main() -> None:
                 "max_new_tokens": run["max_new_tokens"],
                 "repetition_penalty": run.get("repetition_penalty"),
                 "corpora": run["corpora"],
+                **(
+                    {"foreign": foreign, "foreign_pool": run.get("foreign_pool")} if foreign else {}
+                ),
                 "training": run["training"],
                 "verdict": verdict,
                 "results": results,

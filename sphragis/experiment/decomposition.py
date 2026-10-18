@@ -166,6 +166,33 @@ def foreign_arm(source: str, sibling: str) -> str:
     return f"foreign-{source}-for-{sibling}"
 
 
+def matched_foreign_arms(
+    train: Mapping[str, Sequence[Mapping[str, Any]]],
+    pool: Sequence[Mapping[str, Any]],
+    *,
+    org: str,
+    source: str,
+    seed: int,
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, str]]:
+    """H2's two matched foreign arms for one run over `org`'s halves: per evaluated half, `pool`
+    drawn against the sibling half's training draw in `train` (`holdout.matched_foreign_draw`, C++
+    by `is_cpp`), and the half each arm is scored on, as `walk` takes them (`foreign`)."""
+    from sphragis.experiment.holdout import matched_foreign_draw
+
+    first, second = halves(org)
+    if set(train) != {first, second}:
+        raise ValueError(f"foreign arms are drawn for {org}'s halves, not {sorted(train)}")
+    rows: dict[str, list[dict[str, Any]]] = {}
+    scored_on: dict[str, str] = {}
+    for evaluated, sibling in ((first, second), (second, first)):
+        arm = foreign_arm(source, sibling)
+        rows[arm] = matched_foreign_draw(
+            train[sibling], pool, in_language=is_cpp, seed=seed, sibling=sibling
+        )
+        scored_on[arm] = evaluated
+    return rows, scored_on
+
+
 def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -> tuple[str, ...]:
     """`names` in registration order, refused if any is outside `registry` or repeated."""
     listed = list(names)

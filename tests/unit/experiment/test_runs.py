@@ -179,3 +179,13 @@ def test_an_item_without_one_masked_prompt_and_one_target_is_refused(labels) -> 
 
     with pytest.raises(ValueError):
         target_span(labels)
+
+
+def test_trained_keys_are_the_stored_runs_training_reports(tmp_path) -> None:
+    import json
+
+    from sphragis.experiment.runs import trained_keys
+
+    stored = tmp_path / "run.json"
+    stored.write_text(json.dumps({"training": {"qt-a-s1": {}, "foreign-aosp-for-qt-b-s1": {}}}))
+    assert trained_keys(stored) == {"qt-a-s1", "foreign-aosp-for-qt-b-s1"}

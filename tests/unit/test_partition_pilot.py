@@ -934,3 +934,66 @@ def test_a_planted_run_is_not_read_as_one_of_h1s_runs(
     )
     with pytest.raises(SystemExit, match="planted run"):
         _main(monkeypatch, argv)
+
+
+ARMS = {"foreign-aosp-for-qt-b": "qt-a", "foreign-aosp-for-qt-a": "qt-b"}
+
+
+def _h2_inputs(tmp_path: Path, foreign: dict | None = ARMS) -> list[str]:
+    """Qt's runs with their matched foreign arms: the sibling wins every C++ example, the foreign
+    arm every Python one, so H2 on C++ reads +1 and the whole hunk would read 0."""
+    argv = _inputs(tmp_path, "qt")
+    for k, path in enumerate(argv[: len(ADMISSIBLE)], start=1):
+        run = json.loads(Path(path).read_text())
+        results = {}
+        for window, sibling, first in (("qt-a", "qt-b", 0), ("qt-b", "qt-a", N)):
+            for trained in ("qt-a", "qt-b", decomposition.foreign_arm("aosp", sibling)):
+                results[run_id(EvalRun(f"adapter:{trained}", window, k))] = [
+                    {
+                        "id": f"qt:c{i}:f{i}.{'cpp' if i % 2 == 0 else 'py'}:1:1",
+                        "change_id": f"c{i}",
+                        "exact_match": float(
+                            (trained == sibling and i % 2 == 0)
+                            or (trained.startswith("foreign") and i % 2 == 1)
+                        ),
+                    }
+                    for i in range(first, first + N)
+                ]
+        Path(path).write_text(json.dumps({**run, "results": results, "foreign": foreign}))
+    return argv
+
+
+def test_an_h2_development_read_is_sibling_against_matched_foreign_on_cpp(
+    tmp_path, monkeypatch
+) -> None:
+    out = tmp_path / "out.json"
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    _main(monkeypatch, [*argv, "--resamples", "2000", "--out", str(out)])
+    report = json.loads(out.read_text())
+    assert (report["hypothesis"], report["foreign_source"]) == ("H2", "aosp")
+    assert report["per_run"] == pytest.approx([1.0] * len(ADMISSIBLE))
+    assert report["window"] == "development"
+
+
+@pytest.mark.parametrize(
+    ("foreign", "flags", "message"),
+    [
+        (None, [], "carries foreign arms None"),
+        ({"foreign-aosp-for-qt-b": "qt-a"}, [], "carries foreign arms"),
+        (ARMS, ["--planted", "x.json"], "takes no --replication"),
+    ],
+)
+def test_an_h2_read_refuses_runs_without_both_arms_or_h1_only_inputs(
+    tmp_path, monkeypatch, foreign, flags, message
+) -> None:
+    argv = [*_h2_inputs(tmp_path, foreign), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    with pytest.raises(SystemExit, match=message):
+        _main(monkeypatch, [*argv, *flags, "--out", str(tmp_path / "out.json")])
+
+
+def test_h2_is_qts_cell_and_needs_its_source(tmp_path, monkeypatch) -> None:
+    with pytest.raises(SystemExit, match="H2's cell is qt's"):
+        argv = [*_inputs(tmp_path, "openstack"), "--hypothesis", "H2", "--foreign-source", "aosp"]
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "out.json")])
+    with pytest.raises(SystemExit, match="H2 needs it"):
+        _main(monkeypatch, [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--out", "x.json"])

@@ -16,8 +16,10 @@ import torch
 
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.experiment.decomposition import FOREIGN_SOURCES, halves, is_cpp, matched_foreign_arms
 from sphragis.experiment.holdout import (
     equalize_training,
+    foreign_pool,
     holdout_by_change,
     verbatim_overlap,
     window_split,
@@ -44,7 +46,7 @@ from sphragis.experiment.neutral import (
     positive_control,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids
-from sphragis.experiment.runs import reused_adapter
+from sphragis.experiment.runs import reused_adapter, trained_keys
 from sphragis.experiment.training import supervised
 from sphragis.experiment.walk import gate, walk
 
@@ -116,6 +118,13 @@ parser.add_argument(
     help="the stored result whose adapters, saved under --adapters, are evaluated again untrained",
 )
 parser.add_argument(
+    "--foreign-pool",
+    type=Path,
+    help="H2: a built corpus root holding --foreign-source's refined months, the pool each half's "
+    "matched foreign arm is drawn from (holdout.matched_foreign_draw)",
+)
+parser.add_argument("--foreign-source", choices=FOREIGN_SOURCES, help="with --foreign-pool")
+parser.add_argument(
     "--dry-run",
     action="store_true",
     help="report the split and exit, before any model is loaded: runs on a login node",
@@ -170,6 +179,46 @@ if args.equalize_train:
         summary[org]["train_examples_equalized"] = len(train_rows[org])
     print(f"equalized training sets: { {o: len(train_rows[o]) for o in orgs} }", flush=True)
 
+# H2's matched foreign arms: per evaluated half, an adapter trained on the source's pool, as many
+# C++ examples as the sibling half's draw and the rest of N from its other files, drawn with the
+# run's training seed (research log, 2026-10-14). Scored on that half alone.
+foreign: dict[str, str] = {}
+foreign_record: dict | None = None
+if bool(args.foreign_pool) != bool(args.foreign_source):
+    raise SystemExit("--foreign-pool and --foreign-source come together")
+if args.foreign_pool:
+    if args.corpus or len(orgs) != 2 or orgs != halves(orgs[0].removesuffix("-a")):
+        raise SystemExit("foreign arms are drawn for one organization's two halves under --root")
+    if args.train_size is None or len(seeds) != 1:
+        raise SystemExit("foreign arms need --train-size and one seed, the partition run's own")
+    try:
+        pool, pool_removed = foreign_pool(args.foreign_pool, args.foreign_source)
+        drawn, foreign = matched_foreign_arms(
+            train_rows,
+            pool,
+            org=orgs[0].removesuffix("-a"),
+            source=args.foreign_source,
+            seed=seeds[0],
+        )
+    except ValueError as error:
+        raise SystemExit(f"foreign arms: {error}") from error
+    train_rows.update(drawn)
+    foreign_record = {
+        "source": args.foreign_source,
+        "pool": str(args.foreign_pool),
+        "pool_examples": len(pool),
+        "pool_dedup_removed": pool_removed,
+        "arms": {
+            arm: {
+                "evaluated": foreign[arm],
+                "in_language": sum(1 for row in rows if is_cpp(row)),
+                "other": sum(1 for row in rows if not is_cpp(row)),
+            }
+            for arm, rows in drawn.items()
+        },
+    }
+    print(f"foreign arms: {foreign_record['arms']}", flush=True)
+
 
 # Before any model loads, and so inside the dry run: the arms are paired by example id, so a
 # repeated id in an evaluation set is fatal, and checked only at scoring it cost job 148093
@@ -190,6 +239,17 @@ leakage = [
     )
     for org in orgs
     for source in orgs
+]
+# A foreign arm is credited only on its own half, so its draw is checked against that half.
+leakage += [
+    leakage_check(
+        train_rows[arm],
+        held_out[evaluated],
+        threshold=args.leakage_threshold,
+        max_rate=args.leakage_max_rate,
+        label=f"{arm}->{evaluated}",
+    )
+    for arm, evaluated in foreign.items()
 ]
 for check in leakage:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
@@ -223,6 +283,9 @@ if args.dry_run:
     raise SystemExit(0)
 
 
+stored_training = trained_keys(args.reuse_from) if args.reuse_from else set()
+
+
 class InProcessTrainer:
     """Trains one adapter, saves it, and releases the GPU before returning its path."""
 
@@ -233,7 +296,9 @@ class InProcessTrainer:
 
     def train(self, org: str, seed: int) -> str:
         target = args.adapters / f"{org}-s{seed}"
-        if args.reuse_from:
+        # Under --reuse-from every adapter is the stored run's, except a foreign arm it never
+        # trained: an H2 run reuses its H1 run's halves and trains only their matched arms.
+        if args.reuse_from and (org not in foreign or f"{org}-s{seed}" in stored_training):
             return self.reuse(org, seed, target)
         model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
@@ -300,7 +365,12 @@ def generator_for(adapter: str | None) -> HFGenerator:
 
 trainer = InProcessTrainer()
 results = walk(
-    orgs=orgs, seeds=seeds, windows=held_out, trainer=trainer, generator_for=generator_for
+    orgs=orgs,
+    seeds=seeds,
+    windows=held_out,
+    trainer=trainer,
+    generator_for=generator_for,
+    foreign=foreign,
 )
 for run, rows in results.items():
     n = len(rows)
@@ -346,6 +416,20 @@ for org in orgs:
                 label=f"{org}|s{seed}",
             )
         )
+# A foreign arm is not its half's own adapter, so test 2 does not apply to it; test 3 does.
+for arm in foreign:
+    for seed in seeds:
+        if f"{arm}-s{seed}" in trainer.reused_checks:
+            checks.append(trainer.reused_checks[f"{arm}-s{seed}"])
+            continue
+        checks.append(
+            manipulation_check(
+                trainer.losses[f"{arm}-s{seed}"],
+                epochs=int(TRAINING["epochs"]),
+                adapter_weight_norm=trainer.reports[f"{arm}-s{seed}"]["adapter_weight_norm"],
+                label=f"{arm}|s{seed}",
+            )
+        )
 checks += leakage
 checks.append(non_degeneracy(results))
 for check in checks:
@@ -371,6 +455,9 @@ args.out.write_text(
             "max_new_tokens": args.max_new_tokens,
             "repetition_penalty": sorted(repetition_penalties),
             "corpora": summary,
+            # Each matched foreign arm and the half it is scored on, and its pool; empty without H2.
+            "foreign": foreign,
+            "foreign_pool": foreign_record,
             "training": trainer.reports,
             "verdict": verdict,
             "outcome_neutral": {

@@ -772,7 +772,12 @@ echo "$@"
 """
 
 # A result a job reads before it claims its own, named from _JOB_DEFAULTS and the harness's RUN_TAG.
-_JOB_INPUTS = {"likelihood_score.sbatch": "rq1-partition-qt-p2-some-other-run-n1850-rp1.0.json"}
+_JOB_INPUTS = {
+    "likelihood_score.sbatch": "rq1-partition-qt-p2-some-other-run-n1850-rp1.0.json",
+    "foreign_arms.sbatch": "rq1-partition-qt-p2-some-other-run-n1850-rp1.0.json",
+}
+# Variables one job alone needs; set for every job, FOREIGN_SOURCE would name another run.
+_JOB_ENV = {"foreign_arms.sbatch": {"FOREIGN_SOURCE": "aosp", "FOREIGN_POOL": "/unused/pool"}}
 _STAGED = "an input the job reads\n"
 
 # What each job needs from its environment to reach its claim; a fake uv never reads the values.
@@ -844,7 +849,7 @@ def _run_job(script_name: str, root: Path, **env: str) -> subprocess.CompletedPr
         staged = _result_path(home, _JOB_INPUTS[script_name])
         if not staged.exists():
             staged.write_text(_STAGED)
-    return _run_prepared(script_name, home, checkout, env)
+    return _run_prepared(script_name, home, checkout, {**_JOB_ENV.get(script_name, {}), **env})
 
 
 def _run_prepared(
@@ -1539,3 +1544,32 @@ def test_the_likelihood_job_stops_without_the_decoder_checks_output(tmp_path: Pa
     assert "run decoder_check.sbatch with the same variables first" in result.stderr
     assert not _results(tmp_path), "a refused job must leave no claim"
     assert not (tmp_path / "home" / "uv.calls").exists()
+
+
+def test_the_likelihood_job_scores_the_foreign_arms_run_and_stops_without_it(
+    tmp_path: Path,
+) -> None:
+    home, checkout = _prepare(tmp_path)
+    env = {"FOREIGN_SOURCE": "aosp", "FAKE_ID": "JOB_ONE"}
+    refused = _run_prepared("likelihood_score.sbatch", home, checkout, env)
+    assert refused.returncode != 0
+    assert "-foreignaosp-rp1.0.json: run decoder_check.sbatch" in refused.stderr
+    staged = _result_path(home, "rq1-partition-qt-p2-some-other-run-n1850-foreignaosp-rp1.0.json")
+    staged.write_text(_STAGED)
+    scored = _run_prepared("likelihood_score.sbatch", home, checkout, env)
+    assert scored.returncode == 0, scored.stderr
+    assert "likelihood-partition-qt-p2-some-other-run-n1850-foreignaosp-rp1.0.json" in set(
+        _results(tmp_path)
+    )
+
+
+def test_the_foreign_arms_job_reuses_the_decoder_checked_run_and_refuses_a_plant(
+    tmp_path: Path,
+) -> None:
+    refused = _run_job("foreign_arms.sbatch", tmp_path, PLANT="0.5")
+    assert refused.returncode != 0 and "unplanted run only" in refused.stderr
+    done = _run_job("foreign_arms.sbatch", tmp_path, FAKE_ID="JOB_ONE")
+    assert done.returncode == 0, done.stderr
+    call = (tmp_path / "home" / "uv.calls").read_text()
+    assert "--reuse-from" in call and "rq1-partition-qt-p2-some-other-run-n1850-rp1.0.json" in call
+    assert "--foreign-pool /unused/pool --foreign-source aosp" in call

@@ -15,7 +15,7 @@ from typing import Any
 
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
-from sphragis.corpus.windows import WINDOWS
+from sphragis.corpus.windows import TEST_WINDOW_START, WINDOWS
 
 
 def holdout_by_change(
@@ -128,6 +128,21 @@ def matched_foreign_draw(
     draw = strata[True][: need[True]] + strata[False][: need[False]]
     random.Random(f"matched/{seed}/{sibling}/order").shuffle(draw)
     return draw
+
+
+def foreign_pool(root: Path, source: str) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """A foreign source's pool: its refined examples under `root`, deduplicated as one corpus.
+
+    Refused when empty, or when any row was created in the sealed test window or after it: a
+    foreign arm trains on its draw, and the window is read only after acceptance.
+    """
+    pool, removed = run_dedup(refined_examples(root, source))
+    if not pool:
+        raise ValueError(f"no refined examples for {source} under {root}")
+    late = sum(1 for row in pool if row["created"][:10] >= TEST_WINDOW_START)
+    if late:
+        raise ValueError(f"{source}'s pool holds {late} rows from the sealed window on")
+    return pool, removed
 
 
 SEALED_WINDOWS = ("test",)

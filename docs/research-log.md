@@ -9582,3 +9582,29 @@ N = 1,850 at `rq1_pilot.py`'s split seed) and records, per half, the C++ and oth
 its draw; the pool needs the largest of each over all 80 draws (`foreign-need-qt.json`). Each
 rebuilt partition the 22 development runs trained on is checked against them: every half's
 training and held-out counts must equal the run's recorded ones (`--runs`).
+### H2's matched foreign arms join the partition runs (2026-10-18)
+
+`# research(2026-10)`. Item 3 of the H2 plan (2026-10-14) in the runs, before any foreign pool
+exists or any arm is trained. An H2 run is one H1 partition run with two arms added:
+`scripts/foreign_arms.sbatch` reuses the halves' adapters from the run's decoder-checked
+result (`decoder_check.sbatch`'s `-rp` output), trains one adapter per evaluated half on
+`decomposition.matched_foreign_arms`' draw from the source's pool (`holdout.foreign_pool`: its
+refined examples deduplicated as one corpus, refused if any row reaches the sealed window),
+saves it beside the halves' adapters, and generates every arm again at the registered decoder
+(`rq1-<partition>-foreign<source>-rp<rp>.json`). Each arm draws as many C++ examples as the
+sibling half's training draw and the rest of N from the pool's other files
+(`holdout.matched_foreign_draw`, seeded by the run's training seed and the sibling), and is
+scored on its evaluated half alone (`walk`'s `foreign`), under the key
+`decomposition.matched_clusters` reads. The halves' adapters are the H1 run's own, so the
+sibling arm an H2 contrast reads is the one H1 read. Outcome-neutral test 4 checks each arm's
+draw against its half's held-out set at the sibling's threshold, and test 3 each arm's training;
+test 2 does not apply, since an arm is not its half's own adapter. `likelihood_score.sbatch`
+with `FOREIGN_SOURCE` scores the arms on their half.
+
+**The development read.** `partition_pilot.py --hypothesis H2 --foreign-source <source>` reads
+Qt's H2 cell over its runs as H1's is read (`h1_over_partitions`, the crossed runs-by-changes
+interval, K sized by `runs_needed`), on `partitions.h2_contrast`: each evaluated half's sibling
+adapter against the arm matched to that sibling, on the half's C++ examples only. It refuses a
+run that does not carry both arms for the source, any organization but Qt, the test window,
+and the inputs only H1 has registered (`--replication`, `--without`, `--planted`,
+`--sensitivity`). H2's bounds come from its own simulation, which reads this pilot and follows.

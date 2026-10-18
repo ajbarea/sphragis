@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from statistics import NormalDist, stdev, variance
 from typing import Any
 
@@ -27,7 +27,14 @@ from sphragis.experiment.cells import (
     level_key,
     same_calibration,
 )
-from sphragis.experiment.decomposition import SESOI, project_clusters, read_intervals
+from sphragis.experiment.decomposition import (
+    SESOI,
+    Restricted,
+    is_cpp,
+    matched_clusters,
+    project_clusters,
+    read_intervals,
+)
 from sphragis.experiment.neutral import source_root, source_windows
 from sphragis.measure.stats import (
     equal_halves,
@@ -65,6 +72,21 @@ COVERAGE_NULL_TRIALS = 4_000
 MAX_DROPPED_SHARE = 0.01
 
 Results = Mapping[str, Sequence[Mapping[str, Any]]]
+#: A run's contrast for one cell: one cluster list per evaluated half (`project_clusters` for H1).
+Contrast = Callable[..., list[list[Any]]]
+
+
+def h2_contrast(source: str) -> Contrast:
+    """H2's confirmatory contrast in one run: each evaluated half's sibling adapter against the
+    foreign arm matched to that sibling (`matched_clusters`), on the half's C++ examples
+    (`H2_POPULATION`)."""
+
+    def contrast(results: Results, *, org: str, seed: int | None, metric: str) -> list[list[Any]]:
+        return matched_clusters(
+            Restricted(results, is_cpp), org=org, source=source, seed=seed, metric=metric
+        )
+
+    return contrast
 
 
 def reproducibility(estimates: Sequence[float], *, xi: float = XI, beta: float = BETA) -> dict:
@@ -372,12 +394,17 @@ def on_common_examples(
 
 
 def common_runs(
-    runs: Sequence[tuple[Results, int]], *, org: str, metric: str = "exact_match"
+    runs: Sequence[tuple[Results, int]],
+    *,
+    org: str,
+    metric: str = "exact_match",
+    contrast: Contrast = project_clusters,
 ) -> tuple[list[list[list[Any]]], dict[str, int]]:
-    """Each run's own-against-sibling clusters on the examples every run scored."""
+    """Each run's clusters under `contrast` (own against sibling, for H1) on the examples every
+    run scored."""
     cut, examples = on_common_examples([results for results, _ in runs], condition="adapter")
     clusters = [
-        project_clusters(results, org=org, seed=seed, metric=metric)
+        contrast(results, org=org, seed=seed, metric=metric)
         for results, (_, seed) in zip(cut, runs, strict=True)
     ]
     return clusters, examples
@@ -394,8 +421,10 @@ def h1_over_partitions(
     resamples: int = 10_000,
     metric: str = "exact_match",
     sesoi: float = SESOI,
+    contrast: Contrast = project_clusters,
 ) -> dict[str, Any]:
-    """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order.
+    """One organization's H1 cell over its first `runs_fixed` partition runs, in admissible order;
+    with `contrast`, another cell read the same way (`h2_contrast`).
 
     `sesoi` is the metric's own: the readings and the reproducibility margin compare against it.
 
@@ -409,9 +438,12 @@ def h1_over_partitions(
     if len(runs) < runs_fixed:
         raise ValueError(f"{len(runs)} runs computed, fewer than the {runs_fixed} fixed")
     k = runs_fixed
-    clusters, examples = common_runs(runs[:k], org=org, metric=metric)
+    clusters, examples = common_runs(runs[:k], org=org, metric=metric, contrast=contrast)
     per_run = [equal_halves(run) for run in clusters]
-    left_out = [equal_halves(common_runs([run], org=org, metric=metric)[0][0]) for run in runs[k:]]
+    left_out = [
+        equal_halves(common_runs([run], org=org, metric=metric, contrast=contrast)[0][0])
+        for run in runs[k:]
+    ]
     estimate, draws = partitioned_crossed_draws(clusters, seed=bootstrap_seed, resamples=resamples)
     intervals = {c: percentile_interval(draws, c) for c in levels}
     registered = by_level(bounds) if bounds else {}

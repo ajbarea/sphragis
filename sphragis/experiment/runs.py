@@ -111,6 +111,11 @@ def merge(
     return merged, tuple(seeds)
 
 
+def trained_keys(stored: Path) -> set[str]:
+    """The adapters (`<arm>-s<seed>`) a stored run trained, from its training reports."""
+    return set(json.loads(stored.read_text())["training"])
+
+
 def reused_adapter(
     stored: Path, key: str, adapter: Path, *, train_size: int, rank: int
 ) -> tuple[dict[str, Any], dict[str, Any]]:

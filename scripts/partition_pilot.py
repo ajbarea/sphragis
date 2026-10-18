@@ -37,10 +37,14 @@ from sphragis.experiment.cells import (
     sensitivity_bounds,
 )
 from sphragis.experiment.decomposition import (
+    FOREIGN_SOURCES,
+    H2_ORGANIZATION,
     ORGANIZATIONS,
     REPLICATION_CONFIDENCE,
     REPLICATION_FAMILY,
     SESOI,
+    foreign_arm,
+    halves,
     holm_levels,
     metric_sesoi,
     registered_read,
@@ -56,6 +60,7 @@ from sphragis.experiment.neutral import (
 from sphragis.experiment.partitions import (
     eval_ids,
     h1_over_partitions,
+    h2_contrast,
     partition_run_windows,
     pilot_sizing,
     runs_needed,
@@ -112,6 +117,11 @@ parser.add_argument(
 )
 
 
+# H2 reads each run's sibling adapter against the foreign arm matched to it, on C++ examples
+# (`partitions.h2_contrast`), from runs that carry those arms (`foreign_arms.sbatch`). On the
+# development window only: its bounds come from its own simulation, which this read sizes.
+parser.add_argument("--hypothesis", choices=("H1", "H2"), default="H1")
+parser.add_argument("--foreign-source", choices=FOREIGN_SOURCES, help="with --hypothesis H2")
 parser.add_argument("--bootstrap-seed", type=int, default=TEST_BOOTSTRAP_SEED)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
@@ -153,6 +163,15 @@ def main() -> None:
     args = parser.parse_args()
     sesoi = metric_sesoi(args.metric)
     listings = sensitivity_listings(args.without, org=args.org)
+    h2 = args.hypothesis == "H2"
+    if h2 != bool(args.foreign_source):
+        raise SystemExit("--foreign-source comes with --hypothesis H2, and H2 needs it")
+    if h2 and args.org != H2_ORGANIZATION:
+        raise SystemExit(f"H2's cell is {H2_ORGANIZATION}'s, not {args.org}'s")
+    if h2 and (args.replication or args.without or args.planted or args.sensitivity):
+        raise SystemExit(
+            "an H2 development read takes no --replication, --without, --planted or --sensitivity"
+        )
     # Every check on the arguments alone, before any run is read.
     if args.replication != (args.org in REPLICATION_FAMILY):
         raise SystemExit(
@@ -204,6 +223,14 @@ def main() -> None:
         )
         if missing:
             raise SystemExit(f"{path}: arms {missing} carry no {args.metric}")
+        if h2:
+            first, second = halves(args.org)
+            arms = {
+                foreign_arm(args.foreign_source, second): first,
+                foreign_arm(args.foreign_source, first): second,
+            }
+            if run.get("foreign") != arms:
+                raise SystemExit(f"{path}: carries foreign arms {run.get('foreign')}, not {arms}")
         runs.append((run["results"], k))
         decoders.add(json.dumps(decoder(run), sort_keys=True))
     if len(decoders) != 1:
@@ -214,6 +241,8 @@ def main() -> None:
         window = "development"
     else:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
+    if h2 and window != "development":
+        raise SystemExit("H2 is read here on the development window only")
     if window == "test":
         # Fixed before the test window: who is read, its K, and the draws its interval takes.
         if not args.sizing:
@@ -362,6 +391,7 @@ def main() -> None:
         missing = [n for n in REGISTERED_SENSITIVITIES if n not in listings]
         if missing:
             raise SystemExit(f"a test-window read needs --without for {missing}")
+    contrast = {"contrast": h2_contrast(args.foreign_source)} if h2 else {}
     cell = h1_over_partitions(
         runs,
         org=args.org,
@@ -372,6 +402,7 @@ def main() -> None:
         resamples=args.resamples,
         metric=args.metric,
         sesoi=sesoi or SESOI,
+        **contrast,
     )
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"], xi=sesoi or SESOI)
     if sesoi is None:
@@ -427,6 +458,8 @@ def main() -> None:
             **{key: reduced[key] for key in fields},
         }
     head = {
+        "hypothesis",
+        "foreign_source",
         "run_files",
         "metric",
         "sesoi",
@@ -446,6 +479,8 @@ def main() -> None:
     if head & set(cell):
         raise SystemExit(f"cell keys {sorted(head & set(cell))} would overwrite the report's")
     report = {
+        "hypothesis": args.hypothesis,
+        "foreign_source": args.foreign_source,
         "run_files": [str(p) for p in args.runs],
         "metric": args.metric,
         "sesoi": sesoi,
@@ -471,7 +506,8 @@ def main() -> None:
     for c in levels:
         interval = cell["intervals"][c]
         print(
-            f"H1 {args.org} over {len(cell['per_run'])} partitions at {c}: {cell['estimate']:+.4f} "
+            f"{args.hypothesis} {args.org} over {len(cell['per_run'])} partitions at {c}: "
+            f"{cell['estimate']:+.4f} "
             f"[{interval['low']:+.4f}, {interval['high']:+.4f}] "
             f"{cell['verdicts'][c] if cell['verdicts'] else 'no registered SESOI'}"
         )

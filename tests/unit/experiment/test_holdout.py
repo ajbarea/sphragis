@@ -265,3 +265,31 @@ def test_a_pool_with_repeated_ids_is_refused() -> None:
     pool.append(dict(pool[0]))
     with pytest.raises(ValueError, match="repeats example ids"):
         matched_foreign_draw(_lang_rows("s", 2, 2), pool, in_language=_cc, seed=1, sibling="qt-a")
+
+
+def _pool_row(i: int, created: str) -> dict[str, Any]:
+    return {
+        "id": f"aosp:I{i}:src/f{i}.cpp:1:1",
+        "change_id": f"I{i}",
+        "project": "platform/x",
+        "created": f"{created} 00:00:00.000000000",
+        "before": f"int a{i} = {i};",
+        "after": f"int a{i} = {i} + 1; // reviewed {i * 7919}",
+        "comments": [f"use a const here, case {i}"],
+        "path": f"src/f{i}.cpp",
+    }
+
+
+def test_a_foreign_pool_reaching_the_sealed_window_is_refused(monkeypatch, tmp_path) -> None:
+    from sphragis.experiment import holdout
+
+    rows = [_pool_row(1, "2024-11-02"), _pool_row(2, holdout.TEST_WINDOW_START)]
+    monkeypatch.setattr(holdout, "refined_examples", lambda root, org: list(rows))
+    with pytest.raises(ValueError, match="1 rows from the sealed window"):
+        holdout.foreign_pool(tmp_path, "aosp")
+    monkeypatch.setattr(holdout, "refined_examples", lambda root, org: [])
+    with pytest.raises(ValueError, match="no refined examples"):
+        holdout.foreign_pool(tmp_path, "aosp")
+    monkeypatch.setattr(holdout, "refined_examples", lambda root, org: rows[:1])
+    pool, removed = holdout.foreign_pool(tmp_path, "aosp")
+    assert [r["id"] for r in pool] == [rows[0]["id"]] and isinstance(removed, dict)
