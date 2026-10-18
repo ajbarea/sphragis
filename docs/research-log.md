@@ -9471,7 +9471,8 @@ by `partition_pilot.py` in admissible order (`partition-pilot-qt-likelihood.json
 Every run's outcome-neutral battery was recorded and held, and the aggregation is reproducible.
 "Supported" is read here without bounds. The K sized is the floor: the formula gives 1.25 runs and
 `runs_needed` clamps it to 10. Qt's simulation, which sets its detectable effects and its K under
-the coverage rule, and its planted check 5 runs are queued on TIGRIS and follow in their own PR. As for the other organizations, the
+the coverage rule, and its planted check 5 runs are queued on TIGRIS and follow in their own PR. As
+for the other organizations, the
 development window does not stand for the test window.
 
 **Test window.** `window-report-qt-v3.json` reads the granted corpus; the committed
