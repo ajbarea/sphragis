@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 688 artifacts under
+repository. This page is generated from those scripts: 706 artifacts under
 67 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -359,6 +359,7 @@ An organization's K under the coverage rule, as the K source a test read takes (
 | artifact |
 |---|
 | `k-coverage-openstack-likelihood.json` |
+| `k-coverage-qt-likelihood.json` |
 | `k-coverage-wikimedia-likelihood.json` |
 
 ## `scripts/label_audit_agreement.py`
@@ -437,13 +438,21 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-openstack-p9-s7-n1850-plant0.25-rp1.0.json` |
 | `likelihood-partition-openstack-p9-s7-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-openstack-p9-s7-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p11-s3-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p11-s3-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p12-s4-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p12-s4-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p13-s5-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p13-s5-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p16-s6-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p16-s6-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p18-s7-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p18-s7-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p19-s8-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p19-s8-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p20-s9-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p20-s9-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p21-s10-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p21-s10-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p25-s11-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p26-s12-n1850-rp1.0.json` |
@@ -455,9 +464,11 @@ Score a stored H1 partition run by the log-probability of each held-out referenc
 | `likelihood-partition-qt-p36-s18-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p37-s19-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p39-s20-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p4-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p4-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p41-s21-n1850-rp1.0.json` |
 | `likelihood-partition-qt-p44-s22-n1850-rp1.0.json` |
+| `likelihood-partition-qt-p7-s2-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-qt-p7-s2-n1850-rp1.0.json` |
 | `likelihood-partition-wikimedia-p1-n1850-plant0.5-rp1.0.json` |
 | `likelihood-partition-wikimedia-p1-n1850-rp1.0.json` |
@@ -589,6 +600,13 @@ Operating characteristics of H1 over repeated partitions at the registered K, by
 | `partition-sensitivity-openstack-rp1.0.json` |
 | `partition-sensitivity-openstack-stopping.json` |
 | `partition-sensitivity-openstack.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-k12-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-k15-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-k20-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-k25-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-k30-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-k35-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token.json` |
 | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k12-null.json` |
 | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k15-null.json` |
 | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20-null.json` |
