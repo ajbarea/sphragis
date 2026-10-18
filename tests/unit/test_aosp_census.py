@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -118,3 +119,58 @@ def test_the_tree_is_read_blobless_and_counts_files_not_links(tmp_path: Path) ->
     assert sorted(census.blobs(repo)) == ["B.java", "lib/a.cpp"]
     held = repo.git("cat-file", "--batch-all-objects", "--batch-check=%(objecttype)").decode()
     assert "blob" not in held.split()
+
+
+class _Manifest:
+    """The manifest repository's two local reads, with no fetch behind them."""
+
+    def __init__(self, xml: bytes) -> None:
+        self.xml = xml
+
+    def git(self, *args: str) -> bytes:
+        return self.xml if args[0] == "show" else b"0" * 40 + b"\n"
+
+
+def test_a_project_off_the_tag_or_named_outside_its_directory_is_not_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    xml = b"""<manifest>
+      <default revision="refs/tags/android-15.0.0_r1" remote="aosp" />
+      <project name="../escape" />
+      <project name="platform/off" revision="main" />
+      <project name="platform/elsewhere" remote="mirror" />
+      <project name="platform/read" />
+    </manifest>"""
+    fetched: list[str] = []
+
+    def fetch_tag(scratch, project, pacer, ledger, *, blobless):
+        fetched.append(project)
+        if not blobless:
+            return _Manifest(xml)
+        raise notedb.GitError("no network in a unit test")
+
+    monkeypatch.setattr(census, "fetch_tag", fetch_tag)
+    code_files = tmp_path / "code.json"
+    code_files.write_text(json.dumps({"source": {}, **census.code_files(LANGUAGES)}))
+    out = tmp_path / "census.json"
+    args = census.parser.parse_args(
+        [
+            "census",
+            "--code-files",
+            str(code_files),
+            "--scratch",
+            str(tmp_path / "s"),
+            "--ledger",
+            str(tmp_path / "ledger.jsonl"),
+            "--out",
+            str(out),
+        ]
+    )
+    census.run_census(args)
+    rows = {r["name"]: r for r in json.loads(out.read_text())["rows"]}
+    assert fetched == [census.MANIFEST_PROJECT, "platform/read"]
+    assert "outside its own repository" in rows["../escape"]["not_read"]
+    assert "revision" in rows["platform/off"]["not_read"]
+    assert "remote" in rows["platform/elsewhere"]["not_read"]
+    assert "no network" in rows["platform/read"]["not_read"]
+    assert (tmp_path / "s" / "progress.jsonl").is_file()

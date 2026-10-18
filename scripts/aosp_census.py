@@ -11,8 +11,9 @@ SQL's `.sql`), or whose name Linguist lists as a programming language's filename
 Symlinks and submodule entries are not files. Reads trees only, over git, never a blob or a
 review record: each project is a depth-1, blob-less fetch of the tag, the only ref
 `GIT_PERMITTED` opens on the host, paced at its one request a second and ledgered. A project
-whose manifest revision or remote is not the default's is recorded and not read. Resumes from
-`--progress`. `code-files` reads YAML with PyYAML, which the experiment extra's tree installs.
+whose name could leave its scratch directory, or whose manifest revision or remote is not the
+default's, is recorded and not read. Resumes from `--progress`. `code-files` reads YAML with
+PyYAML, which the experiment extra's tree installs.
 
     uv run --no-sync --no-active python scripts/aosp_census.py code-files \\
         --languages <linguist>/lib/linguist/languages.yml --tag v9.7.0 \\
@@ -37,7 +38,7 @@ from typing import Any
 
 from sphragis.corpus.cli import _git_pacer
 from sphragis.corpus.halves import suffix
-from sphragis.corpus.notedb import AOSP_CENSUS_TAG, GIT_HOSTS, GitError, Repo
+from sphragis.corpus.notedb import AOSP_CENSUS_TAG, GIT_HOSTS, GitError, Repo, valid_project_name
 from sphragis.corpus.pacing import Pacer
 from sphragis.experiment.decomposition import CPP_SUFFIXES
 from sphragis.provenance import provenance_header
@@ -58,7 +59,7 @@ census = sub.add_parser("census")
 census.add_argument("--code-files", type=Path, required=True)
 census.add_argument("--scratch", type=Path, required=True, help="scratch repositories, emptied")
 census.add_argument("--ledger", type=Path, required=True)
-census.add_argument("--progress", type=Path, help="one line a project read; default beside --out")
+census.add_argument("--progress", type=Path, help="one line a project read; default in --scratch")
 census.add_argument("--out", type=Path, required=True)
 
 
@@ -139,7 +140,8 @@ def run_census(args: argparse.Namespace) -> None:
     definition = json.loads(args.code_files.read_text())
     pacer = _git_pacer(1.0)
     args.ledger.parent.mkdir(parents=True, exist_ok=True)
-    progress = args.progress or args.out.with_suffix(".progress.jsonl")
+    args.scratch.mkdir(parents=True, exist_ok=True)
+    progress = args.progress or args.scratch / "progress.jsonl"
     manifest = fetch_tag(args.scratch, MANIFEST_PROJECT, pacer, args.ledger, blobless=False)
     xml = manifest.git("show", f"{AOSP_CENSUS_TAG}:default.xml")
     manifest_commit = manifest.git("rev-parse", f"{AOSP_CENSUS_TAG}^{{commit}}").decode().strip()
@@ -154,7 +156,9 @@ def run_census(args: argparse.Namespace) -> None:
         if name in done:
             continue
         row: dict[str, Any] = dict(project)
-        if project["revision"] != AOSP_CENSUS_TAG:
+        if not valid_project_name(name):
+            row["not_read"] = "its name could resolve outside its own repository"
+        elif project["revision"] != AOSP_CENSUS_TAG:
             row["not_read"] = f"its manifest revision is {project['revision']!r}"
         elif project["remote"] != remote:
             row["not_read"] = f"its manifest remote is {project['remote']!r}"
