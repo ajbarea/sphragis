@@ -353,6 +353,17 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 - [x] **The code side is at chance too** (0.511 and 0.513), read as convention shapes rather than
   identifiers, so the medium the study trains on is not visibly moving within its year.
 
+- [ ] **Relation chains as a dependence unit, before Stage 1.** Gerrit relation chains (Belhouchette
+  et al., ESEM 2026, arXiv 2607.20189; papers related-work intake, 2026-10-18) put 5% to 49% of a
+  project's changes in parent-linked sequences, and 97.3% in operations/puppet, one of Wikimedia's
+  two largest repositories here. A chain stays inside one half, so it cannot leak across own and
+  sibling, but its refinements are dependent beyond the change-id cluster the crossed bootstrap
+  resamples. On the development pilots: the share of eligible refinements in a chain, and whether
+  clustering over chains moves the interval; report it, and register chain clustering if it does.
+  The raw snapshots hold each change's `submission_id` (changes submitted together) but no commit
+  parents, so the paper's parent-link chain needs either that proxy, stated as one, or the
+  revisions' commit records fetched within each host's terms.
+
 ## Plan F — RQ2 positioning
 
 - [x] **Source inference is RQ2's attack family**, read in full 2026-09-30. Hu et al., "Source
