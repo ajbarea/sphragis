@@ -27,9 +27,10 @@
     "per_example": 0.1290701359500684
   },
   "truth_shrinkage": 0.9580622033376103,
-  "sesoi": 0.018336619495924602,
-  "xi": 0.018336619495924602,
+  "sesoi": 0.016142401360357633,
+  "xi": 0.016142401360357633,
   "runs": 10,
+  "null_only": false,
   "levels": [
     0.975,
     0.95
@@ -257,8 +258,8 @@
         "0.95": 0.02175
       },
       "null_reads_absent": {
-        "0.975": 1.0,
-        "0.95": 1.0
+        "0.975": 0.999,
+        "0.95": 0.9995
       },
       "reproducibility_failure": 0.0,
       "by_level": {
@@ -311,17 +312,18 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-10T00:28:39.142160+00:00",
+    "generated_at": "2026-10-17T02:05:36.181344+00:00",
     "git": {
-      "commit": "e6fc180f66be7e414224f861f34e02777fc8431b",
+      "commit": "27eb4f388471f400fc66d2c9b2587fc8ce4107d7",
       "branch": "HEAD"
     },
     "python": "3.13.15",
-    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "platform": "Linux-6.18.55-1.el9.aarch64-aarch64-with-glibc2.34",
     "packages": {
       "torch": "2.14.0+cu130",
       "transformers": "5.17.0",
-      "peft": "0.20.0"
+      "peft": "0.20.0",
+      "pygments": "2.21.0"
     }
   }
 }
