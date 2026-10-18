@@ -83,6 +83,7 @@ def main() -> None:
     rows, removed = run_dedup(refined_examples(args.root, args.org))
     checked: list[dict] = []
     seed = args.start
+    short = False
     with ProcessPoolExecutor(
         args.workers,
         initializer=_init,
@@ -90,9 +91,8 @@ def main() -> None:
     ) as pool:
         while sum(c["qualifies"] for c in checked) < args.count:
             if seed > args.max_seed:
-                raise SystemExit(
-                    f"fewer than {args.count} admissible partitions by seed {seed - 1}"
-                )
+                short = True
+                break
             batch = list(range(seed, seed + args.batch))
             checked += list(pool.map(check, batch))
             seed += args.batch
@@ -102,7 +102,8 @@ def main() -> None:
                 flush=True,
             )
     admissible = [c["seed"] for c in checked if c["qualifies"]][: args.count]
-    last = admissible[-1]
+    # A search that ends short keeps every seed it checked, as the record of why there is no list.
+    last = seed - 1 if short else admissible[-1]
     report = {
         "org": args.org,
         "root": str(args.root.resolve()),
@@ -119,8 +120,12 @@ def main() -> None:
         "excluded_projects": excluded_projects(rows, WINDOWS["train"]),
     }
     report["provenance"] = provenance_header()
-    args.out.write_text(json.dumps(report, indent=2) + "\n")
-    print(f"{len(admissible)} admissible of {len(report['checked'])} checked; wrote {args.out}")
+    # A short search never takes the list's name, so nothing reads it as the organization's list.
+    out = args.out.with_name(args.out.stem + "-refused.json") if short else args.out
+    out.write_text(json.dumps(report, indent=2) + "\n")
+    print(f"{len(admissible)} admissible of {len(report['checked'])} checked; wrote {out}")
+    if short:
+        raise SystemExit(f"fewer than {args.count} admissible partitions by seed {last}")
 
 
 if __name__ == "__main__":
