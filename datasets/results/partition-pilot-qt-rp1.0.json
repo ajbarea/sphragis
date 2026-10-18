@@ -1,0 +1,249 @@
+{
+  "run_files": [
+    "datasets/results/rq1-partition-qt-p4-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p7-s2-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p11-s3-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p12-s4-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p13-s5-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p16-s6-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p18-s7-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p19-s8-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p20-s9-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p21-s10-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p25-s11-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p26-s12-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p27-s13-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p29-s14-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p32-s15-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p33-s16-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p35-s17-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p36-s18-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p37-s19-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p39-s20-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p41-s21-n1850-rp1.0.json",
+    "datasets/results/rq1-partition-qt-p44-s22-n1850-rp1.0.json"
+  ],
+  "metric": "exact_match",
+  "sesoi": 0.01,
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-qt.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/rq1-partition-qt-p4-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p7-s2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p11-s3-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p12-s4-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p13-s5-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p16-s6-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p18-s7-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p19-s8-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p20-s9-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p21-s10-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p25-s11-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p26-s12-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p27-s13-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p29-s14-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p32-s15-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p33-s16-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p35-s17-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p36-s18-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p37-s19-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p39-s20-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p41-s21-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-qt-p44-s22-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    }
+  ],
+  "org": "qt",
+  "bootstrap_seed": 7,
+  "estimate": 0.0028240322925359744,
+  "per_run": [
+    -0.0007485851096096507,
+    0.006122448979591827,
+    0.002234944542636841,
+    0.015832293549947807,
+    -2.6812526812525217e-05,
+    0.010943189631025474,
+    -0.018716257943701825,
+    0.001907681825924018,
+    0.006067580290825408,
+    0.01553230503721284,
+    -0.0015947467166979312,
+    0.004126370083816916,
+    0.00519190953973564,
+    0.005817822309257176,
+    0.017835917707548,
+    0.015000000000000013,
+    -0.006072874493927127,
+    -0.00687137024897938,
+    -0.011243828635132985,
+    0.015380533863024126,
+    0.0023991077912646486,
+    -0.01698891904115782
+  ],
+  "runs": 22,
+  "changes": 403,
+  "reproducibility": {
+    "runs": 22,
+    "variance_of_mean": 4.837575103480463e-06,
+    "critical_value": 1.3015888581350293e-05,
+    "holds": true
+  },
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": -0.008940886737530221,
+      "high": 0.014085702143962544
+    },
+    "0.95": {
+      "low": -0.007587382787065039,
+      "high": 0.01271398618567567
+    }
+  },
+  "verdicts": {
+    "0.975": "inconclusive",
+    "0.95": "inconclusive"
+  },
+  "within_sesoi": {
+    "0.975": false,
+    "0.95": false
+  },
+  "meaningful": {
+    "0.975": false,
+    "0.95": false
+  },
+  "p_one_sided": 0.302,
+  "bootstrap_se": 0.005184079071920311,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 800,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.010316329399382816,
+    "sd_upper": 0.01299264131455066,
+    "confidence": 0.9,
+    "formula": 12.969435568958763,
+    "runs": 13,
+    "clamped": null
+  },
+  "without": {},
+  "provenance": {
+    "generated_at": "2026-10-18T02:15:15.356504+00:00",
+    "git": {
+      "commit": "e169c159130b08c23611ebb6dde2d3f41cb22e2f",
+      "branch": "measure/qt-pilot"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

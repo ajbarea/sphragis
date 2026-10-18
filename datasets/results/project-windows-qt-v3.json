@@ -1,0 +1,37 @@
+{
+  "org": "qt",
+  "root": "/home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted",
+  "window_report": "datasets/results/window-report-qt-v3.json",
+  "collected_through": "2025-10",
+  "train": {
+    "months": 10,
+    "changes": 2951,
+    "captured": 0.9684984140126197,
+    "true_changes_per_month": 304.6984855425429
+  },
+  "dev_check": {
+    "predicted": 429.71926022069965,
+    "actual": 409,
+    "miss": 0.05065833794792091,
+    "tolerance": 0.15,
+    "reading": "holds"
+  },
+  "test": {
+    "months": 12,
+    "fetch": "2027-01",
+    "captured": 0.9815845564776268,
+    "projected_changes": 3589.047933488179
+  },
+  "provenance": {
+    "generated_at": "2026-10-18T02:25:05.283640+00:00",
+    "git": {
+      "commit": "e169c159130b08c23611ebb6dde2d3f41cb22e2f",
+      "branch": "measure/qt-pilot"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

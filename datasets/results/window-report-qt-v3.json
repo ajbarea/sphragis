@@ -1,0 +1,213 @@
+{
+  "qt": {
+    "months_built": 13,
+    "examples": 9971,
+    "after_dedup": 9449,
+    "dedup_removed": {
+      "exact": 311,
+      "near_duplicate": 211,
+      "boilerplate": 0,
+      "shared_change_id": 0
+    },
+    "windows": {
+      "pilot": {
+        "examples": 1147,
+        "changes": 368,
+        "content": {
+          ".cpp": 585,
+          ".qdoc": 109,
+          ".h": 85,
+          ".py": 56,
+          ".cmake": 48,
+          ".java": 37,
+          ".rst": 33,
+          ".qml": 27,
+          ".json": 23,
+          ".txt": 21,
+          ".mm": 20,
+          ".ts": 17,
+          ".md": 17,
+          "(none)": 13,
+          ".kt": 10,
+          ".groovy": 9,
+          ".in": 6,
+          ".ps1": 5,
+          ".lua": 5,
+          ".yaml": 5,
+          ".qdocinc": 5,
+          ".gradle": 3,
+          ".conf": 2,
+          ".bbappend": 2,
+          ".frag": 1,
+          ".qbs": 1,
+          ".xml": 1,
+          ".sh": 1
+        }
+      },
+      "train": {
+        "examples": 7493,
+        "changes": 2951,
+        "content": {
+          ".cpp": 3745,
+          ".qdoc": 1379,
+          ".h": 721,
+          ".cmake": 258,
+          ".qml": 235,
+          ".java": 171,
+          ".ts": 160,
+          ".txt": 140,
+          ".mm": 62,
+          ".py": 60,
+          ".md": 52,
+          ".rst": 43,
+          ".mustache": 42,
+          ".in": 34,
+          ".groovy": 34,
+          ".yaml": 32,
+          ".sh": 30,
+          ".json": 30,
+          ".qdocinc": 27,
+          "(none)": 24,
+          ".xml": 20,
+          ".qbs": 18,
+          ".qdocconf": 16,
+          ".cs": 16,
+          ".cc": 14,
+          ".gn": 12,
+          ".frag": 8,
+          ".js": 7,
+          ".pl": 7,
+          ".ui": 7,
+          ".svg": 7,
+          ".ps1": 7,
+          ".html": 6,
+          ".kt": 6,
+          ".glsl": 6,
+          ".go": 6,
+          ".lua": 4,
+          ".qrc": 4,
+          ".ini": 4,
+          ".bat": 4,
+          ".toml": 4,
+          ".bbappend": 3,
+          ".gradle": 3,
+          ".pro": 2,
+          ".bb": 2,
+          ".gni": 2,
+          ".pri": 2,
+          ".conf": 1,
+          ".tpl": 1,
+          ".c": 1,
+          ".bbclass": 1,
+          ".creatortheme": 1,
+          ".figmatokens": 1,
+          ".qtcreator": 1,
+          ".result": 1,
+          ".kts": 1,
+          ".prf": 1,
+          ".pyproject": 1,
+          ".qs": 1,
+          ".properties": 1,
+          ".1": 1,
+          ".spec": 1,
+          ".env": 1,
+          ".dockerfile": 1
+        }
+      },
+      "dev": {
+        "examples": 809,
+        "changes": 409,
+        "content": {
+          ".cpp": 367,
+          ".qdoc": 165,
+          ".h": 60,
+          ".ts": 29,
+          ".qml": 28,
+          ".mustache": 27,
+          ".md": 26,
+          ".txt": 18,
+          ".cmake": 14,
+          ".java": 11,
+          ".sh": 11,
+          ".cs": 7,
+          ".mm": 7,
+          "(none)": 5,
+          ".yaml": 4,
+          ".qdocinc": 3,
+          ".xml": 3,
+          ".qbs": 3,
+          ".html": 2,
+          ".bbappend": 2,
+          ".service": 2,
+          ".qdocconf": 2,
+          ".json": 2,
+          ".toml": 2,
+          ".in": 1,
+          ".log": 1,
+          ".glsllib": 1,
+          ".metainfo": 1,
+          ".bbclass": 1,
+          ".patch": 1,
+          ".js": 1,
+          ".ui": 1,
+          ".props": 1
+        }
+      }
+    },
+    "straddling_changes": 0,
+    "unassigned_changes": 0,
+    "near_duplicate_rate": {
+      "pilot->train": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.0005338315761377286,
+          "near_duplicates": 4
+        },
+        "0.6": {
+          "rate": 0.0009342052582410249,
+          "near_duplicates": 7
+        },
+        "0.5": {
+          "rate": 0.0024022420926197783,
+          "near_duplicates": 18
+        },
+        "max_similarity": 0.7924528301886793
+      },
+      "train->dev": {
+        "0.8": {
+          "rate": 0.0,
+          "near_duplicates": 0
+        },
+        "0.7": {
+          "rate": 0.004944375772558714,
+          "near_duplicates": 4
+        },
+        "0.6": {
+          "rate": 0.007416563658838072,
+          "near_duplicates": 6
+        },
+        "0.5": {
+          "rate": 0.016069221260815822,
+          "near_duplicates": 13
+        },
+        "max_similarity": 0.7872340425531915
+      }
+    },
+    "dedup_note": "dedup runs before the split at Jaccard 0.8, so the 0.8 rate is partly zero by construction; read the looser thresholds"
+  },
+  "provenance": {
+    "generated_at": "2026-10-18T02:24:04.503259+00:00",
+    "git": {
+      "commit": "e169c159130b08c23611ebb6dde2d3f41cb22e2f",
+      "branch": "measure/qt-pilot"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

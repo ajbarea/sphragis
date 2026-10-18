@@ -49,9 +49,13 @@ case "${SMOKE:-0}" in
   0) SMOKE_ARGS=() ;;
   *) echo "SMOKE must be 0 or 1, not $SMOKE" >&2; exit 1 ;;
 esac
+# PLACEBO: the single-seed placebo run exact match resamples; a continuous metric reads none.
+PLACEBO_ARGS=()
+if [ -n "${PLACEBO:-}" ]; then PLACEBO_ARGS=(--placebo "$PLACEBO")
+elif [ "$METRIC" = exact_match ]; then echo "set PLACEBO to a single-seed placebo run" >&2; exit 1; fi
 claim_result OUT "$SPHRAGIS_RESULTS/partition-sensitivity-$ORG$RESULT_SUFFIX.json"
 uv run --no-sync python scripts/partition_sensitivity.py \
-  --placebo "${PLACEBO:?set PLACEBO to a single-seed placebo run}" \
+  ${PLACEBO_ARGS[@]+"${PLACEBO_ARGS[@]}"} \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" --org "$ORG" \
   --pilot "${PILOT:-datasets/results/partition-pilot-$ORG$PILOT_TAG.json}" \
   --projection "datasets/results/project-windows-$ORG-v3.json" \
