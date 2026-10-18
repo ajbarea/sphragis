@@ -67,8 +67,8 @@ def metric_sesoi(metric: str) -> float | None:
     """A metric's registered SESOI, or None where none is registered.
 
     Exact match's is the cost-benefit constant; the per-token log-probability's is carried from it
-    at the registered exchange rate, and its artifact must exist. Total log-probability, a sensitivity,
-    has none.
+    at the registered exchange rate, and its artifact must exist. Total log-probability, a
+    sensitivity, has none.
     """
     if metric == "exact_match":
         return SESOI

@@ -31,7 +31,8 @@ from sphragis.provenance import provenance_header
 RESULTS = Path("datasets/results")
 PLANTED = RESULTS / "planted-exchange-openstack-quotes1.0.json"
 DOSE_CHECK = RESULTS / "planted-exchange-openstack-quotes0.5.json"
-#: The doses the rule names: the rate at f = 1.0, the dose check at f = 0.5 (research log, 2026-10-15).
+#: The doses the rule names: the rate at f = 1.0, the dose check at f = 0.5 (research log,
+#: 2026-10-15).
 PLANTED_FRACTION, DOSE_FRACTION = 1.0, 0.5
 
 
