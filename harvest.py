@@ -992,14 +992,12 @@ def render_index() -> str:
             "",
             _summary(writer),
             "",
-            "| artifact | |",
-            "|---|---|",
+            "| artifact |",
+            "|---|",
         ]
-        # Two per row: the list is long and every entry is short.
-        for start in range(0, len(names), 2):
-            pair = names[start : start + 2]
-            right = f"`{pair[1]}`" if len(pair) > 1 else ""
-            lines.append(f"| `{pair[0]}` | {right} |")
+        # One per row: a run-tagged name is long and never breaks, so two to a row
+        # would scroll the table sideways.
+        lines += [f"| `{name}` |" for name in names]
         lines.append("")
     if orphans:
         lines += [
