@@ -6,7 +6,12 @@ import gzip
 import json
 from pathlib import Path
 
-from sphragis.corpus.backports import branches_by_change, only_backport, possibly_backport
+from sphragis.corpus.backports import (
+    branches_by_change,
+    merge_up_projects,
+    only_backport,
+    possibly_backport,
+)
 
 
 def _raw(root: Path, org: str, changes: list[dict]) -> None:
@@ -47,10 +52,7 @@ def test_release_maintenance_and_deployment_branches_are_backports() -> None:
         # Qt's development lines and upstream-tracking lines.
         "dev",
         "qds/dev",
-        "130-based",
         "134-based-refactor",
-        "v3.8-based",
-        "release_21.1.0-based",
         "upstream-master",
         "refs/meta/config",
         "wip/figmastyle",
@@ -84,6 +86,43 @@ def test_release_maintenance_and_deployment_branches_are_backports() -> None:
         "scarthgap",
         "styhead",
         "walnascar",
+        "whinlatter",
+        "wrynose",
+        "dunfell",
         "2024.1",
+        # Qt WebEngine's maintained Chromium bases, and the other upstream-based lines.
+        "122-based",
+        "87-based",
+        "v3.8-based",
+        "release_21.1.0-based",
     ):
         assert only_backport({name}), name
+
+
+def test_a_project_that_merges_its_release_lines_up_is_read_as_merge_up(tmp_path: Path) -> None:
+    """Qt Creator lands a change on its release line and merges the line up into master; a merge
+    down into deployment, or into a feature branch, is not that model."""
+    up = "Merge remote-tracking branch 'origin/18.0'"
+    _raw(
+        tmp_path,
+        "qt",
+        [
+            {"project": "creator", "change_id": "I1", "branch": "master", "subject": up},
+            {"project": "creator", "change_id": "I2", "branch": "18.0", "subject": "Fix a"},
+            {"project": "fund", "change_id": "I3", "branch": "deployment",
+             "subject": "Merge branch 'master' into deployment"},
+            {"project": "swift", "change_id": "I4", "branch": "feature/mpu",
+             "subject": "Merge remote-tracking branch 'origin/master' into feature/mpu"},
+            {"project": "base", "change_id": "I5", "branch": "6.9",
+             "subject": "Merge remote-tracking branch 'origin/6.8'"},
+        ],
+    )  # fmt: skip
+    assert merge_up_projects(tmp_path, "qt") == frozenset({"creator"})
+
+
+def test_in_a_merge_up_project_a_release_change_is_the_original() -> None:
+    assert only_backport({"18.0"}) and not only_backport({"18.0"}, merge_up=True)
+    assert not possibly_backport({"18.0"}, merge_up=True)
+    # Picked between lines under one Change-Id, it may still be a backport.
+    assert possibly_backport({"18.0", "17.0"}, merge_up=True)
+    assert not only_backport({"18.0", "17.0"}, merge_up=True)

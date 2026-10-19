@@ -19,15 +19,38 @@ from sphragis.corpus.storage import iter_snapshot
 # snapshots): OpenStack `stable/`, `unmaintained/`, `bugfix/`, `release_N` and StarlingX `r/stx`;
 # MediaWiki `REL1_xx` (also under `fundraising/`), `wmf/` and `deploy/wmf/`, `wmf_deploy`,
 # `deployment` and a bare `stable`; Qt's version lines (`6.8`, `6.8.1`, Creator's `15.0`), `lts-`
-# lines, Design Studio's `qds/4.7` and `qds-4.6`, and the Yocto release series its layers keep
-# (`kirkstone`, `scarthgap`, `styhead`, `walnascar`); a bare version names a release line on
-# MediaWiki's hosts too (`2024.1`). Feature branches (`feature/`, `f/`) are development, as are
-# Qt's `dev`, `master` and `qds/dev`, and its `N-based` lines, which track a third-party upstream.
+# lines, Design Studio's `qds/4.7` and `qds-4.6`, the Yocto releases its layers keep, and the
+# `N-based` lines that maintain a Chromium base for Qt WebEngine (mostly `[Backport]` picks of
+# upstream fixes). A bare version names a release line on the other hosts too (`2024.1`).
+# Feature branches (`feature/`, `f/`) are development, as are Qt's `dev`, `master`, `qds/dev`,
+# `upstream-master` and `N-based-refactor`.
+#: The Yocto Project's releases from Dunfell (3.1) through those announced
+#: (wiki.yoctoproject.org/wiki/Releases, read 2026-10-19), so a layer's later line reads too.
+YOCTO = [
+    "dunfell",
+    "gatesgarth",
+    "hardknott",
+    "honister",
+    "kirkstone",
+    "langdale",
+    "mickledore",
+    "nanbield",
+    "scarthgap",
+    "styhead",
+    "walnascar",
+    "whinlatter",
+    "wrynose",
+    "blacksail",
+    "garburn",
+]
 BACKPORT = re.compile(
     r"^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\d.]+$|r/stx|(?:fundraising/)?REL\d"
     r"|(?:deploy/)?wmf/|wmf_deploy$|deployment$"
-    r"|\d+(?:\.\d+)+$|lts-\d|qds[/-]\d|(?:kirkstone|scarthgap|styhead|walnascar)$)"
+    r"|\d+(?:\.\d+)+$|lts-\d|qds[/-]\d|(?:v|release_)?[\d.]+-based$"
+    rf"|(?:{'|'.join(YOCTO)})$)"
 )
+#: A merge onto a branch, as Gerrit and git title it.
+MERGE_FROM = re.compile(r"^Merge (?:remote-tracking )?branch '(?:origin/)?([^']+)'")
 
 
 def raw_changes(root: Path, org: str) -> Iterator[dict]:
@@ -56,11 +79,27 @@ def branches_by_change(root: Path, org: str) -> dict[tuple[str, str], set[str]]:
     return index_changes(root, org)[0]
 
 
-def only_backport(names: set[str]) -> bool:
-    """On a backport branch and on no other: the lower bound, and the registered rule."""
-    return bool(names) and all(BACKPORT.match(name) for name in names)
+def merge_up_projects(root: Path, org: str) -> frozenset[str]:
+    """The projects whose development branch merges a release branch up into it (Qt Creator's
+    model, research log 2026-10-19): there a change lands on the release line first, so one on
+    release branches alone is the original, not a pick of one."""
+    found = set()
+    for change in raw_changes(root, org):
+        merged = MERGE_FROM.match(str(change.get("subject") or ""))
+        onto = str(change.get("branch") or "")
+        if merged and not BACKPORT.match(onto) and BACKPORT.match(merged.group(1)):
+            found.add(change["project"])
+    return frozenset(found)
 
 
-def possibly_backport(names: set[str]) -> bool:
-    """On a backport branch, whatever else: the upper bound."""
-    return any(BACKPORT.match(name) for name in names)
+def only_backport(names: set[str], *, merge_up: bool = False) -> bool:
+    """On a backport branch and on no other: the lower bound, and the registered rule. In a
+    merge-up project such a change is the original, so none is."""
+    return not merge_up and bool(names) and all(BACKPORT.match(name) for name in names)
+
+
+def possibly_backport(names: set[str], *, merge_up: bool = False) -> bool:
+    """On a backport branch, whatever else: the upper bound. In a merge-up project, on a backport
+    branch and another line too, as a pick between lines is."""
+    on_one = any(BACKPORT.match(name) for name in names)
+    return on_one and (not merge_up or len(names) > 1)

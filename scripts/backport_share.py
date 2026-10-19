@@ -25,6 +25,7 @@ from pathlib import Path
 from sphragis.corpus.backports import (
     BACKPORT,
     branches_by_change,
+    merge_up_projects,
     only_backport,
     possibly_backport,
 )
@@ -41,9 +42,12 @@ parser.add_argument("--out", type=Path, required=True)
 
 
 def bounds(
-    windows: Mapping[str, Iterable[Mapping]], branches: Mapping[tuple[str, str], set[str]]
+    windows: Mapping[str, Iterable[Mapping]],
+    branches: Mapping[tuple[str, str], set[str]],
+    merge_up: frozenset[str] = frozenset(),
 ) -> dict:
-    """Per window: examples, and those only (lower) or possibly (upper) on a backport branch."""
+    """Per window: examples, and those only (lower) or possibly (upper) on a backport branch,
+    read as a merge-up project's (`backports.merge_up_projects`) are."""
     out = {}
     for window in READ_WINDOWS:
         rows = list(windows.get(window, []))
@@ -51,8 +55,9 @@ def bounds(
         for row in rows:
             names = branches.get((row["project"], row["change_id"]), set())
             unmatched += not names
-            upper += possibly_backport(names)
-            lower += only_backport(names)
+            up = row["project"] in merge_up
+            upper += possibly_backport(names, merge_up=up)
+            lower += only_backport(names, merge_up=up)
         out[window] = {
             "examples": len(rows),
             "only_backport": lower,
@@ -72,7 +77,11 @@ def main() -> None:
         windows, _, _ = run_split(kept, WINDOWS)
         if windows.get("test"):
             raise SystemExit(f"{org}: the corpus holds test-window examples; it is sealed")
-        report["orgs"][org] = bounds(windows, branches)
+        merge_up = merge_up_projects(Path(root), org)
+        report["orgs"][org] = {
+            **bounds(windows, branches, merge_up),
+            "merge_up_projects": sorted(merge_up),
+        }
         print(org, report["orgs"][org])
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")
