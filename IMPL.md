@@ -27,6 +27,12 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   scoped to those projects and 2024-10-01 to 2025-03-26, their window listings order them, and
   the pool is fetched, built and deduplicated project by project until it covers every draw.
 
+- **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
+  beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
+  likelihood_score) and `partition_pilot.py --hypothesis H2` reads the development cell. Next:
+  the H2 simulation (`partition_sensitivity.py` on `h2_contrast`, C++ changes planned), once
+  AOSP's pool is built and Qt's 22 development runs carry their arms.
+
 ## Next
 
 1. Collect Apache, then LLVM, .NET, Grafana, as the GitHub replication family (pilot, train and

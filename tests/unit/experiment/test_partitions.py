@@ -6,6 +6,7 @@ import json
 import math
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from statistics import NormalDist, stdev
 
@@ -548,3 +549,68 @@ def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid
     assert {k: v for k, v in rerun.items() if k not in drop} == {
         k: v for k, v in committed.items() if k not in drop
     }
+
+
+def _h2_results(seed: int, sibling_wins: set[int], n: int = 20) -> dict:
+    """One H2 run on qt's halves: its halves' adapters on both halves, and each half's matched
+    foreign arm on it; even examples are C++, odd ones Python."""
+    from sphragis.experiment.decomposition import foreign_arm
+
+    results = {}
+    halves = ("qt-a", "qt-b")
+    for window, sibling, first in (("qt-a", "qt-b", 0), ("qt-b", "qt-a", n)):
+
+        def rows(win: Callable[[int], bool], first: int = first) -> list[dict]:
+            return [
+                {
+                    "id": f"qt:c{i}:src/f{i}.{'cpp' if i % 2 == 0 else 'py'}:1:1",
+                    "change_id": f"c{i}",
+                    "exact_match": 1.0 if win(i) else 0.0,
+                }
+                for i in range(first, first + n)
+            ]
+
+        for trained in halves:
+            wins = (lambda i: i in sibling_wins) if trained == sibling else (lambda i: False)
+            results[run_id(EvalRun(f"adapter:{trained}", window, seed))] = rows(wins)
+        # The foreign arm wins every Python example, which the C++ population never reads.
+        arm = foreign_arm("aosp", sibling)
+        results[run_id(EvalRun(f"adapter:{arm}", window, seed))] = rows(lambda i: i % 2 == 1)
+    return results
+
+
+def test_the_h2_cell_reads_sibling_against_matched_foreign_on_cpp_examples_only() -> None:
+    from sphragis.experiment.partitions import h2_contrast
+
+    every_cpp = {i for i in range(40) if i % 2 == 0}
+    runs = [(_h2_results(1, every_cpp), 1), (_h2_results(2, set()), 2)]
+    cell = h1_over_partitions(
+        runs,
+        org="qt",
+        runs_fixed=2,
+        levels=[0.95],
+        bounds=None,
+        bootstrap_seed=0,
+        resamples=500,
+        contrast=h2_contrast("aosp"),
+    )
+    assert cell["per_run"] == pytest.approx([1.0, 0.0])
+    assert cell["estimate"] == pytest.approx(0.5)
+    assert cell["changes"] == 20
+
+
+def test_the_h2_cell_refuses_a_run_without_its_foreign_arms() -> None:
+    from sphragis.experiment.partitions import h2_contrast
+
+    runs = [(_results(1, {"org-a": set(), "org-b": set()}, org="qt"), 1)] * 2
+    with pytest.raises((KeyError, ValueError)):
+        h1_over_partitions(
+            runs,
+            org="qt",
+            runs_fixed=2,
+            levels=[0.95],
+            bounds=None,
+            bootstrap_seed=0,
+            resamples=500,
+            contrast=h2_contrast("aosp"),
+        )

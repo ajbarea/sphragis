@@ -35,20 +35,30 @@ def walk(
     windows: Mapping[str, Sequence[Mapping[str, Any]]],
     trainer: Trainer,
     generator_for: Callable[[str | None], Generator],
+    foreign: Mapping[str, str] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Every evaluation in the grid, keyed by `run_id`.
 
     Each adapter is trained once and evaluated on every organization's window, because
     training it per evaluation would spend the budget twice and, at a different seed,
-    silently compare two different adapters.
+    silently compare two different adapters. `foreign` names further adapters, each with the one
+    window it is scored on: H2's matched foreign arms (`decomposition.foreign_arm`), trained once
+    per seed like an organization's and keyed `adapter:<arm>|<window>|s<seed>`.
     """
     missing = [org for org in orgs if org not in windows]
     if missing:
         raise ValueError(f"no evaluation window for {', '.join(missing)}")
     _require_registered_seeds(seeds)
+    foreign = dict(foreign or {})
+    if set(foreign) & set(orgs):
+        raise ValueError(f"a foreign arm shares an organization's name: {sorted(foreign)}")
+    outside = sorted({w for w in foreign.values() if w not in orgs})
+    if outside:
+        raise ValueError(f"a foreign arm is scored on {outside}, not on an organization's window")
 
     adapters = {
-        (run.org, run.seed): trainer.train(run.org, run.seed) for run in training_runs(orgs, seeds)
+        (run.org, run.seed): trainer.train(run.org, run.seed)
+        for run in training_runs([*orgs, *foreign], seeds)
     }
     # Distinct handles, checked rather than assumed. A trainer that names an adapter by
     # its output directory without the seed returns one handle for three runs, and every
@@ -68,7 +78,10 @@ def walk(
     # Grouped on the run, not on the adapter handle, so equal handles can never alias two
     # conditions onto one generator. `None` is the base model.
     by_generator: dict[tuple[str, int] | None, list[EvalRun]] = {}
-    for run in eval_runs(orgs, seeds):
+    foreign_runs = [
+        EvalRun(f"adapter:{arm}", w, seed) for arm, w in foreign.items() for seed in seeds
+    ]
+    for run in [*eval_runs(orgs, seeds), *foreign_runs]:
         key = None if run.seed is None else (_trained_on(run), run.seed)
         by_generator.setdefault(key, []).append(run)
     results: dict[str, list[dict[str, Any]]] = {}

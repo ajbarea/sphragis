@@ -1997,3 +1997,44 @@ def test_a_missing_likelihood_sesoi_is_named_rather_than_read_as_unregistered(
     with pytest.raises(FileNotFoundError, match="absent.json registers logprob_per_token"):
         decomposition.metric_sesoi("logprob_per_token")
     assert decomposition.metric_sesoi("logprob") is None
+
+
+def _drawn(prefix: str, cpp: int, other: int) -> list[dict[str, Any]]:
+    return [{"id": f"{prefix}:{i}", "path": "a.cpp"} for i in range(cpp)] + [
+        {"id": f"{prefix}:o{i}", "path": "a.py"} for i in range(other)
+    ]
+
+
+def test_each_half_gets_an_arm_matched_to_its_sibling_and_is_scored_on_itself() -> None:
+    train = {"qt-a": _drawn("a", cpp=7, other=3), "qt-b": _drawn("b", cpp=4, other=6)}
+    pool = _drawn("aosp", cpp=20, other=20)
+    rows, scored_on = decomposition.matched_foreign_arms(
+        train, pool, org="qt", source="aosp", seed=5
+    )
+    assert scored_on == {"foreign-aosp-for-qt-b": "qt-a", "foreign-aosp-for-qt-a": "qt-b"}
+    for arm, sibling in (("foreign-aosp-for-qt-b", "qt-b"), ("foreign-aosp-for-qt-a", "qt-a")):
+        assert len(rows[arm]) == len(train[sibling])
+        assert sum(map(decomposition.is_cpp, rows[arm])) == sum(
+            map(decomposition.is_cpp, train[sibling])
+        )
+    again, _ = decomposition.matched_foreign_arms(train, pool, org="qt", source="aosp", seed=5)
+    assert again == rows
+
+
+def test_foreign_arms_need_the_organizations_two_halves() -> None:
+    with pytest.raises(ValueError, match="qt's halves"):
+        decomposition.matched_foreign_arms(
+            {"qt-a": [], "openstack-b": []}, [], org="qt", source="aosp", seed=1
+        )
+
+
+def test_each_foreign_sources_span_is_the_one_its_pool_was_registered_over() -> None:
+    from sphragis.corpus.cli import REST_PERMITTED
+    from sphragis.corpus.windows import WINDOWS
+
+    assert set(decomposition.FOREIGN_SPANS) == set(decomposition.FOREIGN_SOURCES)
+    v8 = REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert v8 is not None
+    assert decomposition.FOREIGN_SPANS["chromium"] == (v8.created_from, v8.created_before)
+    assert decomposition.FOREIGN_SPANS["fuchsia"] == WINDOWS["train"]
+    assert decomposition.FOREIGN_SPANS["aosp"] == ("2024-10-01", "2025-03-27")

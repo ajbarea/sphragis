@@ -44,15 +44,19 @@ case "${KIND:-partition}" in
   *) echo "KIND must be partition or placebo, not $KIND" >&2; exit 1 ;;
 esac
 tag_result_suffix SEEDS TRAIN_SIZE PLANT
+# FOREIGN_SOURCE scores foreign_arms.sbatch's run of the same partition, whose arms were saved
+# beside its halves' adapters.
+SCORED="$RESULT_SUFFIX${FOREIGN_SOURCE:+-foreign$FOREIGN_SOURCE}"
 
-# The scored run is decoder_check.sbatch's output, not the stored run itself: chain
-# partition_run -> decoder_check -> likelihood_score, each afterok on the one before.
-RUN="$SPHRAGIS_RESULTS/rq1-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json"
+# The scored run is decoder_check.sbatch's output (or foreign_arms.sbatch's), not the stored run
+# itself: chain partition_run -> decoder_check [-> foreign_arms] -> likelihood_score, each
+# afterok on the one before.
+RUN="$SPHRAGIS_RESULTS/rq1-$NAME$SCORED-rp$REPETITION_PENALTY.json"
 if [ ! -s "$RUN" ]; then
-  echo "no $RUN: run decoder_check.sbatch with the same variables first" >&2
+  echo "no $RUN: run decoder_check.sbatch with the same variables first (then foreign_arms.sbatch, for FOREIGN_SOURCE)" >&2
   exit 1
 fi
-claim_result OUT "$SPHRAGIS_RESULTS/likelihood-$NAME$RESULT_SUFFIX-rp$REPETITION_PENALTY.json"
+claim_result OUT "$SPHRAGIS_RESULTS/likelihood-$NAME$RESULT_SUFFIX${FOREIGN_SOURCE:+-foreign$FOREIGN_SOURCE}-rp$REPETITION_PENALTY.json"
 uv run --no-sync python scripts/likelihood_score.py \
   --run "$RUN" \
   --adapters "$SPHRAGIS_ADAPTERS/sphragis-adapters-$NAME$RESULT_SUFFIX" \

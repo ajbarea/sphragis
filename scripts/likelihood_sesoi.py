@@ -29,6 +29,10 @@ from sphragis.experiment.decomposition import SESOI
 from sphragis.provenance import provenance_header
 
 RESULTS = Path("datasets/results")
+#: The organizations whose unplanted H1 development runs fixed the positive control (research log,
+#: 2026-10-09: 92 arms in 46 runs). Runs of an organization admitted later, and H2's runs with
+#: their foreign arms, would move a rate already used, so they are never read here.
+CONTROL_ORGS = ("openstack", "wikimedia")
 PLANTED = RESULTS / "planted-exchange-openstack-quotes1.0.json"
 DOSE_CHECK = RESULTS / "planted-exchange-openstack-quotes0.5.json"
 #: The doses the rule names: the rate at f = 1.0, the dose check at f = 0.5 (research log,
@@ -88,7 +92,10 @@ def main() -> None:
     parser.add_argument("--dose-check", type=Path, default=DOSE_CHECK)
     args = parser.parse_args()
     files = sorted(
-        p for p in RESULTS.glob("likelihood-partition-*-rp1.0.json") if "-plant" not in p.name
+        p
+        for org in CONTROL_ORGS
+        for p in RESULTS.glob(f"likelihood-partition-{org}-p*-rp1.0.json")
+        if "-plant" not in p.name and "-foreign" not in p.name
     )
     gains = [gain for path in files for gain in own_half_gains(path)]
     logprob, exact = fmean(g[0] for g in gains), fmean(g[1] for g in gains)

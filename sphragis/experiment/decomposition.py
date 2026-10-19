@@ -25,6 +25,7 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.corpus.halves import suffix
+from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.across import across_organizations, partial_conjunction
 from sphragis.experiment.cells import (
     MIN_RESAMPLES,
@@ -100,6 +101,15 @@ H2_PAIR = ("qt", "chromium")
 # matched draw (research log, 2026-10-14).
 H2_ORGANIZATION = "qt"
 FOREIGN_SOURCES = ("chromium", "fuchsia", "aosp")
+#: Each source's pool by created date, `created_from` inclusive and `created_before` exclusive, as
+#: item 1 of the H2 plan and each pool's rule fix them: Chromium's V8 pool (2026-10-16) and AOSP's
+#: changes before aosp-main went read-only (`cli.REST_PERMITTED` scopes them the same), and
+#: Fuchsia over Qt's own training-window months.
+FOREIGN_SPANS = {
+    "chromium": ("2024-11-01", "2025-09-01"),
+    "fuchsia": WINDOWS["train"],
+    "aosp": ("2024-10-01", "2025-03-27"),
+}
 
 # Every confirmatory H2 cell reads its organization's C++ examples (`CPP_SUFFIXES`), its foreign
 # arm one adapter per evaluated half matched to that sibling's C++ count (`foreign_arm`).
@@ -164,6 +174,33 @@ def foreign_arm(source: str, sibling: str) -> str:
     if "-" in source:
         raise ValueError(f"a source name carries no hyphen, got {source!r}")
     return f"foreign-{source}-for-{sibling}"
+
+
+def matched_foreign_arms(
+    train: Mapping[str, Sequence[Mapping[str, Any]]],
+    pool: Sequence[Mapping[str, Any]],
+    *,
+    org: str,
+    source: str,
+    seed: int,
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, str]]:
+    """H2's two matched foreign arms for one run over `org`'s halves: per evaluated half, `pool`
+    drawn against the sibling half's training draw in `train` (`holdout.matched_foreign_draw`, C++
+    by `is_cpp`), and the half each arm is scored on, as `walk` takes them (`foreign`)."""
+    from sphragis.experiment.holdout import matched_foreign_draw
+
+    first, second = halves(org)
+    if set(train) != {first, second}:
+        raise ValueError(f"foreign arms are drawn for {org}'s halves, not {sorted(train)}")
+    rows: dict[str, list[dict[str, Any]]] = {}
+    scored_on: dict[str, str] = {}
+    for evaluated, sibling in ((first, second), (second, first)):
+        arm = foreign_arm(source, sibling)
+        rows[arm] = matched_foreign_draw(
+            train[sibling], pool, in_language=is_cpp, seed=seed, sibling=sibling
+        )
+        scored_on[arm] = evaluated
+    return rows, scored_on
 
 
 def _registered(names: Iterable[str], registry: tuple[str, ...], *, role: str) -> tuple[str, ...]:

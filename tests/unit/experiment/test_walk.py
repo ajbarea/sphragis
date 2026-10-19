@@ -332,3 +332,41 @@ def test_crossed_gate_fails_when_no_adapter_is_organization_specific() -> None:
 def test_crossed_gate_is_defined_over_exactly_two_organizations() -> None:
     with pytest.raises(ValueError, match="exactly two"):
         crossed_gate({}, orgs=("alpha",), seeds=SEEDS, bootstrap_seed=0)
+
+
+def test_a_foreign_arm_trains_once_a_seed_and_is_scored_on_its_window_alone() -> None:
+    trainer = FakeTrainer()
+    built: list[str | None] = []
+    foreign = {"foreign-src-for-beta": "alpha"}
+    results = walk(
+        orgs=ORGS,
+        seeds=SEEDS,
+        windows=WINDOWS,
+        trainer=trainer,
+        generator_for=_factory(built),
+        foreign=foreign,
+    )
+    assert [c for c in trainer.calls if c[0] == "foreign-src-for-beta"] == [
+        ("foreign-src-for-beta", s) for s in SEEDS
+    ]
+    scored = sorted(k for k in results if k.startswith("adapter:foreign-"))
+    assert scored == [f"adapter:foreign-src-for-beta|alpha|s{s}" for s in SEEDS]
+    # One generator per adapter, the foreign arm's included, each built once.
+    assert built.count("adapter-foreign-src-for-beta-s1") == 1
+    assert len(results) == len(ORGS) + len(ORGS) ** 2 * len(SEEDS) + len(SEEDS)
+
+
+@pytest.mark.parametrize(
+    ("foreign", "message"),
+    [({"alpha": "beta"}, "shares an organization's name"), ({"f": "gamma"}, "not on an")],
+)
+def test_a_foreign_arm_named_as_an_org_or_scored_elsewhere_is_refused(foreign, message) -> None:
+    with pytest.raises(ValueError, match=message):
+        walk(
+            orgs=ORGS,
+            seeds=SEEDS,
+            windows=WINDOWS,
+            trainer=FakeTrainer(),
+            generator_for=_factory([]),
+            foreign=foreign,
+        )

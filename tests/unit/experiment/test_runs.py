@@ -179,3 +179,31 @@ def test_an_item_without_one_masked_prompt_and_one_target_is_refused(labels) -> 
 
     with pytest.raises(ValueError):
         target_span(labels)
+
+
+def test_trained_keys_are_the_stored_runs_training_reports(tmp_path) -> None:
+    import json
+
+    from sphragis.experiment.runs import trained_keys
+
+    stored = tmp_path / "run.json"
+    stored.write_text(json.dumps({"training": {"qt-a-s1": {}, "foreign-aosp-for-qt-b-s1": {}}}))
+    assert trained_keys(stored) == {"qt-a-s1", "foreign-aosp-for-qt-b-s1"}
+
+
+def test_a_reused_adapter_whose_weights_differ_from_the_recorded_ones_is_refused(
+    tmp_path: Path,
+) -> None:
+    import hashlib
+
+    from sphragis.experiment.runs import reused_adapter, stored_foreign_pool
+
+    stored, adapter = _stored_adapter(tmp_path)
+    run = json.loads(stored.read_text())
+    run["training"]["openstack-a-s1"]["adapter_sha256"] = hashlib.sha256(b"weights").hexdigest()
+    stored.write_text(json.dumps(run))
+    reused_adapter(stored, "openstack-a-s1", adapter, train_size=10, rank=32)
+    (adapter / "adapter_model.safetensors").write_bytes(b"retrained")
+    with pytest.raises(ValueError, match="is not the openstack-a-s1 adapter"):
+        reused_adapter(stored, "openstack-a-s1", adapter, train_size=10, rank=32)
+    assert stored_foreign_pool(stored) is None

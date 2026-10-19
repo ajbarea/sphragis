@@ -9,6 +9,7 @@ test windows stay sealed.
 
 import argparse
 import gc
+import hashlib
 import json
 from pathlib import Path
 
@@ -16,9 +17,18 @@ import torch
 
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
+from sphragis.experiment.decomposition import (
+    FOREIGN_SOURCES,
+    FOREIGN_SPANS,
+    halves,
+    is_cpp,
+    matched_foreign_arms,
+)
 from sphragis.experiment.holdout import (
     equalize_training,
+    foreign_pool,
     holdout_by_change,
+    pool_digest,
     verbatim_overlap,
     window_split,
 )
@@ -44,7 +54,7 @@ from sphragis.experiment.neutral import (
     positive_control,
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids
-from sphragis.experiment.runs import reused_adapter
+from sphragis.experiment.runs import reused_adapter, stored_foreign_pool, trained_keys
 from sphragis.experiment.training import supervised
 from sphragis.experiment.walk import gate, walk
 
@@ -116,6 +126,13 @@ parser.add_argument(
     help="the stored result whose adapters, saved under --adapters, are evaluated again untrained",
 )
 parser.add_argument(
+    "--foreign-pool",
+    type=Path,
+    help="H2: a built corpus root holding --foreign-source's refined months, the pool each half's "
+    "matched foreign arm is drawn from (holdout.matched_foreign_draw)",
+)
+parser.add_argument("--foreign-source", choices=FOREIGN_SOURCES, help="with --foreign-pool")
+parser.add_argument(
     "--dry-run",
     action="store_true",
     help="report the split and exit, before any model is loaded: runs on a login node",
@@ -170,6 +187,65 @@ if args.equalize_train:
         summary[org]["train_examples_equalized"] = len(train_rows[org])
     print(f"equalized training sets: { {o: len(train_rows[o]) for o in orgs} }", flush=True)
 
+# H2's matched foreign arms: per evaluated half, an adapter trained on the source's pool, as many
+# C++ examples as the sibling half's draw and the rest of N from its other files, drawn with the
+# run's training seed (research log, 2026-10-14). Scored on that half alone.
+foreign: dict[str, str] = {}
+foreign_record: dict | None = None
+if bool(args.foreign_pool) != bool(args.foreign_source):
+    raise SystemExit("--foreign-pool and --foreign-source come together")
+if args.foreign_pool:
+    if args.corpus or len(orgs) != 2 or orgs != halves(orgs[0].removesuffix("-a")):
+        raise SystemExit("foreign arms are drawn for one organization's two halves under --root")
+    if args.train_size is None or len(seeds) != 1:
+        raise SystemExit("foreign arms need --train-size and one seed, the partition run's own")
+    # The halves' adapters are the H1 run's, read again: trained afresh here, they would replace
+    # the adapters H1 read and every later reuse of them would be refused.
+    if not args.reuse_from:
+        raise SystemExit("foreign arms are added to a stored run: pass its --reuse-from")
+    try:
+        pool, pool_removed = foreign_pool(
+            args.foreign_pool, args.foreign_source, FOREIGN_SPANS[args.foreign_source]
+        )
+        drawn, foreign = matched_foreign_arms(
+            train_rows,
+            pool,
+            org=orgs[0].removesuffix("-a"),
+            source=args.foreign_source,
+            seed=seeds[0],
+        )
+    except ValueError as error:
+        raise SystemExit(f"foreign arms: {error}") from error
+    train_rows.update(drawn)
+    # A draw that copies one of its half's held-out pairs is refused, as an own half's is above.
+    for arm, evaluated in foreign.items():
+        copied = verbatim_overlap(train_rows[arm], held_out[evaluated])
+        if copied:
+            raise SystemExit(f"{arm}: {len(copied)} of {evaluated}'s held-out pairs in its draw")
+    foreign_record = {
+        "source": args.foreign_source,
+        "pool": str(args.foreign_pool),
+        "pool_sha256": pool_digest(pool),
+        "pool_examples": len(pool),
+        "pool_dedup_removed": pool_removed,
+        "arms": {
+            arm: {
+                "evaluated": foreign[arm],
+                "in_language": sum(1 for row in rows if is_cpp(row)),
+                "other": sum(1 for row in rows if not is_cpp(row)),
+            }
+            for arm, rows in drawn.items()
+        },
+    }
+    print(f"foreign arms: {foreign_record['arms']}", flush=True)
+    # An arm reused from a stored run was trained on that run's draw, so the pool must be its.
+    if args.reuse_from and set(foreign) & {
+        k.rsplit("-s", 1)[0] for k in trained_keys(args.reuse_from)
+    }:
+        stored_pool = stored_foreign_pool(args.reuse_from)
+        if stored_pool is None or stored_pool["pool_sha256"] != foreign_record["pool_sha256"]:
+            raise SystemExit(f"{args.reuse_from} drew its foreign arms from another pool")
+
 
 # Before any model loads, and so inside the dry run: the arms are paired by example id, so a
 # repeated id in an evaluation set is fatal, and checked only at scoring it cost job 148093
@@ -191,6 +267,17 @@ leakage = [
     for org in orgs
     for source in orgs
 ]
+# A foreign arm is credited only on its own half, so its draw is checked against that half.
+leakage += [
+    leakage_check(
+        train_rows[arm],
+        held_out[evaluated],
+        threshold=args.leakage_threshold,
+        max_rate=args.leakage_max_rate,
+        label=f"{arm}->{evaluated}",
+    )
+    for arm, evaluated in foreign.items()
+]
 for check in leakage:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
 if not all(check.passed for check in leakage):
@@ -199,6 +286,8 @@ if not all(check.passed for check in leakage):
             {
                 "provenance": run_provenance(),
                 "corpora": summary,
+                "foreign": foreign,
+                "foreign_pool": foreign_record,
                 "halted": "leakage",
                 "outcome_neutral": {
                     "apparatus_holds": False,
@@ -214,13 +303,19 @@ if not all(check.passed for check in leakage):
         )
         + "\n"
     )
-    raise SystemExit("APPARATUS FAILS at test 4, before training: H1 would not be read")
+    # A foreign arm's draw failing alone leaves H1 as it was; H2 is what is not read then.
+    failed = [c for c in leakage if not c.passed]
+    unread = "H2" if all(c.name.startswith("leakage:foreign-") for c in failed) else "H1"
+    raise SystemExit(f"APPARATUS FAILS at test 4, before training: {unread} would not be read")
 
 if args.dry_run:
     # Everything above is CPU: loading, dedup, the split and the leakage check. Stopping here
     # is what lets a login node check the data the job will train on, before the queue.
     print("DRY RUN: split only, no model loaded", flush=True)
     raise SystemExit(0)
+
+
+stored_training = trained_keys(args.reuse_from) if args.reuse_from else set()
 
 
 class InProcessTrainer:
@@ -233,8 +328,13 @@ class InProcessTrainer:
 
     def train(self, org: str, seed: int) -> str:
         target = args.adapters / f"{org}-s{seed}"
-        if args.reuse_from:
+        # Under --reuse-from every adapter is the stored run's, except a foreign arm it never
+        # trained: an H2 run reuses its H1 run's halves and trains only their matched arms.
+        if args.reuse_from and (org not in foreign or f"{org}-s{seed}" in stored_training):
             return self.reuse(org, seed, target)
+        if org in foreign and target.exists():
+            # Another result may have scored the adapter there; retraining would change it.
+            raise SystemExit(f"{target} already holds a foreign arm; reuse it or remove it first")
         model, tok = attach_adapter(MODEL_ID, seed, rank=args.lora_rank)
         if tok.pad_token_id is None:
             tok.pad_token = tok.eos_token
@@ -246,7 +346,10 @@ class InProcessTrainer:
         assert report.skipped_steps == 0, f"{org} s{seed}: {report.skipped_steps} steps skipped"
         self.losses[f"{org}-s{seed}"] = list(report.losses)
         model.save_pretrained(target)
+        weights = hashlib.sha256((target / "adapter_model.safetensors").read_bytes()).hexdigest()
         self.reports[f"{org}-s{seed}"] = {
+            # Recorded so a later rescoring can check it reads these weights (`adapter_checked`).
+            "adapter_sha256": weights,
             "items": len(items),
             "refused": refused,
             "steps": report.steps,
@@ -300,7 +403,12 @@ def generator_for(adapter: str | None) -> HFGenerator:
 
 trainer = InProcessTrainer()
 results = walk(
-    orgs=orgs, seeds=seeds, windows=held_out, trainer=trainer, generator_for=generator_for
+    orgs=orgs,
+    seeds=seeds,
+    windows=held_out,
+    trainer=trainer,
+    generator_for=generator_for,
+    foreign=foreign,
 )
 for run, rows in results.items():
     n = len(rows)
@@ -346,12 +454,28 @@ for org in orgs:
                 label=f"{org}|s{seed}",
             )
         )
+# A foreign arm is not its half's own adapter, so test 2 does not apply to it; test 3 does.
+for arm in foreign:
+    for seed in seeds:
+        if f"{arm}-s{seed}" in trainer.reused_checks:
+            checks.append(trainer.reused_checks[f"{arm}-s{seed}"])
+            continue
+        checks.append(
+            manipulation_check(
+                trainer.losses[f"{arm}-s{seed}"],
+                epochs=int(TRAINING["epochs"]),
+                adapter_weight_norm=trainer.reports[f"{arm}-s{seed}"]["adapter_weight_norm"],
+                label=f"{arm}|s{seed}",
+            )
+        )
 checks += leakage
 checks.append(non_degeneracy(results))
 for check in checks:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
 holds = apparatus_holds(checks)
-print(f"APPARATUS {'holds' if holds else 'FAILS: H1 would not be read'}", flush=True)
+failed = [c for c in checks if not c.passed]
+unread = "H2" if failed and all("foreign-" in c.name for c in failed) else "H1"
+print(f"APPARATUS {'holds' if holds else f'FAILS: {unread} would not be read'}", flush=True)
 
 args.out.write_text(
     json.dumps(
@@ -371,6 +495,9 @@ args.out.write_text(
             "max_new_tokens": args.max_new_tokens,
             "repetition_penalty": sorted(repetition_penalties),
             "corpora": summary,
+            # Each matched foreign arm and the half it is scored on, and its pool; empty without H2.
+            "foreign": foreign,
+            "foreign_pool": foreign_record,
             "training": trainer.reports,
             "verdict": verdict,
             "outcome_neutral": {

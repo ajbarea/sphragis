@@ -111,6 +111,16 @@ def merge(
     return merged, tuple(seeds)
 
 
+def trained_keys(stored: Path) -> set[str]:
+    """The adapters (`<arm>-s<seed>`) a stored run trained, from its training reports."""
+    return set(json.loads(stored.read_text())["training"])
+
+
+def stored_foreign_pool(stored: Path) -> dict[str, Any] | None:
+    """The foreign pool a stored run drew its H2 arms from, None for a run without arms."""
+    return json.loads(stored.read_text()).get("foreign_pool")
+
+
 def reused_adapter(
     stored: Path, key: str, adapter: Path, *, train_size: int, rank: int
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -118,7 +128,8 @@ def reused_adapter(
 
     Refused unless the stored run trained `key` (`<org>-s<seed>`) at this size and rank and the
     saved adapter has that rank. The weights' digest is recorded with both, so two rescorings
-    can be checked to have read the same adapter; stored runs record none to compare with.
+    can be checked to have read the same adapter, and refused when the stored run recorded
+    another.
     """
     run = json.loads(stored.read_text())
     config = adapter / "adapter_config.json"
@@ -136,6 +147,9 @@ def reused_adapter(
     if len(matches) != 1:
         raise ValueError(f"{stored} records {len(matches)} {label} checks, not one")
     weights = hashlib.sha256((adapter / "adapter_model.safetensors").read_bytes()).hexdigest()
+    recorded = run["training"][key].get("adapter_sha256")
+    if recorded is not None and recorded != weights:
+        raise ValueError(f"{adapter} is not the {key} adapter {stored} recorded")
     reused = {"reused_from": str(stored), "adapter_sha256": weights}
     check = matches[0]
     return {**run["training"][key], **reused}, {
