@@ -9624,7 +9624,7 @@ positive control reads only the OpenStack and Wikimedia runs that fixed it
 a rate already used, and a test now checks the committed SESOI's 46 files are what it reads. A run
 past K is held to the cell's floor of ten changes a half.
 
-### The GitHub family frozen and split-checked: .NET and Apache qualify, LLVM and Grafana cannot (2026-10-18)
+### The GitHub family frozen and split-checked: Apache and .NET qualify, LLVM and Grafana cannot (2026-10-18)
 
 `# research(2026-10)`. Apache's, LLVM's, .NET's and Grafana's pilot, train and development windows
 (2024-10 to 2025-10, all thirteen months collected) were deduplicated, split, frozen and verified on
@@ -9645,18 +9645,20 @@ that ended short).
 
 By the registered rule (registered-decisions: "each a member only if its pilot, train and
 development windows are frozen and its split meets the criteria at the registered N by
-2026-11-20"), .NET and Apache are members and LLVM and Grafana are not. LLVM fails on the
+2026-11-20"), Apache and .NET are members and LLVM and Grafana are not. LLVM fails on the
 largest-project criterion alone: its projects are its repositories and, in `llvm/llvm-project`, the
-top-level directories (`github.py`, registered 2026-10-01 before any split was read), and the `llvm`
+top-level directories (`github.py`, named 2026-10-01 and implemented in #82 on 2026-10-04, before any
+split was read), and the `llvm`
 directory holds 0.40 of LLVM's training examples. No admissible partition can exist: each project
 goes to whichever half has fewer training examples so far, so the halves differ by at most the
 largest project, the half holding `llvm` holds at most half the training examples plus half of
 `llvm`'s, and `llvm` is then 0.57 or more of its half, above the 0.5 the criterion allows. The
 search over the first 48 seeds bears it out, every seed failing that criterion
 (`admissible-partitions-llvm-refused.json`; the full search to seed 2,000 was stopped, since the
-bound holds for every seed). Grafana fails on size first: its two halves hold 1,675 and 1,685
-training examples, 3,360 together, fewer than the 3,700 two halves of N = 1,850 need, so no
-partition can qualify; its registered split also fails the largest-project and language-mix
+bound holds for every seed). Grafana fails on size first: its two halves, each deduplicated as the
+runner trains it, hold 1,675 and 1,685 training examples (the frozen window, deduplicated across the
+organization, holds 3,359), fewer than the 3,700 two halves of N = 1,850 need, so no partition can
+qualify; its registered split also fails the largest-project and language-mix
 criteria (`grafana/grafana` holds 0.735 of its half), and the full search to seed 2,016 found none
 (`admissible-partitions-grafana-refused.json`). `admissible_partitions.py` now writes a search that
 ends short under a `-refused` name with every seed it checked, rather than exiting with nothing

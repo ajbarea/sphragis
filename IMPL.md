@@ -15,9 +15,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   check 5 run. Qt's generation runs stay off the repository (their predictions can repeat review
   text); the likelihood rescorings are committed.
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
-  split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify. The Stage 1 freeze
-  commit sets `REPLICATION_MEMBERS` to the two; each member's development pilot and simulation
-  come before its test window.
+  split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
 - **AOSP's pool, H2's foreign source** (research log, 2026-10-18): admitted on AJ's reading of
   Chrome Infra's answer, one client at no more than one request a second. `foreign_need.py` over
   Qt's 40 admissible partitions gives what the pool must cover; `aosp_census.py` reads every
@@ -35,7 +33,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## Next
 
 1. At the Stage 1 freeze, one commit sets `REPLICATION_MEMBERS` to Apache and .NET;
-   `replication_gate()` refuses to read the family before it.
+   `replication_gate()` refuses to read the family before it. Each member's development pilot
+   and simulation come before its test window.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
    `ADMITTED_ORGANIZATIONS` and `FOREIGN_SOURCE`. Qt can be admitted until 2026-11-20, with its
    cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
