@@ -110,7 +110,7 @@ host, so no review text is published. Model text that can repeat it, a generatio
 review comments or a summary distilled from them, is published only as an HMAC-SHA256 digest under
 a key kept off the repository (`scripts/withhold_text.py`); the full texts are held on the
 cluster for release under a data-use agreement. Every commit from 96695eb (2026-09-20) up to the
-one that merged this change carries them in history (research log, 2026-10-19). An author who asks
+one this change merges onto carries them in history (research log, 2026-10-19). An author who asks
 for their reviews to be removed is removed from the corpus and from every later release: write to ajb6289@rit.edu.
 
 | window | OpenStack | Qt |

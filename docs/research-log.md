@@ -5399,7 +5399,7 @@ the two are equal. The threshold remains the property to rely on, not the orderi
 
 **AOSP audited the same way** before RQ2 trains on it (`data-audit-aosp.json`): 5,133 built,
 no comment matching a registered bot, every successor a rework, and a repeated-text queue holding
-only reviewer language ("typo" on 25 changes, "2024" on 24). 5,130 refined.
+only reviewer language (a one-word typo note on 25 changes, a year on 24). 5,130 refined.
 
 **The build and the label rules are now separate stages with separate digests.** Review of the
 fixes found that the build applied the bot templates and the successor rule that `refine` applies
@@ -10148,8 +10148,8 @@ comment word for word when the model copies it (ROADMAP, "predictions in publish
    battery's completions of code and the rules read from organizations' written guides. The bot
    audits (`data-audit-*.json`) listed short real review comments as `candidate_unregistered_bots`
    text; `scripts/data_audit.py` now writes their change counts only and prints the texts, and the
-   three artifacts lost the field in place. The AOSP audit entry quotes two of those comments
-   ("typo", "2024") with their counts, which the artifacts still hold.
+   three artifacts lost the field in place. The AOSP audit entry described two of them by kind
+   with their counts, which the artifacts still hold; it no longer quotes them.
 2. *Digest.* Each text becomes HMAC-SHA256 under a 256-bit key held off the repository
    (`SPHRAGIS_PREDICTION_KEY`), in a field named `<field>_hmac`. Anyone can compare digests, so equal
    texts show as equal across runs, fields and files; the key is needed only to test a guessed text

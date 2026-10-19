@@ -119,3 +119,26 @@ def test_documents_compare_only_on_one_basis() -> None:
     ):
         with pytest.raises(SystemExit, match=match):
             w.basis(mixed)
+
+
+def test_a_summary_keeps_every_file_withheld_so_far_with_its_key_id() -> None:
+    import importlib.util
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[3]
+    spec = importlib.util.spec_from_file_location(
+        "withhold_text", root / "scripts/withhold_text.py"
+    )
+    assert spec is not None and spec.loader is not None
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    entry = {"fields": ["prediction"], "texts": 3}
+    old = {"key_id": "old", "files": 2, "texts": 6, "by_file": {"a.json": entry, "b.json": entry}}
+    merged = script.merged_summary(old, {"c.json": {"fields": ["passes"], "texts": 4}}, "new")
+    assert merged["files"] == 3 and merged["texts"] == 10
+    assert merged["key_ids"] == ["new", "old"]
+    assert merged["by_file"]["a.json"]["key_id"] == "old"
+    assert merged["by_file"]["c.json"]["key_id"] == "new"
+    rerun = script.merged_summary(merged, {"a.json": entry}, "new")
+    assert rerun["files"] == 3 and rerun["by_file"]["a.json"]["key_id"] == "new"
+    assert script.merged_summary(None, {}, "k")["files"] == 0

@@ -54,13 +54,22 @@ def _strings(value: Any) -> Iterator[str]:
             yield from _strings(v)
 
 
+def _counts_only(value: Any) -> bool:
+    """The published shape of a comment list: objects of counts, so no comment text anywhere."""
+    return isinstance(value, list) and all(
+        isinstance(row, Mapping)
+        and all(isinstance(n, int) and not isinstance(n, bool) for n in row.values())
+        for row in value
+    )
+
+
 def _unfit(node: Any, path: str = "") -> Iterator[str]:
     """Digest fields not holding digests, and comment lists holding comments."""
     if isinstance(node, Mapping):
         for k, v in node.items():
             if k.endswith(SUFFIX) and not all(DIGEST.fullmatch(t) for t in _strings(v)):
                 yield f"{path}/{k} is not a digest"
-            elif k in COMMENT_LISTS and any(isinstance(r, Mapping) and "text" in r for r in v):
+            elif k in COMMENT_LISTS and not _counts_only(v):
                 yield f"{path}/{k} carries comment text"
             else:
                 yield from _unfit(v, f"{path}/{k}")
@@ -158,9 +167,19 @@ def test_raw_text_in_a_digest_field_is_caught(tmp_path: Path) -> None:
 
 
 def test_bot_audit_comment_text_is_caught(tmp_path: Path) -> None:
-    audit = {"candidate_unregistered_bots": [{"text": "typo", "changes": 3}]}
-    assert offending([_write(tmp_path / "data-audit-x.json", audit)])
-    assert not offending([_write(tmp_path / "ok.json", {"candidate_unregistered_bots": []})])
+    for i, shape in enumerate(
+        (
+            [{"text": "typo", "changes": 3}],
+            ["typo"],
+            [{"comment": "typo", "changes": 3}],
+            {"typo": 3},
+        )
+    ):
+        audit = {"candidate_unregistered_bots": shape}
+        assert offending([_write(tmp_path / f"data-audit-{i}.json", audit)]), shape
+    for i, ok in enumerate(([], [{"changes": 3}, {"changes": 25}])):
+        audit = {"candidate_unregistered_bots": ok}
+        assert not offending([_write(tmp_path / f"ok-{i}.json", audit)]), ok
 
 
 def test_rules_read_from_a_written_guide_pass(tmp_path: Path) -> None:
@@ -175,8 +194,8 @@ GRANTED = re.compile(r"(?:^|[-_])(?:qt|qtfull|chromium)(?:[-_.]|$)")
 #: derived from the text the grants exclude, so those runs stay out of git either way.
 PREDICTION = re.compile(r'"prediction(?:_hmac)?"')
 
-#: Committed before the rule, from Qt's records held from before its grant. Whether they keep
-#: their predictions is AJ's call (ROADMAP, "predictions in published generation runs").
+#: Committed before the rule, from Qt's records held from before its grant; their predictions are
+#: published as digests (research log, 2026-10-19).
 BEFORE_THE_RULE = frozenset(
     {
         "projects-qt-creator_qt-creator-qt_qtbase-n788.json",
