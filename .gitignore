@@ -33,6 +33,8 @@ datasets/results/rq1-windows-qt*.json
 datasets/results/rq1-partition-chromium-*.json
 datasets/results/rq1-placebo-chromium*.json
 datasets/results/rq1-windows-chromium*.json
+datasets/results/retrieval-halves-qt-*.json
+datasets/results/rules-halves-qt-*.json
 
 COMMITS.md
 

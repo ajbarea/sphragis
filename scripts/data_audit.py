@@ -11,10 +11,10 @@ trained on it:
 - **candidate unregistered bots**: comment texts repeated verbatim across at least `--min-changes`
   distinct changes that no registered template matches. Humans repeat "typo" and "same here" too,
   so this is a review queue, not a filter: a template belongs in the registry only once its
-  source is found.
+  source is found. The artifact records the queue's change counts; the texts are printed for the
+  reader and not written, as no review text is published (`docs/protocol.md`).
 
-Reads the built and refined corpora and the raw snapshots; writes no corpus text beyond the
-queued comment strings, which are review text rather than code.
+Reads the built and refined corpora and the raw snapshots; writes no corpus text.
 
     uv run --no-sync --no-active python scripts/data_audit.py --root datasets/gerrit \\
         --org openstack --org qt --out-dir datasets/results
@@ -50,7 +50,8 @@ def _sum_drops(paths: list[Path]) -> dict[str, int]:
     return dict(total)
 
 
-def audit(root: Path, org: str, *, min_changes: int, top: int) -> dict:
+def audit(root: Path, org: str, *, min_changes: int, top: int) -> tuple[dict, list[str]]:
+    """The report to publish, and the queued texts to show the reader."""
     built = built_examples(root, org)
     refined = refined_examples(root, org)
     raw = root / org / "raw"
@@ -69,7 +70,7 @@ def audit(root: Path, org: str, *, min_changes: int, top: int) -> dict:
         ((text, len(ids)) for text, ids in changes_by_text.items() if len(ids) >= min_changes),
         key=lambda item: (-item[1], item[0]),
     )[:top]
-    return {
+    report = {
         "org": org,
         "rules": RULES_VERSION,
         "bot_registry": registry_digest(),
@@ -79,16 +80,17 @@ def audit(root: Path, org: str, *, min_changes: int, top: int) -> dict:
         "refine_drops": _sum_drops(sorted(refined_dir(root, org).glob("*.drops.json"))),
         "automated_comments_by_bot": dict(by_bot),
         "successor_kinds": dict(successor),
-        "candidate_unregistered_bots": [{"text": text, "changes": n} for text, n in queue],
+        "candidate_unregistered_bots": [{"changes": n} for _, n in queue],
         "min_changes": min_changes,
     }
+    return report, [text for text, _ in queue]
 
 
 def main() -> None:
     args = parser.parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for org in args.org:
-        report = audit(args.root, org, min_changes=args.min_changes, top=args.top)
+        report, texts = audit(args.root, org, min_changes=args.min_changes, top=args.top)
         report["provenance"] = provenance_header()
         out = args.out_dir / f"data-audit-{org}.json"
         out.write_text(json.dumps(report, indent=2) + "\n")
@@ -97,6 +99,8 @@ def main() -> None:
             f"bots {report['automated_comments_by_bot']}, "
             f"{len(report['candidate_unregistered_bots'])} texts queued for review -> {out}"
         )
+        for text, entry in zip(texts, report["candidate_unregistered_bots"], strict=True):
+            print(f"  {entry['changes']:>5}  {text!r}")
 
 
 if __name__ == "__main__":

@@ -33,11 +33,9 @@
   },
   "candidate_unregistered_bots": [
     {
-      "text": "typo",
       "changes": 25
     },
     {
-      "text": "2024",
       "changes": 24
     }
   ],

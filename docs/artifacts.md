@@ -1274,3 +1274,4 @@ of the research log rather than out of the code.
 - `stratified-coverage-0.975.json`
 - `stratified-coverage-h1-0.95.json`
 - `stratified-coverage-h1-0.975.json`
+- `withheld-text.json`

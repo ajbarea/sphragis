@@ -26,6 +26,7 @@ from statistics import fmean
 from sphragis.experiment.model import REPETITION_PENALTY, HFGenerator, run_provenance
 from sphragis.experiment.planted import MARKER
 from sphragis.experiment.runner import build_prompt
+from sphragis.measure.withhold import require_text
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--condition", default="marker-0.25")
@@ -45,6 +46,7 @@ def emits(text: str) -> bool:
 def main() -> None:
     args = parser.parse_args()
     calibration = json.loads(args.results.read_text())
+    require_text(calibration, args.results.name)
     run = calibration["results"]
     examples = {}
     for side in ("a", "b"):

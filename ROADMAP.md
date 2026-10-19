@@ -87,15 +87,6 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   the same `scrub`, obeys the same seal, and paces each host at its crawl delay. Checked against
   the AOSP REST corpus on every branch: the refined examples match but for one pseudonym from the
   older scrub, and every revision's kind agrees (research log, NoteDb entry, rerun 2026-09-25).
-- [ ] **AJ's call: predictions in published generation runs.** A run's `prediction` field is model
-  text, and a prediction can repeat its example's review comment word for word, which
-  `docs/protocol.md` ("no review text is published") and the written grants exclude. Qt's
-  generation runs are held off the repository (`.gitignore`, guarded by
-  `tests/unit/test_published_review_text.py`); OpenStack's and Wikimedia's are committed with
-  their predictions, and so are thirteen Qt runs from the records held before its grant (the
-  test's `BEFORE_THE_RULE`). Open: strip `prediction` from every published run (the scores and ids
-  stay),
-  or keep them; history keeps what is already pushed either way (research log, 2026-10-18).
 - [ ] **AJ's call: changes withdrawn after collection.** Changes a host now answers 404 for
   (deleted or made private after the snapshot listed them) are counted `comment_error` and never
   built. Their metadata stays in the raw snapshots. Open: purge it from raw snapshots and any
@@ -456,15 +447,16 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 - [ ] **Optional: a written "not human subjects research" determination** from hsro@rit.edu, to
   cite in the ethics section. The study contacts no one and reads only publicly posted reviews,
   so it is not human-subjects research under 45 CFR 46.102(e) (research log, 2026-10-08).
-- [ ] **GitHub's written confirmation** that its Acceptable Use Policies permit research on public
-  pull-request review threads, which its Privacy Statement counts as personal data. Requested
-  2026-10-10 by email to GitHub's privacy team (its privacy form routes other questions there),
-  awaiting a reply. Collection continues; the GitHub organizations stay out of every published figure until
-  GitHub answers, and a refusal is met by deleting what was collected.
-- [ ] **Removal on request.** `docs/protocol.md` promises it, and GitHub's Acceptable Use Policies
-  (section 8) require it: a script that looks up the account's numeric id, computes the pseudonyms
-  the scrub writes for it (the salted id, and on GitHub the salted login its @-mentions carry), and
-  drops that author's comments and examples from the corpus, its manifests and the next release.
+- [x] **GitHub's written confirmation** is not a gate (AJ, 2026-10-19; research log): the request of
+  2026-10-10 to GitHub's privacy team drew only that inbox's automatic reply, and the family is read
+  under its Acceptable Use Policies' research clause (section 7: public information, open-access
+  publications), which the study meets. A refusal, should one come, is met by deleting what was
+  collected.
+- [ ] **Removal on request**, required before any release that carries GitHub data. `docs/protocol.md`
+  promises it, and GitHub's Acceptable Use Policies (section 8) require it: a script that looks up the
+  account's numeric id, computes the pseudonyms the scrub writes for it (the salted id, and on GitHub
+  the salted login its @-mentions carry), and drops that author's comments and examples from the
+  corpus, its manifests and the next release.
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
 
@@ -868,6 +860,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-19** — Model text that can repeat a review comment (generation predictions, determinism passes, review distillations) withheld from every published result as HMAC-SHA256 digests under a key kept off the repository; full texts on the cluster for a data-use agreement, history from 96695eb up to the commit this change merges onto disclosed (research log, 2026-10-19).
 - **2026-10-10** — A test read refuses any run whose outcome-neutral battery failed or is missing, a likelihood rescoring's through the generation run it scored, and a planted run is never one of H1's runs; all 46 unplanted development runs hold (research log).
 - **2026-10-07** — The contamination battery read against blind baselines: a bag of words separates the pilot windows better than any membership score, so the battery's gap cannot be read as exposure; proposed for Stage 1 as the battery's reading rule (research log).
 - **2026-10-07** — The rules-file comparator read on the development window: 22 distillations (Qwen3.6-27B) and 22 `ARMS=rules` evaluations at 05465f1; distilled own minus sibling carries no contrast as large as the SESOI on either organization (research log).

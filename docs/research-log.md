@@ -5399,7 +5399,7 @@ the two are equal. The threshold remains the property to rely on, not the orderi
 
 **AOSP audited the same way** before RQ2 trains on it (`data-audit-aosp.json`): 5,133 built,
 no comment matching a registered bot, every successor a rework, and a repeated-text queue holding
-only reviewer language ("typo" on 25 changes, "2024" on 24). 5,130 refined.
+only reviewer language (a one-word typo note on 25 changes, a year on 24). 5,130 refined.
 
 **The build and the label rules are now separate stages with separate digests.** Review of the
 fixes found that the build applied the bot templates and the successor rule that `refine` applies
@@ -10132,6 +10132,119 @@ in Qt's training months. Fixed now, still before any change is read:
    month's.
 4. `scripts/gerrit_projects.py` and its artifact are withdrawn; nothing else asks a host for its
    project list.
+
+### Model text withheld from published results; keyed digests in its place (2026-10-19)
+
+`# research(2026-10)`. The protocol says no review text is published (`docs/protocol.md`), yet the
+committed generation runs carried the model's `prediction`, which repeats its example's review
+comment word for word when the model copies it (ROADMAP, "predictions in published generation runs",
+2026-10-18). AJ asked for the researched recommendation (2026-10-19). Decided and done:
+
+1. *Scope.* Model text whose prompt held review comments, or which summarizes them: generation rows'
+   `prediction` (every results file), the determinism checks' `passes`, and the review
+   distillations' `map_lists`, `rules`, `file` and `reduce_answer`
+   (`sphragis.measure.withhold.ALWAYS` and `IN_DISTILLATION`), found by an object's shape and not
+   its file's name. Left in place, because their prompts held no review text: the contamination
+   battery's completions of code and the rules read from organizations' written guides. The bot
+   audits (`data-audit-*.json`) listed short real review comments as `candidate_unregistered_bots`
+   text; `scripts/data_audit.py` now writes their change counts only and prints the texts, and the
+   three artifacts lost the field in place. The AOSP audit entry described two of them by kind
+   with their counts, which the artifacts still hold; it no longer quotes them.
+2. *Digest.* Each text becomes HMAC-SHA256 under a 256-bit key held off the repository
+   (`SPHRAGIS_PREDICTION_KEY`), in a field named `<field>_hmac`. Anyone can compare digests, so equal
+   texts show as equal across runs, fields and files; the key is needed only to test a guessed text
+   against one. The key protects only text that was never committed: this key is burned for any
+   later publication, because the texts sit in history beside its digests at the same paths and row
+   order (`BURNED_KEY_IDS`; `load_key` refuses it), and the next published result is digested under
+   a new key. A plain SHA-256 was the first recommendation and is not
+   enough: the comments are public on their hosts, so anyone could hash each one and match the
+   digests, the dictionary case of EDPB Guidelines 01/2025 on pseudonymisation (fn. 23; keyed
+   one-way functions, paras 88-90). The key length and its single use follow NIST SP 800-224 (ipd),
+   R2 and R6. Masking only the overlapping spans was passed over: a paraphrase leaks past a span
+   match. So was a slow password-hashing function as the building block, which the guidelines advise
+   where hash functions are used (para. 89): the dictionary here is the hosts' public comments,
+   small enough to hash through even at a slow function's cost once the key is known, so the
+   protection is the key's secrecy (para. 90).
+3. *Where the texts are.* The full texts stay in the cluster's results root and in an archive of the
+   files as they were at d3363d5 (`full-text/datasets-results-d3363d5.tar.gz` beside the cluster's
+   results; SHA-256
+   `a68611f66d704a7da008febd9ce9ee9060cb2712e8155e0b029a0b2505bc19f7`), for release under a
+   data-use agreement. `decoder_read` and
+   `determinism_check --compare` compare the digests of two copies made under one key id, and
+   refuse one published and one plain copy, or two key ids; the digested files give the same
+   `decoder-penalty.json` and the same determinism tables (2026-09-18, 2026-10-08) as the full texts.
+   The readers that need text (`decoding_check`, `retrieval_comparator`'s rules) refuse a published
+   copy (`require_text`).
+4. *History.* Every commit from 96695eb (2026-09-20) up to the one this change merges onto still
+   carries the texts, and stays:
+   rewriting pushed history does not reach clones, forks or caches (GitHub, "Removing sensitive data
+   from a repository") and would break the provenance tags; the comments they can repeat are public
+   on OpenStack's, Wikimedia's and Qt's hosts. The data-availability statement names the range.
+   Stage 1 is not yet submitted, so this is a change to the plan, not a deviation from an accepted
+   protocol; ICSE 2027's open-science policy allows withholding on privacy grounds with a statement.
+5. *Done.* `scripts/withhold_text.py` rewrote the tracked results in place; `withheld-text.json`
+   records the files, fields, counts and key id. `tests/unit/test_published_review_text.py` refuses
+   any tracked `.json` or `.jsonl` file, anywhere in the repo, that still carries such text, holds a
+   `*_hmac` value that is not a 64-digit hex digest, or lists bot-audit comments; it refuses a
+   Qt or Chromium generation run, plain or digested, outside the 13 files committed before the
+   rule, and trips on each shape a run is published in.
+
+Sources:
+
+- EDPB Guidelines 01/2025 on pseudonymisation:
+  https://www.edpb.europa.eu/system/files/2025-01/edpb_guidelines_202501_pseudonymisation_en.pdf
+- NIST SP 800-224 (ipd), HMAC: https://csrc.nist.gov/pubs/sp/800/224/ipd
+- GitHub, removing sensitive data:
+  https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+- ICSE 2027 open-science policy:
+  https://conf.researchr.org/track/icse-2027/icse-2027-icse-2027-open-science-policies
+
+### GitHub's family enters results under its research clause (2026-10-19)
+
+`# research(2026-10)`. The 2026-10-08 entry kept the GitHub organizations out of every published
+figure until GitHub answered a request for written confirmation that its Acceptable Use Policies
+cover research on public pull-request review threads. AJ sent it on 2026-10-10 to GitHub's privacy
+team ("Research use of public pull-request review comments"); the one reply is that inbox's
+automatic one, which routes data-subject, account and takedown requests and answers no research
+question. AJ decided on 2026-10-19 that the study does not wait on it: the hold was the study's own,
+stricter than GitHub's stated terms and than the field's practice.
+
+1. *The terms.* The Acceptable Use Policies, section 7 (read 2026-10-19): "Researchers may use public,
+   non-personal information from the Service for research purposes, only if any publications
+   resulting from that research are open access", whether "scraped, collected through our API, or
+   obtained otherwise". Section 8 adds duties for personal information, not a permission step: use
+   it only "for the purpose for which that User has authorized it", and comply with the Privacy
+   Statement.
+2. *What the study meets.* Every publication has an open-access copy (arXiv, and OSF for the
+   registration); accounts, addresses and @-mentions are pseudonymised at ingestion; no review text
+   is published, and model output that could repeat one is released only as a keyed digest
+   (2026-10-19); an author's reviews are removed on request.
+3. *The field.* GitHub pull requests and their reviews are standard material for mining studies
+   (SmartSHARK's mining-challenge dataset ships them, arXiv 2102.11540), and the ethics guidance the
+   study follows asks for pseudonymisation and an ethics section, not a platform's sign-off (Gold and
+   Krinke, EMSE 27, 2022, entry of 2026-10-08).
+4. *What changes.* The family is read as registered, a separate replication at its own fixed level
+   with its members fixed at the Stage 1 freeze (`REPLICATION_MEMBERS`; Apache and .NET qualify,
+   2026-10-18), and now enters published figures. The removal-on-request script becomes required
+   before any release that carries GitHub data (ROADMAP). A refusal from GitHub, should one come, is
+   met by deleting what was collected.
+
+Sources:
+
+- GitHub Acceptable Use Policies:
+  https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies
+- SmartSHARK mining-challenge data: https://arxiv.org/abs/2102.11540
+- Gold and Krinke, ethics in mining software repositories: https://doi.org/10.1007/s10664-021-10057-7
+
+### Qt's simulations reproduced at later code (2026-10-19)
+
+`# research(2026-10)`. Qt's simulations ran at 6bebf23 and b41de03, before #154 to #162 changed
+`partition_sensitivity.py`, `cells.py` and `partitions.py` for H2. `partition_sensitivity.py` was run
+at 6bebf23 and at 27f5454 on Qt's pilot with the job's smoke settings (20 trials, 40 null trials, 4
+calibration trials, K = 15, seed 43): every field the two outputs share is identical, and the later
+one only adds `hypothesis`, `foreign_source` and `cpp_change_share`. The H1 path the simulations
+took is unchanged, so their artifacts stand for the code on `main`; the one later change on that
+path, `pilot_sizing`'s refusal of a lexer-sure reading (#163), is not reached by these inputs.
 
 ### Chromium re-read as a rate grant: its pool registered again, every code project, before any of it is read (2026-10-19)
 

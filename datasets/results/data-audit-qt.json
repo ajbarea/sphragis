@@ -38,35 +38,27 @@
   },
   "candidate_unregistered_bots": [
     {
-      "text": "typo",
       "changes": 42
     },
     {
-      "text": "remove",
       "changes": 35
     },
     {
-      "text": "nit: line length",
       "changes": 24
     },
     {
-      "text": "repeats",
       "changes": 24
     },
     {
-      "text": "the",
       "changes": 21
     },
     {
-      "text": "same here",
       "changes": 19
     },
     {
-      "text": "const",
       "changes": 18
     },
     {
-      "text": "?",
       "changes": 16
     }
   ],

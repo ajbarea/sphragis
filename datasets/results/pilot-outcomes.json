@@ -48,7 +48,7 @@
     {
       "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:131",
       "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
-      "prediction": "```yaml\n- name: Wait until sysinv API responds with status 200 for region ID (during enroll_init)\n  uri:\n    url: \"{{ oam_endpoint }}/sysinv/v1/region/{{ region_id }}\"\n    method: GET\n    validate_certs: no\n  register: sysinv_response\n  until: sysinv_response.status == 200\n  retries: 30\n  delay: 5\n```",
+      "prediction_hmac": "e0977b0ce583a593e4ef7b6e44a0bbc51d547b672b05b0032eae1dabc178de58",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -57,7 +57,7 @@
     {
       "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:3",
       "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
-      "prediction": "```python\n# Copyright (c) 2024 Wind River Systems, Inc.\n```",
+      "prediction_hmac": "2387008bdd91cc0da0f75faeafe5b35733834bbbb676d36c31f0f61aa2b2b40b",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -66,7 +66,7 @@
     {
       "id": "openstack:I10f69ec048944c2c961f957b4125f29aceee977e:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:1:19705",
       "change_id": "I10f69ec048944c2c961f957b4125f29aceee977e",
-      "prediction": "```python\nif pod_eviction_timeout:\n    if target_version == 'v1.27.5':\n```",
+      "prediction_hmac": "53a9f805d83b450076c947706e390f4498b9e3ad8811fe69d3a00d3303e7c00e",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -75,7 +75,7 @@
     {
       "id": "openstack:Ic77001276e09288debc27258728dc039193bf6cb:.zuul.yaml:1:16",
       "change_id": "Ic77001276e09288debc27258728dc039193bf6cb",
-      "prediction": "nodeset: ubuntu-noble",
+      "prediction_hmac": "169f2f45b366ad8f8a18a68d1df58d8eccf4231c9b6bdebb896133834ebb0734",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
@@ -84,7 +84,7 @@
     {
       "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:110",
       "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "```python\nif action == \"migrate\" and \\\n```",
+      "prediction_hmac": "cd4f7f1a12c917b91410f47763447904608df9e65f7ac65ce5f0725bbd6408fa",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
@@ -93,7 +93,7 @@
     {
       "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
       "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "```python\nimport logging\n\n# Assuming LOG is already configured as a logger\nLOG = logging.getLogger(__name__)\n\ndef execute_command(command):\n    try:\n        # Execute the command and capture stdout and stderr\n        result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n        return result.stdout.decode('utf-8')\n    except subprocess.CalledProcessError as e:\n        # Log both stdout and stderr if an error occurs\n        LOG.error(f",
+      "prediction_hmac": "2047bb8bbac64aacc6adbc59820969b91ded349ca6522f9745e1d355fc75bf00",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -102,7 +102,7 @@
     {
       "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:3:233",
       "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "```python\n# Import the necessary module for release mappings\nfrom ironic.common import release_mappings\n\n# Set the microversion using the mapping from release_mappings.py\nmicroversion = release_mappings.RELEASE_MICROVERSIONS['release_name']\n```",
+      "prediction_hmac": "608ce8835f977108d04105df12f4b57349d8071b3d45ea98d89eb9265ba2af33",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -111,7 +111,7 @@
     {
       "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:4:225",
       "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "```python\nfor testing backwards compatibility or evaluating external tools with\n```",
+      "prediction_hmac": "69ac1657b8db4b6a5bf53173674caf20b52f4596cad49462bb555a26a7a1190c",
       "exact_match": 1.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
@@ -120,7 +120,7 @@
     {
       "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:2:424",
       "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
-      "prediction": "```python\nassert config_list, (\"At least one configuration parameter must be provided.\")\n```",
+      "prediction_hmac": "c1ad1a65830edd6fc850c81fda6959285a25c63fd5def6efcfb1c3447b6e7631",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -129,7 +129,7 @@
     {
       "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:3:444",
       "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
-      "prediction": "\"crudini --set /tmp/{2} {3} {4} {5}'\").format(",
+      "prediction_hmac": "df592ae869c72b47deabdcabd1f103fe83f9c3627b66f46fde816eb36463e615",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
@@ -138,7 +138,7 @@
     {
       "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
       "change_id": "I3ab01460496ba72ebd9941a725945aac92adf749",
-      "prediction": "```python\nDEPLOY_STATES.START.value: \"delete and restart deploy by rerunning 'deploy start <release>' command\",\nDEPLOY_STATES.HOST.value: \"reattempt deploy host '<hostname>' or run 'software deploy abort' to abort\",\nDEPLOY_STATES.HOST_DONE.value: \"reattempt deploy host '<hostname>' or run 'software deploy abort' to abort\",\nDEPLOY_STATES.HOST_ROLLBACK.value: \"reattempt deploy host-rollback '<hostname>'",
+      "prediction_hmac": "5850cff1e372da2d023b74810c6fc28bdc994257e60e59345dfa445c0fdac8d2",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -147,7 +147,7 @@
     {
       "id": "openstack:I97b05918b80223add692a8e09790a08cfe1fe0a2:controllerconfig/controllerconfig/upgrade-scripts/35-sync-system-local-ca-in-subclouds.py:13:1",
       "change_id": "I97b05918b80223add692a8e09790a08cfe1fe0a2",
-      "prediction": "```python\n#!/usr/bin/env python3\n```",
+      "prediction_hmac": "839c34d2c60370ed27e474e70fc2de17ffda9ce9bd410122064b6161ee9e0816",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -156,7 +156,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "```bash\n${KUBECTL_CMD} patch clusterrole system:node --type='json' \\\n--patch='[{\"op\":\"add\",\"path\":\"/rules/-\",\"value\":{\"apiGroups\":[\"\"],\"resources\":[\"namespaces\"],\"verbs\":[\"get\",\"list\"]}}]'\n```",
+      "prediction_hmac": "c4754f4e8324e6557e47d7c4270ce7d5efaa4cd67693a0267eaec7929483b655",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -165,7 +165,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:169",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "# Ensure kubelet is restarted on all Kubernetes nodes after updating RBAC",
+      "prediction_hmac": "6f8472460dcbc5b97bc09ee4e3b83a86084bccbbaa6c9e6d50535cd6b1323e0b",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -174,7 +174,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "```bash\ncompute_hosts=\"\"\n\nhost_list_command=\"system host-list --format value --column hostname --column personality\"\n\nwhile IFS= read -r line; do\n    read -ra arr <<< \"$line\"\n    personality=\"${arr[1]}\"\n    if [[ \"${personality}\" == \"controller\" ]] || \\\n       [[ \"${personality}\" == \"worker\" ]]; then\n        compute_hosts+=\" ${arr[0]}\"\n    fi\ndone < <($host_list",
+      "prediction_hmac": "e2b6cd11f0accc913648d827022ac8193b073a6b0db6573fbb282fa6f76794b7",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -183,7 +183,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:57",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "```bash\nread -ra compute_hosts_arr <<< $(get_compute_hosts)\n```",
+      "prediction_hmac": "709f2a9852453020e21ebae93094bdcceaeec14a5416a5b6fc364ea661eae437",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -192,7 +192,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:66",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "```bash\nvalue=$(echo \"${value}]\" | sed 's/\\(.*\\),/\\1/')\n```",
+      "prediction_hmac": "4dc1327596da35a3959a05e679fb8de12ad3fb59a34bc1fd584e061f8810f536",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -201,7 +201,7 @@
     {
       "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/__init__.py:14:270",
       "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
-      "prediction": "```python\nquery_compatible_apps = [link.Link]\n```",
+      "prediction_hmac": "b9699c1b2296dc664d7ea96bf83a12d876e7773d545c8234b4bd2e731ab0c427",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
@@ -210,7 +210,7 @@
     {
       "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/reorder_apps.py:14:23",
       "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
-      "prediction": "```python\n\"\"\"Reorders apps based on the metadata.yaml file that presents the application tarball\n```",
+      "prediction_hmac": "34ee3a29e617b7e5f650eca41ee810c43e5d5574bcb58b01f1c465a30518fa21",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -219,7 +219,7 @@
     {
       "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
       "change_id": "I9ab37f9d225a84fcceb9b618fad7d110974d2ed4",
-      "prediction": "```python\nself.client.get_network_interfaces.assert_called_one_with(protocols=['NFS', 'CIFS'])\n```",
+      "prediction_hmac": "75229a93ff1a01fb2fe9b516fddc1c8a6861026bcc8c230db7cc76348828b1b7",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -228,7 +228,7 @@
     {
       "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
       "change_id": "I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f",
-      "prediction": "```yaml\n# We don't want to load the project to report on those repos\n- exclude: [project]\n  projects:\n    - opendev/base-jobs\n    - vexxhost/new-repo\n```",
+      "prediction_hmac": "c1f7867235a2302abcc1e77ffa639cf014d568b8eb2e94e88f9eae901e726379",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -237,7 +237,7 @@
     {
       "id": "openstack:I9e120fcaedfa39fc08f3bc5f189976706ae72778:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:4:8633",
       "change_id": "I9e120fcaedfa39fc08f3bc5f189976706ae72778",
-      "prediction": "```python\nLOG.info(\"Skipping k8s_application_audit due to skip_k8s_application_audit flag being set to true.\")\n```",
+      "prediction_hmac": "31c1d7657c60af47dcdeefd1372e89e50afb4a793420df7a92bb7280aaec4d9f",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -246,7 +246,7 @@
     {
       "id": "openstack:I42e459aebab665c0e6dd0c68a4e793e8de225b44:heat/engine/constraint/common_constraints.py:2:196",
       "change_id": "I42e459aebab665c0e6dd0c68a4e793e8de225b44",
-      "prediction": "```python\nclass JsonStringConstraint(constraints.BaseCustomConstraint):\n```",
+      "prediction_hmac": "575612709c10dce86375b54e06f45d5f32fda0c0cfa58fad8c9d8d9648c1225e",
       "exact_match": 1.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
@@ -255,7 +255,7 @@
     {
       "id": "openstack:I32524af08dce007ed344de62e1ea53a98a95405a:README.md:2:37",
       "change_id": "I32524af08dce007ed344de62e1ea53a98a95405a",
-      "prediction": "[cg-doc-contrib]: https://docs.openstack.org/charm-guide/latest/contributing.html",
+      "prediction_hmac": "27aa674359407a4c155c39ff04c3ccca2c6e9d77e533f114bc2e86bccea3d748",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -264,7 +264,7 @@
     {
       "id": "openstack:I6099445adeaa9de2c859205ff2fbba03524aed84:software/software/software_controller.py:1:3049",
       "change_id": "I6099445adeaa9de2c859205ff2fbba03524aed84",
-      "prediction": "```python\nsocket.gethostname() != constants.CONTROLLER_0_HOSTNAME and \\\nnot self.pre_bootstrap:\n```",
+      "prediction_hmac": "e0acb51ea66ccdf6d74bd1a545eb6d3cbc362e7899df9cc73e7bb0296badb1cc",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -273,7 +273,7 @@
     {
       "id": "openstack:I6a6bb45671f3db113f5ff72b88adbd22bee7ac22:upper-constraints.txt:2:499",
       "change_id": "I6a6bb45671f3db113f5ff72b88adbd22bee7ac22",
-      "prediction": "```python\npython-openstackclient===7.2.0;python_version>='3.9'\n```",
+      "prediction_hmac": "ccef8a54040eb24d3c6757e5c8f58110ea89249cfe73728189af3d6cdf030bb9",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -282,7 +282,7 @@
     {
       "id": "openstack:I9d000fc9e385286122d818bb5490d6aa07ecd800:tests/unit/test_openstack_driver.py:2:105",
       "change_id": "I9d000fc9e385286122d818bb5490d6aa07ecd800",
-      "prediction": "```python\nself._test_node_lifecycle('debian-normal')\n```",
+      "prediction_hmac": "bfcf9fcba0b5119aea9da5380fa20478e785cf0f347e9503eeb6c1852ebfd11d",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 1.0,
@@ -293,7 +293,7 @@
     {
       "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:131",
       "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
-      "prediction": "    - name: Wait until sysinv API is ready on the OAM endpoint",
+      "prediction_hmac": "6204e918c737bb82aaea05a6827e4a1be7fec9406ca833816193c3786c46f4be",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -302,7 +302,7 @@
     {
       "id": "openstack:I7d89fb7f43a590b31f632c8ffc8b0518e1767553:playbookconfig/src/playbooks/install.yml:2:3",
       "change_id": "I7d89fb7f43a590b31f632c8ffc8b0518e1767553",
-      "prediction": "# Copyright (c) 2020-2024 Wind River Systems, Inc.",
+      "prediction_hmac": "dd6764aa092cf102af07b3f9badd8b023d1e94d96aa959e167f4dd29cc776f7f",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -311,7 +311,7 @@
     {
       "id": "openstack:I10f69ec048944c2c961f957b4125f29aceee977e:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:1:19705",
       "change_id": "I10f69ec048944c2c961f957b4125f29aceee977e",
-      "prediction": "                    if pod_eviction_timeout:",
+      "prediction_hmac": "9be5673f3c68473c6b409e51bded03fec3bfffafd3cc187534394d813a03e1c4",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -320,7 +320,7 @@
     {
       "id": "openstack:Ic77001276e09288debc27258728dc039193bf6cb:.zuul.yaml:1:16",
       "change_id": "Ic77001276e09288debc27258728dc039193bf6cb",
-      "prediction": "    nodeset: ubuntu-noble",
+      "prediction_hmac": "73ebabd981569104e3d95981235c2e82d2b957411207f29ccc4a9a9ee8af0049",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -329,7 +329,7 @@
     {
       "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:110",
       "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "    if action == \"migrate\" and \\",
+      "prediction_hmac": "91ea83b730d1ffdca90f47b18f8c7817f94e9c8754ad104e6913b52c60df3b87",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -338,7 +338,7 @@
     {
       "id": "openstack:Ic588247048882d1bf800d1851ffe4dd96b24ee6f:controllerconfig/controllerconfig/upgrade-scripts/00-add-service-parameter.py:4:43",
       "change_id": "Ic588247048882d1bf800d1851ffe4dd96b24ee6f",
-      "prediction": "            LOG.error(f\"Command failed: {stdout.decode('utf-8')}\")",
+      "prediction_hmac": "13727c9818d9c8cf429ddf571e7f29f90e4dd3321755c712184b0265a6196d24",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -347,7 +347,7 @@
     {
       "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:3:233",
       "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "    # Set the microversion to 17.0",
+      "prediction_hmac": "35b20b6373cac62fbce9859458cc345b85d800a36e1b1780cd48e9f9926b6e84",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -356,7 +356,7 @@
     {
       "id": "openstack:I1e21a12ad1413046a41f856ddf229e399f82523a:doc/source/contributor/local-dev-guide.rst:4:225",
       "change_id": "I1e21a12ad1413046a41f856ddf229e399f82523a",
-      "prediction": "for testing backwards compatibility or evaluating external tools with",
+      "prediction_hmac": "669d87f1a94804adf50c924c91edc202bcacd610876933c1a6aa0c13af42c0a3",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -365,7 +365,7 @@
     {
       "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:2:424",
       "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
-      "prediction": "        assert config_list, (\"At least one configuration parameter must be \"",
+      "prediction_hmac": "e0d2341e17a3375306b40f4b42958ccedbd730d2f8f97532e6615b3673f8ec80",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -374,7 +374,7 @@
     {
       "id": "openstack:I206f3ce73e9ab36d4fe1ba072735a0bd382c5621:whitebox_neutron_tempest_plugin/tests/scenario/base.py:3:444",
       "change_id": "I206f3ce73e9ab36d4fe1ba072735a0bd382c5621",
-      "prediction": "                    \"crudini --set /tmp/{2} {3} {4} {5}'\").format(",
+      "prediction_hmac": "ea0036f6efa644643a3189344ee6077c9c35e2c637d9f494c8ee11baae264242",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -383,7 +383,7 @@
     {
       "id": "openstack:I3ab01460496ba72ebd9941a725945aac92adf749:software/software/utilities/deploy_set_failed.py:7:39",
       "change_id": "I3ab01460496ba72ebd9941a725945aac92adf749",
-      "prediction": "    DEPLOY_STATES.START.value: \"delete and restart deploy by rerunning 'deploy start' command\",",
+      "prediction_hmac": "2ee1d5bb231a3e931c4c41261bbc1417d2f4755a8a95c0f1300d2e4fc935eb6f",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -392,7 +392,7 @@
     {
       "id": "openstack:I97b05918b80223add692a8e09790a08cfe1fe0a2:controllerconfig/controllerconfig/upgrade-scripts/35-sync-system-local-ca-in-subclouds.py:13:1",
       "change_id": "I97b05918b80223add692a8e09790a08cfe1fe0a2",
-      "prediction": "#!/usr/bin/env python",
+      "prediction_hmac": "8ff77ec0beffcc6e2f0721ed48917cc76c2b5916805b3104b82567fab114fdb1",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -401,7 +401,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:121",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "    ${KUBECTL_CMD} patch clusterrole system:node --type='json' \\\n    --patch='[{\"op\":\"add\",\"path\":\"/rules/-\",\"value\":{\"apiGroups\":[\"\"],\"resources\":[\"namespaces\"],\"verbs\":[\"get\",\"list\"]}}]'",
+      "prediction_hmac": "7b2c3479f257b6724f18a3295fa04e7c411a6fa6cc9964e31695069190de4635",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -410,7 +410,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:169",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "    Restart kubelet on all Kubernetes nodes if RBAC has been updated",
+      "prediction_hmac": "d92c1655269db82992b75a08062f75e9a0b49ac146951636199e5018cb164e8b",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -419,7 +419,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:36",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "    compute_hosts=\"\"\n\n    host_list_command=\"system host-list --format value --column hostname --column personality\"\n\n    while read -r line; do\n        read -ra arr <<< \"${line}\"\n        personality=\"${arr[1]}\";",
+      "prediction_hmac": "61af8528e4ae9bd1254d98d6646f7f9aee5d9792dbd5f7a1f13622680f8be93d",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -428,7 +428,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:57",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "    read -ra compute_hosts_arr <<< $(get_compute_hosts)",
+      "prediction_hmac": "f25624afa0c01d46c9ad3b425b6614292306da64cceb9efb9508a9c6003e73d9",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -437,7 +437,7 @@
     {
       "id": "openstack:I687c6dcf6938bd09e0fa5758f19ccd20af021f33:controllerconfig/controllerconfig/upgrade-scripts/196-k8s-update-system-node-rbac.sh:5:66",
       "change_id": "I687c6dcf6938bd09e0fa5758f19ccd20af021f33",
-      "prediction": "    value=$(echo \"${value}]\" | sed 's/\\(.*\\),/\\1/')",
+      "prediction_hmac": "f4c4f4559175c76fae41880cffc041a31311f4da09712b3ba73084e836fdd550",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -446,7 +446,7 @@
     {
       "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/__init__.py:14:270",
       "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
-      "prediction": "    query_compatible_apps = [link.Link]",
+      "prediction_hmac": "8af962cc4b39ac16209128cee70b19b15828a2cb0402f4a8ec2c38430d056aca",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -455,7 +455,7 @@
     {
       "id": "openstack:I5043733a85add1152a818f943fde2f333c0bfa1f:sysinv/sysinv/sysinv/sysinv/api/controllers/v1/reorder_apps.py:14:23",
       "change_id": "I5043733a85add1152a818f943fde2f333c0bfa1f",
-      "prediction": "        \"\"\"Reorders apps based on the metadata.yaml presenting the application tarball",
+      "prediction_hmac": "9c8b90cae56b21ef7d7cc66d7f424534b377356b1def04bc6da5f45b0faeb614",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -464,7 +464,7 @@
     {
       "id": "openstack:I9ab37f9d225a84fcceb9b618fad7d110974d2ed4:manila/tests/share/drivers/netapp/dataontap/client/test_client_cmode.py:1:3031",
       "change_id": "I9ab37f9d225a84fcceb9b618fad7d110974d2ed4",
-      "prediction": "        self.client.get_network_interfaces.assert_called_one_with(protocols=[])",
+      "prediction_hmac": "98767a345f61d6e77c2c10a2f6ae53001392ce6e9d40b6661bd6e191fea54f4b",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -473,7 +473,7 @@
     {
       "id": "openstack:I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f:zuul/main.yaml:1:1429",
       "change_id": "I3ac2d9eaa0f208b5fd45d5f22c6ef2b97fa5484f",
-      "prediction": "          # We don't want to load the project to report on those repos\n          - exclude: [project]\n            projects:\n              - opendev/vexxhost-base-jobs",
+      "prediction_hmac": "bcea0b0c433f5bfc067c650155e60d67b29fb9bde62befe21d8ea2a1699e4042",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -482,7 +482,7 @@
     {
       "id": "openstack:I9e120fcaedfa39fc08f3bc5f189976706ae72778:sysinv/sysinv/sysinv/sysinv/conductor/manager.py:4:8633",
       "change_id": "I9e120fcaedfa39fc08f3bc5f189976706ae72778",
-      "prediction": "            LOG.info(\"Skipping k8s_application_audit due \"\n                \"skip_k8s_application_audit flag setted as true.\")",
+      "prediction_hmac": "0e5d0a0d58607a4a17506e67086f056b46de659eedf8ff805461b606d81ae01b",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -491,7 +491,7 @@
     {
       "id": "openstack:I42e459aebab665c0e6dd0c68a4e793e8de225b44:heat/engine/constraint/common_constraints.py:2:196",
       "change_id": "I42e459aebab665c0e6dd0c68a4e793e8de225b44",
-      "prediction": "class JsonStringConstraint(constraints.BaseCustomConstraint):",
+      "prediction_hmac": "b93c51639c85b34aaa3fd0798bf4842f6a384c0ab62f835217db37b972d1c49f",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -500,7 +500,7 @@
     {
       "id": "openstack:I32524af08dce007ed344de62e1ea53a98a95405a:README.md:2:37",
       "change_id": "I32524af08dce007ed344de62e1ea53a98a95405a",
-      "prediction": "[cg-doc-contrib]: https://docs.openstack.org/charm-guide/latest/contributing.html",
+      "prediction_hmac": "27aa674359407a4c155c39ff04c3ccca2c6e9d77e533f114bc2e86bccea3d748",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -509,7 +509,7 @@
     {
       "id": "openstack:I6099445adeaa9de2c859205ff2fbba03524aed84:software/software/software_controller.py:1:3049",
       "change_id": "I6099445adeaa9de2c859205ff2fbba03524aed84",
-      "prediction": "                socket.gethostname() != constants.CONTROLLER_1_HOSTNAME and\n                not self.pre_bootstrap):",
+      "prediction_hmac": "8c3e49085bf6556450c0e8288e10dc3c167b02776734a403e00fb0c344303b28",
       "exact_match": 0.0,
       "exact_match_raw": 0.0,
       "normalized_exact_match": 0.0,
@@ -518,7 +518,7 @@
     {
       "id": "openstack:I6a6bb45671f3db113f5ff72b88adbd22bee7ac22:upper-constraints.txt:2:499",
       "change_id": "I6a6bb45671f3db113f5ff72b88adbd22bee7ac22",
-      "prediction": "python-openstackclient===7.2.0",
+      "prediction_hmac": "129b8fbb236ebe499226e86fa6df4be01984a36ba91f98298789265758ec62d1",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
@@ -527,11 +527,20 @@
     {
       "id": "openstack:I9d000fc9e385286122d818bb5490d6aa07ecd800:tests/unit/test_openstack_driver.py:2:105",
       "change_id": "I9d000fc9e385286122d818bb5490d6aa07ecd800",
-      "prediction": "        self._test_node_lifecycle('debian-normal')",
+      "prediction_hmac": "360f30375176504ff9a8c75b48c74cfb0b44cfc5f364ff1f8e00544896439b60",
       "exact_match": 1.0,
       "exact_match_raw": 1.0,
       "normalized_exact_match": 1.0,
       "edit_similarity": 1.0
     }
-  ]
+  ],
+  "withheld_text": {
+    "fields": [
+      "prediction"
+    ],
+    "texts": 54,
+    "algorithm": "HMAC-SHA256",
+    "key_id": "659eedab9a778439",
+    "full_text": "the cluster's results root, under a data-use agreement (docs/protocol.md)"
+  }
 }
