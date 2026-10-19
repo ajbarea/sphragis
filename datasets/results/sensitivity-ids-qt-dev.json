@@ -6,7 +6,7 @@
   "changes": 409,
   "rules": {
     "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers-qt.json's changes_ai",
-    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:v|release_)?[\\d.]+-based$|(?:dunfell|gatesgarth|hardknott|honister|kirkstone|langdale|mickledore|nanbield|scarthgap|styhead|walnascar|whinlatter|wrynose|blacksail|garburn)$), outside the projects that merge their release branches up (['installer-framework/installer-framework', 'qbs/qbs', 'qt-creator/perfparser', 'qt-creator/plugin-telemetry', 'qt-creator/qt-creator', 'qt/qttranslations'])",
+    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:dunfell|gatesgarth|hardknott|honister|kirkstone|langdale|mickledore|nanbield|scarthgap|styhead|walnascar|whinlatter|wrynose|blacksail|garburn)$), outside the projects that merge their release branches up (['installer-framework/installer-framework', 'qbs/qbs', 'qt-creator/perfparser', 'qt-creator/plugin-telemetry', 'qt-creator/qt-creator', 'qt/qttranslations'])",
     "layout_only": "the revision changes the hunk's layout alone (experiment.layout)"
   },
   "ids": {
@@ -890,9 +890,9 @@
     "qt:Iffa0bb4d1515a94f23da506c0c83160b036db514:src/lottiegenerator/qlottievisitor.cpp:1:101"
   ],
   "provenance": {
-    "generated_at": "2026-10-19T06:53:37.338786+00:00",
+    "generated_at": "2026-10-19T08:02:01.801523+00:00",
     "git": {
-      "commit": "f55176f7cc960d29ac985af6987fcaef84939b1c",
+      "commit": "38aadbd2a8063ed45917316f92410bf1a284aa73",
       "branch": "measure/qt-ai-trailers"
     },
     "python": "3.14.4",

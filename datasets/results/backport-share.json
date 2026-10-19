@@ -1,5 +1,5 @@
 {
-  "backport_branches": "^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:v|release_)?[\\d.]+-based$|(?:dunfell|gatesgarth|hardknott|honister|kirkstone|langdale|mickledore|nanbield|scarthgap|styhead|walnascar|whinlatter|wrynose|blacksail|garburn)$)",
+  "backport_branches": "^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:dunfell|gatesgarth|hardknott|honister|kirkstone|langdale|mickledore|nanbield|scarthgap|styhead|walnascar|whinlatter|wrynose|blacksail|garburn)$)",
   "orgs": {
     "openstack": {
       "pilot": {
@@ -20,7 +20,8 @@
         "possibly_backport": 43,
         "no_raw_change": 0
       },
-      "merge_up_projects": []
+      "merge_up_projects": [],
+      "merge_up_found": []
     },
     "wikimedia": {
       "pilot": {
@@ -41,7 +42,8 @@
         "possibly_backport": 56,
         "no_raw_change": 0
       },
-      "merge_up_projects": []
+      "merge_up_projects": [],
+      "merge_up_found": []
     },
     "qt": {
       "pilot": {
@@ -52,8 +54,8 @@
       },
       "train": {
         "examples": 7493,
-        "only_backport": 44,
-        "possibly_backport": 3119,
+        "only_backport": 4,
+        "possibly_backport": 3079,
         "no_raw_change": 0
       },
       "dev": {
@@ -69,13 +71,21 @@
         "qt-creator/plugin-telemetry",
         "qt-creator/qt-creator",
         "qt/qttranslations"
+      ],
+      "merge_up_found": [
+        "installer-framework/installer-framework",
+        "qbs/qbs",
+        "qt-creator/perfparser",
+        "qt-creator/plugin-telemetry",
+        "qt-creator/qt-creator",
+        "qt/qttranslations"
       ]
     }
   },
   "provenance": {
-    "generated_at": "2026-10-19T06:47:55.344686+00:00",
+    "generated_at": "2026-10-19T07:56:19.987522+00:00",
     "git": {
-      "commit": "f55176f7cc960d29ac985af6987fcaef84939b1c",
+      "commit": "38aadbd2a8063ed45917316f92410bf1a284aa73",
       "branch": "measure/qt-ai-trailers"
     },
     "python": "3.14.4",
