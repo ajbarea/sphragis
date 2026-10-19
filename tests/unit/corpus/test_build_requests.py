@@ -1041,9 +1041,10 @@ def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:
 
     git = hosts.claim_host("android.googlesource.com", tmp_path)
     assert hosts.claim_host("android-review.googlesource.com", tmp_path) is git
-    assert (tmp_path / "chromium-review.googlesource.com.lock").exists()
-    assert not (tmp_path / "android.googlesource.com.lock").exists()
-    assert not (tmp_path / "android-review.googlesource.com.lock").exists()
+    # The shared claim's file and each member host's own (`hosts.lock_names`).
+    assert sorted(p.name for p in tmp_path.glob("*.lock")) == sorted(
+        f"{h}.lock" for h in ONE_CLIENT
+    )
     hosts.release_host("android.googlesource.com", tmp_path)
     assert (tmp_path, "chromium-review.googlesource.com") not in hosts._CLAIMS
 
@@ -1088,6 +1089,69 @@ def test_a_host_under_chrome_infras_answer_is_refused_while_another_process_read
         holder.wait()
 
 
+def _held_elsewhere(lock: Path) -> subprocess.Popen[str]:
+    """Another process holding `lock`, as one running code from before the shared claim would."""
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    holder = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            f"import fcntl,time; f=open({str(lock)!r},'a+'); fcntl.flock(f, fcntl.LOCK_EX);"
+            " print('held', flush=True); time.sleep(30)",
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    assert holder.stdout is not None and holder.stdout.readline().strip() == "held"
+    return holder
+
+
+@pytest.mark.parametrize(
+    "old", ["fuchsia-review.googlesource.com", "android-review.googlesource.com"]
+)
+def test_the_shared_claim_waits_on_a_process_holding_a_hosts_own_lock(old: str) -> None:
+    """Code from before the shared claim locks each host's own file; a claim under the shared name
+    takes those too, so old and new code still exclude each other."""
+    from sphragis.corpus import hosts
+
+    holder = _held_elsewhere(hosts.LOCK_DIR / f"{old}.lock")
+    try:
+        for host in ONE_CLIENT:
+            with pytest.raises(SystemExit, match="another process"):
+                hosts.claim_host(host)
+        # A host outside the answer is its own client.
+        hosts.claim_host("codereview.qt-project.org")
+    finally:
+        holder.kill()
+        holder.wait()
+    # The refused attempts left no lock behind in this process.
+    hosts.claim_host("chromium-review.googlesource.com")
+
+
+def test_the_shared_claim_holds_every_member_hosts_own_lock() -> None:
+    from sphragis.corpus import hosts
+
+    hosts.claim_host("fuchsia-review.googlesource.com")
+    for host in ONE_CLIENT:
+        holder = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import fcntl,sys; f=open(sys.argv[1],'a+')\n"
+                "try:\n fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB); print('free')\n"
+                "except BlockingIOError:\n print('held')",
+                str(hosts.LOCK_DIR / f"{host}.lock"),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        assert holder.stdout.strip() == "held", host
+    hosts.claim_host("codereview.qt-project.org")
+    owned = sorted(p.name for p in hosts.LOCK_DIR.glob("*.lock"))
+    assert owned == sorted([*(f"{h}.lock" for h in ONE_CLIENT), "codereview.qt-project.org.lock"])
+
+
 def test_a_test_claims_a_host_in_a_lock_directory_of_its_own() -> None:
     """A fetch the machine has in flight holds the user's lock; no test may contend for it."""
     from sphragis.corpus import hosts
@@ -1103,6 +1167,21 @@ def _listed(after: str, before: str, *changes: dict, project: str | None = None)
 
 EDGE = {"_number": 7, "project": "p", "updated": "2025-01-03 00:00:00.000000000"}
 INSIDE = {"_number": 8, "project": "p", "updated": "2025-01-02 13:00:00.000000000"}
+
+
+def test_a_boundary_repeat_on_a_pages_last_row_is_kept_once() -> None:
+    """Gerrit marks a page's last row `_more_changes`; that flag is not part of the change."""
+    one = {"_number": 1, "project": "p", "updated": "2025-01-03 00:00:00.000000000"}
+    three = {"_number": 3, "project": "p", "updated": "2025-01-04 09:00:00.000000000"}
+    listings = [
+        _listed("2025-01-01", "2025-01-03", dict(one)),
+        _listed("2025-01-03", "2025-01-05", {**one, "_more_changes": True}, three),
+    ]
+    assert cli.drop_boundary_repeats(listings) == ([one, three], 1)
+    # Any other difference still fails the month.
+    other = [listings[0], _listed("2025-01-03", "2025-01-05", {**one, "subject": "x"})]
+    with pytest.raises(ValueError, match="repeat"):
+        cli.drop_boundary_repeats(other)
 
 
 def test_a_change_at_the_midnight_two_adjacent_listings_share_is_kept_once_and_counted() -> None:

@@ -129,11 +129,45 @@ def test_a_count_the_host_would_truncate_is_refused(
         scoping.main(["measure", kind, "chromium/src", "2025-01"])
 
 
-def test_summarize_refuses_a_ranged_count_that_hit_the_cap(tmp_path: Path) -> None:
-    row = {"project": "chromium/src", "month": "2024-11", "merged": 10000, "created_in_window": 1}
-    (tmp_path / "volume.jsonl").write_text(
-        json.dumps({**row, "human": 1, "capped": True, "ranged": True}) + "\n"
+def test_a_ranged_count_counts_a_change_at_a_shared_midnight_once(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Gerrit's after: and before: both include their own time, so a change last updated at the
+    midnight two sub-ranges share is listed by both."""
+    owner = {"_account_id": 1, "email": "dev@example.org"}
+    edge = {
+        "_number": 1,
+        "project": "chromium/src",
+        "created": "2025-01-02 00:00:00.000000000",
+        "updated": "2025-01-06 00:00:00.000000000",
+        "owner": owner,
+    }
+    inside = {**edge, "_number": 2, "updated": "2025-01-07 10:00:00.000000000"}
+    parts = {
+        "status:merged after:2025-01-01 before:2025-01-06 (project:chromium/src)": [edge],
+        "status:merged after:2025-01-06 before:2025-01-11 (project:chromium/src)": [
+            {**edge, "_more_changes": True},
+            inside,
+        ],
+    }
+    monkeypatch.setattr(scoping, "_transport", lambda *_: None)
+    monkeypatch.setattr(
+        scoping, "listing", lambda _t, q, *_, **__: ([dict(r) for r in parts.get(q, [])], False)
     )
-    (tmp_path / "yield.jsonl").write_text("")
-    with pytest.raises(SystemExit, match="floor"):
-        scoping.summarize(tmp_path, tmp_path / "out.json")
+    scoping.measure_ranged("chromium/src", ["2025-01"])
+    row = json.loads(capsys.readouterr().out)
+    assert row["merged"] == 2 and row["ranged"] is True and "capped" not in row
+
+
+def test_a_ranged_count_refuses_any_other_repeat(monkeypatch: pytest.MonkeyPatch) -> None:
+    row = {
+        "_number": 1,
+        "project": "chromium/src",
+        "created": "2025-01-02 00:00:00.000000000",
+        "updated": "2025-01-03 10:00:00.000000000",
+        "owner": {"_account_id": 1, "email": "dev@example.org"},
+    }
+    monkeypatch.setattr(scoping, "_transport", lambda *_: None)
+    monkeypatch.setattr(scoping, "listing", lambda *_, **__: ([dict(row)], False))
+    with pytest.raises(SystemExit, match="repeat"):
+        scoping.measure_ranged("chromium/src", ["2025-01"])

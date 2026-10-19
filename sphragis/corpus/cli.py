@@ -484,13 +484,19 @@ def listing_query(after: str, before: str, projects: Sequence[str] = ()) -> str:
     return query
 
 
+def _as_change(row: Mapping[str, Any]) -> dict[str, Any]:
+    """A listed row without `_more_changes`, which Gerrit sets on a page's last row only."""
+    return {k: v for k, v in row.items() if k != "_more_changes"}
+
+
 def drop_boundary_repeats(listings: Sequence[Listed]) -> tuple[list[dict[str, Any]], int]:
     """The listings' changes with each listed twice at a midnight two adjacent listings share kept
     once, and how many such repeats were dropped. Gerrit's `after:` and `before:` both include
     their own time, so a change last updated at exactly `<day> 00:00:00.000000000`, where one
     listing of a project ends and the next of the same project begins, is in both, and both
-    copies are the same record. Any other repeat raises ValueError: one inside a listing, at
-    another time, of differing content, or across projects or days the two listings do not share."""
+    copies are the same record but for `_more_changes`. Any other repeat raises ValueError: one
+    inside a listing, at another time, of differing content, or across projects or days the two
+    listings do not share."""
     first: dict[Any, tuple[Listed, dict[str, Any]]] = {}
     kept: list[dict[str, Any]] = []
     dropped: set[Any] = set()
@@ -509,7 +515,7 @@ def drop_boundary_repeats(listings: Sequence[Listed]) -> tuple[list[dict[str, An
                 or number in dropped
                 or earlier.project != listing.project
                 or change.get("updated") not in midnights
-                or dict(change) != dict(copy)
+                or _as_change(change) != _as_change(copy)
             ):
                 raise ValueError(
                     f"the listings repeat a change ({number}) other than at a midnight two "

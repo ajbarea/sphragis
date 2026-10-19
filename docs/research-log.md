@@ -10173,8 +10173,10 @@ now, before any chromium-review change past V8's is read:
 5. *Pace.* One client, one request a second, five minutes quiet after a 5xx. Chrome Infra's answer
    is read as that rate for chromium-review, android-review and fuchsia-review together, so no two
    of them are read at once: Chromium's listings start after Fuchsia's build ends. The code holds
-   all three, and AOSP's git host, to one client (`hosts.CLAIM_AS`): a second process is refused
-   the shared lock, and one process's transport paces them as one host (`hosts.claim_name`).
+   all three, and AOSP's git host, to one client (`hosts.CLAIM_AS`): a claim on any of them takes
+   the shared lock and each host's own (`hosts.lock_names`), which code from before the shared
+   claim locks, so a second process, old or new, is refused and a 5xx pause either writes is read
+   by both; one process's transport paces them as one host (`hosts.claim_name`).
 6. *Names.* Under a scope of every project a listing may name a project only if the name reads as
    itself in Gerrit's query grammar (`cli.rest_project_name`, no Gerrit keyword); a brace phrase or
    any other syntax is refused, as on 2026-10-19. This replaces the refusal of any listing that

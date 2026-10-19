@@ -38,9 +38,11 @@ from sphragis.corpus.cli import (
     GERRIT,
     REST_PERMITTED,
     Admitted,
+    Listed,
     admit,
     covers_change,
     created_in_grant,
+    drop_boundary_repeats,
     grant_months,
     host_of,
     http_transport,
@@ -137,17 +139,21 @@ def measure_volume(project: str, months: list[str]) -> None:
 
 
 def measure_ranged(project: str, months: list[str]) -> None:
+    """Each month's counts over six sub-ranges, each listing refused if the host would truncate
+    it, and a change at the midnight two sub-ranges share counted once (`drop_boundary_repeats`)."""
     transport = _transport()
     for month in months:
         a, b = month_bounds(month)
         cuts = [a] + [f"{month}-{d:02d}" for d in (6, 11, 16, 21, 26)] + [b]
-        rows: list[dict] = []
-        capped = False
+        parts: list[Listed] = []
         for lo, hi in itertools.pairwise(cuts):
             part, _ = listing(transport, listing_query(lo, hi, [project]), ["DETAILED_ACCOUNTS"])
-            capped |= len(part) >= 10000
-            rows.extend(part)
-        print(json.dumps(_counts(project, month, rows, capped=capped, ranged=True)), flush=True)
+            parts.append(Listed(lo, hi, project, {}, part))
+        try:
+            rows, _ = drop_boundary_repeats(parts)
+        except ValueError as error:
+            raise SystemExit(f"{project} {month}: {error}") from error
+        print(json.dumps(_counts(project, month, rows, ranged=True)), flush=True)
 
 
 def measure_yield(project: str, month: str, k: int) -> None:
@@ -241,12 +247,8 @@ def summarize(directory: Path, out: Path) -> None:
     volume: dict[str, dict[str, dict]] = collections.defaultdict(dict)
     for line in (directory / "volume.jsonl").read_text().splitlines():
         row = json.loads(line)
-        if row.get("capped"):
-            raise SystemExit(
-                f"{row['project']} {row['month']}: a sub-range reached the host's cap, so its "
-                "count is a floor; measure it in narrower ranges"
-            )
-        # A plain listing that reached 10,000 was cut by the host; only ranged counts stand.
+        # A plain listing that reached 10,000 was cut by the host before listings refused a cut
+        # (the committed 2026-09-22 measurements); only ranged counts stand.
         if "month" in row and (row.get("ranged") or row["merged"] < 10000):
             volume[row["project"]][row["month"]] = row
     samples = {

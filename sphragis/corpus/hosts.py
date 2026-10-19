@@ -1,8 +1,8 @@
 """One process's claim on a host that asks for a single client, shared by every route to it.
 
 A host that asks for concurrency 1 counts every client machine-wide, so the REST transport
-(`cli.http_transport`) and the git route (`notedb.Repo`) take the same lock file for it and keep
-its quiet deadline there.
+(`cli.http_transport`) and the git route (`notedb.Repo`) take the same lock files for it
+(`lock_names`) and keep its quiet deadline there.
 """
 
 from __future__ import annotations
@@ -44,38 +44,53 @@ class HostClaim:
     two terminals would each pace themselves correctly and together break the limit. The lock
     file also carries the wall-clock time before which the host must not be asked again, so a
     pause a 5xx started outlives the process that saw it: `collect`-style loops start a fresh
-    process per month.
+    process per month. A claim under a shared name holds several files (`lock_names`), reads the
+    latest deadline any of them carries and writes a new one to all of them.
     """
 
-    def __init__(self, host: str, handle: IO[str]) -> None:
-        self.host, self._handle = host, handle
+    def __init__(self, host: str, handles: list[IO[str]]) -> None:
+        self.host, self._handles = host, handles
 
     def quiet_until(self) -> float:
-        self._handle.seek(0)
-        text = self._handle.read().strip()
-        return float(text) if text else 0.0
+        deadlines = [0.0]
+        for handle in self._handles:
+            handle.seek(0)
+            text = handle.read().strip()
+            deadlines.append(float(text) if text else 0.0)
+        return max(deadlines)
 
     def hold_until(self, deadline: float) -> None:
         if deadline <= self.quiet_until():
             return
-        self._handle.seek(0)
-        self._handle.truncate()
-        self._handle.write(f"{deadline}\n")
-        self._handle.flush()
-        os.fsync(self._handle.fileno())
+        for handle in self._handles:
+            handle.seek(0)
+            handle.truncate()
+            handle.write(f"{deadline}\n")
+            handle.flush()
+            os.fsync(handle.fileno())
 
     def release(self) -> None:
-        self._handle.close()
+        for handle in self._handles:
+            handle.close()
 
 
 _CLAIMS: dict[tuple[Path, str], HostClaim] = {}
 
 
+def lock_names(host: str) -> list[str]:
+    """The lock files a claim on `host` holds: its claim name's and, under a shared claim, each
+    member host's own, which code from before the claim was shared locks, so old and new code
+    still exclude each other and a pause either writes is read by both."""
+    name = claim_name(host)
+    return sorted({name, *(member for member, shared in CLAIM_AS.items() if shared == name)})
+
+
 def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
     """This process's claim on `host`, taken once and shared by every transport it builds.
 
-    Exits if another process holds it. The lock lives at a fixed path under the user's home, so
-    processes started from different environments contend for the same file.
+    Exits if another process holds any of its lock files (`lock_names`). The locks live at a fixed
+    path under the user's home, so processes started from different environments contend for the
+    same files.
     """
     directory = lock_dir or LOCK_DIR
     name = claim_name(host)
@@ -83,17 +98,21 @@ def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
     if key in _CLAIMS:
         return _CLAIMS[key]
     directory.mkdir(parents=True, exist_ok=True)
-    handle = (directory / f"{name}.lock").open("a+")
-    try:
-        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
-        handle.close()
-        also = f" or a host claimed with it as {name}" if name != host else ""
-        raise SystemExit(
-            f"refusing {host}: another process is already fetching from it{also}, and the host "
-            "asks for a concurrency of 1"
-        ) from None
-    _CLAIMS[key] = HostClaim(host, handle)
+    handles: list[IO[str]] = []
+    for lock in lock_names(host):
+        handle = (directory / f"{lock}.lock").open("a+")
+        handles.append(handle)
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            for taken in handles:
+                taken.close()
+            also = f" or a host claimed with it as {name}" if name != host else ""
+            raise SystemExit(
+                f"refusing {host}: another process is already fetching from it{also}, and the "
+                "host asks for a concurrency of 1"
+            ) from None
+    _CLAIMS[key] = HostClaim(host, handles)
     return _CLAIMS[key]
 
 

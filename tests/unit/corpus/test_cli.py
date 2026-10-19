@@ -2122,6 +2122,69 @@ def test_a_pause_outlives_the_process_that_saw_the_5xx(
     assert later.slept == [pytest.approx(840.0)]
 
 
+CHROMIUM_DAYS = (
+    "https://chromium-review.googlesource.com/changes/"
+    "?q=status%3Amerged+after%3A2025-01-01+before%3A2025-01-03&n=100&S=0"
+)
+MEMBERS = (
+    "chromium-review.googlesource.com",
+    "android-review.googlesource.com",
+    "fuchsia-review.googlesource.com",
+    "android.googlesource.com",
+)
+
+
+def test_a_pause_in_a_member_hosts_own_lock_is_waited_out(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Code from before the shared claim keeps a 5xx pause in the host's own file."""
+    from sphragis.corpus import cli
+
+    monkeypatch.setattr(cli, "unheld_grant", lambda host: None)
+    _scripted_connections(monkeypatch, [_FakeResponse(200)])
+    clocks = _Clocks()
+    (tmp_path / "fuchsia-review.googlesource.com.lock").write_text(f"{clocks.wall() + 300.0}\n")
+    transport = cli.http_transport(
+        clock=clocks.clock, sleep=clocks.sleep, wall=clocks.wall, lock_dir=tmp_path
+    )
+    assert transport(CHROMIUM_DAYS)[0] == 200
+    assert clocks.slept == [pytest.approx(300.0)]
+
+
+def test_a_pause_is_written_to_every_member_hosts_own_lock(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from sphragis.corpus import cli
+
+    monkeypatch.setattr(cli, "unheld_grant", lambda host: None)
+    _scripted_connections(monkeypatch, [_FakeResponse(502)])
+    clocks = _Clocks()
+    transport = cli.http_transport(
+        clock=clocks.clock, sleep=clocks.sleep, wall=clocks.wall, lock_dir=tmp_path
+    )
+    assert transport(CHROMIUM_DAYS)[0] == 502
+    deadline = clocks.wall() + 300.0
+    for host in MEMBERS:
+        assert float((tmp_path / f"{host}.lock").read_text()) == pytest.approx(deadline), host
+
+
+def test_a_pause_for_a_host_outside_the_shared_claim_stays_its_own(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _scripted_connections(monkeypatch, [_FakeResponse(502)])
+    clocks = _Clocks()
+    (tmp_path / "fuchsia-review.googlesource.com.lock").write_text(f"{clocks.wall() + 600.0}\n")
+    assert _wikimedia(clocks, tmp_path)(f"{WIKIMEDIA}/changes/1/comments")[0] == 502
+    assert clocks.slept == []
+    assert sorted(p.name for p in tmp_path.glob("*.lock")) == [
+        "fuchsia-review.googlesource.com.lock",
+        "gerrit.wikimedia.org.lock",
+    ]
+    assert float((tmp_path / "fuchsia-review.googlesource.com.lock").read_text()) == pytest.approx(
+        clocks.wall() + 600.0
+    )
+
+
 def test_wikimedia_gets_a_second_of_silence_after_a_slow_response(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
