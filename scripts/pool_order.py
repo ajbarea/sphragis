@@ -2,7 +2,8 @@
 
 Each project's count is its merged changes created inside the host's grant
 (`cli.GrantScope`: from `created_from`, before `created_before`), read from the month snapshots a
-`fetch` of every scoped project wrote under `--root` (research log, 2026-10-18). Projects are
+`fetch` wrote under `--root`, each its month of every granted project, or of every project listed
+whole (`GrantScope.every_project`) (research log, 2026-10-18 and 2026-10-19). Projects are
 ranked by that count, most first, ties by name. A month lists the changes last updated in it, so
 a change updated after the grant's last month is in no listing. Beside it, as feasibility only,
 the changes whose snapshot records an inline comment (`cli.uncommented` reads the rest as
@@ -26,6 +27,8 @@ from sphragis.corpus.cli import (
     created_in_grant,
     grant_months,
     grant_scope,
+    month_listing,
+    next_month,
     uncommented,
 )
 from sphragis.corpus.storage import iter_snapshot, read_snapshot_record
@@ -50,17 +53,20 @@ def main() -> None:
     merged, commented, seen, repeated = Counter(), Counter(), set(), 0
     for snapshot in snapshots:
         record = read_snapshot_record(snapshot) or {}
-        queries = _queries(record)
+        month = snapshot.name.removesuffix(".ndjson.gz")
+        asked = [month_listing(q) for q in _queries(record)]
+        whole_month = (f"{month}-01", f"{next_month(month)}-01")
+        if not asked or any(a is None or a[:2] != whole_month for a in asked):
+            raise SystemExit(f"{snapshot.name} is not its month's listing: {_queries(record)}")
+        listed = [a[2] for a in asked if a is not None]
         if scope.every_project:
-            if len(queries) != 1 or "project:" in queries[0]:
-                raise SystemExit(f"{snapshot.name} is not its month listed whole: {queries}")
-        else:
-            listed = {q.rsplit("project:", 1)[1].rstrip(")") for q in queries}
-            if listed != set(scope.projects):
-                raise SystemExit(
-                    f"{snapshot.name} lists {len(listed)} projects, the grant names "
-                    f"{len(scope.projects)}"
-                )
+            if listed != [None]:
+                raise SystemExit(f"{snapshot.name} is not its month listed whole: {listed}")
+        elif sorted(listed, key=str) != sorted(scope.projects):
+            raise SystemExit(
+                f"{snapshot.name} lists {len(listed)} projects, the grant names "
+                f"{len(scope.projects)}"
+            )
         for change in iter_snapshot(snapshot):
             if change["_number"] in seen:
                 # Updated into a later month between the two months' fetches: counted once.

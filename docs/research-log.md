@@ -9985,19 +9985,33 @@ in Qt's training months. Fixed now, still before any change is read:
    `All-Projects` and `All-Users` aside (`cli.HOST_PROJECTS`, which hold access rules and accounts,
    never code). A month is listed whole, `status:merged after:<month> before:<next month>`, with no
    project named; the transport's allowlist admits that form only for such a scope and only for a
-   month the grant covers (`cli.out_of_scope_listing`).
+   month the grant covers (`cli.out_of_scope_listing`), and under such a scope refuses any listing
+   that names a project, since a name can be Gerrit syntax (`project:{x}OR{y}` reads as an OR of
+   two brace phrases, Gerrit's `Query.g`,
+   https://github.com/GerritCodeReview/gerrit/blob/master/antlr3/com/google/gerrit/index/query/Query.g).
+   On every scoped host it now also refuses a day or probe time that is not a calendar date
+   (`cli.month_listing`): Gerrit parses dates leniently, so `before:2025-10-99` would read into
+   the sealed test window (`JavaSqlTimestampHelper`,
+   https://github.com/GerritCodeReview/gerrit/blob/master/java/com/google/gerrit/json/JavaSqlTimestampHelper.java).
+   No such request was ever sent; the client builds neither form. A month the host would truncate
+   (10,000 results) is refused, never kept short (`gerrit.fetch_changes`); were one refused, the
+   listing that replaces it is registered here before that month's changes are read.
 2. *Rows.* A fetched month keeps only changes created in the grant, of a covered project and on a
-   branch other than `refs/meta/config` (`cli.covers_change`; the rest counted as
-   `not_code_changes` and dropped); admission, the build and `pool_order.py` read coverage through
-   that one rule. `refs/meta/config` holds a project's access rules and is the only branch of a
-   permissions-only project, which is what `type=CODE` would have left out ("projects created with
-   the `--permissions-only` flag",
+   named branch outside `refs/meta/` (`cli.covers_change`); the rest are read with the listing,
+   dropped before anything is written and counted as `not_code_changes`, recorded for every month.
+   Admission, the build and `pool_order.py` read coverage through that one rule, the build's grant
+   check with its own reason for a branch that holds no code. `refs/meta/config` holds a project's
+   access rules and is the only branch of a permissions-only project, which is what `type=CODE`
+   would have left out ("projects created with the `--permissions-only` flag",
    https://gerrit-review.googlesource.com/Documentation/cmd-ls-projects.html), so no such project
-   is ranked. Scopes that name their projects are unchanged: Qt's REST listings do hold
+   is ranked; the other `refs/meta/` refs (dashboards) hold no code either. Hosts read by project
+   or without a scope are unchanged: Qt's REST listings, read without one, do hold
    `refs/meta/config` changes, and none of its examples comes from one (checked 2026-10-19 against
    `datasets/gerrit-granted/qt`, raw listings by change number against its examples).
 3. *Order and stop.* Unchanged: projects ranked by the merged changes created in the window that the
    listings return, ties by name, and the shortest prefix that covers all 40 partitions. A project
-   the listings never return has no change to rank and no example to add.
+   the listings never return has no change to rank and no example to add. `pool_order.py` reads
+   each snapshot's recorded listing through the same parser and refuses one that is not that
+   month's.
 4. `scripts/gerrit_projects.py` and its artifact are withdrawn; nothing else asks a host for its
    project list.

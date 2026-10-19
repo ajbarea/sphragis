@@ -1387,11 +1387,19 @@ def test_a_whole_month_of_fuchsia_drops_the_hosts_own_projects(
     monkeypatch.setattr(cli, "unheld_grant", lambda host: None)
     created = "2025-01-02 00:00:00.000000000"
     rows = [
-        {"_number": 1, "id": "a", "project": "fuchsia", "created": created, "updated": created},
+        {
+            "_number": 1,
+            "id": "a",
+            "project": "fuchsia",
+            "branch": "main",
+            "created": created,
+            "updated": created,
+        },
         {
             "_number": 2,
             "id": "b",
             "project": "All-Projects",
+            "branch": "master",
             "created": created,
             "updated": created,
         },

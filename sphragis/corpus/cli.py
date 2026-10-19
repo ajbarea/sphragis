@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import http.client
 import json
@@ -97,8 +98,9 @@ GERRIT = {
 # Chromium's did. A host absent here is refused.
 class GrantScope(NamedTuple):
     """What a written grant covers, enforced wherever the host is read: the projects a listing may
-    name, the created dates a fetch may keep (`created_before` exclusive, as `before:` reads), and
-    the commented changes a build may read a month, None where the grant sets no count."""
+    name (none where `every_project`), the created dates a fetch may keep (`created_before`
+    exclusive, as `before:` reads), and the commented changes a build may read a month, None where
+    the grant sets no count."""
 
     projects: tuple[str, ...]
     created_from: str
@@ -108,8 +110,8 @@ class GrantScope(NamedTuple):
     # lists the changes last updated in it, so a change created inside the grant and updated
     # later is listed only past `created_before`; None reads no month past it.
     listed_through: str | None = None
-    # Every project the host shows an anonymous reader, its own two aside (`HOST_PROJECTS`), in
-    # place of `projects`: a month is then listed whole, without naming a project.
+    # Every code project the host shows an anonymous reader, in place of `projects`: a month is
+    # then listed whole, naming no project, and `covers_change` keeps its code changes.
     every_project: bool = False
 
 
@@ -124,14 +126,20 @@ def covers_project(scope: GrantScope, project: object) -> bool:
     return project in scope.projects
 
 
-#: The branch a Gerrit project's access rules live on, a permissions-only project's only one.
-CONFIG_BRANCH = "refs/meta/config"
+#: Gerrit's refs outside a project's code: its access rules (`refs/meta/config`, a
+#: permissions-only project's only branch), dashboards and the like.
+META_REFS = "refs/meta/"
+
+
+def code_branch(branch: object) -> bool:
+    """Whether a change's branch holds code: named, and not under `META_REFS`."""
+    return isinstance(branch, str) and bool(branch) and not branch.startswith(META_REFS)
 
 
 def covers_change(scope: GrantScope, change: Mapping[str, Any]) -> bool:
     """Whether a scope's grant covers a change: its project, and under a scope of every project a
-    branch other than `CONFIG_BRANCH`, so the projects it ranks are the code projects."""
-    if scope.every_project and change.get("branch") == CONFIG_BRANCH:
+    code branch (`code_branch`), so the projects it ranks are the code projects."""
+    if scope.every_project and not code_branch(change.get("branch")):
         return False
     return covers_project(scope, change.get("project"))
 
@@ -209,8 +217,10 @@ def outside_grant(scope: GrantScope | None, month: str, rows: Sequence[Mapping[s
         return ""
     if not grant_months(scope, month):
         return "outside the host's grant"
-    if not all(covers_change(scope, row) for row in rows):
+    if not all(covers_project(scope, row.get("project")) for row in rows):
         return "rows of projects outside the host's grant"
+    if not all(covers_change(scope, row) for row in rows):
+        return "rows on branches that hold no code (refs/meta/, or none named)"
     early_or_late = sum(not created_in_grant(scope, row.get("created")) for row in rows)
     if early_or_late:
         return f"{early_or_late} rows created outside the host's grant"
@@ -403,15 +413,33 @@ def next_month(month: str) -> str:
 
 # ASCII digits only: `\d` would also match other scripts' digits.
 _DAY = r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
-# The one listing the client builds for a scoped host, merged changes of one project within one
-# month (`fetch`, `host_scoping.py`), and the truncation probe `fetch_changes` wraps around it.
+# The one listing the client builds for a scoped host, merged changes within one month, of one
+# project or, under a scope of every project, of none named (`fetch`, `host_scoping.py`), and the
+# truncation probe `fetch_changes` wraps around it.
 _MONTH_LISTING = re.compile(
     rf"status:merged after:(?P<after>{_DAY}) before:(?P<before>{_DAY})"
     r"(?: \(?project:(?P<project>[^\s()\"]+)\)?)?"
 )
 _TRUNCATION_PROBE = re.compile(
-    rf'\((?P<listing>.+)\) before:"{_DAY} [0-9]{{2}}:[0-9]{{2}}:[0-9]{{2}} \+0000"'
+    rf'\((?P<listing>.+)\) before:"(?P<stamp>{_DAY} [0-9]{{2}}:[0-9]{{2}}:[0-9]{{2}}) \+0000"'
 )
+
+
+def month_listing(query: str) -> tuple[str, str, str | None] | None:
+    """A month listing's `after:` and `before:` days and its project (None if it names none), or
+    None if the query is not that form or a day is not a calendar date: Gerrit reads an
+    impossible date leniently, `2025-10-99` as a day in 2026."""
+    asked = _MONTH_LISTING.fullmatch(query)
+    if asked is None or query.count("(") != query.count(")"):
+        return None
+    try:
+        for day in (asked.group("after"), asked.group("before")):
+            datetime.date.fromisoformat(day)
+    except ValueError:
+        return None
+    return asked.group("after"), asked.group("before"), asked.group("project")
+
+
 _LISTING_PARAMETERS = frozenset({"q", "n", "S", "o"})
 # The `o=` options any scoped-host listing in the client asks for.
 _LISTING_OPTIONS = frozenset(
@@ -425,10 +453,10 @@ _BY_NUMBER = (
 
 def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
     """Why a `/changes/?q=` listing on a scoped host is refused, None if it is a month the grant
-    covers of one granted project's merged changes, or of every project's where the scope is all
-    of them, or the probe around it. Anything else, another operator, an alias, a second project,
-    OR, negation, is refused, so a listing the client does not build cannot reach past the
-    grant."""
+    covers of one granted project's merged changes, or under a scope of every project of all of
+    them with none named, or the probe around it. Anything else, another operator, an alias, a
+    second project, OR (a brace phrase included), negation, an impossible date, is refused, so a
+    listing the client does not build cannot reach past the grant."""
     path, _, query = target.partition("?")
     if path not in ("/changes/", "/changes"):
         return None
@@ -443,17 +471,25 @@ def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
         return "a listing with options the client does not send"
     q = parameters.get("q", [""])[0]
     probe = _TRUNCATION_PROBE.fullmatch(q)
-    listing = probe.group("listing") if probe else q
-    asked = _MONTH_LISTING.fullmatch(listing)
-    if asked is None or listing.count("(") != listing.count(")"):
-        return "a listing other than a month of one project's merged changes"
-    after, before, month = asked.group("after"), asked.group("before"), asked.group("after")[:7]
+    if probe:
+        try:
+            datetime.datetime.strptime(probe.group("stamp"), "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return "a truncation probe at an impossible time"
+    asked = month_listing(probe.group("listing") if probe else q)
+    if asked is None:
+        return "a listing other than a month of merged changes the client builds"
+    after, before, project = asked
+    month = after[:7]
     if not (after < before <= f"{next_month(month)}-01") or not grant_months(scope, month):
         return f"a listing of {after} to {before}, outside the grant's months"
-    project = asked.group("project")
+    if scope.every_project:
+        # A name here could be Gerrit syntax (`{x}OR{y}`); the whole month needs none.
+        return None if project is None else "a listing that names a project under every project"
     if project is None:
-        return None if scope.every_project else "a listing that names no project"
-    return None if covers_project(scope, project) else f"a listing of {[project]}"
+        return "a listing that names no project"
+    ok = project in scope.projects and rest_project_name(project)
+    return None if ok else f"a listing of {[project]}"
 
 
 def out_of_scope_request(target: str, scope: GrantScope, admitted: set[str]) -> str | None:
@@ -860,11 +896,12 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
         in_grant = [c for c in kept if created_in_grant(scope, c["created"])]
         after_grant, kept = len(kept) - len(in_grant), in_grant
         record = {**record, "created_after_grant": after_grant}
-        # A month listed whole also returns the host's own projects' and access rules' changes.
+    if scope is not None and scope.every_project:
+        # A month listed whole also returns the host's own projects' changes and changes on
+        # refs/meta/, read with the rest and dropped here, before anything is written.
         covered = [c for c in kept if covers_change(scope, c)]
-        if len(covered) != len(kept):
-            record = {**record, "not_code_changes": len(kept) - len(covered)}
-            kept = covered
+        record = {**record, "not_code_changes": len(kept) - len(covered)}
+        kept = covered
     scrubbed = [scrub(change, salt) for change in kept]
     record = {
         **record,
@@ -878,6 +915,7 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
         f"{args.org} {args.month}: fetched {len(changes)} in {record['pages']} pages, "
         f"kept {len(kept)}, dropped {before_cutoff} created before {args.cutoff}"
         + (f" and {after_grant} from {scope.created_before}" if scope and after_grant else "")
+        + (f", and {record['not_code_changes']} not code" if "not_code_changes" in record else "")
     )
     print(f"wrote {path}")
     derived = _examples_dir(args) / f"{args.month}.jsonl"

@@ -527,7 +527,9 @@ def test_fuchsias_grant_covers_every_project_over_qts_training_months() -> None:
     for not_code in ("All-Projects", "All-Users", "", None):
         assert not cli.covers_project(scope, not_code)
     assert cli.covers_change(scope, {"project": "fuchsia", "branch": "main"})
-    assert not cli.covers_change(scope, {"project": "fuchsia", "branch": "refs/meta/config"})
+    for branch in ("refs/meta/config", "refs/meta/dashboards/team", "", None):
+        assert not cli.covers_change(scope, {"project": "fuchsia", "branch": branch})
+    assert not cli.covers_change(scope, {"project": "fuchsia"})
     whole = _listing("status:merged after:2025-01-01 before:2025-02-01", "&n=500&S=0")
     assert cli.out_of_scope_request(whole, scope, set()) is None
     assert cli.out_of_scope_request(_listing(f"{MONTH} (project:All-Projects)"), scope, set())
@@ -555,10 +557,13 @@ def test_a_whole_month_keeps_only_the_changes_its_grant_covers() -> None:
         {"_number": 2, "project": "All-Projects", "created": created},
         {"_number": 3, "project": "fuchsia", "branch": "refs/meta/config", "created": created},
     ]
-    for outside in (rows[1], rows[2]):
-        assert cli.outside_grant(EVERY, "2025-01", [rows[0], outside]) == (
-            "rows of projects outside the host's grant"
-        )
+    assert (
+        cli.outside_grant(EVERY, "2025-01", rows[:2]) == "rows of projects outside the host's grant"
+    )
+    no_code = "rows on branches that hold no code (refs/meta/, or none named)"
+    unnamed = {k: v for k, v in rows[0].items() if k != "branch"}
+    for outside in (rows[2], unnamed, {**rows[0], "branch": "refs/meta/dashboards/team"}):
+        assert cli.outside_grant(EVERY, "2025-01", [rows[0], outside]) == no_code
     assert cli.outside_grant(EVERY, "2025-01", rows[:1]) == ""
     # A scope that names its projects keeps its listings as they were read (research log,
     # 2026-10-19).
@@ -631,10 +636,31 @@ def test_a_scoped_host_answers_what_the_client_builds(target: str) -> None:
         _listing(f"{MONTH} (project:p)", "&n=&S=0"),
         "/changes/p~7/comments",
         "/changes/7/revisions/../files/a/diff?base=1",
+        # Gerrit reads a brace phrase as quoted and needs no space before OR.
+        _listing(f"{MONTH} project:{{p}}OR{{refs/meta/config}}", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:p{{x}}OR{{y}})", "&n=500&S=0"),
+        _listing(f'({MONTH} project:{{p}}OR{{y}}) before:"2025-01-31 12:00:00 +0000"', "&n=3&S=1"),
+        # Gerrit reads an impossible date leniently, past the month the string compares as.
+        _listing("status:merged after:2025-01-01 before:2025-01-99 (project:p)", "&n=500&S=0"),
+        _listing("status:merged after:2025-01-00 before:2025-02-01 (project:p)", "&n=500&S=0"),
+        _listing("status:merged after:2025-13-01 before:2025-14-01 (project:p)", "&n=500&S=0"),
+        _listing(f'({MONTH} (project:p)) before:"2025-01-31 25:00:00 +0000"', "&n=3&S=1"),
+        _listing(f'({MONTH} (project:p)) before:"2025-01-32 12:00:00 +0000"', "&n=3&S=1"),
     ],
 )
-def test_a_scoped_host_refuses_every_other_request(target: str) -> None:
-    assert cli.out_of_scope_request(target, SCOPED, {"7"})
+@pytest.mark.parametrize("scope", ["named", "every"])
+def test_a_scoped_host_refuses_every_other_request(target: str, scope: str) -> None:
+    granted = SCOPED if scope == "named" else EVERY
+    assert cli.out_of_scope_request(target, granted, {"7"})
+    whole = target.replace(" (project:p)", "").replace(" project:p", "")
+    if scope == "every" and "project:" not in urllib.parse.unquote(whole):
+        assert cli.out_of_scope_request(whole, EVERY, {"7"}), whole
+
+
+@pytest.mark.parametrize("project", ["fuchsia", "p", "{x}OR{y}", "^.*", "All-Projects"])
+def test_a_scope_of_every_project_refuses_any_listing_that_names_one(project: str) -> None:
+    for listing in (f"{MONTH} (project:{project})", f"{MONTH} project:{project}"):
+        assert cli.out_of_scope_request(_listing(listing, "&n=500&S=0"), EVERY, set())
 
 
 def test_no_scope_asks_a_host_for_its_project_list() -> None:
