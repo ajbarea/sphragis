@@ -35,6 +35,10 @@ datasets/results/rq1-placebo-chromium*.json
 datasets/results/rq1-windows-chromium*.json
 datasets/results/retrieval-halves-qt-*.json
 datasets/results/rules-halves-qt-*.json
+datasets/results/retrieval-halves-chromium-*.json
+datasets/results/rules-halves-chromium-*.json
+datasets/results/rules-reviews-qt-*.json
+datasets/results/rules-reviews-chromium-*.json
 
 COMMITS.md
 

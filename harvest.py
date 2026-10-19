@@ -867,7 +867,7 @@ def declared_outputs() -> list[tuple[str, str, int, int]]:
     for script in sorted(SCRIPTS.glob("*.py")):
         text = script.read_text()
         name = f"scripts/{script.name}"
-        for match in re.finditer(rf"--out[ =]+{RESULTS}/([\w.\-]+)\.\w+", text):
+        for match in re.finditer(rf"--(?:out|summary)[ =]+{RESULTS}/([\w.\-]+)\.\w+", text):
             declared.append((_stem_to_glob(match.group(1)), name, FROM_CODE))
         for match in re.finditer(r'"--out".*default=Path\("([\w.\-]+)\.\w+"\)', text):
             declared.append((_stem_to_glob(match.group(1)), name, FROM_CODE))

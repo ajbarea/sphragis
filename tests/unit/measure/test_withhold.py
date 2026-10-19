@@ -74,6 +74,24 @@ def test_a_distillation_of_a_written_guide_is_not_withheld() -> None:
     assert w.withhold({"files": {"o": guide}}, "rules-guide-openstack.json", KEY)[1] == 0
 
 
+def test_a_guide_is_exempt_only_in_the_shape_a_written_guide_has() -> None:
+    guide = {"kind": "guide", "map_lists": ["- m"], "reduce_answer": None, "file": "- r"}
+    real = {**guide, "evidence": [], "recurrence": []}
+    assert w.withhold({"files": {"o": real}}, "g.json", KEY)[1] == 0
+    for bad in (
+        {"reduce_answer": "- a rule"},
+        {"evidence": ["a comment"]},
+        {"recurrence": [{"rule": "a comment"}]},
+    ):
+        assert w.withhold({"files": {"o": {**real, **bad}}}, "g.json", KEY)[1] > 0, bad
+
+
+def test_a_distillation_is_known_by_its_kind_and_a_renamed_field_is_withheld() -> None:
+    distilled = {"kind": "reviews", "rules": ["- r"], "file": "- r"}
+    assert w.withhold({"o": distilled}, "any.json", KEY)[1] == 2
+    assert w.withhold({"rows": [{"output": "t", "generation": ["u", "v"]}]}, "r.json", KEY)[1] == 3
+
+
 def test_determinism_passes_keep_their_ids() -> None:
     doc = {"passes": {"bf16": {"a": "x", "b": "y"}}}
     published, count = w.withhold(doc, "determinism-sym-0-gh-a-001-rp1.0.json", KEY)

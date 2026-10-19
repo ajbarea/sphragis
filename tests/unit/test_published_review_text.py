@@ -16,7 +16,7 @@ import re
 import subprocess
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from sphragis.measure.withhold import SUFFIX, text_left
 
@@ -33,11 +33,26 @@ def _tracked() -> list[Path]:
     return [ROOT / line for line in out.split("\0") if line]
 
 
+#: Matched case-insensitively, optionally gzipped; the line-delimited kinds hold a document a line.
+JSON_SUFFIXES = (".json", ".jsonl", ".ndjson")
+LINE_SUFFIXES = (".jsonl", ".ndjson")
+#: A key this long in words is prose; the longest id or label a tracked file keys on is six.
+PROSE_WORDS = 8
+
+
+def _stem(path: Path) -> str:
+    return path.name.lower().removesuffix(".gz")
+
+
+def _is_json(path: Path) -> bool:
+    return _stem(path).endswith(JSON_SUFFIXES)
+
+
 def _documents(path: Path) -> Iterator[Any]:
     raw = path.read_bytes()
-    if path.name.endswith(".gz"):
+    if path.name.lower().endswith(".gz"):
         raw = gzip.decompress(raw)
-    if path.name.removesuffix(".gz").endswith(".jsonl"):
+    if _stem(path).endswith(LINE_SUFFIXES):
         yield from (json.loads(line) for line in raw.decode().splitlines() if line.strip())
     else:
         yield json.loads(raw)
@@ -64,9 +79,11 @@ def _counts_only(value: Any) -> bool:
 
 
 def _unfit(node: Any, path: str = "") -> Iterator[str]:
-    """Digest fields not holding digests, and comment lists holding comments."""
+    """Digest fields not holding digests, comment lists holding comments, and prose as a key."""
     if isinstance(node, Mapping):
         for k, v in node.items():
+            if len(k.split()) >= PROSE_WORDS:
+                yield f"{path}/{k[:40]} is prose held as a key"
             if k.endswith(SUFFIX) and not all(DIGEST.fullmatch(t) for t in _strings(v)):
                 yield f"{path}/{k} is not a digest"
             elif k in COMMENT_LISTS and not _counts_only(v):
@@ -78,20 +95,29 @@ def _unfit(node: Any, path: str = "") -> Iterator[str]:
             yield from _unfit(v, f"{path}/{i}")
 
 
-def offending(paths: list[Path]) -> dict[str, list[str]]:
-    """Per file under the paths, where it carries model text, a bad digest or comment text."""
+class Scan(NamedTuple):
+    found: dict[str, list[str]]
+    read: list[Path]
+
+
+def scan(paths: list[Path]) -> Scan:
+    """Per JSON file among the paths, where it carries model text, a bad digest or comment text,
+    and which files were read."""
     found: dict[str, list[str]] = {}
-    for path in paths:
-        name = path.name.removesuffix(".gz")
-        if not name.endswith((".json", ".jsonl")):
-            continue
+    read: list[Path] = []
+    for path in filter(_is_json, paths):
+        read.append(path)
         where: list[str] = []
         for i, document in enumerate(_documents(path)):
             where += [f"{i}{p}" for p in text_left(document)]
             where += _unfit(document)
         if where:
             found[str(path.name)] = where[:3]
-    return found
+    return Scan(found, read)
+
+
+def offending(paths: list[Path]) -> dict[str, list[str]]:
+    return scan(paths).found
 
 
 def test_no_tracked_json_carries_withheld_text() -> None:
@@ -100,9 +126,11 @@ def test_no_tracked_json_carries_withheld_text() -> None:
     )
 
 
-def test_the_guard_reads_every_json_and_jsonl_file_in_the_repo() -> None:
-    tracked = {p.suffix for p in _tracked() if p.suffix in {".json", ".jsonl", ".gz"}}
-    assert {".json", ".jsonl"} <= tracked and ".gz" not in tracked
+def test_the_guard_reads_every_json_file_in_the_repo() -> None:
+    tracked = _tracked()
+    read = scan(tracked).read
+    assert set(read) == {p for p in tracked if _is_json(p)}
+    assert {p.suffix for p in read} >= {".json", ".jsonl"}
 
 
 def _write(path: Path, document: Any) -> Path:
@@ -219,15 +247,30 @@ def _tracked_results() -> dict[str, Path]:
     return {p.name: p for p in _tracked() if p.parent == ROOT / "datasets" / "results"}
 
 
-def test_no_granted_host_result_carries_predictions() -> None:
-    offending = [
-        name
-        for name, path in _tracked_results().items()
-        if GRANTED.search(name)
-        and name not in BEFORE_THE_RULE
-        and PREDICTION.search(path.read_text())
+def _digested(node: Any) -> bool:
+    """Whether a document carries a `withheld_text` block or any `*_hmac` key."""
+    if isinstance(node, Mapping):
+        return any(
+            k == "withheld_text" or k.endswith(SUFFIX) or _digested(v) for k, v in node.items()
+        )
+    return isinstance(node, list) and any(_digested(v) for v in node)
+
+
+def granted_offending(paths: list[Path]) -> list[str]:
+    """Granted-host JSON files outside the exceptions that carry predictions or any digest."""
+    results = ROOT / "datasets" / "results"
+    return [
+        p.name
+        for p in filter(_is_json, paths)
+        if GRANTED.search(p.name)
+        and not (p.name in BEFORE_THE_RULE and p.parent == results)
+        and any(_digested(d) or PREDICTION.search(json.dumps(d)) for d in _documents(p))
     ]
-    assert not offending, f"granted-host results carrying predictions: {offending}"
+
+
+def test_no_granted_host_result_carries_predictions_or_digests() -> None:
+    offending = granted_offending(_tracked())
+    assert not offending, f"granted-host files carrying predictions or digests: {offending}"
 
 
 def test_the_listed_exceptions_still_exist_and_still_carry_predictions() -> None:
@@ -253,9 +296,91 @@ def test_a_granted_host_generation_run_is_ignored() -> None:
         "rq1-windows-chromium-s2.json",
         "retrieval-halves-qt-p4.json",
         "rules-halves-qt-p4.json",
+        "retrieval-halves-chromium-p4.json",
+        "rules-halves-chromium-p4.json",
+        "rules-reviews-qt-p4.json",
+        "rules-reviews-chromium-p1.json",
     )
     for name in names:
         ignored = subprocess.run(
             ["git", "check-ignore", "-q", f"datasets/results/{name}"], cwd=ROOT, check=False
         )
         assert ignored.returncode == 0, f"{name} is not ignored"
+
+
+def _carrying(tmp_path: Path, name: str, document: Any) -> list[str]:
+    return granted_offending([_write(tmp_path / name, document)])
+
+
+def test_a_digested_granted_host_file_of_any_shape_is_refused(tmp_path: Path) -> None:
+    shapes = {
+        "rules-reviews-qt-p1.json": {"files": {"qt-a": {"file_hmac": "a" * 64}}},
+        "determinism-sym-0-gh-qt-001.json": {"passes_hmac": {"bf16": {"a": "a" * 64}}},
+        "rules-reviews-chromium-p1.json": {"withheld_text": {"texts": 1}, "x": 1},
+        "rq1-windows-chromium-s9.json": {"rows": [{"reduce_answer_hmac": "a" * 64}]},
+    }
+    for name, document in shapes.items():
+        assert _carrying(tmp_path, name, document) == [name], name
+    assert not _carrying(tmp_path, "coverage-qt.json", {"estimate": 0.5})
+    assert not _carrying(tmp_path, "rules-reviews-openstack-p1.json", {"a_hmac": "a" * 64})
+
+
+def test_a_granted_host_exception_name_elsewhere_is_not_exempt(tmp_path: Path) -> None:
+    name = next(iter(BEFORE_THE_RULE))
+    assert _carrying(tmp_path / "docs", name, {"prediction_hmac": "a" * 64}) == [name]
+
+
+def test_a_json_file_is_read_whatever_its_case_or_line_layout(tmp_path: Path) -> None:
+    upper = _write(tmp_path / "RUN.JSON", {"prediction": "t"})
+    lines = tmp_path / "rows.ndjson"
+    lines.write_text(json.dumps({"id": "a", "prediction": "t"}) + "\n")
+    packed = tmp_path / "rows.NDJSON.GZ"
+    packed.write_bytes(gzip.compress(lines.read_bytes()))
+    for path in (upper, lines, packed):
+        result = scan([path])
+        assert result.read == [path] and result.found, path.name
+
+
+def test_a_file_the_guard_does_not_read_is_reported_unread(tmp_path: Path) -> None:
+    other = tmp_path / "notes.txt"
+    other.write_text("x")
+    assert scan([other, _write(tmp_path / "a.json", {})]).read == [tmp_path / "a.json"]
+
+
+def test_text_held_as_dict_keys_is_caught(tmp_path: Path) -> None:
+    comment = "please use a context manager here instead of closing the file by hand"
+    for i, document in enumerate(
+        ({comment: 1}, {"rows": [{"summary": {comment: ["x"]}}]}, {"prediction": {comment: 0}})
+    ):
+        assert offending([_write(tmp_path / f"keys-{i}.json", document)]), document
+    ids = {
+        "openstack:Ib3c:groups/Wikimedia/ Lingua.yaml:1:2": 1,
+        "same organization and content": 2,
+    }
+    assert not offending([_write(tmp_path / "ids.json", ids)])
+
+
+def test_a_distillation_of_only_rules_and_file_is_caught(tmp_path: Path) -> None:
+    distilled = {"kind": "reviews", "rules": ["- r"], "file": "- r"}
+    assert offending([_write(tmp_path / "notes.json", {"files": {"o": distilled}})])
+
+
+def test_a_renamed_generation_field_is_caught(tmp_path: Path) -> None:
+    for i, field in enumerate(("output", "outputs", "generation", "generations")):
+        document = {"rows": [{field: ["t"] if field.endswith("s") else "t"}]}
+        assert offending([_write(tmp_path / f"renamed-{i}.json", document)]), field
+
+
+def test_a_guide_holding_text_is_not_exempt(tmp_path: Path) -> None:
+    base = {"kind": "guide", "map_lists": ["- r"], "reduce_answer": None, "rules": ["- r"]}
+    for i, bad in enumerate(
+        (
+            {"reduce_answer": "- a rule from comments"},
+            {"evidence": ["a comment"]},
+            {"recurrence": [{"rule": "a comment"}]},
+        )
+    ):
+        guide = {**base, **bad}
+        assert offending([_write(tmp_path / f"guide-{i}.json", {"files": {"o": guide}})]), bad
+    real = {**base, "evidence": [], "recurrence": []}
+    assert not offending([_write(tmp_path / "real.json", {"files": {"o": real}})])

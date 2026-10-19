@@ -34,7 +34,19 @@ BURNED_KEY_IDS: Mapping[str, str] = {
 #: Fields holding model text conditioned on or distilled from review comments, wherever they sit.
 #: Text from prompts without review text stays: the contamination battery's completions of code
 #: and the distillations of written guides (`kind: guide`), which also carry `map_lists`.
-ALWAYS = frozenset({"prediction", "predictions", "passes", "map_lists", "reduce_answer"})
+ALWAYS = frozenset(
+    {
+        "prediction",
+        "predictions",
+        "output",
+        "outputs",
+        "generation",
+        "generations",
+        "passes",
+        "map_lists",
+        "reduce_answer",
+    }
+)
 #: Withheld only inside a review distillation: `file` is a path and `rules` a version elsewhere.
 IN_DISTILLATION = frozenset({"rules", "file"})
 _DISTILLATION_MARKS = frozenset(
@@ -75,9 +87,21 @@ def digest(text: str, key: bytes) -> str:
 
 def fields_for(node: Mapping[str, Any]) -> frozenset[str]:
     """The fields withheld in this object, by its own shape, never by the name of its file."""
-    if node.get("kind") == "guide" and node.get("merge_chunks") is None:
+    if _written_guide(node):
         return ALWAYS - {"map_lists", "reduce_answer"}
-    return ALWAYS | IN_DISTILLATION if _DISTILLATION_MARKS & node.keys() else ALWAYS
+    marked = node.get("kind") == "reviews" or _DISTILLATION_MARKS & node.keys()
+    return ALWAYS | IN_DISTILLATION if marked else ALWAYS
+
+
+def _written_guide(node: Mapping[str, Any]) -> bool:
+    """A guide's own shape: no merge, no answer, and no evidence or recurrence from comments."""
+    return (
+        node.get("kind") == "guide"
+        and node.get("merge_chunks") is None
+        and node.get("reduce_answer") is None
+        and not node.get("evidence")
+        and not node.get("recurrence")
+    )
 
 
 def _texts(value: Any) -> int:
