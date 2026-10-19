@@ -16,6 +16,15 @@ _RETRYABLE = frozenset({429, 500, 502, 503, 504})
 Transport = Callable[[str], tuple[int, dict[str, str], str]]
 
 
+class TruncatedListing(RuntimeError):
+    """A listing the host stopped serving before its query was exhausted (`_refuse_if_truncated`),
+    so a narrower query can read what this one could not; with the query and the pages it read."""
+
+    def __init__(self, message: str, *, query: str, pages: int) -> None:
+        super().__init__(message)
+        self.query, self.pages = query, pages
+
+
 def parse_response(text: str) -> Any:
     """Strip Gerrit's XSSI guard and decode the JSON body."""
     if not text.startswith(_XSSI_PREFIX):
@@ -91,8 +100,9 @@ def _refuse_if_truncated(
     transport: Transport,
     sleep: Callable[[float], None],
     retries: list[int],
+    pages: int,
 ) -> None:
-    """Raise if the server stopped paging before ``query`` was exhausted.
+    """Raise if the server stopped paging before ``query`` was exhausted, after ``pages`` pages.
 
     A missing `_more_changes` is not proof of the end. chromium-review stops at 10,000 results
     and drops the flag on the last page it serves: measured 2026-09-22, chromium/src's merged
@@ -127,10 +137,12 @@ def _refuse_if_truncated(
         if not page or not page[-1].get("_more_changes"):
             break
     if missing:
-        raise RuntimeError(
+        raise TruncatedListing(
             f"{base_url} stopped after {len(changes)} results for {query!r} but more match "
             f"at or before {oldest}: the server truncated the query. Narrow it (fewer projects "
-            "or a shorter date range) rather than keep a partial snapshot."
+            "or a shorter date range) rather than keep a partial snapshot.",
+            query=query,
+            pages=pages,
         )
 
 
@@ -179,7 +191,7 @@ def fetch_changes(
             raise RuntimeError(f"{base_url} served no new change past offset {start} for {query!r}")
         anchor = raw[-1].get("id", raw[-1].get("_number"))
         start += len(page)
-    _refuse_if_truncated(base_url, query, changes, transport, sleep, retries)
+    _refuse_if_truncated(base_url, query, changes, transport, sleep, retries, pages)
     record = {
         "base_url": base_url,
         "query": query,

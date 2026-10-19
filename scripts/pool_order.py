@@ -2,8 +2,11 @@
 
 Each project's count is its merged changes created inside the host's grant
 (`cli.GrantScope`: from `created_from`, before `created_before`), read from the month snapshots a
-`fetch` wrote under `--root`, each its month of every granted project, or of every project listed
-whole (`GrantScope.every_project`) (research log, 2026-10-18 and 2026-10-19). Projects are
+`fetch` wrote under `--root`, each its month listed in the scope's day ranges (`cli.day_ranges`;
+a range's halves, `cli.range_halves`, where the record names that range's listing as one the host
+would have truncated), once per granted
+project, or under a scope of every project naming none (`GrantScope.every_project`) (research
+log, 2026-10-18 and 2026-10-19). Projects are
 ranked by that count, most first, ties by name. A month lists the changes last updated in it, so
 a change updated after the grant's last month is in no listing. Beside it, as feasibility only,
 the changes whose snapshot records an inline comment (`cli.uncommented` reads the rest as
@@ -18,17 +21,18 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from sphragis.corpus.cli import (
     GrantScope,
     covers_change,
     created_in_grant,
+    day_ranges,
     grant_months,
     grant_scope,
     month_listing,
-    next_month,
+    range_halves,
     uncommented,
 )
 from sphragis.corpus.storage import iter_snapshot, read_snapshot_record
@@ -54,19 +58,39 @@ def main() -> None:
     for snapshot in snapshots:
         record = read_snapshot_record(snapshot) or {}
         month = snapshot.name.removesuffix(".ndjson.gz")
-        asked = [month_listing(q) for q in _queries(record)]
-        whole_month = (f"{month}-01", f"{next_month(month)}-01")
-        if not asked or any(a is None or a[:2] != whole_month for a in asked):
-            raise SystemExit(f"{snapshot.name} is not its month's listing: {_queries(record)}")
-        listed = [a[2] for a in asked if a is not None]
+        queries = _queries(record)
+        ranges = _by_project(queries)
+        # The attempts the host would have truncated, each replaced by its range's halves.
+        cut = _by_project(
+            [
+                str(t.get("query")) if isinstance(t, dict) else ""
+                for t in record.get("truncated", [])
+            ]
+        )
+        if not ranges or cut is None or set(cut) - set(ranges):
+            raise SystemExit(f"{snapshot.name} is not its month's listing: {queries}")
+        listed = sorted(ranges, key=str)
         if scope.every_project:
             if listed != [None]:
-                raise SystemExit(f"{snapshot.name} is not its month listed whole: {listed}")
-        elif sorted(listed, key=str) != sorted(scope.projects):
+                raise SystemExit(
+                    f"{snapshot.name} names {[p for p in listed if p]}: the ranking listings "
+                    "name no project"
+                )
+        elif listed != sorted(scope.projects):
             raise SystemExit(
                 f"{snapshot.name} lists {len(listed)} projects, the grant names "
                 f"{len(scope.projects)}"
             )
+        registered = day_ranges(month, scope.listing_days)
+        halve = scope.listing_days is not None
+        for project, spans in ranges.items():
+            halved = cut.get(project, Counter())
+            # Without `listing_days` a scope registers no halving, so a truncated attempt stands
+            # for nothing and is refused below.
+            tiled = all(_tiled(span, spans, halved if halve else Counter()) for span in registered)
+            if not tiled or any(spans.values()) or any(halved.values()):
+                of = f" of {project}" if project else ""
+                raise SystemExit(f"{snapshot.name} is not its month's listing{of}: {queries}")
         for change in iter_snapshot(snapshot):
             if change["_number"] in seen:
                 # Updated into a later month between the two months' fetches: counted once.
@@ -106,6 +130,35 @@ def _months(scope: GrantScope) -> list[str]:
         out.append(f"{year:04d}-{month:02d}")
         year, month = (year + 1, 1) if month == 12 else (year, month + 1)
     return out
+
+
+Spans = Counter[tuple[str, str]]
+
+
+def _by_project(queries: list[str]) -> dict[str | None, Spans] | None:
+    """Each project's listed `(after, before)` days, None where it names none (`month_listing`),
+    or None if a query is not a listing of that form."""
+    spans: defaultdict[str | None, Spans] = defaultdict(Counter)
+    for query in queries:
+        listing = month_listing(query)
+        if listing is None:
+            return None
+        spans[listing[2]][listing[:2]] += 1
+    return spans
+
+
+def _tiled(span: tuple[str, str], spans: Spans, halved: Spans) -> bool:
+    """Whether `spans` lists `span`, or, where `halved` records `span`'s listing as truncated, its
+    two halves (`range_halves`), each in turn, down to one day; each listing and each truncated
+    attempt so matched is taken from `spans` and `halved`."""
+    if spans[span] > 0:
+        spans[span] -= 1
+        return True
+    halves = range_halves(*span) if halved[span] > 0 else None
+    if halves is None:
+        return False
+    halved[span] -= 1
+    return all(_tiled(half, spans, halved) for half in halves)
 
 
 def _queries(record: dict) -> list[str]:

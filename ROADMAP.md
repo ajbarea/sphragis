@@ -113,9 +113,10 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   `REPLICATION_MEMBERS`. Still needed: open access for every resulting publication (GitHub's
   terms: EMSE's open-access option for Stage 2, plus arXiv) and Stage 1's replication-family
   paragraph naming the two members.
-- [x] Chromium's infra-dev list granted the REST API on 2026-10-15 for a pool of about 2,000
-  changes; the scope is in code (`cli.GrantScope`), and the git route stays refused (research log,
-  2026-10-16).
+- [x] Chromium's infra-dev list granted the REST API on 2026-10-15 at one client and one request
+  a second, which AJ reads as a rate (research log, 2026-10-19); the scope is in code
+  (`cli.GrantScope`: every code project in Qt's training months, listed in two-day ranges), and the
+  git route stays refused (research log, 2026-10-16).
 - [ ] `scripts/censoring.py` for a git-fetched organization: selection there is creation to
   merge, not creation to last update.
 - [x] State the dev window's censoring wherever dev numbers appear; they are pre-registration
@@ -124,17 +125,19 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
 - [x] **Chromium approved as a third organization and scoped** (2026-09-22): a C++ organization
   with several projects, the pairing for Qt that controls language. In `GERRIT`; fetch now refuses
   a query the host truncated. Selection rule, feasibility and split outcome are in the research log.
-- [x] **Collect Chromium's V8 pool** under its grant (2026-10-16): 1,700 changes read, 659
-  examples after dedup, below one matched draw (N = 1,850), so the source falls to Fuchsia if it
-  grants first, otherwise AOSP (research log). Chromium as an evaluated organization stays
-  blocked on chromium/src's scale and is beyond the grant.
+- [x] **Collect Chromium's V8 pool** under a read cap of 170 a month (2026-10-16): 1,700 changes
+  read, 659 examples after dedup, below one matched draw (N = 1,850) (research log). The cap was
+  the study's own, and Chromium's pool is registered again over every code project under the rate
+  grant (research log, 2026-10-19).
 - [x] **AOSP's pool** by item 4 of the H2 plan (2026-10-19): the 263 C++-majority projects'
   changes created 2024-10-01 to 2025-03-26, listed through 2025-10, 2,056 examples after
   refinement and dedup against Qt, 1,076 of them C++, which covers 34 of 80 matched draws and no
   partition, so AOSP does not qualify (research log).
-- [ ] **H2's source**: Fuchsia, admitted 2026-10-19 on AJ's reading of Chrome Infra's answer, if its
-  pool over Qt's training months covers every draw (scope and stop rule in the research log);
-  otherwise H2 is exploratory and H1 is read alone (the Stage 1 report's conditional).
+- [ ] **H2's source**: the first of Chromium, Fuchsia and AOSP whose pool over Qt's training months
+  covers every draw (scope and stop rule in the research log, 2026-10-19). Fuchsia's pool is being
+  built; Chromium's listings start after its build ends, under the one-client pace Chrome Infra's
+  answer sets for all three hosts. If none covers, H2 is exploratory and H1 is read alone (the
+  Stage 1 report's conditional).
 
 ## Plan B — measurement
 
@@ -751,8 +754,9 @@ as the unit; the evidence says the codebase is.
   terms were granted in writing on 2026-10-15 (research log); its H1 cell's bounds are simulated
   at K = 15 (research log, 2026-10-19), and its H2 cell's wait on a foreign pool that covers.
   Chromium's grant covers a pool, not an evaluated corpus, so H2 is Qt's cell against a C++-matched
-  foreign adapter; V8's and AOSP's pools cannot cover every matched draw, and Fuchsia's is the one
-  source left (research log, 2026-10-19).
+  foreign adapter; V8's pool under the self-imposed cap and AOSP's cannot cover every matched draw,
+  Fuchsia's pool is being built, and Chromium's is registered again under the rate grant, first in
+  the source order (research log, 2026-10-19).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
@@ -771,7 +775,9 @@ as the unit; the evidence says the codebase is.
 - [x] **Bounded is a one-sided equivalence test at the SESOI** (2026-10-14, research log): the
   margin is δ, not each cell's detectable effect; the simulation stays required as power.
 - [x] Foreign-source hosts need written permission (2026-10-14): Chromium granted first
-  (2026-10-15), so the source is its V8 pool once it covers every matched draw. Open, AJ's: whether
+  (2026-10-15), so the source is Chromium's pool once it covers every matched draw; V8's, read
+  under the self-imposed cap, did not, and the pool is registered again over every code project
+  (research log, 2026-10-19). Open, AJ's: whether
   IRB0000393 needs an amendment naming it.
 - [x] OpenStack on corpus v2 at the half size: seed effect 0.0116 at five seeds, detectable
   effects +0.0266 and +0.0250, H1 dev pilot +0.0134 [-0.0091, +0.0350], inconclusive (research

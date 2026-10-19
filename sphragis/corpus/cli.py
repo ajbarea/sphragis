@@ -20,11 +20,16 @@ from typing import Any, NamedTuple
 
 from sphragis.corpus.build import DROP_REASONS, CommentFetcher, DiffFetcher, build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
-from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
+from sphragis.corpus.gerrit import (
+    Transport,
+    TruncatedListing,
+    created_on_or_after,
+    fetch_changes,
+)
 from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, github_fetchers
 from sphragis.corpus.github_api import GitHubAPI
 from sphragis.corpus.grants import unheld
-from sphragis.corpus.hosts import claim_host
+from sphragis.corpus.hosts import claim_host, claim_name
 from sphragis.corpus.load import (
     build_record,
     raw_digest,
@@ -70,11 +75,11 @@ STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "veri
 # checked live 2026-09-18: it answers residential addresses and refuses datacenter ranges, so it
 # is fetched from a workstation, and its volume needs --project to stay bounded. AOSP is RQ2's
 # third organization, for a cross-organization C++ cell beside Qt; RQ1 is registered on two.
-# Chromium checked live 2026-09-22, from a workstation as AOSP is fetched. Like AOSP it needs
-# --project, and chromium/src alone merges more in a month than the 10,000 results the host
-# serves for one query, which fetch_changes refuses rather than truncates. It is the C++
-# organization beside Qt that the study's windows can still use: AOSP's public review stopped
-# on 2025-03-27.
+# Chromium checked live 2026-09-22, from a workstation as AOSP is fetched. chromium/src alone
+# merges more in a month than the 10,000 results the host serves for one query, which
+# fetch_changes refuses rather than truncates, so its grant lists a month in two-day ranges
+# (`GrantScope.listing_days`). It is the C++ organization beside Qt that the study's windows can
+# still use: AOSP's public review stopped on 2025-03-27.
 GERRIT = {
     "aosp": "https://android-review.googlesource.com",
     "chromium": "https://chromium-review.googlesource.com",
@@ -98,9 +103,9 @@ GERRIT = {
 # Chromium's did. A host absent here is refused.
 class GrantScope(NamedTuple):
     """What a written grant covers, enforced wherever the host is read: the projects a listing may
-    name (none where `every_project`), the created dates a fetch may keep (`created_before`
-    exclusive, as `before:` reads), and the commented changes a build may read a month, None where
-    the grant sets no count."""
+    name (where `every_project`, any it covers named as itself), the created dates a fetch may
+    keep (`created_before` exclusive, as `before:` reads), and the commented changes a build may
+    read a month, None where the grant sets no count."""
 
     projects: tuple[str, ...]
     created_from: str
@@ -111,8 +116,14 @@ class GrantScope(NamedTuple):
     # later is listed only past `created_before`; None reads no month past it.
     listed_through: str | None = None
     # Every code project the host shows an anonymous reader, in place of `projects`: a month is
-    # then listed whole, naming no project, and `covers_change` keeps its code changes.
+    # then listed naming no project, or naming projects it covers (`listable_project`), and
+    # `covers_change` keeps its code changes.
     every_project: bool = False
+    # A month is listed in consecutive ranges of this many days from its first, the last shorter
+    # (`day_ranges`), and a range the host would truncate is listed again as its two halves, down
+    # to one day (`range_halves`). None lists a month whole and refuses one the host would
+    # truncate.
+    listing_days: int | None = None
 
 
 #: A Gerrit host's own projects, which hold its access rules and accounts, never code.
@@ -255,17 +266,32 @@ AOSP_CENSUS = RESULTS / "aosp-census.json"
 
 _REST_PROJECT = re.compile(r"[A-Za-z0-9_][A-Za-z0-9._+/-]*")
 
+#: Gerrit's boolean operators, which it reads in capitals or lower case (`user-search.txt`); no
+#: project is named as one in any case.
+GERRIT_KEYWORDS = frozenset({"AND", "OR", "NOT"})
+
 
 def rest_project_name(name: object) -> bool:
     """Whether a project name reads as itself in a `project:` query: no space, bracket, quote,
-    regex anchor or leading negation that Gerrit's query grammar would read as syntax."""
+    regex anchor or leading negation that Gerrit's query grammar would read as syntax, and not one
+    of its operators."""
     return (
         isinstance(name, str)
         and _REST_PROJECT.fullmatch(name) is not None
         and ".." not in name
         and "//" not in name
         and not name.endswith("/")
+        and name.upper() not in GERRIT_KEYWORDS
     )
+
+
+def listable_project(scope: GrantScope, project: object) -> bool:
+    """Whether a listing under `scope` may name `project`: one of the projects it names, or under
+    a scope of every project one it covers, either way by a name that reads as itself in a
+    `project:` query (`rest_project_name`)."""
+    if not scope.every_project:
+        return project in scope.projects and rest_project_name(project)
+    return rest_project_name(project) and covers_project(scope, project)
 
 
 def artifact_projects(path: Path, key: str) -> tuple[str, ...]:
@@ -314,18 +340,27 @@ REST_PERMITTED = {
     ),
     "chromium-review.googlesource.com": RestPermission(
         "robots.txt is Disallow: / (checked 2026-09-23); Chromium's infra-dev list (Chrome"
-        " Infra) answered on 2026-10-15 that it has no concerns with the Gerrit REST API at the"
-        " requested rate, for about 2,000 merged changes with their inline comments created"
-        " 2024-11 to 2025-08, from one client at no more than one request a second (research"
-        " log, 2026-10-16); quiet five minutes after a 5xx, as for LineageOS",
+        " Infra) answered on 2026-10-15 that it has no concerns with Gerrit's REST API at one"
+        " client and no more than one request a second; the answer sets a rate, and AJ reads it"
+        " so (research log, 2026-10-19); quiet five minutes after a 5xx, as for LineageOS",
         1.0,
         # The grant supersedes robots.txt's Disallow: /, so no pattern is recorded.
         disallow=(),
         error_pause=300.0,
         single_client=True,
-        # The pool fixed in the research log (2026-10-16): with the comment-count probe's 330
-        # reads, at most 170 x 10 + 330 = 2,030 changes.
-        scope=GrantScope(("v8/v8",), "2024-11-01", "2025-09-01", 170),
+        # Item 1(b) of the H2 plan, as for Fuchsia: Qt's own training-window months and every
+        # code project, no read cap; listed through the month before the sealed test window, a
+        # month in two-day ranges, since chromium/src alone passes the host's 10,000 results for
+        # one query in a month (research log, 2026-10-19).
+        scope=GrantScope(
+            (),
+            WINDOWS["train"][0],
+            WINDOWS["train"][1],
+            None,
+            last_open_month(),
+            every_project=True,
+            listing_days=2,
+        ),
         written_grant=True,
     ),
     "android-review.googlesource.com": RestPermission(
@@ -411,11 +446,100 @@ def next_month(month: str) -> str:
     return f"{year + (mm == 12):04d}-{1 if mm == 12 else mm + 1:02d}"
 
 
+def day_ranges(month: str, days: int | None) -> list[tuple[str, str]]:
+    """The `(after, before)` days month `YYYY-MM` is listed in: consecutive ranges of `days` days
+    from its first to the next month's first, the last shorter, or the whole month for None."""
+    first = datetime.date.fromisoformat(f"{month}-01")
+    end = datetime.date.fromisoformat(f"{next_month(month)}-01")
+    if days is None:
+        return [(first.isoformat(), end.isoformat())]
+    if days < 1:
+        raise ValueError(f"a month is listed in ranges of at least one day, not {days} days")
+    step = datetime.timedelta(days=days)
+    ranges = []
+    while first < end:
+        ranges.append((first.isoformat(), min(first + step, end).isoformat()))
+        first += step
+    return ranges
+
+
+class Listed(NamedTuple):
+    """One listing a fetch read: its `after:` and `before:` days, the one project it names (None
+    where it names none, or more than one), its record, and the changes it returned."""
+
+    after: str
+    before: str
+    project: str | None
+    record: dict[str, Any]
+    changes: list[dict[str, Any]]
+
+
+def listing_query(after: str, before: str, projects: Sequence[str] = ()) -> str:
+    """The query listing merged changes last updated from `after` to `before`, of `projects` where
+    any are named: one as `(project:<p>)`, several as an OR, which only a host without a scope
+    answers (`out_of_scope_listing`). `month_listing` reads the forms a scoped host answers."""
+    query = f"status:merged after:{after} before:{before}"
+    if projects:
+        query += " (" + " OR ".join(f"project:{p}" for p in projects) + ")"
+    return query
+
+
+def _as_change(row: Mapping[str, Any]) -> dict[str, Any]:
+    """A listed row without `_more_changes`, which Gerrit sets on a page's last row only."""
+    return {k: v for k, v in row.items() if k != "_more_changes"}
+
+
+def drop_boundary_repeats(listings: Sequence[Listed]) -> tuple[list[dict[str, Any]], int]:
+    """The listings' changes with each listed twice at a midnight two adjacent listings share kept
+    once, and how many such repeats were dropped. Gerrit's `after:` and `before:` both include
+    their own time, so a change last updated at exactly `<day> 00:00:00.000000000`, where one
+    listing of a project ends and the next of the same project begins, is in both, and both
+    copies are the same record but for `_more_changes`. Any other repeat raises ValueError: one
+    inside a listing, at another time, of differing content, or across projects or days the two
+    listings do not share."""
+    first: dict[Any, tuple[Listed, dict[str, Any]]] = {}
+    kept: list[dict[str, Any]] = []
+    dropped: set[Any] = set()
+    for listing in listings:
+        for change in listing.changes:
+            number = change["_number"]
+            if number not in first:
+                first[number] = (listing, change)
+                kept.append(change)
+                continue
+            earlier, copy = first[number]
+            shared = ({earlier.before} & {listing.after}) | ({listing.before} & {earlier.after})
+            midnights = {f"{day} 00:00:00.000000000" for day in shared}
+            if (
+                earlier is listing
+                or number in dropped
+                or earlier.project != listing.project
+                or change.get("updated") not in midnights
+                or _as_change(change) != _as_change(copy)
+            ):
+                raise ValueError(
+                    f"the listings repeat a change ({number}) other than at a midnight two "
+                    "adjacent listings of one project share"
+                )
+            dropped.add(number)
+    return kept, len(dropped)
+
+
+def range_halves(after: str, before: str) -> tuple[tuple[str, str], tuple[str, str]] | None:
+    """The two ranges a listing of `after` to `before` is listed again as when the host would
+    truncate it, the first the shorter by a day if they differ; None for one day."""
+    first, end = datetime.date.fromisoformat(after), datetime.date.fromisoformat(before)
+    if (end - first).days <= 1:
+        return None
+    middle = (first + (end - first) // 2).isoformat()
+    return (after, middle), (middle, before)
+
+
 # ASCII digits only: `\d` would also match other scripts' digits.
 _DAY = r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
-# The one listing the client builds for a scoped host, merged changes within one month, of one
-# project or, under a scope of every project, of none named (`fetch`, `host_scoping.py`), and the
-# truncation probe `fetch_changes` wraps around it.
+# The one listing the client builds for a scoped host, merged changes within one month or a range
+# of its days, naming no project or one (`fetch`, `host_scoping.py`), and the truncation probe
+# `fetch_changes` wraps around it.
 _MONTH_LISTING = re.compile(
     rf"status:merged after:(?P<after>{_DAY}) before:(?P<before>{_DAY})"
     r"(?: \(?project:(?P<project>[^\s()\"]+)\)?)?"
@@ -453,8 +577,9 @@ _BY_NUMBER = (
 
 def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
     """Why a `/changes/?q=` listing on a scoped host is refused, None if it is a month the grant
-    covers of one granted project's merged changes, or under a scope of every project of all of
-    them with none named, or the probe around it. Anything else, another operator, an alias, a
+    covers, or days of one, of one granted project's merged changes, or under a scope of every
+    project of all of them with none named or of one it covers named as itself
+    (`listable_project`), or the probe around it. Anything else, another operator, an alias, a
     second project, OR (a brace phrase included), negation, an impossible date, is refused, so a
     listing the client does not build cannot reach past the grant."""
     path, _, query = target.partition("?")
@@ -483,13 +608,10 @@ def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
     month = after[:7]
     if not (after < before <= f"{next_month(month)}-01") or not grant_months(scope, month):
         return f"a listing of {after} to {before}, outside the grant's months"
-    if scope.every_project:
-        # A name here could be Gerrit syntax (`{x}OR{y}`); the whole month needs none.
-        return None if project is None else "a listing that names a project under every project"
     if project is None:
-        return "a listing that names no project"
-    ok = project in scope.projects and rest_project_name(project)
-    return None if ok else f"a listing of {[project]}"
+        return None if scope.every_project else "a listing that names no project"
+    # A name could be Gerrit syntax (`{x}OR{y}`, `OR`), so only one that reads as itself passes.
+    return None if listable_project(scope, project) else f"a listing of {[project]}"
 
 
 def out_of_scope_request(target: str, scope: GrantScope, admitted: set[str]) -> str | None:
@@ -676,7 +798,12 @@ def http_transport(
     held: Admitted = {} if admitted is None else admitted
     if host_intervals is None:
         host_intervals = {host: p.crawl_delay for host, p in REST_PERMITTED.items()}
-    pacer = Pacer(min_interval, host_intervals=host_intervals, clock=clock, sleep=sleep)
+    # Paced by claim name (`hosts.claim_name`), so hosts read as one client share one pace, at the
+    # longest interval any of them sets.
+    paces: dict[str, float] = {}
+    for host, interval in host_intervals.items():
+        paces[claim_name(host)] = max(paces.get(claim_name(host), 0.0), interval)
+    pacer = Pacer(min_interval, host_intervals=paces, clock=clock, sleep=sleep)
 
     def connect(scheme: str, host: str) -> http.client.HTTPConnection:
         if host not in connections:
@@ -713,10 +840,11 @@ def http_transport(
             if why:
                 raise SystemExit(f"refusing {host}: {why} (cli.out_of_scope_request)")
         claim = claim_host(host, lock_dir) if permission.single_client else None
+        pace = claim_name(host)
 
         def quiet(seconds: float) -> None:
             """Hold the host for `seconds`, here and, for a claimed host, for the next process."""
-            pacer.hold(host, seconds)
+            pacer.hold(pace, seconds)
             if claim is not None and seconds > 0:
                 claim.hold_until(wall() + seconds)
 
@@ -726,10 +854,11 @@ def http_transport(
                 sleep(remaining)
         # One silent retry only for a keep-alive the server closed while idle, which is
         # routine and not a failure; anything else is reported and left to the retry budget.
-        # Paced by host name, as permission is, so a port or letter case cannot open a second
-        # pace, and the retry is a request like any other.
+        # Paced by the host's claim name (`hosts.claim_name`), as permission is by host name, so
+        # neither a port, a letter case nor a second host of one client opens a second pace, and
+        # the retry is a request like any other.
         for attempt in range(2):
-            pacer.wait(host)
+            pacer.wait(pace)
             connection = connect(parts.scheme, parts.netloc)
             try:
                 connection.request(
@@ -737,20 +866,20 @@ def http_transport(
                 )
                 response = connection.getresponse()
                 body = response.read().decode()
-                pacer.hold(host, permission.idle_gap)
+                pacer.hold(pace, permission.idle_gap)
                 if response.status >= 500:
                     quiet(permission.error_pause)
                 return response.status, dict(response.getheaders()), body
             except (http.client.RemoteDisconnected, BrokenPipeError, ConnectionResetError):
                 drop(parts.netloc)
-                pacer.hold(host, permission.idle_gap)
+                pacer.hold(pace, permission.idle_gap)
                 if attempt == 0:
                     continue
                 quiet(permission.error_pause)
                 return 503, {}, ""
             except (OSError, http.client.HTTPException):
                 drop(parts.netloc)
-                pacer.hold(host, permission.idle_gap)
+                pacer.hold(pace, permission.idle_gap)
                 quiet(permission.error_pause)
                 return 503, {}, ""
         return 503, {}, ""
@@ -840,8 +969,13 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
     scope = grant_scope(args.org)
     if scope is not None:
         if scope.every_project:
-            if args.project:
-                raise SystemExit(f"{args.org}'s grant covers every project: list the month whole")
+            unlisted = [p for p in args.project if not listable_project(scope, p)]
+            if unlisted:
+                raise SystemExit(
+                    f"{args.org}'s grant covers every code project, but a listing may not name "
+                    f"{unlisted}: a name must be a code project's that reads as itself in a query "
+                    "(cli.listable_project)"
+                )
         elif not scope.projects:
             raise SystemExit(
                 f"{args.org}'s grant names no project yet: its projects artifact is missing or "
@@ -849,6 +983,9 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
             )
         elif not args.project or set(args.project) - set(scope.projects):
             raise SystemExit(f"{args.org}'s grant covers --project {' '.join(scope.projects)} only")
+        named_twice = sorted({p for p in args.project if args.project.count(p) > 1})
+        if named_twice:
+            raise SystemExit(f"{args.org}: --project names {named_twice} more than once")
         if not grant_months(scope, args.month):
             raise SystemExit(
                 f"{args.org}'s grant covers changes created {scope.created_from} to before "
@@ -859,35 +996,47 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
                 f"{args.org}'s grant keeps changes created from {scope.created_from}: "
                 f"pass --cutoff {scope.created_from}"
             )
-    query = f"status:merged after:{args.month}-01 before:{next_month(args.month)}-01"
-    if scope is not None and scope.every_project:
-        queries = [query]
-    elif scope is not None:
-        # A scoped host answers no OR (`out_of_scope_listing`), so each project is its own listing.
-        queries = [f"{query} (project:{p})" for p in args.project]
-    elif args.project:
-        queries = [query + " (" + " OR ".join(f"project:{p}" for p in args.project) + ")"]
-    else:
-        queries = [query]
     transport = http_transport(min_interval=args.request_interval)
-    changes, records = [], []
-    for asked in queries:
+    listings: list[Listed] = []
+    truncated: list[dict[str, Any]] = []
+    if scope is not None:
+        # A scoped host answers no OR (`out_of_scope_listing`), so each project is its own listing
+        # in each range of the month.
+        for after, before in day_ranges(args.month, scope.listing_days):
+            for project in args.project or [None]:
+                read, cut = _list_range(
+                    GERRIT[args.org],
+                    after,
+                    before,
+                    project,
+                    transport,
+                    halve=scope.listing_days is not None,
+                )
+                listings.extend(read)
+                truncated.extend(cut)
+    else:
+        after, before = day_ranges(args.month, None)[0]
+        query = listing_query(after, before, args.project)
         listed, listing = fetch_changes(
-            GERRIT[args.org], asked, transport=transport, options=("ALL_REVISIONS",)
+            GERRIT[args.org], query, transport=transport, options=("ALL_REVISIONS",)
         )
-        changes.extend(listed)
-        records.append(listing)
-    numbers = [c["_number"] for c in changes]
-    if len(set(numbers)) != len(numbers):
-        raise SystemExit(f"{args.org} {args.month}: the listings repeat a change")
+        project = args.project[0] if len(args.project) == 1 else None
+        listings.append(Listed(after, before, project, listing, listed))
+    try:
+        changes, boundary_repeats = drop_boundary_repeats(listings)
+    except ValueError as error:
+        raise SystemExit(f"{args.org} {args.month}: {error}") from error
+    records = [listing.record for listing in listings]
     record = (
         records[0]
         if len(records) == 1
         else {
             "base_url": GERRIT[args.org],
             "listings": records,
-            "pages": sum(r["pages"] for r in records),
+            "pages": sum(r["pages"] for r in [*records, *truncated]),
             "count": len(changes),
+            "boundary_repeats": boundary_repeats,
+            "truncated": truncated,
         }
     )
     kept = created_on_or_after(changes, args.cutoff)
@@ -897,8 +1046,9 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
         after_grant, kept = len(kept) - len(in_grant), in_grant
         record = {**record, "created_after_grant": after_grant}
     if scope is not None and scope.every_project:
-        # A month listed whole also returns the host's own projects' changes and changes on
-        # refs/meta/, read with the rest and dropped here, before anything is written.
+        # A listing naming no project also returns the host's own projects' changes, and any
+        # listing returns changes on refs/meta/: read with the rest, dropped here, before anything
+        # is written.
         covered = [c for c in kept if covers_change(scope, c)]
         record = {**record, "not_code_changes": len(kept) - len(covered)}
         kept = covered
@@ -922,6 +1072,44 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
     if derived.is_file():
         print(f"note: {derived} was built from the replaced snapshot; build will redo it")
     return 0
+
+
+def _list_range(
+    base_url: str,
+    after: str,
+    before: str,
+    project: str | None,
+    transport: Transport,
+    *,
+    halve: bool,
+) -> tuple[list[Listed], list[dict[str, Any]]]:
+    """Each listing that read the merged changes last updated from `after` to `before`, of
+    `project` where one is named, and each attempt the host would have truncated, its query and
+    the pages it read. With `halve`, a range the host would truncate is listed again as its two
+    halves (`range_halves`), and a day it would still truncate fails the month; without, the
+    truncation is raised as it is."""
+    query = listing_query(after, before, [project] if project else [])
+    try:
+        listed, record = fetch_changes(
+            base_url, query, transport=transport, options=("ALL_REVISIONS",)
+        )
+    except TruncatedListing as error:
+        if not halve:
+            raise
+        halves = range_halves(after, before)
+        if halves is None:
+            raise SystemExit(
+                f"{query!r}: {after} to {before} is one day and the host would still truncate it, "
+                "so the month is not written"
+            ) from error
+        listings: list[Listed] = []
+        truncated = [{"query": error.query, "pages": error.pages}]
+        for half in halves:
+            read, cut = _list_range(base_url, *half, project, transport, halve=True)
+            listings.extend(read)
+            truncated.extend(cut)
+        return listings, truncated
+    return [Listed(after, before, project, record, listed)], []
 
 
 def _github_api(args: argparse.Namespace) -> GitHubAPI:

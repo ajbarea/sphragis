@@ -2033,9 +2033,12 @@ def test_each_foreign_sources_span_is_the_one_its_pool_was_registered_over() -> 
     from sphragis.corpus.windows import WINDOWS
 
     assert set(decomposition.FOREIGN_SPANS) == set(decomposition.FOREIGN_SOURCES)
-    v8 = REST_PERMITTED["chromium-review.googlesource.com"].scope
-    assert v8 is not None
-    assert decomposition.FOREIGN_SPANS["chromium"] == (v8.created_from, v8.created_before)
+    chromium = REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert chromium is not None
+    assert decomposition.FOREIGN_SPANS["chromium"] == (
+        chromium.created_from,
+        chromium.created_before,
+    )
     assert decomposition.FOREIGN_SPANS["fuchsia"] == WINDOWS["train"]
     aosp = REST_PERMITTED["android-review.googlesource.com"].scope
     assert aosp is not None

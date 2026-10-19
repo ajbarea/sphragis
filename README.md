@@ -119,16 +119,20 @@ anything is committed. `freeze` is the single stage that writes windows to disk,
 dedup and split from the refined examples and compares each window with its frozen file byte for
 byte, which catches a change to code the rule digests do not cover.
 
-Chromium's infra-dev list granted the REST API on 2026-10-15 for a pool of about 2,000 merged
-changes, so Chromium is fetched over REST within that scope (`cli.REST_PERMITTED`,
-`build --read-cap`), and its git host stays refused for bulk collection
+Chromium's infra-dev list granted the REST API on 2026-10-15 at one client and no more than one
+request a second; AJ reads the answer as a rate, not a count (research log, 2026-10-19), so Chromium
+is fetched over REST scoped to every code project in Qt's training months, each month listed in
+two-day ranges under the host's 10,000-result cap (`cli.REST_PERMITTED`, `GrantScope.listing_days`),
+and its git host stays refused for bulk collection
 (`sphragis.corpus.notedb.GIT_PERMITTED`). AJ reads that answer as covering AOSP at the same rate:
 AOSP's git host is open only for the release tag whose trees `scripts/aosp_census.py` read, and
 android-review's REST API only for the census's C++-majority projects and changes created
 2024-10-01 to 2025-03-26 (`cli.REST_PERMITTED`'s scope). A scoped host answers only the
-requests the client builds for it, a month of one granted project's merged changes (of every
-project, none named, where the scope is all of them) and an admitted change's comments or diffs
-(`cli.out_of_scope_request`), so a path that forgets its check fails closed. AJ reads the same
+requests the client builds for it: the merged changes of a month the grant covers, or of any range
+of days within one (not only the ranges a fetch registers; `scripts/host_scoping.py`'s ranged
+counts use others), of one granted project (or of every project, none named, where the scope is
+all of them, and then a project only by a name that reads as itself), and an admitted change's
+comments or diffs (`cli.out_of_scope_request`), so a path that forgets its check fails closed. AJ reads the same
 answer as covering fuchsia-review, scoped to every code project in Qt's training months, each
 month listed whole (`GrantScope.every_project`). These grants name this
 study's collector, not every clone, so

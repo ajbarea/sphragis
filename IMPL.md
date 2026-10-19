@@ -24,8 +24,11 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   2026-10-19), its scope and stop rule fixed before any of its data is read. Its host refuses a
   project list (405), so each month is listed whole (`GrantScope.every_project`): next the
   window's listings, `pool_order.py`, the probe, the build in that order and
-  `foreign_pool_coverage.py --order --against qt=...`. Until a pool covers, `FOREIGN_SOURCE`
-  stays unset and H2's development arms wait.
+  `foreign_pool_coverage.py --order --against qt=...`. Chromium, first in item 1's order, is read
+  again under AJ's reading of its answer as a rate (research log, 2026-10-19): every code project,
+  each month in two-day ranges (`GrantScope.listing_days`), ranked, then the covering prefix listed
+  by name into its own root and built; its listings start after Fuchsia's build ends, one host at a
+  time. Until a pool covers, `FOREIGN_SOURCE` stays unset and H2's development arms wait.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and

@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from sphragis.corpus.gerrit import fetch_changes, parse_response
+from sphragis.corpus.gerrit import TruncatedListing, fetch_changes, parse_response
 
 XSSI = ")]}'\n"
 
@@ -102,8 +102,11 @@ def test_fetch_changes_refuses_a_query_the_server_cut_short() -> None:
     ]
     older = [served[1], {"id": "c3", "updated": "2024-11-13 08:27:51.000000000"}]
     transport, asked = _served_then_probed(served, older)
-    with pytest.raises(RuntimeError, match="truncated"):
+    with pytest.raises(TruncatedListing, match="truncated") as raised:
         fetch_changes("https://g/", "status:merged", transport=transport)
+    assert issubclass(TruncatedListing, RuntimeError)
+    # What the attempt read, for the record of the listing that replaces it.
+    assert (raised.value.query, raised.value.pages) == ("status:merged", 1)
     from urllib.parse import unquote
 
     assert unquote(asked[1]).endswith('(status:merged) before:"2024-11-13 08:28:51 +0000"&n=2&S=0')
@@ -189,8 +192,10 @@ def test_fetch_changes_refuses_a_listing_that_moved_while_it_was_paged() -> None
         served = live[start : start + n]
         return 200, {}, _page([dict(c) for c in served], more=start + len(served) < len(live))
 
-    with pytest.raises(RuntimeError, match="moved"):
+    with pytest.raises(RuntimeError, match="moved") as raised:
         fetch_changes("https://g/", "q", transport=transport, page_size=3)
+    # Not a truncation: a ranged fetch halves only a listing the host would cut short.
+    assert not isinstance(raised.value, TruncatedListing)
 
 
 def test_fetch_changes_pages_a_capped_host_without_losing_a_change() -> None:

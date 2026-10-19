@@ -38,16 +38,20 @@ from sphragis.corpus.cli import (
     GERRIT,
     REST_PERMITTED,
     Admitted,
+    Listed,
     admit,
+    covers_change,
     created_in_grant,
+    drop_boundary_repeats,
     grant_months,
     host_of,
     http_transport,
+    listing_query,
     next_month,
     refuse_if_sealed,
 )
 from sphragis.corpus.examples import is_code_file
-from sphragis.corpus.gerrit import _get, parse_response
+from sphragis.corpus.gerrit import _get, fetch_changes, parse_response
 from sphragis.corpus.halves import MAX_SHARE_OF_HALF, MIN_PROJECTS_A_HALF, assign
 from sphragis.provenance import provenance_header
 
@@ -95,6 +99,12 @@ def month_bounds(month: str) -> tuple[str, str]:
 
 
 def listing(transport, query: str, opts: list[str], n: int = 500, limit: int | None = None):
+    """The changes `query` lists and whether more were left unread. Read whole, it is refused if
+    the host would truncate it (`gerrit.fetch_changes`), so no count printed is a floor; with
+    `limit`, the first `limit` or so newest-updated, and `more` says the rest were not read."""
+    if limit is None:
+        rows, _ = fetch_changes(BASE, query, transport=transport, page_size=n, options=tuple(opts))
+        return rows, False
     out: list[dict] = []
     start = 0
     while True:
@@ -124,37 +134,44 @@ def measure_volume(project: str, months: list[str]) -> None:
     transport = _transport()
     for month in months:
         a, b = month_bounds(month)
-        q = f"status:merged after:{a} before:{b} project:{project}"
-        rows, _ = listing(transport, q, ["DETAILED_ACCOUNTS"])
+        rows, _ = listing(transport, listing_query(a, b, [project]), ["DETAILED_ACCOUNTS"])
         print(json.dumps(_counts(project, month, rows)), flush=True)
 
 
 def measure_ranged(project: str, months: list[str]) -> None:
+    """Each month's counts over six sub-ranges, each listing refused if the host would truncate
+    it, and a change at the midnight two sub-ranges share counted once (`drop_boundary_repeats`)."""
     transport = _transport()
     for month in months:
         a, b = month_bounds(month)
         cuts = [a] + [f"{month}-{d:02d}" for d in (6, 11, 16, 21, 26)] + [b]
-        rows: list[dict] = []
-        capped = False
+        parts: list[Listed] = []
         for lo, hi in itertools.pairwise(cuts):
-            q = f"status:merged after:{lo} before:{hi} project:{project}"
-            part, _ = listing(transport, q, ["DETAILED_ACCOUNTS"])
-            capped |= len(part) >= 10000
-            rows.extend(part)
-        print(json.dumps(_counts(project, month, rows, capped=capped, ranged=True)), flush=True)
+            part, _ = listing(transport, listing_query(lo, hi, [project]), ["DETAILED_ACCOUNTS"])
+            parts.append(Listed(lo, hi, project, {}, part))
+        try:
+            rows, _ = drop_boundary_repeats(parts)
+        except ValueError as error:
+            raise SystemExit(f"{project} {month}: {error}") from error
+        print(json.dumps(_counts(project, month, rows, ranged=True)), flush=True)
 
 
 def measure_yield(project: str, month: str, k: int) -> None:
     admitted: Admitted = {}
     transport = _transport(admitted)
     a, b = month_bounds(month)
-    q = f"status:merged after:{a} before:{b} project:{project}"
     opts = ["DETAILED_ACCOUNTS", "CURRENT_REVISION", "CURRENT_FILES"]
-    rows, more = listing(transport, q, opts, n=200, limit=200)
+    rows, more = listing(transport, listing_query(a, b, [project]), opts, n=200, limit=200)
     human = [r for r in rows if not is_bot(r["owner"]) and r["created"][:10] >= WINDOW_START]
     scope = REST_PERMITTED[HOST].scope
     if scope is not None:
-        human = [r for r in human if created_in_grant(scope, r.get("created"))]
+        # Only a change `admit` lets the transport ask about: under a scope of every project, not
+        # one on refs/meta/.
+        human = [
+            r
+            for r in human
+            if created_in_grant(scope, r.get("created")) and covers_change(scope, r)
+        ]
     random.Random(20260922).shuffle(human)
     sample = human[:k]
     # Asked one at a time below, so admitted to the transport first, each against the grant.
@@ -230,12 +247,8 @@ def summarize(directory: Path, out: Path) -> None:
     volume: dict[str, dict[str, dict]] = collections.defaultdict(dict)
     for line in (directory / "volume.jsonl").read_text().splitlines():
         row = json.loads(line)
-        if row.get("capped"):
-            raise SystemExit(
-                f"{row['project']} {row['month']}: a sub-range reached the host's cap, so its "
-                "count is a floor; measure it in narrower ranges"
-            )
-        # A plain listing that reached 10,000 was cut by the host; only ranged counts stand.
+        # A plain listing that reached 10,000 was cut by the host before listings refused a cut
+        # (the committed 2026-09-22 measurements); only ranged counts stand.
         if "month" in row and (row.get("ranged") or row["merged"] < 10000):
             volume[row["project"]][row["month"]] = row
     samples = {

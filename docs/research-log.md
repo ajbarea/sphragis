@@ -10245,3 +10245,54 @@ calibration trials, K = 15, seed 43): every field the two outputs share is ident
 one only adds `hypothesis`, `foreign_source` and `cpp_change_share`. The H1 path the simulations
 took is unchanged, so their artifacts stand for the code on `main`; the one later change on that
 path, `pilot_sizing`'s refusal of a lexer-sure reading (#163), is not reached by these inputs.
+
+### Chromium re-read as a rate grant: its pool registered again, every code project, before any of it is read (2026-10-19)
+
+`# research(2026-10)`. Chrome Infra's answer of 2026-10-15 reads in full "There are no concerns with
+hitting Gerrit's REST API at such a rate." The "about 2,000 merged changes" were the study's own
+narrowed request, and the 2026-10-16 pool rule wrote them into the grant: its read cap (item 4,
+`--read-cap 170`), v8/v8 alone because "chromium/src is outside the grant's scale and the cap"
+(item 2), and "not widened past the grant" (item 5). AJ reads the answer as a rate, one client at no
+more than one request a second, as he read it for AOSP (2026-10-18) and Fuchsia (2026-10-19), and
+decided on 2026-10-19 that the cap was self-imposed. V8's pool came up short under that cap
+(2026-10-16), and read uncapped it would still be short of the others a draw needs (an audit of the
+raw listings, 2026-10-19: about 155 other examples against 926).
+
+Item 1 of the H2 plan names H2's source as the first of Chromium, Fuchsia and AOSP, "in that order
+whatever order they answer in", whose host is admitted for this use when the first H2 development
+contrast is read and whose pool covers every matched draw. No H2 development contrast has been read
+(`FOREIGN_SOURCE` is unset), and a pool's size is not an H2 outcome, so Chromium is read again first.
+This replaces items 2, 4 and 5 of the 2026-10-16 pool rule; it is a change made after V8's and
+AOSP's pools were read and before Fuchsia's coverage is, and the Stage 1 report states it so. Fixed
+now, before any chromium-review change past V8's is read:
+
+1. *Scope.* Item 1(b)'s, as for Fuchsia: changes created in Qt's training window (2024-11-01 to
+   2025-08-31), listed through the month before the sealed test window (2025-10) by last update,
+   every code project the host shows an anonymous reader (`GrantScope.every_project`: its own
+   projects and `refs/meta/` changes aside), no read cap.
+2. *Listing.* A chromium-review month holds more merged changes than the 10,000 the host serves for
+   one query (chromium/src alone, about 18,500), so each month is listed in consecutive two-day
+   ranges (`GrantScope.listing_days`), each refused rather than kept short if the host would truncate
+   it. A range so refused is listed again as two halves, down to one day, decided here.
+3. *Order.* The ranking listings name no project; projects are ranked by the merged changes created
+   in the window that they return, ties by name (`pool_order.py`), as for AOSP and Fuchsia.
+4. *Pool and stop.* The pool is built in that order: each project of the prefix is listed again by
+   name over the same ranges into the pool's own root, built, refined and deduplicated as one corpus
+   and against Qt's unsealed examples, and the pool is the shortest prefix that covers the draws of
+   all 40 admissible partitions (`foreign_pool_coverage.py --order --against`). The comment-count
+   probe, on the pool's root, gates `--fewer-requests`; if it does not hold, every listed change of
+   the prefix is read. If no prefix covers, Chromium does not qualify and the source is the next of
+   Fuchsia and AOSP whose pool covers.
+5. *Pace.* One client, one request a second, five minutes quiet after a 5xx. Chrome Infra's answer
+   is read as that rate for chromium-review, android-review and fuchsia-review together, so no two
+   of them are read at once: Chromium's listings start after Fuchsia's build ends. The code holds
+   all three, and AOSP's git host, to one client (`hosts.CLAIM_AS`): a claim on any of them takes
+   the shared lock and each host's own (`hosts.lock_names`), which code from before the shared
+   claim locks, so a second process, old or new, is refused and a 5xx pause either writes is read
+   by both; one process's transport paces them as one host (`hosts.claim_name`).
+6. *Names.* Under a scope of every project a listing may name a project only if the name reads as
+   itself in Gerrit's query grammar (`cli.rest_project_name`, no Gerrit keyword); a brace phrase or
+   any other syntax is refused, as on 2026-10-19. This replaces the refusal of any listing that
+   names a project in the entry "Fuchsia's months listed whole" (2026-10-19), for both scopes of
+   every project, Chromium's and Fuchsia's: `--project` and the transport now admit a name that
+   reads as itself.
