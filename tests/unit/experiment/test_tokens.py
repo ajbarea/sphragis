@@ -15,6 +15,7 @@ from sphragis.experiment.tokens import (
     char_classes,
     lexemes,
     lexer_for,
+    lexer_unsure,
     split,
     target_cells,
 )
@@ -190,3 +191,14 @@ def test_a_row_its_lexer_cannot_tile_is_read_as_text(monkeypatch) -> None:
     classes, lexed = char_classes("a b", "a c", "m.py")
     assert lexed["lexer"] == "text, shifted could not tile it"
     assert classes == ["other_copied", "other_copied", "other_changed"]
+
+
+def test_a_row_is_lexer_unsure_on_error_characters_or_line_disagreement() -> None:
+    assert not lexer_unsure({"lex_error_chars": 0, "line_disagreement": 0.0})
+    assert lexer_unsure({"lex_error_chars": 2, "line_disagreement": 0.0})
+    assert lexer_unsure({"lex_error_chars": 0, "line_disagreement": 0.01})
+    _, clean = char_classes("x = 1\n", "x = 2\n", "a.py")
+    assert not lexer_unsure(clean)
+    for missing in ({}, {"lex_error_chars": 0}, {"line_disagreement": 0.0}):
+        with pytest.raises(ValueError, match="no lexer record"):
+            lexer_unsure({"id": "x", **missing})

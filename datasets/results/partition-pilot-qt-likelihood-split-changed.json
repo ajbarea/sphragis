@@ -1,0 +1,233 @@
+{
+  "run_files": [
+    "datasets/results/likelihood-partition-qt-p4-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p7-s2-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p11-s3-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p12-s4-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p13-s5-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p16-s6-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p18-s7-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p19-s8-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p20-s9-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p21-s10-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p25-s11-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p26-s12-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p27-s13-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p29-s14-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p32-s15-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p33-s16-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p35-s17-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p36-s18-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p37-s19-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p39-s20-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p41-s21-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p44-s22-n1850-rp1.0.json"
+  ],
+  "metric": "logprob_per_token:changed",
+  "sesoi": null,
+  "decoder": {
+    "inference_dtype": [
+      "float32"
+    ],
+    "max_new_tokens": 256,
+    "repetition_penalty": [
+      1.0
+    ]
+  },
+  "admissible": "datasets/results/admissible-partitions-qt.json",
+  "k_source": "all runs",
+  "k_from": null,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "window": "development",
+  "sensitivity": null,
+  "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/likelihood-partition-qt-p4-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p7-s2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p11-s3-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p12-s4-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p13-s5-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p16-s6-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p18-s7-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p19-s8-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p20-s9-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p21-s10-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p25-s11-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p26-s12-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p27-s13-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p29-s14-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p32-s15-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p33-s16-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p35-s17-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p36-s18-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p37-s19-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p39-s20-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p41-s21-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/likelihood-partition-qt-p44-s22-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    }
+  ],
+  "org": "qt",
+  "bootstrap_seed": 7,
+  "estimate": 0.0062298321495168115,
+  "per_run": [
+    0.0032491780635182654,
+    0.008311518412627533,
+    0.008125128850081154,
+    0.011075014513540843,
+    0.00021429951638779476,
+    0.010489583453618584,
+    0.005143357597125503,
+    0.007392586935026368,
+    0.012917669301070439,
+    0.011733454771466173,
+    0.008899771898157188,
+    -0.0017832972272352754,
+    0.004058620324710022,
+    0.004839217066265555,
+    0.006287329766118843,
+    0.011281612261567736,
+    0.001709289271715514,
+    0.007934278431515562,
+    0.0030776296299676043,
+    0.0013837968164158165,
+    0.00851116365803764,
+    0.0022051039776709025
+  ],
+  "runs": 22,
+  "changes": 403,
+  "reproducibility": null,
+  "runs_computed": 22,
+  "runs_left_out": [],
+  "intervals": {
+    "0.975": {
+      "low": 0.0016902068465493032,
+      "high": 0.010975964389102859
+    },
+    "0.95": {
+      "low": 0.0022670320778065372,
+      "high": 0.010383010676770383
+    }
+  },
+  "verdicts": null,
+  "within_sesoi": null,
+  "meaningful": null,
+  "p_one_sided": 0.0014,
+  "bootstrap_se": 0.0020695582565568253,
+  "resamples": 10000,
+  "bounds": {
+    "0.975": null,
+    "0.95": null
+  },
+  "examples": 800,
+  "dropped": 0,
+  "sizing": {
+    "pilot_runs": 22,
+    "sd": 0.00410482642852997,
+    "sd_upper": 0.005169720292914318,
+    "confidence": 0.9,
+    "runs": null
+  },
+  "without": {},
+  "provenance": {
+    "generated_at": "2026-10-18T08:03:39.911391+00:00",
+    "git": {
+      "commit": "3e28626ea9ef17b2172a32c76d1c349b7766cac8",
+      "branch": "measure/qt-sims"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
