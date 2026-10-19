@@ -20,11 +20,13 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from statistics import fmean, median
 from typing import Any
 
+from sphragis.experiment.cells import cell_of
+from sphragis.experiment.decomposition import FOREIGN_SOURCES, foreign_arm, is_cpp
 from sphragis.measure.stats import (
     Cluster,
     cluster_bootstrap,
@@ -101,13 +103,74 @@ def continuous_runs(
     return runs
 
 
+#: A contrast's two arms in one run, by evaluated half, sibling half and seed: treatment, control.
+Arms = Callable[[str, str, int], tuple[str, str]]
+
+
+def own_against_sibling(window: str, sibling: str, seed: int) -> tuple[str, str]:
+    """H1's arms: the evaluated half's own adapter against its sibling's, on that half."""
+    return f"adapter:{window}|{window}|s{seed}", f"adapter:{sibling}|{window}|s{seed}"
+
+
+def h2_arms(source: str) -> Arms:
+    """H2's arms: the sibling half's adapter against the foreign arm matched to it, on the
+    evaluated half (`decomposition.matched_clusters`)."""
+
+    def arms(window: str, sibling: str, seed: int) -> tuple[str, str]:
+        control = foreign_arm(source, sibling)
+        return f"adapter:{sibling}|{window}|s{seed}", f"adapter:{control}|{window}|s{seed}"
+
+    return arms
+
+
+def cell_contrast(
+    record: Mapping[str, Any],
+) -> tuple[Arms, Callable[[Mapping[str, Any]], bool] | None]:
+    """The arms and rows a pilot's cell is read on (`cells.cell_of`): H1's own against sibling on
+    every example, or H2's sibling against matched foreign on C++ examples."""
+    hypothesis, source = cell_of(record)
+    if hypothesis == "H1" and source is None:
+        return own_against_sibling, None
+    if hypothesis == "H2" and source in FOREIGN_SOURCES:
+        return h2_arms(source), is_cpp
+    raise ValueError(f"no cell is {hypothesis} against {source!r}")
+
+
+def arm_pairs(
+    results: Mapping[str, Sequence[Mapping[str, Any]]],
+    seed: int,
+    window: str,
+    sibling: str,
+    *,
+    arms: Arms = own_against_sibling,
+    keep: Callable[[Mapping[str, Any]], bool] | None = None,
+) -> dict[str, tuple[Mapping[str, Any], Mapping[str, Any]]]:
+    """One run's rows on `window` by example id, treatment's and control's, on the rows `keep`
+    admits; refused if either arm is unscored or the two score different examples."""
+    treatment, control = arms(window, sibling, seed)
+    for arm in (treatment, control):
+        if arm not in results:
+            raise ValueError(f"run s{seed} scored no {arm}")
+    mine = {r["id"]: r for r in results[treatment] if keep is None or keep(r)}
+    theirs = {r["id"]: r for r in results[control] if keep is None or keep(r)}
+    if set(mine) != set(theirs):
+        raise ValueError(f"run s{seed}: {window}'s arms score different examples")
+    return {example: (row, theirs[example]) for example, row in mine.items()}
+
+
 def averaged_truth(
     runs: Sequence[tuple[Mapping[str, Sequence[Mapping[str, Any]]], int]],
     *,
     halves: tuple[str, str],
     metric: str,
+    arms: Arms = own_against_sibling,
+    keep: Callable[[Mapping[str, Any]], bool] | None = None,
 ) -> tuple[list[Cluster], tuple[float, float], float]:
     """Each change's outcomes averaged over a pilot's runs, the change-by-run noise, the shrinkage.
+
+    The contrast is `arms`' treatment minus control (H1's own against sibling by default), on the
+    rows `keep` admits (every row when None), so a cell read on part of its examples is
+    simulated on the same part.
 
     Every run scores every example, in one half or the other, so an example's own-minus-sibling
     is seen once a run. Averaging over runs keeps one run's noise out of the truth a simulation
@@ -131,12 +194,9 @@ def averaged_truth(
     change_of: dict[str, str] = {}
     for results, seed in runs:
         for window, sibling in (halves, halves[::-1]):
-            mine = {r["id"]: r for r in results[f"adapter:{window}|{window}|s{seed}"]}
-            theirs = {r["id"]: r for r in results[f"adapter:{sibling}|{window}|s{seed}"]}
-            if set(mine) != set(theirs):
-                raise ValueError(f"run s{seed}: {window}'s arms score different examples")
-            for example, row in mine.items():
-                a, b = float(row[metric]), float(theirs[example][metric])
+            pairs = arm_pairs(results, seed, window, sibling, arms=arms, keep=keep)
+            for example, (row, theirs) in pairs.items():
+                a, b = float(row[metric]), float(theirs[metric])
                 own[example].append(a)
                 other[example].append(b)
                 contrast[example].append(a - b)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import random
 import sys
 from pathlib import Path
@@ -62,3 +63,30 @@ def test_the_run_wide_part_is_what_the_change_noise_does_not_explain(shift_sd: f
     assert read["run_wide_variance_upper"] > read["run_wide_variance"]
     assert 0.0 <= read["misplaced_on_run_mean_upper"] <= read["worst_case_on_run_mean"]
     assert read["run_wide_share_of_shared"] == pytest.approx(read["run_wide_variance"] / SHARED**2)
+
+
+def test_a_simulation_of_another_cell_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pilot = {"metric": "logprob_per_token", "hypothesis": "H2", "foreign_source": "aosp"}
+    (tmp_path / "pilot.json").write_text(json.dumps(pilot))
+    (tmp_path / "sim.json").write_text(json.dumps({"metric": "logprob_per_token"}))
+    argv = ["run_shift", "--org", "qt", "--pilot", str(tmp_path / "pilot.json")]
+    argv += ["--simulation", str(tmp_path / "sim.json"), "--out", str(tmp_path / "o.json")]
+    monkeypatch.setattr(sys, "argv", argv)
+    with pytest.raises(SystemExit, match=r"the cell \('H2', 'aosp'\), the simulation \('H1'"):
+        run_shift.main()
+    assert not (tmp_path / "o.json").exists()
+
+
+def test_a_run_without_the_cells_arm_is_refused_by_name() -> None:
+    from sphragis.experiment.power import h2_arms
+
+    with pytest.raises(ValueError, match="scored no adapter:foreign-aosp-for-o-b"):
+        run_shift.run_wide(
+            _runs(0.0, n_runs=2),
+            pair=("o-a", "o-b"),
+            metric="lp",
+            noise=(SHARED, PER_EXAMPLE),
+            arms=h2_arms("aosp"),
+        )

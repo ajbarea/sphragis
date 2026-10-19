@@ -32,6 +32,15 @@ REGISTERED_METRIC = "logprob_per_token"
 # 2026-10-09).
 K_COVERAGE = "k_coverage"
 
+#: A cell over partitions: its hypothesis, and for H2 the foreign source it is read against.
+Cell = tuple[str, str | None]
+
+
+def cell_of(record: Mapping[str, Any]) -> Cell:
+    """The cell a pilot, simulation or K coverage artifact was made for; one written before H2 had
+    a cell over partitions names none and is H1's."""
+    return record.get("hypothesis", "H1"), record.get("foreign_source")
+
 
 def level_key(confidence: Any) -> float:
     """A confidence level as a dictionary key: float noise rounded off, a JSON string key read."""
@@ -320,8 +329,10 @@ def sensitivity_bounds(
 
     `target` names a point on the pilot's run spread (`partition_sensitivity.py`'s
     `spread_targets`), so the bound says which spread it assumes; `cells` sets the per-cell power
-    that gives H1 its registered power.
+    that gives H1 its registered power. A simulation of H2's cell bounds no H1 read.
     """
+    if cell_of(sensitivity) != ("H1", None):
+        raise ValueError(f"the simulation is of the cell {cell_of(sensitivity)}, not H1's")
     by_target = sensitivity["by_target"]
     if target not in by_target:
         raise ValueError(f"no spread target {target!r}; the artifact has {sorted(by_target)}")

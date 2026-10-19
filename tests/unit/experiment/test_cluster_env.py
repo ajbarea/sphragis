@@ -1573,3 +1573,19 @@ def test_the_foreign_arms_job_reuses_the_decoder_checked_run_and_refuses_a_plant
     call = (tmp_path / "home" / "uv.calls").read_text()
     assert "--reuse-from" in call and "rq1-partition-qt-p2-some-other-run-n1850-rp1.0.json" in call
     assert "--foreign-pool /unused/pool --foreign-source aosp" in call
+
+
+def test_an_h2_simulation_names_its_cell_and_runs_on_the_likelihood_metric(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "exact").mkdir()
+    refused = _run_job("partition_sensitivity.sbatch", tmp_path / "exact", FOREIGN_SOURCE="aosp")
+    assert refused.returncode != 0
+    assert "H2 is simulated on METRIC=logprob_per_token" in refused.stderr
+    (tmp_path / "h2").mkdir()
+    env = {"FOREIGN_SOURCE": "aosp", "METRIC": "logprob_per_token", "PILOT": "", "PLACEBO": ""}
+    done = _run_job("partition_sensitivity.sbatch", tmp_path / "h2", **env)
+    assert done.returncode == 0, done.stderr
+    call = (tmp_path / "h2" / "home" / "uv.calls").read_text()
+    assert "-foreignaosp-likelihood.json" in call and "--foreign-source aosp" in call
+    assert "-foreignaosp-logprob_per_token.json" in call

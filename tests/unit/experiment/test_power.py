@@ -373,3 +373,37 @@ def test_averaged_truth_refuses_runs_it_cannot_read(problem: str, message: str) 
         runs = [first, _pilot_run(2, {"x": ("cx", "o-b", -0.6)})]
     with pytest.raises(ValueError, match=message):
         averaged_truth(runs, halves=("o-a", "o-b"), metric="lp")
+
+
+def test_averaged_truth_reads_the_arms_and_rows_it_is_given() -> None:
+    from sphragis.experiment.power import averaged_truth
+
+    def foreign(window: str, sibling: str, seed: int) -> tuple[str, str]:
+        return f"adapter:{sibling}|{window}|s{seed}", f"adapter:f-{sibling}|{window}|s{seed}"
+
+    runs = []
+    for seed in (1, 2):
+        results: dict[str, list[dict]] = {}
+        for window, sibling in (("o-a", "o-b"), ("o-b", "o-a")):
+            rows = [
+                {"id": f"{window}:{e}", "change_id": f"c{window}{e}", "lp": value, "path": path}
+                for e, (path, value) in enumerate((("a.cpp", -0.4), ("b.py", -0.9)))
+            ]
+            results[f"adapter:{sibling}|{window}|s{seed}"] = rows
+            results[f"adapter:f-{sibling}|{window}|s{seed}"] = [{**r, "lp": -1.0} for r in rows]
+            results[f"adapter:{window}|{window}|s{seed}"] = rows
+        runs.append((results, seed))
+    truth, _, _ = averaged_truth(
+        runs, halves=("o-a", "o-b"), metric="lp", arms=foreign, keep=lambda r: r["path"] == "a.cpp"
+    )
+    assert [c.change_id for c in truth] == ["co-a0", "co-b0"]
+    assert all(c.control == (-1.0,) for c in truth)
+    assert all(c.treatment == pytest.approx((-0.4,)) for c in truth)
+
+
+def test_averaged_truth_names_an_arm_a_run_never_scored() -> None:
+    from sphragis.experiment.power import averaged_truth, h2_arms
+
+    runs = [_pilot_run(seed, {"e1": ("c1", "o-a", 0.0)}) for seed in (1, 2)]
+    with pytest.raises(ValueError, match="run s1 scored no adapter:foreign-aosp-for-o-b"):
+        averaged_truth(runs, halves=("o-a", "o-b"), metric="lp", arms=h2_arms("aosp"))

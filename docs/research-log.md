@@ -5604,6 +5604,7 @@ mislabeling where `main`'s original two-shape version had refused the same patte
 guard now globs the real client directories the selector resolves to and classifies each match by
 its own suffix, so the result depends on what is actually on disk rather than on the selector's
 spelling.
+
 ### The review UIs are closed to crawlers and the git hosts are not: a NoteDb route, checked against the REST corpus (2026-09-23, rerun 2026-09-25)
 
 `# research(2026-09)`. `scripts/notedb_parity.py` fetches every change NoteDb records as submitted
@@ -5834,6 +5835,7 @@ forbids on Qt. The test window is collected fresh, so its collection records the
 beside the build output, and H1 and H2 are re-read with flagged hunks removed as a registered
 sensitivity analysis. Paixão and Maia (SCAM 2019) find rebasing in 75% of Gerrit reviews and ask
 review-mining studies to handle it rather than filter reviews out.
+
 ### Registered before the next job: under our reading, FDLoRA's personalized module is always something the server has received (2026-09-24)
 
 A second review of PR #36 ran the script against a fake model stack and found that the saved
@@ -9665,3 +9667,31 @@ ends short under a `-refused` name with every seed it checked, rather than exiti
 written, so the refusal is a record and no reader can take a short list for an organization's own.
 The definitions are not changed after the splits were read; LLVM and Grafana are reported as
 checked and not qualifying, and the family is read over its two members.
+
+### Planned before any H2 development contrast is read: how H2's cell is simulated (2026-10-18)
+
+`# research(2026-10)`. Item 6 of the H2 plan (2026-10-14) gives H2's cell its own K and bounds
+from its own development pilot and simulation. `partition_sensitivity.py` simulates a pilot read
+by `partition_pilot.py --hypothesis H2` as it simulates H1's, with three differences fixed now:
+
+1. *Contrast.* The pool averages each change's sibling-minus-matched-foreign outcome over the
+   pilot's runs (`power.averaged_truth` with `h2_arms`), the arms `decomposition.matched_clusters`
+   reads, and the change-by-run noise and shrinkage are measured on that contrast.
+2. *Rows.* Only C++ examples (`is_cpp`) enter the pool, the population the cell is read on.
+3. *Planned changes.* The cell reads a window's C++ examples, so the planned test size is the
+   projected test changes times the share of the pilot's changes carrying a C++ example, from its
+   first run's examples (`cpp_change_share`), rounded down.
+
+Everything else is H1's: the admissible partitions pooled, K from the pilot's sizing or `--runs`
+for the coverage rule's grid, the four calibration points, δ, and the levels the pilot was read
+at. H2 is one cell, so its bound is read at one cell (`plan_cell`), on a continuous metric and
+without a placebo; a plan of fewer than 20 C++ changes is refused, since the gate reads no half
+of fewer than ten. The K coverage rule
+(`partitions.coverage_runs`) now refuses a grid point simulated for another cell than its pilot's
+(hypothesis and foreign source, `cells.cell_of`), so H1's grid never sizes H2's K, nor H2's H1's;
+a K coverage artifact of H2's cell names it (`hypothesis`, `foreign_source`).
+`partition_sensitivity.sbatch` with `FOREIGN_SOURCE` reads
+`partition-pilot-<org>-foreign<source>-likelihood.json` and writes under a name of its own, so H1's
+and H2's simulations never claim one result, and the script refuses a pilot of another cell than
+the one named. `run_shift.py` reads the pilot's cell's contrast and refuses another cell's
+simulation, and an H1 read takes no bounds simulated for H2.

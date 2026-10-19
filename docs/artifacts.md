@@ -587,7 +587,7 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 
 ## `scripts/partition_sensitivity.py`
 
-Operating characteristics of H1 over repeated partitions at the registered K, by simulation.
+Operating characteristics of a cell over repeated partitions at the registered K, by simulation.
 
 | artifact |
 |---|

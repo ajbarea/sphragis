@@ -22,7 +22,9 @@ from sphragis.experiment.cells import (
     K_COVERAGE,
     REGISTERED_SPREAD_TARGET,
     SPREAD_TARGETS,
+    Cell,
     by_level,
+    cell_of,
     is_count,
     level_key,
     same_calibration,
@@ -217,7 +219,7 @@ def pilot_sizing(
     *,
     org: str,
     require_org: bool = False,
-    cell: tuple[str, str | None] = ("H1", None),
+    cell: Cell = ("H1", None),
 ) -> int:
     """The K an organization's pilot sized: `sizing.runs` of a reading over all its runs.
 
@@ -230,7 +232,7 @@ def pilot_sizing(
     carries the K the coverage rule took from that pilot. Either sizes only the `cell` it was made
     for, H1's or H2's against a foreign source (item 6 of the H2 plan: H2's K is its own).
     """
-    made_for = (artifact.get("hypothesis", "H1"), artifact.get("foreign_source"))
+    made_for = cell_of(artifact)
     if made_for != tuple(cell):
         raise ValueError(f"{name} sizes the cell {made_for}, not {tuple(cell)}")
     if artifact.get("kind") == K_COVERAGE:
@@ -271,7 +273,9 @@ def coverage_runs(
     as is a grid in which no K holds. The null's rates are read at `REGISTERED_SPREAD_TARGET` and
     each pilot level.
     """
-    reproducibility = pilot_sizing(pilot, name, org=org, require_org=True)
+    # The pilot sizes its own cell; the grid's points must be made for that cell too (below).
+    cell = cell_of(pilot)
+    reproducibility = pilot_sizing(pilot, name, org=org, require_org=True, cell=cell)
     targets = spread_targets(pilot)
     metric = pilot.get("metric", "exact_match")
     levels = [level_key(c) for c in pilot["levels"]]
@@ -287,6 +291,9 @@ def coverage_runs(
             raise ValueError(
                 f"{file} is on {simulation.get('metric', 'exact_match')}, not {metric}"
             )
+        # An H2 cell's K is its own (item 6 of the H2 plan), so H1's grid never sizes it.
+        if cell_of(simulation) != cell:
+            raise ValueError(f"{file} simulates {cell_of(simulation)}, not the pilot's {cell}")
         if not same_calibration(simulation.get("spread_targets"), targets):
             raise ValueError(f"{file} was calibrated on another pilot than {name}")
         if simulation.get("null_trials") != COVERAGE_NULL_TRIALS:

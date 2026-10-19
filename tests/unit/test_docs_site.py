@@ -227,3 +227,16 @@ def test_retired_term_stays_retired() -> None:
         if re.search(r"fingerprint", (ROOT / name).read_text(), re.I)
     ]
     assert not used, f"retired term in: {used}"
+
+
+def test_every_heading_follows_a_blank_line() -> None:
+    """A heading appended straight after the last entry's paragraph runs into it in the source."""
+    run_on = []
+    for page in [*sorted(DOCS.rglob("*.md")), ROOT / "README.md", ROOT / "ROADMAP.md"]:
+        lines, fenced = page.read_text().split("\n"), False
+        for n, line in enumerate(lines):
+            if line.lstrip().startswith("```"):
+                fenced = not fenced
+            elif not fenced and n and re.match(r"#{1,6} ", line) and lines[n - 1].strip():
+                run_on.append(f"{page.relative_to(ROOT)}:{n + 1}")
+    assert not run_on, run_on
