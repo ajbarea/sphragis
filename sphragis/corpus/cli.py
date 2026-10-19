@@ -91,10 +91,10 @@ GERRIT = {
 
 
 # The review hosts a REST client may call, each with the reason it may. robots.txt is
-# Disallow: / on android-review, chromium-review and codereview.qt-project.org, and Google's
-# terms bar automated access that ignores it, so those are fetched over git where a git host
-# serves NoteDb, or not at all until the host grants permission in writing, as Qt's did. A host
-# absent here is refused.
+# Disallow: / on android-review, chromium-review, fuchsia-review and codereview.qt-project.org,
+# and Google's terms bar automated access that ignores it, so those are fetched over git where a
+# git host serves NoteDb, or not at all until the host grants permission in writing, as Qt's and
+# Chromium's did. A host absent here is refused.
 class GrantScope(NamedTuple):
     """What a written grant covers, enforced wherever the host is read: the projects a listing may
     name, the created dates a fetch may keep (`created_before` exclusive, as `before:` reads), and
@@ -108,6 +108,9 @@ class GrantScope(NamedTuple):
     # lists the changes last updated in it, so a change created inside the grant and updated
     # later is listed only past `created_before`; None reads no month past it.
     listed_through: str | None = None
+    # Whether the projects are every code project the host lists, read through its project list:
+    # only then may the host be asked for that list.
+    lists_projects: bool = False
 
 
 def last_open_month() -> str:
@@ -220,16 +223,33 @@ AOSP_CENSUS = RESULTS / "aosp-census.json"
 FUCHSIA_PROJECTS = RESULTS / "fuchsia-projects.json"
 
 
+_REST_PROJECT = re.compile(r"[A-Za-z0-9_][A-Za-z0-9._+/-]*")
+
+
+def rest_project_name(name: object) -> bool:
+    """Whether a project name reads as itself in a `project:` query: no space, bracket, quote,
+    regex anchor or leading negation that Gerrit's query grammar would read as syntax."""
+    return (
+        isinstance(name, str)
+        and _REST_PROJECT.fullmatch(name) is not None
+        and ".." not in name
+        and "//" not in name
+        and not name.endswith("/")
+    )
+
+
 def artifact_projects(path: Path, key: str) -> tuple[str, ...]:
-    """The projects an artifact names under `key`, none before one is committed, which leaves every
-    listing of a scope built on it refused."""
+    """The projects an artifact names under `key`; none before one is committed, or if any name
+    could read as query syntax, which leaves every listing of a scope built on it refused."""
     try:
         projects = json.loads(path.read_text())[key]
-    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError):
+    except (OSError, ValueError, KeyError, TypeError):
         # Unreadable as well as absent: the scope then names nothing, and no stage of any other
         # organization fails on this import.
         return ()
-    return tuple(projects) if isinstance(projects, list) else ()
+    if not isinstance(projects, list) or not all(rest_project_name(p) for p in projects):
+        return ()
+    return tuple(projects)
 
 
 def census_projects(path: Path = AOSP_CENSUS) -> tuple[str, ...]:
@@ -240,6 +260,10 @@ def census_projects(path: Path = AOSP_CENSUS) -> tuple[str, ...]:
 def fuchsia_projects(path: Path = FUCHSIA_PROJECTS) -> tuple[str, ...]:
     """The code projects fuchsia-review listed."""
     return artifact_projects(path, "projects")
+
+
+#: Where each host whose scope is every code project it lists keeps that list.
+PROJECT_LISTS = {"fuchsia": FUCHSIA_PROJECTS}
 
 
 REST_PERMITTED = {
@@ -314,7 +338,12 @@ REST_PERMITTED = {
         # Item 1(b) of the H2 plan: Qt's own training-window months, every code project the host
         # lists, no read cap; listed through the month before the sealed test window.
         scope=GrantScope(
-            fuchsia_projects(), WINDOWS["train"][0], WINDOWS["train"][1], None, last_open_month()
+            fuchsia_projects(),
+            WINDOWS["train"][0],
+            WINDOWS["train"][1],
+            None,
+            last_open_month(),
+            lists_projects=True,
         ),
         written_grant=True,
     ),
@@ -354,26 +383,59 @@ def grant_scope(org: str) -> GrantScope | None:
     return permission.scope if permission else None
 
 
+_DAY = r"\d{4}-\d{2}-\d{2}"
+# The one listing the client builds for a scoped host, a month of one project's merged changes
+# (`fetch`, `host_scoping.py`), and the truncation probe `fetch_changes` wraps around it.
+_MONTH_LISTING = re.compile(
+    rf"status:merged after:{_DAY} before:{_DAY} \(?project:(?P<project>[^\s()\"]+)\)?"
+)
+_TRUNCATION_PROBE = re.compile(
+    rf'\((?P<listing>.+)\) before:"{_DAY} \d{{2}}:\d{{2}}:\d{{2}} \+0000"'
+)
+_LISTING_PARAMETERS = frozenset({"q", "n", "S", "o"})
+_BY_NUMBER = (
+    re.compile(r"/changes/[^/?]+/comments"),
+    re.compile(r"/changes/[^/?]+/revisions/[^/?]+/files/[^/?]+/diff\?base=\d+"),
+)
+
+
 def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
-    """Why a `/changes/?q=` listing on a scoped host is refused, None if it names only granted
-    projects. A request about one change (its comments, a diff) names no project, so it passes
-    here and is checked against the changes admitted under the grant (`unadmitted_change`)."""
+    """Why a `/changes/?q=` listing on a scoped host is refused, None if it is a month of one
+    granted project's merged changes or the probe around it. Anything else, another operator, an
+    alias, a second project, OR, negation, is refused, so a listing the client does not build
+    cannot reach past the grant."""
     path, _, query = target.partition("?")
-    if not path.rstrip("/").endswith("/changes"):
+    if path not in ("/changes/", "/changes"):
         return None
-    asked = urllib.parse.parse_qs(query).get("q", [""])
-    if len(asked) != 1:
-        return "a listing with more than one query"
-    q = asked[0]
-    if re.search(r"\w(?=project:)", q):
-        return "a listing by a project operator other than project:"
-    named = re.findall(r"project:([^\s()]+)", q)
-    if not named:
-        return "a listing that names no project"
-    if re.search(r"\b(OR|NOT)\b|(^|[\s(])-", q):
-        return "a listing whose OR, NOT or negation could reach past its projects"
-    outside = sorted(set(named) - set(scope.projects))
-    return f"a listing of {outside}" if outside else None
+    parameters = urllib.parse.parse_qs(query, keep_blank_values=True)
+    if set(parameters) - _LISTING_PARAMETERS or any(
+        len(v) != 1 for k, v in parameters.items() if k != "o"
+    ):
+        return "a listing with parameters the client does not send"
+    q = parameters.get("q", [""])[0]
+    probe = _TRUNCATION_PROBE.fullmatch(q)
+    listing = probe.group("listing") if probe else q
+    asked = _MONTH_LISTING.fullmatch(listing)
+    if asked is None or listing.count("(") != listing.count(")"):
+        return "a listing other than a month of one project's merged changes"
+    project = asked.group("project")
+    return None if project in scope.projects else f"a listing of {[project]}"
+
+
+def out_of_scope_request(target: str, scope: GrantScope, admitted: set[str]) -> str | None:
+    """Why a request to a scoped host is refused, None if it is one the client builds under the
+    grant: a listing `out_of_scope_listing` passes, an admitted change's comments or one file's
+    diff, or the host's code projects where the scope is all of them. Every other path is
+    refused, so a path that forgets its check fails closed."""
+    path = target.partition("?")[0]
+    if path in ("/changes/", "/changes"):
+        return out_of_scope_listing(target, scope)
+    if any(shape.fullmatch(target) for shape in _BY_NUMBER):
+        change = unadmitted_change(target, scope, admitted)
+        return None if change is None else f"change {change} was not admitted under its grant"
+    if target == "/projects/?type=CODE" and scope.lists_projects:
+        return None
+    return f"{path}, which the client does not ask a scoped host"
 
 
 # Sent on every request. Wikimedia's User-Agent policy asks for a client name, version and
@@ -580,16 +642,9 @@ def http_transport(
         if robots_disallows(target, permission.disallow):
             raise SystemExit(f"refusing {host}{target}: the host's robots.txt disallows the path")
         if permission.scope is not None:
-            why = out_of_scope_listing(target, permission.scope)
+            why = out_of_scope_request(target, permission.scope, held.get(host, set()))
             if why:
-                raise SystemExit(
-                    f"refusing {host}: {why}, outside its grant ({permission.scope.projects})"
-                )
-            change = unadmitted_change(target, permission.scope, held.get(host, set()))
-            if change is not None:
-                raise SystemExit(
-                    f"refusing {host}: change {change} was not admitted under its grant (cli.admit)"
-                )
+                raise SystemExit(f"refusing {host}: {why} (cli.out_of_scope_request)")
         claim = claim_host(host, lock_dir) if permission.single_client else None
 
         def quiet(seconds: float) -> None:
@@ -717,6 +772,11 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
     refuse_mixed_routes(Path(args.root), args.org, "rest", allow=args.allow_mixed_routes)
     scope = grant_scope(args.org)
     if scope is not None:
+        if not scope.projects:
+            raise SystemExit(
+                f"{args.org}'s grant names no project yet: its projects artifact is missing or "
+                "unreadable (cli.artifact_projects)"
+            )
         if not args.project or set(args.project) - set(scope.projects):
             raise SystemExit(f"{args.org}'s grant covers --project {' '.join(scope.projects)} only")
         if not grant_months(scope, args.month):

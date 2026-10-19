@@ -9965,3 +9965,7 @@ Fuchsia's review data has not been read by this study. Fixed now, before any of 
    cover the draws of all 40 admissible partitions (`foreign_pool_coverage.py --order --against`).
    The comment-count probe gates `--fewer-requests`. If no prefix covers, Fuchsia does not qualify
    and H2 has no confirmatory cell (registered decisions).
+5. *Guards.* The project list is read once (an existing artifact is refused without `--overwrite`)
+   and refused if empty, truncated (`_more_projects`) or naming a project a `project:` query could
+   misread (`cli.rest_project_name`); a scoped host answers only the requests the client builds for
+   it (`cli.out_of_scope_request`), so the list is asked only of a scope defined by it.
