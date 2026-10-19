@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 695 artifacts under
-68 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 697 artifacts under
+69 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -95,6 +95,7 @@ AOSP's projects by language at its release tag, for H2's foreign pool (item 4 of
 
 | artifact |
 |---|
+| `aosp-census.json` |
 | `code-files-linguist.json` |
 
 ## `scripts/backport_share.py`
@@ -312,6 +313,14 @@ The adapter-instance cut: two adapters per client, and only one of them leaves.
 | artifact |
 |---|
 | `client-updates-dual-cpp-rebuilt-c128-t2.json` |
+
+## `scripts/foreign_need.py`
+
+What a foreign pool must hold to cover H2's matched arm over an organization's admissible list.
+
+| artifact |
+|---|
+| `foreign-need-qt.json` |
 
 ## `scripts/github_conversion.py`
 

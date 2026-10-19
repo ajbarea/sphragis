@@ -47,7 +47,7 @@ def test_zero_rows_are_drawn_in_proportion_to_each_month() -> None:
 def _run(tmp_path, monkeypatch, answer, *extra) -> dict:
     root = _corpus(tmp_path)
     monkeypatch.setattr(probe, "fetch_comments", lambda base, n, transport: answer(n))
-    monkeypatch.setattr(probe, "http_transport", lambda: None)
+    monkeypatch.setattr(probe, "http_transport", lambda **_: None)
     out = tmp_path / "out.json"
     argv = ["probe", "--org", "qt", "--root", str(root), "--zero", "8", "--control", "1"]
     monkeypatch.setattr(sys, "argv", [*argv, "--out", str(out), *extra])
@@ -109,3 +109,46 @@ def test_a_month_whose_body_is_damaged_is_skipped(tmp_path) -> None:
     snapshot.write_bytes(data[: len(data) // 2] + b"\0" * (len(data) - len(data) // 2))
     by_month, skipped = probe.recorded(root, "qt")
     assert "2024-11" in skipped and "2024-11" not in by_month
+
+
+def test_a_month_its_hosts_grant_does_not_cover_gives_no_change_to_ask(
+    tmp_path, monkeypatch
+) -> None:
+    """The probe asks by number, as the build does, so it refuses what the build refuses."""
+    from sphragis.corpus import cli
+
+    host = "chromium-review.googlesource.com"
+    scope = cli.GrantScope(("platform/a",), "2024-10-01", "2025-03-27", None)
+    monkeypatch.setitem(cli.REST_PERMITTED, host, cli.REST_PERMITTED[host]._replace(scope=scope))
+    inside = "2024-11-05 00:00:00.000000000"
+    rows = {
+        "2024-10": [{"_number": 1, "project": "platform/a", "created": "2024-09-20 00:00:00.000"}],
+        "2024-11": [
+            {"_number": 2, "project": "platform/a", "created": inside, "total_comment_count": 2},
+            {"_number": 3, "project": "platform/a", "created": inside, "total_comment_count": 0},
+        ],
+        "2024-12": [{"_number": 4, "project": "platform/z", "created": "2024-12-01 00:00:00.000"}],
+        "2025-04": [{"_number": 5, "project": "platform/a", "created": inside}],
+    }
+    for month, changes in rows.items():
+        write_snapshot(tmp_path, "chromium", month, changes, record={})
+    by_month, skipped = probe.recorded(tmp_path, "chromium")
+    assert list(by_month) == ["2024-11"] and by_month["2024-11"] == ([3], [2])
+    assert skipped["2024-10"] == "1 rows created outside the host's grant"
+    assert skipped["2024-12"] == "rows of projects outside the host's grant"
+    assert skipped["2025-04"] == "outside the host's grant"
+
+
+def test_a_probe_with_nothing_inside_the_grant_asks_nothing(tmp_path, monkeypatch) -> None:
+    from sphragis.corpus import cli
+
+    host = "chromium-review.googlesource.com"
+    scope = cli.GrantScope(("platform/a",), "2024-10-01", "2025-03-27", None)
+    monkeypatch.setitem(cli.REST_PERMITTED, host, cli.REST_PERMITTED[host]._replace(scope=scope))
+    held = [{"_number": 1, "project": "platform/art", "created": "2024-01-02 00:00:00.000"}]
+    write_snapshot(tmp_path, "chromium", "2024-01", held, record={})
+    monkeypatch.setattr(probe, "http_transport", lambda **_: pytest.fail("no request"))
+    argv = ["probe", "--org", "chromium", "--root", str(tmp_path), "--zero", "5", "--control", "1"]
+    monkeypatch.setattr(sys, "argv", [*argv, "--out", str(tmp_path / "out.json")])
+    with pytest.raises(SystemExit, match="no control asked"):
+        probe.main()

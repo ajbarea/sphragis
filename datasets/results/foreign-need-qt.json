@@ -1,0 +1,698 @@
+{
+  "org": "qt",
+  "population": "cpp",
+  "size": 1850,
+  "split_seed": 0,
+  "admissible": "datasets/results/admissible-partitions-qt.json",
+  "partitions": 40,
+  "checked_against_runs": [
+    "datasets/results/likelihood-partition-qt-p11-s3-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p12-s4-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p13-s5-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p16-s6-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p18-s7-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p19-s8-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p20-s9-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p21-s10-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p25-s11-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p26-s12-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p27-s13-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p29-s14-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p32-s15-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p33-s16-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p35-s17-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p36-s18-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p37-s19-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p39-s20-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p4-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p41-s21-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p44-s22-n1850-rp1.0.json",
+    "datasets/results/likelihood-partition-qt-p7-s2-n1850-rp1.0.json"
+  ],
+  "need": {
+    "in_language": {
+      "examples": 1308,
+      "seed": 58,
+      "half": "qt-b"
+    },
+    "other": {
+      "examples": 926,
+      "seed": 71,
+      "half": "qt-a"
+    }
+  },
+  "draws": {
+    "4": {
+      "qt-a": {
+        "train_examples": 3998,
+        "held_out_examples": 471,
+        "drawn": 1850,
+        "in_language": 1178,
+        "other": 672
+      },
+      "qt-b": {
+        "train_examples": 3495,
+        "held_out_examples": 329,
+        "drawn": 1850,
+        "in_language": 985,
+        "other": 865
+      }
+    },
+    "7": {
+      "qt-a": {
+        "train_examples": 3287,
+        "held_out_examples": 310,
+        "drawn": 1850,
+        "in_language": 1042,
+        "other": 808
+      },
+      "qt-b": {
+        "train_examples": 4206,
+        "held_out_examples": 490,
+        "drawn": 1850,
+        "in_language": 1174,
+        "other": 676
+      }
+    },
+    "11": {
+      "qt-a": {
+        "train_examples": 3845,
+        "held_out_examples": 462,
+        "drawn": 1850,
+        "in_language": 999,
+        "other": 851
+      },
+      "qt-b": {
+        "train_examples": 3648,
+        "held_out_examples": 338,
+        "drawn": 1850,
+        "in_language": 1207,
+        "other": 643
+      }
+    },
+    "12": {
+      "qt-a": {
+        "train_examples": 3709,
+        "held_out_examples": 346,
+        "drawn": 1850,
+        "in_language": 1179,
+        "other": 671
+      },
+      "qt-b": {
+        "train_examples": 3784,
+        "held_out_examples": 454,
+        "drawn": 1850,
+        "in_language": 1035,
+        "other": 815
+      }
+    },
+    "13": {
+      "qt-a": {
+        "train_examples": 3628,
+        "held_out_examples": 296,
+        "drawn": 1850,
+        "in_language": 1153,
+        "other": 697
+      },
+      "qt-b": {
+        "train_examples": 3865,
+        "held_out_examples": 504,
+        "drawn": 1850,
+        "in_language": 1023,
+        "other": 827
+      }
+    },
+    "16": {
+      "qt-a": {
+        "train_examples": 3308,
+        "held_out_examples": 346,
+        "drawn": 1850,
+        "in_language": 1109,
+        "other": 741
+      },
+      "qt-b": {
+        "train_examples": 4185,
+        "held_out_examples": 454,
+        "drawn": 1850,
+        "in_language": 1097,
+        "other": 753
+      }
+    },
+    "18": {
+      "qt-a": {
+        "train_examples": 3437,
+        "held_out_examples": 303,
+        "drawn": 1850,
+        "in_language": 1214,
+        "other": 636
+      },
+      "qt-b": {
+        "train_examples": 4056,
+        "held_out_examples": 497,
+        "drawn": 1850,
+        "in_language": 994,
+        "other": 856
+      }
+    },
+    "19": {
+      "qt-a": {
+        "train_examples": 3317,
+        "held_out_examples": 285,
+        "drawn": 1850,
+        "in_language": 1219,
+        "other": 631
+      },
+      "qt-b": {
+        "train_examples": 4176,
+        "held_out_examples": 515,
+        "drawn": 1850,
+        "in_language": 989,
+        "other": 861
+      }
+    },
+    "20": {
+      "qt-a": {
+        "train_examples": 4537,
+        "held_out_examples": 484,
+        "drawn": 1850,
+        "in_language": 1074,
+        "other": 776
+      },
+      "qt-b": {
+        "train_examples": 2956,
+        "held_out_examples": 316,
+        "drawn": 1850,
+        "in_language": 1184,
+        "other": 666
+      }
+    },
+    "21": {
+      "qt-a": {
+        "train_examples": 4222,
+        "held_out_examples": 508,
+        "drawn": 1850,
+        "in_language": 1160,
+        "other": 690
+      },
+      "qt-b": {
+        "train_examples": 3271,
+        "held_out_examples": 292,
+        "drawn": 1850,
+        "in_language": 984,
+        "other": 866
+      }
+    },
+    "25": {
+      "qt-a": {
+        "train_examples": 3682,
+        "held_out_examples": 390,
+        "drawn": 1850,
+        "in_language": 999,
+        "other": 851
+      },
+      "qt-b": {
+        "train_examples": 3811,
+        "held_out_examples": 410,
+        "drawn": 1850,
+        "in_language": 1230,
+        "other": 620
+      }
+    },
+    "26": {
+      "qt-a": {
+        "train_examples": 3358,
+        "held_out_examples": 330,
+        "drawn": 1850,
+        "in_language": 1123,
+        "other": 727
+      },
+      "qt-b": {
+        "train_examples": 4135,
+        "held_out_examples": 470,
+        "drawn": 1850,
+        "in_language": 1109,
+        "other": 741
+      }
+    },
+    "27": {
+      "qt-a": {
+        "train_examples": 3860,
+        "held_out_examples": 455,
+        "drawn": 1850,
+        "in_language": 1022,
+        "other": 828
+      },
+      "qt-b": {
+        "train_examples": 3633,
+        "held_out_examples": 345,
+        "drawn": 1850,
+        "in_language": 1244,
+        "other": 606
+      }
+    },
+    "29": {
+      "qt-a": {
+        "train_examples": 3790,
+        "held_out_examples": 447,
+        "drawn": 1850,
+        "in_language": 1219,
+        "other": 631
+      },
+      "qt-b": {
+        "train_examples": 3703,
+        "held_out_examples": 353,
+        "drawn": 1850,
+        "in_language": 991,
+        "other": 859
+      }
+    },
+    "32": {
+      "qt-a": {
+        "train_examples": 4080,
+        "held_out_examples": 513,
+        "drawn": 1850,
+        "in_language": 1132,
+        "other": 718
+      },
+      "qt-b": {
+        "train_examples": 3413,
+        "held_out_examples": 287,
+        "drawn": 1850,
+        "in_language": 1051,
+        "other": 799
+      }
+    },
+    "33": {
+      "qt-a": {
+        "train_examples": 2960,
+        "held_out_examples": 300,
+        "drawn": 1850,
+        "in_language": 952,
+        "other": 898
+      },
+      "qt-b": {
+        "train_examples": 4533,
+        "held_out_examples": 500,
+        "drawn": 1850,
+        "in_language": 1203,
+        "other": 647
+      }
+    },
+    "35": {
+      "qt-a": {
+        "train_examples": 4218,
+        "held_out_examples": 494,
+        "drawn": 1850,
+        "in_language": 1183,
+        "other": 667
+      },
+      "qt-b": {
+        "train_examples": 3275,
+        "held_out_examples": 306,
+        "drawn": 1850,
+        "in_language": 1026,
+        "other": 824
+      }
+    },
+    "36": {
+      "qt-a": {
+        "train_examples": 4395,
+        "held_out_examples": 459,
+        "drawn": 1850,
+        "in_language": 1149,
+        "other": 701
+      },
+      "qt-b": {
+        "train_examples": 3098,
+        "held_out_examples": 341,
+        "drawn": 1850,
+        "in_language": 1043,
+        "other": 807
+      }
+    },
+    "37": {
+      "qt-a": {
+        "train_examples": 3896,
+        "held_out_examples": 455,
+        "drawn": 1850,
+        "in_language": 1192,
+        "other": 658
+      },
+      "qt-b": {
+        "train_examples": 3597,
+        "held_out_examples": 345,
+        "drawn": 1850,
+        "in_language": 1038,
+        "other": 812
+      }
+    },
+    "39": {
+      "qt-a": {
+        "train_examples": 3603,
+        "held_out_examples": 286,
+        "drawn": 1850,
+        "in_language": 1245,
+        "other": 605
+      },
+      "qt-b": {
+        "train_examples": 3890,
+        "held_out_examples": 514,
+        "drawn": 1850,
+        "in_language": 951,
+        "other": 899
+      }
+    },
+    "41": {
+      "qt-a": {
+        "train_examples": 4430,
+        "held_out_examples": 476,
+        "drawn": 1850,
+        "in_language": 1114,
+        "other": 736
+      },
+      "qt-b": {
+        "train_examples": 3063,
+        "held_out_examples": 324,
+        "drawn": 1850,
+        "in_language": 1052,
+        "other": 798
+      }
+    },
+    "44": {
+      "qt-a": {
+        "train_examples": 4062,
+        "held_out_examples": 536,
+        "drawn": 1850,
+        "in_language": 1116,
+        "other": 734
+      },
+      "qt-b": {
+        "train_examples": 3431,
+        "held_out_examples": 264,
+        "drawn": 1850,
+        "in_language": 1066,
+        "other": 784
+      }
+    },
+    "45": {
+      "qt-a": {
+        "train_examples": 3004,
+        "held_out_examples": 270,
+        "drawn": 1850,
+        "in_language": 1115,
+        "other": 735
+      },
+      "qt-b": {
+        "train_examples": 4489,
+        "held_out_examples": 530,
+        "drawn": 1850,
+        "in_language": 1106,
+        "other": 744
+      }
+    },
+    "46": {
+      "qt-a": {
+        "train_examples": 3644,
+        "held_out_examples": 301,
+        "drawn": 1850,
+        "in_language": 1265,
+        "other": 585
+      },
+      "qt-b": {
+        "train_examples": 3849,
+        "held_out_examples": 499,
+        "drawn": 1850,
+        "in_language": 960,
+        "other": 890
+      }
+    },
+    "48": {
+      "qt-a": {
+        "train_examples": 4236,
+        "held_out_examples": 447,
+        "drawn": 1850,
+        "in_language": 1194,
+        "other": 656
+      },
+      "qt-b": {
+        "train_examples": 3257,
+        "held_out_examples": 353,
+        "drawn": 1850,
+        "in_language": 949,
+        "other": 901
+      }
+    },
+    "49": {
+      "qt-a": {
+        "train_examples": 3705,
+        "held_out_examples": 335,
+        "drawn": 1850,
+        "in_language": 1143,
+        "other": 707
+      },
+      "qt-b": {
+        "train_examples": 3788,
+        "held_out_examples": 465,
+        "drawn": 1850,
+        "in_language": 1013,
+        "other": 837
+      }
+    },
+    "51": {
+      "qt-a": {
+        "train_examples": 4165,
+        "held_out_examples": 494,
+        "drawn": 1850,
+        "in_language": 1015,
+        "other": 835
+      },
+      "qt-b": {
+        "train_examples": 3328,
+        "held_out_examples": 306,
+        "drawn": 1850,
+        "in_language": 1270,
+        "other": 580
+      }
+    },
+    "53": {
+      "qt-a": {
+        "train_examples": 3506,
+        "held_out_examples": 373,
+        "drawn": 1850,
+        "in_language": 991,
+        "other": 859
+      },
+      "qt-b": {
+        "train_examples": 3987,
+        "held_out_examples": 427,
+        "drawn": 1850,
+        "in_language": 1197,
+        "other": 653
+      }
+    },
+    "54": {
+      "qt-a": {
+        "train_examples": 3647,
+        "held_out_examples": 335,
+        "drawn": 1850,
+        "in_language": 1177,
+        "other": 673
+      },
+      "qt-b": {
+        "train_examples": 3846,
+        "held_out_examples": 465,
+        "drawn": 1850,
+        "in_language": 1008,
+        "other": 842
+      }
+    },
+    "55": {
+      "qt-a": {
+        "train_examples": 3955,
+        "held_out_examples": 456,
+        "drawn": 1850,
+        "in_language": 1076,
+        "other": 774
+      },
+      "qt-b": {
+        "train_examples": 3538,
+        "held_out_examples": 344,
+        "drawn": 1850,
+        "in_language": 1170,
+        "other": 680
+      }
+    },
+    "58": {
+      "qt-a": {
+        "train_examples": 3914,
+        "held_out_examples": 490,
+        "drawn": 1850,
+        "in_language": 930,
+        "other": 920
+      },
+      "qt-b": {
+        "train_examples": 3579,
+        "held_out_examples": 310,
+        "drawn": 1850,
+        "in_language": 1308,
+        "other": 542
+      }
+    },
+    "63": {
+      "qt-a": {
+        "train_examples": 3408,
+        "held_out_examples": 351,
+        "drawn": 1850,
+        "in_language": 954,
+        "other": 896
+      },
+      "qt-b": {
+        "train_examples": 4085,
+        "held_out_examples": 449,
+        "drawn": 1850,
+        "in_language": 1227,
+        "other": 623
+      }
+    },
+    "64": {
+      "qt-a": {
+        "train_examples": 3694,
+        "held_out_examples": 317,
+        "drawn": 1850,
+        "in_language": 1150,
+        "other": 700
+      },
+      "qt-b": {
+        "train_examples": 3799,
+        "held_out_examples": 483,
+        "drawn": 1850,
+        "in_language": 1071,
+        "other": 779
+      }
+    },
+    "65": {
+      "qt-a": {
+        "train_examples": 3503,
+        "held_out_examples": 326,
+        "drawn": 1850,
+        "in_language": 1087,
+        "other": 763
+      },
+      "qt-b": {
+        "train_examples": 3990,
+        "held_out_examples": 474,
+        "drawn": 1850,
+        "in_language": 1125,
+        "other": 725
+      }
+    },
+    "66": {
+      "qt-a": {
+        "train_examples": 3802,
+        "held_out_examples": 451,
+        "drawn": 1850,
+        "in_language": 1080,
+        "other": 770
+      },
+      "qt-b": {
+        "train_examples": 3691,
+        "held_out_examples": 349,
+        "drawn": 1850,
+        "in_language": 1150,
+        "other": 700
+      }
+    },
+    "67": {
+      "qt-a": {
+        "train_examples": 3199,
+        "held_out_examples": 337,
+        "drawn": 1850,
+        "in_language": 1008,
+        "other": 842
+      },
+      "qt-b": {
+        "train_examples": 4294,
+        "held_out_examples": 463,
+        "drawn": 1850,
+        "in_language": 1163,
+        "other": 687
+      }
+    },
+    "71": {
+      "qt-a": {
+        "train_examples": 2942,
+        "held_out_examples": 324,
+        "drawn": 1850,
+        "in_language": 924,
+        "other": 926
+      },
+      "qt-b": {
+        "train_examples": 4551,
+        "held_out_examples": 476,
+        "drawn": 1850,
+        "in_language": 1211,
+        "other": 639
+      }
+    },
+    "73": {
+      "qt-a": {
+        "train_examples": 4132,
+        "held_out_examples": 536,
+        "drawn": 1850,
+        "in_language": 1097,
+        "other": 753
+      },
+      "qt-b": {
+        "train_examples": 3361,
+        "held_out_examples": 264,
+        "drawn": 1850,
+        "in_language": 1112,
+        "other": 738
+      }
+    },
+    "76": {
+      "qt-a": {
+        "train_examples": 4065,
+        "held_out_examples": 410,
+        "drawn": 1850,
+        "in_language": 1183,
+        "other": 667
+      },
+      "qt-b": {
+        "train_examples": 3428,
+        "held_out_examples": 390,
+        "drawn": 1850,
+        "in_language": 1018,
+        "other": 832
+      }
+    },
+    "81": {
+      "qt-a": {
+        "train_examples": 3680,
+        "held_out_examples": 378,
+        "drawn": 1850,
+        "in_language": 1022,
+        "other": 828
+      },
+      "qt-b": {
+        "train_examples": 3813,
+        "held_out_examples": 422,
+        "drawn": 1850,
+        "in_language": 1222,
+        "other": 628
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-19T02:04:54.293098+00:00",
+    "git": {
+      "commit": "c2f19bfe5e009d5de698726f69e260b06c12e4e1",
+      "branch": "corpus/aosp-census"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

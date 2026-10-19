@@ -16,13 +16,14 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   text); the likelihood rescorings are committed.
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
   split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
-- **AOSP's pool, H2's foreign source** (research log, 2026-10-18): admitted on AJ's reading of
-  Chrome Infra's answer, one client at no more than one request a second. `foreign_need.py` over
-  Qt's 40 admissible partitions gives what the pool must cover; `aosp_census.py` reads every
-  manifest project's tree at `android-15.0.0_r1` (the one ref `GIT_PERMITTED` opens there) and
-  names the C++-majority projects. Then one commit puts android-review in `REST_PERMITTED`
-  scoped to those projects and 2024-10-01 to 2025-03-26, their window listings order them, and
-  the pool is fetched, built and deduplicated project by project until it covers every draw.
+- **AOSP's pool, H2's foreign source** (research log, 2026-10-18 and 2026-10-19): admitted on AJ's
+  reading of Chrome Infra's answer, one client at no more than one request a second. The census
+  is read (263 C++-majority projects) and the pool must hold 1,308 C++ and 926 other examples
+  (`foreign-need-qt.json`). android-review is in `REST_PERMITTED`, scoped to those projects and
+  changes created 2024-10-01 to 2025-03-26. Next: the scoped listings of the window's months,
+  `pool_order.py` over them, then the pool fetched, built, refined and deduplicated (against Qt
+  too) project by project, in that order, until it covers every draw; then the pool to TIGRIS
+  and the 22 development runs' foreign arms.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and

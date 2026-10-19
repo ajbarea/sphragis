@@ -236,7 +236,8 @@ def test_a_read_cap_is_a_positive_count(tmp_path) -> None:
 @pytest.mark.parametrize("flags", [(), ("--read-cap", "171")])
 def test_a_scoped_host_is_read_only_under_its_grants_cap(tmp_path, monkeypatch, flags) -> None:
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
-    write_snapshot(tmp_path, "chromium", "2024-11", [_change(1, 1)], record={})
+    row = {**_change(1, 1), "project": "v8/v8", "created": "2024-11-05 00:00:00.000000000"}
+    write_snapshot(tmp_path, "chromium", "2024-11", [row], record={})
     monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
     with pytest.raises(SystemExit, match="reads at most 170 changes a month"):
         cli.main(["build", "--org", "chromium", "--root", str(tmp_path), *flags])
@@ -292,3 +293,190 @@ def test_a_month_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys) -
     cli.main(["build", "--org", "chromium", "--root", str(tmp_path), "--read-cap", "170"])
     assert "2025-09: outside the host's grant; not built" in capsys.readouterr().out
     assert not (tmp_path / "chromium" / "examples" / "2025-09.jsonl").exists()
+
+
+POOL = cli.GrantScope(("platform/a", "platform/b"), "2024-10-01", "2025-03-27", None)
+
+
+def _pool_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    """chromium's host re-scoped as a two-project, uncapped pool ending mid-month."""
+    host = "chromium-review.googlesource.com"
+    monkeypatch.setitem(cli.REST_PERMITTED, host, cli.REST_PERMITTED[host]._replace(scope=POOL))
+
+
+@pytest.mark.parametrize(
+    ("month", "inside"),
+    [
+        ("2024-09", False),
+        ("2024-10", True),
+        ("2025-02", True),
+        ("2025-03", True),
+        ("2025-04", False),
+    ],
+)
+def test_a_grant_ending_mid_month_covers_that_month(month: str, inside: bool) -> None:
+    assert cli.grant_months(POOL, month) is inside
+    v8 = cli.REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert v8 is not None
+    assert cli.grant_months(v8, "2025-08") and not cli.grant_months(v8, "2025-09")
+
+
+def test_a_scoped_fetch_lists_each_project_alone_and_keeps_only_the_granted_dates(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _pool_host(monkeypatch)
+    asked: list[str] = []
+
+    def listing(base, query, *, transport, options):
+        asked.append(query)
+        project = query.rsplit("project:", 1)[1].rstrip(")")
+        created = ["2025-03-26 23:00:00.000000000", "2025-03-27 00:00:00.000000000"]
+        rows = [
+            {**_change(n, 1), "_number": n, "project": project, "created": c}
+            for n, c in zip((len(asked) * 10, len(asked) * 10 + 1), created, strict=True)
+        ]
+        return rows, {"query": query, "pages": 1, "count": len(rows)}
+
+    monkeypatch.setattr(cli, "fetch_changes", listing)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: object())
+    flags = ["--project", "platform/a", "--project", "platform/b", "--month", "2025-03"]
+    assert (
+        cli.main(
+            [
+                "fetch",
+                "--org",
+                "chromium",
+                "--root",
+                str(tmp_path),
+                *flags,
+                "--cutoff",
+                "2024-10-01",
+            ]
+        )
+        == 0
+    )
+    assert [q.rsplit(" ", 1)[1] for q in asked] == ["(project:platform/a)", "(project:platform/b)"]
+    assert all(cli.out_of_scope_listing(f"/changes/?q={q}", POOL) is None for q in asked)
+    from sphragis.corpus.storage import iter_snapshot
+
+    kept = list(iter_snapshot(tmp_path / "chromium" / "raw" / "2025-03.ndjson.gz"))
+    assert sorted(c["_number"] for c in kept) == [10, 20]
+
+
+def test_a_scoped_fetch_refuses_listings_that_repeat_a_change(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    _pool_host(monkeypatch)
+    monkeypatch.setattr(
+        cli, "fetch_changes", lambda *a, **k: ([_change(7, 1)], {"pages": 1, "count": 1})
+    )
+    monkeypatch.setattr(cli, "http_transport", lambda **_: object())
+    flags = ["--project", "platform/a", "--project", "platform/b", "--month", "2024-10"]
+    with pytest.raises(SystemExit, match="repeat a change"):
+        cli.main(["fetch", "--org", "chromium", "--root", str(tmp_path), *flags])
+
+
+def test_an_uncapped_scope_builds_without_a_read_cap(tmp_path, monkeypatch) -> None:
+    _pool_host(monkeypatch)
+    args = cli.build_parser().parse_args(["build", "--org", "chromium", "--root", str(tmp_path)])
+    cli.require_grant_cap(args)
+
+
+def test_a_held_row_of_a_project_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    rows = [{**_change(1, 1), "project": "v8/v8"}, {**_change(2, 1), "project": "chromium/src"}]
+    write_snapshot(tmp_path, "chromium", "2024-11", rows, record={})
+    monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
+    cli.main(["build", "--org", "chromium", "--root", str(tmp_path), "--read-cap", "170"])
+    assert "2024-11: rows of projects outside the host's grant" in capsys.readouterr().out
+    assert not (tmp_path / "chromium" / "examples" / "2024-11.jsonl").exists()
+
+
+@pytest.mark.parametrize(
+    ("month", "row", "why"),
+    [
+        (
+            "2024-10",
+            {"project": "platform/a", "created": "2024-09-20 08:00:00.000000000"},
+            "1 rows",
+        ),
+        (
+            "2025-03",
+            {"project": "platform/b", "created": "2025-03-29 08:00:00.000000000"},
+            "1 rows",
+        ),
+        (
+            "2025-03",
+            {"project": "platform/b", "created": "2025-03-27 00:00:00.000000000"},
+            "1 rows",
+        ),
+        ("2024-11", {"project": "platform/a"}, "1 rows created outside"),
+        ("2024-11", {"project": "platform/c", "created": "2024-11-05 00:00:00.000"}, "projects"),
+        ("2025-04", {"project": "platform/a", "created": "2025-03-20 00:00:00.000"}, "outside"),
+    ],
+)
+def test_a_held_row_created_outside_the_grant_is_not_built(
+    tmp_path, monkeypatch, capsys, month, row, why
+) -> None:
+    """A snapshot held from before the grant can hold changes created outside its window, which
+    the build would ask for by number."""
+    _pool_host(monkeypatch)
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    change = {k: v for k, v in _change(1, 1).items() if k != "created"} | row
+    write_snapshot(tmp_path, "chromium", month, [change], record={})
+    monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
+    cli.main(["build", "--org", "chromium", "--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert f"{month}: " in out and why in out and "not built" in out
+    assert not (tmp_path / "chromium" / "examples" / f"{month}.jsonl").exists()
+
+
+def test_the_grants_window_is_its_created_dates_exactly() -> None:
+    assert cli.outside_grant(None, "2024-10", [{"project": "x"}]) == ""
+    assert cli.outside_grant(POOL, "2025-04", []) == ""
+    inside = {"project": "platform/a", "created": "2025-03-26 23:59:59.999999999"}
+    assert cli.outside_grant(POOL, "2025-03", [inside]) == ""
+    assert cli.created_in_grant(POOL, "2024-10-01 00:00:00.000000000")
+    assert not cli.created_in_grant(POOL, "2024-09-30 23:59:59.999999999")
+    assert not cli.created_in_grant(POOL, None)
+
+
+@pytest.mark.parametrize("month", ["2024-9", "2024-13", "24-10", "2024-10-01"])
+def test_a_month_is_read_as_yyyy_mm_only(month: str) -> None:
+    with pytest.raises(SystemExit):
+        cli.build_parser().parse_args(["fetch", "--month", month])
+
+
+@pytest.mark.parametrize("cutoff", ["2024-10-1", "2024-1-01", "2024-10", "2024-10-01 00:00"])
+def test_a_cutoff_is_read_as_yyyy_mm_dd_only(cutoff: str) -> None:
+    with pytest.raises(SystemExit):
+        cli.build_parser().parse_args(["fetch", "--cutoff", cutoff])
+
+
+def test_aosps_grant_lists_only_the_census_projects_and_none_before_it(tmp_path) -> None:
+    permission = cli.REST_PERMITTED["android-review.googlesource.com"]
+    assert permission.written_grant and permission.single_client and permission.crawl_delay >= 1.0
+    scope = permission.scope
+    assert scope is not None and scope.read_cap is None
+    assert (scope.created_from, scope.created_before) == ("2024-10-01", "2025-03-27")
+    assert scope.projects == cli.census_projects()
+    assert cli.census_projects(tmp_path / "absent.json") == ()
+    for unreadable in ("{", "{}", '{"cpp_majority": "platform/a"}', "[]"):
+        (tmp_path / "bad.json").write_text(unreadable)
+        assert cli.census_projects(tmp_path / "bad.json") == (), unreadable
+    census = tmp_path / "census.json"
+    census.write_text(json.dumps({"cpp_majority": ["platform/a", "platform/b"]}))
+    assert cli.census_projects(census) == ("platform/a", "platform/b")
+    empty = scope._replace(projects=())
+    assert cli.out_of_scope_listing("/changes/?q=project%3Aplatform%2Fa", empty) is not None
+
+
+def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:
+    from sphragis.corpus import hosts
+
+    git = hosts.claim_host("android.googlesource.com", tmp_path)
+    assert hosts.claim_host("android-review.googlesource.com", tmp_path) is git
+    assert (tmp_path / "android-review.googlesource.com.lock").exists()
+    assert not (tmp_path / "android.googlesource.com.lock").exists()
+    hosts.release_host("android.googlesource.com", tmp_path)
+    assert (tmp_path, "android-review.googlesource.com") not in hosts._CLAIMS

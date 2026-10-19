@@ -29,7 +29,17 @@ import json
 import random
 from pathlib import Path
 
-from sphragis.corpus.cli import GERRIT, http_transport, uncommented
+from sphragis.corpus.cli import (
+    GERRIT,
+    Admitted,
+    admit,
+    grant_scope,
+    host_of,
+    http_transport,
+    outside_grant,
+    rest_rows,
+    uncommented,
+)
 from sphragis.corpus.gerrit import fetch_comments
 from sphragis.corpus.load import raw_digest
 from sphragis.corpus.storage import iter_snapshot, refused_snapshot
@@ -44,10 +54,14 @@ parser.add_argument("--seed", type=int, default=20261015)
 parser.add_argument("--out", type=Path, required=True)
 
 
-def recorded(root: Path, org: str) -> tuple[dict[str, tuple[list[int], list[int]]], dict[str, str]]:
-    """Each month's change numbers whose row the build would skip, and those it would ask."""
+def recorded(
+    root: Path, org: str, admitted: Admitted | None = None
+) -> tuple[dict[str, tuple[list[int], list[int]]], dict[str, str]]:
+    """Each month's change numbers whose row the build would skip, and those it would ask, each
+    month's REST rows admitted to its host's transport (`cli.admit`) as the build admits them."""
     by_month: dict[str, tuple[list[int], list[int]]] = {}
     skipped: dict[str, str] = {}
+    host, scope = host_of(org), grant_scope(org)
     for snapshot in sorted((root / org / "raw").glob("*.ndjson.gz")):
         month = snapshot.name.removesuffix(".ndjson.gz")
         reason = refused_snapshot(snapshot)
@@ -57,7 +71,17 @@ def recorded(root: Path, org: str) -> tuple[dict[str, tuple[list[int], list[int]
         zero: set[int] = set()
         some: set[int] = set()
         try:
-            for change in iter_snapshot(snapshot):
+            changes = list(iter_snapshot(snapshot))
+            # Asked by number, as the build asks: a month the host's grant does not cover gives
+            # no change to ask.
+            rest = rest_rows(changes)
+            why = outside_grant(scope, month, rest)
+            if why:
+                skipped[month] = why
+                continue
+            if admitted is not None:
+                admit(admitted, host, rest)
+            for change in changes:
                 count = change.get("total_comment_count")
                 if uncommented(change):
                     zero.add(int(change["_number"]))
@@ -88,7 +112,9 @@ def _partial(out: Path) -> Path:
     return out.with_name(out.name + ".partial.jsonl")
 
 
-def ask(org: str, asked: list[tuple[str, int]], out: Path) -> dict[str, dict]:
+def ask(
+    org: str, asked: list[tuple[str, int]], out: Path, admitted: Admitted | None = None
+) -> dict[str, dict]:
     """Each (group, change) asked's comment count or error, resumed from and kept in the partial."""
     partial = _partial(out)
     answers: dict[str, dict] = {}
@@ -96,7 +122,8 @@ def ask(org: str, asked: list[tuple[str, int]], out: Path) -> dict[str, dict]:
         for line in partial.read_text().splitlines():
             row = json.loads(line)
             answers[f"{row['group']}:{row['change']}"] = row
-    transport = http_transport()  # the host's own REST_PERMITTED pace and client claim
+    # The host's own REST_PERMITTED pace and client claim, and only the admitted changes.
+    transport = http_transport(admitted=admitted)
     with partial.open("a") as kept:
         for group, number in asked:
             key = f"{group}:{number}"
@@ -118,7 +145,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.org not in GERRIT:
         raise SystemExit(f"{args.org} has no REST host to ask")
-    by_month, skipped = recorded(args.root, args.org)
+    admitted: Admitted = {}
+    by_month, skipped = recorded(args.root, args.org, admitted)
     rng = random.Random(args.seed)
     asked: list[tuple[str, int]] = []
     shortfall: dict[str, dict[str, int]] = {}
@@ -134,7 +162,7 @@ def main() -> None:
             asked += [(f"{group}@{month}", n) for n in rng.sample(rows, take)]
     if not any(g.startswith("control") for g, _ in asked):
         raise SystemExit("no control asked: the probe could not fail")
-    answers = ask(args.org, asked, args.out)
+    answers = ask(args.org, asked, args.out, admitted)
     rows = [answers[f"{g}:{n}"] for g, n in asked]
     failed = sorted({r["change"] for r in rows if "error" in r})
     zero_with = sorted(

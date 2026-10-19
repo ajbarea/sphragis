@@ -2037,4 +2037,6 @@ def test_each_foreign_sources_span_is_the_one_its_pool_was_registered_over() -> 
     assert v8 is not None
     assert decomposition.FOREIGN_SPANS["chromium"] == (v8.created_from, v8.created_before)
     assert decomposition.FOREIGN_SPANS["fuchsia"] == WINDOWS["train"]
-    assert decomposition.FOREIGN_SPANS["aosp"] == ("2024-10-01", "2025-03-27")
+    aosp = REST_PERMITTED["android-review.googlesource.com"].scope
+    assert aosp is not None
+    assert decomposition.FOREIGN_SPANS["aosp"] == (aosp.created_from, aosp.created_before)

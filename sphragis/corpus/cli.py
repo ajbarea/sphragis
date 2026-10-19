@@ -13,7 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -96,12 +96,80 @@ GERRIT = {
 class GrantScope(NamedTuple):
     """What a written grant covers, enforced wherever the host is read: the projects a listing may
     name, the created dates a fetch may keep (`created_before` exclusive, as `before:` reads), and
-    the commented changes a build may read a month."""
+    the commented changes a build may read a month, None where the grant sets no count."""
 
     projects: tuple[str, ...]
     created_from: str
     created_before: str
-    read_cap: int
+    read_cap: int | None
+
+
+def grant_months(scope: GrantScope, month: str) -> bool:
+    """Whether month `YYYY-MM` can hold a change `scope` lets a fetch keep: from `created_from`'s
+    month through the month `created_before` falls in, unless it falls on that month's first."""
+    return scope.created_from[:7] <= month and f"{month}-01" < scope.created_before
+
+
+def created_in_grant(scope: GrantScope, created: Any) -> bool:
+    """Whether a change created at Gerrit's `YYYY-MM-DD hh:mm:ss` time is one `scope` covers."""
+    return isinstance(created, str) and scope.created_from <= created < scope.created_before
+
+
+#: Per scoped host, the change numbers its grant covers that a run has admitted (`admit`): the
+#: only ones its transport asks about one at a time.
+Admitted = dict[str, set[str]]
+
+_BY_CHANGE = re.compile(r"/changes/([^/]+)(?:/|$)")
+
+
+def host_of(org: str) -> str:
+    """The REST host an organization's Gerrit is read from, "" for an organization with none."""
+    return urllib.parse.urlsplit(GERRIT.get(org, "")).hostname or ""
+
+
+def admit(admitted: Admitted, host: str, rows: Iterable[Mapping[str, Any]]) -> None:
+    """Let `host`'s transport ask about the changes of `rows` its grant covers, each checked here
+    (`created_in_grant`, a granted project); a host without a scope needs no admission."""
+    scope = REST_PERMITTED[host].scope if host in REST_PERMITTED else None
+    if scope is None:
+        return
+    admitted.setdefault(host, set()).update(
+        str(row["_number"])
+        for row in rows
+        if row.get("project") in scope.projects and created_in_grant(scope, row.get("created"))
+    )
+
+
+def unadmitted_change(target: str, scope: GrantScope | None, admitted: set[str]) -> str | None:
+    """The change a request about one change names, if a scoped host has not admitted it."""
+    found = _BY_CHANGE.search(target.partition("?")[0])
+    if scope is None or found is None:
+        return None
+    change = urllib.parse.unquote(found.group(1))
+    return None if change in admitted else change
+
+
+def rest_rows(changes: Iterable[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+    """The changes a build reads from the REST host: not NoteDb's, not GitHub's."""
+    return [c for c in changes if NOTEDB_KEY not in c and GITHUB_KEY not in c]
+
+
+def outside_grant(scope: GrantScope | None, month: str, rows: Sequence[Mapping[str, Any]]) -> str:
+    """Why a month's REST rows would be read past what a host's grant covers, "" if they would
+    not: the month, a project it does not name, or a change created outside its window. A
+    change's comments and diffs are asked by number, which names neither, so a path that asks by
+    number (the build, the comment-count probe) refuses here first, a snapshot held from before
+    the grant included, and admits what passes (`admit`); the transport asks about no other."""
+    if scope is None or not rows:
+        return ""
+    if not grant_months(scope, month):
+        return "outside the host's grant"
+    if {row.get("project") for row in rows} - set(scope.projects):
+        return "rows of projects outside the host's grant"
+    early_or_late = sum(not created_in_grant(scope, row.get("created")) for row in rows)
+    if early_or_late:
+        return f"{early_or_late} rows created outside the host's grant"
+    return ""
 
 
 class RestPermission(NamedTuple):
@@ -122,6 +190,23 @@ class RestPermission(NamedTuple):
     # the permission is a written grant to this study's collector, not a public policy, so it
     # holds only on a machine that lists the host in `grants_file()`
     written_grant: bool = False
+
+
+#: The census of AOSP's projects at its release tag (`scripts/aosp_census.py`); the C++-majority
+#: projects it names are the only ones AOSP's grant scope lists (research log, 2026-10-18).
+AOSP_CENSUS = Path(__file__).resolve().parents[2] / "datasets" / "results" / "aosp-census.json"
+
+
+def census_projects(path: Path = AOSP_CENSUS) -> tuple[str, ...]:
+    """The C++-majority projects a census names, none before one is committed, which leaves every
+    listing of the scope refused."""
+    try:
+        projects = json.loads(path.read_text())["cpp_majority"]
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError):
+        # Unreadable as well as absent: the scope then names nothing, and no stage of any other
+        # organization fails on this import.
+        return ()
+    return tuple(projects) if isinstance(projects, list) else ()
 
 
 REST_PERMITTED = {
@@ -165,6 +250,22 @@ REST_PERMITTED = {
         scope=GrantScope(("v8/v8",), "2024-11-01", "2025-09-01", 170),
         written_grant=True,
     ),
+    "android-review.googlesource.com": RestPermission(
+        "robots.txt is Disallow: / (checked 2026-09-23); Chrome Infra answered on infra-dev on"
+        " 2026-10-15, in a thread titled for chromium-review and android-review, that it has no"
+        " concerns with Gerrit's REST API at one client and no more than one request a second,"
+        " and AJ reads the answer as covering AOSP (research log, 2026-10-18); quiet five minutes"
+        " after a 5xx, as for Chromium",
+        1.0,
+        # The grant supersedes robots.txt's Disallow: /, so no pattern is recorded.
+        disallow=(),
+        error_pause=300.0,
+        single_client=True,
+        # Item 4 of the H2 plan: the census's C++-majority projects, changes created before
+        # aosp-main went read-only; the answer sets a rate, not a count, so no read cap.
+        scope=GrantScope(census_projects(), "2024-10-01", "2025-03-27", None),
+        written_grant=True,
+    ),
     "gerrit.wikimedia.org": RestPermission(
         "robots.txt disallows the UI, gitiles, /r/a/, /r/q/ and patch and archive downloads, not"
         " the changes REST endpoints, and asks Crawl-delay 1 (checked 2026-09-26); the Wikitech"
@@ -197,14 +298,14 @@ def unheld_grant(host: str) -> str | None:
 
 def grant_scope(org: str) -> GrantScope | None:
     """The scope of the grant `org`'s REST host is read under, None for a whole-host permission."""
-    url = GERRIT.get(org)
-    permission = REST_PERMITTED.get(urllib.parse.urlsplit(url).hostname or "") if url else None
+    permission = REST_PERMITTED.get(host_of(org))
     return permission.scope if permission else None
 
 
 def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
     """Why a `/changes/?q=` listing on a scoped host is refused, None if it names only granted
-    projects. Requests about one change (its comments, a diff) carry no project and pass."""
+    projects. A request about one change (its comments, a diff) names no project, so it passes
+    here and is checked against the changes admitted under the grant (`unadmitted_change`)."""
     path, _, query = target.partition("?")
     if not path.rstrip("/").endswith("/changes"):
         return None
@@ -265,6 +366,22 @@ def require_salt() -> str:
     return salt
 
 
+def calendar_month(value: str) -> str:
+    """A `--month` as `YYYY-MM`: a grant's months are compared as strings, so `2024-9` would
+    compare past the grant's first month."""
+    if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", value):
+        raise argparse.ArgumentTypeError(f"{value!r} is not a YYYY-MM month")
+    return value
+
+
+def calendar_date(value: str) -> str:
+    """A `--cutoff` as `YYYY-MM-DD`: created dates compare as strings, so `2024-10-1` would drop
+    the first nine days of the month."""
+    if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])", value):
+        raise argparse.ArgumentTypeError(f"{value!r} is not a YYYY-MM-DD date")
+    return value
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sphragis.corpus")
     parser.add_argument("stage", choices=STAGES)
@@ -273,14 +390,18 @@ def build_parser() -> argparse.ArgumentParser:
         default="openstack",
         choices=sorted(set(GERRIT) | set(GIT_HOSTS) | set(GITHUB_ORGS)),
     )
-    parser.add_argument("--month", default="2024-10", help="YYYY-MM, for fetch")
+    parser.add_argument(
+        "--month", default="2024-10", type=calendar_month, help="YYYY-MM, for fetch"
+    )
     parser.add_argument(
         "--expect-month",
         help="build: exit 0 if this YYYY-MM was built or found current, "
         f"{BUILD_NEEDS_REFETCH} if its snapshot is refused or missing (fetch it)",
     )
     parser.add_argument("--root", type=Path, default=Path("datasets/gerrit"))
-    parser.add_argument("--cutoff", default="2024-10-01", help="drop changes created before")
+    parser.add_argument(
+        "--cutoff", default="2024-10-01", type=calendar_date, help="drop changes created before"
+    )
     parser.add_argument(
         "--project",
         action="append",
@@ -348,8 +469,13 @@ def http_transport(
     sleep: Callable[[float], None] = time.sleep,
     lock_dir: Path | None = None,
     wall: Callable[[], float] = time.time,
+    admitted: Admitted | None = None,
 ) -> Transport:
     """A real HTTP transport over one persistent connection per host.
+
+    A host with a grant scope is asked about one change only once its caller has admitted it
+    (`admit`, which checks the change against the grant), so a path that forgets the check fails
+    closed rather than reading past the grant.
 
     Separated so every test runs offline. The earlier transport opened a fresh TLS
     connection for every request under a single 60-second timeout. Against review.opendev.org
@@ -366,6 +492,7 @@ def http_transport(
     a longer crawl delay for it; `pacing.Pacer` records why the default is one a second.
     """
     connections: dict[str, http.client.HTTPConnection] = {}
+    held: Admitted = {} if admitted is None else admitted
     if host_intervals is None:
         host_intervals = {host: p.crawl_delay for host, p in REST_PERMITTED.items()}
     pacer = Pacer(min_interval, host_intervals=host_intervals, clock=clock, sleep=sleep)
@@ -405,6 +532,11 @@ def http_transport(
             if why:
                 raise SystemExit(
                     f"refusing {host}: {why}, outside its grant ({permission.scope.projects})"
+                )
+            change = unadmitted_change(target, permission.scope, held.get(host, set()))
+            if change is not None:
+                raise SystemExit(
+                    f"refusing {host}: change {change} was not admitted under its grant (cli.admit)"
                 )
         claim = claim_host(host, lock_dir) if permission.single_client else None
 
@@ -535,10 +667,10 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
     if scope is not None:
         if not args.project or set(args.project) - set(scope.projects):
             raise SystemExit(f"{args.org}'s grant covers --project {' '.join(scope.projects)} only")
-        if not scope.created_from[:7] <= args.month < scope.created_before[:7]:
+        if not grant_months(scope, args.month):
             raise SystemExit(
-                f"{args.org}'s grant covers months {scope.created_from[:7]} to before "
-                f"{scope.created_before[:7]}, not {args.month}"
+                f"{args.org}'s grant covers changes created {scope.created_from} to before "
+                f"{scope.created_before}, not {args.month}"
             )
         if args.cutoff < scope.created_from:
             raise SystemExit(
@@ -550,15 +682,40 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
         f"{int(year) + (month == '12')}-{'01' if month == '12' else f'{int(month) + 1:02d}'}"
     )
     query = f"status:merged after:{args.month}-01 before:{following}-01"
-    if args.project:
-        query += " (" + " OR ".join(f"project:{p}" for p in args.project) + ")"
-    changes, record = fetch_changes(
-        GERRIT[args.org],
-        query,
-        transport=http_transport(min_interval=args.request_interval),
-        options=("ALL_REVISIONS",),
+    if scope is not None:
+        # A scoped host answers no OR (`out_of_scope_listing`), so each project is its own listing.
+        queries = [f"{query} (project:{p})" for p in args.project]
+    elif args.project:
+        queries = [query + " (" + " OR ".join(f"project:{p}" for p in args.project) + ")"]
+    else:
+        queries = [query]
+    transport = http_transport(min_interval=args.request_interval)
+    changes, records = [], []
+    for asked in queries:
+        listed, listing = fetch_changes(
+            GERRIT[args.org], asked, transport=transport, options=("ALL_REVISIONS",)
+        )
+        changes.extend(listed)
+        records.append(listing)
+    numbers = [c["_number"] for c in changes]
+    if len(set(numbers)) != len(numbers):
+        raise SystemExit(f"{args.org} {args.month}: the listings repeat a change")
+    record = (
+        records[0]
+        if len(records) == 1
+        else {
+            "base_url": GERRIT[args.org],
+            "listings": records,
+            "pages": sum(r["pages"] for r in records),
+            "count": len(changes),
+        }
     )
     kept = created_on_or_after(changes, args.cutoff)
+    before_cutoff, after_grant = len(changes) - len(kept), 0
+    if scope is not None:
+        in_grant = [c for c in kept if created_in_grant(scope, c["created"])]
+        after_grant, kept = len(kept) - len(in_grant), in_grant
+        record = {**record, "created_after_grant": after_grant}
     scrubbed = [scrub(change, salt) for change in kept]
     record = {
         **record,
@@ -568,10 +725,10 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
     path = write_snapshot(
         args.root, args.org, args.month, scrubbed, record=record, overwrite=args.overwrite
     )
-    dropped = len(changes) - len(kept)
     print(
         f"{args.org} {args.month}: fetched {len(changes)} in {record['pages']} pages, "
-        f"kept {len(kept)}, dropped {dropped} created before {args.cutoff}"
+        f"kept {len(kept)}, dropped {before_cutoff} created before {args.cutoff}"
+        + (f" and {after_grant} from {scope.created_before}" if scope and after_grant else "")
     )
     print(f"wrote {path}")
     derived = _examples_dir(args) / f"{args.month}.jsonl"
@@ -993,7 +1150,11 @@ def require_count_probe(args: argparse.Namespace) -> None:
 def require_grant_cap(args: argparse.Namespace) -> None:
     """Refuse REST reads of a scoped host past its grant's monthly cap."""
     scope = grant_scope(args.org)
-    if scope is not None and (args.read_cap is None or args.read_cap > scope.read_cap):
+    if (
+        scope is not None
+        and scope.read_cap is not None
+        and (args.read_cap is None or args.read_cap > scope.read_cap)
+    ):
         raise SystemExit(
             f"{args.org}'s grant reads at most {scope.read_cap} changes a month: "
             f"pass --read-cap {scope.read_cap} or less"
@@ -1011,6 +1172,8 @@ def _stage_build(args: argparse.Namespace) -> int:
         print(f"no snapshots under {raw}; run fetch first")
         return 1
     rest: tuple[CommentFetcher, DiffFetcher] | None = None
+    # The changes a scoped host's transport may ask about, admitted month by month below.
+    admitted: Admitted = {}
 
     def fetchers_for(change: dict[str, Any]) -> tuple[CommentFetcher, DiffFetcher]:
         """A NoteDb or GitHub row answers from what it carries; a REST row fetches."""
@@ -1023,7 +1186,7 @@ def _stage_build(args: argparse.Namespace) -> int:
             if args.org not in GERRIT:
                 raise SystemExit(f"{args.org} has no REST host, and a row carries no NoteDb data")
             require_grant_cap(args)
-            transport = http_transport(min_interval=args.request_interval)
+            transport = http_transport(min_interval=args.request_interval, admitted=admitted)
             rest = (
                 scrubbed_comment_fetcher(GERRIT[args.org], salt, transport=transport),
                 scrubbed_diff_fetcher(GERRIT[args.org], transport=transport),
@@ -1091,14 +1254,14 @@ def _stage_build(args: argparse.Namespace) -> int:
             print(f"{args.org} {month}: {error}")
             refused.append(month)
             continue
-        outside = scope is not None and not (
-            scope.created_from[:7] <= month < scope.created_before[:7]
-        )
-        if outside and any(NOTEDB_KEY not in c and GITHUB_KEY not in c for c in changes):
-            # Its rows would be read from the host, past what the grant covers.
-            print(f"{args.org} {month}: outside the host's grant; not built")
+        asked = rest_rows(changes)
+        why = outside_grant(scope, month, asked)
+        if why:
+            print(f"{args.org} {month}: {why}; not built")
             refused.append(month)
             continue
+        if args.org in GERRIT:
+            admit(admitted, host_of(args.org), asked)
         rows: list[dict[str, Any]] = []
         month_drops: Counter[str] = Counter()
         if args.fewer_requests:

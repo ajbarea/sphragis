@@ -34,13 +34,24 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import quote
 
 from sphragis.corpus.build import is_acknowledgement
-from sphragis.corpus.cli import GERRIT, http_transport, refuse_if_sealed
+from sphragis.corpus.cli import (
+    GERRIT,
+    REST_PERMITTED,
+    Admitted,
+    admit,
+    created_in_grant,
+    grant_months,
+    host_of,
+    http_transport,
+    refuse_if_sealed,
+)
 from sphragis.corpus.examples import is_code_file
 from sphragis.corpus.gerrit import _get, parse_response
 from sphragis.corpus.halves import MAX_SHARE_OF_HALF, MIN_PROJECTS_A_HALF, assign
 from sphragis.provenance import provenance_header
 
 BASE = GERRIT["chromium"]
+HOST = host_of("chromium")
 WINDOW_START = "2024-11-01"  # the train window's first day; the pilot month is not used
 TRAIN_LAST = "2025-08"
 
@@ -56,8 +67,8 @@ EXAMPLES_PER_COMMENT = 0.42
 MIN_HALF_TRAIN = 2163
 
 
-def _transport():
-    return http_transport(min_interval=1.0)
+def _transport(admitted: Admitted | None = None):
+    return http_transport(min_interval=1.0, admitted=admitted)
 
 
 def get(url: str, transport) -> object:
@@ -135,14 +146,20 @@ def measure_ranged(project: str, months: list[str]) -> None:
 
 
 def measure_yield(project: str, month: str, k: int) -> None:
-    transport = _transport()
+    admitted: Admitted = {}
+    transport = _transport(admitted)
     a, b = month_bounds(month)
     q = f"status:merged after:{a} before:{b} project:{project}"
     opts = ["DETAILED_ACCOUNTS", "CURRENT_REVISION", "CURRENT_FILES"]
     rows, more = listing(transport, q, opts, n=200, limit=200)
     human = [r for r in rows if not is_bot(r["owner"]) and r["created"][:10] >= WINDOW_START]
+    scope = REST_PERMITTED[HOST].scope
+    if scope is not None:
+        human = [r for r in human if created_in_grant(scope, r.get("created"))]
     random.Random(20260922).shuffle(human)
     sample = human[:k]
+    # Asked one at a time below, so admitted to the transport first, each against the grant.
+    admit(admitted, HOST, sample)
     exts: collections.Counter[str] = collections.Counter()
     commented: collections.Counter[str] = collections.Counter()
     anchored = reviewer = strict = 0
@@ -311,6 +328,11 @@ def main(argv: list[str]) -> None:
     # window's start onward, under the corpus root's seal for this host.
     for month in arg.split(","):
         refuse_if_sealed(Path("datasets/gerrit"), "chromium", month)
+    # And every month the host's grant does not cover, as fetch refuses it.
+    scope = REST_PERMITTED[HOST].scope
+    for month in arg.split(","):
+        if scope is not None and not grant_months(scope, month):
+            raise SystemExit(f"chromium {month}: outside the host's grant")
     if kind == "volume":
         measure_volume(project, arg.split(","))
     elif kind == "ranged":

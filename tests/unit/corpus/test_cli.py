@@ -244,6 +244,43 @@ def _scripted_connections(monkeypatch: pytest.MonkeyPatch, script: list[object])
     return instances
 
 
+def test_a_scoped_host_is_asked_about_one_change_only_once_it_is_admitted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A path that forgets the grant check fails closed: its by-number request is refused."""
+    from sphragis.corpus import cli
+
+    instances = _scripted_connections(monkeypatch, [_FakeResponse(200, "ok")] * 4)
+    scope = cli.GrantScope(("p",), "2024-10-01", "2025-03-27", None)
+    scoped = cli.RestPermission("scoped placeholder", 0.0, scope=scope)
+    monkeypatch.setitem(cli.REST_PERMITTED, "g", scoped)
+    admitted: cli.Admitted = {}
+    transport = cli.http_transport(admitted=admitted)
+    with pytest.raises(SystemExit, match="change 5 was not admitted"):
+        transport("https://g/changes/5/comments")
+    inside = "2024-11-01 00:00:00.000000000"
+    cli.admit(
+        admitted,
+        "g",
+        [
+            {"_number": 5, "project": "p", "created": inside},
+            {"_number": 6, "project": "q", "created": inside},
+            {"_number": 7, "project": "p", "created": "2024-09-30 23:59:59.000000000"},
+            {"_number": 8, "project": "p"},
+        ],
+    )
+    assert admitted == {"g": {"5"}}
+    assert transport("https://g/changes/5/comments")[2] == "ok"
+    assert transport("https://g/changes/5")[2] == "ok"
+    assert transport("https://g/changes/?q=project:p")[2] == "ok"
+    for refused in ("6/comments", "7/revisions/a/files", "8", "p~5/comments", "p%7E5/comments"):
+        with pytest.raises(SystemExit, match="was not admitted"):
+            transport(f"https://g/changes/{refused}")
+    # A host without a scope needs no admission.
+    assert transport("https://h/changes/9/comments")[2] == "ok"
+    assert [len(c.paths) for c in instances] == [3, 1]
+
+
 def test_http_transport_reuses_one_connection_across_requests(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -919,18 +956,19 @@ def test_fetch_restricted_to_projects_asks_for_those_and_records_it(
         return 200, {}, ")]}'\n" + json.dumps([])
 
     monkeypatch.setattr(cli, "http_transport", lambda **_: transport)
-    argv = ["fetch", "--org", "aosp", "--month", "2025-03", "--root", str(tmp_path)]
-    argv += ["--project", "platform/art", "--project", "platform/bionic"]
+    # An unscoped host takes one listing of every project; a scoped one lists each alone.
+    argv = ["fetch", "--org", "openstack", "--month", "2025-03", "--root", str(tmp_path)]
+    argv += ["--project", "openstack/nova", "--project", "openstack/neutron"]
     assert cli.main(argv) == 0
     query = (
         "status:merged after:2025-03-01 before:2025-04-01"
-        " (project:platform/art OR project:platform/bionic)"
+        " (project:openstack/nova OR project:openstack/neutron)"
     )
-    assert asked and asked[0].startswith("https://android-review.googlesource.com/changes/?q=")
+    assert asked and asked[0].startswith("https://review.opendev.org/changes/?q=")
     from urllib.parse import quote
 
     assert quote(query) in asked[0]
-    raw = snapshot_path(tmp_path, "aosp", "2025-03")
+    raw = snapshot_path(tmp_path, "openstack", "2025-03")
     record = json.loads((raw.parent / "2025-03.record.json").read_text())
     assert record["query"] == query
 
@@ -1240,7 +1278,6 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
 @pytest.mark.parametrize(
     "host",
     [
-        "android-review.googlesource.com",
         "fuchsia-review.googlesource.com",
         "gerrit.example.org",
     ],
@@ -1248,7 +1285,7 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
 def test_http_transport_refuses_a_host_without_recorded_rest_permission(
     monkeypatch: pytest.MonkeyPatch, host: str
 ) -> None:
-    """robots.txt is Disallow: / on the first two; an unknown host is refused by default."""
+    """robots.txt is Disallow: / on the first; an unknown host is refused by default."""
     from sphragis.corpus import cli
 
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
@@ -1258,13 +1295,40 @@ def test_http_transport_refuses_a_host_without_recorded_rest_permission(
     assert opened == [], "refused before any connection opened"
 
 
-def test_a_rest_fetch_of_aosp_opens_no_connection(
+def test_a_rest_fetch_of_aosp_past_its_grant_opens_no_connection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Only the census's projects, created before aosp-main went read-only."""
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)] * 5)
-    with pytest.raises(SystemExit, match="--via git"):
+    with pytest.raises(SystemExit, match="grant covers"):
         main(["fetch", "--org", "aosp", "--month", "2025-10", "--root", str(tmp_path)])
+    with pytest.raises(SystemExit, match="grant covers"):
+        main(
+            [
+                "fetch",
+                "--org",
+                "aosp",
+                "--month",
+                "2025-01",
+                "--root",
+                str(tmp_path),
+                "--project",
+                "platform/not-in-the-census",
+            ]
+        )
+    assert opened == []
+
+
+def test_aosps_rest_host_is_refused_on_a_machine_without_its_grant(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from sphragis.corpus import cli
+
+    opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
+    transport = cli.http_transport()
+    with pytest.raises(SystemExit, match="written grant"):
+        transport("https://android-review.googlesource.com/changes/1/comments")
     assert opened == []
 
 
@@ -1272,6 +1336,7 @@ def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
     assert set(cli.REST_PERMITTED) == {
+        "android-review.googlesource.com",
         "chromium-review.googlesource.com",
         "codereview.qt-project.org",
         "review.lineageos.org",
@@ -1343,7 +1408,7 @@ def test_http_transport_admits_qt_paced_at_its_grant_and_claimed(
     assert (tmp_path / "codereview.qt-project.org.lock").exists()
 
 
-@pytest.mark.parametrize("org", ["aosp", "nonesuch"])
+@pytest.mark.parametrize("org", ["nonesuch"])
 def test_the_resume_script_refuses_a_host_without_rest_permission(org: str) -> None:
     script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
     result = subprocess.run(
@@ -1601,13 +1666,18 @@ def test_qt_permission_pins_the_written_terms() -> None:
     assert "QTQAINFRA-8064" in permission.reason
 
 
-def test_written_grants_are_qt_and_chromium_alone() -> None:
+def test_written_grants_are_qt_chromium_and_aosp_alone() -> None:
     """The other hosts open themselves to any polite client in robots.txt or a published policy;
-    Qt's and Chromium's administrators answered one collector's request by email."""
+    Qt's and Chromium's administrators answered one collector's request by email, and AJ reads
+    Chromium's answer as covering AOSP."""
     from sphragis.corpus import cli
 
     granted = {host for host, p in cli.REST_PERMITTED.items() if p.written_grant}
-    assert granted == {"codereview.qt-project.org", "chromium-review.googlesource.com"}
+    assert granted == {
+        "codereview.qt-project.org",
+        "chromium-review.googlesource.com",
+        "android-review.googlesource.com",
+    }
 
 
 def _granted_placeholder(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
@@ -2055,10 +2125,11 @@ def test_a_finished_github_month_leaves_no_checkpoint(
     assert not (tmp_path / "apache" / "raw" / "2024-10.partial.jsonl").exists()
 
 
-def test_the_resume_script_refuses_a_host_granted_for_a_scoped_pool() -> None:
+@pytest.mark.parametrize(("org", "month"), [("chromium", "2024-11"), ("aosp", "2024-11")])
+def test_the_resume_script_refuses_a_host_granted_for_a_scoped_pool(org: str, month: str) -> None:
     script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
     result = subprocess.run(
-        ["bash", str(script), "chromium", "2024-11"], capture_output=True, text=True, timeout=30
+        ["bash", str(script), org, month], capture_output=True, text=True, timeout=30
     )
     assert result.returncode == 1
     assert "granted for a scoped pool" in result.stdout

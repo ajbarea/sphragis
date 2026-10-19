@@ -1060,7 +1060,8 @@ def test_a_single_client_git_host_is_refused_while_another_process_holds_it(
     _hold_grant(monkeypatch, tmp_path, "android.googlesource.com")
     monkeypatch.setattr(hosts, "LOCK_DIR", tmp_path / "locks")
     (tmp_path / "locks").mkdir()
-    lock = tmp_path / "locks" / "android.googlesource.com.lock"
+    # Held under the review host's name: a REST client of android-review blocks the git route too.
+    lock = tmp_path / "locks" / "android-review.googlesource.com.lock"
     holder = subprocess.Popen(
         [
             sys.executable,
