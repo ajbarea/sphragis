@@ -108,9 +108,20 @@ class GrantScope(NamedTuple):
     # lists the changes last updated in it, so a change created inside the grant and updated
     # later is listed only past `created_before`; None reads no month past it.
     listed_through: str | None = None
-    # Whether the projects are every code project the host lists, read through its project list:
-    # only then may the host be asked for that list.
-    lists_projects: bool = False
+    # Every project the host shows an anonymous reader, its own two aside (`HOST_PROJECTS`), in
+    # place of `projects`: a month is then listed whole, without naming a project.
+    every_project: bool = False
+
+
+#: A Gerrit host's own projects, which hold its access rules and accounts, never code.
+HOST_PROJECTS = frozenset({"All-Projects", "All-Users"})
+
+
+def covers_project(scope: GrantScope, project: object) -> bool:
+    """Whether a scope's grant covers a project's changes."""
+    if scope.every_project:
+        return isinstance(project, str) and bool(project) and project not in HOST_PROJECTS
+    return project in scope.projects
 
 
 def last_open_month() -> str:
@@ -158,7 +169,7 @@ def admit(admitted: Admitted, host: str, rows: Iterable[Mapping[str, Any]]) -> N
     admitted.setdefault(host, set()).update(
         str(row["_number"])
         for row in rows
-        if row.get("project") in scope.projects and created_in_grant(scope, row.get("created"))
+        if covers_project(scope, row.get("project")) and created_in_grant(scope, row.get("created"))
     )
 
 
@@ -186,7 +197,7 @@ def outside_grant(scope: GrantScope | None, month: str, rows: Sequence[Mapping[s
         return ""
     if not grant_months(scope, month):
         return "outside the host's grant"
-    if {row.get("project") for row in rows} - set(scope.projects):
+    if not all(covers_project(scope, row.get("project")) for row in rows):
         return "rows of projects outside the host's grant"
     early_or_late = sum(not created_in_grant(scope, row.get("created")) for row in rows)
     if early_or_late:
@@ -218,9 +229,6 @@ class RestPermission(NamedTuple):
 #: projects it names are the only ones AOSP's grant scope lists (research log, 2026-10-18).
 RESULTS = Path(__file__).resolve().parents[2] / "datasets" / "results"
 AOSP_CENSUS = RESULTS / "aosp-census.json"
-#: Fuchsia's code projects as its host listed them (`scripts/gerrit_projects.py`), the projects
-#: its grant scope lists (research log, 2026-10-19).
-FUCHSIA_PROJECTS = RESULTS / "fuchsia-projects.json"
 
 
 _REST_PROJECT = re.compile(r"[A-Za-z0-9_][A-Za-z0-9._+/-]*")
@@ -255,15 +263,6 @@ def artifact_projects(path: Path, key: str) -> tuple[str, ...]:
 def census_projects(path: Path = AOSP_CENSUS) -> tuple[str, ...]:
     """The C++-majority projects AOSP's census names."""
     return artifact_projects(path, "cpp_majority")
-
-
-def fuchsia_projects(path: Path = FUCHSIA_PROJECTS) -> tuple[str, ...]:
-    """The code projects fuchsia-review listed."""
-    return artifact_projects(path, "projects")
-
-
-#: Where each host whose scope is every code project it lists keeps that list.
-PROJECT_LISTS = {"fuchsia": FUCHSIA_PROJECTS}
 
 
 REST_PERMITTED = {
@@ -335,15 +334,16 @@ REST_PERMITTED = {
         disallow=(),
         error_pause=300.0,
         single_client=True,
-        # Item 1(b) of the H2 plan: Qt's own training-window months, every code project the host
-        # lists, no read cap; listed through the month before the sealed test window.
+        # Item 1(b) of the H2 plan: Qt's own training-window months and every project, no read
+        # cap; listed through the month before the sealed test window. The host answers its
+        # project list with 405, so a month is listed whole (research log, 2026-10-19).
         scope=GrantScope(
-            fuchsia_projects(),
+            (),
             WINDOWS["train"][0],
             WINDOWS["train"][1],
             None,
             last_open_month(),
-            lists_projects=True,
+            every_project=True,
         ),
         written_grant=True,
     ),
@@ -395,7 +395,7 @@ _DAY = r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
 # month (`fetch`, `host_scoping.py`), and the truncation probe `fetch_changes` wraps around it.
 _MONTH_LISTING = re.compile(
     rf"status:merged after:(?P<after>{_DAY}) before:(?P<before>{_DAY})"
-    r" \(?project:(?P<project>[^\s()\"]+)\)?"
+    r"(?: \(?project:(?P<project>[^\s()\"]+)\)?)?"
 )
 _TRUNCATION_PROBE = re.compile(
     rf'\((?P<listing>.+)\) before:"{_DAY} [0-9]{{2}}:[0-9]{{2}}:[0-9]{{2}} \+0000"'
@@ -412,10 +412,11 @@ _BY_NUMBER = (
 
 
 def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
-    """Why a `/changes/?q=` listing on a scoped host is refused, None if it is a month of one
-    granted project's merged changes or the probe around it. Anything else, another operator, an
-    alias, a second project, OR, negation, is refused, so a listing the client does not build
-    cannot reach past the grant."""
+    """Why a `/changes/?q=` listing on a scoped host is refused, None if it is a month the grant
+    covers of one granted project's merged changes, or of every project's where the scope is all
+    of them, or the probe around it. Anything else, another operator, an alias, a second project,
+    OR, negation, is refused, so a listing the client does not build cannot reach past the
+    grant."""
     path, _, query = target.partition("?")
     if path not in ("/changes/", "/changes"):
         return None
@@ -438,22 +439,21 @@ def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
     if not (after < before <= f"{next_month(month)}-01") or not grant_months(scope, month):
         return f"a listing of {after} to {before}, outside the grant's months"
     project = asked.group("project")
-    return None if project in scope.projects else f"a listing of {[project]}"
+    if project is None:
+        return None if scope.every_project else "a listing that names no project"
+    return None if covers_project(scope, project) else f"a listing of {[project]}"
 
 
 def out_of_scope_request(target: str, scope: GrantScope, admitted: set[str]) -> str | None:
     """Why a request to a scoped host is refused, None if it is one the client builds under the
-    grant: a listing `out_of_scope_listing` passes, an admitted change's comments or one file's
-    diff, or the host's code projects where the scope is all of them. Every other path is
-    refused, so a path that forgets its check fails closed."""
+    grant: a listing `out_of_scope_listing` passes, or an admitted change's comments or one file's
+    diff. Every other path is refused, so a path that forgets its check fails closed."""
     path = target.partition("?")[0]
     if path in ("/changes/", "/changes"):
         return out_of_scope_listing(target, scope)
     if any(shape.fullmatch(target) for shape in _BY_NUMBER):
         change = unadmitted_change(target, scope, admitted)
         return None if change is None else f"change {change} was not admitted under its grant"
-    if target == "/projects/?type=CODE" and scope.lists_projects:
-        return None
     return f"{path}, which the client does not ask a scoped host"
 
 
@@ -791,12 +791,15 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
     refuse_mixed_routes(Path(args.root), args.org, "rest", allow=args.allow_mixed_routes)
     scope = grant_scope(args.org)
     if scope is not None:
-        if not scope.projects:
+        if scope.every_project:
+            if args.project:
+                raise SystemExit(f"{args.org}'s grant covers every project: list the month whole")
+        elif not scope.projects:
             raise SystemExit(
                 f"{args.org}'s grant names no project yet: its projects artifact is missing or "
                 "unreadable (cli.artifact_projects)"
             )
-        if not args.project or set(args.project) - set(scope.projects):
+        elif not args.project or set(args.project) - set(scope.projects):
             raise SystemExit(f"{args.org}'s grant covers --project {' '.join(scope.projects)} only")
         if not grant_months(scope, args.month):
             raise SystemExit(
@@ -809,7 +812,9 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
                 f"pass --cutoff {scope.created_from}"
             )
     query = f"status:merged after:{args.month}-01 before:{next_month(args.month)}-01"
-    if scope is not None:
+    if scope is not None and scope.every_project:
+        queries = [query]
+    elif scope is not None:
         # A scoped host answers no OR (`out_of_scope_listing`), so each project is its own listing.
         queries = [f"{query} (project:{p})" for p in args.project]
     elif args.project:
@@ -843,6 +848,11 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
         in_grant = [c for c in kept if created_in_grant(scope, c["created"])]
         after_grant, kept = len(kept) - len(in_grant), in_grant
         record = {**record, "created_after_grant": after_grant}
+        # A month listed whole also returns the host's own projects' changes, never code.
+        covered = [c for c in kept if covers_project(scope, c.get("project"))]
+        if len(covered) != len(kept):
+            record = {**record, "host_project_changes": len(kept) - len(covered)}
+            kept = covered
     scrubbed = [scrub(change, salt) for change in kept]
     record = {
         **record,

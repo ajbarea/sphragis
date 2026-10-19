@@ -20,7 +20,14 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from sphragis.corpus.cli import GrantScope, created_in_grant, grant_months, grant_scope, uncommented
+from sphragis.corpus.cli import (
+    GrantScope,
+    covers_project,
+    created_in_grant,
+    grant_months,
+    grant_scope,
+    uncommented,
+)
 from sphragis.corpus.storage import iter_snapshot, read_snapshot_record
 from sphragis.provenance import provenance_header
 
@@ -43,25 +50,34 @@ def main() -> None:
     merged, commented, seen, repeated = Counter(), Counter(), set(), 0
     for snapshot in snapshots:
         record = read_snapshot_record(snapshot) or {}
-        listed = {q.rsplit("project:", 1)[1].rstrip(")") for q in _queries(record)}
-        if listed != set(scope.projects):
-            raise SystemExit(
-                f"{snapshot.name} lists {len(listed)} projects, the grant names "
-                f"{len(scope.projects)}"
-            )
+        queries = _queries(record)
+        if scope.every_project:
+            if len(queries) != 1 or "project:" in queries[0]:
+                raise SystemExit(f"{snapshot.name} is not its month listed whole: {queries}")
+        else:
+            listed = {q.rsplit("project:", 1)[1].rstrip(")") for q in queries}
+            if listed != set(scope.projects):
+                raise SystemExit(
+                    f"{snapshot.name} lists {len(listed)} projects, the grant names "
+                    f"{len(scope.projects)}"
+                )
         for change in iter_snapshot(snapshot):
             if change["_number"] in seen:
                 # Updated into a later month between the two months' fetches: counted once.
                 repeated += 1
                 continue
             seen.add(change["_number"])
-            if not created_in_grant(scope, change.get("created")):
+            if not created_in_grant(scope, change.get("created")) or not covers_project(
+                scope, change.get("project")
+            ):
                 raise SystemExit(
                     f"{snapshot.name}: change {change['_number']} is outside the grant"
                 )
             merged[change["project"]] += 1
             commented[change["project"]] += not uncommented(change)
-    ranked = sorted(scope.projects, key=lambda p: (-merged[p], p))
+    # Every project the grant names, or under a scope of every project, each the listings return.
+    projects = merged if scope.every_project else scope.projects
+    ranked = sorted(projects, key=lambda p: (-merged[p], p))
     report = {
         "org": args.org,
         "root": str(args.root),

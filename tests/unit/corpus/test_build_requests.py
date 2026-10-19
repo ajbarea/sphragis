@@ -511,7 +511,7 @@ def test_aosps_grant_lists_only_the_census_projects_and_none_before_it(tmp_path)
     assert cli.out_of_scope_listing("/changes/?q=project%3Aplatform%2Fa", empty) is not None
 
 
-def test_fuchsias_grant_lists_its_code_projects_over_qts_training_months(tmp_path) -> None:
+def test_fuchsias_grant_covers_every_project_over_qts_training_months() -> None:
     from sphragis.corpus.windows import WINDOWS
 
     permission = cli.REST_PERMITTED["fuchsia-review.googlesource.com"]
@@ -521,17 +521,52 @@ def test_fuchsias_grant_lists_its_code_projects_over_qts_training_months(tmp_pat
     assert scope is not None and scope.read_cap is None
     assert (scope.created_from, scope.created_before) == WINDOWS["train"]
     assert scope.listed_through == cli.last_open_month()
-    assert scope.projects == cli.fuchsia_projects() and scope.lists_projects
-    assert cli.PROJECT_LISTS == {"fuchsia": cli.FUCHSIA_PROJECTS}
+    assert scope.every_project and scope.projects == ()
     assert cli.host_of("fuchsia") == "fuchsia-review.googlesource.com"
-    listed = tmp_path / "projects.json"
-    listed.write_text(json.dumps({"projects": ["fuchsia", "integration"]}))
-    assert cli.fuchsia_projects(listed) == ("fuchsia", "integration")
-    assert cli.fuchsia_projects(tmp_path / "absent.json") == ()
+    assert cli.covers_project(scope, "fuchsia") and cli.covers_project(scope, "third_party/libc++")
+    for not_code in ("All-Projects", "All-Users", "", None):
+        assert not cli.covers_project(scope, not_code)
+    whole = _listing("status:merged after:2025-01-01 before:2025-02-01", "&n=500&S=0")
+    assert cli.out_of_scope_request(whole, scope, set()) is None
+    assert cli.out_of_scope_request(_listing(f"{MONTH} (project:All-Projects)"), scope, set())
     assert cli.out_of_scope_request("/changes/?q=project%3Afuchsia", scope, set())
+    assert cli.out_of_scope_request("/projects/?type=CODE", scope, set())
 
 
-SCOPED = cli.GrantScope(("p", "a/c++"), "2024-11-01", "2025-09-01", None, lists_projects=True)
+def test_a_whole_month_listing_passes_only_a_scope_of_every_project() -> None:
+    whole = _listing("status:merged after:2025-01-01 before:2025-02-01", "&n=500&S=0")
+    probe = _listing(
+        '(status:merged after:2025-01-01 before:2025-02-01) before:"2025-01-30 08:00:00 +0000"',
+        "&n=3&S=1",
+    )
+    for target in (whole, probe):
+        assert cli.out_of_scope_request(target, SCOPED, set())
+        assert cli.out_of_scope_request(target, EVERY, set()) is None
+    sealed = _listing("status:merged after:2025-12-01 before:2026-01-01", "&n=500&S=0")
+    assert cli.out_of_scope_request(sealed, EVERY, set())
+
+
+def test_a_whole_month_keeps_only_the_changes_its_grant_covers() -> None:
+    rows = [
+        {"_number": 1, "project": "fuchsia", "created": "2025-01-02 00:00:00.000000000"},
+        {"_number": 2, "project": "All-Projects", "created": "2025-01-02 00:00:00.000000000"},
+    ]
+    assert cli.outside_grant(EVERY, "2025-01", rows) == "rows of projects outside the host's grant"
+    assert cli.outside_grant(EVERY, "2025-01", rows[:1]) == ""
+    admitted: cli.Admitted = {}
+    every = cli.RestPermission("every-project placeholder", 0.0, scope=EVERY)
+    original = dict(cli.REST_PERMITTED)
+    cli.REST_PERMITTED["e"] = every
+    try:
+        cli.admit(admitted, "e", rows)
+    finally:
+        cli.REST_PERMITTED.clear()
+        cli.REST_PERMITTED.update(original)
+    assert admitted == {"e": {"1"}}
+
+
+SCOPED = cli.GrantScope(("p", "a/c++"), "2024-11-01", "2025-09-01", None)
+EVERY = cli.GrantScope((), "2024-11-01", "2025-09-01", None, "2025-10", every_project=True)
 MONTH = "status:merged after:2025-01-01 before:2025-02-01"
 
 
@@ -550,7 +585,6 @@ def _listing(q: str, extra: str = "&n=500&S=0&o=ALL_REVISIONS") -> str:
         "/changes/7/revisions/abc123/files/src%2Fmain.cc/diff?base=1",
         _listing("status:merged after:2025-01-26 before:2025-02-01 project:p", "&n=500&S=0"),
         _listing(f"{MONTH} (project:p)", "&n=500&S=0&o=DETAILED_ACCOUNTS&o=CURRENT_REVISION"),
-        "/projects/?type=CODE",
     ],
 )
 def test_a_scoped_host_answers_what_the_client_builds(target: str) -> None:
@@ -592,10 +626,9 @@ def test_a_scoped_host_refuses_every_other_request(target: str) -> None:
     assert cli.out_of_scope_request(target, SCOPED, {"7"})
 
 
-def test_only_a_scope_of_every_listed_project_may_ask_for_the_list() -> None:
-    aosp = cli.REST_PERMITTED["android-review.googlesource.com"].scope
-    assert aosp is not None and not aosp.lists_projects
-    assert cli.out_of_scope_request("/projects/?type=CODE", aosp, set())
+def test_no_scope_asks_a_host_for_its_project_list() -> None:
+    for scope in (SCOPED, EVERY):
+        assert cli.out_of_scope_request("/projects/?type=CODE", scope, set())
 
 
 @pytest.mark.parametrize(
@@ -620,13 +653,13 @@ def test_a_rest_project_name_reads_as_itself(name: str, ok: bool) -> None:
 
 
 def test_an_artifact_with_one_unsafe_name_scopes_nothing(tmp_path) -> None:
-    listed = tmp_path / "projects.json"
-    listed.write_text(json.dumps({"projects": ["fuchsia", "^.*"]}))
-    assert cli.fuchsia_projects(listed) == ()
+    listed = tmp_path / "census.json"
+    listed.write_text(json.dumps({"cpp_majority": ["platform/a", "^.*"]}))
+    assert cli.census_projects(listed) == ()
     (tmp_path / "dir.json").mkdir()
-    assert cli.fuchsia_projects(tmp_path / "dir.json") == ()
+    assert cli.census_projects(tmp_path / "dir.json") == ()
     (tmp_path / "bin.json").write_bytes(b"\xff\xfe")
-    assert cli.fuchsia_projects(tmp_path / "bin.json") == ()
+    assert cli.census_projects(tmp_path / "bin.json") == ()
 
 
 def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:

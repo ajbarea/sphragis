@@ -9969,3 +9969,28 @@ Fuchsia's review data has not been read by this study. Fixed now, before any of 
    and refused if empty, truncated (`_more_projects`) or naming a project a `project:` query could
    misread (`cli.rest_project_name`); a scoped host answers only the requests the client builds for
    it (`cli.out_of_scope_request`), so the list is asked only of a scope defined by it.
+
+### Fuchsia's months listed whole; its host refuses a project list (2026-10-19)
+
+`# research(2026-10)`. fuchsia-review answered the one `/projects/?type=CODE` request (2026-10-19,
+through the granted transport, nothing written) with 405, Method Not Allowed. Gerrit documents that
+endpoint for anonymous GET
+(https://gerrit-review.googlesource.com/Documentation/rest-api-projects.html), so the googlesource
+front end does not serve it; the git host's machine-readable repository index is disallowed by its
+robots.txt (`/?format=TEXT`, `/?format=JSON`, read 2026-10-19), so it is not read. Item 3 of the
+registration above named the project list as the means, and the scope it fixed is every code project
+in Qt's training months. Fixed now, still before any change is read:
+
+1. *Scope.* `GrantScope.every_project`: every project the host shows an anonymous reader, its own
+   `All-Projects` and `All-Users` aside (`cli.HOST_PROJECTS`, which hold access rules and accounts,
+   never code). A month is listed whole, `status:merged after:<month> before:<next month>`, with no
+   project named; the transport's allowlist admits that form only for such a scope and only for a
+   month the grant covers (`cli.out_of_scope_listing`).
+2. *Rows.* A fetched month keeps only changes created in the grant and of a covered project (the
+   host's own projects' changes counted and dropped); admission, the build and `pool_order.py` read
+   coverage through one rule (`cli.covers_project`).
+3. *Order and stop.* Unchanged: projects ranked by the merged changes created in the window that the
+   listings return, ties by name, and the shortest prefix that covers all 40 partitions. A project
+   the listings never return has no change to rank and no example to add.
+4. `scripts/gerrit_projects.py` and its artifact are withdrawn; nothing else asks a host for its
+   project list.
