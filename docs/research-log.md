@@ -9757,3 +9757,51 @@ on corpus v3, every field the 2026-10-01 entry read reproduces exactly for OpenS
 and Qt's development examples share a sibling-half reviewer at 95% (754 of 791). Review is
 concentrated enough that the exposure moderation registered on 2026-10-01 is the reading that
 separates a reviewer's habit from the organization's; this adds no test.
+
+### AOSP's census read, and android-review's REST scope (2026-10-19)
+
+`# research(2026-10)`. The census fixed in the entry above ran at c2f19bf (#154) on this machine
+under the git grant, 2026-10-19 01:03 to 04:29 UTC (`aosp-census.json`,
+`datasets/logs/aosp-census/ledger.jsonl`). All 1,425 of the manifest's projects were read at
+`android-15.0.0_r1`, none left unread, and 263 are C++-majority. 45 tree reads failed on their
+first try, each after about 135 seconds, and were read on a retry (two on a third try); no read
+was given up, so no five-minute quiet was set. The ledger's 1,473 git reads made 4,278 HTTP
+requests, about three in 0.4 seconds a read, each read then charged a second a request
+(`Pacer.charge`), so the run never averaged more than one request a second, as the 2026-10-18
+entry sets the pace; over its 3 hours 26 minutes it averaged 0.35. The 263 are the scope's projects, prebuilt and kernel-header repositories among them, as
+the code-file rule counts their headers; the order fixed above, not this list, decides which are
+fetched.
+
+**What the pool must cover, read.** `foreign_need.py` over Qt's 40 admissible partitions, each
+rebuilt partition checked against the 22 development runs' training and held-out counts
+(`foreign-need-qt.json`): a draw's C++ share runs from 0.499 to 0.707 over the 80 draws, so the
+pool must hold at least 1,308 C++ examples (seed 58's `qt-b`) and 926 others (seed 71's `qt-a`),
+after its build, refinement and deduplication.
+
+**android-review's REST permission, scoped to the census.** `cli.REST_PERMITTED` opens
+android-review.googlesource.com as a written grant under AJ's reading of Chrome Infra's answer,
+one client at no more than one request a second, quiet five minutes after a 5xx, scoped
+(`cli.GrantScope`) to the census's C++-majority projects (`census_projects`, read from
+`aosp-census.json`, so no list is copied) and to changes created from 2024-10-01 to before
+2025-03-27, with no read cap, since the answer sets a rate, not a count. AOSP's git host and its
+review host are one client: both routes claim the same lock (`hosts.CLAIM_AS`).
+
+**What a scoped fetch and build now do.** A scoped host answers no OR (`out_of_scope_listing`), so a
+fetch of several projects lists each alone and merges them into the month's snapshot, refusing a
+change listed twice; a month whose grant ends inside it (2025-03, to the 26th) is fetched and its
+later-created changes dropped and counted (`created_after_grant`, `cli.grant_months` for fetch and
+build alike); and the build and the comment-count probe both refuse a month holding a REST row of
+a project the grant does not name or of a change created outside its window (`cli.outside_grant`),
+since a change's comments and diffs are asked by number, which names neither (a snapshot held from
+before the grant would otherwise reach past it). Corrected before this entry was committed: an
+independent review found the probe asked by number with no scope check and the build checked the
+project but not the creation date, and a second found `scripts/host_scoping.py` asking
+chromium-review by number past V8's grant, the same gap a third time. So the guard is now in the
+transport: a scoped host is asked about one change only once its caller has admitted it
+(`cli.admit`, which checks the change against the grant), and a path that forgets fails closed.
+`host_scoping.py` refuses a month outside its grant and admits only changes created inside it,
+and `--month` and `--cutoff` are read as `YYYY-MM` and `YYYY-MM-DD` only, since the grant's dates
+compare as strings. `scripts/pool_order.py` ranks the scoped
+projects by their merged changes created inside the grant, from listing snapshots, ties by name,
+with the commented changes beside each as feasibility; a month lists the changes last updated in
+it, so a change updated after the grant's last month is in no listing.

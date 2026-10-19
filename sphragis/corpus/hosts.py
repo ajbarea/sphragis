@@ -14,6 +14,10 @@ from typing import IO
 
 LOCK_DIR = Path.home() / ".cache" / "sphragis" / "hosts"
 
+#: Hosts that serve one Gerrit instance under two names, claimed under one: AOSP's git host and
+#: its review host are one client's to read, whichever route asks (research log, 2026-10-18).
+CLAIM_AS = {"android.googlesource.com": "android-review.googlesource.com"}
+
 
 class HostClaim:
     """One process's exclusive claim on a host, and the host's quiet deadline, kept on disk.
@@ -56,11 +60,12 @@ def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
     processes started from different environments contend for the same file.
     """
     directory = lock_dir or LOCK_DIR
-    key = (directory, host)
+    name = CLAIM_AS.get(host, host)
+    key = (directory, name)
     if key in _CLAIMS:
         return _CLAIMS[key]
     directory.mkdir(parents=True, exist_ok=True)
-    handle = (directory / f"{host}.lock").open("a+")
+    handle = (directory / f"{name}.lock").open("a+")
     try:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
@@ -75,6 +80,6 @@ def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
 
 def release_host(host: str, lock_dir: Path | None = None) -> None:
     """Give up this process's claim on `host`, keeping its quiet deadline on disk."""
-    claim = _CLAIMS.pop((lock_dir or LOCK_DIR, host), None)
+    claim = _CLAIMS.pop((lock_dir or LOCK_DIR, CLAIM_AS.get(host, host)), None)
     if claim is not None:
         claim.release()
