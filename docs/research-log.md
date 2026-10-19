@@ -10198,3 +10198,50 @@ Sources:
   https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
 - ICSE 2027 open-science policy:
   https://conf.researchr.org/track/icse-2027/icse-2027-icse-2027-open-science-policies
+
+### GitHub's family enters results under its research clause (2026-10-19)
+
+`# research(2026-10)`. The 2026-10-08 entry kept the GitHub organizations out of every published
+figure until GitHub answered a request for written confirmation that its Acceptable Use Policies
+cover research on public pull-request review threads. AJ sent it on 2026-10-10 to GitHub's privacy
+team ("Research use of public pull-request review comments"); the one reply is that inbox's
+automatic one, which routes data-subject, account and takedown requests and answers no research
+question. AJ decided on 2026-10-19 that the study does not wait on it: the hold was the study's own,
+stricter than GitHub's stated terms and than the field's practice.
+
+1. *The terms.* The Acceptable Use Policies, section 7 (read 2026-10-19): "Researchers may use public,
+   non-personal information from the Service for research purposes, only if any publications
+   resulting from that research are open access", whether "scraped, collected through our API, or
+   obtained otherwise". Section 8 adds duties for personal information, not a permission step: use
+   it only "for the purpose for which that User has authorized it", and comply with the Privacy
+   Statement.
+2. *What the study meets.* Every publication has an open-access copy (arXiv, and OSF for the
+   registration); accounts, addresses and @-mentions are pseudonymised at ingestion; no review text
+   is published, and model output that could repeat one is released only as a keyed digest
+   (2026-10-19); an author's reviews are removed on request.
+3. *The field.* GitHub pull requests and their reviews are standard material for mining studies
+   (SmartSHARK's mining-challenge dataset ships them, arXiv 2102.11540), and the ethics guidance the
+   study follows asks for pseudonymisation and an ethics section, not a platform's sign-off (Gold and
+   Krinke, EMSE 27, 2022, entry of 2026-10-08).
+4. *What changes.* The family is read as registered, a separate replication at its own fixed level
+   with its members fixed at the Stage 1 freeze (`REPLICATION_MEMBERS`; Apache and .NET qualify,
+   2026-10-18), and now enters published figures. The removal-on-request script becomes required
+   before any release that carries GitHub data (ROADMAP). A refusal from GitHub, should one come, is
+   met by deleting what was collected.
+
+Sources:
+
+- GitHub Acceptable Use Policies:
+  https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies
+- SmartSHARK mining-challenge data: https://arxiv.org/abs/2102.11540
+- Gold and Krinke, ethics in mining software repositories: https://doi.org/10.1007/s10664-021-10057-7
+
+### Qt's simulations reproduced at later code (2026-10-19)
+
+`# research(2026-10)`. Qt's simulations ran at 6bebf23 and b41de03, before #154 to #162 changed
+`partition_sensitivity.py`, `cells.py` and `partitions.py` for H2. `partition_sensitivity.py` was run
+at 6bebf23 and at 27f5454 on Qt's pilot with the job's smoke settings (20 trials, 40 null trials, 4
+calibration trials, K = 15, seed 43): every field the two outputs share is identical, and the later
+one only adds `hypothesis`, `foreign_source` and `cpp_change_share`. The H1 path the simulations
+took is unchanged, so their artifacts stand for the code on `main`; the one later change on that
+path, `pilot_sizing`'s refusal of a lexer-sure reading (#163), is not reached by these inputs.
