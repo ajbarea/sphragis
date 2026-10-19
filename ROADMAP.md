@@ -450,15 +450,16 @@ effect, a shift common to every change, which two runs give no evidence of (roug
 - [ ] **Optional: a written "not human subjects research" determination** from hsro@rit.edu, to
   cite in the ethics section. The study contacts no one and reads only publicly posted reviews,
   so it is not human-subjects research under 45 CFR 46.102(e) (research log, 2026-10-08).
-- [ ] **GitHub's written confirmation** that its Acceptable Use Policies permit research on public
-  pull-request review threads, which its Privacy Statement counts as personal data. Requested
-  2026-10-10 by email to GitHub's privacy team (its privacy form routes other questions there),
-  awaiting a reply. Collection continues; the GitHub organizations stay out of every published figure until
-  GitHub answers, and a refusal is met by deleting what was collected.
-- [ ] **Removal on request.** `docs/protocol.md` promises it, and GitHub's Acceptable Use Policies
-  (section 8) require it: a script that looks up the account's numeric id, computes the pseudonyms
-  the scrub writes for it (the salted id, and on GitHub the salted login its @-mentions carry), and
-  drops that author's comments and examples from the corpus, its manifests and the next release.
+- [x] **GitHub's written confirmation** is not a gate (AJ, 2026-10-19; research log): the request of
+  2026-10-10 to GitHub's privacy team drew only that inbox's automatic reply, and the family is read
+  under its Acceptable Use Policies' research clause (section 7: public information, open-access
+  publications), which the study meets. A refusal, should one come, is met by deleting what was
+  collected.
+- [ ] **Removal on request**, required before any release that carries GitHub data. `docs/protocol.md`
+  promises it, and GitHub's Acceptable Use Policies (section 8) require it: a script that looks up the
+  account's numeric id, computes the pseudonyms the scrub writes for it (the salted id, and on GitHub
+  the salted login its @-mentions carry), and drops that author's comments and examples from the
+  corpus, its manifests and the next release.
 
 Added 2026-09-17 from a literature pass against the 2026 state of the art.
 
