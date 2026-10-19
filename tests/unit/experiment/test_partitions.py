@@ -251,6 +251,9 @@ def test_sensitivity_bounds_read_the_named_spread_target_and_cell_count() -> Non
         sensitivity_bounds(artifact, "sizing_bound_90", [0.975], cells=1)
     with pytest.raises(ValueError, match="no bound for 3"):
         sensitivity_bounds(artifact, "pilot_estimate", [0.975], cells=3)
+    h2 = artifact | {"hypothesis": "H2", "foreign_source": "aosp"}
+    with pytest.raises(ValueError, match="not H1's"):
+        sensitivity_bounds(h2, "pilot_estimate", [0.975], cells=1)
 
 
 def test_pilot_sizing_reads_the_pilot_and_refuses_a_reading_at_another_k() -> None:
@@ -489,6 +492,10 @@ def test_the_pilots_reproducibility_k_is_kept_when_it_is_the_larger() -> None:
         ([_grid_point(10, 0.001, 0.002, org="openstack")], "simulates openstack"),
         ([_grid_point(10, 0.001, 0.002, metric="exact_match")], "is on exact_match"),
         ([_grid_point(10, 0.001, 0.002, null_trials=1_000)], "1000 null studies"),
+        (
+            [_grid_point(10, 0.001, 0.002, hypothesis="H2", foreign_source="aosp")],
+            "not the pilot's",
+        ),
         ([_grid_point(11, 0.001, 0.002)], "K = 11 is not a grid point"),
         ([_grid_point(10, 0.02, 0.03), _grid_point(10, 0.001, 0.002)], "K = 10 is not a grid"),
         (
@@ -614,3 +621,31 @@ def test_the_h2_cell_refuses_a_run_without_its_foreign_arms() -> None:
             resamples=500,
             contrast=h2_contrast("aosp"),
         )
+
+
+def test_an_h2_k_sizes_h2_and_never_h1(tmp_path: Path) -> None:
+    """`k_coverage.py` names the H2 cell its K sizes, and `pilot_sizing` reads it only there."""
+    pilot = _COVERAGE_PILOT | {"hypothesis": "H2", "foreign_source": "aosp"}
+    (tmp_path / "pilot.json").write_text(json.dumps(pilot))
+    name, point = _grid_point(10, 0.001, 0.002, hypothesis="H2", foreign_source="aosp")
+    (tmp_path / name).write_text(json.dumps(point))
+    root = Path(__file__).resolve().parents[3]
+    argv = [sys.executable, str(root / "scripts/k_coverage.py"), "--pilot", "pilot.json"]
+    argv += ["--org", "wikimedia", "--grid", name, "--out", "k.json"]
+    subprocess.run(argv, cwd=tmp_path, check=True, capture_output=True)
+    k = json.loads((tmp_path / "k.json").read_text())
+    assert pilot_sizing(k, "k.json", org="wikimedia", cell=("H2", "aosp")) == 10
+    for cell in (("H1", None), ("H2", "fuchsia")):
+        with pytest.raises(ValueError, match="sizes the cell"):
+            pilot_sizing(k, "k.json", org="wikimedia", cell=cell)
+
+
+def test_an_h2_pilot_is_sized_only_by_its_own_grid() -> None:
+    pilot = _COVERAGE_PILOT | {"hypothesis": "H2", "foreign_source": "aosp"}
+    own = _grid_point(10, 0.001, 0.002, hypothesis="H2", foreign_source="aosp")
+    assert coverage_runs(pilot, [own], org="wikimedia", name="pilot")["runs"] == 10
+    for other in ({}, {"hypothesis": "H2", "foreign_source": "fuchsia"}):
+        with pytest.raises(ValueError, match="not the pilot's"):
+            coverage_runs(
+                pilot, [_grid_point(10, 0.001, 0.002, **other)], org="wikimedia", name="p"
+            )

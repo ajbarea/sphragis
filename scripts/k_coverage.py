@@ -43,6 +43,13 @@ def main() -> None:
         "kind": K_COVERAGE,
         "org": args.org,
         "metric": pilot.get("metric", "exact_match"),
+        # The cell this K sizes when it is H2's against a source (`partitions.pilot_sizing`); an
+        # H1 artifact names none, as every one did before H2 had a cell over partitions.
+        **(
+            {"hypothesis": "H2", "foreign_source": pilot["foreign_source"]}
+            if pilot.get("hypothesis") == "H2"
+            else {}
+        ),
         "pilot": str(args.pilot),
         "spread_target": REGISTERED_SPREAD_TARGET,
         "null_trials": COVERAGE_NULL_TRIALS,

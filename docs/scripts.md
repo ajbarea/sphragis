@@ -20,7 +20,7 @@ The registered H1 reading runs in six steps, per organization.
 | 2 | `partition_run.sbatch` | One run of H1: the organization deduplicated once, its projects assigned in the partition seed's order, both halves trained at the fixed size and each scored on both halves. Takes `ORG`, `PARTITION_SEED`, `TRAIN_SIZE` and `SEEDS` from the admissible list. |
 | 3 | `likelihood_score.sbatch` | Scores a stored run on the registered metric, the log-probability of each held-out reference, reusing its adapters and examples (`likelihood_score.py`, no training). It reads `decoder_check.sbatch`'s output, so submit that first and chain this one `afterok` on it. |
 | 4 | `partition_pilot.py` | Reads H1 over the first K runs at the registered Holm levels, on the registered metric (`--metric logprob_per_token`). On the development window it is the pilot, and its per-run spread gives the reproducibility K. |
-| 5 | `partition_sensitivity.sbatch` | Simulates H1 at a given K on the registered metric (`METRIC=logprob_per_token`, `partition_sensitivity.py`, CPU only): coverage, detectable effect and reproducibility. The grid's K = 10 point is this full simulation; every other K on the grid runs with `RUNS=<K> NULL_ONLY=1`, the null alone. |
+| 5 | `partition_sensitivity.sbatch` | Simulates a cell at a given K on the registered metric (`METRIC=logprob_per_token`, `partition_sensitivity.py`, CPU only): coverage, detectable effect and reproducibility. The grid's K = 10 point is this full simulation; every other K on the grid runs with `RUNS=<K> NULL_ONLY=1`, the null alone. |
 | 6 | `k_coverage.py` | Applies the K coverage rule to the pilot and the grid's null simulations and writes `k-coverage-<org>-likelihood.json`, the only K source a test read takes (`partition_pilot.py --sizing`). The full simulation is then run at that K, and its bounds feed `partition_pilot.py --sensitivity`. |
 
 H2's cell on Qt adds one job between steps 2 and 3, and its own step 4: `foreign_arms.sbatch`
@@ -28,7 +28,10 @@ reuses a decoder-checked partition run's halves, trains each evaluated half's ma
 on the source's pool (`FOREIGN_SOURCE`, `FOREIGN_POOL`), and generates every arm again;
 `likelihood_score.sbatch` with `FOREIGN_SOURCE` scores it; and `partition_pilot.py --hypothesis H2
 --foreign-source <source>` reads the development cell (sibling against matched foreign, on C++
-examples). Its simulation and K, steps 5 and 6, come with the H2 simulation.
+examples). Steps 5 and 6 then run on that pilot: `partition_sensitivity.sbatch` with
+`FOREIGN_SOURCE=<source> METRIC=logprob_per_token` simulates the cell at one cell count, on its C++
+examples and the projected changes in their share, and `k_coverage.py` on the H2 pilot and its
+grid writes a K coverage artifact that names the cell, so it sizes H2's K alone.
 
 A test-window read takes its K, bounds and planted run from these artifacts, as
 [Registered decisions](registered-decisions.md) describes. `reading.py` prints a result's

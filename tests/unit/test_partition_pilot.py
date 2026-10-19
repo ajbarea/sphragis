@@ -164,6 +164,20 @@ def test_a_gerrit_pilot_writes_its_report_with_the_cell_bounds(
     assert report["levels"] == [0.975, 0.95]
     assert report["org"] == "openstack"
     assert report["bounds"] == {"0.975": 0.4, "0.95": 0.4}
+    assert report["sensitivity"]["cell"] == ["H1", None]
+
+
+def test_an_h1_read_takes_no_bounds_simulated_for_h2(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack")
+    simulated = json.loads(sensitivity.read_text())
+    sensitivity.write_text(json.dumps({**simulated, "hypothesis": "H2", "foreign_source": "aosp"}))
+    argv = [*_inputs(tmp_path, "openstack"), "--sensitivity", str(sensitivity)]
+    argv += ["--spread-target", "pilot_estimate", "--h1-cells", "1"]
+    with pytest.raises(SystemExit, match=r"of the cell \('H2', 'aosp'\), not H1's"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "pilot.json")])
+    assert not (tmp_path / "pilot.json").exists()
 
 
 def _registered_without(

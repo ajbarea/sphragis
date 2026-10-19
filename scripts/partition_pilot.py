@@ -32,6 +32,7 @@ from sphragis.experiment.cells import (
     SPREAD_TARGETS,
     TEST_BOOTSTRAP_SEED,
     TEST_RESAMPLES,
+    cell_of,
     require_resamples,
     require_test_read,
     sensitivity_bounds,
@@ -373,6 +374,7 @@ def main() -> None:
         simulation = {
             "file": str(args.sensitivity),
             "org": sensitivity["org"],
+            "cell": list(cell_of(sensitivity)),
             "runs": sensitivity.get("runs"),
             "spread_target": args.spread_target,
             "cells": args.h1_cells,

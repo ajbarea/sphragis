@@ -1,14 +1,18 @@
-"""Operating characteristics of H1 over repeated partitions at the registered K, by simulation.
+"""Operating characteristics of a cell over repeated partitions at the registered K, by simulation.
 
-Each simulated study draws the test window's changes from a pilot run's own-against-sibling
-clusters (sign-flip null, then a lift, as `decomposition_sensitivity.py` does), each change keeping
-its project. K runs then each take the next of a random order over a pool of admissible partitions
-built as the runs build them (`partition_pool`: the organization deduplicated, projects assigned
-in a seeded order on training-window counts, `split_criteria` at the fixed size), and score the
-changes once with seed-by-change churn and a run shift N(0, sigma_run) (`seed_runs`, one seed).
-The cell is read off `partitioned_crossed_draws`, the interval the gate reads. A second set of runs
-over disjoint partitions on the same changes measures reproducibility: how often two aggregations
-differ by more than XI.
+H1's cell, or H2's (`--foreign-source`, from `partition_pilot.py --hypothesis H2`), simulated on
+the contrast and rows its pilot was read on (`power.cell_contrast`), at the cell counts and
+planned changes `plan_cell` gives it.
+
+Each simulated study draws the test window's changes from a pilot run's clusters on its cell's
+contrast, own against sibling for H1 (sign-flip null, then a lift, as `decomposition_sensitivity.py`
+does), each change keeping its project. K runs then each take the next of a random order over a pool
+of admissible partitions built as the runs build them (`partition_pool`: the organization
+deduplicated, projects assigned in a seeded order on training-window counts, `split_criteria` at the
+fixed size), and score the changes once with seed-by-change churn and a run shift N(0, sigma_run)
+(`seed_runs`, one seed). The cell is read off `partitioned_crossed_draws`, the interval the gate
+reads. A second set of runs over disjoint partitions on the same changes measures reproducibility:
+how often two aggregations differ by more than XI.
 
 On a continuous score (`--metric logprob_per_token`, research log 2026-10-09) the pool is the
 pilot's own runs averaged per change, the effect is a location shift (`power.shift_by`) and is its
@@ -58,12 +62,21 @@ from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.windows import WINDOWS
-from sphragis.experiment.decomposition import FAMILY_ALPHA, SESOI, halves, metric_sesoi
+from sphragis.experiment.cells import cell_of
+from sphragis.experiment.decomposition import (
+    FAMILY_ALPHA,
+    FOREIGN_SOURCES,
+    SESOI,
+    halves,
+    is_cpp,
+    metric_sesoi,
+)
 from sphragis.experiment.partitions import K_MAX, K_MIN, pilot_sizing, spread_targets
 from sphragis.experiment.power import (
     _null,
     _shift,
     averaged_truth,
+    cell_contrast,
     continuous_runs,
     realised_difference,
     seed_runs,
@@ -72,6 +85,7 @@ from sphragis.experiment.power import (
 from sphragis.experiment.runner import to_clusters
 from sphragis.experiment.runs import decoder
 from sphragis.measure.stats import (
+    MIN_CLUSTERS,
     Cluster,
     equal_halves,
     partitioned_crossed_draws,
@@ -102,7 +116,9 @@ parser.add_argument("--redraw", type=float, help="exact match: BINARY_REDRAW; co
 # so over k independent cells each cell needs hypothesis_power ** (1 / k).
 parser.add_argument("--hypothesis-power", type=float, default=0.95)
 # The admitted set is fixed at Stage 1 submission: one bound per possible count of H1 cells.
-parser.add_argument("--cells", type=int, nargs="+", default=[1, 2, 3], help="H1 cells intersected")
+parser.add_argument(
+    "--cells", type=int, nargs="+", help="H1 cells intersected (1 2 3 by default); H2 is one"
+)
 # Monte Carlo error of a power estimate at 1,000 trials: about 0.007 near 0.95, 0.004 near 0.983.
 # Trials share seeds across bisection steps, so power is compared on common random numbers.
 parser.add_argument("--trials", type=int, default=1000, help="per bisection step")
@@ -134,6 +150,11 @@ parser.add_argument("--metric", choices=("exact_match", "logprob_per_token"), de
 # null alone, without the detectable-effect bisection.
 parser.add_argument("--runs", type=int, help="K to simulate in place of the pilot's sizing")
 parser.add_argument("--null-only", action="store_true", help="the null's rates only, no bisection")
+parser.add_argument(
+    "--foreign-source",
+    choices=FOREIGN_SOURCES,
+    help="H2's source: the pilot must be H2's cell against it; none for H1",
+)
 parser.add_argument("--out", type=Path, required=True)
 
 Pool = list[tuple[Cluster, str]]
@@ -193,16 +214,77 @@ def partition_pool(
     return pool, seeds
 
 
+def cpp_change_share(pilot: dict, org: str) -> tuple[int, int]:
+    """The pilot's first run's changes with a C++ example, and all its changes, over the examples
+    its halves' own adapters scored: what an H2 cell reads of a window, by change."""
+    file = pilot["run_files"][0]
+    run = json.loads(Path(file).read_text())
+    seed = run["seeds"][0]
+    rows = []
+    for half in halves(org):
+        key = f"adapter:{half}|{half}|s{seed}"
+        if key not in run["results"]:
+            raise ValueError(f"{file} scored no {key}")
+        rows += run["results"][key]
+    changes = {r["change_id"] for r in rows}
+    return len({r["change_id"] for r in rows if is_cpp(r)}), len(changes)
+
+
+def plan_cell(
+    pilot: dict,
+    *,
+    org: str,
+    foreign_source: str | None,
+    cells: list[int] | None,
+    metric: str,
+    placebo: Path | None,
+    projected: float,
+) -> tuple[list[int], int, dict | None]:
+    """The cell counts a simulation's bounds are read at and the test changes it plans, for the
+    pilot's cell, with the C++ share an H2 plan was scaled by.
+
+    H1's bounds are read at each count of cells in `cells`, on the projected changes. H2 is one
+    confirmatory cell (item 1 of the H2 plan), simulated on a continuous metric from its pilot's
+    runs without a placebo, and reads a window's C++ examples only, so it plans the projected
+    changes in the share of the pilot's changes that carry one. Both round down.
+    """
+    hypothesis, source = cell_of(pilot)
+    if source != foreign_source:
+        raise ValueError(
+            f"the pilot is {hypothesis}'s cell against {source}, not against {foreign_source}"
+        )
+    if hypothesis == "H1":
+        cells = cells or [1, 2, 3]
+        if min(cells) < 1:
+            raise ValueError("--cells counts H1 cells, at least one")
+        return cells, int(projected), None
+    if cells not in (None, [1]):
+        raise ValueError(f"H2 is one cell; --cells {cells} does not apply")
+    if metric == "exact_match" or placebo is not None:
+        raise ValueError("H2 is simulated on a continuous metric from its pilot's runs, no placebo")
+    cpp, changes = cpp_change_share(pilot, org)
+    size = int(projected * cpp / changes)
+    if size < 2 * MIN_CLUSTERS:
+        raise ValueError(
+            f"{size} planned C++ changes: the gate reads no half of fewer than {MIN_CLUSTERS}"
+        )
+    return [1], size, {"cpp_changes": cpp, "changes": changes}
+
+
 def averaged_pool(
     pilot: dict, corpus: Path, org: str, metric: str
 ) -> tuple[Pool, tuple[float, float], float]:
     """A continuous score's pool: each change averaged over the pilot's runs, with its project,
-    and the change-by-run noise the simulated runs add back (`power.averaged_truth`)."""
+    and the change-by-run noise the simulated runs add back (`power.averaged_truth`), on the
+    contrast and rows the pilot's cell was read on (`power.cell_contrast`)."""
     runs = []
     for path in pilot["run_files"]:
         run = json.loads(Path(path).read_text())
         runs.append((run["results"], run["seeds"][0]))
-    truth, noise, shrink = averaged_truth(runs, halves=halves(org), metric=metric)
+    arms, keep = cell_contrast(pilot)
+    truth, noise, shrink = averaged_truth(
+        runs, halves=halves(org), metric=metric, arms=arms, keep=keep
+    )
     return with_projects(truth, corpus, org), noise, shrink
 
 
@@ -467,9 +549,6 @@ def _cached_trials(
 
 def main() -> None:
     args = parser.parse_args()
-    if min(args.cells) < 1:
-        raise SystemExit("--cells counts H1 cells, at least one")
-    cell_power = {str(k): args.hypothesis_power ** (1 / k) for k in sorted(set(args.cells))}
     pilot = json.loads(args.pilot.read_text())
     # The pilot's spread and the placebo's outcomes must come from one decoder; a pilot written
     # before pilots recorded theirs is read through its first run.
@@ -488,12 +567,22 @@ def main() -> None:
         raise SystemExit(f"{args.projection}: no test-window projection for {args.org}")
     # Whole changes, rounded down: a projection is not an observed count.
     try:
-        sized = pilot_sizing(pilot, str(args.pilot), org=args.org)
+        sized = pilot_sizing(pilot, str(args.pilot), org=args.org, cell=cell_of(pilot))
+        args.cells, args.size, cpp_share = plan_cell(
+            pilot,
+            org=args.org,
+            foreign_source=args.foreign_source,
+            cells=args.cells,
+            metric=args.metric,
+            placebo=args.placebo,
+            projected=projection["test"]["projected_changes"],
+        )
     except ValueError as error:
         raise SystemExit(str(error)) from error
     k_source = f"{args.pilot}: sizing.runs" if args.runs is None else "--runs"
     args.runs = sized if args.runs is None else args.runs
-    args.size = int(projection["test"]["projected_changes"])
+    hypothesis, foreign_source = cell_of(pilot)
+    cell_power = {str(k): args.hypothesis_power ** (1 / k) for k in sorted(set(args.cells))}
     if max(args.trials, args.null_trials) > CALIBRATION_SEED_OFFSET:
         raise SystemExit(f"trial seeds would reach the calibration's at {CALIBRATION_SEED_OFFSET}")
     if args.partitions < 2 * K_MAX:
@@ -540,12 +629,17 @@ def main() -> None:
     report: dict = {
         "placebo": None if args.placebo is None else str(args.placebo),
         "org": args.org,
+        "hypothesis": hypothesis,
+        "foreign_source": foreign_source,
+        "cpp_change_share": cpp_share,
         "inputs": {
             "runs": k_source,
             "levels": f"{args.pilot}: levels",
             "spread_targets": f"{args.pilot}: per_run and runs_left_out, chi-squared bounds",
             "calibration_changes": f"{args.pilot}: changes",
-            "planned_changes": f"{args.projection}: test.projected_changes, rounded down",
+            "planned_changes": f"{args.projection}: test.projected_changes, rounded down"
+            if hypothesis == "H1"
+            else f"{args.projection}: test.projected_changes x cpp_change_share, rounded down",
             "size_floor": f"{args.admissible}: size_floor",
             "reference": f"{args.admissible}: reference",
         },

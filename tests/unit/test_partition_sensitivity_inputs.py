@@ -212,3 +212,103 @@ def test_a_continuous_null_reads_absent_against_the_sesoi_its_workers_were_given
     low = read[0.5]["estimate"] - (read[0.5]["high"][0.975] - read[0.5]["estimate"])
     assert read[0.5]["high"][0.975] - low > 2 * 0.01
     assert read[0.5]["absent"][0.975] and not read[0.001]["absent"][0.975]
+
+
+def _h2_run(tmp_path: Path) -> Path:
+    """One run of qt's halves with each half's matched foreign arm: change c0 carries a C++
+    example, c1 only Python, c2 both."""
+    rows = [
+        {"id": "qt:c0:a.cpp:1:1", "change_id": "c0", "lp": -0.5},
+        {"id": "qt:c1:b.py:1:1", "change_id": "c1", "lp": -0.5},
+        {"id": "qt:c2:c.h:1:1", "change_id": "c2", "lp": -0.5},
+        {"id": "qt:c2:d.py:1:1", "change_id": "c2", "lp": -0.5},
+    ]
+    results = {}
+    for window, sibling, part in (("qt-a", "qt-b", rows[:2]), ("qt-b", "qt-a", rows[2:])):
+        for trained in ("qt-a", "qt-b", f"foreign-aosp-for-{sibling}"):
+            results[f"adapter:{trained}|{window}|s1"] = part
+    path = tmp_path / "run.json"
+    path.write_text(
+        json.dumps({"seeds": [1], "corpora": {"qt-a": {}, "qt-b": {}}, "results": results})
+    )
+    return path
+
+
+def test_an_h2_pilot_is_simulated_on_sibling_against_matched_foreign_on_cpp() -> None:
+    from sphragis.experiment.decomposition import is_cpp
+    from sphragis.experiment.power import cell_contrast, own_against_sibling
+
+    assert cell_contrast({}) == (own_against_sibling, None)
+    arms, keep = cell_contrast({"hypothesis": "H2", "foreign_source": "aosp"})
+    assert arms("qt-a", "qt-b", 3) == (
+        "adapter:qt-b|qt-a|s3",
+        "adapter:foreign-aosp-for-qt-b|qt-a|s3",
+    )
+    assert keep is is_cpp
+    for cell in ({"hypothesis": "H2"}, {"hypothesis": "H2", "foreign_source": "gitlab"}):
+        with pytest.raises(ValueError, match="no cell is H2"):
+            cell_contrast(cell)
+    with pytest.raises(ValueError, match="no cell is H1 against 'aosp'"):
+        cell_contrast({"foreign_source": "aosp"})
+
+
+def test_an_h2_plan_reads_the_pilots_cpp_share_by_change(tmp_path: Path) -> None:
+    partition_sensitivity = _module()
+    pilot = {"run_files": [str(_h2_run(tmp_path))]}
+    assert partition_sensitivity.cpp_change_share(pilot, "qt") == (2, 3)
+    with pytest.raises(ValueError, match="scored no adapter:wikimedia-a"):
+        partition_sensitivity.cpp_change_share(pilot, "wikimedia")
+
+
+H2_PILOT = {"hypothesis": "H2", "foreign_source": "aosp"}
+PLAN = {"org": "qt", "cells": None, "metric": "logprob_per_token", "placebo": None}
+
+
+@pytest.mark.parametrize(
+    ("pilot", "plan", "message"),
+    [
+        ({}, {"foreign_source": "aosp"}, "H1's cell against None, not against aosp"),
+        (H2_PILOT, {"foreign_source": None}, "H2's cell against aosp, not against None"),
+        (H2_PILOT, {"cells": [1, 2, 3]}, "H2 is one cell"),
+        (H2_PILOT, {"cells": [2]}, "H2 is one cell"),
+        (H2_PILOT, {"metric": "exact_match"}, "continuous metric"),
+        (H2_PILOT, {"placebo": Path("placebo.json")}, "no placebo"),
+        (H2_PILOT, {"projected": 29}, "19 planned C"),
+        ({}, {"foreign_source": None, "cells": [0]}, "at least one"),
+    ],
+)
+def test_a_plan_is_refused_for_another_cell_or_inputs_it_does_not_read(
+    tmp_path: Path, pilot: dict, plan: dict, message: str
+) -> None:
+    partition_sensitivity = _module()
+    pilot = {**pilot, "run_files": [str(_h2_run(tmp_path))]}
+    args = {**PLAN, "foreign_source": "aosp", "projected": 300.0, **plan}
+    with pytest.raises(ValueError, match=message):
+        partition_sensitivity.plan_cell(pilot, **args)
+
+
+def test_a_plan_reads_h1_at_every_cell_count_and_h2_at_one_on_its_cpp_share(
+    tmp_path: Path,
+) -> None:
+    partition_sensitivity = _module()
+    run = [str(_h2_run(tmp_path))]
+    h1 = partition_sensitivity.plan_cell(
+        {"run_files": run}, **{**PLAN, "foreign_source": None, "projected": 300.9}
+    )
+    assert h1 == ([1, 2, 3], 300, None)
+    h2 = {**H2_PILOT, "run_files": run}
+    plan = {**PLAN, "foreign_source": "aosp", "projected": 300.0}
+    # Two of the pilot's three changes carry a C++ example: 200 of the 300 projected.
+    assert partition_sensitivity.plan_cell(h2, **plan) == (
+        [1],
+        200,
+        {"cpp_changes": 2, "changes": 3},
+    )
+    assert partition_sensitivity.plan_cell(h2, **{**plan, "cells": [1]})[0] == [1]
+
+
+def test_the_simulation_names_the_cell_it_simulates(tmp_path) -> None:
+    sbatch = (ROOT / "scripts" / "partition_sensitivity.sbatch").read_text()
+    assert 'FOREIGN_TAG="${FOREIGN_SOURCE:+-foreign$FOREIGN_SOURCE}"' in sbatch
+    assert 'RESULT_SUFFIX="$RESULT_SUFFIX$FOREIGN_TAG"' in sbatch
+    assert "partition-pilot-$ORG$FOREIGN_TAG$PILOT_TAG.json" in sbatch

@@ -9,7 +9,7 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ajb6289@rit.edu
 
-# H1 over repeated partitions at the registered K, simulated: coverage, detectable effect and
+# A cell over repeated partitions at the registered K, simulated: coverage, detectable effect and
 # reproducibility. CPU only, pure Python in a process pool: one worker per allocated core. Every
 # input is read from the committed artifact that fixed it (K and the run spread from the pilot,
 # the planned test size from the test-window projection, N and the reference from the
@@ -29,6 +29,14 @@ ORG="${ORG:-openstack}"
 # a rerun under another decoder names its pilot and takes a RUN_TAG for its result.
 # METRIC: exact_match, or logprob_per_token with a likelihood pilot; the result is named for it.
 METRIC="${METRIC:-exact_match}"
+# FOREIGN_SOURCE: H2's cell against that source, simulated from its own pilot
+# (partition_pilot.py --hypothesis H2), under a pilot and result name of its own.
+FOREIGN_TAG="${FOREIGN_SOURCE:+-foreign$FOREIGN_SOURCE}"
+RESULT_SUFFIX="$RESULT_SUFFIX$FOREIGN_TAG"
+FOREIGN_ARGS=(${FOREIGN_SOURCE:+--foreign-source "$FOREIGN_SOURCE"})
+if [ -n "${FOREIGN_SOURCE:-}" ] && [ "$METRIC" != logprob_per_token ]; then
+  echo "FOREIGN_SOURCE: H2 is simulated on METRIC=logprob_per_token, not $METRIC" >&2; exit 1
+fi
 case "$METRIC" in
   exact_match) PILOT_TAG="" ;;
   logprob_per_token) PILOT_TAG="-likelihood"; RESULT_SUFFIX="$RESULT_SUFFIX-$METRIC" ;;
@@ -57,7 +65,8 @@ claim_result OUT "$SPHRAGIS_RESULTS/partition-sensitivity-$ORG$RESULT_SUFFIX.jso
 uv run --no-sync python scripts/partition_sensitivity.py \
   ${PLACEBO_ARGS[@]+"${PLACEBO_ARGS[@]}"} \
   --corpus "${CORPUS_WINDOWS:?set CORPUS_WINDOWS to the corpus root}" --org "$ORG" \
-  --pilot "${PILOT:-datasets/results/partition-pilot-$ORG$PILOT_TAG.json}" \
+  --pilot "${PILOT:-datasets/results/partition-pilot-$ORG$FOREIGN_TAG$PILOT_TAG.json}" \
+  ${FOREIGN_ARGS[@]+"${FOREIGN_ARGS[@]}"} \
   --projection "datasets/results/project-windows-$ORG-v3.json" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --metric "$METRIC" ${SMOKE_ARGS[@]+"${SMOKE_ARGS[@]}"} \

@@ -7,8 +7,10 @@ residual over a run's examples has variance per_example²/N + shared²·Σn²/N�
 (N examples, n per change) plus that of any run-wide shift; the excess over the first two terms,
 over the pilot's runs, estimates the run-wide part, with its one-sided upper bound at
 `SIZING_CONFIDENCE` (chi-squared over the runs), beside the worst case in which all of the shared
-part were run-wide. A shift favouring one half's adapter cancels in the run mean and is not
-measured here; redrawn per change, it only widens the simulated interval.
+part were run-wide. The contrast is the pilot's cell's (H1's own against sibling, or H2's sibling
+against matched foreign on C++ examples), and the simulation must be of the same cell. A shift
+favouring one half's adapter cancels in the run mean and is not measured here; redrawn per
+change, it only widens the simulated interval.
 
     R=datasets/results
     uv run --no-sync --no-active python scripts/run_shift.py --org openstack \\
@@ -22,11 +24,15 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter, defaultdict
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from statistics import fmean, variance
+from typing import Any
 
+from sphragis.experiment.cells import cell_of
 from sphragis.experiment.decomposition import halves
 from sphragis.experiment.partitions import SIZING_CONFIDENCE, sd_bound
+from sphragis.experiment.power import Arms, arm_pairs, cell_contrast, own_against_sibling
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -37,17 +43,23 @@ parser.add_argument("--out", type=Path, required=True)
 
 
 def run_wide(
-    runs: list[tuple[dict, int]], *, pair: tuple[str, str], metric: str, noise: tuple[float, float]
+    runs: list[tuple[dict, int]],
+    *,
+    pair: tuple[str, str],
+    metric: str,
+    noise: tuple[float, float],
+    arms: Arms = own_against_sibling,
+    keep: Callable[[Mapping[str, Any]], bool] | None = None,
 ) -> dict[str, float]:
-    """The run mean's variance, the part change noise (shared, per example) implies, the rest."""
+    """The run mean's variance, the part change noise (shared, per example) implies, the rest,
+    on the contrast and rows of the pilot's cell (`power.cell_contrast`)."""
     contrast: dict[str, dict[int, float]] = defaultdict(dict)
     change_of: dict[str, str] = {}
     for results, seed in runs:
         for window, sibling in (pair, pair[::-1]):
-            mine = {r["id"]: r for r in results[f"adapter:{window}|{window}|s{seed}"]}
-            theirs = {r["id"]: r for r in results[f"adapter:{sibling}|{window}|s{seed}"]}
-            for example, row in mine.items():
-                contrast[example][seed] = float(row[metric]) - float(theirs[example][metric])
+            pairs = arm_pairs(results, seed, window, sibling, arms=arms, keep=keep)
+            for example, (row, theirs) in pairs.items():
+                contrast[example][seed] = float(row[metric]) - float(theirs[metric])
                 change_of[example] = row["change_id"]
     seeds = [seed for _, seed in runs]
     residual = {e: {s: v - fmean(by.values()) for s, v in by.items()} for e, by in contrast.items()}
@@ -86,17 +98,30 @@ def main() -> None:
     metric = simulation["metric"]
     if pilot.get("metric") != metric:
         raise SystemExit(f"{args.pilot} is on {pilot.get('metric')}, the simulation on {metric}")
+    if cell_of(pilot) != cell_of(simulation):
+        raise SystemExit(
+            f"{args.pilot} is the cell {cell_of(pilot)}, the simulation {cell_of(simulation)}"
+        )
+    try:
+        arms, keep = cell_contrast(pilot)
+    except ValueError as error:
+        raise SystemExit(f"{args.pilot}: {error}") from error
     noise = simulation["change_by_run_noise"]
     runs = []
     for path in pilot["run_files"]:
         run = json.loads(Path(path).read_text())
         runs.append((run["results"], run["seeds"][0]))
-    read = run_wide(
-        runs,
-        pair=halves(args.org),
-        metric=metric,
-        noise=(noise["shared_by_change"], noise["per_example"]),
-    )
+    try:
+        read = run_wide(
+            runs,
+            pair=halves(args.org),
+            metric=metric,
+            noise=(noise["shared_by_change"], noise["per_example"]),
+            arms=arms,
+            keep=keep,
+        )
+    except ValueError as error:
+        raise SystemExit(f"{args.pilot}: {error}") from error
     out = {
         "org": args.org,
         "metric": metric,
