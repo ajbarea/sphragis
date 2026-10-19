@@ -35,8 +35,9 @@ grid writes a K coverage artifact that names the cell, so it sizes H2's K alone.
 
 A test-window read takes its K, bounds and planted run from these artifacts, as
 [Registered decisions](registered-decisions.md) describes. `reading.py` prints a result's
-readings with their labels, and `power_at_size.sbatch` reads a test window that falls below its
-projected size.
+readings with their labels, `log_tables.py` prints the research log's simulation, K coverage and
+token-class tables from their artifacts (a test asserts the log quotes each as printed), and
+`power_at_size.sbatch` reads a test window that falls below its projected size.
 
 ## Comparators
 

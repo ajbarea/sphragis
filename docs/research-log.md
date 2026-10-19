@@ -9474,8 +9474,7 @@ Every run's outcome-neutral battery was recorded and held, and the aggregation i
 "Supported" is read here without bounds. The K sized is the floor: the formula gives 1.25 runs and
 `runs_needed` clamps it to 10. Qt's simulation, which sets its detectable effects and its K under
 the coverage rule, and its planted check 5 runs are queued on TIGRIS and follow in their own PR. As
-for the other organizations, the
-development window does not stand for the test window.
+for the other organizations, the development window does not stand for the test window.
 
 **Test window.** `window-report-qt-v3.json` reads the granted corpus; the committed
 `window-report-qt.json` (2026-09-23) read the held corpus from before the grant and stays as that
@@ -9759,6 +9758,99 @@ and Qt's development examples share a sibling-half reviewer at 95% (754 of 791).
 concentrated enough that the exposure moderation registered on 2026-10-01 is the reading that
 separates a reviewer's habit from the organization's; this adds no test.
 
+### s split by token class on Qt: its development contrast is not vocabulary alone either (2026-10-18)
+
+`# research(2026-10)`. The split of 2026-10-15 read on Qt's 22 development runs, at the pilot's
+settings (`partition-pilot-qt-likelihood-split-<component>.json`, 95% crossed intervals; whole s
++0.0101 [+0.0042, +0.0172]). The parts add back to the whole within 1e-9:
+
+| Part of s | Qt |
+|---|---|
+| identifier | +0.0045 [-0.0000, +0.0104] |
+| other (not a name) | +0.0056 [+0.0019, +0.0093] |
+| end token | +0.0001 [-0.0004, +0.0006] |
+| changed by the revision | +0.0062 [+0.0023, +0.0104] |
+| copied from the reviewed hunk | +0.0038 [-0.0003, +0.0097] |
+| other and changed | +0.0044 [+0.0017, +0.0073] |
+
+The part outside names carries 55% of Qt's contrast and its interval excludes zero, as do the
+changed part and the other-and-changed part; the identifier part's lower bound sits just below
+zero (-0.00005). Unlike OpenStack and Wikimedia, Qt's copied part is not near zero: +0.0038, its
+interval just holding zero. Exploratory and development-window only, as on the other two.
+
+The 2026-10-15 check, read again on all three organizations and now an option
+(`partition_pilot.py --lexer-sure`, 2026-10-19): every example whose row in any arm a lexer may
+have misread (error characters, or an identifier class that changes when each line is lexed
+alone, `tokens.lexer_unsure`) leaves every arm of every run, and the reading is repeated
+(`partition-pilot-<org>-likelihood[-split-<component>]-lexer-sure.json`, 95% crossed intervals,
+the table from `scripts/log_tables.py`):
+
+| Part of s | OpenStack | Wikimedia | Qt |
+|---|---|---|---|
+| examples dropped | 11 of 501 | 20 of 711 | 70 of 800 |
+| s on the same rows | +0.0233 [+0.0099, +0.0384] | +0.0056 [-0.0000, +0.0116] | +0.0116 [+0.0050, +0.0192] |
+| identifier | +0.0126 [+0.0044, +0.0229] | +0.0011 [-0.0021, +0.0044] | +0.0051 [+0.0002, +0.0118] |
+| other (not a name) | +0.0099 [+0.0008, +0.0206] | +0.0043 [-0.0003, +0.0095] | +0.0065 [+0.0025, +0.0106] |
+| end token | +0.0008 [-0.0002, +0.0021] | +0.0002 [-0.0010, +0.0012] | +0.0001 [-0.0005, +0.0007] |
+| changed by the revision | +0.0216 [+0.0094, +0.0357] | +0.0062 [+0.0015, +0.0111] | +0.0073 [+0.0030, +0.0117] |
+| copied from the reviewed hunk | +0.0009 [-0.0025, +0.0037] | -0.0007 [-0.0030, +0.0015] | +0.0043 [-0.0003, +0.0108] |
+| other and changed | +0.0093 [+0.0012, +0.0193] | +0.0045 [+0.0005, +0.0089] | +0.0051 [+0.0021, +0.0083] |
+
+No part changes sign on any organization. On OpenStack and Wikimedia no part's interval changes
+whether it holds zero, which the 2026-10-15 entry stated without an artifact. Qt loses far more
+rows, and its identifier part's interval moves to exclude zero, [+0.0002, +0.0118]; the part
+outside names carries 56% of s on the same rows. s itself involves no lexer, so its row is only
+the parts' sum on the rows kept, a subset of each pilot rather than a check of it: on that subset
+Wikimedia's 95% interval reaches just below zero (lower bound -0.00004).
+
+### Qt's simulation at K = 10, its K under the coverage rule (15), and its planted check 5 (2026-10-18)
+
+`# research(2026-10)`. `partition-sensitivity-qt-rp1.0-logprob_per_token.json` (TIGRIS 299502,
+pinned at b41de03), `scripts/partition_sensitivity.py --metric logprob_per_token`, no placebo. The
+pool is the pilot's 22 runs averaged per change and shrunk by 0.834; each simulated run adds the
+change-by-run noise measured on the pilot (per example 0.1287, shared by a change 0.0240) and a run
+shift calibrated to the spread point. 403 calibration changes, 3,589 planned, 1,000 trials and
+4,000 null trials a point, δ = 0.0161. Detectable effect at one to three cells, in nats per token:
+
+| spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| pilot lower 90 | 0.0000 | 0.0046 to 0.0054 | 0.0043 to 0.0049 | 0.003 | 0.00725 |
+| pilot estimate | 0.0017 | 0.0051 to 0.0058 | 0.0047 to 0.0053 | 0.0035 | 0.01 |
+| sizing bound 90 | 0.0044 | 0.0073 to 0.0082 | 0.0067 to 0.0076 | 0.0135 | 0.02525 |
+| pilot upper 99 | 0.0064 | 0.0095 to 0.0105 | 0.0088 to 0.0100 | 0.02 | 0.03275 |
+
+Every detectable effect is below δ, and the simulated null reads bounded in at least 0.9495 of
+trials at every point. As on Wikimedia, the null runs hot at K = 10 at the 90% sizing bound: 0.0135
+against the nominal 0.0125 at 97.5%, and 0.02525 against 0.025 at 95%.
+
+**K under the coverage rule** (2026-10-09). `partition-sensitivity-qt-rp1.0-logprob_per_token-k<K>-null.json`
+(TIGRIS 299503 to 299508, pinned at b41de03), null only, 4,000 null trials per K, at the 90% sizing
+bound; K = 10 is the full simulation above. K = 40 (299509) reached its time limit and wrote
+nothing; the rule needs no K above the first that holds. `k-coverage-qt-likelihood.json`:
+
+| K | null false positive, 97.5% | null false positive, 95% | within nominal |
+|---|---|---|---|
+| 10 | 0.0135 | 0.02525 | no |
+| 12 | 0.012 | 0.02575 | no |
+| 15 | 0.0105 | 0.01825 | yes |
+| 20 | 0.0065 | 0.02025 | yes |
+| 25 | 0.00775 | 0.01725 | yes |
+| 30 | 0.00925 | 0.01925 | yes |
+| 35 | 0.00875 | 0.01975 | yes |
+
+The smallest K within nominal at both levels is 15, and the reproducibility K is 10, so **Qt's K is
+15**. K = 12 holds at 97.5% and fails at 95% (0.02575). Qt's detectable effects at K = 15 are
+simulated again (`RUNS=15`, TIGRIS 300725, pinned at 6bebf23) and follow in their own entry.
+
+**Check 5 passes on Qt, 10 of 10.** Each half's own marker planted in half its refinements
+(`PLANT=0.5`), ten runs on the first ten admissible partitions at N = 1,850, each chained
+`partition_run` -> `decoder_check` -> `likelihood_score` (TIGRIS 299002 to 299031, pinned at
+409e2da, an ancestor of b41de03 that differs from it in no code the chain runs, only in two of its
+job scripts' comments), read by `neutral.planted_convention`: every
+`likelihood-partition-qt-*-plant0.5-rp1.0.json` reads `pass` on both halves, with each half's own
+adapter ahead of its sibling's by 0.36 to 0.56 nats per token. The likelihood reading detects a
+convention learned at half rate on Qt as it did on OpenStack and Wikimedia.
+
 ### AOSP's census read, and android-review's REST scope (2026-10-19)
 
 `# research(2026-10)`. The census fixed in the entry above ran at c2f19bf (#154) on this machine
@@ -9971,74 +10063,6 @@ Fuchsia's review data has not been read by this study. Fixed now, before any of 
    misread (`cli.rest_project_name`); a scoped host answers only the requests the client builds for
    it (`cli.out_of_scope_request`), so the list is asked only of a scope defined by it.
 
-### s split by token class on Qt: its development contrast is not vocabulary alone either (2026-10-18)
-
-`# research(2026-10)`. The split of 2026-10-15 read on Qt's 22 development runs, at the pilot's
-settings (`partition-pilot-qt-likelihood-split-<component>.json`, 95% crossed intervals; whole s
-+0.0101 [+0.0042, +0.0172]). The parts add back to the whole within 1e-9:
-
-| Part of s | Qt |
-|---|---|
-| identifier | +0.0045 [-0.0000, +0.0104] |
-| other (not a name) | +0.0056 [+0.0019, +0.0093] |
-| end token | +0.0001 [-0.0004, +0.0006] |
-| changed by the revision | +0.0062 [+0.0023, +0.0104] |
-| copied from the reviewed hunk | +0.0038 [-0.0003, +0.0097] |
-| other and changed | +0.0044 [+0.0017, +0.0073] |
-
-The part outside names carries 55% of Qt's contrast and its interval excludes zero, as do the
-changed part and the other-and-changed part; the identifier part's lower bound sits just below
-zero (-0.00005). Unlike OpenStack and Wikimedia, Qt's copied part is not near zero: +0.0038, its
-interval just holding zero. Exploratory and development-window only, as on the other two.
-
-### Qt's simulation at K = 10, its K under the coverage rule (15), and its planted check 5 (2026-10-18)
-
-`# research(2026-10)`. `partition-sensitivity-qt-rp1.0-logprob_per_token.json` (TIGRIS 299502,
-pinned at b41de03), `scripts/partition_sensitivity.py --metric logprob_per_token`, no placebo. The
-pool is the pilot's 22 runs averaged per change and shrunk by 0.834; each simulated run adds the
-change-by-run noise measured on the pilot (per example 0.1287, shared by a change 0.0240) and a run
-shift calibrated to the spread point. 403 calibration changes, 3,589 planned, 1,000 trials and
-4,000 null trials a point, δ = 0.0161. Detectable effect at one to three cells, in nats per token:
-
-| spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
-|---|---|---|---|---|---|
-| pilot lower 90 | 0.0000 | 0.0046 to 0.0054 | 0.0043 to 0.0049 | 0.003 | 0.00725 |
-| pilot estimate | 0.0017 | 0.0051 to 0.0058 | 0.0047 to 0.0053 | 0.0035 | 0.01 |
-| sizing bound 90 | 0.0044 | 0.0073 to 0.0082 | 0.0067 to 0.0076 | 0.0135 | 0.02525 |
-| pilot upper 99 | 0.0064 | 0.0095 to 0.0105 | 0.0088 to 0.0100 | 0.02 | 0.03275 |
-
-Every detectable effect is below δ, and the simulated null reads bounded in at least 0.9495 of
-trials at every point. As on Wikimedia, the null runs hot at K = 10 at the 90% sizing bound: 0.0135
-against the nominal 0.0125 at 97.5%, and 0.02525 against 0.025 at 95%.
-
-**K under the coverage rule** (2026-10-09). `partition-sensitivity-qt-rp1.0-logprob_per_token-k<K>-null.json`
-(TIGRIS 299503 to 299508, pinned at b41de03), null only, 4,000 null trials per K, at the 90% sizing
-bound; K = 10 is the full simulation above. K = 40 (299509) reached its time limit and wrote
-nothing; the rule needs no K above the first that holds. `k-coverage-qt-likelihood.json`:
-
-| K | null false positive, 97.5% | null false positive, 95% | within nominal |
-|---|---|---|---|
-| 10 | 0.0135 | 0.02525 | no |
-| 12 | 0.012 | 0.02575 | no |
-| 15 | 0.0105 | 0.01825 | yes |
-| 20 | 0.0065 | 0.02025 | yes |
-| 25 | 0.00775 | 0.01725 | yes |
-| 30 | 0.00925 | 0.01925 | yes |
-| 35 | 0.00875 | 0.01975 | yes |
-
-The smallest K within nominal at both levels is 15, and the reproducibility K is 10, so **Qt's K is
-15**. K = 12 holds at 97.5% and fails at 95% (0.02575). Qt's detectable effects at K = 15 are
-simulated again (`RUNS=15`, TIGRIS 300725, pinned at 6bebf23) and follow in their own entry.
-
-**Check 5 passes on Qt, 10 of 10.** Each half's own marker planted in half its refinements
-(`PLANT=0.5`), ten runs on the first ten admissible partitions at N = 1,850, each chained
-`partition_run` -> `decoder_check` -> `likelihood_score` (TIGRIS 299002 to 299031, pinned at
-409e2da, an ancestor of b41de03 that differs from it in no code the chain runs, only in two of its
-job scripts' comments), read by `neutral.planted_convention`: every
-`likelihood-partition-qt-*-plant0.5-rp1.0.json` reads `pass` on both halves, with each half's own
-adapter ahead of its sibling's by 0.36 to 0.56 nats per token. The likelihood reading detects a
-convention learned at half rate on Qt as it did on OpenStack and Wikimedia.
-
 ### Qt's detectable effects at K = 15 (2026-10-19)
 
 `# research(2026-10)`. `partition-sensitivity-qt-rp1.0-logprob_per_token-k15.json` (TIGRIS 300725,
@@ -10056,8 +10080,8 @@ at one to three cells, in nats per token:
 
 Every detectable effect is below δ, and the simulated null reads bounded in at least 0.95325 of
 trials at every point. At the 90% sizing bound, the point the coverage rule reads, the null holds
-nominal at both levels (0.0105 against 0.0125 at 97.5%, 0.01825 against 0.025 at 95%), as the
-null-only K = 15 run did; at the pilot's upper 99% point it reaches 0.025 at 95%, the nominal rate.
+nominal at both levels (0.0105 against 0.0125 at 97.5%, 0.01825 against 0.025 at 95%), the same
+draw as the null-only K = 15 run (seed 43, identical rates at every point), not a second check; at the pilot's upper 99% point it reaches 0.025 at 95%, the nominal rate.
 Fifteen runs narrow the sizing-bound effect from 0.0073 to 0.0082 at K = 10 to 0.0064 to 0.0071. The
 test read at K = 15 takes Qt's cell bounds from this simulation (`cells.sensitivity_bounds`; a
 record at another K is refused).

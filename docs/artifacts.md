@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 727 artifacts under
+repository. This page is generated from those scripts: 748 artifacts under
 71 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -585,11 +585,18 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 |---|
 | `partition-pilot-openstack-k-rp1.0.json` |
 | `partition-pilot-openstack-k24.json` |
+| `partition-pilot-openstack-likelihood-lexer-sure.json` |
+| `partition-pilot-openstack-likelihood-split-changed-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-changed.json` |
+| `partition-pilot-openstack-likelihood-split-copied-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-copied.json` |
+| `partition-pilot-openstack-likelihood-split-end-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-end.json` |
+| `partition-pilot-openstack-likelihood-split-identifier-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-identifier.json` |
+| `partition-pilot-openstack-likelihood-split-other-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-other.json` |
+| `partition-pilot-openstack-likelihood-split-other_changed-lexer-sure.json` |
 | `partition-pilot-openstack-likelihood-split-other_changed.json` |
 | `partition-pilot-openstack-likelihood-total.json` |
 | `partition-pilot-openstack-likelihood.json` |
@@ -598,21 +605,35 @@ H1 over repeated partitions on real runs: the cell, the number of runs, and the 
 | `partition-pilot-openstack-sensitivities.json` |
 | `partition-pilot-openstack-stopping.json` |
 | `partition-pilot-openstack.json` |
+| `partition-pilot-qt-likelihood-lexer-sure.json` |
+| `partition-pilot-qt-likelihood-split-changed-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-changed.json` |
+| `partition-pilot-qt-likelihood-split-copied-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-copied.json` |
+| `partition-pilot-qt-likelihood-split-end-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-end.json` |
+| `partition-pilot-qt-likelihood-split-identifier-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-identifier.json` |
+| `partition-pilot-qt-likelihood-split-other-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-other.json` |
+| `partition-pilot-qt-likelihood-split-other_changed-lexer-sure.json` |
 | `partition-pilot-qt-likelihood-split-other_changed.json` |
 | `partition-pilot-qt-likelihood.json` |
 | `partition-pilot-qt-rp1.0.json` |
 | `partition-pilot-wikimedia-k-rp1.0.json` |
 | `partition-pilot-wikimedia-k16.json` |
+| `partition-pilot-wikimedia-likelihood-lexer-sure.json` |
+| `partition-pilot-wikimedia-likelihood-split-changed-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-changed.json` |
+| `partition-pilot-wikimedia-likelihood-split-copied-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-copied.json` |
+| `partition-pilot-wikimedia-likelihood-split-end-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-end.json` |
+| `partition-pilot-wikimedia-likelihood-split-identifier-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-identifier.json` |
+| `partition-pilot-wikimedia-likelihood-split-other-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-other.json` |
+| `partition-pilot-wikimedia-likelihood-split-other_changed-lexer-sure.json` |
 | `partition-pilot-wikimedia-likelihood-split-other_changed.json` |
 | `partition-pilot-wikimedia-likelihood-total.json` |
 | `partition-pilot-wikimedia-likelihood.json` |

@@ -369,9 +369,10 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   resamples. On the development pilots: the share of eligible refinements in a chain, and whether
   clustering over chains moves the interval; report it, and register chain clustering if it does.
   The raw snapshots hold each change's `submission_id` (changes submitted together) but no commit
-  parents. The proxy is degenerate on Qt, whose changes are submitted one at a time (checked
-  2026-10-18: almost no Qt change shares a submission), so the parent-link chain needs the
-  revisions' commit records, fetched within each host's terms.
+  parents. The proxy is degenerate on Qt, whose changes are submitted one at a time (Qt's granted raw
+  snapshots, read 2026-10-18: a shared `submission_id` is rare; the share is measured with the chain
+  reading itself), so the parent-link chain needs the revisions' commit records, fetched within
+  each host's terms.
 
 ## Plan F — RQ2 positioning
 
