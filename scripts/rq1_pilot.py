@@ -199,6 +199,10 @@ if args.foreign_pool:
         raise SystemExit("foreign arms are drawn for one organization's two halves under --root")
     if args.train_size is None or len(seeds) != 1:
         raise SystemExit("foreign arms need --train-size and one seed, the partition run's own")
+    # The halves' adapters are the H1 run's, read again: trained afresh here, they would replace
+    # the adapters H1 read and every later reuse of them would be refused.
+    if not args.reuse_from:
+        raise SystemExit("foreign arms are added to a stored run: pass its --reuse-from")
     try:
         pool, pool_removed = foreign_pool(
             args.foreign_pool, args.foreign_source, FOREIGN_SPANS[args.foreign_source]
@@ -282,6 +286,8 @@ if not all(check.passed for check in leakage):
             {
                 "provenance": run_provenance(),
                 "corpora": summary,
+                "foreign": foreign,
+                "foreign_pool": foreign_record,
                 "halted": "leakage",
                 "outcome_neutral": {
                     "apparatus_holds": False,
@@ -467,7 +473,9 @@ checks.append(non_degeneracy(results))
 for check in checks:
     print(f"outcome-neutral {check.name:<32} {'pass' if check.passed else 'FAIL'}", flush=True)
 holds = apparatus_holds(checks)
-print(f"APPARATUS {'holds' if holds else 'FAILS: H1 would not be read'}", flush=True)
+failed = [c for c in checks if not c.passed]
+unread = "H2" if failed and all("foreign-" in c.name for c in failed) else "H1"
+print(f"APPARATUS {'holds' if holds else f'FAILS: {unread} would not be read'}", flush=True)
 
 args.out.write_text(
     json.dumps(

@@ -306,5 +306,7 @@ def test_a_foreign_pool_outside_its_span_or_reaching_the_sealed_window_is_refuse
 def test_a_pools_digest_is_its_ids_whatever_their_order() -> None:
     from sphragis.experiment.holdout import pool_digest
 
-    rows = [{"id": "b"}, {"id": "a"}]
+    rows = [{"id": "b", "before": "x", "after": "y"}, {"id": "a", "before": "x", "after": "z"}]
     assert pool_digest(rows) == pool_digest(rows[::-1]) != pool_digest(rows[:1])
+    reworded = [rows[0], {**rows[1], "after": "w"}]
+    assert pool_digest(reworded) != pool_digest(rows)

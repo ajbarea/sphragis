@@ -9613,8 +9613,8 @@ and the inputs only H1 has registered (`--replication`, `--without`, `--planted`
 (`decomposition.FOREIGN_SPANS`: AOSP 2024-10-01 to before 2025-03-27, Chromium's V8 months, Fuchsia
 over Qt's training window) and is identified by the digest of its example ids; an H2 cell's runs
 must all record one pool, and an arm reused from a stored run only from that run's pool. A draw
-that copies one of its half's held-out pairs verbatim is refused, as an own half's is; the pool is
-deduplicated against Qt once, when it is built. A K is read only for the cell it was sized for
+that copies one of its half's held-out pairs verbatim is refused, as an own half's is; the pool's
+deduplication against Qt is a step of its build, still to come with AOSP's pool. A K is read only for the cell it was sized for
 (`partitions.pilot_sizing`'s `cell`), so H1's pilot or coverage artifact never sets H2's K. A
 freshly trained adapter records its weights' digest, a reused one is refused when its weights
 differ from the recorded ones, and a foreign arm is never trained over a saved one. The SESOI's

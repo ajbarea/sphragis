@@ -128,7 +128,8 @@ def reused_adapter(
 
     Refused unless the stored run trained `key` (`<org>-s<seed>`) at this size and rank and the
     saved adapter has that rank. The weights' digest is recorded with both, so two rescorings
-    can be checked to have read the same adapter; stored runs record none to compare with.
+    can be checked to have read the same adapter, and refused when the stored run recorded
+    another.
     """
     run = json.loads(stored.read_text())
     config = adapter / "adapter_config.json"

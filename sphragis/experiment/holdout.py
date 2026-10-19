@@ -9,6 +9,7 @@ example again, which is how a leaked 0.512 was nearly reported.
 from __future__ import annotations
 
 import hashlib
+import json
 import random
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
@@ -144,18 +145,20 @@ def foreign_pool(
     pool, removed = run_dedup(refined_examples(root, source))
     if not pool:
         raise ValueError(f"no refined examples for {source} under {root}")
-    late = sum(1 for row in pool if row["created"][:10] >= TEST_WINDOW_START)
+    late = sum(1 for row in pool if str(row.get("created", ""))[:10] >= TEST_WINDOW_START)
     if late:
         raise ValueError(f"{source}'s pool holds {late} rows from the sealed window on")
-    outside = sum(1 for row in pool if not span[0] <= row["created"][:10] < span[1])
+    outside = sum(1 for row in pool if not span[0] <= str(row.get("created", ""))[:10] < span[1])
     if outside:
         raise ValueError(f"{source}'s pool holds {outside} rows outside its span {span}")
     return pool, removed
 
 
 def pool_digest(pool: Sequence[Mapping[str, Any]]) -> str:
-    """One pool's identity: the sha256 of its sorted example ids."""
-    return hashlib.sha256("\n".join(sorted(str(row["id"]) for row in pool)).encode()).hexdigest()
+    """One pool's identity: the sha256 of its examples' ids and texts, in id order, so a pool
+    refined again under the same ids but other text is another pool."""
+    rows = sorted((str(r["id"]), str(r["before"]), str(r["after"])) for r in pool)
+    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
 
 
 SEALED_WINDOWS = ("test",)
