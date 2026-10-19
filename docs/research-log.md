@@ -9904,3 +9904,31 @@ has no answer. Until a source qualifies `FOREIGN_SOURCE` stays unset, and by the
 conditional, without a foreign source covering every matched draw H2 is exploratory and H1, the only
 confirmatory hypothesis, is read at one-sided 0.025. The AOSP pool stays held, enters no figure, and
 is reported as the source tried second.
+
+### AOSP's later months listed, decided after the six-month pool was read (2026-10-19)
+
+`# research(2026-10)`. Recorded before any example of the later months is read. The entry above was
+committed at 05:01 EDT with the pool read over six months of listings. An independent check of it
+then found what the 2026-10-18 entry had said in passing: a month lists the changes last updated in
+it, so a change created inside the grant and last updated after 2025-03 was in no listing, and "read
+across its whole grant" was not true. At 05:16 (1679f61) the scope's listings were extended through
+the month before the sealed test window (`GrantScope.listed_through`, `cli.last_open_month()`:
+2024-10 to 2025-10 by last update; a change updated on or after 2025-11-01 stays unlisted). The run
+started at 05:34.
+
+This is not a wider grant: the projects, the creation window (2024-10-01 to 2025-03-26) and the rate
+are unchanged, and a fetch still keeps only changes created inside the window; it reads the rest of
+the changes the grant already named. It is a reading decided after the six-month result was seen,
+and is reported as such. If the pool covers every matched draw only with the later months, whether
+it may be H2's confirmatory source is AJ's decision, recorded with his reason before any H2
+development contrast; if it does not cover either way, the entry above stands.
+
+Fixed now for the reading that follows: item 4's order is ranked again over the 13 listed months
+(`pool_order.py`, superseding the six-month `pool-order-aosp.json`); the comment-count probe is
+rerun over them (`comment-count-probe-aosp.json` superseded, the six-month one kept at
+`prov/aosp-pool-6m`); the pool is cut at the shortest prefix of that order whose refined examples,
+deduplicated as one corpus and against Qt like any organization's, cover the draws of all 40
+admissible splits (the 2026-10-14 entry's item 3), each prefix deduplicated as built rather than the
+whole pool once. Chromium's V8 pool is not listed again: its grant is about 2,000 changes, and at
+its yield (659 examples from 1,700) the whole of it would give about 780, below one draw's N = 1,850
+whatever its months.
