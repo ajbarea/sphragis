@@ -24,7 +24,9 @@ from pathlib import Path
 from sphragis.corpus.backports import (
     BACKPORT,
     index_changes,
+    merge_up_projects,
     only_backport,
+    registered_merge_up,
 )
 from sphragis.corpus.split import seal_open, seal_path
 from sphragis.corpus.windows import WINDOWS
@@ -95,6 +97,7 @@ def main() -> None:
         raise SystemExit(str(error)) from error
     ai = flagged_changes(trailers, args.org)
     branches, merged = index_changes(args.root, args.org)
+    merge_up = registered_merge_up(args.org, merge_up_projects(args.root, args.org))
     # The searches are bounded by merge date and windows by creation date, so an example whose
     # change merged on or after the search bound, or never, was never searched: counted, so the
     # AI-assisted reading states what it could not see.
@@ -109,7 +112,10 @@ def main() -> None:
         "backport_only": sorted(
             r["id"]
             for r in rows
-            if only_backport(branches.get((r["project"], r["change_id"]), set()))
+            if only_backport(
+                branches.get((r["project"], r["change_id"]), set()),
+                merge_up=r["project"] in merge_up,
+            )
         ),
         "layout_only": sorted(r["id"] for r in rows if row_layout_only(r)),
     }
@@ -121,7 +127,10 @@ def main() -> None:
         "changes": len({(r["project"], r["change_id"]) for r in rows}),
         "rules": {
             "ai_assisted": f"(project, Change-Id) among {args.ai_trailers}'s changes_ai",
-            "backport_only": f"(project, Change-Id) only on branches matching {BACKPORT.pattern}",
+            "backport_only": (
+                f"(project, Change-Id) only on branches matching {BACKPORT.pattern}, outside the"
+                f" projects that merge their release branches up ({sorted(merge_up)})"
+            ),
             "layout_only": "the revision changes the hunk's layout alone (experiment.layout)",
         },
         "ids": removed,

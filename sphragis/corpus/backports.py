@@ -15,14 +15,62 @@ from pathlib import Path
 
 from sphragis.corpus.storage import iter_snapshot
 
-# Release, maintenance and deployment branches, as named on the two hosts (read from the raw
+# Release, maintenance and deployment branches, as named on the hosts (read from the raw
 # snapshots): OpenStack `stable/`, `unmaintained/`, `bugfix/`, `release_N` and StarlingX `r/stx`;
 # MediaWiki `REL1_xx` (also under `fundraising/`), `wmf/` and `deploy/wmf/`, `wmf_deploy`,
-# `deployment` and a bare `stable`. Feature branches (`feature/`, `f/`) are development.
+# `deployment` and a bare `stable`; Qt's version lines (`6.8`, `6.8.1`, Creator's `15.0`), `lts-`
+# lines, Design Studio's `qds/4.7` and `qds-4.6`, and the Yocto releases its layers keep. A bare
+# version names a release line on the other hosts too (`2024.1`). Feature branches (`feature/`,
+# `f/`) are development, as are Qt's `dev`, `master`, `qds/dev` and `upstream-master`, and the
+# `N-based` lines its Chromium fork for Qt WebEngine develops on, whose examples are Qt's own
+# patches; its `[Backport]` picks of upstream fixes there are not read as backports.
+#: The Yocto Project's releases from Dunfell (3.1) through those announced
+#: (wiki.yoctoproject.org/wiki/Releases, read 2026-10-19), so a layer's later line reads too.
+YOCTO = [
+    "dunfell",
+    "gatesgarth",
+    "hardknott",
+    "honister",
+    "kirkstone",
+    "langdale",
+    "mickledore",
+    "nanbield",
+    "scarthgap",
+    "styhead",
+    "walnascar",
+    "whinlatter",
+    "wrynose",
+    "blacksail",
+    "garburn",
+]
 BACKPORT = re.compile(
-    r"^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\d|r/stx|(?:fundraising/)?REL\d"
-    r"|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
+    r"^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\d.]+$|r/stx|(?:fundraising/)?REL\d"
+    r"|(?:deploy/)?wmf/|wmf_deploy$|deployment$"
+    r"|\d+(?:\.\d+)+$|lts-\d|qds[/-]\d"
+    rf"|(?:{'|'.join(YOCTO)})$)"
 )
+#: A merge onto a branch, as Gerrit and git title it (`Merge branch 'X'`, `Merge remote-tracking
+#: branch 'origin/X'`) or as Qbs does (`Merge X into master`).
+MERGE_FROM = re.compile(
+    r"^Merge (?:remote-tracking )?branch '(?:origin/)?([^']+)'|^Merge '?([\w.+/-]+?)'? into "
+)
+#: The merge-up projects each organization's raw changes showed when the reading was registered
+#: (registered decisions, 2026-10-19), so a merge in a later window cannot change it for a test
+#: read; an organization not listed is read from its changes.
+MERGE_UP = {
+    "openstack": frozenset(),
+    "wikimedia": frozenset(),
+    "qt": frozenset(
+        {
+            "installer-framework/installer-framework",
+            "qbs/qbs",
+            "qt-creator/perfparser",
+            "qt-creator/plugin-telemetry",
+            "qt-creator/qt-creator",
+            "qt/qttranslations",
+        }
+    ),
+}
 
 
 def raw_changes(root: Path, org: str) -> Iterator[dict]:
@@ -51,11 +99,37 @@ def branches_by_change(root: Path, org: str) -> dict[tuple[str, str], set[str]]:
     return index_changes(root, org)[0]
 
 
-def only_backport(names: set[str]) -> bool:
-    """On a backport branch and on no other: the lower bound, and the registered rule."""
-    return bool(names) and all(BACKPORT.match(name) for name in names)
+def merge_up_projects(root: Path, org: str) -> frozenset[str]:
+    """The projects whose development branch merges a release branch up into it (Qt Creator's
+    model, research log 2026-10-19): there a change lands on the release line first, so one on
+    release branches alone is the original, not a pick of one."""
+    found = set()
+    for change in raw_changes(root, org):
+        merged = MERGE_FROM.match(str(change.get("subject") or ""))
+        onto = str(change.get("branch") or "")
+        if (
+            merged
+            and not BACKPORT.match(onto)
+            and BACKPORT.match(merged.group(1) or merged.group(2))
+        ):
+            found.add(change["project"])
+    return frozenset(found)
 
 
-def possibly_backport(names: set[str]) -> bool:
-    """On a backport branch, whatever else: the upper bound."""
-    return any(BACKPORT.match(name) for name in names)
+def registered_merge_up(org: str, found: frozenset[str]) -> frozenset[str]:
+    """The merge-up projects a reading uses: the registered set (`MERGE_UP`) where there is one,
+    else those `merge_up_projects` found."""
+    return MERGE_UP.get(org, found)
+
+
+def only_backport(names: set[str], *, merge_up: bool = False) -> bool:
+    """On a backport branch and on no other: the lower bound, and the registered rule. In a
+    merge-up project such a change is the original, so none is."""
+    return not merge_up and bool(names) and all(BACKPORT.match(name) for name in names)
+
+
+def possibly_backport(names: set[str], *, merge_up: bool = False) -> bool:
+    """On a backport branch, whatever else: the upper bound. In a merge-up project, on a backport
+    branch and another line too, as a pick between lines is."""
+    on_one = any(BACKPORT.match(name) for name in names)
+    return on_one and (not merge_up or len(names) > 1)

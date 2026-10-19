@@ -9805,3 +9805,75 @@ compare as strings. `scripts/pool_order.py` ranks the scoped
 projects by their merged changes created inside the grant, from listing snapshots, ties by name,
 with the commented changes beside each as feasibility; a month lists the changes last updated in
 it, so a change updated after the grant's last month is in no listing.
+
+### Qt's sensitivity listing: its AI-trailer search, its release branches read into the backport rule (2026-10-19)
+
+`# research(2026-10)`. Qt's test read needs its development and test listings of the three
+registered sensitivities (`cells.REGISTERED_SENSITIVITIES`), which needed two readings first.
+
+**AI trailers.** `scripts/ai_trailers.py` ran over Qt's granted REST API on 2026-10-18 (three
+`message:` searches at the granted 2 s, from the address Qt's administrators were given), by the
+rules of the 2026-10-01 entry, bounded by `mergedbefore:` the test window's start
+(`ai-trailers-qt.json`, apart from `ai-trailers.json` so OpenStack's and Wikimedia's searches stand
+as read). The searches nominated no `Assisted-By`, 151 `Generated-By` and 3 `Co-Authored-By`
+changes. One merged commit message carries a trailer naming a tool (a `Co-Authored-By` naming
+Claude, in `qt-creator/qt-creator`), and it holds none of Qt's 1,147 pilot, 7,493 train or 809
+development examples; none of the 151 carries a `Generated-By` trailer naming a tool or a
+community script. Qt set no disclosure rule in these windows: a QUIP on AI-assisted
+contributions was started on the development list in 2026-07 (Qt development list,
+"AI-generated contributions to Qt", 2026-07-20), after them, so the flag reads voluntary
+disclosure only, as on Wikimedia.
+
+**Release branches.** The backport rule (`sphragis.corpus.backports`, registered 2026-10-02 as
+changes "only on release, maintenance or deployment branches", for "the traceable route by which
+code older than the checkpoint enters") named the branches as OpenStack and Wikimedia name them, and
+none of Qt's: its listing would have held no backport whatever Qt's history. Qt's branch names, read
+from its raw snapshots, are now in it: version lines (`6.8`, `6.8.1`, and Qt Creator's `15.0`),
+`lts-` lines, Design Studio's `qds/4.7` and `qds-4.6`, and the Yocto releases Qt's layers keep
+(every one from Dunfell on, so a later line reads too). `dev`, `master`, `qds/dev` and
+`upstream-master` are development, as are the `N-based` lines Qt WebEngine's Chromium fork develops
+on, whose examples are Qt's own patches (its few `[Backport]` picks of upstream fixes there, one
+training example, are not read as backports); the eight changes on `N.N-tr` lines, whose role Qt
+does not document, are left out. The version-line form also matches three version-named branches in
+Wikimedia's corpus (`2024.1`, `0.2.49`, `2025.03`; 11 changes, none holding an example), and
+`release_N` now needs a version and nothing after it (OpenStack's one such branch is
+`release_1.0.0`).
+
+**Merge-up projects.** Corrected before this listing was committed, over two independent reviews: a
+first reading counted 157 Qt development backports, 154 of them Qt Creator's and Qbs's own changes.
+Those projects land a change on the release line and merge the line up into master ("The minor
+version branch is regularly merged up to Master", Qt Creator's submission policies,
+wiki.qt.io/Submit-Policies, read 2026-10-19), so a change on a release branch alone is the original,
+not a pick of one, and the registered purpose, older code entering, excludes it. Qt's modules
+develop the other way: on `dev`, with a bot that picks a merged change to the release lines its
+`Pick-to:` footer names (Qt development list, "Finishing the transition to the cherry-pick model",
+2020-05). So the rule reads a project as merge-up when its development branch carries a merge of a
+release branch, from the raw changes' merge subjects (`Merge branch 'X'`, and Qbs's `Merge X into
+master`; `backports.merge_up_projects`): Qt Creator (99 such merges) with its telemetry plugin and
+perfparser, Qbs (33), the installer framework and `qttranslations`, and none of OpenStack's or
+Wikimedia's, whose merges run the other way, `master` into `deployment` or into a feature branch.
+That set is registered as found (`backports.MERGE_UP`, registered decisions), so a merge in a later
+window cannot move a test read. In a merge-up project a change on release branches alone is never
+backport-only, and possibly one only when it sits on more than one line. Rerun over all three
+organizations (`backport-share.json`, which records each organization's registered and found
+merge-up projects), every OpenStack and Wikimedia count is unchanged; Qt's:
+
+| | backport, no original in the corpus | possibly a backport |
+|---|---|---|
+| Qt pilot | 7 of 1,147 (0.6%) | 502 (43.8%) |
+| Qt train | 4 of 7,493 (0.05%) | 3,079 (41.1%) |
+| Qt dev | 3 of 809 (0.4%) | 300 (37.1%) |
+
+The first column, the registered sensitivity's, is as small as OpenStack's and Wikimedia's (at most
+1%); the second is three to seven times theirs (6.2% to 12.1%), as Qt's bot picks a fix to release
+lines under its own Change-Id. The rule reads branches, so it is a bound, not a list of picks: Qt's
+3 development backports are one qtbase change on `6.10` (680411, created 2025-09-29) that fixes a
+class `dev` had removed two months earlier (664927), an original on the release line that the rule
+cannot tell from a pick.
+
+**Qt's development listing** (`sensitivity-ids-qt-dev.json`, from Qt's granted corpus): no
+AI-assisted example, 3 of 809 backport-only, and 36 layout-only (30 of 30 in C++, 1 of 1 in Java, 5
+of 5 in QML, 0 of 3 in `.ts` files, which in Qt are Linguist translations and hold markup; none of
+the 14 in files the rule does not read; each of the 36 read is a re-wrap, a re-indent in a brace
+language or a spacing fix). Its test listing is built after acceptance, with `ai_trailers.py
+--through-test`.

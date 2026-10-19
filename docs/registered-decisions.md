@@ -174,7 +174,13 @@ hypothesis the gate reads, on the same draws, at the same levels:
   whether the flagged share moves the estimate.
 - **Without backports of older code.** Recomputed without examples whose (project, Change-Id) sits
   only on release, maintenance or deployment branches (`scripts/backport_share.py`'s rule), the
-  traceable route by which code older than the checkpoint enters.
+  traceable route by which code older than the checkpoint enters. In a project that merges its
+  release branches up into development (Qt Creator's model) such a change is the original, so
+  none is removed there; the projects are those the raw changes showed on 2026-10-19
+  (`backports.MERGE_UP`: Qt Creator, its perfparser and telemetry plugin, Qbs, the installer
+  framework and `qttranslations`, none of OpenStack's or Wikimedia's), fixed so a later merge
+  cannot move a test read (registered 2026-10-19, before Qt's listing was committed and after a
+  first reading of it).
 - **Without layout-only revisions.** Recomputed without examples whose revision changes the
   reviewed hunk's layout alone, the edits a formatter would make (`sphragis/experiment/layout.py`):
   every character but whitespace is kept, and the language's own tokens, read in place between

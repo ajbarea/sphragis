@@ -1,0 +1,65 @@
+{
+  "searches": [
+    "\"Assisted-By\"",
+    "\"Generated-By\"",
+    "\"Co-Authored-By\""
+  ],
+  "ai_tools": "claude|anthropic|copilot|cursor|gemini|codex|chatgpt|openai|gpt-?\\d[\\w.]*|codeium|tabnine|openhands|sonnet|opus|qwen|llama|deepseek|amazonq|amazon q developer|llm",
+  "ai_tools_also_names": "devin|junie|cline|kiro|aider|windsurf",
+  "since": "2024-10-01",
+  "merged_before": "2025-11-01",
+  "orgs": {
+    "qt": {
+      "nominated_by_search": {
+        "\"Assisted-By\"": 0,
+        "\"Generated-By\"": 151,
+        "\"Co-Authored-By\"": 3
+      },
+      "changes_ai": [
+        "qt-creator/qt-creator Id501694ca42427d8d9a017bab153ac7a435b7175"
+      ],
+      "changes_tool_generated": 0,
+      "ai_trailer_values": {
+        "Co-Authored-By: claude": 1
+      },
+      "windows": {
+        "pilot": {
+          "examples": 1147,
+          "changes": 368,
+          "examples_ai": 0,
+          "changes_ai": 0,
+          "examples_tool_generated": 0,
+          "changes_tool_generated": 0
+        },
+        "train": {
+          "examples": 7493,
+          "changes": 2951,
+          "examples_ai": 0,
+          "changes_ai": 0,
+          "examples_tool_generated": 0,
+          "changes_tool_generated": 0
+        },
+        "dev": {
+          "examples": 809,
+          "changes": 409,
+          "examples_ai": 0,
+          "changes_ai": 0,
+          "examples_tool_generated": 0,
+          "changes_tool_generated": 0
+        }
+      }
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-19T02:10:51.802491+00:00",
+    "git": {
+      "commit": "7f504c4eb3b53e6b6b2759acc300af4ef9c9bb30",
+      "branch": "measure/qt-ai-trailers"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

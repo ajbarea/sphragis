@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 697 artifacts under
+repository. This page is generated from those scripts: 699 artifacts under
 69 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -87,6 +87,7 @@ How many of an organization's examples come from a change whose commit names an 
 
 | artifact |
 |---|
+| `ai-trailers-qt.json` |
 | `ai-trailers.json` |
 
 ## `scripts/aosp_census.py`
@@ -1112,6 +1113,7 @@ The examples each registered sensitivity of H1 removes, by id, for one organizat
 | artifact |
 |---|
 | `sensitivity-ids-openstack-dev.json` |
+| `sensitivity-ids-qt-dev.json` |
 | `sensitivity-ids-wikimedia-dev.json` |
 
 ## `scripts/separability.py`
