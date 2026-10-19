@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify corpus-reproduce clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs backup-datasets redact redact-check
+.PHONY: data-audit help sync lint fmt test test-cov gpu-local corpus-verify corpus-reproduce clean deploy submit submit-pinned cluster-env verify docs docs-serve docs-index docs-harvest pull-logs backup-datasets backup-github redact redact-check
 
 # --no-sync throughout: plain `uv run` re-syncs the venv to the lockfile on every
 # invocation, which silently removes the experiment extra (see `make gpu-local`).
@@ -142,23 +142,25 @@ pull-logs:                 ## Copy the cluster's job logs into datasets/logs, th
 	echo "datasets/logs holds $$after job log(s), $$((after - before)) new"
 
 BACKUP_ROOTS = gerrit gerrit-control $(if $(wildcard datasets/gerrit-granted),gerrit-granted)
+# The GitHub family's corpus, collected outside the checkout by the collector service.
+GITHUB_ROOT ?= $(HOME)/ajsoftworks/sphragis-data-local/github/gerrit
+BACKUP_DIR = ajsoftworks/sphragis-data/datasets-backup
 
 backup-datasets:           ## Copy datasets/gerrit* to the cluster's data root, then verify every file
 	@# The raw REST snapshots are untracked and those held from before a grant cannot be refetched, so
 	@# without this the only copy is this machine. The cluster is a second machine, not a
 	@# backup service: RC keeps no backups either, but the two copies do not fail together.
-	@# The checksum comparison is the check, not rsync's exit code.
 	@# gerrit-granted holds what was fetched under a written grant (Qt's, 2026-10-15), apart from
 	@# the snapshots held from before it.
-	rsync -a --checksum $(BACKUP_ROOTS:%=datasets/%) $(TIGRIS_HOST):ajsoftworks/sphragis-data/datasets-backup/
-	@l=$$(mktemp) && r=$$(mktemp) && trap 'rm -f "$$l" "$$r"' EXIT; \
-	(cd datasets && find $(BACKUP_ROOTS) -type f -print0 | xargs -0 sha256sum) | LC_ALL=C sort -k2 >"$$l"; \
-	ssh $(SSH_OPTS) $(TIGRIS_HOST) 'cd ajsoftworks/sphragis-data/datasets-backup && find $(BACKUP_ROOTS) -type f -print0 | xargs -0 sha256sum' | LC_ALL=C sort -k2 >"$$r"; \
-	n=$$(wc -l <"$$l"); missing=$$(LC_ALL=C comm -23 "$$l" "$$r" | wc -l); \
-	if [ "$$n" -eq 0 ] || [ "$$missing" -ne 0 ]; then \
-	  echo "backup-datasets: $$missing of $$n file(s) differ or are missing on $(TIGRIS_HOST)" >&2; exit 1; \
-	fi; \
-	echo "backup-datasets: all $$n files identical on $(TIGRIS_HOST)"
+	rsync -a --checksum --exclude .locks $(BACKUP_ROOTS:%=datasets/%) $(TIGRIS_HOST):$(BACKUP_DIR)/
+	@SSH_OPTS="$(SSH_OPTS)" scripts/verify_backup.sh $(TIGRIS_HOST) datasets $(BACKUP_DIR) $(BACKUP_ROOTS)
+
+backup-github:             ## Copy the GitHub family's corpus to the cluster, then verify every file
+	@# Weeks of collection that live on this machine alone otherwise; a collector's lock files are
+	@# its own and stay behind.
+	@test -d "$(GITHUB_ROOT)" || { echo "no GitHub corpus at $(GITHUB_ROOT)"; exit 1; }
+	rsync -a --checksum --exclude .locks "$(GITHUB_ROOT)/" $(TIGRIS_HOST):$(BACKUP_DIR)/gerrit-github/
+	@SSH_OPTS="$(SSH_OPTS)" scripts/verify_backup.sh $(TIGRIS_HOST) "$(GITHUB_ROOT)" $(BACKUP_DIR)/gerrit-github $$(ls "$(GITHUB_ROOT)")
 
 cluster-env:               ## Build uv + the venv for CLUSTER's machine type (aarch64 TIGRIS, x86_64 SPORC)
 	@# The login node is aarch64 and builds its own venv in place. An x86_64 venv can only be

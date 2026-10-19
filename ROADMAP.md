@@ -113,19 +113,14 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   values and addresses only. Every refined and built example on disk holds none (checked
   2026-10-01, all four Gerrit corpora); the raw snapshots, untracked and never released, do.
 - [ ] **GitHub organizations as a registered replication** (decided 2026-10-04: not H1 candidates;
-  read as their own family, binding no verdict; research log). Collect Apache, LLVM, .NET, Grafana
-  in that order (pilot, train, dev windows); members are those frozen and split-checked by
-  2026-11-20, named in Stage 1. Then per member: admissible list, development pilot for K,
+  read as their own family, binding no verdict; research log). Collected, frozen and
+  split-checked 2026-10-18 (research log): Apache and .NET are members, LLVM and Grafana cannot
+  qualify, so Stage 1 names two. Then per member: development pilot for K,
   sensitivity simulation, all before its test window is fetched. The family is read by
   `replication_gate()` beside `design()` (2026-10-05), once the freeze commit sets
-  `REPLICATION_MEMBERS`. Sized 2026-10-01
-  (`github-sizing-report.json`): Apache and LLVM are of H1-cell size, .NET and Grafana of RQ2 size; OpenJDK and HashiCorp borderline. Needs: a GitHub
-  collection route (threads to hunk, comment, next revision; suggestion blocks and bot or AI authors
-  removed; pseudonymised at ingestion); GitHub's own thread-to-example conversion from a built pilot
-  month per organization (`scripts/github_conversion.py`; OpenJDK 2024-11 first, the rest borrow
-  its span until theirs is built); LLVM's projects defined as its top-level directories before
-  its split is read; open access for every resulting publication (GitHub's terms: EMSE's open-access
-  option for Stage 2, plus arXiv); Stage 1's replication-family paragraph.
+  `REPLICATION_MEMBERS`. Still needed: open access for every resulting publication (GitHub's
+  terms: EMSE's open-access option for Stage 2, plus arXiv) and Stage 1's replication-family
+  paragraph naming the two members.
 - [x] Chromium's infra-dev list granted the REST API on 2026-10-15 for a pool of about 2,000
   changes; the scope is in code (`cli.GrantScope`), and the git route stays refused (research log,
   2026-10-16).

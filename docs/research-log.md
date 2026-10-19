@@ -9582,6 +9582,7 @@ N = 1,850 at `rq1_pilot.py`'s split seed) and records, per half, the C++ and oth
 its draw; the pool needs the largest of each over all 80 draws (`foreign-need-qt.json`). Each
 rebuilt partition the 22 development runs trained on is checked against them: every half's
 training and held-out counts must equal the run's recorded ones (`--runs`).
+
 ### H2's matched foreign arms join the partition runs (2026-10-18)
 
 `# research(2026-10)`. Item 3 of the H2 plan (2026-10-14) in the runs, before any foreign pool
@@ -9622,3 +9623,45 @@ positive control reads only the OpenStack and Wikimedia runs that fixed it
 (`likelihood_sesoi.CONTROL_ORGS`): Qt's runs, committed since, and any H2 run would otherwise move
 a rate already used, and a test now checks the committed SESOI's 46 files are what it reads. A run
 past K is held to the cell's floor of ten changes a half.
+
+### The GitHub family frozen and split-checked: Apache and .NET qualify, LLVM and Grafana cannot (2026-10-18)
+
+`# research(2026-10)`. Apache's, LLVM's, .NET's and Grafana's pilot, train and development windows
+(2024-10 to 2025-10, all thirteen months collected) were deduplicated, split, frozen and verified on
+2026-10-18 from `main`'s code with `github.py` at the bytes they were fetched under (#153), their
+manifests copied to `datasets/gerrit-github/<org>/manifest.json` and the corpus backed up to the
+cluster (`make backup-github`, every file compared by sha256: 436 identical). Each was then checked
+as Qt was: the registered split against OpenStack's corpus v3 (`split-criteria-<org>.json`), its own
+training size, recorded beside the registered N it trains at (`training-size-<org>.json`), and the
+admissible list at N = 1,850 (`admissible-partitions-<org>.json`, or `-refused.json` for a search
+that ended short).
+
+| organization | projects per half | largest project's share of its half | suffix TV (ceiling) | split qualifies | own N | admissible at N = 1,850 |
+|---|---|---|---|---|---|---|
+| Apache | 243, 243 | 0.168, 0.099 | 0.140 (0.319) | yes | 13,800 | 40 of the first 41 seeds |
+| LLVM | 16, 20 | 0.796, 0.310 | 0.164 (0.319) | no | 3,250 | 0 of the first 48 seeds |
+| .NET | 51, 51 | 0.476, 0.302 | 0.277 (0.319) | yes | 2,450 | 40 of the first 45 seeds |
+| Grafana | 53, 61 | 0.735, 0.222 | 0.336 (0.319) | no | 1,050 | 0 of the first 2,016 seeds |
+
+By the registered rule (registered-decisions: "each a member only if its pilot, train and
+development windows are frozen and its split meets the criteria at the registered N by
+2026-11-20"), Apache and .NET are members and LLVM and Grafana are not. LLVM fails on the
+largest-project criterion alone: its projects are its repositories and, in `llvm/llvm-project`, the
+top-level directories (`github.py`, named 2026-10-01 and implemented in #82 on 2026-10-04, before any
+split was read), and the `llvm`
+directory holds 0.40 of LLVM's training examples. No admissible partition can exist: each project
+goes to whichever half has fewer training examples so far, so the halves differ by at most the
+largest project, the half holding `llvm` holds at most half the training examples plus half of
+`llvm`'s, and `llvm` is then 0.57 or more of its half, above the 0.5 the criterion allows. The
+search over the first 48 seeds bears it out, every seed failing that criterion
+(`admissible-partitions-llvm-refused.json`; the full search to seed 2,000 was stopped, since the
+bound holds for every seed). Grafana fails on size first: its two halves, each deduplicated as the
+runner trains it, hold 1,675 and 1,685 training examples (the frozen window, deduplicated across the
+organization, holds 3,359), fewer than the 3,700 two halves of N = 1,850 need, so no partition can
+qualify; its registered split also fails the largest-project and language-mix
+criteria (`grafana/grafana` holds 0.735 of its half), and the full search to seed 2,016 found none
+(`admissible-partitions-grafana-refused.json`). `admissible_partitions.py` now writes a search that
+ends short under a `-refused` name with every seed it checked, rather than exiting with nothing
+written, so the refusal is a record and no reader can take a short list for an organization's own.
+The definitions are not changed after the splits were read; LLVM and Grafana are reported as
+checked and not qualifying, and the family is read over its two members.

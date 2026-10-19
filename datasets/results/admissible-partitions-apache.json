@@ -1,0 +1,918 @@
+{
+  "org": "apache",
+  "root": "/home/ajbar/ajsoftworks/sphragis-data-local/github/gerrit",
+  "size_floor": 1850,
+  "size_floor_source": "datasets/results/training-size-openstack.json: training_size",
+  "language_mix_ceiling": 0.3187417925675669,
+  "reference": "datasets/results/split-criteria-openstack.json",
+  "start": 1,
+  "admissible": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41
+  ],
+  "checked": [
+    {
+      "seed": 1,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14379,
+        14609
+      ],
+      "projects": [
+        281,
+        204
+      ],
+      "suffix_total_variation": 0.23258506237927093
+    },
+    {
+      "seed": 2,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14418,
+        14570
+      ],
+      "projects": [
+        269,
+        216
+      ],
+      "suffix_total_variation": 0.1660642872532266
+    },
+    {
+      "seed": 3,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14743,
+        14245
+      ],
+      "projects": [
+        236,
+        249
+      ],
+      "suffix_total_variation": 0.18388660548329544
+    },
+    {
+      "seed": 4,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14306,
+        14682
+      ],
+      "projects": [
+        300,
+        185
+      ],
+      "suffix_total_variation": 0.24291203534979783
+    },
+    {
+      "seed": 5,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14308,
+        14680
+      ],
+      "projects": [
+        203,
+        282
+      ],
+      "suffix_total_variation": 0.1929115130804664
+    },
+    {
+      "seed": 6,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14522,
+        14466
+      ],
+      "projects": [
+        273,
+        212
+      ],
+      "suffix_total_variation": 0.2712851964114269
+    },
+    {
+      "seed": 7,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14241,
+        14747
+      ],
+      "projects": [
+        249,
+        236
+      ],
+      "suffix_total_variation": 0.2057544209122842
+    },
+    {
+      "seed": 8,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14347,
+        14641
+      ],
+      "projects": [
+        212,
+        273
+      ],
+      "suffix_total_variation": 0.20568133039157516
+    },
+    {
+      "seed": 9,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14010,
+        14978
+      ],
+      "projects": [
+        247,
+        238
+      ],
+      "suffix_total_variation": 0.19908442446494687
+    },
+    {
+      "seed": 10,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        13663,
+        15325
+      ],
+      "projects": [
+        251,
+        234
+      ],
+      "suffix_total_variation": 0.23747499199741529
+    },
+    {
+      "seed": 11,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14407,
+        14581
+      ],
+      "projects": [
+        272,
+        213
+      ],
+      "suffix_total_variation": 0.1599992349161095
+    },
+    {
+      "seed": 12,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        13959,
+        15029
+      ],
+      "projects": [
+        263,
+        222
+      ],
+      "suffix_total_variation": 0.18033428229743723
+    },
+    {
+      "seed": 13,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14550,
+        14438
+      ],
+      "projects": [
+        308,
+        177
+      ],
+      "suffix_total_variation": 0.17870324063694076
+    },
+    {
+      "seed": 14,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14707,
+        14281
+      ],
+      "projects": [
+        201,
+        284
+      ],
+      "suffix_total_variation": 0.16239163302757115
+    },
+    {
+      "seed": 15,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14842,
+        14146
+      ],
+      "projects": [
+        199,
+        286
+      ],
+      "suffix_total_variation": 0.19326021834057222
+    },
+    {
+      "seed": 16,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14489,
+        14499
+      ],
+      "projects": [
+        288,
+        197
+      ],
+      "suffix_total_variation": 0.22516861289792867
+    },
+    {
+      "seed": 17,
+      "qualifies": false,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": false
+      },
+      "train_examples": [
+        13951,
+        15037
+      ],
+      "projects": [
+        263,
+        222
+      ],
+      "suffix_total_variation": 0.34543833523069917
+    },
+    {
+      "seed": 18,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14640,
+        14348
+      ],
+      "projects": [
+        305,
+        180
+      ],
+      "suffix_total_variation": 0.24002425653658246
+    },
+    {
+      "seed": 19,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14155,
+        14833
+      ],
+      "projects": [
+        175,
+        310
+      ],
+      "suffix_total_variation": 0.20734088785916385
+    },
+    {
+      "seed": 20,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14522,
+        14466
+      ],
+      "projects": [
+        222,
+        263
+      ],
+      "suffix_total_variation": 0.18519147605259095
+    },
+    {
+      "seed": 21,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14602,
+        14386
+      ],
+      "projects": [
+        266,
+        219
+      ],
+      "suffix_total_variation": 0.2737473730195428
+    },
+    {
+      "seed": 22,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14534,
+        14454
+      ],
+      "projects": [
+        257,
+        228
+      ],
+      "suffix_total_variation": 0.2508771033901526
+    },
+    {
+      "seed": 23,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14511,
+        14477
+      ],
+      "projects": [
+        237,
+        248
+      ],
+      "suffix_total_variation": 0.17606425552779298
+    },
+    {
+      "seed": 24,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14517,
+        14471
+      ],
+      "projects": [
+        268,
+        217
+      ],
+      "suffix_total_variation": 0.2199739020503709
+    },
+    {
+      "seed": 25,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14445,
+        14543
+      ],
+      "projects": [
+        225,
+        260
+      ],
+      "suffix_total_variation": 0.20054731285056307
+    },
+    {
+      "seed": 26,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14532,
+        14456
+      ],
+      "projects": [
+        197,
+        288
+      ],
+      "suffix_total_variation": 0.24330237899498094
+    },
+    {
+      "seed": 27,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14533,
+        14455
+      ],
+      "projects": [
+        190,
+        295
+      ],
+      "suffix_total_variation": 0.19524425892402988
+    },
+    {
+      "seed": 28,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14956,
+        14032
+      ],
+      "projects": [
+        214,
+        271
+      ],
+      "suffix_total_variation": 0.17496759022208208
+    },
+    {
+      "seed": 29,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14259,
+        14729
+      ],
+      "projects": [
+        209,
+        276
+      ],
+      "suffix_total_variation": 0.2798086233463788
+    },
+    {
+      "seed": 30,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14497,
+        14491
+      ],
+      "projects": [
+        274,
+        211
+      ],
+      "suffix_total_variation": 0.21316371810477924
+    },
+    {
+      "seed": 31,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14425,
+        14563
+      ],
+      "projects": [
+        340,
+        145
+      ],
+      "suffix_total_variation": 0.2658109396441755
+    },
+    {
+      "seed": 32,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        13940,
+        15048
+      ],
+      "projects": [
+        220,
+        265
+      ],
+      "suffix_total_variation": 0.28371214981499665
+    },
+    {
+      "seed": 33,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14490,
+        14498
+      ],
+      "projects": [
+        273,
+        212
+      ],
+      "suffix_total_variation": 0.16159213221956506
+    },
+    {
+      "seed": 34,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14507,
+        14481
+      ],
+      "projects": [
+        225,
+        260
+      ],
+      "suffix_total_variation": 0.21032969484305403
+    },
+    {
+      "seed": 35,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14379,
+        14609
+      ],
+      "projects": [
+        217,
+        268
+      ],
+      "suffix_total_variation": 0.21927150160815467
+    },
+    {
+      "seed": 36,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        15016,
+        13972
+      ],
+      "projects": [
+        222,
+        263
+      ],
+      "suffix_total_variation": 0.2090655166791456
+    },
+    {
+      "seed": 37,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14579,
+        14409
+      ],
+      "projects": [
+        286,
+        199
+      ],
+      "suffix_total_variation": 0.18560692953129537
+    },
+    {
+      "seed": 38,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14066,
+        14922
+      ],
+      "projects": [
+        205,
+        280
+      ],
+      "suffix_total_variation": 0.20386148261971304
+    },
+    {
+      "seed": 39,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14562,
+        14426
+      ],
+      "projects": [
+        257,
+        228
+      ],
+      "suffix_total_variation": 0.21298057443437374
+    },
+    {
+      "seed": 40,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        14510,
+        14478
+      ],
+      "projects": [
+        243,
+        242
+      ],
+      "suffix_total_variation": 0.186144247566283
+    },
+    {
+      "seed": 41,
+      "qualifies": true,
+      "checks": {
+        "projects": true,
+        "largest_share": true,
+        "size": true,
+        "language_mix": true
+      },
+      "train_examples": [
+        15053,
+        13935
+      ],
+      "projects": [
+        258,
+        227
+      ],
+      "suffix_total_variation": 0.2551214437608096
+    }
+  ],
+  "dedup_org": {
+    "exact": 1015,
+    "near_duplicate": 573,
+    "boilerplate": 2,
+    "shared_change_id": 0
+  },
+  "excluded_projects": [
+    "apache/age",
+    "apache/attic",
+    "apache/carbondata",
+    "apache/casbin-jcasbin",
+    "apache/casbin-jcasbin-string-adapter",
+    "apache/casbin-node-casbin-expression-eval",
+    "apache/casbin-rust-redis-watcher",
+    "apache/cassandra-dtest",
+    "apache/cassandra-nodejs-driver",
+    "apache/cassandra-website",
+    "apache/cloudstack-www",
+    "apache/cordova-plugin-camera",
+    "apache/cordova-plugin-file",
+    "apache/couchdb-glazier",
+    "apache/couchdb-ibrowse",
+    "apache/couchdb-rebar",
+    "apache/couchdb-www",
+    "apache/datasketches-website",
+    "apache/doris-thirdparty",
+    "apache/dubbo-getty",
+    "apache/dubbo-hessian-lite",
+    "apache/echarts-handbook",
+    "apache/flink-connector-http",
+    "apache/flink-connector-mongodb",
+    "apache/geaflow-website",
+    "apache/guacamole-manual",
+    "apache/hbase-operator-tools",
+    "apache/incubator-kie-kogito-serverless-operator",
+    "apache/infrastructure-selfserve-portal",
+    "apache/infrastructure-website",
+    "apache/logging-log4j-transform",
+    "apache/maven-deploy-plugin",
+    "apache/maven-doxia",
+    "apache/maven-doxia-converter",
+    "apache/maven-site-plugin",
+    "apache/mynewt-newt",
+    "apache/netbeans-antora-tutorials",
+    "apache/netbeans-antora-wiki",
+    "apache/netbeans-native-installers",
+    "apache/nutch",
+    "apache/nuttx-website",
+    "apache/pekko-site",
+    "apache/phoenix-connectors",
+    "apache/phoenix-queryserver",
+    "apache/pulsar-client-node",
+    "apache/reqsign",
+    "apache/rocketmq-apis",
+    "apache/sdap-nexus",
+    "apache/seatunnel-website",
+    "apache/sedona-db",
+    "apache/sedona-spatialbench",
+    "apache/shenyu-website",
+    "apache/shiro",
+    "apache/skywalking-cli",
+    "apache/skywalking-query-protocol",
+    "apache/sling-org-apache-sling-auth-core",
+    "apache/sling-org-apache-sling-connection-timeout-agent",
+    "apache/sling-org-apache-sling-i18n",
+    "apache/solr-site",
+    "apache/spark",
+    "apache/spark-docker",
+    "apache/steve",
+    "apache/teaclave-website",
+    "apache/thrift",
+    "apache/tvm-ffi",
+    "apache/velocity-engine"
+  ],
+  "provenance": {
+    "generated_at": "2026-10-18T23:12:50.938129+00:00",
+    "git": {
+      "commit": "10ed70916ac7d632b0fd5e2aea6ed21a26564af5",
+      "branch": "corpus/github-family-split"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

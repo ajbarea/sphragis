@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 683 artifacts under
+repository. This page is generated from those scripts: 695 artifacts under
 68 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -51,6 +51,10 @@ The ordered list of admissible partitions H1's runs are drawn from, fixed before
 
 | artifact |
 |---|
+| `admissible-partitions-apache.json` |
+| `admissible-partitions-dotnet.json` |
+| `admissible-partitions-grafana-refused.json` |
+| `admissible-partitions-llvm-refused.json` |
 | `admissible-partitions-openstack.json` |
 | `admissible-partitions-qt.json` |
 | `admissible-partitions-wikimedia.json` |
@@ -1134,6 +1138,10 @@ Whether an organization's registered split qualifies for a confirmatory H1 cell.
 
 | artifact |
 |---|
+| `split-criteria-apache.json` |
+| `split-criteria-dotnet.json` |
+| `split-criteria-grafana.json` |
+| `split-criteria-llvm.json` |
 | `split-criteria-openstack-v2.json` |
 | `split-criteria-openstack.json` |
 | `split-criteria-qt.json` |
@@ -1155,6 +1163,10 @@ The fixed training size N every adapter trains at, derived from the organization
 
 | artifact |
 |---|
+| `training-size-apache.json` |
+| `training-size-dotnet.json` |
+| `training-size-grafana.json` |
+| `training-size-llvm.json` |
 | `training-size-openstack.json` |
 | `training-size-qt.json` |
 | `training-size-wikimedia.json` |
