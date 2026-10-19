@@ -2,7 +2,8 @@
 
 Each project's count is its merged changes created inside the host's grant
 (`cli.GrantScope`: from `created_from`, before `created_before`), read from the month snapshots a
-`fetch` of every scoped project wrote under `--root` (research log, 2026-10-18). Projects are
+`fetch` wrote under `--root`, each its month of every granted project, or of every project listed
+whole (`GrantScope.every_project`) (research log, 2026-10-18 and 2026-10-19). Projects are
 ranked by that count, most first, ties by name. A month lists the changes last updated in it, so
 a change updated after the grant's last month is in no listing. Beside it, as feasibility only,
 the changes whose snapshot records an inline comment (`cli.uncommented` reads the rest as
@@ -20,7 +21,16 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from sphragis.corpus.cli import GrantScope, created_in_grant, grant_months, grant_scope, uncommented
+from sphragis.corpus.cli import (
+    GrantScope,
+    covers_change,
+    created_in_grant,
+    grant_months,
+    grant_scope,
+    month_listing,
+    next_month,
+    uncommented,
+)
 from sphragis.corpus.storage import iter_snapshot, read_snapshot_record
 from sphragis.provenance import provenance_header
 
@@ -43,8 +53,16 @@ def main() -> None:
     merged, commented, seen, repeated = Counter(), Counter(), set(), 0
     for snapshot in snapshots:
         record = read_snapshot_record(snapshot) or {}
-        listed = {q.rsplit("project:", 1)[1].rstrip(")") for q in _queries(record)}
-        if listed != set(scope.projects):
+        month = snapshot.name.removesuffix(".ndjson.gz")
+        asked = [month_listing(q) for q in _queries(record)]
+        whole_month = (f"{month}-01", f"{next_month(month)}-01")
+        if not asked or any(a is None or a[:2] != whole_month for a in asked):
+            raise SystemExit(f"{snapshot.name} is not its month's listing: {_queries(record)}")
+        listed = [a[2] for a in asked if a is not None]
+        if scope.every_project:
+            if listed != [None]:
+                raise SystemExit(f"{snapshot.name} is not its month listed whole: {listed}")
+        elif sorted(listed, key=str) != sorted(scope.projects):
             raise SystemExit(
                 f"{snapshot.name} lists {len(listed)} projects, the grant names "
                 f"{len(scope.projects)}"
@@ -55,13 +73,17 @@ def main() -> None:
                 repeated += 1
                 continue
             seen.add(change["_number"])
-            if not created_in_grant(scope, change.get("created")):
+            if not created_in_grant(scope, change.get("created")) or not covers_change(
+                scope, change
+            ):
                 raise SystemExit(
                     f"{snapshot.name}: change {change['_number']} is outside the grant"
                 )
             merged[change["project"]] += 1
             commented[change["project"]] += not uncommented(change)
-    ranked = sorted(scope.projects, key=lambda p: (-merged[p], p))
+    # Every project the grant names, or under a scope of every project, each the listings return.
+    projects = merged if scope.every_project else scope.projects
+    ranked = sorted(projects, key=lambda p: (-merged[p], p))
     report = {
         "org": args.org,
         "root": str(args.root),

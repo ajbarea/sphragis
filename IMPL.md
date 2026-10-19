@@ -20,8 +20,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   deduplicated against Qt, covers 34 of the 80 matched draws and none of the 40 partitions
   (1,076 C++ examples of the 1,308 the largest needs), so it does not qualify, as Chromium's V8
   pool did not. Fuchsia is admitted on AJ's reading of Chrome Infra's answer (research log,
-  2026-10-19), its scope and stop rule fixed before any of its data is read: next its project
-  list, the window's listings, `pool_order.py`, the probe, the build in that order and
+  2026-10-19), its scope and stop rule fixed before any of its data is read. Its host refuses a
+  project list (405), so each month is listed whole (`GrantScope.every_project`): next the
+  window's listings, `pool_order.py`, the probe, the build in that order and
   `foreign_pool_coverage.py --order --against qt=...`. Until a pool covers, `FOREIGN_SOURCE`
   stays unset and H2's development arms wait.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run

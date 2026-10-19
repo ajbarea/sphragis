@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
@@ -1353,41 +1354,91 @@ def test_fuchsias_rest_host_is_refused_on_a_machine_without_its_grant(
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
     transport = cli.http_transport()
     with pytest.raises(SystemExit, match="written grant"):
-        transport("https://fuchsia-review.googlesource.com/projects/?type=CODE")
+        transport("https://fuchsia-review.googlesource.com/changes/1/comments")
     assert opened == []
 
 
 def test_a_rest_fetch_of_fuchsia_past_its_grant_opens_no_connection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Before its projects artifact, no listing; after it, only listed projects and its months."""
+    """A month is listed whole, never by project, and only a month the grant covers."""
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    opened = _scripted_connections(monkeypatch, [_FakeResponse(200)] * 5)
+    fetch = ["fetch", "--org", "fuchsia", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    with pytest.raises(SystemExit, match="list the month whole"):
+        main([*fetch, "--month", "2025-01", "--project", "fuchsia"])
+    # Before the grant by the grant's months; the sealed test window by the seal, earlier still.
+    for month, why in (("2024-10", "grant covers"), ("2025-11", "sealed test window")):
+        with pytest.raises(SystemExit, match=why):
+            main([*fetch, "--month", month])
+    assert opened == []
+
+
+def test_a_whole_month_of_fuchsia_drops_the_hosts_own_projects(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One listing for the month, through the real transport; All-Projects' and access-rule changes
+    are dropped."""
+    import json as json_module
+
     from sphragis.corpus import cli
 
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
-    opened = _scripted_connections(monkeypatch, [_FakeResponse(200)] * 5)
-    fetch = ["fetch", "--org", "fuchsia", "--root", str(tmp_path)]
-    empty = cli.REST_PERMITTED["fuchsia-review.googlesource.com"].scope
-    assert empty is not None
-    monkeypatch.setitem(
-        cli.REST_PERMITTED,
-        "fuchsia-review.googlesource.com",
-        cli.REST_PERMITTED["fuchsia-review.googlesource.com"]._replace(
-            scope=empty._replace(projects=())
-        ),
+    monkeypatch.setattr(cli, "unheld_grant", lambda host: None)
+    created = "2025-01-02 00:00:00.000000000"
+    rows = [
+        {
+            "_number": 1,
+            "id": "a",
+            "project": "fuchsia",
+            "branch": "main",
+            "created": created,
+            "updated": created,
+        },
+        {
+            "_number": 2,
+            "id": "b",
+            "project": "All-Projects",
+            "branch": "master",
+            "created": created,
+            "updated": created,
+        },
+        {
+            "_number": 3,
+            "id": "c",
+            "project": "fuchsia",
+            "branch": "refs/meta/config",
+            "created": created,
+            "updated": created,
+        },
+    ]
+    opened = _scripted_connections(
+        monkeypatch, [_FakeResponse(200, ")]}'\n" + json_module.dumps(rows))] * 4
     )
-    with pytest.raises(SystemExit, match="names no project yet"):
-        main([*fetch, "--month", "2025-01", "--project", "fuchsia"])
-    monkeypatch.setitem(
-        cli.REST_PERMITTED,
-        "fuchsia-review.googlesource.com",
-        cli.REST_PERMITTED["fuchsia-review.googlesource.com"]._replace(
-            scope=empty._replace(projects=("fuchsia",))
-        ),
+    assert (
+        main(
+            [
+                "fetch",
+                "--org",
+                "fuchsia",
+                "--root",
+                str(tmp_path),
+                "--month",
+                "2025-01",
+                "--cutoff",
+                "2024-11-01",
+            ]
+        )
+        == 0
     )
-    for month, project in (("2024-10", "fuchsia"), ("2025-11", "fuchsia"), ("2025-01", "other")):
-        with pytest.raises(SystemExit):
-            main([*fetch, "--month", month, "--project", project, "--cutoff", "2024-11-01"])
-    assert opened == []
+    asked = [path for c in opened for path in c.paths]
+    assert asked and all("project" not in urllib.parse.unquote(p) for p in asked), asked
+    from sphragis.corpus.storage import iter_snapshot
+
+    kept = list(iter_snapshot(tmp_path / "fuchsia" / "raw" / "2025-01.ndjson.gz"))
+    assert [r["_number"] for r in kept] == [1]
+    record = json_module.loads((tmp_path / "fuchsia" / "raw" / "2025-01.record.json").read_text())
+    assert record["not_code_changes"] == 2
 
 
 def test_every_permitted_rest_host_says_why() -> None:
