@@ -1,0 +1,2226 @@
+{
+  "key_id": "659eedab9a778439",
+  "files": 352,
+  "texts": 609711,
+  "by_file": {
+    "calibration-marker-0.05.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2892
+    },
+    "calibration-marker-0.1.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2895
+    },
+    "calibration-marker-0.25-fp32.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2811
+    },
+    "calibration-marker-0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2811
+    },
+    "calibration-marker-0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2658
+    },
+    "calibration-marker-1.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2658
+    },
+    "calibration-sym-0-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2658
+    },
+    "calibration-sym-0-s3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2658
+    },
+    "calibration-sym-0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2889
+    },
+    "calibration-sym-0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2658
+    },
+    "calibration-sym-1.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2682
+    },
+    "determinism-sym-0-gh-a-001-rp1.0.json": {
+      "fields": [
+        "passes"
+      ],
+      "texts": 600
+    },
+    "determinism-sym-0-gh-a-003.json": {
+      "fields": [
+        "passes"
+      ],
+      "texts": 600
+    },
+    "determinism-sym-0-gh-a-081.json": {
+      "fields": [
+        "passes"
+      ],
+      "texts": 600
+    },
+    "determinism-sym-0-gh-a-082-rp1.0.json": {
+      "fields": [
+        "passes"
+      ],
+      "texts": 600
+    },
+    "pilot-outcomes.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 54
+    },
+    "projects-qt-creator_qt-creator-qt_qtbase-n788.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2340
+    },
+    "projects-qt-creator_qt-creator-qt_qtbase.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2340
+    },
+    "projects-qt-creator_qt-creator-qt_qtdeclarative.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1935
+    },
+    "projects-qt_qtbase-qt_qtdeclarative.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1839
+    },
+    "prompt-format-probe.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 90
+    },
+    "retrieval-foreign-openstack-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2505
+    },
+    "retrieval-foreign-openstack.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2505
+    },
+    "retrieval-foreign-wikimedia-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 3555
+    },
+    "retrieval-foreign-wikimedia.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 3555
+    },
+    "retrieval-halves-openstack-p10-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p10.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p11-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p11.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p12-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p12.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p2-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p3-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p4-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p4.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p7-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p7.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p8-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p8.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p9-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-openstack-p9.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "retrieval-halves-wikimedia-p1-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p1.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p10-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p10.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p11-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p11.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p2-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p3-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p6-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p6.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p7-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p7.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p8-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p8.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p9-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "retrieval-halves-wikimedia-p9.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "rq1-partition-openstack-p10-s8-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p10-s8-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p10-s8-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p10-s8-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p10-s8-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p10-s8-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p10-s8-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p11-s9-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p11-s9-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p11-s9-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p11-s9-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p11-s9-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p11-s9-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p11-s9-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p12-s10-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p12-s10-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p12-s10-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p12-s10-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p12-s10-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p12-s10-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p12-s10-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p14-s11-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p14-s11-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p15-s12-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p15-s12-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p17-s13-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p17-s13-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p18-s14-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p18-s14-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p19-s15-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p19-s15-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p2-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p2-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p2-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p2-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p2-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p2-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p2-n1850-rp1.1.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p2-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p21-s16-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p21-s16-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p22-s17-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p22-s17-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p23-s18-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p23-s18-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p24-s19-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p24-s19-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p25-s20-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p25-s20-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p26-s21-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p26-s21-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p27-s22-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p27-s22-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p28-s23-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p28-s23-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p3-s2-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p3-s2-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p3-s2-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p3-s2-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p3-s2-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p3-s2-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p3-s2-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p30-s24-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p30-s24-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p4-s3-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p4-s3-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p4-s3-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p4-s3-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p4-s3-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p4-s3-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p4-s3-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p5-s4-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p5-s4-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p5-s4-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p5-s4-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p5-s4-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p5-s4-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p5-s4-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p7-s5-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p7-s5-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p7-s5-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p7-s5-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p7-s5-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p7-s5-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p7-s5-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p8-s6-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p8-s6-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p8-s6-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p8-s6-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p8-s6-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p8-s6-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p8-s6-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p9-s7-n1850-plant0.25-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p9-s7-n1850-plant0.25.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p9-s7-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p9-s7-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p9-s7-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1500
+    },
+    "rq1-partition-openstack-p9-s7-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-openstack-p9-s7-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1503
+    },
+    "rq1-partition-wikimedia-p1-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2130
+    },
+    "rq1-partition-wikimedia-p1-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2130
+    },
+    "rq1-partition-wikimedia-p1-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p1-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p1-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p10-s9-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2130
+    },
+    "rq1-partition-wikimedia-p10-s9-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2130
+    },
+    "rq1-partition-wikimedia-p10-s9-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p10-s9-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p10-s9-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p11-s10-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p11-s10-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p11-s10-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2118
+    },
+    "rq1-partition-wikimedia-p11-s10-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p11-s10-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p12-s11-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p12-s11-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p13-s12-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p13-s12-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p16-s13-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p16-s13-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p17-s14-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p17-s14-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p18-s15-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p18-s15-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p19-s16-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p19-s16-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p2-s2-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p2-s2-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p2-s2-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2121
+    },
+    "rq1-partition-wikimedia-p2-s2-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p2-s2-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p20-s17-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p20-s17-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p21-s18-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p21-s18-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p22-s19-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p22-s19-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p25-s20-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p25-s20-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p27-s21-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p27-s21-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p29-s22-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p29-s22-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p3-s3-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p3-s3-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p3-s3-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p3-s3-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p3-s3-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p5-s4-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p5-s4-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p5-s4-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2121
+    },
+    "rq1-partition-wikimedia-p5-s4-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p5-s4-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p6-s5-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2121
+    },
+    "rq1-partition-wikimedia-p6-s5-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2121
+    },
+    "rq1-partition-wikimedia-p6-s5-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2118
+    },
+    "rq1-partition-wikimedia-p6-s5-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p6-s5-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p7-s6-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p7-s6-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p7-s6-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2121
+    },
+    "rq1-partition-wikimedia-p7-s6-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p7-s6-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p8-s7-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p8-s7-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p8-s7-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2127
+    },
+    "rq1-partition-wikimedia-p8-s7-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p8-s7-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p9-s8-n1850-plant0.5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p9-s8-n1850-plant0.5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2124
+    },
+    "rq1-partition-wikimedia-p9-s8-n1850-plant0.75.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2121
+    },
+    "rq1-partition-wikimedia-p9-s8-n1850-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-partition-wikimedia-p9-s8-n1850.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-pilot-equalized.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 480
+    },
+    "rq1-pilot-fp32-pilot.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 480
+    },
+    "rq1-pilot.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 480
+    },
+    "rq1-placebo-openstack-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-openstack-s3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-openstack-v2-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-openstack-v2-s3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-openstack-v2-s4.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-openstack-v2-s5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-openstack-v2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-openstack-v3-p13-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-p13.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-p2-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1509
+    },
+    "rq1-placebo-openstack-v3-p2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1509
+    },
+    "rq1-placebo-openstack-v3-p29-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-p29.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-p8-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1518
+    },
+    "rq1-placebo-openstack-v3-p8.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1518
+    },
+    "rq1-placebo-openstack-v3-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-s3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-s4.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3-s5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack-v3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1512
+    },
+    "rq1-placebo-openstack.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1659
+    },
+    "rq1-placebo-qt-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2826
+    },
+    "rq1-placebo-qt-s3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2826
+    },
+    "rq1-placebo-qt.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2826
+    },
+    "rq1-placebo-wikimedia-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-placebo-wikimedia.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2133
+    },
+    "rq1-windows-qtfull-fp32-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-qtfull-fp32-s3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-qtfull-fp32.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-qtfull-s2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-qtfull-s3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-qtfull.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-r256.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-s2-r256.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows-s3-r256.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 4545
+    },
+    "rq1-windows.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2787
+    },
+    "rules-foreign-openstack-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "rules-foreign-openstack.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2004
+    },
+    "rules-foreign-wikimedia-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "rules-foreign-wikimedia.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 2844
+    },
+    "rules-halves-openstack-p10-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p10.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p11-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p11.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p12-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p12.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p2-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p3-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p4-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p4.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p7-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p7.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p8-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p8.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p9-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-openstack-p9.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1002
+    },
+    "rules-halves-wikimedia-p1-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p1.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p10-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p10.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p11-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p11.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p2-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p2.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p3-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p3.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p5-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p5.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p6-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p6.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p7-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p7.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p8-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p8.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p9-rp1.0.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-halves-wikimedia-p9.json": {
+      "fields": [
+        "prediction"
+      ],
+      "texts": 1422
+    },
+    "rules-reviews-openstack-p10.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 85
+    },
+    "rules-reviews-openstack-p11.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 84
+    },
+    "rules-reviews-openstack-p12.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 74
+    },
+    "rules-reviews-openstack-p2-smoke.openstack-a.part.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 194
+    },
+    "rules-reviews-openstack-p2-smoke2.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 118
+    },
+    "rules-reviews-openstack-p2-smoke3.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 87
+    },
+    "rules-reviews-openstack-p2-smoke4.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 41
+    },
+    "rules-reviews-openstack-p2-smoke5.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 78
+    },
+    "rules-reviews-openstack-p2.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 79
+    },
+    "rules-reviews-openstack-p3.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 87
+    },
+    "rules-reviews-openstack-p4.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 90
+    },
+    "rules-reviews-openstack-p5.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 92
+    },
+    "rules-reviews-openstack-p7.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 83
+    },
+    "rules-reviews-openstack-p8.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 87
+    },
+    "rules-reviews-openstack-p9.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 79
+    },
+    "rules-reviews-wikimedia-p1-smoke2.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 154
+    },
+    "rules-reviews-wikimedia-p1-smoke3.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 89
+    },
+    "rules-reviews-wikimedia-p1-smoke4.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 38
+    },
+    "rules-reviews-wikimedia-p1-smoke5.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 93
+    },
+    "rules-reviews-wikimedia-p1-smoke6.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 99
+    },
+    "rules-reviews-wikimedia-p1.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 56
+    },
+    "rules-reviews-wikimedia-p10.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 68
+    },
+    "rules-reviews-wikimedia-p11.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 70
+    },
+    "rules-reviews-wikimedia-p2.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 89
+    },
+    "rules-reviews-wikimedia-p3.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 63
+    },
+    "rules-reviews-wikimedia-p5.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 66
+    },
+    "rules-reviews-wikimedia-p6.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 74
+    },
+    "rules-reviews-wikimedia-p7.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 67
+    },
+    "rules-reviews-wikimedia-p8.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 57
+    },
+    "rules-reviews-wikimedia-p9.json": {
+      "fields": [
+        "file",
+        "map_lists",
+        "reduce_answer",
+        "rules"
+      ],
+      "texts": 76
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-19T11:27:51.067049+00:00",
+    "git": {
+      "commit": "d3363d5a703017c4559fc51fc11107fea848987a",
+      "branch": "results/prediction-hmac",
+      "uncommitted_code": [
+        "scripts/withhold_text.py",
+        "sphragis/measure/withhold.py"
+      ],
+      "uncommitted_code_sha256": "6cb97063eeb9d736a5936bc32adb24f277c6b4c24830eabbf1d695afb0795541"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
