@@ -54,6 +54,11 @@ def test_release_maintenance_and_deployment_branches_are_backports() -> None:
         "qds/dev",
         "134-based-refactor",
         "upstream-master",
+        # The lines Qt WebEngine's Chromium fork develops on.
+        "130-based",
+        "122-based",
+        "v3.8-based",
+        "release_21.1.0-based",
         "refs/meta/config",
         "wip/figmastyle",
         "6",
@@ -90,11 +95,6 @@ def test_release_maintenance_and_deployment_branches_are_backports() -> None:
         "wrynose",
         "dunfell",
         "2024.1",
-        # Qt WebEngine's maintained Chromium bases, and the other upstream-based lines.
-        "122-based",
-        "87-based",
-        "v3.8-based",
-        "release_21.1.0-based",
     ):
         assert only_backport({name}), name
 
@@ -115,9 +115,20 @@ def test_a_project_that_merges_its_release_lines_up_is_read_as_merge_up(tmp_path
              "subject": "Merge remote-tracking branch 'origin/master' into feature/mpu"},
             {"project": "base", "change_id": "I5", "branch": "6.9",
              "subject": "Merge remote-tracking branch 'origin/6.8'"},
+            {"project": "qbs", "change_id": "I6", "branch": "master",
+             "subject": "Merge 2.5 into master"},
         ],
     )  # fmt: skip
-    assert merge_up_projects(tmp_path, "qt") == frozenset({"creator"})
+    assert merge_up_projects(tmp_path, "qt") == frozenset({"creator", "qbs"})
+
+
+def test_a_registered_set_is_read_whatever_a_later_window_shows() -> None:
+    from sphragis.corpus.backports import MERGE_UP, registered_merge_up
+
+    later = frozenset({"qt/qtbase"})
+    assert registered_merge_up("qt", later) == MERGE_UP["qt"]
+    assert registered_merge_up("openstack", later) == frozenset()
+    assert registered_merge_up("apache", later) == later
 
 
 def test_in_a_merge_up_project_a_release_change_is_the_original() -> None:

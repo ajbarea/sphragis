@@ -28,6 +28,7 @@ from sphragis.corpus.backports import (
     merge_up_projects,
     only_backport,
     possibly_backport,
+    registered_merge_up,
 )
 from sphragis.corpus.load import refined_examples
 from sphragis.corpus.pipeline import run_dedup, run_split
@@ -77,10 +78,13 @@ def main() -> None:
         windows, _, _ = run_split(kept, WINDOWS)
         if windows.get("test"):
             raise SystemExit(f"{org}: the corpus holds test-window examples; it is sealed")
-        merge_up = merge_up_projects(Path(root), org)
+        found = merge_up_projects(Path(root), org)
+        merge_up = registered_merge_up(org, found)
         report["orgs"][org] = {
             **bounds(windows, branches, merge_up),
             "merge_up_projects": sorted(merge_up),
+            # What the raw changes show now, beside the registered set the reading used.
+            "merge_up_found": sorted(found),
         }
         print(org, report["orgs"][org])
     report["provenance"] = provenance_header()

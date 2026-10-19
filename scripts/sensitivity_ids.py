@@ -26,6 +26,7 @@ from sphragis.corpus.backports import (
     index_changes,
     merge_up_projects,
     only_backport,
+    registered_merge_up,
 )
 from sphragis.corpus.split import seal_open, seal_path
 from sphragis.corpus.windows import WINDOWS
@@ -96,7 +97,7 @@ def main() -> None:
         raise SystemExit(str(error)) from error
     ai = flagged_changes(trailers, args.org)
     branches, merged = index_changes(args.root, args.org)
-    merge_up = merge_up_projects(args.root, args.org)
+    merge_up = registered_merge_up(args.org, merge_up_projects(args.root, args.org))
     # The searches are bounded by merge date and windows by creation date, so an example whose
     # change merged on or after the search bound, or never, was never searched: counted, so the
     # AI-assisted reading states what it could not see.
