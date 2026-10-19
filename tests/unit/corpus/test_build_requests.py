@@ -708,3 +708,12 @@ def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:
     assert not (tmp_path / "android.googlesource.com.lock").exists()
     hosts.release_host("android.googlesource.com", tmp_path)
     assert (tmp_path, "android-review.googlesource.com") not in hosts._CLAIMS
+
+
+def test_a_test_claims_a_host_in_a_lock_directory_of_its_own() -> None:
+    """A fetch the machine has in flight holds the user's lock; no test may contend for it."""
+    from sphragis.corpus import hosts
+
+    assert not hosts.LOCK_DIR.is_relative_to(Path.home() / ".cache" / "sphragis")
+    hosts.claim_host("fuchsia-review.googlesource.com")
+    assert (hosts.LOCK_DIR / "fuchsia-review.googlesource.com.lock").is_file()
