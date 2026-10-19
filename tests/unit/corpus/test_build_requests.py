@@ -4,6 +4,7 @@ once; without the flag the build is as it was."""
 from __future__ import annotations
 
 import json
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
@@ -266,7 +267,12 @@ def test_a_fetch_past_chromiums_grant_is_refused_before_any_request(
     ("query", "refused"),
     [
         ("status:merged after:2024-11-01 before:2024-12-01 (project:v8/v8)", False),
-        ('((status:merged (project:v8/v8))) before:"2024-11-30 +0000"', False),
+        (
+            "(status:merged after:2024-11-01 before:2024-12-01 (project:v8/v8)) "
+            'before:"2024-11-30 08:00:00 +0000"',
+            False,
+        ),
+        ('((status:merged (project:v8/v8))) before:"2024-11-30 +0000"', True),
         ("status:merged project:chromium/src", True),
         ("message:Assisted-by after:2024-10-01", True),
         ("project:v8/v8 OR is:open", True),
@@ -283,7 +289,10 @@ def test_a_scoped_host_answers_only_listings_of_its_granted_projects(query, refu
     assert (why is not None) is refused
     assert cli.out_of_scope_listing("/changes/123/comments", scope) is None
     twice = "/changes/?q=project%3Av8%2Fv8&q=status%3Amerged"
-    assert cli.out_of_scope_listing(twice, scope) == "a listing with more than one query"
+    assert (
+        cli.out_of_scope_listing(twice, scope)
+        == "a listing with parameters the client does not send"
+    )
 
 
 def test_a_month_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys) -> None:
@@ -500,6 +509,124 @@ def test_aosps_grant_lists_only_the_census_projects_and_none_before_it(tmp_path)
     assert cli.census_projects(census) == ("platform/a", "platform/b")
     empty = scope._replace(projects=())
     assert cli.out_of_scope_listing("/changes/?q=project%3Aplatform%2Fa", empty) is not None
+
+
+def test_fuchsias_grant_lists_its_code_projects_over_qts_training_months(tmp_path) -> None:
+    from sphragis.corpus.windows import WINDOWS
+
+    permission = cli.REST_PERMITTED["fuchsia-review.googlesource.com"]
+    assert permission.written_grant and permission.single_client and permission.crawl_delay >= 1.0
+    assert permission.error_pause >= 300.0 and permission.disallow == ()
+    scope = permission.scope
+    assert scope is not None and scope.read_cap is None
+    assert (scope.created_from, scope.created_before) == WINDOWS["train"]
+    assert scope.listed_through == cli.last_open_month()
+    assert scope.projects == cli.fuchsia_projects() and scope.lists_projects
+    assert cli.PROJECT_LISTS == {"fuchsia": cli.FUCHSIA_PROJECTS}
+    assert cli.host_of("fuchsia") == "fuchsia-review.googlesource.com"
+    listed = tmp_path / "projects.json"
+    listed.write_text(json.dumps({"projects": ["fuchsia", "integration"]}))
+    assert cli.fuchsia_projects(listed) == ("fuchsia", "integration")
+    assert cli.fuchsia_projects(tmp_path / "absent.json") == ()
+    assert cli.out_of_scope_request("/changes/?q=project%3Afuchsia", scope, set())
+
+
+SCOPED = cli.GrantScope(("p", "a/c++"), "2024-11-01", "2025-09-01", None, lists_projects=True)
+MONTH = "status:merged after:2025-01-01 before:2025-02-01"
+
+
+def _listing(q: str, extra: str = "&n=500&S=0&o=ALL_REVISIONS") -> str:
+    return f"/changes/?q={urllib.parse.quote(q)}{extra}"
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        _listing(f"{MONTH} (project:p)"),
+        _listing(f"{MONTH} project:p", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:a/c++)"),
+        _listing(f'({MONTH} (project:p)) before:"2025-01-31 12:00:00 +0000"', "&n=3&S=1"),
+        "/changes/7/comments",
+        "/changes/7/revisions/abc123/files/src%2Fmain.cc/diff?base=1",
+        _listing("status:merged after:2025-01-26 before:2025-02-01 project:p", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:p)", "&n=500&S=0&o=DETAILED_ACCOUNTS&o=CURRENT_REVISION"),
+        "/projects/?type=CODE",
+    ],
+)
+def test_a_scoped_host_answers_what_the_client_builds(target: str) -> None:
+    assert cli.out_of_scope_request(target, SCOPED, {"7"}) is None
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        _listing(f"{MONTH} (project:p or project:q)"),
+        _listing(f"{MONTH} (project:p) or is:open"),
+        _listing(f"{MONTH} (p:q)"),
+        _listing(f"{MONTH} (project:^.*)"),
+        _listing(f"{MONTH} (project:q)"),
+        _listing(f"{MONTH} (project:p) -is:wip"),
+        _listing("status:open after:2025-01-01 before:2025-02-01 (project:p)"),
+        _listing(f"{MONTH} (project:p)", "&n=500&q=status:open"),
+        _listing(f"{MONTH} (project:p)", "&n=500&x=1"),
+        "/changes/8/comments",
+        "/changes/7/detail",
+        "/accounts/self/detail",
+        "/config/server/info",
+        "/projects/p/commits/abc/files/README/content",
+        "/projects/?type=ALL",
+        _listing("status:merged after:2000-01-01 before:2099-01-01 (project:p)"),
+        _listing("status:merged after:2025-12-01 before:2026-01-01 (project:p)"),
+        _listing("status:merged after:2024-10-01 before:2024-11-01 (project:p)"),
+        _listing("status:merged after:2025-02-01 before:2025-01-01 (project:p)"),
+        _listing("status:merged after:2025-01-01 before:2025-03-01 (project:p)"),
+        _listing("status:merged after:２０２５-01-01 before:2025-02-01 (project:p)"),
+        _listing(f"{MONTH} (project:p)", "&n=500&S=0&o=MESSAGES"),
+        _listing(f"{MONTH} (project:p)", "&n=500&S=-1"),
+        _listing(f"{MONTH} (project:p)", "&n=&S=0"),
+        "/changes/p~7/comments",
+        "/changes/7/revisions/../files/a/diff?base=1",
+    ],
+)
+def test_a_scoped_host_refuses_every_other_request(target: str) -> None:
+    assert cli.out_of_scope_request(target, SCOPED, {"7"})
+
+
+def test_only_a_scope_of_every_listed_project_may_ask_for_the_list() -> None:
+    aosp = cli.REST_PERMITTED["android-review.googlesource.com"].scope
+    assert aosp is not None and not aosp.lists_projects
+    assert cli.out_of_scope_request("/projects/?type=CODE", aosp, set())
+
+
+@pytest.mark.parametrize(
+    ("name", "ok"),
+    [
+        ("fuchsia", True),
+        ("third_party/libc++", True),
+        ("a.b-c/d_e", True),
+        ("^.*", False),
+        ("-x", False),
+        ("a b", False),
+        ("a(b)", False),
+        ('a"b', False),
+        ("a/../b", False),
+        ("a//b", False),
+        ("a/", False),
+        ("", False),
+    ],
+)
+def test_a_rest_project_name_reads_as_itself(name: str, ok: bool) -> None:
+    assert cli.rest_project_name(name) is ok
+
+
+def test_an_artifact_with_one_unsafe_name_scopes_nothing(tmp_path) -> None:
+    listed = tmp_path / "projects.json"
+    listed.write_text(json.dumps({"projects": ["fuchsia", "^.*"]}))
+    assert cli.fuchsia_projects(listed) == ()
+    (tmp_path / "dir.json").mkdir()
+    assert cli.fuchsia_projects(tmp_path / "dir.json") == ()
+    (tmp_path / "bin.json").write_bytes(b"\xff\xfe")
+    assert cli.fuchsia_projects(tmp_path / "bin.json") == ()
 
 
 def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:

@@ -9939,3 +9939,33 @@ copies of Qt's 9,449 unsealed examples, 2,056 (1,076 C++, 980 others;
 `foreign-pool-coverage-aosp.json`, its `stop_rule`). That covers 34 of the 80 draws and none of the
 40 partitions, and the whole order does not cover, so no prefix does: AOSP does not qualify with the
 later months either, and the question this entry leaves to AJ does not arise.
+
+### Fuchsia admitted as H2's foreign source; its scope and stop rule fixed before any of its data is read (2026-10-19)
+
+`# research(2026-10)`. Chromium's V8 pool (2026-10-16) and AOSP's (entries above) cannot cover every
+matched draw. AJ reads Chrome Infra's infra-dev answer of 2026-10-15 (no concerns with Gerrit's REST
+API at one client and no more than one request a second, in a thread titled for chromium-review and
+android-review) as covering fuchsia-review too (2026-10-19), as he read it for AOSP. By item 1 of
+the H2 plan Fuchsia, second in its order, is then H2's source if its pool covers every matched draw.
+Fuchsia's review data has not been read by this study. Fixed now, before any of it is:
+
+1. *Host.* fuchsia-review.googlesource.com joins `REST_PERMITTED` as a written grant held on this
+   machine: one client, one request a second, quiet five minutes after a 5xx. Its robots.txt is
+   `Disallow: /` (read 2026-10-19), which the answer supersedes as for AOSP.
+2. *Window.* Item 1(b)'s: Qt's training window, changes created 2024-11-01 to 2025-08-31
+   (`FOREIGN_SPANS`), listed through the month before the sealed test window (2025-10) by last
+   update, as AOSP's listings were in the end, so a change created in the window and updated later
+   is read.
+3. *Projects.* Item 1(b) restricts by months alone, so the scope is every code project the host
+   lists (`/projects/?type=CODE`, active and read-only, its own meta projects aside), read once
+   before any change is listed (`scripts/gerrit_projects.py`, `fuchsia-projects.json`).
+4. *Order and stop.* AOSP's: projects ranked by the merged changes created in the window that the
+   listings return (`pool_order.py`), ties by name, built in that order; the pool is the shortest
+   prefix whose refined examples, deduplicated as one corpus and against Qt's unsealed examples,
+   cover the draws of all 40 admissible partitions (`foreign_pool_coverage.py --order --against`).
+   The comment-count probe gates `--fewer-requests`. If no prefix covers, Fuchsia does not qualify
+   and H2 has no confirmatory cell (registered decisions).
+5. *Guards.* The project list is read once (an existing artifact is refused without `--overwrite`)
+   and refused if empty, truncated (`_more_projects`) or naming a project a `project:` query could
+   misread (`cli.rest_project_name`); a scoped host answers only the requests the client builds for
+   it (`cli.out_of_scope_request`), so the list is asked only of a scope defined by it.

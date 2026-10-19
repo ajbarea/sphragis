@@ -125,9 +125,12 @@ changes, so Chromium is fetched over REST within that scope (`cli.REST_PERMITTED
 (`sphragis.corpus.notedb.GIT_PERMITTED`). AJ reads that answer as covering AOSP at the same rate:
 AOSP's git host is open only for the release tag whose trees `scripts/aosp_census.py` read, and
 android-review's REST API only for the census's C++-majority projects and changes created
-2024-10-01 to 2025-03-26 (`cli.REST_PERMITTED`'s scope). Its transport lists only granted
-projects and asks about one change only once that change is admitted under the grant
-(`cli.admit`), so a path that forgets the check fails closed. These grants name this study's collector, not every clone, so
+2024-10-01 to 2025-03-26 (`cli.REST_PERMITTED`'s scope). A scoped host answers only the
+requests the client builds for it, a month of one granted project's merged changes and an
+admitted change's comments or diffs (`cli.out_of_scope_request`), so a path that forgets its
+check fails closed. AJ reads the same answer as covering fuchsia-review, scoped to the code
+projects it lists, read once (`scripts/gerrit_projects.py`), and Qt's training months. These grants name this
+study's collector, not every clone, so
 their hosts are read only on a machine that lists each of them in `~/.config/sphragis/grants`
 (one host a line, `android.googlesource.com` and `android-review.googlesource.com` apart;
 `sphragis.corpus.grants`). Gerrit keeps each

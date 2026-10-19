@@ -33,6 +33,7 @@ def test_every_organization_has_its_gerrit_instance() -> None:
     assert GERRIT == {
         "aosp": "https://android-review.googlesource.com",
         "chromium": "https://chromium-review.googlesource.com",
+        "fuchsia": "https://fuchsia-review.googlesource.com",
         "lineageos": "https://review.lineageos.org",
         "openstack": "https://review.opendev.org",
         "qt": "https://codereview.qt-project.org",
@@ -247,7 +248,8 @@ def _scripted_connections(monkeypatch: pytest.MonkeyPatch, script: list[object])
 def test_a_scoped_host_is_asked_about_one_change_only_once_it_is_admitted(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A path that forgets the grant check fails closed: its by-number request is refused."""
+    """A path that forgets the grant check fails closed: its by-number request is refused, and
+    so is any path the client does not build for a scoped host."""
     from sphragis.corpus import cli
 
     instances = _scripted_connections(monkeypatch, [_FakeResponse(200, "ok")] * 4)
@@ -271,11 +273,22 @@ def test_a_scoped_host_is_asked_about_one_change_only_once_it_is_admitted(
     )
     assert admitted == {"g": {"5"}}
     assert transport("https://g/changes/5/comments")[2] == "ok"
-    assert transport("https://g/changes/5")[2] == "ok"
-    assert transport("https://g/changes/?q=project:p")[2] == "ok"
-    for refused in ("6/comments", "7/revisions/a/files", "8", "p~5/comments", "p%7E5/comments"):
-        with pytest.raises(SystemExit, match="was not admitted"):
-            transport(f"https://g/changes/{refused}")
+    assert transport("https://g/changes/5/revisions/a/files/f.py/diff?base=1")[2] == "ok"
+    month = "status%3Amerged+after%3A2024-11-01+before%3A2024-12-01+%28project%3Ap%29"
+    assert transport(f"https://g/changes/?q={month}&n=500&S=0")[2] == "ok"
+    with pytest.raises(SystemExit, match="was not admitted"):
+        transport("https://g/changes/6/comments")
+    # A path the client does not build is refused whatever change it names.
+    for unbuilt in (
+        "5",
+        "5/detail",
+        "7/revisions/a/files",
+        "?q=project:p",
+        "p~5/comments",
+        "p%7E5/comments",
+    ):
+        with pytest.raises(SystemExit, match="refusing g"):
+            transport(f"https://g/changes/{unbuilt}")
     # A host without a scope needs no admission.
     assert transport("https://h/changes/9/comments")[2] == "ok"
     assert [len(c.paths) for c in instances] == [3, 1]
@@ -1278,14 +1291,14 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
 @pytest.mark.parametrize(
     "host",
     [
-        "fuchsia-review.googlesource.com",
+        "go-review.googlesource.com",
         "gerrit.example.org",
     ],
 )
 def test_http_transport_refuses_a_host_without_recorded_rest_permission(
     monkeypatch: pytest.MonkeyPatch, host: str
 ) -> None:
-    """robots.txt is Disallow: / on the first; an unknown host is refused by default."""
+    """A googlesource review host no grant names, and an unknown host, are refused by default."""
     from sphragis.corpus import cli
 
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
@@ -1332,6 +1345,51 @@ def test_aosps_rest_host_is_refused_on_a_machine_without_its_grant(
     assert opened == []
 
 
+def test_fuchsias_rest_host_is_refused_on_a_machine_without_its_grant(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from sphragis.corpus import cli
+
+    opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
+    transport = cli.http_transport()
+    with pytest.raises(SystemExit, match="written grant"):
+        transport("https://fuchsia-review.googlesource.com/projects/?type=CODE")
+    assert opened == []
+
+
+def test_a_rest_fetch_of_fuchsia_past_its_grant_opens_no_connection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Before its projects artifact, no listing; after it, only listed projects and its months."""
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    opened = _scripted_connections(monkeypatch, [_FakeResponse(200)] * 5)
+    fetch = ["fetch", "--org", "fuchsia", "--root", str(tmp_path)]
+    empty = cli.REST_PERMITTED["fuchsia-review.googlesource.com"].scope
+    assert empty is not None
+    monkeypatch.setitem(
+        cli.REST_PERMITTED,
+        "fuchsia-review.googlesource.com",
+        cli.REST_PERMITTED["fuchsia-review.googlesource.com"]._replace(
+            scope=empty._replace(projects=())
+        ),
+    )
+    with pytest.raises(SystemExit, match="names no project yet"):
+        main([*fetch, "--month", "2025-01", "--project", "fuchsia"])
+    monkeypatch.setitem(
+        cli.REST_PERMITTED,
+        "fuchsia-review.googlesource.com",
+        cli.REST_PERMITTED["fuchsia-review.googlesource.com"]._replace(
+            scope=empty._replace(projects=("fuchsia",))
+        ),
+    )
+    for month, project in (("2024-10", "fuchsia"), ("2025-11", "fuchsia"), ("2025-01", "other")):
+        with pytest.raises(SystemExit):
+            main([*fetch, "--month", month, "--project", project, "--cutoff", "2024-11-01"])
+    assert opened == []
+
+
 def test_every_permitted_rest_host_says_why() -> None:
     from sphragis.corpus import cli
 
@@ -1339,6 +1397,7 @@ def test_every_permitted_rest_host_says_why() -> None:
         "android-review.googlesource.com",
         "chromium-review.googlesource.com",
         "codereview.qt-project.org",
+        "fuchsia-review.googlesource.com",
         "review.lineageos.org",
         "review.opendev.org",
         "gerrit.wikimedia.org",
@@ -1666,10 +1725,10 @@ def test_qt_permission_pins_the_written_terms() -> None:
     assert "QTQAINFRA-8064" in permission.reason
 
 
-def test_written_grants_are_qt_chromium_and_aosp_alone() -> None:
+def test_written_grants_are_qt_chromium_aosp_and_fuchsia_alone() -> None:
     """The other hosts open themselves to any polite client in robots.txt or a published policy;
     Qt's and Chromium's administrators answered one collector's request by email, and AJ reads
-    Chromium's answer as covering AOSP."""
+    Chromium's answer as covering AOSP and Fuchsia."""
     from sphragis.corpus import cli
 
     granted = {host for host, p in cli.REST_PERMITTED.items() if p.written_grant}
@@ -1677,6 +1736,7 @@ def test_written_grants_are_qt_chromium_and_aosp_alone() -> None:
         "codereview.qt-project.org",
         "chromium-review.googlesource.com",
         "android-review.googlesource.com",
+        "fuchsia-review.googlesource.com",
     }
 
 
@@ -2125,7 +2185,9 @@ def test_a_finished_github_month_leaves_no_checkpoint(
     assert not (tmp_path / "apache" / "raw" / "2024-10.partial.jsonl").exists()
 
 
-@pytest.mark.parametrize(("org", "month"), [("chromium", "2024-11"), ("aosp", "2024-11")])
+@pytest.mark.parametrize(
+    ("org", "month"), [("chromium", "2024-11"), ("aosp", "2024-11"), ("fuchsia", "2024-11")]
+)
 def test_the_resume_script_refuses_a_host_granted_for_a_scoped_pool(org: str, month: str) -> None:
     script = Path(__file__).resolve().parents[3] / "scripts" / "resume_when_allowed.sh"
     result = subprocess.run(
