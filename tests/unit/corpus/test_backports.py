@@ -37,7 +37,25 @@ def test_a_change_is_only_a_backport_when_every_branch_it_sits_on_is_one(tmp_pat
 
 
 def test_release_maintenance_and_deployment_branches_are_backports() -> None:
-    for name in ("master", "main", "production", "feature/mpu", "f/caracal", "stablekit"):
+    for name in (
+        "master",
+        "main",
+        "production",
+        "feature/mpu",
+        "f/caracal",
+        "stablekit",
+        # Qt's development lines and upstream-tracking lines.
+        "dev",
+        "qds/dev",
+        "130-based",
+        "134-based-refactor",
+        "v3.8-based",
+        "release_21.1.0-based",
+        "upstream-master",
+        "refs/meta/config",
+        "wip/figmastyle",
+        "6",
+    ):
         assert not possibly_backport({name}), name
     for name in (
         "stable/2025.1",
@@ -46,6 +64,7 @@ def test_release_maintenance_and_deployment_branches_are_backports() -> None:
         "unmaintained/2023.1",
         "bugfix/12",
         "release_9",
+        "release_1.0.0",
         "r/stx.10.0",
         "REL1_43",
         "fundraising/REL1_43",
@@ -53,5 +72,18 @@ def test_release_maintenance_and_deployment_branches_are_backports() -> None:
         "deploy/wmf/stable-3.10",
         "wmf_deploy",
         "deployment",
+        "6.8",
+        "6.8.1",
+        "15.0",
+        "lts-6.5",
+        "lts-6.8.4",
+        "qds/4.7",
+        "qds/4.8.0",
+        "qds-4.6",
+        "kirkstone",
+        "scarthgap",
+        "styhead",
+        "walnascar",
+        "2024.1",
     ):
         assert only_backport({name}), name

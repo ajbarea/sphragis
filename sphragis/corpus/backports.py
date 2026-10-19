@@ -15,13 +15,18 @@ from pathlib import Path
 
 from sphragis.corpus.storage import iter_snapshot
 
-# Release, maintenance and deployment branches, as named on the two hosts (read from the raw
+# Release, maintenance and deployment branches, as named on the hosts (read from the raw
 # snapshots): OpenStack `stable/`, `unmaintained/`, `bugfix/`, `release_N` and StarlingX `r/stx`;
 # MediaWiki `REL1_xx` (also under `fundraising/`), `wmf/` and `deploy/wmf/`, `wmf_deploy`,
-# `deployment` and a bare `stable`. Feature branches (`feature/`, `f/`) are development.
+# `deployment` and a bare `stable`; Qt's version lines (`6.8`, `6.8.1`, Creator's `15.0`), `lts-`
+# lines, Design Studio's `qds/4.7` and `qds-4.6`, and the Yocto release series its layers keep
+# (`kirkstone`, `scarthgap`, `styhead`, `walnascar`); a bare version names a release line on
+# MediaWiki's hosts too (`2024.1`). Feature branches (`feature/`, `f/`) are development, as are
+# Qt's `dev`, `master` and `qds/dev`, and its `N-based` lines, which track a third-party upstream.
 BACKPORT = re.compile(
-    r"^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\d|r/stx|(?:fundraising/)?REL\d"
-    r"|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
+    r"^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\d.]+$|r/stx|(?:fundraising/)?REL\d"
+    r"|(?:deploy/)?wmf/|wmf_deploy$|deployment$"
+    r"|\d+(?:\.\d+)+$|lts-\d|qds[/-]\d|(?:kirkstone|scarthgap|styhead|walnascar)$)"
 )
 
 
