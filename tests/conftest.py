@@ -285,6 +285,17 @@ def _no_held_grants(
 
 
 @pytest.fixture(autouse=True)
+def _no_machine_host_locks(
+    monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory
+) -> None:
+    """Point the single-client host locks at a directory of the test's own, so a test that claims
+    a host neither waits on nor is refused by a fetch the machine running it has in flight."""
+    from sphragis.corpus import hosts
+
+    monkeypatch.setattr(hosts, "LOCK_DIR", tmp_path_factory.mktemp("host-locks"))
+
+
+@pytest.fixture(autouse=True)
 def _no_network_attempt() -> Iterator[None]:
     """Fail the test that tried, even when its code caught the refusal."""
     before = len(_VIOLATIONS)
