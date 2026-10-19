@@ -10026,12 +10026,20 @@ comment word for word when the model copies it (ROADMAP, "predictions in publish
 1. *Scope.* Model text whose prompt held review comments, or which summarizes them: generation rows'
    `prediction` (every results file), the determinism checks' `passes`, and the review
    distillations' `map_lists`, `rules`, `file` and `reduce_answer`
-   (`sphragis.measure.withhold.WITHHELD`). Left in place, because their prompts held no review text:
-   the contamination battery's completions of code and the rules read from organizations' written
-   guides.
+   (`sphragis.measure.withhold.ALWAYS` and `IN_DISTILLATION`), found by an object's shape and not
+   its file's name. Left in place, because their prompts held no review text: the contamination
+   battery's completions of code and the rules read from organizations' written guides. The bot
+   audits (`data-audit-*.json`) listed short real review comments as `candidate_unregistered_bots`
+   text; `scripts/data_audit.py` now writes their change counts only and prints the texts, and the
+   three artifacts lost the field in place. The AOSP audit entry quotes two of those comments
+   ("typo", "2024") with their counts, which the artifacts still hold.
 2. *Digest.* Each text becomes HMAC-SHA256 under a 256-bit key held off the repository
-   (`SPHRAGIS_PREDICTION_KEY`), in a field named `<field>_hmac`, so the same generation compares
-   equal across runs to a holder of the key. A plain SHA-256 was the first recommendation and is not
+   (`SPHRAGIS_PREDICTION_KEY`), in a field named `<field>_hmac`. Anyone can compare digests, so equal
+   texts show as equal across runs, fields and files; the key is needed only to test a guessed text
+   against one. The key protects only text that was never committed: this key is burned for any
+   later publication, because the texts sit in history beside its digests at the same paths and row
+   order (`BURNED_KEY_IDS`; `load_key` refuses it), and the next published result is digested under
+   a new key. A plain SHA-256 was the first recommendation and is not
    enough: the comments are public on their hosts, so anyone could hash each one and match the
    digests, the dictionary case of EDPB Guidelines 01/2025 on pseudonymisation (fn. 23; keyed
    one-way functions, paras 88-90). The key length and its single use follow NIST SP 800-224 (ipd),
@@ -10042,10 +10050,16 @@ comment word for word when the model copies it (ROADMAP, "predictions in publish
    protection is the key's secrecy (para. 90).
 3. *Where the texts are.* The full texts stay in the cluster's results root and in an archive of the
    files as they were at d3363d5 (`full-text/datasets-results-d3363d5.tar.gz` beside the cluster's
-   results, with its SHA-256), for release under a data-use agreement. The readers that need text
-   (`decoder_read`, `decoding_check`, `determinism_check`, `retrieval_comparator`'s rules) refuse a
-   published copy (`require_text`).
-4. *History.* Commits 96695eb (2026-09-20) to d3363d5 (2026-10-19) still carry the texts, and stay:
+   results; SHA-256
+   `a68611f66d704a7da008febd9ce9ee9060cb2712e8155e0b029a0b2505bc19f7`), for release under a
+   data-use agreement. `decoder_read` and
+   `determinism_check --compare` compare the digests of two copies made under one key id, and
+   refuse one published and one plain copy, or two key ids; the digested files give the same
+   `decoder-penalty.json` and the same determinism tables (2026-09-18, 2026-10-08) as the full texts.
+   The readers that need text (`decoding_check`, `retrieval_comparator`'s rules) refuse a published
+   copy (`require_text`).
+4. *History.* Every commit from 96695eb (2026-09-20) up to the one this change merges onto still
+   carries the texts, and stays:
    rewriting pushed history does not reach clones, forks or caches (GitHub, "Removing sensitive data
    from a repository") and would break the provenance tags; the comments they can repeat are public
    on OpenStack's, Wikimedia's and Qt's hosts. The data-availability statement names the range.
@@ -10053,7 +10067,10 @@ comment word for word when the model copies it (ROADMAP, "predictions in publish
    protocol; ICSE 2027's open-science policy allows withholding on privacy grounds with a statement.
 5. *Done.* `scripts/withhold_text.py` rewrote the tracked results in place; `withheld-text.json`
    records the files, fields, counts and key id. `tests/unit/test_published_review_text.py` refuses
-   any tracked result that still carries such text, and trips on each published shape.
+   any tracked `.json` or `.jsonl` file, anywhere in the repo, that still carries such text, holds a
+   `*_hmac` value that is not a 64-digit hex digest, or lists bot-audit comments; it refuses a
+   Qt or Chromium generation run, plain or digested, outside the 13 files committed before the
+   rule, and trips on each shape a run is published in.
 
 Sources:
 

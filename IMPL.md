@@ -58,14 +58,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    GitHub Pro (Student Pack) for required checks on papers `main`. Fuchsia is decided: AJ reads
    Chrome Infra's answer as covering fuchsia-review (2026-10-19), so its pool is H2's one source
    left, and without it H2 has no confirmatory cell.
-   Also whether a published generation run keeps its `prediction` field: a prediction can repeat
-   the example's review comment word for word, which the protocol's "no review text is
-   published" excludes; Qt's generation runs are held back meanwhile (research log, 2026-10-18).
-
-   GitHub Pro (Student Pack) for required checks on papers `main`. Fuchsia's discuss list was
-   asked on 2026-10-15 and has not answered; Chromium's and AOSP's pools cannot cover every
-   matched draw, so Fuchsia is H2's one source left (whether Chrome Infra's answer covers
-   fuchsia-review is AJ's reading), and without it H2 has no confirmatory cell.
+6. Generate a new `SPHRAGIS_PREDICTION_KEY` before the next digested result is published
+   (`load_key` refuses the burned one; research log, 2026-10-19).
 
 ## Standing
 

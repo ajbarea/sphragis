@@ -34,7 +34,7 @@ import argparse
 import json
 from pathlib import Path
 
-from sphragis.measure.withhold import require_text
+from sphragis.measure.withhold import basis
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--condition", default="sym-0")
@@ -54,12 +54,12 @@ parser.add_argument("--out", type=Path, help="this job's passes")
 parser.add_argument("--compare", type=Path, nargs="*", help="job outputs to compare, no GPU")
 
 
-def stored_predictions(paths: list[Path], arm: str) -> dict[str, dict[str, str]]:
+def stored_predictions(paths: list[Path], arm: str, suffix: str = "") -> dict[str, dict[str, str]]:
+    """Each stored run's base predictions by id; suffix `_hmac` reads a published copy's digests."""
     runs = {path.name: json.loads(path.read_text()) for path in paths}
-    for name, run in runs.items():
-        require_text(run, name)
     return {
-        name: {r["id"]: r["prediction"] for r in run["results"][arm]} for name, run in runs.items()
+        name: {r["id"]: r[f"prediction{suffix}"] for r in run["results"][arm]}
+        for name, run in runs.items()
     }
 
 
@@ -74,7 +74,8 @@ def generate(args: argparse.Namespace) -> None:
 
     if not args.stored:
         raise SystemExit("--stored: a run to take the prompts from")
-    stored = stored_predictions(args.stored, f"base|{args.half}")
+    runs = {path.name: json.loads(path.read_text()) for path in args.stored}
+    stored = stored_predictions(args.stored, f"base|{args.half}", basis(runs))
     ids = sorted(next(iter(stored.values())))[: args.examples]
     # The corpus keeps an address that appears in a file path, and the published runs have
     # it redacted, so a stored id can carry `<redacted-email>` where the corpus id carries
@@ -137,8 +138,13 @@ def generate(args: argparse.Namespace) -> None:
 
 def compare(args: argparse.Namespace) -> None:
     jobs = [json.loads(path.read_text()) for path in args.compare]
-    for path, job in zip(args.compare, jobs, strict=True):
-        require_text(job, path.name)
+    # Text against text, or digests under one key against digests: nothing else compares.
+    suffix = basis(
+        {
+            **{path.name: job for path, job in zip(args.compare, jobs, strict=True)},
+            **{path.name: json.loads(path.read_text()) for path in args.stored},
+        }
+    )
     ids = jobs[0]["ids"]
     if any(job["ids"] != ids for job in jobs):
         raise SystemExit("the jobs generated for different prompts")
@@ -155,9 +161,11 @@ def compare(args: argparse.Namespace) -> None:
     columns: dict[str, dict[str, str]] = {}
     for job in jobs:
         node = job["provenance"]["slurm"]["node"]
-        for name, predictions in job["passes"].items():
+        for name, predictions in job[f"passes{suffix}"].items():
             columns[f"{node}:{name}"] = predictions
-    for name, predictions in stored_predictions(args.stored, f"base|{jobs[0]['half']}").items():
+    for name, predictions in stored_predictions(
+        args.stored, f"base|{jobs[0]['half']}", suffix
+    ).items():
         columns[f"stored:{name}"] = {i: predictions[i] for i in ids}
     names = list(columns)
     print(f"predictions differing, of {len(ids)}")

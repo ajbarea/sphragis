@@ -29,6 +29,9 @@ datasets/results/contamination-inputs/
 # rescorings, ids and scores only, are committed (research log, 2026-10-18).
 datasets/results/rq1-partition-qt-*.json
 datasets/results/rq1-partition-chromium-*.json
+datasets/results/rq1-windows-chromium*.json
+datasets/results/retrieval-halves-qt-*.json
+datasets/results/rules-halves-qt-*.json
 
 COMMITS.md
 

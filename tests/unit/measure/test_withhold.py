@@ -43,7 +43,7 @@ def test_a_run_keeps_its_ids_and_scores_and_loses_its_text() -> None:
     assert published["withheld_text"]["fields"] == ["prediction"]
     assert published["withheld_text"]["key_id"] == w.key_id(KEY)
     assert run["results"]["base|a"][0]["prediction"] == "p", "the input is not mutated"
-    assert w.text_left(published, "rq1-partition-openstack-p1.json") == []
+    assert w.text_left(published) == []
 
 
 def test_a_prediction_interval_is_not_text() -> None:
@@ -51,13 +51,27 @@ def test_a_prediction_interval_is_not_text() -> None:
     assert w.withhold(across, "across-orgs.json", KEY) == (across, 0)
 
 
-def test_fields_belong_to_their_files() -> None:
-    """`file` is a rule list in a reviews distillation and a path everywhere else."""
-    rules = {"files": {"openstack-a": {"file": "- a rule", "rules": ["- a rule"], "chunks": 2}}}
-    published, count = w.withhold(rules, "rules-reviews-openstack-p10.json", KEY)
-    assert count == 2 and published["files"]["openstack-a"]["chunks"] == 2
+def test_fields_belong_to_their_objects() -> None:
+    """`file` is a rule list in a review distillation and a path everywhere else."""
+    rules = {
+        "files": {
+            "openstack-a": {
+                "map_lists": ["- m"],
+                "file": "- a rule",
+                "rules": ["- a rule"],
+                "chunks": 2,
+            }
+        }
+    }
+    published, count = w.withhold(rules, "any-name.json", KEY)
+    assert count == 3 and published["files"]["openstack-a"]["chunks"] == 2
     assert w.withhold({"file": "datasets/results/x.json"}, "k-coverage-qt.json", KEY)[1] == 0
-    assert w.withhold(rules, "rules-guide-openstack.json", KEY)[1] == 0
+    assert w.text_left(rules) != []
+
+
+def test_a_distillation_of_a_written_guide_is_not_withheld() -> None:
+    guide = {"kind": "guide", "map_lists": ["- m"], "reduce_answer": None, "file": "- r"}
+    assert w.withhold({"files": {"o": guide}}, "rules-guide-openstack.json", KEY)[1] == 0
 
 
 def test_determinism_passes_keep_their_ids() -> None:
@@ -79,3 +93,29 @@ def test_a_reader_that_needs_text_refuses_a_published_copy() -> None:
     with pytest.raises(SystemExit, match="full-text copy"):
         w.require_text(published, "r.json")
     w.require_text({"results": {}}, "r.json")
+
+
+def test_a_burned_key_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    environ = {w.KEY_ENV: KEY.hex()}
+    assert w.load_key(environ) == KEY
+    monkeypatch.setitem(w.BURNED_KEY_IDS, w.key_id(KEY), "its texts are in history")
+    with pytest.raises(SystemExit, match="burned key.*Generate a new one"):
+        w.load_key(environ)
+
+
+def test_the_key_whose_texts_are_in_history_is_burned() -> None:
+    assert "659eedab9a778439" in w.BURNED_KEY_IDS
+
+
+def test_documents_compare_only_on_one_basis() -> None:
+    plain = {"results": {}}
+    one, _ = w.withhold({"prediction": "p"}, "r.json", KEY)
+    two, _ = w.withhold({"prediction": "p"}, "r.json", bytes(32))
+    assert w.basis({"a": plain, "b": plain}) == ""
+    assert w.basis({"a": one, "b": one}) == w.SUFFIX
+    for mixed, match in (
+        ({"a": plain, "b": one}, "published and full-text"),
+        ({"a": one, "b": two}, "keys"),
+    ):
+        with pytest.raises(SystemExit, match=match):
+            w.basis(mixed)

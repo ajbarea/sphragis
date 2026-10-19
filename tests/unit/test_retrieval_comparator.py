@@ -626,6 +626,23 @@ def test_a_rules_job_prompts_with_each_file_in_the_system_turn(
     assert set(report["near_duplicate_shots"].values()) == {None}
 
 
+def test_a_digested_rules_file_is_refused(corpora: dict[str, Path], tmp_path: Path) -> None:
+    from sphragis.measure.withhold import withhold
+
+    rules = tmp_path / "rules"
+    rules.mkdir()
+    files = {h: {"map_lists": ["- m"], "file": f"- rule of {h}"} for h in ("openstack-a",)}
+    made = {"files": files, "source": "reviews", "org": "openstack", "partition": ORDER[0]}
+    digested, count = withhold(made, "rules.json", bytes(range(32)))
+    assert count == 2
+    (rules / f"rules-reviews-openstack-p{ORDER[0]}.json").write_text(json.dumps(digested))
+    with pytest.raises(SystemExit, match="full-text copy"):
+        _halves(
+            corpora, tmp_path / "h.json", "--partition", str(ORDER[0]), "--arms", "rules",
+            "--rules", str(rules),
+        )  # fmt: skip
+
+
 def test_a_rules_file_from_another_pool_is_refused(tmp_path: Path) -> None:
     import argparse
 
