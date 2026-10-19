@@ -68,6 +68,7 @@ from sphragis.experiment.partitions import (
     spread_targets,
 )
 from sphragis.experiment.runs import decoder
+from sphragis.experiment.tokens import lexer_unsure
 from sphragis.measure.stats import one_sided_alpha
 from sphragis.provenance import provenance_header
 
@@ -126,6 +127,13 @@ parser.add_argument("--foreign-source", choices=FOREIGN_SOURCES, help="with --hy
 parser.add_argument("--bootstrap-seed", type=int, default=TEST_BOOTSTRAP_SEED)
 # The gate's registered resample count, as every confirmatory interval here uses.
 parser.add_argument("--resamples", type=int, default=TEST_RESAMPLES)
+# An exploratory check of a token-class reading (research log, 2026-10-15): the development
+# read again without every example a lexer may have misread in any run's arm.
+parser.add_argument(
+    "--lexer-sure",
+    action="store_true",
+    help="drop every example a lexer may have misread (tokens.lexer_unsure) from every run",
+)
 parser.add_argument("--out", type=Path, required=True)
 
 
@@ -160,8 +168,30 @@ def sensitivity_listings(specs: list[str], *, org: str) -> dict[str, tuple[str, 
     return listings
 
 
+def lexer_sure(runs: list[tuple[dict, int]]) -> tuple[list[tuple[dict, int]], int]:
+    """The runs without every example a lexer may have misread in any arm of any run, and how
+    many examples that drops."""
+    unsure = {
+        row["id"]
+        for results, _ in runs
+        for rows in results.values()
+        for row in rows
+        if lexer_unsure(row)
+    }
+    kept = [
+        ({arm: [r for r in rows if r["id"] not in unsure] for arm, rows in results.items()}, k)
+        for results, k in runs
+    ]
+    return kept, len(unsure)
+
+
 def main() -> None:
     args = parser.parse_args()
+    if args.lexer_sure and (args.sizing or args.sensitivity or args.planted or args.without):
+        raise SystemExit(
+            "--lexer-sure is an exploratory check: no --sizing, --sensitivity, "
+            "--planted or --without"
+        )
     sesoi = metric_sesoi(args.metric)
     listings = sensitivity_listings(args.without, org=args.org)
     h2 = args.hypothesis == "H2"
@@ -248,6 +278,15 @@ def main() -> None:
         raise SystemExit(f"runs read on {sorted(windows)}, not one of the two windows")
     if h2 and window != "development":
         raise SystemExit("H2 is read here on the development window only")
+    lexer_dropped = None
+    if args.lexer_sure:
+        if window != "development":
+            raise SystemExit("--lexer-sure is a check on the development window only")
+        try:
+            runs, dropped_examples = lexer_sure(runs)
+        except ValueError as error:
+            raise SystemExit(f"--lexer-sure: {error}") from error
+        lexer_dropped = {"examples_dropped": dropped_examples}
     if window == "test":
         # Fixed before the test window: who is read, its K, and the draws its interval takes.
         if not args.sizing:
@@ -484,6 +523,7 @@ def main() -> None:
         "outcome_neutral_runs",
         "sizing",
         "without",
+        "lexer_sure",
         "provenance",
     }
     if head & set(cell):
@@ -506,6 +546,7 @@ def main() -> None:
         **cell,
         "sizing": sizing,
         "without": without,
+        "lexer_sure": lexer_dropped,
         "provenance": provenance_header(),
     }
     if window == "test":

@@ -535,7 +535,7 @@ def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
         pilot_sizing(artifact | {"runs": 0}, "k-coverage", org="wikimedia")
 
 
-@pytest.mark.parametrize("org", ["openstack", "wikimedia"])
+@pytest.mark.parametrize("org", ["openstack", "wikimedia", "qt"])
 def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid(
     org: str, tmp_path: Path
 ) -> None:
