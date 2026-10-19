@@ -28,22 +28,34 @@ def _pool(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=POOL))
 
 
-def _record(projects=POOL.projects) -> dict:
-    return {"listings": [{"query": f"status:merged (project:{p})"} for p in projects]}
+def _month(month: str) -> str:
+    return f"status:merged after:{month}-01 before:{cli.next_month(month)}-01"
+
+
+def _record(projects=POOL.projects, month: str = "2024-10") -> dict:
+    return {"listings": [{"query": f"{_month(month)} (project:{p})"} for p in projects]}
+
+
+def _whole(month: str) -> dict:
+    """A month listed whole, as a fetch under a scope of every project records it."""
+    return {"query": _month(month)}
 
 
 def _change(number: int, project: str, created: str, comments: int) -> dict:
     return {
         "_number": number,
         "project": project,
+        "branch": "main",
         "created": f"{created} 00:00:00.000000000",
         "total_comment_count": comments,
     }
 
 
 def _write(root: Path, rows: dict[str, list[dict]], record=None) -> None:
+    """Each month's snapshot; `record` maps a month to its record (default every project's)."""
     for month in MONTHS:
-        write_snapshot(root, "chromium", month, rows.get(month, []), record=record or _record())
+        made = record(month) if record else _record(month=month)
+        write_snapshot(root, "chromium", month, rows.get(month, []), record=made)
 
 
 def _main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict:
@@ -81,7 +93,7 @@ def test_a_listing_missing_a_month_is_refused(tmp_path, monkeypatch) -> None:
 
 
 def test_a_listing_missing_a_project_is_refused(tmp_path, monkeypatch) -> None:
-    _write(tmp_path, {}, record=_record(("p/a", "p/b")))
+    _write(tmp_path, {}, record=lambda m: _record(("p/a", "p/b"), m))
     with pytest.raises(SystemExit, match="lists 2 projects"):
         _main(tmp_path, monkeypatch)
 
@@ -89,4 +101,73 @@ def test_a_listing_missing_a_project_is_refused(tmp_path, monkeypatch) -> None:
 def test_a_change_created_outside_the_grant_is_refused(tmp_path, monkeypatch) -> None:
     _write(tmp_path, {"2024-12": [_change(9, "p/a", "2024-12-15", 0)]})
     with pytest.raises(SystemExit, match="outside the grant"):
+        _main(tmp_path, monkeypatch)
+
+
+EVERY = cli.GrantScope((), "2024-10-01", "2024-12-15", None, every_project=True)
+
+
+def test_a_scope_of_every_project_ranks_the_projects_its_whole_months_return(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+    _write(
+        tmp_path,
+        {
+            "2024-10": [_change(1, "x/b", "2024-10-02", 1), _change(2, "x/a", "2024-10-03", 0)],
+            "2024-11": [_change(3, "x/b", "2024-11-02", 2)],
+        },
+        record=_whole,
+    )
+    report = _main(tmp_path, monkeypatch)
+    assert [row["project"] for row in report["order"]] == ["x/b", "x/a"]
+    assert report["order"][0] == {"project": "x/b", "merged": 2, "commented": 2}
+
+
+def test_a_scope_of_every_project_refuses_a_month_listed_by_project(tmp_path, monkeypatch) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+    _write(tmp_path, {}, record=lambda m: _record(("x/a",), m))
+    with pytest.raises(SystemExit, match="listed whole"):
+        _main(tmp_path, monkeypatch)
+
+
+def test_a_scope_of_every_project_refuses_the_hosts_own_project(tmp_path, monkeypatch) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+    _write(tmp_path, {"2024-10": [_change(1, "All-Projects", "2024-10-02", 0)]}, record=_whole)
+    with pytest.raises(SystemExit, match="outside the grant"):
+        _main(tmp_path, monkeypatch)
+
+
+@pytest.mark.parametrize("branch", ["refs/meta/config", "refs/meta/dashboards/team", "", None])
+def test_a_scope_of_every_project_refuses_a_change_off_a_code_branch(
+    tmp_path, monkeypatch, branch: str | None
+) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+    config = {**_change(1, "x/a", "2024-10-02", 0), "branch": branch}
+    _write(tmp_path, {"2024-10": [config]}, record=_whole)
+    with pytest.raises(SystemExit, match="outside the grant"):
+        _main(tmp_path, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "status:merged after:2024-10-15 before:2024-11-01",
+        "status:merged after:2024-09-01 before:2024-10-01",
+        "status:merged after:2024-10-01 before:2024-10-99",
+        "status:merged",
+    ],
+)
+def test_a_scope_of_every_project_refuses_a_listing_that_is_not_its_whole_month(
+    tmp_path, monkeypatch, query: str
+) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+    _write(tmp_path, {}, record=lambda m: {"query": query} if m == "2024-10" else _whole(m))
+    with pytest.raises(SystemExit, match="not its month"):
+        _main(tmp_path, monkeypatch)
+
+
+def test_a_project_listed_for_another_month_is_refused(tmp_path, monkeypatch) -> None:
+    _write(tmp_path, {}, record=lambda m: _record(month="2024-11" if m == "2024-10" else m))
+    with pytest.raises(SystemExit, match="not its month"):
         _main(tmp_path, monkeypatch)
