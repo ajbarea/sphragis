@@ -8,13 +8,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
-- **Qt's simulations** (IMPL 3d): the development pilot is read (research log, 2026-10-18; H1
-  supported on likelihood, K 10). On TIGRIS: the full simulation at the pilot's K and the null at
-  every other K in `K_GRID` (`partition_sensitivity.sbatch`, `METRIC=logprob_per_token`, no
-  placebo), then `k_coverage.py` for Qt's K, its cell's bounds into the gate, and Qt's planted
-  check 5 run. Qt's generation runs stay off the repository (their predictions can repeat review
-  text); the likelihood rescorings are committed. Every other run is published through
-  `scripts/withhold_text.py`, which digests its model text (research log, 2026-10-19).
+- **Qt's simulations** (IMPL 3d): the development pilot is read (H1 supported on likelihood), its
+  planted check 5 passes 10 of 10, and its K under the coverage rule is 15 (research log,
+  2026-10-18). Its full simulation at K = 15 is read (research log, 2026-10-19): every detectable
+  effect below δ, the null nominal at the sizing bound. Qt's generation runs stay off the
+  repository (their predictions can repeat review text); the likelihood rescorings are committed.
+  Every other run is published through `scripts/withhold_text.py`, which digests its model text
+  (research log, 2026-10-19).
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
   split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
 - **H2's foreign source** (research log, 2026-10-19): AOSP's pool, listed through 2025-10 and

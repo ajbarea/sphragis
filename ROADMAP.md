@@ -360,8 +360,10 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   resamples. On the development pilots: the share of eligible refinements in a chain, and whether
   clustering over chains moves the interval; report it, and register chain clustering if it does.
   The raw snapshots hold each change's `submission_id` (changes submitted together) but no commit
-  parents, so the paper's parent-link chain needs either that proxy, stated as one, or the
-  revisions' commit records fetched within each host's terms.
+  parents. The proxy is degenerate on Qt, whose changes are submitted one at a time (Qt's granted raw
+  snapshots, read 2026-10-18: a shared `submission_id` is rare; the share is measured with the chain
+  reading itself), so the parent-link chain needs the revisions' commit records, fetched within
+  each host's terms.
 
 ## Plan F — RQ2 positioning
 
@@ -745,9 +747,11 @@ as the unit; the evidence says the codebase is.
 - [ ] Qt admitted if permission arrives, and its cells' bounds are simulated and committed, before
   2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's REST
-  terms were granted in writing on 2026-10-15 (research log); admission still waits on its cells.
+  terms were granted in writing on 2026-10-15 (research log); its H1 cell's bounds are simulated
+  at K = 15 (research log, 2026-10-19), and its H2 cell's wait on a foreign pool that covers.
   Chromium's grant covers a pool, not an evaluated corpus, so H2 is Qt's cell against a C++-matched
-  foreign adapter on V8 (2026-10-16).
+  foreign adapter; V8's and AOSP's pools cannot cover every matched draw, and Fuchsia's is the one
+  source left (research log, 2026-10-19).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity

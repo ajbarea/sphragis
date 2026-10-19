@@ -227,6 +227,14 @@ def char_classes(before: str, after: str, path: str | None) -> tuple[list[str], 
     }
 
 
+def lexer_unsure(row: Mapping[str, Any]) -> bool:
+    """Whether a lexer may have misread a scored row: error characters, or an identifier class
+    that changes when each line is lexed alone. A row without that record raises ValueError."""
+    if "lex_error_chars" not in row or "line_disagreement" not in row:
+        raise ValueError(f"row {row.get('id')!r} carries no lexer record")
+    return bool(row["lex_error_chars"]) or bool(row["line_disagreement"])
+
+
 def _merge(cells: set[str]) -> str:
     """A token over several characters: an identifier if any is, changed if any is."""
     return _cell(

@@ -1,0 +1,330 @@
+{
+  "placebo": null,
+  "org": "qt",
+  "inputs": {
+    "runs": "--runs",
+    "levels": "datasets/results/partition-pilot-qt-likelihood.json: levels",
+    "spread_targets": "datasets/results/partition-pilot-qt-likelihood.json: per_run and runs_left_out, chi-squared bounds",
+    "calibration_changes": "datasets/results/partition-pilot-qt-likelihood.json: changes",
+    "planned_changes": "datasets/results/project-windows-qt-v3.json: test.projected_changes, rounded down",
+    "size_floor": "datasets/results/admissible-partitions-qt.json: size_floor",
+    "reference": "datasets/results/admissible-partitions-qt.json: reference"
+  },
+  "planned_changes": 3589,
+  "pilot_changes": 403,
+  "projects": 33,
+  "family_alpha": 0.025,
+  "hypothesis_power": 0.95,
+  "cell_power": {
+    "1": 0.95,
+    "2": 0.9746794344808963,
+    "3": 0.9830475724915585
+  },
+  "metric": "logprob_per_token",
+  "pool": "the pilot's runs, averaged per change",
+  "change_by_run_noise": {
+    "shared_by_change": 0.02404443900165393,
+    "per_example": 0.1287093850591836
+  },
+  "truth_shrinkage": 0.8339000973059973,
+  "sesoi": 0.016142401360357633,
+  "xi": 0.016142401360357633,
+  "runs": 15,
+  "null_only": false,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 1000,
+  "null_trials": 4000,
+  "resamples": 10000,
+  "redraw": 0.0,
+  "seed": 43,
+  "size_floor": 1850,
+  "partitions_pooled": 400,
+  "partition_seeds_tried": 934,
+  "spread_targets": {
+    "pilot_lower_90": 0.004345576161629417,
+    "pilot_estimate": 0.005160529235610697,
+    "sizing_bound_90": 0.006499298612503915,
+    "pilot_upper_99": 0.007928248677593022
+  },
+  "calibration_changes": 403,
+  "calibration_trials": 100,
+  "by_target": {
+    "pilot_lower_90": {
+      "calibration": {
+        "target": 0.004345576161629417,
+        "sigma_run": 0.0,
+        "spread": 0.004972650805842402,
+        "floor": true
+      },
+      "null_false_positive": {
+        "0.975": 0.00375,
+        "0.95": 0.0095
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.004296875,
+              "minimum_detectable_effect": 0.004296875,
+              "null_reads_bounded": 0.95325
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.00478515625,
+              "minimum_detectable_effect": 0.00478515625,
+              "null_reads_bounded": 0.98575
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.005078125000000001,
+              "minimum_detectable_effect": 0.005078125000000001,
+              "null_reads_bounded": 0.9955
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00400390625,
+              "minimum_detectable_effect": 0.00400390625,
+              "null_reads_bounded": 0.95775
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.00439453125,
+              "minimum_detectable_effect": 0.00439453125,
+              "null_reads_bounded": 0.9845
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.00478515625,
+              "minimum_detectable_effect": 0.00478515625,
+              "null_reads_bounded": 0.99575
+            }
+          }
+        }
+      },
+      "lifts_simulated": 18
+    },
+    "pilot_estimate": {
+      "calibration": {
+        "target": 0.005160529235610697,
+        "sigma_run": 0.001611328125,
+        "spread": 0.005165153305208483,
+        "floor": false,
+        "spread_at_zero": 0.004972650805842402
+      },
+      "null_false_positive": {
+        "0.975": 0.00375,
+        "0.95": 0.01225
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.004589843750000001,
+              "minimum_detectable_effect": 0.004589843750000001,
+              "null_reads_bounded": 0.957
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.004980468750000001,
+              "minimum_detectable_effect": 0.004980468750000001,
+              "null_reads_bounded": 0.98225
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.005175781250000001,
+              "minimum_detectable_effect": 0.005175781250000001,
+              "null_reads_bounded": 0.99
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.004199218750000001,
+              "minimum_detectable_effect": 0.004199218750000001,
+              "null_reads_bounded": 0.9535
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.004589843750000001,
+              "minimum_detectable_effect": 0.004589843750000001,
+              "null_reads_bounded": 0.98075
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.004882812500000001,
+              "minimum_detectable_effect": 0.004882812500000001,
+              "null_reads_bounded": 0.9915
+            }
+          }
+        }
+      },
+      "lifts_simulated": 19
+    },
+    "sizing_bound_90": {
+      "calibration": {
+        "target": 0.006499298612503915,
+        "sigma_run": 0.004423828125,
+        "spread": 0.006501253270696358,
+        "floor": false,
+        "spread_at_zero": 0.004972650805842402
+      },
+      "null_false_positive": {
+        "0.975": 0.0105,
+        "0.95": 0.01825
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.0064453125000000005,
+              "minimum_detectable_effect": 0.0064453125000000005,
+              "null_reads_bounded": 0.968
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.00673828125,
+              "minimum_detectable_effect": 0.00673828125,
+              "null_reads_bounded": 0.98075
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.007128906250000001,
+              "minimum_detectable_effect": 0.007128906250000001,
+              "null_reads_bounded": 0.99025
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00595703125,
+              "minimum_detectable_effect": 0.00595703125,
+              "null_reads_bounded": 0.96675
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.00625,
+              "minimum_detectable_effect": 0.00625,
+              "null_reads_bounded": 0.98025
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.006640625000000001,
+              "minimum_detectable_effect": 0.006640625000000001,
+              "null_reads_bounded": 0.9905
+            }
+          }
+        }
+      },
+      "lifts_simulated": 23
+    },
+    "pilot_upper_99": {
+      "calibration": {
+        "target": 0.007928248677593022,
+        "sigma_run": 0.006416015625,
+        "spread": 0.007920313008507613,
+        "floor": false,
+        "spread_at_zero": 0.004972650805842402
+      },
+      "null_false_positive": {
+        "0.975": 0.01425,
+        "0.95": 0.025
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.0080078125,
+              "minimum_detectable_effect": 0.0080078125,
+              "null_reads_bounded": 0.96525
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.00859375,
+              "minimum_detectable_effect": 0.00859375,
+              "null_reads_bounded": 0.98225
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.0087890625,
+              "minimum_detectable_effect": 0.0087890625,
+              "null_reads_bounded": 0.9865
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00732421875,
+              "minimum_detectable_effect": 0.00732421875,
+              "null_reads_bounded": 0.96275
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.0080078125,
+              "minimum_detectable_effect": 0.0080078125,
+              "null_reads_bounded": 0.9825
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.008203125,
+              "minimum_detectable_effect": 0.008203125,
+              "null_reads_bounded": 0.98725
+            }
+          }
+        }
+      },
+      "lifts_simulated": 20
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-19T11:42:01.143748+00:00",
+    "git": {
+      "commit": "6bebf23e012efaa3ebcfb2aa63bc2203ba955f11",
+      "branch": "HEAD"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.55-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0",
+      "pygments": "2.21.0"
+    }
+  }
+}
