@@ -2,8 +2,10 @@
 
 Each project's count is its merged changes created inside the host's grant
 (`cli.GrantScope`: from `created_from`, before `created_before`), read from the month snapshots a
-`fetch` wrote under `--root`, each its month of every granted project, or of every project listed
-whole (`GrantScope.every_project`) (research log, 2026-10-18 and 2026-10-19). Projects are
+`fetch` wrote under `--root`, each its month listed in the scope's day ranges (`cli.day_ranges`;
+a range's halves where the host would have truncated it, `cli.range_halves`), once per granted
+project, or under a scope of every project naming none (`GrantScope.every_project`) (research
+log, 2026-10-18 and 2026-10-19). Projects are
 ranked by that count, most first, ties by name. A month lists the changes last updated in it, so
 a change updated after the grant's last month is in no listing. Beside it, as feasibility only,
 the changes whose snapshot records an inline comment (`cli.uncommented` reads the rest as
@@ -18,17 +20,18 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from sphragis.corpus.cli import (
     GrantScope,
     covers_change,
     created_in_grant,
+    day_ranges,
     grant_months,
     grant_scope,
     month_listing,
-    next_month,
+    range_halves,
     uncommented,
 )
 from sphragis.corpus.storage import iter_snapshot, read_snapshot_record
@@ -54,19 +57,34 @@ def main() -> None:
     for snapshot in snapshots:
         record = read_snapshot_record(snapshot) or {}
         month = snapshot.name.removesuffix(".ndjson.gz")
-        asked = [month_listing(q) for q in _queries(record)]
-        whole_month = (f"{month}-01", f"{next_month(month)}-01")
-        if not asked or any(a is None or a[:2] != whole_month for a in asked):
-            raise SystemExit(f"{snapshot.name} is not its month's listing: {_queries(record)}")
-        listed = [a[2] for a in asked if a is not None]
+        queries = _queries(record)
+        asked = [month_listing(q) for q in queries]
+        ranges: defaultdict[str | None, Counter[tuple[str, str]]] = defaultdict(Counter)
+        for listing in asked:
+            if listing is None:
+                raise SystemExit(f"{snapshot.name} is not its month's listing: {queries}")
+            ranges[listing[2]][listing[:2]] += 1
+        if not ranges:
+            raise SystemExit(f"{snapshot.name} is not its month's listing: {queries}")
+        listed = sorted(ranges, key=str)
         if scope.every_project:
             if listed != [None]:
-                raise SystemExit(f"{snapshot.name} is not its month listed whole: {listed}")
-        elif sorted(listed, key=str) != sorted(scope.projects):
+                raise SystemExit(
+                    f"{snapshot.name} names {[p for p in listed if p]}: the ranking listings "
+                    "name no project"
+                )
+        elif listed != sorted(scope.projects):
             raise SystemExit(
                 f"{snapshot.name} lists {len(listed)} projects, the grant names "
                 f"{len(scope.projects)}"
             )
+        registered = day_ranges(month, scope.listing_days)
+        halve = scope.listing_days is not None
+        for project, spans in ranges.items():
+            tiled = all(_tiled(span, spans, halve=halve) for span in registered)
+            if not tiled or any(spans.values()):
+                of = f" of {project}" if project else ""
+                raise SystemExit(f"{snapshot.name} is not its month's listing{of}: {queries}")
         for change in iter_snapshot(snapshot):
             if change["_number"] in seen:
                 # Updated into a later month between the two months' fetches: counted once.
@@ -106,6 +124,16 @@ def _months(scope: GrantScope) -> list[str]:
         out.append(f"{year:04d}-{month:02d}")
         year, month = (year + 1, 1) if month == 12 else (year, month + 1)
     return out
+
+
+def _tiled(span: tuple[str, str], spans: Counter[tuple[str, str]], *, halve: bool) -> bool:
+    """Whether `spans` lists `span`, or with `halve` its two halves (`range_halves`), each in
+    turn, down to one day; each listing so matched is taken from `spans`."""
+    if spans[span] > 0:
+        spans[span] -= 1
+        return True
+    halves = range_halves(*span) if halve else None
+    return halves is not None and all(_tiled(half, spans, halve=True) for half in halves)
 
 
 def _queries(record: dict) -> list[str]:

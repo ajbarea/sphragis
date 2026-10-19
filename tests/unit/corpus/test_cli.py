@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 import urllib.parse
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -206,8 +207,11 @@ class _FakeResponse:
         return list(self._headers.items())
 
 
-def _scripted_connections(monkeypatch: pytest.MonkeyPatch, script: list[object]) -> list[Any]:
-    """Replace HTTPSConnection with one that plays `script`: responses, or exceptions to raise.
+def _scripted_connections(
+    monkeypatch: pytest.MonkeyPatch, script: list[object] | Callable[[str], object]
+) -> list[Any]:
+    """Replace HTTPSConnection with one that plays `script`: responses, or exceptions to raise, in
+    order, or the one a function of the request path returns.
 
     The mechanics tests address the placeholder hosts `g` and `h`, which are permitted here and
     nowhere else; every real review host keeps the permission the module records for it.
@@ -230,7 +234,7 @@ def _scripted_connections(monkeypatch: pytest.MonkeyPatch, script: list[object])
             instances.append(self)
 
         def request(self, method: str, path: str, headers: dict[str, str] | None = None) -> None:
-            action = script.pop(0)
+            action = script(path) if callable(script) else script.pop(0)
             if isinstance(action, BaseException):
                 raise action
             self.paths.append(path)
@@ -1361,12 +1365,14 @@ def test_fuchsias_rest_host_is_refused_on_a_machine_without_its_grant(
 def test_a_rest_fetch_of_fuchsia_past_its_grant_opens_no_connection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A month is listed whole, never by project, and only a month the grant covers."""
+    """A month is listed naming no project or only projects the grant covers, each named as
+    itself, and only a month the grant covers."""
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)] * 5)
     fetch = ["fetch", "--org", "fuchsia", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
-    with pytest.raises(SystemExit, match="list the month whole"):
-        main([*fetch, "--month", "2025-01", "--project", "fuchsia"])
+    for project in ("All-Projects", "{fuchsia}OR{All-Users}", "OR", "^fuchsia.*", "a b"):
+        with pytest.raises(SystemExit, match="may not name"):
+            main([*fetch, "--month", "2025-01", "--project", "fuchsia", "--project", project])
     # Before the grant by the grant's months; the sealed test window by the seal, earlier still.
     for month, why in (("2024-10", "grant covers"), ("2025-11", "sealed test window")):
         with pytest.raises(SystemExit, match=why):
@@ -1439,6 +1445,97 @@ def test_a_whole_month_of_fuchsia_drops_the_hosts_own_projects(
     assert [r["_number"] for r in kept] == [1]
     record = json_module.loads((tmp_path / "fuchsia" / "raw" / "2025-01.record.json").read_text())
     assert record["not_code_changes"] == 2
+
+
+def _change_row(number: int, updated: str) -> dict[str, object]:
+    return {
+        "_number": number,
+        "id": f"c{number}",
+        "project": "chromium/src",
+        "branch": "main",
+        "created": "2025-01-20 00:00:00.000000000",
+        "updated": updated,
+    }
+
+
+def _ranged_host(
+    monkeypatch: pytest.MonkeyPatch, served: dict[tuple[str, str], list[dict[str, object]]]
+) -> list[str]:
+    """chromium-review through the real transport: each listing of a range answers `served`'s
+    rows for it, at most one of them, so a range of two or more rows is cut short and its
+    truncation probe finds the rest; a range not in `served` holds no change."""
+    from sphragis.corpus import cli
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    monkeypatch.setattr(cli, "unheld_grant", lambda host: None)
+    real = cli.http_transport
+    monkeypatch.setattr(cli, "http_transport", lambda **kw: real(**kw, sleep=lambda _: None))
+    asked: list[str] = []
+
+    def answer(path: str) -> _FakeResponse:
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(path).query)["q"][0]
+        asked.append(query)
+        probe = cli._TRUNCATION_PROBE.fullmatch(query)
+        listed = cli.month_listing(probe.group("listing") if probe else query)
+        assert listed is not None, query
+        rows = served.get(listed[:2], [])
+        page = rows[1:] if probe else rows[:1]
+        return _FakeResponse(200, ")]}'\n" + json.dumps(page))
+
+    _scripted_connections(monkeypatch, answer)
+    return asked
+
+
+def test_a_ranged_fetch_lists_a_truncated_range_again_as_its_halves(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Chromium's two-day range the host would cut short is read as two one-day listings
+    (research log, 2026-10-19), each through the grant's allowlist."""
+    first, second = (
+        _change_row(1, "2025-02-02 10:00:00.000000000"),
+        _change_row(2, "2025-02-01 05:00:00.000000000"),
+    )
+    asked = _ranged_host(
+        monkeypatch,
+        {
+            ("2025-02-01", "2025-02-03"): [first, second],
+            ("2025-02-01", "2025-02-02"): [second],
+            ("2025-02-02", "2025-02-03"): [first],
+        },
+    )
+    fetch = ["fetch", "--org", "chromium", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    assert main([*fetch, "--month", "2025-02"]) == 0
+    record = json.loads((tmp_path / "chromium" / "raw" / "2025-02.record.json").read_text())
+    from sphragis.corpus import cli
+
+    ranges = [
+        ("2025-02-01", "2025-02-02"),
+        ("2025-02-02", "2025-02-03"),
+        *cli.day_ranges("2025-02", 2)[1:],
+    ]
+    assert [r["query"] for r in record["listings"]] == [
+        f"status:merged after:{a} before:{b}" for a, b in ranges
+    ]
+    assert record["count"] == 2
+    assert asked[0] == "status:merged after:2025-02-01 before:2025-02-03"
+    from sphragis.corpus.storage import iter_snapshot
+
+    kept = list(iter_snapshot(tmp_path / "chromium" / "raw" / "2025-02.ndjson.gz"))
+    assert sorted(r["_number"] for r in kept) == [1, 2]
+
+
+def test_a_day_the_host_would_still_truncate_fails_the_month(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rows = [_change_row(n, f"2025-02-01 0{n}:00:00.000000000") for n in (3, 2, 1)]
+    _ranged_host(
+        monkeypatch,
+        {("2025-02-01", "2025-02-03"): rows, ("2025-02-01", "2025-02-02"): rows},
+    )
+    fetch = ["fetch", "--org", "chromium", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    with pytest.raises(SystemExit, match="2025-02-01 to 2025-02-02 is one day"):
+        main([*fetch, "--month", "2025-02"])
+    assert not (tmp_path / "chromium" / "raw" / "2025-02.ndjson.gz").exists()
 
 
 def test_every_permitted_rest_host_says_why() -> None:

@@ -50,26 +50,42 @@ def test_measure_allows_the_grants_last_month(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     asked = _offline(monkeypatch, tmp_path)
-    scoping.main(["measure", "volume", "v8/v8", "2025-08"])
+    scoping.main(["measure", "volume", "v8/v8", "2025-10"])
     assert asked and '"merged": 0' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("kind", ["volume", "ranged"])
+def test_a_listing_naming_a_project_passes_the_grants_allowlist(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, kind: str
+) -> None:
+    """Chromium's grant covers every code project; a project the script names is one of them."""
+    from sphragis.corpus import cli
+
+    asked = _offline(monkeypatch, tmp_path)
+    scoping.main(["measure", kind, "chromium/src", "2025-01"])
+    scope = cli.REST_PERMITTED[scoping.HOST].scope
+    assert scope is not None and asked
+    targets = [url.removeprefix(scoping.BASE) for url in asked]
+    assert all(cli.out_of_scope_request(t, scope, set()) is None for t in targets), targets
 
 
 @pytest.mark.parametrize("kind", ["volume", "ranged", "yield"])
 def test_a_month_outside_the_grant_is_refused_before_any_request(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, kind: str
 ) -> None:
-    """Past V8's grant (changes created before 2025-09-01) and before the sealed window."""
+    """Before the grant's first month (Qt's training window opens 2024-11-01)."""
     asked = _offline(monkeypatch, tmp_path)
-    with pytest.raises(SystemExit, match="2025-09: outside the host's grant"):
-        scoping.main(["measure", kind, "v8/v8", "2025-09", "1"])
+    with pytest.raises(SystemExit, match="2024-10: outside the host's grant"):
+        scoping.main(["measure", kind, "v8/v8", "2024-10", "1"])
     assert asked == []
 
 
-def _change(number: int, created: str) -> dict:
+def _change(number: int, created: str, branch: str = "main") -> dict:
     return {
         "_number": number,
         "created": created,
         "project": "v8/v8",
+        "branch": branch,
         "owner": {"_account_id": 1, "email": "dev@example.org"},
         "current_revision": "r",
         "revisions": {"r": {"_number": 1, "files": {}}},
@@ -80,11 +96,13 @@ def test_only_changes_created_inside_the_grant_are_asked_about(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     rows = [_change(1, "2025-08-20 00:00:00.000000000"), _change(2, "2025-09-02 00:00:00.000")]
+    # A change on refs/meta/ holds no code, so the grant does not admit it to be asked about.
+    rows.append(_change(3, "2025-08-21 00:00:00.000000000", "refs/meta/config"))
     monkeypatch.setattr(scoping, "_transport", lambda *_: None)
     monkeypatch.setattr(scoping, "listing", lambda *_, **__: (rows, False))
     asked: list[str] = []
     monkeypatch.setattr(scoping, "get", lambda url, _: asked.append(url) or {})
-    scoping.measure_yield("v8/v8", "2025-08", 2)
+    scoping.measure_yield("v8/v8", "2025-08", 3)
     assert asked == [f"{scoping.BASE}/changes/1/comments"]
     assert '"sampled": 1' in capsys.readouterr().out
 

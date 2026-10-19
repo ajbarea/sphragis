@@ -102,11 +102,11 @@ H2_PAIR = ("qt", "chromium")
 H2_ORGANIZATION = "qt"
 FOREIGN_SOURCES = ("chromium", "fuchsia", "aosp")
 #: Each source's pool by created date, `created_from` inclusive and `created_before` exclusive, as
-#: item 1 of the H2 plan and each pool's rule fix them: Chromium's V8 pool (2026-10-16) and AOSP's
-#: changes before aosp-main went read-only (`cli.REST_PERMITTED` scopes them the same), and
-#: Fuchsia over Qt's own training-window months.
+#: item 1 of the H2 plan and each pool's rule fix them: Chromium and Fuchsia over Qt's own
+#: training-window months (2026-10-19), and AOSP's changes before aosp-main went read-only
+#: (`cli.REST_PERMITTED` scopes them the same).
 FOREIGN_SPANS = {
-    "chromium": ("2024-11-01", "2025-09-01"),
+    "chromium": WINDOWS["train"],
     "fuchsia": WINDOWS["train"],
     "aosp": ("2024-10-01", "2025-03-27"),
 }

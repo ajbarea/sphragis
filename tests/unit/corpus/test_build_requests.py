@@ -234,8 +234,14 @@ def test_a_read_cap_is_a_positive_count(tmp_path) -> None:
         cli.require_count_probe(args)
 
 
+CAPPED = cli.GrantScope(("v8/v8",), "2024-11-01", "2025-09-01", 170)
+
+
 @pytest.mark.parametrize("flags", [(), ("--read-cap", "171")])
 def test_a_scoped_host_is_read_only_under_its_grants_cap(tmp_path, monkeypatch, flags) -> None:
+    """A scope that sets a read cap, as V8's did (research log, 2026-10-16)."""
+    host = "chromium-review.googlesource.com"
+    monkeypatch.setitem(cli.REST_PERMITTED, host, cli.REST_PERMITTED[host]._replace(scope=CAPPED))
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
     row = {**_change(1, 1), "project": "v8/v8", "created": "2024-11-05 00:00:00.000000000"}
     write_snapshot(tmp_path, "chromium", "2024-11", [row], record={})
@@ -244,14 +250,20 @@ def test_a_scoped_host_is_read_only_under_its_grants_cap(tmp_path, monkeypatch, 
         cli.main(["build", "--org", "chromium", "--root", str(tmp_path), *flags])
 
 
+def test_chromiums_grant_builds_without_a_read_cap(tmp_path) -> None:
+    args = cli.build_parser().parse_args(["build", "--org", "chromium", "--root", str(tmp_path)])
+    cli.require_grant_cap(args)
+
+
 @pytest.mark.parametrize(
     ("flags", "message"),
     [
-        (("--month", "2024-11", "--cutoff", "2024-11-01"), "--project v8/v8 only"),
-        (("--project", "chromium/src", "--month", "2024-11", "--cutoff", "2024-11-01"), "only"),
+        (("--project", "All-Projects", "--month", "2024-11", "--cutoff", "2024-11-01"), "name"),
+        (("--project", "{x}OR{y}", "--month", "2024-11", "--cutoff", "2024-11-01"), "name"),
+        (("--project", "v8/v8", "--project", "OR", "--month", "2024-11"), "may not name"),
+        (("--month", "2024-10", "--cutoff", "2024-11-01"), "not 2024-10"),
         (("--project", "v8/v8", "--month", "2024-10", "--cutoff", "2024-11-01"), "not 2024-10"),
-        (("--project", "v8/v8", "--month", "2025-09", "--cutoff", "2024-11-01"), "not 2025-09"),
-        (("--project", "v8/v8", "--month", "2024-11"), "--cutoff 2024-11-01"),
+        (("--month", "2024-11"), "--cutoff 2024-11-01"),
     ],
 )
 def test_a_fetch_past_chromiums_grant_is_refused_before_any_request(
@@ -267,6 +279,9 @@ def test_a_fetch_past_chromiums_grant_is_refused_before_any_request(
     ("query", "refused"),
     [
         ("status:merged after:2024-11-01 before:2024-12-01 (project:v8/v8)", False),
+        ("status:merged after:2024-11-01 before:2024-11-03", False),
+        ("status:merged after:2024-11-29 before:2024-12-01 (project:chromium/src)", False),
+        ("status:merged after:2024-11-01 before:2024-11-03 (project:All-Projects)", True),
         (
             "(status:merged after:2024-11-01 before:2024-12-01 (project:v8/v8)) "
             'before:"2024-11-30 08:00:00 +0000"',
@@ -297,11 +312,11 @@ def test_a_scoped_host_answers_only_listings_of_its_granted_projects(query, refu
 
 def test_a_month_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
-    write_snapshot(tmp_path, "chromium", "2025-09", [_change(1, 1)], record={})
+    write_snapshot(tmp_path, "chromium", "2024-10", [_change(1, 1)], record={})
     monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
-    cli.main(["build", "--org", "chromium", "--root", str(tmp_path), "--read-cap", "170"])
-    assert "2025-09: outside the host's grant; not built" in capsys.readouterr().out
-    assert not (tmp_path / "chromium" / "examples" / "2025-09.jsonl").exists()
+    cli.main(["build", "--org", "chromium", "--root", str(tmp_path)])
+    assert "2024-10: outside the host's grant; not built" in capsys.readouterr().out
+    assert not (tmp_path / "chromium" / "examples" / "2024-10.jsonl").exists()
 
 
 POOL = cli.GrantScope(("platform/a", "platform/b"), "2024-10-01", "2025-03-27", None)
@@ -325,9 +340,9 @@ def _pool_host(monkeypatch: pytest.MonkeyPatch) -> None:
 )
 def test_a_grant_ending_mid_month_covers_that_month(month: str, inside: bool) -> None:
     assert cli.grant_months(POOL, month) is inside
-    v8 = cli.REST_PERMITTED["chromium-review.googlesource.com"].scope
-    assert v8 is not None
-    assert cli.grant_months(v8, "2025-08") and not cli.grant_months(v8, "2025-09")
+    chromium = cli.REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert chromium is not None
+    assert cli.grant_months(chromium, "2025-10") and not cli.grant_months(chromium, "2024-10")
 
 
 def test_a_scoped_fetch_lists_each_project_alone_and_keeps_only_the_granted_dates(
@@ -381,7 +396,7 @@ def test_a_scoped_fetch_refuses_listings_that_repeat_a_change(tmp_path, monkeypa
     )
     monkeypatch.setattr(cli, "http_transport", lambda **_: object())
     flags = ["--project", "platform/a", "--project", "platform/b", "--month", "2024-10"]
-    with pytest.raises(SystemExit, match="repeat a change"):
+    with pytest.raises(SystemExit, match="repeat change 7 away from a range boundary"):
         cli.main(["fetch", "--org", "chromium", "--root", str(tmp_path), *flags])
 
 
@@ -393,10 +408,12 @@ def test_an_uncapped_scope_builds_without_a_read_cap(tmp_path, monkeypatch) -> N
 
 def test_a_held_row_of_a_project_outside_the_grant_is_not_built(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
-    rows = [{**_change(1, 1), "project": "v8/v8"}, {**_change(2, 1), "project": "chromium/src"}]
+    inside = {"branch": "main", "created": "2024-11-05 00:00:00.000000000"}
+    rows = [{**_change(1, 1), **inside, "project": "v8/v8"}]
+    rows.append({**_change(2, 1), **inside, "project": "All-Users"})
     write_snapshot(tmp_path, "chromium", "2024-11", rows, record={})
     monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
-    cli.main(["build", "--org", "chromium", "--root", str(tmp_path), "--read-cap", "170"])
+    cli.main(["build", "--org", "chromium", "--root", str(tmp_path)])
     assert "2024-11: rows of projects outside the host's grant" in capsys.readouterr().out
     assert not (tmp_path / "chromium" / "examples" / "2024-11.jsonl").exists()
 
@@ -467,8 +484,8 @@ def test_aosps_listings_run_through_the_month_before_the_sealed_window() -> None
     scope = cli.REST_PERMITTED["android-review.googlesource.com"].scope
     assert scope is not None and scope.listed_through == cli.last_open_month()
     assert f"{cli.last_open_month()}-31" < WINDOWS["test"][0]
-    v8 = cli.REST_PERMITTED["chromium-review.googlesource.com"].scope
-    assert v8 is not None and v8.listed_through is None
+    chromium = cli.REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert chromium is not None and chromium.listed_through == cli.last_open_month()
 
 
 def test_the_grants_window_is_its_created_dates_exactly() -> None:
@@ -521,7 +538,7 @@ def test_fuchsias_grant_covers_every_project_over_qts_training_months() -> None:
     assert scope is not None and scope.read_cap is None
     assert (scope.created_from, scope.created_before) == WINDOWS["train"]
     assert scope.listed_through == cli.last_open_month()
-    assert scope.every_project and scope.projects == ()
+    assert scope.every_project and scope.projects == () and scope.listing_days is None
     assert cli.host_of("fuchsia") == "fuchsia-review.googlesource.com"
     assert cli.covers_project(scope, "fuchsia") and cli.covers_project(scope, "third_party/libc++")
     for not_code in ("All-Projects", "All-Users", "", None):
@@ -535,6 +552,219 @@ def test_fuchsias_grant_covers_every_project_over_qts_training_months() -> None:
     assert cli.out_of_scope_request(_listing(f"{MONTH} (project:All-Projects)"), scope, set())
     assert cli.out_of_scope_request("/changes/?q=project%3Afuchsia", scope, set())
     assert cli.out_of_scope_request("/projects/?type=CODE", scope, set())
+
+
+def test_chromiums_grant_covers_every_project_in_two_day_ranges() -> None:
+    """Chrome Infra's answer read as a rate, as for AOSP and Fuchsia (research log, 2026-10-19)."""
+    from sphragis.corpus.windows import WINDOWS
+
+    permission = cli.REST_PERMITTED["chromium-review.googlesource.com"]
+    assert permission.written_grant and permission.single_client and permission.crawl_delay >= 1.0
+    assert permission.error_pause >= 300.0 and permission.disallow == ()
+    assert "rate" in permission.reason and "2,000" not in permission.reason
+    assert "2026-10-19" in permission.reason
+    scope = permission.scope
+    assert scope == cli.GrantScope(
+        (),
+        WINDOWS["train"][0],
+        WINDOWS["train"][1],
+        None,
+        cli.last_open_month(),
+        every_project=True,
+        listing_days=2,
+    )
+    for q in (
+        "status:merged after:2024-11-01 before:2024-11-03",
+        "status:merged after:2025-10-31 before:2025-11-01",
+        "status:merged after:2025-01-05 before:2025-01-07 (project:chromium/src)",
+    ):
+        assert (
+            cli.out_of_scope_request(_listing(q, "&n=100&S=0&o=ALL_REVISIONS"), scope, set())
+            is None
+        )
+    for q in (
+        "status:merged after:2024-10-30 before:2024-11-01",
+        "status:merged after:2025-11-01 before:2025-11-03",
+    ):
+        assert cli.out_of_scope_request(_listing(q), scope, set()), q
+
+
+@pytest.mark.parametrize(
+    ("month", "days", "ranges"),
+    [
+        ("2025-01", None, [("2025-01-01", "2025-02-01")]),
+        ("2024-12", None, [("2024-12-01", "2025-01-01")]),
+        (
+            "2025-02",
+            7,
+            [
+                ("2025-02-01", "2025-02-08"),
+                ("2025-02-08", "2025-02-15"),
+                ("2025-02-15", "2025-02-22"),
+                ("2025-02-22", "2025-03-01"),
+            ],
+        ),
+        (
+            "2024-02",
+            10,
+            [
+                ("2024-02-01", "2024-02-11"),
+                ("2024-02-11", "2024-02-21"),
+                ("2024-02-21", "2024-03-01"),
+            ],
+        ),
+        (
+            "2024-12",
+            10,
+            [
+                ("2024-12-01", "2024-12-11"),
+                ("2024-12-11", "2024-12-21"),
+                ("2024-12-21", "2024-12-31"),
+                ("2024-12-31", "2025-01-01"),
+            ],
+        ),
+        ("2025-04", 15, [("2025-04-01", "2025-04-16"), ("2025-04-16", "2025-05-01")]),
+        ("2025-01", 40, [("2025-01-01", "2025-02-01")]),
+        ("2025-01", 31, [("2025-01-01", "2025-02-01")]),
+    ],
+)
+def test_day_ranges_list_a_month_in_consecutive_ranges_the_last_shorter(month, days, ranges):
+    assert cli.day_ranges(month, days) == ranges
+
+
+@pytest.mark.parametrize(
+    ("month", "count", "last"),
+    [
+        ("2025-02", 14, ("2025-02-27", "2025-03-01")),
+        ("2024-02", 15, ("2024-02-29", "2024-03-01")),
+        ("2025-04", 15, ("2025-04-29", "2025-05-01")),
+        ("2025-01", 16, ("2025-01-31", "2025-02-01")),
+        ("2024-12", 16, ("2024-12-31", "2025-01-01")),
+    ],
+)
+def test_two_day_ranges_tile_28_29_30_and_31_day_months(month, count, last) -> None:
+    ranges = cli.day_ranges(month, 2)
+    assert len(ranges) == count and ranges[-1] == last
+    assert ranges[0][0] == f"{month}-01" and ranges[-1][1] == f"{cli.next_month(month)}-01"
+    assert all(a[1] == b[0] for a, b in zip(ranges, ranges[1:], strict=False))
+
+
+def test_one_day_ranges_list_each_day() -> None:
+    ranges = cli.day_ranges("2024-02", 1)
+    assert len(ranges) == 29 and ranges[0] == ("2024-02-01", "2024-02-02")
+    assert ranges[-1] == ("2024-02-29", "2024-03-01")
+
+
+@pytest.mark.parametrize("days", [0, -2])
+def test_day_ranges_refuse_a_length_that_is_not_a_count_of_days(days: int) -> None:
+    with pytest.raises(ValueError, match="days"):
+        cli.day_ranges("2025-01", days)
+
+
+@pytest.mark.parametrize(
+    ("span", "halves"),
+    [
+        (
+            ("2025-01-01", "2025-01-03"),
+            (("2025-01-01", "2025-01-02"), ("2025-01-02", "2025-01-03")),
+        ),
+        (
+            ("2025-01-01", "2025-01-04"),
+            (("2025-01-01", "2025-01-02"), ("2025-01-02", "2025-01-04")),
+        ),
+        (
+            ("2024-12-31", "2025-01-02"),
+            (("2024-12-31", "2025-01-01"), ("2025-01-01", "2025-01-02")),
+        ),
+        (("2025-01-31", "2025-02-01"), None),
+    ],
+)
+def test_a_range_halves_down_to_one_day(span, halves) -> None:
+    assert cli.range_halves(*span) == halves
+
+
+def _ranged_fetch(tmp_path, monkeypatch, *flags: str) -> tuple[list[str], dict]:
+    """A Chromium month fetched under its grant, each listing answered with no change."""
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    asked: list[str] = []
+
+    def listing(base, query, *, transport, options):
+        asked.append(query)
+        return [], {"query": query, "pages": 1, "count": 0}
+
+    monkeypatch.setattr(cli, "fetch_changes", listing)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: object())
+    fetch = ["fetch", "--org", "chromium", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    assert cli.main([*fetch, "--month", "2025-02", *flags]) == 0
+    record = json.loads((tmp_path / "chromium" / "raw" / "2025-02.record.json").read_text())
+    return asked, record
+
+
+def test_a_scope_of_every_project_lists_its_month_in_its_ranges(tmp_path, monkeypatch) -> None:
+    asked, record = _ranged_fetch(tmp_path, monkeypatch)
+    ranges = cli.day_ranges("2025-02", 2)
+    assert asked == [f"status:merged after:{a} before:{b}" for a, b in ranges]
+    assert [r["query"] for r in record["listings"]] == asked
+    scope = cli.grant_scope("chromium")
+    assert scope is not None
+    assert all(cli.out_of_scope_listing(_listing(q), scope) is None for q in asked)
+
+
+def test_a_scope_of_every_project_lists_each_named_project_in_each_range(
+    tmp_path, monkeypatch
+) -> None:
+    flags = ("--project", "chromium/src", "--project", "third_party/libc++")
+    asked, record = _ranged_fetch(tmp_path, monkeypatch, *flags)
+    ranges = cli.day_ranges("2025-02", 2)
+    assert asked == [
+        f"status:merged after:{a} before:{b} (project:{p})"
+        for a, b in ranges
+        for p in ("chromium/src", "third_party/libc++")
+    ]
+    assert len(record["listings"]) == 2 * len(ranges)
+    scope = cli.grant_scope("chromium")
+    assert scope is not None
+    assert all(cli.out_of_scope_listing(_listing(q), scope) is None for q in asked)
+
+
+def test_a_month_listed_whole_is_refused_not_halved_when_the_host_would_truncate_it(
+    tmp_path, monkeypatch
+) -> None:
+    """Fuchsia's months are listed whole; its truncated month's listing is not yet registered."""
+    from sphragis.corpus.gerrit import TruncatedListing
+
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    asked: list[str] = []
+
+    def truncated(base, query, *, transport, options):
+        asked.append(query)
+        raise TruncatedListing(f"{base} truncated {query!r}")
+
+    monkeypatch.setattr(cli, "fetch_changes", truncated)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: object())
+    fetch = ["fetch", "--org", "fuchsia", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    with pytest.raises(TruncatedListing):
+        cli.main([*fetch, "--month", "2025-02"])
+    assert asked == ["status:merged after:2025-02-01 before:2025-03-01"]
+    assert not (tmp_path / "fuchsia" / "raw" / "2025-02.ndjson.gz").exists()
+
+
+def test_a_ranged_fetch_halves_only_a_truncated_listing_not_another_failure(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    asked: list[str] = []
+
+    def moved(base, query, *, transport, options):
+        asked.append(query)
+        raise RuntimeError(f"{base} moved {query!r} while it was paged")
+
+    monkeypatch.setattr(cli, "fetch_changes", moved)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: object())
+    fetch = ["fetch", "--org", "chromium", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    with pytest.raises(RuntimeError, match="moved"):
+        cli.main([*fetch, "--month", "2025-02"])
+    assert asked == ["status:merged after:2025-02-01 before:2025-02-03"]
 
 
 def test_a_whole_month_listing_passes_only_a_scope_of_every_project() -> None:
@@ -614,7 +844,6 @@ def test_a_scoped_host_answers_what_the_client_builds(target: str) -> None:
         _listing(f"{MONTH} (project:p) or is:open"),
         _listing(f"{MONTH} (p:q)"),
         _listing(f"{MONTH} (project:^.*)"),
-        _listing(f"{MONTH} (project:q)"),
         _listing(f"{MONTH} (project:p) -is:wip"),
         _listing("status:open after:2025-01-01 before:2025-02-01 (project:p)"),
         _listing(f"{MONTH} (project:p)", "&n=500&q=status:open"),
@@ -639,7 +868,22 @@ def test_a_scoped_host_answers_what_the_client_builds(target: str) -> None:
         # Gerrit reads a brace phrase as quoted and needs no space before OR.
         _listing(f"{MONTH} project:{{p}}OR{{refs/meta/config}}", "&n=500&S=0"),
         _listing(f"{MONTH} (project:p{{x}}OR{{y}})", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:{{x}}OR{{y}})", "&n=500&S=0"),
         _listing(f'({MONTH} project:{{p}}OR{{y}}) before:"2025-01-31 12:00:00 +0000"', "&n=3&S=1"),
+        # A Gerrit operator, in any case, or the host's own project, named as a project.
+        _listing(f"{MONTH} (project:OR)", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:or)", "&n=500&S=0"),
+        _listing(f"{MONTH} project:AND", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:NOT)", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:Not)", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:All-Projects)", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:All-Users)", "&n=500&S=0"),
+        _listing(f'({MONTH} (project:OR)) before:"2025-01-31 12:00:00 +0000"', "&n=3&S=1"),
+        # A space or a quote in a name.
+        _listing(f"{MONTH} (project:a b)", "&n=500&S=0"),
+        _listing(f'{MONTH} (project:"p")', "&n=500&S=0"),
+        _listing(f"{MONTH} (project:'p')", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:p\\q)", "&n=500&S=0"),
         # Gerrit reads an impossible date leniently, past the month the string compares as.
         _listing("status:merged after:2025-01-01 before:2025-01-99 (project:p)", "&n=500&S=0"),
         _listing("status:merged after:2025-01-00 before:2025-02-01 (project:p)", "&n=500&S=0"),
@@ -657,10 +901,53 @@ def test_a_scoped_host_refuses_every_other_request(target: str, scope: str) -> N
         assert cli.out_of_scope_request(whole, EVERY, {"7"}), whole
 
 
-@pytest.mark.parametrize("project", ["fuchsia", "p", "{x}OR{y}", "^.*", "All-Projects"])
-def test_a_scope_of_every_project_refuses_any_listing_that_names_one(project: str) -> None:
+def test_a_scope_that_names_its_projects_refuses_any_other() -> None:
+    assert cli.out_of_scope_request(_listing(f"{MONTH} (project:q)"), SCOPED, {"7"})
+    assert cli.out_of_scope_request(_listing(f"{MONTH} (project:fuchsia)"), SCOPED, {"7"})
+
+
+@pytest.mark.parametrize(
+    "project",
+    [
+        "{x}OR{y}",
+        "p{x}OR{y}",
+        "^.*",
+        "OR",
+        "or",
+        "AND",
+        "and",
+        "NOT",
+        "nOt",
+        "All-Projects",
+        "All-Users",
+        "-p",
+        "a/../b",
+        "p/",
+    ],
+)
+def test_a_scope_of_every_project_refuses_a_listing_naming_what_is_not_a_code_project(
+    project: str,
+) -> None:
+    """A name that Gerrit's query grammar reads as syntax, or the host's own project."""
+    probe = f'({MONTH} (project:{project})) before:"2025-01-31 12:00:00 +0000"'
     for listing in (f"{MONTH} (project:{project})", f"{MONTH} project:{project}"):
-        assert cli.out_of_scope_request(_listing(listing, "&n=500&S=0"), EVERY, set())
+        assert cli.out_of_scope_request(_listing(listing, "&n=500&S=0"), EVERY, set()), listing
+    assert cli.out_of_scope_request(_listing(probe, "&n=3&S=1"), EVERY, set())
+    assert not cli.listable_project(EVERY, project)
+
+
+@pytest.mark.parametrize("project", ["fuchsia", "chromium/src", "third_party/libc++", "v8/v8"])
+def test_a_scope_of_every_project_admits_a_listing_naming_a_project_it_covers(
+    project: str,
+) -> None:
+    probe = f'({MONTH} (project:{project})) before:"2025-01-31 12:00:00 +0000"'
+    for listing in (f"{MONTH} (project:{project})", f"{MONTH} project:{project}"):
+        assert cli.out_of_scope_request(_listing(listing, "&n=500&S=0"), EVERY, set()) is None
+    assert cli.out_of_scope_request(_listing(probe, "&n=3&S=1"), EVERY, set()) is None
+    assert cli.listable_project(EVERY, project)
+    # Outside the grant's months a name does not help.
+    sealed = f"status:merged after:2025-12-01 before:2026-01-01 (project:{project})"
+    assert cli.out_of_scope_request(_listing(sealed), EVERY, set())
 
 
 def test_no_scope_asks_a_host_for_its_project_list() -> None:
@@ -717,3 +1004,32 @@ def test_a_test_claims_a_host_in_a_lock_directory_of_its_own() -> None:
     assert not hosts.LOCK_DIR.is_relative_to(Path.home() / ".cache" / "sphragis")
     hosts.claim_host("fuchsia-review.googlesource.com")
     assert (hosts.LOCK_DIR / "fuchsia-review.googlesource.com.lock").is_file()
+
+
+def test_a_change_on_a_range_boundary_is_kept_once_and_counted() -> None:
+    """Gerrit's after: and before: are both inclusive, so a change last updated at a range's
+    shared midnight is listed by both ranges."""
+    edge = {"_number": 7, "updated": "2025-01-03 00:00:00.000000000"}
+    inside = {"_number": 8, "updated": "2025-01-02 13:00:00.000000000"}
+    kept, repeats = cli.drop_boundary_repeats([inside, edge, edge], {"2025-01-03"})
+    assert kept == [inside, edge] and repeats == 1
+    assert cli.drop_boundary_repeats([inside, edge], {"2025-01-03"}) == ([inside, edge], 0)
+
+
+@pytest.mark.parametrize(
+    "repeated",
+    [
+        {"_number": 8, "updated": "2025-01-02 13:00:00.000000000"},
+        {"_number": 7, "updated": "2025-01-05 00:00:00.000000000"},
+    ],
+)
+def test_any_other_repeat_fails_the_month(repeated: dict) -> None:
+    with pytest.raises(ValueError, match="repeat"):
+        cli.drop_boundary_repeats([repeated, dict(repeated)], {"2025-01-03"})
+
+
+def test_a_boundary_repeat_must_be_the_same_change_twice() -> None:
+    edge = {"_number": 7, "updated": "2025-01-03 00:00:00.000000000"}
+    moved = {**edge, "updated": "2025-01-03 00:00:01.000000000"}
+    with pytest.raises(ValueError, match="repeat"):
+        cli.drop_boundary_repeats([edge, moved], {"2025-01-03"})

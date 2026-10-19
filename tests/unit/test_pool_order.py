@@ -125,9 +125,10 @@ def test_a_scope_of_every_project_ranks_the_projects_its_whole_months_return(
 
 
 def test_a_scope_of_every_project_refuses_a_month_listed_by_project(tmp_path, monkeypatch) -> None:
+    """The ranking listings name no project; a pool's own listings live in another root."""
     monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
     _write(tmp_path, {}, record=lambda m: _record(("x/a",), m))
-    with pytest.raises(SystemExit, match="listed whole"):
+    with pytest.raises(SystemExit, match="name no project"):
         _main(tmp_path, monkeypatch)
 
 
@@ -171,3 +172,128 @@ def test_a_project_listed_for_another_month_is_refused(tmp_path, monkeypatch) ->
     _write(tmp_path, {}, record=lambda m: _record(month="2024-11" if m == "2024-10" else m))
     with pytest.raises(SystemExit, match="not its month"):
         _main(tmp_path, monkeypatch)
+
+
+RANGED = EVERY._replace(listing_days=2)
+
+
+def _ranged(month: str, ranges=None, projects=(None,)) -> dict:
+    """A month listed in `ranges` (default the scope's two-day ranges), once per project."""
+    spans = cli.day_ranges(month, 2) if ranges is None else ranges
+    return {
+        "listings": [
+            {"query": f"status:merged after:{a} before:{b}" + (f" (project:{p})" if p else "")}
+            for a, b in spans
+            for p in projects
+        ]
+    }
+
+
+def _ranged_scope(monkeypatch: pytest.MonkeyPatch, scope=RANGED) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=scope))
+
+
+def test_a_month_listed_in_its_ranges_is_ranked(tmp_path, monkeypatch) -> None:
+    _ranged_scope(monkeypatch)
+    _write(tmp_path, {"2024-11": [_change(1, "x/a", "2024-11-02", 1)]}, record=_ranged)
+    report = _main(tmp_path, monkeypatch)
+    assert report["order"] == [{"project": "x/a", "merged": 1, "commented": 1}]
+
+
+def test_a_range_listed_again_as_its_halves_is_accepted(tmp_path, monkeypatch) -> None:
+    """The halves a fetch lists when the host would truncate a range (research log, 2026-10-19)."""
+    _ranged_scope(monkeypatch, RANGED._replace(listing_days=4))
+    whole = cli.day_ranges("2024-10", 4)
+    # 2024-10-01 to 05 as its halves, the first of them halved again.
+    split = [
+        ("2024-10-01", "2024-10-02"),
+        ("2024-10-02", "2024-10-03"),
+        ("2024-10-03", "2024-10-05"),
+        *whole[1:],
+    ]
+
+    def record(month: str) -> dict:
+        return _ranged(month, split if month == "2024-10" else cli.day_ranges(month, 4))
+
+    _write(tmp_path, {}, record=record)
+    assert _main(tmp_path, monkeypatch)["changes"] == 0
+
+
+def _one_month_refused(tmp_path, monkeypatch, made: dict, scope=RANGED) -> None:
+    _ranged_scope(monkeypatch, scope)
+    _write(tmp_path, {}, record=lambda m: made if m == "2024-10" else _ranged(m))
+    with pytest.raises(SystemExit, match="not its month"):
+        _main(tmp_path, monkeypatch)
+
+
+RANGES = cli.day_ranges("2024-10", 2)
+
+
+@pytest.mark.parametrize(
+    "ranges",
+    [
+        # a gap
+        RANGES[:3] + RANGES[4:],
+        # an overlap, and a range listed twice
+        [*RANGES, ("2024-10-02", "2024-10-04")],
+        [*RANGES, RANGES[5]],
+        # a range listed and its halves too
+        [*RANGES, ("2024-10-01", "2024-10-02"), ("2024-10-02", "2024-10-03")],
+        # a range from another month
+        [*RANGES, ("2024-11-01", "2024-11-03")],
+        # the month whole where ranges are required
+        [("2024-10-01", "2024-11-01")],
+    ],
+)
+def test_a_month_not_partitioned_into_its_ranges_is_refused(tmp_path, monkeypatch, ranges) -> None:
+    _one_month_refused(tmp_path, monkeypatch, _ranged("2024-10", ranges))
+
+
+def test_a_split_that_is_not_the_ranges_halves_is_refused(tmp_path, monkeypatch) -> None:
+    scope = RANGED._replace(listing_days=4)
+    whole = cli.day_ranges("2024-10", 4)
+    split = [("2024-10-01", "2024-10-02"), ("2024-10-02", "2024-10-05"), *whole[1:]]
+    _ranged_scope(monkeypatch, scope)
+    _write(
+        tmp_path,
+        {},
+        record=lambda m: _ranged(m, split if m == "2024-10" else cli.day_ranges(m, 4)),
+    )
+    with pytest.raises(SystemExit, match="not its month"):
+        _main(tmp_path, monkeypatch)
+
+
+def test_a_month_listed_whole_is_not_accepted_as_halves(tmp_path, monkeypatch) -> None:
+    """A scope that lists months whole registers no halving."""
+    halves = [("2024-10-01", "2024-10-16"), ("2024-10-16", "2024-11-01")]
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+    _write(tmp_path, {}, record=lambda m: _ranged(m, halves) if m == "2024-10" else _whole(m))
+    with pytest.raises(SystemExit, match="not its month"):
+        _main(tmp_path, monkeypatch)
+
+
+def test_a_ranked_root_naming_a_project_in_its_ranges_is_refused(tmp_path, monkeypatch) -> None:
+    _ranged_scope(monkeypatch)
+    _write(tmp_path, {}, record=lambda m: _ranged(m, projects=("x/a",)))
+    with pytest.raises(SystemExit, match="name no project"):
+        _main(tmp_path, monkeypatch)
+
+
+def test_a_named_scope_needs_each_project_in_each_range(tmp_path, monkeypatch) -> None:
+    named = POOL._replace(listing_days=2)
+    _ranged_scope(monkeypatch, named)
+    _write(tmp_path, {}, record=lambda m: _ranged(m, projects=named.projects))
+    assert _main(tmp_path, monkeypatch)["changes"] == 0
+    # p/c missing from one range of 2024-10.
+    gap = _ranged("2024-10", projects=named.projects)
+    gap["listings"] = [
+        q
+        for q in gap["listings"]
+        if q["query"] != ("status:merged after:2024-10-03 before:2024-10-05 (project:p/c)")
+    ]
+    _one_month_refused(tmp_path / "gap", monkeypatch, gap, named)
+    # p/c missing from every range.
+    _ranged_scope(monkeypatch, named)
+    _write(tmp_path / "missing", {}, record=lambda m: _ranged(m, projects=("p/a", "p/b")))
+    with pytest.raises(SystemExit, match="lists 2 projects"):
+        _main(tmp_path / "missing", monkeypatch)

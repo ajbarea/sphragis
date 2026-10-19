@@ -39,6 +39,7 @@ from sphragis.corpus.cli import (
     REST_PERMITTED,
     Admitted,
     admit,
+    covers_change,
     created_in_grant,
     grant_months,
     host_of,
@@ -154,7 +155,13 @@ def measure_yield(project: str, month: str, k: int) -> None:
     human = [r for r in rows if not is_bot(r["owner"]) and r["created"][:10] >= WINDOW_START]
     scope = REST_PERMITTED[HOST].scope
     if scope is not None:
-        human = [r for r in human if created_in_grant(scope, r.get("created"))]
+        # Only a change `admit` lets the transport ask about: under a scope of every project, not
+        # one on refs/meta/.
+        human = [
+            r
+            for r in human
+            if created_in_grant(scope, r.get("created")) and covers_change(scope, r)
+        ]
     random.Random(20260922).shuffle(human)
     sample = human[:k]
     # Asked one at a time below, so admitted to the transport first, each against the grant.

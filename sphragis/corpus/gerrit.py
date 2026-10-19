@@ -16,6 +16,11 @@ _RETRYABLE = frozenset({429, 500, 502, 503, 504})
 Transport = Callable[[str], tuple[int, dict[str, str], str]]
 
 
+class TruncatedListing(RuntimeError):
+    """A listing the host stopped serving before its query was exhausted (`_refuse_if_truncated`),
+    so a narrower query can read what this one could not."""
+
+
 def parse_response(text: str) -> Any:
     """Strip Gerrit's XSSI guard and decode the JSON body."""
     if not text.startswith(_XSSI_PREFIX):
@@ -127,7 +132,7 @@ def _refuse_if_truncated(
         if not page or not page[-1].get("_more_changes"):
             break
     if missing:
-        raise RuntimeError(
+        raise TruncatedListing(
             f"{base_url} stopped after {len(changes)} results for {query!r} but more match "
             f"at or before {oldest}: the server truncated the query. Narrow it (fewer projects "
             "or a shorter date range) rather than keep a partial snapshot."

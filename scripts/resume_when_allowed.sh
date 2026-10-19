@@ -35,7 +35,7 @@ url = GERRIT.get(sys.argv[1])
 if url is None or urlsplit(url).hostname not in REST_PERMITTED:
     print(f"refusing {sys.argv[1]}: its review host disallows automated clients")
     sys.exit(1)
-# This script resumes a full build; a host granted for part of itself is built only under its cap.
+# This script resumes a full build; a host granted for part of itself is built only by hand.
 if REST_PERMITTED[urlsplit(url).hostname].scope is not None:
     print(f"refusing {sys.argv[1]}: its host is granted for a scoped pool, built only by hand")
     sys.exit(1)
