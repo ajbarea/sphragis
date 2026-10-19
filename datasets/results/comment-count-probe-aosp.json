@@ -1,8 +1,8 @@
 {
   "provenance": {
-    "generated_at": "2026-10-19T06:50:01.189181+00:00",
+    "generated_at": "2026-10-19T10:15:48.158479+00:00",
     "git": {
-      "commit": "8927f2287e0b4d6a885dc2b32030c3ea034bfedc",
+      "commit": "4a581782d146a74895e1fd989d92253b0d528eb3",
       "branch": "corpus/aosp-pool-fetch"
     },
     "python": "3.14.4",
@@ -12,7 +12,7 @@
     }
   },
   "org": "aosp",
-  "raw_digest": "239d392b42354481888c871e72cc20c9f4929dc3eff9d0dae5dcc030f44b1608",
+  "raw_digest": "822edd8b58bdb6de992b2190a4788f45ae45341a17e8c3844105867d6303b54d",
   "seed": 20261015,
   "asked": {
     "zero": 300,
@@ -42,10 +42,45 @@
     "2025-03": {
       "zero": 1508,
       "above_zero": 393
+    },
+    "2025-04": {
+      "zero": 3,
+      "above_zero": 9
+    },
+    "2025-05": {
+      "zero": 0,
+      "above_zero": 4
+    },
+    "2025-06": {
+      "zero": 3,
+      "above_zero": 1
+    },
+    "2025-07": {
+      "zero": 0,
+      "above_zero": 6
+    },
+    "2025-08": {
+      "zero": 7,
+      "above_zero": 9
+    },
+    "2025-09": {
+      "zero": 2,
+      "above_zero": 5
+    },
+    "2025-10": {
+      "zero": 1,
+      "above_zero": 2
     }
   },
   "skipped_months": {},
-  "shortfall": {},
+  "shortfall": {
+    "2025-06": {
+      "control": 2
+    },
+    "2025-10": {
+      "control": 1
+    }
+  },
   "answers": [
     {
       "group": "zero@2024-10",
@@ -513,9 +548,9 @@
       "comments": 0
     },
     {
-      "group": "control@2024-11",
-      "change": 3341680,
-      "comments": 20
+      "group": "zero@2024-11",
+      "change": 3342807,
+      "comments": 0
     },
     {
       "group": "control@2024-11",
@@ -528,9 +563,9 @@
       "comments": 45
     },
     {
-      "group": "zero@2024-12",
-      "change": 3380188,
-      "comments": 0
+      "group": "control@2024-11",
+      "change": 3308386,
+      "comments": 32
     },
     {
       "group": "zero@2024-12",
@@ -1635,6 +1670,96 @@
     {
       "group": "control@2025-03",
       "change": 3520033,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-04",
+      "change": 3536309,
+      "comments": 6
+    },
+    {
+      "group": "control@2025-04",
+      "change": 3312437,
+      "comments": 5
+    },
+    {
+      "group": "control@2025-04",
+      "change": 3469423,
+      "comments": 12
+    },
+    {
+      "group": "control@2025-05",
+      "change": 3392321,
+      "comments": 3
+    },
+    {
+      "group": "control@2025-05",
+      "change": 3395019,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-05",
+      "change": 3505856,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-06",
+      "change": 3304359,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-07",
+      "change": 3514615,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-07",
+      "change": 3530461,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-07",
+      "change": 3456637,
+      "comments": 52
+    },
+    {
+      "group": "control@2025-08",
+      "change": 3421880,
+      "comments": 5
+    },
+    {
+      "group": "control@2025-08",
+      "change": 3309468,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-08",
+      "change": 3311347,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-09",
+      "change": 3447791,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-09",
+      "change": 3444148,
+      "comments": 10
+    },
+    {
+      "group": "control@2025-09",
+      "change": 3386522,
+      "comments": 1
+    },
+    {
+      "group": "control@2025-10",
+      "change": 3451855,
+      "comments": 2
+    },
+    {
+      "group": "control@2025-10",
+      "change": 3519039,
       "comments": 1
     }
   ],

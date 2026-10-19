@@ -269,7 +269,8 @@
     ],
     "created_from": "2024-10-01",
     "created_before": "2025-03-27",
-    "read_cap": null
+    "read_cap": null,
+    "listed_through": "2025-10"
   },
   "months": [
     "2024-10",
@@ -277,25 +278,37 @@
     "2024-12",
     "2025-01",
     "2025-02",
-    "2025-03"
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10"
   ],
-  "changes": 12499,
+  "changes": 12551,
   "listed_twice": 0,
   "order": [
     {
       "project": "platform/packages/modules/Bluetooth",
-      "merged": 1745,
-      "commented": 821
+      "merged": 1750,
+      "commented": 826
     },
     {
       "project": "platform/external/perfetto",
-      "merged": 1565,
-      "commented": 768
+      "merged": 1568,
+      "commented": 770
     },
     {
       "project": "device/google/cuttlefish",
-      "merged": 530,
-      "commented": 196
+      "merged": 532,
+      "commented": 198
+    },
+    {
+      "project": "platform/system/core",
+      "merged": 429,
+      "commented": 151
     },
     {
       "project": "platform/hardware/google/gfxstream",
@@ -303,19 +316,14 @@
       "commented": 84
     },
     {
-      "project": "platform/system/core",
-      "merged": 427,
-      "commented": 150
-    },
-    {
       "project": "platform/frameworks/av",
-      "merged": 424,
-      "commented": 191
+      "merged": 426,
+      "commented": 193
     },
     {
       "project": "platform/bionic",
-      "merged": 332,
-      "commented": 99
+      "merged": 340,
+      "commented": 104
     },
     {
       "project": "platform/frameworks/libs/binary_translation",
@@ -324,13 +332,13 @@
     },
     {
       "project": "platform/prebuilts/sdk",
-      "merged": 287,
-      "commented": 15
+      "merged": 289,
+      "commented": 16
     },
     {
       "project": "platform/frameworks/native",
-      "merged": 283,
-      "commented": 104
+      "merged": 285,
+      "commented": 105
     },
     {
       "project": "platform/external/angle",
@@ -364,7 +372,7 @@
     },
     {
       "project": "platform/frameworks/proto_logging",
-      "merged": 161,
+      "merged": 162,
       "commented": 28
     },
     {
@@ -374,13 +382,13 @@
     },
     {
       "project": "platform/packages/modules/StatsD",
-      "merged": 134,
-      "commented": 23
+      "merged": 135,
+      "commented": 24
     },
     {
       "project": "platform/packages/modules/adb",
-      "merged": 127,
-      "commented": 25
+      "merged": 130,
+      "commented": 26
     },
     {
       "project": "platform/hardware/google/aemu",
@@ -423,14 +431,14 @@
       "commented": 13
     },
     {
-      "project": "platform/hardware/nxp/uwb",
-      "merged": 87,
+      "project": "platform/system/memory/libmeminfo",
+      "merged": 88,
       "commented": 9
     },
     {
-      "project": "platform/system/memory/libmeminfo",
-      "merged": 83,
-      "commented": 7
+      "project": "platform/hardware/nxp/uwb",
+      "merged": 87,
+      "commented": 9
     },
     {
       "project": "platform/prebuilts/clang/host/darwin-x86",
@@ -508,14 +516,14 @@
       "commented": 5
     },
     {
+      "project": "platform/bootable/recovery",
+      "merged": 43,
+      "commented": 6
+    },
+    {
       "project": "platform/system/logging",
       "merged": 41,
       "commented": 7
-    },
-    {
-      "project": "platform/bootable/recovery",
-      "merged": 39,
-      "commented": 3
     },
     {
       "project": "platform/external/sqlite",
@@ -528,6 +536,11 @@
       "commented": 0
     },
     {
+      "project": "platform/external/minigbm",
+      "merged": 38,
+      "commented": 5
+    },
+    {
       "project": "platform/hardware/nxp/nfc",
       "merged": 38,
       "commented": 5
@@ -536,11 +549,6 @@
       "project": "platform/system/keymaster",
       "merged": 38,
       "commented": 5
-    },
-    {
-      "project": "platform/external/minigbm",
-      "merged": 37,
-      "commented": 4
     },
     {
       "project": "platform/external/open-dice",
@@ -628,6 +636,11 @@
       "commented": 3
     },
     {
+      "project": "device/amlogic/yukawa",
+      "merged": 26,
+      "commented": 7
+    },
+    {
       "project": "platform/prebuilts/jdk/jdk21",
       "merged": 26,
       "commented": 0
@@ -648,19 +661,14 @@
       "commented": 1
     },
     {
+      "project": "trusty/app/keymaster",
+      "merged": 25,
+      "commented": 4
+    },
+    {
       "project": "platform/external/tensorflow",
       "merged": 24,
       "commented": 2
-    },
-    {
-      "project": "trusty/app/keymaster",
-      "merged": 24,
-      "commented": 3
-    },
-    {
-      "project": "device/amlogic/yukawa",
-      "merged": 23,
-      "commented": 5
     },
     {
       "project": "platform/external/libaom",
@@ -848,6 +856,11 @@
       "commented": 0
     },
     {
+      "project": "platform/test/dittosuite",
+      "merged": 14,
+      "commented": 1
+    },
+    {
       "project": "platform/external/anonymous-counting-tokens",
       "merged": 13,
       "commented": 0
@@ -866,11 +879,6 @@
       "project": "platform/system/linkerconfig",
       "merged": 13,
       "commented": 1
-    },
-    {
-      "project": "platform/test/dittosuite",
-      "merged": 13,
-      "commented": 0
     },
     {
       "project": "platform/external/clang",
@@ -1003,6 +1011,11 @@
       "commented": 0
     },
     {
+      "project": "platform/hardware/nxp/secure_element",
+      "merged": 10,
+      "commented": 1
+    },
+    {
       "project": "platform/hardware/synaptics/wlan",
       "merged": 10,
       "commented": 0
@@ -1036,6 +1049,11 @@
       "project": "device/google/comet-kernels/6.1",
       "merged": 9,
       "commented": 0
+    },
+    {
+      "project": "platform/external/compiler-rt",
+      "merged": 9,
+      "commented": 1
     },
     {
       "project": "platform/external/deqp-deps/SPIRV-Headers",
@@ -1093,19 +1111,14 @@
       "commented": 0
     },
     {
-      "project": "platform/hardware/nxp/secure_element",
-      "merged": 9,
-      "commented": 0
-    },
-    {
       "project": "platform/hardware/qcom/wlan",
       "merged": 9,
       "commented": 0
     },
     {
-      "project": "platform/external/compiler-rt",
-      "merged": 8,
-      "commented": 0
+      "project": "platform/system/connectivity/wificond",
+      "merged": 9,
+      "commented": 1
     },
     {
       "project": "platform/external/libgav1",
@@ -1143,11 +1156,6 @@
       "commented": 0
     },
     {
-      "project": "platform/system/connectivity/wificond",
-      "merged": 8,
-      "commented": 0
-    },
-    {
       "project": "platform/system/dmesgd",
       "merged": 8,
       "commented": 1
@@ -1176,6 +1184,11 @@
       "project": "platform/system/tools/sysprop",
       "merged": 8,
       "commented": 0
+    },
+    {
+      "project": "trusty/app/gatekeeper",
+      "merged": 8,
+      "commented": 1
     },
     {
       "project": "trusty/external/headers",
@@ -1273,11 +1286,6 @@
       "commented": 0
     },
     {
-      "project": "trusty/app/gatekeeper",
-      "merged": 7,
-      "commented": 0
-    },
-    {
       "project": "platform/external/dynamic_depth",
       "merged": 6,
       "commented": 0
@@ -1318,6 +1326,11 @@
       "commented": 0
     },
     {
+      "project": "platform/hardware/samsung/nfc",
+      "merged": 5,
+      "commented": 0
+    },
+    {
       "project": "platform/packages/modules/UprobeStats",
       "merged": 5,
       "commented": 0
@@ -1333,9 +1346,9 @@
       "commented": 0
     },
     {
-      "project": "platform/hardware/samsung/nfc",
-      "merged": 4,
-      "commented": 0
+      "project": "device/google/akita-kernels/5.15",
+      "merged": 3,
+      "commented": 1
     },
     {
       "project": "device/google/bluejay-kernels/5.10",
@@ -1395,11 +1408,6 @@
     {
       "project": "platform/system/memory/libmemtrack",
       "merged": 3,
-      "commented": 0
-    },
-    {
-      "project": "device/google/akita-kernels/5.15",
-      "merged": 2,
       "commented": 0
     },
     {
@@ -1599,9 +1607,9 @@
     }
   ],
   "provenance": {
-    "generated_at": "2026-10-19T06:43:26.710358+00:00",
+    "generated_at": "2026-10-19T10:18:12.994178+00:00",
     "git": {
-      "commit": "8927f2287e0b4d6a885dc2b32030c3ea034bfedc",
+      "commit": "4a581782d146a74895e1fd989d92253b0d528eb3",
       "branch": "corpus/aosp-pool-fetch"
     },
     "python": "3.14.4",

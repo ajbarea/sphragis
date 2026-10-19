@@ -7,26 +7,26 @@
   ],
   "need": "datasets/results/foreign-need-qt.json",
   "pool": {
-    "examples": 2039,
-    "in_language": 1071,
-    "other": 968,
+    "examples": 2062,
+    "in_language": 1078,
+    "other": 984,
     "dedup_removed": {
       "exact": 56,
       "near_duplicate": 29,
       "boilerplate": 0,
       "shared_change_id": 0
     },
-    "digest": "dc6f11beaf9eed293f51f1f09558dc3817ee7129e3fe38d25449c6af5d2aa806",
+    "digest": "310ef73b6c2e7749b9a6f9e5b3e6f0be025a7ac6af2ed417660649f747c10879",
     "by_project": {
-      "platform/packages/modules/Bluetooth": 678,
+      "platform/packages/modules/Bluetooth": 697,
       "platform/external/perfetto": 515,
-      "platform/frameworks/av": 171,
+      "platform/frameworks/av": 173,
       "device/google/cuttlefish": 98,
       "platform/system/core": 95,
       "platform/system/extras": 57,
       "platform/frameworks/native": 55,
-      "platform/packages/modules/adb": 42,
-      "platform/bionic": 39,
+      "platform/packages/modules/adb": 43,
+      "platform/bionic": 40,
       "platform/packages/modules/StatsD": 36,
       "platform/hardware/google/gfxstream": 29,
       "platform/test/vts-testcase/security": 29,
@@ -85,11 +85,30 @@
       "half": "qt-a"
     }
   },
-  "draws_covered": 32,
+  "draws_covered": 34,
   "draws": 80,
   "covers_every_draw": false,
+  "partitions_covered": 0,
+  "partitions": 40,
+  "stop_rule": {
+    "order": "datasets/results/pool-order-aosp.json",
+    "against": "qt",
+    "against_examples": 9449,
+    "whole_order": {
+      "examples": 2056,
+      "in_language": 1076
+    },
+    "projects": null,
+    "pool": {
+      "examples": 2056,
+      "in_language": 1076,
+      "other": 980
+    },
+    "digest": null,
+    "covers_every_draw": false
+  },
   "shortfall": {
-    "in_language": 237,
+    "in_language": 230,
     "other": 0
   },
   "by_draw": [
@@ -210,7 +229,7 @@
       "half": "qt-a",
       "in_language": 1074,
       "other": 776,
-      "covered": false
+      "covered": true
     },
     {
       "seed": "20",
@@ -504,7 +523,7 @@
       "half": "qt-a",
       "in_language": 1076,
       "other": 774,
-      "covered": false
+      "covered": true
     },
     {
       "seed": "55",
@@ -655,9 +674,9 @@
     }
   ],
   "provenance": {
-    "generated_at": "2026-10-19T08:59:38.692154+00:00",
+    "generated_at": "2026-10-19T10:24:51.371108+00:00",
     "git": {
-      "commit": "b64ba26116e3372f8cca1eada3b97fdd11af9181",
+      "commit": "4a581782d146a74895e1fd989d92253b0d528eb3",
       "branch": "corpus/aosp-pool-fetch"
     },
     "python": "3.14.4",

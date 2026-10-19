@@ -9878,7 +9878,7 @@ the 14 in files the rule does not read; each of the 36 read is a re-wrap, a re-i
 language or a spacing fix). Its test listing is built after acceptance, with `ai_trailers.py
 --through-test`.
 
-### AOSP's pool, read across its whole grant, cannot cover every matched draw (2026-10-19)
+### AOSP's pool, read over six months of listings, cannot cover every matched draw (2026-10-19)
 
 `# research(2026-10)`. Under android-review's grant (#159), from a worktree at 8927f22 on this
 machine, as the 2026-10-18 entry fixed the steps. The listings of the 263 census projects over the
@@ -9896,14 +9896,13 @@ What the pool must hold is 1,308 C++ examples and 926 others (`foreign-need-qt.j
 others but not the C++: it covers 32 of the 80 draws and is 237 C++ examples short of the largest.
 The order fixed above was read to its end, so no prefix of it covers, and the deduplication against
 Qt's examples, which could only shrink the pool, was not run. By the 2026-10-14 entry a pool that
-cannot cover a draw is refused, never trained smaller, and by item 5 of the pool rule it is not
-widened past the grant, so AOSP does not qualify as H2's source, as Chromium's V8 pool did not
-(2026-10-16). By item 1 of the H2 plan Fuchsia is the one source left, if its maintainers grant
-before the first H2 development contrast and its pool covers every draw; the request of 2026-10-15
-has no answer. Until a source qualifies `FOREIGN_SOURCE` stays unset, and by the Stage 1 report's
-conditional, without a foreign source covering every matched draw H2 is exploratory and H1, the only
-confirmatory hypothesis, is read at one-sided 0.025. The AOSP pool stays held, enters no figure, and
-is reported as the source tried second.
+cannot cover a draw is refused, never trained smaller, so AOSP does not qualify as H2's source, as
+Chromium's V8 pool did not (2026-10-16). By item 1 of the H2 plan Fuchsia is the one source left, if
+its maintainers grant before the first H2 development contrast and its pool covers every draw; the
+request of 2026-10-15 has no answer. Until a source qualifies `FOREIGN_SOURCE` stays unset, and by
+the registered decisions, with no foreign source covering every matched draw H2 has no confirmatory
+cell and H1 is the whole family, read at one-sided 0.025. The AOSP pool stays held, enters no
+figure, and is reported as the source tried second.
 
 ### AOSP's later months listed, decided after the six-month pool was read (2026-10-19)
 
@@ -9932,3 +9931,11 @@ admissible splits (the 2026-10-14 entry's item 3), each prefix deduplicated as b
 whole pool once. Chromium's V8 pool is not listed again: its grant is about 2,000 changes, and at
 its yield (659 examples from 1,700) the whole of it would give about 780, below one draw's N = 1,850
 whatever its months.
+
+**Read.** The 13 listed months hold 12,551 merged changes created inside the grant, 52 more than the
+six; the probe holds again over them (`comment-count-probe-aosp.json`), and the build gives 2,251
+examples. Refined and deduplicated, the pool holds 2,062 (1,078 C++, 984 others), and cleared of
+copies of Qt's 9,449 unsealed examples, 2,056 (1,076 C++, 980 others;
+`foreign-pool-coverage-aosp.json`, its `stop_rule`). That covers 34 of the 80 draws and none of the
+40 partitions, and the whole order does not cover, so no prefix does: AOSP does not qualify with the
+later months either, and the question this entry leaves to AJ does not arise.

@@ -136,9 +136,10 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   examples after dedup, below one matched draw (N = 1,850), so the source falls to Fuchsia if it
   grants first, otherwise AOSP (research log). Chromium as an evaluated organization stays
   blocked on chromium/src's scale and is beyond the grant.
-- [x] **AOSP's pool** by item 4 of the H2 plan (2026-10-19): the whole grant read, 263 C++-majority
-  projects created 2024-10-01 to 2025-03-26, 2,039 examples after refinement and dedup, 1,071 of
-  them C++, which covers 32 of 80 matched draws, so AOSP does not qualify (research log).
+- [x] **AOSP's pool** by item 4 of the H2 plan (2026-10-19): the 263 C++-majority projects'
+  changes created 2024-10-01 to 2025-03-26, listed through 2025-10, 2,056 examples after
+  refinement and dedup against Qt, 1,076 of them C++, which covers 34 of 80 matched draws and no
+  partition, so AOSP does not qualify (research log).
 - [ ] **H2's source**: Fuchsia, if its maintainers grant before the first H2 development contrast
   and its pool covers every draw (asked 2026-10-15, no answer); otherwise H2 is exploratory and H1
   is read alone (the Stage 1 report's conditional).
