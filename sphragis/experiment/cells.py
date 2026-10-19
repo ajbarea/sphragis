@@ -176,8 +176,8 @@ def same_calibration(a: Any, b: Any) -> bool:
 
 
 #: The sensitivities registered beside the pass rule that recompute a cell without a set of
-#: examples (registered decisions, 2026-10-02): every test read carries both.
-REGISTERED_SENSITIVITIES = ("ai_assisted", "backport_only")
+#: examples (registered decisions, 2026-10-02 and 2026-10-18): every test read carries each.
+REGISTERED_SENSITIVITIES = ("ai_assisted", "backport_only", "layout_only")
 
 
 def require_sensitivities(report: Mapping[str, Any], *, org: str) -> dict[str, Any]:

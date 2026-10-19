@@ -9695,3 +9695,65 @@ a K coverage artifact of H2's cell names it (`hypothesis`, `foreign_source`).
 and H2's simulations never claim one result, and the script refuses a pilot of another cell than
 the one named. `run_shift.py` reads the pilot's cell's contrast and refuses another cell's
 simulation, and an H1 read takes no bounds simulated for H2.
+
+### An outside review read: layout-only revisions become a registered sensitivity, and review concentration is reported (2026-10-18)
+
+`# research(2026-10)`. AJ passed on a review of the study by another model (2026-10-16), with the
+instruction to weigh it against current work and act on what holds up. A search on 2026-10-18
+(identifiers checked through arXiv's export API and Crossref; papers intake, same date) read each
+point. Two changed the study, here; one is a rival-map and related-work matter (papers intake);
+two are for later (ROADMAP: preference learning, a larger checkpoint); and the rest were already
+covered: the reviewer confound by the registered exposure moderation (2026-10-01), H2's language
+match by the C++ population and the matched arm (2026-10-14), the GitHub family's heterogeneity
+by its reading as a replication that binds no verdict (2026-10-04), and the unit of evidence, one
+anchored comment and its hunk, which the Stage 1 report's scope already states (a sentence naming
+edits across files and patch sets as outside it was drafted and cut for the six-page limit).
+
+**Layout-only revisions, registered before any reading without them.** The review asked whether
+what an adapter learns is what a formatter or linter would enforce. Review data is known to fix
+mostly evolvability rather than function (Beller et al., MSR 2014; Mäntylä and Lassenius, TSE
+2009), and no standard flag for a formatting-only revision was found: CodeReviewQA
+(arXiv:2503.16167) filters by keywords in the comment. So the rule is this study's
+(`sphragis/experiment/layout.py`), and it judges whitespace by the language's own tokens, as
+structural diff tools compare code by its syntax rather than its lines: an example is layout-only
+when its revision keeps every character of the hunk but whitespace and, read in place between the
+hunk's unchanged lines (alone where neither version reads there), tokenizes the same; where the rule
+cannot tell, the example is kept. Python is read by `tokenize`, with strings, f-string text and each
+block's indentation compared exactly; C, C++, Java, Go, JavaScript, TypeScript, PHP, JSON, SQL and
+QML by their Pygments tokens, strings and preprocessor lines exact, symbols a character at a time
+with a space that keeps two from reading as one operator kept, and line breaks kept where one can
+end a statement; a file whose whitespace can be structure or content (CSS, Scala, shell, Makefile,
+YAML, reStructuredText, Markdown, a patch, text) is never layout-only, nor a hunk read in place with
+a string left open to the end (it may sit inside a string opened before its context) or holding
+markup. Corrected before this entry was committed, over two independent reviews: a first rule
+(characters once whitespace was removed, Python by tokens without their spaces, indentation compared
+by block within the hunk) marked string rewordings (an f-string's `{provider} : ` to `{provider}: `,
+"can not" to "cannot"), statements moved into or out of a block, and a shell test that only runs
+once a space is added (`[ -n "$HOST_NAME"]` to `[ -n "$HOST_NAME" ]`, in a patch) as layout; the
+second review found CSS selectors (`.a .b` and `.a.b` lex alike), self-documenting f-string fields
+(`{port_id = }` prints its spacing), strings inside C preprocessor lines and hunks inside a string
+opened before their context read as layout. Each is now a test case the rule refuses; the second
+review's cases occur in none of the development examples either rule listed, the first review's do.
+Each cell is now also read without layout-only examples, a third registered sensitivity beside the
+AI-assisted and backport-only ones (`cells.REGISTERED_SENSITIVITIES`, `sensitivity_ids.py`,
+registered decisions "Readings beside the pass rule"), binding no verdict. On the development
+windows, of the revisions that keep every character but whitespace, the listings drop 1 of
+OpenStack's 22 (Python; of its other 9 Python revisions, 6 leave a string open read in place and 3
+tokenize differently, an f-string reworded and two statements re-indented in rows without context;
+12 are in files read as whitespace-sensitive) and 20 of Wikimedia's 36 (13 of 14 in PHP, 5 of 6 in
+JavaScript, both in JSON; none of the 13 in whitespace-sensitive files, Scala's among them, nor its
+one in Python), 1 of 515 and 20 of 747 examples (`sensitivity-ids-<org>-dev.json`, `whitespace_only`
+by rule, regenerated from corpus v3; every other id they list is unchanged). Qt's listing waits on
+its AI-trailer search, which Qt's test read needs anyway. The linters' other rules stay a ROADMAP
+item.
+
+**Review concentration, reported.** The review asked whether a house style is a few reviewers'
+habits. `reviewer-overlap.json` now carries, beside exposure, how concentrated review is over each
+organization's training examples in a half, an example credited to every reviewer of its change,
+read as Hajari et al. read reviews per reviewer (arXiv:2312.17236): the Gini coefficient of
+examples per reviewer is 0.68 on OpenStack (505 reviewers), 0.64 on Wikimedia (320) and 0.73 on
+Qt (364), and the top tenth of reviewers are credited with 52%, 46% and 55% of the examples. Rerun
+on corpus v3, every field the 2026-10-01 entry read reproduces exactly for OpenStack and Wikimedia,
+and Qt's development examples share a sibling-half reviewer at 95% (754 of 791). Review is
+concentrated enough that the exposure moderation registered on 2026-10-01 is the reading that
+separates a reviewer's habit from the organization's; this adds no test.

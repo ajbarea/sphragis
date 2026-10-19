@@ -175,6 +175,17 @@ hypothesis the gate reads, on the same draws, at the same levels:
 - **Without backports of older code.** Recomputed without examples whose (project, Change-Id) sits
   only on release, maintenance or deployment branches (`scripts/backport_share.py`'s rule), the
   traceable route by which code older than the checkpoint enters.
+- **Without layout-only revisions.** Recomputed without examples whose revision changes the
+  reviewed hunk's layout alone, the edits a formatter would make (`sphragis/experiment/layout.py`):
+  every character but whitespace is kept, and the language's own tokens, read in place between
+  the hunk's unchanged lines (alone where neither version reads there), are the same. Python is
+  read by `tokenize`, with strings and each block's indentation compared exactly; C, C++, Java,
+  Go, JavaScript, TypeScript, PHP, JSON, SQL and QML by their Pygments tokens, strings and
+  preprocessor lines exact and, where a line break can end a statement, line breaks kept; every
+  other file, whose whitespace can be structure or content (CSS, Scala, shell, Makefile, YAML,
+  reStructuredText, Markdown, a patch, text), never is, nor a hunk that may sit inside a string
+  or markup. Where the rule cannot tell, the revision is kept. It shows whether the contrast rests
+  on what a formatter would enforce (registered 2026-10-18).
 - **Reviewer exposure.** For the organization contrast, the per-example sibling-minus-foreign
   difference regressed on its exposure (the share of the sibling half's training examples from
   changes its reviewers reviewed, `scripts/reviewer_overlap.py`), the slope with a change-clustered

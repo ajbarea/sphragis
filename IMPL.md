@@ -31,6 +31,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## Next
 
+0. Qt's AI-trailer search (`ai_trailers.py` over Qt's windows), so Qt's sensitivity listing
+   (`sensitivity_ids.py`, now three registered sensitivities) can be built before its test read.
+
 1. At the Stage 1 freeze, one commit sets `REPLICATION_MEMBERS` to Apache and .NET;
    `replication_gate()` refuses to read the family before it. Each member's development pilot
    and simulation come before its test window.

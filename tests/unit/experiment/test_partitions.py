@@ -14,6 +14,7 @@ import pytest
 
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
+    REGISTERED_SENSITIVITIES,
     REGISTERED_SPREAD_TARGET,
     SPREAD_TARGETS,
     sensitivity_bounds,
@@ -333,7 +334,7 @@ def test_a_cell_written_to_json_reads_the_same_through_the_replication_gate(
         "metric": "logprob_per_token",
         "without": {
             name: {"estimate": cell["estimate"], "intervals": cell["intervals"]}
-            for name in ("ai_assisted", "backport_only")
+            for name in REGISTERED_SENSITIVITIES
         },
         "levels": [level],
         "k_from": {

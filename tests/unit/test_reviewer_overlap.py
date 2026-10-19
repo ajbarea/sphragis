@@ -6,6 +6,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location("overlap", ROOT / "scripts" / "reviewer_overlap.py")
 assert _spec is not None and _spec.loader is not None
@@ -53,6 +55,17 @@ def test_exposure_shared_reviewers_and_skips_in_both_directions() -> None:
     assert out["reviewers_per_half"] == [1, 3] and out["reviewers_in_both_halves"] == 0
 
 
+def test_training_rows_read_once_give_what_a_list_gives() -> None:
+    """The windows can arrive as a generator, which the counts over changes read a second time."""
+    side = {"a": 0, "b": 1}
+    reviewers = {("b", "T1"): {"r1"}, ("a", "T2"): {"r2"}, ("a", "D1"): {"r1"}}
+    train = [_row("b", "T1"), _row("a", "T2")]
+    dev = [_row("a", "D1")]
+    listed = script.overlap(train, dev, side, reviewers)
+    assert script.overlap(iter(train), iter(dev), side, reviewers) == listed
+    assert listed["concentration"]["training_changes"] is not None
+
+
 def test_an_empty_sibling_half_has_no_exposure() -> None:
     out = script.overlap([], [_row("a", "D1")], {"a": 0}, {("a", "D1"): {"r1"}})
     assert out["dev_examples_sharing_a_sibling_reviewer"] == 0
@@ -62,3 +75,23 @@ def test_an_empty_sibling_half_has_no_exposure() -> None:
 def test_quantiles_are_nearest_rank() -> None:
     assert script.quantiles([4.0, 1.0, 3.0, 2.0])["0.5"] == 3.0
     assert script.quantiles([]) == {}
+
+
+def test_gini_is_zero_when_equal_and_rises_as_one_reviewer_holds_more() -> None:
+    assert script.gini([3, 3, 3]) == pytest.approx(0.0)
+    assert script.gini([0, 0, 0, 12]) == pytest.approx(0.75)
+    assert script.gini([1, 2, 3, 4]) == pytest.approx(0.25)
+    with pytest.raises(ValueError, match="positive count"):
+        script.gini([0, 0])
+
+
+def test_concentration_credits_every_reviewer_of_an_item() -> None:
+    credited = [{"a", "b"}, {"a"}, {"a"}, {"c"}]
+    report = script.concentration(credited)
+    assert report is not None and report["reviewers"] == 3
+    assert report["top_tenth_reviewers"] == 1 and report["top_tenth_share"] == pytest.approx(3 / 5)
+    assert report["gini"] == pytest.approx(script.gini([3, 1, 1]))
+
+
+def test_concentration_without_any_reviewer_is_none() -> None:
+    assert script.concentration([set(), set()]) is None

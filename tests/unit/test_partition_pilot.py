@@ -183,7 +183,7 @@ def test_an_h1_read_takes_no_bounds_simulated_for_h2(
 def _registered_without(
     tmp_path: Path, org: str, ids: dict[str, list[str]] | None = None
 ) -> list[str]:
-    """Both registered sensitivities for a test read, from one listing over every example."""
+    """Every registered sensitivity for a test read, from one listing over every example."""
     path = tmp_path / f"sensitivity-ids-{org}-test.json"
     listing = {
         "org": org,
@@ -695,7 +695,7 @@ def test_a_sensitivity_naming_ids_the_file_lacks_is_refused(
 def test_a_test_window_read_reports_its_sensitivities_through_the_gate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
 ) -> None:
-    flagged = {"ai_assisted": ["x0", "x2"], "backport_only": []}
+    flagged = {"ai_assisted": ["x0", "x2"], "backport_only": [], "layout_only": []}
     _main(monkeypatch, _replication_argv(tmp_path, "test", ids=flagged))
     report = json.loads((tmp_path / "pilot.json").read_text())
     reduced = report["without"]["ai_assisted"]
@@ -778,7 +778,7 @@ def test_a_listing_made_from_another_corpus_is_refused(
 def test_a_test_read_without_its_registered_sensitivities_is_refused_before_any_draw(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
 ) -> None:
-    with pytest.raises(SystemExit, match=r"needs --without for \['backport_only'\]"):
+    with pytest.raises(SystemExit, match=r"needs --without for \['backport_only', 'layout_only'\]"):
         _main(monkeypatch, _gerrit_test_argv(tmp_path, names=("ai_assisted",)))
 
 

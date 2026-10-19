@@ -629,7 +629,7 @@ def _replication_cell(
         "run_files": ["run-1.json"],
         "outcome_neutral_runs": [{"file": "run-1.json", "recorded": True, "holds": True}],
         "metric": "logprob_per_token",
-        # Both registered sensitivities, read as partition_pilot.py --without writes them.
+        # Every registered sensitivity, read as partition_pilot.py --without writes them.
         # Read at every level any test read uses here, so a fixture serves either gate.
         "without": {
             name: {

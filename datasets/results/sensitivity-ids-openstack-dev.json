@@ -1,12 +1,13 @@
 {
   "org": "openstack",
   "window": "dev",
-  "source": "train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-v3/openstack/refined",
+  "source": "train -> dev windows under /home/ajbar/ajsoftworks/sphragis-data-local/reference/openstack/refined",
   "examples": 515,
   "changes": 214,
   "rules": {
     "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers.json's changes_ai",
-    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
+    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)",
+    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)"
   },
   "ids": {
     "ai_assisted": [
@@ -56,7 +57,20 @@
       "openstack:Id1eced2e0a30044b0da7dd5f4f2dedc50a5297b6:ironic/tests/unit/drivers/modules/test_image_cache.py:2:264",
       "openstack:Id9ae61bd6e4a9a65f919c1560eadba1ee42d935c:doc/source/admin/availability-zones.rst:2:13"
     ],
-    "backport_only": []
+    "backport_only": [],
+    "layout_only": [
+      "openstack:I42b2ea5c4e7f5a68bdfd044e0bc9a3b7745708ec:openstack_auth/defaults.py:2:123"
+    ]
+  },
+  "whitespace_only": {
+    "other": {
+      "revisions": 12,
+      "layout": 0
+    },
+    "python": {
+      "revisions": 10,
+      "layout": 1
+    }
   },
   "ai_unsearched": [],
   "universe": [
@@ -577,17 +591,19 @@
     "openstack:Iffea25529cf792d91d0c903526d1fb213f09a338:playbooks/roles/install-docker/tasks/Ubuntu.noble.yaml:3:39"
   ],
   "provenance": {
-    "generated_at": "2026-10-06T20:29:34.127761+00:00",
+    "generated_at": "2026-10-19T03:40:30.407496+00:00",
     "git": {
-      "commit": "f9cebd4ed03c8768de3c6a625bebc49203804218",
-      "branch": "HEAD"
+      "commit": "366ab808966077472fed5dcf3f34709de53c4ea4",
+      "branch": "measure/review-readings",
+      "uncommitted_code": [
+        "sphragis/experiment/layout.py"
+      ],
+      "uncommitted_code_sha256": "fcb4bed17de39cd24b551f5fb1e8b01116533ca101f740e51255207da920298c"
     },
-    "python": "3.13.15",
-    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
-      "torch": "2.14.0+cu130",
-      "transformers": "5.17.0",
-      "peft": "0.20.0"
+      "pygments": "2.21.0"
     }
   }
 }

@@ -19,6 +19,7 @@ _ORCHESTRATION = (
     "fdlora.py",
     "grid.py",
     "holdout.py",
+    "layout.py",
     "likelihood.py",
     "neutral.py",
     "partitions.py",
