@@ -548,6 +548,8 @@ def _listing(q: str, extra: str = "&n=500&S=0&o=ALL_REVISIONS") -> str:
         _listing(f'({MONTH} (project:p)) before:"2025-01-31 12:00:00 +0000"', "&n=3&S=1"),
         "/changes/7/comments",
         "/changes/7/revisions/abc123/files/src%2Fmain.cc/diff?base=1",
+        _listing("status:merged after:2025-01-26 before:2025-02-01 project:p", "&n=500&S=0"),
+        _listing(f"{MONTH} (project:p)", "&n=500&S=0&o=DETAILED_ACCOUNTS&o=CURRENT_REVISION"),
         "/projects/?type=CODE",
     ],
 )
@@ -573,6 +575,17 @@ def test_a_scoped_host_answers_what_the_client_builds(target: str) -> None:
         "/config/server/info",
         "/projects/p/commits/abc/files/README/content",
         "/projects/?type=ALL",
+        _listing("status:merged after:2000-01-01 before:2099-01-01 (project:p)"),
+        _listing("status:merged after:2025-12-01 before:2026-01-01 (project:p)"),
+        _listing("status:merged after:2024-10-01 before:2024-11-01 (project:p)"),
+        _listing("status:merged after:2025-02-01 before:2025-01-01 (project:p)"),
+        _listing("status:merged after:2025-01-01 before:2025-03-01 (project:p)"),
+        _listing("status:merged after:２０２５-01-01 before:2025-02-01 (project:p)"),
+        _listing(f"{MONTH} (project:p)", "&n=500&S=0&o=MESSAGES"),
+        _listing(f"{MONTH} (project:p)", "&n=500&S=-1"),
+        _listing(f"{MONTH} (project:p)", "&n=&S=0"),
+        "/changes/p~7/comments",
+        "/changes/7/revisions/../files/a/diff?base=1",
     ],
 )
 def test_a_scoped_host_refuses_every_other_request(target: str) -> None:

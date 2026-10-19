@@ -383,19 +383,31 @@ def grant_scope(org: str) -> GrantScope | None:
     return permission.scope if permission else None
 
 
-_DAY = r"\d{4}-\d{2}-\d{2}"
-# The one listing the client builds for a scoped host, a month of one project's merged changes
-# (`fetch`, `host_scoping.py`), and the truncation probe `fetch_changes` wraps around it.
+def next_month(month: str) -> str:
+    """The month `YYYY-MM` after `month`."""
+    year, mm = (int(part) for part in month.split("-"))
+    return f"{year + (mm == 12):04d}-{1 if mm == 12 else mm + 1:02d}"
+
+
+# ASCII digits only: `\d` would also match other scripts' digits.
+_DAY = r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
+# The one listing the client builds for a scoped host, merged changes of one project within one
+# month (`fetch`, `host_scoping.py`), and the truncation probe `fetch_changes` wraps around it.
 _MONTH_LISTING = re.compile(
-    rf"status:merged after:{_DAY} before:{_DAY} \(?project:(?P<project>[^\s()\"]+)\)?"
+    rf"status:merged after:(?P<after>{_DAY}) before:(?P<before>{_DAY})"
+    r" \(?project:(?P<project>[^\s()\"]+)\)?"
 )
 _TRUNCATION_PROBE = re.compile(
-    rf'\((?P<listing>.+)\) before:"{_DAY} \d{{2}}:\d{{2}}:\d{{2}} \+0000"'
+    rf'\((?P<listing>.+)\) before:"{_DAY} [0-9]{{2}}:[0-9]{{2}}:[0-9]{{2}} \+0000"'
 )
 _LISTING_PARAMETERS = frozenset({"q", "n", "S", "o"})
+# The `o=` options any scoped-host listing in the client asks for.
+_LISTING_OPTIONS = frozenset(
+    {"ALL_REVISIONS", "ALL_FILES", "DETAILED_ACCOUNTS", "CURRENT_REVISION", "CURRENT_FILES"}
+)
 _BY_NUMBER = (
-    re.compile(r"/changes/[^/?]+/comments"),
-    re.compile(r"/changes/[^/?]+/revisions/[^/?]+/files/[^/?]+/diff\?base=\d+"),
+    re.compile(r"/changes/[0-9]+/comments"),
+    re.compile(r"/changes/[0-9]+/revisions/[0-9a-f]+/files/[^/?]+/diff\?base=[0-9]+"),
 )
 
 
@@ -412,12 +424,19 @@ def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
         len(v) != 1 for k, v in parameters.items() if k != "o"
     ):
         return "a listing with parameters the client does not send"
+    if any(not re.fullmatch(r"[0-9]+", parameters[k][0]) for k in ("n", "S") if k in parameters):
+        return "a listing with a page size or offset that is not a count"
+    if set(parameters.get("o", [])) - _LISTING_OPTIONS:
+        return "a listing with options the client does not send"
     q = parameters.get("q", [""])[0]
     probe = _TRUNCATION_PROBE.fullmatch(q)
     listing = probe.group("listing") if probe else q
     asked = _MONTH_LISTING.fullmatch(listing)
     if asked is None or listing.count("(") != listing.count(")"):
         return "a listing other than a month of one project's merged changes"
+    after, before, month = asked.group("after"), asked.group("before"), asked.group("after")[:7]
+    if not (after < before <= f"{next_month(month)}-01") or not grant_months(scope, month):
+        return f"a listing of {after} to {before}, outside the grant's months"
     project = asked.group("project")
     return None if project in scope.projects else f"a listing of {[project]}"
 
@@ -789,11 +808,7 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
                 f"{args.org}'s grant keeps changes created from {scope.created_from}: "
                 f"pass --cutoff {scope.created_from}"
             )
-    year, month = args.month.split("-")
-    following = (
-        f"{int(year) + (month == '12')}-{'01' if month == '12' else f'{int(month) + 1:02d}'}"
-    )
-    query = f"status:merged after:{args.month}-01 before:{following}-01"
+    query = f"status:merged after:{args.month}-01 before:{next_month(args.month)}-01"
     if scope is not None:
         # A scoped host answers no OR (`out_of_scope_listing`), so each project is its own listing.
         queries = [f"{query} (project:{p})" for p in args.project]

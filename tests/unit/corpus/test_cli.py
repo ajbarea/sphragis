@@ -276,11 +276,17 @@ def test_a_scoped_host_is_asked_about_one_change_only_once_it_is_admitted(
     assert transport("https://g/changes/5/revisions/a/files/f.py/diff?base=1")[2] == "ok"
     month = "status%3Amerged+after%3A2024-11-01+before%3A2024-12-01+%28project%3Ap%29"
     assert transport(f"https://g/changes/?q={month}&n=500&S=0")[2] == "ok"
-    for refused in ("6/comments", "p~5/comments", "p%7E5/comments"):
-        with pytest.raises(SystemExit, match="was not admitted"):
-            transport(f"https://g/changes/{refused}")
+    with pytest.raises(SystemExit, match="was not admitted"):
+        transport("https://g/changes/6/comments")
     # A path the client does not build is refused whatever change it names.
-    for unbuilt in ("5", "5/detail", "7/revisions/a/files", "?q=project:p"):
+    for unbuilt in (
+        "5",
+        "5/detail",
+        "7/revisions/a/files",
+        "?q=project:p",
+        "p~5/comments",
+        "p%7E5/comments",
+    ):
         with pytest.raises(SystemExit, match="refusing g"):
             transport(f"https://g/changes/{unbuilt}")
     # A host without a scope needs no admission.

@@ -43,6 +43,7 @@ from sphragis.corpus.cli import (
     grant_months,
     host_of,
     http_transport,
+    next_month,
     refuse_if_sealed,
 )
 from sphragis.corpus.examples import is_code_file
@@ -90,9 +91,7 @@ def is_bot(owner: dict) -> bool:
 
 
 def month_bounds(month: str) -> tuple[str, str]:
-    year, mm = map(int, month.split("-"))
-    following = f"{year + (mm == 12)}-{1 if mm == 12 else mm + 1:02d}"
-    return f"{month}-01", f"{following}-01"
+    return f"{month}-01", f"{next_month(month)}-01"
 
 
 def listing(transport, query: str, opts: list[str], n: int = 500, limit: int | None = None):

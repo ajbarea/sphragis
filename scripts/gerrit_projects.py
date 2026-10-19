@@ -7,7 +7,8 @@ review data. Only a host whose grant scope is defined by this list may be asked
 `--overwrite`. Its artifact is what `cli.fuchsia_projects` reads into Fuchsia's grant scope
 (research log, 2026-10-19).
 
-    uv run --no-sync --no-active python scripts/gerrit_projects.py --org fuchsia
+    uv run --no-sync --no-active python scripts/gerrit_projects.py --org fuchsia \\
+        --out datasets/results/fuchsia-projects.json
 """
 
 from __future__ import annotations
@@ -38,12 +39,17 @@ def code_projects(listed: Any) -> list[str]:
     is empty, truncated or not a mapping, or names a project a `project:` query could misread."""
     if not isinstance(listed, Mapping) or not listed:
         raise SystemExit(f"the project list is empty or not a mapping: {type(listed).__name__}")
+    if not all(isinstance(info, Mapping) for info in listed.values()):
+        raise SystemExit("the project list holds an entry that is not a project's record")
     if any(isinstance(info, Mapping) and info.get("_more_projects") for info in listed.values()):
         raise SystemExit("the project list is truncated (_more_projects); refusing a partial scope")
     unsafe = sorted(name for name in listed if not rest_project_name(name))
     if unsafe:
         raise SystemExit(f"project names a query could misread: {unsafe[:5]}")
-    return sorted(name for name in listed if name not in META_PROJECTS)
+    projects = sorted(name for name in listed if name not in META_PROJECTS)
+    if not projects:
+        raise SystemExit("the project list names only the host's own projects")
+    return projects
 
 
 def main() -> None:
@@ -54,6 +60,8 @@ def main() -> None:
     url = GERRIT[args.org].rstrip("/") + QUERY
     listed = parse_response(_get(url, http_transport(), time.sleep, [0]))
     projects = code_projects(listed)
+    if out.exists() and not args.overwrite:
+        raise SystemExit(f"{out} appeared while the list was read; refusing to replace it")
     states: dict[str, int] = {}
     for info in listed.values():
         state = str(info.get("state", "ACTIVE")) if isinstance(info, Mapping) else "ACTIVE"

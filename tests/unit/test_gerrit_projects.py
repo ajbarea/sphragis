@@ -150,6 +150,8 @@ def test_no_other_host_is_asked_for_its_whole_project_list(org: str, monkeypatch
         ({"fuchsia": {}, "z": {"_more_projects": True}}, "truncated"),
         ({"fuchsia": {}, "^.*": {}}, "misread"),
         ({"fuchsia": {}, "a b": {}}, "misread"),
+        ({"All-Projects": {}, "All-Users": {}}, "only the host's own"),
+        ({"fuchsia": "x"}, "not a project's record"),
     ],
 )
 def test_a_partial_or_unsafe_list_writes_nothing(tmp_path, monkeypatch, listed, why) -> None:
