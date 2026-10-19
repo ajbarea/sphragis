@@ -69,6 +69,7 @@ from sphragis.experiment.rules_arms import (
 )
 from sphragis.experiment.runner import build_prompt, require_unique_ids, scored_row
 from sphragis.experiment.training import MAX_SEQ_LENGTH
+from sphragis.measure.withhold import require_text
 from sphragis.provenance import provenance_header
 from sphragis.refusal import refusals
 
@@ -155,7 +156,9 @@ def rules_files(
         # A claim a running distillation holds is an empty file.
         if path.stat().st_size == 0:
             raise SystemExit(f"{path} is still being written")
-        return json.loads(path.read_text())
+        document = json.loads(path.read_text())
+        require_text(document, path.name)
+        return document
 
     owner, partition = (
         (args.org, args.partition) if args.pools == "halves" else (args.foreign, foreign_order[0])

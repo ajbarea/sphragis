@@ -24,18 +24,24 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.experiment.runs import decoder
+from sphragis.measure.withhold import basis
 from sphragis.provenance import provenance_header
 
 RESULTS = Path("datasets/results")
 
 
-def _load(name: str) -> dict[str, Any]:
-    return json.loads((RESULTS / name).read_text())
+def _load(name: str, results: Path) -> dict[str, Any]:
+    return json.loads((results / name).read_text())
 
 
-def pair(stored_name: str, rerun_name: str) -> dict[str, Any]:
-    """Per arm: exact match under each decoder and how many predictions the rerun kept."""
-    stored, rerun = _load(stored_name), _load(rerun_name)
+def pair(stored_name: str, rerun_name: str, results: Path = RESULTS) -> dict[str, Any]:
+    """Per arm: exact match under each decoder and how many predictions the rerun kept.
+
+    Predictions are compared as text when both runs carry it and as digests when both are
+    published copies under one key; a mix of the two, or of two keys, is refused.
+    """
+    stored, rerun = _load(stored_name, results), _load(rerun_name, results)
+    field = f"prediction{basis({stored_name: stored, rerun_name: rerun})}"
     if set(stored["results"]) != set(rerun["results"]):
         raise SystemExit(f"{rerun_name} scored other arms than {stored_name}")
     arms = {}
@@ -47,9 +53,7 @@ def pair(stored_name: str, rerun_name: str) -> dict[str, Any]:
             "examples": len(rows),
             "stored_exact_match": fmean(r["exact_match"] for r in rows),
             "rerun_exact_match": fmean(r["exact_match"] for r in again),
-            "predictions_kept": sum(
-                a["prediction"] == b["prediction"] for a, b in zip(rows, again, strict=True)
-            ),
+            "predictions_kept": sum(a[field] == b[field] for a, b in zip(rows, again, strict=True)),
         }
     contrast = {
         name: {
@@ -70,8 +74,8 @@ def pair(stored_name: str, rerun_name: str) -> dict[str, Any]:
     }
 
 
-def decoding(name: str) -> dict[str, Any]:
-    cell = _load(name)
+def decoding(name: str, results: Path = RESULTS) -> dict[str, Any]:
+    cell = _load(name, results)
     return {
         "file": name,
         "temperature": cell["temperature"],
@@ -85,12 +89,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--pair", action="append", default=[], help="stored.json:rerun.json")
     parser.add_argument("--decoding", action="append", default=[])
+    parser.add_argument("--results", type=Path, default=RESULTS, help="where the runs are")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    pairs = [pair(*spec.split(":", 1)) for spec in args.pair]
+    pairs = [pair(*spec.split(":", 1), results=args.results) for spec in args.pair]
     report = {
         "pairs": pairs,
-        "decoding": [decoding(name) for name in args.decoding],
+        "decoding": [decoding(name, args.results) for name in args.decoding],
         "provenance": provenance_header(),
     }
     args.out.write_text(json.dumps(report, indent=2) + "\n")

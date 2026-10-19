@@ -1,0 +1,98 @@
+{
+  "kind": "k_coverage",
+  "org": "qt",
+  "metric": "logprob_per_token",
+  "pilot": "datasets/results/partition-pilot-qt-likelihood.json",
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": 10,
+  "coverage_runs": 15,
+  "runs": 15,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 10,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token.json",
+      "null_false_positive": {
+        "0.975": 0.0135,
+        "0.95": 0.02525
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 12,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k12-null.json",
+      "null_false_positive": {
+        "0.975": 0.012,
+        "0.95": 0.02575
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 15,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k15-null.json",
+      "null_false_positive": {
+        "0.975": 0.0105,
+        "0.95": 0.01825
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 20,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k20-null.json",
+      "null_false_positive": {
+        "0.975": 0.0065,
+        "0.95": 0.02025
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 25,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k25-null.json",
+      "null_false_positive": {
+        "0.975": 0.00775,
+        "0.95": 0.01725
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 30,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k30-null.json",
+      "null_false_positive": {
+        "0.975": 0.00925,
+        "0.95": 0.01925
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 35,
+      "file": "datasets/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k35-null.json",
+      "null_false_positive": {
+        "0.975": 0.00875,
+        "0.95": 0.01975
+      },
+      "within_nominal": true
+    }
+  ],
+  "spread_targets": {
+    "pilot_lower_90": 0.004345576161629418,
+    "pilot_estimate": 0.005160529235610697,
+    "sizing_bound_90": 0.006499298612503915,
+    "pilot_upper_99": 0.00792824867759302
+  },
+  "provenance": {
+    "generated_at": "2026-10-18T21:16:52.321027+00:00",
+    "git": {
+      "commit": "6bebf23e012efaa3ebcfb2aa63bc2203ba955f11",
+      "branch": "measure/qt-sims"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

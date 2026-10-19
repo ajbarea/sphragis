@@ -1,0 +1,5 @@
+pilot_lower_90: spread 0.0043 at 403 changes -> sigma_run 0.0000 (realised 0.0050)
+pilot_estimate: spread 0.0052 at 403 changes -> sigma_run 0.0016 (realised 0.0052)
+sizing_bound_90: spread 0.0065 at 403 changes -> sigma_run 0.0044 (realised 0.0065)
+pilot_upper_99: spread 0.0079 at 403 changes -> sigma_run 0.0064 (realised 0.0079)
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-qt-rp1.0-logprob_per_token-k15-null.json
