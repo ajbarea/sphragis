@@ -140,9 +140,9 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   changes created 2024-10-01 to 2025-03-26, listed through 2025-10, 2,056 examples after
   refinement and dedup against Qt, 1,076 of them C++, which covers 34 of 80 matched draws and no
   partition, so AOSP does not qualify (research log).
-- [ ] **H2's source**: Fuchsia, if its maintainers grant before the first H2 development contrast
-  and its pool covers every draw (asked 2026-10-15, no answer); otherwise H2 is exploratory and H1
-  is read alone (the Stage 1 report's conditional).
+- [ ] **H2's source**: Fuchsia, admitted 2026-10-19 on AJ's reading of Chrome Infra's answer, if its
+  pool over Qt's training months covers every draw (scope and stop rule in the research log);
+  otherwise H2 is exploratory and H1 is read alone (the Stage 1 report's conditional).
 
 ## Plan B — measurement
 

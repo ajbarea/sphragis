@@ -33,6 +33,7 @@ def test_every_organization_has_its_gerrit_instance() -> None:
     assert GERRIT == {
         "aosp": "https://android-review.googlesource.com",
         "chromium": "https://chromium-review.googlesource.com",
+        "fuchsia": "https://fuchsia-review.googlesource.com",
         "lineageos": "https://review.lineageos.org",
         "openstack": "https://review.opendev.org",
         "qt": "https://codereview.qt-project.org",
@@ -1278,14 +1279,14 @@ def test_verify_reproduce_catches_a_window_dropped_from_the_bounds(
 @pytest.mark.parametrize(
     "host",
     [
-        "fuchsia-review.googlesource.com",
+        "go-review.googlesource.com",
         "gerrit.example.org",
     ],
 )
 def test_http_transport_refuses_a_host_without_recorded_rest_permission(
     monkeypatch: pytest.MonkeyPatch, host: str
 ) -> None:
-    """robots.txt is Disallow: / on the first; an unknown host is refused by default."""
+    """A googlesource review host no grant names, and an unknown host, are refused by default."""
     from sphragis.corpus import cli
 
     opened = _scripted_connections(monkeypatch, [_FakeResponse(200)])
@@ -1339,6 +1340,7 @@ def test_every_permitted_rest_host_says_why() -> None:
         "android-review.googlesource.com",
         "chromium-review.googlesource.com",
         "codereview.qt-project.org",
+        "fuchsia-review.googlesource.com",
         "review.lineageos.org",
         "review.opendev.org",
         "gerrit.wikimedia.org",
@@ -1666,10 +1668,10 @@ def test_qt_permission_pins_the_written_terms() -> None:
     assert "QTQAINFRA-8064" in permission.reason
 
 
-def test_written_grants_are_qt_chromium_and_aosp_alone() -> None:
+def test_written_grants_are_qt_chromium_aosp_and_fuchsia_alone() -> None:
     """The other hosts open themselves to any polite client in robots.txt or a published policy;
     Qt's and Chromium's administrators answered one collector's request by email, and AJ reads
-    Chromium's answer as covering AOSP."""
+    Chromium's answer as covering AOSP and Fuchsia."""
     from sphragis.corpus import cli
 
     granted = {host for host, p in cli.REST_PERMITTED.items() if p.written_grant}
@@ -1677,6 +1679,7 @@ def test_written_grants_are_qt_chromium_and_aosp_alone() -> None:
         "codereview.qt-project.org",
         "chromium-review.googlesource.com",
         "android-review.googlesource.com",
+        "fuchsia-review.googlesource.com",
     }
 
 

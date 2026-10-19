@@ -77,6 +77,8 @@ STAGES = ("fetch", "build", "stamp", "refine", "dedup", "split", "freeze", "veri
 GERRIT = {
     "aosp": "https://android-review.googlesource.com",
     "chromium": "https://chromium-review.googlesource.com",
+    # H2's foreign source after Chromium's and AOSP's pools fell short (research log, 2026-10-19).
+    "fuchsia": "https://fuchsia-review.googlesource.com",
     # Checked live 2026-09-29: about 29,800 changes merged in the training window. A candidate
     # organization for H1, and at most an exploratory H2 cell (research log, 2026-09-29).
     "lineageos": "https://review.lineageos.org",
@@ -211,19 +213,33 @@ class RestPermission(NamedTuple):
 
 #: The census of AOSP's projects at its release tag (`scripts/aosp_census.py`); the C++-majority
 #: projects it names are the only ones AOSP's grant scope lists (research log, 2026-10-18).
-AOSP_CENSUS = Path(__file__).resolve().parents[2] / "datasets" / "results" / "aosp-census.json"
+RESULTS = Path(__file__).resolve().parents[2] / "datasets" / "results"
+AOSP_CENSUS = RESULTS / "aosp-census.json"
+#: Fuchsia's code projects as its host listed them (`scripts/gerrit_projects.py`), the projects
+#: its grant scope lists (research log, 2026-10-19).
+FUCHSIA_PROJECTS = RESULTS / "fuchsia-projects.json"
 
 
-def census_projects(path: Path = AOSP_CENSUS) -> tuple[str, ...]:
-    """The C++-majority projects a census names, none before one is committed, which leaves every
-    listing of the scope refused."""
+def artifact_projects(path: Path, key: str) -> tuple[str, ...]:
+    """The projects an artifact names under `key`, none before one is committed, which leaves every
+    listing of a scope built on it refused."""
     try:
-        projects = json.loads(path.read_text())["cpp_majority"]
+        projects = json.loads(path.read_text())[key]
     except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError):
         # Unreadable as well as absent: the scope then names nothing, and no stage of any other
         # organization fails on this import.
         return ()
     return tuple(projects) if isinstance(projects, list) else ()
+
+
+def census_projects(path: Path = AOSP_CENSUS) -> tuple[str, ...]:
+    """The C++-majority projects AOSP's census names."""
+    return artifact_projects(path, "cpp_majority")
+
+
+def fuchsia_projects(path: Path = FUCHSIA_PROJECTS) -> tuple[str, ...]:
+    """The code projects fuchsia-review listed."""
+    return artifact_projects(path, "projects")
 
 
 REST_PERMITTED = {
@@ -283,6 +299,23 @@ REST_PERMITTED = {
         # Listed through the month before the sealed test window, for the grant's changes updated
         # after aosp-main went read-only.
         scope=GrantScope(census_projects(), "2024-10-01", "2025-03-27", None, last_open_month()),
+        written_grant=True,
+    ),
+    "fuchsia-review.googlesource.com": RestPermission(
+        "robots.txt is Disallow: / (checked 2026-10-19); AJ reads Chrome Infra's infra-dev answer"
+        " of 2026-10-15 (no concerns with Gerrit's REST API at one client and no more than one"
+        " request a second) as covering fuchsia-review too (research log, 2026-10-19), as for"
+        " AOSP; quiet five minutes after a 5xx",
+        1.0,
+        # The grant supersedes robots.txt's Disallow: /, so no pattern is recorded.
+        disallow=(),
+        error_pause=300.0,
+        single_client=True,
+        # Item 1(b) of the H2 plan: Qt's own training-window months, every code project the host
+        # lists, no read cap; listed through the month before the sealed test window.
+        scope=GrantScope(
+            fuchsia_projects(), WINDOWS["train"][0], WINDOWS["train"][1], None, last_open_month()
+        ),
         written_grant=True,
     ),
     "gerrit.wikimedia.org": RestPermission(

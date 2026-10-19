@@ -127,7 +127,9 @@ AOSP's git host is open only for the release tag whose trees `scripts/aosp_censu
 android-review's REST API only for the census's C++-majority projects and changes created
 2024-10-01 to 2025-03-26 (`cli.REST_PERMITTED`'s scope). Its transport lists only granted
 projects and asks about one change only once that change is admitted under the grant
-(`cli.admit`), so a path that forgets the check fails closed. These grants name this study's collector, not every clone, so
+(`cli.admit`), so a path that forgets the check fails closed. AJ reads the same answer as covering
+fuchsia-review, scoped to its code projects and Qt's training months. These grants name this
+study's collector, not every clone, so
 their hosts are read only on a machine that lists each of them in `~/.config/sphragis/grants`
 (one host a line, `android.googlesource.com` and `android-review.googlesource.com` apart;
 `sphragis.corpus.grants`). Gerrit keeps each

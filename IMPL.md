@@ -19,7 +19,10 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 - **H2's foreign source** (research log, 2026-10-19): AOSP's pool, listed through 2025-10 and
   deduplicated against Qt, covers 34 of the 80 matched draws and none of the 40 partitions
   (1,076 C++ examples of the 1,308 the largest needs), so it does not qualify, as Chromium's V8
-  pool did not. Fuchsia is the one source left; until it grants and covers, `FOREIGN_SOURCE`
+  pool did not. Fuchsia is admitted on AJ's reading of Chrome Infra's answer (research log,
+  2026-10-19), its scope and stop rule fixed before any of its data is read: next its project
+  list, the window's listings, `pool_order.py`, the probe, the build in that order and
+  `foreign_pool_coverage.py --order --against qt=...`. Until a pool covers, `FOREIGN_SOURCE`
   stays unset and H2's development arms wait.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->

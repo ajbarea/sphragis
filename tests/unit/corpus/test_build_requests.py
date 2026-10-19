@@ -502,6 +502,32 @@ def test_aosps_grant_lists_only_the_census_projects_and_none_before_it(tmp_path)
     assert cli.out_of_scope_listing("/changes/?q=project%3Aplatform%2Fa", empty) is not None
 
 
+def test_fuchsias_grant_lists_its_code_projects_over_qts_training_months(tmp_path) -> None:
+    from sphragis.corpus.windows import WINDOWS
+
+    permission = cli.REST_PERMITTED["fuchsia-review.googlesource.com"]
+    assert permission.written_grant and permission.single_client and permission.crawl_delay >= 1.0
+    assert permission.error_pause >= 300.0 and permission.disallow == ()
+    scope = permission.scope
+    assert scope is not None and scope.read_cap is None
+    assert (scope.created_from, scope.created_before) == WINDOWS["train"]
+    assert scope.listed_through == cli.last_open_month()
+    assert scope.projects == cli.fuchsia_projects()
+    assert cli.host_of("fuchsia") == "fuchsia-review.googlesource.com"
+    listed = tmp_path / "projects.json"
+    listed.write_text(json.dumps({"projects": ["fuchsia", "integration"]}))
+    assert cli.fuchsia_projects(listed) == ("fuchsia", "integration")
+    assert cli.fuchsia_projects(tmp_path / "absent.json") == ()
+    assert cli.out_of_scope_listing("/changes/?q=project%3Afuchsia", scope._replace(projects=()))
+
+
+def test_a_scoped_host_lists_its_projects_without_a_change(monkeypatch) -> None:
+    """The project list names no change, so a scoped transport passes it to the host."""
+    scope = cli.GrantScope(("p",), "2024-11-01", "2025-09-01", None)
+    assert cli.out_of_scope_listing("/projects/?type=CODE", scope) is None
+    assert cli.unadmitted_change("/projects/?type=CODE", scope, set()) is None
+
+
 def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:
     from sphragis.corpus import hosts
 
