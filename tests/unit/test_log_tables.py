@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 from pathlib import Path
 
 import pytest
@@ -42,4 +43,6 @@ TABLES = {
 @pytest.mark.parametrize("name", sorted(TABLES))
 def test_the_log_quotes_each_table_as_its_artifact_prints_it(name: str) -> None:
     table = TABLES[name]()
-    assert table in LOG, f"{name}: the log's table differs from\n{table}"
+    # Whole: a row the log adds after the table fails as a changed one does.
+    whole = re.compile(rf"(?m)^{re.escape(table)}\n(?!\|)")
+    assert whole.search(LOG + "\n"), f"{name}: the log's table differs from\n{table}"

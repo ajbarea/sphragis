@@ -1073,14 +1073,34 @@ def test_a_lexer_sure_read_refuses_a_row_without_its_lexer_record(
         _main(monkeypatch, [*_inputs(tmp_path, "openstack"), "--lexer-sure", "--out", "o.json"])
 
 
-@pytest.mark.parametrize("window", ["test"])
 def test_a_lexer_sure_read_is_a_development_check_only(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, window: str
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    argv = _lexed(_inputs(tmp_path, "openstack", window=window), {})
+    argv = _lexed(_inputs(tmp_path, "openstack", window="test"), {})
     with pytest.raises(SystemExit, match="development"):
         _main(monkeypatch, [*argv, "--lexer-sure", "--out", str(tmp_path / "o.json")])
     dev = _lexed(_inputs(tmp_path, "openstack"), {})
-    for extra in (_sizing(tmp_path, "openstack"), ["--without", "ai_assisted=x.json"]):
+    sensitivity = ["--sensitivity", str(_sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack"))]
+    for extra in (
+        _sizing(tmp_path, "openstack"),
+        ["--without", "ai_assisted=x.json"],
+        sensitivity,
+        _planted(tmp_path, "openstack"),
+    ):
         with pytest.raises(SystemExit, match="lexer-sure"):
             _main(monkeypatch, [*dev, *extra, "--lexer-sure", "--out", str(tmp_path / "o.json")])
+
+
+def test_a_lexer_sure_read_counts_only_the_examples_that_leave_the_cell(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _lexed(_inputs(tmp_path, "openstack"), {1: {"x0", "x1"}})
+    second = Path(argv[1])
+    run = json.loads(second.read_text())
+    run["results"] = {
+        arm: [r for r in rows if r["id"] != "x0"] for arm, rows in run["results"].items()
+    }
+    second.write_text(json.dumps(run))
+    out = tmp_path / "sure.json"
+    _main(monkeypatch, [*argv, "--lexer-sure", "--out", str(out)])
+    assert json.loads(out.read_text())["lexer_sure"] == {"examples_dropped": 1}

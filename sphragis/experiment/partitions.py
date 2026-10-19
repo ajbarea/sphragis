@@ -252,6 +252,12 @@ def pilot_sizing(
         raise ValueError(f"{name} read the {artifact['window']} window; K comes from the pilot")
     if artifact.get("org", org) != org:
         raise ValueError(f"{name} is {artifact['org']}'s pilot, not {org}'s")
+    # A check on a subset of the rows (`partition_pilot.py --lexer-sure`) sizes nothing: its
+    # spread is of other examples than the runs a simulation pools.
+    if artifact.get("lexer_sure"):
+        raise ValueError(
+            f"{name} reads the pilot without lexer-unsure rows; K comes from the pilot"
+        )
     runs = artifact.get("sizing", {}).get("runs")
     if not is_count(runs):
         raise ValueError(f"{name}: no sizing.runs to read K from, got {runs!r}")

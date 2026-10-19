@@ -9782,8 +9782,8 @@ The 2026-10-15 check, read again on all three organizations and now an option
 (`partition_pilot.py --lexer-sure`, 2026-10-19): every example whose row in any arm a lexer may
 have misread (error characters, or an identifier class that changes when each line is lexed
 alone, `tokens.lexer_unsure`) leaves every arm of every run, and the reading is repeated
-(`partition-pilot-<org>-likelihood[-split-<component>]-lexer-sure.json`, 95% crossed intervals,
-the table from `scripts/log_tables.py`):
+(`partition-pilot-<org>-likelihood[-split-<component>]-lexer-sure.json` at 2435fb0,
+`prov/lexer-sure`, 95% crossed intervals, the table from `scripts/log_tables.py`):
 
 | Part of s | OpenStack | Wikimedia | Qt |
 |---|---|---|---|
@@ -10081,7 +10081,8 @@ at one to three cells, in nats per token:
 Every detectable effect is below δ, and the simulated null reads bounded in at least 0.95325 of
 trials at every point. At the 90% sizing bound, the point the coverage rule reads, the null holds
 nominal at both levels (0.0105 against 0.0125 at 97.5%, 0.01825 against 0.025 at 95%), the same
-draw as the null-only K = 15 run (seed 43, identical rates at every point), not a second check; at the pilot's upper 99% point it reaches 0.025 at 95%, the nominal rate.
-Fifteen runs narrow the sizing-bound effect from 0.0073 to 0.0082 at K = 10 to 0.0064 to 0.0071. The
-test read at K = 15 takes Qt's cell bounds from this simulation (`cells.sensitivity_bounds`; a
-record at another K is refused).
+draw as the null-only K = 15 run (seed 43, identical rates at every point), not a second check;
+at the pilot's upper 99% point it reaches 0.025 at 95%, the nominal rate. Fifteen runs narrow the
+sizing-bound effect from 0.0073 to 0.0082 at K = 10 to 0.0064 to 0.0071. The test read at K = 15
+takes Qt's cell bounds from this simulation (`cells.sensitivity_bounds`; a record at another K is
+refused).

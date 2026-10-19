@@ -265,6 +265,10 @@ def test_pilot_sizing_reads_the_pilot_and_refuses_a_reading_at_another_k() -> No
         pilot_sizing(reading, "k24", org="openstack")
     with pytest.raises(ValueError, match="no sizing.runs"):
         pilot_sizing({"sizing": {}}, "empty", org="openstack")
+    checked = {"sizing": {"runs": 10}, "lexer_sure": {"examples_dropped": 70}}
+    with pytest.raises(ValueError, match="without lexer-unsure rows"):
+        pilot_sizing(checked, "lexer-sure", org="qt")
+    assert pilot_sizing({**checked, "lexer_sure": None}, "pilot", org="qt") == 10
 
 
 def test_sensitivity_bounds_name_a_missing_level() -> None:

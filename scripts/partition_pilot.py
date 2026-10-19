@@ -170,7 +170,7 @@ def sensitivity_listings(specs: list[str], *, org: str) -> dict[str, tuple[str, 
 
 def lexer_sure(runs: list[tuple[dict, int]]) -> tuple[list[tuple[dict, int]], int]:
     """The runs without every example a lexer may have misread in any arm of any run, and how
-    many examples that drops."""
+    many examples that takes out of the cell (those every run scored)."""
     unsure = {
         row["id"]
         for results, _ in runs
@@ -182,7 +182,8 @@ def lexer_sure(runs: list[tuple[dict, int]]) -> tuple[list[tuple[dict, int]], in
         ({arm: [r for r in rows if r["id"] not in unsure] for arm, rows in results.items()}, k)
         for results, k in runs
     ]
-    return kept, len(unsure)
+    scored = [{row["id"] for rows in results.values() for row in rows} for results, _ in runs]
+    return kept, len(unsure & set.intersection(*scored))
 
 
 def main() -> None:
