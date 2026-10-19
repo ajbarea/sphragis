@@ -29,7 +29,7 @@ from sphragis.corpus.gerrit import (
 from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, github_fetchers
 from sphragis.corpus.github_api import GitHubAPI
 from sphragis.corpus.grants import unheld
-from sphragis.corpus.hosts import claim_host
+from sphragis.corpus.hosts import claim_host, claim_name
 from sphragis.corpus.load import (
     build_record,
     raw_digest,
@@ -266,36 +266,32 @@ AOSP_CENSUS = RESULTS / "aosp-census.json"
 
 _REST_PROJECT = re.compile(r"[A-Za-z0-9_][A-Za-z0-9._+/-]*")
 
+#: Gerrit's boolean operators, which it reads in capitals or lower case (`user-search.txt`); no
+#: project is named as one in any case.
+GERRIT_KEYWORDS = frozenset({"AND", "OR", "NOT"})
+
 
 def rest_project_name(name: object) -> bool:
     """Whether a project name reads as itself in a `project:` query: no space, bracket, quote,
-    regex anchor or leading negation that Gerrit's query grammar would read as syntax."""
+    regex anchor or leading negation that Gerrit's query grammar would read as syntax, and not one
+    of its operators."""
     return (
         isinstance(name, str)
         and _REST_PROJECT.fullmatch(name) is not None
         and ".." not in name
         and "//" not in name
         and not name.endswith("/")
+        and name.upper() not in GERRIT_KEYWORDS
     )
-
-
-#: Gerrit's boolean operators, which it reads in capitals or lower case (`user-search.txt`); a
-#: listing names none of them as a project in any case.
-GERRIT_KEYWORDS = frozenset({"AND", "OR", "NOT"})
 
 
 def listable_project(scope: GrantScope, project: object) -> bool:
     """Whether a listing under `scope` may name `project`: one of the projects it names, or under
-    a scope of every project one it covers whose name reads as itself in a `project:` query
-    (`rest_project_name`) and is not a Gerrit operator."""
+    a scope of every project one it covers, either way by a name that reads as itself in a
+    `project:` query (`rest_project_name`)."""
     if not scope.every_project:
         return project in scope.projects and rest_project_name(project)
-    return (
-        isinstance(project, str)
-        and rest_project_name(project)
-        and project.upper() not in GERRIT_KEYWORDS
-        and covers_project(scope, project)
-    )
+    return rest_project_name(project) and covers_project(scope, project)
 
 
 def artifact_projects(path: Path, key: str) -> tuple[str, ...]:
@@ -467,28 +463,60 @@ def day_ranges(month: str, days: int | None) -> list[tuple[str, str]]:
     return ranges
 
 
-def drop_boundary_repeats(
-    changes: Sequence[Mapping[str, Any]], boundaries: Iterable[str]
-) -> tuple[list[Mapping[str, Any]], int]:
-    """The changes with each one listed twice at a range boundary kept once, and how many such
-    repeats were dropped. Gerrit's `after:` and `before:` both include their day's midnight, so a
-    change last updated at exactly that second is listed by both ranges; any other repeat, or a
-    change listed twice with differing `updated`, raises ValueError."""
-    midnights = {f"{day} 00:00:00" for day in boundaries}
-    first: dict[Any, Mapping[str, Any]] = {}
-    kept: list[Mapping[str, Any]] = []
-    repeats = 0
-    for change in changes:
-        number = change["_number"]
-        if number not in first:
-            first[number] = change
-            kept.append(change)
-            continue
-        updated = str(change.get("updated") or "")
-        if updated != first[number].get("updated") or updated[:19] not in midnights:
-            raise ValueError(f"the listings repeat change {number} away from a range boundary")
-        repeats += 1
-    return kept, repeats
+class Listed(NamedTuple):
+    """One listing a fetch read: its `after:` and `before:` days, the one project it names (None
+    where it names none, or more than one), its record, and the changes it returned."""
+
+    after: str
+    before: str
+    project: str | None
+    record: dict[str, Any]
+    changes: list[dict[str, Any]]
+
+
+def listing_query(after: str, before: str, projects: Sequence[str] = ()) -> str:
+    """The query listing merged changes last updated from `after` to `before`, of `projects` where
+    any are named: one as `(project:<p>)`, several as an OR, which only a host without a scope
+    answers (`out_of_scope_listing`). `month_listing` reads the forms a scoped host answers."""
+    query = f"status:merged after:{after} before:{before}"
+    if projects:
+        query += " (" + " OR ".join(f"project:{p}" for p in projects) + ")"
+    return query
+
+
+def drop_boundary_repeats(listings: Sequence[Listed]) -> tuple[list[dict[str, Any]], int]:
+    """The listings' changes with each listed twice at a midnight two adjacent listings share kept
+    once, and how many such repeats were dropped. Gerrit's `after:` and `before:` both include
+    their own time, so a change last updated at exactly `<day> 00:00:00.000000000`, where one
+    listing of a project ends and the next of the same project begins, is in both, and both
+    copies are the same record. Any other repeat raises ValueError: one inside a listing, at
+    another time, of differing content, or across projects or days the two listings do not share."""
+    first: dict[Any, tuple[Listed, dict[str, Any]]] = {}
+    kept: list[dict[str, Any]] = []
+    dropped: set[Any] = set()
+    for listing in listings:
+        for change in listing.changes:
+            number = change["_number"]
+            if number not in first:
+                first[number] = (listing, change)
+                kept.append(change)
+                continue
+            earlier, copy = first[number]
+            shared = ({earlier.before} & {listing.after}) | ({listing.before} & {earlier.after})
+            midnights = {f"{day} 00:00:00.000000000" for day in shared}
+            if (
+                earlier is listing
+                or number in dropped
+                or earlier.project != listing.project
+                or change.get("updated") not in midnights
+                or dict(change) != dict(copy)
+            ):
+                raise ValueError(
+                    f"the listings repeat a change ({number}) other than at a midnight two "
+                    "adjacent listings of one project share"
+                )
+            dropped.add(number)
+    return kept, len(dropped)
 
 
 def range_halves(after: str, before: str) -> tuple[tuple[str, str], tuple[str, str]] | None:
@@ -764,7 +792,12 @@ def http_transport(
     held: Admitted = {} if admitted is None else admitted
     if host_intervals is None:
         host_intervals = {host: p.crawl_delay for host, p in REST_PERMITTED.items()}
-    pacer = Pacer(min_interval, host_intervals=host_intervals, clock=clock, sleep=sleep)
+    # Paced by claim name (`hosts.claim_name`), so hosts read as one client share one pace, at the
+    # longest interval any of them sets.
+    paces: dict[str, float] = {}
+    for host, interval in host_intervals.items():
+        paces[claim_name(host)] = max(paces.get(claim_name(host), 0.0), interval)
+    pacer = Pacer(min_interval, host_intervals=paces, clock=clock, sleep=sleep)
 
     def connect(scheme: str, host: str) -> http.client.HTTPConnection:
         if host not in connections:
@@ -801,10 +834,11 @@ def http_transport(
             if why:
                 raise SystemExit(f"refusing {host}: {why} (cli.out_of_scope_request)")
         claim = claim_host(host, lock_dir) if permission.single_client else None
+        pace = claim_name(host)
 
         def quiet(seconds: float) -> None:
             """Hold the host for `seconds`, here and, for a claimed host, for the next process."""
-            pacer.hold(host, seconds)
+            pacer.hold(pace, seconds)
             if claim is not None and seconds > 0:
                 claim.hold_until(wall() + seconds)
 
@@ -814,10 +848,11 @@ def http_transport(
                 sleep(remaining)
         # One silent retry only for a keep-alive the server closed while idle, which is
         # routine and not a failure; anything else is reported and left to the retry budget.
-        # Paced by host name, as permission is, so a port or letter case cannot open a second
-        # pace, and the retry is a request like any other.
+        # Paced by the host's claim name (`hosts.claim_name`), as permission is by host name, so
+        # neither a port, a letter case nor a second host of one client opens a second pace, and
+        # the retry is a request like any other.
         for attempt in range(2):
-            pacer.wait(host)
+            pacer.wait(pace)
             connection = connect(parts.scheme, parts.netloc)
             try:
                 connection.request(
@@ -825,20 +860,20 @@ def http_transport(
                 )
                 response = connection.getresponse()
                 body = response.read().decode()
-                pacer.hold(host, permission.idle_gap)
+                pacer.hold(pace, permission.idle_gap)
                 if response.status >= 500:
                     quiet(permission.error_pause)
                 return response.status, dict(response.getheaders()), body
             except (http.client.RemoteDisconnected, BrokenPipeError, ConnectionResetError):
                 drop(parts.netloc)
-                pacer.hold(host, permission.idle_gap)
+                pacer.hold(pace, permission.idle_gap)
                 if attempt == 0:
                     continue
                 quiet(permission.error_pause)
                 return 503, {}, ""
             except (OSError, http.client.HTTPException):
                 drop(parts.netloc)
-                pacer.hold(host, permission.idle_gap)
+                pacer.hold(pace, permission.idle_gap)
                 quiet(permission.error_pause)
                 return 503, {}, ""
         return 503, {}, ""
@@ -942,6 +977,9 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
             )
         elif not args.project or set(args.project) - set(scope.projects):
             raise SystemExit(f"{args.org}'s grant covers --project {' '.join(scope.projects)} only")
+        named_twice = sorted({p for p in args.project if args.project.count(p) > 1})
+        if named_twice:
+            raise SystemExit(f"{args.org}: --project names {named_twice} more than once")
         if not grant_months(scope, args.month):
             raise SystemExit(
                 f"{args.org}'s grant covers changes created {scope.created_from} to before "
@@ -953,13 +991,14 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
                 f"pass --cutoff {scope.created_from}"
             )
     transport = http_transport(min_interval=args.request_interval)
-    changes, records = [], []
+    listings: list[Listed] = []
+    truncated: list[dict[str, Any]] = []
     if scope is not None:
         # A scoped host answers no OR (`out_of_scope_listing`), so each project is its own listing
         # in each range of the month.
         for after, before in day_ranges(args.month, scope.listing_days):
             for project in args.project or [None]:
-                listed, listings = _list_range(
+                read, cut = _list_range(
                     GERRIT[args.org],
                     after,
                     before,
@@ -967,39 +1006,33 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
                     transport,
                     halve=scope.listing_days is not None,
                 )
-                changes.extend(listed)
-                records.extend(listings)
+                listings.extend(read)
+                truncated.extend(cut)
     else:
-        query = f"status:merged after:{args.month}-01 before:{next_month(args.month)}-01"
-        if args.project:
-            query += " (" + " OR ".join(f"project:{p}" for p in args.project) + ")"
+        after, before = day_ranges(args.month, None)[0]
+        query = listing_query(after, before, args.project)
         listed, listing = fetch_changes(
             GERRIT[args.org], query, transport=transport, options=("ALL_REVISIONS",)
         )
-        changes.extend(listed)
-        records.append(listing)
-    # A change last updated at a range's shared midnight is listed by both ranges; once is kept.
-    boundaries = {day for after, before in day_ranges(args.month, None) for day in (after, before)}
-    for record in records:
-        asked = month_listing(str(record.get("query", "")))
-        if asked is not None:
-            boundaries.update(asked[:2])
+        project = args.project[0] if len(args.project) == 1 else None
+        listings.append(Listed(after, before, project, listing, listed))
     try:
-        changes, boundary_repeats = drop_boundary_repeats(changes, boundaries)
+        changes, boundary_repeats = drop_boundary_repeats(listings)
     except ValueError as error:
         raise SystemExit(f"{args.org} {args.month}: {error}") from error
+    records = [listing.record for listing in listings]
     record = (
         records[0]
         if len(records) == 1
         else {
             "base_url": GERRIT[args.org],
             "listings": records,
-            "pages": sum(r["pages"] for r in records),
+            "pages": sum(r["pages"] for r in [*records, *truncated]),
             "count": len(changes),
+            "boundary_repeats": boundary_repeats,
+            "truncated": truncated,
         }
     )
-    if len(records) > 1:
-        record = {**record, "boundary_repeats": boundary_repeats}
     kept = created_on_or_after(changes, args.cutoff)
     before_cutoff, after_grant = len(changes) - len(kept), 0
     if scope is not None:
@@ -1043,13 +1076,13 @@ def _list_range(
     transport: Transport,
     *,
     halve: bool,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """The merged changes last updated from `after` to `before`, of `project` where one is named,
-    and the record of each listing that read them. With `halve`, a range the host would truncate
-    is listed again as its two halves (`range_halves`), and a day it would still truncate fails
-    the month; without, the truncation is raised as it is."""
-    named = f" (project:{project})" if project else ""
-    query = f"status:merged after:{after} before:{before}{named}"
+) -> tuple[list[Listed], list[dict[str, Any]]]:
+    """Each listing that read the merged changes last updated from `after` to `before`, of
+    `project` where one is named, and each attempt the host would have truncated, its query and
+    the pages it read. With `halve`, a range the host would truncate is listed again as its two
+    halves (`range_halves`), and a day it would still truncate fails the month; without, the
+    truncation is raised as it is."""
+    query = listing_query(after, before, [project] if project else [])
     try:
         listed, record = fetch_changes(
             base_url, query, transport=transport, options=("ALL_REVISIONS",)
@@ -1063,14 +1096,14 @@ def _list_range(
                 f"{query!r}: {after} to {before} is one day and the host would still truncate it, "
                 "so the month is not written"
             ) from error
-        changes: list[dict[str, Any]] = []
-        records: list[dict[str, Any]] = []
+        listings: list[Listed] = []
+        truncated = [{"query": error.query, "pages": error.pages}]
         for half in halves:
-            part, listings = _list_range(base_url, *half, project, transport, halve=True)
-            changes.extend(part)
-            records.extend(listings)
-        return changes, records
-    return listed, [record]
+            read, cut = _list_range(base_url, *half, project, transport, halve=True)
+            listings.extend(read)
+            truncated.extend(cut)
+        return listings, truncated
+    return [Listed(after, before, project, record, listed)], []
 
 
 def _github_api(args: argparse.Namespace) -> GitHubAPI:

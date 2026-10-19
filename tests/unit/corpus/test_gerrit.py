@@ -102,9 +102,11 @@ def test_fetch_changes_refuses_a_query_the_server_cut_short() -> None:
     ]
     older = [served[1], {"id": "c3", "updated": "2024-11-13 08:27:51.000000000"}]
     transport, asked = _served_then_probed(served, older)
-    with pytest.raises(TruncatedListing, match="truncated"):
+    with pytest.raises(TruncatedListing, match="truncated") as raised:
         fetch_changes("https://g/", "status:merged", transport=transport)
     assert issubclass(TruncatedListing, RuntimeError)
+    # What the attempt read, for the record of the listing that replaces it.
+    assert (raised.value.query, raised.value.pages) == ("status:merged", 1)
     from urllib.parse import unquote
 
     assert unquote(asked[1]).endswith('(status:merged) before:"2024-11-13 08:28:51 +0000"&n=2&S=0')

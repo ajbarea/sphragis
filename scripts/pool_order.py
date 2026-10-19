@@ -3,7 +3,8 @@
 Each project's count is its merged changes created inside the host's grant
 (`cli.GrantScope`: from `created_from`, before `created_before`), read from the month snapshots a
 `fetch` wrote under `--root`, each its month listed in the scope's day ranges (`cli.day_ranges`;
-a range's halves where the host would have truncated it, `cli.range_halves`), once per granted
+a range's halves, `cli.range_halves`, where the record names that range's listing as one the host
+would have truncated), once per granted
 project, or under a scope of every project naming none (`GrantScope.every_project`) (research
 log, 2026-10-18 and 2026-10-19). Projects are
 ranked by that count, most first, ties by name. A month lists the changes last updated in it, so
@@ -58,13 +59,15 @@ def main() -> None:
         record = read_snapshot_record(snapshot) or {}
         month = snapshot.name.removesuffix(".ndjson.gz")
         queries = _queries(record)
-        asked = [month_listing(q) for q in queries]
-        ranges: defaultdict[str | None, Counter[tuple[str, str]]] = defaultdict(Counter)
-        for listing in asked:
-            if listing is None:
-                raise SystemExit(f"{snapshot.name} is not its month's listing: {queries}")
-            ranges[listing[2]][listing[:2]] += 1
-        if not ranges:
+        ranges = _by_project(queries)
+        # The attempts the host would have truncated, each replaced by its range's halves.
+        cut = _by_project(
+            [
+                str(t.get("query")) if isinstance(t, dict) else ""
+                for t in record.get("truncated", [])
+            ]
+        )
+        if not ranges or cut is None or set(cut) - set(ranges):
             raise SystemExit(f"{snapshot.name} is not its month's listing: {queries}")
         listed = sorted(ranges, key=str)
         if scope.every_project:
@@ -81,8 +84,11 @@ def main() -> None:
         registered = day_ranges(month, scope.listing_days)
         halve = scope.listing_days is not None
         for project, spans in ranges.items():
-            tiled = all(_tiled(span, spans, halve=halve) for span in registered)
-            if not tiled or any(spans.values()):
+            halved = cut.get(project, Counter())
+            # Without `listing_days` a scope registers no halving, so a truncated attempt stands
+            # for nothing and is refused below.
+            tiled = all(_tiled(span, spans, halved if halve else Counter()) for span in registered)
+            if not tiled or any(spans.values()) or any(halved.values()):
                 of = f" of {project}" if project else ""
                 raise SystemExit(f"{snapshot.name} is not its month's listing{of}: {queries}")
         for change in iter_snapshot(snapshot):
@@ -126,14 +132,33 @@ def _months(scope: GrantScope) -> list[str]:
     return out
 
 
-def _tiled(span: tuple[str, str], spans: Counter[tuple[str, str]], *, halve: bool) -> bool:
-    """Whether `spans` lists `span`, or with `halve` its two halves (`range_halves`), each in
-    turn, down to one day; each listing so matched is taken from `spans`."""
+Spans = Counter[tuple[str, str]]
+
+
+def _by_project(queries: list[str]) -> dict[str | None, Spans] | None:
+    """Each project's listed `(after, before)` days, None where it names none (`month_listing`),
+    or None if a query is not a listing of that form."""
+    spans: defaultdict[str | None, Spans] = defaultdict(Counter)
+    for query in queries:
+        listing = month_listing(query)
+        if listing is None:
+            return None
+        spans[listing[2]][listing[:2]] += 1
+    return spans
+
+
+def _tiled(span: tuple[str, str], spans: Spans, halved: Spans) -> bool:
+    """Whether `spans` lists `span`, or, where `halved` records `span`'s listing as truncated, its
+    two halves (`range_halves`), each in turn, down to one day; each listing and each truncated
+    attempt so matched is taken from `spans` and `halved`."""
     if spans[span] > 0:
         spans[span] -= 1
         return True
-    halves = range_halves(*span) if halve else None
-    return halves is not None and all(_tiled(half, spans, halve=True) for half in halves)
+    halves = range_halves(*span) if halved[span] > 0 else None
+    if halves is None:
+        return False
+    halved[span] -= 1
+    return all(_tiled(half, spans, halved) for half in halves)
 
 
 def _queries(record: dict) -> list[str]:

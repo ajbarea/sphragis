@@ -107,6 +107,28 @@ def test_only_changes_created_inside_the_grant_are_asked_about(
     assert '"sampled": 1' in capsys.readouterr().out
 
 
+@pytest.mark.parametrize("kind", ["volume", "ranged"])
+def test_a_count_the_host_would_truncate_is_refused(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, kind: str
+) -> None:
+    """chromium/src passes the host's 10,000 results a month; a count cut short is never printed."""
+    from urllib.parse import unquote
+
+    from sphragis.corpus.gerrit import TruncatedListing
+
+    served = [{"_number": 1, "id": "a", "updated": "2025-01-20 10:00:00.000000000"}]
+    unserved = [{"_number": 2, "id": "b", "updated": "2025-01-10 10:00:00.000000000"}]
+
+    def transport(url: str) -> tuple[int, dict[str, str], str]:
+        probe = 'before:"' in unquote(url)
+        return 200, {}, ")]}'\n" + json.dumps(unserved if probe else served)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(scoping, "http_transport", lambda **_: transport)
+    with pytest.raises(TruncatedListing):
+        scoping.main(["measure", kind, "chromium/src", "2025-01"])
+
+
 def test_summarize_refuses_a_ranged_count_that_hit_the_cap(tmp_path: Path) -> None:
     row = {"project": "chromium/src", "month": "2024-11", "merged": 10000, "created_in_window": 1}
     (tmp_path / "volume.jsonl").write_text(

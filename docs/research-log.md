@@ -10172,7 +10172,12 @@ now, before any chromium-review change past V8's is read:
    Fuchsia and AOSP whose pool covers.
 5. *Pace.* One client, one request a second, five minutes quiet after a 5xx. Chrome Infra's answer
    is read as that rate for chromium-review, android-review and fuchsia-review together, so no two
-   of them are read at once: Chromium's listings start after Fuchsia's build ends.
+   of them are read at once: Chromium's listings start after Fuchsia's build ends. The code holds
+   all three, and AOSP's git host, to one client (`hosts.CLAIM_AS`): a second process is refused
+   the shared lock, and one process's transport paces them as one host (`hosts.claim_name`).
 6. *Names.* Under a scope of every project a listing may name a project only if the name reads as
    itself in Gerrit's query grammar (`cli.rest_project_name`, no Gerrit keyword); a brace phrase or
-   any other syntax is refused, as on 2026-10-19.
+   any other syntax is refused, as on 2026-10-19. This replaces the refusal of any listing that
+   names a project in the entry "Fuchsia's months listed whole" (2026-10-19), for both scopes of
+   every project, Chromium's and Fuchsia's: `--project` and the transport now admit a name that
+   reads as itself.

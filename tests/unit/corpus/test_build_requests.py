@@ -4,6 +4,8 @@ once; without the flag the build is as it was."""
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import urllib.parse
 from pathlib import Path
 from typing import Any
@@ -388,6 +390,27 @@ def test_a_scoped_fetch_lists_each_project_alone_and_keeps_only_the_granted_date
     assert sorted(c["_number"] for c in kept) == [10, 20]
 
 
+@pytest.mark.parametrize(
+    ("pooled", "flags"),
+    [
+        (True, ("--project", "platform/a", "--project", "platform/a", "--month", "2024-10")),
+        (False, ("--project", "v8/v8", "--project", "v8/v8", "--month", "2025-01")),
+    ],
+)
+def test_a_scoped_fetch_refuses_a_project_named_twice_before_any_request(
+    tmp_path, monkeypatch, pooled: bool, flags: tuple[str, ...]
+) -> None:
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    if pooled:
+        _pool_host(monkeypatch)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: pytest.fail("no request"))
+    fetch = ["fetch", "--org", "chromium", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    if pooled:
+        fetch[-1] = "2024-10-01"
+    with pytest.raises(SystemExit, match="more than once"):
+        cli.main([*fetch, *flags])
+
+
 def test_a_scoped_fetch_refuses_listings_that_repeat_a_change(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
     _pool_host(monkeypatch)
@@ -396,7 +419,7 @@ def test_a_scoped_fetch_refuses_listings_that_repeat_a_change(tmp_path, monkeypa
     )
     monkeypatch.setattr(cli, "http_transport", lambda **_: object())
     flags = ["--project", "platform/a", "--project", "platform/b", "--month", "2024-10"]
-    with pytest.raises(SystemExit, match="repeat change 7 away from a range boundary"):
+    with pytest.raises(SystemExit, match=r"repeat a change \(7\) other than at a midnight"):
         cli.main(["fetch", "--org", "chromium", "--root", str(tmp_path), *flags])
 
 
@@ -705,6 +728,8 @@ def test_a_scope_of_every_project_lists_its_month_in_its_ranges(tmp_path, monkey
     ranges = cli.day_ranges("2025-02", 2)
     assert asked == [f"status:merged after:{a} before:{b}" for a, b in ranges]
     assert [r["query"] for r in record["listings"]] == asked
+    assert record["boundary_repeats"] == 0 and record["truncated"] == []
+    assert record["pages"] == len(ranges)
     scope = cli.grant_scope("chromium")
     assert scope is not None
     assert all(cli.out_of_scope_listing(_listing(q), scope) is None for q in asked)
@@ -738,7 +763,7 @@ def test_a_month_listed_whole_is_refused_not_halved_when_the_host_would_truncate
 
     def truncated(base, query, *, transport, options):
         asked.append(query)
-        raise TruncatedListing(f"{base} truncated {query!r}")
+        raise TruncatedListing(f"{base} truncated {query!r}", query=query, pages=1)
 
     monkeypatch.setattr(cli, "fetch_changes", truncated)
     monkeypatch.setattr(cli, "http_transport", lambda **_: object())
@@ -906,6 +931,14 @@ def test_a_scope_that_names_its_projects_refuses_any_other() -> None:
     assert cli.out_of_scope_request(_listing(f"{MONTH} (project:fuchsia)"), SCOPED, {"7"})
 
 
+def test_a_scope_naming_a_gerrit_operator_as_a_project_refuses_it() -> None:
+    named = SCOPED._replace(projects=("p", "OR", "and"))
+    assert cli.out_of_scope_request(_listing(f"{MONTH} (project:p)"), named, set()) is None
+    for keyword in ("OR", "and"):
+        assert cli.out_of_scope_request(_listing(f"{MONTH} (project:{keyword})"), named, set())
+        assert not cli.listable_project(named, keyword)
+
+
 @pytest.mark.parametrize(
     "project",
     [
@@ -970,6 +1003,12 @@ def test_no_scope_asks_a_host_for_its_project_list() -> None:
         ("a//b", False),
         ("a/", False),
         ("", False),
+        ("OR", False),
+        ("or", False),
+        ("AND", False),
+        ("Not", False),
+        ("oracle", True),
+        ("android/OR", True),
     ],
 )
 def test_a_rest_project_name_reads_as_itself(name: str, ok: bool) -> None:
@@ -980,10 +1019,21 @@ def test_an_artifact_with_one_unsafe_name_scopes_nothing(tmp_path) -> None:
     listed = tmp_path / "census.json"
     listed.write_text(json.dumps({"cpp_majority": ["platform/a", "^.*"]}))
     assert cli.census_projects(listed) == ()
+    for keyword in ("or", "OR", "Not"):
+        listed.write_text(json.dumps({"cpp_majority": ["platform/a", keyword]}))
+        assert cli.census_projects(listed) == (), keyword
     (tmp_path / "dir.json").mkdir()
     assert cli.census_projects(tmp_path / "dir.json") == ()
     (tmp_path / "bin.json").write_bytes(b"\xff\xfe")
     assert cli.census_projects(tmp_path / "bin.json") == ()
+
+
+ONE_CLIENT = (
+    "chromium-review.googlesource.com",
+    "android-review.googlesource.com",
+    "fuchsia-review.googlesource.com",
+    "android.googlesource.com",
+)
 
 
 def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:
@@ -991,10 +1041,51 @@ def test_aosps_git_and_review_hosts_are_one_client(tmp_path) -> None:
 
     git = hosts.claim_host("android.googlesource.com", tmp_path)
     assert hosts.claim_host("android-review.googlesource.com", tmp_path) is git
-    assert (tmp_path / "android-review.googlesource.com.lock").exists()
+    assert (tmp_path / "chromium-review.googlesource.com.lock").exists()
     assert not (tmp_path / "android.googlesource.com.lock").exists()
+    assert not (tmp_path / "android-review.googlesource.com.lock").exists()
     hosts.release_host("android.googlesource.com", tmp_path)
-    assert (tmp_path, "android-review.googlesource.com") not in hosts._CLAIMS
+    assert (tmp_path, "chromium-review.googlesource.com") not in hosts._CLAIMS
+
+
+def test_chrome_infras_answer_is_claimed_as_one_client() -> None:
+    """The answer sets one client for chromium-review, android-review and fuchsia-review together
+    (research log, 2026-10-19), and AOSP's git host is android-review's instance."""
+    from sphragis.corpus import hosts
+
+    assert {hosts.claim_name(host) for host in ONE_CLIENT} == {"chromium-review.googlesource.com"}
+    assert hosts.claim_name("codereview.qt-project.org") == "codereview.qt-project.org"
+    claims = {hosts.claim_host(host) for host in ONE_CLIENT}
+    assert len(claims) == 1
+
+
+@pytest.mark.parametrize("host", ONE_CLIENT)
+def test_a_host_under_chrome_infras_answer_is_refused_while_another_process_reads_one(
+    host: str,
+) -> None:
+    from sphragis.corpus import hosts
+
+    hosts.LOCK_DIR.mkdir(parents=True, exist_ok=True)
+    lock = hosts.LOCK_DIR / "chromium-review.googlesource.com.lock"
+    holder = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            f"import fcntl,time; f=open({str(lock)!r},'a+'); fcntl.flock(f, fcntl.LOCK_EX);"
+            " print('held', flush=True); time.sleep(30)",
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        assert holder.stdout is not None and holder.stdout.readline().strip() == "held"
+        with pytest.raises(SystemExit, match="another process"):
+            hosts.claim_host(host)
+        # A host outside the answer is its own client.
+        hosts.claim_host("codereview.qt-project.org")
+    finally:
+        holder.kill()
+        holder.wait()
 
 
 def test_a_test_claims_a_host_in_a_lock_directory_of_its_own() -> None:
@@ -1003,33 +1094,165 @@ def test_a_test_claims_a_host_in_a_lock_directory_of_its_own() -> None:
 
     assert not hosts.LOCK_DIR.is_relative_to(Path.home() / ".cache" / "sphragis")
     hosts.claim_host("fuchsia-review.googlesource.com")
-    assert (hosts.LOCK_DIR / "fuchsia-review.googlesource.com.lock").is_file()
+    assert (hosts.LOCK_DIR / "chromium-review.googlesource.com.lock").is_file()
 
 
-def test_a_change_on_a_range_boundary_is_kept_once_and_counted() -> None:
-    """Gerrit's after: and before: are both inclusive, so a change last updated at a range's
-    shared midnight is listed by both ranges."""
-    edge = {"_number": 7, "updated": "2025-01-03 00:00:00.000000000"}
-    inside = {"_number": 8, "updated": "2025-01-02 13:00:00.000000000"}
-    kept, repeats = cli.drop_boundary_repeats([inside, edge, edge], {"2025-01-03"})
-    assert kept == [inside, edge] and repeats == 1
-    assert cli.drop_boundary_repeats([inside, edge], {"2025-01-03"}) == ([inside, edge], 0)
+def _listed(after: str, before: str, *changes: dict, project: str | None = None) -> Any:
+    return cli.Listed(after, before, project, {}, list(changes))
+
+
+EDGE = {"_number": 7, "project": "p", "updated": "2025-01-03 00:00:00.000000000"}
+INSIDE = {"_number": 8, "project": "p", "updated": "2025-01-02 13:00:00.000000000"}
+
+
+def test_a_change_at_the_midnight_two_adjacent_listings_share_is_kept_once_and_counted() -> None:
+    """Gerrit's after: and before: both include their own time, so a change last updated at the
+    midnight two ranges share is listed by both."""
+    for project in (None, "p"):
+        listings = [
+            _listed("2025-01-01", "2025-01-03", INSIDE, dict(EDGE), project=project),
+            _listed("2025-01-03", "2025-01-05", dict(EDGE), project=project),
+        ]
+        kept, repeats = cli.drop_boundary_repeats(listings)
+        assert kept == [INSIDE, EDGE] and repeats == 1
+    # In either order of the two listings.
+    later_first = [
+        _listed("2025-01-03", "2025-01-05", EDGE),
+        _listed("2025-01-01", "2025-01-03", EDGE),
+    ]
+    assert cli.drop_boundary_repeats(later_first) == ([EDGE], 1)
+    assert cli.drop_boundary_repeats([_listed("2025-01-01", "2025-01-03", INSIDE, EDGE)]) == (
+        [INSIDE, EDGE],
+        0,
+    )
 
 
 @pytest.mark.parametrize(
-    "repeated",
+    "listings",
     [
-        {"_number": 8, "updated": "2025-01-02 13:00:00.000000000"},
-        {"_number": 7, "updated": "2025-01-05 00:00:00.000000000"},
+        # inside one listing, even at its own endpoint
+        [_listed("2025-01-01", "2025-01-03", EDGE, dict(EDGE))],
+        # half a second past the shared midnight
+        [
+            _listed(
+                "2025-01-01", "2025-01-03", {**EDGE, "updated": "2025-01-03 00:00:00.500000000"}
+            ),
+            _listed(
+                "2025-01-03", "2025-01-05", {**EDGE, "updated": "2025-01-03 00:00:00.500000000"}
+            ),
+        ],
+        # the same number and update, other content
+        [
+            _listed("2025-01-01", "2025-01-03", EDGE),
+            _listed("2025-01-03", "2025-01-05", {**EDGE, "branch": "main"}),
+        ],
+        # at a midnight the two listings do not share
+        [
+            _listed(
+                "2025-01-01", "2025-01-03", {**EDGE, "updated": "2025-01-01 00:00:00.000000000"}
+            ),
+            _listed(
+                "2025-01-03", "2025-01-05", {**EDGE, "updated": "2025-01-01 00:00:00.000000000"}
+            ),
+        ],
+        # two listings that share no day
+        [_listed("2025-01-01", "2025-01-03", EDGE), _listed("2025-01-05", "2025-01-07", EDGE)],
+        # two projects' listings
+        [
+            _listed("2025-01-01", "2025-01-03", EDGE, project="p"),
+            _listed("2025-01-03", "2025-01-05", EDGE, project="q"),
+        ],
+        [
+            _listed("2025-01-01", "2025-01-03", EDGE, project="p"),
+            _listed("2025-01-03", "2025-01-05", EDGE),
+        ],
+        # the month's first midnight, in a fetch of one listing
+        [
+            _listed(
+                "2025-01-01",
+                "2025-02-01",
+                {**EDGE, "updated": "2025-01-01 00:00:00.000000000"},
+                {**EDGE, "updated": "2025-01-01 00:00:00.000000000"},
+            )
+        ],
+        # a third copy
+        [
+            _listed("2025-01-01", "2025-01-03", EDGE),
+            _listed("2025-01-03", "2025-01-05", EDGE),
+            _listed("2025-01-03", "2025-01-05", EDGE),
+        ],
     ],
 )
-def test_any_other_repeat_fails_the_month(repeated: dict) -> None:
+def test_any_other_repeat_fails_the_month(listings: list) -> None:
     with pytest.raises(ValueError, match="repeat"):
-        cli.drop_boundary_repeats([repeated, dict(repeated)], {"2025-01-03"})
+        cli.drop_boundary_repeats(listings)
 
 
-def test_a_boundary_repeat_must_be_the_same_change_twice() -> None:
-    edge = {"_number": 7, "updated": "2025-01-03 00:00:00.000000000"}
-    moved = {**edge, "updated": "2025-01-03 00:00:01.000000000"}
-    with pytest.raises(ValueError, match="repeat"):
-        cli.drop_boundary_repeats([edge, moved], {"2025-01-03"})
+def _edge_fetch(tmp_path, monkeypatch, rows: dict[str, list[dict]], month: str = "2025-02") -> dict:
+    """A Chromium month whose listings answer `rows` by query, no change for any other."""
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+
+    def listing(base, query, *, transport, options):
+        listed = [dict(r) for r in rows.get(query, [])]
+        return listed, {"query": query, "pages": 1, "count": len(listed)}
+
+    monkeypatch.setattr(cli, "fetch_changes", listing)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: object())
+    fetch = ["fetch", "--org", "chromium", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    assert cli.main([*fetch, "--month", month]) == 0
+    return json.loads((tmp_path / "chromium" / "raw" / f"{month}.record.json").read_text())
+
+
+def _code_change(number: int, updated: str) -> dict:
+    return {
+        "_number": number,
+        "project": "chromium/src",
+        "branch": "main",
+        "created": "2025-01-20 00:00:00.000000000",
+        "updated": updated,
+        "owner": {"_account_id": 1},
+    }
+
+
+def test_a_fetch_keeps_a_change_at_a_shared_midnight_once_and_records_it(
+    tmp_path, monkeypatch
+) -> None:
+    from sphragis.corpus.storage import iter_snapshot
+
+    edge = _code_change(7, "2025-02-03 00:00:00.000000000")
+    record = _edge_fetch(
+        tmp_path,
+        monkeypatch,
+        {
+            "status:merged after:2025-02-01 before:2025-02-03": [edge],
+            "status:merged after:2025-02-03 before:2025-02-05": [edge],
+        },
+    )
+    assert record["boundary_repeats"] == 1 and record["count"] == 1
+    kept = list(iter_snapshot(tmp_path / "chromium" / "raw" / "2025-02.ndjson.gz"))
+    assert [c["_number"] for c in kept] == [7]
+
+
+def test_a_fetch_refuses_a_change_listed_twice_by_one_listing(tmp_path, monkeypatch) -> None:
+    edge = _code_change(7, "2025-02-03 00:00:00.000000000")
+    with pytest.raises(SystemExit, match="repeat"):
+        _edge_fetch(
+            tmp_path,
+            monkeypatch,
+            {"status:merged after:2025-02-01 before:2025-02-03": [edge, edge]},
+        )
+
+
+def test_a_whole_month_fetch_refuses_a_repeat_at_its_first_midnight(tmp_path, monkeypatch) -> None:
+    """Fuchsia's month is one listing: no midnight of it is shared."""
+    monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
+    first = {**_code_change(7, "2025-02-01 00:00:00.000000000"), "project": "fuchsia"}
+
+    def listing(base, query, *, transport, options):
+        return [dict(first), dict(first)], {"query": query, "pages": 1, "count": 2}
+
+    monkeypatch.setattr(cli, "fetch_changes", listing)
+    monkeypatch.setattr(cli, "http_transport", lambda **_: object())
+    fetch = ["fetch", "--org", "fuchsia", "--root", str(tmp_path), "--cutoff", "2024-11-01"]
+    with pytest.raises(SystemExit, match="repeat"):
+        cli.main([*fetch, "--month", "2025-02"])

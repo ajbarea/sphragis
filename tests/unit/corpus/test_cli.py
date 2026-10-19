@@ -386,14 +386,41 @@ def test_http_transport_paces_requests_to_one_host(monkeypatch: pytest.MonkeyPat
 
 
 def test_http_transport_paces_each_host_independently(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hosts outside one answer, Qt's and OpenStack's among them, keep paces of their own."""
     from sphragis.corpus import cli
 
-    _scripted_connections(monkeypatch, [_FakeResponse(200)] * 2)
+    monkeypatch.setattr(cli, "unheld_grant", lambda host: None)
+    _scripted_connections(monkeypatch, [_FakeResponse(200)] * 4)
     slept: list[float] = []
     transport = cli.http_transport(min_interval=1.0, clock=lambda: 0.0, sleep=slept.append)
+    transport("https://codereview.qt-project.org/a")
+    transport("https://review.opendev.org/a")
     transport("https://g/a")
     transport("https://h/a")
     assert slept == []
+
+
+def test_http_transport_paces_chrome_infras_hosts_as_one_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One client at one request a second for chromium-review, android-review and fuchsia-review
+    together (research log, 2026-10-19), so one process alternating them waits between them."""
+    from sphragis.corpus import cli
+
+    monkeypatch.setattr(cli, "unheld_grant", lambda host: None)
+    _scripted_connections(monkeypatch, [_FakeResponse(200)] * 3)
+    now, slept = [0.0], []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    transport = cli.http_transport(min_interval=0.0, clock=lambda: now[0], sleep=sleep)
+    days = "/changes/?q=status%3Amerged+after%3A2025-01-01+before%3A2025-01-03&n=100&S=0"
+    transport(f"https://chromium-review.googlesource.com{days}")
+    transport(f"https://fuchsia-review.googlesource.com{days}")
+    transport(f"https://chromium-review.googlesource.com{days}")
+    assert slept == [1.0, 1.0]
 
 
 def test_http_transport_without_an_interval_never_sleeps(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1518,6 +1545,10 @@ def test_a_ranged_fetch_lists_a_truncated_range_again_as_its_halves(
     ]
     assert record["count"] == 2
     assert asked[0] == "status:merged after:2025-02-01 before:2025-02-03"
+    # The attempt the host would have cut short is recorded, and its page counted.
+    truncated = "status:merged after:2025-02-01 before:2025-02-03"
+    assert record["truncated"] == [{"query": truncated, "pages": 1}]
+    assert record["pages"] == len(ranges) + 1
     from sphragis.corpus.storage import iter_snapshot
 
     kept = list(iter_snapshot(tmp_path / "chromium" / "raw" / "2025-02.ndjson.gz"))

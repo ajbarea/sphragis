@@ -14,9 +14,27 @@ from typing import IO
 
 LOCK_DIR = Path.home() / ".cache" / "sphragis" / "hosts"
 
-#: Hosts that serve one Gerrit instance under two names, claimed under one: AOSP's git host and
-#: its review host are one client's to read, whichever route asks (research log, 2026-10-18).
-CLAIM_AS = {"android.googlesource.com": "android-review.googlesource.com"}
+#: The claim Chrome Infra's infra-dev answer of 2026-10-15 is read under, named for the host the
+#: request was made for: one client at no more than one request a second, read for
+#: chromium-review, android-review and fuchsia-review together (research log, 2026-10-19).
+CHROME_INFRA = "chromium-review.googlesource.com"
+
+#: Hosts claimed, and paced, as one client: the review hosts Chrome Infra's answer covers, and
+#: AOSP's git host, which serves android-review's Gerrit instance (research log, 2026-10-18).
+CLAIM_AS = {
+    host: CHROME_INFRA
+    for host in (
+        "chromium-review.googlesource.com",
+        "android-review.googlesource.com",
+        "fuchsia-review.googlesource.com",
+        "android.googlesource.com",
+    )
+}
+
+
+def claim_name(host: str) -> str:
+    """The one name `host` is claimed and paced under (`CLAIM_AS`), the host's own elsewhere."""
+    return CLAIM_AS.get(host, host)
 
 
 class HostClaim:
@@ -60,7 +78,7 @@ def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
     processes started from different environments contend for the same file.
     """
     directory = lock_dir or LOCK_DIR
-    name = CLAIM_AS.get(host, host)
+    name = claim_name(host)
     key = (directory, name)
     if key in _CLAIMS:
         return _CLAIMS[key]
@@ -70,9 +88,10 @@ def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
         handle.close()
+        also = f" or a host claimed with it as {name}" if name != host else ""
         raise SystemExit(
-            f"refusing {host}: another process is already fetching from it, and the host asks "
-            "for a concurrency of 1"
+            f"refusing {host}: another process is already fetching from it{also}, and the host "
+            "asks for a concurrency of 1"
         ) from None
     _CLAIMS[key] = HostClaim(host, handle)
     return _CLAIMS[key]
@@ -80,6 +99,6 @@ def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
 
 def release_host(host: str, lock_dir: Path | None = None) -> None:
     """Give up this process's claim on `host`, keeping its quiet deadline on disk."""
-    claim = _CLAIMS.pop((lock_dir or LOCK_DIR, CLAIM_AS.get(host, host)), None)
+    claim = _CLAIMS.pop((lock_dir or LOCK_DIR, claim_name(host)), None)
     if claim is not None:
         claim.release()

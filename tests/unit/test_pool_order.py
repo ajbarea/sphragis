@@ -177,15 +177,19 @@ def test_a_project_listed_for_another_month_is_refused(tmp_path, monkeypatch) ->
 RANGED = EVERY._replace(listing_days=2)
 
 
-def _ranged(month: str, ranges=None, projects=(None,)) -> dict:
-    """A month listed in `ranges` (default the scope's two-day ranges), once per project."""
+def _ranged(month: str, ranges=None, projects=(None,), truncated=()) -> dict:
+    """A month listed in `ranges` (default the scope's two-day ranges), once per project, with
+    the `truncated` ranges recorded as attempts the host would have cut short."""
     spans = cli.day_ranges(month, 2) if ranges is None else ranges
+
+    def query(a: str, b: str, p: str | None) -> str:
+        return f"status:merged after:{a} before:{b}" + (f" (project:{p})" if p else "")
+
     return {
-        "listings": [
-            {"query": f"status:merged after:{a} before:{b}" + (f" (project:{p})" if p else "")}
-            for a, b in spans
-            for p in projects
-        ]
+        "listings": [{"query": query(a, b, p)} for a, b in spans for p in projects],
+        "truncated": [
+            {"query": query(a, b, p), "pages": 1} for a, b in truncated for p in projects
+        ],
     }
 
 
@@ -211,12 +215,49 @@ def test_a_range_listed_again_as_its_halves_is_accepted(tmp_path, monkeypatch) -
         ("2024-10-03", "2024-10-05"),
         *whole[1:],
     ]
+    cut = [("2024-10-01", "2024-10-05"), ("2024-10-01", "2024-10-03")]
 
     def record(month: str) -> dict:
-        return _ranged(month, split if month == "2024-10" else cli.day_ranges(month, 4))
+        if month == "2024-10":
+            return _ranged(month, split, truncated=cut)
+        return _ranged(month, cli.day_ranges(month, 4))
 
     _write(tmp_path, {}, record=record)
     assert _main(tmp_path, monkeypatch)["changes"] == 0
+
+
+@pytest.mark.parametrize(
+    "cut",
+    [
+        # halves the record does not say the host would have cut short
+        [],
+        [("2024-10-01", "2024-10-05")],
+        # a truncated attempt with no halves listed in its place
+        [("2024-10-01", "2024-10-05"), ("2024-10-01", "2024-10-03"), ("2024-10-05", "2024-10-09")],
+        # a truncated attempt recorded twice
+        [("2024-10-01", "2024-10-05"), ("2024-10-01", "2024-10-03"), ("2024-10-01", "2024-10-03")],
+    ],
+)
+def test_halves_stand_only_where_the_record_names_their_range_truncated(
+    tmp_path, monkeypatch, cut
+) -> None:
+    _ranged_scope(monkeypatch, RANGED._replace(listing_days=4))
+    whole = cli.day_ranges("2024-10", 4)
+    split = [
+        ("2024-10-01", "2024-10-02"),
+        ("2024-10-02", "2024-10-03"),
+        ("2024-10-03", "2024-10-05"),
+        *whole[1:],
+    ]
+
+    def record(month: str) -> dict:
+        if month == "2024-10":
+            return _ranged(month, split, truncated=cut)
+        return _ranged(month, cli.day_ranges(month, 4))
+
+    _write(tmp_path, {}, record=record)
+    with pytest.raises(SystemExit, match="not its month"):
+        _main(tmp_path, monkeypatch)
 
 
 def _one_month_refused(tmp_path, monkeypatch, made: dict, scope=RANGED) -> None:
@@ -254,10 +295,13 @@ def test_a_split_that_is_not_the_ranges_halves_is_refused(tmp_path, monkeypatch)
     whole = cli.day_ranges("2024-10", 4)
     split = [("2024-10-01", "2024-10-02"), ("2024-10-02", "2024-10-05"), *whole[1:]]
     _ranged_scope(monkeypatch, scope)
+    cut = [("2024-10-01", "2024-10-05")]
     _write(
         tmp_path,
         {},
-        record=lambda m: _ranged(m, split if m == "2024-10" else cli.day_ranges(m, 4)),
+        record=lambda m: (
+            _ranged(m, split, truncated=cut) if m == "2024-10" else _ranged(m, cli.day_ranges(m, 4))
+        ),
     )
     with pytest.raises(SystemExit, match="not its month"):
         _main(tmp_path, monkeypatch)
@@ -266,8 +310,13 @@ def test_a_split_that_is_not_the_ranges_halves_is_refused(tmp_path, monkeypatch)
 def test_a_month_listed_whole_is_not_accepted_as_halves(tmp_path, monkeypatch) -> None:
     """A scope that lists months whole registers no halving."""
     halves = [("2024-10-01", "2024-10-16"), ("2024-10-16", "2024-11-01")]
+    cut = [("2024-10-01", "2024-11-01")]
     monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
-    _write(tmp_path, {}, record=lambda m: _ranged(m, halves) if m == "2024-10" else _whole(m))
+    _write(
+        tmp_path,
+        {},
+        record=lambda m: _ranged(m, halves, truncated=cut) if m == "2024-10" else _whole(m),
+    )
     with pytest.raises(SystemExit, match="not its month"):
         _main(tmp_path, monkeypatch)
 

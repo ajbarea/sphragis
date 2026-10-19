@@ -44,11 +44,12 @@ from sphragis.corpus.cli import (
     grant_months,
     host_of,
     http_transport,
+    listing_query,
     next_month,
     refuse_if_sealed,
 )
 from sphragis.corpus.examples import is_code_file
-from sphragis.corpus.gerrit import _get, parse_response
+from sphragis.corpus.gerrit import _get, fetch_changes, parse_response
 from sphragis.corpus.halves import MAX_SHARE_OF_HALF, MIN_PROJECTS_A_HALF, assign
 from sphragis.provenance import provenance_header
 
@@ -96,6 +97,12 @@ def month_bounds(month: str) -> tuple[str, str]:
 
 
 def listing(transport, query: str, opts: list[str], n: int = 500, limit: int | None = None):
+    """The changes `query` lists and whether more were left unread. Read whole, it is refused if
+    the host would truncate it (`gerrit.fetch_changes`), so no count printed is a floor; with
+    `limit`, the first `limit` or so newest-updated, and `more` says the rest were not read."""
+    if limit is None:
+        rows, _ = fetch_changes(BASE, query, transport=transport, page_size=n, options=tuple(opts))
+        return rows, False
     out: list[dict] = []
     start = 0
     while True:
@@ -125,8 +132,7 @@ def measure_volume(project: str, months: list[str]) -> None:
     transport = _transport()
     for month in months:
         a, b = month_bounds(month)
-        q = f"status:merged after:{a} before:{b} project:{project}"
-        rows, _ = listing(transport, q, ["DETAILED_ACCOUNTS"])
+        rows, _ = listing(transport, listing_query(a, b, [project]), ["DETAILED_ACCOUNTS"])
         print(json.dumps(_counts(project, month, rows)), flush=True)
 
 
@@ -138,8 +144,7 @@ def measure_ranged(project: str, months: list[str]) -> None:
         rows: list[dict] = []
         capped = False
         for lo, hi in itertools.pairwise(cuts):
-            q = f"status:merged after:{lo} before:{hi} project:{project}"
-            part, _ = listing(transport, q, ["DETAILED_ACCOUNTS"])
+            part, _ = listing(transport, listing_query(lo, hi, [project]), ["DETAILED_ACCOUNTS"])
             capped |= len(part) >= 10000
             rows.extend(part)
         print(json.dumps(_counts(project, month, rows, capped=capped, ranged=True)), flush=True)
@@ -149,9 +154,8 @@ def measure_yield(project: str, month: str, k: int) -> None:
     admitted: Admitted = {}
     transport = _transport(admitted)
     a, b = month_bounds(month)
-    q = f"status:merged after:{a} before:{b} project:{project}"
     opts = ["DETAILED_ACCOUNTS", "CURRENT_REVISION", "CURRENT_FILES"]
-    rows, more = listing(transport, q, opts, n=200, limit=200)
+    rows, more = listing(transport, listing_query(a, b, [project]), opts, n=200, limit=200)
     human = [r for r in rows if not is_bot(r["owner"]) and r["created"][:10] >= WINDOW_START]
     scope = REST_PERMITTED[HOST].scope
     if scope is not None:
