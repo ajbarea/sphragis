@@ -1,19 +1,64 @@
 {
   "org": "wikimedia",
   "window": "dev",
-  "source": "train -> dev windows under /home/ajb6289/ajsoftworks/sphragis-data/corpus-v3/wikimedia/refined",
+  "source": "train -> dev windows under /home/ajbar/ajsoftworks/sphragis-data-local/reference/wikimedia/refined",
   "examples": 747,
   "changes": 448,
   "rules": {
     "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers.json's changes_ai",
-    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)"
+    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)",
+    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)"
   },
   "ids": {
     "ai_assisted": [],
     "backport_only": [
       "wikimedia:I6dcc94fd95a8cd5b26c008adfca56f67e376974a:src/SkinTuleapSkin.php:1:130",
       "wikimedia:I9039a39aa92de193a2f2e9816856adc8c757cf85:includes/specials/CargoExport.php:1:149"
+    ],
+    "layout_only": [
+      "wikimedia:I12701efe6f142d2031d2ed084a30f2a918d9bf7c:lib/includes/DataTypeDefinitions.php:11:413",
+      "wikimedia:I2bc582140c1fc95530b2eb5667b2df4b992261c4:src/Hook/ReactToGroupChanges.php:1:65",
+      "wikimedia:I485386ef72158525a0deae17c64b3b0e4247278b:resources/panel/PreferencesPanel.js:1:184",
+      "wikimedia:I4b83c8338c2af06c2e87578019935826c63df817:src/FrontendModules/EventContributionsModule.php:17:145",
+      "wikimedia:I525cfb05f76136c44b60a76f8ed21d65461a8cf4:docs/extension.schema.v2.json:2:1685",
+      "wikimedia:I5ebf9743642fafe14b08e2dddbc1d29c90e5576c:view/src/Wbui2025FeatureFlag.php:31:45",
+      "wikimedia:I7389194baebf2e7dc07bc7d87f7d97c040430ade:includes/User/CentralAuthUserHelper.php:6:23",
+      "wikimedia:I7389194baebf2e7dc07bc7d87f7d97c040430ade:includes/User/CentralAuthUserHelper.php:6:38",
+      "wikimedia:I7d45ece6e9d0c0cfa7c3911b89c803081f0f3116:src/Special/OATHManage.php:4:200",
+      "wikimedia:I7e0fde36ac196a6b2dc2363473408a775b98e659:extension.json:4:157",
+      "wikimedia:I7e0fde36ac196a6b2dc2363473408a775b98e659:src/Auth/SecondaryAuthenticationProvider.php:1:138",
+      "wikimedia:I8732421a525e4abfc4368c1de218bbd9034e4ef2:configs/common/cache_purge.adaptor.js:1:30",
+      "wikimedia:I8cf7add384c4a290cdb7926c23f2286ea9c4909e:modules/ext.wikimediaEvents/xLab/imageBrowsingPageLoad.js:2:19",
+      "wikimedia:Ib472f45c0c795ac6f4034e1f050e683eb848e983:modules/ext.wikimediaEvents/xLab/pageVisitBotDetection.js:7:105",
+      "wikimedia:Ic430ad78ba2a78c7d0ed78c179956563aae0be54:modules/ext.wikimediaEvents/index.js:8:20",
+      "wikimedia:Ica73c0166a039d9d0479e8d2357bdc610a61b42f:includes/parser/Parser.php:4:4235",
+      "wikimedia:Iceff93e0abaaa41216ae855c4b115aa4b945d396:src/Hooks.php:2:43",
+      "wikimedia:Id6040acf41136054ba4460c6166b11cb1cb3edcf:includes/HookHandler/SearchHooks.php:6:66",
+      "wikimedia:Ie48e85a4fd0fec523275ae7a850b14d2930010ba:src/Special/OATHManage.php:8:721",
+      "wikimedia:Ifd3dba4d8719323588ac87d62b778d574941a89b:repo/domains/reuse/src/Infrastructure/GraphQL/Schema/ValueType.php:4:14"
     ]
+  },
+  "whitespace_only": {
+    "JSON": {
+      "revisions": 2,
+      "layout": 2
+    },
+    "JavaScript": {
+      "revisions": 6,
+      "layout": 5
+    },
+    "PHP": {
+      "revisions": 14,
+      "layout": 13
+    },
+    "other": {
+      "revisions": 13,
+      "layout": 0
+    },
+    "python": {
+      "revisions": 1,
+      "layout": 0
+    }
   },
   "ai_unsearched": [],
   "universe": [
@@ -766,17 +811,15 @@
     "wikimedia:Ifff3b85e1bd55ff231570d3bc7f9ea4af1cf3df6:i18n/en.json:2:38"
   ],
   "provenance": {
-    "generated_at": "2026-10-06T20:30:54.838015+00:00",
+    "generated_at": "2026-10-19T04:06:52.311365+00:00",
     "git": {
-      "commit": "f9cebd4ed03c8768de3c6a625bebc49203804218",
-      "branch": "HEAD"
+      "commit": "cbc6e1570616abef4bd92885beb5f0d75f43194d",
+      "branch": "measure/review-readings"
     },
-    "python": "3.13.15",
-    "platform": "Linux-6.18.51-1.el9.aarch64-aarch64-with-glibc2.34",
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "packages": {
-      "torch": "2.14.0+cu130",
-      "transformers": "5.17.0",
-      "peft": "0.20.0"
+      "pygments": "2.21.0"
     }
   }
 }

@@ -1,10 +1,11 @@
 """The examples each registered sensitivity of H1 removes, by id, for one organization and window.
 
-Two of the readings registered beside the pass rule recompute an H1 cell without a set of
+Three of the readings registered beside the pass rule recompute an H1 cell without a set of
 examples (registered decisions, "Readings beside the pass rule"): those whose change's merged
 commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s flagged changes),
-and those whose (project, Change-Id) sits only on release, maintenance or deployment branches
-(`sphragis.corpus.backports`). A run's rows carry ids and Change-Ids but no project, so the ids
+those whose (project, Change-Id) sits only on release, maintenance or deployment branches
+(`sphragis.corpus.backports`), and those whose revision changes the hunk's layout alone
+(`sphragis.experiment.layout`). A run's rows carry ids and Change-Ids but no project, so the ids
 are read here, from the corpus the partitions were built from, deduplicated and split as the
 study loads it; `partition_pilot.py --without NAME=FILE` drops them from every run.
 
@@ -28,6 +29,7 @@ from sphragis.corpus.backports import (
 from sphragis.corpus.split import seal_open, seal_path
 from sphragis.corpus.windows import WINDOWS
 from sphragis.experiment.holdout import window_split
+from sphragis.experiment.layout import language, row_layout_only, whitespace_only
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -58,6 +60,18 @@ def covers(trailers: dict, window: str) -> bool:
     """Whether the trailer searches span the window: changes are flagged only where searched."""
     start, end = WINDOWS[window]
     return trailers["since"] <= start and end <= trailers["merged_before"]
+
+
+def whitespace_counts(rows: list[dict]) -> dict[str, dict[str, int]]:
+    """Per rule, the whitespace-only revisions and how many of them are layout-only."""
+    counts: dict[str, dict[str, int]] = {}
+    for row in rows:
+        if not whitespace_only(row["before"], row["after"]):
+            continue
+        tally = counts.setdefault(language(row["path"]) or "other", {"revisions": 0, "layout": 0})
+        tally["revisions"] += 1
+        tally["layout"] += row_layout_only(row)
+    return dict(sorted(counts.items()))
 
 
 def main() -> None:
@@ -97,6 +111,7 @@ def main() -> None:
             for r in rows
             if only_backport(branches.get((r["project"], r["change_id"]), set()))
         ),
+        "layout_only": sorted(r["id"] for r in rows if row_layout_only(r)),
     }
     report = {
         "org": args.org,
@@ -107,8 +122,13 @@ def main() -> None:
         "rules": {
             "ai_assisted": f"(project, Change-Id) among {args.ai_trailers}'s changes_ai",
             "backport_only": f"(project, Change-Id) only on branches matching {BACKPORT.pattern}",
+            "layout_only": "the revision changes the hunk's layout alone (experiment.layout)",
         },
         "ids": removed,
+        # The revisions that keep every character but whitespace, by the rule judging their file
+        # (`experiment.layout.language`, `other` for a file whose whitespace can carry meaning),
+        # beside how many of those it read as layout.
+        "whitespace_only": whitespace_counts(rows),
         "ai_unsearched": unsearched,
         # Every example this listing was made from, so a reader can check its runs came from it.
         "universe": sorted(r["id"] for r in rows),

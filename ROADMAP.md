@@ -260,7 +260,13 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   simulated power; the placebo rerun once on the repeated-partition pipeline.
 - [ ] **Tacit, measured**: H1 on the refinements each organization's own linters would not make
   (flake8/hacking, mediawiki-codesniffer, eslint-config-wikimedia), and exact match after
-  identifier anonymisation, both supplementary estimands like `file_type_supplement`.
+  identifier anonymisation, both supplementary estimands like `file_type_supplement`. First step
+  registered 2026-10-18: the layout-only revisions (what a formatter would make) as a registered
+  sensitivity of every cell (`experiment.layout`, research log); the linters' other rules remain.
+- [ ] **A larger checkpoint, exploratory** (raised in an outside review, 2026-10-18): whether house
+  style is easier to learn at 14B or 32B, on TIGRIS's GH200s, after Stage 1 and beside the
+  registered 7B, never in place of it; its contamination window is checked as the 7B's was before
+  any reading.
 - [ ] **The rank-256 arm** (changes a registered arm): alpha held at 64, or rsLoRA, so the arm
   changes capacity and not step size too (LoRA Without Regret, Thinking Machines 2025); a one-seed
   learning-rate check at 1e-4 to 1e-3, chosen by pooled held-out loss, logged even if 2e-4 stands.
@@ -538,6 +544,24 @@ Added 2026-09-17 from a literature pass against the 2026 state of the art.
   AOSP cell tests.
 - [x] Both threat models exist and both leak: per-client updates, and aggregates over rounds of
   varying composition.
+- [ ] **Preference learning, for after Stage 2** (raised in an outside review, 2026-10-18; read
+  2026-10-18): a reviewed hunk and its revision are a rejected and a chosen output, so an
+  organization's adapter could be trained by DPO or KTO rather than on the revision alone. A
+  search on 2026-10-18 found no work that trains on review revisions that way or learns
+  organization conventions so; the
+  nearest are reward-guided comment generation (CoRAL, arXiv:2506.04464) and federated
+  preference tuning with a private adapter per client (FedBiscuit, arXiv:2407.03038; FedPDPO,
+  arXiv:2603.19741; pFedDPO, arXiv:2610.12885), none on code. A candidate objective for the
+  Federated Agents line, not a change to RQ1's registered SFT and likelihood measure.
+- [ ] **Parameter-selection rivals for the rivals map** (full texts read 2026-10-18): FedSelect
+  (CVPR 2024, arXiv:2404.02478; p3: each client grows its own mask of parameters that stay local,
+  so training sorts it, per client), FedKSeed (ICML 2024, arXiv:2312.06353; p3: the whole update
+  leaves as seeds and scalar gradients, nothing is split), Offsite-Tuning (arXiv:2302.04870; p4: a
+  fixed rule keeps the outer layers trainable and sends a compressed middle) and FedBiOT (KDD 2024,
+  arXiv:2406.17706; p4: the same layer rule, federated). None runs a leakage attack (Offsite-Tuning,
+  p8: leakage "yet to" be shown absent). FedSelect joins the deck's map, the one whose split is
+  learned per client; the other three repeat cells the map already holds, and the two
+  emulator designs protect the model owner's weights, not a client's data.
 
 ## Plan E — calibration
 

@@ -12,9 +12,15 @@ whether any of its reviewers reviewed a sibling-half training change, and its ex
 share of the sibling half's training examples that come from changes one of its reviewers
 reviewed. The test window is sealed and never read.
 
+Beside it, how concentrated review is: over the training window's examples in a half, each
+example credited to every reviewer of its change, the Gini coefficient of examples per reviewer
+and the share the top tenth of reviewers hold, as Hajari et al. read reviews per reviewer
+(arXiv:2312.17236), and the same over changes.
+
     uv run --no-sync --no-active python scripts/reviewer_overlap.py \\
-        --root openstack=../wm-bots/datasets/gerrit \\
-        --root wikimedia=../fa-auto/datasets/gerrit \\
+        --root openstack=../sphragis-data-local/reference \\
+        --root wikimedia=../sphragis-data-local/reference \\
+        --root qt=datasets/gerrit-granted \\
         --out datasets/results/reviewer-overlap.json
 """
 
@@ -61,6 +67,36 @@ def quantiles(values: list[float]) -> dict[str, float]:
     )
 
 
+def gini(counts: list[int]) -> float:
+    """The Gini coefficient of non-negative counts: 0 when equal, towards 1 when one holds all."""
+    ordered = sorted(counts)
+    total = sum(ordered)
+    if not ordered or total == 0:
+        raise ValueError("a Gini coefficient needs at least one positive count")
+    n = len(ordered)
+    weighted = sum((i + 1) * c for i, c in enumerate(ordered))
+    return (2 * weighted) / (n * total) - (n + 1) / n
+
+
+def concentration(credited: Iterable[set[str]]) -> dict | None:
+    """How many items each reviewer is credited with, an item crediting each of its reviewers;
+    None when no item has a reviewer."""
+    per: dict[str, int] = {}
+    for people in credited:
+        for person in people:
+            per[person] = per.get(person, 0) + 1
+    counts = sorted(per.values(), reverse=True)
+    if not counts:
+        return None
+    top = max(1, len(counts) // 10)
+    return {
+        "reviewers": len(counts),
+        "gini": gini(counts),
+        "top_tenth_share": sum(counts[:top]) / sum(counts),
+        "top_tenth_reviewers": top,
+    }
+
+
 def overlap(
     train: Iterable[Mapping],
     dev: Iterable[Mapping],
@@ -68,6 +104,7 @@ def overlap(
     reviewers: Mapping[tuple[str, str], set[str]],
 ) -> dict:
     """Per dev example, a shared reviewer with the sibling half's training data, and exposure."""
+    train = list(train)
     by_half: dict[int, list[set[str]]] = {0: [], 1: []}
     for row in train:
         if row["project"] in side:
@@ -75,6 +112,13 @@ def overlap(
                 reviewers.get((row["project"], row["change_id"]), set())
             )
     sibling_people = {h: set().union(*seen) if seen else set() for h, seen in by_half.items()}
+    # Examples and changes in the halves' training data, each with its change's reviewers.
+    examples = [people for seen in by_half.values() for people in seen if people]
+    changes = {
+        (row["project"], row["change_id"]): reviewers.get((row["project"], row["change_id"]), set())
+        for row in train
+        if row["project"] in side
+    }
     counted = skipped = known = shared = shared_two = 0
     exposures: list[float] = []
     for row in dev:
@@ -104,6 +148,10 @@ def overlap(
         "exposure_quantiles": quantiles(exposures),
         "reviewers_per_half": [len(sibling_people[0]), len(sibling_people[1])],
         "reviewers_in_both_halves": len(sibling_people[0] & sibling_people[1]),
+        "concentration": {
+            "training_examples": concentration(examples),
+            "training_changes": concentration(p for p in changes.values() if p),
+        },
     }
 
 
@@ -123,7 +171,10 @@ def main() -> None:
         windows, _, _ = run_split(kept, WINDOWS)
         if windows.get("test"):
             raise SystemExit(f"{org}: the corpus holds test-window examples; it is sealed")
-        report["orgs"][org] = overlap(windows["train"], windows["dev"], side, reviewers)
+        report["orgs"][org] = {
+            "root": str(Path(root).resolve()),
+            **overlap(windows["train"], windows["dev"], side, reviewers),
+        }
         print(org, report["orgs"][org])
     report["provenance"] = provenance_header()
     args.out.write_text(json.dumps(report, indent=2) + "\n")

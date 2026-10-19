@@ -58,11 +58,11 @@ def test_the_sealed_window_and_an_uncovered_window_are_refused(tmp_path: Path) -
         _run([*argv, "--window", "test", "--out", str(tmp_path / "o.json")])
 
 
-def _corpus(root: Path, org: str) -> None:
+def _corpus(root: Path, org: str, edits: dict[int, tuple[str, str]] | None = None) -> None:
     """Five development-window changes, refined as the build leaves them, and their raw changes.
 
     c1 AI-flagged; c2 only on a stable branch; c3 merged after the search bound; c4 unmerged;
-    c5 ordinary.
+    c5 ordinary. `edits` gives a change's hunk and revision in place of distinct text.
     """
     import gzip
     import hashlib
@@ -73,6 +73,7 @@ def _corpus(root: Path, org: str) -> None:
         {
             "id": f"{org}:c{n}:f.py:1",
             "change_id": f"c{n}",
+            "path": "f.py",
             "project": "p",
             "org": org,
             "created": "2025-09-10 00:00:00.000000000",
@@ -82,6 +83,8 @@ def _corpus(root: Path, org: str) -> None:
         }
         for n in range(1, 6)
     ]
+    for n, (before, after) in (edits or {}).items():
+        rows[n - 1] |= {"before": before, "after": after}
     merged = "2025-09-20 00:00:00.000000000"
     raw = [
         {
@@ -145,6 +148,28 @@ def test_each_sensitivity_lists_its_examples_and_says_what_the_searches_missed(
     listing = json.loads(out.read_text())
     every = [f"openstack:c{n}:f.py:1" for n in range(1, 6)]
     assert listing["universe"] == every and listing["examples"] == 5 and listing["changes"] == 5
-    assert listing["ids"] == {"ai_assisted": [every[0]], "backport_only": [every[1]]}
+    assert listing["ids"] == {
+        "ai_assisted": [every[0]],
+        "backport_only": [every[1]],
+        "layout_only": [],
+    }
     # Merged after the bound, or never: the searches could not have seen them.
     assert listing["ai_unsearched"] == [every[2], every[3]]
+
+
+def test_the_layout_listing_counts_every_whitespace_only_revision_it_read(tmp_path: Path) -> None:
+    """c5 re-spaces a call, a formatter's edit; c4 shifts a statement into a deeper block."""
+    edits = {4: ("    y = 1\n", "        y = 1\n"), 5: ("f(a,b)\n", "f(a, b)\n")}
+    _corpus(tmp_path / "corpus", "openstack", edits)
+    trailers = tmp_path / "trailers.json"
+    trailers.write_text(json.dumps({**TRAILERS, "orgs": {"openstack": {"changes_ai": []}}}))
+    out = tmp_path / "ids.json"
+    _run(
+        [
+            "--root", str(tmp_path / "corpus"), "--org", "openstack",
+            "--ai-trailers", str(trailers), "--out", str(out),
+        ]
+    )  # fmt: skip
+    listing = json.loads(out.read_text())
+    assert listing["ids"]["layout_only"] == ["openstack:c5:f.py:1"]
+    assert listing["whitespace_only"] == {"python": {"revisions": 2, "layout": 1}}
