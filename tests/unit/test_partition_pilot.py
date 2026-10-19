@@ -1037,3 +1037,70 @@ def test_an_h2_cells_runs_must_share_one_pool(tmp_path, monkeypatch) -> None:
     ]
     with pytest.raises(SystemExit, match="one recorded pool"):
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "o.json")])
+
+
+def _lexed(argv: list[str], unsure: dict[int, set[str]]) -> list[str]:
+    """The runs with each row's lexer record; `unsure` names, per run, ids one arm misread."""
+    for k, path in enumerate(argv[: len(ADMISSIBLE)], start=1):
+        run = json.loads(Path(path).read_text())
+        seen: set[str] = set()
+        for rows in run["results"].values():
+            for row in rows:
+                flagged = row["id"] in unsure.get(k, set()) and row["id"] not in seen
+                seen.add(row["id"])
+                row.update({"lex_error_chars": int(flagged), "line_disagreement": 0.0})
+        Path(path).write_text(json.dumps(run))
+    return argv
+
+
+def test_a_lexer_sure_read_drops_an_example_any_arm_may_have_misread_from_every_arm(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _lexed(_inputs(tmp_path, "openstack"), {1: {"x0", f"x{N}"}, 3: {"x2"}})
+    whole, sure = tmp_path / "whole.json", tmp_path / "sure.json"
+    _main(monkeypatch, [*argv, "--out", str(whole)])
+    _main(monkeypatch, [*argv, "--lexer-sure", "--out", str(sure)])
+    whole_report, sure_report = json.loads(whole.read_text()), json.loads(sure.read_text())
+    assert whole_report["lexer_sure"] is None
+    assert sure_report["lexer_sure"] == {"examples_dropped": 3}
+    assert sure_report["examples"] == whole_report["examples"] - 3
+
+
+def test_a_lexer_sure_read_refuses_a_row_without_its_lexer_record(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with pytest.raises(SystemExit, match="lexer record"):
+        _main(monkeypatch, [*_inputs(tmp_path, "openstack"), "--lexer-sure", "--out", "o.json"])
+
+
+def test_a_lexer_sure_read_is_a_development_check_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _lexed(_inputs(tmp_path, "openstack", window="test"), {})
+    with pytest.raises(SystemExit, match="development"):
+        _main(monkeypatch, [*argv, "--lexer-sure", "--out", str(tmp_path / "o.json")])
+    dev = _lexed(_inputs(tmp_path, "openstack"), {})
+    sensitivity = ["--sensitivity", str(_sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack"))]
+    for extra in (
+        _sizing(tmp_path, "openstack"),
+        ["--without", "ai_assisted=x.json"],
+        sensitivity,
+        _planted(tmp_path, "openstack"),
+    ):
+        with pytest.raises(SystemExit, match="lexer-sure"):
+            _main(monkeypatch, [*dev, *extra, "--lexer-sure", "--out", str(tmp_path / "o.json")])
+
+
+def test_a_lexer_sure_read_counts_only_the_examples_that_leave_the_cell(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    argv = _lexed(_inputs(tmp_path, "openstack"), {1: {"x0", "x1"}})
+    second = Path(argv[1])
+    run = json.loads(second.read_text())
+    run["results"] = {
+        arm: [r for r in rows if r["id"] != "x0"] for arm, rows in run["results"].items()
+    }
+    second.write_text(json.dumps(run))
+    out = tmp_path / "sure.json"
+    _main(monkeypatch, [*argv, "--lexer-sure", "--out", str(out)])
+    assert json.loads(out.read_text())["lexer_sure"] == {"examples_dropped": 1}
