@@ -102,12 +102,29 @@ class GrantScope(NamedTuple):
     created_from: str
     created_before: str
     read_cap: int | None
+    # The last month `YYYY-MM` whose listing is read for the changes the scope covers. A month
+    # lists the changes last updated in it, so a change created inside the grant and updated
+    # later is listed only past `created_before`; None reads no month past it.
+    listed_through: str | None = None
+
+
+def last_open_month() -> str:
+    """The last month `YYYY-MM` before the sealed test window starts."""
+    year, month = (int(part) for part in WINDOWS["test"][0][:7].split("-"))
+    year, month = (year, month - 1) if month > 1 else (year - 1, 12)
+    return f"{year:04d}-{month:02d}"
 
 
 def grant_months(scope: GrantScope, month: str) -> bool:
     """Whether month `YYYY-MM` can hold a change `scope` lets a fetch keep: from `created_from`'s
-    month through the month `created_before` falls in, unless it falls on that month's first."""
-    return scope.created_from[:7] <= month and f"{month}-01" < scope.created_before
+    month through the month `created_before` falls in, unless it falls on that month's first, or
+    through `listed_through` where the scope sets it. A fetch keeps only changes created inside
+    the grant whatever the month (`created_in_grant`)."""
+    if scope.created_from[:7] > month:
+        return False
+    if scope.listed_through is not None:
+        return month <= scope.listed_through
+    return f"{month}-01" < scope.created_before
 
 
 def created_in_grant(scope: GrantScope, created: Any) -> bool:
@@ -263,7 +280,9 @@ REST_PERMITTED = {
         single_client=True,
         # Item 4 of the H2 plan: the census's C++-majority projects, changes created before
         # aosp-main went read-only; the answer sets a rate, not a count, so no read cap.
-        scope=GrantScope(census_projects(), "2024-10-01", "2025-03-27", None),
+        # Listed through the month before the sealed test window, for the grant's changes updated
+        # after aosp-main went read-only.
+        scope=GrantScope(census_projects(), "2024-10-01", "2025-03-27", None, last_open_month()),
         written_grant=True,
     ),
     "gerrit.wikimedia.org": RestPermission(
