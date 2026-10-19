@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 699 artifacts under
-69 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 702 artifacts under
+71 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -168,6 +168,7 @@ Whether a host's `total_comment_count` of 0 means a row has no comments, asked o
 
 | artifact |
 |---|
+| `comment-count-probe-aosp.json` |
 | `comment-count-probe-chromium.json` |
 | `comment-count-probe-qt.json` |
 
@@ -322,6 +323,14 @@ What a foreign pool must hold to cover H2's matched arm over an organization's a
 | artifact |
 |---|
 | `foreign-need-qt.json` |
+
+## `scripts/foreign_pool_coverage.py`
+
+Whether a built foreign pool covers every matched draw an H2 run can make from it.
+
+| artifact |
+|---|
+| `foreign-pool-coverage-aosp.json` |
 
 ## `scripts/github_conversion.py`
 
@@ -850,6 +859,14 @@ The exchange rate between exact match and s, read on a planted code-level conven
 |---|
 | `planted-exchange-openstack-quotes0.5.json` |
 | `planted-exchange-openstack-quotes1.0.json` |
+
+## `scripts/pool_order.py`
+
+A foreign pool's projects in the order item 4 of the H2 plan takes them, from listing snapshots.
+
+| artifact |
+|---|
+| `pool-order-aosp.json` |
 
 ## `scripts/power_rq1.py`
 

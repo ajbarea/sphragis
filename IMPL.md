@@ -16,19 +16,16 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   text); the likelihood rescorings are committed.
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
   split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
-- **AOSP's pool, H2's foreign source** (research log, 2026-10-18 and 2026-10-19): admitted on AJ's
-  reading of Chrome Infra's answer, one client at no more than one request a second. The census
-  is read (263 C++-majority projects) and the pool must hold 1,308 C++ and 926 other examples
-  (`foreign-need-qt.json`). android-review is in `REST_PERMITTED`, scoped to those projects and
-  changes created 2024-10-01 to 2025-03-26. Next: the scoped listings of the window's months,
-  `pool_order.py` over them, then the pool fetched, built, refined and deduplicated (against Qt
-  too) project by project, in that order, until it covers every draw; then the pool to TIGRIS
-  and the 22 development runs' foreign arms.
+- **H2's foreign source** (research log, 2026-10-19): AOSP's pool, listed through 2025-10 and
+  deduplicated against Qt, covers 34 of the 80 matched draws and none of the 40 partitions
+  (1,076 C++ examples of the 1,308 the largest needs), so it does not qualify, as Chromium's V8
+  pool did not. Fuchsia is the one source left; until it grants and covers, `FOREIGN_SOURCE`
+  stays unset and H2's development arms wait.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and
   `partition_sensitivity.sbatch` with `FOREIGN_SOURCE` simulates it (`power.cell_contrast`,
-  `plan_cell`). Both wait on AOSP's pool and Qt's 22 development runs with their arms.
+  `plan_cell`). Both wait on a qualifying foreign source and Qt's 22 development runs with its arms.
 
 ## Next
 
@@ -40,7 +37,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
-   (a) AOSP's pool (In flight); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   (a) a source whose pool covers every draw (Chromium's and AOSP's do not; Fuchsia unanswered); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; a fixed source other than Chromium refuses every read
@@ -54,8 +51,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
    GitHub Pro (Student Pack) for required checks on papers `main`. Fuchsia's discuss list was
-   asked on 2026-10-15 and has not answered; by item 1 of the H2 plan a grant before the first H2
-   development contrast would make Fuchsia the source in AOSP's place.
+   asked on 2026-10-15 and has not answered; Chromium's and AOSP's pools cannot cover every
+   matched draw, so Fuchsia is H2's one source left (whether Chrome Infra's answer covers
+   fuchsia-review is AJ's reading), and without it H2 has no confirmatory cell.
    Also whether a published generation run keeps its `prediction` field: a prediction can repeat
    the example's review comment word for word, which the protocol's "no review text is
    published" excludes; Qt's generation runs are held back meanwhile (research log, 2026-10-18).

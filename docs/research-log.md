@@ -9877,3 +9877,65 @@ of 5 in QML, 0 of 3 in `.ts` files, which in Qt are Linguist translations and ho
 the 14 in files the rule does not read; each of the 36 read is a re-wrap, a re-indent in a brace
 language or a spacing fix). Its test listing is built after acceptance, with `ai_trailers.py
 --through-test`.
+
+### AOSP's pool, read over six months of listings, cannot cover every matched draw (2026-10-19)
+
+`# research(2026-10)`. Under android-review's grant (#159), from a worktree at 8927f22 on this
+machine, as the 2026-10-18 entry fixed the steps. The listings of the 263 census projects over the
+grant's six months (2024-10 to 2025-03) ran 2026-10-19 02:00 to 02:42 and hold 12,499 merged changes
+created inside the grant, 3,074 of them with an inline comment, ranked by item 4's count
+(`pool-order-aosp.json`; `platform/packages/modules/Bluetooth` 1,745, `platform/external/perfetto`
+1,565). The comment-count probe holds (none of the 300 zero-count changes asked carries a comment
+and every control does; `comment-count-probe-aosp.json`), so the build read the commented changes
+alone (`--fewer-requests`), 02:50 to 04:41, with no comment or diff error in any month (logs in
+`datasets/logs/aosp-pool-2026-10-19/`). It gave 2,227 examples; refined and deduplicated as one
+corpus, as the foreign arms read it (`holdout.foreign_pool`, 56 exact and 29 near duplicates
+removed), the pool holds 2,039: 1,071 C++ and 968 others (`foreign-pool-coverage-aosp.json`).
+
+What the pool must hold is 1,308 C++ examples and 926 others (`foreign-need-qt.json`). It holds the
+others but not the C++: it covers 32 of the 80 draws and is 237 C++ examples short of the largest.
+The order fixed above was read to its end, so no prefix of it covers, and the deduplication against
+Qt's examples, which could only shrink the pool, was not run. By the 2026-10-14 entry a pool that
+cannot cover a draw is refused, never trained smaller, so AOSP does not qualify as H2's source, as
+Chromium's V8 pool did not (2026-10-16). By item 1 of the H2 plan Fuchsia is the one source left, if
+its maintainers grant before the first H2 development contrast and its pool covers every draw; the
+request of 2026-10-15 has no answer. Until a source qualifies `FOREIGN_SOURCE` stays unset, and by
+the registered decisions, with no foreign source covering every matched draw H2 has no confirmatory
+cell and H1 is the whole family, read at one-sided 0.025. The AOSP pool stays held, enters no
+figure, and is reported as the source tried second.
+
+### AOSP's later months listed, decided after the six-month pool was read (2026-10-19)
+
+`# research(2026-10)`. Recorded before any example of the later months is read. The entry above was
+committed at 05:01 EDT with the pool read over six months of listings. An independent check of it
+then found what the 2026-10-18 entry had said in passing: a month lists the changes last updated in
+it, so a change created inside the grant and last updated after 2025-03 was in no listing, and "read
+across its whole grant" was not true. At 05:16 (1679f61) the scope's listings were extended through
+the month before the sealed test window (`GrantScope.listed_through`, `cli.last_open_month()`:
+2024-10 to 2025-10 by last update; a change updated on or after 2025-11-01 stays unlisted). The run
+started at 05:34.
+
+This is not a wider grant: the projects, the creation window (2024-10-01 to 2025-03-26) and the rate
+are unchanged, and a fetch still keeps only changes created inside the window; it reads the rest of
+the changes the grant already named. It is a reading decided after the six-month result was seen,
+and is reported as such. If the pool covers every matched draw only with the later months, whether
+it may be H2's confirmatory source is AJ's decision, recorded with his reason before any H2
+development contrast; if it does not cover either way, the entry above stands.
+
+Fixed now for the reading that follows: item 4's order is ranked again over the 13 listed months
+(`pool_order.py`, superseding the six-month `pool-order-aosp.json`); the comment-count probe is
+rerun over them (`comment-count-probe-aosp.json` superseded, the six-month one kept at
+`prov/aosp-pool-6m`); the pool is cut at the shortest prefix of that order whose refined examples,
+deduplicated as one corpus and against Qt like any organization's, cover the draws of all 40
+admissible splits (the 2026-10-14 entry's item 3), each prefix deduplicated as built rather than the
+whole pool once. Chromium's V8 pool is not listed again: its grant is about 2,000 changes, and at
+its yield (659 examples from 1,700) the whole of it would give about 780, below one draw's N = 1,850
+whatever its months.
+
+**Read.** The 13 listed months hold 12,551 merged changes created inside the grant, 52 more than the
+six; the probe holds again over them (`comment-count-probe-aosp.json`), and the build gives 2,251
+examples. Refined and deduplicated, the pool holds 2,062 (1,078 C++, 984 others), and cleared of
+copies of Qt's 9,449 unsealed examples, 2,056 (1,076 C++, 980 others;
+`foreign-pool-coverage-aosp.json`, its `stop_rule`). That covers 34 of the 80 draws and none of the
+40 partitions, and the whole order does not cover, so no prefix does: AOSP does not qualify with the
+later months either, and the question this entry leaves to AJ does not arise.

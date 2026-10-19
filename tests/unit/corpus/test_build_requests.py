@@ -431,6 +431,37 @@ def test_a_held_row_created_outside_the_grant_is_not_built(
     assert not (tmp_path / "chromium" / "examples" / f"{month}.jsonl").exists()
 
 
+@pytest.mark.parametrize(
+    ("month", "inside"),
+    [
+        ("2024-09", False),
+        ("2024-10", True),
+        ("2025-04", True),
+        ("2025-10", True),
+        ("2025-11", False),
+    ],
+)
+def test_a_scope_listed_past_its_window_reads_the_later_months(month: str, inside: bool) -> None:
+    """A change created inside the grant and updated later is listed in a later month."""
+    later = POOL._replace(listed_through="2025-10")
+    assert cli.grant_months(later, month) is inside
+    assert cli.grant_months(POOL, "2025-04") is False
+    row = {"project": "platform/a", "created": "2025-02-10 00:00:00.000000000"}
+    assert cli.outside_grant(later, "2025-06", [row]) == ""
+    after = {**row, "created": "2025-04-02 00:00:00.000000000"}
+    assert "created outside" in cli.outside_grant(later, "2025-06", [after])
+
+
+def test_aosps_listings_run_through_the_month_before_the_sealed_window() -> None:
+    from sphragis.corpus.windows import WINDOWS
+
+    scope = cli.REST_PERMITTED["android-review.googlesource.com"].scope
+    assert scope is not None and scope.listed_through == cli.last_open_month()
+    assert f"{cli.last_open_month()}-31" < WINDOWS["test"][0]
+    v8 = cli.REST_PERMITTED["chromium-review.googlesource.com"].scope
+    assert v8 is not None and v8.listed_through is None
+
+
 def test_the_grants_window_is_its_created_dates_exactly() -> None:
     assert cli.outside_grant(None, "2024-10", [{"project": "x"}]) == ""
     assert cli.outside_grant(POOL, "2025-04", []) == ""

@@ -1,0 +1,688 @@
+{
+  "source": "aosp",
+  "root": "/home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing",
+  "span": [
+    "2024-10-01",
+    "2025-03-27"
+  ],
+  "need": "datasets/results/foreign-need-qt.json",
+  "pool": {
+    "examples": 2062,
+    "in_language": 1078,
+    "other": 984,
+    "dedup_removed": {
+      "exact": 56,
+      "near_duplicate": 29,
+      "boilerplate": 0,
+      "shared_change_id": 0
+    },
+    "digest": "310ef73b6c2e7749b9a6f9e5b3e6f0be025a7ac6af2ed417660649f747c10879",
+    "by_project": {
+      "platform/packages/modules/Bluetooth": 697,
+      "platform/external/perfetto": 515,
+      "platform/frameworks/av": 173,
+      "device/google/cuttlefish": 98,
+      "platform/system/core": 95,
+      "platform/system/extras": 57,
+      "platform/frameworks/native": 55,
+      "platform/packages/modules/adb": 43,
+      "platform/bionic": 40,
+      "platform/packages/modules/StatsD": 36,
+      "platform/hardware/google/gfxstream": 29,
+      "platform/test/vts-testcase/security": 29,
+      "platform/frameworks/proto_logging": 17,
+      "platform/external/cronet": 16,
+      "platform/frameworks/libs/binary_translation": 14,
+      "platform/hardware/google/apf": 14,
+      "platform/system/nfc": 11,
+      "platform/system/libvintf": 11,
+      "platform/system/bpf": 9,
+      "platform/external/ot-br-posix": 8,
+      "device/generic/goldfish-opengl": 8,
+      "platform/system/libbase": 7,
+      "platform/system/libcppbor": 7,
+      "platform/hardware/google/aemu": 6,
+      "platform/system/update_engine": 6,
+      "platform/system/logging": 6,
+      "platform/system/tools/aidl": 6,
+      "platform/external/open-dice": 5,
+      "platform/hardware/nxp/nfc": 4,
+      "platform/system/keymaster": 4,
+      "platform/external/icing": 4,
+      "platform/system/vold": 3,
+      "platform/hardware/nxp/uwb": 3,
+      "platform/hardware/google/graphics/common": 2,
+      "platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8": 2,
+      "platform/system/memory/lmkd": 2,
+      "platform/system/libziparchive": 2,
+      "platform/hardware/st/nfc": 2,
+      "platform/prebuilts/build-tools": 2,
+      "platform/external/aac": 1,
+      "platform/prebuilts/clang/host/linux-x86": 1,
+      "platform/hardware/libhardware": 1,
+      "platform/external/abseil-cpp": 1,
+      "platform/system/server_configurable_flags": 1,
+      "platform/system/unwinding": 1,
+      "platform/external/angle": 1,
+      "platform/external/drm_hwcomposer": 1,
+      "trusty/external/trusty": 1,
+      "platform/system/libprocinfo": 1,
+      "platform/system/media": 1,
+      "platform/external/libbpf": 1,
+      "device/generic/goldfish": 1,
+      "platform/system/netd": 1
+    }
+  },
+  "largest_need": {
+    "in_language": {
+      "examples": 1308,
+      "seed": 58,
+      "half": "qt-b"
+    },
+    "other": {
+      "examples": 926,
+      "seed": 71,
+      "half": "qt-a"
+    }
+  },
+  "draws_covered": 34,
+  "draws": 80,
+  "covers_every_draw": false,
+  "partitions_covered": 0,
+  "partitions": 40,
+  "stop_rule": {
+    "order": "datasets/results/pool-order-aosp.json",
+    "against": "qt",
+    "against_examples": 9449,
+    "whole_order": {
+      "examples": 2056,
+      "in_language": 1076
+    },
+    "projects": null,
+    "pool": {
+      "examples": 2056,
+      "in_language": 1076,
+      "other": 980
+    },
+    "digest": null,
+    "covers_every_draw": false
+  },
+  "shortfall": {
+    "in_language": 230,
+    "other": 0
+  },
+  "by_draw": [
+    {
+      "seed": "4",
+      "half": "qt-a",
+      "in_language": 1178,
+      "other": 672,
+      "covered": false
+    },
+    {
+      "seed": "4",
+      "half": "qt-b",
+      "in_language": 985,
+      "other": 865,
+      "covered": true
+    },
+    {
+      "seed": "7",
+      "half": "qt-a",
+      "in_language": 1042,
+      "other": 808,
+      "covered": true
+    },
+    {
+      "seed": "7",
+      "half": "qt-b",
+      "in_language": 1174,
+      "other": 676,
+      "covered": false
+    },
+    {
+      "seed": "11",
+      "half": "qt-a",
+      "in_language": 999,
+      "other": 851,
+      "covered": true
+    },
+    {
+      "seed": "11",
+      "half": "qt-b",
+      "in_language": 1207,
+      "other": 643,
+      "covered": false
+    },
+    {
+      "seed": "12",
+      "half": "qt-a",
+      "in_language": 1179,
+      "other": 671,
+      "covered": false
+    },
+    {
+      "seed": "12",
+      "half": "qt-b",
+      "in_language": 1035,
+      "other": 815,
+      "covered": true
+    },
+    {
+      "seed": "13",
+      "half": "qt-a",
+      "in_language": 1153,
+      "other": 697,
+      "covered": false
+    },
+    {
+      "seed": "13",
+      "half": "qt-b",
+      "in_language": 1023,
+      "other": 827,
+      "covered": true
+    },
+    {
+      "seed": "16",
+      "half": "qt-a",
+      "in_language": 1109,
+      "other": 741,
+      "covered": false
+    },
+    {
+      "seed": "16",
+      "half": "qt-b",
+      "in_language": 1097,
+      "other": 753,
+      "covered": false
+    },
+    {
+      "seed": "18",
+      "half": "qt-a",
+      "in_language": 1214,
+      "other": 636,
+      "covered": false
+    },
+    {
+      "seed": "18",
+      "half": "qt-b",
+      "in_language": 994,
+      "other": 856,
+      "covered": true
+    },
+    {
+      "seed": "19",
+      "half": "qt-a",
+      "in_language": 1219,
+      "other": 631,
+      "covered": false
+    },
+    {
+      "seed": "19",
+      "half": "qt-b",
+      "in_language": 989,
+      "other": 861,
+      "covered": true
+    },
+    {
+      "seed": "20",
+      "half": "qt-a",
+      "in_language": 1074,
+      "other": 776,
+      "covered": true
+    },
+    {
+      "seed": "20",
+      "half": "qt-b",
+      "in_language": 1184,
+      "other": 666,
+      "covered": false
+    },
+    {
+      "seed": "21",
+      "half": "qt-a",
+      "in_language": 1160,
+      "other": 690,
+      "covered": false
+    },
+    {
+      "seed": "21",
+      "half": "qt-b",
+      "in_language": 984,
+      "other": 866,
+      "covered": true
+    },
+    {
+      "seed": "25",
+      "half": "qt-a",
+      "in_language": 999,
+      "other": 851,
+      "covered": true
+    },
+    {
+      "seed": "25",
+      "half": "qt-b",
+      "in_language": 1230,
+      "other": 620,
+      "covered": false
+    },
+    {
+      "seed": "26",
+      "half": "qt-a",
+      "in_language": 1123,
+      "other": 727,
+      "covered": false
+    },
+    {
+      "seed": "26",
+      "half": "qt-b",
+      "in_language": 1109,
+      "other": 741,
+      "covered": false
+    },
+    {
+      "seed": "27",
+      "half": "qt-a",
+      "in_language": 1022,
+      "other": 828,
+      "covered": true
+    },
+    {
+      "seed": "27",
+      "half": "qt-b",
+      "in_language": 1244,
+      "other": 606,
+      "covered": false
+    },
+    {
+      "seed": "29",
+      "half": "qt-a",
+      "in_language": 1219,
+      "other": 631,
+      "covered": false
+    },
+    {
+      "seed": "29",
+      "half": "qt-b",
+      "in_language": 991,
+      "other": 859,
+      "covered": true
+    },
+    {
+      "seed": "32",
+      "half": "qt-a",
+      "in_language": 1132,
+      "other": 718,
+      "covered": false
+    },
+    {
+      "seed": "32",
+      "half": "qt-b",
+      "in_language": 1051,
+      "other": 799,
+      "covered": true
+    },
+    {
+      "seed": "33",
+      "half": "qt-a",
+      "in_language": 952,
+      "other": 898,
+      "covered": true
+    },
+    {
+      "seed": "33",
+      "half": "qt-b",
+      "in_language": 1203,
+      "other": 647,
+      "covered": false
+    },
+    {
+      "seed": "35",
+      "half": "qt-a",
+      "in_language": 1183,
+      "other": 667,
+      "covered": false
+    },
+    {
+      "seed": "35",
+      "half": "qt-b",
+      "in_language": 1026,
+      "other": 824,
+      "covered": true
+    },
+    {
+      "seed": "36",
+      "half": "qt-a",
+      "in_language": 1149,
+      "other": 701,
+      "covered": false
+    },
+    {
+      "seed": "36",
+      "half": "qt-b",
+      "in_language": 1043,
+      "other": 807,
+      "covered": true
+    },
+    {
+      "seed": "37",
+      "half": "qt-a",
+      "in_language": 1192,
+      "other": 658,
+      "covered": false
+    },
+    {
+      "seed": "37",
+      "half": "qt-b",
+      "in_language": 1038,
+      "other": 812,
+      "covered": true
+    },
+    {
+      "seed": "39",
+      "half": "qt-a",
+      "in_language": 1245,
+      "other": 605,
+      "covered": false
+    },
+    {
+      "seed": "39",
+      "half": "qt-b",
+      "in_language": 951,
+      "other": 899,
+      "covered": true
+    },
+    {
+      "seed": "41",
+      "half": "qt-a",
+      "in_language": 1114,
+      "other": 736,
+      "covered": false
+    },
+    {
+      "seed": "41",
+      "half": "qt-b",
+      "in_language": 1052,
+      "other": 798,
+      "covered": true
+    },
+    {
+      "seed": "44",
+      "half": "qt-a",
+      "in_language": 1116,
+      "other": 734,
+      "covered": false
+    },
+    {
+      "seed": "44",
+      "half": "qt-b",
+      "in_language": 1066,
+      "other": 784,
+      "covered": true
+    },
+    {
+      "seed": "45",
+      "half": "qt-a",
+      "in_language": 1115,
+      "other": 735,
+      "covered": false
+    },
+    {
+      "seed": "45",
+      "half": "qt-b",
+      "in_language": 1106,
+      "other": 744,
+      "covered": false
+    },
+    {
+      "seed": "46",
+      "half": "qt-a",
+      "in_language": 1265,
+      "other": 585,
+      "covered": false
+    },
+    {
+      "seed": "46",
+      "half": "qt-b",
+      "in_language": 960,
+      "other": 890,
+      "covered": true
+    },
+    {
+      "seed": "48",
+      "half": "qt-a",
+      "in_language": 1194,
+      "other": 656,
+      "covered": false
+    },
+    {
+      "seed": "48",
+      "half": "qt-b",
+      "in_language": 949,
+      "other": 901,
+      "covered": true
+    },
+    {
+      "seed": "49",
+      "half": "qt-a",
+      "in_language": 1143,
+      "other": 707,
+      "covered": false
+    },
+    {
+      "seed": "49",
+      "half": "qt-b",
+      "in_language": 1013,
+      "other": 837,
+      "covered": true
+    },
+    {
+      "seed": "51",
+      "half": "qt-a",
+      "in_language": 1015,
+      "other": 835,
+      "covered": true
+    },
+    {
+      "seed": "51",
+      "half": "qt-b",
+      "in_language": 1270,
+      "other": 580,
+      "covered": false
+    },
+    {
+      "seed": "53",
+      "half": "qt-a",
+      "in_language": 991,
+      "other": 859,
+      "covered": true
+    },
+    {
+      "seed": "53",
+      "half": "qt-b",
+      "in_language": 1197,
+      "other": 653,
+      "covered": false
+    },
+    {
+      "seed": "54",
+      "half": "qt-a",
+      "in_language": 1177,
+      "other": 673,
+      "covered": false
+    },
+    {
+      "seed": "54",
+      "half": "qt-b",
+      "in_language": 1008,
+      "other": 842,
+      "covered": true
+    },
+    {
+      "seed": "55",
+      "half": "qt-a",
+      "in_language": 1076,
+      "other": 774,
+      "covered": true
+    },
+    {
+      "seed": "55",
+      "half": "qt-b",
+      "in_language": 1170,
+      "other": 680,
+      "covered": false
+    },
+    {
+      "seed": "58",
+      "half": "qt-a",
+      "in_language": 930,
+      "other": 920,
+      "covered": true
+    },
+    {
+      "seed": "58",
+      "half": "qt-b",
+      "in_language": 1308,
+      "other": 542,
+      "covered": false
+    },
+    {
+      "seed": "63",
+      "half": "qt-a",
+      "in_language": 954,
+      "other": 896,
+      "covered": true
+    },
+    {
+      "seed": "63",
+      "half": "qt-b",
+      "in_language": 1227,
+      "other": 623,
+      "covered": false
+    },
+    {
+      "seed": "64",
+      "half": "qt-a",
+      "in_language": 1150,
+      "other": 700,
+      "covered": false
+    },
+    {
+      "seed": "64",
+      "half": "qt-b",
+      "in_language": 1071,
+      "other": 779,
+      "covered": true
+    },
+    {
+      "seed": "65",
+      "half": "qt-a",
+      "in_language": 1087,
+      "other": 763,
+      "covered": false
+    },
+    {
+      "seed": "65",
+      "half": "qt-b",
+      "in_language": 1125,
+      "other": 725,
+      "covered": false
+    },
+    {
+      "seed": "66",
+      "half": "qt-a",
+      "in_language": 1080,
+      "other": 770,
+      "covered": false
+    },
+    {
+      "seed": "66",
+      "half": "qt-b",
+      "in_language": 1150,
+      "other": 700,
+      "covered": false
+    },
+    {
+      "seed": "67",
+      "half": "qt-a",
+      "in_language": 1008,
+      "other": 842,
+      "covered": true
+    },
+    {
+      "seed": "67",
+      "half": "qt-b",
+      "in_language": 1163,
+      "other": 687,
+      "covered": false
+    },
+    {
+      "seed": "71",
+      "half": "qt-a",
+      "in_language": 924,
+      "other": 926,
+      "covered": true
+    },
+    {
+      "seed": "71",
+      "half": "qt-b",
+      "in_language": 1211,
+      "other": 639,
+      "covered": false
+    },
+    {
+      "seed": "73",
+      "half": "qt-a",
+      "in_language": 1097,
+      "other": 753,
+      "covered": false
+    },
+    {
+      "seed": "73",
+      "half": "qt-b",
+      "in_language": 1112,
+      "other": 738,
+      "covered": false
+    },
+    {
+      "seed": "76",
+      "half": "qt-a",
+      "in_language": 1183,
+      "other": 667,
+      "covered": false
+    },
+    {
+      "seed": "76",
+      "half": "qt-b",
+      "in_language": 1018,
+      "other": 832,
+      "covered": true
+    },
+    {
+      "seed": "81",
+      "half": "qt-a",
+      "in_language": 1022,
+      "other": 828,
+      "covered": true
+    },
+    {
+      "seed": "81",
+      "half": "qt-b",
+      "in_language": 1222,
+      "other": 628,
+      "covered": false
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-10-19T10:24:51.371108+00:00",
+    "git": {
+      "commit": "4a581782d146a74895e1fd989d92253b0d528eb3",
+      "branch": "corpus/aosp-pool-fetch"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
