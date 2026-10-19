@@ -14,11 +14,10 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   placebo), then `k_coverage.py` for Qt's K, its cell's bounds into the gate, and Qt's planted
   check 5 run. Qt's generation runs stay off the repository (their predictions can repeat review
   text); the likelihood rescorings are committed.
-- **The GitHub replication family's collection**: pilot, train and dev windows (2024-10 to
-  2025-10) for Apache, then LLVM, .NET, Grafana, one organization at a time, from the
-  `data/github-collect` worktree into `~/ajsoftworks/sphragis-data-local/github/` (`collect.sh`,
-  progress in `status.log`). Each month resumes from its checkpoint. A member not frozen and
-  split-checked by 2026-11-20 is reported as not collected.
+- **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
+  split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify. The Stage 1 freeze
+  commit sets `REPLICATION_MEMBERS` to the two; each member's development pilot and simulation
+  come before its test window.
 - **AOSP's pool, H2's foreign source** (research log, 2026-10-18): admitted on AJ's reading of
   Chrome Infra's answer, one client at no more than one request a second. `foreign_need.py` over
   Qt's 40 admissible partitions gives what the pool must cover; `aosp_census.py` reads every
@@ -35,10 +34,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## Next
 
-1. Collect Apache, then LLVM, .NET, Grafana, as the GitHub replication family (pilot, train and
-   dev windows) to freeze members by 2026-11-20; then each member's admissible list, development
-   pilot and simulation before its test window. At the freeze, one commit sets
-   `REPLICATION_MEMBERS`; `replication_gate()` refuses to read the family before it.
+1. At the Stage 1 freeze, one commit sets `REPLICATION_MEMBERS` to Apache and .NET;
+   `replication_gate()` refuses to read the family before it.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
    `ADMITTED_ORGANIZATIONS` and `FOREIGN_SOURCE`. Qt can be admitted until 2026-11-20, with its
    cells' bounds simulated and committed by then, and Chromium only if its split is frozen by

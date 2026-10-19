@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-10-18T22:52:50.653886+00:00",
+  "git": {
+    "commit": "10ed70916ac7d632b0fd5e2aea6ed21a26564af5",
+    "branch": "corpus/github-family-split"
+  },
+  "python": "3.14.4",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "packages": {
+    "pygments": "2.21.0"
+  },
+  "org": "grafana",
+  "counts": {
+    "pilot": 347,
+    "train": 3359,
+    "dev": 538,
+    "test": 0
+  },
+  "hashes": {
+    "pilot": "a57da48cd98f32679b30f55a7414251643ccfca7579c2a5331317c0c8affb2d8",
+    "train": "8360b6b4a3a974f18396efeff02c3309302728afe0f090a5884ea04f6c6b5db5",
+    "dev": "49953715ec8dc67e6831d6b9cfdbedc658010bc7376a1d497cb2fc8aaddef1a9",
+    "test": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stats": {
+    "built_drops": {
+      "acknowledgement": 62,
+      "author_comment": 15512,
+      "comment_error": 0,
+      "diff_error": 0,
+      "ill_posed_contraction": 257,
+      "ill_posed_empty_after": 1957,
+      "ill_posed_empty_before": 290,
+      "ill_posed_expansion": 134,
+      "metadata_file": 0,
+      "no_anchored_hunk": 11283,
+      "no_line_anchor": 801,
+      "no_successor": 2139,
+      "service_user": 1763
+    },
+    "refine_counts": {
+      "automated_comment": 1,
+      "acknowledgement_comment": 0,
+      "automated_only": 1,
+      "acknowledgement_only": 0,
+      "not_rework_successor": 0,
+      "suggested_edit": 4555,
+      "applied_fix": 0,
+      "successor_kind_unknown": 8887,
+      "address_residue": 0
+    },
+    "deduped": {
+      "exact": 56,
+      "near_duplicate": 31,
+      "boilerplate": 0,
+      "shared_change_id": 0
+    },
+    "unassigned_changes": 0,
+    "build_rules": "3d29d529390c1eea",
+    "rules": "c2ddb5b5f6e99182"
+  }
+}
