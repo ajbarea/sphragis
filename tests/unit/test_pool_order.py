@@ -126,3 +126,12 @@ def test_a_scope_of_every_project_refuses_the_hosts_own_project(tmp_path, monkey
     _write(tmp_path, {"2024-10": [_change(1, "All-Projects", "2024-10-02", 0)]}, record=whole)
     with pytest.raises(SystemExit, match="outside the grant"):
         _main(tmp_path, monkeypatch)
+
+
+def test_a_scope_of_every_project_refuses_an_access_rule_change(tmp_path, monkeypatch) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+    whole = {"query": "status:merged after:2024-10-01 before:2024-11-01"}
+    config = {**_change(1, "x/a", "2024-10-02", 0), "branch": "refs/meta/config"}
+    _write(tmp_path, {"2024-10": [config]}, record=whole)
+    with pytest.raises(SystemExit, match="outside the grant"):
+        _main(tmp_path, monkeypatch)

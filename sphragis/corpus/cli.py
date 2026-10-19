@@ -124,6 +124,18 @@ def covers_project(scope: GrantScope, project: object) -> bool:
     return project in scope.projects
 
 
+#: The branch a Gerrit project's access rules live on, a permissions-only project's only one.
+CONFIG_BRANCH = "refs/meta/config"
+
+
+def covers_change(scope: GrantScope, change: Mapping[str, Any]) -> bool:
+    """Whether a scope's grant covers a change: its project, and under a scope of every project a
+    branch other than `CONFIG_BRANCH`, so the projects it ranks are the code projects."""
+    if scope.every_project and change.get("branch") == CONFIG_BRANCH:
+        return False
+    return covers_project(scope, change.get("project"))
+
+
 def last_open_month() -> str:
     """The last month `YYYY-MM` before the sealed test window starts."""
     year, month = (int(part) for part in WINDOWS["test"][0][:7].split("-"))
@@ -169,7 +181,7 @@ def admit(admitted: Admitted, host: str, rows: Iterable[Mapping[str, Any]]) -> N
     admitted.setdefault(host, set()).update(
         str(row["_number"])
         for row in rows
-        if covers_project(scope, row.get("project")) and created_in_grant(scope, row.get("created"))
+        if covers_change(scope, row) and created_in_grant(scope, row.get("created"))
     )
 
 
@@ -197,7 +209,7 @@ def outside_grant(scope: GrantScope | None, month: str, rows: Sequence[Mapping[s
         return ""
     if not grant_months(scope, month):
         return "outside the host's grant"
-    if not all(covers_project(scope, row.get("project")) for row in rows):
+    if not all(covers_change(scope, row) for row in rows):
         return "rows of projects outside the host's grant"
     early_or_late = sum(not created_in_grant(scope, row.get("created")) for row in rows)
     if early_or_late:
@@ -848,10 +860,10 @@ def _fetch_month(args: argparse.Namespace, salt: str) -> int:
         in_grant = [c for c in kept if created_in_grant(scope, c["created"])]
         after_grant, kept = len(kept) - len(in_grant), in_grant
         record = {**record, "created_after_grant": after_grant}
-        # A month listed whole also returns the host's own projects' changes, never code.
-        covered = [c for c in kept if covers_project(scope, c.get("project"))]
+        # A month listed whole also returns the host's own projects' and access rules' changes.
+        covered = [c for c in kept if covers_change(scope, c)]
         if len(covered) != len(kept):
-            record = {**record, "host_project_changes": len(kept) - len(covered)}
+            record = {**record, "not_code_changes": len(kept) - len(covered)}
             kept = covered
     scrubbed = [scrub(change, salt) for change in kept]
     record = {

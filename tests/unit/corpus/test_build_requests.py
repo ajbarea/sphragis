@@ -526,6 +526,8 @@ def test_fuchsias_grant_covers_every_project_over_qts_training_months() -> None:
     assert cli.covers_project(scope, "fuchsia") and cli.covers_project(scope, "third_party/libc++")
     for not_code in ("All-Projects", "All-Users", "", None):
         assert not cli.covers_project(scope, not_code)
+    assert cli.covers_change(scope, {"project": "fuchsia", "branch": "main"})
+    assert not cli.covers_change(scope, {"project": "fuchsia", "branch": "refs/meta/config"})
     whole = _listing("status:merged after:2025-01-01 before:2025-02-01", "&n=500&S=0")
     assert cli.out_of_scope_request(whole, scope, set()) is None
     assert cli.out_of_scope_request(_listing(f"{MONTH} (project:All-Projects)"), scope, set())
@@ -547,12 +549,21 @@ def test_a_whole_month_listing_passes_only_a_scope_of_every_project() -> None:
 
 
 def test_a_whole_month_keeps_only_the_changes_its_grant_covers() -> None:
+    created = "2025-01-02 00:00:00.000000000"
     rows = [
-        {"_number": 1, "project": "fuchsia", "created": "2025-01-02 00:00:00.000000000"},
-        {"_number": 2, "project": "All-Projects", "created": "2025-01-02 00:00:00.000000000"},
+        {"_number": 1, "project": "fuchsia", "branch": "main", "created": created},
+        {"_number": 2, "project": "All-Projects", "created": created},
+        {"_number": 3, "project": "fuchsia", "branch": "refs/meta/config", "created": created},
     ]
-    assert cli.outside_grant(EVERY, "2025-01", rows) == "rows of projects outside the host's grant"
+    for outside in (rows[1], rows[2]):
+        assert cli.outside_grant(EVERY, "2025-01", [rows[0], outside]) == (
+            "rows of projects outside the host's grant"
+        )
     assert cli.outside_grant(EVERY, "2025-01", rows[:1]) == ""
+    # A scope that names its projects keeps its listings as they were read (research log,
+    # 2026-10-19).
+    config = {**rows[2], "project": "p"}
+    assert cli.covers_change(SCOPED, config)
     admitted: cli.Admitted = {}
     every = cli.RestPermission("every-project placeholder", 0.0, scope=EVERY)
     original = dict(cli.REST_PERMITTED)

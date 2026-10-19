@@ -1377,7 +1377,8 @@ def test_a_rest_fetch_of_fuchsia_past_its_grant_opens_no_connection(
 def test_a_whole_month_of_fuchsia_drops_the_hosts_own_projects(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """One listing for the month, through the real transport; All-Projects' changes are dropped."""
+    """One listing for the month, through the real transport; All-Projects' and access-rule changes
+    are dropped."""
     import json as json_module
 
     from sphragis.corpus import cli
@@ -1391,6 +1392,14 @@ def test_a_whole_month_of_fuchsia_drops_the_hosts_own_projects(
             "_number": 2,
             "id": "b",
             "project": "All-Projects",
+            "created": created,
+            "updated": created,
+        },
+        {
+            "_number": 3,
+            "id": "c",
+            "project": "fuchsia",
+            "branch": "refs/meta/config",
             "created": created,
             "updated": created,
         },
@@ -1419,7 +1428,9 @@ def test_a_whole_month_of_fuchsia_drops_the_hosts_own_projects(
     from sphragis.corpus.storage import iter_snapshot
 
     kept = list(iter_snapshot(tmp_path / "fuchsia" / "raw" / "2025-01.ndjson.gz"))
-    assert [r["project"] for r in kept] == ["fuchsia"]
+    assert [r["_number"] for r in kept] == [1]
+    record = json_module.loads((tmp_path / "fuchsia" / "raw" / "2025-01.record.json").read_text())
+    assert record["not_code_changes"] == 2
 
 
 def test_every_permitted_rest_host_says_why() -> None:

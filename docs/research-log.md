@@ -9986,9 +9986,16 @@ in Qt's training months. Fixed now, still before any change is read:
    never code). A month is listed whole, `status:merged after:<month> before:<next month>`, with no
    project named; the transport's allowlist admits that form only for such a scope and only for a
    month the grant covers (`cli.out_of_scope_listing`).
-2. *Rows.* A fetched month keeps only changes created in the grant and of a covered project (the
-   host's own projects' changes counted and dropped); admission, the build and `pool_order.py` read
-   coverage through one rule (`cli.covers_project`).
+2. *Rows.* A fetched month keeps only changes created in the grant, of a covered project and on a
+   branch other than `refs/meta/config` (`cli.covers_change`; the rest counted as
+   `not_code_changes` and dropped); admission, the build and `pool_order.py` read coverage through
+   that one rule. `refs/meta/config` holds a project's access rules and is the only branch of a
+   permissions-only project, which is what `type=CODE` would have left out ("projects created with
+   the `--permissions-only` flag",
+   https://gerrit-review.googlesource.com/Documentation/cmd-ls-projects.html), so no such project
+   is ranked. Scopes that name their projects are unchanged: Qt's REST listings do hold
+   `refs/meta/config` changes, and none of its examples comes from one (checked 2026-10-19 against
+   `datasets/gerrit-granted/qt`, raw listings by change number against its examples).
 3. *Order and stop.* Unchanged: projects ranked by the merged changes created in the window that the
    listings return, ties by name, and the shortest prefix that covers all 40 partitions. A project
    the listings never return has no change to rank and no example to add.

@@ -22,7 +22,7 @@ from pathlib import Path
 
 from sphragis.corpus.cli import (
     GrantScope,
-    covers_project,
+    covers_change,
     created_in_grant,
     grant_months,
     grant_scope,
@@ -67,8 +67,8 @@ def main() -> None:
                 repeated += 1
                 continue
             seen.add(change["_number"])
-            if not created_in_grant(scope, change.get("created")) or not covers_project(
-                scope, change.get("project")
+            if not created_in_grant(scope, change.get("created")) or not covers_change(
+                scope, change
             ):
                 raise SystemExit(
                     f"{snapshot.name}: change {change['_number']} is outside the grant"
