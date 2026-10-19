@@ -1,0 +1,1613 @@
+{
+  "org": "aosp",
+  "root": "/home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing",
+  "grant": {
+    "projects": [
+      "platform/bionic",
+      "platform/bootable/deprecated-ota",
+      "platform/bootable/recovery",
+      "device/amlogic/yukawa",
+      "device/generic/goldfish",
+      "device/generic/goldfish-opengl",
+      "device/generic/opengl-transport",
+      "device/google/akita-kernels/5.15",
+      "device/google/barbet",
+      "device/google/bluejay-kernels/5.10",
+      "device/google/caimito-kernels/6.1",
+      "device/google/comet-kernels/6.1",
+      "device/google/coral-kernel",
+      "device/google/felix-kernels/5.10",
+      "device/google/lynx-kernels/5.10",
+      "device/google/pantah-kernels/5.10",
+      "device/google/raviole-kernels/5.10",
+      "device/google/redbull-kernel",
+      "device/google/tangorpro-kernels/5.10",
+      "device/google/shusky-kernels/5.15",
+      "device/google/sunfish",
+      "device/google/sunfish-kernel",
+      "device/google/cuttlefish",
+      "device/google/trout",
+      "device/linaro/hikey",
+      "platform/external/aac",
+      "platform/external/abseil-cpp",
+      "platform/external/angle",
+      "platform/external/anonymous-counting-tokens",
+      "platform/external/android-nn-driver",
+      "platform/external/armnn",
+      "platform/external/bsdiff",
+      "platform/external/clang",
+      "platform/external/compiler-rt",
+      "platform/external/ComputeLibrary",
+      "platform/external/cpuinfo",
+      "platform/external/cronet",
+      "platform/external/deqp",
+      "platform/external/deqp-deps/SPIRV-Headers",
+      "platform/external/deqp-deps/SPIRV-Tools",
+      "platform/external/deqp-deps/amber",
+      "platform/external/dng_sdk",
+      "platform/external/double-conversion",
+      "platform/external/drm_hwcomposer",
+      "platform/external/dynamic_depth",
+      "platform/external/eigen",
+      "platform/external/fastrpc",
+      "platform/external/federated-compute",
+      "platform/external/fmtlib",
+      "platform/external/FP16",
+      "platform/external/FXdiv",
+      "platform/external/gemmlowp",
+      "platform/external/google-benchmark",
+      "platform/external/google-breakpad",
+      "platform/external/google-fruit",
+      "platform/external/googletest",
+      "platform/external/gptfdisk",
+      "platform/external/gwp_asan",
+      "platform/external/harfbuzz_ng",
+      "platform/external/icing",
+      "platform/external/image_io",
+      "platform/external/kernel-headers",
+      "platform/external/leveldb",
+      "platform/external/libaom",
+      "platform/external/libbrillo",
+      "platform/external/libbpf",
+      "platform/external/libchrome",
+      "platform/external/libchrome-gestures",
+      "platform/external/libcxx",
+      "platform/external/libcxxabi",
+      "platform/external/libgav1",
+      "platform/external/libkmsxx",
+      "platform/external/libpalmrejection",
+      "platform/external/libprotobuf-mutator",
+      "platform/external/libtextclassifier",
+      "platform/external/libultrahdr",
+      "platform/external/libwebm",
+      "platform/external/libyuv",
+      "platform/external/llvm-libc",
+      "platform/external/lzma",
+      "platform/external/marisa-trie",
+      "platform/external/mdnsresponder",
+      "platform/external/minigbm",
+      "platform/external/private-join-and-compute",
+      "platform/external/ms-tpm-20-ref",
+      "platform/external/neven",
+      "platform/external/nos/host/generic",
+      "platform/external/oboe",
+      "platform/external/OpenCL-CTS",
+      "platform/external/OpenCSD",
+      "platform/external/open-dice",
+      "platform/external/openscreen",
+      "platform/external/ot-br-posix",
+      "platform/external/pffft",
+      "platform/external/parameter-framework",
+      "platform/external/pdfium",
+      "platform/external/perfetto",
+      "platform/external/piex",
+      "platform/external/pigweed",
+      "platform/external/puffin",
+      "platform/external/python/pycparser",
+      "platform/external/regex-re2",
+      "platform/external/rmi4utils",
+      "platform/external/rust/crates/cexpr",
+      "platform/external/rust/crates/grpcio-sys",
+      "platform/external/rust/crates/libfuzzer-sys",
+      "platform/external/ruy",
+      "platform/external/sandboxed-api",
+      "platform/external/scrypt",
+      "platform/external/scudo",
+      "platform/external/sdv/vsomeip",
+      "platform/external/shaderc/spirv-headers",
+      "platform/external/skia",
+      "platform/external/sqlite",
+      "platform/external/stg",
+      "platform/external/stressapptest",
+      "platform/external/swiftshader",
+      "platform/external/tensorflow",
+      "platform/external/tflite-support",
+      "trusty/external/trusty",
+      "trusty/external/headers",
+      "platform/external/v4l2_codec2",
+      "platform/external/virglrenderer",
+      "platform/external/vixl",
+      "platform/external/vulkan-headers",
+      "platform/external/vulkan-validation-layers",
+      "platform/external/webrtc",
+      "platform/external/zlib",
+      "platform/external/zopfli",
+      "platform/external/zucchini",
+      "platform/frameworks/av",
+      "platform/frameworks/compile/libbcc",
+      "platform/frameworks/compile/mclinker",
+      "platform/frameworks/compile/slang",
+      "platform/frameworks/libs/binary_translation",
+      "platform/frameworks/libs/native_bridge_support",
+      "platform/frameworks/minikin",
+      "platform/frameworks/native",
+      "platform/frameworks/proto_logging",
+      "platform/frameworks/wilhelm",
+      "platform/hardware/broadcom/wlan",
+      "platform/hardware/google/aemu",
+      "platform/hardware/google/apf",
+      "platform/hardware/google/av",
+      "platform/hardware/google/camera",
+      "platform/hardware/google/easel",
+      "platform/hardware/google/gchips",
+      "platform/hardware/google/gfxstream",
+      "platform/hardware/google/graphics/common",
+      "platform/hardware/google/graphics/gs101",
+      "platform/hardware/google/graphics/gs201",
+      "platform/hardware/google/graphics/zuma",
+      "platform/hardware/google/graphics/zumapro",
+      "platform/hardware/google/pixel",
+      "platform/hardware/invensense",
+      "platform/hardware/libhardware",
+      "platform/hardware/libhardware_legacy",
+      "platform/hardware/nxp/keymint",
+      "platform/hardware/nxp/nfc",
+      "platform/hardware/nxp/uwb",
+      "platform/hardware/nxp/secure_element",
+      "platform/hardware/nxp/weaver",
+      "platform/hardware/qcom/bootctrl",
+      "platform/hardware/qcom/camera",
+      "platform/hardware/qcom/data/ipacfg-mgr",
+      "platform/hardware/qcom/display",
+      "platform/hardware/qcom/gps",
+      "platform/hardware/qcom/keymaster",
+      "platform/hardware/qcom/media",
+      "platform/hardware/qcom/sm7150/gps",
+      "platform/hardware/qcom/sm7250/display",
+      "platform/hardware/qcom/sm7250/gps",
+      "platform/hardware/qcom/sm7250/media",
+      "platform/hardware/qcom/sm8150/data/ipacfg-mgr",
+      "platform/hardware/qcom/sm8150/display",
+      "platform/hardware/qcom/sm8150/gps",
+      "platform/hardware/qcom/sm8150/media",
+      "platform/hardware/qcom/sm8150p/gps",
+      "platform/hardware/qcom/wlan",
+      "platform/hardware/ril",
+      "platform/hardware/st/nfc",
+      "platform/hardware/st/secure_element",
+      "platform/hardware/st/secure_element2",
+      "platform/hardware/samsung/nfc",
+      "platform/hardware/synaptics/wlan",
+      "platform/hardware/ti/am57x",
+      "platform/libnativehelper",
+      "platform/packages/modules/adb",
+      "platform/packages/modules/Bluetooth",
+      "platform/packages/modules/Gki",
+      "platform/packages/modules/ImsMedia",
+      "platform/packages/modules/NeuralNetworks",
+      "platform/packages/modules/StatsD",
+      "platform/packages/modules/UprobeStats",
+      "platform/prebuilts/android-emulator",
+      "platform/prebuilts/build-tools",
+      "platform/prebuilts/clang-tools",
+      "platform/prebuilts/clang/host/darwin-x86",
+      "platform/prebuilts/clang/host/linux-x86",
+      "platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8",
+      "platform/prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8",
+      "platform/prebuilts/jdk/jdk17",
+      "platform/prebuilts/jdk/jdk21",
+      "platform/prebuilts/misc",
+      "platform/prebuilts/module_sdk/art",
+      "platform/prebuilts/module_sdk/Connectivity",
+      "platform/prebuilts/module_sdk/StatsD",
+      "platform/prebuilts/ndk",
+      "platform/prebuilts/runtime",
+      "platform/prebuilts/sdk",
+      "platform/prebuilts/vndk/v30",
+      "platform/prebuilts/vndk/v31",
+      "platform/prebuilts/vndk/v32",
+      "platform/prebuilts/vndk/v33",
+      "platform/prebuilts/vndk/v34",
+      "platform/system/bpf",
+      "platform/system/chre",
+      "platform/system/connectivity/wificond",
+      "platform/system/core",
+      "platform/system/dmesgd",
+      "platform/system/extras",
+      "platform/system/gatekeeper",
+      "platform/system/gsid",
+      "platform/system/hwservicemanager",
+      "platform/system/incremental_delivery",
+      "platform/system/keymaster",
+      "platform/system/libartpalette",
+      "platform/system/libbase",
+      "platform/system/libcppbor",
+      "platform/system/libfmq",
+      "platform/system/libhidl",
+      "platform/system/libhwbinder",
+      "platform/system/libprocinfo",
+      "platform/system/libvintf",
+      "platform/system/libziparchive",
+      "platform/system/linkerconfig",
+      "platform/system/logging",
+      "platform/system/media",
+      "platform/system/memory/libion",
+      "platform/system/memory/libdmabufheap",
+      "platform/system/memory/libmeminfo",
+      "platform/system/memory/libmemtrack",
+      "platform/system/memory/libmemunreachable",
+      "platform/system/memory/lmkd",
+      "platform/system/netd",
+      "platform/system/nfc",
+      "platform/system/nvram",
+      "platform/system/server_configurable_flags",
+      "platform/system/teeui",
+      "platform/system/testing/gtest_extras",
+      "platform/system/tools/aidl",
+      "platform/system/tools/hidl",
+      "platform/system/tools/sysprop",
+      "platform/system/unwinding",
+      "platform/system/update_engine",
+      "platform/system/vold",
+      "platform/test/dittosuite",
+      "platform/test/vts-testcase/security",
+      "platform/tools/dexter",
+      "trusty/app/avb",
+      "trusty/app/confirmationui",
+      "trusty/app/gatekeeper",
+      "trusty/app/keymaster"
+    ],
+    "created_from": "2024-10-01",
+    "created_before": "2025-03-27",
+    "read_cap": null
+  },
+  "months": [
+    "2024-10",
+    "2024-11",
+    "2024-12",
+    "2025-01",
+    "2025-02",
+    "2025-03"
+  ],
+  "changes": 12499,
+  "listed_twice": 0,
+  "order": [
+    {
+      "project": "platform/packages/modules/Bluetooth",
+      "merged": 1745,
+      "commented": 821
+    },
+    {
+      "project": "platform/external/perfetto",
+      "merged": 1565,
+      "commented": 768
+    },
+    {
+      "project": "device/google/cuttlefish",
+      "merged": 530,
+      "commented": 196
+    },
+    {
+      "project": "platform/hardware/google/gfxstream",
+      "merged": 427,
+      "commented": 84
+    },
+    {
+      "project": "platform/system/core",
+      "merged": 427,
+      "commented": 150
+    },
+    {
+      "project": "platform/frameworks/av",
+      "merged": 424,
+      "commented": 191
+    },
+    {
+      "project": "platform/bionic",
+      "merged": 332,
+      "commented": 99
+    },
+    {
+      "project": "platform/frameworks/libs/binary_translation",
+      "merged": 291,
+      "commented": 38
+    },
+    {
+      "project": "platform/prebuilts/sdk",
+      "merged": 287,
+      "commented": 15
+    },
+    {
+      "project": "platform/frameworks/native",
+      "merged": 283,
+      "commented": 104
+    },
+    {
+      "project": "platform/external/angle",
+      "merged": 262,
+      "commented": 4
+    },
+    {
+      "project": "platform/prebuilts/clang/host/linux-x86",
+      "merged": 195,
+      "commented": 6
+    },
+    {
+      "project": "platform/system/extras",
+      "merged": 182,
+      "commented": 54
+    },
+    {
+      "project": "platform/external/deqp",
+      "merged": 174,
+      "commented": 12
+    },
+    {
+      "project": "device/generic/goldfish",
+      "merged": 167,
+      "commented": 25
+    },
+    {
+      "project": "platform/external/icing",
+      "merged": 166,
+      "commented": 17
+    },
+    {
+      "project": "platform/frameworks/proto_logging",
+      "merged": 161,
+      "commented": 28
+    },
+    {
+      "project": "platform/external/cronet",
+      "merged": 140,
+      "commented": 31
+    },
+    {
+      "project": "platform/packages/modules/StatsD",
+      "merged": 134,
+      "commented": 23
+    },
+    {
+      "project": "platform/packages/modules/adb",
+      "merged": 127,
+      "commented": 25
+    },
+    {
+      "project": "platform/hardware/google/aemu",
+      "merged": 123,
+      "commented": 10
+    },
+    {
+      "project": "platform/prebuilts/build-tools",
+      "merged": 117,
+      "commented": 10
+    },
+    {
+      "project": "platform/external/scudo",
+      "merged": 108,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/ot-br-posix",
+      "merged": 102,
+      "commented": 28
+    },
+    {
+      "project": "platform/system/tools/aidl",
+      "merged": 96,
+      "commented": 18
+    },
+    {
+      "project": "platform/system/update_engine",
+      "merged": 95,
+      "commented": 27
+    },
+    {
+      "project": "platform/test/vts-testcase/security",
+      "merged": 95,
+      "commented": 15
+    },
+    {
+      "project": "platform/external/llvm-libc",
+      "merged": 91,
+      "commented": 13
+    },
+    {
+      "project": "platform/hardware/nxp/uwb",
+      "merged": 87,
+      "commented": 9
+    },
+    {
+      "project": "platform/system/memory/libmeminfo",
+      "merged": 83,
+      "commented": 7
+    },
+    {
+      "project": "platform/prebuilts/clang/host/darwin-x86",
+      "merged": 79,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/swiftshader",
+      "merged": 77,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/nfc",
+      "merged": 77,
+      "commented": 8
+    },
+    {
+      "project": "platform/system/server_configurable_flags",
+      "merged": 77,
+      "commented": 5
+    },
+    {
+      "project": "platform/external/abseil-cpp",
+      "merged": 76,
+      "commented": 3
+    },
+    {
+      "project": "platform/hardware/google/apf",
+      "merged": 70,
+      "commented": 11
+    },
+    {
+      "project": "platform/system/media",
+      "merged": 65,
+      "commented": 5
+    },
+    {
+      "project": "platform/system/libvintf",
+      "merged": 63,
+      "commented": 16
+    },
+    {
+      "project": "platform/external/drm_hwcomposer",
+      "merged": 58,
+      "commented": 9
+    },
+    {
+      "project": "platform/hardware/st/nfc",
+      "merged": 58,
+      "commented": 10
+    },
+    {
+      "project": "platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8",
+      "merged": 57,
+      "commented": 5
+    },
+    {
+      "project": "platform/system/libbase",
+      "merged": 55,
+      "commented": 6
+    },
+    {
+      "project": "platform/system/netd",
+      "merged": 54,
+      "commented": 9
+    },
+    {
+      "project": "platform/prebuilts/misc",
+      "merged": 45,
+      "commented": 3
+    },
+    {
+      "project": "platform/system/vold",
+      "merged": 45,
+      "commented": 5
+    },
+    {
+      "project": "platform/system/logging",
+      "merged": 41,
+      "commented": 7
+    },
+    {
+      "project": "platform/bootable/recovery",
+      "merged": 39,
+      "commented": 3
+    },
+    {
+      "project": "platform/external/sqlite",
+      "merged": 39,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/libyuv",
+      "merged": 38,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/nxp/nfc",
+      "merged": 38,
+      "commented": 5
+    },
+    {
+      "project": "platform/system/keymaster",
+      "merged": 38,
+      "commented": 5
+    },
+    {
+      "project": "platform/external/minigbm",
+      "merged": 37,
+      "commented": 4
+    },
+    {
+      "project": "platform/external/open-dice",
+      "merged": 37,
+      "commented": 7
+    },
+    {
+      "project": "device/generic/goldfish-opengl",
+      "merged": 35,
+      "commented": 3
+    },
+    {
+      "project": "platform/external/zlib",
+      "merged": 33,
+      "commented": 3
+    },
+    {
+      "project": "platform/prebuilts/clang-tools",
+      "merged": 33,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/libhidl",
+      "merged": 33,
+      "commented": 5
+    },
+    {
+      "project": "platform/frameworks/libs/native_bridge_support",
+      "merged": 31,
+      "commented": 2
+    },
+    {
+      "project": "platform/hardware/libhardware",
+      "merged": 31,
+      "commented": 3
+    },
+    {
+      "project": "platform/system/chre",
+      "merged": 31,
+      "commented": 2
+    },
+    {
+      "project": "platform/system/tools/hidl",
+      "merged": 30,
+      "commented": 0
+    },
+    {
+      "project": "trusty/external/trusty",
+      "merged": 30,
+      "commented": 3
+    },
+    {
+      "project": "platform/system/libcppbor",
+      "merged": 29,
+      "commented": 6
+    },
+    {
+      "project": "platform/system/libhwbinder",
+      "merged": 28,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/memory/lmkd",
+      "merged": 28,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/libtextclassifier",
+      "merged": 27,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libultrahdr",
+      "merged": 27,
+      "commented": 1
+    },
+    {
+      "project": "platform/hardware/ril",
+      "merged": 27,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/bpf",
+      "merged": 27,
+      "commented": 3
+    },
+    {
+      "project": "platform/prebuilts/jdk/jdk21",
+      "merged": 26,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/google/graphics/common",
+      "merged": 25,
+      "commented": 2
+    },
+    {
+      "project": "platform/system/libfmq",
+      "merged": 25,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/libziparchive",
+      "merged": 25,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/tensorflow",
+      "merged": 24,
+      "commented": 2
+    },
+    {
+      "project": "trusty/app/keymaster",
+      "merged": 24,
+      "commented": 3
+    },
+    {
+      "project": "device/amlogic/yukawa",
+      "merged": 23,
+      "commented": 5
+    },
+    {
+      "project": "platform/external/libaom",
+      "merged": 23,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/skia",
+      "merged": 23,
+      "commented": 1
+    },
+    {
+      "project": "platform/packages/modules/NeuralNetworks",
+      "merged": 23,
+      "commented": 1
+    },
+    {
+      "project": "platform/prebuilts/ndk",
+      "merged": 23,
+      "commented": 0
+    },
+    {
+      "project": "device/linaro/hikey",
+      "merged": 22,
+      "commented": 2
+    },
+    {
+      "project": "platform/system/unwinding",
+      "merged": 22,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/libcxx",
+      "merged": 21,
+      "commented": 1
+    },
+    {
+      "project": "platform/prebuilts/runtime",
+      "merged": 21,
+      "commented": 5
+    },
+    {
+      "project": "device/google/trout",
+      "merged": 19,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/armnn",
+      "merged": 19,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/fmtlib",
+      "merged": 19,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libbpf",
+      "merged": 19,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/libchrome",
+      "merged": 19,
+      "commented": 3
+    },
+    {
+      "project": "platform/external/vixl",
+      "merged": 19,
+      "commented": 3
+    },
+    {
+      "project": "platform/libnativehelper",
+      "merged": 19,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/OpenCSD",
+      "merged": 18,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/google-breakpad",
+      "merged": 18,
+      "commented": 1
+    },
+    {
+      "project": "platform/prebuilts/jdk/jdk17",
+      "merged": 18,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/aac",
+      "merged": 17,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/stg",
+      "merged": 17,
+      "commented": 2
+    },
+    {
+      "project": "platform/system/teeui",
+      "merged": 17,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/cpuinfo",
+      "merged": 16,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/federated-compute",
+      "merged": 16,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/googletest",
+      "merged": 16,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libcxxabi",
+      "merged": 16,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/sdv/vsomeip",
+      "merged": 16,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/v4l2_codec2",
+      "merged": 16,
+      "commented": 1
+    },
+    {
+      "project": "platform/hardware/nxp/keymint",
+      "merged": 16,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/double-conversion",
+      "merged": 15,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/harfbuzz_ng",
+      "merged": 15,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/virglrenderer",
+      "merged": 15,
+      "commented": 1
+    },
+    {
+      "project": "platform/hardware/google/camera",
+      "merged": 15,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/kernel-headers",
+      "merged": 14,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/mdnsresponder",
+      "merged": 14,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/webrtc",
+      "merged": 14,
+      "commented": 3
+    },
+    {
+      "project": "platform/prebuilts/android-emulator",
+      "merged": 14,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/gsid",
+      "merged": 14,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/anonymous-counting-tokens",
+      "merged": 13,
+      "commented": 0
+    },
+    {
+      "project": "platform/frameworks/minikin",
+      "merged": 13,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/libprocinfo",
+      "merged": 13,
+      "commented": 2
+    },
+    {
+      "project": "platform/system/linkerconfig",
+      "merged": 13,
+      "commented": 1
+    },
+    {
+      "project": "platform/test/dittosuite",
+      "merged": 13,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/clang",
+      "merged": 12,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libchrome-gestures",
+      "merged": 12,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libpalmrejection",
+      "merged": 12,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/nos/host/generic",
+      "merged": 12,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/pffft",
+      "merged": 12,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/scrypt",
+      "merged": 12,
+      "commented": 1
+    },
+    {
+      "project": "platform/frameworks/wilhelm",
+      "merged": 12,
+      "commented": 1
+    },
+    {
+      "project": "platform/hardware/google/pixel",
+      "merged": 12,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/memory/libdmabufheap",
+      "merged": 12,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/google-fruit",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/gptfdisk",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/lzma",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/marisa-trie",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/pigweed",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/regex-re2",
+      "merged": 11,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/sandboxed-api",
+      "merged": 11,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/tflite-support",
+      "merged": 11,
+      "commented": 2
+    },
+    {
+      "project": "platform/external/vulkan-headers",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/google/av",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/libhardware_legacy",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/incremental_delivery",
+      "merged": 11,
+      "commented": 1
+    },
+    {
+      "project": "platform/tools/dexter",
+      "merged": 11,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/FP16",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/eigen",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/gemmlowp",
+      "merged": 10,
+      "commented": 1
+    },
+    {
+      "project": "platform/hardware/broadcom/wlan",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/synaptics/wlan",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/module_sdk/StatsD",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/gatekeeper",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "trusty/app/avb",
+      "merged": 10,
+      "commented": 0
+    },
+    {
+      "project": "device/google/caimito-kernels/6.1",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "device/google/comet-kernels/6.1",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/deqp-deps/SPIRV-Headers",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/deqp-deps/SPIRV-Tools",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/dng_sdk",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/leveldb",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libkmsxx",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/ms-tpm-20-ref",
+      "merged": 9,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/oboe",
+      "merged": 9,
+      "commented": 1
+    },
+    {
+      "project": "platform/external/parameter-framework",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/ruy",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/zucchini",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/google/graphics/zuma",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/nxp/secure_element",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/wlan",
+      "merged": 9,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/compiler-rt",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libgav1",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libprotobuf-mutator",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/private-join-and-compute",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/zopfli",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/frameworks/compile/slang",
+      "merged": 8,
+      "commented": 1
+    },
+    {
+      "project": "platform/hardware/google/graphics/zumapro",
+      "merged": 8,
+      "commented": 1
+    },
+    {
+      "project": "platform/hardware/st/secure_element2",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/connectivity/wificond",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/dmesgd",
+      "merged": 8,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/hwservicemanager",
+      "merged": 8,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/libartpalette",
+      "merged": 8,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/memory/libmemunreachable",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/testing/gtest_extras",
+      "merged": 8,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/tools/sysprop",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "trusty/external/headers",
+      "merged": 8,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/ComputeLibrary",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/FXdiv",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/android-nn-driver",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/bsdiff",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/image_io",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libbrillo",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/piex",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/puffin",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/rust/crates/grpcio-sys",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/rust/crates/libfuzzer-sys",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/vulkan-validation-layers",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/google/gchips",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/google/graphics/gs101",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/google/graphics/gs201",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/nxp/weaver",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/module_sdk/Connectivity",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/module_sdk/art",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "trusty/app/confirmationui",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "trusty/app/gatekeeper",
+      "merged": 7,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/dynamic_depth",
+      "merged": 6,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/pdfium",
+      "merged": 6,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/shaderc/spirv-headers",
+      "merged": 6,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/stressapptest",
+      "merged": 6,
+      "commented": 1
+    },
+    {
+      "project": "platform/packages/modules/Gki",
+      "merged": 6,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/memory/libion",
+      "merged": 6,
+      "commented": 1
+    },
+    {
+      "project": "platform/system/nvram",
+      "merged": 6,
+      "commented": 0
+    },
+    {
+      "project": "platform/frameworks/compile/libbcc",
+      "merged": 5,
+      "commented": 0
+    },
+    {
+      "project": "platform/packages/modules/UprobeStats",
+      "merged": 5,
+      "commented": 0
+    },
+    {
+      "project": "device/google/sunfish",
+      "merged": 4,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/google-benchmark",
+      "merged": 4,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/samsung/nfc",
+      "merged": 4,
+      "commented": 0
+    },
+    {
+      "project": "device/google/bluejay-kernels/5.10",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "device/google/felix-kernels/5.10",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "device/google/pantah-kernels/5.10",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "device/google/raviole-kernels/5.10",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "device/google/shusky-kernels/5.15",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "device/google/tangorpro-kernels/5.10",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/deqp-deps/amber",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/gwp_asan",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/openscreen",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "platform/frameworks/compile/mclinker",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "platform/packages/modules/ImsMedia",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "platform/system/memory/libmemtrack",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "device/google/akita-kernels/5.15",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "device/google/lynx-kernels/5.10",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "device/google/sunfish-kernel",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/neven",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/vndk/v30",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/vndk/v34",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "device/generic/opengl-transport",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "device/google/barbet",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "device/google/coral-kernel",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "device/google/redbull-kernel",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/bootable/deprecated-ota",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/OpenCL-CTS",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/fastrpc",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/libwebm",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/python/pycparser",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/rmi4utils",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/external/rust/crates/cexpr",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/google/easel",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/invensense",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/bootctrl",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/camera",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/data/ipacfg-mgr",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/display",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/gps",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/keymaster",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/media",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm7150/gps",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm7250/display",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm7250/gps",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm7250/media",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm8150/data/ipacfg-mgr",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm8150/display",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm8150/gps",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm8150/media",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/qcom/sm8150p/gps",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/st/secure_element",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/hardware/ti/am57x",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/vndk/v31",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/vndk/v32",
+      "merged": 0,
+      "commented": 0
+    },
+    {
+      "project": "platform/prebuilts/vndk/v33",
+      "merged": 0,
+      "commented": 0
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-10-19T06:43:26.710358+00:00",
+    "git": {
+      "commit": "8927f2287e0b4d6a885dc2b32030c3ea034bfedc",
+      "branch": "corpus/aosp-pool-fetch"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

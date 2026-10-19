@@ -1,0 +1,12 @@
+aosp 2024-10: fetched 2264 in 270 pages, kept 1979, dropped 285 created before 2024-10-01
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing/aosp/raw/2024-10.ndjson.gz
+aosp 2024-11: fetched 2036 in 269 pages, kept 1969, dropped 67 created before 2024-10-01
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing/aosp/raw/2024-11.ndjson.gz
+aosp 2024-12: fetched 2692 in 267 pages, kept 2632, dropped 60 created before 2024-10-01
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing/aosp/raw/2024-12.ndjson.gz
+aosp 2025-01: fetched 2064 in 268 pages, kept 2031, dropped 33 created before 2024-10-01
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing/aosp/raw/2025-01.ndjson.gz
+aosp 2025-02: fetched 2022 in 270 pages, kept 1987, dropped 35 created before 2024-10-01
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing/aosp/raw/2025-02.ndjson.gz
+aosp 2025-03: fetched 2001 in 265 pages, kept 1901, dropped 58 created before 2024-10-01 and 42 from 2025-03-27
+wrote /home/ajbar/ajsoftworks/sphragis-data-local/aosp/listing/aosp/raw/2025-03.ndjson.gz

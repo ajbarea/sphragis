@@ -16,14 +16,10 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   text); the likelihood rescorings are committed.
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
   split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
-- **AOSP's pool, H2's foreign source** (research log, 2026-10-18 and 2026-10-19): admitted on AJ's
-  reading of Chrome Infra's answer, one client at no more than one request a second. The census
-  is read (263 C++-majority projects) and the pool must hold 1,308 C++ and 926 other examples
-  (`foreign-need-qt.json`). android-review is in `REST_PERMITTED`, scoped to those projects and
-  changes created 2024-10-01 to 2025-03-26. Next: the scoped listings of the window's months,
-  `pool_order.py` over them, then the pool fetched, built, refined and deduplicated (against Qt
-  too) project by project, in that order, until it covers every draw; then the pool to TIGRIS
-  and the 22 development runs' foreign arms.
+- **H2's foreign source** (research log, 2026-10-19): AOSP's pool, read across its whole grant,
+  covers 32 of the 80 matched draws (1,071 C++ examples of the 1,308 the largest needs), so it
+  does not qualify, as Chromium's V8 pool did not. Fuchsia is the one source left; until it
+  grants and covers, `FOREIGN_SOURCE` stays unset and H2's development arms wait.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and
