@@ -131,9 +131,9 @@ def test_decoding_check_refuses_a_digested_copy(
 ) -> None:
     # The script imports the model stack at module level; it is refused before any model loads.
     model = ModuleType("sphragis.experiment.model")
-    model.REPETITION_PENALTY = 1.1  # type: ignore[attr-defined]
-    model.HFGenerator = object  # type: ignore[attr-defined]
-    model.run_provenance = dict  # type: ignore[attr-defined]
+    model.REPETITION_PENALTY = 1.1  # ty: ignore[unresolved-attribute]
+    model.HFGenerator = object  # ty: ignore[unresolved-attribute]
+    model.run_provenance = dict  # ty: ignore[unresolved-attribute]
     monkeypatch.setitem(sys.modules, "sphragis.experiment.model", model)
     decoding_check = _script("decoding_check")
     run = _run(["a"], 1.0)
