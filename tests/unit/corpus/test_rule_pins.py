@@ -23,7 +23,7 @@ from sphragis.corpus import rules
 #: `FETCH_RULES` yet; its pin marks the code the git route's first fetch will record.
 PINNED = {
     "BUILD_RULES": ("3d29d529390c1eea", rules.BUILD_SOURCES),
-    "FETCH_RULES": ("296c5a080b125562", rules.FETCH_SOURCES),
+    "FETCH_RULES": ("5c939338684181c8", rules.FETCH_SOURCES),
     "GITHUB_RULES": ("56b5374b852d17d7", rules.GITHUB_SOURCES),
 }
 

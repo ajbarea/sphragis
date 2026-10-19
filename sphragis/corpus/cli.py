@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import fcntl
 import hashlib
 import http.client
 import json
@@ -16,14 +15,15 @@ import urllib.request
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import IO, Any, NamedTuple
+from typing import Any, NamedTuple
 
 from sphragis.corpus.build import DROP_REASONS, CommentFetcher, DiffFetcher, build_from_change
 from sphragis.corpus.fetchers import scrubbed_comment_fetcher, scrubbed_diff_fetcher
 from sphragis.corpus.gerrit import Transport, created_on_or_after, fetch_changes
 from sphragis.corpus.github import GITHUB_KEY, GITHUB_ORGS, collect_month, github_fetchers
 from sphragis.corpus.github_api import GitHubAPI
-from sphragis.corpus.grants import grants_file, holds_grant
+from sphragis.corpus.grants import unheld
+from sphragis.corpus.hosts import claim_host
 from sphragis.corpus.load import (
     build_record,
     raw_digest,
@@ -187,19 +187,12 @@ REST_PERMITTED = {
 }
 
 
-LOCK_DIR = Path.home() / ".cache" / "sphragis" / "hosts"
-
-
 def unheld_grant(host: str) -> str | None:
     """Why the REST route may not read `host` from this machine although `REST_PERMITTED` lists
     it, None if it may: its permission is a written grant that `holds_grant` does not find."""
     permission = REST_PERMITTED.get(host)
-    if permission is None or not permission.written_grant or holds_grant(host):
-        return None
-    return (
-        f"refusing {host}: its permission is a written grant to this study's collector, not to"
-        f" every clone of the code; the machine that holds it lists {host} in {grants_file()}"
-    )
+    reason = None if permission is None else unheld(host, permission.written_grant)
+    return None if reason is None else f"refusing {host}: {reason}"
 
 
 def grant_scope(org: str) -> GrantScope | None:
@@ -228,71 +221,6 @@ def out_of_scope_listing(target: str, scope: GrantScope) -> str | None:
         return "a listing whose OR, NOT or negation could reach past its projects"
     outside = sorted(set(named) - set(scope.projects))
     return f"a listing of {outside}" if outside else None
-
-
-class HostClaim:
-    """One process's exclusive claim on a host, and the host's quiet deadline, kept on disk.
-
-    A host that asks for concurrency 1 counts every client machine-wide, and two stages run in
-    two terminals would each pace themselves correctly and together break the limit. The lock
-    file also carries the wall-clock time before which the host must not be asked again, so a
-    pause a 5xx started outlives the process that saw it: `collect`-style loops start a fresh
-    process per month.
-    """
-
-    def __init__(self, host: str, handle: IO[str]) -> None:
-        self.host, self._handle = host, handle
-
-    def quiet_until(self) -> float:
-        self._handle.seek(0)
-        text = self._handle.read().strip()
-        return float(text) if text else 0.0
-
-    def hold_until(self, deadline: float) -> None:
-        if deadline <= self.quiet_until():
-            return
-        self._handle.seek(0)
-        self._handle.truncate()
-        self._handle.write(f"{deadline}\n")
-        self._handle.flush()
-        os.fsync(self._handle.fileno())
-
-    def release(self) -> None:
-        self._handle.close()
-
-
-_CLAIMS: dict[tuple[Path, str], HostClaim] = {}
-
-
-def claim_host(host: str, lock_dir: Path | None = None) -> HostClaim:
-    """This process's claim on `host`, taken once and shared by every transport it builds.
-
-    Exits if another process holds it. The lock lives at a fixed path under the user's home, so
-    processes started from different environments contend for the same file.
-    """
-    directory = lock_dir or LOCK_DIR
-    key = (directory, host)
-    if key in _CLAIMS:
-        return _CLAIMS[key]
-    directory.mkdir(parents=True, exist_ok=True)
-    handle = (directory / f"{host}.lock").open("a+")
-    try:
-        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
-        handle.close()
-        raise SystemExit(
-            f"refusing {host}: another process is already fetching from it, and the host asks "
-            "for a concurrency of 1"
-        ) from None
-    _CLAIMS[key] = HostClaim(host, handle)
-    return _CLAIMS[key]
-
-
-def release_host(host: str, lock_dir: Path | None = None) -> None:
-    """Give up this process's claim on `host`, keeping its quiet deadline on disk."""
-    claim = _CLAIMS.pop((lock_dir or LOCK_DIR, host), None)
-    if claim is not None:
-        claim.release()
 
 
 # Sent on every request. Wikimedia's User-Agent policy asks for a client name, version and

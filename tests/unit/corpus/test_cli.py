@@ -7,12 +7,12 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from sphragis.corpus import hosts
 from sphragis.corpus.cli import GERRIT, STAGES, build_parser, main, require_salt
 from sphragis.corpus.rules import BUILD_RULES
 
@@ -1545,16 +1545,6 @@ WIKIMEDIA_ROBOTS = (
 )
 
 
-@pytest.fixture(autouse=True)
-def _release_host_claims() -> Iterator[None]:
-    """A claim is process-wide, so each test gives back what it took."""
-    yield
-    from sphragis.corpus import cli
-
-    for directory, host in list(cli._CLAIMS):
-        cli.release_host(host, directory)
-
-
 class _Clocks:
     """A monotonic clock and a wall clock that a fake sleep advances together."""
 
@@ -1678,14 +1668,14 @@ def test_an_unreadable_grants_file_stops_the_process(
 def test_the_grants_file_defaults_to_the_xdg_config_directory_then_home(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    from sphragis.corpus import cli
+    from sphragis.corpus import grants
 
     monkeypatch.delenv("SPHRAGIS_GRANTS")
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
-    assert cli.grants_file() == tmp_path / "xdg" / "sphragis" / "grants"
+    assert grants.grants_file() == tmp_path / "xdg" / "sphragis" / "grants"
     monkeypatch.setenv("XDG_CONFIG_HOME", "")
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    assert cli.grants_file() == tmp_path / "home" / ".config" / "sphragis" / "grants"
+    assert grants.grants_file() == tmp_path / "home" / ".config" / "sphragis" / "grants"
 
 
 def test_the_resume_script_refuses_a_grant_this_machine_does_not_hold(tmp_path: Path) -> None:
@@ -1712,13 +1702,20 @@ def test_the_resume_script_refuses_a_grant_this_machine_does_not_hold(tmp_path: 
     assert not called.exists()
 
 
-def test_no_git_host_is_permitted_before_the_git_route_checks_held_grants() -> None:
-    """A git host opens only by written grant, and `notedb._network` does not ask
-    `grants.holds_grant` yet: that lands with the first grant, since any edit to notedb.py changes
-    `FETCH_RULES` and so stales every git-route month. Permitting a host without it fails here."""
-    from sphragis.corpus.notedb import GIT_PERMITTED
+def test_the_git_route_asks_for_a_held_grant_before_a_permitted_host() -> None:
+    """A git host opens only by written grant, and `notedb.refused_by_permission`, which every
+    network command passes through, asks `grants.unheld` for it, as the REST route does."""
+    import inspect
 
-    assert not any(permission.permitted for permission in GIT_PERMITTED.values())
+    from sphragis.corpus import cli, grants, notedb
+
+    assert all(p.written_grant for p in notedb.GIT_PERMITTED.values() if p.permitted)
+    assert "unheld(host, permission.written_grant)" in inspect.getsource(
+        notedb.refused_by_permission
+    )
+    assert "unheld(host, permission.written_grant)" in inspect.getsource(cli.unheld_grant)
+    assert "holds_grant(host)" in inspect.getsource(grants.unheld)
+    assert "refused_by_permission(" in inspect.getsource(notedb.Repo._network)
 
 
 @pytest.mark.parametrize(
@@ -1805,12 +1802,11 @@ def test_a_pause_outlives_the_process_that_saw_the_5xx(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """A loop starts a fresh process per month; the next one still waits the pause out."""
-    from sphragis.corpus import cli
 
     _scripted_connections(monkeypatch, [_FakeResponse(502), _FakeResponse(200)])
     clocks = _Clocks()
     assert _wikimedia(clocks, tmp_path)(f"{WIKIMEDIA}/changes/1/comments")[0] == 502
-    cli.release_host("gerrit.wikimedia.org", tmp_path)
+    hosts.release_host("gerrit.wikimedia.org", tmp_path)
     later = _Clocks()
     later.now = clocks.now + 60.0  # the next process starts a minute later, with a fresh pacer
     assert _wikimedia(later, tmp_path)(f"{WIKIMEDIA}/changes/1/comments")[0] == 200
@@ -1882,7 +1878,6 @@ def test_a_claim_held_by_another_process_refuses_before_connecting(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Concurrency 1 is machine-wide; the lock is taken in a real second process."""
-    from sphragis.corpus import cli
 
     holder = subprocess.Popen(
         [
@@ -1905,7 +1900,7 @@ def test_a_claim_held_by_another_process_refuses_before_connecting(
         holder.kill()
         holder.wait()
     assert _wikimedia(_Clocks(), tmp_path)(f"{WIKIMEDIA}/changes/?q=x")[0] == 200
-    assert "gerrit.wikimedia.org" in {h for _, h in cli._CLAIMS}
+    assert "gerrit.wikimedia.org" in {h for _, h in hosts._CLAIMS}
 
 
 def test_two_transports_in_one_process_share_the_claim(

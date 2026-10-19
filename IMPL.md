@@ -19,6 +19,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   `data/github-collect` worktree into `~/ajsoftworks/sphragis-data-local/github/` (`collect.sh`,
   progress in `status.log`). Each month resumes from its checkpoint. A member not frozen and
   split-checked by 2026-11-20 is reported as not collected.
+- **AOSP's pool, H2's foreign source** (research log, 2026-10-18): admitted on AJ's reading of
+  Chrome Infra's answer, one client at no more than one request a second. `foreign_need.py` over
+  Qt's 40 admissible partitions gives what the pool must cover; `aosp_census.py` reads every
+  manifest project's tree at `android-15.0.0_r1` (the one ref `GIT_PERMITTED` opens there) and
+  names the C++-majority projects. Then one commit puts android-review in `REST_PERMITTED`
+  scoped to those projects and 2024-10-01 to 2025-03-26, their window listings order them, and
+  the pool is fetched, built and deduplicated project by project until it covers every draw.
 
 ## Next
 
@@ -31,8 +38,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
-   (a) once AJ admits the source's host, its pool sized by counts (AOSP: projects listed by
-   language at `android-15.0.0_r1`); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   (a) AOSP's pool (In flight); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; a fixed source other than Chromium refuses every read
@@ -45,9 +51,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
-   GitHub Pro (Student Pack) for required checks on papers `main`; sending the Fuchsia request,
-   the Chromium follow-up and the AOSP request (drafts in the rit account), and an IRB0000393
-   amendment naming the source that grants.
+   GitHub Pro (Student Pack) for required checks on papers `main`. Fuchsia's discuss list was
+   asked on 2026-10-15 and has not answered; by item 1 of the H2 plan a grant before the first H2
+   development contrast would make Fuchsia the source in AOSP's place.
    Also whether a published generation run keeps its `prediction` field: a prediction can repeat
    the example's review comment word for word, which the protocol's "no review text is
    published" excludes; Qt's generation runs are held back meanwhile (research log, 2026-10-18).

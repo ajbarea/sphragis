@@ -58,6 +58,8 @@ from urllib.parse import quote, urlsplit
 from sphragis.corpus import gerrit_diff
 from sphragis.corpus.build import CommentFetcher, DiffFetcher
 from sphragis.corpus.examples import REWORK, is_code_file
+from sphragis.corpus.grants import unheld
+from sphragis.corpus.hosts import claim_host
 from sphragis.corpus.pacing import Pacer
 from sphragis.corpus.rules import FETCH_RULES
 from sphragis.corpus.scrub import scrub
@@ -74,7 +76,21 @@ class GitPermission(NamedTuple):
     permitted: bool
     reason: str
     min_interval: float  # seconds between requests to this host; pacing never goes below it
+    # the only refs a fetch may name where the permission covers part of the host, None where it
+    # covers every ref; such a host also refuses `ls-remote`, which lists every ref
+    refs: tuple[str, ...] | None = None
+    # the permission is a written grant to this study's collector, held only on a machine whose
+    # `grants.grants_file()` lists the host
+    written_grant: bool = False
+    # one client at a time machine-wide (`hosts.claim_host`, the REST route's lock), and the
+    # seconds every later process stays quiet after a failed request
+    single_client: bool = False
+    error_pause: float = 0.0
 
+
+#: The AOSP release whose manifest and trees H2's project census reads (research log, 2026-10-14,
+#: item 4 of the H2 plan).
+AOSP_CENSUS_TAG = "refs/tags/android-15.0.0_r1"
 
 # Mirrors `cli.REST_PERMITTED`: one entry per git host this route may fetch from, so granting
 # permission to android or chromium is a one-line change here; fuchsia also needs its entry in
@@ -84,7 +100,18 @@ class GitPermission(NamedTuple):
 # refused until its maintainers grant permission in writing (research log, 2026-10-14).
 GIT_PERMITTED = {
     "android.googlesource.com": GitPermission(
-        False, "waits for written permission (request drafted; research log 2026-10-14)", 1.0
+        True,
+        "asked on infra-dev for reads over git at one client and no more than one request a"
+        " second, in a thread titled for chromium-review and android-review, Chrome Infra"
+        " answered on 2026-10-15: \"There are no concerns with hitting Gerrit's REST API at such"
+        ' a rate." AJ reads the answer as covering AOSP, its git host included (research log,'
+        " 2026-10-18); scoped to the release tag H2's project census reads, so no review record"
+        " is fetched here",
+        1.0,
+        refs=(AOSP_CENSUS_TAG,),
+        written_grant=True,
+        single_client=True,
+        error_pause=300.0,
     ),
     "chromium.googlesource.com": GitPermission(
         False,
@@ -223,6 +250,59 @@ NO_HEAD = "refs/sphragis/no-head"
 #: holds that tree, so the log fails on a lazy fetch once HEAD resolves (reading every branch
 #: brings in the one HEAD names). A mailmap would also rewrite the identities a log reports.
 _NO_MAILMAP = ("-c", "log.mailmap=false", "-c", "mailmap.blob=", "-c", "mailmap.file=")
+
+
+#: What a scoped permission's fetch may carry: `Repo.fetch`'s own arguments, in its order, around
+#: a depth-1 read, blob-less or not (the manifest's one file is read). Anything else (`--tags`,
+#: `--all`, `--mirror`, a refspec on the command line, more history) could widen what is fetched.
+SCOPED_FETCH = (("fetch", "--quiet", "--no-tags", "--no-write-fetch-head"), ("--stdin", "origin"))
+SCOPED_FETCH_REQUIRED = ("--depth=1",)
+SCOPED_FETCH_OPTIONS = ("--depth=1", "--filter=blob:none")
+
+
+def refused_by_permission(host: str, args: Sequence[str], stdin: bytes | None) -> str | None:
+    """Why `GIT_PERMITTED` refuses this network command to `host`, None if it allows it.
+
+    A scoped permission allows only a `fetch` of `SCOPED_FETCH`'s arguments around
+    `SCOPED_FETCH_REQUIRED` and at most `SCOPED_FETCH_OPTIONS`, whose refspecs (read from stdin,
+    as `Repo.fetch` passes them) all take their source from its `refs`; an object id, a wildcard
+    or any other ref is refused, and so is every other command.
+    """
+    permission = GIT_PERMITTED.get(host)
+    if permission is None or not permission.permitted:
+        return permission.reason if permission else "not recorded in GIT_PERMITTED"
+    if refused := unheld(host, permission.written_grant):
+        return refused
+    if permission.refs is None:
+        return None
+    if not args or args[0] != "fetch":
+        return f"{args[0] if args else 'a command'} is outside its scope ({permission.refs})"
+    head, tail = SCOPED_FETCH
+    options = list(args[len(head) : len(args) - len(tail)])
+    if (
+        tuple(args[: len(head)]) != head
+        or tuple(args[len(args) - len(tail) :]) != tail
+        or len(set(options)) != len(options)
+        or not set(options) <= set(SCOPED_FETCH_OPTIONS)
+        or not set(SCOPED_FETCH_REQUIRED) <= set(options)
+    ):
+        return f"fetch arguments {list(args[1:])} are outside its scope ({permission.refs})"
+    # Split as git reads `--stdin`: one refspec a line. An empty line is a refspec git reads as
+    # HEAD, and a line holding whitespace or text that is not UTF-8 is refused too.
+    try:
+        text = (stdin or b"").decode()
+    except UnicodeDecodeError:
+        return f"refspecs that are not UTF-8 are outside its scope ({permission.refs})"
+    lines = text.removesuffix("\n").split("\n")
+    if any(not line or line != line.strip() or not line.isprintable() for line in lines) or any(
+        " " in line or "\t" in line for line in lines
+    ):
+        return f"refspecs {lines} are outside its scope ({permission.refs})"
+    sources = [line.lstrip("+").partition(":")[0] for line in lines]
+    outside = sorted({source for source in sources if source not in permission.refs})
+    if not sources or outside:
+        return f"refs {outside or ['none']} are outside its scope ({permission.refs})"
+    return None
 
 
 class GitError(RuntimeError):
@@ -525,16 +605,27 @@ class Repo:
         return self._run(list(args), stdin=stdin).stdout
 
     def _network(self, purpose: str, args: Sequence[str], stdin: bytes | None, items: int) -> bytes:
-        permission = GIT_PERMITTED.get(self.host)
-        if not _is_local_url(self.url) and (permission is None or not permission.permitted):
-            reason = permission.reason if permission else "not recorded in GIT_PERMITTED"
-            raise GitError(f"refusing to contact {self.host} over the network: {reason}")
+        claim = None
+        if not _is_local_url(self.url):
+            refused = refused_by_permission(self.host, args, stdin)
+            if refused is not None:
+                raise GitError(f"refusing to contact {self.host} over the network: {refused}")
+            permission = GIT_PERMITTED[self.host]
+            if permission.single_client:
+                claim = claim_host(self.host)
+                remaining = claim.quiet_until() - time.time()
+                if remaining > 0:
+                    _sleep(remaining)
         for attempt in range(len(RETRY_WAITS) + 1):
             done = self._attempt(purpose, args, stdin, items, attempt)
             if done.returncode == 0:
                 return done.stdout
             stderr = done.stderr.decode(errors="replace")
             if attempt == len(RETRY_WAITS) or not _TRANSIENT.search(stderr):
+                # A missing ref is the host's answer about a repository, not a sign of strain.
+                pause = GIT_PERMITTED[self.host].error_pause if claim is not None else 0.0
+                if claim is not None and pause and not _MISSING_REF.search(stderr):
+                    claim.hold_until(time.time() + pause)
                 raise GitError(stderr.strip()[-2000:])
             _sleep(RETRY_WAITS[attempt])
         raise AssertionError("unreachable")

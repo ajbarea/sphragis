@@ -9511,3 +9511,74 @@ moved under collected months (a code change in #101, restored in #102, was the f
 collected months record, and `FETCH_RULES` to the code the git route's first fetch will record; a
 deliberate rules change updates its pin in the same commit as the rebuild it implies.
 `RULES_VERSION` stays unpinned, since a label change is re-refined from disk.
+
+### AOSP as H2's foreign source: the grant's reading, and the census fixed before any count is read (2026-10-18)
+
+`# research(2026-10)`. By item 1 of the H2 plan (2026-10-14) H2's foreign source fell to AOSP when
+V8's pool came up short of one matched draw (2026-10-16), unless Fuchsia grants first; it has not
+answered. What was asked and answered, from the thread itself: the request of 2026-09-23, titled
+"Research use of the Gerrit REST API (chromium-review, android-review)", asked to read
+chromium-review over REST and to keep using the android-review data collected earlier; the
+narrowed request of 2026-10-15 asked for about 2,000 merged changes with their inline comments
+over git, from one client at no more than one request a second; Chrome Infra's answer of the same
+day reads in full "There are no concerns with hitting Gerrit's REST API at such a rate." Asked on
+2026-10-18 whether that answer extends to AOSP's pool, AJ answered that it does: it is read as a
+rate, one client at no more than one request a second, for the pool item 4 of the H2 plan fixes.
+The reading is recorded here as his, beside the words it rests on.
+
+**In code.** `notedb.GIT_PERMITTED` opens android.googlesource.com as a written grant
+(`grants.holds_grant`, so only on the collector that holds it) scoped to one ref,
+`refs/tags/android-15.0.0_r1` (`AOSP_CENSUS_TAG`): `refused_by_permission`, which every network
+command of the git route passes through, refuses `ls-remote`, object ids, change and branch refs,
+and any fetch other than `Repo.fetch`'s own arguments around a depth-1 read, blob-less or not
+(`--tags`, `--all`, a refspec on the command line, more history), and any refspec line that is
+empty (git reads it as HEAD) or holds whitespace, so the NoteDb route itself stays closed and
+reads no review record. The host is one client at a time machine-wide: the git route now takes
+the REST route's host lock (`hosts.claim_host`, moved out of `cli`), and a failed request holds
+every later process quiet for five minutes. Pacing is the git route's: one git operation at a
+time, the next waiting out every HTTP request the last one made (`Pacer.charge`), so requests
+average no more than one a second; the two or three requests of one fetch go back to back. The
+written-grant check is one function for both routes (`grants.unheld`). The git route never asked for
+a held grant before; it now does for every host, and since `notedb.py` is a `FETCH_RULES` source
+its pin moves with this commit (no git-route month records the digest yet). android-review's
+REST permission, scoped to the projects the census names and the window item 4 fixes, comes in
+the commit that records the census, before any of its changes is listed.
+
+**The census, fixed now** (`scripts/aosp_census.py`, before any tree is read):
+
+1. *Projects.* Every `<project>` in `default.xml` at the tag, in `platform/manifest`. One whose
+   revision or remote is not the manifest default's, or whose name could leave its scratch
+   directory, is recorded and not read, and so is one the host holds no tag for; a manifest whose
+   default revision is not the tag, or that includes, removes, extends or nests projects, is
+   refused. Any other fetch failure stops the run, since the host may be refusing the client,
+   and the next run asks that project again; no census is written that read no project, and a
+   project the host sent blobs to is refused.
+2. *Files.* Each project's tree at the tag, read by a depth-1, blob-less fetch (trees only, no
+   file contents) paced at one request a second and ledgered per request
+   (`datasets/logs/aosp-census/ledger.jsonl`). Symlinks and submodule entries are not files.
+3. *Code file.* A file whose lowercased suffix a GitHub Linguist language of type `programming`
+   lists, unless a language of another type lists that suffix as its own primary extension, or
+   whose name Linguist lists as a programming language's filename (`code-files-linguist.json`,
+   from `languages.yml` at Linguist v9.7.0, sha256 7c2bc5b5...). Linguist is what GitHub's own
+   language statistics use, and its `type` is what keeps data, markup and prose out of them. Of
+   the 60 suffixes both kinds list, the exception drops the 28 another type holds as primary:
+   `.md` is Markdown's and not GCC's machine descriptions, `.sql` is SQL's; `.rs` stays code,
+   since XML lists it but not first. 938 suffixes and 178 file names; every suffix in
+   `CPP_SUFFIXES` is among them, which the script checks. A suffix of more than one dot (17 of
+   them, `.h.in`, `.cmake.in`) is matched on the end of the file name, as Linguist matches it.
+4. *C++-majority.* C++ files (`CPP_SUFFIXES`, the H2 estimand's definition, `.h` included and `.c`
+   not) more than half a project's code files. A C project's headers therefore count toward C++,
+   as they do in the estimand.
+5. *Order.* Item 4's "NoteDb change count" is read as the merged changes created in the pool's
+   window (2024-10-01 to 2025-03-26) that android-review's REST listing returns for the project.
+   Item 4 was written when git was the only route considered; the count is now the population a
+   fetch draws from, where a NoteDb ref count would rank projects by history outside the window
+   and cost the host a listing of every change ref. Projects are taken in descending order of it,
+   ties by name, until the built and deduplicated pool covers every matched draw.
+
+**What the pool must cover.** `scripts/foreign_need.py` reads each of Qt's 40 admissible
+partitions as `partition_run.sbatch` trains it (the placebo corpus at that seed, each half cut to
+N = 1,850 at `rq1_pilot.py`'s split seed) and records, per half, the C++ and other examples of
+its draw; the pool needs the largest of each over all 80 draws (`foreign-need-qt.json`). Each
+rebuilt partition the 22 development runs trained on is checked against them: every half's
+training and held-out counts must equal the run's recorded ones (`--runs`).

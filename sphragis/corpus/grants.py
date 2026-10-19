@@ -1,9 +1,9 @@
 """The written grants this machine holds, read from a machine-local file.
 
-A host that opens only by written grant (Qt's and Chromium's review hosts over REST) granted one
-collector, at its stated address and with its User-Agent, not every clone of this repository.
-The REST route asks `holds_grant` before contacting such a host; the git route will, with its
-first grant.
+A host that opens only by written grant (Qt's and Chromium's review hosts over REST, AOSP's git
+host for its release tag) granted one collector, at its stated address and with its User-Agent,
+not every clone of this repository. The REST route and the git route
+(`notedb.refused_by_permission`) ask `holds_grant` before contacting such a host.
 """
 
 from __future__ import annotations
@@ -36,3 +36,14 @@ def holds_grant(host: str) -> bool:
     except (OSError, UnicodeDecodeError) as error:
         raise SystemExit(f"refusing every written grant: {path} cannot be read ({error})") from None
     return host.lower() in {line.split("#", 1)[0].strip().lower() for line in lines}
+
+
+def unheld(host: str, written_grant: bool) -> str | None:
+    """Why a host whose permission is `written_grant` may not be read from this machine, None if
+    it may: the grant names one collector, and this machine's `grants_file()` does not list it."""
+    if not written_grant or holds_grant(host):
+        return None
+    return (
+        "its permission is a written grant to this study's collector, not to every clone of the"
+        f" code; the machine that holds it lists {host} in {grants_file()}"
+    )
