@@ -591,14 +591,10 @@
     "openstack:Iffea25529cf792d91d0c903526d1fb213f09a338:playbooks/roles/install-docker/tasks/Ubuntu.noble.yaml:3:39"
   ],
   "provenance": {
-    "generated_at": "2026-10-19T03:40:30.407496+00:00",
+    "generated_at": "2026-10-19T04:04:57.335121+00:00",
     "git": {
-      "commit": "366ab808966077472fed5dcf3f34709de53c4ea4",
-      "branch": "measure/review-readings",
-      "uncommitted_code": [
-        "sphragis/experiment/layout.py"
-      ],
-      "uncommitted_code_sha256": "fcb4bed17de39cd24b551f5fb1e8b01116533ca101f740e51255207da920298c"
+      "commit": "cbc6e1570616abef4bd92885beb5f0d75f43194d",
+      "branch": "measure/review-readings"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

@@ -811,14 +811,10 @@
     "wikimedia:Ifff3b85e1bd55ff231570d3bc7f9ea4af1cf3df6:i18n/en.json:2:38"
   ],
   "provenance": {
-    "generated_at": "2026-10-19T03:42:28.846867+00:00",
+    "generated_at": "2026-10-19T04:06:52.311365+00:00",
     "git": {
-      "commit": "366ab808966077472fed5dcf3f34709de53c4ea4",
-      "branch": "measure/review-readings",
-      "uncommitted_code": [
-        "sphragis/experiment/layout.py"
-      ],
-      "uncommitted_code_sha256": "fcb4bed17de39cd24b551f5fb1e8b01116533ca101f740e51255207da920298c"
+      "commit": "cbc6e1570616abef4bd92885beb5f0d75f43194d",
+      "branch": "measure/review-readings"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

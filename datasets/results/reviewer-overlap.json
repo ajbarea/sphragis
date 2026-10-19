@@ -1,6 +1,7 @@
 {
   "orgs": {
     "openstack": {
+      "root": "/home/ajbar/ajsoftworks/sphragis-data-local/reference",
       "dev_examples_in_halves": 501,
       "dev_examples_without_a_half": 14,
       "dev_examples_with_reviewers": 497,
@@ -36,6 +37,7 @@
       }
     },
     "wikimedia": {
+      "root": "/home/ajbar/ajsoftworks/sphragis-data-local/reference",
       "dev_examples_in_halves": 711,
       "dev_examples_without_a_half": 36,
       "dev_examples_with_reviewers": 700,
@@ -71,6 +73,7 @@
       }
     },
     "qt": {
+      "root": "/home/ajbar/ajsoftworks/sphragis/datasets/gerrit-granted",
       "dev_examples_in_halves": 800,
       "dev_examples_without_a_half": 9,
       "dev_examples_with_reviewers": 791,
@@ -107,17 +110,10 @@
     }
   },
   "provenance": {
-    "generated_at": "2026-10-18T23:18:12.444508+00:00",
+    "generated_at": "2026-10-19T04:16:11.926667+00:00",
     "git": {
-      "commit": "f181753a80f151dbface233a3a0a6dce509c29ae",
-      "branch": "measure/review-readings",
-      "uncommitted_code": [
-        "scripts/reviewer_overlap.py",
-        "scripts/sensitivity_ids.py",
-        "sphragis/corpus/layout.py",
-        "sphragis/experiment/cells.py"
-      ],
-      "uncommitted_code_sha256": "5da504644b573e1ae5bb0e5c6f807fc206283e50f77236be035776d6c060830e"
+      "commit": "cbc6e1570616abef4bd92885beb5f0d75f43194d",
+      "branch": "measure/review-readings"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
