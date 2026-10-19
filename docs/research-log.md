@@ -10036,7 +10036,10 @@ comment word for word when the model copies it (ROADMAP, "predictions in publish
    digests, the dictionary case of EDPB Guidelines 01/2025 on pseudonymisation (fn. 23; keyed
    one-way functions, paras 88-90). The key length and its single use follow NIST SP 800-224 (ipd),
    R2 and R6. Masking only the overlapping spans was passed over: a paraphrase leaks past a span
-   match.
+   match. So was a slow password-hashing function as the building block, which the guidelines advise
+   where hash functions are used (para. 89): the dictionary here is the hosts' public comments,
+   small enough to hash through even at a slow function's cost once the key is known, so the
+   protection is the key's secrecy (para. 90).
 3. *Where the texts are.* The full texts stay in the cluster's results root and in an archive of the
    files as they were at d3363d5 (`full-text/datasets-results-d3363d5.tar.gz` beside the cluster's
    results, with its SHA-256), for release under a data-use agreement. The readers that need text
@@ -10045,16 +10048,19 @@ comment word for word when the model copies it (ROADMAP, "predictions in publish
 4. *History.* Commits 96695eb (2026-09-20) to d3363d5 (2026-10-19) still carry the texts, and stay:
    rewriting pushed history does not reach clones, forks or caches (GitHub, "Removing sensitive data
    from a repository") and would break the provenance tags; the comments they can repeat are public
-   on OpenStack's, Wikimedia's and Qt's hosts. The data-availability statement names the range, and
-   the Stage 1 report records the change as a deviation, as MSR 2027's registered reports ask; ICSE
-   2027's open-science policy allows withholding on privacy grounds with a statement.
+   on OpenStack's, Wikimedia's and Qt's hosts. The data-availability statement names the range.
+   Stage 1 is not yet submitted, so this is a change to the plan, not a deviation from an accepted
+   protocol; ICSE 2027's open-science policy allows withholding on privacy grounds with a statement.
 5. *Done.* `scripts/withhold_text.py` rewrote the tracked results in place; `withheld-text.json`
    records the files, fields, counts and key id. `tests/unit/test_published_review_text.py` refuses
    any tracked result that still carries such text, and trips on each published shape.
 
 Sources:
-https://www.edpb.europa.eu/system/files/2025-01/edpb_guidelines_202501_pseudonymisation_en.pdf ;
-https://csrc.nist.gov/pubs/sp/800/224/ipd ;
-https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
-; https://2027.msrconf.org/track/msr-2027-registered-reports ;
-https://conf.researchr.org/track/icse-2027/icse-2027-icse-2027-open-science-policies
+
+- EDPB Guidelines 01/2025 on pseudonymisation:
+  https://www.edpb.europa.eu/system/files/2025-01/edpb_guidelines_202501_pseudonymisation_en.pdf
+- NIST SP 800-224 (ipd), HMAC: https://csrc.nist.gov/pubs/sp/800/224/ipd
+- GitHub, removing sensitive data:
+  https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+- ICSE 2027 open-science policy:
+  https://conf.researchr.org/track/icse-2027/icse-2027-icse-2027-open-science-policies

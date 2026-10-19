@@ -62,6 +62,11 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    the example's review comment word for word, which the protocol's "no review text is
    published" excludes; Qt's generation runs are held back meanwhile (research log, 2026-10-18).
 
+   GitHub Pro (Student Pack) for required checks on papers `main`. Fuchsia's discuss list was
+   asked on 2026-10-15 and has not answered; Chromium's and AOSP's pools cannot cover every
+   matched draw, so Fuchsia is H2's one source left (whether Chrome Infra's answer covers
+   fuchsia-review is AJ's reading), and without it H2 has no confirmatory cell.
+
 ## Standing
 
 A test window below its projected size is read with `power_at_size.py` run on its report
