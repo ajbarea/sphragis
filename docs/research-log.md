@@ -10015,3 +10015,46 @@ in Qt's training months. Fixed now, still before any change is read:
    month's.
 4. `scripts/gerrit_projects.py` and its artifact are withdrawn; nothing else asks a host for its
    project list.
+
+### Model text withheld from published results; keyed digests in its place (2026-10-19)
+
+`# research(2026-10)`. The protocol says no review text is published (`docs/protocol.md`), yet the
+committed generation runs carried the model's `prediction`, which repeats its example's review
+comment word for word when the model copies it (ROADMAP, "predictions in published generation runs",
+2026-10-18). AJ asked for the researched recommendation (2026-10-19). Decided and done:
+
+1. *Scope.* Model text whose prompt held review comments, or which summarizes them: generation rows'
+   `prediction` (every results file), the determinism checks' `passes`, and the review
+   distillations' `map_lists`, `rules`, `file` and `reduce_answer`
+   (`sphragis.measure.withhold.WITHHELD`). Left in place, because their prompts held no review text:
+   the contamination battery's completions of code and the rules read from organizations' written
+   guides.
+2. *Digest.* Each text becomes HMAC-SHA256 under a 256-bit key held off the repository
+   (`SPHRAGIS_PREDICTION_KEY`), in a field named `<field>_hmac`, so the same generation compares
+   equal across runs to a holder of the key. A plain SHA-256 was the first recommendation and is not
+   enough: the comments are public on their hosts, so anyone could hash each one and match the
+   digests, the dictionary case of EDPB Guidelines 01/2025 on pseudonymisation (fn. 23; keyed
+   one-way functions, paras 88-90). The key length and its single use follow NIST SP 800-224 (ipd),
+   R2 and R6. Masking only the overlapping spans was passed over: a paraphrase leaks past a span
+   match.
+3. *Where the texts are.* The full texts stay in the cluster's results root and in an archive of the
+   files as they were at d3363d5 (`full-text/datasets-results-d3363d5.tar.gz` beside the cluster's
+   results, with its SHA-256), for release under a data-use agreement. The readers that need text
+   (`decoder_read`, `decoding_check`, `determinism_check`, `retrieval_comparator`'s rules) refuse a
+   published copy (`require_text`).
+4. *History.* Commits 96695eb (2026-09-20) to d3363d5 (2026-10-19) still carry the texts, and stay:
+   rewriting pushed history does not reach clones, forks or caches (GitHub, "Removing sensitive data
+   from a repository") and would break the provenance tags; the comments they can repeat are public
+   on OpenStack's, Wikimedia's and Qt's hosts. The data-availability statement names the range, and
+   the Stage 1 report records the change as a deviation, as MSR 2027's registered reports ask; ICSE
+   2027's open-science policy allows withholding on privacy grounds with a statement.
+5. *Done.* `scripts/withhold_text.py` rewrote the tracked results in place; `withheld-text.json`
+   records the files, fields, counts and key id. `tests/unit/test_published_review_text.py` refuses
+   any tracked result that still carries such text, and trips on each published shape.
+
+Sources:
+https://www.edpb.europa.eu/system/files/2025-01/edpb_guidelines_202501_pseudonymisation_en.pdf ;
+https://csrc.nist.gov/pubs/sp/800/224/ipd ;
+https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+; https://2027.msrconf.org/track/msr-2027-registered-reports ;
+https://conf.researchr.org/track/icse-2027/icse-2027-icse-2027-open-science-policies

@@ -106,7 +106,11 @@ redacted separately: `scripts/redact_identities.py` removes third-party addresse
 everything under `datasets/results/`, and a test scans every committed file for one.
 
 Review text stays personal data after the scrub, since a verbatim comment can be found again on its
-host, so no review text is published. An author who asks for their reviews to be removed is removed
+host, so no review text is published. Model text that can repeat it, a generation conditioned on
+review comments or a summary distilled from them, is published only as an HMAC-SHA256 digest under
+a key kept off the repository (`scripts/withhold_text.py`); the full texts are held on the
+cluster for release under a data-use agreement. Commits 96695eb to d3363d5 carry them in history
+(research log, 2026-10-19). An author who asks for their reviews to be removed is removed
 from the corpus and from every later release: write to ajb6289@rit.edu.
 
 | window | OpenStack | Qt |

@@ -232,7 +232,7 @@ that its change could alter; `make deploy FORCE=1` overrides.
 | `test-cov` | the suite with coverage |
 | `corpus-verify`, `corpus-reproduce` | `corpus verify` and `corpus verify --reproduce`, for the default `--org openstack` |
 | `data-audit` | audits a built and refined corpus: drops, bots, successor kinds, the unregistered-bot queue (`ORGS=` names the organizations) |
-| `redact`, `redact-check` | take third-party addresses out of the result artifacts, or report them; run `redact` before committing a fresh result |
+| `redact`, `redact-check` | take third-party addresses out of the result artifacts, or report them; run `redact` before committing a fresh result, after `scripts/withhold_text.py` has digested its model text (the suite refuses a tracked result still carrying it) |
 | `docs-index`, `docs-harvest` | regenerate `docs/artifacts.md` (after staging a result), or assert every figure on the site |
 | `pull-logs`, `backup-datasets`, `backup-github` | copy the cluster's job logs into `datasets/logs`, or the raw snapshots (Gerrit, or the GitHub family's corpus) to the cluster's data root |
 | `submit-pinned` | `submit` from a worktree pinned at this pushed commit, so a deploy cannot change what queued jobs run |

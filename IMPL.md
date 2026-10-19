@@ -13,7 +13,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   every other K in `K_GRID` (`partition_sensitivity.sbatch`, `METRIC=logprob_per_token`, no
   placebo), then `k_coverage.py` for Qt's K, its cell's bounds into the gate, and Qt's planted
   check 5 run. Qt's generation runs stay off the repository (their predictions can repeat review
-  text); the likelihood rescorings are committed.
+  text); the likelihood rescorings are committed. Every other run is published through
+  `scripts/withhold_text.py`, which digests its model text (research log, 2026-10-19).
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
   split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
 - **H2's foreign source** (research log, 2026-10-19): AOSP's pool, listed through 2025-10 and

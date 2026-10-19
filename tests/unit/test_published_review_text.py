@@ -1,42 +1,22 @@
-"""No tracked result from a host opened by written grant carries the model's predictions.
+"""No tracked result carries model text that could repeat a review comment.
 
-A generation run's `prediction` is model text, and a prediction can repeat its example's review
-comment word for word. Qt and Chromium opened their review hosts by written grant on the
-condition that no review text is published (`docs/protocol.md`), so their generation runs stay
-out of git (`.gitignore`) and only their likelihood rescorings, ids and scores, are committed
-(research log, 2026-10-18).
+A generation conditioned on review comments, or a summary distilled from them, can repeat a
+comment word for word, and no review text is published (`docs/protocol.md`). Published results
+carry a keyed digest of each such text instead (`sphragis.measure.withhold`,
+`scripts/withhold_text.py`); the full texts stay in the cluster's results root. Qt's and
+Chromium's generation runs stay out of git altogether, as their written grants ask (research log,
+2026-10-18 and 2026-10-19).
 """
 
 from __future__ import annotations
 
-import re
+import json
 import subprocess
 from pathlib import Path
 
+from sphragis.measure.withhold import text_left
+
 ROOT = Path(__file__).resolve().parents[2]
-
-#: An organization token in a result's file name, for the hosts opened by written grant.
-GRANTED = re.compile(r"(?:^|[-_])(?:qt|qtfull|chromium)(?:[-_.]|$)")
-
-#: Committed before the rule, from Qt's records held from before its grant. Whether they keep
-#: their predictions is AJ's call (ROADMAP, "predictions in published generation runs").
-BEFORE_THE_RULE = frozenset(
-    {
-        "projects-qt-creator_qt-creator-qt_qtbase-n788.json",
-        "projects-qt-creator_qt-creator-qt_qtbase.json",
-        "projects-qt-creator_qt-creator-qt_qtdeclarative.json",
-        "projects-qt_qtbase-qt_qtdeclarative.json",
-        "rq1-placebo-qt-s2.json",
-        "rq1-placebo-qt-s3.json",
-        "rq1-placebo-qt.json",
-        "rq1-windows-qtfull-fp32-s2.json",
-        "rq1-windows-qtfull-fp32-s3.json",
-        "rq1-windows-qtfull-fp32.json",
-        "rq1-windows-qtfull-s2.json",
-        "rq1-windows-qtfull-s3.json",
-        "rq1-windows-qtfull.json",
-    }
-)
 
 
 def _tracked_results() -> list[Path]:
@@ -50,23 +30,29 @@ def _tracked_results() -> list[Path]:
     return [ROOT / line for line in out.splitlines() if line.endswith(".json")]
 
 
-def test_no_granted_host_result_carries_predictions() -> None:
-    offending = [
-        path.name
+def test_no_tracked_result_carries_withheld_text() -> None:
+    offending = {
+        path.name: left[:3]
         for path in _tracked_results()
-        if GRANTED.search(path.name)
-        and path.name not in BEFORE_THE_RULE
-        and '"prediction"' in path.read_text()
-    ]
-    assert not offending, f"granted-host results carrying predictions: {offending}"
+        if (left := text_left(json.loads(path.read_text()), path.name))
+    }
+    assert not offending, f"results carrying model text; run scripts/withhold_text.py: {offending}"
 
 
-def test_the_listed_exceptions_still_exist_and_still_carry_predictions() -> None:
-    """A file stripped or removed leaves the list, so the list never grows stale and silent."""
-    tracked = {path.name: path for path in _tracked_results()}
-    for name in BEFORE_THE_RULE:
-        assert name in tracked, f"{name} is no longer tracked; drop it from BEFORE_THE_RULE"
-        assert '"prediction"' in tracked[name].read_text(), f"{name} carries none; drop it"
+def test_the_check_fires_on_a_published_run_shape() -> None:
+    """The guard is only as good as its reach: each shape a run is published in trips it."""
+    shapes = {
+        "rq1-partition-openstack-p1-s1-n1850-rp1.0.json": {
+            "results": {"base|a": [{"prediction": "x"}]}
+        },
+        "prompt-format-probe.json": {"raw": [{"prediction": "x"}]},
+        "determinism-sym-0-gh-a-001-rp1.0.json": {
+            "passes": {"bf16": {"openstack:I1:f.py:1:2": "x"}}
+        },
+        "rules-reviews-openstack-p10.json": {"files": {"openstack-a": {"file": "- a rule"}}},
+    }
+    for name, document in shapes.items():
+        assert text_left(document, name), name
 
 
 def test_a_granted_host_generation_run_is_ignored() -> None:

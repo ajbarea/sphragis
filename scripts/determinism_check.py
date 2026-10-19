@@ -34,6 +34,8 @@ import argparse
 import json
 from pathlib import Path
 
+from sphragis.measure.withhold import require_text
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--condition", default="sym-0")
 parser.add_argument("--half", default="a")
@@ -53,9 +55,11 @@ parser.add_argument("--compare", type=Path, nargs="*", help="job outputs to comp
 
 
 def stored_predictions(paths: list[Path], arm: str) -> dict[str, dict[str, str]]:
+    runs = {path.name: json.loads(path.read_text()) for path in paths}
+    for name, run in runs.items():
+        require_text(run, name)
     return {
-        path.name: {r["id"]: r["prediction"] for r in json.loads(path.read_text())["results"][arm]}
-        for path in paths
+        name: {r["id"]: r["prediction"] for r in run["results"][arm]} for name, run in runs.items()
     }
 
 
@@ -133,6 +137,8 @@ def generate(args: argparse.Namespace) -> None:
 
 def compare(args: argparse.Namespace) -> None:
     jobs = [json.loads(path.read_text()) for path in args.compare]
+    for path, job in zip(args.compare, jobs, strict=True):
+        require_text(job, path.name)
     ids = jobs[0]["ids"]
     if any(job["ids"] != ids for job in jobs):
         raise SystemExit("the jobs generated for different prompts")

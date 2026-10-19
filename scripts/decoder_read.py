@@ -24,13 +24,16 @@ from statistics import fmean
 from typing import Any
 
 from sphragis.experiment.runs import decoder
+from sphragis.measure.withhold import require_text
 from sphragis.provenance import provenance_header
 
 RESULTS = Path("datasets/results")
 
 
 def _load(name: str) -> dict[str, Any]:
-    return json.loads((RESULTS / name).read_text())
+    document = json.loads((RESULTS / name).read_text())
+    require_text(document, name)
+    return document
 
 
 def pair(stored_name: str, rerun_name: str) -> dict[str, Any]:
