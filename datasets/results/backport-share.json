@@ -1,5 +1,5 @@
 {
-  "backport_branches": "^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)",
+  "backport_branches": "^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:kirkstone|scarthgap|styhead|walnascar)$)",
   "orgs": {
     "openstack": {
       "pilot": {
@@ -40,16 +40,38 @@
         "possibly_backport": 56,
         "no_raw_change": 0
       }
+    },
+    "qt": {
+      "pilot": {
+        "examples": 1147,
+        "only_backport": 131,
+        "possibly_backport": 626,
+        "no_raw_change": 0
+      },
+      "train": {
+        "examples": 7493,
+        "only_backport": 470,
+        "possibly_backport": 3545,
+        "no_raw_change": 0
+      },
+      "dev": {
+        "examples": 809,
+        "only_backport": 157,
+        "possibly_backport": 454,
+        "no_raw_change": 0
+      }
     }
   },
   "provenance": {
-    "generated_at": "2026-10-02T05:19:26.718901+00:00",
+    "generated_at": "2026-10-19T05:40:20.082317+00:00",
     "git": {
-      "commit": "c40395ccd0f1d9065a32f3a666736204ce88645a",
-      "branch": "measure/backport-share"
+      "commit": "f701cb264f9c2ddb1695193c24ce39097fe33c59",
+      "branch": "measure/qt-ai-trailers"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
   }
 }
