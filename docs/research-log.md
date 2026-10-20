@@ -10457,3 +10457,43 @@ Sources:
 - Angulo, Yeste and Espinos-Morato, arXiv:2608.29463; schema at
   https://github.com/Jangulo7/contamination-disclosure-paper (commit 3d0dee0).
 - Hugging Face Hub API, model tree endpoint at each pinned revision (read 2026-10-20).
+
+### The backport lookup registered: each target's added lines against every branch at the upload (2026-10-20)
+
+`# research(2026-10)`. Registered before any lookup is run or read. Plan H's open item asks for
+each target's added lines to be looked up in every branch as it stood at the evaluated
+checkpoint's weight upload (6ab006b, 2024-09-17T16:13:45Z, entry above); the branch-name bound of
+2026-10-02 cannot see a revert, a re-proposal under a new Change-Id or a hand copy. Fixed now:
+
+1. *Lines.* A target's added lines are the stripped lines of `after` left once each stripped line
+   of `before` is removed once (a multiset difference), at least `TYPED_TARGET_MIN_CHARS` (20)
+   characters long, the study's floor below which a line matches by chance. An example with none
+   is counted as having no eligible line, never as clean.
+2. *Reference.* For the example's own project, every branch the host serves, each at its last
+   commit before the upload (a branch with none is skipped), and every stripped line of every
+   text file in those trees (a file whose first 8,000 bytes hold a NUL is binary and skipped).
+   Branches, not tags, as the item says.
+3. *Reading.* η is the share of an example's added lines found verbatim in its reference, and
+   an example is clean below 0.2, suspicious from 0.2, and found before the checkpoint at 0.8
+   or more: infini-gram mini's classes (arXiv:2506.12229, section 4.1, which keeps Touvron et
+   al.'s cutoffs), read on lines instead of 50-character substrings, since a target is code
+   and its unit is the line. Reported per organization and window: the counts per class, the
+   examples with no eligible line and those with no reference.
+4. *Sensitivity.* "Without targets found before the checkpoint": H1 recomputed without the
+   examples at η ≥ 0.8 (`partition_pilot.py --without`), beside the branch-name sensitivity,
+   registered in `docs/registered-decisions.md`. The lookup reads the pilot, train and dev
+   windows now; the test window when it is read, with the same code.
+5. *Sources, read once per project into a local bare clone, one clone at a time per host with
+   the host's claim held (`hosts.claim_host`) and 2 seconds between clones, under `cli.USER_AGENT`:*
+   OpenStack from opendev.org, whose robots.txt disallows its web pages but not git's clone paths
+   (read 2026-10-20); Wikimedia from gerrit.wikimedia.org's anonymous `/r/<project>` paths,
+   which its robots.txt leaves open (it disallows `/r/a/`, gitiles and `/g`; `Crawl-delay: 1`);
+   Qt from its official repositories on GitHub, read under GitHub's research clause (2026-10-19
+   entry), since code.qt.io disallows all paths and Qt's written grant covers its REST API. A Qt
+   project resolves, in this order, to the GitHub repository at its own path, to `qtproject/`
+   with its slashes as hyphens, or to `qtproject/` and its last component; one that resolves to
+   none is reported as having no reference (in Qt's dev window `license-tools/license-service`
+   and three `yocto` layers, 29 of 809 examples).
+
+No line of review text is read or written by the lookup; it reads `before` and `after` and the
+hosts' code, and its output holds example ids, counts and η.
