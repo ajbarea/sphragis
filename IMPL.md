@@ -48,7 +48,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
-   (a) a source whose pool covers every draw (Chromium's and AOSP's do not; Fuchsia admitted 2026-10-19, its pool next); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   (a) a source whose pool covers every draw (AOSP's does not; Fuchsia's and Chromium's are being built, 2026-10-19); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; a fixed source other than Chromium refuses every read
@@ -61,11 +61,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 4. When Qt or Chromium is admitted, rerun every cell's simulation at the admitted H1 cell count
    (`partition_sensitivity.py --cells`).
 5. Decisions that are AJ's: purging changes withdrawn from the hosts out of the raw snapshots;
-   GitHub Pro (Student Pack) for required checks on papers `main`. Fuchsia is decided: AJ reads
-   Chrome Infra's answer as covering fuchsia-review (2026-10-19), so its pool is H2's one source
-   left, and without it H2 has no confirmatory cell.
-6. Generate a new `SPHRAGIS_PREDICTION_KEY` before the next digested result is published
-   (`load_key` refuses the burned one; research log, 2026-10-19).
+   GitHub Pro (Student Pack) for required checks on papers `main`. Decided 2026-10-19: AJ reads
+   Chrome Infra's answer as a rate covering Chromium, AOSP and Fuchsia, so H2's source is the
+   first of Chromium and Fuchsia whose pool covers; without one, H2 has no confirmatory cell.
 
 ## Standing
 
