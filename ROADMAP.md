@@ -169,7 +169,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   *creation* filter of February 2024, which bounds nothing for repositories as old as
   OpenStack and Qt; the content cutoff is unstated. The post-cutoff window does not depend on
   it, starting after the checkpoint was published (research log).
-- [x] Registered: Min-K%++ primary, time partition corroborative only.
+- [x] Registered: Min-K%++ primary, time partition corroborative only (superseded 2026-10-20:
+  provenance primary, membership scores descriptive; research log).
 - [x] Registered: guided completion is reported as a null instrument, at its floor under
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
@@ -182,7 +183,7 @@ before the test window is fetched; items that change a registered decision say s
 
 Before Stage 1 (2026-11-20), each registered before the seal:
 
-- [ ] **Contamination: provenance primary, Min-K%++ descriptive** (changes a registered decision).
+- [x] **Contamination: provenance primary, Min-K%++ descriptive** (changed 2026-10-20, research log; target-only scoring not adopted, for comparability with the blind baseline).
   Membership inference barely beats chance on LLMs (Duan et al., COLM 2024, arXiv:2402.07841)
   and the battery's model-less baseline beats Min-K%++ here; protection rests on provenance.
   Score only target tokens given context; Min-K%++ is read as exposure only above the blind
@@ -866,6 +867,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-20** — Contamination registered as provenance primary (windows after the weight upload, the backport lookup's sensitivity) and membership scores descriptive, Min-K%++ read as exposure only above the blind baseline (`blind.exposure_reading`); on the pilot it cannot be told from drift (research log).
 - **2026-10-20** — Checkpoint dates read from the commits that wrote each pinned checkpoint's weights (the evaluated model's on 2024-09-17, before every corpus window), and a contamination disclosure record in arXiv:2608.29463's v1.1 format, validated against its schema in the suite; direct and temporal stay not controlled until the backport lookup lands (research log).
 - **2026-10-20** — Fuchsia's foreign pool read in full over Qt's training months (its comment-count probe did not hold): 5,890 examples after refinement and dedup, and the stop rule's prefix, its first project, covers all 80 matched draws and 40 partitions against Qt, so Fuchsia qualifies as H2's source unless Chromium's pool, ahead of it in the order, covers (research log).
 - **2026-10-19** — Model text that can repeat a review comment (generation predictions, determinism passes, review distillations) withheld from every published result as HMAC-SHA256 digests under a key kept off the repository; full texts on the cluster for a data-use agreement, history from 96695eb up to the commit this change merges onto disclosed (research log, 2026-10-19).

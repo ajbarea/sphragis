@@ -1043,6 +1043,9 @@ Their general point survives that fix. A time partition cannot separate exposure
 distribution shift, because a codebase's conventions, reviewers and subject matter all move
 over eighteen months. So the registered reading changes:
 
+> **Superseded on 2026-10-20** ("Contamination: provenance primary, membership scores
+> descriptive"): provenance is primary and Min-K%++ is read against the blind baseline.
+
 - **Min-K%++ on the base checkpoint is the primary instrument.** It scores the text directly
   and does not infer membership from a performance difference across dates.
 - **The time partition is corroborative only.** A gap in the expected direction supports the
@@ -10526,3 +10529,37 @@ lookup is read:
    refusals); a sealed window is refused, as the runner refuses it.
 7. *The sensitivity's listing* is written by `scripts/sensitivity_ids.py` from the lookup's
    artifact, in the change that adds its name to `cells.REGISTERED_SENSITIVITIES`.
+
+### Contamination: provenance primary, membership scores descriptive (2026-10-20)
+
+`# research(2026-10)`. Plan H's first item, decided in the 2026-10-01 sweep and changing a
+registered decision before the seal. The registration made Min-K%++ on the base checkpoint the
+primary contamination evidence and the time partition corroborative. Both halves of that have
+moved: membership inference barely beats chance on LLMs (Duan et al., COLM 2024,
+arXiv:2402.07841), a bag of words separates this battery's windows better than any membership
+score (2026-10-07, after Das, Zhang and Tramèr, arXiv:2406.16201), and the time partition now
+rests on a fact read from the source rather than on a published cutoff: every window opens after
+the evaluated weights were written (2026-10-20, from the Hub's commit record). Registered now
+(`docs/registered-decisions.md`, "Contamination: provenance primary"):
+
+1. *Primary.* Provenance: the windows' start after the weight upload, and the backport lookup's
+   sensitivity for targets whose added lines stood in their project at the upload (registered
+   2026-10-20).
+2. *Descriptive.* Min-K%++, Min-K% and Gap-K%, reported as before. Min-K%++ reads as exposure only
+   above the blind baseline, the rule the 2026-10-07 entry set out, now in code
+   (`blind.exposure_reading`, written into `contamination_blind.py`'s output). On the pilot's
+   committed artifact it reads "not told from drift" under both groupings: Min-K%++ minus the bag
+   of words is -0.142 [-0.183, -0.100] by change and -0.056 [-0.106, -0.011] by project.
+3. *Not adopted:* scoring only the target's tokens given its context. The blind baseline was
+   measured on the registered scored text (the hunk with three context lines), and the reading
+   compares the two on identical examples; target-only text would also put most examples under
+   the 32-token minimum, as bare hunks did. Target-only scoring would need both recomputed, and
+   with membership descriptive, a GPU rerun buys no verdict. The scored text stays as registered.
+
+The battery's window files kept locally under `datasets/results/contamination-inputs/` no longer
+parse (line 1090 of the post window, four lines of the pre), so the artifact was not regenerated;
+the reading is computed from it as committed. An independent review traced why: `make redact`
+scans every file under `datasets/results/`, these gitignored inputs included, and redacts a
+`.jsonl` file as raw text, where its address pattern can start at the letter after a JSON
+backslash (`\n\n@decorator(`) and remove it. The redactor is fixed to read JSON lines as JSON,
+and the files are rebuilt, before the battery's next run.

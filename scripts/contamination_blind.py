@@ -23,7 +23,13 @@ from statistics import median
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.corpus.redact import redact_text
-from sphragis.measure.blind import auc, clustered_separation, latest_year, repeated_out_of_fold
+from sphragis.measure.blind import (
+    auc,
+    clustered_separation,
+    exposure_reading,
+    latest_year,
+    repeated_out_of_fold,
+)
 from sphragis.measure.contamination import scored_text
 from sphragis.provenance import provenance_header
 
@@ -129,9 +135,12 @@ args.out.write_text(
             "resamples": args.resamples,
             "direction": "AUC: a post-cutoff example looks more post-like than a pre-cutoff one",
             "separation": separation,
+            # The registered reading: Min-K%++ is exposure only above the bag of words.
+            "reading": exposure_reading(separation),
             "bag_of_words_single_seed_auc": spread_change,
             "by_project": {
                 "separation": by_project_separation,
+                "reading": exposure_reading(by_project_separation),
                 "bag_of_words_single_seed_auc": spread_project,
             },
         },

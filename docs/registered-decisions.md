@@ -124,12 +124,23 @@ enlarges the simulated bounds, provided arrivals do not fall below the training 
 the realised change count is compared with the projection, and a window below it is reported
 beside the verdict with the simulation's power at the realised size.
 
-### Contamination: Min-K%++ on the base checkpoint is primary, the time partition corroborative only
+### Contamination: provenance primary, membership scores descriptive
 
-Temporal decay is not dependable contamination evidence (Zhang et al., ACL 2026): item
-construction distorts it independently of the source. Identical construction across windows
-answers their specific confound, not the confound with ordinary distribution shift. The
-measured gap is -0.075.
+Changed 2026-10-20 from "Min-K%++ on the base checkpoint is primary, the time partition
+corroborative only" (research log). The primary evidence is provenance: every corpus window
+opens after the evaluated weights were written (2024-09-17, from the Hub's commit record), and
+the backport lookup (registered 2026-10-20, read before the test window) finds targets whose
+added lines stood in their project's branches at that upload, removed in a registered
+sensitivity beside the estimate. Membership inference barely beats chance on LLMs
+(Duan et al., COLM 2024, arXiv:2402.07841), and a blind classifier separates the windows better
+than any membership score here (Das, Zhang and Tramèr, arXiv:2406.16201; research log,
+2026-10-07). So Min-K%++, Min-K% and Gap-K% are reported as description, and Min-K%++ is read as
+evidence of exposure only when its separation of the windows exceeds the bag of words', the 95%
+interval of the difference above zero, folds grouped by change and the by-project reading beside
+it (`blind.exposure_reading`); otherwise the battery reports that exposure cannot be told from
+the windows' drift. Temporal decay is not dependable contamination evidence either (Zhang et al.,
+ACL 2026), so neither reading is a verdict on its own. The battery's measured Min-K%++ gap
+is -0.075.
 
 ### Guided completion: reported as a null instrument
 

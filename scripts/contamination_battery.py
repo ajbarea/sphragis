@@ -149,11 +149,12 @@ def per_example(rows: list[dict], tokens: list, window: str) -> list[dict]:
 
 scores = per_example(post_e, post_tokens, "post") + per_example(pre_e, pre_tokens, "pre")
 
-# Membership is the registered PRIMARY instrument and it is finished; write it before the
-# generative half begins. Job 145093 reached exactly this point and hit its wall during
-# guided completion, and because the script wrote once at the end, a completed Min-K%++ on
-# fifteen times the earlier sample was thrown away. Guided completion is registered as a
-# null instrument, so losing it costs a line in a table; losing the primary costs the run.
+# Membership is finished; write it before the generative half begins (registered descriptive
+# since 2026-10-20, read against the blind baseline, and the costliest result to lose). Job
+# 145093 reached exactly this point and hit its wall during guided completion, and because the
+# script wrote once at the end, a completed Min-K%++ on fifteen times the earlier sample was
+# thrown away. Guided completion is registered as a
+# null instrument, so losing it costs a line in a table; losing membership costs the run.
 _partial = {
     "membership_model": MEMBERSHIP_MODEL_ID,
     "scored_text": args.scored_text,
