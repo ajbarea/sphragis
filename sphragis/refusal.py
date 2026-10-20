@@ -11,7 +11,7 @@ from __future__ import annotations
 import sys
 import sysconfig
 import traceback
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -44,7 +44,7 @@ def _studys(filename: str) -> bool:
 
 
 @contextmanager
-def refusals(prefix: str = "", *, where: bool = False) -> Iterator[None]:
+def refusals(prefix: str = "", *, where: bool = False) -> Generator[None, None, None]:
     """Exit on a refusal raised inside, `prefix` before its message; `where` adds the file and
     line it was raised at, for a catch around a whole job."""
     try:

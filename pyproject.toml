@@ -41,7 +41,7 @@ dev = [
     # tests/conftest.py reads the extra and this group with it.
     "packaging>=24",
     "ruff>=0.16.8",
-    "ty>=0.0.82,<0.1",
+    "ty>=0.0.86,<0.1",
     # The docs site. In `dev` rather than run through `uv tool` because the docs workflow
     # builds with `uv run zensical`, matching the sister repositories, and a tool-run
     # version is not pinned by uv.lock, so CI and a local build could drift.
@@ -101,6 +101,14 @@ include = ["sphragis", "tests"]
 # still fails on any real error.
 [tool.ty.rules]
 unused-ignore-comment = "ignore"
+
+# notedb.py's source text is FETCH_RULES: any edit stales every fetched month, so its
+# @contextmanager Iterator annotations stay as written.
+[[tool.ty.overrides]]
+include = ["sphragis/corpus/notedb.py"]
+
+[tool.ty.overrides.rules]
+deprecated = "ignore"
 
 [tool.ty.analysis]
 allowed-unresolved-imports = [
