@@ -17,7 +17,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from sphragis.measure.withhold import key_id, load_key, refusals, withhold
+from sphragis.measure.withhold import (
+    PLAIN_HASHES_BEFORE_THE_RULE,
+    key_id,
+    load_key,
+    pinned,
+    refusals,
+    withhold,
+)
 from sphragis.provenance import provenance_header
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,15 +53,19 @@ def convert(path: Path, dest: Path, key: bytes) -> tuple[bytes, int, Any]:
     document; exits, naming why, unless the guard would pass the result at `dest`.
 
     A path outside the checkout is judged by every component it has: the results root holds a
-    host's files in a folder named for it.
+    host's files in a folder named for it. A file pinned as committed with plain hashes before the
+    rule stays as it is: re-keying it would tie the key to texts whose plain hashes are public.
     """
     data = path.read_bytes()
-    try:
-        document, count = withhold(json.loads(data), path.name, key)
-    except ValueError as error:
-        raise SystemExit(str(error)) from error
-    out = published(data.decode(), document).encode() if count else data
     rel = _in_repo(path) or "/".join(path.resolve().parts[1:])
+    if _in_repo(path) and pinned(PLAIN_HASHES_BEFORE_THE_RULE, rel, data):
+        document, count = json.loads(data), 0
+    else:
+        try:
+            document, count = withhold(json.loads(data), path.name, key)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+    out = published(data.decode(), document).encode() if count else data
     if problems := refusals(rel, out, [document], _in_repo(dest)):
         raise SystemExit(f"{path} may not be published: {'; '.join(problems[:3])}")
     return out, count, document

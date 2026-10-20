@@ -144,7 +144,7 @@ def _analyse(path: Path, base: Path) -> Analysis:
     """Everything the guard asks of one file, from one read and one parse of it."""
     raw = path.read_bytes()
     if _classify(path, raw) != "json":
-        return Analysis(False, w.Verdict([], False, [], False))
+        return Analysis(False, w.Verdict([], False, [], False, [], False))
     rel = path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name
     return Analysis(True, w.examine(rel, raw, _documents(raw)))
 
@@ -456,6 +456,80 @@ def test_the_listed_exceptions_still_exist_and_still_carry_predictions() -> None
         assert _analyse(tracked[rel], ROOT).verdict.granted, rel
 
 
+def plain_offending(paths: list[Path], base: Path = ROOT) -> dict[str, list[str]]:
+    """Per file outside the pinned set, where it carries a plain hash of generated text."""
+    out: dict[str, list[str]] = {}
+    for path in paths:
+        verdict = _analyse(path, base).verdict
+        if verdict.plain and not verdict.plain_pinned:
+            rel = path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name
+            out[rel] = verdict.plain[:3]
+    return out
+
+
+def test_no_tracked_file_outside_the_pinned_set_carries_a_plain_hash() -> None:
+    assert not (found := plain_offending(_tracked())), (
+        f"files carrying a plain hash of generated text outside "
+        f"w.PLAIN_HASHES_BEFORE_THE_RULE; run scripts/withhold_text.py: {found}"
+    )
+
+
+@pytest.mark.parametrize("field", sorted(w.PLAIN_HASHES))
+def test_a_new_file_carrying_a_plain_hash_field_is_refused(tmp_path: Path, field: str) -> None:
+    value = {"i": "a" * 64} if field != "fingerprint" else "a" * 64
+    for n, document in enumerate(
+        (
+            {field: value},
+            {"results": {"b": [{"id": "x", field: value}]}},
+            {"org": "openstack", field: value},
+        )
+    ):
+        source = _write(tmp_path / f"retrieval-new-{n}.json", document)
+        assert plain_offending([source], tmp_path), document
+        assert w.refusals(source.name, source.read_bytes(), [document]), document
+    keyed = _write(tmp_path / "keyed.json", {f"{field}_hmac": value})
+    assert not plain_offending([keyed], tmp_path)
+
+
+def test_a_pinned_plain_file_whose_blob_changed_or_moved_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rel = "datasets/results/retrieval-halves-openstack-p2.json"
+    original = json.dumps({"rules_files": {"rules-distilled:openstack-a": "a" * 64}})
+    monkeypatch.setattr(w, "PLAIN_HASHES_BEFORE_THE_RULE", {rel: w.blob(original.encode())})
+    same = tmp_path / "same" / rel
+    changed = tmp_path / "changed" / rel
+    elsewhere = tmp_path / "elsewhere" / "docs" / "retrieval-halves-openstack-p2.json"
+    for path, text in (
+        (same, original),
+        (changed, original.replace("a" * 64, "b" * 64)),
+        (elsewhere, original),
+    ):
+        path.parent.mkdir(parents=True)
+        path.write_text(text)
+    assert not plain_offending([same], tmp_path / "same")
+    assert plain_offending([changed], tmp_path / "changed")
+    assert plain_offending([elsewhere], tmp_path / "elsewhere")
+
+
+def test_the_plain_pins_still_exist_and_still_carry_plain_hashes() -> None:
+    """A file rekeyed, removed or changed leaves the list, so the list never grows stale."""
+    tracked = {p.relative_to(ROOT).as_posix(): p for p in _tracked()}
+    assert len(w.PLAIN_HASHES_BEFORE_THE_RULE) == 120
+    for rel, pinned in w.PLAIN_HASHES_BEFORE_THE_RULE.items():
+        assert rel in tracked, f"{rel} is no longer tracked; drop it from the plain pins"
+        raw = tracked[rel].read_bytes()
+        assert w.blob(raw) == pinned, f"{rel} changed; re-pin it or drop it"
+        assert _analyse(tracked[rel], ROOT).verdict.plain, f"{rel} carries none; drop it"
+
+
+def test_the_plain_hash_files_on_the_tree_are_the_plain_pins() -> None:
+    carrying = {
+        p.relative_to(ROOT).as_posix() for p in _tracked() if _analyse(p, ROOT).verdict.plain
+    }
+    assert carrying == set(w.PLAIN_HASHES_BEFORE_THE_RULE)
+
+
 def test_the_flagged_set_on_the_tree_is_the_exceptions() -> None:
     """Before the exceptions: every granted-derived file carrying text, digests or hashes."""
     flagged = set()
@@ -468,14 +542,15 @@ def test_the_flagged_set_on_the_tree_is_the_exceptions() -> None:
 
 def test_the_pinned_files_are_not_converted_by_line_endings() -> None:
     """A blob pin holds under `core.autocrlf` only where git leaves the file's bytes alone."""
+    pins = [*w.BEFORE_THE_RULE, *w.PLAIN_HASHES_BEFORE_THE_RULE]
     out = subprocess.run(
-        ["git", "check-attr", "text", "--", *w.BEFORE_THE_RULE],
+        ["git", "check-attr", "text", "--", *pins],
         cwd=ROOT,
         capture_output=True,
         text=True,
         check=True,
     ).stdout
-    assert len(lines := out.splitlines()) == len(w.BEFORE_THE_RULE)
+    assert len(lines := out.splitlines()) == len(pins)
     assert all(line.endswith("text: unset") for line in lines), lines
 
 
@@ -694,6 +769,29 @@ def test_the_script_refuses_to_digest_a_granted_document(tmp_path: Path) -> None
     copy = tmp_path / "rq1-placebo-qt.json"
     copy.write_bytes(pinned.read_bytes())
     with pytest.raises(SystemExit, match="may not be published"):
+        script.convert(copy, copy, KEY)
+
+
+def test_the_script_rekeys_plain_hashes_but_leaves_a_pinned_file_as_it_is(tmp_path: Path) -> None:
+    script = _script()
+    document = {"rules_files": {"rules-distilled:openstack-a": "a" * 64}, "org": "openstack"}
+    source = _write(tmp_path / "retrieval-new.json", document)
+    out, count, published = script.convert(source, tmp_path / "out" / source.name, KEY)
+    assert count == 1 and not w.plain_left(published)
+    assert json.loads(out)["rules_files_hmac"] == {
+        "rules-distilled:openstack-a": w.digest("a" * 64, KEY)
+    }
+    assert script.convert(source, source, KEY)[2] == published, "re-running changes nothing"
+    again, recount, _ = script.convert(
+        _write(tmp_path / "again.json", published), tmp_path / "again.json", KEY
+    )
+    assert recount == 0 and json.loads(again) == published
+    tracked = ROOT / RESULTS / "retrieval-halves-openstack-p2.json"
+    out, count, _ = script.convert(tracked, tracked, KEY)
+    assert out == tracked.read_bytes() and count == 0
+    copy = tmp_path / tracked.name
+    copy.write_bytes(tracked.read_bytes())
+    with pytest.raises(SystemExit, match="already a withheld copy"):
         script.convert(copy, copy, KEY)
 
 

@@ -272,3 +272,54 @@ def test_a_summary_keeps_every_file_withheld_so_far_with_its_key_id() -> None:
     rerun = script.merged_summary(merged, {"a.json": entry}, "new")
     assert rerun["files"] == 3 and rerun["by_file"]["a.json"]["key_id"] == "new"
     assert script.merged_summary(None, {}, "k")["files"] == 0
+
+
+PLAIN = hashlib.sha256(b"a prompt").hexdigest()
+OTHER_PLAIN = hashlib.sha256(b"another prompt").hexdigest()
+
+
+def test_a_plain_hash_is_rekeyed_by_hmac_of_its_hex_with_its_shape_kept() -> None:
+    job = {
+        "rules_files": {"base:openstack-a": PLAIN, "base:openstack-b": OTHER_PLAIN},
+        "base_marks": {"i0": PLAIN},
+        "results": {"base|a": [{"id": "i0", "fingerprint": PLAIN, "exact_match": 1.0}]},
+    }
+    published, count = w.withhold(job, "retrieval-foreign-openstack.json", KEY)
+    assert count == 4
+    assert list(published["rules_files_hmac"]) == ["base:openstack-a", "base:openstack-b"]
+    assert published["rules_files_hmac"]["base:openstack-a"] == w.digest(PLAIN, KEY)
+    assert published["base_marks_hmac"] == {"i0": w.digest(PLAIN, KEY)}
+    row = published["results"]["base|a"][0]
+    assert list(row) == ["id", "fingerprint_hmac", "exact_match"]
+    assert row["fingerprint_hmac"] == w.digest(PLAIN, KEY) != PLAIN
+    assert not {"rules_files", "base_marks"} & published.keys()
+    assert published["withheld_text"]["fields"] == ["base_marks", "fingerprint", "rules_files"]
+    assert published["withheld_text"]["key_id"] == w.key_id(KEY)
+    assert job["base_marks"] == {"i0": PLAIN}, "the input is not mutated"
+
+
+def test_a_rekeyed_file_is_left_as_it_is() -> None:
+    published, _ = w.withhold({"rows": [{"id": "i", "fingerprint": PLAIN}]}, "r.json", KEY)
+    assert w.withhold(published, "r.json", KEY) == (published, 0)
+
+
+def test_a_plain_hash_digests_differently_under_each_key() -> None:
+    one, _ = w.withhold({"fingerprint": PLAIN}, "r.json", KEY)
+    other, _ = w.withhold({"fingerprint": PLAIN}, "r.json", bytes(range(1, 33)))
+    assert one["fingerprint_hmac"] != other["fingerprint_hmac"]
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["m0", "AB" * 32, "ab" * 31, None, 3, {"i": "not a hash"}, ["ab" * 32, 1], {"i": {"j": PLAIN}}],
+)
+def test_a_plain_hash_field_that_is_not_hashes_is_refused(value: object) -> None:
+    for field in sorted(w.PLAIN_HASHES):
+        with pytest.raises(ValueError, match=field):
+            w.withhold({"rows": [{field: value}]}, "r.json", KEY)
+
+
+def test_a_plain_hash_is_found_by_the_walk_the_guard_uses() -> None:
+    document = {"rules_files": {"a": PLAIN}, "rows": [{"fingerprint": PLAIN}], "x": {"y": 1}}
+    assert w.plain_left(document) == ["/rules_files", "/rows/0/fingerprint"]
+    assert w.plain_left({"rules_files_hmac": {"a": PLAIN}}) == []

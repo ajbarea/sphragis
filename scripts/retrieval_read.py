@@ -60,6 +60,7 @@ from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, f
 from sphragis.experiment.rules_arms import DISTILLED, WRITTEN
 from sphragis.experiment.runs import UNRECORDED_REPETITION_PENALTY, decoder
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
+from sphragis.measure.withhold import basis
 from sphragis.provenance import provenance_header
 from sphragis.refusal import refusals
 
@@ -107,19 +108,26 @@ def needed_once(arms: str, *, org: str, foreign: str) -> list[str]:
 
 
 def require_base_prompted_alike(
-    rows: Sequence[Mapping[str, Any]], marks: Mapping[str, str] | None, *, job: Path
+    rows: Sequence[Mapping[str, Any]],
+    marks: Mapping[str, str] | None,
+    *,
+    job: Path,
+    suffix: str = "",
 ) -> None:
     """Refuse a base arm whose rows were prompted otherwise than the rules jobs would prompt
-    them: every row's prompt fingerprint against the rules foreign job's `base_marks`."""
+    them: every row's prompt fingerprint against the rules foreign job's `base_marks`, both
+    fields as the two jobs were published (`suffix`, from `withhold.basis`)."""
     if not marks:
-        raise SystemExit("the rules foreign job records no base_marks to check the base arm by")
+        raise SystemExit(
+            f"the rules foreign job records no base_marks{suffix} to check the base arm by"
+        )
     # Every row: one the rules jobs did not target, or one written without a fingerprint, is
     # one the check cannot vouch for.
     untargeted, differ = [], []
     for row in rows:
         if row["id"] not in marks:
             untargeted.append(row["id"])
-        elif row.get("fingerprint") != marks[row["id"]]:
+        elif row.get(f"fingerprint{suffix}") != marks[row["id"]]:
             differ.append(row["id"])
     missing = set(marks) - {row["id"] for row in rows}
     if untargeted or differ or missing:
@@ -397,7 +405,11 @@ def main() -> None:
         )
         key = run_id(EvalRun("base", args.org, None))
         once[key] = base["results"][key]
-        require_base_prompted_alike(once[key], foreign_job.get("base_marks"), job=args.base_job)
+        # Prompt hashes are compared as published, and only within one key.
+        suffix = basis({str(args.foreign_job): foreign_job, str(args.base_job): base})
+        require_base_prompted_alike(
+            once[key], foreign_job.get(f"base_marks{suffix}"), job=args.base_job, suffix=suffix
+        )
     needed = needed_once(args.arms, org=args.org, foreign=args.foreign)
     lacking = [key for key in needed if key not in once]
     if lacking:

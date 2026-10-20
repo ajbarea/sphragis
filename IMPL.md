@@ -16,7 +16,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   The guard knows any written-grant host's run by its content, 20 pre-grant Qt files aside
   (research log, 2026-10-19, "The published-text guard reads a granted host from its content").
   Every other run is published through `scripts/withhold_text.py`, which digests its model text
-  (research log, 2026-10-19).
+  and keys its plain prompt and rules hashes, 120 earlier files pinned as they are (research log,
+  2026-10-19, "Plain hashes of generated text keyed for publication").
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
   split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
 - **H2's foreign source** (research log, 2026-10-19): AOSP's pool, listed through 2025-10 and
@@ -73,9 +74,10 @@ A test window below its projected size is read with `power_at_size.py` run on it
 
 The test window is sealed until in-principle acceptance. Stage 1 is due 2026-11-20, abstract
 2026-11-13. `make redact` before committing a fresh result, `make pull-logs` after a job finishes,
-and `make docs-index` *after* staging, never before. Every googlesource git host waits on its
-maintainers' written permission; Qt's REST API is open to the collector at the terms granted
-2026-10-15 (`REST_PERMITTED`).
+and `make docs-index` *after* staging, never before. A host is read only as its registry admits
+it: Qt's REST API at the terms granted 2026-10-15, Chromium's, AOSP's and Fuchsia's under Chrome
+Infra's rate answer of the same day (`REST_PERMITTED`); over git, AOSP alone
+(`GIT_PERMITTED`).
 
 ## Cluster data root
 
