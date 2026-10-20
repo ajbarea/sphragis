@@ -10497,3 +10497,28 @@ checkpoint's weight upload (6ab006b, 2024-09-17T16:13:45Z, entry above); the bra
 
 No line of review text is read or written by the lookup; it reads `before` and `after` and the
 hosts' code, and its output holds example ids, counts and η.
+
+### The backport lookup amended before it ran (2026-10-20)
+
+`# research(2026-10)`. An independent review of the code, before any clone or lookup, found
+places where the entry above was underspecified or its first code wrong; fixed, still before any
+lookup is read:
+
+1. *A branch at the upload* is its first-parent commit before it. A side branch merged after the
+   upload carries commits dated before it that were not on the branch then (reproduced on a local
+   repository). A commit dated before its parent (clock skew) is read as dated.
+2. *Retired branches.* OpenStack deletes a branch at its end of life and keeps it as the tag
+   `<series>-eol`, so the reference adds every tag ending in `-eol`, read the same way; other tags
+   stay out.
+3. *Files.* Symlinks and submodules are not files and are not read.
+4. *Lines* are held as their 64-bit hashes within one run, to bound memory on a project with
+   hundreds of deployment branches; a false match needs two distinct lines to collide.
+5. *Clones* run in the git route's isolated environment (`notedb._isolated_env`: no user or system
+   config, no credential helper, no prompt), with redirects off, only from the three hosts named
+   (`lookup.LOOKUP_PERMITTED`), keep a host's quiet deadline and hold it 15 minutes after a server
+   error, and refuse a project name that does not read plainly as a path (`notedb._UNSAFE_PROJECT`).
+   Two seconds separate the end of one clone from the start of the next.
+6. *Windows* are read as the runner reads them (`holdout.window_split`'s deduplication, split and
+   refusals); a sealed window is refused, as the runner refuses it.
+7. *The sensitivity's listing* is written by `scripts/sensitivity_ids.py` from the lookup's
+   artifact, in the change that adds its name to `cells.REGISTERED_SENSITIVITIES`.

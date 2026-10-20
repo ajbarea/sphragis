@@ -26,9 +26,10 @@ from sphragis.corpus import lookup
 from sphragis.corpus.cli import USER_AGENT
 from sphragis.corpus.halves import TYPED_TARGET_MIN_CHARS
 from sphragis.corpus.hosts import claim_host
-from sphragis.corpus.split import seal_open, seal_path
+from sphragis.corpus.load import refined_examples
+from sphragis.corpus.pipeline import run_dedup, run_split
 from sphragis.corpus.windows import WINDOWS
-from sphragis.experiment.holdout import window_split
+from sphragis.experiment.holdout import SEALED_WINDOWS
 from sphragis.provenance import provenance_header
 
 CLASSES = ("clean", "suspicious", "found", "no_eligible_line", "no_reference")
@@ -40,7 +41,7 @@ parser.add_argument(
     "--window",
     action="append",
     choices=sorted(WINDOWS),
-    help="a window to read, repeatable (default pilot, train and dev); test only once unsealed",
+    help="a window to read, repeatable (default pilot, train and dev); never a sealed one",
 )
 parser.add_argument("--clones", type=Path, required=True, help="where bare clones are kept")
 parser.add_argument("--out", type=Path, required=True)
@@ -51,26 +52,35 @@ def summarize(readings: list[dict[str, Any]]) -> dict[str, Any]:
     return {"examples": len(readings), **{name: counts.get(name, 0) for name in CLASSES}}
 
 
+def read_windows(root: Path, org: str, windows: list[str]) -> dict[str, list[dict[str, Any]]]:
+    """The examples of `windows`, deduplicated as one corpus and split as `holdout.window_split`
+    reads them for the runner, with its refusals: a change straddling a boundary or outside every
+    window, and any test-window row while the test window is sealed."""
+    examples = refined_examples(root, org)
+    if not examples:
+        raise SystemExit(f"no refined examples under {root / org}")
+    kept, _ = run_dedup(examples)
+    split, straddling, unassigned = run_split(kept, WINDOWS)
+    if straddling or unassigned:
+        raise SystemExit(f"{org}: {len(straddling)} straddling and {len(unassigned)} unassigned")
+    if split.get("test"):
+        raise SystemExit(f"{org}: the corpus holds test-window examples; it is sealed")
+    return {window: [dict(row) for row in split.get(window, [])] for window in windows}
+
+
 def main() -> None:
     args = parser.parse_args()
     windows = args.window or ["pilot", "train", "dev"]
-    unsealed = seal_open(args.root, args.org)
-    if "test" in windows and not unsealed:
-        raise SystemExit(f"{args.org}'s test window is sealed: {seal_path(args.root, args.org)}")
-    rows: dict[str, list[dict[str, Any]]] = {}
-    for window in windows:
-        try:
-            _, held, _ = window_split(
-                args.root, args.org, eval_window=window, refuse_sealed_rows=not unsealed
-            )
-        except ValueError as error:
-            raise SystemExit(str(error)) from error
-        rows[window] = held
+    sealed = sorted(set(windows) & set(SEALED_WINDOWS))
+    if sealed:
+        raise SystemExit(f"{sealed} sealed: read only once acceptance unseals it, as the runner")
+    rows = read_windows(args.root, args.org, windows)
     projects = sorted({row["project"] for held in rows.values() for row in held})
     cloner = lookup.Cloner(args.clones, user_agent=USER_AGENT, claim=claim_host)
     by_example: dict[str, dict[str, Any]] = {}
     sources: dict[str, dict[str, Any]] = {}
     for number, project in enumerate(projects, 1):
+        lookup.safe_project(project)
         clone = url = None
         for candidate in lookup.SOURCES[args.org](project):
             clone = cloner.clone(candidate)
