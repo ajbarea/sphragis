@@ -18,7 +18,7 @@ import hmac
 import os
 import re
 import urllib.parse
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, NamedTuple
 
 KEY_ENV = "SPHRAGIS_PREDICTION_KEY"
@@ -86,6 +86,25 @@ ORG_FIELDS = frozenset(
 )
 
 DIGEST = re.compile(r"[0-9a-f]{64}")
+HEX = re.compile(r"[0-9a-f]{64}", re.IGNORECASE)
+#: Fields that hold a 64-hex hash of a public or local artifact (weights, code, a manifest, a pool
+#: of ids, a raw snapshot, a pipeline's code), from a survey of the tracked JSON: (the field it
+#: sits under or "", the field or "*", where the survey found it). Any other 64-hex string
+#: outside a `_hmac` field is a plain hash of text and is refused; a new name fails until listed.
+ALLOWED_HASHES: Mapping[tuple[str, str], str] = {
+    ("", "adapter_sha256"): "likelihood-partition-*.json, client-geometry-*.json",
+    ("", "initial_adapter_sha256"): "client-geometry-cpp-rebuilt-c128-a.json",
+    ("", "code_files_sha256"): "aosp-census.json",
+    ("", "manifest_sha256"): "aosp-census.json, dataset-funnel.json",
+    ("", "sha256"): "aosp-census.json, code-files-linguist.json",
+    ("", "uncommitted_code_sha256"): "datasets/gerrit/*/manifest.json",
+    ("", "raw_digest"): "comment-count-probe-*.json",
+    ("", "pipeline"): "rules-guide-*.json",
+    ("", "rules_pipeline"): "rules-foreign-*.json, rules-halves-*.json",
+    ("", "rules_arms"): "rules-foreign-*.json, rules-halves-*.json",
+    ("hashes", "*"): "datasets/gerrit-github/*/manifest.json",
+    ("pool", "digest"): "foreign-pool-coverage-*.json",
+}
 #: A bot-audit list of short real review comments, which no published artifact carries, and the
 #: one key a row of it has: `scripts/data_audit.py` writes `{"changes": n}`.
 COMMENT_LISTS = frozenset({"candidate_unregistered_bots"})
@@ -259,7 +278,9 @@ PLAIN_HASHES_BEFORE_THE_RULE: Mapping[str, str] = {
         "rules-reviews-openstack-p10": "63db8e4e78fa2617c49380326ff80043de1c7043",
         "rules-reviews-openstack-p11": "36b298f4ab97891aa5088814c1e36466f4f63f09",
         "rules-reviews-openstack-p12": "5f1dd1640897cec7552ecdf7901a82d546b74018",
-        "rules-reviews-openstack-p2-smoke.openstack-a.part": "757e2bd61683763f6e9b0a10d7345322a76a5695",  # noqa: E501
+        "rules-reviews-openstack-p2-smoke.openstack-a.part": (
+            "757e2bd61683763f6e9b0a10d7345322a76a5695"
+        ),
         "rules-reviews-openstack-p2-smoke2": "c2bc6d135e84c4519fdaf0bf20f5b2cbd059e102",
         "rules-reviews-openstack-p2-smoke3": "e5a0928c3d4b7310eebfedfb6b6d41eea5707cd0",
         "rules-reviews-openstack-p2-smoke4": "42443833d29999304087684206f22d9e12685706",
@@ -346,7 +367,7 @@ def _written_guide(node: Mapping[str, Any]) -> bool:
         and node.get("reduce_answer") is None
         and node.get("evidence") == []
         and node.get("recurrence") == []
-        and not any(k.endswith(SUFFIX) for k in node)
+        and not any(k.endswith(SUFFIX) and k.removesuffix(SUFFIX) not in PLAIN_HASHES for k in node)
         and isinstance(chunks, int)
         and not isinstance(chunks, bool)
         and chunks > 0
@@ -458,25 +479,71 @@ def _digested(value: Any, key: bytes) -> Any:
     return value
 
 
+def _paths(
+    node: Any,
+    match: Callable[[str, Any, str], bool],
+    path: str = "",
+    key: str = "",
+    parent: str = "",
+) -> Iterator[str]:
+    """JSON paths of each value `match(key, value, parent)` takes, in a document: an object's
+    members under their own key, a list's items under the key of the list. A `_hmac` member is
+    never entered, a match is not entered either."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if match(k, v, key):
+                yield f"{path}/{k}"
+            elif not k.endswith(SUFFIX):
+                yield from _paths(v, match, f"{path}/{k}", k, key)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            if match(key, v, parent):
+                yield f"{path}/{i}"
+            else:
+                yield from _paths(v, match, f"{path}/{i}", key, parent)
+
+
+def _plain(key: str, value: Any, parent: str) -> bool:
+    """A plain hash field holding anything but nothing, or a 64-hex string no listed field of a
+    public or local artifact holds."""
+    if key in PLAIN_HASHES:
+        return value not in ({}, [])
+    return (
+        isinstance(value, str)
+        and not key.endswith(SUFFIX)
+        and HEX.fullmatch(value) is not None
+        and allowed_hash(parent, key) is None
+    )
+
+
 def plain_left(document: Any) -> list[str]:
-    """Where a document still carries a plain hash field (`PLAIN_HASHES`) holding a string, as
-    JSON paths."""
-    found: list[str] = []
+    """Where a document carries a plain hash: a `PLAIN_HASHES` field with anything in it, or a
+    64-hex string in a field `ALLOWED_HASHES` does not list, as JSON paths."""
+    return list(_paths(document, _plain))
 
-    def walk(node: Any, path: str) -> None:
-        if isinstance(node, dict):
-            for k, v in node.items():
-                if k in PLAIN_HASHES:
-                    if _strings(v):
-                        found.append(f"{path}/{k}")
-                else:
-                    walk(v, f"{path}/{k}")
-        elif isinstance(node, list):
-            for i, v in enumerate(node):
-                walk(v, f"{path}/{i}")
 
-    walk(document, "")
+def hash_locations(document: Any) -> list[tuple[str, str]]:
+    """The (parent field, field) of each 64-hex string outside a digest field or a plain hash
+    field, which `ALLOWED_HASHES` lists or the guard refuses."""
+    found: list[tuple[str, str]] = []
+
+    def collect(key: str, value: Any, parent: str) -> bool:
+        digested = key in PLAIN_HASHES or key.endswith(SUFFIX)
+        if not digested and isinstance(value, str) and HEX.fullmatch(value):
+            found.append((parent, key))
+        return False
+
+    for _ in _paths(document, collect):
+        pass
     return found
+
+
+def allowed_hash(parent: str, field: str) -> tuple[str, str] | None:
+    """The `ALLOWED_HASHES` entry (parent, field) that lists a 64-hex string at this place."""
+    for entry in ((parent, field), ("", field), (parent, "*")):
+        if entry in ALLOWED_HASHES:
+            return entry
+    return None
 
 
 def _rekeyed(field: str, value: Any, key: bytes) -> tuple[Any, int]:
@@ -613,21 +680,12 @@ def granted_content(document: Any) -> bool:
 
 def _digest_keys(document: Any) -> list[str]:
     """Where a document carries a digest of text or a plain hash of it, as JSON paths."""
-    found: list[str] = []
-
-    def walk(node: Any, path: str) -> None:
-        if isinstance(node, dict):
-            for k, v in node.items():
-                if k == "withheld_text" or k.endswith(SUFFIX) or k in PLAIN_HASHES:
-                    found.append(f"{path}/{k}")
-                else:
-                    walk(v, f"{path}/{k}")
-        elif isinstance(node, list):
-            for i, v in enumerate(node):
-                walk(v, f"{path}/{i}")
-
-    walk(document, "")
-    return found
+    return list(
+        _paths(
+            document,
+            lambda k, _v, _p: k == "withheld_text" or k.endswith(SUFFIX) or k in PLAIN_HASHES,
+        )
+    )
 
 
 def _counts_only(value: Any) -> bool:
@@ -735,6 +793,21 @@ class Verdict(NamedTuple):
     plain: list[str]
     plain_pinned: bool
 
+    def not_granted(self) -> list[str]:
+        """A granted host's file carrying text, digests or hashes, outside the exceptions."""
+        if self.granted and self.findings and not self.pinned:
+            return [f"granted host: {p}" for p in self.findings]
+        return []
+
+    def not_plain(self) -> list[str]:
+        """A plain hash of generated text, outside the files committed so before the rule."""
+        if self.plain and not self.plain_pinned:
+            return [f"plain hash of generated text: {p}" for p in self.plain]
+        return []
+
+    def refusals(self) -> list[str]:
+        return [*self.unfit, *self.not_granted(), *self.not_plain()]
+
 
 def pinned(pins: Mapping[str, str], rel: str, raw: bytes) -> bool:
     """Whether a file is one of the pinned exceptions, byte for byte, at this path."""
@@ -781,13 +854,7 @@ def refusals(
 ) -> list[str]:
     """Why a file may not be published, empty when it may: the one predicate the guard and the
     script that digests a result both ask."""
-    verdict = examine(rel, raw, documents, pin_rel)
-    out = list(verdict.unfit)
-    if verdict.granted and verdict.findings and not verdict.pinned:
-        out += [f"granted host: {p}" for p in verdict.findings]
-    if verdict.plain and not verdict.plain_pinned:
-        out += [f"plain hash of generated text: {p}" for p in verdict.plain]
-    return out
+    return examine(rel, raw, documents, pin_rel).refusals()
 
 
 def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
@@ -834,7 +901,8 @@ def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
     if not isinstance(result, dict):
         raise ValueError(f"{name}: withheld text outside a JSON object")
     if "withheld_text" in result:
-        raise ValueError(f"{name} is already a withheld copy yet still carries text")
+        what = "text" if text_left(document) else "plain hashes"
+        raise ValueError(f"{name} is already a withheld copy yet still carries {what}")
     result["withheld_text"] = {
         "fields": sorted(
             {p.rsplit("/", 1)[-1] for p in [*text_left(document), *plain_left(document)]}
@@ -847,6 +915,16 @@ def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
     return result, count
 
 
+def _common(keys: Mapping[str, str | None], label: str) -> str:
+    """`""` when no document is keyed, `SUFFIX` when every one is keyed under one key id; a mix,
+    or two keys, compares nothing and exits."""
+    if len(set(keys.values())) == 1:
+        return "" if None in keys.values() else SUFFIX
+    if None in keys.values():
+        raise SystemExit(f"cannot compare {label} together: {keys}")
+    raise SystemExit(f"the copies are digested under different keys: {keys}")
+
+
 def basis(documents: Mapping[str, Mapping[str, Any]]) -> str:
     """The suffix under which a reader compares the withheld fields of documents read together.
 
@@ -854,11 +932,21 @@ def basis(documents: Mapping[str, Mapping[str, Any]]) -> str:
     id. A mix of published and plain copies, or of two keys, compares nothing and exits.
     """
     keys = {name: doc.get("withheld_text", {}).get("key_id") for name, doc in documents.items()}
-    if len(set(keys.values())) == 1:
-        return "" if None in keys.values() else SUFFIX
-    if None in keys.values():
-        raise SystemExit(f"cannot compare published and full-text copies together: {keys}")
-    raise SystemExit(f"the copies are digested under different keys: {keys}")
+    return _common(keys, "published and full-text copies")
+
+
+def hash_basis(documents: Mapping[str, tuple[Mapping[str, Any], str]]) -> str:
+    """The suffix under which a reader compares plain-hash fields, one `(document, field)` each.
+
+    A published file keys a hash only when `withheld_text.fields` lists the field: a file
+    published before the rule has its texts digested and its hashes plain. All keyed under one
+    key id gives `SUFFIX`, none keyed gives `""` (published or not), a mix or two keys exits.
+    """
+    keys: dict[str, str | None] = {}
+    for name, (doc, field) in documents.items():
+        meta = doc.get("withheld_text", {})
+        keys[name] = meta.get("key_id") if field in meta.get("fields", ()) else None
+    return _common(keys, "keyed and plain prompt hashes")
 
 
 def require_text(document: Mapping[str, Any], label: str) -> None:

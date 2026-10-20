@@ -60,7 +60,7 @@ from sphragis.experiment.retrieval import KS, adapter_run, arm_key, condition, f
 from sphragis.experiment.rules_arms import DISTILLED, WRITTEN
 from sphragis.experiment.runs import UNRECORDED_REPETITION_PENALTY, decoder
 from sphragis.measure.stats import equal_halves, partitioned_crossed_draws, percentile_interval
-from sphragis.measure.withhold import basis
+from sphragis.measure.withhold import hash_basis
 from sphragis.provenance import provenance_header
 from sphragis.refusal import refusals
 
@@ -406,7 +406,12 @@ def main() -> None:
         key = run_id(EvalRun("base", args.org, None))
         once[key] = base["results"][key]
         # Prompt hashes are compared as published, and only within one key.
-        suffix = basis({str(args.foreign_job): foreign_job, str(args.base_job): base})
+        suffix = hash_basis(
+            {
+                str(args.foreign_job): (foreign_job, "base_marks"),
+                str(args.base_job): (base, "fingerprint"),
+            }
+        )
         require_base_prompted_alike(
             once[key], foreign_job.get(f"base_marks{suffix}"), job=args.base_job, suffix=suffix
         )

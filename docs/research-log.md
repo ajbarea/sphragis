@@ -10355,8 +10355,10 @@ entry, item 2). This rule covers every published result, from the next one on.
    HMAC-SHA256 of the plain hash's hex under `SPHRAGIS_PREDICTION_KEY`, in the same shape. Equal
    prompts or rules show as equal under one key; testing a guessed text takes the key. A value
    that is not a plain hash is refused, not digested. `scripts/retrieval_read.py` compares a base
-   arm's prompts with the rules job's `base_marks` as both were published, under one key id, and
-   refuses a published file paired with a plain one, as `determinism_check --compare` does.
+   arm's prompts with the rules job's `base_marks` as each job keyed them (`withheld_text.fields`):
+   both keyed under one key id, or both plain, published or not; it refuses a keyed job paired
+   with a plain one, as `determinism_check --compare` does. The committed rules readings, whose
+   inputs are pinned, still read.
 3. *Files before the rule.* 120 tracked files carry plain hashes: OpenStack's and Wikimedia's
    retrieval and rules runs under `datasets/results/` (60 each). Their hashes are in history,
    which stays (item 4 of "Model text withheld"), and keying them now would tie the new key to
@@ -10364,8 +10366,12 @@ entry, item 2). This rule covers every published result, from the next one on.
    git blob like the 20 of the previous entry, and `withhold_text.py --in-place` leaves them as
    they are. Old entries kept in their scheme beside keyed new ones, each marked by it, is the
    migration of TYPO3 nr-vault's ADR-023 from plain SHA-256 to HMAC-SHA256.
-4. *Guard.* `tests/unit/test_published_review_text.py` refuses a plain hash under these fields in
-   any tracked file outside the pinned set, on any host, and a pinned file whose blob changed.
+4. *Guard.* `tests/unit/test_published_review_text.py` reads content, not field names: outside
+   the pinned set, any 64-digit hex string in a tracked file, on any host, is refused unless it
+   sits in a `_hmac` field or under a field that hashes a public or local artifact
+   (`withhold.ALLOWED_HASHES`, the tree's own survey: adapters, code files, manifests, raw
+   snapshots, pipelines); a new name fails until listed. A pinned file whose blob changed is
+   refused, and the guard and `withhold` refuse the same values.
 5. *Key.* The next published result is digested under key id `299aa664286ac190`;
    `659eedab9a778439` stays burned (`BURNED_KEY_IDS`).
 
