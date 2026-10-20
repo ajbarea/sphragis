@@ -682,6 +682,19 @@ def test_the_committed_rules_reading_reads_from_its_tracked_inputs(tmp_path: Pat
     assert cell["estimate"] == pytest.approx(want)
 
 
+def test_an_unmarked_row_is_not_prompted_alike_however_the_marks_read(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    base, foreign = _hashed(_foreign_job()), _hashed(_rules_foreign_job())
+    keyed_base, keyed_foreign = _published(base, KEY), _published(foreign, KEY)
+    mark = IDS[0]
+    keyed_foreign["base_marks_hmac"][mark] = None
+    for row in keyed_base["results"][run_id(EvalRun("base", "openstack", None))]:
+        if row["id"] == mark:
+            del row["fingerprint_hmac"]
+    with pytest.raises(SystemExit, match="1 rows prompted otherwise or unmarked"):
+        _rules_read(tmp_path, jobs, keyed_foreign, keyed_base)
+
+
 def test_a_rules_reading_needs_the_base_arm(tmp_path: Path) -> None:
     listing = tmp_path / "list.json"
     listing.write_text(json.dumps({"org": "openstack", "admissible": ORDER, "size_floor": SIZE}))

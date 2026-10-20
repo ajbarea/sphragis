@@ -127,7 +127,7 @@ def require_base_prompted_alike(
     for row in rows:
         if row["id"] not in marks:
             untargeted.append(row["id"])
-        elif row.get(f"fingerprint{suffix}") != marks[row["id"]]:
+        elif (mark := row.get(f"fingerprint{suffix}")) is None or mark != marks[row["id"]]:
             differ.append(row["id"])
     missing = set(marks) - {row["id"] for row in rows}
     if untargeted or differ or missing:

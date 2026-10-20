@@ -87,24 +87,51 @@ ORG_FIELDS = frozenset(
 
 DIGEST = re.compile(r"[0-9a-f]{64}")
 HEX = re.compile(r"[0-9a-f]{64}", re.IGNORECASE)
-#: Fields that hold a 64-hex hash of a public or local artifact (weights, code, a manifest, a pool
-#: of ids, a raw snapshot, a pipeline's code), from a survey of the tracked JSON: (the field it
-#: sits under or "", the field or "*", where the survey found it). Any other 64-hex string
-#: outside a `_hmac` field is a plain hash of text and is refused; a new name fails until listed.
-ALLOWED_HASHES: Mapping[tuple[str, str], str] = {
-    ("", "adapter_sha256"): "likelihood-partition-*.json, client-geometry-*.json",
-    ("", "initial_adapter_sha256"): "client-geometry-cpp-rebuilt-c128-a.json",
-    ("", "code_files_sha256"): "aosp-census.json",
-    ("", "manifest_sha256"): "aosp-census.json, dataset-funnel.json",
-    ("", "sha256"): "aosp-census.json, code-files-linguist.json",
-    ("", "uncommitted_code_sha256"): "datasets/gerrit/*/manifest.json",
-    ("", "raw_digest"): "comment-count-probe-*.json",
-    ("", "pipeline"): "rules-guide-*.json",
-    ("", "rules_pipeline"): "rules-foreign-*.json, rules-halves-*.json",
-    ("", "rules_arms"): "rules-foreign-*.json, rules-halves-*.json",
-    ("hashes", "*"): "datasets/gerrit-github/*/manifest.json",
-    ("pool", "digest"): "foreign-pool-coverage-*.json",
-}
+
+
+class HashField(NamedTuple):
+    """Where a 64-hex hash of a public or local artifact may sit: the key it sits under (a regex,
+    `{org}` an organization's name; empty is the top of the document), the field, the script that
+    writes it, and the word in that script that shows it still does when it is not the field."""
+
+    parent: str
+    field: str
+    producer: str
+    marker: str = ""
+
+
+#: Hashes of public or local artifacts (weights, code, a manifest, a pool of ids and code, a raw
+#: snapshot, a pipeline's code), from a survey of the tracked JSON and the producers' own shapes.
+#: Any other 64-hex string outside a `_hmac` field is a plain hash of text and is refused: a new
+#: name or place fails until it is listed here.
+_HALF = r"{org}-[ab]"
+ALLOWED_HASHES: tuple[HashField, ...] = (
+    HashField("", "initial_adapter_sha256", "scripts/adapter_geometry.py"),
+    HashField(r"{org}-[ab]-s\d+", "adapter_sha256", "scripts/rq1_pilot.py"),
+    HashField("evidence", "adapter_sha256", "scripts/rq1_pilot.py"),
+    HashField("", "manifest_sha256", "scripts/aosp_census.py"),
+    HashField("{org}", "manifest_sha256", "scripts/dataset_funnel.py"),
+    HashField("under", "code_files_sha256", "scripts/aosp_census.py"),
+    HashField("code_files_source", "sha256", "scripts/aosp_census.py"),
+    HashField("source", "sha256", "scripts/aosp_census.py"),
+    HashField("guide", "sha256", "scripts/rules_guides.py"),
+    HashField("sources", "sha256", "scripts/rules_guides.py"),
+    HashField("git", "uncommitted_code_sha256", "sphragis/provenance.py"),
+    HashField("", "raw_digest", "scripts/comment_count_probe.py"),
+    HashField("", "pipeline", "sphragis/experiment/rules.py"),
+    HashField("{org}", "pipeline", "sphragis/experiment/rules.py"),
+    HashField(_HALF, "pipeline", "sphragis/experiment/rules.py"),
+    HashField("", "rules_pipeline", "scripts/retrieval_comparator.py"),
+    HashField("", "rules_arms", "scripts/retrieval_comparator.py"),
+    *(
+        HashField("hashes", name, "sphragis/corpus/manifest.py", "hashes")
+        for name in ("dev", "pilot", "test", "train")
+    ),
+    HashField("pool", "digest", "scripts/foreign_pool_coverage.py"),
+    HashField("stop_rule", "digest", "scripts/foreign_pool_coverage.py"),
+    HashField("foreign_pool", "pool_sha256", "scripts/rq1_pilot.py"),
+    HashField("", "digest", "scripts/label_audit_decision.py"),
+)
 #: A bot-audit list of short real review comments, which no published artifact carries, and the
 #: one key a row of it has: `scripts/data_audit.py` writes `{"changes": n}`.
 COMMENT_LISTS = frozenset({"candidate_unregistered_bots"})
@@ -528,8 +555,9 @@ def hash_locations(document: Any) -> list[tuple[str, str]]:
     found: list[tuple[str, str]] = []
 
     def collect(key: str, value: Any, parent: str) -> bool:
-        digested = key in PLAIN_HASHES or key.endswith(SUFFIX)
-        if not digested and isinstance(value, str) and HEX.fullmatch(value):
+        if key in PLAIN_HASHES:
+            return True
+        if not key.endswith(SUFFIX) and isinstance(value, str) and HEX.fullmatch(value):
             found.append((parent, key))
         return False
 
@@ -538,12 +566,24 @@ def hash_locations(document: Any) -> list[tuple[str, str]]:
     return found
 
 
-def allowed_hash(parent: str, field: str) -> tuple[str, str] | None:
-    """The `ALLOWED_HASHES` entry (parent, field) that lists a 64-hex string at this place."""
-    for entry in ((parent, field), ("", field), (parent, "*")):
-        if entry in ALLOWED_HASHES:
-            return entry
-    return None
+@functools.cache
+def organizations() -> frozenset[str]:
+    """Every organization the collectors know, Gerrit or GitHub."""
+    from sphragis.corpus.cli import GERRIT
+    from sphragis.corpus.github import GITHUB_ORGS
+
+    return frozenset(GERRIT) | frozenset(GITHUB_ORGS)
+
+
+@functools.cache
+def _allowed() -> tuple[tuple[re.Pattern[str], str, HashField], ...]:
+    alt = "(?:" + _alt(organizations()) + ")"
+    return tuple((re.compile(e.parent.replace("{org}", alt)), e.field, e) for e in ALLOWED_HASHES)
+
+
+def allowed_hash(parent: str, field: str) -> HashField | None:
+    """The `ALLOWED_HASHES` entry that lists a 64-hex string under `parent` named `field`."""
+    return next((e for rx, f, e in _allowed() if f == field and rx.fullmatch(parent)), None)
 
 
 def _rekeyed(field: str, value: Any, key: bytes) -> tuple[Any, int]:
@@ -709,6 +749,17 @@ def _strings_of(value: Any) -> Iterator[str]:
             yield from _strings_of(v)
 
 
+def _leaves(value: Any) -> Iterator[Any]:
+    if isinstance(value, dict):
+        for v in value.values():
+            yield from _leaves(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _leaves(v)
+    else:
+        yield value
+
+
 def _listed_key(field: str, key: str) -> bool:
     return any(f == field and rx.fullmatch(key) for f, rx in _WHITESPACE_KEYS)
 
@@ -721,7 +772,12 @@ def _unfit(node: Any, ids: frozenset[str], path: str = "", field: str = "") -> I
             if re.search(r"\s", k) and not is_example_id(k) and not _listed_key(field, k):
                 yield f"{path}/{k[:40]} is a key of prose"
             if k.endswith(SUFFIX) and (
-                not all(DIGEST.fullmatch(t) for t in _strings_of(v)) or unlabelled_keys(v, ids)
+                not all(DIGEST.fullmatch(t) for t in _strings_of(v))
+                or unlabelled_keys(v, ids)
+                or (
+                    k.removesuffix(SUFFIX) in PLAIN_HASHES
+                    and not all(isinstance(t, str) for t in _leaves(v))
+                )
             ):
                 yield f"{path}/{k} is not a digest under labels"
             elif k in COMMENT_LISTS and not _counts_only(v):
@@ -915,6 +971,15 @@ def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
     return result, count
 
 
+def _meta(name: str, doc: Mapping[str, Any]) -> Mapping[str, Any]:
+    """A document's `withheld_text` record, `{}` for a copy with none; exits on one that is not an
+    object, or whose `fields` is not a list."""
+    meta = doc.get("withheld_text", {})
+    if not isinstance(meta, dict) or not isinstance(meta.get("fields", []), list):
+        raise SystemExit(f"{name}: withheld_text is not a record with a list of fields")
+    return meta
+
+
 def _common(keys: Mapping[str, str | None], label: str) -> str:
     """`""` when no document is keyed, `SUFFIX` when every one is keyed under one key id; a mix,
     or two keys, compares nothing and exits."""
@@ -931,7 +996,7 @@ def basis(documents: Mapping[str, Mapping[str, Any]]) -> str:
     `""` when every document carries text, `SUFFIX` when every one is digested under the same key
     id. A mix of published and plain copies, or of two keys, compares nothing and exits.
     """
-    keys = {name: doc.get("withheld_text", {}).get("key_id") for name, doc in documents.items()}
+    keys = {name: _meta(name, doc).get("key_id") for name, doc in documents.items()}
     return _common(keys, "published and full-text copies")
 
 
@@ -944,7 +1009,7 @@ def hash_basis(documents: Mapping[str, tuple[Mapping[str, Any], str]]) -> str:
     """
     keys: dict[str, str | None] = {}
     for name, (doc, field) in documents.items():
-        meta = doc.get("withheld_text", {})
+        meta = _meta(name, doc)
         keys[name] = meta.get("key_id") if field in meta.get("fields", ()) else None
     return _common(keys, "keyed and plain prompt hashes")
 

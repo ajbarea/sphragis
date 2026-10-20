@@ -556,40 +556,115 @@ def test_a_plain_hash_is_refused_whatever_its_field_is_called(
 
 def test_a_hash_of_a_public_or_local_artifact_is_listed_by_where_it_sits(tmp_path: Path) -> None:
     for document in (
-        {"adapter_sha256": SHA},
-        {"rows": [{"id": "i", "adapter_sha256": SHA}]},
+        {"training": {"openstack-a-s1": {"adapter_sha256": SHA}}},
+        {"training": {"qt-b-s12": {"adapter_sha256": SHA}}},
+        {"checks": [{"evidence": {"adapter_sha256": SHA}}]},
         {"hashes": {"dev": SHA}},
         {"pool": {"digest": SHA}},
         {"rules_pipeline": SHA, "rules_arms": SHA},
     ):
         assert not plain_offending([_write(tmp_path / "ok.json", document)], tmp_path), document
     # A listed name elsewhere in the tree's shapes is still a plain hash.
-    assert plain_offending([_write(tmp_path / "bad.json", {"digest": SHA})], tmp_path)
+    assert plain_offending([_write(tmp_path / "bad.json", {"rows": [{"digest": SHA}]})], tmp_path)
     assert not plain_offending(
         [_write(tmp_path / "keyed.json", {"marks_hmac": {"i": SHA}})], tmp_path
     )
 
 
-def test_the_hash_allowlist_is_the_survey_of_the_tree() -> None:
-    """A new name fails until it is listed; a listed one no file uses leaves the list."""
-    found = {
-        entry
-        for p in _tracked()
-        if _analyse(p, ROOT).read
-        for d in _documents(p.read_bytes())
-        for parent, field in w.hash_locations(d)
-        if (entry := w.allowed_hash(parent, field)) is not None
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"results": {"base|a": [{"id": "i", "sha256": SHA}]}},
+        {"rows": [{"id": "i", "pipeline": SHA}]},
+        {"prompts": {"sha256": SHA}},
+        {"rules": {"raw_digest": SHA}},
+        {"targets": {"adapter_sha256": SHA}},
+        {"rows": [{"id": "i", "rules_arms": SHA}]},
+        {"hashes": {"prompt": SHA}},
+        {"hashes": {"rules-distilled:openstack-a": SHA}},
+        {"nested": {"digest": SHA}},
+    ],
+)
+def test_a_listed_hash_name_is_listed_only_where_the_survey_found_it(
+    tmp_path: Path, document: dict
+) -> None:
+    assert plain_offending([_write(tmp_path / "new-result.json", document)], tmp_path), document
+
+
+#: Each producer's shape for the hashes of public or local artifacts it writes.
+PRODUCED = {
+    "scripts/rq1_pilot.py": {"foreign_pool": {"pool_sha256": SHA, "pool_examples": 3}},
+    "scripts/foreign_pool_coverage.py": {
+        "pool": {"examples": 3, "digest": SHA},
+        "stop_rule": {"pool": {"examples": 2}, "digest": SHA},
+    },
+    "scripts/label_audit_decision.py": {"model": "m", "digest": SHA, "items": 2},
+}
+
+
+@pytest.mark.parametrize("producer", sorted(PRODUCED))
+def test_a_producers_hashes_of_artifacts_pass_the_guard(tmp_path: Path, producer: str) -> None:
+    document = PRODUCED[producer]
+    assert not plain_offending([_write(tmp_path / "out.json", document)], tmp_path), document
+
+
+#: The (parent, field) of every 64-hex string in the tracked JSON, an organization, a half and a
+#: seed named by their slots.
+SURVEYED = frozenset(
+    {
+        ("", "initial_adapter_sha256"),
+        ("", "manifest_sha256"),
+        ("", "pipeline"),
+        ("", "raw_digest"),
+        ("", "rules_arms"),
+        ("", "rules_pipeline"),
+        ("code_files_source", "sha256"),
+        ("evidence", "adapter_sha256"),
+        ("git", "uncommitted_code_sha256"),
+        ("guide", "sha256"),
+        ("hashes", "dev"),
+        ("hashes", "pilot"),
+        ("hashes", "test"),
+        ("hashes", "train"),
+        ("<org>", "manifest_sha256"),
+        ("<org>", "pipeline"),
+        ("<org>-<half>", "pipeline"),
+        ("<org>-<half>-<seed>", "adapter_sha256"),
+        ("pool", "digest"),
+        ("source", "sha256"),
+        ("sources", "sha256"),
+        ("under", "code_files_sha256"),
     }
-    assert found == set(w.ALLOWED_HASHES)
-    assert not [
+)
+
+
+def _slots(parent: str) -> str:
+    orgs = "|".join(sorted(w.organizations()))
+    return re.sub(rf"^({orgs})(?:-[ab](?:-(s\d+))?)?$", _slot, parent)
+
+
+def _slot(m: re.Match[str]) -> str:
+    return "<org>" + ("-<half>" if "-" in m[0] else "") + ("-<seed>" if m[2] else "")
+
+
+def test_the_hash_allowlist_is_the_survey_of_the_tree() -> None:
+    """The (parent, field) set of the tree is the surveyed set, each place listed by an entry."""
+    places = {
         (parent, field)
         for p in _tracked()
         if _analyse(p, ROOT).read
         for d in _documents(p.read_bytes())
         for parent, field in w.hash_locations(d)
-        if w.allowed_hash(parent, field) is None
-        and p.relative_to(ROOT).as_posix() not in w.PLAIN_HASHES_BEFORE_THE_RULE
-    ]
+    }
+    assert {(_slots(parent), field) for parent, field in places} == SURVEYED
+    assert not [place for place in places if w.allowed_hash(*place) is None]
+
+
+def test_each_allowlist_entry_names_a_producer_that_writes_its_field() -> None:
+    """A producer that stopped writing a field leaves the list; one not yet run may be listed."""
+    for entry in w.ALLOWED_HASHES:
+        source = (ROOT / entry.producer).read_text()
+        assert (entry.marker or entry.field) in source, entry
 
 
 def test_the_guard_and_withhold_agree_on_a_value_that_is_not_a_hash(tmp_path: Path) -> None:

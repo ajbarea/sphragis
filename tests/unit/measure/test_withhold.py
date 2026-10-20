@@ -323,3 +323,32 @@ def test_a_plain_hash_is_found_by_the_walk_the_guard_uses() -> None:
     document = {"rules_files": {"a": PLAIN}, "rows": [{"fingerprint": PLAIN}], "x": {"y": 1}}
     assert w.plain_left(document) == ["/rules_files", "/rows/0/fingerprint"]
     assert w.plain_left({"rules_files_hmac": {"a": PLAIN}}) == []
+
+
+@pytest.mark.parametrize(
+    "meta", [None, "text", ["fields"], {"key_id": "k", "fields": "base_marks"}, {"fields": 3}]
+)
+def test_a_malformed_withheld_text_is_refused_not_misread(meta: object) -> None:
+    doc = {"withheld_text": meta}
+    with pytest.raises(SystemExit, match="withheld_text"):
+        w.hash_basis({"a": (doc, "base_marks")})
+    if not isinstance(meta, dict):
+        with pytest.raises(SystemExit, match="withheld_text"):
+            w.basis({"a": doc})
+
+
+def test_a_field_is_keyed_only_when_it_is_listed_whole() -> None:
+    doc = {"withheld_text": {"key_id": "k", "fields": ["base_marks_extra"]}}
+    assert w.hash_basis({"a": (doc, "base_marks")}) == ""
+    assert (
+        w.hash_basis({"a": ({"withheld_text": {"key_id": "k", "fields": ["x"]}}, "x")}) == w.SUFFIX
+    )
+
+
+def test_a_digested_plain_hash_field_holds_only_digests() -> None:
+    for bad in ({"rules-distilled:openstack-a": None}, {"rules-written:qt": "m0"}, [None], None):
+        document = {"base_marks_hmac": bad}
+        assert w.refusals("r.json", b"", [document]), bad
+    assert not w.refusals(
+        "r.json", b"", [{"base_marks_hmac": {"rules-distilled:openstack-a": "a" * 64}}]
+    )

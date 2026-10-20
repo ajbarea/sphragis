@@ -10367,11 +10367,12 @@ entry, item 2). This rule covers every published result, from the next one on.
    they are. Old entries kept in their scheme beside keyed new ones, each marked by it, is the
    migration of TYPO3 nr-vault's ADR-023 from plain SHA-256 to HMAC-SHA256.
 4. *Guard.* `tests/unit/test_published_review_text.py` reads content, not field names: outside
-   the pinned set, any 64-digit hex string in a tracked file, on any host, is refused unless it
-   sits in a `_hmac` field or under a field that hashes a public or local artifact
-   (`withhold.ALLOWED_HASHES`, the tree's own survey: adapters, code files, manifests, raw
-   snapshots, pipelines); a new name fails until listed. A pinned file whose blob changed is
-   refused, and the guard and `withhold` refuse the same values.
+   the pinned set, a string value that is a 64-digit hex hash, in any tracked file read as JSON
+   on any host, is refused unless it is a `_hmac` digest or sits where `withhold.ALLOWED_HASHES`
+   lists it, by field and parent: hashes of public or local artifacts (adapters, code files,
+   manifests, raw snapshots, pipelines), each entry justified by a tracked file or by the script
+   that writes it. A hash at any other place fails until listed. A pinned file whose blob
+   changed is refused, and the guard and `withhold` refuse the same values.
 5. *Key.* The next published result is digested under key id `299aa664286ac190`;
    `659eedab9a778439` stays burned (`BURNED_KEY_IDS`).
 
