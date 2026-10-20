@@ -13,6 +13,8 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   2026-10-18). Its full simulation at K = 15 is read (research log, 2026-10-19): every detectable
   effect below δ, the null nominal at the sizing bound. Qt's generation runs stay off the
   repository (their predictions can repeat review text); the likelihood rescorings are committed.
+  The guard knows any written-grant host's run by its content, 20 pre-grant Qt files aside
+  (research log, 2026-10-19, "The published-text guard reads a granted host from its content").
   Every other run is published through `scripts/withhold_text.py`, which digests its model text
   (research log, 2026-10-19).
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
