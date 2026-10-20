@@ -181,6 +181,12 @@ hypothesis the gate reads, on the same draws, at the same levels:
   framework and `qttranslations`, none of OpenStack's or Wikimedia's), fixed so a later merge
   cannot move a test read (registered 2026-10-19, before Qt's listing was committed and after a
   first reading of it).
+- **Without targets found before the checkpoint.** Recomputed without examples whose added lines
+  are found at η ≥ 0.8 in their project's branches as they stood at the evaluated weights' upload
+  (`scripts/backport_lookup.py`, `sphragis.corpus.lookup`; registered 2026-10-20, before any
+  lookup was read). It reaches what the branch-name rule cannot: a revert, a re-proposal under a
+  new Change-Id or a hand copy of older code. Read beside it, the suspicious class (0.2 to 0.8)
+  and the examples with no eligible line or no reference are reported as counts.
 - **Without layout-only revisions.** Recomputed without examples whose revision changes the
   reviewed hunk's layout alone, the edits a formatter would make (`sphragis/experiment/layout.py`):
   every character but whitespace is kept, and the language's own tokens, read in place between

@@ -10457,3 +10457,72 @@ Sources:
 - Angulo, Yeste and Espinos-Morato, arXiv:2608.29463; schema at
   https://github.com/Jangulo7/contamination-disclosure-paper (commit 3d0dee0).
 - Hugging Face Hub API, model tree endpoint at each pinned revision (read 2026-10-20).
+
+### The backport lookup registered: each target's added lines against every branch at the upload (2026-10-20)
+
+`# research(2026-10)`. Registered before any lookup is run or read. Plan H's open item asks for
+each target's added lines to be looked up in every branch as it stood at the evaluated
+checkpoint's weight upload (6ab006b, 2024-09-17T16:13:45Z, entry above); the branch-name bound of
+2026-10-02 cannot see a revert, a re-proposal under a new Change-Id or a hand copy. Fixed now:
+
+1. *Lines.* A target's added lines are the stripped lines of `after` left once each stripped line
+   of `before` is removed once (a multiset difference), at least `TYPED_TARGET_MIN_CHARS` (20)
+   characters long, the study's floor below which a line matches by chance. An example with none
+   is counted as having no eligible line, never as clean.
+2. *Reference.* For the example's own project, every branch the host serves, each at its last
+   commit before the upload (a branch with none is skipped), and every stripped line of every
+   text file in those trees (a file whose first 8,000 bytes hold a NUL is binary and skipped).
+   Branches, not tags, as the item says.
+3. *Reading.* η is the share of an example's added lines found verbatim in its reference, and
+   an example is clean below 0.2, suspicious from 0.2, and found before the checkpoint at 0.8
+   or more: infini-gram mini's classes (arXiv:2506.12229, section 4.1, which keeps Touvron et
+   al.'s cutoffs), read on lines instead of 50-character substrings, since a target is code
+   and its unit is the line. Reported per organization and window: the counts per class, the
+   examples with no eligible line and those with no reference.
+4. *Sensitivity.* "Without targets found before the checkpoint": H1 recomputed without the
+   examples at η ≥ 0.8 (`partition_pilot.py --without`), beside the branch-name sensitivity,
+   registered in `docs/registered-decisions.md`. The lookup reads the pilot, train and dev
+   windows now; the test window when it is read, with the same code.
+5. *Sources, read once per project into a local bare clone, one clone at a time per host with
+   the host's claim held (`hosts.claim_host`) and 2 seconds between clones, under `cli.USER_AGENT`:*
+   OpenStack from opendev.org, whose robots.txt disallows its web pages but not git's clone paths
+   (read 2026-10-20); Wikimedia from gerrit.wikimedia.org's anonymous `/r/<project>` paths,
+   which its robots.txt leaves open (it disallows `/r/a/`, gitiles and `/g`; `Crawl-delay: 1`);
+   Qt from its official repositories on GitHub, read under GitHub's research clause (2026-10-19
+   entry), since code.qt.io disallows all paths and Qt's written grant covers its REST API. A Qt
+   project resolves, in this order, to the GitHub repository at its own path, to `qtproject/`
+   with its slashes as hyphens, or to `qtproject/` and its last component; one that resolves to
+   none is reported as having no reference (in Qt's dev window `license-tools/license-service`
+   and three `yocto` layers, 29 of 809 examples).
+
+No line of review text is read or written by the lookup; it reads `before` and `after` and the
+hosts' code, and its output holds example ids, counts and η.
+
+### The backport lookup amended before it ran (2026-10-20)
+
+`# research(2026-10)`. An independent review of the code, before any clone or lookup, found
+places where the entry above was underspecified or its first code wrong; fixed, still before any
+lookup is read:
+
+1. *A branch at the upload* is its first-parent commit before it. A side branch merged after the
+   upload carries commits dated before it that were not on the branch then (reproduced on a local
+   repository). A commit dated before its parent (clock skew) is read as dated, and so is a
+   change fast-forwarded onto a branch: its date is its last rebase, not its landing, which a
+   second review counted for a few changes per branch within a week of the upload.
+2. *Retired branches.* OpenStack deletes a branch at its end of life and keeps it as the tag
+   `<series>-eol`, so the reference adds a tag ending in `-eol` when it was created after the
+   upload, its branch then still standing, read the same way; an earlier one's branch was gone
+   at the upload (on cinder, 18 of 23, which would have added 44% of its reference lines), and
+   other tags stay out. A first run with every `-eol` tag was stopped before any lookup was read.
+3. *Files.* Symlinks and submodules are not files and are not read.
+4. *Lines* are held as their 64-bit hashes within one run, to bound memory on a project with
+   hundreds of deployment branches; a false match needs two distinct lines to collide.
+5. *Clones* run in the git route's isolated environment (`notedb._isolated_env`: no user or system
+   config, no credential helper, no prompt), with redirects off, only from the three hosts named
+   (`lookup.LOOKUP_PERMITTED`), keep a host's quiet deadline and hold it 15 minutes after a server
+   error, and refuse a project name that does not read plainly as a path (`notedb._UNSAFE_PROJECT`).
+   Two seconds separate the end of one clone from the start of the next.
+6. *Windows* are read as the runner reads them (`holdout.window_split`'s deduplication, split and
+   refusals); a sealed window is refused, as the runner refuses it.
+7. *The sensitivity's listing* is written by `scripts/sensitivity_ids.py` from the lookup's
+   artifact, in the change that adds its name to `cells.REGISTERED_SENSITIVITIES`.
