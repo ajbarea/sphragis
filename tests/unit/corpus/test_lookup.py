@@ -101,12 +101,17 @@ def test_a_side_branch_merged_after_the_upload_is_not_the_tip(work: Path, tmp_pa
     assert lookup.branch_tips(repo, before=UPLOAD)["refs/heads/stable/1"] == before_merge
 
 
-def test_an_end_of_life_tag_stands_for_its_deleted_branch(work: Path, tmp_path: Path) -> None:
-    _git(work, "tag", "1.0-eol", "stable/1")
+def test_an_end_of_life_tag_stands_for_a_branch_retired_after_the_upload(
+    work: Path, tmp_path: Path
+) -> None:
+    _git(work, "tag", "-a", "-m", "eol", "1.0-eol", "stable/1", when="2025-03-01T00:00:00Z")
+    _git(work, "tag", "-a", "-m", "eol", "0.9-eol", "main", when="2024-05-01T00:00:00Z")
     _git(work, "tag", "1.0.0", "stable/1")
     _git(work, "branch", "-D", "stable/1")
     tips = lookup.branch_tips(_bare(work, tmp_path / "eol.git"), before=UPLOAD)
-    assert "refs/tags/1.0-eol" in tips and "refs/tags/1.0.0" not in tips
+    # 1.0-eol was cut after the upload, so its branch stood then; 0.9-eol's was gone before it.
+    assert "refs/tags/1.0-eol" in tips
+    assert "refs/tags/0.9-eol" not in tips and "refs/tags/1.0.0" not in tips
 
 
 def test_a_branch_born_entirely_after_the_upload_is_skipped(repo: Path, tmp_path: Path) -> None:

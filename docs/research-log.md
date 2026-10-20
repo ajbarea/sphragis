@@ -10506,10 +10506,14 @@ lookup is read:
 
 1. *A branch at the upload* is its first-parent commit before it. A side branch merged after the
    upload carries commits dated before it that were not on the branch then (reproduced on a local
-   repository). A commit dated before its parent (clock skew) is read as dated.
+   repository). A commit dated before its parent (clock skew) is read as dated, and so is a
+   change fast-forwarded onto a branch: its date is its last rebase, not its landing, which a
+   second review counted for a few changes per branch within a week of the upload.
 2. *Retired branches.* OpenStack deletes a branch at its end of life and keeps it as the tag
-   `<series>-eol`, so the reference adds every tag ending in `-eol`, read the same way; other tags
-   stay out.
+   `<series>-eol`, so the reference adds a tag ending in `-eol` when it was created after the
+   upload, its branch then still standing, read the same way; an earlier one's branch was gone
+   at the upload (on cinder, 18 of 23, which would have added 44% of its reference lines), and
+   other tags stay out. A first run with every `-eol` tag was stopped before any lookup was read.
 3. *Files.* Symlinks and submodules are not files and are not read.
 4. *Lines* are held as their 64-bit hashes within one run, to bound memory on a project with
    hundreds of deployment branches; a false match needs two distinct lines to collide.

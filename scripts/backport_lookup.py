@@ -104,7 +104,10 @@ def main() -> None:
             for row in held:
                 if row["project"] == project:
                     by_example[row["id"]] = lookup.reading(row, reference)
-        print(f"{args.org} {number}/{len(projects)} {project}: {sources[project].get('source')}")
+        print(
+            f"{args.org} {number}/{len(projects)} {project}: {sources[project].get('source')}",
+            flush=True,
+        )
     report: dict[str, Any] = {
         "org": args.org,
         "rule": {

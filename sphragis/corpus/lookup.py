@@ -16,6 +16,7 @@ import subprocess
 import time
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import urlparse
@@ -117,13 +118,24 @@ def _git(repo: Path, *args: str) -> str:
 
 
 def branch_tips(repo: Path, before: str = UPLOAD) -> dict[str, str]:
-    """Each branch's, and each end-of-life tag's, first-parent commit before `before`, keyed by
-    ref; one with none is left out. First-parent, because a merged side branch's commits carry
-    their own dates and were not on the branch until the merge."""
-    refs = _git(repo, "for-each-ref", "--format=%(refname)", "refs/heads", "refs/tags").split()
+    """Each branch's first-parent commit before `before`, and each end-of-life tag's whose branch
+    still stood then (the tag created after `before`), keyed by ref; one with no commit before
+    `before` is left out. First-parent, because a merged side branch's commits carry their own
+    dates and were not on the branch until the merge."""
+    listing = _git(
+        repo,
+        "for-each-ref",
+        "--format=%(refname) %(creatordate:iso-strict)",
+        "refs/heads",
+        "refs/tags",
+    )
+    cutoff = datetime.fromisoformat(before.replace("Z", "+00:00"))
     tips = {}
-    for ref in refs:
-        if ref.startswith("refs/tags/") and not ref.endswith(EOL_TAG_SUFFIX):
+    for line in listing.splitlines():
+        ref, created = line.rsplit(" ", 1)
+        if ref.startswith("refs/tags/") and (
+            not ref.endswith(EOL_TAG_SUFFIX) or datetime.fromisoformat(created) <= cutoff
+        ):
             continue
         commit = _git(
             repo, "rev-list", "-1", "--first-parent", f"--before={before}", f"{ref}^{{commit}}"
@@ -222,7 +234,7 @@ class Cloner:
             ],
             capture_output=True,
             text=True,
-            env=_isolated_env(),
+            env=_isolated_env({"GIT_ASKPASS": "", "SSH_ASKPASS": ""}),
         )
         self._ready[host] = self._clock() + CLONE_INTERVAL
         if done.returncode != 0:
