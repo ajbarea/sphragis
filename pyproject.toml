@@ -40,7 +40,7 @@ dev = [
     "pygments>=2.21",
     # tests/conftest.py reads the extra and this group with it.
     "packaging>=24",
-    "ruff>=0.16.8",
+    "ruff>=0.17.0",
     "ty>=0.0.86,<0.1",
     # The docs site. In `dev` rather than run through `uv tool` because the docs workflow
     # builds with `uv run zensical`, matching the sister repositories, and a tool-run
