@@ -346,3 +346,14 @@ def test_a_named_scope_needs_each_project_in_each_range(tmp_path, monkeypatch) -
     _write(tmp_path / "missing", {}, record=lambda m: _ranged(m, projects=("p/a", "p/b")))
     with pytest.raises(SystemExit, match="lists 2 projects"):
         _main(tmp_path / "missing", monkeypatch)
+
+
+def test_a_listing_recorded_without_its_query_is_refused(tmp_path, monkeypatch) -> None:
+    monkeypatch.setitem(cli.REST_PERMITTED, HOST, cli.REST_PERMITTED[HOST]._replace(scope=EVERY))
+
+    def record(month: str) -> dict:
+        return {"listings": [_whole(month), {"pages": 1}]}
+
+    _write(tmp_path, {}, record=record)
+    with pytest.raises(SystemExit, match="names no query"):
+        _main(tmp_path, monkeypatch)

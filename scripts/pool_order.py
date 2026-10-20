@@ -162,7 +162,11 @@ def _tiled(span: tuple[str, str], spans: Spans, halved: Spans) -> bool:
 
 
 def _queries(record: dict) -> list[str]:
-    return [r["query"] for r in record.get("listings", [record]) if "query" in r]
+    """Every listing's query as the fetch recorded it; a listing without one is refused."""
+    listings = record.get("listings", [record])
+    if any("query" not in listing for listing in listings):
+        raise SystemExit(f"a recorded listing names no query: {listings}")
+    return [listing["query"] for listing in listings]
 
 
 if __name__ == "__main__":

@@ -20,18 +20,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   2026-10-19, "Plain hashes of generated text keyed for publication").
 - **The GitHub replication family** (research log, 2026-10-18): all four collected, frozen and
   split-checked; Apache and .NET are members, LLVM and Grafana cannot qualify.
-- **H2's foreign source** (research log, 2026-10-19): AOSP's pool, listed through 2025-10 and
-  deduplicated against Qt, covers 34 of the 80 matched draws and none of the 40 partitions
-  (1,076 C++ examples of the 1,308 the largest needs), so it does not qualify, as Chromium's V8
-  pool did not. Fuchsia is admitted on AJ's reading of Chrome Infra's answer (research log,
-  2026-10-19), its scope and stop rule fixed before any of its data is read. Its host refuses a
-  project list (405), so each month is listed whole (`GrantScope.every_project`): next the
-  window's listings, `pool_order.py`, the probe, the build in that order and
-  `foreign_pool_coverage.py --order --against qt=...`. Chromium, first in item 1's order, is read
-  again under AJ's reading of its answer as a rate (research log, 2026-10-19): every code project,
-  each month in two-day ranges (`GrantScope.listing_days`), ranked, then the covering prefix listed
-  by name into its own root and built; its listings start after Fuchsia's build ends, one host at a
-  time. Until a pool covers, `FOREIGN_SOURCE` stays unset and H2's development arms wait.
+- **H2's foreign source** (research log, 2026-10-20): Fuchsia's pool covers every matched draw
+  with its first project, `fuchsia` (5,552 examples after dedup against Qt, 1,348 C++ of the 1,308
+  the largest draw needs), so Fuchsia qualifies; AOSP's and V8's pools do not. Chromium, first in
+  item 1's order, is being read under its rate grant (research log, 2026-10-19): ranking listings
+  over every code project in two-day ranges (started 2026-10-20), then the covering prefix listed
+  by name into its own root, built and covered the same way. If it covers it is the source, else
+  Fuchsia; that commit sets `FOREIGN_SOURCE`, and no H2 development contrast is read before it.
 - **H2 in the partition design** (research log, 2026-10-18): the matched foreign arms run
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and
@@ -44,11 +39,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    `replication_gate()` refuses to read the family before it. Each member's development pilot
    and simulation come before its test window.
 2. After the permission deadline (2026-11-20) and before the first test window: one commit sets
-   `ADMITTED_ORGANIZATIONS` and `FOREIGN_SOURCE`. Qt can be admitted until 2026-11-20, with its
+   `ADMITTED_ORGANIZATIONS` (`FOREIGN_SOURCE` is set earlier, before the first H2 development
+   contrast, item 3(b)). Qt can be admitted until 2026-11-20, with its
    cells' bounds simulated and committed by then, and Chromium only if its split is frozen by
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
-   (a) a source whose pool covers every draw (AOSP's does not; Fuchsia's and Chromium's are being built, 2026-10-19); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   (a) a source whose pool covers every draw (Fuchsia's does, AOSP's does not, 2026-10-20; Chromium's
+   is being read and wins if it covers); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; a fixed source other than Chromium refuses every read

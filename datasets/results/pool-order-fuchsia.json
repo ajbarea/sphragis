@@ -1,0 +1,397 @@
+{
+  "org": "fuchsia",
+  "root": "/home/ajbar/ajsoftworks/sphragis-data-local/fuchsia/listing",
+  "grant": {
+    "projects": [],
+    "created_from": "2024-11-01",
+    "created_before": "2025-09-01",
+    "read_cap": null,
+    "listed_through": "2025-10",
+    "every_project": true
+  },
+  "months": [
+    "2024-11",
+    "2024-12",
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10"
+  ],
+  "changes": 37811,
+  "listed_twice": 0,
+  "order": [
+    {
+      "project": "fuchsia",
+      "merged": 16223,
+      "commented": 7727
+    },
+    {
+      "project": "sdk-samples/drivers",
+      "merged": 3733,
+      "commented": 0
+    },
+    {
+      "project": "drivers/wlan/intel/iwlwifi",
+      "merged": 3698,
+      "commented": 2
+    },
+    {
+      "project": "sdk-samples/getting-started",
+      "merged": 3673,
+      "commented": 1
+    },
+    {
+      "project": "drivers/rtc/nxp/pcf8563",
+      "merged": 3212,
+      "commented": 4
+    },
+    {
+      "project": "boards/emac",
+      "merged": 2940,
+      "commented": 0
+    },
+    {
+      "project": "fuchsia-infra-bazel-rules",
+      "merged": 2002,
+      "commented": 4
+    },
+    {
+      "project": "infra/recipes",
+      "merged": 1504,
+      "commented": 269
+    },
+    {
+      "project": "antlion",
+      "merged": 107,
+      "commented": 49
+    },
+    {
+      "project": "third_party/mesa",
+      "merged": 99,
+      "commented": 29
+    },
+    {
+      "project": "jiri",
+      "merged": 74,
+      "commented": 14
+    },
+    {
+      "project": "third_party/github.com/ninja-build/ninja",
+      "merged": 66,
+      "commented": 39
+    },
+    {
+      "project": "cobalt-registry",
+      "merged": 55,
+      "commented": 28
+    },
+    {
+      "project": "cobalt",
+      "merged": 54,
+      "commented": 24
+    },
+    {
+      "project": "vscode-plugins",
+      "merged": 43,
+      "commented": 16
+    },
+    {
+      "project": "rsclient",
+      "merged": 37,
+      "commented": 9
+    },
+    {
+      "project": "infra/3pp",
+      "merged": 34,
+      "commented": 18
+    },
+    {
+      "project": "infra/infra",
+      "merged": 26,
+      "commented": 6
+    },
+    {
+      "project": "protobuf-gn",
+      "merged": 23,
+      "commented": 12
+    },
+    {
+      "project": "third_party/go",
+      "merged": 21,
+      "commented": 8
+    },
+    {
+      "project": "third_party/Vulkan-Tools",
+      "merged": 17,
+      "commented": 7
+    },
+    {
+      "project": "shac-project/shac",
+      "merged": 11,
+      "commented": 3
+    },
+    {
+      "project": "third_party/Vulkan-Loader",
+      "merged": 10,
+      "commented": 4
+    },
+    {
+      "project": "third_party/github.com/jacereda/fsatrace",
+      "merged": 9,
+      "commented": 2
+    },
+    {
+      "project": "third_party/openthread",
+      "merged": 9,
+      "commented": 1
+    },
+    {
+      "project": "third_party/abseil-cpp",
+      "merged": 8,
+      "commented": 3
+    },
+    {
+      "project": "third_party/android.googlesource.com/platform/hardware/google/gfxstream",
+      "merged": 8,
+      "commented": 3
+    },
+    {
+      "project": "third_party/github.com/google/mobly",
+      "merged": 8,
+      "commented": 2
+    },
+    {
+      "project": "third_party/android/device/generic/goldfish-opengl",
+      "merged": 7,
+      "commented": 5
+    },
+    {
+      "project": "third_party/spirv-tools",
+      "merged": 7,
+      "commented": 1
+    },
+    {
+      "project": "third_party/grpc",
+      "merged": 6,
+      "commented": 2
+    },
+    {
+      "project": "third_party/vulkan-cts",
+      "merged": 6,
+      "commented": 2
+    },
+    {
+      "project": "third_party/Vulkan-ValidationLayers",
+      "merged": 5,
+      "commented": 2
+    },
+    {
+      "project": "third_party/android.googlesource.com/platform/bionic",
+      "merged": 5,
+      "commented": 2
+    },
+    {
+      "project": "third_party/glslang",
+      "merged": 5,
+      "commented": 1
+    },
+    {
+      "project": "third_party/android.googlesource.com/platform/frameworks/native",
+      "merged": 4,
+      "commented": 0
+    },
+    {
+      "project": "third_party/freetype2",
+      "merged": 4,
+      "commented": 4
+    },
+    {
+      "project": "third_party/shaderc",
+      "merged": 4,
+      "commented": 0
+    },
+    {
+      "project": "third_party/spirv-cross",
+      "merged": 4,
+      "commented": 0
+    },
+    {
+      "project": "third_party/spirv-headers",
+      "merged": 4,
+      "commented": 0
+    },
+    {
+      "project": "third_party/Vulkan-Headers",
+      "merged": 3,
+      "commented": 1
+    },
+    {
+      "project": "third_party/libxml2",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "third_party/tink",
+      "merged": 3,
+      "commented": 2
+    },
+    {
+      "project": "infra/checkout-tests/integration",
+      "merged": 2,
+      "commented": 1
+    },
+    {
+      "project": "infra/checkout-tests/project2",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "third_party/curl",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "third_party/github.com/KhronosGroup/Vulkan-Utility-Libraries",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "third_party/github.com/google/snippet-uiautomator",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "third_party/github.com/zeux/volk",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "third_party/luci-go",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "third_party/rapidjson",
+      "merged": 2,
+      "commented": 1
+    },
+    {
+      "project": "third_party/vboot_reference",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "api-docs-resources",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "fontdata",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "infra/checkout-tests/project1",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "infra/prebuilt",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/acpica",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "third_party/android.googlesource.com/platform/system/libbase",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/android.googlesource.com/platform/system/logging",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/android/platform/external/avb",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "third_party/bcmdhd",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/github.com/alacritty/alacritty",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/github.com/ridiculousfish/libdivide",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "third_party/github.com/the-tcpdump-group/libpcap",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "third_party/github.com/the-tcpdump-group/tcpdump",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "third_party/half",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "third_party/openssh-portable",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/openweave-core",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/quickjs",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "third_party/sbase",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "third_party/wayland",
+      "merged": 1,
+      "commented": 0
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-10-19T18:15:24.982126+00:00",
+    "git": {
+      "commit": "4629b94863373ddd6bb98252500175db9b60d878",
+      "branch": "HEAD"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
