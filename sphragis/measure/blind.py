@@ -19,6 +19,7 @@ import random
 import re
 from collections import Counter
 from collections.abc import Sequence
+from typing import Any
 
 from sphragis.measure.stats import percentile_interval
 
@@ -168,3 +169,30 @@ def clustered_separation(
                 estimate = out[a]["estimate"] - out[b]["estimate"]
                 out[f"{a} - {b}"] = {"estimate": estimate, "low": low, "high": high}
     return out
+
+
+def exposure_reading(
+    separation: dict[str, dict[str, float]],
+    *,
+    membership: str = "min_k_plus_plus",
+    blind: str = "bag_of_words",
+) -> dict[str, Any]:
+    """The registered reading of a membership score (registered decisions, "Contamination:
+    provenance primary"): exposure only when its separation exceeds the blind classifier's, the
+    95% interval of the difference above zero; otherwise exposure cannot be told from the
+    windows' drift."""
+    if f"{membership} - {blind}" in separation:
+        diff = separation[f"{membership} - {blind}"]
+    else:
+        flipped = separation[f"{blind} - {membership}"]
+        diff = {
+            "estimate": -flipped["estimate"],
+            "low": -flipped["high"],
+            "high": -flipped["low"],
+        }
+    return {
+        "membership": membership,
+        "blind": blind,
+        "membership_minus_blind": diff,
+        "reading": "exposure" if diff["low"] > 0 else "not_told_from_drift",
+    }
