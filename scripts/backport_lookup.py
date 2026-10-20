@@ -1,0 +1,126 @@
+"""Each target's added lines looked up in its project's branches as they stood at the checkpoint.
+
+The registered lookup (research log, 2026-10-20, "The backport lookup registered";
+`sphragis.corpus.lookup`): every example of the given windows, deduplicated and split as the
+runner reads them, against every branch of its project at its last commit before the evaluated
+weights' upload. Each project is cloned once, bare, into `--clones`, under its host's claim and
+2 seconds apart; a project with no repository at any registered source has no reference. The
+output holds example ids, counts and η, never a line of code or review text. The test window
+only once its seal is open.
+
+    uv run --no-sync --no-active python scripts/backport_lookup.py \\
+        --root ~/ajsoftworks/sphragis-data-local/reference --org openstack \\
+        --clones ~/ajsoftworks/sphragis-data-local/lookup-clones \\
+        --out datasets/results/backport-lookup-openstack.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+from sphragis.corpus import lookup
+from sphragis.corpus.cli import USER_AGENT
+from sphragis.corpus.halves import TYPED_TARGET_MIN_CHARS
+from sphragis.corpus.hosts import claim_host
+from sphragis.corpus.split import seal_open, seal_path
+from sphragis.corpus.windows import WINDOWS
+from sphragis.experiment.holdout import window_split
+from sphragis.provenance import provenance_header
+
+CLASSES = ("clean", "suspicious", "found", "no_eligible_line", "no_reference")
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--root", type=Path, required=True, help="the corpus the partitions came from")
+parser.add_argument("--org", required=True, choices=sorted(lookup.SOURCES))
+parser.add_argument(
+    "--window",
+    action="append",
+    choices=sorted(WINDOWS),
+    help="a window to read, repeatable (default pilot, train and dev); test only once unsealed",
+)
+parser.add_argument("--clones", type=Path, required=True, help="where bare clones are kept")
+parser.add_argument("--out", type=Path, required=True)
+
+
+def summarize(readings: list[dict[str, Any]]) -> dict[str, Any]:
+    counts = Counter(r["class"] for r in readings)
+    return {"examples": len(readings), **{name: counts.get(name, 0) for name in CLASSES}}
+
+
+def main() -> None:
+    args = parser.parse_args()
+    windows = args.window or ["pilot", "train", "dev"]
+    unsealed = seal_open(args.root, args.org)
+    if "test" in windows and not unsealed:
+        raise SystemExit(f"{args.org}'s test window is sealed: {seal_path(args.root, args.org)}")
+    rows: dict[str, list[dict[str, Any]]] = {}
+    for window in windows:
+        try:
+            _, held, _ = window_split(
+                args.root, args.org, eval_window=window, refuse_sealed_rows=not unsealed
+            )
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+        rows[window] = held
+    projects = sorted({row["project"] for held in rows.values() for row in held})
+    cloner = lookup.Cloner(args.clones, user_agent=USER_AGENT, claim=claim_host)
+    by_example: dict[str, dict[str, Any]] = {}
+    sources: dict[str, dict[str, Any]] = {}
+    for number, project in enumerate(projects, 1):
+        clone = url = None
+        for candidate in lookup.SOURCES[args.org](project):
+            clone = cloner.clone(candidate)
+            if clone is not None:
+                url = candidate
+                break
+        reference = None
+        if clone is None:
+            sources[project] = {"source": None}
+        else:
+            tips = lookup.branch_tips(clone)
+            reference, files = lookup.reference_lines(clone, tips.values())
+            sources[project] = {
+                "source": url,
+                "branches": len(tips),
+                "tips": sorted(set(tips.values())),
+                "files": files,
+                "lines": len(reference),
+            }
+        for held in rows.values():
+            for row in held:
+                if row["project"] == project:
+                    by_example[row["id"]] = lookup.reading(row, reference)
+        print(f"{args.org} {number}/{len(projects)} {project}: {sources[project].get('source')}")
+    report: dict[str, Any] = {
+        "org": args.org,
+        "rule": {
+            "upload": lookup.UPLOAD,
+            "min_chars": TYPED_TARGET_MIN_CHARS,
+            "suspicious_from": lookup.SUSPICIOUS,
+            "found_from": lookup.FOUND,
+            "binary_probe_bytes": lookup.BINARY_PROBE,
+        },
+        "windows": {},
+        "projects": sources,
+    }
+    for window, held in rows.items():
+        readings = [by_example[row["id"]] for row in held]
+        report["windows"][window] = {
+            **summarize(readings),
+            "ids": {
+                name: sorted(r["id"] for r in readings if r["class"] == name)
+                for name in ("found", "suspicious")
+            },
+        }
+        print(window, summarize(readings))
+    report["provenance"] = provenance_header()
+    args.out.write_text(json.dumps(report, indent=2) + "\n")
+    print(f"wrote {args.out}")
+
+
+if __name__ == "__main__":
+    main()
