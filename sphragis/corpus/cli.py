@@ -193,7 +193,8 @@ def host_of(org: str) -> str:
 
 def admit(admitted: Admitted, host: str, rows: Iterable[Mapping[str, Any]]) -> None:
     """Let `host`'s transport ask about the changes of `rows` its grant covers, each checked here
-    (`created_in_grant`, a granted project); a host without a scope needs no admission."""
+    (`created_in_grant`, `covers_change`: a granted project and, under a scope of every project, a
+    code branch); a host without a scope needs no admission."""
     scope = REST_PERMITTED[host].scope if host in REST_PERMITTED else None
     if scope is None:
         return
@@ -220,7 +221,8 @@ def rest_rows(changes: Iterable[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
 
 def outside_grant(scope: GrantScope | None, month: str, rows: Sequence[Mapping[str, Any]]) -> str:
     """Why a month's REST rows would be read past what a host's grant covers, "" if they would
-    not: the month, a project it does not name, or a change created outside its window. A
+    not: the month, a project it does not name, a branch that holds no code under a scope of every
+    project, or a change created outside its window. A
     change's comments and diffs are asked by number, which names neither, so a path that asks by
     number (the build, the comment-count probe) refuses here first, a snapshot held from before
     the grant included, and admits what passes (`admit`); the transport asks about no other."""
