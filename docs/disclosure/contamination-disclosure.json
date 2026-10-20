@@ -1,0 +1,49 @@
+{
+  "disclosure_version": "1.1",
+  "benchmark": {
+    "name": "sphragis sealed test windows: Gerrit review refinements created 2025-11-01 to 2026-10-31",
+    "version": "corpus v3; each organization's frozen manifest (datasets/*/<org>/manifest.json)",
+    "doi": "",
+    "url": "https://github.com/ajbarea/sphragis"
+  },
+  "system_under_test": "Qwen/Qwen2.5-Coder-7B-Instruct at Hub revision c03e6d358207e414f1eca0bb1891e29f1db0e242, whose weights were written by commit 6ab006b7202e on 2024-09-17; one LoRA adapter per organization half",
+  "evaluation_date": "",
+  "strata_reported": {
+    "reported": true,
+    "strata": [
+      "openstack",
+      "wikimedia",
+      "qt"
+    ],
+    "aggregate_only": false,
+    "definition": "One stratum per admitted Gerrit organization, each its own H1 cell; Qt is a stratum if admitted at the Stage 1 freeze (ADMITTED_ORGANIZATIONS).",
+    "pre_registered": true
+  },
+  "elicitation_budget": {
+    "harness": "this repository, at the commit each result's provenance records",
+    "token_budget": "256 new tokens per example (MAX_NEW_TOKENS)",
+    "attempts_allowed": 1,
+    "attempt_resolution": "single",
+    "scaffold_notes": "No tools, retrieval or agent loop: one prompt (the hunk, its context and the review comments) and one completion.",
+    "decoding": "Greedy, temperature 0, repetition penalty 1.0 (registered 2026-10-08).",
+    "still_rising_at_max_budget": "n/a"
+  },
+  "contamination_controls": {
+    "direct": "not_controlled",
+    "derivative": "not_controlled",
+    "temporal": "not_controlled",
+    "distributional": "controlled",
+    "acquired": "n/a",
+    "network_access_during_eval": false,
+    "environment_sanitised": "n/a",
+    "transcripts_reviewed": "n/a",
+    "boundary_integrity_monitored": "n/a",
+    "notes": "Direct and temporal: every test example was created on or after 2025-11-01, more than a year after the evaluated weights were written (2024-09-17, read from the Hub's commit record), and test ids stay sealed with no review text published. That bound does not reach a backport or cherry-pick, whose answer can carry code merged upstream before the checkpoint; the lookup of each target's added lines in the branches as they stood at the upload is still open (ROADMAP), and the backport share is measured on the pilot, train and dev windows only (datasets/results/backport-share.json), so both are not_controlled until it lands. Derivative: the code around a hunk can predate the checkpoint. Distributional: an organization's conventions predate the checkpoint by design; both arms of the H1 contrast share the base checkpoint and are scored on the same test items, so exposure that adds equally to both cancels in own minus sibling, an assumption that fails if the base model's prior knowledge of an organization interacts with its own adapter. Acquired: the model generates from one prompt with no tool or network interface. Two inputs to the rules-file comparator postdate the test window's opening: its distiller (Qwen/Qwen3.6-27B, weights written 2026-04-22) and the written-guide revisions it reads (datasets/rules/guide-*.json), so test-period exposure could reach an own-half file more than a sibling's; that comparator's test reading carries the caveat and a sensitivity with earlier inputs (research log, 2026-10-20)."
+  },
+  "regeneration": {
+    "procedure_published": true,
+    "procedure_url": "https://github.com/ajbarea/sphragis",
+    "artifact_only": false,
+    "notes": "The corpus is rebuilt from each host under pinned fetch and build rules (FETCH_RULES, BUILD_RULES); review text is not redistributed, and example ids per window are released at Stage 2."
+  }
+}

@@ -10412,3 +10412,48 @@ Fuchsia, is being read under its re-registration (2026-10-19), its ranking listi
 10:02. No H2 development contrast is read until Chromium's coverage is: if its pool covers, it is
 the source; if not, Fuchsia is, and the commit that says which sets `FOREIGN_SOURCE`. The C++
 margin over the largest draw is 40 examples, recorded as the pool's tightest constraint.
+
+### Checkpoint dates from the weights' upload commits, and a contamination disclosure (2026-10-20)
+
+`# research(2026-10)`. The 2026-10-01 sweep left two items under "Pin the checkpoint revisions":
+cite each checkpoint's weight upload as its date, and adopt a contamination disclosure table
+(arXiv:2608.29463). The Hub's tree API, asked at each pinned revision (2026-10-20,
+`/api/models/<repo>/tree/<revision>?expand=true`), names the commit that last wrote every
+`.safetensors` file; one commit wrote all of each checkpoint's weights:
+
+| Checkpoint (role) | Pinned revision | Weights written by | On |
+| --- | --- | --- | --- |
+| Qwen2.5-Coder-7B-Instruct (evaluated) | c03e6d3 | 6ab006b7202ec68b6df47693b5c3003998dc3124 | 2024-09-17 |
+| Qwen2.5-Coder-7B (membership scores) | 0396a76 | 921a10c41e41816ad13dea9f8e7a68a2e7d59acf | 2024-09-16 |
+| Qwen2.5-Coder-1.5B-Instruct (development) | 2e1fd39 | e3b23484d3a9a85090a66068cd8396cc015c3637 | 2024-09-18 |
+| Qwen3.6-27B (rules distiller) | 6a9e13b | 1b559cf7215ebe67ff10758e14f6293ba883223b | 2026-04-22 |
+| Qwen3-14B (label-audit rater) | 40c0698 | f8c293defed9c6a8026291e8e7d780697e88d7af | 2025-04-28 |
+
+The tree is read at the pinned revision, so the later commits each carries (config, tokenizer,
+licence and README files) left the weights as uploaded. Every corpus window opens after the three
+Qwen2.5-Coder uploads (the pilot on 2024-10-01): no refinement was created before the evaluated
+weights were written, a bound read from the upload rather than from a self-reported training
+cutoff. It does not reach a backport or cherry-pick, whose answer can carry code merged upstream
+before the upload; the lookup of each target's added lines at the upload is still open (Plan H),
+and the backport share is measured on the pilot, train and dev windows only.
+
+The disclosure is `docs/disclosure/contamination-disclosure.json`, in the authors' v1.1 format and
+validated against their schema (copied unchanged, CC BY 4.0, `docs/disclosure/README.md`). Direct
+and temporal contamination are marked not controlled until that lookup lands, derivative not
+controlled, and distributional controlled by the contrast, on the stated assumption that exposure
+adds equally to both arms, which share the checkpoint and the test items. Acquired does not
+apply: the model has no tool or network interface. The label-audit rater grades labels and scores
+no arm.
+
+Two inputs to the rules-file comparator postdate the test window's opening (2025-11-01): its
+distiller, and the written guides it reads (OpenStack's `HACKING.rst` at a 2026-05-08 revision,
+and most of Wikimedia's pages, `datasets/rules/guide-*.json`). Neither scores anything, but an
+own-half file describes the own half, so test-period exposure could reach it more than the
+sibling's and would not cancel in the comparator's contrast. The comparator's test reading carries
+this caveat, and a sensitivity reading with inputs that predate 2025-11-01 is added to the ROADMAP.
+
+Sources:
+
+- Angulo, Yeste and Espinos-Morato, arXiv:2608.29463; schema at
+  https://github.com/Jangulo7/contamination-disclosure-paper (commit 3d0dee0).
+- Hugging Face Hub API, model tree endpoint at each pinned revision (read 2026-10-20).
