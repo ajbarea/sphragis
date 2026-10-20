@@ -26,19 +26,41 @@ scratch/
 datasets/results/contamination-inputs/
 # Generation runs of a host opened by written grant: their predictions are model text that can
 # repeat a reviewer's comment, which the grants exclude from anything published. Their likelihood
-# rescorings, ids and scores only, are committed (research log, 2026-10-18).
-datasets/results/rq1-partition-qt-*.json
-datasets/results/rq1-placebo-qt*.json
-datasets/results/rq1-windows-qt*.json
-datasets/results/rq1-partition-chromium-*.json
-datasets/results/rq1-placebo-chromium*.json
-datasets/results/rq1-windows-chromium*.json
-datasets/results/retrieval-halves-qt-*.json
-datasets/results/rules-halves-qt-*.json
-datasets/results/retrieval-halves-chromium-*.json
-datasets/results/rules-halves-chromium-*.json
-datasets/results/rules-reviews-qt-*.json
-datasets/results/rules-reviews-chromium-*.json
+# rescorings, ids and scores only, are committed (research log, 2026-10-18). A name carries its
+# org (`qtfull` for Qt's full pool) and any sidecar: rows, a job's temporary file, a part.
+datasets/results/rq1-partition-qt*
+datasets/results/rq1-partition-chromium*
+datasets/results/rq1-partition-aosp*
+datasets/results/rq1-partition-fuchsia*
+datasets/results/rq1-placebo-qt*
+datasets/results/rq1-placebo-chromium*
+datasets/results/rq1-placebo-aosp*
+datasets/results/rq1-placebo-fuchsia*
+datasets/results/rq1-windows-qt*
+datasets/results/rq1-windows-chromium*
+datasets/results/rq1-windows-aosp*
+datasets/results/rq1-windows-fuchsia*
+datasets/results/retrieval-halves-qt*
+datasets/results/retrieval-halves-chromium*
+datasets/results/retrieval-halves-aosp*
+datasets/results/retrieval-halves-fuchsia*
+datasets/results/rules-halves-qt*
+datasets/results/rules-halves-chromium*
+datasets/results/rules-halves-aosp*
+datasets/results/rules-halves-fuchsia*
+datasets/results/rules-reviews-qt*
+datasets/results/rules-reviews-chromium*
+datasets/results/rules-reviews-aosp*
+datasets/results/rules-reviews-fuchsia*
+datasets/results/retrieval-foreign-qt*
+datasets/results/retrieval-foreign-chromium*
+datasets/results/retrieval-foreign-aosp*
+datasets/results/retrieval-foreign-fuchsia*
+datasets/results/rules-foreign-qt*
+datasets/results/rules-foreign-chromium*
+datasets/results/rules-foreign-aosp*
+datasets/results/rules-foreign-fuchsia*
+*.partial
 
 COMMITS.md
 

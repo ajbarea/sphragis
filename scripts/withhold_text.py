@@ -17,8 +17,18 @@ import json
 from pathlib import Path
 from typing import Any
 
-from sphragis.measure.withhold import key_id, load_key, withhold
+from sphragis.measure.withhold import (
+    granted_content,
+    granted_findings,
+    granted_path,
+    key_id,
+    load_key,
+    pinned,
+    withhold,
+)
 from sphragis.provenance import provenance_header
+
+ROOT = Path(__file__).resolve().parents[1]
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("paths", nargs="+", type=Path)
@@ -26,6 +36,19 @@ where = parser.add_mutually_exclusive_group(required=True)
 where.add_argument("--out-dir", type=Path, help="write each published copy here, by name")
 where.add_argument("--in-place", action="store_true", help="rewrite tracked copies in place")
 parser.add_argument("--summary", type=Path, help="record which files and fields were withheld")
+
+
+def refuse_granted(path: Path, raw: bytes, document: object) -> None:
+    """Exit on a document drawn from a host opened by written grant, whose model text the grants
+    keep out of anything published, a digest of it included; the committed exceptions pass."""
+    resolved = path.resolve()
+    rel = resolved.relative_to(ROOT).as_posix() if resolved.is_relative_to(ROOT) else path.name
+    granted = (granted_path(rel) or granted_content(document)) and granted_findings(document)
+    if granted and not pinned(rel, raw):
+        raise SystemExit(
+            f"{path} is drawn from a host opened by written grant, which keeps its model text "
+            "out of anything published, digests included: leave it in the results root."
+        )
 
 
 def published(raw: str, document: object) -> str:
@@ -39,8 +62,11 @@ def main() -> None:
     key = load_key()
     files: dict[str, dict[str, Any]] = {}
     for path in args.paths:
-        raw = path.read_text()
-        document, count = withhold(json.loads(raw), path.name, key)
+        data = path.read_bytes()
+        raw = data.decode()
+        document = json.loads(raw)
+        refuse_granted(path, data, document)
+        document, count = withhold(document, path.name, key)
         out = path if args.in_place else args.out_dir / path.name
         if count:
             out.write_text(published(raw, document))
