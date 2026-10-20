@@ -69,17 +69,147 @@ def test_fields_belong_to_their_objects() -> None:
     assert w.text_left(rules) != []
 
 
+GUIDE = {
+    "kind": "guide",
+    "chunks": 1,
+    "part_pages": [1],
+    "map_lists": ["- m"],
+    "evidence": [],
+    "reduce_answer": None,
+    "merge_chunks": None,
+    "recurrence": [],
+    "rule_pages": [1],
+    "rules": ["- r"],
+    "file": "- r",
+}
+
+
 def test_a_distillation_of_a_written_guide_is_not_withheld() -> None:
-    guide = {"kind": "guide", "map_lists": ["- m"], "reduce_answer": None, "file": "- r"}
-    assert w.withhold({"files": {"o": guide}}, "rules-guide-openstack.json", KEY)[1] == 0
+    assert w.withhold({"files": {"o": GUIDE}}, "rules-guide-openstack.json", KEY)[1] == 0
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"reduce_answer": "- a rule"},
+        {"reduce_answer_hmac": "a" * 64},
+        {"evidence": ["a comment"]},
+        {"evidence": None},
+        {"evidence": 0},
+        {"recurrence": [{"rule": "a comment"}]},
+        {"recurrence": 0},
+        {"recurrence": None},
+        {"merge_chunks": [1]},
+        {"rules_hmac": ["a" * 64]},
+        {"chunks": 2},
+        {"chunks": 0, "part_pages": []},
+        {"part_pages": None},
+        {"rule_pages": [1, 1]},
+        {"kind": "Guide"},
+    ],
+)
+def test_a_guide_is_exempt_only_in_the_shape_a_written_guide_has(change: dict) -> None:
+    assert w.withhold({"files": {"o": {**GUIDE, **change}}}, "g.json", KEY)[1] > 0, change
+
+
+@pytest.mark.parametrize("gone", ["evidence", "recurrence", "chunks", "part_pages", "rule_pages"])
+def test_a_guide_missing_part_of_its_shape_is_not_exempt(gone: str) -> None:
+    bare = {k: v for k, v in GUIDE.items() if k != gone}
+    assert w.withhold({"o": bare}, "g.json", KEY)[1] > 0
+
+
+def test_a_reviews_distillation_is_known_by_its_kind_in_any_case() -> None:
+    for kind in ("reviews", "Reviews", "REVIEWS"):
+        distilled = {"kind": kind, "rules": ["- r"], "file": "- r"}
+        assert w.withhold({"o": distilled}, "any.json", KEY)[1] == 2, kind
+    sources = {"kind": "reviews", "sources": ["a review", "another"], "pool_ids": ["i", "j"]}
+    published, count = w.withhold({"o": sources}, "any.json", KEY)
+    assert count == 2 and published["o"]["pool_ids"] == ["i", "j"]
+
+
+def test_a_reviews_distillation_keeps_the_counts_it_records() -> None:
+    counts = {
+        "kind": "reviews",
+        "evidence": [{"listed": 15, "kept": 2}],
+        "recurrence": [[2, 5], [1]],
+        "chunks": 2,
+    }
+    assert w.withhold({"o": counts}, "any.json", KEY) == ({"o": counts}, 0)
+
+
+def test_a_field_no_producer_writes_is_not_withheld_by_name() -> None:
+    config = {"output": "datasets/results/x.json", "generation": "greedy", "outputs": ["a"]}
+    assert w.withhold(config, "r.json", KEY) == (config, 0)
+
+
+def _id(n: str = "a", path: str = "f.py") -> str:
+    return f"openstack:I{n * 40}:{path}:1:2"
+
+
+def test_a_key_the_document_lists_is_a_label() -> None:
+    listed = {"ids": ["i0", "i1"], "passes": {"bf16": {"i0": "x", "i1": "y"}}}
+    published, count = w.withhold(listed, "r.json", KEY)
+    assert count == 2 and list(published["passes_hmac"]["bf16"]) == ["i0", "i1"]
+    row = {"results": [{"id": "i0", "prediction": {"i0": "x"}}]}
+    assert w.withhold(row, "r.json", KEY)[1] == 1
+    unlisted = {"ids": ["i0"], "passes": {"bf16": {"i9": "x"}}}
+    assert w.text_left(unlisted) == ["/passes"]
+
+
+def test_keys_that_are_text_are_reported_and_refused_never_digested() -> None:
+    for doc in (
+        {"prediction": {"nit: typo": 0}},
+        {"prediction": {"lower": 0.1, "upper": 0.2}},
+        {"rows": [{"id": "i0", "predictions": {"LGTM": ["x"]}}]},
+    ):
+        assert w.text_left(doc), doc
+        with pytest.raises(ValueError, match="text as keys"):
+            w.withhold(doc, "r.json", KEY)
+
+
+def test_ids_and_dtype_labels_keep_their_place_as_keys() -> None:
+    doc = {"prediction": {_id(): "x"}, "passes": {"bf16_fresh": {_id("b"): "y"}, "fp32": {}}}
+    published, count = w.withhold(doc, "r.json", KEY)
+    assert count == 2 and list(published["prediction_hmac"]) == [_id()]
+    assert w.text_left(published) == []
+
+
+def test_keys_under_a_digest_field_are_labels_or_digests() -> None:
+    ids = frozenset({"i0"})
+    assert not w.unlabelled_keys({"bf16": {"i0": "d", _id(): "d", "fp32": {}}}, ids)
+    assert w.unlabelled_keys({"bf16": {"LGTM": "d"}}, ids) == ["LGTM"]
+    assert not w.unlabelled_keys({"a" * 64: "d"}, ids)
+
+
+@pytest.mark.parametrize(
+    ("value", "ok"),
+    [
+        (f"qt:I{'a' * 40}:src/a.cpp:1:2", True),
+        (f"qt:I{'A' * 40}:src/a b/c.cpp:1", True),
+        (f"wikimedia:I{'a' * 40}:doc/adr/0008. Filtering data with Scribunto.md:3", True),
+        ("x:o/r#12:src/a.py:3:4", True),
+        (f"qt:I{'a' * 40}:Please rename this variable to something clearer:1", False),
+        (f"qt:I{'a' * 40}:Please rename this variable now. Thanks:1", False),
+        (f"qt:I{'a' * 39}:f.py:1", False),
+        (f"qt:Ig{'a' * 39}:f.py:1", False),
+        (f"qt:I{'a' * 40}:f.py:x", False),
+    ],
+)
+def test_one_example_id_pattern(value: str, ok: bool) -> None:
+    assert w.is_example_id(value) is ok, value
+
+
+def test_the_pass_labels_are_the_dtype_runs_the_determinism_check_writes() -> None:
+    assert {"bf16", "bf16_fresh", "bf16_repeat", "fp32"} == w.PASS_LABELS
 
 
 def test_determinism_passes_keep_their_ids() -> None:
-    doc = {"passes": {"bf16": {"a": "x", "b": "y"}}}
+    a, b = (f"openstack:I{n * 40}:f.py:1:2" for n in "ab")
+    doc = {"passes": {"bf16": {a: "x", b: "y"}}}
     published, count = w.withhold(doc, "determinism-sym-0-gh-a-001-rp1.0.json", KEY)
     assert count == 2 and published["passes_hmac"]["bf16"] == {
-        "a": w.digest("x", KEY),
-        "b": w.digest("y", KEY),
+        a: w.digest("x", KEY),
+        b: w.digest("y", KEY),
     }
 
 

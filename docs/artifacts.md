@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 748 artifacts under
-71 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 749 artifacts under
+72 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -1257,6 +1257,14 @@ What the collected windows contain, and how much leaks across their boundaries.
 | `window-report-qt.json` |
 | `window-report-wikimedia-v3.json` |
 
+## `scripts/withhold_text.py`
+
+Publish results without their model text: each withheld field's texts become keyed digests.
+
+| artifact |
+|---|
+| `withheld-text.json` |
+
 ## Written by no script this page can find
 
 These are committed artifacts that no `claim_result`, no `--out` example and no
@@ -1274,4 +1282,3 @@ of the research log rather than out of the code.
 - `stratified-coverage-0.975.json`
 - `stratified-coverage-h1-0.95.json`
 - `stratified-coverage-h1-0.975.json`
-- `withheld-text.json`

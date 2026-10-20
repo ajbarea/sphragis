@@ -17,8 +17,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-from sphragis.measure.withhold import key_id, load_key, withhold
+from sphragis.measure.withhold import key_id, load_key, refusals, withhold
 from sphragis.provenance import provenance_header
+
+ROOT = Path(__file__).resolve().parents[1]
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("paths", nargs="+", type=Path)
@@ -34,23 +36,51 @@ def published(raw: str, document: object) -> str:
     return text + "\n" if raw.endswith("\n") else text
 
 
+def _in_repo(path: Path) -> str | None:
+    resolved = path.resolve()
+    return resolved.relative_to(ROOT).as_posix() if resolved.is_relative_to(ROOT) else None
+
+
+def convert(path: Path, dest: Path, key: bytes) -> tuple[bytes, int, Any]:
+    """The bytes to publish for one input, how many texts were withheld, and the published
+    document; exits, naming why, unless the guard would pass the result at `dest`.
+
+    A path outside the checkout is judged by every component it has: the results root holds a
+    host's files in a folder named for it.
+    """
+    data = path.read_bytes()
+    try:
+        document, count = withhold(json.loads(data), path.name, key)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    out = published(data.decode(), document).encode() if count else data
+    rel = _in_repo(path) or "/".join(path.resolve().parts[1:])
+    if problems := refusals(rel, out, [document], _in_repo(dest)):
+        raise SystemExit(f"{path} may not be published: {'; '.join(problems[:3])}")
+    return out, count, document
+
+
 def main() -> None:
     args = parser.parse_args()
     key = load_key()
     files: dict[str, dict[str, Any]] = {}
+    writes: list[tuple[Path, bytes]] = []
+    # Every input is checked before any output is written.
     for path in args.paths:
-        raw = path.read_text()
-        document, count = withhold(json.loads(raw), path.name, key)
-        out = path if args.in_place else args.out_dir / path.name
+        dest = path if args.in_place else args.out_dir / path.name
+        out, count, document = convert(path, dest, key)
         if count:
-            out.write_text(published(raw, document))
             files[path.name] = {"fields": document["withheld_text"]["fields"], "texts": count}
-        elif not args.in_place:
-            out.write_text(raw)
-    print(f"withheld {sum(f['texts'] for f in files.values())} texts in {len(files)} files")
+        if count or not args.in_place:
+            writes.append((dest, out))
+    summary = None
     if args.summary:
         previous = json.loads(args.summary.read_text()) if args.summary.is_file() else None
         summary = merged_summary(previous, files, key_id(key))
+    for dest, out in writes:
+        dest.write_bytes(out)
+    print(f"withheld {sum(f['texts'] for f in files.values())} texts in {len(files)} files")
+    if args.summary:
         args.summary.write_text(json.dumps(summary, indent=2) + "\n")
 
 

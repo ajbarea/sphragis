@@ -10187,7 +10187,8 @@ comment word for word when the model copies it (ROADMAP, "predictions in publish
    any tracked `.json` or `.jsonl` file, anywhere in the repo, that still carries such text, holds a
    `*_hmac` value that is not a 64-digit hex digest, or lists bot-audit comments; it refuses a
    Qt or Chromium generation run, plain or digested, outside the 13 files committed before the
-   rule, and trips on each shape a run is published in.
+   rule, and trips on each shape a run is published in. (Amended 2026-10-19: 20 files, every
+   written-grant host; see "The published-text guard reads a granted host from its content".)
 
 Sources:
 
@@ -10296,3 +10297,45 @@ now, before any chromium-review change past V8's is read:
    names a project in the entry "Fuchsia's months listed whole" (2026-10-19), for both scopes of
    every project, Chromium's and Fuchsia's: `--project` and the transport now admit a name that
    reads as itself.
+
+### The published-text guard reads a granted host from its content (2026-10-19)
+
+The guard of "Model text withheld from published results" (item 5) knew a Qt or Chromium run by its
+file name only. Read by content, the tree holds seven more Qt runs of the 13 exceptions' class:
+`rq1-pilot.json`, `rq1-pilot-equalized.json`, `rq1-pilot-fp32-pilot.json` and `rq1-windows.json`
+(96695eb, 2026-09-20), and `rq1-windows-r256.json`, `rq1-windows-s2-r256.json` and
+`rq1-windows-s3-r256.json` (2026-09-22). Each was committed from Qt's records held before its grant
+(2026-10-15), its predictions published as digests, and `scripts/rq1.sbatch` names a run without
+its org. They join the exceptions: 20 files, and nothing else in the tree is flagged.
+
+1. *Hosts.* The rule covers every host the registry opens by written grant (`cli.REST_PERMITTED`,
+   `notedb.GIT_PERMITTED`): Qt, Chromium, AOSP and Fuchsia. AOSP and Fuchsia are read under Chrome Infra's answer to
+   Chromium's request, which promised that no review text is published. The set is read from the
+   registry (`withhold.granted_orgs`), not listed by hand.
+2. *Detection.* A file is a granted host's if any part of its path names a granted org or a name
+   the registry's hosts give it (any case, or glued after `foreign`), if it holds one's example id
+   (`{org}:I...`) or host name, or if it names one as a key, as an `org:` prefix, or in a field
+   naming an organization (`org`, `foreign`, `source`, `against` and the like). Outside the
+   exceptions such a file may not carry model text, a digest of it, or a plain hash of a text the
+   study generated (`rules_files`, `fingerprint`, `base_marks`); the provenance hash of a raw
+   snapshot (`raw_digest`) stays. The guard and `scripts/withhold_text.py` apply one set of
+   refusals (`withhold.refusals`), and the script checks every input before it writes any output.
+3. *Exceptions.* Each is pinned to its git blob, so a changed file at an exception's path, or its
+   name elsewhere, is refused.
+4. *Shapes.* Every tracked file is classified: JSON, known by name in any case (compressed or not,
+   `.partial` and `.part` sidecars included) or by content, is read; any other suffix must be one
+   the tree holds; an unknown suffix fails. Keys are read as text: under a withheld or digested
+   field a key is an example id, a pass label or an id the document lists (or, under a digested
+   field, a digest), and any other key is
+   text, which `withhold` refuses rather than digests; a key holding whitespace is one of the
+   labels its producing script writes. A string of three words or more anywhere under an object
+   carrying an example id is model text, unless it is a lexer's name, the row's own path, or the
+   contamination battery's code on a host without a written grant. A guide is exempt only in a
+   written guide's full shape. `.gitattributes` keeps the pinned files' bytes as committed.
+5. *Ignore.* The families the generation jobs write (`scripts/*.sbatch` that run the model, read
+   from their templates) are gitignored for the four hosts, sidecars included: those named for a
+   host, the foreign arms (`-foreign<org>`), and `rq1.sbatch`'s two families, which always include
+   Qt. Runs whose name does not carry the host (`projects-*`, `determinism-*`,
+   `retrieval-foreign-<target>` and others) are refused by their content.
+
+The plain hashes of distilled rules text on the other hosts are a follow-up (#175).

@@ -160,6 +160,12 @@ def test_every_committed_result_is_in_the_index() -> None:
     assert not missing, f"not listed in docs/artifacts.md: {missing}"
 
 
+def test_the_withheld_text_summary_is_attributed_to_its_script() -> None:
+    by_writer, orphans = harvest.attribute()
+    assert "withheld-text.json" in by_writer["scripts/withhold_text.py"]
+    assert "withheld-text.json" not in orphans
+
+
 def test_nav_pages_exist(config: dict) -> None:
     for target in _nav_targets(config["nav"]):
         if target == LOG_INDEX:
