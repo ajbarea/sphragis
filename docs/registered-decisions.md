@@ -127,10 +127,11 @@ beside the verdict with the simulation's power at the realised size.
 ### Contamination: provenance primary, membership scores descriptive
 
 Changed 2026-10-20 from "Min-K%++ on the base checkpoint is primary, the time partition
-corroborative only" (research log). Protection rests on provenance: every corpus window opens
-after the evaluated weights were written (2024-09-17, from the Hub's commit record), and targets
-whose added lines stood in their project's branches at that upload are found by the backport
-lookup and removed in a registered sensitivity. Membership inference barely beats chance on LLMs
+corroborative only" (research log). The primary evidence is provenance: every corpus window
+opens after the evaluated weights were written (2024-09-17, from the Hub's commit record), and
+the backport lookup (registered 2026-10-20, read before the test window) finds targets whose
+added lines stood in their project's branches at that upload, removed in a registered
+sensitivity beside the estimate. Membership inference barely beats chance on LLMs
 (Duan et al., COLM 2024, arXiv:2402.07841), and a blind classifier separates the windows better
 than any membership score here (Das, Zhang and Tramèr, arXiv:2406.16201; research log,
 2026-10-07). So Min-K%++, Min-K% and Gap-K% are reported as description, and Min-K%++ is read as

@@ -1043,6 +1043,9 @@ Their general point survives that fix. A time partition cannot separate exposure
 distribution shift, because a codebase's conventions, reviewers and subject matter all move
 over eighteen months. So the registered reading changes:
 
+> **Superseded on 2026-10-20** ("Contamination: provenance primary, membership scores
+> descriptive"): provenance is primary and Min-K%++ is read against the blind baseline.
+
 - **Min-K%++ on the base checkpoint is the primary instrument.** It scores the text directly
   and does not infer membership from a performance difference across dates.
 - **The time partition is corroborative only.** A gap in the expected direction supports the
@@ -10549,9 +10552,14 @@ the evaluated weights were written (2026-10-20, from the Hub's commit record). R
    of words is -0.142 [-0.183, -0.100] by change and -0.056 [-0.106, -0.011] by project.
 3. *Not adopted:* scoring only the target's tokens given its context. The blind baseline was
    measured on the registered scored text (the hunk with three context lines), and the reading
-   compares the two on identical examples; target-only scoring would need both recomputed, and
+   compares the two on identical examples; target-only text would also put most examples under
+   the 32-token minimum, as bare hunks did. Target-only scoring would need both recomputed, and
    with membership descriptive, a GPU rerun buys no verdict. The scored text stays as registered.
 
 The battery's window files kept locally under `datasets/results/contamination-inputs/` no longer
-parse (line 1089 of the post window), so the artifact was not regenerated; the reading is computed
-from it as committed, and the files are rebuilt before the battery's next run.
+parse (line 1090 of the post window, four lines of the pre), so the artifact was not regenerated;
+the reading is computed from it as committed. An independent review traced why: `make redact`
+scans every file under `datasets/results/`, these gitignored inputs included, and redacts a
+`.jsonl` file as raw text, where its address pattern can start at the letter after a JSON
+backslash (`\n\n@decorator(`) and remove it. The redactor is fixed to read JSON lines as JSON,
+and the files are rebuilt, before the battery's next run.

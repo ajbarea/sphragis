@@ -169,7 +169,8 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   *creation* filter of February 2024, which bounds nothing for repositories as old as
   OpenStack and Qt; the content cutoff is unstated. The post-cutoff window does not depend on
   it, starting after the checkpoint was published (research log).
-- [x] Registered: Min-K%++ primary, time partition corroborative only.
+- [x] Registered: Min-K%++ primary, time partition corroborative only (superseded 2026-10-20:
+  provenance primary, membership scores descriptive; research log).
 - [x] Registered: guided completion is reported as a null instrument, at its floor under
   both verbatim and edit-similarity criteria.
 - [x] Purity enforced by test: no measurement module may import a GPU stack.
