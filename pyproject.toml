@@ -35,7 +35,7 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=6.0",
     # The analysis scripts import it, so their tests need it.
-    "numpy>=2.5",
+    "numpy>=2.5.4",
     # tests/unit/experiment/test_tokens.py lexes with it, as sphragis/experiment/tokens.py does.
     "pygments>=2.21",
     # tests/conftest.py reads the extra and this group with it.
