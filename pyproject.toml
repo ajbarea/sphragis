@@ -102,6 +102,14 @@ include = ["sphragis", "tests"]
 [tool.ty.rules]
 unused-ignore-comment = "ignore"
 
+# notedb.py's source text is FETCH_RULES: any edit stales every fetched month, so its
+# @contextmanager Iterator annotations stay as written.
+[[tool.ty.overrides]]
+include = ["sphragis/corpus/notedb.py"]
+
+[tool.ty.overrides.rules]
+deprecated = "ignore"
+
 [tool.ty.analysis]
 allowed-unresolved-imports = [
     "torch",

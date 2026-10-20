@@ -16,7 +16,7 @@ import os
 import socket
 import stat
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Any, cast
@@ -65,7 +65,7 @@ def read_json_object(path: Path) -> dict[str, Any] | None:
 
 
 @contextmanager
-def exclusive(lock: Path) -> Iterator[None]:
+def exclusive(lock: Path) -> Generator[None, None, None]:
     """Hold `lock` for one process: a second one is refused at once rather than interleaved.
 
     The lock file is kept apart from what it guards, so it survives `read_records` replacing a
