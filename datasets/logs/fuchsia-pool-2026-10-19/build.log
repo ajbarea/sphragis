@@ -1,0 +1,14 @@
+/home/ajbar/ajsoftworks/sphragis/.claude/worktrees/fuchsia-data/datasets/results/comment-count-probe-fuchsia.json does not hold for fuchsia
+fuchsia 2024-11: skip, already built (366 examples)
+fuchsia 2024-12: skip, already built (428 examples)
+fuchsia 2025-01: skip, already built (681 examples)
+fuchsia 2025-02: skip, already built (689 examples)
+fuchsia 2025-03: skip, already built (803 examples)
+fuchsia 2025-04: skip, already built (775 examples)
+fuchsia 2025-05: skip, already built (671 examples)
+fuchsia 2025-06: skip, already built (647 examples)
+fuchsia 2025-07: skip, already built (497 examples)
+fuchsia 2025-08: skip, already built (631 examples)
+fuchsia 2025-09: skip, already built (251 examples)
+fuchsia 2025-10: 62 examples, drops {'ill_posed_empty_after': 13, 'ill_posed_empty_before': 6, 'ill_posed_expansion': 3, 'ill_posed_contraction': 2, 'metadata_file': 100, 'author_comment': 253, 'service_user': 0, 'acknowledgement': 10, 'no_line_anchor': 6, 'no_successor': 6, 'diff_error': 0, 'comment_error': 0, 'no_anchored_hunk': 173}
+fuchsia: 6501 examples over 12 months, drops {'acknowledgement': 822, 'author_comment': 22594, 'comment_error': 0, 'diff_error': 0, 'ill_posed_contraction': 254, 'ill_posed_empty_after': 1670, 'ill_posed_empty_before': 520, 'ill_posed_expansion': 187, 'metadata_file': 12878, 'no_anchored_hunk': 10899, 'no_line_anchor': 389, 'no_successor': 147, 'service_user': 0}

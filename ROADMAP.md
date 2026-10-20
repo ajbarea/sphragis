@@ -134,9 +134,9 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   refinement and dedup against Qt, 1,076 of them C++, which covers 34 of 80 matched draws and no
   partition, so AOSP does not qualify (research log).
 - [ ] **H2's source**: the first of Chromium, Fuchsia and AOSP whose pool over Qt's training months
-  covers every draw (scope and stop rule in the research log, 2026-10-19). Fuchsia's pool is being
-  built; Chromium's listings start after its build ends, under the one-client pace Chrome Infra's
-  answer sets for all three hosts. If none covers, H2 is exploratory and H1 is read alone (the
+  covers every draw (scope and stop rule in the research log, 2026-10-19). Fuchsia's covers with
+  its first project (research log, 2026-10-20); Chromium's, ahead of it in the order, is being
+  read under the one-client pace Chrome Infra's answer sets for all three hosts. If none covers, H2 is exploratory and H1 is read alone (the
   Stage 1 report's conditional).
 
 ## Plan B — measurement
@@ -755,8 +755,8 @@ as the unit; the evidence says the codebase is.
   at K = 15 (research log, 2026-10-19), and its H2 cell's wait on a foreign pool that covers.
   Chromium's grant covers a pool, not an evaluated corpus, so H2 is Qt's cell against a C++-matched
   foreign adapter; V8's pool under the self-imposed cap and AOSP's cannot cover every matched draw,
-  Fuchsia's pool is being built, and Chromium's is registered again under the rate grant, first in
-  the source order (research log, 2026-10-19).
+  Fuchsia's pool covers (2026-10-20), and Chromium's, registered again under the rate grant and
+  first in the source order, is being read (research log, 2026-10-19).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
@@ -860,6 +860,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-20** — Fuchsia's foreign pool read in full over Qt's training months (its comment-count probe did not hold): 5,890 examples after refinement and dedup, and the stop rule's prefix, its first project, covers all 80 matched draws and 40 partitions against Qt, so Fuchsia qualifies as H2's source unless Chromium's pool, ahead of it in the order, covers (research log).
 - **2026-10-19** — Model text that can repeat a review comment (generation predictions, determinism passes, review distillations) withheld from every published result as HMAC-SHA256 digests under a key kept off the repository; full texts on the cluster for a data-use agreement, history from 96695eb up to the commit this change merges onto disclosed (research log, 2026-10-19).
 - **2026-10-10** — A test read refuses any run whose outcome-neutral battery failed or is missing, a likelihood rescoring's through the generation run it scored, and a planted run is never one of H1's runs; all 46 unplanted development runs hold (research log).
 - **2026-10-07** — The contamination battery read against blind baselines: a bag of words separates the pilot windows better than any membership score, so the battery's gap cannot be read as exposure; proposed for Stage 1 as the battery's reading rule (research log).

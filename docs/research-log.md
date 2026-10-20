@@ -10381,3 +10381,34 @@ Sources:
 - EDPB Guidelines 01/2025 on pseudonymisation (as above).
 - TYPO3 nr-vault, ADR-023 "Audit hash chain HMAC consideration":
   https://docs.typo3.org/p/netresearch/nr-vault/0.15/en-us/Developer/Adr/ADR-023-AuditHashChainHmac.html
+
+### Fuchsia's pool covers every matched draw with its first project (2026-10-20)
+
+`# research(2026-10)`. Under fuchsia-review's grant, from the worktree pinned at #164 (4629b94), in
+the steps the 2026-10-19 entries fixed. The listings, 2024-11 to 2025-10 by last update, of changes
+created in Qt's training window (2024-11-01 to 2025-08-31) ran 2026-10-19 13:50 to 14:15 and hold
+37,811 merged changes over 71 projects, 8,315 of them with an inline comment, none on a branch that
+holds no code (`pool-order-fuchsia.json`; `fuchsia` 16,223, `sdk-samples/drivers` 3,733). The
+comment-count probe does not hold: none of the 300 zero-count changes asked carries a comment, but
+control 1169080 returned none (`comment-count-probe-fuchsia.json`), so the registered rule refuses
+`--fewer-requests` and the build read every listed change, one request a second, 2026-10-19 14:23
+to 2026-10-20 09:59, then refine and dedup to 10:02. WSL stopped at 07:56 (the user units'
+journal) with 11 of the 12 months closed; the build was restarted at 09:54, skipped the closed
+months by their records, and built 2025-10 (logs in `datasets/logs/fuchsia-pool-2026-10-19/`:
+`status.log` with both starts, `build.log` with the skips). It gave 6,501 examples; refinement kept
+6,102 (399 suggested edits removed) and deduplication as one corpus 5,890 (149 exact and 63 near
+duplicates removed): 1,380 C++ and 4,510 others (`foreign-pool-coverage-fuchsia.json`).
+
+The largest matched draw needs 1,308 C++ examples and 926 others (`foreign-need-qt.json`). By the
+stop rule, cleared of copies of Qt's 9,449 unsealed examples, the whole order holds 5,886 (1,379
+C++), and its shortest covering prefix is the first project alone, `fuchsia`: 5,552 examples,
+1,348 C++ and 4,204 others, which covers all 80 draws and all 40 partitions (`stop_rule`, with that
+prefix pool's own digest; coverage run at 21e8bf8 on the committed order, sha256 664455f1). Ranked
+again at this entry's code, the order is unchanged.
+
+So Fuchsia qualifies as H2's source. Item 1 of the H2 plan takes the first of Chromium, Fuchsia
+and AOSP whose pool covers when the first H2 development contrast is read, and Chromium, ahead of
+Fuchsia, is being read under its re-registration (2026-10-19), its ranking listings started at
+10:02. No H2 development contrast is read until Chromium's coverage is: if its pool covers, it is
+the source; if not, Fuchsia is, and the commit that says which sets `FOREIGN_SOURCE`. The C++
+margin over the largest draw is 40 examples, recorded as the pool's tightest constraint.

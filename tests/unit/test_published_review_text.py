@@ -633,6 +633,7 @@ SURVEYED = frozenset(
         ("pool", "digest"),
         ("source", "sha256"),
         ("sources", "sha256"),
+        ("stop_rule", "digest"),
         ("under", "code_files_sha256"),
     }
 )
