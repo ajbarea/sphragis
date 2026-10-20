@@ -6,6 +6,7 @@ partition corpora `placebo_corpus.py` builds; the reader is exercised on synthet
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import random
@@ -21,7 +22,9 @@ from sphragis.experiment.holdout import equalize_training, window_split
 from sphragis.experiment.retrieval import KS, PARTITIONS, arm_key, resumable
 from sphragis.experiment.rules import pipeline
 from sphragis.experiment.rules_arms import DISTILLED, WRITTEN, arms_fingerprint, rules_key
+from sphragis.measure.withhold import digest, key_id, withhold
 
+KEY = bytes(range(32))
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -529,9 +532,9 @@ def _rules_foreign_job() -> dict:
     }
 
 
-def _rules_read(tmp_path: Path, jobs: list[dict], foreign: dict) -> dict:
+def _rules_read(tmp_path: Path, jobs: list[dict], foreign: dict, base: dict | None = None) -> dict:
     tmp_path.mkdir(exist_ok=True)
-    base = _foreign_job()
+    base = base or _foreign_job()
     (tmp_path / "base.json").write_text(json.dumps(base))
     halves, results = [], tmp_path / "results"
     results.mkdir()
@@ -589,6 +592,107 @@ def test_a_base_arm_prompted_otherwise_is_refused(tmp_path: Path) -> None:
     del foreign["base_marks"]
     with pytest.raises(SystemExit, match="no base_marks"):
         _rules_read(tmp_path / "unmarked", [_rules_halves_job(p) for p in ORDER], foreign)
+
+
+def _hashed(job: dict) -> dict:
+    """The job as the cluster writes it: every prompt fingerprint a SHA-256 hex digest."""
+
+    def sha(mark: str) -> str:
+        return hashlib.sha256(mark.encode()).hexdigest()
+
+    out = json.loads(json.dumps(job))
+    for rows in out["results"].values():
+        for row in rows:
+            row["fingerprint"] = sha(row["fingerprint"])
+    if "base_marks" in out:
+        out["base_marks"] = {i: sha(m) for i, m in out["base_marks"].items()}
+    return out
+
+
+def _published(job: dict, key: bytes) -> dict:
+    return withhold(job, "job.json", key)[0]
+
+
+def test_a_published_base_arm_is_checked_by_its_digests(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    base, foreign = _hashed(_foreign_job()), _hashed(_rules_foreign_job())
+    published = _published(foreign, KEY)
+    assert "base_marks" not in published and "base_marks_hmac" in published
+    report = _rules_read(tmp_path, jobs, published, _published(base, KEY))
+    assert report["families"]["distilled"]["own_minus_sibling"]["estimate"] == pytest.approx(0.5)
+    # The same check refuses a published base arm prompted otherwise.
+    other = json.loads(json.dumps(base))
+    other["results"][run_id(EvalRun("base", "openstack", None))][0]["fingerprint"] = "ab" * 32
+    with pytest.raises(SystemExit, match="1 rows prompted otherwise or unmarked, 0 not"):
+        _rules_read(tmp_path / "other", jobs, published, _published(other, KEY))
+
+
+def test_base_arm_marks_are_compared_only_within_one_key(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    base, foreign = _hashed(_foreign_job()), _hashed(_rules_foreign_job())
+    with pytest.raises(SystemExit, match="keyed and plain"):
+        _rules_read(tmp_path / "mixed", jobs, _published(foreign, KEY), base)
+    with pytest.raises(SystemExit, match="keyed and plain"):
+        _rules_read(tmp_path / "mixed2", jobs, foreign, _published(base, KEY))
+    with pytest.raises(SystemExit, match="different keys"):
+        _rules_read(
+            tmp_path / "keys", jobs, _published(foreign, KEY), _published(base, bytes(range(1, 33)))
+        )
+    # Plain on both sides, as the cluster reads its own files, still reads.
+    _rules_read(tmp_path / "plain", jobs, foreign, base)
+
+
+def _digested_predictions_only(job: dict, key: bytes) -> dict:
+    """A job published when only its predictions were keyed: the prompt hashes stay plain."""
+    out = json.loads(json.dumps(job))
+    for rows in out["results"].values():
+        for row in rows:
+            row["prediction_hmac"] = digest("text", key)
+    out["withheld_text"] = {"fields": ["prediction"], "key_id": key_id(key)}
+    return out
+
+
+def test_prompt_hashes_still_plain_in_a_published_file_compare_as_plain(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    base, foreign = _hashed(_foreign_job()), _hashed(_rules_foreign_job())
+    one = _digested_predictions_only(base, KEY)
+    two = _digested_predictions_only(foreign, KEY)
+    assert "withheld_text" in one and "base_marks" in two
+    _rules_read(tmp_path / "both", jobs, two, one)
+    # A pinned published file beside a cluster copy, both plain.
+    _rules_read(tmp_path / "cluster", jobs, foreign, one)
+    # Keyed prompt hashes beside plain ones are refused.
+    with pytest.raises(SystemExit, match="keyed and plain"):
+        _rules_read(tmp_path / "mix", jobs, _published(foreign, KEY), one)
+
+
+def test_the_committed_rules_reading_reads_from_its_tracked_inputs(tmp_path: Path) -> None:
+    root = ROOT / "datasets" / "results"
+    committed = json.loads((root / "rules-reading-openstack.json").read_text())
+    out = tmp_path / "read.json"
+    argv = ["--org", committed["org"], "--foreign", committed["foreign"], "--arms", "rules"]
+    argv += ["--admissible", str(root / "admissible-partitions-openstack.json")]
+    argv += ["--foreign-job", str(ROOT / committed["foreign_job"])]
+    argv += ["--base-job", str(ROOT / committed["base_job"])]
+    argv += ["--halves", *(str(ROOT / h) for h in committed["halves_jobs"])]
+    argv += ["--results", str(root), "--resamples", "50", "--out", str(out)]
+    _run(reader, argv)
+    cell = json.loads(out.read_text())["families"]["distilled"]["own_minus_sibling"]
+    want = committed["families"]["distilled"]["own_minus_sibling"]["estimate"]
+    assert cell["estimate"] == pytest.approx(want)
+
+
+def test_an_unmarked_row_is_not_prompted_alike_however_the_marks_read(tmp_path: Path) -> None:
+    jobs = [_rules_halves_job(p) for p in ORDER]
+    base, foreign = _hashed(_foreign_job()), _hashed(_rules_foreign_job())
+    keyed_base, keyed_foreign = _published(base, KEY), _published(foreign, KEY)
+    mark = IDS[0]
+    keyed_foreign["base_marks_hmac"][mark] = None
+    for row in keyed_base["results"][run_id(EvalRun("base", "openstack", None))]:
+        if row["id"] == mark:
+            del row["fingerprint_hmac"]
+    with pytest.raises(SystemExit, match="1 rows prompted otherwise or unmarked"):
+        _rules_read(tmp_path, jobs, keyed_foreign, keyed_base)
 
 
 def test_a_rules_reading_needs_the_base_arm(tmp_path: Path) -> None:

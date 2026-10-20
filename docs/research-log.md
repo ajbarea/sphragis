@@ -10339,3 +10339,45 @@ its org. They join the exceptions: 20 files, and nothing else in the tree is fla
    `retrieval-foreign-<target>` and others) are refused by their content.
 
 The plain hashes of distilled rules text on the other hosts are a follow-up (#175).
+
+### Plain hashes of generated text keyed for publication (2026-10-19)
+
+Three fields hash a text the study generated: `rules_files`, the distilled or written rules each
+rules arm read; `fingerprint`, each row's prompt, which rules arms build from those rules; and
+`base_marks`, the prompts the base arm must match. They held plain SHA-256 on every host. A plain
+hash of a text one can rebuild is matched by recomputing it, the dictionary case of "Model text
+withheld from published results" (item 2). The granted hosts' files already refuse them (previous
+entry, item 2). This rule covers every published result, from the next one on.
+
+1. *Producers.* The jobs keep the plain hashes: the cluster resumes a run by `fingerprint` and
+   holds no key.
+2. *Publication.* `withhold` (and so `scripts/withhold_text.py`) writes each as `<field>_hmac`,
+   HMAC-SHA256 of the plain hash's hex under `SPHRAGIS_PREDICTION_KEY`, in the same shape. Equal
+   prompts or rules show as equal under one key; testing a guessed text takes the key. A value
+   that is not a plain hash is refused, not digested. `scripts/retrieval_read.py` compares a base
+   arm's prompts with the rules job's `base_marks` as each job keyed them (`withheld_text.fields`):
+   both keyed under one key id, or both plain, published or not; it refuses a keyed job paired
+   with a plain one, as `determinism_check --compare` does. The committed rules readings, whose
+   inputs are pinned, still read.
+3. *Files before the rule.* 120 tracked files carry plain hashes: OpenStack's and Wikimedia's
+   retrieval and rules runs under `datasets/results/` (60 each). Their hashes are in history,
+   which stays (item 4 of "Model text withheld"), and keying them now would tie the new key to
+   texts whose plain hashes are public, the reason the first key was burned. They are pinned by
+   git blob like the 20 of the previous entry, and `withhold_text.py --in-place` leaves them as
+   they are. Old entries kept in their scheme beside keyed new ones, each marked by it, is the
+   migration of TYPO3 nr-vault's ADR-023 from plain SHA-256 to HMAC-SHA256.
+4. *Guard.* `tests/unit/test_published_review_text.py` reads content, not field names: outside
+   the pinned set, a string value that is a 64-digit hex hash, in any tracked file read as JSON
+   on any host, is refused unless it is a `_hmac` digest or sits where `withhold.ALLOWED_HASHES`
+   lists it, by field and parent: hashes of public or local artifacts (adapters, code files,
+   manifests, raw snapshots, pipelines), each entry justified by a tracked file or by the script
+   that writes it. A hash at any other place fails until listed. A pinned file whose blob
+   changed is refused, and the guard and `withhold` refuse the same values.
+5. *Key.* The next published result is digested under key id `299aa664286ac190`;
+   `659eedab9a778439` stays burned (`BURNED_KEY_IDS`).
+
+Sources:
+
+- EDPB Guidelines 01/2025 on pseudonymisation (as above).
+- TYPO3 nr-vault, ADR-023 "Audit hash chain HMAC consideration":
+  https://docs.typo3.org/p/netresearch/nr-vault/0.15/en-us/Developer/Adr/ADR-023-AuditHashChainHmac.html

@@ -144,7 +144,7 @@ def _analyse(path: Path, base: Path) -> Analysis:
     """Everything the guard asks of one file, from one read and one parse of it."""
     raw = path.read_bytes()
     if _classify(path, raw) != "json":
-        return Analysis(False, w.Verdict([], False, [], False))
+        return Analysis(False, w.Verdict([], False, [], False, [], False))
     rel = path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name
     return Analysis(True, w.examine(rel, raw, _documents(raw)))
 
@@ -170,16 +170,28 @@ def offending(paths: list[Path], base: Path = ROOT) -> dict[str, list[str]]:
     return scan(paths, base).found
 
 
+def refused_by(
+    paths: list[Path], base: Path, rule: Callable[[w.Verdict], list[str]]
+) -> dict[str, list[str]]:
+    """Per file, what one of `withhold.refusals`' rules refuses it for."""
+    out: dict[str, list[str]] = {}
+    for path in paths:
+        if why := rule(_analyse(path, base).verdict):
+            out[path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name] = (
+                why[:3]
+            )
+    return out
+
+
 def granted_offending(paths: list[Path], base: Path = ROOT) -> dict[str, list[str]]:
     """Per granted-derived file outside the pinned exceptions, what it carries that the grants
     exclude: model text, any digest, a plain hash of text."""
-    out: dict[str, list[str]] = {}
-    for path in paths:
-        verdict = _analyse(path, base).verdict
-        if verdict.granted and verdict.findings and not verdict.pinned:
-            rel = path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name
-            out[rel] = verdict.findings[:3]
-    return out
+    return refused_by(paths, base, w.Verdict.not_granted)
+
+
+def plain_offending(paths: list[Path], base: Path = ROOT) -> dict[str, list[str]]:
+    """Per file outside the pinned set, where it carries a plain hash of generated text."""
+    return refused_by(paths, base, w.Verdict.not_plain)
 
 
 def test_no_tracked_json_carries_withheld_text() -> None:
@@ -456,6 +468,216 @@ def test_the_listed_exceptions_still_exist_and_still_carry_predictions() -> None
         assert _analyse(tracked[rel], ROOT).verdict.granted, rel
 
 
+def test_no_tracked_file_outside_the_pinned_set_carries_a_plain_hash() -> None:
+    assert not (found := plain_offending(_tracked())), (
+        f"files carrying a plain hash of generated text outside "
+        f"w.PLAIN_HASHES_BEFORE_THE_RULE; run scripts/withhold_text.py: {found}"
+    )
+
+
+@pytest.mark.parametrize("field", sorted(w.PLAIN_HASHES))
+def test_a_new_file_carrying_a_plain_hash_field_is_refused(tmp_path: Path, field: str) -> None:
+    value = {"i": "a" * 64} if field != "fingerprint" else "a" * 64
+    for n, document in enumerate(
+        (
+            {field: value},
+            {"results": {"b": [{"id": "x", field: value}]}},
+            {"org": "openstack", field: value},
+        )
+    ):
+        source = _write(tmp_path / f"retrieval-new-{n}.json", document)
+        assert plain_offending([source], tmp_path), document
+        assert w.refusals(source.name, source.read_bytes(), [document]), document
+    keyed = _write(tmp_path / "keyed.json", {f"{field}_hmac": value})
+    assert not plain_offending([keyed], tmp_path)
+
+
+def test_a_pinned_plain_file_whose_blob_changed_or_moved_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rel = "datasets/results/retrieval-halves-openstack-p2.json"
+    original = json.dumps({"rules_files": {"rules-distilled:openstack-a": "a" * 64}})
+    monkeypatch.setattr(w, "PLAIN_HASHES_BEFORE_THE_RULE", {rel: w.blob(original.encode())})
+    same = tmp_path / "same" / rel
+    changed = tmp_path / "changed" / rel
+    elsewhere = tmp_path / "elsewhere" / "docs" / "retrieval-halves-openstack-p2.json"
+    for path, text in (
+        (same, original),
+        (changed, original.replace("a" * 64, "b" * 64)),
+        (elsewhere, original),
+    ):
+        path.parent.mkdir(parents=True)
+        path.write_text(text)
+    assert not plain_offending([same], tmp_path / "same")
+    assert plain_offending([changed], tmp_path / "changed")
+    assert plain_offending([elsewhere], tmp_path / "elsewhere")
+
+
+def test_the_plain_pins_still_exist_and_still_carry_plain_hashes() -> None:
+    """A file rekeyed, removed or changed leaves the list, so the list never grows stale."""
+    tracked = {p.relative_to(ROOT).as_posix(): p for p in _tracked()}
+    assert len(w.PLAIN_HASHES_BEFORE_THE_RULE) == 120
+    for rel, pinned in w.PLAIN_HASHES_BEFORE_THE_RULE.items():
+        assert rel in tracked, f"{rel} is no longer tracked; drop it from the plain pins"
+        raw = tracked[rel].read_bytes()
+        assert w.blob(raw) == pinned, f"{rel} changed; re-pin it or drop it"
+        assert _analyse(tracked[rel], ROOT).verdict.plain, f"{rel} carries none; drop it"
+
+
+def test_the_plain_hash_files_on_the_tree_are_the_plain_pins() -> None:
+    carrying = {
+        p.relative_to(ROOT).as_posix() for p in _tracked() if _analyse(p, ROOT).verdict.plain
+    }
+    assert carrying == set(w.PLAIN_HASHES_BEFORE_THE_RULE)
+
+
+SHA = "ab" * 32
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"fingerprints": [SHA]},
+        {"rows": [{"id": "i", "prompt_fingerprint": SHA}]},
+        {"rules_file": SHA},
+        {"base_mark": SHA},
+        {"Fingerprint": SHA},
+        {"marks": {"i": SHA}},
+        {"x": {"y": [{"z": SHA.upper()}]}},
+        {"fingerprint": None},
+        {"rules_files": ["m0"]},
+    ],
+)
+def test_a_plain_hash_is_refused_whatever_its_field_is_called(
+    tmp_path: Path, document: dict
+) -> None:
+    assert plain_offending([_write(tmp_path / "new-result.json", document)], tmp_path), document
+
+
+def test_a_hash_of_a_public_or_local_artifact_is_listed_by_where_it_sits(tmp_path: Path) -> None:
+    for document in (
+        {"training": {"openstack-a-s1": {"adapter_sha256": SHA}}},
+        {"training": {"qt-b-s12": {"adapter_sha256": SHA}}},
+        {"checks": [{"evidence": {"adapter_sha256": SHA}}]},
+        {"hashes": {"dev": SHA}},
+        {"pool": {"digest": SHA}},
+        {"rules_pipeline": SHA, "rules_arms": SHA},
+    ):
+        assert not plain_offending([_write(tmp_path / "ok.json", document)], tmp_path), document
+    # A listed name elsewhere in the tree's shapes is still a plain hash.
+    assert plain_offending([_write(tmp_path / "bad.json", {"rows": [{"digest": SHA}]})], tmp_path)
+    assert not plain_offending(
+        [_write(tmp_path / "keyed.json", {"marks_hmac": {"i": SHA}})], tmp_path
+    )
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"results": {"base|a": [{"id": "i", "sha256": SHA}]}},
+        {"rows": [{"id": "i", "pipeline": SHA}]},
+        {"prompts": {"sha256": SHA}},
+        {"rules": {"raw_digest": SHA}},
+        {"targets": {"adapter_sha256": SHA}},
+        {"rows": [{"id": "i", "rules_arms": SHA}]},
+        {"hashes": {"prompt": SHA}},
+        {"hashes": {"rules-distilled:openstack-a": SHA}},
+        {"nested": {"digest": SHA}},
+    ],
+)
+def test_a_listed_hash_name_is_listed_only_where_the_survey_found_it(
+    tmp_path: Path, document: dict
+) -> None:
+    assert plain_offending([_write(tmp_path / "new-result.json", document)], tmp_path), document
+
+
+#: Each producer's shape for the hashes of public or local artifacts it writes.
+PRODUCED = {
+    "scripts/rq1_pilot.py": {"foreign_pool": {"pool_sha256": SHA, "pool_examples": 3}},
+    "scripts/foreign_pool_coverage.py": {
+        "pool": {"examples": 3, "digest": SHA},
+        "stop_rule": {"pool": {"examples": 2}, "digest": SHA},
+    },
+    "scripts/label_audit_decision.py": {"model": "m", "digest": SHA, "items": 2},
+}
+
+
+@pytest.mark.parametrize("producer", sorted(PRODUCED))
+def test_a_producers_hashes_of_artifacts_pass_the_guard(tmp_path: Path, producer: str) -> None:
+    document = PRODUCED[producer]
+    assert not plain_offending([_write(tmp_path / "out.json", document)], tmp_path), document
+
+
+#: The (parent, field) of every 64-hex string in the tracked JSON, an organization, a half and a
+#: seed named by their slots.
+SURVEYED = frozenset(
+    {
+        ("", "initial_adapter_sha256"),
+        ("", "manifest_sha256"),
+        ("", "pipeline"),
+        ("", "raw_digest"),
+        ("", "rules_arms"),
+        ("", "rules_pipeline"),
+        ("code_files_source", "sha256"),
+        ("evidence", "adapter_sha256"),
+        ("git", "uncommitted_code_sha256"),
+        ("guide", "sha256"),
+        ("hashes", "dev"),
+        ("hashes", "pilot"),
+        ("hashes", "test"),
+        ("hashes", "train"),
+        ("<org>", "manifest_sha256"),
+        ("<org>", "pipeline"),
+        ("<org>-<half>", "pipeline"),
+        ("<org>-<half>-<seed>", "adapter_sha256"),
+        ("pool", "digest"),
+        ("source", "sha256"),
+        ("sources", "sha256"),
+        ("under", "code_files_sha256"),
+    }
+)
+
+
+def _slots(parent: str) -> str:
+    orgs = "|".join(sorted(w.organizations()))
+    return re.sub(rf"^({orgs})(?:-[ab](?:-(s\d+))?)?$", _slot, parent)
+
+
+def _slot(m: re.Match[str]) -> str:
+    return "<org>" + ("-<half>" if "-" in m[0] else "") + ("-<seed>" if m[2] else "")
+
+
+def test_the_hash_allowlist_is_the_survey_of_the_tree() -> None:
+    """The (parent, field) set of the tree is the surveyed set, each place listed by an entry."""
+    places = {
+        (parent, field)
+        for p in _tracked()
+        if _analyse(p, ROOT).read
+        for d in _documents(p.read_bytes())
+        for parent, field in w.hash_locations(d)
+    }
+    assert {(_slots(parent), field) for parent, field in places} == SURVEYED
+    assert not [place for place in places if w.allowed_hash(*place) is None]
+
+
+def test_each_allowlist_entry_names_a_producer_that_writes_its_field() -> None:
+    """A producer that stopped writing a field leaves the list; one not yet run may be listed."""
+    for entry in w.ALLOWED_HASHES:
+        source = (ROOT / entry.producer).read_text()
+        assert (entry.marker or entry.field) in source, entry
+
+
+def test_the_guard_and_withhold_agree_on_a_value_that_is_not_a_hash(tmp_path: Path) -> None:
+    for value in (None, "m0", 3, {"i": None}):
+        document = {"rows": [{"id": "i", "fingerprint": value}]}
+        assert plain_offending([_write(tmp_path / "n.json", document)], tmp_path), value
+        with pytest.raises(ValueError, match="fingerprint"):
+            w.withhold(document, "n.json", KEY)
+    empty = {"base_marks": {}, "rules_files": []}
+    assert not plain_offending([_write(tmp_path / "e.json", empty)], tmp_path)
+    assert w.withhold(empty, "e.json", KEY) == (empty, 0)
+
+
 def test_the_flagged_set_on_the_tree_is_the_exceptions() -> None:
     """Before the exceptions: every granted-derived file carrying text, digests or hashes."""
     flagged = set()
@@ -468,14 +690,15 @@ def test_the_flagged_set_on_the_tree_is_the_exceptions() -> None:
 
 def test_the_pinned_files_are_not_converted_by_line_endings() -> None:
     """A blob pin holds under `core.autocrlf` only where git leaves the file's bytes alone."""
+    pins = [*w.BEFORE_THE_RULE, *w.PLAIN_HASHES_BEFORE_THE_RULE]
     out = subprocess.run(
-        ["git", "check-attr", "text", "--", *w.BEFORE_THE_RULE],
+        ["git", "check-attr", "text", "--", *pins],
         cwd=ROOT,
         capture_output=True,
         text=True,
         check=True,
     ).stdout
-    assert len(lines := out.splitlines()) == len(w.BEFORE_THE_RULE)
+    assert len(lines := out.splitlines()) == len(pins)
     assert all(line.endswith("text: unset") for line in lines), lines
 
 
@@ -695,6 +918,44 @@ def test_the_script_refuses_to_digest_a_granted_document(tmp_path: Path) -> None
     copy.write_bytes(pinned.read_bytes())
     with pytest.raises(SystemExit, match="may not be published"):
         script.convert(copy, copy, KEY)
+
+
+def test_the_script_rekeys_plain_hashes_but_leaves_a_pinned_file_as_it_is(tmp_path: Path) -> None:
+    script = _script()
+    document = {"rules_files": {"rules-distilled:openstack-a": "a" * 64}, "org": "openstack"}
+    source = _write(tmp_path / "retrieval-new.json", document)
+    out, count, published = script.convert(source, tmp_path / "out" / source.name, KEY)
+    assert count == 1 and not w.plain_left(published)
+    assert json.loads(out)["rules_files_hmac"] == {
+        "rules-distilled:openstack-a": w.digest("a" * 64, KEY)
+    }
+    assert script.convert(source, source, KEY)[2] == published, "re-running changes nothing"
+    again, recount, _ = script.convert(
+        _write(tmp_path / "again.json", published), tmp_path / "again.json", KEY
+    )
+    assert recount == 0 and json.loads(again) == published
+    tracked = ROOT / RESULTS / "retrieval-halves-openstack-p2.json"
+    out, count, _ = script.convert(tracked, tracked, KEY)
+    assert out == tracked.read_bytes() and count == 0
+    copy = tmp_path / tracked.name
+    copy.write_bytes(tracked.read_bytes())
+    with pytest.raises(SystemExit, match="already a withheld copy yet still carries plain hashes"):
+        script.convert(copy, copy, KEY)
+
+
+def test_a_written_guide_with_a_plain_fingerprint_is_published_with_its_rules(
+    tmp_path: Path,
+) -> None:
+    script = _script()
+    source = _write(
+        tmp_path / "g.json", {"files": {"openstack": {**GUIDE, "fingerprint": "a" * 64}}}
+    )
+    out, count, document = script.convert(source, tmp_path / "out" / "g.json", KEY)
+    node = document["files"]["openstack"]
+    assert count == 1 and node["rules"] == GUIDE["rules"] and "rules_hmac" not in node
+    assert node["fingerprint_hmac"] == w.digest("a" * 64, KEY)
+    # Published, it is still a written guide: nothing more is withheld on a second pass.
+    assert w.withhold(document, "g.json", KEY) == (document, 0)
 
 
 def test_the_script_judges_a_path_outside_the_checkout_by_every_component(tmp_path: Path) -> None:

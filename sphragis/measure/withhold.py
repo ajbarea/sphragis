@@ -18,7 +18,7 @@ import hmac
 import os
 import re
 import urllib.parse
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, NamedTuple
 
 KEY_ENV = "SPHRAGIS_PREDICTION_KEY"
@@ -65,7 +65,8 @@ PASS_DTYPES: Mapping[str, str] = {
 PASS_LABELS = frozenset(PASS_DTYPES)
 #: Plain hashes of prompts or distillations, which a reader holding the public comments can
 #: match as a dictionary: `rules_files` and `base_marks` (`scripts/retrieval_comparator.py`) and
-#: the per-row prompt `fingerprint` (`sphragis/experiment/retrieval.py`).
+#: the per-row prompt `fingerprint` (`sphragis/experiment/retrieval.py`). The cluster has no key
+#: and keeps them plain to resume; `withhold` re-keys them as `<field>_hmac` for publication.
 PLAIN_HASHES = frozenset({"rules_files", "base_marks", "fingerprint"})
 #: Names a run is saved under besides its org's and its host's: `qtfull` is `RUN_TAG` of the
 #: full-pool Qt runs, `qtbase` a Qt project.
@@ -85,6 +86,52 @@ ORG_FIELDS = frozenset(
 )
 
 DIGEST = re.compile(r"[0-9a-f]{64}")
+HEX = re.compile(r"[0-9a-f]{64}", re.IGNORECASE)
+
+
+class HashField(NamedTuple):
+    """Where a 64-hex hash of a public or local artifact may sit: the key it sits under (a regex,
+    `{org}` an organization's name; empty is the top of the document), the field, the script that
+    writes it, and the word in that script that shows it still does when it is not the field."""
+
+    parent: str
+    field: str
+    producer: str
+    marker: str = ""
+
+
+#: Hashes of public or local artifacts (weights, code, a manifest, a pool of ids and code, a raw
+#: snapshot, a pipeline's code), from a survey of the tracked JSON and the producers' own shapes.
+#: Any other 64-hex string outside a `_hmac` field is a plain hash of text and is refused: a new
+#: name or place fails until it is listed here.
+_HALF = r"{org}-[ab]"
+ALLOWED_HASHES: tuple[HashField, ...] = (
+    HashField("", "initial_adapter_sha256", "scripts/adapter_geometry.py"),
+    HashField(r"{org}-[ab]-s\d+", "adapter_sha256", "scripts/rq1_pilot.py"),
+    HashField("evidence", "adapter_sha256", "scripts/rq1_pilot.py"),
+    HashField("", "manifest_sha256", "scripts/aosp_census.py"),
+    HashField("{org}", "manifest_sha256", "scripts/dataset_funnel.py"),
+    HashField("under", "code_files_sha256", "scripts/aosp_census.py"),
+    HashField("code_files_source", "sha256", "scripts/aosp_census.py"),
+    HashField("source", "sha256", "scripts/aosp_census.py"),
+    HashField("guide", "sha256", "scripts/rules_guides.py"),
+    HashField("sources", "sha256", "scripts/rules_guides.py"),
+    HashField("git", "uncommitted_code_sha256", "sphragis/provenance.py"),
+    HashField("", "raw_digest", "scripts/comment_count_probe.py"),
+    HashField("", "pipeline", "sphragis/experiment/rules.py"),
+    HashField("{org}", "pipeline", "sphragis/experiment/rules.py"),
+    HashField(_HALF, "pipeline", "sphragis/experiment/rules.py"),
+    HashField("", "rules_pipeline", "scripts/retrieval_comparator.py"),
+    HashField("", "rules_arms", "scripts/retrieval_comparator.py"),
+    *(
+        HashField("hashes", name, "sphragis/corpus/manifest.py", "hashes")
+        for name in ("dev", "pilot", "test", "train")
+    ),
+    HashField("pool", "digest", "scripts/foreign_pool_coverage.py"),
+    HashField("stop_rule", "digest", "scripts/foreign_pool_coverage.py"),
+    HashField("foreign_pool", "pool_sha256", "scripts/rq1_pilot.py"),
+    HashField("", "digest", "scripts/label_audit_decision.py"),
+)
 #: A bot-audit list of short real review comments, which no published artifact carries, and the
 #: one key a row of it has: `scripts/data_audit.py` writes `{"changes": n}`.
 COMMENT_LISTS = frozenset({"candidate_unregistered_bots"})
@@ -158,6 +205,139 @@ BEFORE_THE_RULE: Mapping[str, str] = {
 }
 
 
+#: Committed before the rule, with plain SHA-256 hashes of prompts or distilled rules in the fields
+#: of `PLAIN_HASHES`: their hashes are in git history, which is not rewritten, and keying them
+#: now would tie the new key to texts whose plain hashes are public. Repo-relative path to git
+#: blob, held to the same terms as `BEFORE_THE_RULE`. A published result carries them as digests.
+PLAIN_HASHES_BEFORE_THE_RULE: Mapping[str, str] = {
+    f"datasets/results/{name}.json": sha
+    for name, sha in {
+        "retrieval-foreign-openstack-rp1.0": "54118ae6fce38cae983e53c0591529cc11ae35f5",
+        "retrieval-foreign-openstack": "173030aab55803d0fb43702f04d5485f88bd2d56",
+        "retrieval-foreign-wikimedia-rp1.0": "d148dc927ad9f8f0b2551dd7b78214c479792de6",
+        "retrieval-foreign-wikimedia": "0b8524db7c3eb396d4941eebfaf82fbb9c6d4c7f",
+        "retrieval-halves-openstack-p10-rp1.0": "ffe04144f02d3a111d2994364bd36c58233fc86c",
+        "retrieval-halves-openstack-p10": "91d4b4fbefb883b31ca7bcd28a484d94aa454371",
+        "retrieval-halves-openstack-p11-rp1.0": "cbb88b2e9424f89c01fa9ee0948d80cfe2246cd3",
+        "retrieval-halves-openstack-p11": "5ed81126e2db8d70019bbff32ad6a18773c21fe7",
+        "retrieval-halves-openstack-p12-rp1.0": "89ec6c1bedf1b579ec6001833a9c0574ac593db9",
+        "retrieval-halves-openstack-p12": "76fc6f5d2a5932e67f4facdd3de797a19485fbb9",
+        "retrieval-halves-openstack-p2-rp1.0": "d691b114f633d99efb7f97ef3605180bd35f0041",
+        "retrieval-halves-openstack-p2": "b442971d36e6e5a8e84321e7ae278a6d8169a950",
+        "retrieval-halves-openstack-p3-rp1.0": "d0f83030616da6558ca21b271d8d8e44875d20f7",
+        "retrieval-halves-openstack-p3": "793b27d3247630c835311ffbb8afc1ef6371dae5",
+        "retrieval-halves-openstack-p4-rp1.0": "02e3965bb17791b3814b43076c5d5b7a61f50381",
+        "retrieval-halves-openstack-p4": "bb89f1588868f966f7307aaa1a382aaa34022187",
+        "retrieval-halves-openstack-p5-rp1.0": "c5dd512384c8729455bf6f66cc4f72bd6f12c18d",
+        "retrieval-halves-openstack-p5": "5db2964045bb9832e3f48c1f67021c09fa2d4436",
+        "retrieval-halves-openstack-p7-rp1.0": "1b6475ac1d94cae3a7cdd635a97d96e7a6ef40d5",
+        "retrieval-halves-openstack-p7": "389db144dd97a262a4162a3816716b7d0a02ab01",
+        "retrieval-halves-openstack-p8-rp1.0": "cef5e758c3d577daded9cb074ffa902f5352633a",
+        "retrieval-halves-openstack-p8": "52c1a4d6405bb65c183007f131422ac2827fad4f",
+        "retrieval-halves-openstack-p9-rp1.0": "994a5aa9e9bfd813c27235429d9434479786ae5f",
+        "retrieval-halves-openstack-p9": "6b389675e1487b184ceef3554e588ee7372fd73e",
+        "retrieval-halves-wikimedia-p1-rp1.0": "3810f6be5c437fa89f288203d942d2dbf01b2627",
+        "retrieval-halves-wikimedia-p1": "e1d38a5389e47bfa6657aeb997cec906b7da2e1f",
+        "retrieval-halves-wikimedia-p10-rp1.0": "7eefbd0900c60eda4687747199b43b3895a31349",
+        "retrieval-halves-wikimedia-p10": "f7d2730fb5b24224873be4faf61886d554087b1b",
+        "retrieval-halves-wikimedia-p11-rp1.0": "c8f7c42f3cd2fed9a71a84c4fdb87152f006b72b",
+        "retrieval-halves-wikimedia-p11": "a234a396686a81ab6f0c1697858f7b140841bb4e",
+        "retrieval-halves-wikimedia-p2-rp1.0": "fa3176206e9327ef7a7a5c6170cceb8794320516",
+        "retrieval-halves-wikimedia-p2": "a2bd66bb6d8d65dc64f1c08636813c4f4bca6f84",
+        "retrieval-halves-wikimedia-p3-rp1.0": "a03c3baee2d283d0a991506f18f18c7ec7e629cf",
+        "retrieval-halves-wikimedia-p3": "7799b9aaf8fa70ce64e1273ee64ed8ecbce44b43",
+        "retrieval-halves-wikimedia-p5-rp1.0": "d9e8edbc71c8a9f8427c771e068ecebae5eb6eab",
+        "retrieval-halves-wikimedia-p5": "6930559e7df60233a6fb6000420cf1379faff0ff",
+        "retrieval-halves-wikimedia-p6-rp1.0": "7a52b3d6f434f6395b9a37f5f17012e49b8deae6",
+        "retrieval-halves-wikimedia-p6": "8dd2ab3b99782ab3e41ef46d2434624f083e7f9c",
+        "retrieval-halves-wikimedia-p7-rp1.0": "144750a26fee0fada510db8cedb387f927eceb7a",
+        "retrieval-halves-wikimedia-p7": "187a3a3ba087bfd25a5c9dfe6dabaee1924d160d",
+        "retrieval-halves-wikimedia-p8-rp1.0": "d31f86e7ff7126ca1006802743b5dbb4485ef83e",
+        "retrieval-halves-wikimedia-p8": "d897e1622d3843ec5bbab842a71681f8b7127f39",
+        "retrieval-halves-wikimedia-p9-rp1.0": "97ed74d4996f4f1f62365669b79dfa17d798b2a9",
+        "retrieval-halves-wikimedia-p9": "e5b6e566f32d13cb5d15d0a4fdfb58e2468202e8",
+        "rules-foreign-openstack-rp1.0": "e1faaf1666318cddcdc7ad7c912c79886c201cb5",
+        "rules-foreign-openstack": "25f364b9644534a1c648692048b13045e4c53a50",
+        "rules-foreign-wikimedia-rp1.0": "f525e0cf32c29e92300df9dfaf3afb64cf6a53dd",
+        "rules-foreign-wikimedia": "3490d2b5defc4d2b33e52efc0db786ed3d6192c1",
+        "rules-guide-openstack": "6dd1dba5791ae59d5b95261cfdeba6ec837af72d",
+        "rules-guide-wikimedia": "305793424ea704151ce7473435723f79c92dcb93",
+        "rules-halves-openstack-p10-rp1.0": "fcc3e228540a28650bd63ceec4631674d14184c0",
+        "rules-halves-openstack-p10": "de26341bb7214354049efd02c639ac3dc06b2d87",
+        "rules-halves-openstack-p11-rp1.0": "e8d69d0684faafd6129b65634517c8896ba07a66",
+        "rules-halves-openstack-p11": "e0eeadd0605cff373c327b0a8404e4e70304691b",
+        "rules-halves-openstack-p12-rp1.0": "ce9ea998a53c8ff507baff5634d2d0689988ac97",
+        "rules-halves-openstack-p12": "a66e03059f6bedcf7611ab2a4df653c21e46f341",
+        "rules-halves-openstack-p2-rp1.0": "20fe7ca565e83332299d58c0b2c0e9fa8df9168c",
+        "rules-halves-openstack-p2": "faf3c4756b32803c0477597d13e7812bd4abd335",
+        "rules-halves-openstack-p3-rp1.0": "82baef989566ba6325c213ff02498decf26a1572",
+        "rules-halves-openstack-p3": "29cdac5b5384b31688f0d73dea0d819616079b7d",
+        "rules-halves-openstack-p4-rp1.0": "0494901940228cca117f138e85f19c06e76c8f69",
+        "rules-halves-openstack-p4": "2fd8d178ed574890ee4b54831d5c01f63c05aed9",
+        "rules-halves-openstack-p5-rp1.0": "1122c6314b84344c8ddad3e936c6f75069d7c747",
+        "rules-halves-openstack-p5": "e1208a332ff56c158ffbc23f02da08bb59b6b487",
+        "rules-halves-openstack-p7-rp1.0": "2da8a6a86eab59fbeca23ced2755e54d90ac53c4",
+        "rules-halves-openstack-p7": "632732da91b52ff4afa918f66cd441e715ab1411",
+        "rules-halves-openstack-p8-rp1.0": "caea8a4281460062159452a3488fffa421cd0846",
+        "rules-halves-openstack-p8": "5b605ee0ae8477c3f7909752f6709c92614ff9b7",
+        "rules-halves-openstack-p9-rp1.0": "c7e2ea5126bd75d846681b2699a226eacbae3eca",
+        "rules-halves-openstack-p9": "fd3b364aa79906735457f8f43728b36d890cfdbb",
+        "rules-halves-wikimedia-p1-rp1.0": "9392ab4b3dd45e72cf12fa9384efd63200647ca8",
+        "rules-halves-wikimedia-p1": "baa2313890f3354c9c1db72ca5c78d78934a1747",
+        "rules-halves-wikimedia-p10-rp1.0": "c7cfdba86d377a79b311639620dbe13fe7a20073",
+        "rules-halves-wikimedia-p10": "cc494b633e3838794d0e5aeeedf048e70194f378",
+        "rules-halves-wikimedia-p11-rp1.0": "9eee3dbe7df5d5358a0328cab76d87377cfa5e6d",
+        "rules-halves-wikimedia-p11": "c0850015bfd09d09c0a21e6198ae0098d68eba6e",
+        "rules-halves-wikimedia-p2-rp1.0": "4cf0a6aa4fd2716569af52affc3977ae9612b99b",
+        "rules-halves-wikimedia-p2": "a4582380e8de9c2c87ca234542f9ad2425958964",
+        "rules-halves-wikimedia-p3-rp1.0": "e0db18c1ad235f34a528e846a2838d1f467a75b1",
+        "rules-halves-wikimedia-p3": "33148c36d80409d62f5eb492b0429b26c27cf320",
+        "rules-halves-wikimedia-p5-rp1.0": "82d3f62527837aebdc205f75e25f76bf64ae25af",
+        "rules-halves-wikimedia-p5": "4b67d5d0e515eabbde955474db148d0252a14766",
+        "rules-halves-wikimedia-p6-rp1.0": "764a7fb8ad733e2fad47111444cf80227e591456",
+        "rules-halves-wikimedia-p6": "ce551933f64f233cf3bf5a74fcdde43df3889435",
+        "rules-halves-wikimedia-p7-rp1.0": "39a9474e9af085498aefd9bcc5a7cb793173eeac",
+        "rules-halves-wikimedia-p7": "a3664f84faeb2245880ff3cccdb0e4b5aa6b9759",
+        "rules-halves-wikimedia-p8-rp1.0": "a01f55aa2e444920eff6d00c412bec3485239067",
+        "rules-halves-wikimedia-p8": "96c7b38d8d3d93e9c62d3762b41ae50a48f8f5df",
+        "rules-halves-wikimedia-p9-rp1.0": "2296eff88d05012615c0188658ee0cd31b776d38",
+        "rules-halves-wikimedia-p9": "a33e3d51b708269be80bfef0b3b9877fbe91c81e",
+        "rules-reviews-openstack-p10": "63db8e4e78fa2617c49380326ff80043de1c7043",
+        "rules-reviews-openstack-p11": "36b298f4ab97891aa5088814c1e36466f4f63f09",
+        "rules-reviews-openstack-p12": "5f1dd1640897cec7552ecdf7901a82d546b74018",
+        "rules-reviews-openstack-p2-smoke.openstack-a.part": (
+            "757e2bd61683763f6e9b0a10d7345322a76a5695"
+        ),
+        "rules-reviews-openstack-p2-smoke2": "c2bc6d135e84c4519fdaf0bf20f5b2cbd059e102",
+        "rules-reviews-openstack-p2-smoke3": "e5a0928c3d4b7310eebfedfb6b6d41eea5707cd0",
+        "rules-reviews-openstack-p2-smoke4": "42443833d29999304087684206f22d9e12685706",
+        "rules-reviews-openstack-p2-smoke5": "8a13459de8af03bd90c63003cc1dd9f13313e63b",
+        "rules-reviews-openstack-p2": "245cbc1ea4372fff546f67e53f887489f90e8c65",
+        "rules-reviews-openstack-p3": "2ab672a31bb33ad0e1486505bbba8318a35f7ef5",
+        "rules-reviews-openstack-p4": "eae86a9cbf15daa98fb8805d0278ada219f10bc9",
+        "rules-reviews-openstack-p5": "f335f74b503a18e86f38ac3bacf2ca885c07d344",
+        "rules-reviews-openstack-p7": "3af549ec7e9214d0eb3b7def11828d3ff1256214",
+        "rules-reviews-openstack-p8": "04c00000c5d9b1ec3f1e52acc58d9f039b09b264",
+        "rules-reviews-openstack-p9": "b006dcb70243c1315e49ed0c8890313b320c1dab",
+        "rules-reviews-wikimedia-p1-smoke2": "9bec16971634751cb6ece527849b20d293ec5edc",
+        "rules-reviews-wikimedia-p1-smoke3": "3fa1595d1298b4ee5177c75e6a0e11560663b680",
+        "rules-reviews-wikimedia-p1-smoke4": "f87677db64cceab5807faf6998f01106ed718ceb",
+        "rules-reviews-wikimedia-p1-smoke5": "a75218156942f6693c399c38e336b7aeba1da34e",
+        "rules-reviews-wikimedia-p1-smoke6": "b2d31ce259e74468babd03edb379d465cad96cc8",
+        "rules-reviews-wikimedia-p1": "26db6c7b7c8510c896b3e7012b412e9962901e39",
+        "rules-reviews-wikimedia-p10": "a4ff3d995cd00075a858d4ea59a290d7801b1a59",
+        "rules-reviews-wikimedia-p11": "0c52b80eea96da31b771b64894fd0468bc1a4cd3",
+        "rules-reviews-wikimedia-p2": "3cea68ff64717fdc8aaf4e88c0645575f8645d5d",
+        "rules-reviews-wikimedia-p3": "a6db63e0585ac71a73b7b88af0ee67a61d49990f",
+        "rules-reviews-wikimedia-p5": "6778267e35206d47a184aef749bd5a020bfa4e48",
+        "rules-reviews-wikimedia-p6": "fbc0a6542276a32f60028e3a94df0ff2a2c1e572",
+        "rules-reviews-wikimedia-p7": "ed434e932f88f0666156569a1b586a41d5b4213a",
+        "rules-reviews-wikimedia-p8": "d7918898bd6c93c1a0b474b60125a31ae1b37886",
+        "rules-reviews-wikimedia-p9": "c2439a3b91afadef6d917609a4ee7e4c2b2c6dd8",
+    }.items()
+}  # fmt: skip
+
+
 def load_key(environ: Mapping[str, str] = os.environ) -> bytes:
     """The withholding key from the environment, or exit."""
     value = environ.get(KEY_ENV, "").strip()
@@ -214,7 +394,7 @@ def _written_guide(node: Mapping[str, Any]) -> bool:
         and node.get("reduce_answer") is None
         and node.get("evidence") == []
         and node.get("recurrence") == []
-        and not any(k.endswith(SUFFIX) for k in node)
+        and not any(k.endswith(SUFFIX) and k.removesuffix(SUFFIX) not in PLAIN_HASHES for k in node)
         and isinstance(chunks, int)
         and not isinstance(chunks, bool)
         and chunks > 0
@@ -264,10 +444,23 @@ def _listed_ids(document: Any) -> frozenset[str]:
     return frozenset(found)
 
 
+@functools.cache
+def _rules_file_key() -> re.Pattern[str]:
+    """A key of `rules_files`: `<condition>:<owner>`, the owner an organization or one half."""
+    from sphragis.experiment.rules_arms import DISTILLED, WRITTEN
+
+    return re.compile(rf"(?:{re.escape(DISTILLED)}|{re.escape(WRITTEN)}):[a-z0-9]+(?:-[a-z0-9]+)*")
+
+
 def _label(key: str, ids: frozenset[str]) -> bool:
     """A key that names a run or an example, not text: a dtype pass, an id the document lists,
-    or an example id."""
-    return key in PASS_LABELS or key in ids or is_example_id(key)
+    an example id, or the name of a rules file."""
+    return (
+        key in PASS_LABELS
+        or key in ids
+        or is_example_id(key)
+        or _rules_file_key().fullmatch(key) is not None
+    )
 
 
 def _walk_keys(value: Any) -> Iterator[str]:
@@ -311,6 +504,104 @@ def _digested(value: Any, key: bytes) -> Any:
     if isinstance(value, list | tuple):
         return [_digested(v, key) for v in value]
     return value
+
+
+def _paths(
+    node: Any,
+    match: Callable[[str, Any, str], bool],
+    path: str = "",
+    key: str = "",
+    parent: str = "",
+) -> Iterator[str]:
+    """JSON paths of each value `match(key, value, parent)` takes, in a document: an object's
+    members under their own key, a list's items under the key of the list. A `_hmac` member is
+    never entered, a match is not entered either."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if match(k, v, key):
+                yield f"{path}/{k}"
+            elif not k.endswith(SUFFIX):
+                yield from _paths(v, match, f"{path}/{k}", k, key)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            if match(key, v, parent):
+                yield f"{path}/{i}"
+            else:
+                yield from _paths(v, match, f"{path}/{i}", key, parent)
+
+
+def _plain(key: str, value: Any, parent: str) -> bool:
+    """A plain hash field holding anything but nothing, or a 64-hex string no listed field of a
+    public or local artifact holds."""
+    if key in PLAIN_HASHES:
+        return value not in ({}, [])
+    return (
+        isinstance(value, str)
+        and not key.endswith(SUFFIX)
+        and HEX.fullmatch(value) is not None
+        and allowed_hash(parent, key) is None
+    )
+
+
+def plain_left(document: Any) -> list[str]:
+    """Where a document carries a plain hash: a `PLAIN_HASHES` field with anything in it, or a
+    64-hex string in a field `ALLOWED_HASHES` does not list, as JSON paths."""
+    return list(_paths(document, _plain))
+
+
+def hash_locations(document: Any) -> list[tuple[str, str]]:
+    """The (parent field, field) of each 64-hex string outside a digest field or a plain hash
+    field, which `ALLOWED_HASHES` lists or the guard refuses."""
+    found: list[tuple[str, str]] = []
+
+    def collect(key: str, value: Any, parent: str) -> bool:
+        if key in PLAIN_HASHES:
+            return True
+        if not key.endswith(SUFFIX) and isinstance(value, str) and HEX.fullmatch(value):
+            found.append((parent, key))
+        return False
+
+    for _ in _paths(document, collect):
+        pass
+    return found
+
+
+@functools.cache
+def organizations() -> frozenset[str]:
+    """Every organization the collectors know, Gerrit or GitHub."""
+    from sphragis.corpus.cli import GERRIT
+    from sphragis.corpus.github import GITHUB_ORGS
+
+    return frozenset(GERRIT) | frozenset(GITHUB_ORGS)
+
+
+@functools.cache
+def _allowed() -> tuple[tuple[re.Pattern[str], str, HashField], ...]:
+    alt = "(?:" + _alt(organizations()) + ")"
+    return tuple((re.compile(e.parent.replace("{org}", alt)), e.field, e) for e in ALLOWED_HASHES)
+
+
+def allowed_hash(parent: str, field: str) -> HashField | None:
+    """The `ALLOWED_HASHES` entry that lists a 64-hex string under `parent` named `field`."""
+    return next((e for rx, f, e in _allowed() if f == field and rx.fullmatch(parent)), None)
+
+
+def _rekeyed(field: str, value: Any, key: bytes) -> tuple[Any, int]:
+    """A plain hash field with each hash replaced by the HMAC of its hex string, and how many.
+
+    One hash, or a flat dict or list of them; anything else is refused rather than guessed at.
+    """
+
+    def hashed(v: Any) -> bool:
+        return isinstance(v, str) and DIGEST.fullmatch(v) is not None
+
+    if hashed(value):
+        return digest(value, key), 1
+    if isinstance(value, dict) and all(hashed(v) for v in value.values()):
+        return {k: digest(v, key) for k, v in value.items()}, len(value)
+    if isinstance(value, list) and all(hashed(v) for v in value):
+        return [digest(v, key) for v in value], len(value)
+    raise ValueError(f"{field} is not a SHA-256 hex digest or a dict or list of them")
 
 
 def text_left(document: Any) -> list[str]:
@@ -429,21 +720,12 @@ def granted_content(document: Any) -> bool:
 
 def _digest_keys(document: Any) -> list[str]:
     """Where a document carries a digest of text or a plain hash of it, as JSON paths."""
-    found: list[str] = []
-
-    def walk(node: Any, path: str) -> None:
-        if isinstance(node, dict):
-            for k, v in node.items():
-                if k == "withheld_text" or k.endswith(SUFFIX) or k in PLAIN_HASHES:
-                    found.append(f"{path}/{k}")
-                else:
-                    walk(v, f"{path}/{k}")
-        elif isinstance(node, list):
-            for i, v in enumerate(node):
-                walk(v, f"{path}/{i}")
-
-    walk(document, "")
-    return found
+    return list(
+        _paths(
+            document,
+            lambda k, _v, _p: k == "withheld_text" or k.endswith(SUFFIX) or k in PLAIN_HASHES,
+        )
+    )
 
 
 def _counts_only(value: Any) -> bool:
@@ -467,6 +749,17 @@ def _strings_of(value: Any) -> Iterator[str]:
             yield from _strings_of(v)
 
 
+def _leaves(value: Any) -> Iterator[Any]:
+    if isinstance(value, dict):
+        for v in value.values():
+            yield from _leaves(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _leaves(v)
+    else:
+        yield value
+
+
 def _listed_key(field: str, key: str) -> bool:
     return any(f == field and rx.fullmatch(key) for f, rx in _WHITESPACE_KEYS)
 
@@ -479,7 +772,12 @@ def _unfit(node: Any, ids: frozenset[str], path: str = "", field: str = "") -> I
             if re.search(r"\s", k) and not is_example_id(k) and not _listed_key(field, k):
                 yield f"{path}/{k[:40]} is a key of prose"
             if k.endswith(SUFFIX) and (
-                not all(DIGEST.fullmatch(t) for t in _strings_of(v)) or unlabelled_keys(v, ids)
+                not all(DIGEST.fullmatch(t) for t in _strings_of(v))
+                or unlabelled_keys(v, ids)
+                or (
+                    k.removesuffix(SUFFIX) in PLAIN_HASHES
+                    and not all(isinstance(t, str) for t in _leaves(v))
+                )
             ):
                 yield f"{path}/{k} is not a digest under labels"
             elif k in COMMENT_LISTS and not _counts_only(v):
@@ -548,6 +846,28 @@ class Verdict(NamedTuple):
     granted: bool
     findings: list[str]
     pinned: bool
+    plain: list[str]
+    plain_pinned: bool
+
+    def not_granted(self) -> list[str]:
+        """A granted host's file carrying text, digests or hashes, outside the exceptions."""
+        if self.granted and self.findings and not self.pinned:
+            return [f"granted host: {p}" for p in self.findings]
+        return []
+
+    def not_plain(self) -> list[str]:
+        """A plain hash of generated text, outside the files committed so before the rule."""
+        if self.plain and not self.plain_pinned:
+            return [f"plain hash of generated text: {p}" for p in self.plain]
+        return []
+
+    def refusals(self) -> list[str]:
+        return [*self.unfit, *self.not_granted(), *self.not_plain()]
+
+
+def pinned(pins: Mapping[str, str], rel: str, raw: bytes) -> bool:
+    """Whether a file is one of the pinned exceptions, byte for byte, at this path."""
+    return pins.get(rel) == blob(raw)
 
 
 def examine(rel: str, raw: bytes, documents: Sequence[Any], pin_rel: str | None = None) -> Verdict:
@@ -557,10 +877,12 @@ def examine(rel: str, raw: bytes, documents: Sequence[Any], pin_rel: str | None 
     digests, comment text, keys of prose, prose under an example). `granted` and `findings`: a
     file drawn from a granted host (by any component of `rel`, or its content) and what it
     carries that the grants exclude. `pinned`: it is a committed exception byte for byte at
-    `pin_rel` (default `rel`), the blob taken only when it matters.
+    `pin_rel` (default `rel`), the blob taken only when it matters. `plain`: where it carries a
+    plain hash field, `plain_pinned`: it is one of the files committed so before the rule.
     """
     unfit: list[str] = []
     findings: list[str] = []
+    plain: list[str] = []
     prose: list[tuple[str, str]] = []
     granted = granted_path(rel)
     for i, document in enumerate(documents):
@@ -569,10 +891,18 @@ def examine(rel: str, raw: bytes, documents: Sequence[Any], pin_rel: str | None 
         unfit += [f"{i}{p}" for p in [*left, *_unfit(document, ids)]]
         prose += [(k, f"{i}{p}") for k, p in _prose(document)]
         findings += [f"{i}{p}" for p in [*left, *_digest_keys(document)]]
+        plain += [f"{i}{p}" for p in plain_left(document)]
         granted = granted or granted_content(document)
     unfit += [p for k, p in prose if granted or k not in BATTERY_FIELDS]
-    pinned = bool(granted and findings and BEFORE_THE_RULE.get(pin_rel or rel) == blob(raw))
-    return Verdict(unfit, granted, findings, pinned)
+    at = pin_rel or rel
+    return Verdict(
+        unfit,
+        granted,
+        findings,
+        bool(granted and findings and pinned(BEFORE_THE_RULE, at, raw)),
+        plain,
+        bool(plain and pinned(PLAIN_HASHES_BEFORE_THE_RULE, at, raw)),
+    )
 
 
 def refusals(
@@ -580,19 +910,17 @@ def refusals(
 ) -> list[str]:
     """Why a file may not be published, empty when it may: the one predicate the guard and the
     script that digests a result both ask."""
-    verdict = examine(rel, raw, documents, pin_rel)
-    out = list(verdict.unfit)
-    if verdict.granted and verdict.findings and not verdict.pinned:
-        out += [f"granted host: {p}" for p in verdict.findings]
-    return out
+    return examine(rel, raw, documents, pin_rel).refusals()
 
 
 def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
     """The document with each withheld field's texts replaced by digests, and how many were.
 
     A field `f` holding text becomes `f_hmac` in the same place, its shape kept and each string
-    in it digested; a field holding none (a prediction interval, a null) is left alone. A copy
-    already withheld that still carries text is refused rather than half-merged.
+    in it digested; a field holding none (a prediction interval, a null) is left alone. A plain
+    hash field (`PLAIN_HASHES`) becomes `f_hmac` too, each hash replaced by the HMAC of its hex
+    string, so the cluster's resume keeps its plain hashes and the published copy holds none. A
+    copy already withheld that still carries text is refused rather than half-merged.
     """
     count = 0
     ids = _listed_ids(document)
@@ -608,6 +936,14 @@ def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
                         raise ValueError(f"{name}: {k} holds text as keys ({keys[0][:30]!r})")
                     count += _strings(v)
                     out[f"{k}{SUFFIX}"] = _digested(v, key)
+                elif k in PLAIN_HASHES:
+                    if f"{k}{SUFFIX}" in node:
+                        raise ValueError(f"{name}: {k} sits beside {k}{SUFFIX}")
+                    try:
+                        out[f"{k}{SUFFIX}"], n = _rekeyed(k, v, key)
+                    except ValueError as error:
+                        raise ValueError(f"{name}: {error}") from error
+                    count += n
                 else:
                     out[k] = walk(v)
             return out
@@ -621,9 +957,12 @@ def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
     if not isinstance(result, dict):
         raise ValueError(f"{name}: withheld text outside a JSON object")
     if "withheld_text" in result:
-        raise ValueError(f"{name} is already a withheld copy yet still carries text")
+        what = "text" if text_left(document) else "plain hashes"
+        raise ValueError(f"{name} is already a withheld copy yet still carries {what}")
     result["withheld_text"] = {
-        "fields": sorted({p.rsplit("/", 1)[-1] for p in text_left(document)}),
+        "fields": sorted(
+            {p.rsplit("/", 1)[-1] for p in [*text_left(document), *plain_left(document)]}
+        ),
         "texts": count,
         "algorithm": "HMAC-SHA256",
         "key_id": key_id(key),
@@ -632,18 +971,47 @@ def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
     return result, count
 
 
+def _meta(name: str, doc: Mapping[str, Any]) -> Mapping[str, Any]:
+    """A document's `withheld_text` record, `{}` for a copy with none; exits on one that is not an
+    object, or whose `fields` is not a list."""
+    meta = doc.get("withheld_text", {})
+    if not isinstance(meta, dict) or not isinstance(meta.get("fields", []), list):
+        raise SystemExit(f"{name}: withheld_text is not a record with a list of fields")
+    return meta
+
+
+def _common(keys: Mapping[str, str | None], label: str) -> str:
+    """`""` when no document is keyed, `SUFFIX` when every one is keyed under one key id; a mix,
+    or two keys, compares nothing and exits."""
+    if len(set(keys.values())) == 1:
+        return "" if None in keys.values() else SUFFIX
+    if None in keys.values():
+        raise SystemExit(f"cannot compare {label} together: {keys}")
+    raise SystemExit(f"the copies are digested under different keys: {keys}")
+
+
 def basis(documents: Mapping[str, Mapping[str, Any]]) -> str:
     """The suffix under which a reader compares the withheld fields of documents read together.
 
     `""` when every document carries text, `SUFFIX` when every one is digested under the same key
     id. A mix of published and plain copies, or of two keys, compares nothing and exits.
     """
-    keys = {name: doc.get("withheld_text", {}).get("key_id") for name, doc in documents.items()}
-    if len(set(keys.values())) == 1:
-        return "" if None in keys.values() else SUFFIX
-    if None in keys.values():
-        raise SystemExit(f"cannot compare published and full-text copies together: {keys}")
-    raise SystemExit(f"the copies are digested under different keys: {keys}")
+    keys = {name: _meta(name, doc).get("key_id") for name, doc in documents.items()}
+    return _common(keys, "published and full-text copies")
+
+
+def hash_basis(documents: Mapping[str, tuple[Mapping[str, Any], str]]) -> str:
+    """The suffix under which a reader compares plain-hash fields, one `(document, field)` each.
+
+    A published file keys a hash only when `withheld_text.fields` lists the field: a file
+    published before the rule has its texts digested and its hashes plain. All keyed under one
+    key id gives `SUFFIX`, none keyed gives `""` (published or not), a mix or two keys exits.
+    """
+    keys: dict[str, str | None] = {}
+    for name, (doc, field) in documents.items():
+        meta = _meta(name, doc)
+        keys[name] = meta.get("key_id") if field in meta.get("fields", ()) else None
+    return _common(keys, "keyed and plain prompt hashes")
 
 
 def require_text(document: Mapping[str, Any], label: str) -> None:
