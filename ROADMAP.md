@@ -192,9 +192,15 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches remains): look each target's added lines up
   in every branch as it stood at the checkpoint's weight upload, report the rate and a
   sensitivity estimate without them (infini-gram mini, arXiv:2506.12229, as exact-lookup practice).
-- [ ] **Pin the checkpoint revisions** (pins done: `model.MODEL_REVISIONS`, every load pinned; still to do: the checkpoint date and the disclosure table below; the Qwen repos changed config and
+- [x] **Pin the checkpoint revisions** (pins: `model.MODEL_REVISIONS`, every load pinned; checkpoint dates from the weights' upload commits and the disclosure record `docs/disclosure/`, 2026-10-20; the Qwen repos changed config and
   tokenizer files on 2024-11-18) to the revision the pilots ran on, and cite the weight-upload
   commit as the checkpoint date; adopt a contamination disclosure table (arXiv:2608.29463).
+- [ ] **The rules comparator's inputs postdate the test window** (found 2026-10-20, research log):
+  the distiller's weights (Qwen3.6-27B, 2026-04-22) and the written-guide revisions
+  (`datasets/rules/guide-*.json`) are from after the test window opened, so an own-half rules file
+  can carry test-period exposure the sibling's does not. Before the comparator's test reading: a
+  sensitivity reading with a distiller and guides that predate 2025-11-01, and the caveat stated
+  beside the comparator.
 - [ ] **AI-assisted pull requests on the GitHub family**: the route drops accounts typed `Bot` and
   the logins in `github.AGENT_LOGINS`, which misses agents that commit under a developer's account
   (an agent `Co-Authored-By:` trailer, Cursor's `cursoragent` committer). The raw rows carry no
@@ -860,6 +866,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-20** — Checkpoint dates read from the commits that wrote each pinned checkpoint's weights (the evaluated model's on 2024-09-17, before every corpus window), and a contamination disclosure record in arXiv:2608.29463's v1.1 format, validated against its schema in the suite; direct and temporal stay not controlled until the backport lookup lands (research log).
 - **2026-10-20** — Fuchsia's foreign pool read in full over Qt's training months (its comment-count probe did not hold): 5,890 examples after refinement and dedup, and the stop rule's prefix, its first project, covers all 80 matched draws and 40 partitions against Qt, so Fuchsia qualifies as H2's source unless Chromium's pool, ahead of it in the order, covers (research log).
 - **2026-10-19** — Model text that can repeat a review comment (generation predictions, determinism passes, review distillations) withheld from every published result as HMAC-SHA256 digests under a key kept off the repository; full texts on the cluster for a data-use agreement, history from 96695eb up to the commit this change merges onto disclosed (research log, 2026-10-19).
 - **2026-10-10** — A test read refuses any run whose outcome-neutral battery failed or is missing, a likelihood rescoring's through the generation run it scored, and a planted run is never one of H1's runs; all 46 unplanted development runs hold (research log).
