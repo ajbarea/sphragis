@@ -1,0 +1,2 @@
+# A blob pin holds under core.autocrlf only where git leaves a result's bytes alone.
+datasets/results/** -text

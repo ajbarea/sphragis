@@ -5,7 +5,7 @@ comment word for word, and no review text is published (`docs/protocol.md`). Pub
 carry a keyed digest of each such text instead (`sphragis.measure.withhold`,
 `scripts/withhold_text.py`); the full texts stay in the cluster's results root. The hosts opened
 by written grant stay out of git altogether, as their grants ask (research log, 2026-10-18 and
-2026-10-19).
+2026-10-19). The rule itself is `withhold.refusals`; this module reads the tracked files and asks.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import json
 import lzma
 import re
 import subprocess
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -30,11 +30,6 @@ from sphragis.measure import withhold as w
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = "datasets/results"
-DIGEST = re.compile(r"[0-9a-f]{64}")
-#: A bot-audit list of short real review comments, which no published artifact carries.
-COMMENT_LISTS = frozenset({"candidate_unregistered_bots"})
-#: The only key of a row in that list: `scripts/data_audit.py` writes `{"changes": n}`.
-COMMENT_ROW_KEYS = frozenset({"changes"})
 GUIDE: dict[str, Any] = {
     "kind": "guide",
     "chunks": 1,
@@ -65,50 +60,9 @@ OTHER_SUFFIXES = frozenset(
     {
         ".log", ".py", ".sbatch", ".md", ".txt", ".sh", ".npz", ".yml", ".svg", ".css", ".html",
         ".js", ".toml", ".example", ".cff", ".java", ".lock", ".png", ".pdf", ".tex",
-        ".gitignore", ".gitkeep", "license", "makefile",
+        ".gitignore", ".gitkeep", ".gitattributes", "license", "makefile",
     }
 )  # fmt: skip
-
-#: Fields whose keys hold whitespace, from a survey of the tracked JSON: the field the key sits
-#: under (empty at the top of a file), what it may be, and the script that writes it.
-WHITESPACE_KEYS: tuple[tuple[str, str, str], ...] = (
-    ("ai_trailer_values", r"(?:Assisted|Co-Authored|Generated)-By: [\w. -]{1,24}", "ai_trailers"),
-    (
-        "relations",
-        "other organization and content|other organization, same content"
-        "|same organization and content, other project|same organization, other content"
-        "|same project",
-        "client_attribution",
-    ),
-    ("separation", r"\w+ - \w+", "contamination_blind"),
-    (
-        "automated_comments_by_bot",
-        "Qt QUIP-23 security review integration|Qt Sanity Bot|flake8 lint output",
-        "data_audit",
-    ),
-    (
-        "pairs",
-        r"(?:human|[ABC])~[ABC](?: (?:first|second) half)?"
-        r"(?: (?:outside_names|valid_vs_rest|on checked items))?(?: without slips)?",
-        "label_audit_agreement",
-    ),
-    (
-        "cuts",
-        "attention, all four|mlp, all three|[a-z_]+ alone|pfadapter (?:kept local \\(v,o\\)"
-        "|transmitted \\(q,k\\))",
-        "module_split",
-    ),
-    ("", r"within:\w+:[\w/.\-]+ vs [\w/.\-]+", "separability"),
-)
-_WHITESPACE_KEYS = tuple((field, re.compile(rx)) for field, rx, _ in WHITESPACE_KEYS)
-
-#: A string of this many words under any key of an object carrying an example id is model text
-#: under a name the guard does not know; the longest a tracked file holds outside the two
-#: battery fields below is two (a `lexer`, a `path`).
-PROSE_VALUE_WORDS = 3
-#: The contamination battery's completions of code and its targets, from prompts without review
-#: text (`scripts/contamination_blind.py`); never allowed in a granted host's file.
-BATTERY_FIELDS = frozenset({"predicted", "reference"})
 
 
 def _tracked() -> list[Path]:
@@ -121,8 +75,8 @@ def _tracked() -> list[Path]:
 def _zstd() -> Any:
     try:
         from compression import zstd  # ty: ignore[unresolved-import]
-    except ImportError:
-        pytest.skip("zstd needs Python 3.14")
+    except ImportError as error:
+        raise AssertionError("a zstd file is tracked: read it on Python 3.14") from error
     return zstd
 
 
@@ -151,115 +105,48 @@ def _parsed(text: str) -> list[Any]:
         return [json.loads(line) for line in text.splitlines() if line.strip()]
 
 
-def _documents(path: Path) -> list[Any]:
-    return _parsed(_decoded(path.read_bytes()).decode())
+def _documents(raw: bytes) -> list[Any]:
+    return _parsed(_decoded(raw).decode())
 
 
-def _classify(path: Path) -> str | None:
+def _json_looking(raw: bytes) -> bool:
+    """Opens with an object or array that parses, whole or as the first line of a line file."""
+    if raw[:64].lstrip()[:1] not in (b"{", b"["):
+        return False
+    text = raw.decode(errors="replace")
+    for attempt in (text, text.lstrip().splitlines()[0]):
+        try:
+            json.loads(attempt)
+        except json.JSONDecodeError:
+            continue
+        return True
+    return False
+
+
+def _classify(path: Path, raw: bytes) -> str | None:
     """`json` for a file the guard reads, `other` for a listed suffix, None for the rest.
 
-    Read: a JSON name, compression magic, or a first byte of `{` or `[` where the whole file
-    then parses, whatever the name says. A log that opens with `[` stays `other`.
+    Read: a JSON name, compression magic, or content that opens as JSON, whatever the name says.
+    A log that opens with `[timestamp]` and does not parse stays `other`.
     """
-    with path.open("rb") as handle:
-        head = handle.read(8)
-    if _stem(path).endswith(JSON_SUFFIXES) or head.startswith(tuple(MAGIC)):
+    if _stem(path).endswith(JSON_SUFFIXES) or raw.startswith(tuple(MAGIC)) or _json_looking(raw):
         return "json"
-    if head.lstrip()[:1] in (b"{", b"["):
-        try:
-            _documents(path)
-        except ValueError:
-            pass
-        else:
-            return "json"
     return "other" if _suffix(path) in OTHER_SUFFIXES else None
-
-
-def _strings(value: Any) -> Iterator[str]:
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, Mapping):
-        for v in value.values():
-            yield from _strings(v)
-    elif isinstance(value, list):
-        for v in value:
-            yield from _strings(v)
-
-
-def _counts_only(value: Any) -> bool:
-    """The published shape of a comment list: rows of counts under the one key the audit writes."""
-    return isinstance(value, list) and all(
-        isinstance(row, Mapping)
-        and set(row) <= COMMENT_ROW_KEYS
-        and all(isinstance(n, int) and not isinstance(n, bool) for n in row.values())
-        for row in value
-    )
-
-
-def _listed_key(field: str, key: str) -> bool:
-    return any(f == field and rx.fullmatch(key) for f, rx in _WHITESPACE_KEYS)
-
-
-def _unfit(node: Any, path: str = "", field: str = "") -> Iterator[str]:
-    """Digest fields not holding digests, comment lists holding comments, keys of prose."""
-    if isinstance(node, Mapping):
-        for k, v in node.items():
-            if re.search(r"\s", k) and not w.EXAMPLE_ID.match(k) and not _listed_key(field, k):
-                yield f"{path}/{k[:40]} is a key of prose"
-            if k.endswith(w.SUFFIX) and not all(DIGEST.fullmatch(t) for t in _strings(v)):
-                yield f"{path}/{k} is not a digest"
-            elif k in COMMENT_LISTS and not _counts_only(v):
-                yield f"{path}/{k} carries comment text"
-            else:
-                yield from _unfit(v, f"{path}/{k}", k)
-    elif isinstance(node, list):
-        for i, v in enumerate(node):
-            yield from _unfit(v, f"{path}/{i}", field)
-
-
-def _prose(node: Any, path: str = "") -> Iterator[tuple[str, str]]:
-    """(key, where) for a string of several words in an object that carries an example id."""
-    if isinstance(node, Mapping):
-        carries = any(w.EXAMPLE_ID.match(k) for k in node) or any(
-            isinstance(v, str) and w.EXAMPLE_ID.match(v) for v in node.values()
-        )
-        for k, v in node.items():
-            if carries and isinstance(v, str) and len(v.split()) >= PROSE_VALUE_WORDS:
-                if not w.EXAMPLE_ID.match(v):
-                    yield k, f"{path}/{k} holds prose"
-            else:
-                yield from _prose(v, f"{path}/{k}")
-    elif isinstance(node, list):
-        for i, v in enumerate(node):
-            yield from _prose(v, f"{path}/{i}")
 
 
 class Analysis(NamedTuple):
     read: bool
-    unfit: list[str]
-    refused: list[str]
-    granted: bool
-    blob: str
+    verdict: w.Verdict
 
 
 @functools.cache
 def _analyse(path: Path, base: Path) -> Analysis:
-    """Everything the guard asks of one file, from one parse of it."""
-    if _classify(path) != "json":
-        return Analysis(False, [], [], False, "")
+    """Everything the guard asks of one file, from one read and one parse of it."""
+    raw = path.read_bytes()
+    if _classify(path, raw) != "json":
+        return Analysis(False, w.Verdict([], False, [], False))
     rel = path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name
-    unfit: list[str] = []
-    prose: list[tuple[str, str]] = []
-    refused: list[str] = []
-    granted = w.granted_path(rel)
-    for i, document in enumerate(_documents(path)):
-        unfit += [f"{i}{p}" for p in w.text_left(document)]
-        unfit += [f"{i}{p}" for p in _unfit(document)]
-        prose += [(k, f"{i}{p}") for k, p in _prose(document)]
-        refused += [f"{i}{p}" for p in w.granted_findings(document)]
-        granted = granted or w.granted_content(document)
-    unfit += [p for k, p in prose if granted or k not in BATTERY_FIELDS]
-    return Analysis(True, unfit, refused, granted, w.blob(path.read_bytes()))
+    return Analysis(True, w.examine(rel, raw, _documents(raw)))
 
 
 class Scan(NamedTuple):
@@ -268,15 +155,14 @@ class Scan(NamedTuple):
 
 
 def scan(paths: list[Path], base: Path = ROOT) -> Scan:
-    """Per JSON file among the paths, where it carries model text, a bad digest or comment text,
-    and which files were read."""
+    """Per JSON file among the paths, why it may not be published, and which files were read."""
     found: dict[str, list[str]] = {}
     read: list[Path] = []
     for path in paths:
         if (analysis := _analyse(path, base)).read:
             read.append(path)
-            if analysis.unfit:
-                found[path.name] = analysis.unfit[:3]
+            if analysis.verdict.unfit:
+                found[path.name] = analysis.verdict.unfit[:3]
     return Scan(found, read)
 
 
@@ -289,10 +175,10 @@ def granted_offending(paths: list[Path], base: Path = ROOT) -> dict[str, list[st
     exclude: model text, any digest, a plain hash of text."""
     out: dict[str, list[str]] = {}
     for path in paths:
-        analysis = _analyse(path, base)
-        rel = path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name
-        if analysis.granted and analysis.refused and w.BEFORE_THE_RULE.get(rel) != analysis.blob:
-            out[rel] = analysis.refused[:3]
+        verdict = _analyse(path, base).verdict
+        if verdict.granted and verdict.findings and not verdict.pinned:
+            rel = path.relative_to(base).as_posix() if path.is_relative_to(base) else path.name
+            out[rel] = verdict.findings[:3]
     return out
 
 
@@ -320,6 +206,17 @@ def offending_in(paths: list[Path]) -> dict[str, list[str]]:
     return offending(paths, paths[0].parent)
 
 
+CHANGE = "I" + "a1" * 20
+
+
+def _row(org: str, **fields: Any) -> dict[str, Any]:
+    return {"id": f"{org}:{CHANGE}:src/a.cpp:1:2", **fields}
+
+
+def _refused(tmp_path: Path, name: str, document: Any) -> dict[str, list[str]]:
+    return granted_offending([_write(tmp_path / name, document)], tmp_path)
+
+
 def test_the_check_fires_on_a_published_run_shape(tmp_path: Path) -> None:
     """The guard is only as good as its reach: each shape a run is published in trips it."""
     shapes = {
@@ -328,7 +225,7 @@ def test_the_check_fires_on_a_published_run_shape(tmp_path: Path) -> None:
         },
         "prompt-format-probe.json": {"raw": [{"prediction": "x"}]},
         "determinism-sym-0-gh-a-001-rp1.0.json": {
-            "passes": {"bf16": {"openstack:I1:f.py:1:2": "x"}}
+            "passes": {"bf16": {f"openstack:{CHANGE}:f.py:1:2": "x"}}
         },
         "rules-reviews-openstack-p10.json": {
             "files": {"openstack-a": {"map_lists": [], "file": "- a rule"}}
@@ -373,6 +270,21 @@ def test_raw_text_in_a_digest_field_is_caught(tmp_path: Path) -> None:
     assert offending_in([_write(tmp_path / "upper.json", {"prediction_hmac": "A" * 64})])
 
 
+def test_text_keys_under_a_digest_field_are_caught(tmp_path: Path) -> None:
+    digest = "a" * 64
+    row = f"openstack:{CHANGE}:f.py:1:2"
+    for i, bad in enumerate(
+        (
+            {"prediction_hmac": {"Done.": digest}},
+            {"passes_hmac": {"bf16": {"LGTM": digest}}},
+            {"ids": ["i0"], "passes_hmac": {"bf16": {"i9": digest}}},
+        )
+    ):
+        assert offending_in([_write(tmp_path / f"hmac-{i}.json", bad)]), bad
+    ok = {"ids": ["i0"], "passes_hmac": {"bf16": {"i0": digest}, "fp32": {row: digest}}}
+    assert not offending_in([_write(tmp_path / "ok.json", ok)])
+
+
 def test_bot_audit_comment_text_is_caught(tmp_path: Path) -> None:
     for i, shape in enumerate(
         (
@@ -380,6 +292,8 @@ def test_bot_audit_comment_text_is_caught(tmp_path: Path) -> None:
             ["typo"],
             [{"comment": "typo", "changes": 3}],
             {"typo": 3},
+            [{"nit: typo in the docstring": 3}],
+            [{"changes": 3, "text": 4}],
         )
     ):
         audit = {"candidate_unregistered_bots": shape}
@@ -394,19 +308,9 @@ def test_rules_read_from_a_written_guide_pass(tmp_path: Path) -> None:
     assert not offending_in([path])
 
 
-CHANGE = "I" + "a1" * 20
-
-
-def _row(org: str, **fields: Any) -> dict[str, Any]:
-    return {"id": f"{org}:{CHANGE}:src/a.cpp:1:2", **fields}
-
-
-def _refused(tmp_path: Path, name: str, document: Any) -> dict[str, list[str]]:
-    return granted_offending([_write(tmp_path / name, document)], tmp_path)
-
-
 def test_the_granted_orgs_are_read_from_the_registry() -> None:
     assert w.granted_orgs() == {"qt", "chromium", "aosp", "fuchsia"}
+    assert w.aliases()["android"] == "aosp" and w.aliases()["qtfull"] == "qt"
 
 
 @pytest.mark.parametrize(
@@ -415,6 +319,9 @@ def test_the_granted_orgs_are_read_from_the_registry() -> None:
         "datasets/results/rq1-partition-qt-p1.json",
         "datasets/results/RQ1-QT-P1.JSON",
         "datasets/results/rq1-windows-qtfull.json",
+        "datasets/results/rq1-windows-qt6.json",
+        "datasets/results/qtbase-x.json",
+        "datasets/results/android-census.json",
         "datasets/results/host-scoping-chromium/a.jsonl",
         "datasets/results/rq1-x-foreignchromium-rp1.0.json",
         "datasets/results/rq1-x-foreign_aosp.json",
@@ -432,28 +339,48 @@ def test_a_path_names_a_granted_org_at_a_token_boundary(rel: str) -> None:
         "datasets/results/rq1-windows.json",
         "datasets/results/rq1-pilot.json",
         "datasets/results/retrieval-foreign-openstack-rp1.0.json",
-        "datasets/results/qt5-notes.json",
         "datasets/results/quantum-qtile.json",
+        "datasets/results/androids-x.json",
     ],
 )
 def test_a_path_without_a_granted_token_is_not_granted(rel: str) -> None:
     assert not w.granted_path(rel)
 
 
-def test_a_document_names_a_granted_org_by_its_content() -> None:
-    row = _row("qt", prediction_hmac="a" * 64)
-    assert w.granted_content({"results": {"base": [row]}})
-    assert w.granted_content({"results": {f"qt:{CHANGE}:f.py:1:2": 1}})
-    assert w.granted_content({"note": f"yocto {CHANGE} aosp:{CHANGE}:x:1"})
-    assert not w.granted_content({"note": f"openstack:{CHANGE}:x:1 qt: {CHANGE}"})
-    for field, value in (
-        ("org", "Chromium"),
-        ("foreign", "qt"),
-        ("foreign_source", "fuchsia"),
-        ("orgs", ["openstack", "aosp"]),
-    ):
-        assert w.granted_content({"cells": [{field: value}]}), field
-    assert not w.granted_content({"org": "openstack", "results": [_row("openstack")]})
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"results": {"base": [_row("qt", prediction_hmac="a" * 64)]}},
+        {"results": {f"qt:{CHANGE}:f.py:1:2": 1}},
+        {"results": {f"QTFULL:{CHANGE.lower()}:f.py:1:2": 1}},
+        {"note": f"yocto {CHANGE} aosp:{CHANGE}:x:1"},
+        {"cells": [{"org": "Chromium"}]},
+        {"cells": [{"foreign": "qt"}]},
+        {"cells": [{"foreign_source": "fuchsia"}]},
+        {"cells": [{"orgs": ["openstack", "aosp"]}]},
+        {"by_org": {"qt": {"n": 3}}},
+        {"corpora": {"base|qt": 1}},
+        {"source": "qt:cpp/qtbase"},
+        {"url": "https://codereview.qt-project.org/c/x"},
+        {"url": "https://chromium-review.googlesource.com/c/x", "n": 1},
+        {"git": "https://android.googlesource.com/platform"},
+    ],
+)
+def test_a_document_names_a_granted_org_by_its_content(document: Any) -> None:
+    assert w.granted_content(document)
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"org": "openstack", "results": [_row("openstack")]},
+        {"note": f"openstack:{CHANGE}:x:1 qt: {CHANGE}"},
+        {"by_org": {"openstack": {"n": 3}}, "source": "openstack:nova"},
+        {"url": "https://review.opendev.org/c/x"},
+    ],
+)
+def test_a_document_of_other_orgs_is_not_granted(document: Any) -> None:
+    assert not w.granted_content(document)
 
 
 def test_a_granted_run_is_refused_whatever_its_name(tmp_path: Path) -> None:
@@ -472,6 +399,7 @@ def test_a_granted_file_is_refused_for_text_hashes_and_digests_alike(tmp_path: P
             {"rows": [_row("aosp", prediction="a comment")]},
             {"rows": [_row("aosp", predictions=["a comment"])]},
             {"rules_files": {"base:qt-a": "a" * 64}, "org": "qt"},
+            {"base_marks": {"i": "a" * 64}, "org": "qt"},
             {"rows": [_row("fuchsia", fingerprint="a" * 64)]},
             {"rows": [_row("fuchsia", passes_hmac={"bf16": {"i": "a" * 64}})]},
         )
@@ -486,6 +414,7 @@ def test_a_granted_file_of_counts_passes(tmp_path: Path) -> None:
         "other": {"prediction": None},
         "rows": [_row("fuchsia", exact_match=1.0, tokens=12)],
         "git": {"commit": "a" * 40},
+        "raw_digest": "a" * 64,
     }
     assert not _refused(tmp_path, "pool-order-fuchsia.json", counts)
     assert not _refused(tmp_path, "coverage-qt.json", {"k": 3, "intervals": [[0.1, 0.2]]})
@@ -494,45 +423,25 @@ def test_a_granted_file_of_counts_passes(tmp_path: Path) -> None:
     )
 
 
-def test_the_script_refuses_to_digest_a_granted_document() -> None:
-    spec = importlib.util.spec_from_file_location(
-        "withhold_text", ROOT / "scripts" / "withhold_text.py"
-    )
-    assert spec is not None and spec.loader is not None
-    script = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(script)
-    document = {"results": {"b": [_row("qt", prediction="a comment")]}}
-    raw = json.dumps(document).encode()
-    for name in ("rq1-pilot.json", "rq1-partition-qt-p1.json"):
-        with pytest.raises(SystemExit, match="written grant"):
-            script.refuse_granted(ROOT / RESULTS / name, raw, document)
-    other = {"results": {"b": [_row("openstack", prediction="a comment")]}}
-    script.refuse_granted(ROOT / RESULTS / "rq1-partition-openstack-p1.json", raw, other)
-    name = "rq1-placebo-qt.json"
-    pinned = ROOT / RESULTS / name
-    script.refuse_granted(pinned, pinned.read_bytes(), json.loads(pinned.read_bytes()))
-    with pytest.raises(SystemExit, match="written grant"):
-        script.refuse_granted(pinned, pinned.read_bytes() + b" ", document)
-
-
 def test_the_exceptions_are_pinned_by_the_blob_of_each_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     rel = "datasets/results/rq1-placebo-qt.json"
     original = json.dumps({"rows": [_row("qt", prediction_hmac="a" * 64)]})
-    pins = {rel: w.blob(original.encode())}
-    monkeypatch.setattr(w, "BEFORE_THE_RULE", pins)
-    path = tmp_path / rel
-    path.parent.mkdir(parents=True)
-    path.write_text(original)
-    assert not granted_offending([path], tmp_path)
-    path.write_text(original.replace("a" * 64, "b" * 64))
-    _analyse.cache_clear()
-    assert granted_offending([path], tmp_path)
-    elsewhere = tmp_path / "docs" / "rq1-placebo-qt.json"
-    elsewhere.parent.mkdir()
-    elsewhere.write_text(original)
-    assert granted_offending([elsewhere], tmp_path)
+    monkeypatch.setattr(w, "BEFORE_THE_RULE", {rel: w.blob(original.encode())})
+    same = tmp_path / "same" / rel
+    changed = tmp_path / "changed" / rel
+    elsewhere = tmp_path / "elsewhere" / "docs" / "rq1-placebo-qt.json"
+    for path, text in (
+        (same, original),
+        (changed, original.replace("a" * 64, "b" * 64)),
+        (elsewhere, original),
+    ):
+        path.parent.mkdir(parents=True)
+        path.write_text(text)
+    assert not granted_offending([same], tmp_path / "same")
+    assert granted_offending([changed], tmp_path / "changed")
+    assert granted_offending([elsewhere], tmp_path / "elsewhere")
 
 
 def test_the_listed_exceptions_still_exist_and_still_carry_predictions() -> None:
@@ -544,50 +453,80 @@ def test_the_listed_exceptions_still_exist_and_still_carry_predictions() -> None
         raw = tracked[rel].read_bytes()
         assert w.blob(raw) == pinned, f"{rel} changed; re-pin it or drop it"
         assert re.search(rb'"prediction(?:_hmac)?"', raw), f"{rel} carries none; drop it"
-        assert _analyse(tracked[rel], ROOT).granted, rel
+        assert _analyse(tracked[rel], ROOT).verdict.granted, rel
 
 
 def test_the_flagged_set_on_the_tree_is_the_exceptions() -> None:
     """Before the exceptions: every granted-derived file carrying text, digests or hashes."""
-    flagged = {
-        p.relative_to(ROOT).as_posix()
-        for p in _tracked()
-        if (a := _analyse(p, ROOT)).granted and a.refused
-    }
+    flagged = set()
+    for p in _tracked():
+        verdict = _analyse(p, ROOT).verdict
+        if verdict.granted and verdict.findings:
+            flagged.add(p.relative_to(ROOT).as_posix())
     assert flagged == set(w.BEFORE_THE_RULE)
+
+
+def test_the_pinned_files_are_not_converted_by_line_endings() -> None:
+    """A blob pin holds under `core.autocrlf` only where git leaves the file's bytes alone."""
+    out = subprocess.run(
+        ["git", "check-attr", "text", "--", *w.BEFORE_THE_RULE],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    assert len(lines := out.splitlines()) == len(w.BEFORE_THE_RULE)
+    assert all(line.endswith("text: unset") for line in lines), lines
 
 
 def test_every_tracked_file_is_classified_and_every_json_one_is_read() -> None:
     tracked = _tracked()
-    unclassified = [p.relative_to(ROOT).as_posix() for p in tracked if _classify(p) is None]
+    unclassified = [
+        p.relative_to(ROOT).as_posix() for p in tracked if _classify(p, p.read_bytes()) is None
+    ]
     assert not unclassified, f"list the suffixes in OTHER_SUFFIXES or fix the names: {unclassified}"
     by_name = re.compile(r"\.(?:json|jsonl|ndjson)(?:\.(?:gz|bz2|xz|zst))?$", re.IGNORECASE)
     named = {p for p in tracked if by_name.search(p.name)}
     read = set(scan(tracked).read)
     assert named <= read and {p.suffix for p in named} >= {".json", ".jsonl"}
-    assert all(_analyse(p, ROOT).read for p in read)
 
 
 def test_a_file_the_guard_cannot_classify_fails(tmp_path: Path) -> None:
     odd = tmp_path / "notes.weird"
     odd.write_text("plain words")
-    assert _classify(odd) is None
-    assert _classify(_write(tmp_path / "a.json", {})) == "json"
+    assert _classify(odd, odd.read_bytes()) is None
+    assert _classify(tmp_path / "a.json", b"{}") == "json"
 
 
 def test_json_content_under_an_odd_name_is_read(tmp_path: Path) -> None:
     odd = tmp_path / "notes.weird"
     odd.write_text(json.dumps({"rows": [{"prediction": "t"}]}))
-    assert _classify(odd) == "json" and offending_in([odd])
-    log = tmp_path / "run.log"
-    log.write_text("[2026-10-19] started\n")
-    assert _classify(log) == "other" and scan([log], tmp_path).read == []
+    assert _classify(odd, odd.read_bytes()) == "json" and offending_in([odd])
     packed = tmp_path / "rows.dat"
     packed.write_bytes(bz2.compress(b'{"prediction": "t"}'))
-    assert _classify(packed) == "json" and offending_in([packed])
+    assert offending_in([packed])
     xz = tmp_path / "rows.bin"
     xz.write_bytes(lzma.compress(b'{"prediction": "t"}'))
     assert offending_in([xz])
+
+
+def test_a_text_file_of_json_lines_is_read_whole_or_it_fails(tmp_path: Path) -> None:
+    lines = tmp_path / "run.txt"
+    lines.write_text('{"id": "a", "prediction": "t"}\n{"id": "b", "prediction": "u"}\n')
+    assert offending_in([lines])
+    broken = tmp_path / "run.log"
+    broken.write_text('{"id": "a"}\nnot json\n')
+    with pytest.raises(ValueError, match="Expecting"):
+        offending_in([broken])
+    log = tmp_path / "job.log"
+    log.write_text("[2026-10-19] started\n[2026-10-19] done\n")
+    assert _classify(log, log.read_bytes()) == "other" and scan([log], tmp_path).read == []
+
+
+def test_a_zstd_file_fails_where_it_cannot_be_read(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(__import__("sys").modules, "compression", None)
+    with pytest.raises(AssertionError, match="zstd"):
+        _decoded(b"\x28\xb5\x2f\xfd" + b"\0" * 8)
 
 
 def test_a_partial_sidecar_holding_predictions_is_refused(tmp_path: Path) -> None:
@@ -598,7 +537,7 @@ def test_a_partial_sidecar_holding_predictions_is_refused(tmp_path: Path) -> Non
         assert offending_in([sidecar]), name
 
 
-def test_a_text_file_is_not_a_guarded_file_but_a_json_named_one_must_parse(tmp_path: Path) -> None:
+def test_a_json_named_file_that_does_not_parse_fails(tmp_path: Path) -> None:
     broken = tmp_path / "a.json"
     broken.write_text("not json")
     with pytest.raises(ValueError, match="Expecting"):
@@ -611,8 +550,7 @@ def test_each_document_is_parsed_once_whatever_the_asks(
     path = _write(tmp_path / "a.json", {"rows": [_row("qt", prediction_hmac="a" * 64)]})
     calls = []
     real = _documents
-    monkeypatch.setitem(globals(), "_documents", lambda p: calls.append(p) or real(p))
-    _analyse.cache_clear()
+    monkeypatch.setitem(globals(), "_documents", lambda raw: calls.append(1) or real(raw))
     offending([path], tmp_path)
     granted_offending([path], tmp_path)
     scan([path], tmp_path)
@@ -626,18 +564,12 @@ def test_text_held_as_keys_is_caught_under_a_withheld_field_and_elsewhere(tmp_pa
             {"prediction": {comment: 0}},
             {"rows": [{"predictions": {comment: ["x"]}}]},
             {"passes": {"bf16": {comment: "x"}}},
+            {"prediction": {"LGTM": 0}},
         )
     ):
         assert offending_in([_write(tmp_path / f"keys-{i}.json", document)]), document
     labels = {"passes": {"fp32": {f"qt:{CHANGE}:f.py:1:2": {}}}}
     assert not offending_in([_write(tmp_path / "labels.json", labels)])
-
-
-def test_bot_audit_row_keys_are_the_ones_the_audit_writes(tmp_path: Path) -> None:
-    bad = {"candidate_unregistered_bots": [{"nit: typo in the docstring": 3}]}
-    assert offending_in([_write(tmp_path / "data-audit-a.json", bad)])
-    bad = {"candidate_unregistered_bots": [{"changes": 3, "text": 4}]}
-    assert offending_in([_write(tmp_path / "data-audit-b.json", bad)])
 
 
 def test_a_key_holding_whitespace_must_be_one_the_survey_found(tmp_path: Path) -> None:
@@ -653,34 +585,62 @@ def test_a_key_holding_whitespace_must_be_one_the_survey_found(tmp_path: Path) -
             {"pairs": {"human~A first half valid_vs_rest without slips": 1.0}},
             {"cuts": {"pfadapter kept local (v,o)": 1, "q_proj alone": 2}},
             {"within:qt:qt/qtbase vs qt/qtdoc": 1},
-            {"x": {"wikimedia:Ib3c:groups/Wikimedia/ Lingua.yaml:2:23": 1}},
+            {"x": {f"wikimedia:{CHANGE}:groups/Wikimedia/ Lingua.yaml:2:23": 1}},
         )
     ):
         assert not offending_in([_write(tmp_path / f"wsok-{i}.json", ok)]), ok
 
 
-def test_every_whitespace_key_in_the_tree_is_listed_with_its_producer() -> None:
-    for *_, producer in WHITESPACE_KEYS:
-        assert (ROOT / "scripts" / f"{producer}.py").is_file(), producer
+def test_every_whitespace_key_is_listed_with_a_producer_that_writes_its_field() -> None:
+    for field, _, producer in w.WHITESPACE_KEYS:
+        source = (ROOT / "scripts" / f"{producer}.py").read_text()
+        needle = field or "within:"
+        assert needle in source, f"{producer}.py never writes {needle!r}"
 
 
-@pytest.mark.parametrize(
-    "field", ["completion", "response", "answer", "generated", "model_output", "output"]
-)
+def test_the_pass_labels_are_one_constant_the_determinism_check_shares() -> None:
+    spec = importlib.util.spec_from_file_location(
+        "determinism_check", ROOT / "scripts" / "determinism_check.py"
+    )
+    assert spec is not None and spec.loader is not None
+    check = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(check)
+    assert check.PASS_DTYPES is w.PASS_DTYPES
+    written = set(
+        re.findall(r'passes\["(\w+)"\]', (ROOT / "scripts" / "determinism_check.py").read_text())
+    )
+    assert written == w.PASS_LABELS
+
+
+@pytest.mark.parametrize("field", ["completion", "response", "answer", "generated", "model_output"])
 def test_a_renamed_model_text_field_in_an_example_row_is_caught(tmp_path: Path, field: str) -> None:
     sentence = "Please rename this variable to something clearer"
     document = {"rows": [_row("openstack", **{field: sentence})]}
     assert offending_in([_write(tmp_path / f"{field}.json", document)]), field
-    keyed = {"rows": {f"openstack:{CHANGE}:f.py:1:2": sentence}}
-    assert offending_in([_write(tmp_path / f"{field}-keyed.json", keyed)]), field
+
+
+def test_prose_under_an_example_is_caught_however_deep(tmp_path: Path) -> None:
+    sentence = "Please rename this variable to something clearer"
+    row = f"openstack:{CHANGE}:f.py:1:2"
+    for i, document in enumerate(
+        (
+            {"id": row, "outputs": [sentence]},
+            {"id": row, "gen": {"text": sentence}},
+            {row: {"completion": sentence}},
+            {row: [sentence]},
+            {"id": row, "output": sentence},
+        )
+    ):
+        assert offending_in([_write(tmp_path / f"deep-{i}.json", document)]), document
 
 
 def test_prose_is_not_flagged_where_the_tree_keeps_it(tmp_path: Path) -> None:
+    row = f"qt:{CHANGE}:best practices/a b.md:1:2"
     for i, ok in enumerate(
         (
             {"output": "datasets/results/x.json"},
-            {"rows": [_row("openstack", lexer="Text only", path="groups/W/ L.yaml")]},
             {"output": "three whole words", "rows": [{"n": 1}]},
+            {"id": row, "path": "best practices/a b.md", "lexer": "Debian Control file"},
         )
     ):
         assert not offending_in([_write(tmp_path / f"fine-{i}.json", ok)]), ok
@@ -688,29 +648,171 @@ def test_prose_is_not_flagged_where_the_tree_keeps_it(tmp_path: Path) -> None:
     assert not offending_in([_write(tmp_path / "battery.json", battery)])
     granted = {"rows": [_row("qt", predicted="set to false in the file")]}
     assert offending_in([_write(tmp_path / "rq1-windows-qt.json", granted)])
+    other_path = {"id": row, "path": "some other file with spaces.md"}
+    assert offending_in([_write(tmp_path / "otherpath.json", other_path)])
+    sentence = {"id": row, "lexer": "Please rename this variable"}
+    assert offending_in([_write(tmp_path / "lexersentence.json", sentence)])
 
 
-#: The families a granted host's runs are written under (`scripts/*.sbatch`), the shapes a name
-#: takes (a result, its rows sidecar, a job's temporary file, a per-file part), and a name no
-#: pattern may reach.
-FAMILIES = (
-    "rq1-partition",
-    "rq1-placebo",
-    "rq1-windows",
-    "retrieval-halves",
-    "rules-halves",
-    "rules-reviews",
-    "retrieval-foreign",
-    "rules-foreign",
-)
-SHAPES = (".json", "-p4-n1850-rp1.0.json", "-p4.rows.jsonl", "-p4.partial", "-p4.qt-a.part.json")
+def _lexers() -> list[str]:
+    from sphragis.experiment.tokens import LEXED, UNTILED
+
+    return [*sorted(LEXED), "Text only", UNTILED.format("Pygments' Foo")]
 
 
-def _granted_block() -> list[str]:
-    lines = (ROOT / ".gitignore").read_text().splitlines()
-    start = next(i for i, line in enumerate(lines) if line.startswith("# Generation runs"))
-    block = itertools.takewhile(bool, lines[start:])
-    return [line for line in block if not line.startswith("#")]
+@pytest.mark.parametrize("lexer", _lexers())
+def test_a_lexer_the_tokenizer_writes_is_not_prose(tmp_path: Path, lexer: str) -> None:
+    document = {"rows": [_row("openstack", lexer=lexer)]}
+    assert not offending_in([_write(tmp_path / "lexer.json", document)]), lexer
+
+
+#: Where the script that digests a result lives, loaded as a module.
+def _script() -> Any:
+    spec = importlib.util.spec_from_file_location(
+        "withhold_text", ROOT / "scripts" / "withhold_text.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+KEY = bytes(range(32))
+
+
+def test_the_script_refuses_to_digest_a_granted_document(tmp_path: Path) -> None:
+    script = _script()
+    document = {"results": {"b": [_row("qt", prediction="a comment")]}}
+    for name in ("rq1-pilot.json", "rq1-partition-qt-p1.json"):
+        source = _write(tmp_path / name, document)
+        with pytest.raises(SystemExit, match="may not be published"):
+            script.convert(source, tmp_path / "out" / name, KEY)
+    other = _write(tmp_path / "o.json", {"results": {"b": [_row("openstack", prediction="a b")]}})
+    script.convert(other, tmp_path / "out" / "o.json", KEY)
+    pinned = ROOT / RESULTS / "rq1-placebo-qt.json"
+    script.convert(pinned, pinned, KEY)
+    copy = tmp_path / "rq1-placebo-qt.json"
+    copy.write_bytes(pinned.read_bytes())
+    with pytest.raises(SystemExit, match="may not be published"):
+        script.convert(copy, copy, KEY)
+
+
+def test_the_script_judges_a_path_outside_the_checkout_by_every_component(tmp_path: Path) -> None:
+    script = _script()
+    source = _write(
+        tmp_path / "host-scoping-chromium" / "run.json", {"rows": [{"prediction": "t"}]}
+    )
+    with pytest.raises(SystemExit, match="may not be published"):
+        script.convert(source, tmp_path / "out" / "run.json", KEY)
+
+
+def test_the_script_refuses_prose_under_a_renamed_field(tmp_path: Path) -> None:
+    script = _script()
+    sentence = "Please rename this variable to something clearer"
+    source = _write(tmp_path / "run.json", {"rows": [_row("openstack", completion=sentence)]})
+    with pytest.raises(SystemExit, match="may not be published"):
+        script.convert(source, tmp_path / "out" / "run.json", KEY)
+
+
+def test_the_script_refuses_text_it_cannot_digest_in_place(tmp_path: Path) -> None:
+    script = _script()
+    source = _write(tmp_path / "run.json", {"prediction": {"nit: typo": 0}})
+    with pytest.raises(SystemExit, match="text as keys"):
+        script.convert(source, tmp_path / "out" / "run.json", KEY)
+
+
+def test_a_refusal_partway_through_leaves_every_output_and_the_summary_unwritten(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    script = _script()
+    good = _write(tmp_path / "a.json", {"rows": [{"id": "i", "prediction": "t"}]})
+    bad = _write(tmp_path / "host-scoping-chromium" / "b.json", {"rows": [{"prediction": "t"}]})
+    before = good.read_bytes()
+    summary = tmp_path / "summary.json"
+    monkeypatch.setenv(w.KEY_ENV, KEY.hex())
+    monkeypatch.setattr(
+        "sys.argv", ["x", "--in-place", "--summary", str(summary), str(good), str(bad)]
+    )
+    with pytest.raises(SystemExit, match="may not be published"):
+        script.main()
+    assert good.read_bytes() == before and not summary.exists()
+    monkeypatch.setattr("sys.argv", ["x", "--in-place", "--summary", str(summary), str(good)])
+    script.main()
+    assert w.text_left(json.loads(good.read_text())) == [] and summary.exists()
+
+
+#: Jobs whose model run is a rescoring of stored rows (ids and scores, committed), and results
+#: that are written guides (public text): neither is a generation of review text.
+NOT_GENERATIONS = ("likelihood_score.sbatch", "rules-guide-")
+#: Where an organization sits in a result's name: the template's own slots.
+SLOTS = ("ORG", "FOREIGN_SOURCE")
+#: The ways a name is saved besides its result: rows beside it, a job's temporary file, a part.
+SIDECARS = (".json", ".rows.jsonl", ".partial", ".qt-a.part.json")
+
+
+def _alternatives(var: str, job: str) -> list[str] | None:
+    """The values a job's variable takes: listed in a comment, the labels of a `case`, or the
+    strings it is assigned."""
+    if listed := re.search(rf"^#\s*{var}=([\w.\-]+(?:\|[\w.\-]+)+)", job, re.MULTILINE):
+        return listed[1].split("|")
+    if block := re.search(rf'case "\${var}" in\n(.*?)esac', job, re.DOTALL):
+        return re.findall(r"^\s*([\w.\-]+)\)", block[1], re.MULTILINE) or None
+    return re.findall(rf'^\s*{var}="([^"$]*(?:\$[A-Z_]+[^"$]*)*)"', job, re.MULTILINE) or None
+
+
+def _expand(template: str, job: str, depth: int = 0) -> list[str]:
+    for var in re.findall(r"\$\{?(\w+)", template):
+        if var not in SLOTS and (alternatives := _alternatives(var, job)) and depth < 4:
+            filled = [
+                re.sub(rf"\$\{{{var}\}}|\${var}\b", lambda _, a=a: a, template)
+                for a in alternatives
+            ]
+            return [name for t in filled for name in _expand(t, job, depth + 1)]
+    return [template]
+
+
+def _fill(template: str, **slots: str) -> str:
+    for var, value in slots.items():
+        template = re.sub(rf"\$\{{{var}\}}|\${var}\b", lambda _, v=value: v, template)
+    template = re.sub(r"\$\{RESULT_SUFFIX\}|\$RESULT_SUFFIX\b", "-s2", template)
+    return re.sub(r"\$\{\w+\}|\$\w+", "x", template)
+
+
+def generation_names() -> dict[str, list[str]]:
+    """Concrete result names per kind of family, read from the `claim_result` templates of the jobs
+    that run the model (a script that builds an `HFGenerator`) outside `NOT_GENERATIONS`:
+    `org` the families whose name holds the organization, `always` the ones every run of which
+    reads a granted org (the job's code names one, and every variable of the template is
+    listed or has a default). Families whose name tells neither are left to the content check."""
+    found: dict[str, list[str]] = {"org": [], "always": []}
+    orgs = sorted(w.granted_orgs())
+    for job in sorted((ROOT / "scripts").glob("*.sbatch")):
+        text = job.read_text()
+        if job.name in NOT_GENERATIONS:
+            continue
+        scripts = re.findall(r"python (scripts/\w+\.py)", text)
+        if not any("HFGenerator" in (ROOT / s).read_text() for s in scripts):
+            continue
+        code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+        named = re.search(rf"\b(?:{'|'.join(orgs)})\b", code) is not None
+        for raw in re.findall(r'^\s*claim_result \w+ "\$SPHRAGIS_RESULTS/([^"]+)"', text, re.M):
+            for template in _expand(raw, text):
+                if template.startswith(NOT_GENERATIONS):
+                    continue
+                slots = [s for s in SLOTS if f"${s}" in template or f"${{{s}}}" in template]
+                for slot in slots:
+                    for org in orgs:
+                        others = {s: "x" for s in SLOTS if s != slot}
+                        found["org"].append(_fill(template, **{slot: org}, **others))
+                if not slots and named:
+                    unknown = [
+                        v
+                        for v in re.findall(r"\$\{?(\w+)", template)
+                        if v != "RESULT_SUFFIX" and not _alternatives(v, text)
+                    ]
+                    if not unknown:
+                        found["always"].append(_fill(template))
+    return found
 
 
 def _ignored(names: list[str]) -> set[str]:
@@ -725,29 +827,55 @@ def _ignored(names: list[str]) -> set[str]:
     return set(out.split())
 
 
+def _granted_block() -> list[str]:
+    lines = (ROOT / ".gitignore").read_text().splitlines()
+    start = next(i for i, line in enumerate(lines) if line.startswith("# Generation runs"))
+    block = itertools.takewhile(bool, lines[start:])
+    return [line for line in block if not line.startswith("#")]
+
+
 def _matches(pattern: str, name: str) -> bool:
     """A gitignore pattern against a path: one with a slash is anchored, one without is a name."""
     return fnmatch.fnmatchcase(name if "/" in pattern else name.rsplit("/", 1)[-1], pattern)
 
 
-def _tokens() -> list[str]:
-    return sorted(w.granted_orgs() | set(w.ALIASES))
+def _ignorable() -> list[str]:
+    """Every name and sidecar a generation job can write for a granted org."""
+    stems = [n.removesuffix(".json") for names in generation_names().values() for n in names]
+    return [f"{RESULTS}/{stem}{sidecar}" for stem in stems for sidecar in SIDECARS]
 
 
-def test_a_granted_host_generation_run_is_ignored() -> None:
-    names = [f"{RESULTS}/{f}-{t}{s}" for f in FAMILIES for t in _tokens() for s in SHAPES]
-    assert {"qt", "chromium", "aosp", "fuchsia", "qtfull"} <= set(_tokens())
+def test_the_families_come_from_the_jobs_that_run_the_model() -> None:
+    found = generation_names()
+    for start in ("rq1-partition-qt-", "rq1-placebo-aosp", "retrieval-halves-chromium-"):
+        assert any(n.startswith(start) for n in found["org"]), start
+    assert any(n.startswith("rules-foreign-fuchsia") for n in found["org"])
+    assert any("-foreignqt" in n for n in found["org"])
+    assert {n.removesuffix("-s2.json") for n in found["always"]} == {"rq1-pilot", "rq1-windows"}
+    every = [*found["org"], *found["always"]]
+    assert not any(n.startswith(("likelihood", "projects-", "rules-guide")) for n in every)
+
+
+def test_every_name_a_generation_job_writes_for_a_granted_org_is_ignored() -> None:
+    names = _ignorable()
+    assert len(names) > 100
     assert not (missed := set(names) - _ignored(names)), f"not ignored: {sorted(missed)[:5]}"
+    qtfull = [
+        f"{RESULTS}/{f}-qtfull{s}" for f in ("rules-reviews", "rq1-windows") for s in SIDECARS
+    ]
+    assert not (set(qtfull) - _ignored(qtfull))
 
 
-def test_every_pattern_of_the_granted_block_is_exercised_by_a_test_name() -> None:
-    names = [f"{RESULTS}/{f}-{t}{s}" for f in FAMILIES for t in _tokens() for s in SHAPES]
-    patterns = _granted_block()
-    assert len(patterns) >= len(FAMILIES) * len(w.granted_orgs()) + 1
-    for pattern in patterns:
-        assert any(_matches(pattern, n) for n in names), f"no test name exercises {pattern}"
+def test_every_pattern_of_the_granted_block_is_exercised_by_a_generated_name() -> None:
+    names = _ignorable()
+    for pattern in _granted_block():
+        assert any(_matches(pattern, n) for n in names), f"no generated name exercises {pattern}"
 
 
 def test_a_name_without_a_granted_org_is_not_ignored() -> None:
-    names = [f"{RESULTS}/{f}-openstack{s}" for f in FAMILIES for s in SHAPES[:3]]
+    names = [
+        f"{RESULTS}/{f}-openstack{s}"
+        for f in ("rq1-partition", "rules-reviews")
+        for s in (".json",)
+    ]
     assert _ignored(names) == set()

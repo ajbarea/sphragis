@@ -34,7 +34,7 @@ import argparse
 import json
 from pathlib import Path
 
-from sphragis.measure.withhold import basis
+from sphragis.measure.withhold import PASS_DTYPES, basis
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--condition", default="sym-0")
@@ -113,17 +113,13 @@ def generate(args: argparse.Namespace) -> None:
     torch.cuda.empty_cache()
     generator = HFGenerator(dtype="float32", repetition_penalty=penalty)
     passes["fp32"] = run(generator, "fp32")
+    assert passes.keys() == PASS_DTYPES.keys()
     args.out.write_text(
         json.dumps(
             {
                 "condition": args.condition,
                 "half": args.half,
-                "dtypes": {
-                    "bf16": "bfloat16",
-                    "bf16_repeat": "bfloat16",
-                    "bf16_fresh": "bfloat16",
-                    "fp32": "float32",
-                },
+                "dtypes": dict(PASS_DTYPES),
                 "ids": ids,
                 "repetition_penalty": generator.effective_repetition_penalty,
                 "passes": passes,

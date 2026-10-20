@@ -10308,24 +10308,34 @@ file name only. Read by content, the tree holds seven more Qt runs of the 13 exc
 (2026-10-15), its predictions published as digests, and `scripts/rq1.sbatch` names a run without
 its org. They join the exceptions: 20 files, and nothing else in the tree is flagged.
 
-1. *Hosts.* The rule covers every host the registry opens by written grant (`cli.REST_PERMITTED`):
-   Qt, Chromium, AOSP and Fuchsia. AOSP and Fuchsia are read under Chrome Infra's answer to
+1. *Hosts.* The rule covers every host the registry opens by written grant (`cli.REST_PERMITTED`,
+   `notedb.GIT_PERMITTED`): Qt, Chromium, AOSP and Fuchsia. AOSP and Fuchsia are read under Chrome Infra's answer to
    Chromium's request, which promised that no review text is published. The set is read from the
    registry (`withhold.granted_orgs`), not listed by hand.
-2. *Detection.* A file is a granted host's if any part of its path names a granted org (any case,
-   or glued after `foreign`), if it holds one's example id (`{org}:I...`), or if a field naming an
-   organization (`org`, `foreign`, `source`, `against` and the like) names one. Outside the
-   exceptions such a file carries counts only: model text, any digest, or a plain hash of text
-   (`rules_files`, `fingerprint`) refuses it. `scripts/withhold_text.py` refuses to digest one.
+2. *Detection.* A file is a granted host's if any part of its path names a granted org or a name
+   the registry's hosts give it (any case, or glued after `foreign`), if it holds one's example id
+   (`{org}:I...`) or host name, or if it names one as a key, as an `org:` prefix, or in a field
+   naming an organization (`org`, `foreign`, `source`, `against` and the like). Outside the
+   exceptions such a file may not carry model text, a digest of it, or a plain hash of a text the
+   study generated (`rules_files`, `fingerprint`, `base_marks`); the provenance hash of a raw
+   snapshot (`raw_digest`) stays. The guard and `scripts/withhold_text.py` apply one set of
+   refusals (`withhold.refusals`), and the script checks every input before it writes any output.
 3. *Exceptions.* Each is pinned to its git blob, so a changed file at an exception's path, or its
    name elsewhere, is refused.
 4. *Shapes.* Every tracked file is classified: JSON, known by name in any case (compressed or not,
    `.partial` and `.part` sidecars included) or by content, is read; any other suffix must be one
-   the tree holds; an unknown suffix fails. Keys are read as text: under a withheld field a key is
-   an example id or a pass label; a key holding whitespace is one of the labels its producing
-   script writes; a string of three words or more in any object carrying an example id is model
-   text, unless it is the contamination battery's code on a host without a written grant. A guide
-   is exempt only in a written guide's full shape.
-5. *Ignore.* Each run family of the four hosts is gitignored, its sidecars included.
+   the tree holds; an unknown suffix fails. Keys are read as text: under a withheld or digested
+   field a key is an example id, a pass label or an id the document lists (or, under a digested
+   field, a digest), and any other key is
+   text, which `withhold` refuses rather than digests; a key holding whitespace is one of the
+   labels its producing script writes. A string of three words or more anywhere under an object
+   carrying an example id is model text, unless it is a lexer's name, the row's own path, or the
+   contamination battery's code on a host without a written grant. A guide is exempt only in a
+   written guide's full shape. `.gitattributes` keeps the pinned files' bytes as committed.
+5. *Ignore.* The families the generation jobs write (`scripts/*.sbatch` that run the model, read
+   from their templates) are gitignored for the four hosts, sidecars included: those named for a
+   host, the foreign arms (`-foreign<org>`), and `rq1.sbatch`'s two families, which always include
+   Qt. Runs whose name does not carry the host (`projects-*`, `determinism-*`,
+   `retrieval-foreign-<target>` and others) are refused by their content.
 
 The plain hashes of distilled rules text on the other hosts are a follow-up (#175).

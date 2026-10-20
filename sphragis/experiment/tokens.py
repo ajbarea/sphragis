@@ -65,6 +65,9 @@ _BY_SUFFIX = {
     ".tpl": "text",
 }
 
+#: What a row's `lexer` says when the lexer failed on a file and the text lexer stood in.
+UNTILED = "text, {} could not tile it"
+
 #: The languages lexed: those these corpora hold (and Qt's QML and CMake). A file Pygments
 #: resolves to anything else is read as text rather than trusted to an unchecked lexer.
 LEXED = frozenset(
@@ -219,7 +222,7 @@ def char_classes(before: str, after: str, path: str | None) -> tuple[list[str], 
         except ValueError:
             by_line += [False] * len(line)
     return classes, {
-        "lexer": lexer.name if fallback is None else f"text, {fallback} could not tile it",
+        "lexer": lexer.name if fallback is None else UNTILED.format(fallback),
         "lex_error_chars": sum(len(value) for _, kind, value in found if kind in Error),
         "line_disagreement": (
             sum(a != b for a, b in zip(whole, by_line, strict=True)) / len(after) if after else 0.0
