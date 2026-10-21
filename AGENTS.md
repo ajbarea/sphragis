@@ -19,7 +19,7 @@ make verify   # lint + test; read its LINT_RC=, TEST_RC= and ALL GREEN / NOT GRE
 - Never commit `COMMITS.md` (a local scratchpad).
 - Every number traces to an artifact under `datasets/results/` and is recorded once, in `docs/research-log.md`. Quote figures through `scripts/reading.py`; elsewhere state status and point at the log.
 - Do not hand-edit `docs/artifacts.md`: `make docs-index` writes it, after the new results are staged. `docs/log/` is generated from the research log by `scripts/log_to_blog.py`.
-- `.env` holds `SPHRAGIS_CORPUS_SALT` and `SPHRAGIS_PREDICTION_KEY`; it stays out of git and the two values are never printed or shared.
+- `.env` holds `SPHRAGIS_CORPUS_SALT` and `SPHRAGIS_PREDICTION_KEY`; it stays out of git and the values are never printed or shared. Scripts read them from the environment (`set -a; . ./.env; set +a`). A worktree has no `.env` and no raw `datasets/gerrit*/` snapshots: use the main checkout's (`MAIN=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)`, as `scripts/fetch_chromium.sh` does). Never generate a new salt or key.
 - Corpus fetches reach only the hosts in `cli.REST_PERMITTED` and `notedb.GIT_PERMITTED`, each under a written grant (README, research log). Widening either needs a new grant.
 - Corpus text, generation runs of written-grant hosts and `datasets/gerrit*/` raw snapshots stay out of git; `.gitignore` lists them. Publish model text only through `scripts/withhold_text.py`.
 - The study invariants are tested on purpose: only `experiment/model.py` imports a GPU stack under `sphragis/measure/` or `sphragis/experiment/`, a seal without in-principle acceptance stays locked, and exact match is byte identity. Do not loosen a test to make a change pass.
