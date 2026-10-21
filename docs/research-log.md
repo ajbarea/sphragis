@@ -10682,3 +10682,26 @@ is a union of changes). Fixed now, before any chain is built or any interval rea
 4. *Reported* per organization and window: the share of eligible refinements in a chain of two or
    more, the chain-size distribution, and the merged changes whose last patch set the clones do
    not hold (read as chains of one, counted).
+
+### Relation chains amended: the last authored patch set, its parents fetched (2026-10-21)
+
+`# research(2026-10)`. Recorded before any interval is read under chains. Built as registered
+above, Qt's chains hold no link among 52,868 merged changes: Qt's integration rebases a change
+onto its branch before it merges, so the last patch set's parent is the branch tip, already
+merged (of Qt's merged changes in 2025-05 to 2025-08, 16,841, the last patch set is a trivial
+rebase or carries no code change for all but 53). OpenStack's and Wikimedia's last patch sets are
+author rework four times in five (6,066 of 7,668 and 32,487 of 40,365), so their links stood, but
+a fifth were rebased too. The rule read Gerrit's current panel, which a rebase empties, not the
+dependence the item is about. Amended for all three organizations:
+
+1. *A link.* Change A is linked to change B when the parent of A's last authored patch set (its
+   last patch set whose kind is not a trivial rebase, a no-code change or no change; its first if
+   none) is any patch set of B, in the same project, and B was not yet merged when that patch
+   set of A was uploaded.
+2. *Parents* are read from each host's listing with every revision's commit (`o=ALL_COMMITS`),
+   replaying the queries each raw month recorded, through the same transport, grants and pacing as
+   the fetch; only each patch set's SHA and its parents' SHAs are kept, never a message or a name.
+   A change the replayed listing no longer returns falls back to its merged commit's parents from
+   the clone, counted.
+3. Items 2 to 4 above stand: chains are components joined also by a shared Change-Id, and they are
+   H1's cluster unit, decided before any reading.
