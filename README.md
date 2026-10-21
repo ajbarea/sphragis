@@ -148,8 +148,9 @@ uv run python -m sphragis.corpus fetch --via git --org aosp --month 2024-11 \
     --project platform/hardware/interfaces
 ```
 
-`build` is resumable: an already-built month is skipped, and `fetch` refuses to replace an existing
-snapshot. Pass `--overwrite` for either. This matters more than it sounds. A month of
+`build` is resumable: an already-built month is skipped, a month stopped partway resumes from
+`raw/<month>.build.partial.jsonl`, and a second build of the same organization is refused while
+one runs; `fetch` refuses to replace an existing snapshot. Pass `--overwrite` for either. This matters more than it sounds. A month of
 OpenStack is 24 requests; the same month of Qt is 387, because Qt caps a page at ten
 changes regardless of what you ask for.
 
