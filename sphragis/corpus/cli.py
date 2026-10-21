@@ -66,6 +66,7 @@ from sphragis.durable import (
     DurableLog,
     exclusive,
     read_json_object,
+    read_records,
     write_atomic,
     write_json_atomic,
 )
@@ -1554,7 +1555,8 @@ def build_checkpoint(raw: Path, month: str) -> DurableLog:
 def checkpoint_key(digest: str, salt: str, args: argparse.Namespace) -> dict[str, Any]:
     """What a checkpointed change was built under; a log under any other key is discarded.
 
-    The salt enters as a keyed digest: rows carry its pseudonyms, and the log stays local.
+    The salt enters as a keyed digest, never in the clear: the log sits in the raw tier, which
+    `make backup-datasets` copies to the cluster.
     """
     return {
         "snapshot_sha256": digest,
@@ -1565,29 +1567,52 @@ def checkpoint_key(digest: str, salt: str, args: argparse.Namespace) -> dict[str
     }
 
 
-def checkpointed_changes(checkpoint: Path, key: dict[str, Any]) -> dict[int, dict[str, Any]]:
-    """The changes an interrupted build of this month read under `key`, by number.
+def _checkpoint_entry(record: Any) -> bool:
+    """Whether a checkpoint record has the shape the build writes for one change."""
+    return (
+        isinstance(record, dict)
+        and isinstance(record.get("at"), int)
+        and isinstance(record.get("rows"), list)
+        and isinstance(record.get("dropped"), dict)
+    )
 
-    A log under another key, or with no key, is removed and nothing resumes. A change whose read
-    failed is left out, so it is asked again. Replayed in snapshot order, the month's examples
-    match an uninterrupted build's.
+
+def checkpointed_changes(checkpoint: Path, key: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    """The changes an interrupted build of this month read under `key`, by snapshot position.
+
+    Position, not `_number`: a GitHub month's rows come from several repositories, whose PR
+    numbers repeat, and the key's snapshot digest fixes every position. A log under another key,
+    with no key, or with a record the build would not write is removed, said so, and nothing
+    resumes. A change whose read failed is left out, so it is asked again. Replayed in snapshot
+    order, the month's examples match an uninterrupted build's.
     """
     if not checkpoint.is_file():
         return {}
-    lines = [line for line in checkpoint.read_text(encoding="utf-8").splitlines() if line]
-    if not lines or json.loads(lines[0]).get("key") != key:
+    records = read_records(checkpoint)
+    header, entries = (records[0], records[1:]) if records else (None, [])
+    if not (isinstance(header, dict) and header.get("key") == key) or not all(
+        _checkpoint_entry(entry) for entry in entries
+    ):
+        print(f"{checkpoint.name}: written under another build or malformed; discarded")
         checkpoint.unlink()
         return {}
-    done: dict[int, dict[str, Any]] = {}
-    for line in lines[1:]:
-        entry = json.loads(line)
-        if not any(entry["dropped"].get(reason) for reason in RETRIED_DROPS):
-            done[entry["number"]] = entry
-    return done
+    return {
+        entry["at"]: entry
+        for entry in entries
+        if not any(entry["dropped"].get(reason) for reason in RETRIED_DROPS)
+    }
 
 
 def _stage_build(args: argparse.Namespace) -> int:
     """Every snapshot for an organization into examples, one file per month."""
+    # One build of an org at a time: a second would rewrite months the first is writing, and
+    # append to or remove a checkpoint the first is replaying.
+    with exclusive(Path(args.root) / ".locks" / args.org / "build.lock"):
+        return _build_org(args)
+
+
+def _build_org(args: argparse.Namespace) -> int:
+    """`_stage_build`, run while the org's build is held."""
     require_count_probe(args)
     scope = grant_scope(args.org)
     salt = require_salt()
@@ -1670,6 +1695,8 @@ def _stage_build(args: argparse.Namespace) -> int:
                 json.loads(drops_path(target).read_text()) if drops_path(target).is_file() else {}
             )
             print(f"{args.org} {month}: skip, already built ({skipped} examples)")
+            # Left by an `--overwrite` rebuild stopped partway: the month it would redo stands.
+            build_checkpoint(raw, month).unlink(missing_ok=True)
             current.add(month)
             continue
         try:
@@ -1708,23 +1735,23 @@ def _stage_build(args: argparse.Namespace) -> int:
             if fresh:
                 log.write(json.dumps({"key": key}, sort_keys=True) + "\n")
                 log.flush()
-            for change in changes:
+            for at, change in enumerate(changes):
                 if args.fewer_requests and uncommented(change):
                     month_drops[UNCOMMENTED] += 1
                     continue
-                number = int(change["_number"])
-                if reads is not None and number not in reads:
+                if reads is not None and int(change["_number"]) not in reads:
                     month_drops[OVER_READ_CAP] += 1
                     continue
-                entry = done.get(number)
-                if entry is None:
-                    built, dropped = build_from_change(args.org, change, *fetchers_for(change))
-                    log.write(
-                        json.dumps({"number": number, "rows": built, "dropped": dropped}) + "\n"
-                    )
-                    log.flush()
-                else:
+                entry = done.get(at)
+                if entry is not None:
                     built, dropped = entry["rows"], entry["dropped"]
+                else:
+                    built, dropped = build_from_change(args.org, change, *fetchers_for(change))
+                    # Only a REST answer is worth a durable record: NoteDb and GitHub rows
+                    # answer from the snapshot, thousands a second.
+                    if NOTEDB_KEY not in change and GITHUB_KEY not in change:
+                        log.write(json.dumps({"at": at, "rows": built, "dropped": dropped}) + "\n")
+                        log.flush()
                 rows.extend(built)
                 month_drops.update(dropped)
         finally:
@@ -1747,6 +1774,9 @@ def _stage_build(args: argparse.Namespace) -> int:
             read_cap=args.read_cap,
         )
         write_atomic(target, "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows).encode())
+        # Removed before the month closes, so a checkpoint never sits beside a finished month for
+        # a later `--overwrite` to replay; a stop between the two rebuilds the month whole.
+        checkpoint.unlink(missing_ok=True)
         write_build_record(
             target,
             digest,
@@ -1754,7 +1784,6 @@ def _stage_build(args: argparse.Namespace) -> int:
             fewer_requests=args.fewer_requests,
             read_cap=args.read_cap,
         )
-        checkpoint.unlink(missing_ok=True)
         drops.update(month_drops)
         current.add(month)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")

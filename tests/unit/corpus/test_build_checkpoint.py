@@ -43,11 +43,13 @@ def _build(
     monkeypatch: pytest.MonkeyPatch,
     comments: Callable[[int], dict[str, Any]] | None = None,
     *flags: str,
+    changes: list[dict[str, Any]] | None = None,
 ) -> list[int]:
     """Builds the month and returns the changes whose comments were asked for."""
     monkeypatch.setenv("SPHRAGIS_CORPUS_SALT", "salt")
     if not (root / "openstack" / "raw" / "2024-10.ndjson.gz").exists():
-        write_snapshot(root, "openstack", "2024-10", [_change(n) for n in (1, 2, 3)], record={})
+        rows = changes if changes is not None else [_change(n) for n in (1, 2, 3)]
+        write_snapshot(root, "openstack", "2024-10", rows, record={})
     asked: list[int] = []
 
     def fetch_comments(number: int) -> dict[str, Any]:
@@ -157,3 +159,85 @@ def test_the_salt_is_not_written_into_the_checkpoint(tmp_path: Path, monkeypatch
         _build(tmp_path, monkeypatch, _stop_at(3))
     header = _paths(tmp_path)[1].read_text().splitlines()[0]
     assert '"salt"' in header and '"salt": "salt"' not in header
+
+
+def test_changes_sharing_a_number_resume_as_themselves(tmp_path: Path, monkeypatch) -> None:
+    """A GitHub month's PR numbers repeat across repositories; an entry is its snapshot position."""
+    a, b, c = _change(5), _change(5), _change(9)
+    b["change_id"] = "I5b"
+
+    def comments(number: int) -> dict[str, Any]:
+        return {"f.py": [{**COMMENTS["f.py"][0], "message": f"fix {number}"}]}
+
+    whole = tmp_path / "whole"
+    _build(whole, monkeypatch, comments, changes=[a, b, c])
+    stopped = tmp_path / "stopped"
+
+    def stop_at_9(number: int) -> dict[str, Any]:
+        if number == 9:
+            raise Stop
+        return comments(number)
+
+    with pytest.raises(Stop):
+        _build(stopped, monkeypatch, stop_at_9, changes=[a, b, c])
+    assert _build(stopped, monkeypatch, comments) == [9]
+    assert _paths(stopped)[0].read_bytes() == _paths(whole)[0].read_bytes()
+
+
+def test_a_malformed_entry_discards_the_checkpoint(tmp_path: Path, monkeypatch, capsys) -> None:
+    with pytest.raises(Stop):
+        _build(tmp_path, monkeypatch, _stop_at(3))
+    checkpoint = _paths(tmp_path)[1]
+    checkpoint.write_text(checkpoint.read_text() + json.dumps({"at": 1}) + "\n")
+    assert _build(tmp_path, monkeypatch) == [1, 2, 3]
+    assert "malformed; discarded" in capsys.readouterr().out
+
+
+def test_a_second_build_of_the_org_is_refused_while_one_runs(tmp_path: Path, monkeypatch) -> None:
+    from sphragis.durable import exclusive
+
+    lock = tmp_path / ".locks" / "openstack" / "build.lock"
+    with exclusive(lock), pytest.raises(SystemExit, match="held by another process"):
+        _build(tmp_path, monkeypatch)
+
+
+def test_a_finished_month_leaves_nothing_for_overwrite_to_replay(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _build(tmp_path, monkeypatch)
+    assert _build(tmp_path, monkeypatch, None, "--overwrite") == [1, 2, 3]
+
+
+def test_a_skipped_month_drops_a_checkpoint_its_overwrite_left(tmp_path: Path, monkeypatch) -> None:
+    _build(tmp_path, monkeypatch)
+    with pytest.raises(Stop):
+        _build(tmp_path, monkeypatch, _stop_at(3), "--overwrite")
+    assert _paths(tmp_path)[1].is_file()
+    assert _build(tmp_path, monkeypatch) == []
+    assert not _paths(tmp_path)[1].exists()
+
+
+def test_rows_that_answer_from_the_snapshot_write_no_records(tmp_path: Path, monkeypatch) -> None:
+    from sphragis.corpus.cli import GITHUB_KEY
+
+    offline = _change(1)
+    offline[GITHUB_KEY] = {}
+    monkeypatch.setattr(cli, "github_fetchers", lambda change: (lambda n: {}, lambda *a: DIFF))
+    with pytest.raises(Stop):
+        _build(tmp_path, monkeypatch, _stop_at(3), changes=[offline, _change(2), _change(3)])
+    records = [json.loads(line) for line in _paths(tmp_path)[1].read_text().splitlines()]
+    assert [r.get("at") for r in records] == [None, 1]
+
+
+def test_a_stop_as_the_month_closes_leaves_no_checkpoint(tmp_path: Path, monkeypatch) -> None:
+    real = cli.write_build_record
+
+    def record(*args: Any, complete: bool, **kwargs: Any) -> None:
+        if complete:
+            raise Stop
+        real(*args, complete=complete, **kwargs)
+
+    monkeypatch.setattr(cli, "write_build_record", record)
+    with pytest.raises(Stop):
+        _build(tmp_path, monkeypatch)
+    assert not _paths(tmp_path)[1].exists()
