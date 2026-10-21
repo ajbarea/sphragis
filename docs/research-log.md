@@ -10594,3 +10594,28 @@ a reference are the number registered before the run. The sensitivity that remov
 examples is computed once its listing is wired (`sensitivity_ids.py`,
 `cells.REGISTERED_SENSITIVITIES`), the change that follows; until then the disclosure record keeps
 direct and temporal contamination not controlled.
+
+### The lookup's sensitivity wired and read on the development window (2026-10-20)
+
+`# research(2026-10)`. "Without targets found before the checkpoint" joins the registered
+sensitivities (`cells.REGISTERED_SENSITIVITIES`), so a test read is refused without it.
+`sensitivity_ids.py` lists its examples from the lookup's artifact, refusing one that did not read
+exactly the listing's examples; regenerated for the three development windows, every earlier list
+and the example universe are unchanged. Before the new readings, the committed OpenStack and
+Wikimedia sensitivity readings at the registered decoding were reproduced from their 22 runs each
+(numbers identical; the reruns add only fields later code writes). Read again with all four
+registered sensitivities (`partition-pilot-<org>-sensitivities-rp1.0.json`), H1 on the
+development window, at 0.975:
+
+| organization | H1 | without targets found before the checkpoint (removed of listed) |
+| --- | --- | --- |
+| OpenStack | +0.0020 [-0.0122, +0.0163] | +0.0040 [-0.0096, +0.0180] (23 of 27) |
+| Wikimedia | +0.0058 [-0.0054, +0.0180] | +0.0056 [-0.0060, +0.0188] (33 of 36) |
+
+No reading moves: removing the targets whose code stood in their project at the upload leaves
+each cell inconclusive, its estimate within a third of the interval's half-width of where it
+was. The layout-only sensitivity, registered 2026-10-18 and absent from these files until now, is
+read beside them for the first time (OpenStack +0.0020, Wikimedia +0.0065). Qt has no committed
+development sensitivity reading; its listing carries the new list for when one is made. The
+primary estimate keeps the found targets, so the disclosure record keeps direct and temporal
+contamination not controlled, now with the measured share and this sensitivity beside them.

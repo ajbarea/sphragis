@@ -1,17 +1,20 @@
 """The examples each registered sensitivity of H1 removes, by id, for one organization and window.
 
-Three of the readings registered beside the pass rule recompute an H1 cell without a set of
-examples (registered decisions, "Readings beside the pass rule"): those whose change's merged
-commit message carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s flagged changes),
-those whose (project, Change-Id) sits only on release, maintenance or deployment branches
-(`sphragis.corpus.backports`), and those whose revision changes the hunk's layout alone
-(`sphragis.experiment.layout`). A run's rows carry ids and Change-Ids but no project, so the ids
-are read here, from the corpus the partitions were built from, deduplicated and split as the
-study loads it; `partition_pilot.py --without NAME=FILE` drops them from every run.
+Four of the readings registered beside the pass rule recompute an H1 cell without a set of examples
+(registered decisions, "Readings beside the pass rule"): those whose change's merged commit message
+carries an AI trailer naming a tool (`scripts/ai_trailers.py`'s flagged changes), those whose
+(project, Change-Id) sits only on release, maintenance or deployment branches
+(`sphragis.corpus.backports`), those whose revision changes the hunk's layout alone
+(`sphragis.experiment.layout`), and those whose added lines stood in their project at the evaluated
+weights' upload (`scripts/backport_lookup.py`'s found class). A run's rows carry ids and Change-Ids
+but no project, so the ids are read here, from the corpus the partitions were built from,
+deduplicated and split as the study loads it; `partition_pilot.py --without NAME=FILE` drops them
+from every run.
 
     uv run --no-sync --no-active python scripts/sensitivity_ids.py \\
         --root ~/ajsoftworks/sphragis-data/corpus-v3 --org openstack \\
         --ai-trailers datasets/results/ai-trailers.json \\
+        --lookup datasets/results/backport-lookup-openstack.json \\
         --out datasets/results/sensitivity-ids-openstack-dev.json
 """
 
@@ -44,7 +47,25 @@ parser.add_argument(
     help="the test window only once it is unsealed, as the runner reads it",
 )
 parser.add_argument("--ai-trailers", type=Path, required=True, help="ai_trailers.py's artifact")
+parser.add_argument(
+    "--lookup", type=Path, required=True, help="backport_lookup.py's artifact for the organization"
+)
 parser.add_argument("--out", type=Path, required=True)
+
+
+def found_before_checkpoint(lookup: dict, org: str, window: str, ids: list[str]) -> list[str]:
+    """The examples `backport_lookup.py` found at η ≥ 0.8, refused unless its reading covers
+    exactly this read's examples of the organization and window."""
+    if lookup.get("org") != org or window not in lookup.get("windows", {}):
+        raise SystemExit(f"the lookup artifact holds no {org} {window} window")
+    reading = lookup["windows"][window]
+    found = set(reading["ids"]["found"])
+    if reading["examples"] != len(ids) or not found <= set(ids):
+        raise SystemExit(
+            f"the lookup read {reading['examples']} {window} examples, this read has {len(ids)}; "
+            "rerun backport_lookup.py on this corpus"
+        )
+    return sorted(found)
 
 
 def flagged_changes(trailers: dict, org: str) -> set[tuple[str, str]]:
@@ -118,6 +139,9 @@ def main() -> None:
             )
         ),
         "layout_only": sorted(r["id"] for r in rows if row_layout_only(r)),
+        "found_before_checkpoint": found_before_checkpoint(
+            json.loads(args.lookup.read_text()), args.org, args.window, [r["id"] for r in rows]
+        ),
     }
     report = {
         "org": args.org,
@@ -132,6 +156,10 @@ def main() -> None:
                 f" projects that merge their release branches up ({sorted(merge_up)})"
             ),
             "layout_only": "the revision changes the hunk's layout alone (experiment.layout)",
+            "found_before_checkpoint": (
+                f"η ≥ 0.8 in {args.lookup}: the added lines stood in the project's branches at the"
+                " evaluated weights' upload (corpus.lookup)"
+            ),
         },
         "ids": removed,
         # The revisions that keep every character but whitespace, by the rule judging their file

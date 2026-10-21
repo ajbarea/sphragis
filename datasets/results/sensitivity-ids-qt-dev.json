@@ -7,7 +7,8 @@
   "rules": {
     "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers-qt.json's changes_ai",
     "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:dunfell|gatesgarth|hardknott|honister|kirkstone|langdale|mickledore|nanbield|scarthgap|styhead|walnascar|whinlatter|wrynose|blacksail|garburn)$), outside the projects that merge their release branches up (['installer-framework/installer-framework', 'qbs/qbs', 'qt-creator/perfparser', 'qt-creator/plugin-telemetry', 'qt-creator/qt-creator', 'qt/qttranslations'])",
-    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)"
+    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)",
+    "found_before_checkpoint": "\u03b7 \u2265 0.8 in datasets/results/backport-lookup-qt.json: the added lines stood in the project's branches at the evaluated weights' upload (corpus.lookup)"
   },
   "ids": {
     "ai_assisted": [],
@@ -53,6 +54,41 @@
       "qt:Ie3ed8237295395f2707e48b10d422aec6f14bff3:tests/auto/gui/painting/qpainter/tst_qpainter.cpp:2:5688",
       "qt:Iea39ae7c18e71956e7a101a86425c84d876e8730:src/quick/accessible/qaccessiblequickitem.cpp:3:455",
       "qt:If4fa050149a31bf2baffa208716341d21631c042:tests/auto/quick/qquickaccessible/tst_qquickaccessible.cpp:1:944"
+    ],
+    "found_before_checkpoint": [
+      "qt:I116a5e1da6c9df5e4237073481d71efbf956f27f:src/corelib/text/qunicodetools.cpp:1:126",
+      "qt:I170d856d49e9427f1aa33c5e11d8df251592a7d3:doc/qtcreator/src/projects/creator-only/creator-projects-settings-building-and-running.qdoc:1:34",
+      "qt:I21c5c6ecc0a8095d74c3721acf77274a1cc78d60:util/xkbdatagen/main.cpp:2:378",
+      "qt:I23c064b9b24b9da5d175467ca088accd83278481:src/network/access/qdecompresshelper_p.h:1:19",
+      "qt:I23c064b9b24b9da5d175467ca088accd83278481:src/network/access/qdecompresshelper_p.h:1:40",
+      "qt:I28e16f1a3ac91e703bba270da36edc27b9457fa8:util/unicode/main.cpp:8:40",
+      "qt:I3d34fd00b010416715b4a09c337a6bba573a18c2:src/libs/gocmdbridge/server/CMakeLists.txt:2:52",
+      "qt:I3eba81519c22cded8a48a197c7b1a5d7835673f4:src/plugins/designer/qtcreatorintegration.cpp:3:640",
+      "qt:I456a2cbdc4b81312a2959bc0f84a1dd545908b1f:src/plugins/styles/mac/qmacstyle_mac.mm:1:5991",
+      "qt:I5f71d212a96f428513e4f5c77b42c0efd9dfe355:src/plugins/cmakeprojectmanager/cmakebuildconfiguration.cpp:2:404",
+      "qt:I5fa334c7cd55c5c1651bfb0499a027e3a4ab738a:src/plugins/qmldesignerai/aiassistantview.h:1:28",
+      "qt:I65ab0e14cdd035762505a36b72bf84d140596ce3:src/android/jar/src/org/qtproject/qt/android/QtActivityBase.java:2:63",
+      "qt:I7142462ab77bad77f1fba61750bd967ff8d96750:src/qmldom/qqmldomformatdirectivescanner_p.h:6:21",
+      "qt:I7689161adcc002d3b45c69a03fcd1deb0fe18fe2:doc/src/platforms/android/android-publishing-to-googleplay.qdoc:3:6",
+      "qt:I8400fc596b92b74f596e2c50f71e49f882a37a76:src/plugins/qmldesigner/libs/designercore/model/abstractview.cpp:1:113",
+      "qt:I95b9f735b7e19ad9916562bf09445fd20f2ba1f4:tests/auto/quickcontrols/qquickmaterialstyle/data/tst_material.qml:2:747",
+      "qt:I97a208fe92ac56921f47fbe49086d9a9d95ef7c9:src/plugins/cmakeprojectmanager/cmakeprojectmanager.cpp:2:390",
+      "qt:I988ac29bf08920343d119b1abc81975b26d73666:tests/unit/tests/unittests/metainfo/propertymetainfo-test.cpp:1:344",
+      "qt:I9b586a86aacd776e2ed7261a37c441be9fff38b0:doc/qtcreator/src/debugger/creator-debug-views.qdoc:1:259",
+      "qt:Ia50a6f2a46a3d2e0651124167111644019304aad:tests/auto/widgets/graphicsview/qgraphicsview/tst_qgraphicsview.cpp:1:1846",
+      "qt:Ia50a6f2a46a3d2e0651124167111644019304aad:tests/auto/widgets/graphicsview/qgraphicsview/tst_qgraphicsview.cpp:1:2032",
+      "qt:Ib84c58ba0e28aa0eec73b274696834b0c28f58eb:tests/unit/tests/mocks/projectstoragemock.cpp:3:341",
+      "qt:Ibead06a56d5880bb56be04204f4bfc1b72a8b5ca:src/plugins/axivion/axivionplugin.cpp:9:888",
+      "qt:Ibf9b9765e22ee8e0caf8b3646d86f8a4cf789ff1:tests/auto/quick/qquickitem/tst_qquickitem.cpp:4:2689",
+      "qt:Ic5e7a93bcad4d82210bcd5c7f4144153c938a603:coin/provisioning/common/unix/install-golang.sh:16:30",
+      "qt:Ie153097a250d3a646e1c760356937eccf6204a93:examples/demos/robotarm/content/+Material/Circle.qml:1:12",
+      "qt:Ie221765037a7c29fb600e5b4cf25c043f53f09c0:examples/demos/calqlatr/content/ApplicationState.qml:3:10",
+      "qt:Iebe7de0833a47955d5f5b3cca454da96a7d8c5e2:doc/qtcreator/src/ios/creator-ios-dev.qdoc:2:175",
+      "qt:If21f71ee6dce00777ecea2e9b5d438244bf39daf:src/runtimerender/res/effectlib/bsdf.glsllib:3:24",
+      "qt:If272a746595b39cb2dbc2b8cc0c2f688277cfe59:src/qml/qml/qqmlcomponentandaliasresolver_p.h:2:471",
+      "qt:If6725257ed540f8bf5c47116800d884d93b4ea32:src/plugins/android/androiddevice.cpp:5:212",
+      "qt:If71191a570605d0ad5427cbefbdaed402070d392:doc/qtcreator/src/howto/creator-only/creator-how-to-configure-tools-on-devices.qdoc:1:14",
+      "qt:Ifb9698b93ca53c3c6a7c82b0f1d393105cd62f35:src/corelib/doc/snippets/code/src_corelib_tools_qhash.cpp:3:64"
     ]
   },
   "whitespace_only": {
@@ -890,10 +926,15 @@
     "qt:Iffa0bb4d1515a94f23da506c0c83160b036db514:src/lottiegenerator/qlottievisitor.cpp:1:101"
   ],
   "provenance": {
-    "generated_at": "2026-10-19T08:02:01.801523+00:00",
+    "generated_at": "2026-10-21T01:04:54.780473+00:00",
     "git": {
-      "commit": "38aadbd2a8063ed45917316f92410bf1a284aa73",
-      "branch": "measure/qt-ai-trailers"
+      "commit": "c727ce3c545525b270a96f52134a3230fdcabd30",
+      "branch": "corpus/lookup-sensitivity",
+      "uncommitted_code": [
+        "scripts/sensitivity_ids.py",
+        "sphragis/experiment/cells.py"
+      ],
+      "uncommitted_code_sha256": "5bdd43027c33ea6c41594b803ecebce7d7c175e6d1ac96fdadb34dc296ad3b74"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

@@ -37,6 +37,15 @@ def test_the_trailer_searches_must_span_the_window() -> None:
     assert not script.covers(TRAILERS, "test")
 
 
+def _lookup(path: Path, found: list[str], examples: int = 5, org: str = "openstack") -> Path:
+    path.write_text(
+        json.dumps(
+            {"org": org, "windows": {"dev": {"examples": examples, "ids": {"found": found}}}}
+        )
+    )
+    return path
+
+
 def _run(argv: list[str]) -> None:
     saved = sys.argv
     sys.argv = ["sensitivity_ids", *argv]
@@ -49,7 +58,11 @@ def _run(argv: list[str]) -> None:
 def test_the_sealed_window_and_an_uncovered_window_are_refused(tmp_path: Path) -> None:
     trailers = tmp_path / "trailers.json"
     trailers.write_text(json.dumps(TRAILERS))
-    argv = ["--root", str(tmp_path), "--org", "openstack", "--ai-trailers", str(trailers)]
+    lookup = _lookup(tmp_path / "lookup.json", [])
+    argv = [
+        "--root", str(tmp_path), "--org", "openstack", "--ai-trailers", str(trailers),
+        "--lookup", str(lookup),
+    ]  # fmt: skip
     with pytest.raises(SystemExit, match="test window is sealed"):
         _run([*argv, "--window", "test", "--out", str(tmp_path / "o.json")])
     (tmp_path / "openstack").mkdir()
@@ -139,19 +152,21 @@ def test_each_sensitivity_lists_its_examples_and_says_what_the_searches_missed(
     trailers = tmp_path / "trailers.json"
     trailers.write_text(json.dumps({**TRAILERS, "orgs": {"openstack": {"changes_ai": ["p c1"]}}}))
     out = tmp_path / "ids.json"
+    every = [f"openstack:c{n}:f.py:1" for n in range(1, 6)]
+    lookup = _lookup(tmp_path / "lookup.json", [every[4]])
     _run(
         [
             "--root", str(tmp_path / "corpus"), "--org", "openstack",
-            "--ai-trailers", str(trailers), "--out", str(out),
+            "--ai-trailers", str(trailers), "--lookup", str(lookup), "--out", str(out),
         ]
     )  # fmt: skip
     listing = json.loads(out.read_text())
-    every = [f"openstack:c{n}:f.py:1" for n in range(1, 6)]
     assert listing["universe"] == every and listing["examples"] == 5 and listing["changes"] == 5
     assert listing["ids"] == {
         "ai_assisted": [every[0]],
         "backport_only": [every[1]],
         "layout_only": [],
+        "found_before_checkpoint": [every[4]],
     }
     # Merged after the bound, or never: the searches could not have seen them.
     assert listing["ai_unsearched"] == [every[2], every[3]]
@@ -164,12 +179,34 @@ def test_the_layout_listing_counts_every_whitespace_only_revision_it_read(tmp_pa
     trailers = tmp_path / "trailers.json"
     trailers.write_text(json.dumps({**TRAILERS, "orgs": {"openstack": {"changes_ai": []}}}))
     out = tmp_path / "ids.json"
+    lookup = _lookup(tmp_path / "lookup.json", [])
     _run(
         [
             "--root", str(tmp_path / "corpus"), "--org", "openstack",
-            "--ai-trailers", str(trailers), "--out", str(out),
+            "--ai-trailers", str(trailers), "--lookup", str(lookup), "--out", str(out),
         ]
     )  # fmt: skip
     listing = json.loads(out.read_text())
     assert listing["ids"]["layout_only"] == ["openstack:c5:f.py:1"]
     assert listing["whitespace_only"] == {"python": {"revisions": 2, "layout": 1}}
+
+
+@pytest.mark.parametrize(
+    ("lookup", "match"),
+    [
+        (
+            {"org": "wikimedia", "windows": {"dev": {"examples": 2, "ids": {"found": []}}}},
+            "no openstack",
+        ),
+        ({"org": "openstack", "windows": {"dev": {"examples": 3, "ids": {"found": []}}}}, "read 3"),
+        (
+            {"org": "openstack", "windows": {"dev": {"examples": 2, "ids": {"found": ["x"]}}}},
+            "read 2",
+        ),
+    ],
+)
+def test_a_lookup_that_did_not_read_exactly_these_examples_is_refused(
+    lookup: dict, match: str
+) -> None:
+    with pytest.raises(SystemExit, match=match):
+        script.found_before_checkpoint(lookup, "openstack", "dev", ["a", "b"])

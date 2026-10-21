@@ -188,9 +188,9 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   and the battery's model-less baseline beats Min-K%++ here; protection rests on provenance.
   Score only target tokens given context; Min-K%++ is read as exposure only above the blind
   baseline.
-- [ ] **Pre-cutoff code through cherry-picks and backports** (the bounded dev-window share landed
+- [x] **Pre-cutoff code through cherry-picks and backports** (the bounded dev-window share landed
   2026-10-06: `backport_share.py`, `backport-share.json`, read beside H1 in
-  `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches registered, run and read 2026-10-20, about one dev target in twenty found; the sensitivity estimate waits on its listing's wiring): look each target's added lines up
+  `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches registered, run and read 2026-10-20, about one dev target in twenty found; its registered sensitivity wired and read on the development window, moving no reading): look each target's added lines up
   in every branch as it stood at the checkpoint's weight upload, report the rate and a
   sensitivity estimate without them (infini-gram mini, arXiv:2506.12229, as exact-lookup practice).
 - [x] **Pin the checkpoint revisions** (pins: `model.MODEL_REVISIONS`, every load pinned; checkpoint dates from the weights' upload commits and the disclosure record `docs/disclosure/`, 2026-10-20; the Qwen repos changed config and
@@ -867,6 +867,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-20** — "Without targets found before the checkpoint" joins the registered sensitivities and is read on OpenStack's and Wikimedia's development windows: no reading moves (research log).
 - **2026-10-20** — The backport lookup run on every pilot, train and dev target of OpenStack, Wikimedia and Qt: 4.1 to 5.2% of dev targets found in their project's branches at the weight upload, examples the branch-name rule did not reach (research log).
 - **2026-10-20** — Contamination registered as provenance primary (windows after the weight upload, the backport lookup's sensitivity) and membership scores descriptive, Min-K%++ read as exposure only above the blind baseline (`blind.exposure_reading`); on the pilot it cannot be told from drift (research log).
 - **2026-10-20** — Checkpoint dates read from the commits that wrote each pinned checkpoint's weights (the evaluated model's on 2024-09-17, before every corpus window), and a contamination disclosure record in arXiv:2608.29463's v1.1 format, validated against its schema in the suite; direct and temporal stay not controlled until the backport lookup lands (research log).

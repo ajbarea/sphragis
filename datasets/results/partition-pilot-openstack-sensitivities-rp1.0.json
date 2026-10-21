@@ -1,4 +1,6 @@
 {
+  "hypothesis": "H1",
+  "foreign_source": null,
   "run_files": [
     "datasets/results/rq1-partition-openstack-p2-n1850-rp1.0.json",
     "datasets/results/rq1-partition-openstack-p3-s2-n1850-rp1.0.json",
@@ -23,6 +25,8 @@
     "datasets/results/rq1-partition-openstack-p26-s21-n1850-rp1.0.json",
     "datasets/results/rq1-partition-openstack-p27-s22-n1850-rp1.0.json"
   ],
+  "metric": "exact_match",
+  "sesoi": 0.01,
   "decoder": {
     "inference_dtype": [
       "float32"
@@ -42,6 +46,118 @@
   "window": "development",
   "sensitivity": null,
   "planted_convention": null,
+  "outcome_neutral_runs": [
+    {
+      "file": "datasets/results/rq1-partition-openstack-p2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p3-s2-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p4-s3-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p5-s4-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p7-s5-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p8-s6-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p9-s7-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p10-s8-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p11-s9-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p12-s10-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p14-s11-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p15-s12-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p17-s13-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p18-s14-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p19-s15-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p21-s16-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p22-s17-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p23-s18-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p24-s19-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p25-s20-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p26-s21-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    },
+    {
+      "file": "datasets/results/rq1-partition-openstack-p27-s22-n1850-rp1.0.json",
+      "recorded": true,
+      "holds": true
+    }
+  ],
   "org": "openstack",
   "bootstrap_seed": 7,
   "estimate": 0.0019877939175376017,
@@ -110,6 +226,7 @@
   },
   "examples": 501,
   "dropped": 0,
+  "cell_examples": 501,
   "sizing": {
     "pilot_runs": 22,
     "sd": 0.012404681905645337,
@@ -174,16 +291,78 @@
       },
       "p_one_sided": 0.3707,
       "bootstrap_se": 0.006225472158336311
+    },
+    "layout_only": {
+      "file": "datasets/results/sensitivity-ids-openstack-dev.json",
+      "listed": 1,
+      "removed": 1,
+      "estimate": 0.0019995408476789736,
+      "examples": 500,
+      "intervals": {
+        "0.975": {
+          "low": -0.011873376996891422,
+          "high": 0.01602008275281513
+        },
+        "0.95": {
+          "low": -0.010028456364848271,
+          "high": 0.01425169102381188
+        }
+      },
+      "within_sesoi": {
+        "0.975": false,
+        "0.95": false
+      },
+      "meaningful": {
+        "0.975": false,
+        "0.95": false
+      },
+      "p_one_sided": 0.3727,
+      "bootstrap_se": 0.006195354181498207
+    },
+    "found_before_checkpoint": {
+      "file": "datasets/results/sensitivity-ids-openstack-dev.json",
+      "listed": 27,
+      "removed": 23,
+      "estimate": 0.004017316279829941,
+      "examples": 478,
+      "intervals": {
+        "0.975": {
+          "low": -0.009612385538253587,
+          "high": 0.017986201497272678
+        },
+        "0.95": {
+          "low": -0.007928482122949308,
+          "high": 0.016138261662708417
+        }
+      },
+      "within_sesoi": {
+        "0.975": false,
+        "0.95": false
+      },
+      "meaningful": {
+        "0.975": false,
+        "0.95": false
+      },
+      "p_one_sided": 0.2572,
+      "bootstrap_se": 0.0061270400977370245
     }
   },
+  "lexer_sure": null,
   "provenance": {
-    "generated_at": "2026-10-08T16:31:28.001039+00:00",
+    "generated_at": "2026-10-21T01:06:06.455751+00:00",
     "git": {
-      "commit": "5a1ddd5ad1aca73198c5f90631dfbfae4240afe0",
-      "branch": "measure/rescored-1.0"
+      "commit": "c727ce3c545525b270a96f52134a3230fdcabd30",
+      "branch": "corpus/lookup-sensitivity",
+      "uncommitted_code": [
+        "scripts/sensitivity_ids.py",
+        "sphragis/experiment/cells.py"
+      ],
+      "uncommitted_code_sha256": "5bdd43027c33ea6c41594b803ecebce7d7c175e6d1ac96fdadb34dc296ad3b74"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
   }
 }
