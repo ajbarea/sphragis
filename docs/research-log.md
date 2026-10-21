@@ -10563,3 +10563,34 @@ scans every file under `datasets/results/`, these gitignored inputs included, an
 `.jsonl` file as raw text, where its address pattern can start at the letter after a JSON
 backslash (`\n\n@decorator(`) and remove it. The redactor is fixed to read JSON lines as JSON,
 and the files are rebuilt, before the battery's next run.
+
+### The backport lookup read: about one dev target in twenty stood in its project at the upload (2026-10-20)
+
+`# research(2026-10)`. The lookup registered and amended above, run at e863bcf (the tree #181
+merged) from a detached worktree, 2026-10-20 18:34 to 20:01, after a first run with the
+over-inclusive tag rule was stopped unread; Wikimedia's first attempt failed once on a connection
+timeout to gerrit.wikimedia.org and was rerun (logs in `datasets/logs/backport-lookup-2026-10-20/`).
+Every OpenStack and Wikimedia project resolved; 16 of Qt's 80 did not (the `yocto` layers,
+`license-tools/license-service` and some `qt-labs` and `qtqa` projects). Counts by class
+(`backport-lookup-<org>.json`):
+
+| organization, window | examples | clean | suspicious | found (η ≥ 0.8) | no eligible line | no reference |
+| --- | --- | --- | --- | --- | --- | --- |
+| OpenStack, pilot | 532 | 441 | 23 | 26 | 42 | 0 |
+| OpenStack, train | 4,006 | 3,365 | 105 | 184 | 352 | 0 |
+| OpenStack, dev | 515 | 427 | 28 | 27 | 33 | 0 |
+| Wikimedia, pilot | 582 | 482 | 21 | 38 | 41 | 0 |
+| Wikimedia, train | 4,184 | 3,414 | 127 | 232 | 411 | 0 |
+| Wikimedia, dev | 747 | 629 | 14 | 36 | 68 | 0 |
+| Qt, pilot | 1,147 | 894 | 29 | 55 | 76 | 93 |
+| Qt, train | 7,493 | 6,065 | 220 | 406 | 435 | 367 |
+| Qt, dev | 809 | 666 | 15 | 33 | 66 | 29 |
+
+On the dev windows 27 (5.2%), 36 (4.8%) and 33 (4.1%) targets are found before the checkpoint,
+where the branch-name rule removed 0, 2 and 3, and none of those five is found here: the two
+rules reach different examples, the lookup the code that a revert, a move or a re-proposal brings
+back, the branch rule changes whose original is outside the corpus. Qt's 29 dev examples without
+a reference are the number registered before the run. The sensitivity that removes the found
+examples is computed once its listing is wired (`sensitivity_ids.py`,
+`cells.REGISTERED_SENSITIVITIES`), the change that follows; until then the disclosure record keeps
+direct and temporal contamination not controlled.

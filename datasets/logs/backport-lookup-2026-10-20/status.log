@@ -1,0 +1,11 @@
+lookup start 3bdbeea 2026-10-20T15:03:27-04:00
+lookup stopped by hand for a rule fix 2026-10-20T15:21:31-04:00
+lookup start e863bcf 2026-10-20T16:16:41-04:00
+lookup openstack rc=0 2026-10-20T16:26:59-04:00
+lookup wikimedia rc=1 2026-10-20T16:34:48-04:00
+lookup restart after a wikimedia connect failure 2026-10-20T18:34:23-04:00
+lookup start e863bcf 2026-10-20T18:34:23-04:00
+lookup openstack rc=0 2026-10-20T18:38:46-04:00
+lookup wikimedia rc=0 2026-10-20T19:03:45-04:00
+lookup qt rc=0 2026-10-20T20:01:06-04:00
+lookup done 2026-10-20T20:01:06-04:00

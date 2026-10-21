@@ -190,7 +190,7 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   baseline.
 - [ ] **Pre-cutoff code through cherry-picks and backports** (the bounded dev-window share landed
   2026-10-06: `backport_share.py`, `backport-share.json`, read beside H1 in
-  `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches remains): look each target's added lines up
+  `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches registered, run and read 2026-10-20, about one dev target in twenty found; the sensitivity estimate waits on its listing's wiring): look each target's added lines up
   in every branch as it stood at the checkpoint's weight upload, report the rate and a
   sensitivity estimate without them (infini-gram mini, arXiv:2506.12229, as exact-lookup practice).
 - [x] **Pin the checkpoint revisions** (pins: `model.MODEL_REVISIONS`, every load pinned; checkpoint dates from the weights' upload commits and the disclosure record `docs/disclosure/`, 2026-10-20; the Qwen repos changed config and
@@ -867,6 +867,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-20** — The backport lookup run on every pilot, train and dev target of OpenStack, Wikimedia and Qt: 4.1 to 5.2% of dev targets found in their project's branches at the weight upload, examples the branch-name rule did not reach (research log).
 - **2026-10-20** — Contamination registered as provenance primary (windows after the weight upload, the backport lookup's sensitivity) and membership scores descriptive, Min-K%++ read as exposure only above the blind baseline (`blind.exposure_reading`); on the pilot it cannot be told from drift (research log).
 - **2026-10-20** — Checkpoint dates read from the commits that wrote each pinned checkpoint's weights (the evaluated model's on 2024-09-17, before every corpus window), and a contamination disclosure record in arXiv:2608.29463's v1.1 format, validated against its schema in the suite; direct and temporal stay not controlled until the backport lookup lands (research log).
 - **2026-10-20** — Fuchsia's foreign pool read in full over Qt's training months (its comment-count probe did not hold): 5,890 examples after refinement and dedup, and the stop rule's prefix, its first project, covers all 80 matched draws and 40 partitions against Qt, so Fuchsia qualifies as H2's source unless Chromium's pool, ahead of it in the order, covers (research log).
