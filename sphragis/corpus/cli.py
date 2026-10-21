@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import hashlib
+import hmac
 import http.client
 import json
 import os
@@ -1538,6 +1539,53 @@ def require_grant_cap(args: argparse.Namespace) -> None:
         )
 
 
+#: Drops a resumed build asks again: the request failed, and may not the next time.
+RETRIED_DROPS = ("comment_error", "diff_error")
+
+
+def build_checkpoint(raw: Path, month: str) -> DurableLog:
+    """Where a month's build keeps each change's outcome until the month's examples land.
+
+    Beside the snapshot rather than the examples, whose directory every later stage globs.
+    """
+    return DurableLog(raw, f"{month}.build.partial.jsonl")
+
+
+def checkpoint_key(digest: str, salt: str, args: argparse.Namespace) -> dict[str, Any]:
+    """What a checkpointed change was built under; a log under any other key is discarded.
+
+    The salt enters as a keyed digest: rows carry its pseudonyms, and the log stays local.
+    """
+    return {
+        "snapshot_sha256": digest,
+        "build_rules": BUILD_RULES,
+        "fewer_requests": bool(args.fewer_requests),
+        "read_cap": args.read_cap,
+        "salt": hmac.new(salt.encode(), b"sphragis build checkpoint", "sha256").hexdigest(),
+    }
+
+
+def checkpointed_changes(checkpoint: Path, key: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    """The changes an interrupted build of this month read under `key`, by number.
+
+    A log under another key, or with no key, is removed and nothing resumes. A change whose read
+    failed is left out, so it is asked again. Replayed in snapshot order, the month's examples
+    match an uninterrupted build's.
+    """
+    if not checkpoint.is_file():
+        return {}
+    lines = [line for line in checkpoint.read_text(encoding="utf-8").splitlines() if line]
+    if not lines or json.loads(lines[0]).get("key") != key:
+        checkpoint.unlink()
+        return {}
+    done: dict[int, dict[str, Any]] = {}
+    for line in lines[1:]:
+        entry = json.loads(line)
+        if not any(entry["dropped"].get(reason) for reason in RETRIED_DROPS):
+            done[entry["number"]] = entry
+    return done
+
+
 def _stage_build(args: argparse.Namespace) -> int:
     """Every snapshot for an organization into examples, one file per month."""
     require_count_probe(args)
@@ -1648,16 +1696,39 @@ def _stage_build(args: argparse.Namespace) -> int:
         if args.read_cap is not None:
             month_drops[OVER_READ_CAP] = 0
         reads = capped_numbers(changes, args.read_cap, skip_uncommented=args.fewer_requests)
-        for change in changes:
-            if args.fewer_requests and uncommented(change):
-                month_drops[UNCOMMENTED] += 1
-                continue
-            if reads is not None and int(change["_number"]) not in reads:
-                month_drops[OVER_READ_CAP] += 1
-                continue
-            built, dropped = build_from_change(args.org, change, *fetchers_for(change))
-            rows.extend(built)
-            month_drops.update(dropped)
+        digest = snapshot_digest(snapshot)
+        checkpoint = build_checkpoint(raw, month)
+        key = checkpoint_key(digest, salt, args)
+        done = checkpointed_changes(checkpoint, key)
+        if done:
+            print(f"{args.org} {month}: resuming, {len(done)} changes read before the stop")
+        fresh = not checkpoint.is_file()
+        log = checkpoint.open("a", encoding="utf-8")
+        try:
+            if fresh:
+                log.write(json.dumps({"key": key}, sort_keys=True) + "\n")
+                log.flush()
+            for change in changes:
+                if args.fewer_requests and uncommented(change):
+                    month_drops[UNCOMMENTED] += 1
+                    continue
+                number = int(change["_number"])
+                if reads is not None and number not in reads:
+                    month_drops[OVER_READ_CAP] += 1
+                    continue
+                entry = done.get(number)
+                if entry is None:
+                    built, dropped = build_from_change(args.org, change, *fetchers_for(change))
+                    log.write(
+                        json.dumps({"number": number, "rows": built, "dropped": dropped}) + "\n"
+                    )
+                    log.flush()
+                else:
+                    built, dropped = entry["rows"], entry["dropped"]
+                rows.extend(built)
+                month_drops.update(dropped)
+        finally:
+            log.close()
         # Drop counts beside the examples, written first so a month with examples always has
         # them. They were printed and lost: the files on disk are post-filter, so the
         # discard rate by reason could not be reconstructed without refetching every diff,
@@ -1668,7 +1739,6 @@ def _stage_build(args: argparse.Namespace) -> int:
         # interrupted rebuild otherwise leaves a truncated month beside a digest that still
         # matches, and the next run certifies it as finished and counts its truncated tail as
         # an example.
-        digest = snapshot_digest(snapshot)
         write_build_record(
             target,
             digest,
@@ -1684,6 +1754,7 @@ def _stage_build(args: argparse.Namespace) -> int:
             fewer_requests=args.fewer_requests,
             read_cap=args.read_cap,
         )
+        checkpoint.unlink(missing_ok=True)
         drops.update(month_drops)
         current.add(month)
         print(f"{args.org} {month}: {len(rows)} examples, drops {dict(month_drops)}")
