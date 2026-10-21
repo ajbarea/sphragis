@@ -26,6 +26,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from sphragis.corpus.chains import chain_map, relabel
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
     K_COVERAGE,
@@ -194,19 +195,11 @@ def lexer_sure(runs: list[tuple[dict, int]]) -> tuple[list[tuple[dict, int]], in
 
 def cluster_by_chain(runs: list[tuple[dict, int]], chains: dict, org: str) -> dict[str, Any]:
     """Relabel every run row's `change_id` with its relation chain, so the bootstrap, which groups
-    by `change_id`, resamples chains (research log, 2026-10-21); returns what the report records.
-    A Change-Id the chain artifact does not map is refused, never left as its own cluster."""
-    if chains.get("org") != org:
-        raise SystemExit(f"the chain artifact is {chains.get('org')!r}'s, not {org!r}'s")
-    chain_of = chains["change_chain"]
-    seen: set[str] = set()
-    for results, _ in runs:
-        for rows in results.values():
-            for row in rows:
-                if row["change_id"] not in chain_of:
-                    raise SystemExit(f"{row['change_id']} has no chain in the chain artifact")
-                seen.add(row["change_id"])
-                row["change_id"] = chain_of[row["change_id"]]
+    by `change_id`, resamples chains (research log, 2026-10-21); returns what the report records."""
+    chain_of = chain_map(chains, org)
+    seen = relabel(
+        (row for results, _ in runs for rows in results.values() for row in rows), chain_of
+    )
     return {"changes": len(seen), "chains": len({chain_of[c] for c in seen})}
 
 

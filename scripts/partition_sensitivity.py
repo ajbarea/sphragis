@@ -57,6 +57,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from statistics import fmean, stdev
 
+from sphragis.corpus.chains import chain_map, relabel
 from sphragis.corpus.halves import assign, organization_train, project_counts, split_criteria
 from sphragis.corpus.halves import halves as build_halves
 from sphragis.corpus.load import refined_examples
@@ -146,6 +147,11 @@ parser.add_argument("--max-seed", type=int, default=2_000, help="stop searching 
 # The per-example score simulated: exact match, binary, or the reference's mean log-probability
 # per token, continuous (research log, 2026-10-09). The pilot and placebo must be scored on it.
 parser.add_argument("--metric", choices=("exact_match", "logprob_per_token"), default="exact_match")
+parser.add_argument(
+    "--chains",
+    type=Path,
+    help="relation_chains.py's artifact: draw relation chains instead of changes (2026-10-21)",
+)
 # The coverage search over K (research log, 2026-10-09): K in place of the pilot's sizing, and the
 # null alone, without the detectable-effect bisection.
 parser.add_argument("--runs", type=int, help="K to simulate in place of the pilot's sizing")
@@ -160,11 +166,15 @@ parser.add_argument("--out", type=Path, required=True)
 Pool = list[tuple[Cluster, str]]
 
 
-def with_projects(clusters: list[Cluster], corpus: Path, org: str) -> Pool:
-    """Each cluster with its change's project, which must be exactly one."""
+def with_projects(
+    clusters: list[Cluster], corpus: Path, org: str, chain_of: dict[str, str] | None = None
+) -> Pool:
+    """Each cluster with its change's, or chain's, project, which must be exactly one."""
     project_of: dict[str, set[str]] = defaultdict(set)
     for row in refined_examples(corpus, org):
-        project_of[row["change_id"]].add(row["project"])
+        key = row["change_id"] if chain_of is None else chain_of.get(row["change_id"])
+        if key is not None:
+            project_of[key].add(row["project"])
     pool: Pool = []
     for cluster in clusters:
         projects = project_of.get(cluster.change_id, set())
@@ -174,9 +184,18 @@ def with_projects(clusters: list[Cluster], corpus: Path, org: str) -> Pool:
     return pool
 
 
-def pilot_pool(placebo: Path, corpus: Path, org: str, metric: str = "exact_match") -> Pool:
-    """The pilot's own-against-sibling clusters on both halves, each with its change's project."""
+def pilot_pool(
+    placebo: Path,
+    corpus: Path,
+    org: str,
+    metric: str = "exact_match",
+    chain_of: dict[str, str] | None = None,
+) -> Pool:
+    """The pilot's own-against-sibling clusters on both halves, each with its change's project;
+    with `chain_of`, its chains'."""
     results = json.loads(placebo.read_text())["results"]
+    if chain_of is not None:
+        relabel((row for rows in results.values() for row in rows), chain_of)
     seed = json.loads(placebo.read_text())["seeds"][0]
     clusters: list[Cluster] = []
     first, second = halves(org)
@@ -184,7 +203,7 @@ def pilot_pool(placebo: Path, corpus: Path, org: str, metric: str = "exact_match
         own = results[f"adapter:{window}|{window}|s{seed}"]
         other = results[f"adapter:{sibling}|{window}|s{seed}"]
         clusters.extend(to_clusters(own, other, metric=metric))
-    return with_projects(clusters, corpus, org)
+    return with_projects(clusters, corpus, org, chain_of)
 
 
 def partition_pool(
@@ -272,7 +291,7 @@ def plan_cell(
 
 
 def averaged_pool(
-    pilot: dict, corpus: Path, org: str, metric: str
+    pilot: dict, corpus: Path, org: str, metric: str, chain_of: dict[str, str] | None = None
 ) -> tuple[Pool, tuple[float, float], float]:
     """A continuous score's pool: each change averaged over the pilot's runs, with its project,
     and the change-by-run noise the simulated runs add back (`power.averaged_truth`), on the
@@ -280,12 +299,14 @@ def averaged_pool(
     runs = []
     for path in pilot["run_files"]:
         run = json.loads(Path(path).read_text())
+        if chain_of is not None:
+            relabel((row for rows in run["results"].values() for row in rows), chain_of)
         runs.append((run["results"], run["seeds"][0]))
     arms, keep = cell_contrast(pilot)
     truth, noise, shrink = averaged_truth(
         runs, halves=halves(org), metric=metric, arms=arms, keep=keep
     )
-    return with_projects(truth, corpus, org), noise, shrink
+    return with_projects(truth, corpus, org, chain_of), noise, shrink
 
 
 def pools(
@@ -297,6 +318,7 @@ def pools(
     max_seed: int,
     metric: str = "exact_match",
     pilot: dict | None = None,
+    chain_of: dict[str, str] | None = None,
 ) -> tuple[Pool, list[dict[str, int]], int, tuple[float, float], float | None]:
     """The pilot's clusters, the first `count` admissible partitions and the last seed tried.
 
@@ -309,11 +331,11 @@ def pools(
     if metric == "exact_match":
         if placebo is None:
             raise SystemExit("exact match is simulated from a placebo run; no placebo was given")
-        pool, noise, shrink = pilot_pool(placebo, corpus, org, metric), (0.0, 0.0), None
+        pool, noise, shrink = pilot_pool(placebo, corpus, org, metric, chain_of), (0.0, 0.0), None
     elif pilot is None:
         raise SystemExit(f"{metric} is simulated from the pilot's runs; no pilot was given")
     else:
-        pool, noise, shrink = averaged_pool(pilot, corpus, org, metric)
+        pool, noise, shrink = averaged_pool(pilot, corpus, org, metric, chain_of)
     partitions, seeds = partition_pool(
         corpus, org, Path(admissible["reference"]), admissible["size_floor"], count, max_seed
     )
@@ -565,7 +587,20 @@ def main() -> None:
     projection = json.loads(args.projection.read_text())
     if projection["org"] != args.org or projection["test"] is None:
         raise SystemExit(f"{args.projection}: no test-window projection for {args.org}")
-    # Whole changes, rounded down: a projection is not an observed count.
+    # Chains are drawn instead of changes only on a pilot read under chains, and the other way
+    # round; the planned test changes become chains at the development window's ratio.
+    unit = (pilot.get("cluster_unit") or {}).get("unit", "change")
+    if (args.chains is not None) != (unit == "chain"):
+        raise SystemExit(f"the pilot was read by {unit}; --chains must match it")
+    chain_of = ratio = None
+    if args.chains is not None:
+        chain_artifact = json.loads(args.chains.read_text())
+        if pilot["cluster_unit"].get("file") != str(args.chains):
+            raise SystemExit(f"the pilot read chains from {pilot['cluster_unit'].get('file')}")
+        chain_of = chain_map(chain_artifact, args.org)
+        dev = chain_artifact["windows"]["dev"]
+        ratio = dev["clusters_by_chain"] / dev["clusters_by_change"]
+    # Whole changes (or chains), rounded down: a projection is not an observed count.
     try:
         sized = pilot_sizing(pilot, str(args.pilot), org=args.org, cell=cell_of(pilot))
         args.cells, args.size, cpp_share = plan_cell(
@@ -575,7 +610,7 @@ def main() -> None:
             cells=args.cells,
             metric=args.metric,
             placebo=args.placebo,
-            projected=projection["test"]["projected_changes"],
+            projected=projection["test"]["projected_changes"] * (ratio or 1.0),
         )
     except ValueError as error:
         raise SystemExit(str(error)) from error
@@ -622,11 +657,17 @@ def main() -> None:
         args.max_seed,
         args.metric,
         pilot,
+        chain_of,
     )
     # The pilot's own levels (its Holm levels, or a replication member's fixed level), so the
     # simulation reads at the levels the reading does.
     levels = pilot["levels"]
     report: dict = {
+        "cluster_unit": {
+            "unit": unit,
+            "file": None if args.chains is None else str(args.chains),
+            "planned_ratio": ratio,
+        },
         "placebo": None if args.placebo is None else str(args.placebo),
         "org": args.org,
         "hypothesis": hypothesis,

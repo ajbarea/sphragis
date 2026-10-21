@@ -10,13 +10,17 @@ from sphragis.corpus.chains import Merged, chains, links, merged, parents
 
 
 def _m(number: int, commit: str, uploaded: str, submitted: str, **kw: str) -> Merged:
+    """A merged change whose last authored patch set is its merged commit unless `authored`."""
+    authored = kw.get("authored", commit)
     return Merged(
         number,
         kw.get("project", "p"),
         kw.get("change_id", f"I{number}"),
         commit,
+        authored,
         uploaded,
         submitted,
+        frozenset({commit, authored, *kw.get("others", "").split()}),
     )
 
 
@@ -52,21 +56,49 @@ def test_a_shared_change_id_joins_a_chain_as_the_bootstrap_already_does() -> Non
     assert chains(changes, []) == {1: 1, 7: 1, 9: 9}
 
 
-def test_merged_reads_the_last_patch_set_and_skips_the_rest() -> None:
+def test_merged_takes_the_last_authored_patch_set_and_skips_the_rest() -> None:
     rows = [
         {
             "_number": 5,
             "project": "p",
             "change_id": "I5",
             "status": "MERGED",
-            "current_revision": "s5",
-            "submitted": "2025-02-02",
-            "revisions": {"s4": {"created": "2025-01-01"}, "s5": {"created": "2025-02-01"}},
+            "current_revision": "s6",
+            "submitted": "2025-02-03",
+            "revisions": {
+                "s4": {"_number": 1, "kind": "REWORK", "created": "2025-01-01"},
+                "s5": {"_number": 2, "kind": "REWORK", "created": "2025-02-01"},
+                "s6": {"_number": 3, "kind": "TRIVIAL_REBASE", "created": "2025-02-02"},
+            },
+        },
+        {
+            "_number": 8,
+            "project": "p",
+            "change_id": "I8",
+            "status": "MERGED",
+            "current_revision": "t2",
+            "submitted": "2025-03-03",
+            "revisions": {
+                "t1": {"_number": 1, "kind": "NO_CODE_CHANGE", "created": "2025-03-01"},
+                "t2": {"_number": 2, "kind": "NO_CHANGE", "created": "2025-03-02"},
+            },
         },
         {"_number": 6, "status": "ABANDONED", "current_revision": "s6", "revisions": {}},
         {"_number": 7, "status": "MERGED", "current_revision": "s7", "revisions": {}},
     ]
-    assert merged(rows) == [Merged(5, "p", "I5", "s5", "2025-02-01", "2025-02-02")]
+    first, second = merged(rows)
+    assert (first.commit, first.authored, first.uploaded) == ("s6", "s5", "2025-02-01")
+    assert first.patch_sets == frozenset({"s4", "s5", "s6"})
+    # No authored patch set at all: the first stands for the author's.
+    assert (second.authored, second.uploaded) == ("t1", "2025-03-01")
+
+
+def test_a_rebased_change_links_through_its_authored_patch_set_to_any_patch_set() -> None:
+    """Qt's case: the last patch set is a rebase onto the tip; the authored one sat on B's
+    second patch set, which B later replaced before it merged."""
+    parent = _m(1, "b-final", "2025-01-01", "2025-01-09", others="b-ps2")
+    child = _m(2, "a-final", "2025-01-03", "2025-01-10", authored="a-ps1")
+    assert links([parent, child], {"a-final": ["b-final"], "a-ps1": ["b-ps2"]}) == [(2, 1)]
 
 
 def test_parents_are_read_from_the_clone_and_a_missing_commit_left_out(tmp_path: Path) -> None:
