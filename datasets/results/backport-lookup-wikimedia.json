@@ -1,0 +1,3643 @@
+{
+  "org": "wikimedia",
+  "rule": {
+    "upload": "2024-09-17T16:13:45Z",
+    "min_chars": 20,
+    "suspicious_from": 0.2,
+    "found_from": 0.8,
+    "binary_probe_bytes": 8000
+  },
+  "windows": {
+    "pilot": {
+      "examples": 582,
+      "clean": 482,
+      "suspicious": 21,
+      "found": 38,
+      "no_eligible_line": 41,
+      "no_reference": 0,
+      "ids": {
+        "found": [
+          "wikimedia:I0af3ea66f82e18131f83503409c4bd9f9f5fd905:includes/HomepageModules/Impact.php:1:84",
+          "wikimedia:I0af3ea66f82e18131f83503409c4bd9f9f5fd905:modules/ext.growthExperiments.Homepage.Impact/App.vue:2:80",
+          "wikimedia:I0da5f34ce4e99bd81a3c92b97b4033d9bfef8c4b:extension.json:5:2",
+          "wikimedia:I0da5f34ce4e99bd81a3c92b97b4033d9bfef8c4b:extension.json:5:49",
+          "wikimedia:I0da5f34ce4e99bd81a3c92b97b4033d9bfef8c4b:extension.json:5:52",
+          "wikimedia:I1902acb4a44199e5fbb76a9cec88c14de250ceb3:includes/Hooks/Handlers/RedirectingLoginHookHandler.php:1:120",
+          "wikimedia:I2926bcb9fa3a9471c1efd0173592d68c47b83948:static_data/sanitization/event_sanitized_analytics_allowlist.yaml:3:675",
+          "wikimedia:I2a29f5cb2d57bb9778d12f123dfbc1dbc6d27fa7:src/ParserTests/TestRunner.php:26:798",
+          "wikimedia:I2a29f5cb2d57bb9778d12f123dfbc1dbc6d27fa7:tests/phpunit/Parsoid/Wt2Html/DOMPostProcessorTest.php:26:35",
+          "wikimedia:I2ca823b9d7583c5e023097590f806e9c13b8fdd7:composer.json:1:6",
+          "wikimedia:I2d326bb73182efd30483139dfdc9a6b18aeb4d23:includes/frontend/FlaggablePageView.php:1:177",
+          "wikimedia:I30092e41b53956c2a8b1fa66d086fcbbea6eaca1:includes/WikimediaEventsHooks.php:1:542",
+          "wikimedia:I365118d92cf156f2ee879b84d8b509aa531acc8c:modules/mediawiki/files/mariadb/tables-catalog.yaml:2:415",
+          "wikimedia:I5c3f0eead37d6f19de2f85b0c0c7af89f7319851:cookbooks/sre/ceph/roll-restart-reboot-server.py:9:106",
+          "wikimedia:I5f81e62e8080c468c07b48ac818e24f3a6e28754:packages/codex/src/components/chip-input/ChipInput.vue:8:579",
+          "wikimedia:I6104373e5803783393bf0299dac73bd4457d4ea3:tox.ini:1:25",
+          "wikimedia:I7cf92b6949a48965ef7e31d59e0e7221c9fe8b71:packages/codex/src/components/checkbox/Checkbox.vue:2:219",
+          "wikimedia:I7cf92b6949a48965ef7e31d59e0e7221c9fe8b71:packages/codex/src/components/radio/Radio.vue:9:273",
+          "wikimedia:I7d86c7dc697cd18e96b53b2058e60edad2bec77b:includes/CentralAuthHooks.php:15:557",
+          "wikimedia:I7d86c7dc697cd18e96b53b2058e60edad2bec77b:includes/SharedDomainUtils.php:15:209",
+          "wikimedia:I92646e4b60e309d5fe1c75f2f77a90717dd38700:src/GlobalContributions/CheckUserApiRequestAggregator.php:17:134",
+          "wikimedia:I92646e4b60e309d5fe1c75f2f77a90717dd38700:src/GlobalContributions/CheckUserApiRequestAggregator.php:17:239",
+          "wikimedia:I980b30199e8a6230cd1c784c901a7ae921671ac4:spicerack/dhcp.py:1:100",
+          "wikimedia:Ia961e03ccf21fd2c2b5ca121ae257c9e8deacbb7:app/src/components/SXPublisher/useTranslationPublish.js:6:123",
+          "wikimedia:Ia961e03ccf21fd2c2b5ca121ae257c9e8deacbb7:app/src/components/SXPublisher/useTranslationPublish.js:6:134",
+          "wikimedia:Ibaced79e49604115ec3c754118b64d830739b3e3:src/GlobalContributions/GlobalContributionsPager.php:6:155",
+          "wikimedia:Ibec3c29e94a25a46dee8f295af54934fda1e252b:src/models/article_country/model_server/model.py:1:38",
+          "wikimedia:Ic1e2b19bdb4867ca52d4fa46078c1882238a20d1:modules/profile/manifests/analytics/client/limits.pp:24:2",
+          "wikimedia:Ic240edea0bb9a27cdfa2d810284644c1eef51895:includes/recentchanges/CategoryMembershipChange.php:2:162",
+          "wikimedia:Ic276814eed95695990bb886f800ab272819f6754:repo/rest-api/src/Application/Serialization/PropertyDeserializer.php:3:45",
+          "wikimedia:Ic364d79245c2bb9378da0dbfd60401ff467be020:modules/vopsbot/manifests/init.pp:16:111",
+          "wikimedia:Ic55f722ee3e6574fb4374a23b287574c585f72a9:i18n/qqq.json:1:143",
+          "wikimedia:Icb08e4c305aa7e950417b32a5a643d759c7e4532:resources/src/ext.translate.eventlogginghelpers/index.js:6:69",
+          "wikimedia:Id779c54ffd8f2be1efe1e76edc063eb9bae4e66e:modules/liberica/templates/initscripts/liberica-hcforwarder.systemd.erb:9:4",
+          "wikimedia:Ie260e00d228f2495b1b18561bc3e0a2f040ce0f8:src/JavaScriptMinifier.php:4:2044",
+          "wikimedia:Ie3f42164989d948aea42afcc61833735c4e2c982:plugins/wm-patch-demo.js:12:136",
+          "wikimedia:Iec68cdbe900ff1f848a8e36b286804f5cb8e7adf:repo/rest-api/src/WbRestApi.ServiceWiring.php:2:507",
+          "wikimedia:Ifcba79d76b2be8c212eb0669a57ecc1e28cc7b84:view/resources/wikibase/wikibase.less:7:71"
+        ],
+        "suspicious": [
+          "wikimedia:I2eef2e4fbe19678527df1bfca5a5e73d7e6a8621:includes/TemporaryAccountsInstrumentation.php:3:35",
+          "wikimedia:I313b595ccbcf0650fceffc5bfd31bc245aca0237:includes/specials/SpecialWhatLinksHere.php:3:615",
+          "wikimedia:I37db0caae0fdeb1cf92714a5fe156cce194520c4:refinery-job/src/main/scala/org/wikimedia/analytics/refinery/job/refine/RefineHelper.scala:8:100",
+          "wikimedia:I45e99808a89eb181b9e9186fd5b6eb6df78636dc:repo/tests/phpunit/includes/Diff/EntityDiffVisualizerFactoryTest.php:14:79",
+          "wikimedia:I57fc103953cba4bf404deb62ebee8675f9e9ec1d:repo/rest-api/tests/mocha/api-testing/TempUserTest.js:5:51",
+          "wikimedia:I5be3713ff0db62eb93bd721aba04031a8490a30d:includes/auth/AuthManager.php:2:1867",
+          "wikimedia:I60017c3075bb9ba0c8536c01975e812639bb5181:cookbooks/sre/k8s/pool-depool-node.py:5:145",
+          "wikimedia:I62a72228171ff1367acf4389591edd9a2f2656a8:spicerack/mysql_legacy.py:5:560",
+          "wikimedia:I6622c9e5063ab387a8d6c851e0235c86a044f0a8:modules/ext.growthExperiments.StructuredTask.Surfacing/index.js:23:38",
+          "wikimedia:I71e10f8a9133c16ebd9120c23c965b9ff20dabd2:includes/parser/ParserOutput.php:2:2352",
+          "wikimedia:I7cf92b6949a48965ef7e31d59e0e7221c9fe8b71:packages/codex/src/components/chip-input/ChipInput.vue:14:583",
+          "wikimedia:I7d86c7dc697cd18e96b53b2058e60edad2bec77b:includes/Hooks/Handlers/UserLogoutHookHandler.php:75:87",
+          "wikimedia:I7d86c7dc697cd18e96b53b2058e60edad2bec77b:includes/Special/SpecialCentralAutoLogin.php:37:933",
+          "wikimedia:I8f7d550608e26adeaf5b6bcda27c142a46198368:src/GlobalContributions/GlobalContributionsPager.php:1:119",
+          "wikimedia:I92646e4b60e309d5fe1c75f2f77a90717dd38700:src/GlobalContributions/CheckUserApiRequestAggregator.php:19:85",
+          "wikimedia:Iac80d8872ebffecbad9e347ec7f1a5144ba5a8ec:wmf-config/core-Permissions.php:1:768",
+          "wikimedia:Ic276814eed95695990bb886f800ab272819f6754:repo/rest-api/tests/mocha/api-testing/CreatePropertyTest.js:3:57",
+          "wikimedia:Ic65e7c323d1c8ca17ab861491db578f30fd54e9f:cookbooks/sre/mysql/sanitize-wiki.py:34:19",
+          "wikimedia:Ic9f4c513bf58e08f4e8eab40f0e2a4a54d1972d8:resources/src/mediawiki.special.search.styles.less:3:213",
+          "wikimedia:Ie531ff074979ec2267eeb591621551e4ca525dc7:cookbooks/sre/k8s/reimage-stacked-control-plane.py:24:249",
+          "wikimedia:If4267e083cd6721bdb80d32a84c1fd9306096b50:resources/skins.vector.js/tables.js:2:6"
+        ]
+      }
+    },
+    "train": {
+      "examples": 4184,
+      "clean": 3414,
+      "suspicious": 127,
+      "found": 232,
+      "no_eligible_line": 411,
+      "no_reference": 0,
+      "ids": {
+        "found": [
+          "wikimedia:I00425e720d15dcd7f513711d65d3e7f63c2ae332:modules/mw.cx.logEvent.js:6:109",
+          "wikimedia:I033fffb69d7a9c2fc24bc47a1863c2769480805d:modules/ext.growthExperiments.Homepage.styles/CommunityUpdates.less:1:36",
+          "wikimedia:I04303a443e6557534fed8bc90694935161a6689d:i18n/en.json:1:30",
+          "wikimedia:I04928d989e6764ac93ec243a5fec9c7fe2b0b9b0:includes/api/ApiUnblock.php:8:91",
+          "wikimedia:I05c3572aa02a7ea96f7729a6b98a29e7e207dfd6:includes/specialpage/ChangesListSpecialPage.php:17:721",
+          "wikimedia:I07e4a180119eb2a1d970d727faa87bd933a91b9c:modules/gitlab/manifests/init.pp:1:140",
+          "wikimedia:I084e08f113cc438ae044ecbb85a0a21fa623a18d:packages/codex/src/demo/DemoBaseLayout.vue:5:129",
+          "wikimedia:I090d1649a4dce342d657ebaba8d88b554a4be8e2:app/src/components/CXDashboard/SuggestionFilterChip.vue:2:4",
+          "wikimedia:I0a307982a5f63be7c2d030fcfa4449b79651f0a1:includes/SpecialNukeDPL.php:2:100",
+          "wikimedia:I0a436e64e09c0c810b67519a463fc00d01a00c86:utils/ci-fullrun.sh:22:30",
+          "wikimedia:I0b0796d43d11107435900e194f04a016d73d7a88:resources/libraries/normalise.css:1:31",
+          "wikimedia:I0cf94017fb4d0b3391798f02aa5e3ff764467db2:includes/TemplateCollectionFeature.php:18:29",
+          "wikimedia:I0e5789b51d4846d76675b7e3f04c3cc9f58f0c1e:minT/styles/mint.less:3:88",
+          "wikimedia:I0e799332f1e702358607f1a636c1f33e8e4142c7:tests/phpunit/PropertySuggester/UpdateTable/Importer/ImportContextTest.php:4:9",
+          "wikimedia:I1211203b459319377cecd932f1330a8ea32df374:manifests/site.pp:1:773",
+          "wikimedia:I131e69b55be0aeba32ceda45a6229cb40a3a812d:data-access/tests/phpunit/InMemoryPrefetchingTermLookup.php:2:58",
+          "wikimedia:I145a97d483a197b505f41b794d55f5d5030545ca:manifests/site.pp:2:1978",
+          "wikimedia:I145a97d483a197b505f41b794d55f5d5030545ca:modules/profile/data/profile/installserver/preseed.yaml:2:569",
+          "wikimedia:I1547e505eab51bb683fb169646ca25af0f2cedb2:libs/foreign/jsuites/jsuites.js:12:2",
+          "wikimedia:I1778c9174c31c871ac028c56700ab0f3bd47ed1a:src/dm/ve.dm.InternalList.js:3:296",
+          "wikimedia:I1a1e2621842d9df6f4356dd4ba2638bb63860899:modules/idm/templates/idm-apache-config.erb:1:20",
+          "wikimedia:I1ce177591546eb426847500ac4499cd71872d22e:modules/ve-cite/ve.ui.MWReferenceEditPanel.js:1:55",
+          "wikimedia:I1efdad2663be3648d46953fcec6d3e3415a95657:src/Wt2Html/Grammar.pegphp:5:2548",
+          "wikimedia:I20e7054ae31cebb0c98efe8030f71242d7677313:repo/includes/Hooks/SummaryParsingPrefetchHelper.php:5:74",
+          "wikimedia:I216f3b570454883f16781312236a4977c3fca65d:includes/specials/SpecialLog.php:11:79",
+          "wikimedia:I22726c1a41f48e24c37eba22b5757c2ee72f5072:tests/selenium/componentobjects/EvaluateFunctionBlock.js:1:57",
+          "wikimedia:I241872237a8b27bc4261e6231b55b068bd3ac428:includes/Hooks/Handlers/SpecialPageBeforeExecuteHookHandler.php:32:242",
+          "wikimedia:I24a6f56eb575a87d1aed03441a47a91f7644466f:composer.json:3:22",
+          "wikimedia:I24a6f56eb575a87d1aed03441a47a91f7644466f:composer.json:3:84",
+          "wikimedia:I265f3a62d8e0d1ae0516920c8b2d8dd715da96a4:includes/Util.php:3:183",
+          "wikimedia:I271c6abdb76c5f0da16d7ae5deee6bca09d6f4e1:tests/phpunit/PageImagesTest.php:2:25",
+          "wikimedia:I274be145fa436aa845831a37616ceae8fbb05fb8:tests/phpunit/unit/NewcomerTasksUserOptionsLookupTest.php:5:49",
+          "wikimedia:I27edb610a91baa06d99b45040b3f2f390cd0a769:resources/ext.blueSpiceExtendedSearch.SearchCenter.less:32:234",
+          "wikimedia:I2966551759f801c75966bf6a881894e51426c5c2:src/Event/Store/EventWikisStore.php:31:56",
+          "wikimedia:I29940ee4c7097fbb10dd3e7336a4be547a33d6a4:includes/Services/GlobalBlockingBlockPurger.php:2:87",
+          "wikimedia:I2aba5799b267c93d8975d5e1fd8b6b8fafc4fc08:src/Services/AccountCreationDetailsLookup.php:3:22",
+          "wikimedia:I2af5bf58d7e5c7b817dbbef5f3819c0b6187ba57:package-lock.json:10:3",
+          "wikimedia:I2b6a586a1f1348a9b77779fb4443f0808b9e0baf:src/Event/EventRegistration.php:4:116",
+          "wikimedia:I2c20594310ab74410cae2fbb813c104dc5a0d806:groups/Wikimedia/WikimediaTools.yaml:2:343",
+          "wikimedia:I2c378df5497cbc21f3a79b7030aea21014a49e90:includes/Lexicon/ConfiguredLexiconStorage.php:37:30",
+          "wikimedia:I2d17bd3743e590e06298efaac387fc6d64e3609d:includes/mail/EmailNotification.php:7:81",
+          "wikimedia:I304909560f4c006bd672caae1b2e49512ba71fe1:modules/nagios_common/files/check_commands/check_ssl.cfg:2:41",
+          "wikimedia:I307e1d30e84396b56d919993aef4d411ecae8ea1:includes/user/Options/UserOptionsManager.php:15:340",
+          "wikimedia:I3140d2132a353fa62465524fdf7342e48710a95f:resources/css/ext.translate.special.managetranslatorsandbox.less:1:184",
+          "wikimedia:I334f3921bd63541acf28e0b39f230bfdea2ce174:includes/SpecialNotifyTranslators.php:2:2",
+          "wikimedia:I36d77272bab2e2d5974a7e74375f53fd5d3e2c45:src/Wt2Html/TT/WikiLinkHandler.php:1:272",
+          "wikimedia:I3728ff8368c4794c5024b09dbed828d369c376b8:src/Authenticator.php:6:124",
+          "wikimedia:I3945f0418587327dcf06bc8bdc43b7bea5f1b7e7:src/ui/elements/ve.ui.PreviewElement.js:1:147",
+          "wikimedia:I39e953f5bf63fd5b2d34dcc7187acfaa1a896469:minT/entrypoints/ArticleFooterEntrypointCard.vue:7:78",
+          "wikimedia:I39e953f5bf63fd5b2d34dcc7187acfaa1a896469:minT/entrypoints/ArticleFooterEntrypointCard.vue:9:81",
+          "wikimedia:I3baca91d678be3baa16b794eaecf01d3468c7703:spicerack/netbox.py:3:438",
+          "wikimedia:I3d9977a6212e85ce08480457fa61b7d0b89af02b:includes/Query/PrefixSearchQueryBuilder.php:3:43",
+          "wikimedia:I3ea9f5a971325c6c6a2e4ec75a0d5ad0536fe70b:resources/bluespice.bookshelf.createNewBook.js:1:1",
+          "wikimedia:I3eb55987a3499d3b0f5e18848e7e9a25d6babcb8:drupal/sites/default/civicrm/extensions/wmf-civicrm/Civi/WMFException/WMFException.php:1:177",
+          "wikimedia:I4248ed0fe66dc8d9591a62c90e9834f47f649c34:modules/entrypoints/styles/ext.cx.entrypoints.contributionsmenu.less:1:32",
+          "wikimedia:I424fb768e13c2b7316d4b38c3f0eb13af8ca8a0f:src/ConstraintCheck/Message/ViolationMessageRenderer.php:2:152",
+          "wikimedia:I4304163b629fe55ef950b2979d7cfe1d53f2419a:tests/selenium/specs/editmerge.js:1:286",
+          "wikimedia:I4304163b629fe55ef950b2979d7cfe1d53f2419a:tests/selenium/specs/twocolconflict.js:1:72",
+          "wikimedia:I432288384340516be170db9a4741d56ed79854e1:includes/Tag/ParsoidMapFrame.php:1:101",
+          "wikimedia:I445091df8f2c359e764a25d99e82bfb494fc6e44:src/Html2Wt/WTSUtils.php:3:291",
+          "wikimedia:I48caccae8bb5296992f741899f7c5609bec394e9:modules/admin/data/data.yaml:10:310",
+          "wikimedia:I48caccae8bb5296992f741899f7c5609bec394e9:modules/admin/data/data.yaml:10:897",
+          "wikimedia:I48d82096a90fe05b720536d308b801566485f986:modules/profile/manifests/prometheus/ops.pp:1:2225",
+          "wikimedia:I4905d824dba889d85872f8fd227bff6e82450f7a:modules/base/manifests/sysctl/inotify.pp:4:7",
+          "wikimedia:I499605b5e0c7b5fc48b919208a1ea3f20fde9d57:includes/search/SearchEngine.php:2:624",
+          "wikimedia:I49e93de6c0241419cfbac99cb7bf0de5d4279cc1:src/Diagnostics/FindDeletedTranslationsMaintenanceScript.php:3:55",
+          "wikimedia:I4b3526ce0959d82516a09f579a3e40e96b765b0a:includes/session/SessionBackend.php:62:234",
+          "wikimedia:I4d8b342146d7d0b0372d5f676d2dc3314407a53b:includes/session/SessionBackend.php:2:235",
+          "wikimedia:I4d9e2902fbb24e37da9632b99c1ac21a67fa6faf:repo/rest-api/package.json:1:7",
+          "wikimedia:I4ed1ea98f1533572acb09f90241294faf1c4d4b0:includes/Pages/DetailsPage.php:23:92",
+          "wikimedia:I4fc5444da028b8755cafa90214d944229c106ca1:includes/BabelAutoCreate.php:9:48",
+          "wikimedia:I5057ef28e2cb8d64f78da5e395b30e528c91be67:tests/phpunit/PlayerHooksTest.php:2:195",
+          "wikimedia:I50d45d2a17f0e4da9fe615d481834ba1ab13d8fc:resources/src/mediawiki.page.ready/enableSearchDialog.js:6:60",
+          "wikimedia:I50ec27302347203170cb14c7228b6c3d3264b24c:composer.lock:2:9013",
+          "wikimedia:I512854aa961f82ca3d20cb628a4758c2d89faa36:src/LexemeFieldDefinitions.php:4:63",
+          "wikimedia:I519201470e2a0256de7d8c83fa78dc5a6f38815e:ServiceWiring.php:22:553",
+          "wikimedia:I519201470e2a0256de7d8c83fa78dc5a6f38815e:includes/Mentorship/Provider/CommunityStructuredMentorWriter.php:22:135",
+          "wikimedia:I5277196c12dbe6b9eb026cade18a1b2de4c22655:app/src/components/CXDashboard/CXDashboard.vue:1:128",
+          "wikimedia:I543257576a55d6911a5149f024253a03a8c348d0:src/Wt2Html/PegTokenizer.php:10:183",
+          "wikimedia:I5633820a317a5d425ab236f5d1afd7009c812570:repo/resources/wikibase.wbui2025/wikibase.wbui2025.snakValue.less:20:31",
+          "wikimedia:I576b450caee63566396ecdca763cab1ba42e95a3:tests/phpunit/integration/Special/SpecialGlobalGroupMembershipTest.php:28:365",
+          "wikimedia:I577c327c47bbdf79e4a7cf27c8185c02454bfd9c:schema/tables.json:5:659",
+          "wikimedia:I587e64bed068a33fec27a91d303fe0a8cd585317:includes/OutputTransform/Stages/ParsoidLocalization.php:5:139",
+          "wikimedia:I58db3e7f70333f0a7b101ded8155fbce8ba247ca:maintenance/flushUtterances.php:2:49",
+          "wikimedia:I59e4a651f6d6325b6604c4d596936cdc33d7e8f4:modules/smart/files/smart_data_dump.py:1:244",
+          "wikimedia:I5f89bf4492b395f580e2bbbe6a4bcef3e344d470:src/Config/CiteEditorCapability.php:7:33",
+          "wikimedia:I60c8411c4da457611c3784f35ad6ed44c114b333:lib/compiler/passes/ast-to-code.js:8:861",
+          "wikimedia:I61910dba894c164bebb880aa6af39cc534bd64c5:includes/installer/DatabaseUpdater.php:4:1121",
+          "wikimedia:I63fc9e64c132e8215f0f2a2a52d7938f24d8ae04:includes/Content/NewsletterDataUpdate.php:1:69",
+          "wikimedia:I676895abd661e3d6e6ff54cf8f5fa10743055ab9:maintenance/categoryChangesAsRdf.php:1:294",
+          "wikimedia:I69a0b7142b1d3aebd8101d85459841f0270f4cfa:.phpcs.xml:1:3",
+          "wikimedia:I6a66dd5fdb030efb7d18f3c052691930682e0a0c:modules/dashboard/ext.cx.dashboard.js:3:410",
+          "wikimedia:I6bf44bbf8ab7840c3a86d3db6f6133b4d05ea68a:src/Synchronization/ImportTranslationsSpecialPage.php:3:221",
+          "wikimedia:I6d20cc688f6d300c630366ddc4da6723fd4c34b6:includes/JCApiUtils.php:1:39",
+          "wikimedia:I6d9fe1fa1f9d57b9349abd898cbfb08d0d9168e9:tests/phpunit/integration/Serializers/MediaWiki/PageChangeEventSerializerTest.php:15:163",
+          "wikimedia:I6f5cb19720953167cb0c05b2f55be7a45d9035dc:packages/codex/src/components-wip/popover/Popover.vue:4:158",
+          "wikimedia:I7028c5c204ea055b8ea6c9266a0d7538665c6915:modules/mediawiki/files/mariadb/tables-catalog.yaml:1:1059",
+          "wikimedia:I7156e2b2b757afeeb6352fd44b3288dd2ef120d9:app/src/components/MWLanguageSelector/MWLanguageSelector.vue:1:11",
+          "wikimedia:I71c04de72efe9936df6106779f59f26f02351dbd:composer.json:2:203",
+          "wikimedia:I73009798abf6393d56a2f16e6e39402890eb64d1:includes/ExperimentUserDefaultsManager.php:2:50",
+          "wikimedia:I73f9a2827c00a6e40d9d4de2b4d294d4b7fa5287:modules/ext.wikispeech.storage.js:2:538",
+          "wikimedia:I7469a8abfc9f76978611338a310ce8470cf4f9e9:scripts/tracking_param_remover.py:7:103",
+          "wikimedia:I7648562c0262076f6dc06f619ef39c106ea7b30f:src/title.js:19:52",
+          "wikimedia:I768eeb834dce0f24714f2869514256a75248ca30:includes/user/User.php:2:2692",
+          "wikimedia:I76ec1f0f1892b65d5e116009d058acc4c31f57f7:includes/Hooks.php:21:174",
+          "wikimedia:I7719ba7fc7a54d1deb2a85a5bf2c895d9452673a:lib/Less/Parser.php:5:1044",
+          "wikimedia:I77b5fcfc101c5ee7630852c1137f09d5fe84e736:languages/i18n/bqi.json:2:1301",
+          "wikimedia:I78058d3f724b41f54eed25a74066a07289c1eddd:includes/ResourceLoader/Module.php:4:1103",
+          "wikimedia:I795d2844df9f58340ccd32114cfd772e5b4e6e62:charts/miscweb/templates/_volumes.tpl:9:27",
+          "wikimedia:I7986156320d13903e0cdf3cdf4ce471326f4f105:src/WikiTexVC/MMLnodes/MMLmmultiscripts.php:3:13",
+          "wikimedia:I798a6722c4fb37cbd1d3e4a90d129e42a40d6867:app/src/components/CXDashboard/SXSuggestionsFiltersDialog.vue:3:446",
+          "wikimedia:I7cf64dcf76f60835a574c366ce6c6fdfe6f3bc8d:includes/Serializers/MediaWiki/PageChangeEventSerializer.php:11:107",
+          "wikimedia:I7ef612b94aeb1dd33db0e281be5e66f43f409560:src/Server.php:2:313",
+          "wikimedia:I8026abff4d229dbf11cc9484915212b085b1e811:src/HookHandler/AddReaders.php:4:20",
+          "wikimedia:I83b02e930a4534d13be5ccf2eaaf18f4a76fc66d:modules/profile/manifests/airflow.pp:2:72",
+          "wikimedia:I848e87a502ff161bffb81624032c028ece338884:minT/src/ConfirmTopicPage.vue:1:394",
+          "wikimedia:I85bc06364af65bdd5a4e16474ad8a6f644d4f940:includes/filebackend/FileBackendGroup.php:3:238",
+          "wikimedia:I85bd893d06aebd0f438d8fb017dd758232884351:tests/phpunit/unit/RendererFactoryTest.php:2:159",
+          "wikimedia:I85f0187e5d97d024713de946339f910ffd702808:packages/codex/src/components-wip/breadcrumb/Breadcrumb.vue:2:235",
+          "wikimedia:I867c96fa2bdbf406e44c53820748c4af105ef8a7:app/src/wiki/cx/api/translator.js:1:421",
+          "wikimedia:I87ad8f16efa409a24bceed4b8d46661382bb48d4:src/dm/ve.dm.Annotation.js:1:100",
+          "wikimedia:I87ad8f16efa409a24bceed4b8d46661382bb48d4:src/dm/ve.dm.Converter.js:1:483",
+          "wikimedia:I87bc01058f3207fb3deca2c41597405c5eb11020:ext/wmf-civicrm/Civi/WMFQueue/VerifyEmailQueueConsumer.php:13:115",
+          "wikimedia:I89d0316c7198704a0e093452cb5bcd483b577b90:helmfile.d/dse-k8s-services/airflow-wmde/values-production.yaml:2:10",
+          "wikimedia:I8a880cc251d649991e69819e48aadd7dfed9311b:app/src/components/SXPublisher/useMtValidate.js:2:7",
+          "wikimedia:I8aa88ea476bb80d3023bb423d90f957aba425950:minT/src/useApi.js:3:179",
+          "wikimedia:I8c0fea2ce00af101f377b83f3cf7b0f02d7915a3:app/vite.config.js:1:11",
+          "wikimedia:I8ceb7a57c7481259156a443006f5aaa9896c16cc:src/WikiTexVC/MMLmappings/BaseParsing.php:6:445",
+          "wikimedia:I8d54284c5adc3f872f773f7a552c89654f0be350:wmf-config/ext-EventStreamConfig.php:1:2467",
+          "wikimedia:I8e61889521c73ce191ffdda6dbfe5f40c2611afc:modules/mediawiki/files/mariadb/tables-catalog.yaml:1:1141",
+          "wikimedia:I8ed183b32b42f58bdbefc0dbe3afd8481da89821:includes/NewcomerTasks/TaskSuggester/SearchStrategy/SearchStrategy.php:6:84",
+          "wikimedia:I900327c87e944ab3a71162900d10566082b16082:silverpop_export/update_table.sql:4:596",
+          "wikimedia:I90c8c867d6da5673d0433bee4e5d6a09a50a8e59:modules/dynamicproxy/files/api/invisible-unicorn.py:1:492",
+          "wikimedia:I91dad79437a6b3ff236b2953209bf18e1c275e88:cookbooks/sre/hosts/provision.py:4:173",
+          "wikimedia:I92a7d97e3269b93f8aa455c4e8d971cc47115e24:tests/phpunit/integration/HookHandler/PageDisplayTest.php:19:474",
+          "wikimedia:I988fb561ed7d365058b3084b71aba0c94c301908:wmf-config/ext-ORES.php:2:179",
+          "wikimedia:I98ec17046c0863878eba3768d83f083bc2753e6f:includes/user/User.php:23:1242",
+          "wikimedia:I9a451bdd8bc2169eddc546c409defe1c533f459c:helmfile.d/services/miscweb/values-os-reports.yaml:6:26",
+          "wikimedia:I9ac39a402564b5f07be2051d5367556e6b0b319c:includes/Output/OutputHandler.php:2:168",
+          "wikimedia:I9b8d7c2f77aff8b17d5ea258e4a4fb1c2556a06a:dlocal_gateway/config/payment_submethods.yaml:1:47",
+          "wikimedia:I9ff690924dcb4747f9bda853151b192db8d33011:src/Services/CheckUserIPRevealManager.php:2:17",
+          "wikimedia:Ia3ea77a78fea7210141b8e371e69cd53b6eee884:modules/acme_chief/manifests/server.pp:2:119",
+          "wikimedia:Ia43c1c708dcdae54c32d542ac62c891742d7e5dd:app/src/components/SXEditor/SXEditor.vue:1:86",
+          "wikimedia:Ia43c1c708dcdae54c32d542ac62c891742d7e5dd:app/src/components/SXEditor/SXEditor.vue:1:99",
+          "wikimedia:Ia4e3e6279d96509ebc85c8a3086d63a440dc7c50:src/Pager/EventPagerTrait.php:7:85",
+          "wikimedia:Ia5ab234e807a86c1c2f356d35bc745f554011cef:lib/Less/Tree/Call.php:10:158",
+          "wikimedia:Ia74233f27730251f06e6ff89c6a8d112eb6cf2d6:src/Wt2Html/DOM/Processors/MigrateTrailingNLs.php:2:64",
+          "wikimedia:Iaa417d97a55af99dcba1ce36c309f30dcc76e35a:dockerfiles/ci-common/content/ci-src-setup.sh:1:28",
+          "wikimedia:Iaa6910daaf80c197535d6f56234ea447ce620d13:includes/ActionApi/ApiQueryAutomaticTranslationDenseLanguages.php:14:213",
+          "wikimedia:Iaa6910daaf80c197535d6f56234ea447ce620d13:includes/ActionApi/ApiQueryAutomaticTranslationDenseLanguages.php:14:229",
+          "wikimedia:Iaa6910daaf80c197535d6f56234ea447ce620d13:includes/ActionApi/ApiQueryAutomaticTranslationDenseLanguages.php:20:241",
+          "wikimedia:Iabc00220e262c8d47765f2da59320ef7c10cad6c:modules/ext.wikimediaEvents/sessionLength/mixin.js:22:15",
+          "wikimedia:Iabd076faf31574e487b6cac202ae5339069a2a44:includes/logging/DatabaseLogEntry.php:10:148",
+          "wikimedia:Iad5b543434c4b9b6a4450146a9e17bca70383de0:modules/realtimepreview/ErrorLayout.less:1:8",
+          "wikimedia:Iae9bb008bb2e541b2922f647dfddcd8858e3e205:includes/specials/SpecialEditTags.php:7:279",
+          "wikimedia:Iaebdd784312311249d697ebeded9ce5cba432190:tests/phpunit/unit/NewcomerTasks/ConfigurationLoader/CommunityConfigurationLoaderTest.php:4:20",
+          "wikimedia:Ib0016215c66191a6e024ccd7cfad6e89ebb5ea84:hieradata/role/common/maps/replica.yaml:1:4",
+          "wikimedia:Ib1ccd5dcddbdb55b81d992460b7a738276d1f992:packages/codex-design-tokens/src/components.json:29:63",
+          "wikimedia:Ib1ccd5dcddbdb55b81d992460b7a738276d1f992:packages/codex-design-tokens/src/modes/small.json:8:8",
+          "wikimedia:Ib32cda50ebd95d6e7834d1af21977fb1abd985b1:python/refinery/sqoop.py:1:488",
+          "wikimedia:Ib3b47be1bdca9de802f6de0db438122bfbf61fa7:src/Core/Sanitizer.php:1:890",
+          "wikimedia:Ib3da21e798eaec0f6ef03dbc12f0abaf49532731:Doxyfile:6:39",
+          "wikimedia:Ib66f06965c872e234ffe2c03d4a5553a20b4c7e0:includes/LoginNotify.php:2:1089",
+          "wikimedia:Ib7fac6f43cc83ed71e2dddd9d5c55d79140f70be:modules/aptrepo/files/updates:1:481",
+          "wikimedia:Iba344087b95172da54940e83e89ef2b6e2e36b5d:includes/specials/SpecialCreateAccount.php:1:50",
+          "wikimedia:Ibac90bb7c565cca6f0ed7efa95a284850ce0c393:src/Services/CheckUserInsert.php:24:61",
+          "wikimedia:Ibb919b5d38de51378410bdd70a3680b0f91361dc:src/models/article_country/model_server/model.py:1:82",
+          "wikimedia:Ibb919b5d38de51378410bdd70a3680b0f91361dc:src/models/article_country/model_server/model.py:1:88",
+          "wikimedia:Ic0a2abca839a9a6d4502e1a0e73ea0f08a45c350:tests/phpunit/unit/Lexicon/LexiconHandlerTest.php:5:504",
+          "wikimedia:Ic0a2abca839a9a6d4502e1a0e73ea0f08a45c350:tests/phpunit/unit/Lexicon/LexiconHandlerTest.php:5:507",
+          "wikimedia:Ic11c838c8dca4b96b7fea8d3964f874879a3d7d1:spec.yaml:1:132",
+          "wikimedia:Ic11c838c8dca4b96b7fea8d3964f874879a3d7d1:spec.yaml:1:42",
+          "wikimedia:Ic149d14324c8c2426c59a6d125b0a8bd596dcda3:resources/src/ext.translate.aggregategroups.refresh/init.js:12:148",
+          "wikimedia:Ic1ef983dbf46482eef997a27a740b99989535d70:includes/Api/AbuseLogPrivateDetails.php:2:97",
+          "wikimedia:Ic23317b4448d66807bd223a4c9f4951e1c9818fc:modules/ldap/files/scripts/add-ldap-group.py:1:66",
+          "wikimedia:Ic286d30d4d410d54f563c6cf64ee0c3b64954085:includes/mail/EmailNotification.php:4:199",
+          "wikimedia:Ic3bcf6ef188be6df052ec7a5ce8cbcb6b2817aca:repo/includes/ParserOutput/EntityParserOutputGeneratorFactory.php:19:31",
+          "wikimedia:Ic440c83619854f3d99c1abf68ccab589065eb553:includes/specials/Contribute/ContributeFactory.php:23:39",
+          "wikimedia:Ic45fb265b9c8590839ea2cbe7a40d8a3f377a415:modules/ve-mw/init/styles/ve.init.mw.Target.less:1:73",
+          "wikimedia:Ic4f00e7e47df1ef66d109a488b8ea13aba6aa9ee:packages/codex/src/components/search-input/SearchInput.vue:9:179",
+          "wikimedia:Ic916469d4962e72e864759f26b786ffd59c59570:includes/linker/UserLinkRenderer.php:54:204",
+          "wikimedia:Icba5313052a78a5d01d7771a9928ffd4cd31d042:src/Services/CheckUserLookupUtils.php:5:25",
+          "wikimedia:Icbd9a1574b7929a23afdeb8ae1b68836a1d88517:lib/Less/Tree/Call.php:4:9",
+          "wikimedia:Iced5e750bfa04bb4d75f2ee8ea5bee99f2e1c4d7:wmf-config/InitialiseSettings-labs.php:5:1364",
+          "wikimedia:Icf684f97989015acf4b01f8d7fe1119a714fdbeb:app/src/components/SXArticleSearch/ArticleSuggestionsCard.vue:2:56",
+          "wikimedia:Id0b4057746059fed940f273d9ef3ddf79f70c735:resources/codemirror.search.js:2:470",
+          "wikimedia:Id12ead6c7c56aed2be2da8e1758646c1db90393c:includes/Consequences/Consequence/Throttle.php:1:156",
+          "wikimedia:Id1d1c108d32b22a77be966013288a042cc6fa7d3:helmfile.d/ml-services/revision-models/values.yaml:1:50",
+          "wikimedia:Id23b89d17cdb90fbca71fdd4ca99130ca355a08b:includes/Hooks/ApiHooks.php:24:69",
+          "wikimedia:Id3d377003112dbdb613a243dbb27f4fe8f37b1bc:tests/selenium/features/step_definitions/menu_steps.js:2:39",
+          "wikimedia:Id41af52b4905641866812c9bce8711ae7359276d:specials/PF_FormEdit.php:2:102",
+          "wikimedia:Id669cfeeabdb32e50ed9e45ecb7e17d674f52646:extension.json:28:44",
+          "wikimedia:Id7d303adc07425fa37ea85e63e1ebebaac9ee16f:src/TemplateDataProvider/TemplateDataProvider.php:1:53",
+          "wikimedia:Id8d9767e486b0bd95e48c73c49fcd9e729f5bd65:includes/Handlers/WebMHandler/WebMHandler.php:7:324",
+          "wikimedia:Id96230b5f82f285af3de4235f2a002172b31574e:messagegroups/MessageGroupBase.php:2:232",
+          "wikimedia:Idc03d1170c59c00e923bd6eb8bb10997065def5b:debmonitor/kubernetes/views.py:1:30",
+          "wikimedia:Idc22ef4aec253a8be34aa9db5d46e05b5c4a98f5:maintenance/importArticleTopics.php:2:300",
+          "wikimedia:Ie0495902a62c688da4d63e0f305888fb96fbfbac:includes/BabelBox/NotBabelBox.php:8:55",
+          "wikimedia:Ie0bfbf52d93e983ef7500e61871ad9c374098cc8:manifests/site.pp:1:431",
+          "wikimedia:Ie1d54721a1849619fe9a33b74ad1c231868b1c26:includes/jobqueue/JobRunner.php:12:422",
+          "wikimedia:Ie2fba7f2bcffb27d48a87b0677f2ad7c52d1477d:includes/Specials/MapSourcesPage.php:1:83",
+          "wikimedia:Ie44a2a4835dfc6de2bdb965a7b500641b21292a1:src/toolgroups/PopupToolGroup.js:1:349",
+          "wikimedia:Ie4f5589130b1c1a430d5377f0d51d51f0dac542f:lib/mw/MWApiRequestManager.js:3:198",
+          "wikimedia:Ie4f5589130b1c1a430d5377f0d51d51f0dac542f:lib/suggestion/SectionSuggester.js:1:249",
+          "wikimedia:Ie7970584937987b0a03a2c17f881a92515b40baf:resources/js/ext.translate.editor.helpers.js:26:520",
+          "wikimedia:Ie827bbeb1f0952393bf9651825c183df7dbc5058:src/HookHandler.php:5:111",
+          "wikimedia:Ie83678177d227ff4684c77f54b6d3e42e2ff468e:MediaWiki/Sniffs/Commenting/PhpunitAnnotationsSniff.php:3:328",
+          "wikimedia:Ie8f2ca607565cc2a4c1f3675069befacc85ebf85:resources/css/ext.translate.special.aggregategroups.less:9:1",
+          "wikimedia:Ie924be46f18c6600d894a4e43032988c21411b2b:modules/ext.wikispeech.player.js:20:103",
+          "wikimedia:Ie924be46f18c6600d894a4e43032988c21411b2b:modules/ext.wikispeech.player.js:20:212",
+          "wikimedia:Ie924be46f18c6600d894a4e43032988c21411b2b:modules/ext.wikispeech.player.js:20:265",
+          "wikimedia:Ie924be46f18c6600d894a4e43032988c21411b2b:modules/ext.wikispeech.player.js:20:48",
+          "wikimedia:Ie924be46f18c6600d894a4e43032988c21411b2b:modules/ext.wikispeech.player.js:6:112",
+          "wikimedia:Ie9596efe0c39f3b0b67d946ba28b1d5140ea938f:modules/profile/manifests/mediawiki/php.pp:4:379",
+          "wikimedia:Ie9a575e392ea1b3a10cbd65c12e1a826ac00971b:includes/Special/SpecialTemplateSearch.php:7:12",
+          "wikimedia:Iea62818ae0f096f41d412415cb5e0a3e28f66715:resources/ext.wikilambda.app/components/visualeditor/FunctionInputParser.vue:16:10",
+          "wikimedia:Ieb2f37be284d1779d219a176a6d2e4f64f4af28f:includes/Lexicon/LexiconSpeechoidStorage.php:15:107",
+          "wikimedia:Ieb2f37be284d1779d219a176a6d2e4f64f4af28f:includes/Lexicon/LexiconSpeechoidStorage.php:6:104",
+          "wikimedia:Ieb2f37be284d1779d219a176a6d2e4f64f4af28f:includes/Lexicon/LexiconWikiStorage.php:15:275",
+          "wikimedia:Iebe47fff80a0198d371c3d60cbfc6fcea0087ce2:groups/Wikimedia/WikimediaTools.yaml:4:265",
+          "wikimedia:Ieca4e3ed364b1ae8622c3b2c9e5107990261ed8c:app/src/components/SXArticleSearch/SXArticleSearch.snap.js:8:106",
+          "wikimedia:Iecd9925ed821b81e0d27e9e31a3123608ce80581:includes/specials/SpecialMovePage.php:11:593",
+          "wikimedia:Ied7810c49e979a7284d76706fd65edc451421c06:includes/CampaignPageFormatter.php:1:32",
+          "wikimedia:Ieeb02ad875c6932cf594de6585cdda79771f7e50:resources/src/mediawiki.widgets/mw.widgets.MenuTagMultiselectWidget.js:10:51",
+          "wikimedia:If069096e2f8b0a6c363547f23a6b0c4ad90d91b6:cookbooks/sre/hosts/rename.py:2:172",
+          "wikimedia:If147e9322b408ac4593ac27ce5a9e1857b3d2b2c:packages/codex/src/themes/mixins/button.less:3:45",
+          "wikimedia:If33edcdcfea476003ed166483782ad108af7ef8c:repo/includes/Hooks/WikibaseRepoHookRunner.php:18:27",
+          "wikimedia:If8962a6b6a0db92cbac29334ef1efea7dcb7f013:tests/phpunit/unit/includes/language/LanguageCodeTest.php:1:209",
+          "wikimedia:Ifb6471ea50c793992f76293c7b2fd1463829a1b1:tests/phpunit/ResourceLoaderULSModuleTest.php:6:6",
+          "wikimedia:Ifcad42e4c2b117d241b30411255caa14877fea9b:src/Backend/MWOAuthToken.php:2:29",
+          "wikimedia:Ifeb808c65c1d750514b23927fff7e4bd37093da5:resources/ext.wikilambda.app/components/default-view-types/ZObjectToString.vue:4:170",
+          "wikimedia:Iff8c39b6d49e3ce476e026b022613ec08ced37ca:hCaptcha/extension.json:2:45"
+        ],
+        "suspicious": [
+          "wikimedia:I00425e720d15dcd7f513711d65d3e7f63c2ae332:modules/mw.cx.logEvent.js:6:111",
+          "wikimedia:I02104780d3fde60abed1a445f2acfd6da5acf278:modules/ext.wikimediaEvents.createAccount/instrumentation.js:5:22",
+          "wikimedia:I044e2b4fd792069a9cea4a9ab2c0de0d167b1c5e:resources/js/ext.translate.editor.helpers.js:9:737",
+          "wikimedia:I079fb1e661cce759a2f5380035ca36944f048e40:hql/geoeditors/geoeditors_edits_monthly.hql:1:27",
+          "wikimedia:I10101c8b928a1236eeb4d338ad16a1cd3db44bed:includes/session/MultiBackendSessionStore.php:57:107",
+          "wikimedia:I10d4c8d9838a94bbdc3f35cc8961f15f957d6b54:repo/includes/Hooks/WikibaseRepoHookRunner.php:8:23",
+          "wikimedia:I12f03a6573461b46ea46cb8b6712cf7a9cfa7525:cookbooks/sre/k8s/pool-depool-cluster.py:5:124",
+          "wikimedia:I14438c53958c4dc52f13a16cafd4036193b6c9fd:tests/phpunit/integration/GlobalPreferencesFactoryTest.php:10:153",
+          "wikimedia:I1547e505eab51bb683fb169646ca25af0f2cedb2:libs/foreign/jstree/jstree.js:12:7",
+          "wikimedia:I16b309935c3d29c3cde4459b5e36abce063a8534:includes/Notifications/Notifications.php:5:38",
+          "wikimedia:I16f962fbb658702cf2476b4813836e96e55c4931:src/MediaWiki/Content/EntitySchemaSlotViewRenderer.php:5:350",
+          "wikimedia:I183c50b6feba1bfbde12d4c1634605afdecec5b4:includes/skins/SkinTemplate.php:2:811",
+          "wikimedia:I1b76a6d698ff60215a4871a3a9b627dceae8ced6:messagegroups/AggregateMessageGroup.php:9:183",
+          "wikimedia:I1bd68657f171bc862ea28eaca269dc9abf3183f3:includes/ExperimentsHooks.php:1:21",
+          "wikimedia:I216f3b570454883f16781312236a4977c3fca65d:includes/logging/LogEventsList.php:13:296",
+          "wikimedia:I216f3b570454883f16781312236a4977c3fca65d:tests/phpunit/includes/specials/SpecialLogTest.php:7:128",
+          "wikimedia:I224ebd2193315963c869fafa59c56e4a5734b0f1:includes/MediaWikiEventIngress/PageEventIngress.php:12:15",
+          "wikimedia:I2715f3367cbf3d5bcdeeeea6f0c27211ec8e8c46:resources/src/mediawiki.rcfilters/ui/FilterTagMultiselectWidget.js:2:350",
+          "wikimedia:I27763811b01e404f67e09fc0fc1988cb64c5ea8d:modules/profile/manifests/cache/base.pp:3:37",
+          "wikimedia:I2c378df5497cbc21f3a79b7030aea21014a49e90:includes/Lexicon/ConfiguredLexiconStorage.php:23:111",
+          "wikimedia:I2c378df5497cbc21f3a79b7030aea21014a49e90:includes/Lexicon/LexiconHandler.php:30:171",
+          "wikimedia:I2cd1fb56d9e5d56ee0f2a50fec7c95da0feb1292:includes/Hooks.php:4:247",
+          "wikimedia:I2ce1a82f3fbb3cf18aa2d17986d46dbdcc70c761:includes/block/AbstractBlock.php:3:79",
+          "wikimedia:I3061699a62ec1cfac9b3ba9d72fb6e5ae784126f:modules/profile/files/cache/haproxy/tests/run.py:8:128",
+          "wikimedia:I3061699a62ec1cfac9b3ba9d72fb6e5ae784126f:modules/profile/files/cache/haproxy/tests/run.py:8:167",
+          "wikimedia:I340c599d61f8b3202c70dd210b1016dd9f59493e:tests/phpunit/integration/Services/CheckUserTemporaryAccountsByIPLookupTest.php:9:78",
+          "wikimedia:I37e06181199fcf1a3c87f6e9f34739afa4d801f0:ServiceWiring.php:7:1154",
+          "wikimedia:I3dc8cedcd424fb5aaaebd0ea19c7a765c6b0e77d:includes/InputTextValidator.php:9:10",
+          "wikimedia:I3e0df790ff9db2fa630f82408a7254a359fe61ca:includes/installer/WebInstaller.php:4:674",
+          "wikimedia:I4304163b629fe55ef950b2979d7cfe1d53f2419a:tests/selenium/specs/saveandpreview.js:17:132",
+          "wikimedia:I4b3526ce0959d82516a09f579a3e40e96b765b0a:includes/MainConfigSchema.php:16:3938",
+          "wikimedia:I4b3526ce0959d82516a09f579a3e40e96b765b0a:includes/session/SessionManager.php:62:227",
+          "wikimedia:I4b3526ce0959d82516a09f579a3e40e96b765b0a:includes/session/SessionManager.php:8:176",
+          "wikimedia:I4c0d76839b03154bcaa11fb3fe06be9e3b68ee42:src/Html2Wt/WikitextSerializer.php:7:347",
+          "wikimedia:I4ebfa36d337453eb30cd45f26fe1199a8309f76b:wmf-config/ext-EventStreamConfig.php:3:1876",
+          "wikimedia:I4ec980ddbff3548fdd59b508e1bd62411772f781:hieradata/role/common/titan.yaml:1:53",
+          "wikimedia:I519201470e2a0256de7d8c83fa78dc5a6f38815e:includes/Mentorship/Hooks/MentorHooks.php:16:367",
+          "wikimedia:I5633820a317a5d425ab236f5d1afd7009c812570:repo/resources/wikibase.wbui2025/wikibase.wbui2025.snakValue.less:5:41",
+          "wikimedia:I565a58947fdf6b24db7a1cd1bddc2a98d0d10d18:modules/ve-cite/ve.ui.MWReferenceContextItem.js:10:132",
+          "wikimedia:I567b8a9e3b3c92a37d43e07f71a8157e21366b1a:includes/ZObjectSecondaryDataUpdate.php:1:47",
+          "wikimedia:I56f1fc896c61d00d4d97ff4e32159270018c9919:src/MessageGroupProcessing/AggregateGroupManager.php:7:91",
+          "wikimedia:I58db3e7f70333f0a7b101ded8155fbce8ba247ca:includes/Utterance/FlushUtterancesByExpirationDateOnFileJob.php:2:28",
+          "wikimedia:I5bf61f802267f965c224542af62a7c46dfbe5f8b:src/TranslatorInterface/TranslateEditAddons.php:1:154",
+          "wikimedia:I5f22cda7aef8cccbb2122b8ecbb2c92ffdddcc64:packages/codex/src/components/field/Field.vue:3:45",
+          "wikimedia:I663f609d211e2aac7e9d01f4bb6ac21a80fedd01:packages/codex-docs/component-demos/text-area/examples/TextAreaNativeValidation.vue:8:15",
+          "wikimedia:I686f77baea33ea2852c546e30e9cc08618d44321:includes/language/Language.php:3:4458",
+          "wikimedia:I6ce5f1787aa7bbb903014a7143487fcd7ff1be3d:includes/LevelingUp/LevelingUpHooks.php:18:90",
+          "wikimedia:I6e9908f22979b56bbb2d9344cb71047f9addbc3f:includes/Auth/CaptchaPreAuthenticationProvider.php:1:95",
+          "wikimedia:I6f5cb19720953167cb0c05b2f55be7a45d9035dc:packages/codex/src/components-wip/popover/Popover.test.ts:7:28",
+          "wikimedia:I700c27fb437d253eec0c399546681c50af7b3cb3:resources/src/mediawiki.less/mediawiki.skin.defaults.less:4:58",
+          "wikimedia:I717fdfa877d1cace96fb9528d4ba2a1be89cec37:repo/rest-api/tests/mocha/helpers/chaiHelper.js:12:109",
+          "wikimedia:I76f20d05a5789284dee56925d3e067e889f9f83c:resources/src/mediawiki.special.block/SpecialBlock.vue:8:247",
+          "wikimedia:I7a43175eb308acfcf7aaf83370ced6a50bfca98a:modules/profile/templates/hcaptcha/proxy.nginx.conf.erb:3:46",
+          "wikimedia:I7be7f5794a864d9a12c6527323d159e18fdcb6a3:repo/includes/RepoHooks.php:5:1216",
+          "wikimedia:I7c9ad17847df2265c301c1ed3bd8e40b639a6ca8:tests/phpunit/MediaWikiTestCaseTrait.php:1:260",
+          "wikimedia:I80ac6651aeb84d49715c49a539df413c2abc2167:includes/NewcomerTasks/MediaWikiEventIngress/NewcomerMilestoneIngress.php:10:103",
+          "wikimedia:I80ac6651aeb84d49715c49a539df413c2abc2167:tests/phpunit/integration/NewcomerTasks/MediawikiEventSubscribers/NewcomerMilestoneIngressTest.php:24:71",
+          "wikimedia:I82afa647a4eb2c18a20dacdaf68ef76aa0e1d6a1:modules/scap/manifests/master.pp:2:107",
+          "wikimedia:I85bc06364af65bdd5a4e16474ad8a6f644d4f940:includes/libs/filebackend/FileBackendStore.php:3:1340",
+          "wikimedia:I865a8d2293879fec2837dc0d08381cba5b7ec26c:modules/entrypoints/styles/ext.cx.entrypoints.recenttranslation.less:3:32",
+          "wikimedia:I87ad8f16efa409a24bceed4b8d46661382bb48d4:src/dm/ve.dm.Change.js:1:181",
+          "wikimedia:I89591c51ad4647c1241a69268c997f651140341e:src/Logging/TemporaryAccountLogger.php:13:141",
+          "wikimedia:I89d0316c7198704a0e093452cb5bcd483b577b90:helmfile.d/dse-k8s-services/airflow-wmde/helmfile.yaml:2:33",
+          "wikimedia:I89da3bc26a407562304e403be83b4d94a7e52fd1:lib/packages/wikibase/data-model-services/src/Lookup/EntityAccessLimitException.php:2:18",
+          "wikimedia:I89da3bc26a407562304e403be83b4d94a7e52fd1:lib/packages/wikibase/data-model-services/src/Lookup/RestrictedEntityLookup.php:2:55",
+          "wikimedia:I8cba294e290a20d0f2222ba508188ee8ff98e26d:cookbooks/sre/k8s/roll-reimage-nodes.py:10:81",
+          "wikimedia:I8e5b26947ca4fa732294aad36bac76faf5d52cb2:tests/phpunit/includes/language/LeximorphFactoryTest.php:7:158",
+          "wikimedia:I911c9ab2739fe149ba54a094888d22ed139dd117:client/includes/Hooks/WikibaseClientHookRunner.php:5:87",
+          "wikimedia:I92a7d97e3269b93f8aa455c4e8d971cc47115e24:tests/phpunit/integration/HookHandler/PageDisplayTest.php:11:273",
+          "wikimedia:I94303f7cd40620d40e26e2d03fc7165c9b39e282:recommendation/recommenders/popular_recommender.py:9:41",
+          "wikimedia:I94aa28a3ceaae54013290d84afc218aee6e50473:includes/JCCache.php:1:14",
+          "wikimedia:I9521bb15757f8ee39298b10f95f7e1f493b26a92:src/FrontendModules/EventContributionsModule.php:1:42",
+          "wikimedia:I95c6e58cb810737fd40f262ef4041d6271a1181e:recommendation/recommenders/popular_recommender.py:2:42",
+          "wikimedia:I974c4d92c5281067d53bb3bdc94eb0e290b7cadb:includes/linker/UserLinkRenderer.php:1:45",
+          "wikimedia:I9a451bdd8bc2169eddc546c409defe1c533f459c:charts/miscweb/values.yaml:1:34",
+          "wikimedia:I9a9b81a52b3f2b6bff5629d6ec55e1d5ac723760:packages/codex-docs/docs/public/favicon.svg:1:2",
+          "wikimedia:I9f4dd53b791af0b152fba5259813c23bd7dc8ba9:eventutilities/src/main/java/org/wikimedia/eventutilities/core/event/EventUtilitiesConfig.java:2:188",
+          "wikimedia:I9f7953fa7f1346a1be82bcf4a9f9c4cd6943f8a4:src/GlobalContributions/GlobalContributionsPager.php:8:169",
+          "wikimedia:Ia032025f92f1c3cc0d62a0f45925dddba93fb42f:includes/ApiDiscussionToolsThank.php:4:78",
+          "wikimedia:Ia2638e3e692ce5ec3b805384c388d1a7786b8a31:includes/parser/ContentHolder.php:10:164",
+          "wikimedia:Ia3b4fc83b3b74eac939251bad9272d910a967e10:resources/src/mediawiki.special.block/components/BlockLog.vue:1:35",
+          "wikimedia:Ia48fcf45527c9d7a8c3a9dfcb591be9e3dc7a5fd:src/GlobalContributions/CheckUserGlobalContributionsLookup.php:24:135",
+          "wikimedia:Ia4b27e4e15973a061a32bc50286e506a340cd39c:editcheck/modules/EditCheckDialog.js:3:162",
+          "wikimedia:Ia89896d0603b8251e24aa0be0b4433b172305c40:minT/src/ViewTranslationPage.vue:1:466",
+          "wikimedia:Iaa6d7a0de3a825937729aa3ae399adeb74ebc9d0:includes/pager/CodexTablePager.php:4:105",
+          "wikimedia:Ib1ccd5dcddbdb55b81d992460b7a738276d1f992:packages/codex/src/components/info-chip/InfoChip.vue:7:94",
+          "wikimedia:Ib286138463f94f54b38dc57c5ad6f3ba3fbd5ff1:maintenance/dropUnusedTables.php:4:5",
+          "wikimedia:Ib44fcdeaad75ce6a9a9a38ba809c4c234f6db085:drupal/sites/default/civicrm/extensions/wmf-thankyou/tests/phpunit/Civi/Api4/ThankYouTest.php:1:566",
+          "wikimedia:Ib490666ffa4bf87234abf156bd5ae1a5ad9282db:tests/phpunit/integration/maintenance/UpdateMetricsTest.php:1:32",
+          "wikimedia:Ib5d4913b384cb86ec7066f5788c4fb9d3dce10a7:includes/libs/http/MultiHttpClient.php:1:282",
+          "wikimedia:Ib99a203e7e735ccfedd104e68209c4a5f93ad201:client/includes/Hooks/WikibaseClientHookRunner.php:5:77",
+          "wikimedia:Iba79d2725f3fef0cc11eabcecf5f074cb746b76a:includes/MainConfigSchema.php:5:10240",
+          "wikimedia:Ibac90bb7c565cca6f0ed7efa95a284850ce0c393:tests/phpunit/integration/Services/CheckUserInsertTest.php:21:490",
+          "wikimedia:Ic1bc800c4eec4bacca8f43e231f4be970578fa98:repo/domains/search/src/RouteHandlers/RestfulSearchNotAvailableRouteHandler.php:9:16",
+          "wikimedia:Ic2e838f6f96e0ade423c918060fa02247c46ca84:includes/JCCache.php:10:57",
+          "wikimedia:Ic3b43bd40929fa2701f0bb775f16f85d1414d0e9:images/flink/flink-kubernetes-operator/Dockerfile.template:3:116",
+          "wikimedia:Ic6b273c5271de223b8b79a46f271d0396dfcef54:modules/ext.templateDataGenerator.editTemplatePage/widgets/ParamWidget.js:1:8",
+          "wikimedia:Ic7c389f93cc9401bc2a61a8617b5748dd47d4087:includes/Api/ApiRequestPauseRecurring.php:14:9",
+          "wikimedia:Ica5529d1d1dfd9ebaa8951815e5db5a33c45b37a:includes/Service/SectionPositionCalculator.php:4:137",
+          "wikimedia:Icc151fc2bf32df044d85bf8aa89e843b0c0bf25f:tests/phpunit/includes/api/ApiUploadTest.php:2:339",
+          "wikimedia:Iccdd0148cdc9f8abdf706be0ba70bf7986a93581:includes/AbuseFilterPermissionManager.php:26:106",
+          "wikimedia:Ice9e7b587c6be1124ff21b74fad2c56efb123d66:src/Special/SpecialCancelEventRegistration.php:1:107",
+          "wikimedia:Ice9e7b587c6be1124ff21b74fad2c56efb123d66:src/Special/SpecialRegisterForEvent.php:1:295",
+          "wikimedia:Icecae3235a7cb478f717bd7852c57952821fdbe5:src/models/edit_check/model_server/model.py:5:136",
+          "wikimedia:Id2d33d8d98bf9aea5b511bec60bccb7e909eaa09:src/SpecialMathWikibase.php:4:107",
+          "wikimedia:Id3d377003112dbdb613a243dbb27f4fe8f37b1bc:tests/selenium/features/step_definitions/watch_steps.js:5:14",
+          "wikimedia:Id4b5dda37a1b34d30c9196a679c71c1ef8683e21:resources/css/ext.translate.special.aggregategroups.less:3:10",
+          "wikimedia:Id5547d78e0bf9bd24871ebbc8ff1de3236b2443d:lib/mt/MinT.js:2:65",
+          "wikimedia:Id5e7325d69a6de0f4d603e5b188f4ec5e4e01ae8:src/Panel/AsyncBookNavigationTreeContainer.php:4:33",
+          "wikimedia:Id79dcd26821af2cf2ec8cc346fb7ba6863b53466:includes/Revision/RevisionStore.php:6:3075",
+          "wikimedia:Id79dcd26821af2cf2ec8cc346fb7ba6863b53466:includes/Revision/RevisionStore.php:7:3082",
+          "wikimedia:Id8d37d86bbe88f85a43989c9c38c359fcad51a20:includes/recentchanges/RecentChangeStore.php:42:119",
+          "wikimedia:Idca11e9eb6376838910fb1aaa659c054f7c6670a:includes/Service/SectionPositionCalculator.php:3:180",
+          "wikimedia:Ie1d54721a1849619fe9a33b74ad1c231868b1c26:includes/jobqueue/JobQueue.php:14:778",
+          "wikimedia:Ie1f837a3f31473709c92196644e30dcd7c4bcbbc:modules/ext.growthExperiments.StructuredTask.PreEdit/index.js:2:111",
+          "wikimedia:Ie2001796442ee6ba973fdb4b7b1dc7312f802e8d:includes/MainConfigSchema.php:2:5123",
+          "wikimedia:Ie5d9267e26a899222558dd0fc94ce7835725fb72:includes/JCCache.php:4:86",
+          "wikimedia:Iec0925755da198cb7a12804156b9229a9634e585:messagegroups/SubsetMessageGroup.php:3:142",
+          "wikimedia:Iec0925755da198cb7a12804156b9229a9634e585:src/TranslatorInterface/Aid/InsertablesAid.php:3:22",
+          "wikimedia:Iec0925755da198cb7a12804156b9229a9634e585:src/TranslatorInterface/Aid/TranslationAidDataProvider.php:3:38",
+          "wikimedia:Ied9ed72be7bbff6d7f323109bc0043f1aa0f4b70:src/Wt2Html/TT/OnlyInclude.php:12:82",
+          "wikimedia:Ieda2b6275ef5f83484a37d37782bdf27a1eb624d:minT/src/ConfirmTopicPage.vue:2:271",
+          "wikimedia:If20c4ae856d03df13c055ba111dd019dde3dcb7b:includes/api/reports/ApiQueryOldreviewedpages.php:6:118",
+          "wikimedia:If898e0cf90e7478ccd59a2db9bf41eccf5a5e58c:tests/phpunit/structure/BundleSizeTestBase.php:14:41",
+          "wikimedia:Ifc2ed2aacbf5a082667c266a52ce92e47f823ee4:tests/phpunit/integration/CiteTest.php:1:403",
+          "wikimedia:Ifd3987c1b52140f029bf9653cdf626b7a7f7048f:app/src/plugins/ve/components/VisualEditor.vue:5:3",
+          "wikimedia:Iff691a1e3560ed84253a2934c1778519084cf80d:lib/packages/wikibase/data-model-services/src/Lookup/RestrictedEntityLookupFactory.php:2:29"
+        ]
+      }
+    },
+    "dev": {
+      "examples": 747,
+      "clean": 629,
+      "suspicious": 14,
+      "found": 36,
+      "no_eligible_line": 68,
+      "no_reference": 0,
+      "ids": {
+        "found": [
+          "wikimedia:I01cc1328e7807c3e064571be61e966452d872360:includes/user/UserGroupManager.php:6:131",
+          "wikimedia:I0635f920660207c086864f9141399455258bd456:cookbooks/sre/hosts/provision.py:2:179",
+          "wikimedia:I0fa8fb809932d92e7e1149350065832520e6ea55:includes/upload/UploadVerification.php:1:674",
+          "wikimedia:I376304cb81fbba3b6d57d6d0b0eecdb6f3bcb308:repoconfig.yaml:1:1074",
+          "wikimedia:I3876c50cdd1666645d326b20e3e36617bc7decf8:ext/wmf-civicrm/Civi/WMFQueueMessage/AuditMessage.php:1:467",
+          "wikimedia:I41935ecddf4e80769bd54e3403811181a02ce862:includes/frontend/FlaggedRevsUIHooks.php:7:190",
+          "wikimedia:I4cd1e21418675d74d102f3880ef53ae9fda42095:modules/profile/manifests/cache/haproxy.pp:9:271",
+          "wikimedia:I4cd1e21418675d74d102f3880ef53ae9fda42095:modules/profile/manifests/cache/haproxy.pp:9:284",
+          "wikimedia:I59e7d184c8612ae644aa1aaff28ff3cbefae041e:includes/Api/ApiQueryGadgets.php:1:157",
+          "wikimedia:I5ee726c2557225ed0c6fa5ab4ada91a7d858f96a:lib/Config.js:2:247",
+          "wikimedia:I61643ec457be77fd2c6e1dc6e17f6c6f29913912:refinery-job/src/main/scala/org/wikimedia/analytics/refinery/job/mediawikihistory/sql/AllViewsRegistrar.scala:4:50",
+          "wikimedia:I61775e784cfbeffdf01e5c5242e69c4a193d05af:src/GlobalContributions/CheckUserApiRequestAggregator.php:12:59",
+          "wikimedia:I6a6a69643a5167a40563b5e87e17466ff0159949:modules/ceph/spec/classes/ceph_config_spec.rb:2:4",
+          "wikimedia:I6acbad9ff4786219c2cf49f477644fe210f3dba7:hieradata/hosts/es2050.yaml:1:1",
+          "wikimedia:I70b9f69ec6426d8f1e462592605e8225dabbf234:handlers/edits_per_editor_handler.go:10:64",
+          "wikimedia:I747ea6b68c0a33dcfd0d614959014f4d8d78fcf5:includes/Query/FullTextSimpleMatchQueryBuilder.php:1:66",
+          "wikimedia:I747ea6b68c0a33dcfd0d614959014f4d8d78fcf5:profiles/FullTextQueryBuilderProfiles.config.php:1:140",
+          "wikimedia:I86b9724bc4aa40a30b08f1c87fe002af11929fcb:modules/profile/templates/analytics/refinery/job/refinery-sqoop-wikifunctions-production.sh.erb:1:15",
+          "wikimedia:I8ad22367bedb443b46b0602ef69508748348df3c:profiles/PhraseSuggesterProfiles.config.php:1:127",
+          "wikimedia:I8d6262c9fb7299257b3e913b966da41273cbbf8f:extension.json:5:189",
+          "wikimedia:I970ca10776bd9f35b4ccfcbe952f291d6d675a06:modules/varnish/files/tests/upload/21-maps.vtc:1:44",
+          "wikimedia:I98cb05f072653da89b905d4310dd7d5cbe1ead8e:charts/opensearch-cluster/templates/networkpolicy_wmf.yaml:39:4",
+          "wikimedia:I9a58d5840f4e9b73b4354bb0e4aa121e3fcc14b4:tests/phpunit/ReadingListsTestHelperTrait.php:9:140",
+          "wikimedia:I9ee2e8a72aa5c9808c58d808e6284f5be27c742f:lib/i18n/qqq.json:2:173",
+          "wikimedia:Ia70cee63ab2f524887b40ab5539edfc502a64ba7:templates/wmnet:1:35",
+          "wikimedia:Ib12165640e4afe254f58327bfd996e81e18e0162:extension.json:1:57",
+          "wikimedia:Ib5c9ba6e54c83afcf144c4dcce2148d96a6a6964:hieradata/role/common/wmcs/db/wikireplicas/dedicated/analytics_multiinstance.yaml:1:2",
+          "wikimedia:Ibde918c3085f645e7ff8bf952707c98c6bcbee64:src/NodeData/DataMw.php:8:223",
+          "wikimedia:Ibe0e32f657a61da96b7ba42ea2de23403894c721:includes/specials/SpecialPollAjaxUpload.php:3:237",
+          "wikimedia:Ice8d588eaf5e582c578eb459e2a81361bd96fb77:manifests/site.pp:1:1510",
+          "wikimedia:Id5bb1e996ec56c56ad09c848bd85dc346ba3750d:languages/i18n/en.json:4:999",
+          "wikimedia:Ideb9784b48568e1d2eb9ed8145ff133499477722:includes/search/SearchMySQL.php:1:314",
+          "wikimedia:Ie53620616bdeeac8b96f738304dcb8e10cc9dd20:RELEASE-NOTES-1.45:4:510",
+          "wikimedia:Ie8ebc648a979b0cde0d702906aab3dc8f0d65f13:wmf-config/CommonSettings.php:2:4019",
+          "wikimedia:Ifc85e1a8f564c937d66e008a370fa9f9717333ef:cookbooks/sre/k8s/__init__.py:5:210",
+          "wikimedia:Iff2b2d36ac328d7a02bf5c1a8fdbb7f968e4a8db:includes/ZObjectUtils.php:3:1103"
+        ],
+        "suspicious": [
+          "wikimedia:I3a25669ba83f97c2ccf2bef156d60cd214fa646c:includes/media/FormatMetadata.php:1:955",
+          "wikimedia:I41935ecddf4e80769bd54e3403811181a02ce862:includes/frontend/FlaggedRevsUIHooks.php:1:178",
+          "wikimedia:I457160254652da63fab7b915771cfee9d486073c:src/Wt2Html/TT/TokenStreamPatcher.php:1:474",
+          "wikimedia:I4c49acb6f02a19c8c0c705c196f98c98923db60b:minT/src/ConfirmTopicPage.vue:5:397",
+          "wikimedia:I7c9a9ab2e1ce6ce27d64904671a3da76d7f2b8bc:includes/specials/SpecialUserRights.php:3:882",
+          "wikimedia:I968397e9e735134108b05685a5919095f0f0c3a7:includes/Query/DateRangeFeature.php:1:90",
+          "wikimedia:Ia83f08577ee49d5867689ae945b3280e4ad8f7f6:scripts/misspelling.py:2:196",
+          "wikimedia:Ib0492135a568e0fc2e9f140a9e2579bcaae08505:tests/parser/citeParserTests.txt:12:2104",
+          "wikimedia:Ibab03eaac418b72ab75db4421d0815181c2a1981:ext/wmf-civicrm/Civi/WMFQueueMessage/Message.php:4:985",
+          "wikimedia:Ibe8f0375a58c12c306a0ec333ab411e1231977cf:python/refinery/sqoop.py:1:1323",
+          "wikimedia:Ic40cd95aad746d770e310043384ca9ce5d87b79e:tests/api_tests.py:9:643",
+          "wikimedia:Ic40cd95aad746d770e310043384ca9ce5d87b79e:tests/archivebot_tests.py:9:97",
+          "wikimedia:Id72c08af92a7939ca88f1320a40e3fec30e91860:tests/phpunit/includes/logging/LogEventsListTest.php:5:40",
+          "wikimedia:Idacd91d8bd59b1ecb98e66dcc7da26c7164baa9a:src/HTMLForm/RecoveryCodesTrait.php:3:156"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "VisualEditor/VisualEditor": {
+      "source": "https://gerrit.wikimedia.org/r/VisualEditor/VisualEditor",
+      "branches": 23,
+      "tips": [
+        "4c4d831812f4a55f5ed5cbd0489e6a444aa1c5b0",
+        "5ad7cae15751aa4bbbabe77870c391569dbb5cf0"
+      ],
+      "files": 4445,
+      "lines": 154505
+    },
+    "analytics/gobblin-wmf": {
+      "source": "https://gerrit.wikimedia.org/r/analytics/gobblin-wmf",
+      "branches": 1,
+      "tips": [
+        "524fadef89ab9e67a7fc7ab22ad6cc377cd7d717"
+      ],
+      "files": 47,
+      "lines": 2987
+    },
+    "analytics/refinery": {
+      "source": "https://gerrit.wikimedia.org/r/analytics/refinery",
+      "branches": 3,
+      "tips": [
+        "0e61cb73532abc5ce51ea43fca4904635a937fdb",
+        "494ef55b52848fdac1e294e76cefc2536d5f9a14",
+        "bc0be94a4941edc766117dc6b91167a3ef2e75d7"
+      ],
+      "files": 1506,
+      "lines": 23968
+    },
+    "analytics/refinery/source": {
+      "source": "https://gerrit.wikimedia.org/r/analytics/refinery/source",
+      "branches": 19,
+      "tips": [
+        "04c48dba37bf769dd92f2febbac6a643847319d3",
+        "09fff4512d2efda8957e6d0405e86f4287d4bb75",
+        "2294ef5c584957b084bb81b93f431f7d5451862e",
+        "242bad499d3115d878129742a00ce786e144c0b4",
+        "28c9ee35ceabdd88693f9b82f450fbdd4ca13d7a",
+        "2f57433fff118df830ac3122f7fd205ae97b2b43",
+        "37ff18392fb6ac867505a46b83e377b3f0ffa0ea",
+        "3b04149710ec1d38fd9441f1363a007fc94dd4b8",
+        "a1fd6007cf49a9d4df7f63b4bb8dfe71dadaad63",
+        "ac14622cc3a039264d223293354efc682a1c941f",
+        "b1f03adc9d477bce5c6109cb72bbf01d9e91a986",
+        "cf2593355c223e434d3f11e4906abb26e8df620b",
+        "d1cd4932dd35e9b756467995aa877fa3899e24f8",
+        "d633d6da598428dcd543229b7d9836687dd220cb",
+        "dcbc1791674b56e01485bf36f693ab1ec8f38abf",
+        "e46c2948f2f2ebb8a69f21bba6e95477e66d7ff0",
+        "f69a2dc77e7ec70e860335182fe5ac37dd747595"
+      ],
+      "files": 1551,
+      "lines": 39029
+    },
+    "analytics/wmde/scripts": {
+      "source": "https://gerrit.wikimedia.org/r/analytics/wmde/scripts",
+      "branches": 2,
+      "tips": [
+        "164b3afc90d04e4b47344013e539d4ad40fed129",
+        "bb7be5bff20f9e440e249bbd7d2ebb0179d6c5f8"
+      ],
+      "files": 83,
+      "lines": 1278
+    },
+    "at-ease": {
+      "source": "https://gerrit.wikimedia.org/r/at-ease",
+      "branches": 1,
+      "tips": [
+        "2cc97fe2340d64eb0b106fd3d6d3cb3d2178b586"
+      ],
+      "files": 17,
+      "lines": 490
+    },
+    "bluespice/mw-config/overrides": {
+      "source": "https://gerrit.wikimedia.org/r/bluespice/mw-config/overrides",
+      "branches": 13,
+      "tips": [
+        "5c49b3bc5d8a322ef40a501e9316c7f610dbdd5d",
+        "6ef6eee0fef80a2f805df25474ff192955b30ab7",
+        "6f25cf4e2fd57e6943e404c059d7c642c6d4b95b",
+        "70d37aafa588bff9df1207c4a013625c32d454f4",
+        "8e708b56f5dd3f9ae24537f5a5392187f4d9243c",
+        "c7860ad2f668fd9c5cde77ed63d583d83e339828",
+        "df724cfbdf804b0126afd8982c09f3f761e6f40b"
+      ],
+      "files": 46,
+      "lines": 709
+    },
+    "cloud/wmcs-cookbooks": {
+      "source": "https://gerrit.wikimedia.org/r/cloud/wmcs-cookbooks",
+      "branches": 1,
+      "tips": [
+        "94d4f4183e48e1cc05cc1f15fdceab2ea8f181d7"
+      ],
+      "files": 159,
+      "lines": 9159
+    },
+    "css-sanitizer": {
+      "source": "https://gerrit.wikimedia.org/r/css-sanitizer",
+      "branches": 1,
+      "tips": [
+        "d5e1d99e90022c7c15548854a15910f4a0f6574c"
+      ],
+      "files": 137,
+      "lines": 8854
+    },
+    "data-values/value-view": {
+      "source": "https://gerrit.wikimedia.org/r/data-values/value-view",
+      "branches": 1,
+      "tips": [
+        "ecb3a76489cd822239e103f5dd86687fbb339214"
+      ],
+      "files": 213,
+      "lines": 9821
+    },
+    "design/codex": {
+      "source": "https://gerrit.wikimedia.org/r/design/codex",
+      "branches": 1,
+      "tips": [
+        "eb2ad3464013c8ad1a0d4a63af969d46feacc1c3"
+      ],
+      "files": 1481,
+      "lines": 47488
+    },
+    "design/codex-php": {
+      "source": "https://gerrit.wikimedia.org/r/design/codex-php",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "fresh": {
+      "source": "https://gerrit.wikimedia.org/r/fresh",
+      "branches": 1,
+      "tips": [
+        "3e58c326d7124df9e2303c8ef6abb650379e0c47"
+      ],
+      "files": 15,
+      "lines": 806
+    },
+    "generated-data-platform/aqs/edit-analytics": {
+      "source": "https://gerrit.wikimedia.org/r/generated-data-platform/aqs/edit-analytics",
+      "branches": 1,
+      "tips": [
+        "79e9f8ce8fdc14c72554f9cf1f50b074751ecb50"
+      ],
+      "files": 100,
+      "lines": 3416
+    },
+    "generated-data-platform/aqs/page-analytics": {
+      "source": "https://gerrit.wikimedia.org/r/generated-data-platform/aqs/page-analytics",
+      "branches": 1,
+      "tips": [
+        "62691f3c6340695f2885635d3970b63456f00b96"
+      ],
+      "files": 70,
+      "lines": 2877
+    },
+    "integration/config": {
+      "source": "https://gerrit.wikimedia.org/r/integration/config",
+      "branches": 10,
+      "tips": [
+        "1b2537123fe712da0b957a6d9aeb4b2e6803bba0",
+        "37710586cb8efc728ba59b08fd2a284e5b3cb5dc",
+        "3bb41f317889baf5f9697d0df5368183f00ee0c3",
+        "44fccfb68fb2cbb14864694618fc25c7cab13b7b",
+        "9f9691186d080bc4a7400ccdb6487e67f6d363c7",
+        "a6b4964e37b1c9526eef61937eab98fe4c78dfe3",
+        "ab366d0c0b54d7ee73f01e74c1ee77440ea35828",
+        "e2db93d26b50a0128c1c0a2268c21f9ada34b910",
+        "ec7a94cbeb8eef9da58c290e7411850667aeb7d1"
+      ],
+      "files": 572,
+      "lines": 19564
+    },
+    "integration/docroot": {
+      "source": "https://gerrit.wikimedia.org/r/integration/docroot",
+      "branches": 1,
+      "tips": [
+        "c3352dd7bc1f1273bb9ad17b3fce1e58777c2af7"
+      ],
+      "files": 82,
+      "lines": 5415
+    },
+    "integration/quibble": {
+      "source": "https://gerrit.wikimedia.org/r/integration/quibble",
+      "branches": 2,
+      "tips": [
+        "76094ad46e0a3935103414b3dbbe6d07d6505568"
+      ],
+      "files": 66,
+      "lines": 4289
+    },
+    "integration/visualdiff": {
+      "source": "https://gerrit.wikimedia.org/r/integration/visualdiff",
+      "branches": 5,
+      "tips": [
+        "16c8a10fb65652302f0d34ee62620fa358691b11",
+        "3715663e6f083f95e3b19f38cdd600284e73f9f5",
+        "460da6092eab649ee03bdda682ca61bf5f87f5fc",
+        "d18774683bb0aa26755f9cbbeb147efb477f66ed",
+        "dbb288ccf6539098e93d38f19486c8f1cbd21fec"
+      ],
+      "files": 4472,
+      "lines": 183154
+    },
+    "labs/private": {
+      "source": "https://gerrit.wikimedia.org/r/labs/private",
+      "branches": 1,
+      "tips": [
+        "a0b8a5a1a7cb84a530745da29c93e1bc03be91a6"
+      ],
+      "files": 456,
+      "lines": 2810
+    },
+    "labs/tools/stewardbots": {
+      "source": "https://gerrit.wikimedia.org/r/labs/tools/stewardbots",
+      "branches": 1,
+      "tips": [
+        "9eaaf4880cfec8750cca0b6adf43e6facef1a928"
+      ],
+      "files": 33,
+      "lines": 2217
+    },
+    "machinelearning/liftwing/inference-services": {
+      "source": "https://gerrit.wikimedia.org/r/machinelearning/liftwing/inference-services",
+      "branches": 11,
+      "tips": [
+        "2297ad6987331c3ea86590c85dfabd1a706436ae",
+        "fde2a4d8f8b6b7118880c9b73cf5e58fef58590c"
+      ],
+      "files": 206,
+      "lines": 5032
+    },
+    "mediawiki/core": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/core",
+      "branches": 13,
+      "tips": [
+        "7aec405724fb2b85d3406b36d6f2263d087aa330",
+        "a4284e58f803da7ef064c42e852cbdc299ffab2b"
+      ],
+      "files": 16287,
+      "lines": 1595719
+    },
+    "mediawiki/extensions/AIEditingAssistant": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/AIEditingAssistant",
+      "branches": 5,
+      "tips": [
+        "8c4ef22e8755d572e018eae86f4ec4d1c7fa2485"
+      ],
+      "files": 1,
+      "lines": 2
+    },
+    "mediawiki/extensions/AbuseFilter": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/AbuseFilter",
+      "branches": 10,
+      "tips": [
+        "57d4fac14760dc092e2f9365d3faa1401067fe03"
+      ],
+      "files": 792,
+      "lines": 80185
+    },
+    "mediawiki/extensions/AdhocTranslation": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/AdhocTranslation",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/ArticlePlaceholder": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ArticlePlaceholder",
+      "branches": 10,
+      "tips": [
+        "05d37f7f79932911d069473339b4d0f9068718ab"
+      ],
+      "files": 191,
+      "lines": 6074
+    },
+    "mediawiki/extensions/ArticleSummaries": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ArticleSummaries",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/Auth_remoteuser": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Auth_remoteuser",
+      "branches": 8,
+      "tips": [
+        "33b7dae3ce20abdd6c28ee474dcb215d85b0b0f4",
+        "90d380823c220ccd57dcec21d16b4703f1d186a7",
+        "bd069acb998fd2dcb74d771e28a3f4d3eb208a1d"
+      ],
+      "files": 68,
+      "lines": 2632
+    },
+    "mediawiki/extensions/AutoCategoriseUploads": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/AutoCategoriseUploads",
+      "branches": 6,
+      "tips": [
+        "5afa6536e12497d2b88d50357d30641c3b370813"
+      ],
+      "files": 58,
+      "lines": 1702
+    },
+    "mediawiki/extensions/AutoModerator": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/AutoModerator",
+      "branches": 10,
+      "tips": [
+        "1bcf912fa0dacdb1581aad8b478c192fee785c56"
+      ],
+      "files": 88,
+      "lines": 4820
+    },
+    "mediawiki/extensions/Babel": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Babel",
+      "branches": 13,
+      "tips": [
+        "22d0fc184b8336cb07ef6cb33833bbf11d71d634",
+        "91b9e304b7b04557339d5b34d426085eea172ebd",
+        "b9d5fe138f30518da74006bc9128fd3eddfc44d0"
+      ],
+      "files": 1045,
+      "lines": 19728
+    },
+    "mediawiki/extensions/BlueSpiceAvatars": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceAvatars",
+      "branches": 14,
+      "tips": [
+        "5539bff78d966b9a4ed2a458be2200104e203964",
+        "8d3f2ab62196af60ddbe562cec3bd8f37e472ad2",
+        "97fea15cf80fb1cb9835b2a397c2f7f22a0bfcfd",
+        "a136a0b98be56d0e4a3dc8fe88811bfaf94be367",
+        "abd81821489dfbcf4b68f3909103bc9600f24b09",
+        "bcdf9dfc5eaf95f91ec022b7a0e708ba173275f3",
+        "d5da0e3e26a78c474a1cbe1cdff73ae867b8bd7d",
+        "e452a38a0cca6b5e302171d7314775790491783b",
+        "f70bb522784f767309273b39d929fc4e82fae200"
+      ],
+      "files": 371,
+      "lines": 5175
+    },
+    "mediawiki/extensions/BlueSpiceBookshelf": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceBookshelf",
+      "branches": 13,
+      "tips": [
+        "15454eea60c7532333d8191a7ebdab51149e649b",
+        "5dbe301d173a70b0b9e21ad54b6ac042ef3264a0",
+        "816cf43167b4603b0a8a38f57d916dd2becbe445",
+        "82ea954ef590116cb72f66c007d704786902cfe8",
+        "8b167a9c49afda1519629a060937f97ab465d29c",
+        "908749783ab2522df6991bef078feb5614217d5b",
+        "cec675c5b1142fdc49363d4b31c7b50ee18314b2",
+        "f30c6a9294c299a4264450600f79bb875934cf6f"
+      ],
+      "files": 1258,
+      "lines": 20062
+    },
+    "mediawiki/extensions/BlueSpiceCategoryManager": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceCategoryManager",
+      "branches": 14,
+      "tips": [
+        "0d9fe3561601f2cdcc7eb623b57f637373fb7822",
+        "37ee6bde632a7eac11d67b0c98c26418c1c7e61a",
+        "3fdd61e8b5b25eeba1089e4c7b9d47571c212493",
+        "756a7521b438eb05540a86f9dd88a4a084d5bf20",
+        "7c3d2b59d1bd792be1890c8d1adc0c45d9ff39ab",
+        "9c156542e015532933329edbae4178885af75ffd",
+        "aaa2c143f3bf82e47b6c6245df34fc80f9eeb8ef",
+        "b5b97ba6423bef3012a2670c17dfccc6451e5116",
+        "dfa33c22cb78d4a07da2d60bebed05fadd8eb635"
+      ],
+      "files": 349,
+      "lines": 3939
+    },
+    "mediawiki/extensions/BlueSpiceChecklist": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceChecklist",
+      "branches": 14,
+      "tips": [
+        "073d239abe357e9ad45ddcd561c08b860cadda9e",
+        "08a6e8c962e3f8cfa4babcd8d1e00906a7413f9c",
+        "0aac8ae66512f0484eb28dc78657b27f6c28b22c",
+        "1b2288d3cae9f9d99573bc2f8edc3811f9746e3a",
+        "2e6696e728decf3617aa01a08c80f13cd3414ab4",
+        "3a522a824829ef09696da7270fc0d4dd3cb0cd3c",
+        "4892cad7108e2f23b6218118e052c9964ca685a3",
+        "95c0c9fb1de2ea7c8b681f0d0144e430247a671f",
+        "e98e531e0ca779b612ca6de4af15521c1942958e"
+      ],
+      "files": 392,
+      "lines": 6273
+    },
+    "mediawiki/extensions/BlueSpiceCustomMenu": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceCustomMenu",
+      "branches": 14,
+      "tips": [
+        "3dcc896480bcfc76c0c508473240c2d8416247bf",
+        "712aa65ed53057985bc363a90bf751fef8decfcd",
+        "76fb236b76f5d6f42dbb2ed332ca28c844d2abe9",
+        "95b5cbc0e53a5a439e5764ea7859c16cfc3cb4db",
+        "abec733480e8c7cfc255288e21e43d9504de8900",
+        "cc9b3e90fef8ae4728f5d7c2c65076dac1a22fbf",
+        "e722db841f28a7595959e2c8a24bac1d00c242e6",
+        "ef7240a3396032b903669a7690ff06452457f61a",
+        "f4767134e8f60bcddf57130aa2985ff1ce65cee7"
+      ],
+      "files": 209,
+      "lines": 3811
+    },
+    "mediawiki/extensions/BlueSpiceDistributionConnector": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceDistributionConnector",
+      "branches": 14,
+      "tips": [
+        "065b43ccce09480e36cc100957fc6c8038cc8326",
+        "1ee6e283fd763a03d7fa444306f75d0d7039dcec",
+        "3425e58711fcc30e0929c7339e54ee5957a1cfba",
+        "45e3766bd6d1632732a5f3dfd5adb70dd9774777",
+        "4f626abf33158e4508ce47def67de28417be8af5",
+        "6e2313f078d48f66cd241ad90acfca7329fbb762",
+        "9a9df7c6a9cb3e2bff7d4083053a67d2ec998b43",
+        "b184fa1426494f7159783623137e740163ecae7b",
+        "b424d5f1410df29b6f05ae41255d49a4a216b74c"
+      ],
+      "files": 700,
+      "lines": 12492
+    },
+    "mediawiki/extensions/BlueSpiceExpiry": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceExpiry",
+      "branches": 13,
+      "tips": [
+        "156f3695bbc88e14538072a8669b3aadd45c7b3e",
+        "1e660453dd4c8bdd596339bef937614283d962d5",
+        "75fab962c9edc4303b40971b6c1ac44fd33e55c0",
+        "930cacb6500c63f74392e387e77ab8cea9978f3d",
+        "b4ea53bff2565ffe0d4c5fc59235b16618b1ba9e",
+        "b69e7f86d3c577c93349ce32116342ad926cee2b",
+        "bf77c4b9ab35228aa1d6c98ca19ae133cc74c4a4",
+        "f58637fdb8644fb743ff9c16dba602089884810a"
+      ],
+      "files": 473,
+      "lines": 7550
+    },
+    "mediawiki/extensions/BlueSpiceExportTables": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceExportTables",
+      "branches": 13,
+      "tips": [
+        "234cc9ece5dca98709ead16fd875e2fff205afd9",
+        "6f30bfce84b994dd45877cd4f07946e762f42539",
+        "70d504902da6a27f98806ef3af5943b46921687e",
+        "7a589315f867508e16e6be009d4c4347664cda09",
+        "819949565154d36001fed915784c009260da5672",
+        "d4cef729e8c1e615a246b7885cdff6bc02b34289",
+        "e5ccef19215f1d463950cd61b16a983640f05dba",
+        "f4e5078e9c1e2b7635e83940126164409a8a3324"
+      ],
+      "files": 160,
+      "lines": 3305
+    },
+    "mediawiki/extensions/BlueSpiceExtendedSearch": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceExtendedSearch",
+      "branches": 15,
+      "tips": [
+        "2add2893f53f1f1d289a4c88f07100602e4406d1",
+        "5a6edf5e65222d6f402da0e05b72010a3e04ff51",
+        "708cf5a095897a2e8b5e2a432c431b9b62196ce5",
+        "75b38d7da2aa3dbd63ce11672d75aa2a9d9d4e5d",
+        "7e31ecb487871d7e958b42e2d23c0cd558a905d3",
+        "911c140dc521ce7e0ea3a599838de78c990ebcd6",
+        "b4409b4c0c35496e6be7655fced36bdd00991321",
+        "df3739c7d820f93682f3582005fbe99b5965bdc2",
+        "e512a1aefd30b37c2e9588290f8afdcdfa5d6391",
+        "ed6cf745c1b0a38289adf46a5dfaf6e2cc47fde0"
+      ],
+      "files": 1261,
+      "lines": 18664
+    },
+    "mediawiki/extensions/BlueSpiceExtendedStatistics": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceExtendedStatistics",
+      "branches": 14,
+      "tips": [
+        "007f880296871e07fdebdd761a67c778a6f9735a",
+        "361fe514df6c752ad34c38977fb690c7b407c4de",
+        "3f2b2170e0d132ea66150ae5aef4e6ce38c55ae3",
+        "4027e1f72ba0d0dac3e7f9c2989c338065573626",
+        "476566b3b5b3dd85c83848b079f1e196815a03df",
+        "7486d072c40248690dc0ae779edaab771fc121bb",
+        "86e32f009203ff4a2d33d1ca337504e9b626c7e3",
+        "90fe039c21f472e0a84b1f9926ea5180e3ca6b63",
+        "cbac4b5c6ed190ab60a27b88909a3b9236c34599"
+      ],
+      "files": 679,
+      "lines": 19856
+    },
+    "mediawiki/extensions/BlueSpiceInsertCategory": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceInsertCategory",
+      "branches": 14,
+      "tips": [
+        "229328357a0c3abf1992fe2405b57f975cebbf95",
+        "36efb0a7ab32f747dfc703ac115d34b0b06e0398",
+        "570f3ac1f27b3e2c13773e1c85773ccd54e070dd",
+        "875764b43a7f534faa30e65c7e4c288452a1925b",
+        "9f42118fad626a9186304cfdb7be9ab6b3e0731c",
+        "abbc907c16abbfc2e3114811658ee5943bae6c43",
+        "c0934b30d4f23154738a9d3d76160b4bce8b867f",
+        "c2e7d9f2af5ef0d7b25de3ae9e6369276f7396a4",
+        "edc15541748b91e344edef0fcf628517a4cca006"
+      ],
+      "files": 380,
+      "lines": 4856
+    },
+    "mediawiki/extensions/BlueSpiceInstanceStatus": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceInstanceStatus",
+      "branches": 9,
+      "tips": [
+        "1ef227b16f38ac839aa0e6b074f463e3be112a96",
+        "6e3fa7b6d152ef98767752776968f10d198d7e03",
+        "c93b69325753ee3dc447833f5c134f68d8c46c0b",
+        "f8dd3847c93b244ce8df5b4fd84c3dc5e34fd4de"
+      ],
+      "files": 80,
+      "lines": 2800
+    },
+    "mediawiki/extensions/BlueSpiceMatomoConnector": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceMatomoConnector",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/BlueSpicePermissionManager": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpicePermissionManager",
+      "branches": 14,
+      "tips": [
+        "0f3fa71d2de96f711b7e23200758055d6a9a6e3e",
+        "5299c9f9e6b76e38bf5e85a7a4a6e668e4fc776c",
+        "5d9cd45db1ee03db2ef400148d818af578f989fd",
+        "92d0d03788e4d60c95f5e1978f60b74d71a9cd4e",
+        "a099cb02f180c9d53d363f36c8216cbbec6d8869",
+        "af02fca5ca86b4ea15d6cc16677b396ec439bd3f",
+        "f00369b037a4672db8c2b51cf4eca278276be776",
+        "f094369a6c361b0f2dde0852a79d802388069aa9",
+        "f304241eb13f6085cc2251e39521bc525012675d"
+      ],
+      "files": 459,
+      "lines": 7059
+    },
+    "mediawiki/extensions/BlueSpiceProDistributionConnector": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceProDistributionConnector",
+      "branches": 11,
+      "tips": [
+        "2edb771f985b42377468869373d343f1d1020281",
+        "89db1b7f0737891ca4ae79c19f4d3b129c71305a",
+        "8f4d99249142373c952aeb98717904aedf618013",
+        "adf6c878ef5729a7449f81ec591fc6e0bc0e25d4",
+        "c4af4b91ac75a5d5f3f64f21e3c6e405f69c4967",
+        "f3a276fee7c340db7724b0947de7335d33e3198f"
+      ],
+      "files": 209,
+      "lines": 2313
+    },
+    "mediawiki/extensions/BlueSpiceRating": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceRating",
+      "branches": 14,
+      "tips": [
+        "0327bf5b775a2bbcfcc35cce7915ab58e3e92bfb",
+        "08015e2916533f45a2326aeced0acf2fec9a0382",
+        "0935519da7ab3b95032e159835b123cb5c1fc9ba",
+        "405de14e03ba25c4cc9e6eb8d598f51bbb847cd8",
+        "4b839ad46b3e29cec7d4acfaf5e3871bbf701dba",
+        "60cc15e76ec1b9ebe5e350ffb188705188da9b8a",
+        "78cbd7085f8a1446d7b2db2a382d1928525a6e46",
+        "91323b89f8502a9e082fdd7fc4e0128efb8288f2",
+        "d3cc4ffa00b6e27ec32e0065507d75c9b5500b77"
+      ],
+      "files": 397,
+      "lines": 6093
+    },
+    "mediawiki/extensions/BlueSpiceReaders": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceReaders",
+      "branches": 14,
+      "tips": [
+        "35ef4c4e5bb758337459c0d9a9edb41fc022012e",
+        "3b566ffacafbbd097c74741a39cdf283077d7201",
+        "556c2a4bf610c3ad7f07b67597dd23877facaadf",
+        "7c0ce1e5215bb0df47f95eb222266fb78fa974d3",
+        "92b6584c184c3fb9f4fb363c449345708154ca8c",
+        "aff2c85673ed84b2aafeb7047c7f1e8564566764",
+        "d7610dac0991580b5abb466e61291390587bfe66",
+        "e860e05d6b09a04cde20379a30398b75ab4924e0",
+        "f1a5ff3d3df15c2134cd5d703b778bbcb819ab48"
+      ],
+      "files": 453,
+      "lines": 4997
+    },
+    "mediawiki/extensions/BlueSpiceReminder": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceReminder",
+      "branches": 13,
+      "tips": [
+        "0d8f07f61b0ffb25acbc4b48ceca47065e51415b",
+        "24a6c804523a42557fb8930cff36656551f0c78c",
+        "25d9c06712edd62f0d787762d28252e9622f309d",
+        "36d58cf31cf93b9dac9c51ff5220f6dce8f94c95",
+        "3c81e2162d121e7914699c1dd2971e318ec16858",
+        "5500555220d41299c1331d2e214d7082a1e8a811",
+        "a16e729059702b9de8acee28910d4405da53bbe4",
+        "af24362f2f38fa834ac1638046b1a91b6942cdad"
+      ],
+      "files": 482,
+      "lines": 8356
+    },
+    "mediawiki/extensions/BlueSpiceSocialProfile": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceSocialProfile",
+      "branches": 13,
+      "tips": [
+        "4b4bd0bf05dabc5c78697a1164647b3e271c84c8",
+        "7c9d29e3ff98de49f6423e368028e4883de1a917",
+        "aead3a559e1233042610ec60bf0e451067dd4b39",
+        "b19ca03d371b8144b678b55f177da3fe44eae8aa",
+        "c528d1d577385624780eeeceb3903a8db2ca0839",
+        "d328a4fac508e6ff47708d209bf39aba4f2b51b8",
+        "f5ed962427c4e41cfdd4c51f4ba828bfc804e456",
+        "febe72171ba078170ecd63393a894bc172a794de"
+      ],
+      "files": 349,
+      "lines": 5383
+    },
+    "mediawiki/extensions/BlueSpiceTranslationTransfer": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceTranslationTransfer",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/BlueSpiceWikiExplorer": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceWikiExplorer",
+      "branches": 13,
+      "tips": [
+        "19e12102fd7f1b6520a80a0e7c2d277371427fad",
+        "2d285e949fe7c1471a725f3bc323224c7a124d38",
+        "7a24a2b21e4542c6268956479e47c35ad33e7577",
+        "9d602c9765e93628bd4702f798349cdcc2a4be7f",
+        "b443cd46c1f7b15a6fb096c5056835c3d60dbe0a",
+        "bce9bdaa05630b555c2f988ef69cbc5fd706ef04",
+        "dcb2ad6c1dc4ac0ddf7f6c863eaeacae12d1b864",
+        "e7e14d5329fa70f54e5b2fc4498a589d3a16a98a"
+      ],
+      "files": 196,
+      "lines": 3803
+    },
+    "mediawiki/extensions/BlueSpiceWikiFarm": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BlueSpiceWikiFarm",
+      "branches": 5,
+      "tips": [
+        "f1aed52371bd28dc0994d5565debd7131cb4711c"
+      ],
+      "files": 1,
+      "lines": 2
+    },
+    "mediawiki/extensions/BounceHandler": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/BounceHandler",
+      "branches": 10,
+      "tips": [
+        "5121ad7f098fdf4f5e050aad39cb24515dc7326e"
+      ],
+      "files": 144,
+      "lines": 3107
+    },
+    "mediawiki/extensions/CampaignEvents": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CampaignEvents",
+      "branches": 10,
+      "tips": [
+        "3b1204bc84eb1cf508cf72130339cfa224831611"
+      ],
+      "files": 462,
+      "lines": 32490
+    },
+    "mediawiki/extensions/Campaigns": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Campaigns",
+      "branches": 11,
+      "tips": [
+        "649c218467491fc090d867495b725acfb86cfe07",
+        "c664343a4c1e1691771ccc7aad293408d9dd131a"
+      ],
+      "files": 237,
+      "lines": 5178
+    },
+    "mediawiki/extensions/Cargo": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Cargo",
+      "branches": 3,
+      "tips": [
+        "5f62d2b82a4cbc02f61b9fa7c837d4658f3ee8e3"
+      ],
+      "files": 454,
+      "lines": 74066
+    },
+    "mediawiki/extensions/CategoryTests": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CategoryTests",
+      "branches": 8,
+      "tips": [
+        "83f209117942416a604935adb5f8718008ab484b",
+        "a878f85c55980c6bdfbc009627f0024fc8517cc9",
+        "b558ac931741b824734291d20b31743ec921cc28"
+      ],
+      "files": 120,
+      "lines": 1998
+    },
+    "mediawiki/extensions/CategoryTree": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CategoryTree",
+      "branches": 10,
+      "tips": [
+        "f6b9e3a473ec1e52fc61269f5de26f78b45f6634"
+      ],
+      "files": 483,
+      "lines": 9604
+    },
+    "mediawiki/extensions/CentralAuth": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CentralAuth",
+      "branches": 17,
+      "tips": [
+        "26234f42618d6878dca982e3599808dd429d71c6",
+        "73b0cae08560983bf0992976e018e64b4dee6981",
+        "75b939126934e869b573a9c3c0e363ccbc5d079c",
+        "a84c98c5502f56e4d01791e28c98641a4c5438a0",
+        "b0e49d7d02cc8b6bfb6ea5b1ee45343f5c5608f2",
+        "baa87c08288a66c158570839bbb59e593dd6f0c6",
+        "dad0f73ac56c64ea152c17c1dfa06ecf5f67f60f",
+        "ffd52c7c7daa59f78369226551932fa59de6dbc9"
+      ],
+      "files": 1794,
+      "lines": 120872
+    },
+    "mediawiki/extensions/CentralNotice": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CentralNotice",
+      "branches": 11,
+      "tips": [
+        "b0a196822c54b931f08b6a8ff403345ad418badb",
+        "f78deb7325f5b504c644e9e564bd988487e1e61c"
+      ],
+      "files": 523,
+      "lines": 48847
+    },
+    "mediawiki/extensions/Chart": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Chart",
+      "branches": 10,
+      "tips": [
+        "95ce12a752bde9117729625599cf337220a12376"
+      ],
+      "files": 37,
+      "lines": 1139
+    },
+    "mediawiki/extensions/CheckUser": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CheckUser",
+      "branches": 10,
+      "tips": [
+        "15321c4b14f8db7c351ed56d0d22d405546b8d5b"
+      ],
+      "files": 746,
+      "lines": 35837
+    },
+    "mediawiki/extensions/CirrusSearch": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CirrusSearch",
+      "branches": 18,
+      "tips": [
+        "11704e692d50276037588689e2b4a1d31f5edbf7",
+        "207d36311b0b8a7291a63413c4ba2d59daaae29e",
+        "64817b3397e27edf7f0b649e9315462e6705fe10",
+        "66c19733aa3b378baf78167aabc26c833536af84",
+        "8dad04fef89754473556f50002060c8d148c3acc",
+        "95c0e599531c139acbfe28829a3ea05034c3c255",
+        "c040a76012196699f8184abce99a07a5a65fc686",
+        "f62e8820d4b69743cdca147589543ed515e625d9"
+      ],
+      "files": 9144,
+      "lines": 88808
+    },
+    "mediawiki/extensions/Cite": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Cite",
+      "branches": 10,
+      "tips": [
+        "94d78fa268dfe7a9117918e0d14bb5c186c1a4ea"
+      ],
+      "files": 793,
+      "lines": 21961
+    },
+    "mediawiki/extensions/Citoid": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Citoid",
+      "branches": 10,
+      "tips": [
+        "67d00f453c4b977e13d674f2edbd64f29b28d2a2"
+      ],
+      "files": 269,
+      "lines": 7488
+    },
+    "mediawiki/extensions/CodeEditor": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CodeEditor",
+      "branches": 10,
+      "tips": [
+        "d3ba6712ab9342c19f742aa79b19f9a84859a119"
+      ],
+      "files": 598,
+      "lines": 75836
+    },
+    "mediawiki/extensions/CodeMirror": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CodeMirror",
+      "branches": 10,
+      "tips": [
+        "cb9a82fa0d7cc1a0c2549c59e8d17dea7763df0a"
+      ],
+      "files": 186,
+      "lines": 31029
+    },
+    "mediawiki/extensions/Cognate": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Cognate",
+      "branches": 11,
+      "tips": [
+        "563e05f5fa45c000bc3573eb0c0be3f869574d3a",
+        "a6c53d7559e214db3f3fe5506a4b1bc061849ad8"
+      ],
+      "files": 116,
+      "lines": 3166
+    },
+    "mediawiki/extensions/CognitiveProcessDesigner": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CognitiveProcessDesigner",
+      "branches": 6,
+      "tips": [
+        "5a272655e58fa70c1c1aff11c4c01f440e352922",
+        "97b736ec091376ce6f7f57faedae7ef6d5a1cfac",
+        "f674a9cea229f24cb4cc994c40645bc327d1c8bf"
+      ],
+      "files": 224,
+      "lines": 25187
+    },
+    "mediawiki/extensions/CollabPads": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CollabPads",
+      "branches": 6,
+      "tips": [
+        "2a1b44c6e3cd5ab789ab76ce98d026c5f6081cc3"
+      ],
+      "files": 1,
+      "lines": 2
+    },
+    "mediawiki/extensions/CommentStreams": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CommentStreams",
+      "branches": 8,
+      "tips": [
+        "0b8981e3c6e58c773bb6cc6131a5f25254b2ac4b",
+        "447064e8c24d7b8f914b1efc1b939436939f0717",
+        "af741f68b82f48910425ac2209aae8abb4532dc4"
+      ],
+      "files": 283,
+      "lines": 9320
+    },
+    "mediawiki/extensions/CommonsMetadata": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CommonsMetadata",
+      "branches": 10,
+      "tips": [
+        "230be510f652b65b1a4ecb6c6d078e087d6ada06"
+      ],
+      "files": 140,
+      "lines": 5741
+    },
+    "mediawiki/extensions/CommunityConfiguration": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CommunityConfiguration",
+      "branches": 10,
+      "tips": [
+        "625f884511df933a68654fbb5d01f3b2bb4ca94e"
+      ],
+      "files": 226,
+      "lines": 10396
+    },
+    "mediawiki/extensions/CommunityRequests": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/CommunityRequests",
+      "branches": 10,
+      "tips": [
+        "d5f75ef4a7b15c3bf03fecefa73318ff3a9e5093"
+      ],
+      "files": 51,
+      "lines": 4301
+    },
+    "mediawiki/extensions/ConfirmAccount": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ConfirmAccount",
+      "branches": 8,
+      "tips": [
+        "32a03710c9b55e5d2391d55822bfa0ddcb5734fa",
+        "6ebba01f63fbeda68ee117b5442ca1ff441bda68",
+        "83ae0c93d7b9629cb30a677761856e76d0d05971"
+      ],
+      "files": 652,
+      "lines": 26912
+    },
+    "mediawiki/extensions/ConfirmEdit": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ConfirmEdit",
+      "branches": 10,
+      "tips": [
+        "bac39ab8fea839ea1e6b0aa3f7c0562367274222"
+      ],
+      "files": 1048,
+      "lines": 11591
+    },
+    "mediawiki/extensions/ContactPage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ContactPage",
+      "branches": 10,
+      "tips": [
+        "03a2581e73c0ebc996093cf9c3e562a9ca97609f"
+      ],
+      "files": 434,
+      "lines": 6217
+    },
+    "mediawiki/extensions/ContentProvisioning": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ContentProvisioning",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/ContentTranslation": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ContentTranslation",
+      "branches": 12,
+      "tips": [
+        "59bec18cfc65cfb74daa71e717d93a66f92fd724",
+        "f794c384b21c77814f2c8c4847461cf8b5303135"
+      ],
+      "files": 1472,
+      "lines": 103660
+    },
+    "mediawiki/extensions/DiscussionTools": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/DiscussionTools",
+      "branches": 10,
+      "tips": [
+        "0b2989114eeadd3c800f9300deb91cfb69b77177"
+      ],
+      "files": 962,
+      "lines": 85327
+    },
+    "mediawiki/extensions/DonationInterface": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/DonationInterface",
+      "branches": 21,
+      "tips": [
+        "01f5e9913fd8a74b5b66001a052b66e119da6541",
+        "025d1c844d294dcc64d509ffff52380811f359e4",
+        "2ee2509ce4d4ac3d3c9fb7c170ca6bda36c551c5",
+        "34dd2fd6a22014fd4ff9a33ef8535da16677e2e9",
+        "4b31ba624610f244f6fccdcb6ee375a55eae4bb6",
+        "5b80468bf9ceaa19ffede6a3e48b78eb6e831918",
+        "5e1cade540fd696976992b2cb519790f3c5ac70c",
+        "8d88e272b41711646f87d32a0f620ca409d2a420",
+        "cd3e0309773abd49bdca81bf0d79452b787475d0",
+        "fdf7e21b143ce6cfe5f0276bdaaf7a68702da89e"
+      ],
+      "files": 3804,
+      "lines": 236495
+    },
+    "mediawiki/extensions/DrawioEditor": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/DrawioEditor",
+      "branches": 6,
+      "tips": [
+        "219ef7e069b5e1419efe08ab6dfe2bc63894ff34",
+        "7d21cf463c735a095258afc7d6c6616119fb608d"
+      ],
+      "files": 108,
+      "lines": 3117
+    },
+    "mediawiki/extensions/Echo": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Echo",
+      "branches": 12,
+      "tips": [
+        "2eb264770bbc3d1a9e0cbeda837c430f8bc7e5d0",
+        "4b472dd9f20b4677232fd18c9f58645aee850a4b",
+        "c82b58aff117991f8045b6aeca646287de0d253a"
+      ],
+      "files": 1545,
+      "lines": 63829
+    },
+    "mediawiki/extensions/EditNotify": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/EditNotify",
+      "branches": 6,
+      "tips": [
+        "ffc2e307eefab9ef3d8543bae8375af1026a4d21"
+      ],
+      "files": 49,
+      "lines": 2537
+    },
+    "mediawiki/extensions/EmailAuth": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/EmailAuth",
+      "branches": 10,
+      "tips": [
+        "95a8279d463acdf560068915f55c58beb1a7b786"
+      ],
+      "files": 54,
+      "lines": 1911
+    },
+    "mediawiki/extensions/EnhancedStandardUIs": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/EnhancedStandardUIs",
+      "branches": 7,
+      "tips": [
+        "6a212f4d7d0fe1611c4a2d1b80e98febac199edb",
+        "77f932b51ecaee5f0002bb88c8f6e65121732068",
+        "a6f18553a45571e6ac35f5c5ba827944a5ed7c40"
+      ],
+      "files": 124,
+      "lines": 5593
+    },
+    "mediawiki/extensions/EnhancedUpload": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/EnhancedUpload",
+      "branches": 8,
+      "tips": [
+        "0bafbbf73bde62eb17cc8cae5eb95cd5d9a2f807",
+        "64e71e959ac01fe6981f6ece5cb290e9c914627a",
+        "c5c62a0a02b137e526577ce47534cd46609ff2eb"
+      ],
+      "files": 255,
+      "lines": 7367
+    },
+    "mediawiki/extensions/EntitySchema": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/EntitySchema",
+      "branches": 10,
+      "tips": [
+        "04fe4b3629c4fe1d94164ef9e34e76e48ece4c39"
+      ],
+      "files": 306,
+      "lines": 11871
+    },
+    "mediawiki/extensions/EventBus": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/EventBus",
+      "branches": 10,
+      "tips": [
+        "79790fdff075c7fa0e4a359e6f359cb35ddfac36"
+      ],
+      "files": 97,
+      "lines": 6219
+    },
+    "mediawiki/extensions/EventLogging": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/EventLogging",
+      "branches": 10,
+      "tips": [
+        "a68f83ee7f320de1ecbe7bb6182127577292ab27"
+      ],
+      "files": 212,
+      "lines": 6933
+    },
+    "mediawiki/extensions/ExtensionDistributor": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ExtensionDistributor",
+      "branches": 10,
+      "tips": [
+        "8ac48d9bc6e4e77d40cb528eff3445cb0c0459e9"
+      ],
+      "files": 187,
+      "lines": 4935
+    },
+    "mediawiki/extensions/ExternalData": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ExternalData",
+      "branches": 8,
+      "tips": [
+        "3bd2ec0b1a41d054488801e3018672af0e34b908",
+        "a7c68c0112a3ce3032ac830598cc9b9b63793fdc",
+        "ea6d31bf2863fe22ba8c193d21de2636f4de430b"
+      ],
+      "files": 221,
+      "lines": 40547
+    },
+    "mediawiki/extensions/ExternalGuidance": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ExternalGuidance",
+      "branches": 10,
+      "tips": [
+        "2afc440ddb15dd7bce2454274996d95fc0bab2e6"
+      ],
+      "files": 99,
+      "lines": 4237
+    },
+    "mediawiki/extensions/FeaturedFeeds": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/FeaturedFeeds",
+      "branches": 10,
+      "tips": [
+        "f98b479621ae08c9ac1d89fb4d3aa5e2db3e9c09"
+      ],
+      "files": 208,
+      "lines": 6531
+    },
+    "mediawiki/extensions/FlaggedRevs": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/FlaggedRevs",
+      "branches": 10,
+      "tips": [
+        "22aa271a2589f6478dfe0433c821b5aa6ff1de44"
+      ],
+      "files": 1530,
+      "lines": 38289
+    },
+    "mediawiki/extensions/Flow": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Flow",
+      "branches": 12,
+      "tips": [
+        "42d92316da295662a07dd565f8586e2196106dda",
+        "cddefaf61ab1a655cc2e56092a64a3bd8e76bd5d",
+        "e1d1cc7fbc77630178c8aed9f523982c0aff44e8"
+      ],
+      "files": 1646,
+      "lines": 90652
+    },
+    "mediawiki/extensions/ForcePreview": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ForcePreview",
+      "branches": 8,
+      "tips": [
+        "1b78b7c3f7276549c6cef9ad7c6873ced92de5fa",
+        "3967965f9c0107185386f6a5996dd8617dd57948",
+        "cec471ccf1acad4c7d7550a77dc84beeaf52cde9"
+      ],
+      "files": 90,
+      "lines": 2231
+    },
+    "mediawiki/extensions/FundraiserLandingPage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/FundraiserLandingPage",
+      "branches": 10,
+      "tips": [
+        "47a53d6b2bcd93f879e7dca3875ab8b2ce942bf3"
+      ],
+      "files": 77,
+      "lines": 2159
+    },
+    "mediawiki/extensions/FundraisingEmailUnsubscribe": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/FundraisingEmailUnsubscribe",
+      "branches": 8,
+      "tips": [
+        "647f017c8674ae75d71e6675d289f3507f25e7b6",
+        "8a44aa1db5c21a885cfc1ef1354532c2ced7f6b5",
+        "a8d24bd4f83edb75bc3e3a370e8726c75a6e8931"
+      ],
+      "files": 250,
+      "lines": 6183
+    },
+    "mediawiki/extensions/Gadgets": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Gadgets",
+      "branches": 12,
+      "tips": [
+        "01c8d3bb7ca1f7005e7696ce2e5ac40bcadf55db",
+        "6665aa44ccb2db5b5995ae58c0d4ae9106edb911",
+        "c02976b11f4b83e0e2103e753a2d315d7154477f"
+      ],
+      "files": 542,
+      "lines": 17215
+    },
+    "mediawiki/extensions/GeoCrumbs": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GeoCrumbs",
+      "branches": 10,
+      "tips": [
+        "81836854fe6aa9f90d7543cb69998e58801ae866"
+      ],
+      "files": 64,
+      "lines": 1619
+    },
+    "mediawiki/extensions/GlobalBlocking": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GlobalBlocking",
+      "branches": 10,
+      "tips": [
+        "8981cd22574fc4621cd9afdd56ad476e522890c7"
+      ],
+      "files": 377,
+      "lines": 16647
+    },
+    "mediawiki/extensions/GlobalPreferences": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GlobalPreferences",
+      "branches": 10,
+      "tips": [
+        "3998a5ad7368bb5f0003d17617f584149b5263b8"
+      ],
+      "files": 233,
+      "lines": 5651
+    },
+    "mediawiki/extensions/GlobalUsage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GlobalUsage",
+      "branches": 10,
+      "tips": [
+        "f050ab6679ba22e9f351a118e0b0b50981af8716"
+      ],
+      "files": 505,
+      "lines": 6063
+    },
+    "mediawiki/extensions/GlobalUserPage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GlobalUserPage",
+      "branches": 10,
+      "tips": [
+        "396edcb3a068ee216ad85a569d52e49f722178f6"
+      ],
+      "files": 125,
+      "lines": 3295
+    },
+    "mediawiki/extensions/GoogleDocs4MW": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GoogleDocs4MW",
+      "branches": 8,
+      "tips": [
+        "0193a691a7ce100215db4bd441be1c014b0a2298",
+        "0b4884f17ff1456082307bb514155a7ead08205c",
+        "6e78a10e2bbcfbdf89f96d234f6b11aba7e8d52a"
+      ],
+      "files": 45,
+      "lines": 1545
+    },
+    "mediawiki/extensions/GoogleNewsSitemap": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GoogleNewsSitemap",
+      "branches": 8,
+      "tips": [
+        "805f31a210a6aa6df6a833afb53f8bce8a0acd48"
+      ],
+      "files": 102,
+      "lines": 2638
+    },
+    "mediawiki/extensions/GrowthExperiments": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/GrowthExperiments",
+      "branches": 10,
+      "tips": [
+        "fc06261e0c0207b03ab1ceebcec65f8cfa8e8526"
+      ],
+      "files": 2159,
+      "lines": 125895
+    },
+    "mediawiki/extensions/IPInfo": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/IPInfo",
+      "branches": 10,
+      "tips": [
+        "ae0b047617e1d7dbae790cd2521f9dcaae0d6a8d"
+      ],
+      "files": 226,
+      "lines": 12426
+    },
+    "mediawiki/extensions/IPReputation": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/IPReputation",
+      "branches": 10,
+      "tips": [
+        "15905c132c2c6e14fe7803e8331a8bcf0497e704"
+      ],
+      "files": 32,
+      "lines": 2517
+    },
+    "mediawiki/extensions/ImageMap": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ImageMap",
+      "branches": 10,
+      "tips": [
+        "4e874612c4e37e6776976adeb256edc57d194747"
+      ],
+      "files": 181,
+      "lines": 4311
+    },
+    "mediawiki/extensions/ImportOfficeFiles": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ImportOfficeFiles",
+      "branches": 8,
+      "tips": [
+        "5437ecf00cb0965c9bf3abe8297c75b277a2dfd8",
+        "5c8bcf9bdbd14e6bca94531c862e70ee09c6b9f3",
+        "b5fe7a20581fa5c9b047a300c6020d964d47cbf7"
+      ],
+      "files": 290,
+      "lines": 7194
+    },
+    "mediawiki/extensions/InputBox": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/InputBox",
+      "branches": 10,
+      "tips": [
+        "4653158370b3429292b9fd47030c38a6b3c455e2"
+      ],
+      "files": 392,
+      "lines": 4047
+    },
+    "mediawiki/extensions/JsonConfig": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/JsonConfig",
+      "branches": 10,
+      "tips": [
+        "c5ca164c107a5fcf13c7fca7cd583c39e5fa0fcc"
+      ],
+      "files": 235,
+      "lines": 7993
+    },
+    "mediawiki/extensions/Kartographer": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Kartographer",
+      "branches": 11,
+      "tips": [
+        "50224206286199a062fa2854bc1ae95d020bdcce",
+        "f9dc077f7caa0b8dd305fe229f0f1e0302e47b96"
+      ],
+      "files": 829,
+      "lines": 35441
+    },
+    "mediawiki/extensions/LiquidThreads": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/LiquidThreads",
+      "branches": 11,
+      "tips": [
+        "9ca16d9730e935e0ef26b44a97443daeb9ab3903",
+        "c03b08f9d455551b19767ef2eb0eaf463430e6ed"
+      ],
+      "files": 516,
+      "lines": 60640
+    },
+    "mediawiki/extensions/LoginNotify": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/LoginNotify",
+      "branches": 10,
+      "tips": [
+        "55060a5a352df5966b8fc09c2ce7e117895868f7"
+      ],
+      "files": 148,
+      "lines": 3644
+    },
+    "mediawiki/extensions/MapSources": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MapSources",
+      "branches": 10,
+      "tips": [
+        "198915d49081487337be098f6c6736a8a31ae5e7"
+      ],
+      "files": 102,
+      "lines": 3120
+    },
+    "mediawiki/extensions/MassMessage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MassMessage",
+      "branches": 13,
+      "tips": [
+        "1dd6eab357859e4fbd7227ee414dfccf8b8f7dcc",
+        "75b45ffffa20c6d6ce3ab8842590589abee5bd34",
+        "83b7c456ed009dd93cb16600dcf3637967144d58",
+        "c75fe86c8af54ea3e319c12f7acd44bc16d7dad7"
+      ],
+      "files": 419,
+      "lines": 16406
+    },
+    "mediawiki/extensions/Math": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Math",
+      "branches": 19,
+      "tips": [
+        "0c0686a2f6dc2010a3a11adc535612519f69963b",
+        "2c555baf4f758dc0cbe08893a6bcb5ba79916f98",
+        "33bfafb31373fc6b7d5a574c7eba3281e13f20b9",
+        "3652e8697e28ad86a8eb89fc8372a5207d1934ad",
+        "3d4d166a2f7eb479fb6f0d3c64c2ef20375ee928",
+        "41bc10280a18e78e081289776543558148e8ba32",
+        "94272d2a34e626bf11c7a1d416b9530d5447f91b",
+        "ae5fc8a6f90de34cccc9dce42307fc3a24e89d0b",
+        "b8a6ed97748f29d60dae0c7fc97a54e30b3d5488",
+        "d8ffd95e728c48b8767e9d58acae85a7355564fb"
+      ],
+      "files": 3152,
+      "lines": 144564
+    },
+    "mediawiki/extensions/MathSearch": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MathSearch",
+      "branches": 7,
+      "tips": [
+        "7db84e6e8209927b0b2abc6e1baf8fb281385114",
+        "a4085fefe1728bb5aaa118ed506b204a62aa98a2"
+      ],
+      "files": 273,
+      "lines": 11710
+    },
+    "mediawiki/extensions/MediaModeration": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MediaModeration",
+      "branches": 10,
+      "tips": [
+        "b8602c1d02807028c30094ac97772001aca4dd42"
+      ],
+      "files": 111,
+      "lines": 6081
+    },
+    "mediawiki/extensions/MediaSearch": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MediaSearch",
+      "branches": 10,
+      "tips": [
+        "555cb1a4e93f5ecda171e8c7ea7a32158a55eeff"
+      ],
+      "files": 269,
+      "lines": 17194
+    },
+    "mediawiki/extensions/MetricsPlatform": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MetricsPlatform",
+      "branches": 10,
+      "tips": [
+        "0960a58b43cd6f2beabaaac5c9a16cbf08e69c1d"
+      ],
+      "files": 28,
+      "lines": 2553
+    },
+    "mediawiki/extensions/MobileFrontend": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MobileFrontend",
+      "branches": 16,
+      "tips": [
+        "3a42492957807fcf9e4e5481ce98df195c78e0ec",
+        "5f6922ab55c3bba801f29d61827ed1b66484d451",
+        "7bac0302641ef261a2265438793f2ba8ac1c8632",
+        "8def2a54e5e0ca9b49456677f5c1a581d42d0bbf",
+        "d0405499754ab83490eb0a05f9a75e0f11cfa590",
+        "f40e153d4485f673f3dc8704903add5a67afa17a",
+        "f938390bfff1af37ee62d5e64e4cd463cc9d97ad"
+      ],
+      "files": 3480,
+      "lines": 91205
+    },
+    "mediawiki/extensions/MultimediaViewer": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/MultimediaViewer",
+      "branches": 11,
+      "tips": [
+        "4ba760ae26249d7e93fbe935daeecb1c05790705",
+        "842872df21bb49b1b21bac43ce0ab411b5874a07"
+      ],
+      "files": 305,
+      "lines": 18271
+    },
+    "mediawiki/extensions/NSFileRepo": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/NSFileRepo",
+      "branches": 4,
+      "tips": [
+        "0251849543c14ea157b969388f8c1c5f5263f334",
+        "141c46a5a1e446d58b085b86da385c2398992587"
+      ],
+      "files": 184,
+      "lines": 4112
+    },
+    "mediawiki/extensions/NewestPages": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/NewestPages",
+      "branches": 8,
+      "tips": [
+        "36250bb376f947ba481a97015fc5a7f474015004",
+        "8d63c7147e7dc97cebee892b51d26ca2d706dfe4",
+        "eacef10d946c56808b19b40dfb3ec2cce4577669"
+      ],
+      "files": 207,
+      "lines": 4465
+    },
+    "mediawiki/extensions/Newsletter": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Newsletter",
+      "branches": 10,
+      "tips": [
+        "8ec2611e4c7f040bfc48ee388017a8c57800b2be"
+      ],
+      "files": 238,
+      "lines": 12635
+    },
+    "mediawiki/extensions/NotifyMe": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/NotifyMe",
+      "branches": 6,
+      "tips": [
+        "c87fb0fd7c33104fa45551ad666859153e0fcba0"
+      ],
+      "files": 1,
+      "lines": 2
+    },
+    "mediawiki/extensions/Nuke": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Nuke",
+      "branches": 10,
+      "tips": [
+        "b70c00db875060a5264163698ad73934874b0a81"
+      ],
+      "files": 182,
+      "lines": 5568
+    },
+    "mediawiki/extensions/NukeDPL": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/NukeDPL",
+      "branches": 7,
+      "tips": [
+        "51428d33ef9dc75748b8fed963a725b2b23658e4",
+        "e914ded7bffa397094b78ca82e4f075d02779eb1"
+      ],
+      "files": 66,
+      "lines": 2607
+    },
+    "mediawiki/extensions/OATHAuth": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/OATHAuth",
+      "branches": 11,
+      "tips": [
+        "52f951632467abc7b361e1e8fb5dc011f7eb425c",
+        "fdca46d29e7a36c748329120080f6f21991a382c"
+      ],
+      "files": 348,
+      "lines": 11352
+    },
+    "mediawiki/extensions/OAuth": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/OAuth",
+      "branches": 10,
+      "tips": [
+        "d9de9590617d11513eb3a08a632da4cc637175eb"
+      ],
+      "files": 334,
+      "lines": 23090
+    },
+    "mediawiki/extensions/ORES": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ORES",
+      "branches": 10,
+      "tips": [
+        "c39d80635a2f3c55e1fbc62cd446f500c192419a"
+      ],
+      "files": 240,
+      "lines": 8701
+    },
+    "mediawiki/extensions/PDFCreator": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PDFCreator",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/PageAssessments": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PageAssessments",
+      "branches": 10,
+      "tips": [
+        "e7ac1e944fbeec89c04fa041bbd28317c660b9c1"
+      ],
+      "files": 142,
+      "lines": 3496
+    },
+    "mediawiki/extensions/PageForms": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PageForms",
+      "branches": 10,
+      "tips": [
+        "1fa604d856a1d75ba976448c9ab55d2066774b17",
+        "513167273fbb0c68d6e8daf7f1bfd589279d017f",
+        "548eb86e372098e3f3185a6df3d1bce49b64717b",
+        "9414e6b8791ca867b9efafc68631013ca579c212",
+        "9daa940a3ab138b381ef95b1014f2665a947a7f0"
+      ],
+      "files": 933,
+      "lines": 95058
+    },
+    "mediawiki/extensions/PageImages": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PageImages",
+      "branches": 11,
+      "tips": [
+        "b31bfd8fb23670549f7c13953f71534b791b70d1",
+        "b98389fdc27ed496ae6f5d605a69633079c896a7"
+      ],
+      "files": 159,
+      "lines": 3538
+    },
+    "mediawiki/extensions/PageSchemas": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PageSchemas",
+      "branches": 9,
+      "tips": [
+        "8021112f784690ca2b3d4e33a97a7a8031bb872a",
+        "c2ee07edd0dba64dffe3cff2faf861f67c1025a3",
+        "e4b5b4fd612b909a6eb61ef6246261d7252f1372",
+        "eea9e1419ea9339529403b8289e5fbff51903ab0"
+      ],
+      "files": 217,
+      "lines": 7636
+    },
+    "mediawiki/extensions/PageTriage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PageTriage",
+      "branches": 11,
+      "tips": [
+        "097c56d065ddb13d446c3ca747fd2e7ee1369e8d",
+        "36963d069e48f584a24ac0ee469b90dbff8bf684"
+      ],
+      "files": 513,
+      "lines": 36862
+    },
+    "mediawiki/extensions/PageViewInfo": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PageViewInfo",
+      "branches": 10,
+      "tips": [
+        "9a21483c1e775c21dcc2d85824063df33bb2056e"
+      ],
+      "files": 169,
+      "lines": 3766
+    },
+    "mediawiki/extensions/ParserMigration": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ParserMigration",
+      "branches": 10,
+      "tips": [
+        "650bfb8de7eedf34c6fd37288754d9a2ff9e2e29"
+      ],
+      "files": 145,
+      "lines": 3333
+    },
+    "mediawiki/extensions/PollNY": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PollNY",
+      "branches": 9,
+      "tips": [
+        "0f37ebe12364acf38e619c91849fa8fbe68c772b",
+        "5c440379dc8c49795a07898f8393bdda4db9ec13",
+        "5e371aafd8aba0a70e40ad5d2be6b95b64d2f96c",
+        "b2a27b2c6e1e5d8c3bc29f660054b789a41d3bb7"
+      ],
+      "files": 265,
+      "lines": 9139
+    },
+    "mediawiki/extensions/Popups": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Popups",
+      "branches": 11,
+      "tips": [
+        "a782b7b7dae1df8934035f8df9482c403c912aa2",
+        "e358e385916c82858f4eefce942706a4f84e61ec"
+      ],
+      "files": 625,
+      "lines": 20641
+    },
+    "mediawiki/extensions/Preloader": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Preloader",
+      "branches": 4,
+      "tips": [
+        "1d871fae2f5e581dd5e405726396d473425ba7e4"
+      ],
+      "files": 61,
+      "lines": 324
+    },
+    "mediawiki/extensions/ProofreadPage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ProofreadPage",
+      "branches": 10,
+      "tips": [
+        "96178d8728cec340183e713d707f1a40717d8e3d"
+      ],
+      "files": 697,
+      "lines": 43602
+    },
+    "mediawiki/extensions/PropertySuggester": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/PropertySuggester",
+      "branches": 10,
+      "tips": [
+        "5ce1c8da8a969de48e03624858e5a0d9706b83ee"
+      ],
+      "files": 129,
+      "lines": 3878
+    },
+    "mediawiki/extensions/QuickInstantCommons": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/QuickInstantCommons",
+      "branches": 7,
+      "tips": [
+        "3f895dbcd2c04414a0dc95e10a02b7a0a21567be",
+        "63dbc1497695173a309a6b1efbe08ced228f24d0"
+      ],
+      "files": 65,
+      "lines": 1637
+    },
+    "mediawiki/extensions/QuickSurveys": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/QuickSurveys",
+      "branches": 12,
+      "tips": [
+        "06bb5d8ea691bb1e628e15affb59f000d4f98f5f",
+        "0ac3865fa82b1f65553433463d1fe864d4efaba0",
+        "aebce7006b9b7d2dd96ba2562a5ec9ba9a4b8353"
+      ],
+      "files": 261,
+      "lines": 9703
+    },
+    "mediawiki/extensions/ReaderExperiments": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ReaderExperiments",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/ReadingLists": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ReadingLists",
+      "branches": 10,
+      "tips": [
+        "674ef9831251131225bf16efa3d81916f7e5e9bd"
+      ],
+      "files": 257,
+      "lines": 11441
+    },
+    "mediawiki/extensions/RegexBlock": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/RegexBlock",
+      "branches": 7,
+      "tips": [
+        "2e167f43a0f1d7089ddd8abc40f16e9b729d2293",
+        "cfd1ba36da3a426fe92dd037d1283af2275f6892"
+      ],
+      "files": 230,
+      "lines": 5901
+    },
+    "mediawiki/extensions/RelatedArticles": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/RelatedArticles",
+      "branches": 11,
+      "tips": [
+        "1392810c40e0ad6118980e6412d9cd83e0679f06",
+        "483cf8f2d2126951984d82c49982645416ca97a2"
+      ],
+      "files": 239,
+      "lines": 6304
+    },
+    "mediawiki/extensions/ReplaceText": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ReplaceText",
+      "branches": 8,
+      "tips": [
+        "0948f516232307763add8d2fb97ccd73618deb83",
+        "2d92f94c898f6d707c66eba894d7207a550c79b0",
+        "6e6ace0affeda162a8fc72bac2a32fe102d42972",
+        "904a9aa56d70f63f7a78b6430bb2433f4aeb10af"
+      ],
+      "files": 228,
+      "lines": 10467
+    },
+    "mediawiki/extensions/Report": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Report",
+      "branches": 6,
+      "tips": [
+        "ff34a34be5c2ca3189254e5be77b8d68cab9a683"
+      ],
+      "files": 65,
+      "lines": 3686
+    },
+    "mediawiki/extensions/ReportIncident": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/ReportIncident",
+      "branches": 10,
+      "tips": [
+        "cfff9a7bf7183c2d95303c70e129d66a6e8a484d"
+      ],
+      "files": 103,
+      "lines": 9221
+    },
+    "mediawiki/extensions/RevisionSlider": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/RevisionSlider",
+      "branches": 10,
+      "tips": [
+        "9f996d37e5095c5bc4075ed9a8f53db369a4cf23"
+      ],
+      "files": 198,
+      "lines": 8708
+    },
+    "mediawiki/extensions/Scribunto": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Scribunto",
+      "branches": 12,
+      "tips": [
+        "b1cc0225a9a079c30ab9d1abe03a548112de0465",
+        "db3e79a5352cc890644985ee9c6a74f89f9f04ad",
+        "fa6dd449577772e12c09b29910399a39d6b6809a"
+      ],
+      "files": 592,
+      "lines": 128922
+    },
+    "mediawiki/extensions/SecurePoll": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/SecurePoll",
+      "branches": 10,
+      "tips": [
+        "e60307f95c2728542d472e75537d2101c0cda6b5"
+      ],
+      "files": 472,
+      "lines": 33866
+    },
+    "mediawiki/extensions/SimpleBlogPage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/SimpleBlogPage",
+      "branches": 4,
+      "tips": [
+        "be531f04aff499bf32c1c823a190080879284e53"
+      ],
+      "files": 48,
+      "lines": 2762
+    },
+    "mediawiki/extensions/SpamBlacklist": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/SpamBlacklist",
+      "branches": 10,
+      "tips": [
+        "f3a1e39c31b80eda4bb8a885f78373f1800b92f7"
+      ],
+      "files": 119,
+      "lines": 3578
+    },
+    "mediawiki/extensions/SyntaxHighlight_GeSHi": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/SyntaxHighlight_GeSHi",
+      "branches": 10,
+      "tips": [
+        "16538948aea4c23d5fab9e8ca0a19a2fa8660c3b"
+      ],
+      "files": 170,
+      "lines": 5259
+    },
+    "mediawiki/extensions/TemplateData": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TemplateData",
+      "branches": 10,
+      "tips": [
+        "4ab9e382747296511f89d7f4a2ad24989f5ecddb"
+      ],
+      "files": 299,
+      "lines": 15264
+    },
+    "mediawiki/extensions/TextExtracts": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TextExtracts",
+      "branches": 10,
+      "tips": [
+        "23791622e07acd60e43d32db6bbac833fe879f3c"
+      ],
+      "files": 92,
+      "lines": 2740
+    },
+    "mediawiki/extensions/Thanks": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Thanks",
+      "branches": 10,
+      "tips": [
+        "8f75c66cb0cfc5504d44dbeebb786cb725d8caa8"
+      ],
+      "files": 477,
+      "lines": 9359
+    },
+    "mediawiki/extensions/TheWikipediaLibrary": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TheWikipediaLibrary",
+      "branches": 10,
+      "tips": [
+        "18faea178e3aec038d8b7a6214e7c1a09db3acae"
+      ],
+      "files": 107,
+      "lines": 2114
+    },
+    "mediawiki/extensions/TimedMediaHandler": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TimedMediaHandler",
+      "branches": 10,
+      "tips": [
+        "d16c6aa3c54824e92ad47ce68c77c5ffdb53bf44"
+      ],
+      "files": 558,
+      "lines": 24427
+    },
+    "mediawiki/extensions/TitleIcon": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TitleIcon",
+      "branches": 7,
+      "tips": [
+        "9fea6799d72ea8c36874a50e974c50dd0e99ca54",
+        "be4e16a5ceb064d4d9297356932ecb313e9269da"
+      ],
+      "files": 117,
+      "lines": 2781
+    },
+    "mediawiki/extensions/Translate": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Translate",
+      "branches": 18,
+      "tips": [
+        "0b019d97f3ee0e142c47a9689edfeddd7f370700",
+        "209fbf073dfc330d0fecbc0d19bcf0977389df9e",
+        "58b2ec138642d1cb39c4e48b1cc9a3f7bf044976",
+        "98c92318b2b89a54f901320c5abd4bee16e89750",
+        "b13f0cf024e3c8c9cf4f5515ead107aad608cb03",
+        "cc6de0674b4d8e54c1d1bc0ecfd3ee1ba988a050",
+        "f9332b9dc01f8b96345abe3d6f37bbe427927fb6"
+      ],
+      "files": 5216,
+      "lines": 196014
+    },
+    "mediawiki/extensions/TranslationNotifications": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TranslationNotifications",
+      "branches": 11,
+      "tips": [
+        "3df754e7fb7e81d1614ac976b87155ee4454ddb1",
+        "f06cc036a6728f9b2e6c7b38082c8334f3dd45fc"
+      ],
+      "files": 247,
+      "lines": 11317
+    },
+    "mediawiki/extensions/TwnMainPage": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TwnMainPage",
+      "branches": 7,
+      "tips": [
+        "04c6f613835b8a38c3bc006c2ef3c4fb2147afa5",
+        "8cb06c8f1611c226b553b66691234d9c4045d6ae"
+      ],
+      "files": 382,
+      "lines": 10606
+    },
+    "mediawiki/extensions/TwoColConflict": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/TwoColConflict",
+      "branches": 10,
+      "tips": [
+        "1371e76f87c40a17b37de95c869a01d5741dfb97"
+      ],
+      "files": 205,
+      "lines": 10835
+    },
+    "mediawiki/extensions/UniversalLanguageSelector": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/UniversalLanguageSelector",
+      "branches": 14,
+      "tips": [
+        "4fa58fe36b6815bbc05cb6cd105f8e40ec8cbdab",
+        "73e0109d8073edebad23cca461ef2fabdfa0cd4f",
+        "852fd22c4157a0bfdf2777d6c615c4a56bb4f37e",
+        "896cb9be6eae050b3eed04fda5794cafe4d3e440",
+        "f3cf47705219b94c209464dbd3f45c128e702b69"
+      ],
+      "files": 2421,
+      "lines": 82624
+    },
+    "mediawiki/extensions/UnlinkedWikibase": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/UnlinkedWikibase",
+      "branches": 6,
+      "tips": [
+        "e9a301f24d9d13ac58b9d94fdc36b85dc065b62c"
+      ],
+      "files": 24,
+      "lines": 2274
+    },
+    "mediawiki/extensions/UploadWizard": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/UploadWizard",
+      "branches": 20,
+      "tips": [
+        "058bcec87397d26e30781e35547e8e5b51725969",
+        "29f4b704ebe8df10b501ed1fd4820e9c26e6a716",
+        "51ca24d2f95b5aa4a0bc38d9761776bc8c9ba444",
+        "76e700fd751c1792f5fd09a8d005693207f22cf7",
+        "9dd5bdab89c82e54ac1f1e0de16181aeadde77a4",
+        "9e70e08fd1c88a9158eb9681a423d416ebdae23f",
+        "af6e9cb5943b9c2ee55418d722852003d7c39293",
+        "caa64118ce6b4cd261fcb039eb0a77eef0182aa8",
+        "e13538f3268a9ca82b2818dce02c95c4161ea7f6",
+        "e82a924da4e3a4b7de5b8453f1dd2b51dd92dddc",
+        "efa1af33bb5be3f4cb8d47b78370f7b74d5fddc2"
+      ],
+      "files": 1837,
+      "lines": 123593
+    },
+    "mediawiki/extensions/UrlShortener": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/UrlShortener",
+      "branches": 10,
+      "tips": [
+        "5c0d9e77830f1d08f1d817b5636f2fdfa362bc04"
+      ],
+      "files": 320,
+      "lines": 7120
+    },
+    "mediawiki/extensions/UserProfile": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/UserProfile",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/VisualEditor": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/VisualEditor",
+      "branches": 12,
+      "tips": [
+        "48c4dfd59e3b48c8a0ad2f937fae33c70d4ac7ec",
+        "a9c91ac78f0f036c3297ad0ca7108e3b0298c115",
+        "e59420fedd82e4aaed730da2b62b53be609e6164"
+      ],
+      "files": 2740,
+      "lines": 122375
+    },
+    "mediawiki/extensions/WP25EasterEggs": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WP25EasterEggs",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/WSOAuth": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WSOAuth",
+      "branches": 7,
+      "tips": [
+        "8c22b332d42167a85210b5a2416eb9811ff23390",
+        "fb4870f635d9ee6c634d71e7f419d62fea90826d"
+      ],
+      "files": 76,
+      "lines": 2775
+    },
+    "mediawiki/extensions/Wanda": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Wanda",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/extensions/WebAuthn": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WebAuthn",
+      "branches": 8,
+      "tips": [
+        "52f951632467abc7b361e1e8fb5dc011f7eb425c"
+      ],
+      "files": 117,
+      "lines": 4852
+    },
+    "mediawiki/extensions/WikiEditor": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikiEditor",
+      "branches": 10,
+      "tips": [
+        "6c0b4884b5b524f24f962905de89729360d29f9b"
+      ],
+      "files": 323,
+      "lines": 28229
+    },
+    "mediawiki/extensions/WikiForum": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikiForum",
+      "branches": 9,
+      "tips": [
+        "4a274fa7f2c6ea47977bbb5883ea4cfcc5baf767",
+        "8b548d56d06e847a6b9508597c9b4c9eaeb8fbeb",
+        "9d560f3e0029501ae9229f1100744545c2b0c710",
+        "ae60f3de078571608e50c947273635429da324bf"
+      ],
+      "files": 303,
+      "lines": 13655
+    },
+    "mediawiki/extensions/WikiLambda": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikiLambda",
+      "branches": 10,
+      "tips": [
+        "b6adf59e9c6b968362f1e5aa9da009e838e26b02"
+      ],
+      "files": 1254,
+      "lines": 122996
+    },
+    "mediawiki/extensions/Wikibase": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Wikibase",
+      "branches": 25,
+      "tips": [
+        "0964fd11d5f757e05667a14d502fc6187c4fbbcb",
+        "0c0a0238dabd983a93c3853dad6ba42c3e84a560",
+        "14cddc40205f70f88994ca99993a2c349aeeaab2",
+        "1f5f5536087a2422d77188d76b097c67980e8025",
+        "2740025e107f439269692622c9a11fb3b30be658",
+        "3a77b4494337d65b2858ddc9688015020cb6662c",
+        "4dc5e8e4ba2cbb47440bad63229527976610fef6",
+        "5a3c6b8b295b54cbe8bfc60df814000090b556bc",
+        "64fa846e08d999337594e69207018b2a49783ced",
+        "8119aab75cd6ae0ce4f0630e29bff819eacf3d7f",
+        "856bad9d6083d5ac1f8eb6ffa36cf0374a36e9e5",
+        "cac4d354f997fe99521630b60d1679b82b715271",
+        "d42c09df502b915e8d3e6a9f88fc52d3af4593de",
+        "ecb99fceaf7ac16c6ec0cffb90fc91ae276ce0fe",
+        "f1878770864f2a8e2fe0a7be1fd30998cb3970cc"
+      ],
+      "files": 21280,
+      "lines": 426534
+    },
+    "mediawiki/extensions/WikibaseCirrusSearch": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikibaseCirrusSearch",
+      "branches": 10,
+      "tips": [
+        "cad7f80327bfe0f1060a6a29da8285720d49aefc"
+      ],
+      "files": 284,
+      "lines": 6717
+    },
+    "mediawiki/extensions/WikibaseLexeme": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikibaseLexeme",
+      "branches": 11,
+      "tips": [
+        "08040d9b4079eb6d659b2b588dae513ca2d0b963",
+        "669480e729d0b5058d0056000ddb75beb1a2fb92"
+      ],
+      "files": 1518,
+      "lines": 41398
+    },
+    "mediawiki/extensions/WikibaseLexemeCirrusSearch": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikibaseLexemeCirrusSearch",
+      "branches": 10,
+      "tips": [
+        "b85b49b38f847d0a83586560d3dd7b312d592c0d"
+      ],
+      "files": 75,
+      "lines": 3153
+    },
+    "mediawiki/extensions/WikibaseMediaInfo": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikibaseMediaInfo",
+      "branches": 10,
+      "tips": [
+        "d6c6de82feb98ac2562d66d0e67f6a3b07bd3ad5"
+      ],
+      "files": 436,
+      "lines": 21440
+    },
+    "mediawiki/extensions/WikibaseQualityConstraints": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikibaseQualityConstraints",
+      "branches": 10,
+      "tips": [
+        "797db043a822314e8bd578c3758c7de99c5efa75"
+      ],
+      "files": 410,
+      "lines": 21504
+    },
+    "mediawiki/extensions/WikimediaBadges": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikimediaBadges",
+      "branches": 10,
+      "tips": [
+        "183be7d682951870df3e3c36f4c52ed58e022ed4"
+      ],
+      "files": 85,
+      "lines": 2637
+    },
+    "mediawiki/extensions/WikimediaCampaignEvents": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikimediaCampaignEvents",
+      "branches": 10,
+      "tips": [
+        "67400634a7c187dd1cfdf1d67e75e76fb207432d"
+      ],
+      "files": 86,
+      "lines": 3458
+    },
+    "mediawiki/extensions/WikimediaEvents": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikimediaEvents",
+      "branches": 12,
+      "tips": [
+        "2d333a628c2ad17fcb90b7a0eecca3e586034711",
+        "64a390b66f0f0706c93a4618d6e68b16ca54f111"
+      ],
+      "files": 252,
+      "lines": 9354
+    },
+    "mediawiki/extensions/WikimediaIncubator": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikimediaIncubator",
+      "branches": 10,
+      "tips": [
+        "90b2d9f1e55343459cf1e3fce17c4cc669babfc5"
+      ],
+      "files": 403,
+      "lines": 16416
+    },
+    "mediawiki/extensions/WikimediaMaintenance": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikimediaMaintenance",
+      "branches": 10,
+      "tips": [
+        "72449564e1d1a21ac775c77b6847653d955fb8d5"
+      ],
+      "files": 47,
+      "lines": 4004
+    },
+    "mediawiki/extensions/WikimediaMessages": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/WikimediaMessages",
+      "branches": 10,
+      "tips": [
+        "9dbce7410ffcce293712a912cb86efc4bddf1779"
+      ],
+      "files": 2447,
+      "lines": 134211
+    },
+    "mediawiki/extensions/Wikisource": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Wikisource",
+      "branches": 10,
+      "tips": [
+        "399b35903ae2efae60df5cd47246b80a91728352"
+      ],
+      "files": 142,
+      "lines": 5277
+    },
+    "mediawiki/extensions/Wikispeech": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Wikispeech",
+      "branches": 12,
+      "tips": [
+        "0c733f118dd5a15176dee285ed651f0bf612ec86",
+        "153560c491edad4c95514c615f65b0c30e76a850",
+        "c455310d7846999187ca6b34374b4440efe47089",
+        "ce1ae9c709879508a301bb3e04d1a690d183e310",
+        "f87463d71a9738a3ecc7aa0d2717539b3c0fe79a",
+        "fe34de01efd254558f0ba356cad4a146e09da4ec"
+      ],
+      "files": 646,
+      "lines": 23730
+    },
+    "mediawiki/extensions/Wikistories": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Wikistories",
+      "branches": 11,
+      "tips": [
+        "136c3a76bcc82e646bbe793e926295bb7c0f9415",
+        "19da75d0cc0989c0402d36f70660b5b2e0e64592"
+      ],
+      "files": 432,
+      "lines": 20554
+    },
+    "mediawiki/extensions/Workflows": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/Workflows",
+      "branches": 11,
+      "tips": [
+        "172d9fc1f607d4d12da9724302eb95c06022ad22",
+        "1c175a25fbe4bbcb1670464e7ec770e4ece223af",
+        "48947fffa81d9fb32c8671826ad2bfcccf2fba56",
+        "857c4af8bd7b289e997e8549866df7e08ca3b203",
+        "c27538df33421225c552b7e1e1fb03e2dbb9340f",
+        "fa0bb8b5fcee334a777288e2ff27fb188c280c86"
+      ],
+      "files": 904,
+      "lines": 39015
+    },
+    "mediawiki/extensions/cldr": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/cldr",
+      "branches": 15,
+      "tips": [
+        "0db018378571c580f9c9de036339709fdcb58e69",
+        "1476e3bfc75428af5132e14a8bd08002c6c14c77",
+        "8d3ac8ad5689c6ef5894b0653f6ff40916b4df38",
+        "e0d361709e59cba402594ffb9f59d743730f7511"
+      ],
+      "files": 934,
+      "lines": 118898
+    },
+    "mediawiki/extensions/examples": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/extensions/examples",
+      "branches": 9,
+      "tips": [
+        "4fc7f7b77772422024824d31777f88762a3ac85e",
+        "672ab783f396259e769618a940045f4bf156a928",
+        "80da06ada97351adb918bb56c55fb78cf34a55da",
+        "e66e1064fb2b4d921d49a7cd749873adba3db12f"
+      ],
+      "files": 106,
+      "lines": 6270
+    },
+    "mediawiki/gadgets/WADP": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/gadgets/WADP",
+      "branches": 1,
+      "tips": [
+        "4adae40e24d9f2a4caaa26df337f731a08370a9f"
+      ],
+      "files": 24,
+      "lines": 6066
+    },
+    "mediawiki/libs/IPUtils": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/IPUtils",
+      "branches": 2,
+      "tips": [
+        "5cac3f0ecbeaebb36832e761ca93f86c5fac8f8f",
+        "b4a377d714c716809fc6106c6a0b3c91907ef46d"
+      ],
+      "files": 33,
+      "lines": 2501
+    },
+    "mediawiki/libs/Message": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/Message",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "mediawiki/libs/Minify": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/Minify",
+      "branches": 1,
+      "tips": [
+        "8492d24ef5b50fff35d6ff5fa67974237db2da0a"
+      ],
+      "files": 69,
+      "lines": 2839
+    },
+    "mediawiki/libs/RemexHtml": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/RemexHtml",
+      "branches": 1,
+      "tips": [
+        "0bec3091d02b3a1c51416aed712b075af01d0ea6"
+      ],
+      "files": 196,
+      "lines": 21833
+    },
+    "mediawiki/libs/ScopedCallback": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/ScopedCallback",
+      "branches": 1,
+      "tips": [
+        "b263e587e59b52abddbc6c9d8b1fc5f80c0b5f59"
+      ],
+      "files": 15,
+      "lines": 443
+    },
+    "mediawiki/libs/Shellbox": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/Shellbox",
+      "branches": 2,
+      "tips": [
+        "aa64c1285f1f5c173b0ce4c901863f851b44fff5",
+        "d301a38b022e2778ff5d05e3a5bd859843e63a7a"
+      ],
+      "files": 135,
+      "lines": 6821
+    },
+    "mediawiki/libs/Zest": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/Zest",
+      "branches": 1,
+      "tips": [
+        "5196e3538175eb3f2d1ceb27c50670050741e493"
+      ],
+      "files": 21,
+      "lines": 1473
+    },
+    "mediawiki/libs/less.php": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/less.php",
+      "branches": 1,
+      "tips": [
+        "c6922de56885cf01edd07d70478b71b6967a8a80"
+      ],
+      "files": 862,
+      "lines": 27815
+    },
+    "mediawiki/libs/php-cssjanus": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/libs/php-cssjanus",
+      "branches": 1,
+      "tips": [
+        "f8b6023836adfc250fcf58f83ace5406a78be504"
+      ],
+      "files": 18,
+      "lines": 646
+    },
+    "mediawiki/oauthclient-php": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/oauthclient-php",
+      "branches": 1,
+      "tips": [
+        "166aea876951706c889b8f31faefcd2de38be41a"
+      ],
+      "files": 33,
+      "lines": 1796
+    },
+    "mediawiki/php/excimer": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/php/excimer",
+      "branches": 1,
+      "tips": [
+        "67bf470e9f62858d68c4d624f5fd841caa7cbbdb"
+      ],
+      "files": 36,
+      "lines": 2201
+    },
+    "mediawiki/services/citoid": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/citoid",
+      "branches": 2,
+      "tips": [
+        "2ec3f561366d973a317916d9fee6eb2b45a68864",
+        "857d3d4b369e88e356f56f544e6c8c19779eb436"
+      ],
+      "files": 127,
+      "lines": 9001
+    },
+    "mediawiki/services/cxserver": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/cxserver",
+      "branches": 1,
+      "tips": [
+        "b9981847c56c468559bf8fdf99fd0d5f1d64aa78"
+      ],
+      "files": 271,
+      "lines": 14115
+    },
+    "mediawiki/services/machinetranslation": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/machinetranslation",
+      "branches": 1,
+      "tips": [
+        "04f343ee41ba2e59e45317200c1dd8a85eeaf486"
+      ],
+      "files": 60,
+      "lines": 2077
+    },
+    "mediawiki/services/mobileapps": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/mobileapps",
+      "branches": 8,
+      "tips": [
+        "6f5b0873ed3d6cc2fb7e5d38ee05a76999601df3",
+        "7b3fe127c0f98eabe92e0eadbdf1ce198b9654b4",
+        "9e9b042dcc9b699432e17b24ba1d890ae7312026",
+        "ca65e756ee298dc5e956462ecf16fcdbc8bf5133",
+        "cfc461774d0181bf116073e0e0d524b2f362b4c1",
+        "f2bbfd6b27464ac2708f8135a6a8838653c97683",
+        "ff18f00e45f033abb13d6ea6bb027768768554cb"
+      ],
+      "files": 1919,
+      "lines": 96358
+    },
+    "mediawiki/services/parsoid": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/parsoid",
+      "branches": 35,
+      "tips": [
+        "09f2177daa83c30f47b20f08ed026696c17e8ae7",
+        "0a2ede099b6ccf675229da4f99b03399ea6e58fd",
+        "0d0c868cb4b81d221f02025f768692f7d9f98552",
+        "260688ab4d430020f0f2811b4fa64ae68bdf9c04",
+        "4a727558bdfaf243a15b3ce91874fd6b1209a6f5",
+        "4f65249fd07babf654b6360f1215c02ac045214c",
+        "63eb33cf235b27b74220cda02b84a366daef2f15",
+        "6fe015c3d76762dcf1ba59e554e5547955fa76a8",
+        "78696fdb53fdc2c182a7811e5a6e2bce97e127f3",
+        "8910ad03ba9cceceb05c6f8305a188adadbaf860",
+        "9bd298e8d81337c5a982024140d62d196e84d7b7",
+        "ae8c37f5776d9889880f9356188e5313d1aebc1f",
+        "b94ad26ffe1f1320a55affc316ed7d3c560d9b6b",
+        "d35398e93aa112b5c96769b1c9a5c6ea07390efb",
+        "d4a1367f26940e70d580b51a245892c59c250588",
+        "db1f21a985c09a5698e28b50daab37da477d9877",
+        "e6069788062358c421794b114098e588fcf7527f",
+        "e95187049cd9bf7c19bda5fe05d1172f6a559369",
+        "f41a924720ae7e101111b69072545fc125c53068",
+        "f839f7bf8381d84319b413dabc6b968e94eb802b"
+      ],
+      "files": 3544,
+      "lines": 129658
+    },
+    "mediawiki/services/parsoid/testreduce": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/parsoid/testreduce",
+      "branches": 2,
+      "tips": [
+        "c17c824a1e02350fa6516313f2179eab5050beec",
+        "e589ac788aad29b4887d17f785e0005770578d8e"
+      ],
+      "files": 10030,
+      "lines": 426067
+    },
+    "mediawiki/services/push-notifications": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/push-notifications",
+      "branches": 4,
+      "tips": [
+        "5b2a56a0c856202294a5117f15dd222106485696",
+        "5dc8aeae848d43ece302e3aad9469c92516ac587",
+        "ac067aa42c329dec661d63b78010d3c6e63c64b6",
+        "bc6ab04aed385f914fc33b8c1123eb0901a60fce"
+      ],
+      "files": 155,
+      "lines": 7529
+    },
+    "mediawiki/services/wikifeeds": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/wikifeeds",
+      "branches": 2,
+      "tips": [
+        "12ac356d6bc72dc925bd0f7d684032860ee0b2b2",
+        "2c712cb38265999b29642e67a9377389ff542a70"
+      ],
+      "files": 150,
+      "lines": 10234
+    },
+    "mediawiki/services/zotero": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/services/zotero",
+      "branches": 1,
+      "tips": [
+        "db4cacb84e5a4d13f4bd0e223c2fa22e26f7910f"
+      ],
+      "files": 62,
+      "lines": 4269
+    },
+    "mediawiki/skins/BlueSky": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/skins/BlueSky",
+      "branches": 6,
+      "tips": [
+        "29872c826a1daabed78a17a5c6a36963ce42f527"
+      ],
+      "files": 151,
+      "lines": 4699
+    },
+    "mediawiki/skins/BlueSpiceDiscovery": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/skins/BlueSpiceDiscovery",
+      "branches": 11,
+      "tips": [
+        "02cd0e4d9632fc4c7e0400b03ff44e0fa6c47111",
+        "02e8a6693923fd534433848d2193a9a0d7efea1a",
+        "4b9ae471b277c31d096da330334ca35553c43da3",
+        "89a465cfe69944d77f1b53ccf14828524a14b7bb",
+        "a385ca93fdd515c213ca5850d75d17595b41de66",
+        "c962bd94ba5ebf6b932f66773c9c435b9230a254"
+      ],
+      "files": 1020,
+      "lines": 32170
+    },
+    "mediawiki/skins/MinervaNeue": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/skins/MinervaNeue",
+      "branches": 14,
+      "tips": [
+        "106395c7b2cad715ad4f28996db0d34e8b33aeea",
+        "3047f3e0fa52f48e322835e69747abc1ec98faff",
+        "5633960a381eee2999e9f646bb80e0815264d149",
+        "8118fd35db978dc531ca91c0a56399d6bf2c8669",
+        "c2ba33a2fcff8b3f78058600cdb7fa0324c63803"
+      ],
+      "files": 1794,
+      "lines": 33533
+    },
+    "mediawiki/skins/Timeless": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/skins/Timeless",
+      "branches": 10,
+      "tips": [
+        "1d3382ca54ffc9f7702eaa6c1ed27088d139e9f1"
+      ],
+      "files": 248,
+      "lines": 6036
+    },
+    "mediawiki/skins/TuleapSkin": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/skins/TuleapSkin",
+      "branches": 6,
+      "tips": [
+        "45c7c563e489cba7c8377dab49919d5e7d2cc18c"
+      ],
+      "files": 103,
+      "lines": 3259
+    },
+    "mediawiki/skins/Vector": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/skins/Vector",
+      "branches": 14,
+      "tips": [
+        "3618a6dedeaa548d9ccd1a33b539acea745a94d3",
+        "38a7bca2fbc7a7b762cd09c6ed948479e1c6104b",
+        "7dc328ca36205d1e0d75faf406b2500075e42974",
+        "ae3b0f378fc3cca5d9c56dbbe79dbe3e78a52e59"
+      ],
+      "files": 2062,
+      "lines": 44566
+    },
+    "mediawiki/tools/api-testing": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/tools/api-testing",
+      "branches": 1,
+      "tips": [
+        "f19ecd38750739907d14bf4a07bb20249a27407b"
+      ],
+      "files": 33,
+      "lines": 2732
+    },
+    "mediawiki/tools/codesniffer": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/tools/codesniffer",
+      "branches": 5,
+      "tips": [
+        "86c56877214ad5216a0d1c6c0d3a9c72edce4c08"
+      ],
+      "files": 340,
+      "lines": 8815
+    },
+    "mediawiki/tools/phan/SecurityCheckPlugin": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/tools/phan/SecurityCheckPlugin",
+      "branches": 2,
+      "tips": [
+        "141114fccff89bb5b582d752d0d0a1490ef73b83",
+        "fe971e11fe984ed10ea83d86124dd42b84973508"
+      ],
+      "files": 800,
+      "lines": 17909
+    },
+    "mediawiki/vagrant": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/vagrant",
+      "branches": 7,
+      "tips": [
+        "0e36b93c9dec817606ad75a912d110af8e2e846d",
+        "256c4ae059812bf4982b9b1a05a8f4b3ba7c879e",
+        "531ac322974adf9b90cd84c047fb52580c46873c",
+        "aad93b08b4feb529f76e12148e08a5ec28008bc0",
+        "c9374b583aef41e7b2ee05c7afc922370238e59d",
+        "eb1ad59efdcc19bc21483018a811ccc3dded2cc3",
+        "ec8585e911b52c4b4d02866bebe12aadf7892487"
+      ],
+      "files": 2965,
+      "lines": 52351
+    },
+    "mediawiki/vendor": {
+      "source": "https://gerrit.wikimedia.org/r/mediawiki/vendor",
+      "branches": 12,
+      "tips": [
+        "216ccfbe33cfdc0073aebadc73746cfad0a3ad8c",
+        "e419aaf98f36d4a19afd5a1d6168d7a5d4ba54b5"
+      ],
+      "files": 10087,
+      "lines": 458780
+    },
+    "oojs/ui": {
+      "source": "https://gerrit.wikimedia.org/r/oojs/ui",
+      "branches": 2,
+      "tips": [
+        "49dffe151f28aa1556adca063d4faa82b2634822",
+        "cb4a01e9e4fdfa24c7c334fb11e3e265ffaf8f5f"
+      ],
+      "files": 1652,
+      "lines": 37739
+    },
+    "operations/alerts": {
+      "source": "https://gerrit.wikimedia.org/r/operations/alerts",
+      "branches": 1,
+      "tips": [
+        "13f5aa586fc5578b34eacd6469abe9ff5b48a2a8"
+      ],
+      "files": 267,
+      "lines": 4473
+    },
+    "operations/container/codesearch": {
+      "source": "https://gerrit.wikimedia.org/r/operations/container/codesearch",
+      "branches": 0,
+      "tips": [],
+      "files": 0,
+      "lines": 0
+    },
+    "operations/cookbooks": {
+      "source": "https://gerrit.wikimedia.org/r/operations/cookbooks",
+      "branches": 2,
+      "tips": [
+        "ca0161797c92219716a2b8e2a40663eeb1fbc134"
+      ],
+      "files": 198,
+      "lines": 11403
+    },
+    "operations/debs/amd-k8s-device-plugin": {
+      "source": "https://gerrit.wikimedia.org/r/operations/debs/amd-k8s-device-plugin",
+      "branches": 3,
+      "tips": [
+        "6266b42105a53705816229c4ea23aecb67dc3217",
+        "9af00341230052ae169cd1084dd78954c90756ae",
+        "c9fc3459dd199a2ba4d716e8c9913b6b6bd24d73"
+      ],
+      "files": 3463,
+      "lines": 291529
+    },
+    "operations/debs/benthos": {
+      "source": "https://gerrit.wikimedia.org/r/operations/debs/benthos",
+      "branches": 1,
+      "tips": [
+        "bbc759d1be228f3ffba5c67dcd0419e56bf47d1d"
+      ],
+      "files": 1678,
+      "lines": 83394
+    },
+    "operations/debs/dnsdist": {
+      "source": "https://gerrit.wikimedia.org/r/operations/debs/dnsdist",
+      "branches": 3,
+      "tips": [
+        "51166d0dee28c53354c5e85dc3a1af59b0e6e896",
+        "576e80be496244c6ee06bb3e9e89fe975a6c30ae",
+        "b7dfd1daf2b6ec84d41f9b47d47d7349a2c9e836"
+      ],
+      "files": 383,
+      "lines": 96545
+    },
+    "operations/debs/envoyproxy": {
+      "source": "https://gerrit.wikimedia.org/r/operations/debs/envoyproxy",
+      "branches": 11,
+      "tips": [
+        "41283e0cd1354ce879c65ced6d9719d343191b3c",
+        "49bab0a2a01abbff469a1e63d0c3a78f56bb263a",
+        "607fefc84bfaf6375c9dc82fb21a71dc5dbfd9fb",
+        "7feea4b2b5b13aa129b15d0e722915c8e1e5d9a8",
+        "a06a9b812b17d54b27853aa944fb4b052182479a",
+        "d319bbe85e447bbaa8593ab6f07bf05aed3de6a7"
+      ],
+      "files": 15883,
+      "lines": 433657
+    },
+    "operations/debs/helm3": {
+      "source": "https://gerrit.wikimedia.org/r/operations/debs/helm3",
+      "branches": 7,
+      "tips": [
+        "560674b9ab80a446bdf7ca7eac8e02350183230a",
+        "e638a70835dc78924e79a458f76bab4ecc0274ce"
+      ],
+      "files": 6206,
+      "lines": 436955
+    },
+    "operations/debs/helmfile": {
+      "source": "https://gerrit.wikimedia.org/r/operations/debs/helmfile",
+      "branches": 2,
+      "tips": [
+        "75480668008a81a2be149e8597c27d0ed29a3742",
+        "b56d529dd47b3fff64eb90ca97c382ee809de4f1"
+      ],
+      "files": 2762,
+      "lines": 271598
+    },
+    "operations/debs/osmborder": {
+      "source": "https://gerrit.wikimedia.org/r/operations/debs/osmborder",
+      "branches": 5,
+      "tips": [
+        "0ef8a14874edc7a5987210173cbf79b861357483",
+        "407546711ca8c3b9011c3521ae79419d09fdeee0",
+        "5a623642ae50d88bf881504004a3fdd271455c1b",
+        "63a6a2e881a06ce1cb54097df92d78b2f72b4ce3",
+        "cd49f7454c3aab24676855286f1ef5bc22251bd4"
+      ],
+      "files": 26,
+      "lines": 712
+    },
+    "operations/deployment-charts": {
+      "source": "https://gerrit.wikimedia.org/r/operations/deployment-charts",
+      "branches": 3,
+      "tips": [
+        "c7f63e0dc7d9001ce9e40f793fb29a668b6fcba6"
+      ],
+      "files": 1889,
+      "lines": 29912
+    },
+    "operations/dns": {
+      "source": "https://gerrit.wikimedia.org/r/operations/dns",
+      "branches": 1,
+      "tips": [
+        "c4e186f0ef60b8c854e40dde29061079c6eda7a0"
+      ],
+      "files": 73,
+      "lines": 4603
+    },
+    "operations/docker-images/docker-pkg": {
+      "source": "https://gerrit.wikimedia.org/r/operations/docker-images/docker-pkg",
+      "branches": 2,
+      "tips": [
+        "03e3b2a884e118a58b3be770001a617e88094d76",
+        "24f4414f6a41de074bac01ba717525f5c6f32756"
+      ],
+      "files": 52,
+      "lines": 2675
+    },
+    "operations/docker-images/docker-report": {
+      "source": "https://gerrit.wikimedia.org/r/operations/docker-images/docker-report",
+      "branches": 1,
+      "tips": [
+        "6c2d38426b065cdfb6d5e49f63ff59ad21a97916"
+      ],
+      "files": 35,
+      "lines": 1923
+    },
+    "operations/docker-images/production-images": {
+      "source": "https://gerrit.wikimedia.org/r/operations/docker-images/production-images",
+      "branches": 2,
+      "tips": [
+        "83daf3b2b63032f8bf7f5acf1f67f7988f6fecf9",
+        "e956e3caa09737176832ec99b2865c8576136aab"
+      ],
+      "files": 463,
+      "lines": 11254
+    },
+    "operations/homer/public": {
+      "source": "https://gerrit.wikimedia.org/r/operations/homer/public",
+      "branches": 1,
+      "tips": [
+        "076c04fdad8fe5cc9296ab4d50c8e8bcbb0bd60b"
+      ],
+      "files": 113,
+      "lines": 2281
+    },
+    "operations/mediawiki-config": {
+      "source": "https://gerrit.wikimedia.org/r/operations/mediawiki-config",
+      "branches": 3,
+      "tips": [
+        "595c30603bb0a5de305711f74c5487824d875bda",
+        "bb95e3437dc548543a63809a0d254e1761dd4ad3",
+        "d8f01ed721c96fee44011657bfc56da4a4508e76"
+      ],
+      "files": 5490,
+      "lines": 74209
+    },
+    "operations/puppet": {
+      "source": "https://gerrit.wikimedia.org/r/operations/puppet",
+      "branches": 11,
+      "tips": [
+        "2570ceb055f29e2f038dbd6730369295056087b3",
+        "267be85a2352abd9ff233ba8e80fd7a5f5880867",
+        "2e46d0f6bb25945b39f5870feee12e6c9a485dfb",
+        "477dd2c85c1e7bf3b1fc371efedbd3ffea398e56",
+        "e6a61dc45873ecb1254eeafe248774269841b92c"
+      ],
+      "files": 19823,
+      "lines": 336423
+    },
+    "operations/software": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software",
+      "branches": 3,
+      "tips": [
+        "5bf4cd04ade383de95b0e760ba86e0d37ebcf9e4",
+        "d5e7607ad85f1f516aeea9113f00947b8f1e83dc",
+        "de75ecc70899619ce61da2f12f005936e503fa12"
+      ],
+      "files": 387,
+      "lines": 16883
+    },
+    "operations/software/bitu": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/bitu",
+      "branches": 1,
+      "tips": [
+        "913b14a925a92d247e7e9b77017f7e09d71b2154"
+      ],
+      "files": 248,
+      "lines": 17885
+    },
+    "operations/software/cas-overlay-template": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/cas-overlay-template",
+      "branches": 6,
+      "tips": [
+        "55e8547148f48628ed84a15c6eb35a6f1f227742",
+        "720434393220c05b31d24c8a24e52ec04b133d59",
+        "8225d735dadbdde162223cd4c303d5fd6b5ab6e6",
+        "955fbaf3caf0805b21b216c7ca79f4eee289ec85",
+        "c16c5c1f04dd5682648fc8c2175611e5f7032222"
+      ],
+      "files": 271,
+      "lines": 31272
+    },
+    "operations/software/debmonitor": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/debmonitor",
+      "branches": 2,
+      "tips": [
+        "27b5ebf417b61a4b244153932bfb0c7d6b1eaf8e",
+        "e1ad26b00e394240d795365298bad32494a03fcd"
+      ],
+      "files": 152,
+      "lines": 19351
+    },
+    "operations/software/debmonitor-client": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/debmonitor-client",
+      "branches": 2,
+      "tips": [
+        "5f59725b2e2719c56052e64112dae83031b8c40d",
+        "a79b2ef11d950a925f668871e838329eb4e59f94"
+      ],
+      "files": 31,
+      "lines": 1547
+    },
+    "operations/software/gerrit": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/gerrit",
+      "branches": 21,
+      "tips": [
+        "06b7b99768bfb6f611f70be741c8cb4f82afdf44",
+        "2d8ea08b83387c501d3b4d23b7640bad60961e0f",
+        "33111cee4917cb4eb62f74877c139f41d8538eff",
+        "37e60948032a6875f9b98016f9739efbc16e989d",
+        "40e4e0f7d1e570abcfb9830a0b31f0c74bd3ef68",
+        "49f23317559e21db1e1676d3053e34c79e087525",
+        "521462815223a07e7df3e040e5d09c0d647fcbd5",
+        "61aabcab278705f32ac7f5f0fc19d72826103172",
+        "65eeac4f0602dc6e0a1a47151b412418601a77b8",
+        "6aa45d07054228c11ec1627a9e21ab5e4526c2ba",
+        "74bda36250254a3bdbefec473d4ee5f5fef96d81",
+        "cd93e0b77245e9dbc99200375f6649ec8ec130e2",
+        "dea253f365fa64b695a73d280198a1eaa86ba902",
+        "eb09fdaa338c8bc3ffde8ad3b7dfc56781293215",
+        "f106a05974294b74b7e0a988ab18517433cdae5d",
+        "f4da11a04a358bf62c48186490db60c810b7b4fb",
+        "fd266bf32ba071e7a7a0d25e17ad2524e6e02d89"
+      ],
+      "files": 26837,
+      "lines": 539803
+    },
+    "operations/software/homer": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/homer",
+      "branches": 2,
+      "tips": [
+        "29bdd7f9484be9db938c61e13b3cf8a97d7025c7",
+        "992b4228f3279c55055e1551051297799957f826"
+      ],
+      "files": 89,
+      "lines": 2582
+    },
+    "operations/software/homer/deploy": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/homer/deploy",
+      "branches": 1,
+      "tips": [
+        "3777afcaefc38878633c07c8c629f51e5de8fddf"
+      ],
+      "files": 18,
+      "lines": 587
+    },
+    "operations/software/netbox-extras": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/netbox-extras",
+      "branches": 2,
+      "tips": [
+        "a71d05fc4991075fd027dd18987168fbc99e6114",
+        "eb0b605f7275fe7e8eab99a874c548e333830ba6"
+      ],
+      "files": 57,
+      "lines": 3030
+    },
+    "operations/software/pywmflib": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/pywmflib",
+      "branches": 2,
+      "tips": [
+        "1d98d1d0f472b29dd6d7de4548e39fb93f5e951b",
+        "67f2da7414572f537c3dfe84600b699d30c3592e"
+      ],
+      "files": 81,
+      "lines": 2806
+    },
+    "operations/software/spicerack": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/spicerack",
+      "branches": 2,
+      "tips": [
+        "bedbe8624bef6291f2a3c6d6295ea429166dc316",
+        "c9454cef4dede02e001227edc17010e214f4a8e8"
+      ],
+      "files": 241,
+      "lines": 15797
+    },
+    "operations/software/thumbor-plugins": {
+      "source": "https://gerrit.wikimedia.org/r/operations/software/thumbor-plugins",
+      "branches": 1,
+      "tips": [
+        "ddc6c7922029102d919e218d00fb55036995ddf4"
+      ],
+      "files": 266,
+      "lines": 55352
+    },
+    "performance/WikimediaDebug": {
+      "source": "https://gerrit.wikimedia.org/r/performance/WikimediaDebug",
+      "branches": 1,
+      "tips": [
+        "6daaa7693669ed3401d6ed4c70ce9ae3549c7642"
+      ],
+      "files": 21,
+      "lines": 1743
+    },
+    "purtle": {
+      "source": "https://gerrit.wikimedia.org/r/purtle",
+      "branches": 2,
+      "tips": [
+        "51780919a2ed6b92a78715dd04a41941784728d5",
+        "c4faa25aacae946586475a5b6bb1075e7fcc8b96"
+      ],
+      "files": 127,
+      "lines": 2257
+    },
+    "pywikibot/core": {
+      "source": "https://gerrit.wikimedia.org/r/pywikibot/core",
+      "branches": 2,
+      "tips": [
+        "911b7256cd49f1371cda35c97c886363d16a5362",
+        "f279ad4411faad0617fc4ce3c8de4172a31ab0fa"
+      ],
+      "files": 534,
+      "lines": 73531
+    },
+    "releng/phatality": {
+      "source": "https://gerrit.wikimedia.org/r/releng/phatality",
+      "branches": 1,
+      "tips": [
+        "84c728358fc5378b253629cb9ec74f91924bc685"
+      ],
+      "files": 30,
+      "lines": 549
+    },
+    "research/mwaddlink": {
+      "source": "https://gerrit.wikimedia.org/r/research/mwaddlink",
+      "branches": 1,
+      "tips": [
+        "273c5e2913c752154a539e823eba5433b3560dea"
+      ],
+      "files": 65,
+      "lines": 3069
+    },
+    "research/recommendation-api": {
+      "source": "https://gerrit.wikimedia.org/r/research/recommendation-api",
+      "branches": 2,
+      "tips": [
+        "986631b12cc1a4cb3a9e826ae485689fea959f3c",
+        "a48dee1d53a4a006ee0d13df375a2eae299f4475"
+      ],
+      "files": 140,
+      "lines": 5587
+    },
+    "search/extra": {
+      "source": "https://gerrit.wikimedia.org/r/search/extra",
+      "branches": 13,
+      "tips": [
+        "03533f35f91aee1d85803fe3e8b80637970c27eb",
+        "064acbd5601684fbef21e4574a1bb8b7c2775ee2",
+        "17aedfbf18e8269ad114180323d17024e92f9e57",
+        "277d5d39c1df9b0611a0bf0bed48daed545116af",
+        "40761eaf9af2a2f0e1d4d7ec6692b59adfb70fdd",
+        "624c74adffcff67c14933efa95daccbb9fab265e",
+        "76075ab3ed4107fbf92796621e0a2fbf6d3d7de7",
+        "79202ef3d7c5fde174ae322a053984bc70edd32d",
+        "93ae982352388ed4cf5f7924c02ec8e1e156d17a",
+        "ae8e3309edf30df08b58d2943eefc41cee78220e",
+        "d316e3a08827c7488705c5881186ef0e0f2b942f",
+        "ec0c0943b1dd453259edd483070a7efd35febc23"
+      ],
+      "files": 600,
+      "lines": 17314
+    },
+    "search/extra-analysis": {
+      "source": "https://gerrit.wikimedia.org/r/search/extra-analysis",
+      "branches": 3,
+      "tips": [
+        "93d40583a614bf2bb6962d6ae698376be5c857d8",
+        "9c6e22a759e8a196f270ee729435e3dd1d3b9e06"
+      ],
+      "files": 50,
+      "lines": 1408
+    },
+    "translatewiki": {
+      "source": "https://gerrit.wikimedia.org/r/translatewiki",
+      "branches": 1,
+      "tips": [
+        "eba0695406a16cd88978b4c6183605077f2093a9"
+      ],
+      "files": 341,
+      "lines": 14439
+    },
+    "wikidata/query-builder": {
+      "source": "https://gerrit.wikimedia.org/r/wikidata/query-builder",
+      "branches": 1,
+      "tips": [
+        "891e0d7cc87e8ee5400db277b510bc4462736590"
+      ],
+      "files": 280,
+      "lines": 18825
+    },
+    "wikidata/query/deploy": {
+      "source": "https://gerrit.wikimedia.org/r/wikidata/query/deploy",
+      "branches": 8,
+      "tips": [
+        "25a1756b52758c7d412bb3d44e6e511b285cea58",
+        "316bf7f42474f8105bb5bed4884bb8eeee0067a2",
+        "32f356702c023fe1329b208d89be8fedd43f8b09",
+        "353b3cb9e15758d3754d0ab7dbb174f5c3de358e",
+        "3ba1e8b02c369e238c75bc45f51d89148c15aeee",
+        "5c49eba23ef39d1bbd61878f8b5d4529a510757a",
+        "9da2416b5940fa705d534578ddfa9eb8bf063536",
+        "e26e3284a261e9a7c800ae3f717e81870eda7971"
+      ],
+      "files": 166,
+      "lines": 31110
+    },
+    "wikidata/query/rdf": {
+      "source": "https://gerrit.wikimedia.org/r/wikidata/query/rdf",
+      "branches": 6,
+      "tips": [
+        "1da3dd5f3778009206468f0051a7c8cf1d5fafb5",
+        "29fcd01230198e68afb0cf9992dfe2732a20a6a7",
+        "2d50567e629d501bc69e5e4608bd66652cd757b3",
+        "5306442ad93001a3de12ed306743dde2a1fa771b",
+        "995f1261ccf5ef83b7e033c113c8daa3d1b1e0c8",
+        "ba4cce98d31c743b557de0fd05e825b6f0f3e9de"
+      ],
+      "files": 1197,
+      "lines": 76074
+    },
+    "wikimedia-event-utilities": {
+      "source": "https://gerrit.wikimedia.org/r/wikimedia-event-utilities",
+      "branches": 1,
+      "tips": [
+        "a6a195346d966a06c3525457bc41863ae8caba0a"
+      ],
+      "files": 125,
+      "lines": 8496
+    },
+    "wikimedia/developer-portal": {
+      "source": "https://gerrit.wikimedia.org/r/wikimedia/developer-portal",
+      "branches": 1,
+      "tips": [
+        "8bcbe5252604bfde64d7be6b0e621ed61c9d5d82"
+      ],
+      "files": 206,
+      "lines": 8609
+    },
+    "wikimedia/fundraising/SmashPig": {
+      "source": "https://gerrit.wikimedia.org/r/wikimedia/fundraising/SmashPig",
+      "branches": 2,
+      "tips": [
+        "ac85ad1da47f12a99edad956fc034dc1b2d0dd0f",
+        "bec738a93e555f1b7ed1280acc224138bfe2e415"
+      ],
+      "files": 795,
+      "lines": 17944
+    },
+    "wikimedia/fundraising/crm": {
+      "source": "https://gerrit.wikimedia.org/r/wikimedia/fundraising/crm",
+      "branches": 30,
+      "tips": [
+        "061a230cf361a817b6aa8bec83a21f93d385929d",
+        "0aeb2f05f0a21c862af41ed27915e023e2ded045",
+        "0dec8aa91c4270ec8206f94485223a0c8556b01b",
+        "11faf63ad63ccdaf5f4bffc79eeef5b110fb08bd",
+        "43756bfab22a48221adf0ea4474b3cab204b7698",
+        "4f86365c9cef6715c22318937afcc88117fd131a",
+        "62abf9f9a819390a1d9de21ffe6bb66efc7af4cf",
+        "6910fc0c1743065c84f6ad7e532c382b0a9c9bce",
+        "6cfdd9312253c22c2ca6495ec93a1377f69195c0",
+        "769c905d795b68309b4096ba9fab2dc5fc6b27ef",
+        "77cd64317404b2fcec9500cfbb1c0b19e5846705",
+        "7c524cd648e38e10f960f72a8c9079f6c96bc026",
+        "7f828405d1a807e91ee952f608697eb1d9450520",
+        "88b15549c07b6cd555b471bf028eb37a8ef4142c",
+        "8f61b1e5d3ee49b9d3f5dc8386d78d6a8440aca9",
+        "93cd628805d38d5271a6130c7d2bc740e2b6468c",
+        "991c470edb1d5a6424f48848d3811baa1d23524e",
+        "a7efdd1991ba99311e5c6e8d1e9bc27ab5f48846",
+        "ac29ff459b383698f08baac0327fe85c5f603afe",
+        "ae6e8800e3a195f667cab683662c59fef500cd94",
+        "b260226c5552e6732d3724c5b58cf08fb0d55178",
+        "b29fd78571e8f01b0dc0710a95aab818767d4fb3",
+        "c1812b5a259d67a252152631ce216d45895a81ce",
+        "c5aed03585bc4a0250609e6cbe7f6944d7f52162",
+        "dddf20825eeed004b5c762d47feb3980c5a2c6cf",
+        "e299d7838ac77751a2366a352a45743c458b0680",
+        "e3f6c4578bce16e8b7e7befd087c9db2cd51c2fa",
+        "e6ddd302b78e478ed53c43c576acb596acaca747",
+        "f3218cbda54623f3cb76c07fcb4bda91702be296"
+      ],
+      "files": 27799,
+      "lines": 1268470
+    },
+    "wikimedia/fundraising/dev": {
+      "source": "https://gerrit.wikimedia.org/r/wikimedia/fundraising/dev",
+      "branches": 1,
+      "tips": [
+        "f3fbb71acb04137b4a98f5a2799108b30e8a74b0"
+      ],
+      "files": 133,
+      "lines": 3207
+    },
+    "wikimedia/fundraising/tools": {
+      "source": "https://gerrit.wikimedia.org/r/wikimedia/fundraising/tools",
+      "branches": 10,
+      "tips": [
+        "0aeb9ef9e0bf6cab8f5b1b304b500ddc775a5c7e",
+        "206f928e6291475feddeefa450b6e8dc7a206305",
+        "3f7b238df750995275d9494ea99f80217a551a0b",
+        "57ff3a4486925ae65f4da48e43f9d9e31632a484",
+        "78e5dbc92d50b71d1075ce76e67eb9850ceabdd1",
+        "aaea839cb2210c77401caeb851031b1c198ec1ee",
+        "ac58b2e0debaf396a3552f5fccd17c215cfc2387",
+        "b54854fcdd7a272ca2af8475affa033517456d07",
+        "e00aa00e26d7bcbd827336bf28476f19de323e74",
+        "ed086384f565e57516fb21dbf6bc502d7951a48a"
+      ],
+      "files": 352,
+      "lines": 11069
+    },
+    "wikimedia/portals": {
+      "source": "https://gerrit.wikimedia.org/r/wikimedia/portals",
+      "branches": 3,
+      "tips": [
+        "59062259a5d7b273cfdd0897cb0395bf87cdf237",
+        "c30d2077cf89bce55d73e3b5bca878758d16269b",
+        "d0de7f15e22b1473298172e36a57e279a98db786"
+      ],
+      "files": 1061,
+      "lines": 27058
+    },
+    "wikipeg": {
+      "source": "https://gerrit.wikimedia.org/r/wikipeg",
+      "branches": 2,
+      "tips": [
+        "77651f14934719fcb69296bbeaa71706e1beb7bf"
+      ],
+      "files": 118,
+      "lines": 9332
+    },
+    "wmf-jvm-utils": {
+      "source": "https://gerrit.wikimedia.org/r/wmf-jvm-utils",
+      "branches": 1,
+      "tips": [
+        "68589a94c455cde600e70d249e4626e5f06b13bd"
+      ],
+      "files": 11,
+      "lines": 337
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-20T23:03:44.559861+00:00",
+    "git": {
+      "commit": "e863bcf8eefb905c9f9dd7a1c74b6e62aec41911",
+      "branch": "HEAD"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

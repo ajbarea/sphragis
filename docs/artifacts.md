@@ -2,8 +2,8 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 752 artifacts under
-72 writers, grouped by the script that wrote them, each described by
+repository. This page is generated from those scripts: 755 artifacts under
+73 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
 
@@ -98,6 +98,16 @@ AOSP's projects by language at its release tag, for H2's foreign pool (item 4 of
 |---|
 | `aosp-census.json` |
 | `code-files-linguist.json` |
+
+## `scripts/backport_lookup.py`
+
+Each target's added lines looked up in its project's branches as they stood at the checkpoint.
+
+| artifact |
+|---|
+| `backport-lookup-openstack.json` |
+| `backport-lookup-qt.json` |
+| `backport-lookup-wikimedia.json` |
 
 ## `scripts/backport_share.py`
 
