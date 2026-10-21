@@ -100,6 +100,11 @@
     }
   },
   "ai_unsearched": [],
+  "lookup_counts": {
+    "suspicious": 14,
+    "no_eligible_line": 68,
+    "no_reference": 0
+  },
   "universe": [
     "wikimedia:I0042e0c7455d8082ec2f491346f264b362625271:resources/skins.minerva.scripts/setup.js:1:20",
     "wikimedia:I00a7ab186bfbb2aad6b05d4675dc187fa34176e9:includes/Maintenance/Reindexer.php:1:392",
@@ -850,15 +855,10 @@
     "wikimedia:Ifff3b85e1bd55ff231570d3bc7f9ea4af1cf3df6:i18n/en.json:2:38"
   ],
   "provenance": {
-    "generated_at": "2026-10-21T00:59:12.936984+00:00",
+    "generated_at": "2026-10-21T01:50:49.101799+00:00",
     "git": {
-      "commit": "c727ce3c545525b270a96f52134a3230fdcabd30",
-      "branch": "corpus/lookup-sensitivity",
-      "uncommitted_code": [
-        "scripts/sensitivity_ids.py",
-        "sphragis/experiment/cells.py"
-      ],
-      "uncommitted_code_sha256": "5bdd43027c33ea6c41594b803ecebce7d7c175e6d1ac96fdadb34dc296ad3b74"
+      "commit": "ca6e008ba669360d79b6c28fef4197352b4fde61",
+      "branch": "corpus/lookup-sensitivity"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

@@ -114,6 +114,11 @@
     }
   },
   "ai_unsearched": [],
+  "lookup_counts": {
+    "suspicious": 15,
+    "no_eligible_line": 66,
+    "no_reference": 29
+  },
   "universe": [
     "qt:I0091203f906aa5b43384c474f42fa555d1e86dba:cmake/QtBaseConfigureTests.cmake:1:336",
     "qt:I01dd3f2ab9de33afee59925aae9a557ba829fc25:examples/demos/todolist/doc/src/todolist.qdoc:1:9",
@@ -926,15 +931,10 @@
     "qt:Iffa0bb4d1515a94f23da506c0c83160b036db514:src/lottiegenerator/qlottievisitor.cpp:1:101"
   ],
   "provenance": {
-    "generated_at": "2026-10-21T01:04:54.780473+00:00",
+    "generated_at": "2026-10-21T01:56:32.847850+00:00",
     "git": {
-      "commit": "c727ce3c545525b270a96f52134a3230fdcabd30",
-      "branch": "corpus/lookup-sensitivity",
-      "uncommitted_code": [
-        "scripts/sensitivity_ids.py",
-        "sphragis/experiment/cells.py"
-      ],
-      "uncommitted_code_sha256": "5bdd43027c33ea6c41594b803ecebce7d7c175e6d1ac96fdadb34dc296ad3b74"
+      "commit": "ca6e008ba669360d79b6c28fef4197352b4fde61",
+      "branch": "corpus/lookup-sensitivity"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

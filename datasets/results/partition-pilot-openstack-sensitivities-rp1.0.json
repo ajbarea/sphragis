@@ -349,15 +349,10 @@
   },
   "lexer_sure": null,
   "provenance": {
-    "generated_at": "2026-10-21T01:06:06.455751+00:00",
+    "generated_at": "2026-10-21T01:56:44.908648+00:00",
     "git": {
-      "commit": "c727ce3c545525b270a96f52134a3230fdcabd30",
-      "branch": "corpus/lookup-sensitivity",
-      "uncommitted_code": [
-        "scripts/sensitivity_ids.py",
-        "sphragis/experiment/cells.py"
-      ],
-      "uncommitted_code_sha256": "5bdd43027c33ea6c41594b803ecebce7d7c175e6d1ac96fdadb34dc296ad3b74"
+      "commit": "ca6e008ba669360d79b6c28fef4197352b4fde61",
+      "branch": "corpus/lookup-sensitivity"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

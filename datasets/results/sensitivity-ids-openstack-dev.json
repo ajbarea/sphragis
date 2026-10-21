@@ -103,6 +103,11 @@
     }
   },
   "ai_unsearched": [],
+  "lookup_counts": {
+    "suspicious": 28,
+    "no_eligible_line": 33,
+    "no_reference": 0
+  },
   "universe": [
     "openstack:I00c16740764a21ef305ed5c197135f1fc04cb856:sysinv/sysinv/sysinv/sysinv/common/ceph.py:6:4",
     "openstack:I02022863d4d680640b8da13d960fcdec463514c2:stx-openbao-helm/stx-openbao-helm/fluxcd-manifests/openbao-manager/openbao-manager-static-overrides.yaml:2:10",
@@ -621,15 +626,10 @@
     "openstack:Iffea25529cf792d91d0c903526d1fb213f09a338:playbooks/roles/install-docker/tasks/Ubuntu.noble.yaml:3:39"
   ],
   "provenance": {
-    "generated_at": "2026-10-21T00:57:11.560484+00:00",
+    "generated_at": "2026-10-21T01:48:49.515370+00:00",
     "git": {
-      "commit": "c727ce3c545525b270a96f52134a3230fdcabd30",
-      "branch": "corpus/lookup-sensitivity",
-      "uncommitted_code": [
-        "scripts/sensitivity_ids.py",
-        "sphragis/experiment/cells.py"
-      ],
-      "uncommitted_code_sha256": "5bdd43027c33ea6c41594b803ecebce7d7c175e6d1ac96fdadb34dc296ad3b74"
+      "commit": "ca6e008ba669360d79b6c28fef4197352b4fde61",
+      "branch": "corpus/lookup-sensitivity"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
