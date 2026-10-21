@@ -10652,3 +10652,33 @@ this sensitivity, while its estimate moves by 0.0003. Without layout-only revisi
 test read rather than decide anything; the test read carries the same four sensitivities
 (`cells.require_sensitivities`), and a confirmatory cell that holds only with the found targets
 is reported as such.
+
+### Relation chains registered as H1's cluster unit, before any chain is built (2026-10-21)
+
+`# research(2026-10)`. Plan H's item "Relation chains as a dependence unit, before Stage 1": Gerrit
+relation chains put 5% to 49% of a project's changes in parent-linked sequences (Belhouchette et
+al., arXiv:2607.20189: nova 31.5%, mediawiki/core 19.1%, operations/puppet 97.3%), and a chain's
+changes stay in one half but are dependent beyond the change-id cluster the crossed bootstrap
+resamples. The item planned to measure the chain share and register chain clustering if it moved
+the interval. That is choosing the level of clustering by looking at it, which MacKinnon, Nielsen
+and Webb call a form of pre-testing that can leave estimators poorly approximated by their
+asymptotic distributions (arXiv:2205.03285, section on the level of clustering, after Leeb and
+Pötscher 2005); their advice when independence across the finer clusters is uncertain is that it
+may be safer to cluster at the coarser level. Chains strictly coarsen change-id clusters (a chain
+is a union of changes). Fixed now, before any chain is built or any interval read under one:
+
+1. *A link.* As Gerrit draws a relation chain and Belhouchette et al. reconstruct one: change A
+   is linked to change B when the parent of A's last patch set is B's last patch set, both in the
+   same project, and B was not yet merged when A's last patch set was uploaded. In all three
+   corpora a merged change's last patch set is its merged commit (checked on 2026-10-20 samples:
+   OpenStack 205 of 205, Qt 200 of 200, Wikimedia 199 of 200), so its parents are read from the
+   bare clones the backport lookup holds; no host is asked.
+2. *A chain* is a connected component of the links over every merged change of the organization's
+   raw snapshots; a change with no link is a chain of one.
+3. *The cluster unit.* The confirmatory H1 bootstrap, crossed over seeds, resamples chains instead
+   of changes. Decided here, not by any reading. The development pilots are read under both units,
+   and the simulations that fixed each organization's K and detectable effects are rerun with
+   chains as the drawn unit before any test window is read; the K of record is the one they give.
+4. *Reported* per organization and window: the share of eligible refinements in a chain of two or
+   more, the chain-size distribution, and the merged changes whose last patch set the clones do
+   not hold (read as chains of one, counted).
