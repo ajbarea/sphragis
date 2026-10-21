@@ -931,9 +931,10 @@ def _summary(script: str) -> str:
 
 
 def tracked_results() -> list[str]:
-    """Committed files under datasets/results, newest naming first."""
+    """Files under datasets/results that are committed or about to be (untracked and not
+    ignored), so `make docs-index` lists a new artifact before it is staged, not only after."""
     out = subprocess.run(
-        ["git", "-C", str(ROOT), "ls-files", RESULTS],
+        ["git", "-C", str(ROOT), "ls-files", "--cached", "--others", "--exclude-standard", RESULTS],
         capture_output=True,
         text=True,
         check=True,
