@@ -10629,3 +10629,26 @@ whole (2,153 and 2,769 lines) and replace them. From them `contamination_blind.p
 now writes the registered reading beside them: Min-K%++ cannot be told from the windows' drift,
 by change and by project, as the entry "Contamination: provenance primary" read from the
 committed artifact.
+
+### The registered sensitivities read on the registered metric (2026-10-21)
+
+`# research(2026-10)`. The development sensitivity readings committed so far, and the four read on
+2026-10-20, are on exact match (`partition-pilot-<org>-sensitivities-rp1.0.json`), while H1 is
+registered on the reference's mean log-probability per token (`cells.REGISTERED_METRIC`,
+`partition-pilot-<org>-likelihood.json`). Read now on that metric, from the same 22 runs each,
+with all four registered sensitivities (`partition-pilot-<org>-likelihood-sensitivities.json`):
+
+| organization | H1, 0.975 / 0.95 | without targets found before the checkpoint, 0.975 / 0.95 |
+| --- | --- | --- |
+| OpenStack | +0.0231 [+0.0082, +0.0402] / [+0.0097, +0.0376] | +0.0243 [+0.0091, +0.0422] / [+0.0107, +0.0398] |
+| Wikimedia | +0.0058 [-0.0004, +0.0125] / [+0.0003, +0.0117] | +0.0055 [-0.0010, +0.0124] / [-0.0003, +0.0115] |
+
+OpenStack's cell stays supported at both levels under every sensitivity (without AI-assisted
+targets +0.0258, without layout-only revisions +0.0230; no backport-only target listed). Wikimedia's
+was inconclusive at 0.975 and supported at 0.95 only by a lower bound of +0.0003; without the 33
+targets found before the checkpoint that bound is -0.0003, so its 0.95 support does not survive
+this sensitivity, while its estimate moves by 0.0003. Without layout-only revisions it holds
+(+0.0061 [+0.0006, +0.0120] at 0.95). These are development readings, which size and calibrate the
+test read rather than decide anything; the test read carries the same four sensitivities
+(`cells.require_sensitivities`), and a confirmatory cell that holds only with the found targets
+is reported as such.
