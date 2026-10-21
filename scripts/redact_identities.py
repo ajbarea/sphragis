@@ -23,11 +23,29 @@ from __future__ import annotations
 
 import argparse
 import pathlib
+import subprocess
 import sys
 
 from sphragis.corpus.redact import addresses_in, redact_file
 
 RESULTS = pathlib.Path(__file__).resolve().parents[1] / "datasets" / "results"
+
+
+def artifacts(results: pathlib.Path = RESULTS) -> list[pathlib.Path]:
+    """Every file under `results` git does not ignore: what is published or about to be.
+    An ignored file there is a local input (`contamination-inputs/`), never published, and
+    rewriting it changes study data (issue #183)."""
+    files = sorted(p for p in results.rglob("*") if p.is_file())
+    ignored = subprocess.run(
+        ["git", "-C", str(results), "check-ignore", "--stdin", "-z"],
+        input="\0".join(str(p) for p in files),
+        capture_output=True,
+        text=True,
+    )
+    if ignored.returncode not in (0, 1):
+        raise SystemExit(f"git check-ignore failed: {ignored.stderr.strip()}")
+    skip = {pathlib.Path(p) for p in ignored.stdout.split("\0") if p}
+    return [p for p in files if p not in skip]
 
 
 def main() -> None:
@@ -38,9 +56,9 @@ def main() -> None:
 
     everything: set[str] = set()
     changed: list[str] = []
-    # Every file, not only *.json: the directory also holds .txt and .npz, and a file class
-    # nobody scans is how a guard passes while the disclosure stands.
-    for path in sorted(p for p in RESULTS.rglob("*") if p.is_file()):
+    # Every file git does not ignore, not only *.json: the directory also holds .txt and .npz,
+    # and a file class nobody scans is how a guard passes while the disclosure stands.
+    for path in artifacts():
         found, redacted = redact_file(path)
         if not found:
             continue
@@ -58,9 +76,7 @@ def main() -> None:
         return
     # Re-scan rather than reusing the pre-write tally, so `--write --check` means "fix it
     # and confirm it is clean" instead of always failing on what it just repaired.
-    remaining = {
-        address for path in RESULTS.rglob("*") if path.is_file() for address in addresses_in(path)
-    }
+    remaining = {address for path in artifacts() for address in addresses_in(path)}
     if remaining:
         print(f"\n{len(remaining)} address(es) remain; run `make redact`", file=sys.stderr)
         sys.exit(1)
