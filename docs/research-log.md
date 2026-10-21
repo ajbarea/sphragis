@@ -10640,7 +10640,7 @@ with all four registered sensitivities (`partition-pilot-<org>-likelihood-sensit
 
 | organization | H1, 0.975 / 0.95 | without targets found before the checkpoint, 0.975 / 0.95 |
 | --- | --- | --- |
-| OpenStack | +0.0231 [+0.0082, +0.0402] / [+0.0097, +0.0376] | +0.0243 [+0.0091, +0.0422] / [+0.0107, +0.0398] |
+| OpenStack | +0.0231 [+0.0081, +0.0402] / [+0.0097, +0.0376] | +0.0243 [+0.0091, +0.0422] / [+0.0107, +0.0398] |
 | Wikimedia | +0.0058 [-0.0004, +0.0125] / [+0.0003, +0.0117] | +0.0055 [-0.0010, +0.0124] / [-0.0003, +0.0115] |
 
 OpenStack's cell stays supported at both levels under every sensitivity (without AI-assisted
@@ -10652,3 +10652,95 @@ this sensitivity, while its estimate moves by 0.0003. Without layout-only revisi
 test read rather than decide anything; the test read carries the same four sensitivities
 (`cells.require_sensitivities`), and a confirmatory cell that holds only with the found targets
 is reported as such.
+
+### Relation chains registered as H1's cluster unit, before any chain is built (2026-10-21)
+
+`# research(2026-10)`. Plan H's item "Relation chains as a dependence unit, before Stage 1": Gerrit
+relation chains put 5% to 49% of a project's changes in parent-linked sequences (Belhouchette et
+al., arXiv:2607.20189: nova 31.5%, mediawiki/core 19.1%, operations/puppet 97.3%), and a chain's
+changes stay in one half but are dependent beyond the change-id cluster the crossed bootstrap
+resamples. The item planned to measure the chain share and register chain clustering if it moved
+the interval. That is choosing the level of clustering by looking at it, which MacKinnon, Nielsen
+and Webb call a form of pre-testing that can leave estimators poorly approximated by their
+asymptotic distributions (arXiv:2205.03285, section on the level of clustering, after Leeb and
+Pötscher 2005); their advice when independence across the finer clusters is uncertain is that it
+may be safer to cluster at the coarser level. Chains strictly coarsen change-id clusters (a chain
+is a union of changes). Fixed now, before any chain is built or any interval read under one:
+
+1. *A link.* As Gerrit draws a relation chain and Belhouchette et al. reconstruct one: change A
+   is linked to change B when the parent of A's last patch set is B's last patch set, both in the
+   same project, and B was not yet merged when A's last patch set was uploaded. In all three
+   corpora a merged change's last patch set is its merged commit (checked on 2026-10-20 samples:
+   OpenStack 205 of 205, Qt 200 of 200, Wikimedia 199 of 200), so its parents are read from the
+   bare clones the backport lookup holds; no host is asked.
+2. *A chain* is a connected component of the links over every merged change of the organization's
+   raw snapshots; a change with no link is a chain of one.
+3. *The cluster unit.* The confirmatory H1 bootstrap, crossed over seeds, resamples chains instead
+   of changes. Decided here, not by any reading. The development pilots are read under both units,
+   and the simulations that fixed each organization's K and detectable effects are rerun with
+   chains as the drawn unit before any test window is read; the K of record is the one they give.
+4. *Reported* per organization and window: the share of eligible refinements in a chain of two or
+   more, the chain-size distribution, and the merged changes whose last patch set the clones do
+   not hold (read as chains of one, counted).
+
+### Relation chains amended: the last authored patch set, its parents fetched (2026-10-21)
+
+`# research(2026-10)`. Recorded before any interval is read under chains. Built as registered
+above, Qt's chains hold no link among 52,868 merged changes: Qt's integration rebases a change
+onto its branch before it merges, so the last patch set's parent is the branch tip, already
+merged (of Qt's merged changes in 2025-05 to 2025-08, 16,841, the last patch set is a trivial
+rebase or carries no code change for all but 53). OpenStack's and Wikimedia's last patch sets are
+author rework four times in five (6,066 of 7,668 and 32,487 of 40,365), so their links stood, but
+a fifth were rebased too. The rule read Gerrit's current panel, which a rebase empties, not the
+dependence the item is about. Amended for all three organizations:
+
+1. *A link.* Change A is linked to change B when the parent of A's last authored patch set (its
+   last patch set whose kind is not a trivial rebase, a no-code change or no change; its first if
+   none) is any patch set of B, in the same project, and B was not yet merged when that patch
+   set of A was uploaded.
+2. *Parents* are read from each host's listing with every revision's commit (`o=ALL_COMMITS`),
+   replaying the queries each raw month recorded, through the same transport, grants and pacing as
+   the fetch; only each patch set's SHA and its parents' SHAs are kept, never a message or a name.
+   A change the replayed listing no longer returns falls back to its merged commit's parents from
+   the clone, counted.
+3. Items 2 to 4 above stand: chains are components joined also by a shared Change-Id, and they are
+   H1's cluster unit, decided before any reading.
+
+### Relation chains read on the development window: H1's readings hold under them (2026-10-21)
+
+`# research(2026-10)`. As registered and amended above. Parents were fetched for every patch set
+of the three organizations' raw months (2026-10-20 23:58 to 2026-10-21 04:43; OpenStack, Wikimedia
+and Qt concurrently, each its own host at its own terms); every authored patch set's parents were
+read but Wikimedia's 3, and 3 merged changes fell back to their clone. Chains
+(`relation-chains-<org>.json`):
+
+| organization | merged changes | links | dev examples in a relation chain (in any chain) | dev clusters, by change → by chain |
+| --- | --- | --- | --- | --- |
+| OpenStack | 25,191 | 3,257 | 31 of 515, 6.0% (71) | 214 → 211 |
+| Wikimedia | 114,857 | 6,687 | 150 of 747, 20.1% (189) | 448 → 441 |
+| Qt | 52,868 | 12,401 | 312 of 809, 38.6% (505) | 409 → 368 |
+
+A relation chain here holds two or more distinct Change-Ids; "any chain" also counts changes that
+share a Change-Id with a sibling (cherry-picks and backports), which the change unit already joins.
+
+The registered H1 metric read on the development pilots under both units, from the same 22 runs
+each (`partition-pilot-<org>-likelihood.json` by change, `-likelihood-chains.json` by chain), at
+0.975:
+
+| organization | by change | by chain |
+| --- | --- | --- |
+| OpenStack | +0.0231 [+0.0081, +0.0402] supported | +0.0231 [+0.0082, +0.0400] supported |
+| Wikimedia | +0.0058 [-0.0004, +0.0125] inconclusive | +0.0058 [-0.0006, +0.0124] inconclusive |
+| Qt | +0.0101 [+0.0032, +0.0183] supported | +0.0101 [+0.0031, +0.0181] supported |
+
+No verdict moves at either level (Wikimedia stays supported at 0.95, [+0.0001, +0.0116] by chain).
+Chains coarsen the clusters little where a window's examples rarely share a chain, and most in Qt,
+where more than one in three sit in a relation chain; the intervals move in the fourth decimal. Chains are the
+cluster unit of the test read as registered, whatever these readings show. What remains before it
+is the simulations: each organization's K and detectable effects rerun with chains as the drawn
+unit (`partition_sensitivity.py --chains`, the planned test changes taken to chains at each
+training window's ratio, the window nearest the test window's size: OpenStack 0.948, Wikimedia
+0.977, Qt 0.865 chains a change). A Gerrit test read is refused without `--chains`, and a K or a
+bound made in the other unit is refused (`partition_pilot.py`); the GitHub replication has no
+relation chains and reads by change. The OpenStack lower bound of the entry "The registered
+sensitivities read on the registered metric" is +0.0081 (0.00815), not +0.0082 as first typed.

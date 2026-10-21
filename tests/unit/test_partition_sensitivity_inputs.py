@@ -312,3 +312,53 @@ def test_the_simulation_names_the_cell_it_simulates(tmp_path) -> None:
     assert 'FOREIGN_TAG="${FOREIGN_SOURCE:+-foreign$FOREIGN_SOURCE}"' in sbatch
     assert 'RESULT_SUFFIX="$RESULT_SUFFIX$FOREIGN_TAG"' in sbatch
     assert "partition-pilot-$ORG$FOREIGN_TAG$PILOT_TAG.json" in sbatch
+
+
+def test_chains_are_drawn_only_from_a_pilot_read_under_chains(tmp_path: Path) -> None:
+    """The committed pilot was read by change: asking to draw chains from it is refused."""
+    result = _likelihood(
+        tmp_path, "--metric", "logprob_per_token", "--chains", str(tmp_path / "chains.json")
+    )
+    assert result.returncode != 0
+    assert "the pilot was read by change; --chains must match it" in result.stderr
+
+
+def test_a_pilot_read_under_chains_is_not_simulated_by_change(tmp_path: Path) -> None:
+    pilot = json.loads(
+        (ROOT / "datasets/results/partition-pilot-wikimedia-likelihood.json").read_text()
+    )
+    pilot["cluster_unit"] = {"unit": "chain", "file": "c.json"}
+    (tmp_path / "pilot.json").write_text(json.dumps(pilot))
+    results = ROOT / "datasets/results"
+    argv = ["--corpus", "datasets/gerrit", "--org", "wikimedia", "--metric", "logprob_per_token"]
+    argv += ["--pilot", str(tmp_path / "pilot.json")]
+    argv += ["--projection", str(results / "project-windows-wikimedia-v3.json")]
+    argv += ["--admissible", str(results / "admissible-partitions-wikimedia.json")]
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), *argv, "--out", str(tmp_path / "o.json")],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "the pilot was read by chain; --chains must match it" in result.stderr
+
+
+def test_a_chain_pool_takes_each_chains_one_project(tmp_path: Path, monkeypatch) -> None:
+    module = _module()
+    rows = [
+        {"change_id": "I1", "project": "p"},
+        {"change_id": "I2", "project": "p"},
+        {"change_id": "I3", "project": "q"},
+    ]
+    monkeypatch.setattr(module, "refined_examples", lambda corpus, org: rows)
+    from sphragis.measure.stats import Cluster
+
+    clusters = [Cluster("chain-1", (1.0,), (0.0,)), Cluster("chain-3", (1.0,), (0.0,))]
+    chain_of = {"I1": "chain-1", "I2": "chain-1", "I3": "chain-3"}
+    pool = module.with_projects(clusters, Path("c"), "openstack", chain_of)
+    assert [project for _, project in pool] == ["p", "q"]
+    chain_of["I3"] = "chain-1"  # a chain spanning two projects has no one project
+    with pytest.raises(SystemExit, match="maps to projects"):
+        module.with_projects(clusters[:1], Path("c"), "openstack", chain_of)

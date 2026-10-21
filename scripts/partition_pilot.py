@@ -24,7 +24,9 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
+from sphragis.corpus.chains import chain_map, relabel
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
     K_COVERAGE,
@@ -101,6 +103,11 @@ parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 
 # Any fixed value: fixed so the reading reproduces.
 parser.add_argument(
     "--planted", type=Path, help="the organization's planted dev run (outcome-neutral check 5)"
+)
+parser.add_argument(
+    "--chains",
+    type=Path,
+    help="relation_chains.py's artifact: resample relation chains instead of changes",
 )
 parser.add_argument(
     "--without",
@@ -186,6 +193,16 @@ def lexer_sure(runs: list[tuple[dict, int]]) -> tuple[list[tuple[dict, int]], in
     return kept, len(unsure & set.intersection(*scored))
 
 
+def cluster_by_chain(runs: list[tuple[dict, int]], chains: dict, org: str) -> dict[str, Any]:
+    """Relabel every run row's `change_id` with its relation chain, so the bootstrap, which groups
+    by `change_id`, resamples chains (research log, 2026-10-21); returns what the report records."""
+    chain_of = chain_map(chains, org)
+    seen = relabel(
+        (row for results, _ in runs for rows in results.values() for row in rows), chain_of
+    )
+    return {"changes": len(seen), "chains": len({chain_of[c] for c in seen})}
+
+
 def main() -> None:
     args = parser.parse_args()
     if args.lexer_sure and (args.sizing or args.sensitivity or args.planted or args.without):
@@ -269,6 +286,10 @@ def main() -> None:
         decoders.add(json.dumps(decoder(run), sort_keys=True))
     if len(decoders) != 1:
         raise SystemExit(f"runs decoded differently, not one study: {sorted(decoders)}")
+    cluster_unit: dict[str, Any] = {"unit": "change"}
+    if args.chains:
+        chained = cluster_by_chain(runs, json.loads(args.chains.read_text()), args.org)
+        cluster_unit = {"unit": "chain", "file": str(args.chains), **chained}
     if h2 and (len(pools) != 1 or None in pools):
         raise SystemExit("an H2 cell's runs must all draw their arms from one recorded pool")
     if windows == {"train -> test"}:
@@ -441,6 +462,20 @@ def main() -> None:
         missing = [n for n in REGISTERED_SENSITIVITIES if n not in listings]
         if missing:
             raise SystemExit(f"a test-window read needs --without for {missing}")
+    # Chains are a Gerrit test read's cluster unit (research log, 2026-10-21), and a K or a
+    # bound carries the unit it was simulated in; the GitHub replication has no relation chains.
+    if window == "test" and not args.replication and not args.chains:
+        raise SystemExit("a test-window read resamples relation chains: give --chains")
+    for artifact in (args.sizing, args.sensitivity):
+        made_by = (
+            (json.loads(artifact.read_text()).get("cluster_unit") or {}).get("unit", "change")
+            if artifact
+            else None
+        )
+        if made_by is not None and made_by != cluster_unit["unit"]:
+            raise SystemExit(
+                f"{artifact} was made by {made_by}, this read is by {cluster_unit['unit']}"
+            )
     contrast = {"contrast": h2_contrast(args.foreign_source)} if h2 else {}
     cell = h1_over_partitions(
         runs,
@@ -525,6 +560,7 @@ def main() -> None:
         "sizing",
         "without",
         "lexer_sure",
+        "cluster_unit",
         "provenance",
     }
     if head & set(cell):
@@ -548,6 +584,7 @@ def main() -> None:
         "sizing": sizing,
         "without": without,
         "lexer_sure": lexer_dropped,
+        "cluster_unit": cluster_unit,
         "provenance": provenance_header(),
     }
     if window == "test":

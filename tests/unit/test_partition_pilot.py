@@ -136,6 +136,22 @@ def _sizing(tmp_path: Path, org: str, **fields: object) -> list[str]:
     return ["--sizing", str(path)]
 
 
+def _chains(tmp_path: Path, org: str) -> list[str]:
+    """A relation-chain artifact putting each change in a chain of its own."""
+    path = tmp_path / "chains.json"
+    path.write_text(
+        json.dumps({"org": org, "change_chain": {f"c{i}": f"chain-c{i}" for i in range(2 * N)}})
+    )
+    return ["--chains", str(path)]
+
+
+def _by_chain(path: Path, chains: str) -> None:
+    """Mark an artifact as made under relation chains, as a chain simulation writes it."""
+    artifact = json.loads(path.read_text())
+    artifact["cluster_unit"] = {"unit": "chain", "file": chains}
+    path.write_text(json.dumps(artifact))
+
+
 def _main(monkeypatch: pytest.MonkeyPatch, argv: list[str]) -> None:
     monkeypatch.setattr(sys, "argv", ["partition_pilot.py", *argv])
     partition_pilot.main()
@@ -353,6 +369,8 @@ def _registered_metric(argv: list[str]) -> list[str]:
                 "metric": REGISTERED_METRIC,
                 "runs": pilot["sizing"]["runs"],
                 "spread_targets": spread_targets(pilot),
+                # A coverage artifact is made in the unit of the pilot it covers.
+                **({"cluster_unit": pilot["cluster_unit"]} if "cluster_unit" in pilot else {}),
             }
             path.write_text(json.dumps(coverage))
     return [*argv, "--metric", REGISTERED_METRIC]
@@ -541,13 +559,18 @@ def _gerrit_test_argv(
     names: tuple[str, ...] = REGISTERED_SENSITIVITIES,
 ) -> list[str]:
     sensitivity = _sensitivity(tmp_path, [0.975, 0.95], 0.4, "openstack", pilot=pilot)
+    chains = _chains(tmp_path, "openstack")
+    sizing = _sizing(tmp_path, "openstack")
+    for made in (sensitivity, Path(sizing[1])):
+        _by_chain(made, chains[1])
     argv = [
         *_inputs(tmp_path, "openstack", "test"),
         *_planted(tmp_path, "openstack"),
-        *_sizing(tmp_path, "openstack"),
+        *sizing,
         *_registered_without(tmp_path, "openstack", {name: [] for name in names}),
         "--sensitivity",
         str(sensitivity),
+        *chains,
         *extra,
     ]
     return [*_registered_metric(argv), "--out", str(tmp_path / "o.json")]
@@ -826,6 +849,7 @@ def test_a_test_read_takes_its_k_from_the_coverage_artifact(
         "metric": REGISTERED_METRIC,
         "runs": len(ADMISSIBLE),
         "spread_targets": spread_targets(PILOT),
+        "cluster_unit": {"unit": "chain"},
     }
     (tmp_path / "sizing.json").write_text(json.dumps(coverage))
     _main(monkeypatch, argv)
@@ -1110,3 +1134,56 @@ def test_a_lexer_sure_read_counts_only_the_examples_that_leave_the_cell(
     out = tmp_path / "sure.json"
     _main(monkeypatch, [*argv, "--lexer-sure", "--out", str(out)])
     assert json.loads(out.read_text())["lexer_sure"] == {"examples_dropped": 1}
+
+
+def test_chain_clustering_relabels_every_row_with_its_chain() -> None:
+    runs = [({"a": [{"change_id": "I1"}, {"change_id": "I2"}], "b": [{"change_id": "I3"}]}, 1)]
+    chains = {
+        "org": "openstack",
+        "change_chain": {"I1": "chain-7", "I2": "chain-7", "I3": "chain-9"},
+    }
+    recorded = partition_pilot.cluster_by_chain(runs, chains, "openstack")
+    assert [row["change_id"] for rows in runs[0][0].values() for row in rows] == [
+        "chain-7",
+        "chain-7",
+        "chain-9",
+    ]
+    assert recorded == {"changes": 3, "chains": 2}
+
+
+@pytest.mark.parametrize(
+    ("chains", "match"),
+    [
+        ({"org": "openstack", "change_chain": {}}, "I1 has no chain"),
+        (
+            {"org": "wikimedia", "change_chain": {"I1": "chain-1"}},
+            "'wikimedia''s, not 'openstack''s",
+        ),
+    ],
+)
+def test_chain_clustering_refuses_an_unmapped_change_or_another_organization(
+    chains: dict, match: str
+) -> None:
+    with pytest.raises(SystemExit, match=match):
+        partition_pilot.cluster_by_chain([({"a": [{"change_id": "I1"}]}, 1)], chains, "openstack")
+
+
+def test_a_gerrit_test_read_without_chains_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _gerrit_test_argv(tmp_path)
+    at = argv.index("--chains")
+    with pytest.raises(SystemExit, match="resamples relation chains: give --chains"):
+        _main(monkeypatch, argv[:at] + argv[at + 2 :])
+
+
+def test_a_k_made_by_change_is_not_read_by_chain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    argv = _gerrit_test_argv(tmp_path)
+    sizing = tmp_path / "sizing.json"
+    artifact = json.loads(sizing.read_text())
+    artifact["cluster_unit"] = {"unit": "change"}
+    sizing.write_text(json.dumps(artifact))
+    with pytest.raises(SystemExit, match="was made by change, this read is by chain"):
+        _main(monkeypatch, argv)
