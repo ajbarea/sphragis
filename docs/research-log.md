@@ -10705,3 +10705,35 @@ dependence the item is about. Amended for all three organizations:
    the clone, counted.
 3. Items 2 to 4 above stand: chains are components joined also by a shared Change-Id, and they are
    H1's cluster unit, decided before any reading.
+
+### Relation chains read on the development window: H1's readings hold under them (2026-10-21)
+
+`# research(2026-10)`. As registered and amended above. Parents were fetched for every patch set
+of the three organizations' raw months (2026-10-20 23:58 to 2026-10-21 04:43; OpenStack, Wikimedia
+and Qt concurrently, each its own host at its own terms); every authored patch set's parents were
+read but Wikimedia's 3, and 3 merged changes fell back to their clone. Chains
+(`relation-chains-<org>.json`):
+
+| organization | merged changes | links | dev examples in a chain | dev clusters, by change → by chain |
+| --- | --- | --- | --- | --- |
+| OpenStack | 25,191 | 3,257 | 71 of 515 (13.8%) | 214 → 211 |
+| Wikimedia | 114,857 | 6,687 | 189 of 747 (25.3%) | 448 → 441 |
+| Qt | 52,868 | 12,401 | 505 of 809 (62.4%) | 409 → 368 |
+
+The registered H1 metric read on the development pilots under both units, from the same 22 runs
+each (`partition-pilot-<org>-likelihood.json` by change, `-likelihood-chains.json` by chain), at
+0.975:
+
+| organization | by change | by chain |
+| --- | --- | --- |
+| OpenStack | +0.0231 [+0.0082, +0.0402] supported | +0.0231 [+0.0082, +0.0400] supported |
+| Wikimedia | +0.0058 [-0.0004, +0.0125] inconclusive | +0.0058 [-0.0006, +0.0124] inconclusive |
+| Qt | +0.0101 [+0.0032, +0.0183] supported | +0.0101 [+0.0031, +0.0181] supported |
+
+No verdict moves at either level (Wikimedia stays supported at 0.95, [+0.0001, +0.0116] by chain).
+Chains coarsen the clusters little where a window's examples rarely share a chain, and most in Qt,
+where nearly two in three sit in one; the intervals move in the fourth decimal. Chains are the
+cluster unit of the test read as registered, whatever these readings show. What remains before it
+is the simulations: each organization's K and detectable effects rerun with chains as the drawn
+unit (`partition_sensitivity.py --chains`, the planned test changes taken to chains at each
+development window's ratio).

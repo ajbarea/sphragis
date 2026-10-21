@@ -3153,15 +3153,10 @@
     "Ifff3b85e1bd55ff231570d3bc7f9ea4af1cf3df6": "chain-1194631"
   },
   "provenance": {
-    "generated_at": "2026-10-21T04:43:14.001806+00:00",
+    "generated_at": "2026-10-21T08:54:49.148831+00:00",
     "git": {
-      "commit": "bd0fe6a51e4586f5502ad19a715ac0f9d60ba844",
-      "branch": "registration/relation-chains",
-      "uncommitted_code": [
-        "scripts/relation_chains.py",
-        "sphragis/corpus/chains.py"
-      ],
-      "uncommitted_code_sha256": "a19ca448649eeb93a53663af7cb43ba8790818bbc6fc398b317a7f555cd2b0ae"
+      "commit": "977253f69f27d342f05ae1aa7fcf640af1c58f88",
+      "branch": "registration/relation-chains"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
