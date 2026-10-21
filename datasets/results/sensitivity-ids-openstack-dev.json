@@ -6,8 +6,9 @@
   "changes": 214,
   "rules": {
     "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers.json's changes_ai",
-    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)",
-    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)"
+    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:dunfell|gatesgarth|hardknott|honister|kirkstone|langdale|mickledore|nanbield|scarthgap|styhead|walnascar|whinlatter|wrynose|blacksail|garburn)$), outside the projects that merge their release branches up ([])",
+    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)",
+    "found_before_checkpoint": "\u03b7 \u2265 0.8 in datasets/results/backport-lookup-openstack.json: the added lines stood in the project's branches at the evaluated weights' upload (corpus.lookup)"
   },
   "ids": {
     "ai_assisted": [
@@ -60,6 +61,35 @@
     "backport_only": [],
     "layout_only": [
       "openstack:I42b2ea5c4e7f5a68bdfd044e0bc9a3b7745708ec:openstack_auth/defaults.py:2:123"
+    ],
+    "found_before_checkpoint": [
+      "openstack:I032ef2288967cb9e190a955590e66f981d8f28de:distributedcloud-client/dcmanagerclient/commands/v1/subcloud_manager.py:7:371",
+      "openstack:I09fef07438a569c5db6f4e28803a7aaf2a57089f:neutron/tests/functional/plugins/ml2/drivers/ovn/mech_driver/ovsdb/test_ovn_client.py:1:461",
+      "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:1:376",
+      "openstack:I110dc88b2032971049e4676a5fc3b112cf8e916f:reference/projects.yaml:1:378",
+      "openstack:I17e95b27c0f51c92dfce30f7ad3dcdf1c98fc55e:requirements.yml:3:24",
+      "openstack:I1f689931572bf1f252b4e005ec226f17a761b867:doc/source/updates/kubernetes/configuring-kubernetes-multi-version-upgrade-orchestration-aio-b0b59a346466.rst:7:145",
+      "openstack:I1f689931572bf1f252b4e005ec226f17a761b867:doc/source/updates/kubernetes/configuring-kubernetes-multi-version-upgrade-orchestration-aio-b0b59a346466.rst:7:148",
+      "openstack:I1f689931572bf1f252b4e005ec226f17a761b867:doc/source/updates/kubernetes/manual-kubernetes-components-upgrade.rst:9:338",
+      "openstack:I1f689931572bf1f252b4e005ec226f17a761b867:doc/source/updates/kubernetes/manual-kubernetes-components-upgrade.rst:9:385",
+      "openstack:I2b062ea0c59d5d92c7c518f6256fbdaa4bf719f4:python3-k8sapp-kubevirt/k8sapp_kubevirt/k8sapp_kubevirt/lifecycle/lifecycle_kubevirt.py:19:64",
+      "openstack:I2b062ea0c59d5d92c7c518f6256fbdaa4bf719f4:python3-k8sapp-kubevirt/k8sapp_kubevirt/k8sapp_kubevirt/lifecycle/lifecycle_kubevirt.py:19:81",
+      "openstack:I3e1a7b170c9840b0de83e0eb97c596154790d019:manifests/deps.pp:4:30",
+      "openstack:I42f1d504a063f1d8542c861b3b7caffe56c47bf1:neutron/services/externaldns/drivers/designate/driver.py:1:170",
+      "openstack:I4bb6cc238d4e567e3edc6c15a58d4a5f9a41e273:CONTRIBUTING.rst:2:90",
+      "openstack:I539d5081a30783af8ba9f4163af731e783635edd:ovsdbapp/tests/functional/schema/hardware_vtep/test_impl_idl.py:1:368",
+      "openstack:I5dfd5b223d1fe1eb7d66f449d9ae9ab8c1106fd5:test/liberasurecode_test.c:1:1461",
+      "openstack:I6b17f6de9137a2e37f77113ce40db7350faa50a3:doc/source/planning/kubernetes/verified-commercial-hardware.rst:3:125",
+      "openstack:I753b0cd3912d2f9bc53c50906c05e90f2443d3f0:doc/source/security/kubernetes/configure-kubernetes-for-oidc-token-validation-while-bootstrapping-the-system.rest:15:33",
+      "openstack:I753b0cd3912d2f9bc53c50906c05e90f2443d3f0:doc/source/security/kubernetes/configure-kubernetes-for-oidc-token-validation-while-bootstrapping-the-system.rest:15:35",
+      "openstack:I753b0cd3912d2f9bc53c50906c05e90f2443d3f0:doc/source/security/kubernetes/sssd-support-5fb6c4b0320b.rest:15:252",
+      "openstack:I764c25386803982644ce05403810dedc3bb7ddcf:distributedcloud/dcmanager/manager/subcloud_manager.py:5:595",
+      "openstack:I902c18895679737c4a9dc20b98affdc98af33659:tox.ini:1:80",
+      "openstack:Ia1d3b8644c48287a2f5839ee09be52bb767d81a6:deliverables/flamingo/glance.yaml:2:18",
+      "openstack:Ib379e4e4c8308361357914f21fd8d73ab5bafbb4:distributedcloud/scripts/ipmi_sel_event_monitor.py:2:37",
+      "openstack:Ib45005e0d88d9fa0eeee504000c948a55afa770d:doc/source/admin/troubleshooting.rst:12:197",
+      "openstack:Ib655eae79ba73f4582b29fef82c2d882a474329b:ansible/roles/loadbalancer-config/defaults/main.yml:12:2",
+      "openstack:If4a783ab23fe993276b82cd82b1a3316482cc992:doc/source/security/kubernetes/portieris-server-certificate-a0c7054844bd.rst:2:29"
     ]
   },
   "whitespace_only": {
@@ -73,6 +103,11 @@
     }
   },
   "ai_unsearched": [],
+  "lookup_counts": {
+    "suspicious": 28,
+    "no_eligible_line": 33,
+    "no_reference": 0
+  },
   "universe": [
     "openstack:I00c16740764a21ef305ed5c197135f1fc04cb856:sysinv/sysinv/sysinv/sysinv/common/ceph.py:6:4",
     "openstack:I02022863d4d680640b8da13d960fcdec463514c2:stx-openbao-helm/stx-openbao-helm/fluxcd-manifests/openbao-manager/openbao-manager-static-overrides.yaml:2:10",
@@ -591,10 +626,10 @@
     "openstack:Iffea25529cf792d91d0c903526d1fb213f09a338:playbooks/roles/install-docker/tasks/Ubuntu.noble.yaml:3:39"
   ],
   "provenance": {
-    "generated_at": "2026-10-19T04:04:57.335121+00:00",
+    "generated_at": "2026-10-21T01:48:49.515370+00:00",
     "git": {
-      "commit": "cbc6e1570616abef4bd92885beb5f0d75f43194d",
-      "branch": "measure/review-readings"
+      "commit": "ca6e008ba669360d79b6c28fef4197352b4fde61",
+      "branch": "corpus/lookup-sensitivity"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",

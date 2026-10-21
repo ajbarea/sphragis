@@ -6,8 +6,9 @@
   "changes": 448,
   "rules": {
     "ai_assisted": "(project, Change-Id) among datasets/results/ai-trailers.json's changes_ai",
-    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_\\d|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$)",
-    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)"
+    "backport_only": "(project, Change-Id) only on branches matching ^(?:stable(?:/|-|$)|unmaintained/|bugfix/|release_[\\d.]+$|r/stx|(?:fundraising/)?REL\\d|(?:deploy/)?wmf/|wmf_deploy$|deployment$|\\d+(?:\\.\\d+)+$|lts-\\d|qds[/-]\\d|(?:dunfell|gatesgarth|hardknott|honister|kirkstone|langdale|mickledore|nanbield|scarthgap|styhead|walnascar|whinlatter|wrynose|blacksail|garburn)$), outside the projects that merge their release branches up ([])",
+    "layout_only": "the revision changes the hunk's layout alone (experiment.layout)",
+    "found_before_checkpoint": "\u03b7 \u2265 0.8 in datasets/results/backport-lookup-wikimedia.json: the added lines stood in the project's branches at the evaluated weights' upload (corpus.lookup)"
   },
   "ids": {
     "ai_assisted": [],
@@ -36,6 +37,44 @@
       "wikimedia:Id6040acf41136054ba4460c6166b11cb1cb3edcf:includes/HookHandler/SearchHooks.php:6:66",
       "wikimedia:Ie48e85a4fd0fec523275ae7a850b14d2930010ba:src/Special/OATHManage.php:8:721",
       "wikimedia:Ifd3dba4d8719323588ac87d62b778d574941a89b:repo/domains/reuse/src/Infrastructure/GraphQL/Schema/ValueType.php:4:14"
+    ],
+    "found_before_checkpoint": [
+      "wikimedia:I01cc1328e7807c3e064571be61e966452d872360:includes/user/UserGroupManager.php:6:131",
+      "wikimedia:I0635f920660207c086864f9141399455258bd456:cookbooks/sre/hosts/provision.py:2:179",
+      "wikimedia:I0fa8fb809932d92e7e1149350065832520e6ea55:includes/upload/UploadVerification.php:1:674",
+      "wikimedia:I376304cb81fbba3b6d57d6d0b0eecdb6f3bcb308:repoconfig.yaml:1:1074",
+      "wikimedia:I3876c50cdd1666645d326b20e3e36617bc7decf8:ext/wmf-civicrm/Civi/WMFQueueMessage/AuditMessage.php:1:467",
+      "wikimedia:I41935ecddf4e80769bd54e3403811181a02ce862:includes/frontend/FlaggedRevsUIHooks.php:7:190",
+      "wikimedia:I4cd1e21418675d74d102f3880ef53ae9fda42095:modules/profile/manifests/cache/haproxy.pp:9:271",
+      "wikimedia:I4cd1e21418675d74d102f3880ef53ae9fda42095:modules/profile/manifests/cache/haproxy.pp:9:284",
+      "wikimedia:I59e7d184c8612ae644aa1aaff28ff3cbefae041e:includes/Api/ApiQueryGadgets.php:1:157",
+      "wikimedia:I5ee726c2557225ed0c6fa5ab4ada91a7d858f96a:lib/Config.js:2:247",
+      "wikimedia:I61643ec457be77fd2c6e1dc6e17f6c6f29913912:refinery-job/src/main/scala/org/wikimedia/analytics/refinery/job/mediawikihistory/sql/AllViewsRegistrar.scala:4:50",
+      "wikimedia:I61775e784cfbeffdf01e5c5242e69c4a193d05af:src/GlobalContributions/CheckUserApiRequestAggregator.php:12:59",
+      "wikimedia:I6a6a69643a5167a40563b5e87e17466ff0159949:modules/ceph/spec/classes/ceph_config_spec.rb:2:4",
+      "wikimedia:I6acbad9ff4786219c2cf49f477644fe210f3dba7:hieradata/hosts/es2050.yaml:1:1",
+      "wikimedia:I70b9f69ec6426d8f1e462592605e8225dabbf234:handlers/edits_per_editor_handler.go:10:64",
+      "wikimedia:I747ea6b68c0a33dcfd0d614959014f4d8d78fcf5:includes/Query/FullTextSimpleMatchQueryBuilder.php:1:66",
+      "wikimedia:I747ea6b68c0a33dcfd0d614959014f4d8d78fcf5:profiles/FullTextQueryBuilderProfiles.config.php:1:140",
+      "wikimedia:I86b9724bc4aa40a30b08f1c87fe002af11929fcb:modules/profile/templates/analytics/refinery/job/refinery-sqoop-wikifunctions-production.sh.erb:1:15",
+      "wikimedia:I8ad22367bedb443b46b0602ef69508748348df3c:profiles/PhraseSuggesterProfiles.config.php:1:127",
+      "wikimedia:I8d6262c9fb7299257b3e913b966da41273cbbf8f:extension.json:5:189",
+      "wikimedia:I970ca10776bd9f35b4ccfcbe952f291d6d675a06:modules/varnish/files/tests/upload/21-maps.vtc:1:44",
+      "wikimedia:I98cb05f072653da89b905d4310dd7d5cbe1ead8e:charts/opensearch-cluster/templates/networkpolicy_wmf.yaml:39:4",
+      "wikimedia:I9a58d5840f4e9b73b4354bb0e4aa121e3fcc14b4:tests/phpunit/ReadingListsTestHelperTrait.php:9:140",
+      "wikimedia:I9ee2e8a72aa5c9808c58d808e6284f5be27c742f:lib/i18n/qqq.json:2:173",
+      "wikimedia:Ia70cee63ab2f524887b40ab5539edfc502a64ba7:templates/wmnet:1:35",
+      "wikimedia:Ib12165640e4afe254f58327bfd996e81e18e0162:extension.json:1:57",
+      "wikimedia:Ib5c9ba6e54c83afcf144c4dcce2148d96a6a6964:hieradata/role/common/wmcs/db/wikireplicas/dedicated/analytics_multiinstance.yaml:1:2",
+      "wikimedia:Ibde918c3085f645e7ff8bf952707c98c6bcbee64:src/NodeData/DataMw.php:8:223",
+      "wikimedia:Ibe0e32f657a61da96b7ba42ea2de23403894c721:includes/specials/SpecialPollAjaxUpload.php:3:237",
+      "wikimedia:Ice8d588eaf5e582c578eb459e2a81361bd96fb77:manifests/site.pp:1:1510",
+      "wikimedia:Id5bb1e996ec56c56ad09c848bd85dc346ba3750d:languages/i18n/en.json:4:999",
+      "wikimedia:Ideb9784b48568e1d2eb9ed8145ff133499477722:includes/search/SearchMySQL.php:1:314",
+      "wikimedia:Ie53620616bdeeac8b96f738304dcb8e10cc9dd20:RELEASE-NOTES-1.45:4:510",
+      "wikimedia:Ie8ebc648a979b0cde0d702906aab3dc8f0d65f13:wmf-config/CommonSettings.php:2:4019",
+      "wikimedia:Ifc85e1a8f564c937d66e008a370fa9f9717333ef:cookbooks/sre/k8s/__init__.py:5:210",
+      "wikimedia:Iff2b2d36ac328d7a02bf5c1a8fdbb7f968e4a8db:includes/ZObjectUtils.php:3:1103"
     ]
   },
   "whitespace_only": {
@@ -61,6 +100,11 @@
     }
   },
   "ai_unsearched": [],
+  "lookup_counts": {
+    "suspicious": 14,
+    "no_eligible_line": 68,
+    "no_reference": 0
+  },
   "universe": [
     "wikimedia:I0042e0c7455d8082ec2f491346f264b362625271:resources/skins.minerva.scripts/setup.js:1:20",
     "wikimedia:I00a7ab186bfbb2aad6b05d4675dc187fa34176e9:includes/Maintenance/Reindexer.php:1:392",
@@ -811,10 +855,10 @@
     "wikimedia:Ifff3b85e1bd55ff231570d3bc7f9ea4af1cf3df6:i18n/en.json:2:38"
   ],
   "provenance": {
-    "generated_at": "2026-10-19T04:06:52.311365+00:00",
+    "generated_at": "2026-10-21T01:50:49.101799+00:00",
     "git": {
-      "commit": "cbc6e1570616abef4bd92885beb5f0d75f43194d",
-      "branch": "measure/review-readings"
+      "commit": "ca6e008ba669360d79b6c28fef4197352b4fde61",
+      "branch": "corpus/lookup-sensitivity"
     },
     "python": "3.14.4",
     "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
