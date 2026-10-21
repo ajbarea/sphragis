@@ -1,6 +1,6 @@
 {
   "org": "qt",
-  "example_change_ids_not_in_the_snapshots": 1,
+  "example_change_ids_without_a_merged_record": 1,
   "merged_changes": 52868,
   "links": 12401,
   "parents_from_the_clone": 0,
@@ -9,7 +9,9 @@
     "pilot": {
       "examples": 1147,
       "in_a_chain": 693,
+      "in_a_relation_chain": 423,
       "share": 0.604185,
+      "relation_share": 0.368788,
       "clusters_by_change": 368,
       "clusters_by_chain": 323,
       "chain_sizes": {
@@ -38,7 +40,9 @@
     "train": {
       "examples": 7493,
       "in_a_chain": 4771,
+      "in_a_relation_chain": 2922,
       "share": 0.636728,
+      "relation_share": 0.389964,
       "clusters_by_change": 2951,
       "clusters_by_chain": 2552,
       "chain_sizes": {
@@ -106,7 +110,9 @@
     "dev": {
       "examples": 809,
       "in_a_chain": 505,
+      "in_a_relation_chain": 312,
       "share": 0.624227,
+      "relation_share": 0.385661,
       "clusters_by_change": 409,
       "clusters_by_chain": 368,
       "chain_sizes": {
@@ -3866,9 +3872,9 @@
     "Ifff9bf51fb787778473d2b0bac6603cada2ab443": "chain-665341"
   },
   "provenance": {
-    "generated_at": "2026-10-21T09:00:39.010983+00:00",
+    "generated_at": "2026-10-21T09:53:06.251988+00:00",
     "git": {
-      "commit": "977253f69f27d342f05ae1aa7fcf640af1c58f88",
+      "commit": "3746a5c8ede38905f04ded2780391947a3eb6eec",
       "branch": "registration/relation-chains"
     },
     "python": "3.14.4",

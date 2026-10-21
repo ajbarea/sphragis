@@ -1,6 +1,6 @@
 {
   "org": "openstack",
-  "example_change_ids_not_in_the_snapshots": 0,
+  "example_change_ids_without_a_merged_record": 0,
   "merged_changes": 25191,
   "links": 3257,
   "parents_from_the_clone": 1,
@@ -9,7 +9,9 @@
     "pilot": {
       "examples": 532,
       "in_a_chain": 169,
+      "in_a_relation_chain": 144,
       "share": 0.317669,
+      "relation_share": 0.270677,
       "clusters_by_change": 192,
       "clusters_by_chain": 189,
       "chain_sizes": {
@@ -27,7 +29,9 @@
     "train": {
       "examples": 4006,
       "in_a_chain": 1102,
+      "in_a_relation_chain": 719,
       "share": 0.275087,
+      "relation_share": 0.179481,
       "clusters_by_change": 1645,
       "clusters_by_chain": 1560,
       "chain_sizes": {
@@ -53,7 +57,9 @@
     "dev": {
       "examples": 515,
       "in_a_chain": 71,
+      "in_a_relation_chain": 31,
       "share": 0.137864,
+      "relation_share": 0.060194,
       "clusters_by_change": 214,
       "clusters_by_chain": 211,
       "chain_sizes": {
@@ -2124,9 +2130,9 @@
     "Iffea25529cf792d91d0c903526d1fb213f09a338": "chain-963642"
   },
   "provenance": {
-    "generated_at": "2026-10-21T08:52:46.353983+00:00",
+    "generated_at": "2026-10-21T09:45:22.112882+00:00",
     "git": {
-      "commit": "977253f69f27d342f05ae1aa7fcf640af1c58f88",
+      "commit": "3746a5c8ede38905f04ded2780391947a3eb6eec",
       "branch": "registration/relation-chains"
     },
     "python": "3.14.4",
