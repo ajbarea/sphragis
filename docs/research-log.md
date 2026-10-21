@@ -10619,3 +10619,13 @@ read beside them for the first time (OpenStack +0.0020, Wikimedia +0.0065). Qt h
 development sensitivity reading; its listing carries the new list for when one is made. The
 primary estimate keeps the found targets, so the disclosure record keeps direct and temporal
 contamination not controlled, now with the measured share and this sensitivity beside them.
+
+### The blind baseline reproduced from intact inputs, with its registered reading (2026-10-20)
+
+`# research(2026-10)`. The battery's two window files kept locally had been damaged by the
+redactor (issue #183); the cluster's copies, written 2026-09-16 before that redaction, parse
+whole (2,153 and 2,769 lines) and replace them. From them `contamination_blind.py` reproduces
+`contamination-openstack-6mo-blind.json` exactly, every separation and interval unchanged, and
+now writes the registered reading beside them: Min-K%++ cannot be told from the windows' drift,
+by change and by project, as the entry "Contamination: provenance primary" read from the
+committed artifact.

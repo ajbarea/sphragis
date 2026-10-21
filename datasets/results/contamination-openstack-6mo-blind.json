@@ -1,13 +1,15 @@
 {
   "provenance": {
-    "generated_at": "2026-10-08T00:27:19.764704+00:00",
+    "generated_at": "2026-10-21T02:51:34.382820+00:00",
     "git": {
-      "commit": "cc899ccbfa7aea3207f8602b3c1b72d09c5b02fe",
-      "branch": "measure/contamination-blind"
+      "commit": "d946f5424a3d77589d19a17c1b6385098d9a65a2",
+      "branch": "results/blind-reading"
     },
     "python": "3.14.4",
-    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "packages": {}
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
   },
   "battery": "datasets/results/contamination-openstack-6mo-with_context-gapk.json",
   "scored_text": "with_context",
@@ -126,6 +128,16 @@
       "high": 0.022763935722909134
     }
   },
+  "reading": {
+    "membership": "min_k_plus_plus",
+    "blind": "bag_of_words",
+    "membership_minus_blind": {
+      "estimate": -0.14241513942575013,
+      "low": -0.18328561217122186,
+      "high": -0.10005791554402832
+    },
+    "reading": "not_told_from_drift"
+  },
   "bag_of_words_single_seed_auc": {
     "median": 0.6722672597589103,
     "min": 0.6569916061062869,
@@ -148,6 +160,16 @@
         "low": 0.011191437848601105,
         "high": 0.10555231427460132
       }
+    },
+    "reading": {
+      "membership": "min_k_plus_plus",
+      "blind": "bag_of_words",
+      "membership_minus_blind": {
+        "estimate": -0.0561365215285915,
+        "low": -0.10555231427460132,
+        "high": -0.011191437848601105
+      },
+      "reading": "not_told_from_drift"
     },
     "bag_of_words_single_seed_auc": {
       "median": 0.591137845684893,
