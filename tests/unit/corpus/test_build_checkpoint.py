@@ -241,3 +241,12 @@ def test_a_stop_as_the_month_closes_leaves_no_checkpoint(tmp_path: Path, monkeyp
     with pytest.raises(Stop):
         _build(tmp_path, monkeypatch)
     assert not _paths(tmp_path)[1].exists()
+
+
+def test_a_boolean_position_is_malformed(tmp_path: Path, monkeypatch) -> None:
+    with pytest.raises(Stop):
+        _build(tmp_path, monkeypatch, _stop_at(3))
+    checkpoint = _paths(tmp_path)[1]
+    entry = {"at": True, "rows": [], "dropped": {}}
+    checkpoint.write_text(checkpoint.read_text() + json.dumps(entry) + "\n")
+    assert _build(tmp_path, monkeypatch) == [1, 2, 3]

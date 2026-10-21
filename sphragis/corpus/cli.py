@@ -1571,7 +1571,7 @@ def _checkpoint_entry(record: Any) -> bool:
     """Whether a checkpoint record has the shape the build writes for one change."""
     return (
         isinstance(record, dict)
-        and isinstance(record.get("at"), int)
+        and type(record.get("at")) is int
         and isinstance(record.get("rows"), list)
         and isinstance(record.get("dropped"), dict)
     )
@@ -1584,7 +1584,8 @@ def checkpointed_changes(checkpoint: Path, key: dict[str, Any]) -> dict[int, dic
     numbers repeat, and the key's snapshot digest fixes every position. A log under another key,
     with no key, or with a record the build would not write is removed, said so, and nothing
     resumes. A change whose read failed is left out, so it is asked again. Replayed in snapshot
-    order, the month's examples match an uninterrupted build's.
+    order, the month's examples match an uninterrupted build's. `--overwrite` replays it too: a log
+    outlives only a build that never finished.
     """
     if not checkpoint.is_file():
         return {}
