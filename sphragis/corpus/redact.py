@@ -122,6 +122,8 @@ def addresses_in(path: pathlib.Path) -> set[str]:
     except (UnicodeDecodeError, ValueError):
         return third_party_addresses(path.read_bytes().decode("latin-1", errors="replace"))
 
+    if path.suffix == ".jsonl":
+        return set().union(*(_line_addresses(line) for line in text.splitlines()))
     if path.suffix != ".json":
         return third_party_addresses(text)
 
@@ -144,6 +146,34 @@ def addresses_in(path: pathlib.Path) -> set[str]:
         # a `.partial.json` by design. Fall back to the raw scan rather than skipping it.
         return third_party_addresses(text)
     return found
+
+
+def _strings(node: Any) -> list[str]:
+    if isinstance(node, dict):
+        return [s for item in node.values() for s in _strings(item)]
+    if isinstance(node, list):
+        return [s for item in node for s in _strings(item)]
+    return [node] if isinstance(node, str) else []
+
+
+def _line_addresses(line: str) -> set[str]:
+    """One JSON line's addresses, read from its decoded strings as a `.json` file's are; a line
+    that is not JSON is scanned as text."""
+    try:
+        return set().union(*(third_party_addresses(s) for s in _strings(json.loads(line))))
+    except ValueError:
+        return third_party_addresses(line)
+
+
+def _redact_line(line: str) -> str:
+    """One JSON line redacted through its decoded strings, left byte for byte when it holds no
+    address: rewriting a raw line can delete the letter after a JSON backslash (issue #183)."""
+    if not _line_addresses(line):
+        return line
+    try:
+        return json.dumps(_mark_redacted(_redact(json.loads(line))))
+    except ValueError:
+        return redact_text(line)
 
 
 def _redact(value: Any) -> Any:
@@ -191,6 +221,8 @@ def redact_file(path: pathlib.Path) -> tuple[set[str], str | None]:
 
     original = path.read_text(errors="replace")
     trailing = "\n" if original.endswith("\n") else ""
+    if path.suffix == ".jsonl":
+        return found, "\n".join(_redact_line(line) for line in original.splitlines()) + trailing
     if path.suffix != ".json":
         return found, redact_text(original)
     try:
