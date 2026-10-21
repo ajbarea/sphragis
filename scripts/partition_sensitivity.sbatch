@@ -42,6 +42,15 @@ case "$METRIC" in
   logprob_per_token) PILOT_TAG="-likelihood"; RESULT_SUFFIX="$RESULT_SUFFIX-$METRIC" ;;
   *) echo "METRIC must be exact_match or logprob_per_token, not $METRIC" >&2; exit 1 ;;
 esac
+# CHAINS=1: relation chains as the drawn unit (research log, 2026-10-21), from the organization's
+# chain artifact and its pilot read under chains, under a result name of its own.
+CHAIN_ARGS=()
+case "${CHAINS:-0}" in
+  1) CHAIN_ARGS=(--chains "datasets/results/relation-chains-$ORG.json"); PILOT_TAG="$PILOT_TAG-chains"
+     RESULT_SUFFIX="$RESULT_SUFFIX-chains" ;;
+  0) ;;
+  *) echo "CHAINS must be 0 or 1, not $CHAINS" >&2; exit 1 ;;
+esac
 # RUNS=<K> and NULL_ONLY=1: the coverage search over K, the null's rates at a K in place of the
 # pilot's sizing, each under a result name of its own.
 COVERAGE_ARGS=()
@@ -70,6 +79,7 @@ uv run --no-sync python scripts/partition_sensitivity.py \
   --projection "datasets/results/project-windows-$ORG-v3.json" \
   --admissible "datasets/results/admissible-partitions-$ORG.json" \
   --metric "$METRIC" ${SMOKE_ARGS[@]+"${SMOKE_ARGS[@]}"} \
+  ${CHAIN_ARGS[@]+"${CHAIN_ARGS[@]}"} \
   ${COVERAGE_ARGS[@]+"${COVERAGE_ARGS[@]}"} \
   --workers "$(nproc)" \
   --out "$OUT"
