@@ -1589,3 +1589,18 @@ def test_an_h2_simulation_names_its_cell_and_runs_on_the_likelihood_metric(
     call = (tmp_path / "h2" / "home" / "uv.calls").read_text()
     assert "-foreignaosp-likelihood.json" in call and "--foreign-source aosp" in call
     assert "-foreignaosp-logprob_per_token.json" in call
+
+
+def test_a_chain_simulation_draws_chains_from_its_chain_pilot_under_its_own_name(
+    tmp_path: Path,
+) -> None:
+    env = {"CHAINS": "1", "METRIC": "logprob_per_token", "PILOT": "", "PLACEBO": "", "ORG": "qt"}
+    done = _run_job("partition_sensitivity.sbatch", tmp_path, **env)
+    assert done.returncode == 0, done.stderr
+    call = (tmp_path / "home" / "uv.calls").read_text()
+    assert "--chains datasets/results/relation-chains-qt.json" in call
+    assert "partition-pilot-qt-likelihood-chains.json" in call
+    assert "-logprob_per_token-chains.json" in call
+    (tmp_path / "bad").mkdir()
+    refused = _run_job("partition_sensitivity.sbatch", tmp_path / "bad", **{**env, "CHAINS": "2"})
+    assert refused.returncode != 0 and "CHAINS must be 0 or 1" in refused.stderr
