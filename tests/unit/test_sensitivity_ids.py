@@ -38,10 +38,15 @@ def test_the_trailer_searches_must_span_the_window() -> None:
 
 
 def _lookup(path: Path, found: list[str], examples: int = 5, org: str = "openstack") -> Path:
+    window = {
+        "examples": examples,
+        "ids": {"found": found},
+        "suspicious": 0,
+        "no_eligible_line": 0,
+        "no_reference": 0,
+    }
     path.write_text(
-        json.dumps(
-            {"org": org, "windows": {"dev": {"examples": examples, "ids": {"found": found}}}}
-        )
+        json.dumps({"org": org, "rule": {"found_from": 0.8}, "windows": {"dev": window}})
     )
     return path
 
@@ -201,7 +206,7 @@ def test_the_layout_listing_counts_every_whitespace_only_revision_it_read(tmp_pa
         ({"org": "openstack", "windows": {"dev": {"examples": 3, "ids": {"found": []}}}}, "read 3"),
         (
             {"org": "openstack", "windows": {"dev": {"examples": 2, "ids": {"found": ["x"]}}}},
-            "read 2",
+            "found 1 dev examples this read does not hold",
         ),
     ],
 )

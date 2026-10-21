@@ -60,9 +60,14 @@ def found_before_checkpoint(lookup: dict, org: str, window: str, ids: list[str])
         raise SystemExit(f"the lookup artifact holds no {org} {window} window")
     reading = lookup["windows"][window]
     found = set(reading["ids"]["found"])
-    if reading["examples"] != len(ids) or not found <= set(ids):
+    if reading["examples"] != len(ids):
         raise SystemExit(
             f"the lookup read {reading['examples']} {window} examples, this read has {len(ids)}; "
+            "rerun backport_lookup.py on this corpus"
+        )
+    if not found <= set(ids):
+        raise SystemExit(
+            f"the lookup found {len(found - set(ids))} {window} examples this read does not hold; "
             "rerun backport_lookup.py on this corpus"
         )
     return sorted(found)
@@ -116,6 +121,7 @@ def main() -> None:
         )
     except ValueError as error:
         raise SystemExit(str(error)) from error
+    lookup = json.loads(args.lookup.read_text())
     ai = flagged_changes(trailers, args.org)
     branches, merged = index_changes(args.root, args.org)
     merge_up = registered_merge_up(args.org, merge_up_projects(args.root, args.org))
@@ -140,7 +146,7 @@ def main() -> None:
         ),
         "layout_only": sorted(r["id"] for r in rows if row_layout_only(r)),
         "found_before_checkpoint": found_before_checkpoint(
-            json.loads(args.lookup.read_text()), args.org, args.window, [r["id"] for r in rows]
+            lookup, args.org, args.window, [r["id"] for r in rows]
         ),
     }
     report = {
@@ -157,8 +163,8 @@ def main() -> None:
             ),
             "layout_only": "the revision changes the hunk's layout alone (experiment.layout)",
             "found_before_checkpoint": (
-                f"η ≥ 0.8 in {args.lookup}: the added lines stood in the project's branches at the"
-                " evaluated weights' upload (corpus.lookup)"
+                f"η ≥ {lookup['rule']['found_from']} in {args.lookup}: the added lines stood in the"
+                " project's branches at the evaluated weights' upload (corpus.lookup)"
             ),
         },
         "ids": removed,
@@ -167,6 +173,11 @@ def main() -> None:
         # beside how many of those it read as layout.
         "whitespace_only": whitespace_counts(rows),
         "ai_unsearched": unsearched,
+        # The lookup's other classes, reported beside its sensitivity as registered.
+        "lookup_counts": {
+            name: lookup["windows"][args.window][name]
+            for name in ("suspicious", "no_eligible_line", "no_reference")
+        },
         # Every example this listing was made from, so a reader can check its runs came from it.
         "universe": sorted(r["id"] for r in rows),
         "provenance": provenance_header(),

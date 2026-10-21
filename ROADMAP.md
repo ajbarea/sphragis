@@ -190,7 +190,7 @@ Before Stage 1 (2026-11-20), each registered before the seal:
   baseline.
 - [x] **Pre-cutoff code through cherry-picks and backports** (the bounded dev-window share landed
   2026-10-06: `backport_share.py`, `backport-share.json`, read beside H1 in
-  `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches registered, run and read 2026-10-20, about one dev target in twenty found; its registered sensitivity wired and read on the development window, moving no reading): look each target's added lines up
+  `partition-pilot-*-sensitivities.json`; the lookup against the checkpoint's branches registered, run and read 2026-10-20, about one dev target in twenty found; its registered sensitivity wired and read on the development window, moving no reading; the test window's lookup runs once acceptance unseals it, as the runner reads it): look each target's added lines up
   in every branch as it stood at the checkpoint's weight upload, report the rate and a
   sensitivity estimate without them (infini-gram mini, arXiv:2506.12229, as exact-lookup practice).
 - [x] **Pin the checkpoint revisions** (pins: `model.MODEL_REVISIONS`, every load pinned; checkpoint dates from the weights' upload commits and the disclosure record `docs/disclosure/`, 2026-10-20; the Qwen repos changed config and
