@@ -22,7 +22,10 @@ from typing import Any, Protocol
 from urllib.parse import urlparse
 
 from sphragis.corpus.halves import TYPED_TARGET_MIN_CHARS
+from sphragis.corpus.load import refined_examples
 from sphragis.corpus.notedb import _UNSAFE_PROJECT, _isolated_env
+from sphragis.corpus.pipeline import run_dedup, run_split
+from sphragis.corpus.windows import WINDOWS
 
 #: The commit that wrote the evaluated checkpoint's weights, 6ab006b (research log, 2026-10-20).
 UPLOAD = "2024-09-17T16:13:45Z"
@@ -257,3 +260,19 @@ def _missing(stderr: str) -> bool:
 
 def _server_error(stderr: str) -> bool:
     return any(f"error: {code}" in stderr for code in ("429", "500", "502", "503", "504"))
+
+
+def read_windows(root: Path, org: str, windows: list[str]) -> dict[str, list[dict[str, Any]]]:
+    """The examples of `windows`, deduplicated as one corpus and split as `holdout.window_split`
+    reads them for the runner, with its refusals: a change straddling a boundary or outside every
+    window, and any test-window row while the test window is sealed."""
+    examples = refined_examples(root, org)
+    if not examples:
+        raise SystemExit(f"no refined examples under {root / org}")
+    kept, _ = run_dedup(examples)
+    split, straddling, unassigned = run_split(kept, WINDOWS)
+    if straddling or unassigned:
+        raise SystemExit(f"{org}: {len(straddling)} straddling and {len(unassigned)} unassigned")
+    if split.get("test"):
+        raise SystemExit(f"{org}: the corpus holds test-window examples; it is sealed")
+    return {window: [dict(row) for row in split.get(window, [])] for window in windows}

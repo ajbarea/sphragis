@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from sphragis.experiment import decomposition
 from sphragis.experiment.cells import (
@@ -101,6 +102,11 @@ parser.add_argument("--h1-cells", type=int, help="the admitted organizations H1 
 # Any fixed value: fixed so the reading reproduces.
 parser.add_argument(
     "--planted", type=Path, help="the organization's planted dev run (outcome-neutral check 5)"
+)
+parser.add_argument(
+    "--chains",
+    type=Path,
+    help="relation_chains.py's artifact: resample relation chains instead of changes",
 )
 parser.add_argument(
     "--without",
@@ -186,6 +192,24 @@ def lexer_sure(runs: list[tuple[dict, int]]) -> tuple[list[tuple[dict, int]], in
     return kept, len(unsure & set.intersection(*scored))
 
 
+def cluster_by_chain(runs: list[tuple[dict, int]], chains: dict, org: str) -> dict[str, Any]:
+    """Relabel every run row's `change_id` with its relation chain, so the bootstrap, which groups
+    by `change_id`, resamples chains (research log, 2026-10-21); returns what the report records.
+    A Change-Id the chain artifact does not map is refused, never left as its own cluster."""
+    if chains.get("org") != org:
+        raise SystemExit(f"the chain artifact is {chains.get('org')!r}'s, not {org!r}'s")
+    chain_of = chains["change_chain"]
+    seen: set[str] = set()
+    for results, _ in runs:
+        for rows in results.values():
+            for row in rows:
+                if row["change_id"] not in chain_of:
+                    raise SystemExit(f"{row['change_id']} has no chain in the chain artifact")
+                seen.add(row["change_id"])
+                row["change_id"] = chain_of[row["change_id"]]
+    return {"changes": len(seen), "chains": len({chain_of[c] for c in seen})}
+
+
 def main() -> None:
     args = parser.parse_args()
     if args.lexer_sure and (args.sizing or args.sensitivity or args.planted or args.without):
@@ -269,6 +293,10 @@ def main() -> None:
         decoders.add(json.dumps(decoder(run), sort_keys=True))
     if len(decoders) != 1:
         raise SystemExit(f"runs decoded differently, not one study: {sorted(decoders)}")
+    cluster_unit: dict[str, Any] = {"unit": "change"}
+    if args.chains:
+        chained = cluster_by_chain(runs, json.loads(args.chains.read_text()), args.org)
+        cluster_unit = {"unit": "chain", "file": str(args.chains), **chained}
     if h2 and (len(pools) != 1 or None in pools):
         raise SystemExit("an H2 cell's runs must all draw their arms from one recorded pool")
     if windows == {"train -> test"}:
@@ -525,6 +553,7 @@ def main() -> None:
         "sizing",
         "without",
         "lexer_sure",
+        "cluster_unit",
         "provenance",
     }
     if head & set(cell):
@@ -548,6 +577,7 @@ def main() -> None:
         "sizing": sizing,
         "without": without,
         "lexer_sure": lexer_dropped,
+        "cluster_unit": cluster_unit,
         "provenance": provenance_header(),
     }
     if window == "test":

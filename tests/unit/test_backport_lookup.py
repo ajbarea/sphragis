@@ -95,7 +95,7 @@ def run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         _row(6, "openstack/nova", "2025-01-10 00:00:00.000000000", f"{new(6)}\n"),
     ]
     # The real dedup and split read these, as the runner's loader does.
-    monkeypatch.setattr(script, "refined_examples", lambda root, org: examples)
+    monkeypatch.setattr(lookup, "refined_examples", lambda root, org: examples)
     monkeypatch.setattr(script, "claim_host", lambda host: None)
     monkeypatch.setitem(
         lookup.SOURCES,

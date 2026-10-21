@@ -1110,3 +1110,35 @@ def test_a_lexer_sure_read_counts_only_the_examples_that_leave_the_cell(
     out = tmp_path / "sure.json"
     _main(monkeypatch, [*argv, "--lexer-sure", "--out", str(out)])
     assert json.loads(out.read_text())["lexer_sure"] == {"examples_dropped": 1}
+
+
+def test_chain_clustering_relabels_every_row_with_its_chain() -> None:
+    runs = [({"a": [{"change_id": "I1"}, {"change_id": "I2"}], "b": [{"change_id": "I3"}]}, 1)]
+    chains = {
+        "org": "openstack",
+        "change_chain": {"I1": "chain-7", "I2": "chain-7", "I3": "chain-9"},
+    }
+    recorded = partition_pilot.cluster_by_chain(runs, chains, "openstack")
+    assert [row["change_id"] for rows in runs[0][0].values() for row in rows] == [
+        "chain-7",
+        "chain-7",
+        "chain-9",
+    ]
+    assert recorded == {"changes": 3, "chains": 2}
+
+
+@pytest.mark.parametrize(
+    ("chains", "match"),
+    [
+        ({"org": "openstack", "change_chain": {}}, "I1 has no chain"),
+        (
+            {"org": "wikimedia", "change_chain": {"I1": "chain-1"}},
+            "'wikimedia''s, not 'openstack''s",
+        ),
+    ],
+)
+def test_chain_clustering_refuses_an_unmapped_change_or_another_organization(
+    chains: dict, match: str
+) -> None:
+    with pytest.raises(SystemExit, match=match):
+        partition_pilot.cluster_by_chain([({"a": [{"change_id": "I1"}]}, 1)], chains, "openstack")
