@@ -64,3 +64,13 @@ def test_no_names_or_an_empty_tree_is_refused(trees: Path) -> None:
     result = _verify(trees, "empty")
     assert result.returncode == 1
     assert "0 of 0" in result.stderr
+
+
+def test_a_build_checkpoint_is_skipped(tmp_path: Path) -> None:
+    """A running build appends to its checkpoint between the copy and the check."""
+    files = {"org/raw/2025-02.ndjson.gz": "1"}
+    _tree(tmp_path / "local", {**files, "org/raw/2025-02.build.partial.jsonl": "grown"})
+    _tree(tmp_path / "remote", files)
+    result = _verify(tmp_path, "org")
+    assert result.returncode == 0, result.stderr
+    assert "all 1 files identical" in result.stdout
