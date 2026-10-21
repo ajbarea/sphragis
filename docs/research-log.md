@@ -10640,7 +10640,7 @@ with all four registered sensitivities (`partition-pilot-<org>-likelihood-sensit
 
 | organization | H1, 0.975 / 0.95 | without targets found before the checkpoint, 0.975 / 0.95 |
 | --- | --- | --- |
-| OpenStack | +0.0231 [+0.0082, +0.0402] / [+0.0097, +0.0376] | +0.0243 [+0.0091, +0.0422] / [+0.0107, +0.0398] |
+| OpenStack | +0.0231 [+0.0081, +0.0402] / [+0.0097, +0.0376] | +0.0243 [+0.0091, +0.0422] / [+0.0107, +0.0398] |
 | Wikimedia | +0.0058 [-0.0004, +0.0125] / [+0.0003, +0.0117] | +0.0055 [-0.0010, +0.0124] / [-0.0003, +0.0115] |
 
 OpenStack's cell stays supported at both levels under every sensitivity (without AI-assisted
@@ -10714,11 +10714,14 @@ and Qt concurrently, each its own host at its own terms); every authored patch s
 read but Wikimedia's 3, and 3 merged changes fell back to their clone. Chains
 (`relation-chains-<org>.json`):
 
-| organization | merged changes | links | dev examples in a chain | dev clusters, by change → by chain |
+| organization | merged changes | links | dev examples in a relation chain (in any chain) | dev clusters, by change → by chain |
 | --- | --- | --- | --- | --- |
-| OpenStack | 25,191 | 3,257 | 71 of 515 (13.8%) | 214 → 211 |
-| Wikimedia | 114,857 | 6,687 | 189 of 747 (25.3%) | 448 → 441 |
-| Qt | 52,868 | 12,401 | 505 of 809 (62.4%) | 409 → 368 |
+| OpenStack | 25,191 | 3,257 | 31 of 515, 6.0% (71) | 214 → 211 |
+| Wikimedia | 114,857 | 6,687 | 150 of 747, 20.1% (189) | 448 → 441 |
+| Qt | 52,868 | 12,401 | 312 of 809, 38.6% (505) | 409 → 368 |
+
+A relation chain here holds two or more distinct Change-Ids; "any chain" also counts changes that
+share a Change-Id with a sibling (cherry-picks and backports), which the change unit already joins.
 
 The registered H1 metric read on the development pilots under both units, from the same 22 runs
 each (`partition-pilot-<org>-likelihood.json` by change, `-likelihood-chains.json` by chain), at
@@ -10726,14 +10729,18 @@ each (`partition-pilot-<org>-likelihood.json` by change, `-likelihood-chains.jso
 
 | organization | by change | by chain |
 | --- | --- | --- |
-| OpenStack | +0.0231 [+0.0082, +0.0402] supported | +0.0231 [+0.0082, +0.0400] supported |
+| OpenStack | +0.0231 [+0.0081, +0.0402] supported | +0.0231 [+0.0082, +0.0400] supported |
 | Wikimedia | +0.0058 [-0.0004, +0.0125] inconclusive | +0.0058 [-0.0006, +0.0124] inconclusive |
 | Qt | +0.0101 [+0.0032, +0.0183] supported | +0.0101 [+0.0031, +0.0181] supported |
 
 No verdict moves at either level (Wikimedia stays supported at 0.95, [+0.0001, +0.0116] by chain).
 Chains coarsen the clusters little where a window's examples rarely share a chain, and most in Qt,
-where nearly two in three sit in one; the intervals move in the fourth decimal. Chains are the
+where more than one in three sit in a relation chain; the intervals move in the fourth decimal. Chains are the
 cluster unit of the test read as registered, whatever these readings show. What remains before it
 is the simulations: each organization's K and detectable effects rerun with chains as the drawn
 unit (`partition_sensitivity.py --chains`, the planned test changes taken to chains at each
-development window's ratio).
+training window's ratio, the window nearest the test window's size: OpenStack 0.948, Wikimedia
+0.977, Qt 0.865 chains a change). A Gerrit test read is refused without `--chains`, and a K or a
+bound made in the other unit is refused (`partition_pilot.py`); the GitHub replication has no
+relation chains and reads by change. The OpenStack lower bound of the entry "The registered
+sensitivities read on the registered metric" is +0.0081 (0.00815), not +0.0082 as first typed.

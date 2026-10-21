@@ -84,10 +84,15 @@ def main() -> None:
     # Every change sharing a Change-Id is in one chain (`chains.chains` joins them), so a
     # Change-Id names its chain; an example's Change-Id the raw snapshots lack is its own.
     root_of = {change.change_id: chain_of[change.number] for change in changes.values()}
+    # A chain's distinct Change-Ids: siblings sharing one (cherry-picks, backports) are one
+    # cluster already, so only two or more make a relation chain the change unit misses.
+    change_ids_of: dict[int, set[str]] = defaultdict(set)
+    for change in changes.values():
+        change_ids_of[chain_of[change.number]].add(change.change_id)
     unmatched = sorted({row["change_id"] for held in rows.values() for row in held} - set(root_of))
     report: dict[str, Any] = {
         "org": args.org,
-        "example_change_ids_not_in_the_snapshots": len(unmatched),
+        "example_change_ids_without_a_merged_record": len(unmatched),
         "merged_changes": len(changes),
         "links": len(linked),
         "parents_from_the_clone": from_clone,
@@ -97,16 +102,20 @@ def main() -> None:
     change_chain: dict[str, str] = {}
     for window, held in rows.items():
         keys = []
+        relation: list[bool] = []
         for row in held:
             root = root_of.get(row["change_id"])
             key = f"chain-{root}" if root is not None else f"change-{row['change_id']}"
             change_chain[row["change_id"]] = key
             keys.append((key, size[root] if root is not None else 1))
+            relation.append(root is not None and len(change_ids_of[root]) >= 2)
         in_chain = sum(1 for _, n in keys if n >= 2)
         report["windows"][window] = {
             "examples": len(held),
             "in_a_chain": in_chain,
+            "in_a_relation_chain": sum(relation),
             "share": round(in_chain / len(held), 6) if held else None,
+            "relation_share": round(sum(relation) / len(held), 6) if held else None,
             "clusters_by_change": len({row["change_id"] for row in held}),
             "clusters_by_chain": len({key for key, _ in keys}),
             "chain_sizes": dict(sorted(Counter(n for _, n in set(keys)).items())),

@@ -462,6 +462,20 @@ def main() -> None:
         missing = [n for n in REGISTERED_SENSITIVITIES if n not in listings]
         if missing:
             raise SystemExit(f"a test-window read needs --without for {missing}")
+    # Chains are a Gerrit test read's cluster unit (research log, 2026-10-21), and a K or a
+    # bound carries the unit it was simulated in; the GitHub replication has no relation chains.
+    if window == "test" and not args.replication and not args.chains:
+        raise SystemExit("a test-window read resamples relation chains: give --chains")
+    for artifact in (args.sizing, args.sensitivity):
+        made_by = (
+            (json.loads(artifact.read_text()).get("cluster_unit") or {}).get("unit", "change")
+            if artifact
+            else None
+        )
+        if made_by is not None and made_by != cluster_unit["unit"]:
+            raise SystemExit(
+                f"{artifact} was made by {made_by}, this read is by {cluster_unit['unit']}"
+            )
     contrast = {"contrast": h2_contrast(args.foreign_source)} if h2 else {}
     cell = h1_over_partitions(
         runs,

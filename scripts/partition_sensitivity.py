@@ -588,7 +588,8 @@ def main() -> None:
     if projection["org"] != args.org or projection["test"] is None:
         raise SystemExit(f"{args.projection}: no test-window projection for {args.org}")
     # Chains are drawn instead of changes only on a pilot read under chains, and the other way
-    # round; the planned test changes become chains at the development window's ratio.
+    # round; the planned test changes become chains at the training window's ratio, the window
+    # nearest the test window's size (a larger window joins more of its changes into chains).
     unit = (pilot.get("cluster_unit") or {}).get("unit", "change")
     if (args.chains is not None) != (unit == "chain"):
         raise SystemExit(f"the pilot was read by {unit}; --chains must match it")
@@ -598,8 +599,8 @@ def main() -> None:
         if pilot["cluster_unit"].get("file") != str(args.chains):
             raise SystemExit(f"the pilot read chains from {pilot['cluster_unit'].get('file')}")
         chain_of = chain_map(chain_artifact, args.org)
-        dev = chain_artifact["windows"]["dev"]
-        ratio = dev["clusters_by_chain"] / dev["clusters_by_change"]
+        train = chain_artifact["windows"]["train"]
+        ratio = train["clusters_by_chain"] / train["clusters_by_change"]
     # Whole changes (or chains), rounded down: a projection is not an observed count.
     try:
         sized = pilot_sizing(pilot, str(args.pilot), org=args.org, cell=cell_of(pilot))
@@ -679,6 +680,11 @@ def main() -> None:
             "spread_targets": f"{args.pilot}: per_run and runs_left_out, chi-squared bounds",
             "calibration_changes": f"{args.pilot}: changes",
             "planned_changes": f"{args.projection}: test.projected_changes, rounded down"
+            + (
+                ""
+                if ratio is None
+                else f", times the training window's {ratio:.4f} chains a change"
+            )
             if hypothesis == "H1"
             else f"{args.projection}: test.projected_changes x cpp_change_share, rounded down",
             "size_floor": f"{args.admissible}: size_floor",
