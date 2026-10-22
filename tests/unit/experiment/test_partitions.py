@@ -498,6 +498,10 @@ def test_the_pilots_reproducibility_k_is_kept_when_it_is_the_larger() -> None:
         ([_grid_point(10, 0.001, 0.002, metric="exact_match")], "is on exact_match"),
         ([_grid_point(10, 0.001, 0.002, null_trials=1_000)], "1000 null studies"),
         (
+            [_grid_point(10, 0.001, 0.002, cluster_unit={"unit": "chain"})],
+            "was simulated by chain, the pilot by change",
+        ),
+        (
             [_grid_point(10, 0.001, 0.002, hypothesis="H2", foreign_source="aosp")],
             "not the pilot's",
         ),
@@ -530,6 +534,17 @@ def test_a_grid_the_rule_cannot_read_is_refused(grid: list, match: str) -> None:
         coverage_runs(_COVERAGE_PILOT, grid, org="wikimedia", name="pilot")
 
 
+def test_a_grid_is_read_in_the_pilots_cluster_unit() -> None:
+    chain = {"cluster_unit": {"unit": "chain"}}
+    by_change = [_grid_point(10, 0.001, 0.002)]
+    by_chain = [_grid_point(10, 0.001, 0.002, **chain)]
+    pilot = _COVERAGE_PILOT | chain
+    with pytest.raises(ValueError, match="was simulated by change, the pilot by chain"):
+        coverage_runs(pilot, by_change, org="wikimedia", name="pilot")
+    read = coverage_runs(pilot, by_chain, org="wikimedia", name="pilot")
+    assert read == coverage_runs(_COVERAGE_PILOT, by_change, org="wikimedia", name="pilot")
+
+
 def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
     artifact = {"kind": K_COVERAGE, "org": "wikimedia", "runs": 20}
     assert pilot_sizing(artifact, "k-coverage", org="wikimedia", require_org=True) == 20
@@ -539,14 +554,24 @@ def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
         pilot_sizing(artifact | {"runs": 0}, "k-coverage", org="wikimedia")
 
 
-@pytest.mark.parametrize("org", ["openstack", "wikimedia", "qt"])
+@pytest.mark.parametrize(
+    ("org", "suffix"),
+    [
+        ("openstack", ""),
+        ("wikimedia", ""),
+        ("qt", ""),
+        ("openstack", "-chains"),
+        ("wikimedia", "-chains"),
+    ],
+)
 def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid(
-    org: str, tmp_path: Path
+    org: str, suffix: str, tmp_path: Path
 ) -> None:
     """`k_coverage.py` rerun on the committed pilot and grid reproduces the committed artifact."""
     root = Path(__file__).resolve().parents[3]
     results = root / "datasets/results"
-    committed = json.loads((results / f"k-coverage-{org}-likelihood.json").read_text())
+    committed = json.loads((results / f"k-coverage-{org}-likelihood{suffix}.json").read_text())
+    assert (committed.get("cluster_unit") or {}).get("unit") == ("chain" if suffix else None)
     grid = [Path(row["file"]) for row in committed["grid"]]
     out = tmp_path / "k.json"
     subprocess.run(

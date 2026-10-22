@@ -51,6 +51,9 @@ def main() -> None:
             else {}
         ),
         "pilot": str(args.pilot),
+        # A coverage artifact is made in the unit of the pilot it covers; `partition_pilot.py`
+        # refuses a K from another unit.
+        **({"cluster_unit": pilot["cluster_unit"]} if "cluster_unit" in pilot else {}),
         "spread_target": REGISTERED_SPREAD_TARGET,
         "null_trials": COVERAGE_NULL_TRIALS,
         **k,

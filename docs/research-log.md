@@ -10792,7 +10792,9 @@ Wikimedia (`k-coverage-wikimedia-likelihood-chains.json`):
 | 35 | 0.011 | 0.02025 | yes |
 
 The reproducibility K is 10 on both, so **OpenStack's K is 10 and Wikimedia's is 20 under chains**,
-the K each had by change. Neither paper nor deck states a K that moves. Wikimedia's 95% rate at
+the K each had by change. Neither paper nor deck states a K that moves. A K artifact now records
+its pilot's cluster unit, which a chain test read checks, and the coverage rule refuses a grid
+simulated in another unit than its pilot (`partitions.coverage_runs`). Wikimedia's 95% rate at
 K = 20, 0.02475, sits within one Monte Carlo standard error of nominal (0.0025 at 4,000 trials);
 the rule reads the rate as simulated, and every larger K on the grid holds as well. Wikimedia's
 detectable effects at K = 20 under chains are simulated again (`RUNS=20`, TIGRIS 438923, pinned at
