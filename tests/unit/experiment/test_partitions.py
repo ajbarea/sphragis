@@ -31,6 +31,7 @@ from sphragis.experiment.partitions import (
     MAX_DROPPED_SHARE,
     XI,
     chi2_quantile,
+    cluster_unit_of,
     common_runs,
     coverage_runs,
     h1_over_partitions,
@@ -562,6 +563,7 @@ def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
         ("qt", ""),
         ("openstack", "-chains"),
         ("wikimedia", "-chains"),
+        ("qt", "-chains"),
     ],
 )
 def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid(
@@ -571,7 +573,7 @@ def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid
     root = Path(__file__).resolve().parents[3]
     results = root / "datasets/results"
     committed = json.loads((results / f"k-coverage-{org}-likelihood{suffix}.json").read_text())
-    assert (committed.get("cluster_unit") or {}).get("unit") == ("chain" if suffix else None)
+    assert cluster_unit_of(committed) == ("chain" if suffix else "change")
     grid = [Path(row["file"]) for row in committed["grid"]]
     out = tmp_path / "k.json"
     subprocess.run(
