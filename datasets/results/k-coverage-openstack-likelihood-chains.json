@@ -3,6 +3,12 @@
   "org": "openstack",
   "metric": "logprob_per_token",
   "pilot": "datasets/results/partition-pilot-openstack-likelihood-chains.json",
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-openstack.json",
+    "changes": 206,
+    "chains": 203
+  },
   "spread_target": "sizing_bound_90",
   "null_trials": 4000,
   "reproducibility_runs": 10,
@@ -57,9 +63,9 @@
     "pilot_upper_99": 0.008288180494188776
   },
   "provenance": {
-    "generated_at": "2026-10-22T02:19:41.052963+00:00",
+    "generated_at": "2026-10-22T03:21:13.012126+00:00",
     "git": {
-      "commit": "6c85be757bffadccdac3c1a8af9502999cf06699",
+      "commit": "30cfe3b386cb3c40e8d4aec05a2db164c75333f1",
       "branch": "measure/k-coverage-chains"
     },
     "python": "3.14.4",
