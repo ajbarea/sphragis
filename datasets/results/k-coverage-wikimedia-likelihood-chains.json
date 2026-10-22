@@ -1,0 +1,98 @@
+{
+  "kind": "k_coverage",
+  "org": "wikimedia",
+  "metric": "logprob_per_token",
+  "pilot": "datasets/results/partition-pilot-wikimedia-likelihood-chains.json",
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": 10,
+  "coverage_runs": 20,
+  "runs": 20,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 10,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains.json",
+      "null_false_positive": {
+        "0.975": 0.016,
+        "0.95": 0.031
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 12,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k12-null.json",
+      "null_false_positive": {
+        "0.975": 0.01825,
+        "0.95": 0.03275
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 15,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k15-null.json",
+      "null_false_positive": {
+        "0.975": 0.01675,
+        "0.95": 0.02675
+      },
+      "within_nominal": false
+    },
+    {
+      "runs": 20,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k20-null.json",
+      "null_false_positive": {
+        "0.975": 0.011,
+        "0.95": 0.02475
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 25,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k25-null.json",
+      "null_false_positive": {
+        "0.975": 0.0105,
+        "0.95": 0.0215
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 30,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k30-null.json",
+      "null_false_positive": {
+        "0.975": 0.00975,
+        "0.95": 0.0185
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 35,
+      "file": "datasets/results/partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k35-null.json",
+      "null_false_positive": {
+        "0.975": 0.011,
+        "0.95": 0.02025
+      },
+      "within_nominal": true
+    }
+  ],
+  "spread_targets": {
+    "pilot_lower_90": 0.005332661742551202,
+    "pilot_estimate": 0.006332729148564618,
+    "sizing_bound_90": 0.007975596278887944,
+    "pilot_upper_99": 0.009729128390786192
+  },
+  "provenance": {
+    "generated_at": "2026-10-22T02:19:41.156643+00:00",
+    "git": {
+      "commit": "6c85be757bffadccdac3c1a8af9502999cf06699",
+      "branch": "measure/k-coverage-chains"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

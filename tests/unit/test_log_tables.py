@@ -28,7 +28,16 @@ TABLES = {
     "Wikimedia at K = 20": lambda: log_tables.sensitivity(
         RESULTS / "partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20.json"
     ),
+    "OpenStack at K = 10 by chain": lambda: log_tables.sensitivity(
+        RESULTS / "partition-sensitivity-openstack-rp1.0-logprob_per_token-chains.json"
+    ),
     "Qt's K": lambda: log_tables.k_coverage(RESULTS / "k-coverage-qt-likelihood.json"),
+    "OpenStack's K by chain": lambda: log_tables.k_coverage(
+        RESULTS / "k-coverage-openstack-likelihood-chains.json"
+    ),
+    "Wikimedia's K by chain": lambda: log_tables.k_coverage(
+        RESULTS / "k-coverage-wikimedia-likelihood-chains.json"
+    ),
     "Wikimedia's K": lambda: log_tables.k_coverage(
         RESULTS / "k-coverage-wikimedia-likelihood.json"
     ),

@@ -1,0 +1,5 @@
+pilot_lower_90: spread 0.0045 at 203 changes -> sigma_run 0.0000 (realised 0.0066)
+pilot_estimate: spread 0.0054 at 203 changes -> sigma_run 0.0000 (realised 0.0066)
+sizing_bound_90: spread 0.0068 at 203 changes -> sigma_run 0.0013 (realised 0.0068)
+pilot_upper_99: spread 0.0083 at 203 changes -> sigma_run 0.0049 (realised 0.0083)
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k15-null.json

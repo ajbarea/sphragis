@@ -1,0 +1,5 @@
+pilot_lower_90: spread 0.0043 at 363 changes -> sigma_run 0.0000 (realised 0.0052)
+pilot_estimate: spread 0.0052 at 363 changes -> sigma_run 0.0000 (realised 0.0052)
+sizing_bound_90: spread 0.0065 at 363 changes -> sigma_run 0.0041 (realised 0.0065)
+pilot_upper_99: spread 0.0079 at 363 changes -> sigma_run 0.0062 (realised 0.0079)
+wrote /home/ajb6289/ajsoftworks/sphragis-data/results/partition-sensitivity-qt-rp1.0-logprob_per_token-chains-k20-null.json

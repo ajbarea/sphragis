@@ -8,6 +8,15 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **Simulations under relation chains** (research log, 2026-10-21, "Relation chains simulated"):
+  OpenStack's K stays 10 and Wikimedia's 20. Running on TIGRIS, all CPU only at 9da8025: Qt's
+  full simulation at K = 10 (421180), which Qt's K reads; Wikimedia at K = 20 (438923); Qt at
+  K = 15 (438924). When each finishes: rsync its `partition-sensitivity-<org>-rp1.0-logprob_per_token-chains[-k<K>].json`
+  from `~/ajsoftworks/sphragis-data/results` into `datasets/results`, `make pull-logs`; for Qt run
+  `scripts/k_coverage.py --pilot datasets/results/partition-pilot-qt-likelihood-chains.json --org qt
+  --grid <full> <k*-null> --out datasets/results/k-coverage-qt-likelihood-chains.json`; tables
+  from `scripts/log_tables.py` into one research-log entry, each added to
+  `tests/unit/test_log_tables.py`; papers and deck only if Qt's K moves from 15.
 - **Qt's simulations** (IMPL 3d): the development pilot is read (H1 supported on likelihood), its
   planted check 5 passes 10 of 10, and its K under the coverage rule is 15 (research log,
   2026-10-18). Its full simulation at K = 15 is read (research log, 2026-10-19): every detectable
