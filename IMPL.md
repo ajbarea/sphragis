@@ -8,10 +8,27 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 
 ## In flight
 
+- **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated"):
+  every organization's K under chains is read; Qt's moved from its by-change K, OpenStack's and
+  Wikimedia's did not. `k-coverage-<org>-likelihood-chains.json` is a Gerrit test read's K source.
+  Running on TIGRIS:
+  Wikimedia's chain simulation at K = 20 (438923, CPU only, 9da8025). When it finishes: rsync
+  `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k20.json` from
+  `~/ajsoftworks/sphragis-data/results` and its log from `~/ajsoftworks/sphragis/logs`, log entry
+  with its `scripts/log_tables.py` table (added to `tests/unit/test_log_tables.py`). Then, in one
+  change, move papers (`org-house-style/harvest.py` K and simulation sources, 50-data.tex table,
+  70-analysis.tex calibration) and the talks deck (`federated-agents/figures.py`) from the
+  by-change K artifacts and simulations to the chain ones (Qt's K changes there).
+  Open (review of #194): a chain simulation records its chains file's path, not its content, so a
+  grid drawn from a since-regenerated `relation-chains-<org>.json` would pass `coverage_runs` and
+  the test read's unit check. Record a digest of the chains file in the pilot and every
+  simulation, and compare it, before any chain artifact is regenerated. Also open:
+  `cells.require_test_read` checks no cluster unit (only `partition_pilot.py` does); record the
+  unit in `k_from` and check the read's, its K's and its bounds' units there.
 - **Qt's simulations** (IMPL 3d): the development pilot is read (H1 supported on likelihood), its
-  planted check 5 passes 10 of 10, and its K under the coverage rule is 15 (research log,
-  2026-10-18). Its full simulation at K = 15 is read (research log, 2026-10-19): every detectable
-  effect below δ, the null nominal at the sizing bound. Qt's generation runs stay off the
+  planted check 5 passes (research log, 2026-10-18), and its K under the coverage rule and its
+  simulation at that K are read by change (2026-10-18, 2026-10-19) and by chain, the Gerrit test
+  read's unit (2026-10-22). Qt's generation runs stay off the
   repository (their predictions can repeat review text); the likelihood rescorings are committed.
   The guard knows any written-grant host's run by its content, 20 pre-grant Qt files aside
   (research log, 2026-10-19, "The published-text guard reads a granted host from its content").

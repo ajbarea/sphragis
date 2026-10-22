@@ -9,11 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from sphragis.experiment import decomposition
+from sphragis.experiment import decomposition, partitions
 from sphragis.experiment.cells import K_COVERAGE, REGISTERED_METRIC, REGISTERED_SENSITIVITIES
 from sphragis.experiment.grid import EvalRun, run_id
 from sphragis.experiment.neutral import PLANT_FRACTION, SCORED_IDENTITY
-from sphragis.experiment.partitions import spread_targets
+from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, spread_targets
 
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location(
@@ -574,6 +574,50 @@ def _gerrit_test_argv(
         *extra,
     ]
     return [*_registered_metric(argv), "--out", str(tmp_path / "o.json")]
+
+
+def test_a_chain_test_read_takes_the_k_artifact_k_coverage_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, members: None
+) -> None:
+    """The artifact is the script's own output and carries the pilot's unit."""
+    argv = _gerrit_test_argv(tmp_path)
+    chains = argv[argv.index("--chains") + 1]
+    unit = {"unit": "chain", "file": chains}
+    pilot: dict = {"org": "openstack", "window": "development", "metric": REGISTERED_METRIC}
+    pilot |= PILOT | {"levels": [0.95], "sizing": {**SIZING, "runs": 4}, "cluster_unit": unit}
+    null = {"null_false_positive": {"0.95": 0.001}}
+    simulation = {
+        "org": "openstack",
+        "metric": REGISTERED_METRIC,
+        "runs": 4,
+        "null_trials": COVERAGE_NULL_TRIALS,
+        "planned_changes": 1,
+        "spread_targets": spread_targets(pilot),
+        "by_target": {"sizing_bound_90": null},
+        "cluster_unit": unit,
+    }
+    files = {"pilot": pilot, "grid": simulation}
+    for name, artifact in files.items():
+        (tmp_path / f"{name}.json").write_text(json.dumps(artifact))
+    # K = 4 is the grid's only point, so the rule reads it without the registered grid.
+    monkeypatch.setattr(partitions, "K_GRID", (4,))
+    spec = importlib.util.spec_from_file_location("k_coverage", ROOT / "scripts" / "k_coverage.py")
+    assert spec is not None and spec.loader is not None
+    k_coverage = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(k_coverage)
+    # The script names a chain K by its unit, so the read takes it under that name.
+    sizing = tmp_path / "k-coverage-openstack-likelihood-chains.json"
+    argv[argv.index("--sizing") + 1] = str(sizing)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["k_coverage.py", "--pilot", str(tmp_path / "pilot.json"), "--org", "openstack"]
+        + ["--grid", str(tmp_path / "grid.json"), "--out", str(sizing)],
+    )
+    k_coverage.main()
+    assert json.loads(sizing.read_text())["cluster_unit"] == unit
+    _main(monkeypatch, argv)
+    assert json.loads((tmp_path / "o.json").read_text())["k_from"]["runs"] == 4
 
 
 def test_a_gerrit_test_read_takes_its_levels_cells_and_target_from_the_registration(

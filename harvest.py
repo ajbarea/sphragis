@@ -69,6 +69,9 @@ PARTITION_SENSITIVITY_WM = (
 )
 K_COVERAGE_OS = f"{RESULTS}/k-coverage-openstack-likelihood.json"
 K_COVERAGE_WM = f"{RESULTS}/k-coverage-wikimedia-likelihood.json"
+K_COVERAGE_OS_CHAINS = f"{RESULTS}/k-coverage-openstack-likelihood-chains.json"
+K_COVERAGE_WM_CHAINS = f"{RESULTS}/k-coverage-wikimedia-likelihood-chains.json"
+K_COVERAGE_QT_CHAINS = f"{RESULTS}/k-coverage-qt-likelihood-chains.json"
 SESOI = f"{RESULTS}/likelihood-sesoi.json"
 CENSORING = f"{RESULTS}/censoring.json"
 MARKER_1 = f"{RESULTS}/calibration-marker-1.json"
@@ -391,6 +394,38 @@ CLAIMS: list[tuple[Any, ...]] = [
         K_COVERAGE_WM,
         ["runs"],
         {"after": "Wikimedia K = ", "occurrences": 2},
+    ),
+    (
+        "rd_partition_k_chains",
+        "registered-decisions.md",
+        "10",
+        K_COVERAGE_OS_CHAINS,
+        ["runs"],
+        {"after": "OpenStack's K is "},
+    ),
+    (
+        "rd_partition_k_wm_chains",
+        "registered-decisions.md",
+        "20",
+        K_COVERAGE_WM_CHAINS,
+        ["runs"],
+        {"after": "Wikimedia's K is "},
+    ),
+    (
+        "rd_partition_k_qt_chains",
+        "registered-decisions.md",
+        "10",
+        K_COVERAGE_QT_CHAINS,
+        ["runs"],
+        {"after": "Qt's K is "},
+    ),
+    (
+        "rd_partition_k_qt_chains_heading",
+        "registered-decisions.md",
+        "10",
+        K_COVERAGE_QT_CHAINS,
+        ["runs"],
+        {"after": "Qt K = "},
     ),
     (
         "rd_cell_power",

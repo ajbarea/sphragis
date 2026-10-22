@@ -10744,3 +10744,93 @@ training window's ratio, the window nearest the test window's size: OpenStack 0.
 bound made in the other unit is refused (`partition_pilot.py`); the GitHub replication has no
 relation chains and reads by change. The OpenStack lower bound of the entry "The registered
 sensitivities read on the registered metric" is +0.0081 (0.00815), not +0.0082 as first typed.
+
+### Relation chains simulated: OpenStack's K stays 10, Wikimedia's 20, and Qt's falls to 10 (2026-10-22)
+
+`# research(2026-10)`. `scripts/partition_sensitivity.py --metric logprob_per_token --chains`, as
+the entry above set out: each organization's development pilot read under chains
+(`partition-pilot-<org>-likelihood-chains.json`), chains drawn as the unit, and the planned test
+changes taken to chains at each training window's ratio. TIGRIS, CPU only, every run pinned at
+9da8025: the full simulations at the pilots' K = 10 (OpenStack 421165, Wikimedia 421169, Qt
+421180; 1,000 trials and 4,000 null trials a point) and the coverage rule's null-only grid (4,000
+null trials a K; OpenStack 421166 to 421168, Wikimedia 421172, 421174, 421178, 421179, 427481 and
+427482, Qt 421182 to 421184 and 427483). The
+K rule is the one fixed on 2026-10-09; chains change only the unit drawn.
+
+**OpenStack at K = 10, by chain** (`partition-sensitivity-openstack-rp1.0-logprob_per_token-chains.json`,
+1,913 planned chains, 203 calibration chains), in nats per token:
+
+| spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| pilot lower 90 | 0.0000 | 0.0105 to 0.0116 | 0.0097 to 0.0109 | 0.00825 | 0.0205 |
+| pilot estimate | 0.0000 | 0.0105 to 0.0116 | 0.0097 to 0.0109 | 0.00825 | 0.0205 |
+| sizing bound 90 | 0.0015 | 0.0104 to 0.0120 | 0.0097 to 0.0112 | 0.0075 | 0.019 |
+| pilot upper 99 | 0.0050 | 0.0118 to 0.0136 | 0.0109 to 0.0127 | 0.012 | 0.0215 |
+
+Every detectable effect is below δ (0.0161), and every simulated null reads bounded in at least
+0.949 of trials, as by change. Chains widen OpenStack's detectable effects by at most 0.0007 against
+its simulation by change at the same K (entries of 2026-10-09 and 2026-10-16), at the sizing bound.
+
+**K under the coverage rule.** OpenStack (`k-coverage-openstack-likelihood-chains.json`):
+
+| K | null false positive, 97.5% | null false positive, 95% | within nominal |
+|---|---|---|---|
+| 10 | 0.0075 | 0.019 | yes |
+| 12 | 0.0075 | 0.01975 | yes |
+| 15 | 0.0095 | 0.01925 | yes |
+| 20 | 0.01025 | 0.02225 | yes |
+
+Wikimedia (`k-coverage-wikimedia-likelihood-chains.json`):
+
+| K | null false positive, 97.5% | null false positive, 95% | within nominal |
+|---|---|---|---|
+| 10 | 0.016 | 0.031 | no |
+| 12 | 0.01825 | 0.03275 | no |
+| 15 | 0.01675 | 0.02675 | no |
+| 20 | 0.011 | 0.02475 | yes |
+| 25 | 0.0105 | 0.0215 | yes |
+| 30 | 0.00975 | 0.0185 | yes |
+| 35 | 0.011 | 0.02025 | yes |
+
+The reproducibility K is 10 on both, so **OpenStack's K is 10 and Wikimedia's is 20 under chains**,
+the K each had by change. A K artifact now records its pilot's cluster unit, which a chain test
+read checks, and the coverage rule refuses a grid simulated in another unit than its pilot
+(`partitions.coverage_runs`). Wikimedia's 95% rate at
+K = 20, 0.02475, sits within one Monte Carlo standard error of nominal (0.0025 at 4,000 trials);
+the rule reads the rate as simulated, and every larger K on the grid holds as well. Wikimedia's
+detectable effects at K = 20 under chains are simulated again (`RUNS=20`, TIGRIS 438923, pinned at
+9da8025) and follow in their own entry.
+
+**Qt at K = 10, by chain** (`partition-sensitivity-qt-rp1.0-logprob_per_token-chains.json`, 3,103
+planned chains, 363 calibration chains):
+
+| spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| pilot lower 90 | 0.0000 | 0.0048 to 0.0055 | 0.0043 to 0.0051 | 0.005 | 0.01125 |
+| pilot estimate | 0.0016 | 0.0053 to 0.0058 | 0.0049 to 0.0054 | 0.00525 | 0.012 |
+| sizing bound 90 | 0.0044 | 0.0073 to 0.0083 | 0.0068 to 0.0077 | 0.01175 | 0.025 |
+| pilot upper 99 | 0.0064 | 0.0093 to 0.0106 | 0.0087 to 0.0099 | 0.01875 | 0.03025 |
+
+Every detectable effect is below δ, and the null reads bounded in at least 0.943 of trials, at the
+pilot's 90% lower point.
+
+**Qt's K** (`k-coverage-qt-likelihood-chains.json`):
+
+| K | null false positive, 97.5% | null false positive, 95% | within nominal |
+|---|---|---|---|
+| 10 | 0.01175 | 0.025 | yes |
+| 12 | 0.01275 | 0.02675 | no |
+| 15 | 0.01125 | 0.0245 | yes |
+| 20 | 0.01175 | 0.0245 | yes |
+| 25 | 0.0115 | 0.024 | yes |
+
+The reproducibility K is 10 and K = 10 holds, so **Qt's K is 10 under chains**; by change it was
+15, with K = 10 above nominal at both levels (entry of 2026-10-18). The hold is at the edge: at
+95% the null reads a false positive in 100 of 4,000 trials, exactly nominal, which the rule counts
+as within ("no more often than nominal"). K = 12 runs above nominal at both levels and K = 15 to 25 hold, the
+non-monotone grid the Monte Carlo error allows near nominal. The rule was fixed before any grid ran
+and is read as fixed. Qt's simulation at K = 15 (TIGRIS 438924) was cancelled once K = 10 held.
+
+Qt's K moves, so the paper's organization table and the deck, which read each organization's
+by-change K artifact and its simulation at that K, move to the chain artifacts in one change once
+Wikimedia's chain simulation at K = 20 is in.

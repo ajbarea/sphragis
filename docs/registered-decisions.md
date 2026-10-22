@@ -97,7 +97,7 @@ it was set before any test data existed.
 A test-window read (`scripts/partition_pilot.py`) is read on the registered metric, the
 reference's per-token log-probability (`cells.REGISTERED_METRIC`), and takes its K from the
 organization's K coverage artifact (`--sizing`, written by `scripts/k_coverage.py` from its own
-development pilot), its bounds from the organization's own simulation at that K
+development pilot, in the read's cluster unit), its bounds from the organization's own simulation at that K
 (`--sensitivity`), outcome-neutral check 5 (`--planted`), and 10,000 resamples at bootstrap seed
 7, the values every development reading used; it refuses to run without any of them. Every run it
 reads must carry an outcome-neutral battery that held, its own or, for a likelihood rescoring, the
@@ -278,7 +278,7 @@ Monte Carlo standard error at 4,000 null trials. OpenStack's two lowest spread p
 at the simulation's floor, the spread partitions and change noise give with no run shift
 (0.0065), so its range starts there.
 
-### Number of runs: OpenStack K = 10, Wikimedia K = 20
+### Number of runs: OpenStack K = 10, Wikimedia K = 20; under relation chains, Qt K = 10 too
 
 Decided by the partition study, the pilot and the simulated null. H1 is the mean over K admissible
 partitions, replacing five seeds on one registered partition, whose reading moved with the
@@ -294,8 +294,15 @@ error exceeds its distance from nominal, so the grid is not monotone: Wikimedia'
 0.0135 and K = 35 reads 0.013 at the stricter level against 0.0125, both recorded in the artifact,
 and neither changes the K the rule takes. OpenStack's null holds at the floor and Wikimedia's
 first at 20, so **OpenStack K = 10** and **Wikimedia K = 20**
-(`k-coverage-<org>-likelihood.json`, the only K source a test read accepts). A sequential rule, adding runs until they agree, was simulated
-first and rejected: it ran above nominal where it stopped early.
+(`k-coverage-<org>-likelihood.json`, the K source of a read by change). A sequential rule, adding
+runs until they agree, was simulated first and rejected: it ran above nominal where it stopped
+early.
+
+Relation chains are H1's cluster unit for a Gerrit test read (research log, 2026-10-21), so the
+same rule was read again on each development pilot read under chains, with chains drawn as the
+unit: OpenStack's K is 10, Wikimedia's K is 20 and Qt's K is 10
+(`k-coverage-<org>-likelihood-chains.json`, the K source a Gerrit test read accepts, which refuses
+a K made in the other unit; research log, 2026-10-22).
 
 ### Stated power: sensitivity, not power at an observed effect
 

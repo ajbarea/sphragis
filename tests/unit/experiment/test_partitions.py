@@ -31,6 +31,7 @@ from sphragis.experiment.partitions import (
     MAX_DROPPED_SHARE,
     XI,
     chi2_quantile,
+    cluster_unit_of,
     common_runs,
     coverage_runs,
     h1_over_partitions,
@@ -498,6 +499,10 @@ def test_the_pilots_reproducibility_k_is_kept_when_it_is_the_larger() -> None:
         ([_grid_point(10, 0.001, 0.002, metric="exact_match")], "is on exact_match"),
         ([_grid_point(10, 0.001, 0.002, null_trials=1_000)], "1000 null studies"),
         (
+            [_grid_point(10, 0.001, 0.002, cluster_unit={"unit": "chain"})],
+            "was simulated by chain, the pilot by change",
+        ),
+        (
             [_grid_point(10, 0.001, 0.002, hypothesis="H2", foreign_source="aosp")],
             "not the pilot's",
         ),
@@ -530,6 +535,17 @@ def test_a_grid_the_rule_cannot_read_is_refused(grid: list, match: str) -> None:
         coverage_runs(_COVERAGE_PILOT, grid, org="wikimedia", name="pilot")
 
 
+def test_a_grid_is_read_in_the_pilots_cluster_unit() -> None:
+    chain = {"cluster_unit": {"unit": "chain"}}
+    by_change = [_grid_point(10, 0.001, 0.002)]
+    by_chain = [_grid_point(10, 0.001, 0.002, **chain)]
+    pilot = _COVERAGE_PILOT | chain
+    with pytest.raises(ValueError, match="was simulated by change, the pilot by chain"):
+        coverage_runs(pilot, by_change, org="wikimedia", name="pilot")
+    read = coverage_runs(pilot, by_chain, org="wikimedia", name="pilot")
+    assert read == coverage_runs(_COVERAGE_PILOT, by_change, org="wikimedia", name="pilot")
+
+
 def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
     artifact = {"kind": K_COVERAGE, "org": "wikimedia", "runs": 20}
     assert pilot_sizing(artifact, "k-coverage", org="wikimedia", require_org=True) == 20
@@ -539,16 +555,38 @@ def test_a_coverage_artifact_is_a_k_source_for_its_own_organization() -> None:
         pilot_sizing(artifact | {"runs": 0}, "k-coverage", org="wikimedia")
 
 
-@pytest.mark.parametrize("org", ["openstack", "wikimedia", "qt"])
+@pytest.mark.parametrize(
+    ("org", "suffix"),
+    [
+        ("openstack", ""),
+        ("wikimedia", ""),
+        ("qt", ""),
+        ("openstack", "-chains"),
+        ("wikimedia", "-chains"),
+        ("qt", "-chains"),
+    ],
+)
 def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid(
-    org: str, tmp_path: Path
+    org: str, suffix: str, tmp_path: Path
 ) -> None:
     """`k_coverage.py` rerun on the committed pilot and grid reproduces the committed artifact."""
     root = Path(__file__).resolve().parents[3]
     results = root / "datasets/results"
-    committed = json.loads((results / f"k-coverage-{org}-likelihood.json").read_text())
+    committed = json.loads((results / f"k-coverage-{org}-likelihood{suffix}.json").read_text())
+    assert cluster_unit_of(committed) == ("chain" if suffix else "change")
     grid = [Path(row["file"]) for row in committed["grid"]]
-    out = tmp_path / "k.json"
+    out = tmp_path / f"k-coverage-{org}-likelihood{suffix}.json"
+    # A name that does not say the pilot's unit is refused before anything is written.
+    misnamed = tmp_path / f"k-coverage-{org}-likelihood{'' if suffix else '-chains'}.json"
+    refused = subprocess.run(
+        [sys.executable, str(root / "scripts/k_coverage.py"), "--pilot", committed["pilot"]]
+        + ["--org", org, "--grid", *map(str, grid), "--out", str(misnamed)],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    assert refused.returncode != 0 and "not written" in refused.stderr
+    assert not misnamed.exists()
     subprocess.run(
         [sys.executable, str(root / "scripts/k_coverage.py"), "--pilot", committed["pilot"]]
         + ["--org", org, "--grid", *map(str, grid), "--out", str(out)],

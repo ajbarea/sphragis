@@ -759,7 +759,7 @@ as the unit; the evidence says the codebase is.
   2026-11-20; Chromium if it arrives in time for its
   corpus to be frozen by 2026-10-23; otherwise each is registered as not collected. Qt's REST
   terms were granted in writing on 2026-10-15 (research log); its H1 cell's bounds are simulated
-  at K = 15 (research log, 2026-10-19), and its H2 cell's wait on a foreign pool that covers.
+  at its K under relation chains (research log, 2026-10-22), and its H2 cell's wait on a foreign pool that covers.
   Chromium's grant covers a pool, not an evaluated corpus, so H2 is Qt's cell against a C++-matched
   foreign adapter; V8's pool under the self-imposed cap and AOSP's cannot cover every matched draw,
   Fuchsia's pool covers (2026-10-20), and Chromium's, registered again under the rate grant and

@@ -1,0 +1,77 @@
+{
+  "kind": "k_coverage",
+  "org": "openstack",
+  "metric": "logprob_per_token",
+  "pilot": "datasets/results/partition-pilot-openstack-likelihood-chains.json",
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-openstack.json",
+    "changes": 206,
+    "chains": 203
+  },
+  "spread_target": "sizing_bound_90",
+  "null_trials": 4000,
+  "reproducibility_runs": 10,
+  "coverage_runs": 10,
+  "runs": 10,
+  "nominal": {
+    "0.975": 0.012500000000000011,
+    "0.95": 0.025000000000000022
+  },
+  "grid": [
+    {
+      "runs": 10,
+      "file": "datasets/results/partition-sensitivity-openstack-rp1.0-logprob_per_token-chains.json",
+      "null_false_positive": {
+        "0.975": 0.0075,
+        "0.95": 0.019
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 12,
+      "file": "datasets/results/partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k12-null.json",
+      "null_false_positive": {
+        "0.975": 0.0075,
+        "0.95": 0.01975
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 15,
+      "file": "datasets/results/partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k15-null.json",
+      "null_false_positive": {
+        "0.975": 0.0095,
+        "0.95": 0.01925
+      },
+      "within_nominal": true
+    },
+    {
+      "runs": 20,
+      "file": "datasets/results/partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k20-null.json",
+      "null_false_positive": {
+        "0.975": 0.01025,
+        "0.95": 0.02225
+      },
+      "within_nominal": true
+    }
+  ],
+  "spread_targets": {
+    "pilot_lower_90": 0.004542859469156213,
+    "pilot_estimate": 0.005394810315569553,
+    "sizing_bound_90": 0.006794358019861835,
+    "pilot_upper_99": 0.008288180494188776
+  },
+  "provenance": {
+    "generated_at": "2026-10-22T03:21:13.012126+00:00",
+    "git": {
+      "commit": "30cfe3b386cb3c40e8d4aec05a2db164c75333f1",
+      "branch": "measure/k-coverage-chains"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}

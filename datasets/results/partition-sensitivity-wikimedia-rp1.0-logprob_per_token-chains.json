@@ -1,0 +1,339 @@
+{
+  "cluster_unit": {
+    "unit": "chain",
+    "file": "datasets/results/relation-chains-wikimedia.json",
+    "planned_ratio": 0.9770017035775128
+  },
+  "placebo": null,
+  "org": "wikimedia",
+  "hypothesis": "H1",
+  "foreign_source": null,
+  "cpp_change_share": null,
+  "inputs": {
+    "runs": "datasets/results/partition-pilot-wikimedia-likelihood-chains.json: sizing.runs",
+    "levels": "datasets/results/partition-pilot-wikimedia-likelihood-chains.json: levels",
+    "spread_targets": "datasets/results/partition-pilot-wikimedia-likelihood-chains.json: per_run and runs_left_out, chi-squared bounds",
+    "calibration_changes": "datasets/results/partition-pilot-wikimedia-likelihood-chains.json: changes",
+    "planned_changes": "datasets/results/project-windows-wikimedia-v3.json: test.projected_changes, rounded down, times the training window's 0.9770 chains a change",
+    "size_floor": "datasets/results/admissible-partitions-wikimedia.json: size_floor",
+    "reference": "datasets/results/admissible-partitions-wikimedia.json: reference"
+  },
+  "planned_changes": 2782,
+  "pilot_changes": 422,
+  "projects": 73,
+  "family_alpha": 0.025,
+  "hypothesis_power": 0.95,
+  "cell_power": {
+    "1": 0.95,
+    "2": 0.9746794344808963,
+    "3": 0.9830475724915585
+  },
+  "metric": "logprob_per_token",
+  "pool": "the pilot's runs, averaged per change",
+  "change_by_run_noise": {
+    "shared_by_change": 0.022842955748840706,
+    "per_example": 0.13233974212150554
+  },
+  "truth_shrinkage": 0.7012336162127348,
+  "sesoi": 0.016142401360357633,
+  "xi": 0.016142401360357633,
+  "runs": 10,
+  "null_only": false,
+  "levels": [
+    0.975,
+    0.95
+  ],
+  "trials": 1000,
+  "null_trials": 4000,
+  "resamples": 10000,
+  "redraw": 0.0,
+  "seed": 43,
+  "size_floor": 1850,
+  "partitions_pooled": 400,
+  "partition_seeds_tried": 508,
+  "spread_targets": {
+    "pilot_lower_90": 0.0053326617425512,
+    "pilot_estimate": 0.006332729148564618,
+    "sizing_bound_90": 0.007975596278887944,
+    "pilot_upper_99": 0.009729128390786195
+  },
+  "calibration_changes": 422,
+  "calibration_trials": 100,
+  "by_target": {
+    "pilot_lower_90": {
+      "calibration": {
+        "target": 0.0053326617425512,
+        "sigma_run": 0.0009082031249999999,
+        "spread": 0.005335697033530873,
+        "floor": false,
+        "spread_at_zero": 0.0051650995356158705
+      },
+      "null_false_positive": {
+        "0.975": 0.002,
+        "0.95": 0.00475
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.004687500000000001,
+              "minimum_detectable_effect": 0.004687500000000001,
+              "null_reads_bounded": 0.959
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.004980468750000001,
+              "minimum_detectable_effect": 0.004980468750000001,
+              "null_reads_bounded": 0.97825
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.005078125000000001,
+              "minimum_detectable_effect": 0.005078125000000001,
+              "null_reads_bounded": 0.983
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.004296875,
+              "minimum_detectable_effect": 0.004296875,
+              "null_reads_bounded": 0.95675
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.004589843750000001,
+              "minimum_detectable_effect": 0.004589843750000001,
+              "null_reads_bounded": 0.9785
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.00478515625,
+              "minimum_detectable_effect": 0.00478515625,
+              "null_reads_bounded": 0.9855
+            }
+          }
+        }
+      },
+      "lifts_simulated": 17
+    },
+    "pilot_estimate": {
+      "calibration": {
+        "target": 0.006332729148564618,
+        "sigma_run": 0.003544921875,
+        "spread": 0.006325135870870781,
+        "floor": false,
+        "spread_at_zero": 0.0051650995356158705
+      },
+      "null_false_positive": {
+        "0.975": 0.0075,
+        "0.95": 0.0145
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.0064453125000000005,
+              "minimum_detectable_effect": 0.0064453125000000005,
+              "null_reads_bounded": 0.96275
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.0068359375,
+              "minimum_detectable_effect": 0.0068359375,
+              "null_reads_bounded": 0.9785
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.007128906250000001,
+              "minimum_detectable_effect": 0.007128906250000001,
+              "null_reads_bounded": 0.98675
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.005859375,
+              "minimum_detectable_effect": 0.005859375,
+              "null_reads_bounded": 0.9595
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.00634765625,
+              "minimum_detectable_effect": 0.00634765625,
+              "null_reads_bounded": 0.97975
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.006640625000000001,
+              "minimum_detectable_effect": 0.006640625000000001,
+              "null_reads_bounded": 0.988
+            }
+          }
+        }
+      },
+      "lifts_simulated": 22
+    },
+    "sizing_bound_90": {
+      "calibration": {
+        "target": 0.007975596278887944,
+        "sigma_run": 0.006064453125,
+        "spread": 0.007986129679680556,
+        "floor": false,
+        "spread_at_zero": 0.0051650995356158705
+      },
+      "null_false_positive": {
+        "0.975": 0.016,
+        "0.95": 0.031
+      },
+      "null_reads_absent": {
+        "0.975": 1.0,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.008886718750000001,
+              "minimum_detectable_effect": 0.008886718750000001,
+              "null_reads_bounded": 0.958
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.0095703125,
+              "minimum_detectable_effect": 0.0095703125,
+              "null_reads_bounded": 0.97775
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.009863281250000001,
+              "minimum_detectable_effect": 0.009863281250000001,
+              "null_reads_bounded": 0.98225
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.00810546875,
+              "minimum_detectable_effect": 0.00810546875,
+              "null_reads_bounded": 0.95375
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.008886718750000001,
+              "minimum_detectable_effect": 0.008886718750000001,
+              "null_reads_bounded": 0.977
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.009179687500000002,
+              "minimum_detectable_effect": 0.009179687500000002,
+              "null_reads_bounded": 0.983
+            }
+          }
+        }
+      },
+      "lifts_simulated": 22
+    },
+    "pilot_upper_99": {
+      "calibration": {
+        "target": 0.009729128390786195,
+        "sigma_run": 0.008291015625,
+        "spread": 0.009744577661254712,
+        "floor": false,
+        "spread_at_zero": 0.0051650995356158705
+      },
+      "null_false_positive": {
+        "0.975": 0.02125,
+        "0.95": 0.03625
+      },
+      "null_reads_absent": {
+        "0.975": 0.99975,
+        "0.95": 1.0
+      },
+      "reproducibility_failure": 0.0,
+      "by_level": {
+        "0.975": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.011425781250000001,
+              "minimum_detectable_effect": 0.011425781250000001,
+              "null_reads_bounded": 0.9595
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.01220703125,
+              "minimum_detectable_effect": 0.01220703125,
+              "null_reads_bounded": 0.9755
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.01259765625,
+              "minimum_detectable_effect": 0.01259765625,
+              "null_reads_bounded": 0.98075
+            }
+          }
+        },
+        "0.95": {
+          "by_cells": {
+            "1": {
+              "cell_power": 0.95,
+              "lift": 0.01064453125,
+              "minimum_detectable_effect": 0.01064453125,
+              "null_reads_bounded": 0.96325
+            },
+            "2": {
+              "cell_power": 0.9746794344808963,
+              "lift": 0.0115234375,
+              "minimum_detectable_effect": 0.0115234375,
+              "null_reads_bounded": 0.97775
+            },
+            "3": {
+              "cell_power": 0.9830475724915585,
+              "lift": 0.01171875,
+              "minimum_detectable_effect": 0.01171875,
+              "null_reads_bounded": 0.981
+            }
+          }
+        }
+      },
+      "lifts_simulated": 25
+    }
+  },
+  "provenance": {
+    "generated_at": "2026-10-22T01:15:39.668839+00:00",
+    "git": {
+      "commit": "9da8025a789f22e15217ba20197842ecb4ecc604",
+      "branch": "main"
+    },
+    "python": "3.13.15",
+    "platform": "Linux-6.18.55-1.el9.aarch64-aarch64-with-glibc2.34",
+    "packages": {
+      "torch": "2.14.0+cu130",
+      "transformers": "5.17.0",
+      "peft": "0.20.0",
+      "pygments": "2.21.0"
+    }
+  }
+}

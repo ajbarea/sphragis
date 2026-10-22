@@ -2,7 +2,7 @@
 
 Every measurement this study rests on is a committed file under
 `datasets/results/`, and every one of them was written by a script in this
-repository. This page is generated from those scripts: 763 artifacts under
+repository. This page is generated from those scripts: 785 artifacts under
 74 writers, grouped by the script that wrote them, each described by
 that script's own summary line. Run `make docs-index` to rebuild it, and the test
 suite fails if it is stale.
@@ -401,8 +401,11 @@ An organization's K under the coverage rule, as the K source a test read takes (
 
 | artifact |
 |---|
+| `k-coverage-openstack-likelihood-chains.json` |
 | `k-coverage-openstack-likelihood.json` |
+| `k-coverage-qt-likelihood-chains.json` |
 | `k-coverage-qt-likelihood.json` |
+| `k-coverage-wikimedia-likelihood-chains.json` |
 | `k-coverage-wikimedia-likelihood.json` |
 
 ## `scripts/label_audit_agreement.py`
@@ -665,10 +668,21 @@ Operating characteristics of a cell over repeated partitions at the registered K
 
 | artifact |
 |---|
+| `partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k12-null.json` |
+| `partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k15-null.json` |
+| `partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-k20-null.json` |
+| `partition-sensitivity-openstack-rp1.0-logprob_per_token-chains-smoke.json` |
+| `partition-sensitivity-openstack-rp1.0-logprob_per_token-chains.json` |
 | `partition-sensitivity-openstack-rp1.0-logprob_per_token.json` |
 | `partition-sensitivity-openstack-rp1.0.json` |
 | `partition-sensitivity-openstack-stopping.json` |
 | `partition-sensitivity-openstack.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-chains-k12-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-chains-k15-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-chains-k20-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-chains-k25-null.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-chains-smoke.json` |
+| `partition-sensitivity-qt-rp1.0-logprob_per_token-chains.json` |
 | `partition-sensitivity-qt-rp1.0-logprob_per_token-k12-null.json` |
 | `partition-sensitivity-qt-rp1.0-logprob_per_token-k15-null.json` |
 | `partition-sensitivity-qt-rp1.0-logprob_per_token-k15.json` |
@@ -677,6 +691,14 @@ Operating characteristics of a cell over repeated partitions at the registered K
 | `partition-sensitivity-qt-rp1.0-logprob_per_token-k30-null.json` |
 | `partition-sensitivity-qt-rp1.0-logprob_per_token-k35-null.json` |
 | `partition-sensitivity-qt-rp1.0-logprob_per_token.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k12-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k15-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k20-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k25-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k30-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k35-null.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-smoke.json` |
+| `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains.json` |
 | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k12-null.json` |
 | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k15-null.json` |
 | `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-k20-null.json` |

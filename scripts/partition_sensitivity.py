@@ -72,7 +72,13 @@ from sphragis.experiment.decomposition import (
     is_cpp,
     metric_sesoi,
 )
-from sphragis.experiment.partitions import K_MAX, K_MIN, pilot_sizing, spread_targets
+from sphragis.experiment.partitions import (
+    K_MAX,
+    K_MIN,
+    cluster_unit_of,
+    pilot_sizing,
+    spread_targets,
+)
 from sphragis.experiment.power import (
     _null,
     _shift,
@@ -590,7 +596,7 @@ def main() -> None:
     # Chains are drawn instead of changes only on a pilot read under chains, and the other way
     # round; the planned test changes become chains at the training window's ratio, the window
     # nearest the test window's size (a larger window joins more of its changes into chains).
-    unit = (pilot.get("cluster_unit") or {}).get("unit", "change")
+    unit = cluster_unit_of(pilot)
     if (args.chains is not None) != (unit == "chain"):
         raise SystemExit(f"the pilot was read by {unit}; --chains must match it")
     chain_of = ratio = None

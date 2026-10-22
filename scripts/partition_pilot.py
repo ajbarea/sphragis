@@ -61,6 +61,7 @@ from sphragis.experiment.neutral import (
     recorded_battery,
 )
 from sphragis.experiment.partitions import (
+    cluster_unit_of,
     eval_ids,
     h1_over_partitions,
     h2_contrast,
@@ -467,11 +468,7 @@ def main() -> None:
     if window == "test" and not args.replication and not args.chains:
         raise SystemExit("a test-window read resamples relation chains: give --chains")
     for artifact in (args.sizing, args.sensitivity):
-        made_by = (
-            (json.loads(artifact.read_text()).get("cluster_unit") or {}).get("unit", "change")
-            if artifact
-            else None
-        )
+        made_by = cluster_unit_of(json.loads(artifact.read_text())) if artifact else None
         if made_by is not None and made_by != cluster_unit["unit"]:
             raise SystemExit(
                 f"{artifact} was made by {made_by}, this read is by {cluster_unit['unit']}"
