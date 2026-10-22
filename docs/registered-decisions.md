@@ -278,7 +278,7 @@ Monte Carlo standard error at 4,000 null trials. OpenStack's two lowest spread p
 at the simulation's floor, the spread partitions and change noise give with no run shift
 (0.0065), so its range starts there.
 
-### Number of runs: OpenStack K = 10, Wikimedia K = 20
+### Number of runs: OpenStack K = 10, Wikimedia K = 20; under relation chains, Qt K = 10 too
 
 Decided by the partition study, the pilot and the simulated null. H1 is the mean over K admissible
 partitions, replacing five seeds on one registered partition, whose reading moved with the

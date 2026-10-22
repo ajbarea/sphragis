@@ -605,7 +605,9 @@ def test_a_chain_test_read_takes_the_k_artifact_k_coverage_writes(
     assert spec is not None and spec.loader is not None
     k_coverage = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(k_coverage)
-    sizing = Path(argv[argv.index("--sizing") + 1])
+    # The script names a chain K by its unit, so the read takes it under that name.
+    sizing = tmp_path / "k-coverage-openstack-likelihood-chains.json"
+    argv[argv.index("--sizing") + 1] = str(sizing)
     monkeypatch.setattr(
         sys,
         "argv",

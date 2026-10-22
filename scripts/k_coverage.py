@@ -12,6 +12,9 @@ full simulation at the pilot's own K); every K up to the first that holds must b
     uv run --no-sync --no-active python scripts/k_coverage.py \\
         --pilot $R/partition-pilot-wikimedia-likelihood.json --org wikimedia \\
         --grid $S.json $S-k*-null.json --out $R/k-coverage-wikimedia-likelihood.json
+
+From a pilot read under chains the artifact is `k-coverage-<org>-likelihood-chains.json`; a name
+that does not say the pilot's unit is refused, since the docs and the papers pick a K by its name.
 """
 
 from __future__ import annotations
@@ -21,7 +24,7 @@ import json
 from pathlib import Path
 
 from sphragis.experiment.cells import K_COVERAGE, REGISTERED_SPREAD_TARGET
-from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, coverage_runs
+from sphragis.experiment.partitions import COVERAGE_NULL_TRIALS, cluster_unit_of, coverage_runs
 from sphragis.provenance import provenance_header
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -34,6 +37,12 @@ parser.add_argument("--out", type=Path, required=True)
 def main() -> None:
     args = parser.parse_args()
     pilot = json.loads(args.pilot.read_text())
+    unit = cluster_unit_of(pilot)
+    if (unit == "chain") != args.out.name.endswith("-chains.json"):
+        raise SystemExit(
+            f"not written: {args.out.name} does not say the pilot's unit, {unit} "
+            "(a K made by chain is named *-chains.json, a K made by change is not)"
+        )
     grid = [(str(path), json.loads(path.read_text())) for path in args.grid]
     try:
         k = coverage_runs(pilot, grid, org=args.org, name=str(args.pilot))

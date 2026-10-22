@@ -10826,8 +10826,8 @@ pilot's 90% lower point.
 
 The reproducibility K is 10 and K = 10 holds, so **Qt's K is 10 under chains**; by change it was
 15, with K = 10 above nominal at both levels (entry of 2026-10-18). The hold is at the edge: at
-95% the null passes in 100 of 4,000 trials, exactly nominal, which the rule counts as within ("no
-more often than nominal"). K = 12 runs above nominal at both levels and K = 15 to 25 hold, the
+95% the null reads a false positive in 100 of 4,000 trials, exactly nominal, which the rule counts
+as within ("no more often than nominal"). K = 12 runs above nominal at both levels and K = 15 to 25 hold, the
 non-monotone grid the Monte Carlo error allows near nominal. The rule was fixed before any grid ran
 and is read as fixed. Qt's simulation at K = 15 (TIGRIS 438924) was cancelled once K = 10 held.
 

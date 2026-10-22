@@ -420,6 +420,14 @@ CLAIMS: list[tuple[Any, ...]] = [
         {"after": "Qt's K is "},
     ),
     (
+        "rd_partition_k_qt_chains_heading",
+        "registered-decisions.md",
+        "10",
+        K_COVERAGE_QT_CHAINS,
+        ["runs"],
+        {"after": "Qt K = "},
+    ),
+    (
         "rd_cell_power",
         "registered-decisions.md",
         "0.9747",

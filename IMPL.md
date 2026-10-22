@@ -9,15 +9,20 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 ## In flight
 
 - **Simulations under relation chains** (research log, 2026-10-22, "Relation chains simulated"):
-  K under chains is OpenStack 10, Wikimedia 20, Qt 10 (by change Qt was 15);
-  `k-coverage-<org>-likelihood-chains.json` is a Gerrit test read's K source. Running on TIGRIS:
+  every organization's K under chains is read; Qt's moved from its by-change K, OpenStack's and
+  Wikimedia's did not. `k-coverage-<org>-likelihood-chains.json` is a Gerrit test read's K source.
+  Running on TIGRIS:
   Wikimedia's chain simulation at K = 20 (438923, CPU only, 9da8025). When it finishes: rsync
   `partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k20.json` from
   `~/ajsoftworks/sphragis-data/results` and its log from `~/ajsoftworks/sphragis/logs`, log entry
   with its `scripts/log_tables.py` table (added to `tests/unit/test_log_tables.py`). Then, in one
   change, move papers (`org-house-style/harvest.py` K and simulation sources, 50-data.tex table,
   70-analysis.tex calibration) and the talks deck (`federated-agents/figures.py`) from the
-  by-change K artifacts and simulations to the chain ones; Qt's K there moves 15 -> 10.
+  by-change K artifacts and simulations to the chain ones (Qt's K changes there).
+  Open (review of #194): a chain simulation records its chains file's path, not its content, so a
+  grid drawn from a since-regenerated `relation-chains-<org>.json` would pass `coverage_runs` and
+  the test read's unit check. Record a digest of the chains file in the pilot and every
+  simulation, and compare it, before any chain artifact is regenerated.
 - **Qt's simulations** (IMPL 3d): the development pilot is read (H1 supported on likelihood), its
   planted check 5 passes 10 of 10, and its K under the coverage rule is 15 by change (research
   log, 2026-10-18) and 10 by chain (2026-10-22). Its full simulation at K = 15 is read (research log, 2026-10-19): every detectable

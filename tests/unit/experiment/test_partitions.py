@@ -575,7 +575,18 @@ def test_the_committed_coverage_k_is_what_the_rule_reads_from_the_committed_grid
     committed = json.loads((results / f"k-coverage-{org}-likelihood{suffix}.json").read_text())
     assert cluster_unit_of(committed) == ("chain" if suffix else "change")
     grid = [Path(row["file"]) for row in committed["grid"]]
-    out = tmp_path / "k.json"
+    out = tmp_path / f"k-coverage-{org}-likelihood{suffix}.json"
+    # A name that does not say the pilot's unit is refused before anything is written.
+    misnamed = tmp_path / f"k-coverage-{org}-likelihood{'' if suffix else '-chains'}.json"
+    refused = subprocess.run(
+        [sys.executable, str(root / "scripts/k_coverage.py"), "--pilot", committed["pilot"]]
+        + ["--org", org, "--grid", *map(str, grid), "--out", str(misnamed)],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    assert refused.returncode != 0 and "not written" in refused.stderr
+    assert not misnamed.exists()
     subprocess.run(
         [sys.executable, str(root / "scripts/k_coverage.py"), "--pilot", committed["pilot"]]
         + ["--org", org, "--grid", *map(str, grid), "--out", str(out)],
