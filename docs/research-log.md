@@ -10834,3 +10834,21 @@ and is read as fixed. Qt's simulation at K = 15 (TIGRIS 438924) was cancelled on
 Qt's K moves, so the paper's organization table and the deck, which read each organization's
 by-change K artifact and its simulation at that K, move to the chain artifacts in one change once
 Wikimedia's chain simulation at K = 20 is in.
+
+### Access answers of 2026-10-22 and 2026-10-23: Fuchsia calls its records public, and HSRO says the study is not human-subjects research
+
+`# research(2026-10)`. Two answers, recorded here before anything downstream cites them.
+
+- **Fuchsia.** To the request of 2026-10-15 for its NoteDb records on fuchsia.googlesource.com,
+  Adam Barth (Google, on fuchsia-discuss, 2026-10-22) replied that the information "is already
+  publicly available" and asked why permission was needed. That is no objection, and no grant
+  beyond Chrome Infra's answer of 2026-10-15, which Fuchsia's pool is already read under; the
+  admitted set and `notedb.GIT_PERMITTED` do not change. AOSP's request of the same day has no reply.
+- **RIT HSRO.** AJ met Heather Foti, HSRO's director, on 2026-10-23. She told him the study, which
+  contacts no one and reads only publicly posted reviews, is not human-subjects research, the reading
+  of 45 CFR 46.102(e) this log made on 2026-10-08: public reviews are not "identifiable private
+  information" (RIT HSRO, [Do I need review?](https://www.rit.edu/hsro/do-i-need-review)). The answer
+  was given in person, so it is not yet citable: a written determination was requested the same day,
+  together with what becomes of protocol IRB0000393, which is still routing for the faculty
+  advisor's attestation. The ethics section cites the determination once it is in writing.
+
