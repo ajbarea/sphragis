@@ -451,9 +451,9 @@ effect, a shift common to every change, which two runs give no evidence of (roug
   written permission (2026-10-14), so AOSP may enter again through the NoteDb route once it is
   granted and its data audit shows how
   Android's 2025 move to internal development changed its public review stream in the windows.
-- [ ] **Optional: a written "not human subjects research" determination** from hsro@rit.edu, to
-  cite in the ethics section. The study contacts no one and reads only publicly posted reviews,
-  so it is not human-subjects research under 45 CFR 46.102(e) (research log, 2026-10-08).
+- [ ] **A written "not human subjects research" determination** from RIT HSRO, to cite in the
+  ethics section. HSRO's director gave it in person on 2026-10-23, and the written form was asked for
+  the same day, with what becomes of IRB0000393 (research log, 2026-10-23).
 - [x] **GitHub's written confirmation** is not a gate (AJ, 2026-10-19; research log): the request of
   2026-10-10 to GitHub's privacy team drew only that inbox's automatic reply, and the family is read
   under its Acceptable Use Policies' research clause (section 7: public information, open-access
