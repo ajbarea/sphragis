@@ -75,6 +75,9 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    GitHub Pro (Student Pack) for required checks on papers `main`. Decided 2026-10-19: AJ reads
    Chrome Infra's answer as a rate covering Chromium, AOSP and Fuchsia, so H2's source is the
    first of Chromium and Fuchsia whose pool covers; without one, H2 has no confirmatory cell.
+6. `provenance._git_record` splits `git status --porcelain` on whitespace, so an untracked path
+   git quotes (non-ASCII) drops out of `uncommitted_code_sha256` and a rename records `old -> new`;
+   read `--porcelain -z` instead, with a test (open bug issue, found in the comment sweep).
 
 ## Standing
 
