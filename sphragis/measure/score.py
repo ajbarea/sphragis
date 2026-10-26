@@ -15,7 +15,8 @@ def normalize_formatting(text: str) -> str:
 
 
 def extract_code(text: str) -> str:
-    """The contents of the first markdown fence, or the whole text when there is none.
+    """The first closed markdown fence's contents, or the whole text without one, less trailing
+    newlines.
 
     Measured 2026-09-14 on Qwen2.5-Coder-1.5B: the model answered three refinement
     prompts correctly and raw exact match scored one of three, because it prefixed

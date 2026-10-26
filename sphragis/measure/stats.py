@@ -53,13 +53,13 @@ ESTIMATORS: Mapping[str, Estimator] = {
 
 # The false-positive rate of `cluster_bootstrap` under a true null (both arms at the same
 # exact-match rate) is measured by `scripts/interval_calibration.py` into
-# `datasets/results/interval-calibration.json` and read in the research log (2026-09-19,
-# 2026-09-30). It runs above nominal where the clusters are few and near nominal at the
-# largest sizes, and it moves with the rate the null is drawn at, so the figure to quote is
-# the one measured at the arm accuracy the gate contrasts. The gate reads one side (nominal
-# alpha 0.025), where the rate is about half the two-sided one. The floor rules out the
-# degenerate end: at one cluster every resample is that cluster, so the interval has zero
-# width and always excludes zero.
+# `datasets/results/interval-calibration.json`; `docs/registered-decisions.md` ("Estimand: pooled")
+# quotes it, checked by `harvest.py`. It runs above nominal where the clusters are few and near
+# nominal at the largest sizes, and it moves with the rate the null is drawn at, so the figure to
+# quote is the one measured at the arm accuracy the gate contrasts. The gate reads one side; its
+# measured rate is `gate_false_positive_rate`, about half the two-sided one. The floor rules out the
+# degenerate end: at one cluster every resample is that cluster, so the interval has zero width and
+# always excludes zero.
 MIN_CLUSTERS = 10
 
 

@@ -143,8 +143,7 @@ def _cross_validate(
 ) -> tuple[list[tuple[str, int, int, bool]], int, int]:
     """Held-out predictions over label-stratified folds of whole changes, with the counts.
 
-    Whole changes are held out together: a change's examples share a review conversation, so
-    splitting by example puts the same words on both sides of a fold. Returns the rows, the
+    Returns the rows, the
     change count and the document count. The labels are balanced first; no rows come back when
     either label then has fewer than `min_per_label` documents.
     """
@@ -239,7 +238,7 @@ def accuracy_interval(
     """A 95% percentile interval for the accuracy, resampling whole changes' held-out predictions.
 
     The classifier is fitted once per fold, and the resampling draws changes with replacement over
-    the predictions it made on them. Refitting on each resample trained every refit
+    the predictions it made on them. Refitting on each resample instead trained every refit
     on about 63% unique changes, so the resampled accuracies sat below the estimate by more than
     their own spread: the raw probe read 0.841 with an interval of [0.814, 0.836], and no interval
     built from quantiles of those draws, bias-corrected or not, can contain the estimate when

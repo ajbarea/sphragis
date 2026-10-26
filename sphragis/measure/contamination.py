@@ -96,8 +96,9 @@ def gap_k_percent(tokens: Sequence[TokenStats], *, k: float = 20.0, window: int 
     A position whose variance is not positive has no score, as in Min-K%++. Such positions are
     held in place rather than removed, and a window covering one is skipped: compacting them out
     first would average tokens that are not adjacent in the text, which is the opposite of what
-    the smoothing is for. A sequence shorter than the window is smoothed as one window over its
-    whole length, so k cannot select and the score is that window's mean.
+    the smoothing is for. A sequence shorter than the window, with every position scored, is
+    smoothed as one window over its whole length, so k cannot select and the score is that
+    window's mean.
 
     When gaps leave no run of `window` scored positions the window shrinks until some run
     survives, down to single positions, rather than refusing: one unscorable example must not
@@ -165,7 +166,8 @@ def gap_k_windows(tokens: Sequence[TokenStats], *, window: int = 3) -> dict[str,
 
 
 def guided_completion_rate(completions: Sequence[tuple[str, str]]) -> float:
-    """Fraction of prefix-prompted continuations reproducing the reference up to whitespace."""
+    """Fraction of prefix-prompted continuations equal to the reference under
+    `normalize_formatting`."""
     if not completions:
         return 0.0
     hits = sum(
