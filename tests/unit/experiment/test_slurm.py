@@ -163,7 +163,7 @@ def test_a_workdir_slurm_cannot_resolve_is_refused(workdir: str) -> None:
         render(SlurmJob(name="x", command="true", output="x.log", workdir=workdir))
 
 
-# --- Cluster targets ---------------------------------------------------------------------
+# Cluster targets
 
 
 def test_a_target_names_the_cluster_partition_and_gpu_together() -> None:

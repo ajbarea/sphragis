@@ -1,4 +1,4 @@
-"""scripts/notedb_parity.py's own wiring: the parts round 2 review found broken (items 4c, 12-14).
+"""scripts/notedb_parity.py's own wiring: paths, branch scope, the history marker and `--work`.
 
 Loaded via `importlib`, the pattern `test_fdlora_script.py` uses for a script outside the
 `sphragis` package, so it runs the real file rather than a reimplementation of it.
@@ -51,18 +51,16 @@ def _init_repo(root: Path) -> None:
     subprocess.run(["git", "-C", str(root), "commit", "-q", "-m", "init"], check=True)
 
 
-# ---------------------------------------------------------------------------
-# item 14: rest_root relative to its own checkout, not this process's cwd
-# ---------------------------------------------------------------------------
+# `rest_root` relative to its own checkout, not this process's cwd
 
 
 def test_relative_to_repo_uses_the_checkouts_own_toplevel_not_this_processs_cwd(
     parity: types.ModuleType, tmp_path: Path
 ) -> None:
     """A separate repository holds `rest_root` nested inside it; pytest's own cwd is a
-    different repository entirely (this one). The old code ran a bare `git rev-parse
-    --show-toplevel`, which reads *this* process's cwd -- the wrong checkout -- so it must
-    resolve against `rest_root` itself, `-C`, not the ambient working directory."""
+    different repository entirely (this one). A bare `git rev-parse --show-toplevel` reads
+    *this* process's cwd, the wrong checkout, so it must resolve against `rest_root` itself,
+    `-C`, not the ambient working directory."""
     other_repo = tmp_path / "other-repo"
     other_repo.mkdir()
     _init_repo(other_repo)
@@ -98,9 +96,7 @@ def test_relative_to_repo_falls_back_to_the_resolved_path_outside_any_checkout(
     assert parity._relative_to_repo(outside) == str(outside.resolve())
 
 
-# ---------------------------------------------------------------------------
-# item 12: classify_enumeration under the branches actually read, no hardcoded default
-# ---------------------------------------------------------------------------
+# `classify_enumeration` under the branches actually read, no hardcoded default
 
 
 def _rest_only_row(number: int, branch: str) -> dict[str, Any]:
@@ -125,8 +121,8 @@ def test_classify_enumeration_labels_a_branch_outside_what_was_read(
 def test_classify_enumeration_does_not_mislabel_a_change_on_a_branch_that_was_read(
     parity: types.ModuleType,
 ) -> None:
-    """The old hardcoded check (`branch != BRANCH_DEFAULT`) would call this
-    `other_branch_never_reached_main` even though `release` -- the change's own branch -- was
+    """A hardcoded check (`branch != BRANCH_DEFAULT`) would call this
+    `other_branch_never_reached_main` even though `release`, the change's own branch, was
     exactly what this run read; the label must track what was actually asked for."""
     rest = {"2024-11": [_rest_only_row(502, "release")]}
     result = parity.classify_enumeration("2024-11", {}, rest, {}, ["refs/heads/release"])
@@ -135,9 +131,7 @@ def test_classify_enumeration_does_not_mislabel_a_change_on_a_branch_that_was_re
     assert result["rest_only"] == {"main_commit_not_in_history": 1}
 
 
-# ---------------------------------------------------------------------------
-# item 11B: collect() is called with a submitted_between span, not unbounded
-# ---------------------------------------------------------------------------
+# `collect()` is called with a submitted_between span, not unbounded
 
 
 def test_collect_span_covers_every_compared_month(parity: types.ModuleType) -> None:
@@ -159,16 +153,14 @@ def test_collect_span_is_the_min_start_and_max_end_whatever_the_month_order(
     )
 
 
-# ---------------------------------------------------------------------------
-# item 13: the history-since marker is keyed on the branch set, not the date alone
-# ---------------------------------------------------------------------------
+# The history-since marker is keyed on the branch set, not the date alone
 
 
 def test_history_fetched_is_none_for_a_branch_never_fetched_before(
     parity: types.ModuleType, tmp_path: Path
 ) -> None:
     """A rerun asking for a new branch, at the same `since` already held, must still trigger a
-    fetch: the old marker (a bare date string) could not tell "new branch" from "nothing new"."""
+    fetch: a bare-date marker could not tell "new branch" from "nothing new"."""
     marker = tmp_path / "history-since.txt"
     parity._record_history_fetch(marker, ["refs/heads/main"], "2024-08-01")
     assert parity._history_fetched(marker, ["refs/heads/main"], "2024-08-01") is not None
@@ -187,7 +179,7 @@ def test_history_fetched_is_none_when_since_deepens(
 def test_history_fetched_is_none_for_a_legacy_bare_date_marker(
     parity: types.ModuleType, tmp_path: Path
 ) -> None:
-    """A marker from before this fix (a bare date, not JSON) must not be trusted as covering
+    """A legacy marker (a bare date, not JSON) must not be trusted as covering
     any branch: unreadable or unrecognised, so a fetch happens rather than being skipped."""
     marker = tmp_path / "history-since.txt"
     marker.write_text("2024-08-01\n")
@@ -198,8 +190,8 @@ def test_rerunning_with_an_extra_branch_does_not_crash_on_an_unfetched_ref(
     parity: types.ModuleType, tmp_path: Path
 ) -> None:
     """End to end, against a real repository: the exact sequence `_run` executes (marker
-    decision, `fetch_history`, then a `git log` over the branches read). The old marker (a bare
-    date, unchanged between runs) skipped the second `fetch_history` entirely, so `release`
+    decision, `fetch_history`, then a `git log` over the branches read). A bare-date marker,
+    unchanged between runs, skipped the second `fetch_history` entirely, so `release`
     was never fetched and the `git log` below failed with `unknown revision 'refs/heads/release'`.
     """
     from sphragis.corpus.notedb import Pacer, Repo, fetch_history
@@ -261,9 +253,7 @@ def test_record_history_fetch_unions_branches_across_reruns(
     )
 
 
-# ---------------------------------------------------------------------------
-# item 4c: --keep-work
-# ---------------------------------------------------------------------------
+# --keep-work
 
 
 def _rest_root(tmp_path: Path) -> Path:
@@ -478,9 +468,7 @@ def test_a_kept_scratch_directory_is_reused_by_the_next_run(
     assert (seen[0] / "history-since.txt").is_file(), "the reused directory keeps its contents"
 
 
-# ---------------------------------------------------------------------------
-# item 1: --work never deletes anything it did not create itself
-# ---------------------------------------------------------------------------
+# --work never deletes anything it did not create itself
 
 
 def test_refuse_unsafe_work_when_work_is_the_checkout_root(parity: types.ModuleType) -> None:
@@ -566,7 +554,7 @@ def test_rmtree_marked_does_not_follow_a_symlink_to_the_checkout(
 
 
 def test_cleanup_survives_a_second_signal_via_subprocess(tmp_path: Path) -> None:
-    """M25: a mutant that dropped the `_uninterruptible` wrap around `main()`'s own cleanup call.
+    """A mutant that dropped the `_uninterruptible` wrap around `main()`'s own cleanup call.
     Run in a child process (as `test_fetch_month_cleanup_survives_a_second_signal_via_subprocess`
     in `test_notedb.py` does for the route's own cleanup): unguarded, the first self-signal
     raises before the real `shutil.rmtree` runs, and the marked scratch directory, which has no

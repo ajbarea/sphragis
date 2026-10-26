@@ -433,7 +433,7 @@ def test_the_environment_builder_shares_the_job_environment_and_verifies_uv() ->
     assert "uv sync --frozen --extra experiment" in builder
 
 
-# --- Building the environment ------------------------------------------------------------
+# Building the environment
 
 _BUILDER = _ROOT / "scripts" / "cluster_env.sh"
 _ARCHIVE = f"uv-{_MACHINE}-unknown-linux-gnu.tar.gz"
@@ -524,7 +524,7 @@ def test_the_builder_refuses_a_uv_whose_checksum_does_not_match(tmp_path: Path) 
     assert "CLUSTER_ENV_OK" not in result.stdout
 
 
-# --- make targets, read as the shell will receive them -------------------------------------
+# make targets, read as the shell will receive them
 
 
 def _dry_run(*args: str) -> str:

@@ -80,7 +80,7 @@ def test_interleaved_removals_and_additions_lose_no_line() -> None:
 
 @pytest.mark.parametrize("separator", [" ", "\f", "\x85", "\x1c"])
 def test_a_line_separator_inside_a_source_line_does_not_split_it(separator: str) -> None:
-    """Review finding: `splitlines` split these and shifted the anchor by a line."""
+    """`splitlines` split these and shifted the anchor by a line."""
     patch = f"@@ -1,3 +1,3 @@\n a{separator} x\n-old\n+new\n tail"
     (hunk,) = hunks_from_diff(diff_from_patch(patch), context=3)
     assert hunk.before_start == 2 and hunk.context_before == (f"a{separator} x",)
@@ -138,7 +138,7 @@ def test_a_participants_account_reference_is_replaced_wherever_it_appears(text: 
 
 
 def test_a_login_that_is_an_ordinary_word_does_not_corrupt_the_comment() -> None:
-    """Review finding: a participant named `fix` turned "Please fix this" into a pseudonym."""
+    """A participant named `fix` turned "Please fix this" into a pseudonym."""
     assert scrub_mentions("Please fix this, @fix", "s", logins=["fix"]).startswith(
         "Please fix this"
     )
@@ -277,7 +277,7 @@ def test_the_successor_is_the_first_commit_after_the_comment_that_changes_the_fi
 
 
 def test_a_file_changed_between_the_commit_and_the_comment_is_an_outdated_view() -> None:
-    """Review finding: those edits predate the comment, so they are no response to it."""
+    """Those edits predate the comment, so they are no response to it."""
     late = _comment(created_at="2025-01-16T12:00:00Z")
     row = _row({"c1": BEFORE, "c2": "a = 100\n" + BEFORE, "c3": "a = 100\n" + AFTER}, [late])
     assert row[GITHUB_KEY]["outdated_view"] == 1 and row[GITHUB_KEY]["diffs"] == {}
@@ -289,7 +289,7 @@ def test_a_file_no_later_commit_changes_is_an_empty_diff() -> None:
 
 
 def test_fork_points_are_taken_against_the_branch_before_the_pr_merged() -> None:
-    """Review finding: after a merge commit every PR commit is reachable from the branch, so a
+    """After a merge commit every PR commit is reachable from the branch, so a
     merge base against its current head is the commit itself and every comment read upstream."""
     on_main_now = {("main", "c1"): "c1", ("main", "c2"): "c2"}
     before_merge = {("tip", "c1"): "base0", ("tip", "c2"): "base0"}
@@ -301,7 +301,7 @@ def test_fork_points_are_taken_against_the_branch_before_the_pr_merged() -> None
     ("older", "newer"), [("base0", "base1"), ("base1", "base0")], ids=["forward", "backward"]
 )
 def test_the_base_branchs_own_edit_to_the_file_drops_the_comment(older: str, newer: str) -> None:
-    """Review findings: the rebase guard, in both directions, with no 300-file list to miss."""
+    """The rebase guard, in both directions, with no 300-file list to miss."""
     versions = {"c1": BEFORE, "c2": AFTER, "c3": AFTER, "base0": BEFORE, "base1": UPSTREAM}
     forks = {("tip", "c1"): older, ("tip", "c2"): newer, ("tip", "c3"): newer}
     row = _row(versions, forks=forks)
@@ -336,7 +336,7 @@ def test_a_binary_or_truncated_file_is_counted_unavailable() -> None:
 
 
 def test_an_object_github_no_longer_holds_costs_its_comments_not_the_pr() -> None:
-    """Review finding: one missing blob marked the whole PR withdrawn."""
+    """One missing blob marked the whole PR withdrawn."""
 
     class Collected(Files):
         def blob_text(self, repo: str, oid: str) -> str | None:
