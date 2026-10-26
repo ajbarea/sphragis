@@ -221,7 +221,7 @@ clean:                     ## Remove caches + build artifacts
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 
 verify:                    ## lint + test, reporting a bare exit code (no pipes to mask it)
-	@$(MAKE) --no-print-directory lint > /dev/null 2>&1; echo "LINT_RC=$$?"
-	@$(MAKE) --no-print-directory test > /dev/null 2>&1; echo "TEST_RC=$$?"
-	@$(MAKE) --no-print-directory lint > /dev/null 2>&1 && $(MAKE) --no-print-directory test > /dev/null 2>&1 \
-		&& echo "ALL GREEN" || { echo "NOT GREEN - run make lint / make test for detail"; exit 1; }
+	@$(MAKE) --no-print-directory lint > /dev/null 2>&1; lint=$$?; echo "LINT_RC=$$lint"; \
+	$(MAKE) --no-print-directory test > /dev/null 2>&1; test=$$?; echo "TEST_RC=$$test"; \
+	if [ "$$lint" -eq 0 ] && [ "$$test" -eq 0 ]; then echo "ALL GREEN"; \
+	else echo "NOT GREEN - run make lint / make test for detail"; exit 1; fi
