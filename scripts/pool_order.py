@@ -1,16 +1,15 @@
 """A foreign pool's projects in the order item 4 of the H2 plan takes them, from listing snapshots.
 
-Each project's count is its merged changes created inside the host's grant
-(`cli.GrantScope`: from `created_from`, before `created_before`), read from the month snapshots a
-`fetch` wrote under `--root`, each its month listed in the scope's day ranges (`cli.day_ranges`;
-a range's halves, `cli.range_halves`, where the record names that range's listing as one the host
-would have truncated), once per granted
-project, or under a scope of every project naming none (`GrantScope.every_project`) (research
-log, 2026-10-18 and 2026-10-19). Projects are
-ranked by that count, most first, ties by name. A month lists the changes last updated in it, so
-a change updated after the grant's last month is in no listing. Beside it, as feasibility only,
-the changes whose snapshot records an inline comment (`cli.uncommented` reads the rest as
-uncommented), the changes a `build --fewer-requests` would ask about. Reads listings only.
+Each project's count is its merged changes created inside the host's grant (`cli.GrantScope`: from
+`created_from`, before `created_before`), read from the month snapshots a `fetch` wrote under
+`--root`, each its month listed in the scope's day ranges (`cli.day_ranges`; a range's halves,
+`cli.range_halves`, where the record names that range's listing as one the host would have
+truncated), once per granted project, or under a scope of every project naming none
+(`GrantScope.every_project`) (research log, 2026-10-18 and 2026-10-19). Projects are ranked by that
+count, most first, ties by name. A month lists the changes last updated in it, so a change updated
+after the grant's last month is in no listing. Beside it, as feasibility only, the changes whose
+snapshot records an inline comment (`cli.uncommented` reads the rest as uncommented), the changes a
+`build --fewer-requests` would ask about. Reads listings only.
 
     uv run --no-sync --no-active python scripts/pool_order.py --org aosp \\
         --root ~/ajsoftworks/sphragis-data-local/aosp/listing \\

@@ -74,7 +74,7 @@ def partitions_covered(draws: list[dict]) -> int:
 
 
 def against(pool: Sequence[dict[str, Any]], other: Sequence[dict[str, Any]]) -> list[dict]:
-    """The pool's rows that neither copy nor nearly copy a row of `other`."""
+    """The pool's rows with no exact or near copy among the rows of `other`."""
     exact = {pair_text(row) for row in other}
     sized: dict[int, list[frozenset[str]]] = {}
     for row in other:
