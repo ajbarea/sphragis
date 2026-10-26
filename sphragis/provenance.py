@@ -1,8 +1,8 @@
 """Provenance every artifact in this repo carries: commit, versions, platform, and Slurm job.
 
-Copied from phalanx-fl rather than imported. Twelve lines of standard library is the
-wrong thing to take a cross-repo dependency for, especially on a repo whose stated
-invariant is to ride the latest Flower while this one must stay reproducible.
+Copied from phalanx-fl rather than imported: phalanx-fl rides the latest Flower, and this repo
+must stay reproducible, so a cross-repo dependency for a short standard-library module is the
+wrong trade.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
-# The packages whose versions actually pin a run's behaviour.
+# Packages whose versions pin a run's behaviour.
 _TRACKED_PACKAGES = ("torch", "transformers", "peft", "datasets", "pygments")
 
 
@@ -63,8 +63,8 @@ def _git_record() -> dict[str, Any]:
         "status", "--porcelain", "--untracked-files=all", "--", ":/sphragis", ":/scripts"
     )
     if changed:
-        # Split on the status field rather than slice at a column: `_git` strips its output,
-        # which removes the leading space of the first line and shifted every fixed offset by one.
+        # Split on the status field rather than slice at a column: `_git` strips its output, so
+        # the first line can lose its leading status space.
         entries = [line.split(None, 1) for line in changed.splitlines() if line.strip()]
         paths = sorted(entry[1] for entry in entries)
         digest = hashlib.sha256(

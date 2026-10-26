@@ -62,8 +62,7 @@ def write_build_record(
 ) -> None:
     """What a month was built from and under which build rules; `complete` once it has landed.
 
-    A month built with `--fewer-requests`, or under `--read-cap`, says so; a full build's record
-    is as it always was.
+    A month built with `--fewer-requests`, or under `--read-cap`, says so.
     """
     record = {"snapshot_sha256": snapshot_sha256, "build_rules": BUILD_RULES, "complete": complete}
     if fewer_requests:
@@ -182,10 +181,11 @@ def _stale_build(built: Path) -> str | None:
 
 
 def _stale_fetch(snapshot: Path) -> str | None:
-    """Whether a git-route or GitHub snapshot was read under rules other than the code's own.
+    """Why a snapshot cannot back its built month, or None: `refused_snapshot`'s reason, or a
+    git-route or GitHub snapshot read under rules other than the code's own.
 
-    Nothing to check for a REST snapshot, or one from before this was recorded: only a git
-    route names `fetch_rules`, the same way only a build names `build_rules`.
+    A REST snapshot, or a git-route one from before `fetch_rules` was recorded, has no rules to
+    check. A GitHub record without `github_rules` is refused.
     """
     if not snapshot.is_file():
         return None

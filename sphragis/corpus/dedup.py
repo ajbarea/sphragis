@@ -1,4 +1,4 @@
-"""Three-stage deduplication: exact, near-duplicate, repeated boilerplate."""
+"""Deduplication: exact, near-duplicate, repeated boilerplate, then one example per id."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ def dedup(
     boilerplate_min_docs: int = 5,
     boilerplate_fraction: float = 0.5,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Remove duplicates, near-duplicates and boilerplate; keep the earliest occurrence.
+    """Remove duplicates, near-duplicates, boilerplate and repeated ids; keep the earliest.
 
     The boilerplate threshold is a FRACTION of the surviving corpus, not a document count.
     An absolute count silently tightens as the corpus grows: 20 documents is 11.5% document
