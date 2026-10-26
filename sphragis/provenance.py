@@ -1,7 +1,7 @@
 """Provenance every artifact in this repo carries: commit, versions, platform, and Slurm job.
 
 Copied from phalanx-fl rather than imported: phalanx-fl rides the latest Flower, and this repo
-must stay reproducible, so a cross-repo dependency for a few lines of standard library is the
+must stay reproducible, so a cross-repo dependency for a short standard-library module is the
 wrong trade.
 """
 
@@ -63,8 +63,8 @@ def _git_record() -> dict[str, Any]:
         "status", "--porcelain", "--untracked-files=all", "--", ":/sphragis", ":/scripts"
     )
     if changed:
-        # Split on the status field rather than slice at a column: `_git` strips its output,
-        # which removes the first line's leading space and shifted that line's offsets by one.
+        # Split on the status field rather than slice at a column: `_git` strips its output, so
+        # the first line can lose its leading status space.
         entries = [line.split(None, 1) for line in changed.splitlines() if line.strip()]
         paths = sorted(entry[1] for entry in entries)
         digest = hashlib.sha256(
