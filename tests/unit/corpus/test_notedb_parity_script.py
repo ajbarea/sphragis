@@ -1,4 +1,5 @@
-"""scripts/notedb_parity.py's own wiring: paths, branch scope, the history marker and `--work`.
+"""scripts/notedb_parity.py's own wiring: paths, branch scope, the collect span, the history
+marker, `--keep-work` and `--work`.
 
 Loaded via `importlib`, the pattern `test_fdlora_script.py` uses for a script outside the
 `sphragis` package, so it runs the real file rather than a reimplementation of it.

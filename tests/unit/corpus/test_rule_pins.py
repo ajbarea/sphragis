@@ -5,8 +5,9 @@ included (`rules.BUILD_SOURCES`, `FETCH_SOURCES`, `GITHUB_SOURCES`), so any edit
 files marks every month built or fetched under the old text as stale, and the loader then refuses
 it: a rebuild or refetch over the network, weeks for the GitHub family. `GITHUB_RULES` moved twice
 under collected months, once by a code change and once by a comment edit, and was restored both
-times. A deliberate rules change updates its pin here in the same commit, with the
-rebuild it implies. `RULES_VERSION` is not pinned: a label change is re-refined from disk, offline.
+times (research log, 2026-10-18). A deliberate rules change updates its pin here in the same
+commit, with the rebuild it implies. `RULES_VERSION` is not pinned: a label change is re-refined
+from disk, offline.
 
 `github.py`'s comment on GitHub's Acceptable Use Policies predates the 2026-10-08 reading that
 GitHub's confirmation is awaited (research log); it stays as written because the digest covers it.

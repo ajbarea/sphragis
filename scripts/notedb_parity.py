@@ -17,7 +17,8 @@ anything else in it are left alone whatever happens mid-run. Every network opera
 to `<scratch>/ledger.jsonl`, so the artifact reports what the whole comparison cost. A rerun over
 a kept scratch directory does *not* cost no requests: reading which branches to enumerate
 (`branch_refs`) runs one `ls-remote` every time regardless, and the sealed test window's
-meta-tip probe is re-forced every time by design (item 1); what a kept directory actually saves
+meta-tip probe is re-forced every time, so a ref updated since the last run is not read back
+from the kept repository; what a kept directory actually saves
 is not refetching blobs, trees and patch-set commits already held.
 
 Before the scratch directory (and its ledger) is deleted, whether the run succeeded or raised,

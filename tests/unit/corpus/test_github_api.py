@@ -124,7 +124,7 @@ def _commit(oid: str, at: str) -> dict[str, str]:
 
 def test_heads_recover_force_pushed_commits_in_commit_time_order() -> None:
     """An amended commit can sit in the timeline before the force push that
-    replaced the commit it amends; ordering by timeline position put them backwards."""
+    replaced the commit it amends; ordering by timeline position once put them backwards."""
     nodes = [
         {"__typename": "PullRequestCommit", "commit": _commit("a1", "2025-01-01T00:00:00Z")},
         {"__typename": "PullRequestCommit", "commit": _commit("b1", "2025-01-03T00:00:00Z")},
