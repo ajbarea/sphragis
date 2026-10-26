@@ -31,6 +31,9 @@ TABLES = {
     "OpenStack at K = 10 by chain": lambda: log_tables.sensitivity(
         RESULTS / "partition-sensitivity-openstack-rp1.0-logprob_per_token-chains.json"
     ),
+    "Wikimedia at K = 20 by chain": lambda: log_tables.sensitivity(
+        RESULTS / "partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k20.json"
+    ),
     "Qt at K = 10 by chain": lambda: log_tables.sensitivity(
         RESULTS / "partition-sensitivity-qt-rp1.0-logprob_per_token-chains.json"
     ),
