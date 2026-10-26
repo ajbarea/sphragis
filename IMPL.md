@@ -12,9 +12,10 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   and 2026-10-25, "Wikimedia at K = 20 by chain"): every organization's K and its full
   simulation at that K are read under chains (OpenStack 10, Wikimedia 20, Qt 10; Qt's moved from
   15 by change). `k-coverage-<org>-likelihood-chains.json` is a Gerrit test read's K source.
-  Next, in one change: move papers (`org-house-style/harvest.py` K and simulation sources,
-  50-data.tex table, 70-analysis.tex calibration) and the talks deck (`federated-agents/figures.py`)
-  from the by-change K artifacts and simulations to the chain ones.
+  The paper (papers#111: organizations table, calibration, a run-by-chain crossed interval) and
+  the deck (talks#34) read the chain K artifacts and simulations. The deck's split figure and team
+  readings still read the by-change development pilots, since no chain split files exist; its
+  `chains_hold` asserts the verdicts match under chains.
   Open (review of #194): a chain simulation records its chains file's path, not its content, so a
   grid drawn from a since-regenerated `relation-chains-<org>.json` would pass `coverage_runs` and
   the test read's unit check. Record a digest of the chains file in the pilot and every
