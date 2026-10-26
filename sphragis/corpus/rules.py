@@ -1,7 +1,7 @@
 """Digests of the code that decides what an example is, so a changed rule cannot go unnoticed.
 
-Three stages apply rules, and each gets its own digest, because re-running one does not re-run
-the other:
+Each stage or route that applies rules gets its own digest, because re-running one does not
+re-run the others:
 
 - `BUILD_RULES`, what `build` applies while it turns a change into examples. Every built month
   records the digest it was built under, and a month built under other rules is stale until it is

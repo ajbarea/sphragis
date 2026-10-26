@@ -25,9 +25,9 @@ def partition(
 
     The unassigned list is the point. Dropping a change that matches no window is silent
     and total: the windows still look well formed, `straddling_changes` still comes back
-    empty, and the freeze records counts for whatever survived. The bounds end at
-    2026-09-01, so a fetch of any later month assigns nothing and freezes an empty corpus
-    while reporting success.
+    empty, and the freeze records counts for whatever survived. A change created past the
+    last bound's end matches no window, so without this list a corpus of later months would
+    freeze empty while reporting success.
     """
     by_change: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
     for example in examples:

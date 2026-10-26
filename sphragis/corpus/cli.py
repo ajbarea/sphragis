@@ -1,4 +1,5 @@
-"""Corpus pipeline entry point: the one place that touches disk or the network."""
+"""Corpus pipeline entry point (`python -m sphragis.corpus <stage>`), and the permissions and
+transport every Gerrit REST read goes through."""
 
 from __future__ import annotations
 
@@ -224,10 +225,10 @@ def rest_rows(changes: Iterable[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
 def outside_grant(scope: GrantScope | None, month: str, rows: Sequence[Mapping[str, Any]]) -> str:
     """Why a month's REST rows would be read past what a host's grant covers, "" if they would
     not: the month, a project it does not name, a branch that holds no code under a scope of every
-    project, or a change created outside its window. A
-    change's comments and diffs are asked by number, which names neither, so a path that asks by
-    number (the build, the comment-count probe) refuses here first, a snapshot held from before
-    the grant included, and admits what passes (`admit`); the transport asks about no other."""
+    project, or a change created outside its window. A change's comments and diffs are asked by
+    number, which names neither, so a path that asks by number (the build, the comment-count
+    probe) refuses here first, a snapshot held from before the grant included, and admits what
+    passes (`admit`); the transport asks about no other."""
     if scope is None or not rows:
         return ""
     if not grant_months(scope, month):
@@ -895,7 +896,7 @@ def refuse_if_sealed(root: Path, org: str, month: str) -> None:
     """Exit before any request if `month` could return test-window content while sealed.
 
     The test window is fetched only after in-principle acceptance; fetch timestamps are the
-    Stage 2 evidence that collection followed acceptance, and nothing enforced it here.
+    Stage 2 evidence that collection followed acceptance.
 
     Every month from the window's start onward is refused, not only the months inside it.
     Gerrit's `after:`/`before:` filter on a change's last update, not its creation, so a
@@ -1185,8 +1186,7 @@ def _stage_fetch_git(args: argparse.Namespace, salt: str) -> int:
     if bad:
         raise SystemExit(f"refusing --project {bad}: not a plain project path")
     refuse_mixed_routes(Path(args.root), args.org, "notedb", allow=args.allow_mixed_routes)
-    # `fetch_month` installs its own SIGTERM handling around the scratch repository it owns
-    # (item 4b): every caller gets it, so nothing extra is needed here.
+    # `fetch_month` installs its own SIGTERM handling around the scratch repository it owns.
     rows, record = fetch_month(
         args.org,
         args.project,

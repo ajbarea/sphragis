@@ -59,7 +59,7 @@ _ROLE_LOCAL_PARTS = frozenset({"noreply", "no-reply", "your-email", "root", "adm
 #: `n@mock.patch`, and the escaped newline is what supplies the local part, so these are
 #: recognised by a local part of exactly `n` beside one of these first labels. Matching the
 #: label alone would drop `u@mark.com`, which is a person. Reading decoded values removes
-#: most of these already; this is the belt to that braces.
+#: most of these already; this catches the rest.
 _DECORATOR_LABELS = frozenset({"mock", "mark", "decorators", "pytest", "app", "patch", "route"})
 
 
@@ -167,7 +167,7 @@ def _line_addresses(line: str) -> set[str]:
 
 def _redact_line(line: str) -> str:
     """One JSON line redacted through its decoded strings, left byte for byte when it holds no
-    address: rewriting a raw line can delete the letter after a JSON backslash (issue #183)."""
+    address: rewriting a raw line can delete the letter after a JSON backslash."""
     if not _line_addresses(line):
         return line
     try:

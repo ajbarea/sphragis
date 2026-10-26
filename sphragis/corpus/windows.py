@@ -15,10 +15,10 @@ TEST_WINDOW_START = "2025-11-01"
 # The test window runs twelve months rather than ten. The gate is conjunctive, so its power
 # is the probability BOTH organizations clear zero, and twelve months clears it more often than
 # ten (the figures that chose it are superseded as absolute power; see the ROADMAP's registered
-# decisions) for 0.4 points of additional
-# differential censoring, still a twelfth of what the dev window carries. It is set now,
-# before any test data exists to be seen: 2026-10 closes before the Stage 1 submission on
-# 2026-11-20, and the window is still fetched only after in-principle acceptance.
+# decisions) for 0.4 points of additional differential censoring, still a twelfth of what the
+# dev window carries. It is set before any test data exists to be seen: 2026-10 closes before
+# the Stage 1 submission on 2026-11-20, and the window is still fetched only after in-principle
+# acceptance.
 WINDOWS = {
     "pilot": ("2024-10-01", "2024-11-01"),
     "train": ("2024-11-01", "2025-09-01"),
