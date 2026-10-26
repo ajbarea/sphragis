@@ -25,8 +25,8 @@ def partition(
 
     The unassigned list is the point. Dropping a change that matches no window is silent
     and total: the windows still look well formed, `straddling_changes` still comes back
-    empty, and the freeze records counts for whatever survived. A change created past the
-    last bound's end matches no window, so without this list a corpus of later months would
+    empty, and the freeze records counts for whatever survived. A change created outside
+    every window's bounds matches no window, so without this list a corpus of such months would
     freeze empty while reporting success.
     """
     by_change: dict[str, list[Mapping[str, Any]]] = defaultdict(list)

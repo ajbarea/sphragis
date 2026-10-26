@@ -59,7 +59,7 @@ _ROLE_LOCAL_PARTS = frozenset({"noreply", "no-reply", "your-email", "root", "adm
 #: `n@mock.patch`, and the escaped newline is what supplies the local part, so these are
 #: recognised by a local part of exactly `n` beside one of these first labels. Matching the
 #: label alone would drop `u@mark.com`, which is a person. Reading decoded values removes
-#: most of these already; this catches the rest.
+#: most of these already; this catches the ones left beside these labels.
 _DECORATOR_LABELS = frozenset({"mock", "mark", "decorators", "pytest", "app", "patch", "route"})
 
 

@@ -62,8 +62,7 @@ def write_build_record(
 ) -> None:
     """What a month was built from and under which build rules; `complete` once it has landed.
 
-    A month built with `--fewer-requests`, or under `--read-cap`, says so; a full build's record
-    carries neither key.
+    A month built with `--fewer-requests`, or under `--read-cap`, says so.
     """
     record = {"snapshot_sha256": snapshot_sha256, "build_rules": BUILD_RULES, "complete": complete}
     if fewer_requests:
