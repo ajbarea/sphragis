@@ -384,7 +384,8 @@ def fields_for(node: Mapping[str, Any]) -> frozenset[str]:
 
 def _written_guide(node: Mapping[str, Any]) -> bool:
     """The shape both tracked guides have: no merge, no answer, no evidence or recurrence from
-    comments, no digest, one page list a chunk and one a rule."""
+    comments, no `_hmac` field other than a re-keyed plain hash, one page list a chunk and one a
+    rule."""
     chunks, parts, rules, pages = (
         node.get(k) for k in ("chunks", "part_pages", "rules", "rule_pages")
     )
@@ -650,7 +651,7 @@ def granted_orgs() -> frozenset[str]:
 @functools.cache
 def aliases() -> Mapping[str, str]:
     """Other names a granted org is saved under: its hosts' first labels without `review`
-    (`android-review` for `aosp`), and the manual ones."""
+    (`android` from `android-review` for `aosp`), and the manual ones."""
     found = dict(MANUAL_ALIASES)
     for org, hosts in _registry().items():
         for host in hosts:
@@ -920,7 +921,8 @@ def withhold(document: Any, name: str, key: bytes) -> tuple[Any, int]:
     in it digested; a field holding none (a prediction interval, a null) is left alone. A plain
     hash field (`PLAIN_HASHES`) becomes `f_hmac` too, each hash replaced by the HMAC of its hex
     string, so the cluster's resume keeps its plain hashes and the published copy holds none. A
-    copy already withheld that still carries text is refused rather than half-merged.
+    copy already withheld that still carries text or a plain hash is refused rather than
+    half-merged.
     """
     count = 0
     ids = _listed_ids(document)
