@@ -62,12 +62,10 @@ def average_state_dicts(state_dicts: Sequence[Mapping[str, Any]]) -> dict[str, A
 
 
 def round0_seed(personalized: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
-    """Algorithm 1, line 7's average, over every client label the caller passes in.
+    """Algorithm 1, line 7's average, over exactly the clients in `personalized`.
 
-    Averages exactly the mapping it is given: the caller decides the scope by what it puts in
-    `personalized`, so a caller that passes one source's clients still gets that source's own
-    average, not the paper's cross-client one. `scripts/fdlora_schedule.py` calls this once, with
-    every client across every source, which is what makes the average the paper's own.
+    The paper's average is over every client of every source, which is how
+    `scripts/fdlora_schedule.py` calls it; one source's clients give that source's average.
     """
     return average_state_dicts(list(personalized.values()))
 
@@ -77,11 +75,10 @@ def validate_schedule(
 ) -> None:
     """Refuse a bad R/K/H before Stage 1 trains anything.
 
-    `rounds`, `inner_steps` and `sync_period` all read as counts and must be at least 1; checked
-    here rather than left to `should_sync`/`with_inner_steps` so the message names the argument
-    before either is called. The final-sync collision (`rounds` a multiple of `sync_period`) is
-    the same refusal the script already carried, unless `allow_final_sync` says the collision
-    (the synchronous `sync-period=1` endpoint) is intended.
+    `rounds`, `inner_steps` and `sync_period` must each be at least 1. `rounds` a multiple of
+    `sync_period` makes the final round sync, so the saved `-local` would equal the transmitted
+    global; that is refused unless `allow_final_sync` says it is intended (the synchronous
+    `sync-period=1` endpoint).
     """
     if rounds < 1:
         raise SystemExit(f"rounds must be at least 1, got {rounds}")
