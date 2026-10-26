@@ -1,22 +1,19 @@
 """Plant a convention of known strength, and find out whether the contrast can see it.
 
-Every null this study has produced is ambiguous between two statements: there is no
-organizational house style, or this instrument cannot see one of any strength. The
-existing positive control does not separate them. It compares an organization's adapter
-against the base model, which establishes that adaptation works; RQ1's contrast is matched
-adapter against MISMATCHED adapter, and nothing establishes that this contrast can detect a
+A null is ambiguous between no organizational house style and an instrument that cannot see
+one. The positive control (an organization's adapter against the base model) shows adaptation
+works; it does not show that RQ1's contrast, matched adapter against mismatched, can detect a
 difference known to be there.
 
-So: split one organization's corpus into two halves that are statistically identical, impose
-a mechanical convention on a fraction of one half, and run the identical contrast. Sweeping
-the fraction gives the instrument's detection floor, and a null then stops being an absence
-and becomes a bound: the organizational house style, if any, is weaker than a convention
-applied to this share of refinements.
+So one organization's corpus is split into two statistically identical halves, a mechanical
+convention is imposed on a fraction of one half (or each half its own,
+`symmetric_planted_corpora`), and the same contrast is run. Sweeping the fraction gives the
+detection floor, and a null becomes a bound: any house style is weaker than a convention
+applied to that share of refinements.
 
-The convention has to be mechanical, semantics-preserving, visible to the binding metric,
-and the kind of thing an organization actually enforces. Quote style is all four: linters
-enforce it, it changes the target text exactly where exact match reads, and it changes no
-behaviour.
+The convention must be mechanical, semantics-preserving, visible to the binding metric, and
+one organizations enforce. Quote style is all four: linters enforce it, it changes the target
+text exactly where exact match reads, and it changes no behaviour.
 """
 
 from __future__ import annotations
@@ -33,9 +30,9 @@ from typing import Any
 # rather than a convention, and the point is that the planted signal is exactly known.
 #
 # The lookbehind is load-bearing. Without it the scan resumes inside an escaped literal and
-# pairs the wrong quotes: `x = 'it\'s'` came out as `x = 'it\"s"`, which is neither the old
-# convention nor the new one. It also refuses a quote glued to a word character, which is
-# how an apostrophe inside prose gets read as an opening delimiter.
+# pairs the wrong quotes: `x = 'it\'s'` came out as `x = 'it\"s"`, which matches no convention,
+# old or new. It also refuses a quote glued to a word character, which is how an apostrophe
+# inside prose gets read as an opening delimiter.
 SINGLE_QUOTED = re.compile(r"(?<![\\\w])'([^'\"\\\n]*)'")
 
 

@@ -4,9 +4,8 @@ The orchestration the confirmatory run needs, with no model in it. `runner` scor
 condition; this decides which conditions exist, which pairs are contrasted, and how the
 per-seed intervals collapse into one verdict.
 
-Keeping it here rather than in a job script is what lets February's run be exercised in
-November against fakes, and what stops the pass rule from being re-derived by hand at the
-point where the answer is already visible.
+Kept out of the job scripts so the confirmatory run can be exercised against fakes, and so the
+pass rule is not re-derived by hand once the answer is visible.
 """
 
 from __future__ import annotations
@@ -109,11 +108,10 @@ def _require_registered_seeds(seeds: Sequence[int]) -> None:
 
 
 def _trained_on(run: EvalRun) -> str:
-    """The organization an adapter condition was trained on.
+    """The organization an adapter condition was trained on; any other condition raises.
 
-    `grid.eval_runs` gives the base condition a `None` seed and every adapter condition a
-    real one, so a seed is what distinguishes them; reading the condition string would
-    duplicate that rule in a second place.
+    `walk` tells base runs from adapter runs by seed (`grid.eval_runs` gives only the base a
+    `None` seed) and calls this on adapter runs alone.
     """
     condition, _, org = run.condition.partition(":")
     if condition != "adapter" or not org:

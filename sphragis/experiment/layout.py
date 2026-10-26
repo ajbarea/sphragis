@@ -46,9 +46,9 @@ from sphragis.experiment.tokens import lexemes, lexer_for
 
 PYTHON = frozenset({".py", ".pyi"})
 
-#: Pygments languages (`Lexer.name`) whose whitespace between tokens is only a separator. CSS and
-#: LESS are not (a space between selectors means "descendant of"), nor JSX (its text is shown),
-#: nor Scala (Scala 3 reads indentation).
+#: Pygments languages (`Lexer.name`) whose whitespace between tokens is only a separator. Not CSS
+#: or LESS (a space between selectors means "descendant of"), JSX (its text is shown) or Scala
+#: (Scala 3 reads indentation).
 FREE_FORM = frozenset(
     {"C", "C++", "Go", "JSON", "JSON5", "Java", "JavaScript", "PHP", "QML", "SQL", "TypeScript"}
 )

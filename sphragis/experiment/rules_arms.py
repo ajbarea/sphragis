@@ -70,9 +70,8 @@ _PROBE_FILES = {(DISTILLED, "o-a"): "- Use `ddt`.", (WRITTEN, "o"): "- Log with 
 
 
 def arms_fingerprint() -> str:
-    """Every arm as `rules_arms` builds it, keys and prompts, for fixed targets and files,
-    hashed: what a rules job prompted with, held equal across jobs, whatever the code around it
-    says."""
+    """The sha256 of `rules_arms`' keys and prompts for fixed targets and files: a rules job
+    records it, and `retrieval_read.py` requires one value across the jobs it reads."""
     arms = rules_arms(_PROBE_TARGETS, _PROBE_FILES, evaluated="o-b")
     return hashlib.sha256(json.dumps(arms, sort_keys=True).encode()).hexdigest()
 
