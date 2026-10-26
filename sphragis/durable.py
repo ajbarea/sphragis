@@ -87,10 +87,10 @@ class DurableLog(Path):
     `read_text()` cuts torn records first (see `read_records`), as does opening it to append, so a
     record never lands after a torn one; an append handle makes each `flush()` and `close()` reach
     the disk, with a new file's directory entry made durable as it is created. Other reads
-    (`read_bytes`, `open("r")`) see the file as it is. The code that reads and appends the log
-    stays as it was, so durability changes here never touch the code whose text digests a route's
-    rules. Paths derived from it (`parent`, `with_name`, `/`) are plain: only the log itself
-    rewrites what it reads.
+    (`read_bytes`, `open("r")`) see the file as it is. Durability lives here, not in the code that
+    reads and appends the log, because some of that code is digested into a route's rules
+    (`rules.GITHUB_SOURCES` into `GITHUB_RULES`). Paths derived from it (`parent`, `with_name`,
+    `/`) are plain: only the log itself rewrites what it reads.
     """
 
     # Narrower than PurePath's on purpose: derived paths are plain, not logs.
