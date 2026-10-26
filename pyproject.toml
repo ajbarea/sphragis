@@ -42,7 +42,7 @@ dev = [
     "packaging>=24",
     # tests/unit/test_contamination_disclosure.py validates the disclosure record against its schema.
     "jsonschema>=4.26",
-    "ruff>=0.17.0",
+    "ruff>=0.17.1",
     "ty>=0.0.86,<0.1",
     # The docs site. In `dev` rather than run through `uv tool` because the docs workflow
     # builds with `uv run zensical`, matching the sister repositories, and a tool-run
