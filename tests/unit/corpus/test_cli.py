@@ -1741,9 +1741,7 @@ def test_build_answers_a_notedb_row_from_its_own_data_without_the_network(
     assert [json.loads(line)["comments"] for line in built] == [["fix"]]
 
 
-# ---------------------------------------------------------------------------
-# Route mixing (item 10)
-# ---------------------------------------------------------------------------
+# Route mixing
 
 
 def test_refuse_mixed_routes_blocks_the_other_route(tmp_path: Path) -> None:

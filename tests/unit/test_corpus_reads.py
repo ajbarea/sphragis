@@ -191,7 +191,7 @@ def test_there_are_scripts_to_check() -> None:
     assert len(_SCRIPTS) >= 5
 
 
-# --- Probes: each escape the rule above exists to catch --------------------------------------
+# Probes: each escape the rule above exists to catch
 
 
 def _tree(source: str) -> ast.AST:
@@ -238,7 +238,7 @@ def test_a_loader_reached_through_a_module_alias_passes() -> None:
     assert not _imports_built_examples(tree)
 
 
-# --- The rest of what these scripts must get right about --legacy-corpus ----------------------
+# The rest of what these scripts must get right about --legacy-corpus
 
 
 def _legacy_corpus_help(path: Path) -> str | None:

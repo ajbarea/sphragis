@@ -215,7 +215,7 @@ def _client_signal(entry: dict, spec: Mapping[str, Sequence[float]]) -> float:
     return spec[entry["source"]][cidx]
 
 
-# --- (a) the round-0 seed averages over every client, not per source -------------------------
+# The round-0 seed averages over every client, not per source
 
 
 def test_round0_seed_averages_every_client_across_every_source(
@@ -247,7 +247,7 @@ def test_round0_seed_averages_every_client_across_every_source(
         assert implied == pytest.approx(true_seed), label
 
 
-# --- (b) validate_schedule runs before Stage 1 trains anything -------------------------------
+# validate_schedule runs before Stage 1 trains anything
 
 
 @pytest.mark.parametrize(
@@ -271,7 +271,7 @@ def test_validate_schedule_runs_before_any_training(
     assert TRAIN_CALLS == [], "Stage 1 trained a client before validate_schedule ran"
 
 
-# --- (c) the output records local_equals and legacy_corpus -----------------------------------
+# The output records local_equals and legacy_corpus
 
 
 def test_output_records_local_equals_and_legacy_corpus(
@@ -337,7 +337,7 @@ def test_legacy_corpus_actually_gates_which_corpora_are_read(
         mod.main()
 
 
-# --- (d) a label collision is refused before any adapter is written, in both scripts ---------
+# A label collision is refused before any adapter is written, in both scripts
 
 
 @pytest.mark.parametrize("script", [_FDLORA, _DUAL], ids=lambda p: p.name)
@@ -352,7 +352,7 @@ def test_a_label_collision_is_refused_before_any_adapter_is_written(
     assert not (tmp_path / "adapters").exists()
 
 
-# --- a repeated source name is refused before any client trains, in both scripts -------------
+# A repeated source name is refused before any client trains, in both scripts
 
 
 @pytest.mark.parametrize("script", [_FDLORA, _DUAL], ids=lambda p: p.name)

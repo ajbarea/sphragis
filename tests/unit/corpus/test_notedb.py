@@ -621,9 +621,7 @@ def test_a_depth_fetch_does_not_cut_the_branch_history_short(tmp_path: Path) -> 
     assert side_1 in repo.git("rev-list", "refs/heads/main").decode().split()
 
 
-# ---------------------------------------------------------------------------
-# Since/until bound on the merge-commit log, and branch scope (items 5, 6)
-# ---------------------------------------------------------------------------
+# Since/until bound on the merge-commit log, and branch scope
 
 
 def test_merged_commits_git_log_is_bounded_by_since_and_until(
@@ -721,15 +719,13 @@ def test_chromium_also_reads_branch_heads(tmp_path: Path) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
 # A dormant branch's tip predates `since`: a real android.googlesource.com run over every
 # branch of platform/hardware/interfaces failed the shallow-since fetch outright when a
 # dormant branch (tip older than the candidate window) was named in it alongside active ones
 # ("fatal: bad object ...", "remote did not send all necessary objects"). A mix of one active
-# and one dormant branch does not make a local file:// server refuse the same fetch -- the
-# failure needs *every* named branch to predate the cutoff -- so these check the fix by
+# and one dormant branch does not make a local file:// server refuse the same fetch (the
+# failure needs *every* named branch to predate the cutoff), so these check the fix by
 # construction (the refspecs actually sent) rather than by reproducing the server failure.
-# ---------------------------------------------------------------------------
 
 
 def _spy_on_fetch(
@@ -871,9 +867,7 @@ def test_fetch_month_counts_a_dormant_branch_and_still_finds_the_active_ones_cha
     assert project_record["branches_dormant"] == 1
 
 
-# ---------------------------------------------------------------------------
-# Integration: a change's commit that is itself a branch tip (item 11A)
-# ---------------------------------------------------------------------------
+# Integration: a change's commit that is itself a branch tip
 
 
 def _fetch_month_with_release_tip(
@@ -882,11 +876,10 @@ def _fetch_month_with_release_tip(
     """`release` points directly at a change's patch set 2, `main` points elsewhere.
 
     `fetch_history` shallow-fetches `release`'s tip (--filter=tree:0), so the scratch repo
-    already holds that patch-set commit -- without its tree -- before `collect` ever runs.
-    Reproduces the reviewer's trigger: `collect`'s later tree fetch, by resolved tree id, of a
-    commit already held this way failed with `fatal: bad revision ... did not send all
-    necessary objects`, git's own shallow/partial-clone negotiation getting confused about an
-    object it already partly holds.
+    already holds that patch-set commit, without its tree, before `collect` ever runs.
+    `collect`'s later tree fetch, by resolved tree id, of a commit already held this way
+    failed with `fatal: bad revision ... did not send all necessary objects`, git's own
+    shallow/partial-clone negotiation getting confused about an object it already partly holds.
     """
     s = Server(tmp_path / "server")
     root = s.commit(s.tree({"f": b"line1\nline2\n"}), "root", "2024-09-01T00:00:00Z")
@@ -965,9 +958,7 @@ def test_restricting_to_the_tip_branch_does_not_crash_either(tmp_path: Path) -> 
     assert record["projects"][PROJECT]["branches_read"] == ["refs/heads/release"]
 
 
-# ---------------------------------------------------------------------------
-# Host allowlist, pacing floor, redirects (item 2)
-# ---------------------------------------------------------------------------
+# Host allowlist, pacing floor, redirects
 
 
 def test_git_permitted_states_a_reason_and_a_positive_floor_for_every_host() -> None:
@@ -1159,10 +1150,9 @@ def test_an_scp_style_url_does_not_bypass_the_host_guard(
 def test_is_local_url_does_not_exempt_an_scp_style_name_that_exists_as_a_directory(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """NS1 residual: the old code called `Path(url).is_dir()` for *any* no-scheme string, so an
-    scp-style remote (`git@host:x`) was wrongly treated as local whenever a directory happened
-    to exist with that exact literal name in the current directory -- git would still use ssh
-    for it. The fix must refuse `.is_dir()` for anything that is not an absolute path."""
+    """Calling `Path(url).is_dir()` on any no-scheme string treated an scp-style remote
+    (`git@host:x`) as local whenever a directory of that literal name existed in the current
+    directory, though git would still use ssh for it. Only an absolute path reaches `.is_dir()`."""
     monkeypatch.chdir(tmp_path)
     (tmp_path / "git@chromium-review.googlesource.com:x").mkdir()
     assert notedb._is_local_url("git@chromium-review.googlesource.com:x") is False
@@ -1276,9 +1266,7 @@ def test_the_git_pacer_floors_a_zero_or_negative_request_interval() -> None:
         assert slept == pytest.approx([1.0]), interval
 
 
-# ---------------------------------------------------------------------------
-# Lazy fetch probe (item 3)
-# ---------------------------------------------------------------------------
+# Lazy fetch probe
 
 
 def test_lazy_fetch_probe_passes_under_this_process_git() -> None:
@@ -1314,16 +1302,14 @@ def test_lazy_fetch_probe_leaves_no_scratch_directory_behind(
     assert list(tmp_path.iterdir()) == [], "no probe scratch directory must remain under tmpdir"
 
 
-# ---------------------------------------------------------------------------
-# SIGTERM cleanup (item 4)
-# ---------------------------------------------------------------------------
+# SIGTERM cleanup
 
 
 def test_sigterm_during_a_git_fetch_leaves_no_scratch_repository(
     server: Server, tmp_path: Path
 ) -> None:
     """`fetch_month` alone, with no CLI-level wrap: the handling has to live in `fetch_month`
-    itself (item 4b), so every caller gets it, not only `_stage_fetch_git`."""
+    itself, so every caller gets it, not only `_stage_fetch_git`."""
     workdir = tmp_path / "work"
     workdir.mkdir()
     script = f"""
@@ -1442,14 +1428,13 @@ def test_a_sigterm_during_scratch_creation_leaves_no_directory(
 
 
 def test_cli_stage_fetch_git_still_gets_sigterm_protection(server: Server, tmp_path: Path) -> None:
-    """The CLI path (`_stage_fetch_git`) no longer wraps `fetch_month` itself, so this proves
-    the protection it used to add explicitly still reaches it through `fetch_month` alone --
-    driven through `cli.main` end to end, `TMPDIR` pinned so the scratch directory is one this
-    test can watch.
+    """The CLI path (`_stage_fetch_git`) does not wrap `fetch_month` itself, so its SIGTERM
+    protection comes through `fetch_month` alone. Driven through `cli.main` end to end, with
+    `TMPDIR` pinned so the scratch directory is one this test can watch.
 
     Synchronised on a line the child prints once it is genuinely inside `_raise_on_sigterm`'s
-    protected window, read with a generous, blocking `select` timeout -- not the wall-clock poll
-    this test used to run (sleep 0.05, deadline 5s), which raced under load: the child could
+    protected window, read with a generous, blocking `select` timeout. A wall-clock poll
+    (sleep 0.05, deadline 5s) raced under load: the child could
     finish (and exit 0) before the parent's next poll noticed anything in `workdir`, or the
     reverse, the deadline could expire before a slow child had created anything at all. Either
     way the two assertions below would fail without any code defect."""
@@ -1584,9 +1569,7 @@ def test_uninterruptible_cleanup_survives_a_second_signal_mid_rmtree(
     assert list(scratch.iterdir()) == [], "cleanup must have finished despite the mid-way signals"
 
 
-# ---------------------------------------------------------------------------
-# Successor kind, computed from git objects (item 7)
-# ---------------------------------------------------------------------------
+# Successor kind, computed from git objects
 
 
 def _kind_verified(
@@ -1840,12 +1823,11 @@ def test_collect_writes_kind_and_kind_source_onto_each_revision(tmp_path: Path) 
 def test_collect_fetches_a_missing_kind_parent_instead_of_crashing_the_whole_batch(
     tmp_path: Path,
 ) -> None:
-    """item 9's reviewer trigger: patch set 1's commit is already held (as a shallow fetch --
-    e.g. from an earlier, narrower operation -- would leave it) but its parent is not, and
-    patch set 2's parent is a separate commit never otherwise fetched either. `kind_roots` used
-    to hand both parents straight to `git log --no-walk --stdin` with no `missing()`-and-fetch
-    guard (`upstream`, just above, gets one; `kind_roots` did not), so `collect` raised `fatal:
-    bad object` for the whole project-month, not just this one revision."""
+    """Patch set 1's commit is already held (as a shallow fetch from an earlier, narrower
+    operation would leave it) but its parent is not, and patch set 2's parent is a separate
+    commit never otherwise fetched either. Handed to `git log --no-walk --stdin` without the
+    `missing()`-and-fetch guard `upstream` has, those parents made `collect` raise `fatal: bad
+    object` for the whole project-month, not just this one revision."""
     s = Server(tmp_path / "server")
     base = s.commit(s.tree({"f": b"base\n"}), "base", "2024-09-01T00:00:00Z")
     other_base = s.commit(s.tree({"f": b"other\n"}), "other base", "2024-09-01T00:00:00Z")
@@ -1939,11 +1921,11 @@ def test_collect_counts_kind_unverified_when_a_parent_stays_unfetchable(
 def test_collect_confirms_trivial_rebase_when_both_sides_touch_the_same_file(
     tmp_path: Path,
 ) -> None:
-    """item 8's reviewer case: `f` has 20 lines, upstream edits line 2, the change edits line
-    18, and patch set 2 is patch set 1 rebased cleanly onto that upstream commit -- through
-    `collect` end to end, not only `_successor_kind` with every object already fetched (the
-    existing unit tests above never touch the same file on both sides, so `git merge-tree`
-    never needed blob content and the ordering bug went unnoticed there). A comment sits on
+    """`f` has 20 lines, upstream edits line 2, the change edits line 18, and patch set 2 is
+    patch set 1 rebased cleanly onto that upstream commit, read through `collect` end to end
+    rather than `_successor_kind` with every object already fetched (the unit tests above
+    never touch the same file on both sides, so `git merge-tree` never needed blob content
+    and the ordering bug went unnoticed there). A comment sits on
     line 2, the line only the rebase touched.
     """
     lines = [f"l{i}" for i in range(1, 21)]
@@ -2017,9 +1999,7 @@ def test_collect_confirms_trivial_rebase_when_both_sides_touch_the_same_file(
     assert any(b.get("due_to_rebase") for b in block if "ab" not in b)
 
 
-# ---------------------------------------------------------------------------
-# service_user gap and the bot-template rule on NoteDb rows (item 8)
-# ---------------------------------------------------------------------------
+# `service_user` gap and the bot-template rule on NoteDb rows
 
 
 def test_author_tags_is_a_recorded_gap() -> None:
@@ -2091,9 +2071,7 @@ def test_refine_drops_a_bot_comment_on_a_notedb_row_the_same_as_rest(tmp_path: P
     assert counts["automated_only"] == 1
 
 
-# ---------------------------------------------------------------------------
-# Note parsing robustness (item 11)
-# ---------------------------------------------------------------------------
+# Note parsing robustness
 
 
 def test_the_legacy_written_on_format_parses(tmp_path: Path) -> None:
@@ -2193,15 +2171,13 @@ def test_a_comment_with_an_unparseable_timestamp_is_dropped_not_fatal(tmp_path: 
     assert rows[0]["_number"] == 93, "the change itself is not aborted"
 
 
-# ---------------------------------------------------------------------------
-# Guard-mutant kill tests (item 6)
-# ---------------------------------------------------------------------------
+# Guard-mutant kill tests
 
 
 def test_a_filtered_fetch_does_not_leak_its_filter_onto_a_later_one(
     server: Server, tmp_path: Path
 ) -> None:
-    """M8: a `--filter=tree:0` fetch (`fetch_history`'s own) must not linger as the remote's
+    """A `--filter=tree:0` fetch (`fetch_history`'s own) must not linger as the remote's
     default filter, or the next fetch -- naming none of its own -- inherits it. Here that next
     fetch is the meta+notes fetch a real `collect` always makes; a leaked `tree:0` would strip
     the notes tree, and a leaked `blob:none` would leave it present but content-less."""
@@ -2220,7 +2196,7 @@ def test_a_filtered_fetch_does_not_leak_its_filter_onto_a_later_one(
 def test_a_bad_project_name_is_refused_before_fetch_month_runs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """M13: `_stage_fetch_git`'s own project-name validation, not just `valid_project_name`
+    """`_stage_fetch_git`'s own project-name validation, not just `valid_project_name`
     itself: a mutant that removed the CLI's `bad = [...]; raise SystemExit(...)` guard would
     still pass every `valid_project_name` unit test while letting an unsafe --project through
     to a real fetch."""
@@ -2251,7 +2227,7 @@ def test_a_bad_project_name_is_refused_before_fetch_month_runs(
 def test_the_git_pacer_is_actually_what_the_cli_fetch_stage_uses(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """M7: a mutant that has `_stage_fetch_git` build a bare `Pacer(0)` (or otherwise bypass
+    """A mutant that has `_stage_fetch_git` build a bare `Pacer(0)` (or otherwise bypass
     `_git_pacer`) would still pass `test_the_git_pacer_floors_...` (which only unit-tests
     `_git_pacer` in isolation) while removing every host floor from a real fetch."""
     from sphragis.corpus import cli
@@ -2292,7 +2268,7 @@ def test_the_git_pacer_is_actually_what_the_cli_fetch_stage_uses(
 def test_repo_open_actually_calls_the_lazy_fetch_probe(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """M16: a mutant that dropped `_require_lazy_fetch_disabled()` from `Repo.open` would still
+    """A mutant that dropped `_require_lazy_fetch_disabled()` from `Repo.open` would still
     pass `test_lazy_fetch_probe_passes_under_this_process_git` (which calls the probe function
     directly, not through `Repo.open`), while every route call would run on an unchecked git."""
     calls = []
@@ -2304,7 +2280,7 @@ def test_repo_open_actually_calls_the_lazy_fetch_probe(
 def test_network_charges_the_pacer_for_extra_http_requests(
     server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """M3: `_network` must actually call `pacer.charge` with the requests a fetch made beyond
+    """`_network` must actually call `pacer.charge` with the requests a fetch made beyond
     the first -- `test_pacing.py` only proves `Pacer.charge` itself works, not that `_network`
     calls it; a mutant that dropped that call would still pass every local-fetch test, since a
     `file://` transport never produces a real curl trace to charge for on its own."""
@@ -2333,7 +2309,7 @@ def test_network_charges_the_pacer_for_extra_http_requests(
 def test_fetch_month_calls_cleanup_explicitly_not_relying_on_the_finalizer(
     server: Server, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """M6: a mutant that dropped `fetch_month`'s explicit `scratch_dir.cleanup()` call still
+    """A mutant that dropped `fetch_month`'s explicit `scratch_dir.cleanup()` call still
     passes a naive "is the directory gone after return" check, because CPython's refcounting
     deallocates the now-unreferenced `TemporaryDirectory` the instant `fetch_month` returns,
     running the very same cleanup through its finalizer -- `gc.disable()` alone does not stop
@@ -2380,7 +2356,7 @@ def test_fetch_month_calls_cleanup_explicitly_not_relying_on_the_finalizer(
 def test_fetch_month_cleanup_survives_a_second_signal_via_subprocess(
     server: Server, tmp_path: Path
 ) -> None:
-    """M21: a mutant that dropped the `_uninterruptible` wrap around the scratch repository's
+    """A mutant that dropped the `_uninterruptible` wrap around the scratch repository's
     cleanup. A real SIGTERM and SIGINT are sent from inside `shutil.rmtree`, after the
     `TemporaryDirectory` finalizer is detached, in a child process so the parent's own signal
     handling is never in play. Unguarded, the signal aborts the deletion partway and the
@@ -2430,15 +2406,13 @@ print(f"ROWS {{len(rows)}}")
     assert list(workdir.iterdir()) == [], "cleanup must survive a second signal mid-rmtree"
 
 
-# ---------------------------------------------------------------------------
-# The sealed test window's tip probe: forced, and pinned by commit id (item 1)
-# ---------------------------------------------------------------------------
+# The sealed test window's tip probe: forced, and pinned by commit id
 
 
 def test_a_rerun_over_a_kept_repo_drops_a_change_updated_since_the_first_run(
     tmp_path: Path,
 ) -> None:
-    """NB1: an unforced probe on a second `collect` over the same scratch repository read back
+    """An unforced probe on a second `collect` over the same scratch repository read back
     the ref it already held from the first run (`fetch_refs` skips a ref already held unless
     `force`), never learning the change had a window-dated comment added upstream since."""
     s = Server(tmp_path / "server")
@@ -2480,7 +2454,7 @@ def test_a_rerun_over_a_kept_repo_drops_a_change_updated_since_the_first_run(
 def test_a_ref_advanced_between_probe_and_full_fetch_persists_nothing_window_dated(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """NB2: the race. The probe reads a safe (pre-window) tip; before the full meta chain is
+    """The probe reads a safe (pre-window) tip; before the full meta chain is
     fetched, the ref advances upstream to a window-dated commit. Fetching the full chain BY
     THE PROBED COMMIT ID (not the ref name) must land on the same, still-safe commit the probe
     checked -- a ref-named fetch would silently follow the ref to the new, sealed tip instead."""

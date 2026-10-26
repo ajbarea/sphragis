@@ -123,8 +123,8 @@ def _commit(oid: str, at: str) -> dict[str, str]:
 
 
 def test_heads_recover_force_pushed_commits_in_commit_time_order() -> None:
-    """Review finding: an amended commit can sit in the timeline before the force push that
-    replaced the commit it amends; ordering by timeline position put them backwards."""
+    """An amended commit can sit in the timeline before the force push that
+    replaced the commit it amends; ordering by timeline position once put them backwards."""
     nodes = [
         {"__typename": "PullRequestCommit", "commit": _commit("a1", "2025-01-01T00:00:00Z")},
         {"__typename": "PullRequestCommit", "commit": _commit("b1", "2025-01-03T00:00:00Z")},
@@ -141,7 +141,7 @@ def test_heads_recover_force_pushed_commits_in_commit_time_order() -> None:
 
 
 def test_a_graphql_rate_limit_inside_a_200_waits_rather_than_counting_prs_withdrawn() -> None:
-    """Review finding: GitHub reports an exhausted GraphQL budget as HTTP 200 with errors."""
+    """GitHub reports an exhausted GraphQL budget as HTTP 200 with errors."""
     limited = {"errors": [{"type": "RATE_LIMITED", "message": "API rate limit exceeded"}]}
     fake = Fake(
         [
@@ -183,7 +183,7 @@ def test_fork_point_is_the_merge_base_with_the_base_branch() -> None:
 
 
 def test_a_rebased_series_in_one_second_is_ordered_parent_first() -> None:
-    """Review finding: a rebase gives a series one committer second, leaving order to the sha."""
+    """A rebase gives a series one committer second, leaving order to the sha."""
     second = "2025-01-01T00:00:00Z"
     series = [
         {"sha": "a", "committed_at": second, "parents": ["c"]},
