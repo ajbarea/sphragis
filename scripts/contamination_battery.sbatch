@@ -12,7 +12,7 @@
 
 # Five hours, not two. Job 145093 hit a two-hour wall at 1h35m of guided completion on the
 # six-month corpus, which is fifteen times the sample the old limit was measured against.
-# Membership finished inside that and is now written before the generative half starts, so a
+# Membership finished inside that and is written before the generative half starts, so a
 # future wall costs the null instrument rather than the primary one.
 set -euo pipefail
 

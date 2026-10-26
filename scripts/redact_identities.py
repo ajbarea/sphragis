@@ -34,7 +34,7 @@ RESULTS = pathlib.Path(__file__).resolve().parents[1] / "datasets" / "results"
 def artifacts(results: pathlib.Path = RESULTS) -> list[pathlib.Path]:
     """Every file under `results` git does not ignore: what is published or about to be.
     An ignored file there is a local input (`contamination-inputs/`), never published, and
-    rewriting it changes study data (issue #183)."""
+    rewriting it changes study data."""
     files = sorted(p for p in results.rglob("*") if p.is_file())
     ignored = subprocess.run(
         ["git", "-C", str(results), "check-ignore", "--stdin", "-z"],

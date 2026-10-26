@@ -18,7 +18,7 @@ source sphragis/experiment/cluster-env.sh
 
 PATTERN="${PATTERN:-sphragis-adapters-clients/*-c*/adapter_model.safetensors}"
 
-# The default pattern gives the empty suffix, so existing names are unchanged.
+# The default pattern gives the empty suffix.
 name_result_after_adapters "$PATTERN"
 # Another sketch width is another set of vectors, so it names its own file.
 [ "${SKETCH:-16}" = 16 ] || RESULT_SUFFIX="$RESULT_SUFFIX-w$SKETCH"

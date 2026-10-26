@@ -91,7 +91,7 @@ NEAR_DUPLICATE = ["openstack", "near_duplicate_rate", "train->dev"]
 #: other quantities), or `reduce`, which with `min:a/b` or
 #: `max:a/b` reads `a/b` under every entry at the path and takes the extreme.
 CLAIMS: list[tuple[Any, ...]] = [
-    # ---- protocol.md: the corpus, and where the dev-window reading stands ----
+    # protocol.md: the corpus, and where the dev-window reading stands.
     ("corpus_os", "protocol.md", "5,053", MANIFEST_OS, ["counts"], {"reduce": "sum"}),
     ("corpus_qt", "protocol.md", "9,445", MANIFEST_QT, ["counts"], {"reduce": "sum"}),
     ("seal_os", "protocol.md", "532", MANIFEST_OS, ["counts", "pilot"]),
@@ -126,7 +126,7 @@ CLAIMS: list[tuple[Any, ...]] = [
     ("dev_h1_wm_975_high", "protocol.md", "+0.0125", PARTITION_PILOT_WM, [*AT_975, "high"]),
     ("dev_h1_wm_95_low", "protocol.md", "+0.0003", PARTITION_PILOT_WM, [*AT_95, "low"]),
     ("dev_h1_wm_95_high", "protocol.md", "+0.0117", PARTITION_PILOT_WM, [*AT_95, "high"]),
-    # ---- registered-decisions.md ----
+    # registered-decisions.md
     (
         "rd_cluster_r_os",
         "registered-decisions.md",
@@ -510,7 +510,7 @@ CLAIMS: list[tuple[Any, ...]] = [
             "minimum_detectable_effect",
         ],
     ),
-    # ---- outcome-neutral.md ----
+    # outcome-neutral.md
     (
         "on_minkpct",
         "outcome-neutral.md",
@@ -636,9 +636,7 @@ CLAIMS: list[tuple[Any, ...]] = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# Claim resolution
-# ---------------------------------------------------------------------------
+# Claim resolution.
 
 
 def step(data: Any, part: str) -> Any:
@@ -735,8 +733,8 @@ def occurrences(text: str, literal: str, after: str = "") -> int:
     # An unsigned literal must not match a signed number either: 0.000 occurs on its own as
     # the measured seed effect and again as +0.000, a bound of a different interval.
     before = r"(?<![0-9.,])" if literal[0] in "+-" else r"(?<![0-9.,+-])"
-    # Nor the whole-number part of a decimal: 10 inside 10.33. A sentence's closing period, with
-    # no digit after it, still ends the number.
+    # The literal must not match the whole-number part of a decimal either: 10 inside 10.33. A
+    # sentence's closing period, with no digit after it, still ends the number.
     pattern = re.escape(after) + before + re.escape(literal) + r"(?![0-9]|[.,][0-9])"
     return len(re.findall(pattern, text))
 
@@ -836,9 +834,7 @@ def unclaimed() -> list[str]:
     return found
 
 
-# ---------------------------------------------------------------------------
-# The artifact index, derived from what the scripts declare they write
-# ---------------------------------------------------------------------------
+# The artifact index, derived from what the scripts declare they write.
 
 
 def _stem_to_glob(stem: str) -> str:
@@ -985,8 +981,8 @@ def attribute() -> tuple[dict[str, list[str]], list[str]]:
     for name in tracked_results():
         # A declaration naming this artifact's whole stem beats every prefix, whatever its
         # source: a job script's `rq1-$MODE$RESULT_SUFFIX.json` reduces to `rq1-*`, which
-        # also matches post-processing output it did not write, and neither the variable's
-        # value nor the run tag's can be recovered from a name that concatenates them.
+        # also matches post-processing output it did not write, and a name that concatenates the
+        # variable's value and the run tag cannot be split back into them.
         # Below that, code outranks prose, and a longer prefix outranks a shorter one.
         stem = name.rsplit(".", 1)[0]
         hits = [
@@ -1047,11 +1043,6 @@ def render_index() -> str:
         lines += [f"- `{name}`" for name in orphans]
         lines.append("")
     return "\n".join(lines)
-
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 
 def main() -> None:

@@ -115,7 +115,7 @@ post_e, pre_e = eligible(post_rows), eligible(pre_rows)
 post_counts["eligible"], pre_counts["eligible"] = len(post_e), len(pre_e)
 print(f"post {post_counts}\npre  {pre_counts}", flush=True)
 
-# --- Min-K%++ on the base checkpoint ---------------------------------------------------
+# Min-K%++ on the base checkpoint.
 model = AutoModelForCausalLM.from_pretrained(
     MEMBERSHIP_MODEL_ID,
     revision=revision(MEMBERSHIP_MODEL_ID),
@@ -153,8 +153,8 @@ scores = per_example(post_e, post_tokens, "post") + per_example(pre_e, pre_token
 # since 2026-10-20, read against the blind baseline, and the costliest result to lose). Job
 # 145093 reached exactly this point and hit its wall during guided completion, and because the
 # script wrote once at the end, a completed Min-K%++ on fifteen times the earlier sample was
-# thrown away. Guided completion is registered as a
-# null instrument, so losing it costs a line in a table; losing membership costs the run.
+# thrown away. Guided completion is registered as a null instrument, so losing it costs a line
+# in a table; losing membership costs the run.
 _partial = {
     "membership_model": MEMBERSHIP_MODEL_ID,
     "scored_text": args.scored_text,
@@ -171,7 +171,7 @@ _partial = {
 args.out.with_suffix(".partial.json").write_text(json.dumps(_partial, indent=2) + "\n")
 print(f"wrote {args.out.with_suffix('.partial.json')} (membership only)", flush=True)
 
-# --- Guided completion on the registered model -------------------------------------------
+# Guided completion on the registered model.
 generator = HFGenerator(
     model_id=MODEL_ID, max_new_tokens=MAX_NEW_TOKENS, repetition_penalty=args.repetition_penalty
 )
