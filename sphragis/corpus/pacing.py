@@ -2,8 +2,8 @@
 
 A host's robots.txt `Crawl-delay`, or the interval its maintainers grant in writing in its
 place, is a floor under whatever interval the run asks for: the CLI's `--request-interval` can
-slow a host down but never speed one past it. The
-delays themselves are recorded once, with each host's REST permission, in `cli.REST_PERMITTED`.
+slow a host down but never speed one past it. The delays themselves are recorded once, with
+each host's REST permission, in `cli.REST_PERMITTED`.
 """
 
 from __future__ import annotations
