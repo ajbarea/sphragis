@@ -867,6 +867,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-26**: First comment and docstring sweep over `sphragis/`, `scripts/`, `harvest.py` and `tests/`, one PR per folder, behaviour unchanged. Comments that were wrong about the code were corrected (among them `tpr_at_fpr`'s threshold, the K source a test read takes, the window bounds, the digest count), and figures restated in `stats.py` now point at their artifact.
 - **2026-10-20** — "Without targets found before the checkpoint" joins the registered sensitivities and is read on OpenStack's and Wikimedia's development windows: no reading moves (research log).
 - **2026-10-20** — The backport lookup run on every pilot, train and dev target of OpenStack, Wikimedia and Qt: 4.1 to 5.2% of dev targets found in their project's branches at the weight upload, examples the branch-name rule did not reach (research log).
 - **2026-10-20** — Contamination registered as provenance primary (windows after the weight upload, the backport lookup's sensitivity) and membership scores descriptive, Min-K%++ read as exposure only above the blind baseline (`blind.exposure_reading`); on the pilot it cannot be told from drift (research log).
