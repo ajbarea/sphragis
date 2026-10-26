@@ -35,8 +35,8 @@ _INTERPRETER = tuple(
 
 def _studys(filename: str) -> bool:
     """Whether a frame's file is the study's: a real file of the checkout, not an interpreter's
-    (its venv, its standard library) nor a frozen module's or exec'd code's pseudo-name
-    (`<frozen posixpath>`)."""
+    (its venv, its standard library). A frozen module's or exec'd code's pseudo-name
+    (`<frozen posixpath>`) is not."""
     if filename.startswith("<"):
         return False
     path = Path(filename).resolve()
