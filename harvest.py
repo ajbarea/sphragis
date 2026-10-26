@@ -1045,6 +1045,9 @@ def render_index() -> str:
     return "\n".join(lines)
 
 
+# Entry point.
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="exit non-zero on any defect")

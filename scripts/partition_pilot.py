@@ -488,7 +488,8 @@ def main() -> None:
     sizing = runs_needed(cell["per_run"] + cell["runs_left_out"], xi=sesoi or SESOI)
     if sesoi is None:
         # The SESOI is 0.01 in exact match and means nothing on this metric, so the verdicts,
-        # margins and K that compare against it are set to None. Intervals and estimates stand.
+        # margins and K that compare against it are dropped or set to None. Intervals and
+        # estimates stand.
         for key in ("verdicts", "within_sesoi", "meaningful", "reproducibility"):
             cell[key] = None
         kept = ("pilot_runs", "sd", "sd_upper", "confidence")

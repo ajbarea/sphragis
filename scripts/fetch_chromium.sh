@@ -7,7 +7,8 @@
 # Over git (`--via git`), the same route AOSP uses: chromium-review.googlesource.com's
 # robots.txt disallows an automated REST client, but chromium.googlesource.com serves NoteDb.
 # Refuses to run while chromium.googlesource.com is not recorded permitted in
-# `sphragis.corpus.notedb.GIT_PERMITTED`, read from there rather than duplicated here.
+# `sphragis.corpus.notedb.GIT_PERMITTED`, read from there rather than duplicated here, so a later
+# grant is one change to that table.
 #
 # The project set has no default: scripts/host_scoping.py found none that meets the split
 # criteria, so it is a decision to pass in, and a month refetched under a different set would
