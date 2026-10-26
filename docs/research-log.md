@@ -10852,3 +10852,33 @@ Wikimedia's chain simulation at K = 20 is in.
   together with what becomes of protocol IRB0000393, which is still routing for the faculty
   advisor's attestation. The ethics section cites the determination once it is in writing.
 
+### Wikimedia at K = 20 by chain: detectable effects below δ, the null within nominal at the sizing bound (2026-10-25)
+
+`# research(2026-10)`. The simulation the entry "Relation chains simulated" queued:
+`scripts/partition_sensitivity.py --metric logprob_per_token --chains` at `RUNS=20`
+(`partition-sensitivity-wikimedia-rp1.0-logprob_per_token-chains-k20.json`, TIGRIS 438923, CPU
+only, pinned at 9da8025, completed 2026-10-22 after 18:39:53, exit 0; log
+`datasets/logs/sphragis-partition-sensitivity-438923.log`). Wikimedia's development pilot read
+under chains, 2,782 planned chains, 422 calibration chains; 1,000 trials and 4,000 null trials a
+point. Detectable effect at one to three cells, in nats per token:
+
+| spread point | sigma_run | detectable, 97.5% | detectable, 95% | null false positive, 97.5% | null false positive, 95% |
+|---|---|---|---|---|---|
+| pilot lower 90 | 0.0007 | 0.0038 to 0.0042 | 0.0035 to 0.0039 | 0.0025 | 0.009 |
+| pilot estimate | 0.0035 | 0.0049 to 0.0055 | 0.0045 to 0.0051 | 0.0085 | 0.01625 |
+| sizing bound 90 | 0.0061 | 0.0065 to 0.0074 | 0.0060 to 0.0069 | 0.011 | 0.02475 |
+| pilot upper 99 | 0.0083 | 0.0083 to 0.0095 | 0.0076 to 0.0087 | 0.014 | 0.027 |
+
+Every detectable effect is below δ (0.0161), and every simulated null reads bounded in at least
+0.951 of trials (one cell, 95%, sizing bound), 0.9705 at the registered two cells. At the 90%
+sizing bound the null's false positives are within nominal at both levels (0.011 and 0.02475), as
+the coverage rule read them from the null-only grid. At the pilot's 99% upper spread both rates
+exceed nominal, 0.014 by 0.0015 and 0.027 by 0.002, each inside one Monte Carlo standard error at
+4,000 trials (0.0018 and 0.0025); by change at the same K only the 97.5% rate did. Reproducibility
+failure is 0 at every point. Chains widen Wikimedia's detectable effects by at most 0.0004 against
+its simulation by change at K = 20 (entries of 2026-10-10 and 2026-10-16), at the 99% upper
+spread, and narrow none by more than 0.0002.
+
+Every organization's K and detectable effects under chains are now read: OpenStack K = 10,
+Wikimedia K = 20 and Qt K = 10, each with its full simulation at that K. The paper's organization
+table and the deck move to these chain artifacts in one change.
