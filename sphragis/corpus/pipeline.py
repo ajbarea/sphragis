@@ -20,7 +20,7 @@ from sphragis.corpus.split import partition, straddling_changes
 def run_dedup(
     examples: Sequence[Mapping[str, Any]], **options: Any
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Three-stage dedup, returning what survived and what was removed by bucket."""
+    """`dedup.dedup`: what survived, and how many each of its stages removed."""
     return dedup(examples, **options)
 
 
