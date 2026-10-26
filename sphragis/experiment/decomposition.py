@@ -1044,12 +1044,11 @@ def decomposition_gate(
     (`matched_clusters`); its H1 verdict stays on every example, and its joint reading is taken on
     the C++ examples, where both contrasts share one example set. The cells are
     `registered_design(admitted)`, so Qt's foreign source is the registered one, never an argument.
-    `detectable` holds each cell's
-    registered bound by Holm level (`detectable_effects`); a confirmatory cell without one at
-    every level the design reads is refused, so no bound is chosen after the data.
-    It reads single-partition development pilots (`scripts/decomposition_pilot.py`). The H2
-    test-window read over partitions is not built yet; when it is, it goes through
-    `require_test_read` as the H1 read does.
+    `detectable` holds each cell's registered bound by Holm level (`detectable_effects`); a
+    confirmatory cell without one at every level the design reads is refused, so no bound is
+    chosen after the data. It reads single-partition development pilots
+    (`scripts/decomposition_pilot.py`). The H2 test-window read over partitions is not built
+    yet; when it is, it goes through `require_test_read` as the H1 read does.
     """
     if resamples < MIN_RESAMPLES:
         raise ValueError(f"at least {MIN_RESAMPLES} resamples, got {resamples}")

@@ -6,7 +6,7 @@ snapshots carry no commit messages, so each trailer is a Gerrit `message:` searc
 is flagged when its (project, Change-Id) is among the changes whose merged commit message carries
 one. Windows are the corpus's own: refined examples deduplicated and split as the study loads them.
 
-The flag is per change, read from the merged commit message, so it neither bounds nor estimates
+The flag is per change, read from the merged commit message, so it does not bound or estimate
 AI-assisted targets: trailers are voluntary (undisclosed use is missed), and a trailer added in a
 late patch set flags examples from earlier ones. Disclosure itself became policy on OpenStack
 inside the training window.

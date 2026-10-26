@@ -16,27 +16,25 @@ how often two aggregations differ by more than XI.
 
 On a continuous score (`--metric logprob_per_token`, research log 2026-10-09) the pool is the
 pilot's own runs averaged per change, the effect is a location shift (`power.shift_by`) and is its
-own detectable effect, and each run adds change-by-run noise, per example and shared by a change,
-at the sds measured on the pilot, before its shift (`power.continuous_runs`), the continuous
-counterpart of churn; SESOI and XI are the
-metric's own (`decomposition.metric_sesoi`).
+own detectable effect, and each run adds change-by-run noise, per example and shared by a change, at
+the sds measured on the pilot, before its shift (`power.continuous_runs`), the continuous
+counterpart of churn; SESOI and XI are the metric's own (`decomposition.metric_sesoi`).
 
 Every input is read from the artifact that fixed it, never typed: K from the pilot's sizing (or
-`--runs`, recorded as the K source, for the K coverage rule's grid), the test window's size from
-the decomposition sensitivity's projection, N and the split criteria's reference from the
-admissible list. sigma_run is calibrated, not chosen: at each of four named
-points on the pilot's per-run spread (its 90% lower bound, its estimate, the 90% bound K was sized
-on, its 99% upper bound), the shift at which K null runs on the pilot's number of changes spread
-that much. The artifact records each input's source.
+`--runs`, recorded as the K source, for the K coverage rule's grid), the test window's size from the
+decomposition sensitivity's projection, N and the split criteria's reference from the admissible
+list. sigma_run is calibrated, not chosen: at each of four named points on the pilot's per-run
+spread (its 90% lower bound, its estimate, the 90% bound K was sized on, its 99% upper bound), the
+shift at which K null runs on the pilot's number of changes spread that much. The artifact records
+each input's source.
 
 Reported per point: the calibration, the null's one-sided false-positive rate at each Holm level,
 the detectable effect by bisection on the lift at the per-cell power that gives H1
 `--hypothesis-power` over each count of cells in `--cells`, how often a null's upper bound falls
-below it (the bounded reading before 2026-10-14; the registered margin is now the SESOI, whose
-null rate `null_reads_absent`, less the false-positive rate, bounds from below), and the
-reproducibility failure rate.
-`partition-sensitivity-openstack-stopping.json` is the data-dependent stopping rule this design
-replaced, as its provenance's commit ran it.
+below it (the bounded reading before 2026-10-14; the registered margin is now the SESOI, whose null
+rate `null_reads_absent`, less the false-positive rate, bounds from below), and the reproducibility
+failure rate. `partition-sensitivity-openstack-stopping.json` is the data-dependent stopping rule
+this design replaced, as its provenance's commit ran it.
 
     uv run --no-sync --no-active python scripts/partition_sensitivity.py \\
         --placebo datasets/results/rq1-placebo-openstack-v3.json \\

@@ -96,9 +96,8 @@ def closest_training_match(
 ) -> list[tuple[str, float]]:
     """Each held-out example's id with its similarity to the nearest training example.
 
-    The threshold is applied by the caller, so a sweep over thresholds costs one pass rather
-    than one pass each: shingling every example is the expensive part, and it was being
-    repeated per threshold.
+    The threshold is applied by the caller, so a sweep over thresholds shingles every example
+    once.
 
     The training side is shingled in chunks, holding a running maximum, because materialising
     every signature at once is what makes this memory-hungry: a 4,327-example training window
@@ -167,7 +166,7 @@ def leakage_check(
 
 
 def non_degeneracy(results: Mapping[str, Sequence[Mapping[str, Any]]]) -> Check:
-    """Test 6: exact match is neither 0 nor 1 for every condition on every held-out set."""
+    """Test 6: every condition's exact match on every held-out set lies strictly inside (0, 1)."""
     rates = {
         run: fmean(float(r["exact_match"]) for r in rows) if rows else float("nan")
         for run, rows in results.items()

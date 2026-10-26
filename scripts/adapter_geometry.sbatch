@@ -18,7 +18,7 @@ source sphragis/experiment/cluster-env.sh
 
 PATTERN="${PATTERN:-sphragis-adapters-clients/*-c*/adapter_model.safetensors}"
 
-# The default pattern gives the empty suffix, so existing names are unchanged.
+# The default pattern gives the empty suffix, so the default run keeps the committed results' names.
 name_result_after_adapters "$PATTERN"
 # MATRICES=a or b reads one LoRA factor rather than the product, a different geometry over the
 # same adapters, so it names its own file. Each combination has exactly one meaning:

@@ -20,8 +20,8 @@ cd "$(dirname "$0")/.." || exit 1
 set -a; . ./.env; set +a   # the corpus salt, which never reaches a log or the process list
 for m in $MONTHS; do
   # Restartable. A six-month window is hours of paced requests and this has already been
-  # interrupted once; refetching a month that is built would discard that work and, now
-  # that build checks the snapshot digest, correctly rebuild it as well.
+  # interrupted once; refetching a month that is built would discard that work and, because
+  # build checks the snapshot digest, rebuild it as well.
   if [ -s "$ROOT/$ORG/examples/$m.jsonl" ]; then
     echo "=== $m already built ($(wc -l < "$ROOT/$ORG/examples/$m.jsonl") examples), skipping ==="
     continue

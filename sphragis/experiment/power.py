@@ -4,16 +4,15 @@ The pilot supplies the variance model. A candidate lift is applied to the treatm
 interval is bootstrapped, and power is the fraction of simulated studies whose interval
 supports the directional claim. Bisection gives the minimum detectable difference.
 
-Two things the design of record asks for that the first version did not deliver:
+Two requirements of the design of record, each missed once:
 
 - **The planned window's size, not the pilot's.** Section 4 asks for the minimum detectable
-  difference "for the test window's change count". Simulating at `len(clusters)` answered
-  it for the 19-change pilot instead.
+  difference "for the test window's change count"; simulating at `len(clusters)` answered
+  it for the 19-change pilot.
 - **A difference in exact match, not a lift probability.** The simulated lift flips a
   failing example to a success with probability `lift`, so the exact-match difference it
   produces is `lift x (share of failures)`: a lift of 0.20 realised +0.146. The returned
-  figure is the realised difference, because that is the unit section 5 of the Stage 1
-  report states.
+  figure is the realised difference, the unit section 5 of the Stage 1 report states.
 """
 
 from __future__ import annotations
@@ -302,8 +301,8 @@ def minimum_detectable_effect(
 ) -> DetectableDifference:
     """Bisect on the lift until simulated power reaches `target_power`.
 
-    `reached_target` is False when even a lift of 1.0 falls short. The earlier version
-    returned its initial upper bound in that case, indistinguishable from a real result.
+    `reached_target` is False when even a lift of 1.0 falls short; without the flag, that case
+    returned the initial upper bound, indistinguishable from a real result.
     """
     n = _resolve_size(clusters, n_changes)
     reached = (

@@ -18,14 +18,13 @@ foreign job (`--base-job`); beside them, the written guides' contrasts: written 
 foreign, written own minus none, and distilled own minus written own. The adapters' own minus
 sibling is read beside every family over the same partitions and examples.
 
-Reading rule, fixed before any generation (research log, 2026-10-05): own minus sibling at each
-k, on its 95% interval, reads "carries a half-split contrast" when the lower bound clears the
-SESOI, "reversed" when the upper bound sits below minus the SESOI, "carries none as large as the
-SESOI" when the interval sits inside the SESOI band, and "inconclusive" otherwise; the adapters'
-interval is read by the same rule. The other two contrasts are reported, not read. Beside the
-reading, own minus sibling is read again without every target whose own or sibling shot is a
-near-duplicate of it at test 4's threshold. Exploratory: no
-reading here binds a verdict.
+Reading rule, fixed before any generation (research log, 2026-10-05): own minus sibling at each k,
+on its 95% interval, reads "carries a half-split contrast" when the lower bound clears the SESOI,
+"reversed" when the upper bound sits below minus the SESOI, "carries none as large as the SESOI"
+when the interval sits inside the SESOI band, and "inconclusive" otherwise; the adapters' interval
+is read by the same rule. The other two contrasts are reported, not read. Beside the reading, own
+minus sibling is read again without every target whose own or sibling shot is a near-duplicate of it
+at test 4's threshold. Exploratory: no reading here binds a verdict.
 
     uv run --no-sync python scripts/retrieval_read.py --org openstack --foreign wikimedia \\
         --admissible datasets/results/admissible-partitions-openstack.json \\

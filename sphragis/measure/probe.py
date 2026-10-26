@@ -19,10 +19,9 @@ beat it before it says anything about organizations. Liu et al. (arXiv:2606.0710
 show style classifiers routinely ride content cues and recommend exactly this kind of
 controlled comparison.
 
-Deliberately a bag-of-words naive Bayes rather than a learned encoder: it is deterministic,
-has no hyperparameters to tune into a result, runs on a CPU in seconds, and is the weakest
-instrument that could show the effect. A null from a weak instrument is weaker evidence than
-a null from a strong one, which is stated with the result rather than hidden.
+The classifier is a bag-of-words naive Bayes: deterministic, with no hyperparameters to tune
+into a result, and the weakest instrument that could show the effect. A null from it is weak
+evidence, which is stated with the result.
 """
 
 from __future__ import annotations
@@ -142,12 +141,11 @@ def balance(docs: Sequence[Document], *, seed: int) -> list[Document]:
 def _cross_validate(
     docs: Sequence[Document], *, seed: int, folds: int, min_per_label: int
 ) -> tuple[list[tuple[str, int, int, bool]], int, int]:
-    """Cross-validated accuracy, with whole changes held out together.
+    """Held-out predictions over label-stratified folds of whole changes, with the counts.
 
-    Splitting by example would leak: one change contributes several examples that share a
-    review conversation, so the same words appear on both sides of the split and accuracy
-    rises for a reason that has nothing to do with the label. This is the same grouping the
-    generative contrast uses, for the same reason.
+    Returns the rows, the
+    change count and the document count. The labels are balanced first; no rows come back when
+    either label then has fewer than `min_per_label` documents.
     """
     docs = balance(docs, seed=seed)
     if min(sum(1 for d in docs if d.label == label) for label in (0, 1)) < min_per_label:
@@ -167,17 +165,6 @@ def _cross_validate(
             assigned[change] = i % folds
     changes = sorted(assigned)
 
-    # Balanced accuracy: the mean of the two per-label recalls, not the raw hit rate.
-    # Stratifying by change equalises how many CHANGES of each label land in a fold, not
-    # how many documents, and changes carry between one and forty-five. A fold whose
-    # documents run 80% one label rewards a classifier that simply leans that way, which is
-    # how a chance-level probe came back at 0.55 on a bootstrap resample. Balanced accuracy
-    # puts the chance line at 0.5 whatever the fold's composition.
-    # Balanced accuracy, averaged ACROSS folds rather than pooled over them. Pooling the
-    # hits first lets folds that lean toward opposite labels cancel into apparent skill: a
-    # fold predicting everything label 0 and another predicting everything label 1 each
-    # score 0.5 alone, but their pooled recalls average above it. That is how a probe with
-    # no learnable signal returned 0.55 on bootstrap resamples.
     # One row per held-out document: its change, its fold, its label, whether it was classified
     # correctly. The classifier is fitted once per fold, here and nowhere else.
     rows: list[tuple[str, int, int, bool]] = []
@@ -201,7 +188,9 @@ def _score(rows: Sequence[tuple[str, int, int, bool]], folds: int) -> tuple[floa
     changes carry between one and forty-five. A fold whose documents run 80% one label rewards a
     classifier that simply leans that way, which is how a chance-level probe came back at 0.55 on
     a bootstrap resample. Averaged ACROSS folds rather than pooled over them: pooling the hits
-    first lets folds that lean toward opposite labels cancel into apparent skill.
+    first lets folds that lean toward opposite labels cancel into apparent skill (a fold
+    predicting every document label 0 and another predicting label 1 each score 0.5 alone, but
+    their pooled recalls average above it).
     """
     scores = []
     for fold in range(folds):
@@ -248,8 +237,8 @@ def accuracy_interval(
 ) -> dict[str, Any]:
     """A 95% percentile interval for the accuracy, resampling whole changes' held-out predictions.
 
-    The classifier is fitted once, and the resampling draws changes with replacement over the
-    predictions it made on them. Refitting on each resample, as this used to, trained every refit
+    The classifier is fitted once per fold, and the resampling draws changes with replacement over
+    the predictions it made on them. Refitting on each resample instead trained every refit
     on about 63% unique changes, so the resampled accuracies sat below the estimate by more than
     their own spread: the raw probe read 0.841 with an interval of [0.814, 0.836], and no interval
     built from quantiles of those draws, bias-corrected or not, can contain the estimate when
@@ -258,7 +247,7 @@ def accuracy_interval(
     classifier's own instability across refits, so it is the narrower of the two readings.
     """
     # One cross-validation, read twice: the estimate and the resamples must come from the same
-    # predictions, and fitting each fold again for the estimate doubled the work for nothing.
+    # predictions.
     rows, changes, size = _cross_validate(docs, seed=seed, folds=folds, min_per_label=min_per_label)
     accuracy, scored = _score(rows, folds)
     if not scored or math.isnan(accuracy):

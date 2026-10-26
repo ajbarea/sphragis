@@ -1,9 +1,8 @@
 """False-positive rate of the registered pairs cluster bootstrap, under a true null.
 
-The report states this rate, and until now it lived in a comment in `measure/stats.py`
-that no artifact backs. A registered report cannot quote a calibration figure it cannot
-re-derive, so this measures it against the same `cluster_bootstrap` the gate calls, and
-writes the ladder out.
+The report states this rate, and a registered report cannot quote a calibration figure it
+cannot re-derive, so this measures it against the same `cluster_bootstrap` the gate calls
+and writes the ladder out.
 
 The null. Both arms score the same Bernoulli rate, so the true difference is zero, and
 clusters carry the real dev window's example counts rather than a round number: the whole

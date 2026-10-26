@@ -2,10 +2,10 @@
 
 FedDPA (`scripts/dual_adapter_updates.py`) and FDLoRA (`scripts/fdlora_schedule.py`) both split a
 client's update into a global adapter that is communicated and a local/personalized one that is
-not. What differs between them is the schedule that moves parameters between the two
-(`sphragis.experiment.fdlora`); reading source specs, freezing one adapter while the other
-trains, and writing an adapter where the geometry and attribution scripts expect to find it are
-identical between the two, so they live once, here.
+not. They differ in the schedule that moves parameters between the two
+(`sphragis.experiment.fdlora`); this module holds what they share: reading source specs,
+freezing one adapter while the other trains, and writing an adapter where the geometry and
+attribution scripts read it.
 """
 
 from __future__ import annotations
@@ -68,10 +68,8 @@ def check_label_collisions(plan: Mapping[str, Sequence[Any]]) -> None:
 def freeze(model: Any, adapter: str) -> None:
     """Hold one adapter's parameters still while another trains against them.
 
-    Only needed when both adapters are simultaneously active in the forward pass: an adapter that
-    is merely inactive gets no gradient at all, and every built-in optimiser skips a parameter
-    whose `.grad` is `None`, so freezing an adapter nobody is training is unneeded, not harmless
-    caution.
+    Needed only when both adapters are active in the forward pass: an inactive adapter gets no
+    gradient, and every built-in optimiser skips a parameter whose `.grad` is `None`.
     """
     for name, parameter in model.named_parameters():
         if "lora_" in name and f".{adapter}." in name:

@@ -118,10 +118,10 @@ def require_readable(
     """Refuse any H1 cell (`h1_over_partitions`) that cannot be read at `confidence`.
 
     Each must be filed under the organization it was computed for and hold `fields`, any
-    estimate and bootstrap standard error finite; a resample
-    count `require_resamples` accepts; a p-value in [0, 1]; a finite interval at that level, low
-    at most high; and a p-value and interval that agree on whether the effect is above zero at
-    the one-sided level, as draws from one bootstrap do. Returns each cell's intervals by level.
+    estimate and bootstrap standard error finite; a resample count `require_resamples` accepts;
+    a p-value in [0, 1]; a finite interval at that level, low at most high; and a p-value and
+    interval that agree on whether the effect is above zero at the one-sided level, as draws from
+    one bootstrap do. Returns each cell's intervals by level.
     """
     alpha = one_sided_alpha(confidence)
     level = level_key(confidence)
@@ -231,13 +231,14 @@ def require_test_read(
     """Refuse a `partition_pilot.py` report unless it is a test-window read registered in advance.
 
     "Reading the test window" (registered-decisions.md): read on the test window with check 5
-    passed; K, a whole number, from the organization's own development pilot (`k_from`); bounds
-    from its own simulation, run at that same K and calibrated on that pilot (`sensitivity`); at
-    `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell count and spread
-    target `expected` registers for the organization (`decomposition.registered_read`), so none
-    is chosen when the window is read. The pilot runs this on its report before writing it, and
-    `replication_gate` and `h1_test_gate` on reading it, so both sides hold one rule. Returns
-    the report's registered sensitivities (`require_sensitivities`), which the gates carry.
+    passed; K, a whole number, from the organization's own K coverage artifact (`k_from`); bounds
+    from its own simulation, run at that same K and calibrated on the pilot K was sized on
+    (`sensitivity`); at `TEST_RESAMPLES` draws and `TEST_BOOTSTRAP_SEED`; and at the levels, cell
+    count and spread target `expected` registers for the organization
+    (`decomposition.registered_read`), so none is chosen when the window is read. The pilot
+    runs this on its report before writing it, and `replication_gate` and `h1_test_gate` on
+    reading it, so both sides hold one rule. Returns the report's registered sensitivities
+    (`require_sensitivities`), which the gates carry.
     """
     required = (
         "window",

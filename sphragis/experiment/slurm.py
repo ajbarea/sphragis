@@ -14,21 +14,11 @@ The job scripts under `scripts/` carry the TIGRIS target in their `#SBATCH` line
 passes `sbatch_flags` on the command line, which Slurm ranks above both `SBATCH_*` variables and
 `#SBATCH` directives, so a script never needs editing to move clusters.
 
-The account is stated explicitly rather than left to the Slurm default, because the choice
-is not about scheduling.
-
-It used to be `rc-onboard`, AJ's own Research Computing access, on the reasoning that this
-study is a sole-authored first-author line and running it on the lab's `fl-mlm` would
-entangle its resource provenance with a group whose contribution the paper does not
-otherwise claim. Research Computing wrote on 2026-09-16 that `rc-onboard` is for training
-only, so that reasoning rested on an option that was never available: the account is now
-`fl-mlm`.
-
-The implication the old note anticipated is therefore live rather than hypothetical. Lab
-compute normally carries an acknowledgment expectation, and this paper's author list does
-not currently reflect one. That is a conversation with Dr. Reznik, not something to settle
-in a docstring, and it is recorded here so the next person to read this file knows the
-question is open rather than answered.
+The account is stated explicitly rather than left to the Slurm default. Research Computing
+wrote on 2026-09-16 that `rc-onboard`, AJ's own access, is for training only, so research jobs
+run under the Reznik lab's `fl-mlm`. Lab compute normally carries an acknowledgment
+expectation that this paper's author list does not reflect; that question is open, for a
+conversation with Dr. Reznik.
 """
 
 from __future__ import annotations

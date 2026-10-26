@@ -23,8 +23,8 @@ from sphragis.measure.stats import one_sided_alpha
 def cohen_kappa(first: Sequence[Hashable], second: Sequence[Hashable]) -> float:
     """Cohen's kappa for two raters' labels of the same items, in the same order.
 
-    1 when the raters agree on every item, 0 at chance agreement. When both raters give one
-    label to every item, chance agreement is total and kappa is undefined; that returns NaN.
+    1 when the raters agree on every item, 0 at chance agreement. When both raters give the same
+    single label to every item, chance agreement is total and kappa is undefined; that returns NaN.
     """
     if len(first) != len(second):
         raise ValueError("both raters must label the same items")
