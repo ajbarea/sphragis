@@ -108,7 +108,8 @@ def _require_registered_seeds(seeds: Sequence[int]) -> None:
 
 
 def _trained_on(run: EvalRun) -> str:
-    """The organization an adapter condition was trained on; any other condition raises.
+    """What an adapter condition was trained on (an organization, or an H2 foreign arm); any
+    other condition raises.
 
     `walk` tells base runs from adapter runs by seed (`grid.eval_runs` gives only the base a
     `None` seed) and calls this on adapter runs alone.

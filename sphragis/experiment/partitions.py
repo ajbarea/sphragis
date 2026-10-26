@@ -4,9 +4,10 @@ A run is one partition of an organization's projects (`assign(..., order_seed=s)
 `split_criteria`) at its own training seed, scored own half against sibling half on every held-out
 change. The estimand is the mean over partitions and seeds of the equally weighted half-split
 contrast; the interval crosses runs and changes (`partitioned_crossed_draws`). The number of runs K
-is fixed before the test window is read, from the organization's development-window pilot: the
-larger of Ritzwoller and Romano's sizing formula for reproducible aggregation (`runs_needed`) and
-the K coverage rule (`coverage_runs`). Design of record:
+is fixed before the test window is read by the K coverage rule (`coverage_runs`): the larger
+of the development-window pilot's K under Ritzwoller and Romano's sizing formula for
+reproducible aggregation (`runs_needed`) and the smallest grid K whose simulated null holds at
+nominal. Design of record:
 `docs/superpowers/specs/2026-09-29-repeated-partitions-design.md`.
 """
 

@@ -1,6 +1,6 @@
-"""The model stack.
+"""The model stack (torch, transformers, peft).
 
-The only module under `sphragis/measure/` or `sphragis/experiment/` permitted to import it.
+The only module under `sphragis/measure/` or `sphragis/experiment/` permitted to import that stack.
 Everything above this file talks to `Generator` and `Trainer` protocols, so the
 orchestration, the metrics and the statistics all run with no GPU and no model.
 
@@ -60,9 +60,10 @@ DISTILLER_ID = "Qwen/Qwen3.6-27B"
 DISTILLER_DTYPE = "bfloat16"
 # Thinking off: the distiller answers with the list, as the prompts ask.
 DISTILLER_TEMPLATE = {"enable_thinking": False}
-# Every checkpoint loads at a pinned Hub revision, never `main`: both 7B repositories changed
-# their config and tokenizer files on 2024-11-18, after the checkpoints were published. These are
-# the revisions the cluster's cache held for every run to date (weights unchanged since 2024-09).
+# Every checkpoint loads at a pinned Hub revision, never `main`. Both 7B repositories changed
+# their config and tokenizer files on 2024-11-18, after the checkpoints were published; their
+# pins are the revisions the cluster's cache held for every run to date (weights unchanged since
+# 2024-09).
 MODEL_REVISIONS = {
     MODEL_ID: "c03e6d358207e414f1eca0bb1891e29f1db0e242",
     DISTILLER_ID: "6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
@@ -91,8 +92,8 @@ def pinned_id(model_id: str) -> str:
 # adapters at the same rank, and because the positive controls show this rank adapts: the
 # capacity objection bites on a null, and the conditional branch answers it by rerunning at
 # 256 rather than by assuming 32 was enough.
-#: The registered rank; `lora_config` and `attach_adapter` take another for the conditional
-#: branch's rerun at 256.
+#: The registered rank. `lora_config` and `attach_adapter` take another because the report
+#: pre-commits to a rerun at 256, and a branch the apparatus cannot run is not registered.
 REGISTERED_RANK = 32
 LORA_TARGETS = (
     "q_proj",
@@ -212,7 +213,8 @@ class HFGenerator:
     # only a rescoring of a result from before the registration needs; recorded either way.
     repetition_penalty: float | None = REPETITION_PENALTY
     seed: int = 0
-    # The registered compute precision. Only the determinism check overrides it, to measure bf16.
+    # The registered compute precision. The determinism check overrides it to compare bf16 with
+    # fp32, and the rules distiller to load in `DISTILLER_DTYPE`.
     dtype: str = INFERENCE_DTYPE
     # A chat template's own options (render_chat's `template`), as the distiller's.
     template: Mapping[str, Any] | None = None

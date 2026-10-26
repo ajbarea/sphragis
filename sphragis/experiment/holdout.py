@@ -63,7 +63,8 @@ def equalize_training(
     one organization simply contributes more training examples, its adapter wins for that
     reason alone: in the first RQ1 pilot the Qt adapter trained on 422 examples against
     OpenStack's 145 and beat the matched OpenStack adapter on OpenStack's own held-out
-    changes.
+    changes. Performance grows roughly logarithmically with training-set size
+    (arXiv:1712.04008), and the standard control is subsampling each source to equal size.
 
     Subsampling is by example, not by change: grouping matters across the train/held-out
     boundary, which this does not touch, not within the training set.
@@ -172,8 +173,9 @@ def split_by_window(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Training and held-out rows taken from two named time windows.
 
-    The study's own split, by change creation time rather than at random: refinements
-    contemporaneous with the training data are an easier test than the one the report claims.
+    The study's own split, by change creation time rather than at random: evaluating on
+    refinements contemporaneous with the training data is an easier test than the one the
+    report claims.
     `holdout_by_change` is the pilot's stand-in for it.
 
     Refuses to read a sealed window whatever the caller asks for. The test window is defined

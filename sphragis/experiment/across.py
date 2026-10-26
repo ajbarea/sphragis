@@ -5,7 +5,7 @@ and how much the effect varies between them (a random-effects summary: REML for 
 between-organization variance, the modified Hartung-Knapp-Sidik-Jonkman interval of Röver, Knapp
 and Friede, BMC MRM 2015, a prediction interval from five organizations, each platform's
 subgroup beside it). Registered in `docs/registered-decisions.md`, "Readings beside the pass rule".
-Standard library only.
+Standard library only, like the rest of the measurement package.
 """
 
 from __future__ import annotations

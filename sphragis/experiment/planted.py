@@ -6,14 +6,14 @@ works; it does not show that RQ1's contrast, matched adapter against mismatched,
 difference known to be there.
 
 So one organization's corpus is split into two statistically identical halves, a mechanical
-convention is imposed on a fraction of one half (or each half its own,
+convention is imposed on a fraction of one half (or each half its own marker,
 `symmetric_planted_corpora`), and the same contrast is run. Sweeping the fraction gives the
 detection floor, and a null becomes a bound: any house style is weaker than a convention
 applied to that share of refinements.
 
-The convention must be mechanical, semantics-preserving, visible to the binding metric, and
-one organizations enforce. Quote style is all four: linters enforce it, it changes the target
-text exactly where exact match reads, and it changes no behaviour.
+The convention must be mechanical, semantics-preserving, visible to the binding metric, and the
+kind an organization enforces. Quote style, `plant`'s default, is all four: linters enforce it,
+it changes the target text exactly where exact match reads, and it changes no behaviour.
 """
 
 from __future__ import annotations
