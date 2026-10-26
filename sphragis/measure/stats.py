@@ -32,16 +32,10 @@ def paired_difference(clusters: Sequence[Cluster]) -> float:
 def change_averaged_difference(clusters: Sequence[Cluster]) -> float:
     """Each change's own difference, averaged over changes: every change counts once.
 
-    The other estimand. `paired_difference` pools examples, so a change carrying forty
-    hunks weighs forty times one carrying a single hunk, while the bootstrap resamples
-    whole changes and so treats both as one draw. The statistic and its resampling unit
-    disagree, which is a coherence problem rather than a matter of taste.
-
-    Neither is obviously right. RQ1 is a claim about refinements, and a refinement is an
-    example; but a large change is not forty times more interesting than a small one, and
-    the measured gap between the two estimands reached 118% of a 0.08 effect at nineteen
-    changes. Which one binds the gate is a Stage 1 registration, so both are computed and
-    the report names the one it registered.
+    The estimand computed and reported beside the registered pooled `paired_difference`
+    (registered decisions, "Estimand: pooled"), which weighs a change by its example count
+    while the bootstrap resamples whole changes. A change missing either arm's outcomes is
+    skipped.
     """
     per_change = [
         fmean(cluster.treatment) - fmean(cluster.control)
@@ -57,15 +51,13 @@ ESTIMATORS: Mapping[str, Estimator] = {
 }
 
 
-# Measured false-positive rate of this function under a true null (both arms at the same
-# exact-match rate), by `scripts/interval_calibration.py` into
-# `datasets/results/interval-calibration.json`: 10 changes 7.0%, 19 changes 5.7%,
-# 30 changes 5.5%, 45 changes 5.9%, 91 changes 4.7%, 200 changes 4.8%, against a nominal 5%
-# (standard error about 0.6 points). Anti-conservative where the clusters are few and
-# nominal from about 90 upward. The rate the null is drawn at decides this: at 19 changes it
-# reads 3.1% at the base arm's 0.05 accuracy and 5.7% at the matched adapter's 0.32, so the
-# figure to quote is the one measured where the gate operates. The gate reads one side,
-# nominal alpha 0.025, so these rates roughly halve for it. The floor rules out the
+# The false-positive rate of `cluster_bootstrap` under a true null (both arms at the same
+# exact-match rate) is measured by `scripts/interval_calibration.py` into
+# `datasets/results/interval-calibration.json` and read in the research log (2026-09-19,
+# 2026-09-30). It runs above nominal where the clusters are few and near nominal at the
+# largest sizes, and it moves with the rate the null is drawn at, so the figure to quote is
+# the one measured at the arm accuracy the gate contrasts. The gate reads one side (nominal
+# alpha 0.025), where the rate is about half the two-sided one. The floor rules out the
 # degenerate end: at one cluster every resample is that cluster, so the interval has zero
 # width and always excludes zero.
 MIN_CLUSTERS = 10
@@ -217,13 +209,11 @@ def supports_direction(interval: Mapping[str, float]) -> bool:
 
     RQ1 is a directional claim: an adapter trained on an organization does better on that
     organization's held-out refinements than one trained elsewhere. An interval lying
-    entirely BELOW zero is the strongest possible refutation of that claim, and
-    `excludes_zero` calls it a pass -- so a study whose two organizations both showed the
-    effect reversed would have been reported as supporting the hypothesis.
+    entirely BELOW zero refutes it, yet `excludes_zero` would call that a pass.
 
     Reading the lower bound of a two-sided 95% interval is a one-sided test at alpha
-    0.025, so this is stricter than the two-sided rule it replaces, not a loosening. The
-    Stage 1 report has to state the one-sided reading, because it sets the nominal alpha.
+    0.025. The Stage 1 report has to state the one-sided reading, because it sets the
+    nominal alpha.
     """
     return interval["low"] > 0.0
 
