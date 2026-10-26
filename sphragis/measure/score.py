@@ -15,7 +15,8 @@ def normalize_formatting(text: str) -> str:
 
 
 def extract_code(text: str) -> str:
-    """The code a chat model actually emitted, without its prose or fences.
+    """The first closed markdown fence's contents, or the whole text without one, less trailing
+    newlines.
 
     Measured 2026-09-14 on Qwen2.5-Coder-1.5B: the model answered three refinement
     prompts correctly and raw exact match scored one of three, because it prefixed

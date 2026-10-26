@@ -1,9 +1,8 @@
-"""The model stack. The only module in this repository permitted to import it.
+"""The model stack (torch, transformers, peft).
 
+The only module under `sphragis/measure/` or `sphragis/experiment/` permitted to import that stack.
 Everything above this file talks to `Generator` and `Trainer` protocols, so the
-orchestration, the metrics and the statistics all run with no GPU and no model. That
-matters because the pilot runs in November and the confirmatory grid in February: without
-the seam, February would be the first end-to-end execution.
+orchestration, the metrics and the statistics all run with no GPU and no model.
 
 `MODEL_ID` is the registered base model and is not a tuning knob. A smaller model is for
 developing this file on a local card; changing what the *study* measures is a
@@ -51,9 +50,6 @@ DEV_MODEL_ID = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
 # degraded by instruction fine-tuning (Samuel, Zhou and Zou, COLING 2025), so Min-K%++ reads
 # the base, whose likelihoods reflect pretraining exposure. A registered choice.
 MEMBERSHIP_MODEL_ID = "Qwen/Qwen2.5-Coder-7B"
-# Every checkpoint loads at a pinned Hub revision, never `main`: both 7B repositories changed
-# their config and tokenizer files on 2024-11-18, after the checkpoints were published. These are
-# the revisions the cluster's cache held for every run to date (weights unchanged since 2024-09).
 # The rules-file comparator's distiller: the registered model could not distil grounded rules
 # from reviews (smoke jobs 223030, 223034, 223245, 223246; research log 2026-10-06), so the newest
 # dense model of its family that fits one GH200 in bf16 does (Qwen3.6-27B, 2026-04, Apache-2.0).
@@ -64,6 +60,10 @@ DISTILLER_ID = "Qwen/Qwen3.6-27B"
 DISTILLER_DTYPE = "bfloat16"
 # Thinking off: the distiller answers with the list, as the prompts ask.
 DISTILLER_TEMPLATE = {"enable_thinking": False}
+# Every checkpoint loads at a pinned Hub revision, never `main`. Both 7B repositories changed
+# their config and tokenizer files on 2024-11-18, after the checkpoints were published; their
+# pins are the revisions the cluster's cache held for every run to date (weights unchanged since
+# 2024-09).
 MODEL_REVISIONS = {
     MODEL_ID: "c03e6d358207e414f1eca0bb1891e29f1db0e242",
     DISTILLER_ID: "6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
@@ -92,8 +92,8 @@ def pinned_id(model_id: str) -> str:
 # adapters at the same rank, and because the positive controls show this rank adapts: the
 # capacity objection bites on a null, and the conditional branch answers it by rerunning at
 # 256 rather than by assuming 32 was enough.
-#: The registered rank. The conditional branch reruns at 256, so the rank has to be a knob the
-#: apparatus can turn; it was a constant, which made a pre-registered branch unexecutable.
+#: The registered rank. `lora_config` and `attach_adapter` take another because the report
+#: pre-commits to a rerun at 256, and a branch the apparatus cannot run is not registered.
 REGISTERED_RANK = 32
 LORA_TARGETS = (
     "q_proj",
@@ -130,12 +130,10 @@ LORA = lora_config()
 
 @dataclass(frozen=True)
 class TrainingReport:
-    """What one training run actually did, as opposed to what it was asked to do.
+    """What one training run did, beside what it was asked to do.
 
-    Returned instead of a bare loss list because the differences between asked and did are
-    exactly the ones that break a pre-registered budget: a skipped step is a step the
-    adapter did not take, and two conditions that skip differently were not trained
-    identically however identical their configuration was.
+    A skipped step is a step the adapter did not take, so two conditions that skip
+    differently were not trained identically however identical their configuration was.
     """
 
     losses: list[float]
@@ -215,9 +213,8 @@ class HFGenerator:
     # only a rescoring of a result from before the registration needs; recorded either way.
     repetition_penalty: float | None = REPETITION_PENALTY
     seed: int = 0
-    # The registered compute precision. Only the determinism check overrides it, to measure the
-    # bf16 it replaced; a default that could not be overridden would make that job rewrite its
-    # own evidence in fp32.
+    # The registered compute precision. The determinism check overrides it to compare bf16 with
+    # fp32, and the rules distiller to load in `DISTILLER_DTYPE`.
     dtype: str = INFERENCE_DTYPE
     # A chat template's own options (render_chat's `template`), as the distiller's.
     template: Mapping[str, Any] | None = None
@@ -363,9 +360,8 @@ def attach_adapter(
     before it costs GPU hours. Every recorded run uses the default, and a result produced on
     another device would say so in its provenance rather than silently match.
 
-    `rank` defaults to the registered one. It is an argument because the report pre-commits to
-    rerunning at 256 when an arm returns no gain, and a branch the apparatus cannot execute is
-    not a registered branch.
+    `rank` defaults to the registered one; the report pre-commits to rerunning at 256 when an
+    arm returns no gain.
     """
     # Seed BEFORE get_peft_model: the LoRA initialization draws from the global RNG, so
     # seeding afterwards leaves it dependent on whatever ran before. scripts/pilot.py had
@@ -410,11 +406,7 @@ def train_adapter(
     in digits, produce a NaN gradient **only when batched together** -- deterministically
     over five repeats, in either order, while each is fine alone and fine paired with
     anything else. Batching one example at a time removes padding and pairing as variables
-    entirely, and the cost is throughput this pilot does not need.
-
-    This loop is that configuration, made permanent. For a pre-registered study a training
-    procedure that can be read in full is worth more than one whose failure mode resisted
-    four attempts to reproduce.
+    entirely, at a cost in throughput.
     """
     torch.manual_seed(seed)
     trainable = [p for p in model.parameters() if p.requires_grad]
@@ -427,9 +419,7 @@ def train_adapter(
     steps = total_steps(
         n_examples=len(items), batch_size=micro_batch, grad_accum=grad_accum, epochs=epochs
     )
-    # Linear warmup then cosine, so the schedule matches the declared budget. A declared
-    # parameter the code ignores is worse than either choice, and this one is
-    # pre-registered.
+    # Linear warmup then cosine (`lr_multiplier`), as the pre-registered budget declares.
     warm = warmup_steps(
         n_examples=len(items),
         batch_size=micro_batch,

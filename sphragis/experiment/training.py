@@ -56,9 +56,9 @@ def build_supervised(
     """One training item: prompt tokens masked, target tokens supervised.
 
     The prompt goes through `render_chat`, the same function every generator uses, so the
-    adapter is fitted on exactly the input it is evaluated on. It was not: training
-    tokenized the raw prompt while `HFGenerator` applied the chat template, two sequences
-    that shared no prefix at all (61 tokens against 90 on a real example).
+    adapter is fitted on exactly the input it is evaluated on. When training tokenized the raw
+    prompt while `HFGenerator` applied the chat template, the two sequences shared no prefix
+    at all (61 tokens against 90 on a real example).
 
     An item that does not fit is refused rather than truncated. Cutting the target teaches
     the model to stop mid-line; cutting the prompt's head removes the chat frame and the
@@ -113,11 +113,10 @@ def total_steps(*, n_examples: int, batch_size: int, grad_accum: int, epochs: in
 def training_order(*, n_examples: int, epochs: int, seed: int) -> list[int]:
     """The exact index sequence the training loop consumes.
 
-    A fresh permutation per epoch, so every example is seen exactly `epochs` times. The
-    loop this replaces walked a rolling cursor modulo `n - 1`, which never reached the
-    last example at any corpus size and gave a prefix two exposures against the suffix's
-    one, with the split point depending on `n`. Two organizations of different sizes
-    therefore trained under differently shaped budgets.
+    A fresh permutation per epoch, so every example is seen exactly `epochs` times. A rolling
+    cursor modulo `n - 1` once never reached the last example at any corpus size and gave a
+    prefix two exposures against the suffix's one, with the split point depending on `n`, so
+    two organizations of different sizes trained under differently shaped budgets.
 
     Pure, and returned rather than consumed in place, so the order a run used can be
     asserted without a model.
@@ -165,10 +164,9 @@ def step_batches(
 def lr_multiplier(step: int, *, warmup: int, total: int) -> float:
     """Linear warmup into cosine decay, as a fraction of the declared learning rate.
 
-    Pure and public so CI checks the shape of the pre-registered schedule; it lived as a
-    closure inside `train_adapter`, in the one module CI cannot import. Never negative and
-    never above 1: a multiplier outside that range would silently train at a rate the report
-    does not state.
+    Pure and public so CI checks the shape of the pre-registered schedule outside `model`, the
+    one module CI cannot import. Never negative and never above 1: a multiplier outside that
+    range would silently train at a rate the report does not state.
     """
     if warmup and step < warmup:
         return (step + 1) / warmup

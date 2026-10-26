@@ -14,9 +14,10 @@ cosines and the norms, which give the inner products.
 
 Two detectors, both what an honest-but-curious server could run with reference updates of its own:
 
-- `membership_score`: how much an aggregate aligns with a candidate source's direction, which
-  separates rounds that contained that source from rounds that did not.
-- `paired_difference`: FedAttr's mechanism (arXiv:2605.06596) with the watermark removed. The
+- `membership_auc` and `organization_membership_auc`: how much an aggregate aligns with a
+  candidate source's direction (`direction_score`), which separates rounds that contained that
+  source from rounds that did not.
+- `paired_subset_difference`: FedAttr's mechanism (arXiv:2605.06596) with the watermark removed. The
   server averages the aggregates of rounds containing a target and subtracts the average of
   rounds without it, and reads the difference's alignment with the target's direction.
 """
@@ -42,9 +43,9 @@ def tpr_at_fpr(present: Sequence[float], absent: Sequence[float], fpr: float) ->
     IEEE S&P 2022, arXiv:2112.03570). A privacy claim is about the confident identifications,
     so every detector here reports this beside its AUC.
 
-    The threshold is the largest one whose empirical false-positive rate is at most `fpr`: with
-    `m = floor(fpr * n)` non-members allowed above it, that is the (m+1)-th largest non-member
-    score, and at m = 0 it is the largest, which asks how many members outrank every non-member
+    The threshold is the (m+1)-th largest non-member score, `m = min(floor(fpr * n), n - 1)`:
+    the lowest with at most m non-members above it, so a rate of at most `fpr`, and at m = 0
+    the largest, which asks how many members outrank every non-member
     drawn. The achieved rate is returned rather than the requested one, since `n` draws cannot
     resolve a rate below 1/n.
     """

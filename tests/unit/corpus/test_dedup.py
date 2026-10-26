@@ -1,4 +1,4 @@
-"""Three-stage dedup: exact, near-duplicate, repeated boilerplate."""
+"""Deduplication: exact, near-duplicate, repeated boilerplate, then one example per id."""
 
 from __future__ import annotations
 
