@@ -44,7 +44,7 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
   beside each H1 partition run (`foreign_arms.sbatch`, chained decoder_check -> foreign_arms ->
   likelihood_score), `partition_pilot.py --hypothesis H2` reads the development cell, and
   `partition_sensitivity.sbatch` with `FOREIGN_SOURCE` simulates it (`power.cell_contrast`,
-  `plan_cell`). Both wait on the Chromium pool, cleared against Qt and on TIGRIS, and on Qt's 22
+  `plan_cell`). Both wait on the cleared Chromium pool's copy on TIGRIS and on Qt's 22
   development runs with its arms.
 
 ## Next
@@ -62,11 +62,13 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
    (a) done 2026-10-27: Chromium's pool covers every draw, first in the order, so
    `FOREIGN_SOURCE = "chromium"`; `partition_pilot.py`, `partition_sensitivity.py` and
-   `rq1_pilot.py` refuse an H2 step against another source (`require_registered_source`). Before
-   the foreign arms train, its pool (`sphragis-data-local/chromium-pool/pool`, 14 examples more
-   than the stop rule's) is cleared of Qt's copies as the stop rule read it, and copied to TIGRIS's
-   sphragis-data. `rq1_pilot.py` refuses any pool whose `pool_digest` is not
-   `FOREIGN_POOL_SHA256` (75d9f7f3), so the clearing must reproduce that digest; (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   `rq1_pilot.py` refuse an H2 step against another source (`require_registered_source`). The pool,
+   cleared of Qt's copies as the stop rule read it, was written on 2026-10-27 at the registered
+   digest (research log, "Chromium's pool cleared of Qt's copies"):
+   `sphragis-data-local/chromium-pool/cleared/chromium.jsonl` with its `.source.json` record, the
+   file `rq1_pilot.py --foreign-pool` and `foreign_arms.sbatch FOREIGN_POOL` take. Next: copy both
+   to TIGRIS (`~/ajsoftworks/sphragis-data/chromium-pool/cleared/`, sha256 checked at both ends;
+   needs AJ's Duo login); (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; (c) the matched foreign

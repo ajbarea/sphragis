@@ -159,8 +159,8 @@ def test_the_written_pool_is_the_one_the_coverage_stop_rule_read(
         sys,
         "argv",
         ["c", "--coverage", str(coverage), "--root", str(tmp_path / "pool")]
-        + ["--against", f"qt={tmp_path / 'qt'}", "--out", str(out)]
-        + ["--record", str(tmp_path / "record.json")],
+        + ["--against", f"qt={tmp_path / 'qt'}", "--pool", str(out)]
+        + ["--out", str(tmp_path / "record.json")],
     )
     clear.main()
     written = derived_file_rows(out)

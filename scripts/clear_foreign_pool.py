@@ -13,8 +13,8 @@ Reads no outcome.
         --coverage datasets/results/foreign-pool-coverage-chromium.json \\
         --root ~/ajsoftworks/sphragis-data-local/chromium-pool/pool \\
         --against qt=datasets/gerrit-granted \\
-        --out ~/ajsoftworks/sphragis-data-local/chromium-pool/cleared/chromium.jsonl \\
-        --record datasets/results/foreign-pool-cleared-chromium.json
+        --pool ~/ajsoftworks/sphragis-data-local/chromium-pool/cleared/chromium.jsonl \\
+        --out datasets/results/foreign-pool-cleared-chromium.json
 """
 
 from __future__ import annotations
@@ -43,8 +43,8 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--coverage", type=Path, required=True, help="foreign_pool_coverage.py's")
 parser.add_argument("--root", type=Path, required=True, help="the source's built corpus root")
 parser.add_argument("--against", required=True, help="ORG=ROOT: the organization cleared against")
-parser.add_argument("--out", type=Path, required=True, help="the cleared pool's derived file")
-parser.add_argument("--record", type=Path, required=True, help="the clearing's artifact")
+parser.add_argument("--pool", type=Path, required=True, help="the cleared pool's derived file")
+parser.add_argument("--out", type=Path, required=True, help="the clearing's artifact")
 
 
 def stop_rule(coverage: dict[str, Any], org: str) -> dict[str, Any]:
@@ -98,10 +98,10 @@ def main() -> None:
         if span[0] <= str(row.get("created", ""))[:10] < span[1]
     ]
     pool = cleared(stop, order, refined, unsealed(Path(against_root), org))
-    write_derived_file(args.out, pool, sources=[(args.root, source), (Path(against_root), org)])
+    write_derived_file(args.pool, pool, sources=[(args.root, source), (Path(against_root), org)])
     cpp, other = counts(pool)
     write_json_atomic(
-        args.record,
+        args.out,
         {
             "source": source,
             "coverage": str(args.coverage),
@@ -113,11 +113,11 @@ def main() -> None:
                 "other": other,
                 "digest": pool_digest(pool),
             },
-            "file": str(args.out.resolve()),
+            "file": str(args.pool.resolve()),
             "provenance": provenance_header(),
         },
     )
-    print(f"{source}: cleared pool {len(pool)} ({cpp} C++, {other} other) at {args.out}")
+    print(f"{source}: cleared pool {len(pool)} ({cpp} C++, {other} other) at {args.pool}")
 
 
 if __name__ == "__main__":
