@@ -228,11 +228,11 @@ def main() -> None:
         raise SystemExit("--foreign-source comes with --hypothesis H2, and H2 needs it")
     if h2 and args.org != H2_ORGANIZATION:
         raise SystemExit(f"H2's cell is {H2_ORGANIZATION}'s, not {args.org}'s")
-    registered = decomposition.FOREIGN_SOURCE
-    if h2 and registered is not None and args.foreign_source != registered:
-        raise SystemExit(
-            f"H2's registered foreign source is {registered}, not {args.foreign_source}"
-        )
+    if h2:
+        try:
+            decomposition.require_registered_source(args.foreign_source)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
     if h2 and (args.replication or args.without or args.planted or args.sensitivity):
         raise SystemExit(
             "an H2 development read takes no --replication, --without, --planted or --sensitivity"

@@ -61,10 +61,12 @@ Figures are quoted from artifacts through `scripts/reading.py`, never transcribe
    2026-10-23, so it is not set earlier.
 3. H2 as a Qt cell against a C++-matched foreign adapter (research log, 2026-10-14), in order:
    (a) done 2026-10-27: Chromium's pool covers every draw, first in the order, so
-   `FOREIGN_SOURCE = "chromium"`, and `partition_pilot.py` refuses an H2 read against another
-   source. Before the foreign arms train, its pool (`sphragis-data-local/chromium-pool/pool`) is
-   cleared of Qt's copies as the stop rule read it (digest 75d9f7f3; `rq1_pilot.py` builds from
-   the uncleared pool, 14 examples more) and copied to TIGRIS's sphragis-data; (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
+   `FOREIGN_SOURCE = "chromium"`; `partition_pilot.py`, `partition_sensitivity.py` and
+   `rq1_pilot.py` refuse an H2 step against another source (`require_registered_source`). Before
+   the foreign arms train, its pool (`sphragis-data-local/chromium-pool/pool`, 14 examples more
+   than the stop rule's) is cleared of Qt's copies as the stop rule read it, and copied to TIGRIS's
+   sphragis-data. `rq1_pilot.py` refuses any pool whose `pool_digest` is not
+   `FOREIGN_POOL_SHA256` (75d9f7f3), so the clearing must reproduce that digest; (b) done 2026-10-14: `registered_design`, `matched_clusters`, the
    gate's C++ population and `whole_hunk_supplement`; the commit that fixes the source sets
    `FOREIGN_SOURCE` before the first H2 development contrast, and a foreign pool over check 4 is
    recorded by setting `H2_WITHDRAWN`; (c) the matched foreign

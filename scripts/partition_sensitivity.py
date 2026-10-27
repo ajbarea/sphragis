@@ -69,6 +69,7 @@ from sphragis.experiment.decomposition import (
     halves,
     is_cpp,
     metric_sesoi,
+    require_registered_source,
 )
 from sphragis.experiment.partitions import (
     K_MAX,
@@ -613,6 +614,8 @@ def main() -> None:
         ratio = train["clusters_by_chain"] / train["clusters_by_change"]
     # Whole changes (or chains), rounded down: a projection is not an observed count.
     try:
+        if args.foreign_source is not None:
+            require_registered_source(args.foreign_source)
         sized = pilot_sizing(pilot, str(args.pilot), org=args.org, cell=cell_of(pilot))
         args.cells, args.size, cpp_share = plan_cell(
             pilot,

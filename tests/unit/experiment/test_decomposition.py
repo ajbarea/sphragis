@@ -2119,3 +2119,34 @@ def test_chromium_is_the_registered_foreign_source() -> None:
     assert design["H2"] == (("qt", "chromium"),)
     assert design["foreign_source"] == "chromium"
     assert decomposition.registered_design(("openstack", "wikimedia"))["foreign_source"] is None
+
+
+@pytest.mark.parametrize(
+    ("registered", "source", "message"),
+    [
+        (None, "chromium", "no foreign source is registered"),
+        ("chromium", "fuchsia", "registered foreign source is chromium, not fuchsia"),
+    ],
+)
+def test_an_h2_step_against_an_unregistered_source_is_refused(
+    monkeypatch: pytest.MonkeyPatch, registered: str | None, source: str, message: str
+) -> None:
+    _registered_source(monkeypatch, registered)
+    with pytest.raises(ValueError, match=message):
+        decomposition.require_registered_source(source)
+
+
+def test_an_h2_step_against_the_registered_source_runs() -> None:
+    decomposition.require_registered_source("chromium")
+
+
+def test_the_registered_pool_is_the_one_the_stop_rule_covered() -> None:
+    """The digest is the coverage artifact's, never typed apart from it."""
+    coverage = json.loads(
+        (
+            Path(__file__).resolve().parents[3]
+            / "datasets/results/foreign-pool-coverage-chromium.json"
+        ).read_text()
+    )
+    assert coverage["stop_rule"]["covers_every_draw"]
+    assert coverage["stop_rule"]["digest"] == decomposition.FOREIGN_POOL_SHA256

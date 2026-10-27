@@ -1299,3 +1299,10 @@ def test_an_h2_read_against_an_unregistered_source_is_refused(tmp_path, monkeypa
     argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
     with pytest.raises(SystemExit, match="registered foreign source is chromium, not aosp"):
         _main(monkeypatch, [*argv, "--out", str(tmp_path / "out.json")])
+
+
+def test_an_h2_read_without_a_registered_source_is_refused(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", None)
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    with pytest.raises(SystemExit, match="no foreign source is registered"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "out.json")])

@@ -18,11 +18,13 @@ import torch
 from sphragis.corpus.load import derived_file_rows
 from sphragis.corpus.pipeline import run_dedup
 from sphragis.experiment.decomposition import (
+    FOREIGN_POOL_SHA256,
     FOREIGN_SOURCES,
     FOREIGN_SPANS,
     halves,
     is_cpp,
     matched_foreign_arms,
+    require_registered_source,
 )
 from sphragis.experiment.holdout import (
     equalize_training,
@@ -204,9 +206,15 @@ if args.foreign_pool:
     if not args.reuse_from:
         raise SystemExit("foreign arms are added to a stored run: pass its --reuse-from")
     try:
+        require_registered_source(args.foreign_source)
         pool, pool_removed = foreign_pool(
             args.foreign_pool, args.foreign_source, FOREIGN_SPANS[args.foreign_source]
         )
+        # The pool the stop rule covered, cleared of Qt's copies, and no other.
+        if pool_digest(pool) != FOREIGN_POOL_SHA256:
+            raise ValueError(
+                f"{args.foreign_pool} is not the registered pool (sha256 {FOREIGN_POOL_SHA256})"
+            )
         drawn, foreign = matched_foreign_arms(
             train_rows,
             pool,
