@@ -382,3 +382,11 @@ def test_a_chain_pool_takes_each_chains_one_project(tmp_path: Path, monkeypatch)
     chain_of["I3"] = "chain-1"  # a chain spanning two projects has no one project
     with pytest.raises(SystemExit, match="maps to projects"):
         module.with_projects(clusters[:1], Path("c"), "openstack", chain_of)
+
+
+def test_an_h2_simulation_against_an_unregistered_source_is_refused(tmp_path: Path) -> None:
+    """Before any pilot is sized: the source is the registered one or nothing runs."""
+    result = _likelihood(tmp_path, "--metric", "logprob_per_token", "--foreign-source", "aosp")
+    assert result.returncode != 0
+    assert "registered foreign source is chromium, not aosp" in result.stderr
+    assert not (tmp_path / "o.json").exists()

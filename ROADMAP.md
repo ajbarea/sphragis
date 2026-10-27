@@ -133,11 +133,10 @@ and the call itself, quoted, at `org-house-style/VENUE.md`.
   changes created 2024-10-01 to 2025-03-26, listed through 2025-10, 2,056 examples after
   refinement and dedup against Qt, 1,076 of them C++, which covers 34 of 80 matched draws and no
   partition, so AOSP does not qualify (research log).
-- [ ] **H2's source**: the first of Chromium, Fuchsia and AOSP whose pool over Qt's training months
-  covers every draw (scope and stop rule in the research log, 2026-10-19). Fuchsia's covers with
-  its first project (research log, 2026-10-20); Chromium's, ahead of it in the order, is being
-  read under the one-client pace Chrome Infra's answer sets for all three hosts. If none covers, H2 is exploratory and H1 is read alone (the
-  Stage 1 report's conditional).
+- [x] **H2's source**: the first of Chromium, Fuchsia and AOSP whose pool over Qt's training months
+  covers every draw (scope and stop rule in the research log, 2026-10-19). Chromium's covers with
+  its first project, `chromium/src`, so Chromium is the source and `FOREIGN_SOURCE` is set
+  (research log, 2026-10-27); Fuchsia's also covers (2026-10-20) and is not used.
 
 ## Plan B — measurement
 
@@ -763,7 +762,7 @@ as the unit; the evidence says the codebase is.
   Chromium's grant covers a pool, not an evaluated corpus, so H2 is Qt's cell against a C++-matched
   foreign adapter; V8's pool under the self-imposed cap and AOSP's cannot cover every matched draw,
   Fuchsia's pool covers (2026-10-20), and Chromium's, registered again under the rate grant and
-  first in the source order, is being read (research log, 2026-10-19).
+  first in the source order, covers too, so Chromium is the source (research log, 2026-10-27).
 - [x] The seed effect at the half size: above 0.01 on both placebos, so five seeds; on corpus v3
   0.0077 with an upper bound of 0.0376, five kept as a stated deviation from the rule's wording.
 - [x] The crossed interval's coverage at 97.5% in both regimes (2026-09-23), and the sensitivity
@@ -867,6 +866,7 @@ a Stage 1 pre-registration item, not an implementation detail.
 
 ## Completed
 
+- **2026-10-27**: Chromium's foreign pool, its first project `chromium/src` read under the rate grant with the comment-count probe holding, covers all 80 matched draws and 40 partitions against Qt under the stop rule, so Chromium is H2's foreign source and `FOREIGN_SOURCE` is set (research log).
 - **2026-10-26**: A chain pilot, K and simulation record the chains they drew by a digest of what a read takes from the chains file, and every check that compared the unit compares the chains too; a test read's unit is checked against the registration, Gerrit by chain and GitHub by change (#214). `provenance` reads changed code with `git status --porcelain -z`, so a quoted or renamed path reaches the dirty-code digest (#212). `make verify` runs lint and test once (#213).
 - **2026-10-26**: First comment and docstring sweep over `sphragis/`, `scripts/`, `harvest.py` and `tests/`, one PR per folder, behaviour unchanged. Comments that were wrong about the code were corrected (among them `tpr_at_fpr`'s threshold, the K source a test read takes, the window bounds, the digest count), and figures restated in `stats.py` now point at their artifact.
 - **2026-10-20** — "Without targets found before the checkpoint" joins the registered sensitivities and is read on OpenStack's and Wikimedia's development windows: no reading moves (research log).

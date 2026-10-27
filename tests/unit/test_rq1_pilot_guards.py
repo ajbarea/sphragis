@@ -15,3 +15,11 @@ def test_foreign_arms_are_added_only_to_a_stored_run() -> None:
     assert guard < pilot.index("matched_foreign_arms(")
     job = (ROOT / "scripts" / "foreign_arms.sbatch").read_text()
     assert '--reuse-from "$STORED"' in job and "--foreign-pool" in job
+
+
+def test_foreign_arms_train_only_on_the_registered_source_and_pool() -> None:
+    """Both checks run before any arm is drawn from the pool."""
+    pilot = (ROOT / "scripts" / "rq1_pilot.py").read_text()
+    draw = pilot.index("matched_foreign_arms(\n")
+    assert pilot.index("require_registered_source(args.foreign_source)") < draw
+    assert pilot.index("if pool_digest(pool) != FOREIGN_POOL_SHA256:") < draw

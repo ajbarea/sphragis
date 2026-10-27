@@ -1,0 +1,14 @@
+chromium 2024-11: skip, already built (3142 examples)
+chromium 2024-12: skip, already built (3520 examples)
+chromium 2025-01: skip, already built (4637 examples)
+chromium 2025-02: skip, already built (5168 examples)
+chromium 2025-03: skip, already built (5911 examples)
+chromium 2025-04: skip, already built (5368 examples)
+chromium 2025-05: skip, already built (5358 examples)
+chromium 2025-06: skip, already built (4862 examples)
+chromium 2025-07: skip, already built (5610 examples)
+chromium 2025-08: resuming, 6534 changes read before the stop
+chromium 2025-08: 5137 examples, drops {'ill_posed_empty_after': 1898, 'ill_posed_empty_before': 487, 'ill_posed_expansion': 124, 'ill_posed_contraction': 187, 'metadata_file': 19000, 'author_comment': 19835, 'service_user': 102, 'acknowledgement': 1007, 'no_line_anchor': 118, 'no_successor': 174, 'diff_error': 0, 'comment_error': 0, 'no_anchored_hunk': 9951, 'uncommented_by_count': 10642}
+chromium 2025-09: 1908 examples, drops {'ill_posed_empty_after': 705, 'ill_posed_empty_before': 169, 'ill_posed_expansion': 33, 'ill_posed_contraction': 69, 'metadata_file': 4889, 'author_comment': 7813, 'service_user': 49, 'acknowledgement': 327, 'no_line_anchor': 46, 'no_successor': 98, 'diff_error': 0, 'comment_error': 0, 'no_anchored_hunk': 4131, 'uncommented_by_count': 129}
+chromium 2025-10: 488 examples, drops {'ill_posed_empty_after': 182, 'ill_posed_empty_before': 39, 'ill_posed_expansion': 11, 'ill_posed_contraction': 22, 'metadata_file': 1333, 'author_comment': 2354, 'service_user': 11, 'acknowledgement': 158, 'no_line_anchor': 9, 'no_successor': 51, 'diff_error': 0, 'comment_error': 0, 'no_anchored_hunk': 1396, 'uncommented_by_count': 38}
+chromium: 51109 examples over 12 months, drops {'acknowledgement': 9030, 'author_comment': 191667, 'comment_error': 0, 'diff_error': 0, 'ill_posed_contraction': 1875, 'ill_posed_empty_after': 18140, 'ill_posed_empty_before': 4672, 'ill_posed_expansion': 1128, 'metadata_file': 191140, 'no_anchored_hunk': 96554, 'no_line_anchor': 942, 'no_successor': 1628, 'service_user': 410, 'uncommented_by_count': 100381}

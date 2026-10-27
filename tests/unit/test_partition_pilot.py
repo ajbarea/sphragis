@@ -162,6 +162,14 @@ def _chain_unit(chains: str) -> dict:
     }
 
 
+@pytest.fixture(autouse=True)
+def _aosp_registered(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The synthetic H2 runs here carry AOSP arms from pool `p1`; registering both lets the
+    source and pool guards admit them."""
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "aosp")
+    monkeypatch.setattr(decomposition, "FOREIGN_POOL_SHA256", "p1")
+
+
 def _main(monkeypatch: pytest.MonkeyPatch, argv: list[str]) -> None:
     monkeypatch.setattr(sys, "argv", ["partition_pilot.py", *argv])
     partition_pilot.main()
@@ -1285,3 +1293,24 @@ def test_a_k_made_by_change_is_not_read_by_chain(
     sizing.write_text(json.dumps(artifact))
     with pytest.raises(SystemExit, match="was made by change, this read is by chain"):
         _main(monkeypatch, argv)
+
+
+def test_an_h2_read_against_an_unregistered_source_is_refused(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", "chromium")
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    with pytest.raises(SystemExit, match="registered foreign source is chromium, not aosp"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "out.json")])
+
+
+def test_an_h2_read_without_a_registered_source_is_refused(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(decomposition, "FOREIGN_SOURCE", None)
+    argv = [*_h2_inputs(tmp_path), "--hypothesis", "H2", "--foreign-source", "aosp"]
+    with pytest.raises(SystemExit, match="no foreign source is registered"):
+        _main(monkeypatch, [*argv, "--out", str(tmp_path / "out.json")])
+
+
+def test_an_h2_read_on_arms_from_an_unregistered_pool_is_refused(tmp_path, monkeypatch) -> None:
+    """One pool across every run, but not the one the stop rule covered."""
+    argv = [*_h2_inputs(tmp_path, pool_sha="p2", first_pool="p2"), "--hypothesis", "H2"]
+    with pytest.raises(SystemExit, match="drew from p2, not the registered pool p1"):
+        _main(monkeypatch, [*argv, "--foreign-source", "aosp", "--out", str(tmp_path / "o.json")])

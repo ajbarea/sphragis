@@ -229,11 +229,24 @@ ADMITTED_ORGANIZATIONS: tuple[str, ...] | None = None
 # Qt's foreign source, set by the commit that fixes it before the first H2 development contrast
 # is read, or None while no source qualifies. Every read takes it from here, never from a
 # caller, so no source can be chosen after a contrast is seen.
-FOREIGN_SOURCE: str | None = None
+FOREIGN_SOURCE: str | None = "chromium"
 
 # Why H2 was withdrawn from the confirmatory family after its source was fixed (a foreign pool
 # over check 4's threshold), set by the commit recording it; None while H2 stands.
 H2_WITHDRAWN: str | None = None
+
+# `holdout.pool_digest` of the registered source's pool as the stop rule found it covering,
+# cleared of Qt's copies (research log, 2026-10-27). The foreign arms train on that pool alone.
+FOREIGN_POOL_SHA256: str = "75d9f7f37e1faafb863f0fd3bcc3508506309e3c2e4edbe9b631d05258fe5ba9"
+
+
+def require_registered_source(source: str) -> None:
+    """Refuse an H2 step against `source` unless it is the registered `FOREIGN_SOURCE`: no H2
+    development contrast is read, simulated or trained for before the source is fixed."""
+    if FOREIGN_SOURCE is None:
+        raise ValueError("no foreign source is registered, so no H2 step runs")
+    if source != FOREIGN_SOURCE:
+        raise ValueError(f"H2's registered foreign source is {FOREIGN_SOURCE}, not {source}")
 
 
 # The GitHub replication family in registration order (registered-decisions.md, "GitHub

@@ -228,6 +228,11 @@ def main() -> None:
         raise SystemExit("--foreign-source comes with --hypothesis H2, and H2 needs it")
     if h2 and args.org != H2_ORGANIZATION:
         raise SystemExit(f"H2's cell is {H2_ORGANIZATION}'s, not {args.org}'s")
+    if h2:
+        try:
+            decomposition.require_registered_source(args.foreign_source)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
     if h2 and (args.replication or args.without or args.planted or args.sensitivity):
         raise SystemExit(
             "an H2 development read takes no --replication, --without, --planted or --sensitivity"
@@ -309,6 +314,11 @@ def main() -> None:
         }
     if h2 and (len(pools) != 1 or None in pools):
         raise SystemExit("an H2 cell's runs must all draw their arms from one recorded pool")
+    if h2 and pools != {decomposition.FOREIGN_POOL_SHA256}:
+        raise SystemExit(
+            f"an H2 cell's arms drew from {pools.pop()}, not the registered pool "
+            f"{decomposition.FOREIGN_POOL_SHA256}"
+        )
     if windows == {"train -> test"}:
         window = "test"
     elif windows == {"train -> dev"}:

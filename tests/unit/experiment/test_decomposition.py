@@ -223,7 +223,10 @@ def test_an_exploratory_cell_never_decides_a_verdict() -> None:
     assert outcome["verdicts"]["H2"] == "pass"
 
 
-def test_admitting_openstack_and_qt_tests_h1_alone_at_the_whole_family_level() -> None:
+def test_admitting_openstack_and_qt_without_a_foreign_source_tests_h1_alone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, None)  # no source registered: H2 has no confirmatory cell
     admitted = ("openstack", "qt")
     results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
     outcome = decomposition_gate(
@@ -1080,7 +1083,10 @@ def test_a_bound_missing_at_the_laxer_holm_level_is_refused() -> None:
         _gate(_by_relation(0.75, 0.25, 0.25), detectable=lax_missing)
 
 
-def test_a_design_with_no_confirmatory_h2_reads_the_bound_registered_at_its_one_level() -> None:
+def test_a_design_with_no_confirmatory_h2_reads_the_bound_registered_at_its_one_level(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _registered_source(monkeypatch, None)  # no source registered: H2 has no confirmatory cell
     admitted = ("openstack", "qt")
     results = _results(_by_relation(0.25, 0.75, 0.75), orgs=admitted)
     only_lax = {"H1": {o: {0.95: BOUND} for o in admitted}}
@@ -1489,7 +1495,8 @@ def test_a_confirmatory_h2_cell_without_a_bound_is_refused() -> None:
         _gate(_by_relation(0.75, 0.25, 0.25), detectable={"H1": DETECTABLE["H1"]})
 
 
-def test_an_exploratory_cell_never_reads_bounded() -> None:
+def test_an_exploratory_cell_never_reads_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    _registered_source(monkeypatch, None)  # no source registered: H2 has no confirmatory cell
     admitted = ("openstack", "qt")
     results = _results(_by_relation(0.75, 0.25, 0.25), orgs=admitted)
     outcome = decomposition_gate(
@@ -2103,3 +2110,43 @@ def test_each_foreign_sources_span_is_the_one_its_pool_was_registered_over() -> 
     aosp = REST_PERMITTED["android-review.googlesource.com"].scope
     assert aosp is not None
     assert decomposition.FOREIGN_SPANS["aosp"] == (aosp.created_from, aosp.created_before)
+
+
+def test_chromium_is_the_registered_foreign_source() -> None:
+    """Research log, 2026-10-27: Chromium's pool covers every matched draw, first in the order."""
+    assert decomposition.FOREIGN_SOURCE == "chromium"
+    design = decomposition.registered_design(("openstack", "qt"))
+    assert design["H2"] == (("qt", "chromium"),)
+    assert design["foreign_source"] == "chromium"
+    assert decomposition.registered_design(("openstack", "wikimedia"))["foreign_source"] is None
+
+
+@pytest.mark.parametrize(
+    ("registered", "source", "message"),
+    [
+        (None, "chromium", "no foreign source is registered"),
+        ("chromium", "fuchsia", "registered foreign source is chromium, not fuchsia"),
+    ],
+)
+def test_an_h2_step_against_an_unregistered_source_is_refused(
+    monkeypatch: pytest.MonkeyPatch, registered: str | None, source: str, message: str
+) -> None:
+    _registered_source(monkeypatch, registered)
+    with pytest.raises(ValueError, match=message):
+        decomposition.require_registered_source(source)
+
+
+def test_an_h2_step_against_the_registered_source_runs() -> None:
+    decomposition.require_registered_source("chromium")
+
+
+def test_the_registered_pool_is_the_one_the_stop_rule_covered() -> None:
+    """The digest is the coverage artifact's, never typed apart from it."""
+    coverage = json.loads(
+        (
+            Path(__file__).resolve().parents[3]
+            / "datasets/results/foreign-pool-coverage-chromium.json"
+        ).read_text()
+    )
+    assert coverage["stop_rule"]["covers_every_draw"]
+    assert coverage["stop_rule"]["digest"] == decomposition.FOREIGN_POOL_SHA256

@@ -1,0 +1,1138 @@
+{
+  "org": "chromium",
+  "root": "/home/ajbar/ajsoftworks/sphragis-data-local/chromium-pool/ranking",
+  "grant": {
+    "projects": [],
+    "created_from": "2024-11-01",
+    "created_before": "2025-09-01",
+    "read_cap": null,
+    "listed_through": "2025-10",
+    "every_project": true,
+    "listing_days": 2
+  },
+  "months": [
+    "2024-11",
+    "2024-12",
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10"
+  ],
+  "changes": 401584,
+  "listed_twice": 0,
+  "order": [
+    {
+      "project": "chromium/src",
+      "merged": 169778,
+      "commented": 69397
+    },
+    {
+      "project": "chromiumos/overlays/chromiumos-overlay",
+      "merged": 112362,
+      "commented": 1146
+    },
+    {
+      "project": "infra/infra_superproject",
+      "merged": 28180,
+      "commented": 19
+    },
+    {
+      "project": "chromiumos/third_party/zephyr",
+      "merged": 16669,
+      "commented": 13942
+    },
+    {
+      "project": "v8/v8",
+      "merged": 7937,
+      "commented": 4254
+    },
+    {
+      "project": "infra/infra",
+      "merged": 6617,
+      "commented": 1627
+    },
+    {
+      "project": "chromiumos/third_party/coreboot",
+      "merged": 6546,
+      "commented": 175
+    },
+    {
+      "project": "chromiumos/infra/recipes",
+      "merged": 5158,
+      "commented": 241
+    },
+    {
+      "project": "devtools/devtools-frontend",
+      "merged": 4848,
+      "commented": 2530
+    },
+    {
+      "project": "chromiumos/third_party/kernel",
+      "merged": 4374,
+      "commented": 1335
+    },
+    {
+      "project": "chromiumos/platform/ec",
+      "merged": 3403,
+      "commented": 2233
+    },
+    {
+      "project": "chromiumos/third_party/pigweed/pigweed",
+      "merged": 2900,
+      "commented": 1501
+    },
+    {
+      "project": "emscripten-releases",
+      "merged": 2705,
+      "commented": 36
+    },
+    {
+      "project": "chromiumos/platform2",
+      "merged": 2499,
+      "commented": 1393
+    },
+    {
+      "project": "chromiumos/platform/tast-tests",
+      "merged": 2264,
+      "commented": 1442
+    },
+    {
+      "project": "vulkan-deps",
+      "merged": 2000,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/overlays/board-overlays",
+      "merged": 1951,
+      "commented": 305
+    },
+    {
+      "project": "infra/luci/luci-go",
+      "merged": 1823,
+      "commented": 1022
+    },
+    {
+      "project": "angle/angle",
+      "merged": 1814,
+      "commented": 885
+    },
+    {
+      "project": "chromium/tools/build",
+      "merged": 1335,
+      "commented": 391
+    },
+    {
+      "project": "chromiumos/platform/depthcharge",
+      "merged": 1269,
+      "commented": 282
+    },
+    {
+      "project": "copybot",
+      "merged": 1174,
+      "commented": 29
+    },
+    {
+      "project": "crosvm/crosvm",
+      "merged": 1042,
+      "commented": 270
+    },
+    {
+      "project": "chromiumos/chromite",
+      "merged": 746,
+      "commented": 231
+    },
+    {
+      "project": "chromium/tools/depot_tools",
+      "merged": 656,
+      "commented": 268
+    },
+    {
+      "project": "chromiumos/third_party/zephyr/picolibc",
+      "merged": 649,
+      "commented": 503
+    },
+    {
+      "project": "crossbench",
+      "merged": 617,
+      "commented": 517
+    },
+    {
+      "project": "chromiumos/third_party/autotest",
+      "merged": 548,
+      "commented": 309
+    },
+    {
+      "project": "chromiumos/platform/vboot_reference",
+      "merged": 531,
+      "commented": 116
+    },
+    {
+      "project": "chromiumos/config",
+      "merged": 466,
+      "commented": 147
+    },
+    {
+      "project": "infra/luci/luci-py",
+      "merged": 390,
+      "commented": 73
+    },
+    {
+      "project": "chromiumos/platform/factory",
+      "merged": 387,
+      "commented": 182
+    },
+    {
+      "project": "catapult",
+      "merged": 378,
+      "commented": 255
+    },
+    {
+      "project": "chromiumos/platform/dev-util",
+      "merged": 351,
+      "commented": 193
+    },
+    {
+      "project": "chromiumos/third_party/hdctools",
+      "merged": 330,
+      "commented": 133
+    },
+    {
+      "project": "chromiumos/third_party/toolchain-utils",
+      "merged": 329,
+      "commented": 134
+    },
+    {
+      "project": "chromiumos/infra/proto",
+      "merged": 298,
+      "commented": 56
+    },
+    {
+      "project": "chromium/web-tests",
+      "merged": 276,
+      "commented": 95
+    },
+    {
+      "project": "chromiumos/platform/crdyboot",
+      "merged": 261,
+      "commented": 131
+    },
+    {
+      "project": "chromiumos/project",
+      "merged": 255,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/platform/borealis",
+      "merged": 254,
+      "commented": 17
+    },
+    {
+      "project": "chromiumos/platform/crosvm",
+      "merged": 240,
+      "commented": 36
+    },
+    {
+      "project": "website",
+      "merged": 222,
+      "commented": 128
+    },
+    {
+      "project": "chromiumos/overlays/portage-stable",
+      "merged": 195,
+      "commented": 61
+    },
+    {
+      "project": "infra/luci/recipes-py",
+      "merged": 189,
+      "commented": 46
+    },
+    {
+      "project": "chromiumos/platform/tast",
+      "merged": 158,
+      "commented": 110
+    },
+    {
+      "project": "web-workload",
+      "merged": 151,
+      "commented": 20
+    },
+    {
+      "project": "chromiumos/third_party/zephyr/hal_stm32",
+      "merged": 149,
+      "commented": 88
+    },
+    {
+      "project": "chromiumos/platform/libchrome",
+      "merged": 147,
+      "commented": 88
+    },
+    {
+      "project": "chromiumos/third_party/adhd",
+      "merged": 146,
+      "commented": 90
+    },
+    {
+      "project": "chromiumos/third_party/linux-firmware",
+      "merged": 142,
+      "commented": 85
+    },
+    {
+      "project": "chromiumos/infra/ide",
+      "merged": 141,
+      "commented": 38
+    },
+    {
+      "project": "libyuv/libyuv",
+      "merged": 141,
+      "commented": 102
+    },
+    {
+      "project": "webm/libwebp",
+      "merged": 131,
+      "commented": 50
+    },
+    {
+      "project": "chromiumos/manifest",
+      "merged": 126,
+      "commented": 5
+    },
+    {
+      "project": "chromiumos/overlays/toolchains",
+      "merged": 106,
+      "commented": 1
+    },
+    {
+      "project": "webm/libvpx",
+      "merged": 96,
+      "commented": 55
+    },
+    {
+      "project": "crashpad/crashpad",
+      "merged": 92,
+      "commented": 59
+    },
+    {
+      "project": "chromiumos/third_party/rust_crates",
+      "merged": 79,
+      "commented": 41
+    },
+    {
+      "project": "chromiumos/third_party/mesa",
+      "merged": 77,
+      "commented": 15
+    },
+    {
+      "project": "chromiumos/platform/chameleon",
+      "merged": 76,
+      "commented": 52
+    },
+    {
+      "project": "chromiumos/infra/test-scheduling",
+      "merged": 75,
+      "commented": 41
+    },
+    {
+      "project": "external/github.com/llvm/llvm-project",
+      "merged": 75,
+      "commented": 16
+    },
+    {
+      "project": "chromiumos/third_party/mmc-utils",
+      "merged": 74,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/satlab",
+      "merged": 72,
+      "commented": 24
+    },
+    {
+      "project": "chromiumos/third_party/fwupd",
+      "merged": 72,
+      "commented": 8
+    },
+    {
+      "project": "build",
+      "merged": 68,
+      "commented": 33
+    },
+    {
+      "project": "chromiumos/platform/bisect-kit",
+      "merged": 67,
+      "commented": 48
+    },
+    {
+      "project": "chromiumos/platform/factory_installer",
+      "merged": 66,
+      "commented": 30
+    },
+    {
+      "project": "chromiumos/platform/tflite",
+      "merged": 66,
+      "commented": 40
+    },
+    {
+      "project": "chromiumos/third_party/libcamera",
+      "merged": 65,
+      "commented": 11
+    },
+    {
+      "project": "codecs/libwebp2",
+      "merged": 64,
+      "commented": 3
+    },
+    {
+      "project": "infra/cop",
+      "merged": 61,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/third_party/flashrom",
+      "merged": 57,
+      "commented": 15
+    },
+    {
+      "project": "chromiumos/platform/fw-testing-configs",
+      "merged": 55,
+      "commented": 15
+    },
+    {
+      "project": "chromiumos/platform/passport",
+      "merged": 53,
+      "commented": 41
+    },
+    {
+      "project": "infra/chromium",
+      "merged": 51,
+      "commented": 22
+    },
+    {
+      "project": "chromiumos/platform/dolos",
+      "merged": 49,
+      "commented": 34
+    },
+    {
+      "project": "chromiumos/platform/dagwood",
+      "merged": 45,
+      "commented": 14
+    },
+    {
+      "project": "chromiumos/platform/minigbm",
+      "merged": 41,
+      "commented": 19
+    },
+    {
+      "project": "openscreen",
+      "merged": 41,
+      "commented": 22
+    },
+    {
+      "project": "chromiumos/platform/touch_updater",
+      "merged": 39,
+      "commented": 31
+    },
+    {
+      "project": "v8/node-ci",
+      "merged": 39,
+      "commented": 33
+    },
+    {
+      "project": "chromiumos/platform/crosutils",
+      "merged": 37,
+      "commented": 17
+    },
+    {
+      "project": "chromiumos/platform/graphics",
+      "merged": 37,
+      "commented": 10
+    },
+    {
+      "project": "apps/libapps",
+      "merged": 36,
+      "commented": 14
+    },
+    {
+      "project": "breakpad/breakpad",
+      "merged": 36,
+      "commented": 28
+    },
+    {
+      "project": "external/github.com/WebKit/JetStream",
+      "merged": 35,
+      "commented": 35
+    },
+    {
+      "project": "chromiumos/platform/ec-aic-tester",
+      "merged": 33,
+      "commented": 16
+    },
+    {
+      "project": "chromiumos/third_party/arm-trusted-firmware",
+      "merged": 33,
+      "commented": 8
+    },
+    {
+      "project": "chromiumos/third_party/zephyr/nanopb",
+      "merged": 33,
+      "commented": 1
+    },
+    {
+      "project": "chromium/deps/icu",
+      "merged": 25,
+      "commented": 20
+    },
+    {
+      "project": "chromium/mini_chromium",
+      "merged": 25,
+      "commented": 19
+    },
+    {
+      "project": "chromiumos/third_party/zephyr/cmsis_6",
+      "merged": 24,
+      "commented": 24
+    },
+    {
+      "project": "chromiumos/platform/firmware",
+      "merged": 23,
+      "commented": 18
+    },
+    {
+      "project": "chromiumos/platform/hwtools/diagnoseme",
+      "merged": 23,
+      "commented": 8
+    },
+    {
+      "project": "chromiumos/bazel",
+      "merged": 22,
+      "commented": 8
+    },
+    {
+      "project": "deps/inspector_protocol",
+      "merged": 21,
+      "commented": 11
+    },
+    {
+      "project": "enterprise/cel",
+      "merged": 20,
+      "commented": 5
+    },
+    {
+      "project": "chromium/third_party/ffmpeg",
+      "merged": 19,
+      "commented": 14
+    },
+    {
+      "project": "aosp/platform/packages/modules/Bluetooth",
+      "merged": 18,
+      "commented": 4
+    },
+    {
+      "project": "webpagereplay",
+      "merged": 17,
+      "commented": 7
+    },
+    {
+      "project": "chromiumos/platform/initramfs",
+      "merged": 16,
+      "commented": 11
+    },
+    {
+      "project": "external/gitlab.gnome.org/GNOME/mutter",
+      "merged": 16,
+      "commented": 15
+    },
+    {
+      "project": "aosp/platform/frameworks/proto_logging",
+      "merged": 14,
+      "commented": 1
+    },
+    {
+      "project": "chromium/deps/nasm",
+      "merged": 14,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/containers/cros-container-guest-tools",
+      "merged": 14,
+      "commented": 8
+    },
+    {
+      "project": "chromiumos/third_party/dbus",
+      "merged": 14,
+      "commented": 14
+    },
+    {
+      "project": "chromiumos/platform/bmpblk",
+      "merged": 13,
+      "commented": 8
+    },
+    {
+      "project": "chromiumos/platform/minijail",
+      "merged": 13,
+      "commented": 11
+    },
+    {
+      "project": "chromiumos/platform/pdc",
+      "merged": 13,
+      "commented": 8
+    },
+    {
+      "project": "chromiumos/third_party/coreboot/amd_blobs",
+      "merged": 13,
+      "commented": 3
+    },
+    {
+      "project": "chromium/src/third_party/libunwindstack",
+      "merged": 11,
+      "commented": 8
+    },
+    {
+      "project": "chromiumos/platform/camera",
+      "merged": 11,
+      "commented": 7
+    },
+    {
+      "project": "chromiumos/third_party/shellcheck",
+      "merged": 11,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/zephyr/hal_intel",
+      "merged": 11,
+      "commented": 8
+    },
+    {
+      "project": "chromium/cdm",
+      "merged": 10,
+      "commented": 7
+    },
+    {
+      "project": "chromiumos/platform/bluetooth",
+      "merged": 10,
+      "commented": 4
+    },
+    {
+      "project": "chromiumos/platform/gestures",
+      "merged": 10,
+      "commented": 7
+    },
+    {
+      "project": "chromiumos/third_party/atrusctl",
+      "merged": 10,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/third_party/cups",
+      "merged": 10,
+      "commented": 6
+    },
+    {
+      "project": "chromiumos/third_party/kernel-rebase-patches",
+      "merged": 10,
+      "commented": 7
+    },
+    {
+      "project": "chromiumos/third_party/pi-gen-btpeer",
+      "merged": 10,
+      "commented": 4
+    },
+    {
+      "project": "chromiumos/third_party/zephyr/cmsis",
+      "merged": 10,
+      "commented": 9
+    },
+    {
+      "project": "external/github.com/WebKit/Speedometer",
+      "merged": 10,
+      "commented": 10
+    },
+    {
+      "project": "webm/libwebm",
+      "merged": 10,
+      "commented": 3
+    },
+    {
+      "project": "chromium/tools/chrome-devtools-frontend",
+      "merged": 9,
+      "commented": 5
+    },
+    {
+      "project": "chromiumos/platform/audiotest",
+      "merged": 9,
+      "commented": 4
+    },
+    {
+      "project": "chromiumos/platform/moblab",
+      "merged": 9,
+      "commented": 4
+    },
+    {
+      "project": "chromiumos/third_party/modemmanager-next",
+      "merged": 9,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/tpm2",
+      "merged": 9,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/platform/libva-fake-driver",
+      "merged": 8,
+      "commented": 6
+    },
+    {
+      "project": "chromiumos/third_party/OP-TEE/optee_os",
+      "merged": 8,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/third_party/canon-sane-backend",
+      "merged": 8,
+      "commented": 3
+    },
+    {
+      "project": "experimental/chromium/src",
+      "merged": 8,
+      "commented": 3
+    },
+    {
+      "project": "native_client/src/native_client",
+      "merged": 8,
+      "commented": 8
+    },
+    {
+      "project": "chromiumos/platform/crostestutils",
+      "merged": 7,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/platform/mosys",
+      "merged": 7,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/rules_cros_firmware",
+      "merged": 7,
+      "commented": 5
+    },
+    {
+      "project": "infra/experimental",
+      "merged": 7,
+      "commented": 2
+    },
+    {
+      "project": "infra/luci/python-adb",
+      "merged": 7,
+      "commented": 5
+    },
+    {
+      "project": "chromiumos/platform/drm-tests",
+      "merged": 6,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/vpd",
+      "merged": 6,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/repohooks",
+      "merged": 6,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/aver-updater",
+      "merged": 6,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/hostap",
+      "merged": 6,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/third_party/logitech-updater",
+      "merged": 6,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/virtual-usb-printer",
+      "merged": 6,
+      "commented": 2
+    },
+    {
+      "project": "infra/gerrit-plugins/buildbucket",
+      "merged": 6,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/third_party/u-boot",
+      "merged": 5,
+      "commented": 1
+    },
+    {
+      "project": "codecs/libgav1",
+      "merged": 5,
+      "commented": 1
+    },
+    {
+      "project": "aosp/platform/system/keymaster",
+      "merged": 4,
+      "commented": 4
+    },
+    {
+      "project": "chromium/deps/sqlite",
+      "merged": 4,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/infra/autotest-drone",
+      "merged": 4,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/mttools",
+      "merged": 4,
+      "commented": 4
+    },
+    {
+      "project": "chromiumos/third_party/novatek-tcon-fw-update-tool",
+      "merged": 4,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/portage_tool",
+      "merged": 4,
+      "commented": 3
+    },
+    {
+      "project": "infra/gerrit-plugins/chromium-behavior",
+      "merged": 4,
+      "commented": 1
+    },
+    {
+      "project": "cast_core/public",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "chromium/deps/libjpeg_turbo",
+      "merged": 3,
+      "commented": 3
+    },
+    {
+      "project": "chromium/deps/libsrtp",
+      "merged": 3,
+      "commented": 2
+    },
+    {
+      "project": "chromium/third_party/instrumented_libraries",
+      "merged": 3,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/docs",
+      "merged": 3,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/overlays/eclass-overlay",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/platform/frecon",
+      "merged": 3,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/platform/labstation",
+      "merged": 3,
+      "commented": 3
+    },
+    {
+      "project": "chromiumos/platform/microbenchmarks",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/platform/tauto",
+      "merged": 3,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/third_party/ap_wpsr",
+      "merged": 3,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/dhcpcd",
+      "merged": 3,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/third_party/huddly-updater",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/mimo-updater",
+      "merged": 3,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/sis-updater",
+      "merged": 3,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/tlsdate",
+      "merged": 3,
+      "commented": 2
+    },
+    {
+      "project": "infra/archived/monorail",
+      "merged": 3,
+      "commented": 1
+    },
+    {
+      "project": "infra/gerrit-plugins/chumpdetector",
+      "merged": 3,
+      "commented": 1
+    },
+    {
+      "project": "aosp/platform/frameworks/ml",
+      "merged": 2,
+      "commented": 2
+    },
+    {
+      "project": "chromium/src/tools/franky",
+      "merged": 2,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/infra/build/observability-cloud",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/platform/hdctools_firmware",
+      "merged": 2,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/platform/redaction_tool",
+      "merged": 2,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/tremplin",
+      "merged": 2,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/platform/xolabs-common-core",
+      "merged": 2,
+      "commented": 2
+    },
+    {
+      "project": "chromiumos/third_party/libva-intel-media-driver",
+      "merged": 2,
+      "commented": 1
+    },
+    {
+      "project": "external/anongit.freedesktop.org/git/wayland/weston",
+      "merged": 2,
+      "commented": 2
+    },
+    {
+      "project": "external/gob/android/platform/system/chre",
+      "merged": 2,
+      "commented": 2
+    },
+    {
+      "project": "webm/libwebp-test-data",
+      "merged": 2,
+      "commented": 1
+    },
+    {
+      "project": "apps/libapps/hterm.org",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromium/deps/flac",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromium/deps/gperf",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromium/wasm-tts-engine",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/infra/build/prebuilts-cloud",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/infra/ci_results_archiver",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/infra/lucifer",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/infra/skylab_inventory",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/platform/btsocket",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/glbench",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/libevdev",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/libevstate",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/platform/touchpad-tests",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/platform/xorg-conf",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/bluez",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/coreboot/blobs",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/cros-adapta",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/gmmlib",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/intel-wifi-fw-dump",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/libmbim",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/libqmi",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/libv4lplugins",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/rootdev",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/scx",
+      "merged": 1,
+      "commented": 0
+    },
+    {
+      "project": "chromiumos/third_party/upstart",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "chromiumos/third_party/webrtc-apm",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "codecs/infra",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "external/github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "external/github.com/catchpoint/WebPageTest.tsproxy",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "external/netty-tcnative",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "infra/goma-input-processor",
+      "merged": 1,
+      "commented": 1
+    },
+    {
+      "project": "v8/node",
+      "merged": 1,
+      "commented": 1
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-10-20T19:46:03.359371+00:00",
+    "git": {
+      "commit": "25174e852f011a6b615e35b5e85453fe7491d3fa",
+      "branch": "HEAD"
+    },
+    "python": "3.14.4",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "packages": {
+      "pygments": "2.21.0"
+    }
+  }
+}
